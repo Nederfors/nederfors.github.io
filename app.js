@@ -61,6 +61,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       ? inv.map(it => {
           const entry = ALL.find(e => e.id === it.itemId) || {};
           let desc = entry.beskrivning || '';
+          const kval = (it.kval && it.kval.length) ? it.kval : (entry.taggar?.kvalitet || []);
           if (entry.taggar?.typ?.includes('Elixir') && entry.nivåer) {
             desc += '<br>' + Object.entries(entry.nivåer)
               .map(([lvl,txt]) => `${lvl}: ${txt}`).join('<br>');
@@ -68,8 +69,9 @@ document.addEventListener('DOMContentLoaded', async () => {
             desc += '<br>' + Object.entries(entry.stat)
               .map(([k,v]) => `${k}: ${v}`).join(', ');
           }
+          if (kval.length) desc += '<br>Kvalitet: ' + kval.join(', ');
           return `
-            <li class="card" data-id="${it.itemId}" data-level="${it.level}">
+            <li class="card" data-id="${it.itemId}" data-level="${it.level}" data-kval="${kval.join(';')}">
               <div class="card-title">${it.name}</div>
               <div class="card-desc">${desc}<br>Nivå: ${it.level}<br>Antal: ${it.qty}</div>
               <div class="inv-controls">
@@ -104,15 +106,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const typSel     = $('typFilter');
     const arkSel     = $('arkFilter');
     const testSel    = $('testFilter');
+    const kvalSel    = $('kvalFilter');
     const clearBtn   = $('clearFilter');
 
     /* fyll filter-dropdowns */
     (() => {
-      const sets = { typ:new Set(), ark:new Set(), test:new Set() };
+      const sets = { typ:new Set(), ark:new Set(), test:new Set(), kval:new Set() };
       ALL.forEach(p => {
         (p.taggar?.typ      || []).forEach(v => sets.typ .add(v));
         (p.taggar?.ark_trad || []).forEach(v => sets.ark .add(v));
         (p.taggar?.test     || []).forEach(v => sets.test.add(v));
+        (p.taggar?.kvalitet || []).forEach(v => sets.kval.add(v));
       });
       const fill = (sel,set,lbl) => {
         sel.innerHTML = `<option value="">${lbl} (alla)</option>` +
@@ -122,14 +126,15 @@ document.addEventListener('DOMContentLoaded', async () => {
       fill(typSel , sets.typ , 'Typ');
       fill(arkSel , sets.ark , 'Arketyp');
       fill(testSel, sets.test, 'Test');
+      fill(kvalSel, sets.kval, 'Kvalitet');
     })();
 
     const filtered = () => {
       const q  = searchIn.value.toLowerCase();
-      const tF = typSel.value, aF = arkSel.value, xF = testSel.value;
+      const tF = typSel.value, aF = arkSel.value, xF = testSel.value, kF = kvalSel.value;
       return ALL.filter(p => {
         const tags = (p.taggar?.typ||[])
-          .concat(p.taggar?.ark_trad||[], p.taggar?.test||[])
+          .concat(p.taggar?.ark_trad||[], p.taggar?.test||[], p.taggar?.kvalitet||[])
           .map(t => t.toLowerCase());
         const txt = p.namn.toLowerCase().includes(q) ||
           (p.beskrivning || '').toLowerCase().includes(q) ||
@@ -138,7 +143,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         const tOK = !tF || (p.taggar?.typ      || []).includes(tF);
         const aOK = !aF || (p.taggar?.ark_trad || []).includes(aF);
         const xOK = !xF || (p.taggar?.test     || []).includes(xF);
-        return txt && tOK && aOK && xOK;
+        const kOK = !kF || (p.taggar?.kvalitet || []).includes(kF);
+        return txt && tOK && aOK && xOK && kOK;
       });
     };
 
@@ -163,7 +169,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         li.className = 'card';
         li.innerHTML = `
           <div class="card-title">${p.namn}</div>
-          ${(p.taggar?.typ||[]).concat(p.taggar?.ark_trad||[], p.taggar?.test||[])
+          ${(p.taggar?.typ||[])
+            .concat(p.taggar?.ark_trad||[], p.taggar?.test||[], p.taggar?.kvalitet||[])
             .map(t=>`<span class="tag">${t}</span>`).join(' ')}
           ${lvlSel}
           <div class="card-desc">${desc}</div>
@@ -173,13 +180,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     };
 
     const refreshList = () => renderList(filtered());
-    [searchIn, typSel, arkSel, testSel].forEach(el => el.addEventListener('input', refreshList));
+    [searchIn, typSel, arkSel, testSel, kvalSel].forEach(el => el.addEventListener('input', refreshList));
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         searchIn.value = '';
         typSel.value = '';
         arkSel.value = '';
         testSel.value = '';
+        kvalSel.value = '';
         refreshList();
       });
     }
@@ -193,10 +201,39 @@ document.addEventListener('DOMContentLoaded', async () => {
       const lvl  = li.querySelector('select.level')?.value || 'Novis';
 
       if (btn.dataset.act === 'add') {
-        if (isInv(entry)) {
+        if (entry.taggar?.typ?.includes('Kvalitet')) {
           const inv = storeHelper.getInventory(store);
-          const idx = inv.findIndex(x=>x.itemId===id && x.level===lvl);
-          idx>=0 ? inv[idx].qty++ : inv.push({itemId:id,name:entry.namn,qty:1,level:lvl});
+          const equip = inv.filter(it => {
+            const e = ALL.find(x => x.id === it.itemId);
+            return e && (e.taggar?.typ?.includes('Vapen') || e.taggar?.typ?.includes('Rustning'));
+          });
+          if (!equip.length) { alert('Inga vapen eller rustningar i inventariet.'); return; }
+          const msg = equip.map((it,i)=>`${i+1}: ${it.name} ${(it.kval||[]).join(', ')}`).join('\n');
+          const ch = prompt('Välj föremål att ändra kvalitet på:\n'+msg);
+          const n  = Number(ch);
+          if (!n || n<1 || n>equip.length) return;
+          const item = equip[n-1];
+          const q = entry.namn;
+          item.kval = item.kval || [];
+          const qi = item.kval.indexOf(q);
+          if (qi>=0) {
+            if (!confirm('Ta bort kvaliteten?')) return;
+            item.kval.splice(qi,1);
+          } else {
+            item.kval.push(q);
+          }
+          storeHelper.setInventory(store, inv); renderInv();
+        } else if (isInv(entry)) {
+          let kval = entry.taggar?.kvalitet || [];
+          if (entry.taggar?.typ?.includes('Vapen') || entry.taggar?.typ?.includes('Rustning')) {
+            const inp = prompt('Kvaliteter (kommaseparerade):', kval.join(', '));
+            if (inp === null) return;
+            kval = inp.split(',').map(s=>s.trim()).filter(Boolean);
+          }
+          const inv = storeHelper.getInventory(store);
+          const idx = inv.findIndex(x=>x.itemId===id && x.level===lvl && JSON.stringify(x.kval||[])===JSON.stringify(kval));
+          if (idx>=0) { inv[idx].qty++; }
+          else { inv.push({itemId:id,name:entry.namn,qty:1,level:lvl,kval}); }
           storeHelper.setInventory(store,inv); renderInv();
         } else {
           const list = storeHelper.getCurrentList(store);
@@ -237,16 +274,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     const typSel   = $('typFilter');
     const arkSel   = $('arkFilter');
     const testSel  = $('testFilter');
+    const kvalSel  = $('kvalFilter');
     const clearBtn = $('clearFilter');
 
     /* fyll dropdowns från aktuell karaktär */
     const fillFilters = () => {
       const list = storeHelper.getCurrentList(store).filter(p=>!isInv(p));
-      const sets = { typ:new Set(), ark:new Set(), test:new Set() };
+      const sets = { typ:new Set(), ark:new Set(), test:new Set(), kval:new Set() };
       list.forEach(p => {
         (p.taggar?.typ      || []).forEach(v=>sets.typ .add(v));
         (p.taggar?.ark_trad || []).forEach(v=>sets.ark .add(v));
         (p.taggar?.test     || []).forEach(v=>sets.test.add(v));
+        (p.taggar?.kvalitet || []).forEach(v=>sets.kval.add(v));
       });
       const fill = (sel,set,lbl) => {
         sel.innerHTML = `<option value="">${lbl} (alla)</option>` +
@@ -255,16 +294,17 @@ document.addEventListener('DOMContentLoaded', async () => {
       fill(typSel , sets.typ , 'Typ');
       fill(arkSel , sets.ark , 'Arketyp');
       fill(testSel, sets.test, 'Test');
+      fill(kvalSel, sets.kval, 'Kvalitet');
     };
 
     const filtered = () => {
       const q  = searchIn.value.toLowerCase();
-      const tF = typSel.value, aF = arkSel.value, xF = testSel.value;
+      const tF = typSel.value, aF = arkSel.value, xF = testSel.value, kF = kvalSel.value;
       return storeHelper.getCurrentList(store)
         .filter(p=>!isInv(p))
         .filter(p=>{
           const tags = (p.taggar?.typ||[])
-            .concat(p.taggar?.ark_trad||[], p.taggar?.test||[])
+            .concat(p.taggar?.ark_trad||[], p.taggar?.test||[], p.taggar?.kvalitet||[])
             .map(t=>t.toLowerCase());
           const txt = p.namn.toLowerCase().includes(q) ||
             (p.beskrivning||'').toLowerCase().includes(q) ||
@@ -272,7 +312,8 @@ document.addEventListener('DOMContentLoaded', async () => {
           const tOK=!tF||(p.taggar?.typ      || []).includes(tF);
           const aOK=!aF||(p.taggar?.ark_trad || []).includes(aF);
           const xOK=!xF||(p.taggar?.test     || []).includes(xF);
-          return txt&&tOK&&aOK&&xOK;
+          const kOK=!kF||(p.taggar?.kvalitet || []).includes(kF);
+          return txt&&tOK&&aOK&&xOK&&kOK;
         });
     };
 
@@ -319,13 +360,14 @@ document.addEventListener('DOMContentLoaded', async () => {
       refreshCharPage();
     });
 
-    [searchIn, typSel, arkSel, testSel].forEach(el => el.addEventListener('input', () => renderSkills(filtered())));
+    [searchIn, typSel, arkSel, testSel, kvalSel].forEach(el => el.addEventListener('input', () => renderSkills(filtered())));
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         searchIn.value = '';
         typSel.value = '';
         arkSel.value = '';
         testSel.value = '';
+        kvalSel.value = '';
         renderSkills(filtered());
       });
     }
