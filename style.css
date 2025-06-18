@@ -242,6 +242,15 @@ body {
 }
 #filterPanel.open { left: 0; }
 
+#filterPanel input {
+  padding: .55rem .9rem;
+  border-radius: .6rem;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--txt);
+  font-size: 1rem;
+}
+
 .filter-group {
   display: flex;
   flex-direction: column;

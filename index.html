@@ -22,11 +22,8 @@
   <footer class="toolbar">
     <!-- Karaktärshantering -->
     <select id="charSelect"></select>
-    <button id="newCharBtn" class="char-btn">Ny rollperson</button>
     <button id="deleteChar" class="char-btn danger icon" title="Ta bort">🗑</button>
 
-    <!-- Sökfält -->
-    <input id="sökfält" placeholder="Sök…">
     <button id="clearFilter" class="char-btn" title="Rensa filter">Rensa filter</button>
 
     <!-- XP-översikt -->
@@ -59,6 +56,11 @@
       <h2>Filter</h2>
       <button id="filterClose" class="char-btn icon" title="Stäng">✕</button>
     </header>
+
+    <div class="filter-group">
+      <input id="sökfält" placeholder="Sök…">
+      <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+    </div>
 
     <div class="filter-group">
       <label for="typFilter">Typ</label>
