@@ -99,11 +99,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   /* ---------- index-specifik logik ---------- */
   if (role === 'index') {
-    const lista    = $('lista');
-    const searchIn = $('sökfält');
-    const typSel   = $('typFilter');
-    const arkSel   = $('arkFilter');
-    const testSel  = $('testFilter');
+    const lista      = $('lista');
+    const searchIn   = $('sökfält');
+    const typSel     = $('typFilter');
+    const arkSel     = $('arkFilter');
+    const testSel    = $('testFilter');
+    const clearBtn   = $('clearFilter');
 
     /* fyll filter-dropdowns */
     (() => {
@@ -127,9 +128,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       const q  = searchIn.value.toLowerCase();
       const tF = typSel.value, aF = arkSel.value, xF = testSel.value;
       return ALL.filter(p => {
+        const tags = (p.taggar?.typ||[])
+          .concat(p.taggar?.ark_trad||[], p.taggar?.test||[])
+          .map(t => t.toLowerCase());
         const txt = p.namn.toLowerCase().includes(q) ||
           (p.beskrivning || '').toLowerCase().includes(q) ||
-          (p.nivåer ? Object.values(p.nivåer).join(' ').toLowerCase().includes(q) : false);
+          (p.nivåer ? Object.values(p.nivåer).join(' ').toLowerCase().includes(q) : false) ||
+          tags.some(t => t.includes(q));
         const tOK = !tF || (p.taggar?.typ      || []).includes(tF);
         const aOK = !aF || (p.taggar?.ark_trad || []).includes(aF);
         const xOK = !xF || (p.taggar?.test     || []).includes(xF);
@@ -169,6 +174,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const refreshList = () => renderList(filtered());
     [searchIn, typSel, arkSel, testSel].forEach(el => el.addEventListener('input', refreshList));
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        searchIn.value = '';
+        typSel.value = '';
+        arkSel.value = '';
+        testSel.value = '';
+        refreshList();
+      });
+    }
 
     lista.addEventListener('click', e => {
       const btn = e.target.closest('button[data-act]');
@@ -223,6 +237,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const typSel   = $('typFilter');
     const arkSel   = $('arkFilter');
     const testSel  = $('testFilter');
+    const clearBtn = $('clearFilter');
 
     /* fyll dropdowns från aktuell karaktär */
     const fillFilters = () => {
@@ -248,7 +263,12 @@ document.addEventListener('DOMContentLoaded', async () => {
       return storeHelper.getCurrentList(store)
         .filter(p=>!isInv(p))
         .filter(p=>{
-          const txt = p.namn.toLowerCase().includes(q) || (p.beskrivning||'').toLowerCase().includes(q);
+          const tags = (p.taggar?.typ||[])
+            .concat(p.taggar?.ark_trad||[], p.taggar?.test||[])
+            .map(t=>t.toLowerCase());
+          const txt = p.namn.toLowerCase().includes(q) ||
+            (p.beskrivning||'').toLowerCase().includes(q) ||
+            tags.some(t=>t.includes(q));
           const tOK=!tF||(p.taggar?.typ      || []).includes(tF);
           const aOK=!aF||(p.taggar?.ark_trad || []).includes(aF);
           const xOK=!xF||(p.taggar?.test     || []).includes(xF);
@@ -300,6 +320,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
 
     [searchIn, typSel, arkSel, testSel].forEach(el => el.addEventListener('input', () => renderSkills(filtered())));
+    if (clearBtn) {
+      clearBtn.addEventListener('click', () => {
+        searchIn.value = '';
+        typSel.value = '';
+        arkSel.value = '';
+        testSel.value = '';
+        renderSkills(filtered());
+      });
+    }
 
     refreshChars(); refreshCharPage();
   }
