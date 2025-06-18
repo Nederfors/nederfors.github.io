@@ -231,6 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             kval = inp.split(',').map(s=>s.trim()).filter(Boolean);
           }
           const inv = storeHelper.getInventory(store);
+
           const idx = inv.findIndex(x=>x.itemId===id && x.level===lvl && JSON.stringify(x.kval||[])===JSON.stringify(kval));
           if (idx>=0) { inv[idx].qty++; }
           else { inv.push({itemId:id,name:entry.namn,qty:1,level:lvl,kval}); }
