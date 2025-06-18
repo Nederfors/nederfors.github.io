@@ -185,10 +185,17 @@ body {
   color: #fff;
   cursor: pointer;
   text-decoration: none;
+  transition: transform .05s ease;
 }
 .char-btn.danger { background: var(--danger); }
 .char-btn.icon   { font-size: 1.1rem; }
 .char-btn:hover  { opacity: .85; }
+.char-btn:active,
+.toolbar button:active,
+.toolbar a:active,
+.card button:active {
+  transform: scale(.95);
+}
 
 .exp-counter { font-weight: 500; }
 
