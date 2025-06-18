@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rollperson</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/store.js" defer></script>
+  <script src="js/app.js"   defer></script>
+</head>
+<body data-role="character">
+
+  <h1 class="app-title">ROLLPERSON</h1>
+
+  <!-- Panel: sparade förmågor / krafter -->
+  <div class="panel">
+    <h2 id="charName" style="margin-top:0;"></h2>
+    <ul id="valda" class="card-list"></ul>
+  </div>
+
+  <!-- Fast verktygsrad längst ned -->
+  <footer class="toolbar">
+    <!-- Karaktärshantering -->
+    <select id="charSelect"></select>
+    <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+    <button id="deleteChar" class="char-btn danger icon" title="Ta bort">🗑</button>
+
+    <!-- Sökfält -->
+    <input id="sökfält" placeholder="Sök…">
+
+    <!-- XP-översikt -->
+    <span class="exp-counter">XP: <span id="expPoints">0</span></span>
+
+    <!-- Tillbaka & inventarie -->
+    <a href="index.html" class="char-btn icon" title="Till sök">⮌</a>
+    <button id="invToggle" class="char-btn icon" title="Inventarie">🎒
+      <span id="invBadge">0</span>
+    </button>
+      <!-- Filter-knapp -->
+    <button id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
+  </footer>
+
+  <!-- Off-canvas inventariepanel -->
+  <aside id="invPanel">
+    <header class="inv-header">
+      <h2>Inventarie</h2>
+      <button id="invClose" class="char-btn icon" title="Stäng">✕</button>
+    </header>
+    <ul id="invList" class="card-list"></ul>
+    <div class="exp-counter">
+      Vikt: <span id="weightOut">0</span> / Slots: <span id="slotOut">0</span>
+    </div>
+  </aside>
+
+  <!-- Off-canvas filterpanel -->
+  <aside id="filterPanel">
+    <header class="inv-header">
+      <h2>Filter</h2>
+      <button id="filterClose" class="char-btn icon" title="Stäng">✕</button>
+    </header>
+
+    <div class="filter-group">
+      <label for="typFilter">Typ</label>
+      <select id="typFilter"></select>
+    </div>
+
+    <div class="filter-group">
+      <label for="arkFilter">Arketyp</label>
+      <select id="arkFilter"></select>
+    </div>
+
+    <div class="filter-group">
+      <label for="testFilter">Test</label>
+      <select id="testFilter"></select>
+    </div>
+  </aside>
+
+</body>
+</html>
