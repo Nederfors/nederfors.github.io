@@ -2,7 +2,8 @@
 function initCharacter() {
   dom.cName.textContent = store.characters.find(c=>c.id===store.current)?.name||'';
 
-  const F = { search:'', typ:[], ark:[], test:[] };
+  const F = { search:[], typ:[], ark:[], test:[] };
+  let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
 
@@ -26,7 +27,7 @@ function initCharacter() {
   const activeTags = ()=>{
     dom.active.innerHTML='';
     const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
-    if(F.search) push(`<span class="tag removable" data-type="search">${F.search} ✕</span>`);
+    F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
     F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
@@ -35,8 +36,9 @@ function initCharacter() {
   const filtered = () => storeHelper.getCurrentList(store)
       .filter(p => !isInv(p))
       .filter(p => {
-        const q = F.search.toLowerCase();
-        const txt = p.namn.toLowerCase().includes(q) || (p.beskrivning || '').toLowerCase().includes(q);
+        const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t => t.toLowerCase());
+        const text = `${p.namn} ${(p.beskrivning || '')}`.toLowerCase();
+        const txt = terms.every(q => text.includes(q));
         const tags = p.taggar || {};
         const selTags = [...F.typ, ...F.ark, ...F.test];
         const itmTags = [
@@ -91,7 +93,15 @@ function initCharacter() {
   renderSkills(filtered()); activeTags(); updateXP(); renderTraits();
 
   /* --- filter-events */
-  dom.sIn.addEventListener('input', ()=>{F.search=dom.sIn.value; activeTags(); renderSkills(filtered()); renderTraits();});
+  dom.sIn.addEventListener('input', ()=>{sTemp=dom.sIn.value.trim(); activeTags(); renderSkills(filtered()); renderTraits();});
+  dom.sIn.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
+      dom.sIn.value=''; sTemp='';
+      activeTags(); renderSkills(filtered()); renderTraits();
+    }
+  });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
     dom[sel].addEventListener('change',()=>{
       const v=dom[sel].value; if(v&&!F[key].includes(v)) F[key].push(v);
@@ -101,12 +111,12 @@ function initCharacter() {
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const sec=t.dataset.type,val=t.dataset.val;
-    if(sec==='search'){F.search=''; dom.sIn.value='';}
+    if(sec==='search'){F.search=F.search.filter(x=>x!==val);} 
     else F[sec]=F[sec].filter(x=>x!==val);
     activeTags(); renderSkills(filtered()); renderTraits();
   });
   dom.clrBtn.addEventListener('click',()=>{
-    F.search='';F.typ=[];F.ark=[];F.test=[];
+    F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
     dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderSkills(filtered()); renderTraits();
   });
