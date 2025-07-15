@@ -1,20 +1,275 @@
 [
   {
-    "id": 43,
     "namn": "Skräckslå",
     "beskrivning": "Varelsen kan genom sin uppenbarelse injaga skräck i sina offer och kräver särdraget Andeform.",
     "taggar": {
       "typ": [
-        "Monstruöst särdrag",
-        "Elityrkesförmåga"
-      ],
-      "ark_trad": [
-        "Andebesvärjare"
-      ]
+      "Monstruöst särdrag",
+      "Elityrkesförmåga"
+    ],
+    "test": [
+      "Viljestark"
+    ]
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Ett offer måste slå [Viljestark←Viljestark] eller backa undan under sina handlingar tills det lyckas med ett nytt slag.",
       "Gesäll": "Handling: Aktiv. Alla inom hörhåll påverkas som på novisnivån.",
       "Mästare": "Handling: Fri. Som gesäll men offren kan inte ens försvara sig innan de lyckas med ett slag per runda."
     }
-  }]
+  },
+  {
+  "namn": "Frätande attack",
+  "beskrivning": "Varelsens obeväpnade attack eller Naturliga vapen är frätande och varje träff på en fiende ger också en frätande sidoeffekt. Syran måste tränga igenom Bepansring även om den inledande attacken ger skada. Att få bort syran från kropp eller rustning kräver att någon spenderar en handling och lyckas med Listig. Frätande attack kräver särdraget Frätande blod av samma eller högre nivå.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Reaktiv. Den frätande attacken är svag och gör 1t6 i skada i 1t6 rundor.",
+    "Gesäll": "Handling: Reaktiv. Den frätande attacken är medelstark och gör 1t8 i skada i 1t8 rundor.",
+    "Mästare": "Handling: Reaktiv. Den frätande attacken är stark och gör 1t10 i skada i 1t10 rundor."
+  }
+},
+{
+  "namn": "Frätande blod",
+  "beskrivning": "Varelsens blod är frätande och skvätter vida omkring när den träffas av attacker. Den som träffar varelsen i närstrid och gör skada måste slå Försvar eller träffas av det frätande blodet. Att få bort syran från kropp eller rustning kräver att någon spenderar en handling och lyckas med Listig (tvättar bort syran med vatten, jord eller motsvarande).",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Reaktiv. Det frätande blodet är svagt och gör 1t6 i skada i 1t6 rundor.",
+    "Gesäll": "Handling: Reaktiv. Det frätande blodet är medelstarkt och gör 1t8 i skada i 1t8 rundor.",
+    "Mästare": "Handling: Reaktiv. Det frätande blodet är starkt och gör 1t10 i skada i 1t10 rundor."
+  }
+},
+{
+  "namn": "Fångstnät",
+  "beskrivning": "Varelsen kan skapa sega nät och använder dem för att passivt eller aktivt fånga in sina byten.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ],
+    "test": [
+      "Listig"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. De sega trådarna i fångstnätet tvingar alla som passerar att slå [Kvick←Listig] eller fastna i trådarna. Att komma loss kräver sedan ett lyckat [Stark←Listig], ett slag per runda. En fångad varelse får inte förflytta sig och får två chanser att misslyckas med alla handlingar, om ett av slagen misslyckas fallerar försöket.",
+    "Gesäll": "Handling: Aktiv. Förutom passiva fångsttrådar (som nivå Novis) kan varelsen kasta fångstnät mot en fiende som en handling. Offret undgår attacken om den lyckas med [Kvick←Träffsäker]. En varelse som träffas måste klara [Stark←Listig] för att komma loss, ett slag per runda. En fångad varelse får inte förflytta sig och får två chanser att misslyckas med alla handlingar, om ett av slagen misslyckas fallerar försöket.",
+    "Mästare": "Handling: Aktiv. Fångstnätet är nära nog levande och lyder sin skapare; dels finns den passiva fångstkvaliteten (som nivå Novis) men själva nätet kan också skjuta upp till tre (3) fångsttrådar per runda, var och en med effekt som på nivå II."
+  }
+},
+{
+  "namn": "Giftig",
+  "beskrivning": "Varelsens obeväpnade attack eller naturliga vapen är giftigt. Varje skadande träff förgiftar offret om det misslyckas med ett [Stark←Listig]. Giftets effekt avbryts om någon applicerar ett motgift på såret och lyckas med ett slag mot Listig.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ],
+    "test": [
+      "Listig"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
+    "Gesäll": "Handling: Passiv. Giftet är medelstarkt och gör 1t6 i skada i 1t6 rundor.",
+    "Mästare": "Handling: Passiv. Giftet är starkt och gör 1t8 i skada i 1t8 rundor."
+  }
+},
+
+{
+    "namn": "Alternativ skada",
+    "beskrivning": "Varelsens attacker skadar ett specifikt karaktärsdrag istället för Tålighet, vanligen Stark eller Viljestark. Spelledaren avgör vilket, om det inte anges i beskrivningen av monstret. Sådan skada påverkar alla slag med det karaktärsdraget. Alternativ skada läker och helas som vanlig skada. Om karaktärsdraget når 0 slukas offrets själ eller livskraft av anfallaren och offret avlider. Alternativ skada kräver särdraget Andeform.",
+    "taggar": {
+      "typ": [
+        "Monstruöst särdrag"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 alternativ skada, Bepansring skyddar ej.",
+      "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 alternativ skada, Bepansring skyddar ej.",
+      "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 alternativ skada, Bepansring skyddar ej."
+    }
+},
+{
+    "namn": "Andeform",
+    "beskrivning": "Varelsen är en ande utan fysisk kropp; den är immateriell och kan i sin mest naturliga form varken påverka eller påverkas av fysiska effekter. En ande vars Tålighet blir 0 fördrivs från platsen i en kortare eller längre tid. Andeform ger tillgång till särdragen Alternativ skada, Manifestering och Skräckslå.",
+    "taggar": {
+      "typ": [
+        "Monstruöst särdrag"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Varelsen passerar fysiska barriärer utan problem men kan inte korsa vatten ens på broar, med båt eller i luften. Anden tar halv skada av vapenattacker. Alkemiska effekter på vapen, liksom mystiska krafter ger full skada. Magiska vapen ger också full skada.",
+      "Gesäll": "Handling: Passiv. Som Novis men anden tar halv skada av vapenattacker, alkemiska/mystiska attacker och magiska vapen.",
+      "Mästare": "Handling: Passiv. Som Novis men endast mystiska krafter och magiska vapen skadar anden, och dessa gör då halv skada."
+    }
+},
+{
+  "namn": "Giftspott",
+  "beskrivning": "Varelsen är inte bara giftig, den kan också sända iväg giftiga spottloskor mot sina fiender. Giftattacken utförs på samma sätt som en vanlig avståndsattack; om den lyckas och offret misslyckas med ett [Stark←Listig] tränger giftet in genom porerna och gör skada. Giftets effekt avbryts om någon applicerar ett motgift på såret och lyckas med ett slag mot Listig. Giftspott kräver att varelsen först har särdraget Giftig till samma eller högre nivå.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ],
+    "test": [
+      "Listig"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Aktiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
+    "Gesäll": "Handling: Aktiv. Giftet är medelstarkt och gör 1t6 i skada i 1t6 rundor.",
+    "Mästare": "Handling: Aktiv. Giftet är starkt och gör 1t8 i skada i 1t8 rundor."
+  }
+},
+{
+  "namn": "Gravkyla",
+  "beskrivning": "Varelsen sprider gravens kyla kring sig som en aura där den drar fram och alla i dess direkta närhet riskerar att drabbas.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ],
+    "test": [
+      "Viljestark"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Fri. Varelsen sprider gravens paralyserade kyla omkring sig; rollpersoner på närstridsavstånd paralyseras om de misslyckas med Viljestark. Ett slag slås per runda, lyckas rollpersonen får den agera som vanligt. En rollperson som bryter gravkylan kan inte drabbas igen under samma scen.",
+    "Gesäll": "Handling: Fri. Som Novis med tillägget att gravkylan också gör 1t4 per runda för dem som drabbas och Bepansring skyddar ej.",
+    "Mästare": "Handling: Fri. Som Gesäll men effekten drabbar de rollpersoner som misslyckas med [Viljestark←Viljestark]."
+  }
+},
+
+{
+  "namn": "Korrumperande attack",
+  "beskrivning": "De av Davokars varelser som är allra mest korrumperade har förmågan att sprida den mörka smittan vidare med sina klor, bett och andra naturliga vapen.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Varelsens attacker osar av korruption och smittar den som skadas av attacken. Ett offer som tar minst 1 i skada av attacken får också 1t4 temporär korruption.",
+    "Gesäll": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1t6 temporär korruption.",
+    "Mästare": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1t8 temporär korruption."
+  }
+},
+{
+  "namn": "Manifestering",
+  "beskrivning": "Varelsen har disciplinerat sin andeform till den grad att den kan manifestera sig fysiskt under kortare eller längre perioder.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Fri. Anden kan manifestera sig fysiskt och får då agera som om den hade en fysisk kropp i en runda. Om 1 rundas förflyttning räcker för att korsa vatten kan anden göra det. Andens obeväpnade eller naturliga vapen kan användas under rundan och den tar skada av allt som skadar fysiska varelser.",
+    "Gesäll": "Handling: Fri. Anden kan manifestera sig med de vapen och den rustning den hade då den dog och kan slåss med dem. Anden förblir fysisk så länge den behagar, men kan inte avbryta mitt i en runda. Har anden inlett rundan som fysisk spelas rundan med anden i fysisk form. Anden kan vandra en hel scen i fysisk form om den vill, exempelvis för att korsa vatten. Om anden tvingas eller väljer att återfå andeformen när den befinner sig över vatten kastas den tillbaka till fast mark.",
+    "Mästare": "Handling: Speciell. Anden behärskar manifestering till fullo och kan agera fysiskt med de handlingar den så önskar men är i allt övrigt immateriell. Den attackerar som fysisk och försvarar sig som ande. Anden kan inte skadas på annat sätt än det som beskrivs av dess nivå i Andeform. Anden kan vandra obehindrat i fysisk form om den vill, exempelvis för en längre båtresa. Om anden tvingas eller väljer att återfå andeform när den befinner sig över vatten kastas den tillbaka till fast mark."
+  }
+},
+{
+  "namn": "Naturligt vapen",
+  "beskrivning": "Varelsen har begåvats med ett välutvecklat naturligt vapen som den kan göra bruk av i närstrid, exempelvis skarpa klor, bett eller svanssting. Förmågan Naturlig krigare (beskriven på sid 119) kan användas för att utveckla varelsens naturliga vapen ytterligare.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 i skada istället för 1t4.",
+    "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 i skada.",
+    "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 i skada. Det naturliga vapnet har kvaliteten Långt och ger alltså frislag initialt i striden mot dem med kortare vapen."
+  }
+},
+{
+  "namn": "Pansar",
+  "beskrivning": "Varelsen är tjockhudad, fjällig eller på annat sätt särskilt svår att skada. Varelsen kan inte bära ytterligare rustning på sitt naturliga pansar, men bepansringen ger inte heller Begränsning som annan rustning gör. Förmågan Rustmästare utvecklar dock varelsens naturliga skydd ytterligare, utöver nivåerna i Pansar.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1t4.",
+    "Gesäll": "Handling: Passiv. Pansaret skyddar 1t6.",
+    "Mästare": "Handling: Passiv. Pansaret skyddar 1t8."
+  }
+},
+{
+  "namn": "Regeneration",
+  "beskrivning": "Varelsen läker skador utan att behöva ägna varken tid eller kraft åt det. Varelsen har också en svaghet i form av en skadetyp som den inte kan regenerera (men såklart läka på annat aktivt sätt). Varelsen måste välja en svaghet som avser en typ av skada som den inte kan läka automatiskt. Välj mellan typerna magiska vapen, elementarenergier (eld och syra), helig skada eller ohelig skada.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Varelsen regenererar 1t4 Tålighet per runda.",
+    "Gesäll": "Handling: Passiv. Varelsen regenererar 1t6 Tålighet per runda.",
+    "Mästare": "Handling: Passiv. Varelsen regenererar 1t8 Tålighet per runda."
+  }
+},
+{
+  "namn": "Svärm",
+  "beskrivning": "Varelsen är ett kollektiv, dess medvetande utspritt över en svärm varelser. Varelsen kan inte förgöras med mindre än att dess hela svärm tillintetgörs, men varelsen är inte heller i alla lägen helt i kontroll över sin svärm.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Speciell. Svärm tar halv skada av alla attacker. Om svärm skadas och går ner till mindre än hälften av sin Tålighet kommer de ingående delarnas överlevnadsinstinkt att ta över och dess flockinstinkt dra med sig resten av svärm på flykt. Mentala angrepp (där svärm försvarar sig med Viljestark) påverkar hela svärm.",
+    "Gesäll": "Handling: Speciell. Svärm tar halv skada av alla attacker. Om svärm skadas så pass att dess Smärtgräns överskrids genom en enstaka attack kommer de ingående delarnas överlevnadsinstinkt att ta över och dess flockinstinkt dra med sig resten av svärm på flykt. Svärm får två försök på sig att motstå mentala angrepp (där svärm försvarar sig med Viljestark).",
+    "Mästare": "Handling: Speciell. Svärmens medvetande styr den så att den endast tar en fjärdedels skada av alla attacker. Svärmens sammanhållning är total och svärm kommer inte att fly förrän det övergripande intellektet väljer att göra det. Svärm får två försök på sig att motstå mentala angrepp (där svärm försvarar sig med Viljestark)."
+  }
+},
+{
+  "namn": "Trollbinda",
+  "beskrivning": "Varelsen kan hypnotisera sina offer och få dem att inte agera förrän det är för sent.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ],
+    "test": [
+      "Viljestark"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Aktiv. Varelsens blick tvingar offret att klara [Viljestark←Viljestark] eller förlora båda sina nästkommande handlingar.",
+    "Gesäll": "Handling: Aktiv. Varelsens ljuva sång eller dess hypnotiska läte tvingar alla offer att slå för [Viljestark←Viljestark] eller ägna nästkommande runda åt att göra ingenting.",
+    "Mästare": "Handling: Aktiv. Som Gesäll men offren står trollbundna tills de klarar ett [Viljestark←Viljestark]. Om de tar skada på något sätt bryts också förtrollningen."
+  }
+},
+{
+  "namn": "Vandöd",
+  "beskrivning": "Varelsen är en ande fångad i en död kropp. Anden styr den sakta ruttnande kroppen och fördrivs när kroppen förstörs.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Den vandöde påverkas inte av gifter eller sjukdomar, men tar skada av fysiska effekter som vanligt med undantag av att Smärtgräns inte används (smärta och chock påverkar inte den vandöde). Den vandöde läker inte naturligt och påverkas inte av alkemiska läkeelixir utan måste äta rått kött (levande eller nyligen dödat) eller dricka blod för att läka, varje poäng Tålighet som konsumeras läker 2 Tålighet på den vandöde.",
+    "Gesäll": "Handling: Passiv. Som Novis men den vandöde tar halv skada av vanliga fysiska effekter så som vapen eller elementarskada. Mystiska krafter som ignorerar Bepansring gör skada som vanligt.",
+    "Mästare": "Handling: Passiv. Som Gesäll men den vandöde tar också halv skada av alkemiska och mystiska effekter (dock full skada av magiska vapen och heliga effekter)."
+  }
+},
+{
+  "namn": "Vingar",
+  "beskrivning": "Varelsen är utrustad med någon form av vingar (fågel- eller insektsliknande) och kan flyga, mer eller mindre bra.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Varelsen kan flyga under sin förflyttning och alltså undgå fria attacker vid passage över en fiende.",
+    "Gesäll": "Handling: Passiv. Varelsen kan ryttla, det vill säga stanna stilla i luften och då i praktiken inte göra någon förflyttning men samtidigt befinna sig utom räckhåll för närstridsattacker. Att ryttla är ingen handling.",
+    "Mästare": "Handling: Passiv. Varelsen kan göra svepande attacker, det vill säga använda en del av sin förflyttning innan en attack och resten efter. På så sätt fastnar varelsen inte i närstrid men kan utföra närstridsattacker själv."
+  }
+}
+]
