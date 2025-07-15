@@ -30,6 +30,7 @@
       box.innerHTML='';
       add.removeEventListener('click',onAdd);
       cls.removeEventListener('click',onCancel);
+      pop.removeEventListener('click',onOutside);
       sels.forEach(s=>s.removeEventListener('change',check));
     }
     function onAdd(){
@@ -40,6 +41,12 @@
       cb(levels);
     }
     function onCancel(){ close(); cb(null); }
+    function onOutside(e){
+      if(!pop.querySelector('.popup-inner').contains(e.target)){
+        close();
+        cb(null);
+      }
+    }
     function check(){
       for(let i=0;i<groups.length;i++){
         const sgs=box.querySelectorAll(`select[data-group="${i}"]`);
@@ -52,6 +59,7 @@
     check();
     add.addEventListener('click',onAdd);
     cls.addEventListener('click',onCancel);
+    pop.addEventListener('click',onOutside);
   }
 
   function splitComma(str){

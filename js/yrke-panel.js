@@ -1,4 +1,5 @@
 (function(window){
+  let outsideHandler = null;
   function create() {
     if (document.getElementById('yrkePanel')) return;
     const panel = document.createElement('aside');
@@ -18,12 +19,23 @@
     create();
     document.getElementById('yrkeTitle').textContent = title || '';
     document.getElementById('yrkeContent').innerHTML = html || '';
-    document.getElementById('yrkePanel').classList.add('open');
+    const panel = document.getElementById('yrkePanel');
+    panel.classList.add('open');
+    outsideHandler = e => {
+      if(!panel.contains(e.target)){
+        close();
+      }
+    };
+    setTimeout(()=>document.addEventListener('click', outsideHandler));
   }
 
   function close(){
     const p = document.getElementById('yrkePanel');
     if(p) p.classList.remove('open');
+    if(outsideHandler){
+      document.removeEventListener('click', outsideHandler);
+      outsideHandler = null;
+    }
   }
 
   window.yrkePanel = { open, close };

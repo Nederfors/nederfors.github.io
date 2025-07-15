@@ -17,6 +17,8 @@ class SharedToolbar extends HTMLElement {
     this.render();
     this.cache();
     this.shadowRoot.addEventListener('click', e => this.handleClick(e));
+    this._outsideHandler = e => this.handleOutsideClick(e);
+    document.addEventListener('click', this._outsideHandler);
     this.initSwitchLink();
   }
 
@@ -183,6 +185,16 @@ class SharedToolbar extends HTMLElement {
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
+  }
+
+  handleOutsideClick(e) {
+    const path = e.composedPath();
+    const toggles = ['invToggle','traitsToggle','filterToggle'];
+    if (path.some(el => toggles.includes(el.id))) return;
+    const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
+    if (openPanel && !path.includes(openPanel)) {
+      openPanel.classList.remove('open');
+    }
   }
 
   toggle(id) {
