@@ -22,6 +22,7 @@
       box.innerHTML='';
       box.removeEventListener('click',onClick);
       cls.removeEventListener('click',onCancel);
+      pop.removeEventListener('click',onOutside);
     }
     function onClick(e){
       const b=e.target.closest('button[data-i]');
@@ -31,8 +32,15 @@
       cb(options[idx]);
     }
     function onCancel(){ close(); cb(null); }
+    function onOutside(e){
+      if(!pop.querySelector('.popup-inner').contains(e.target)){
+        close();
+        cb(null);
+      }
+    }
     box.addEventListener('click',onClick);
     cls.addEventListener('click',onCancel);
+    pop.addEventListener('click',onOutside);
   }
 
   function pickTrait(used, cb){

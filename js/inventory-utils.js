@@ -69,6 +69,7 @@
       pop.classList.remove('open');
       box.removeEventListener('click', onBtn);
       cls.removeEventListener('click', close);
+      pop.removeEventListener('click', onOutside);
       box.innerHTML = '';                      // rensa bort gamla knappar
     };
     const onBtn = e => {
@@ -78,9 +79,16 @@
       close();
       callback(idx);
     };
+    const onOutside = e => {
+      if(!pop.querySelector('.popup-inner').contains(e.target)){
+        close();
+        callback(null);
+      }
+    };
 
     box.addEventListener('click', onBtn);
     cls.addEventListener('click', close);
+    pop.addEventListener('click', onOutside);
   }
 
   function openCustomPopup(callback) {
@@ -102,6 +110,7 @@
       pop.classList.remove('open');
       add.removeEventListener('click', onAdd);
       cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
       name.value = '';
       dIn.value = sIn.value = oIn.value = '';
       desc.value = '';
@@ -121,9 +130,16 @@
       callback(entry);
     };
     const onCancel = () => { close(); callback(null); };
+    const onOutside = e => {
+      if(!pop.querySelector('.popup-inner').contains(e.target)){
+        close();
+        callback(null);
+      }
+    };
 
     add.addEventListener('click', onAdd);
     cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
   }
 
   function calcRowCost(row, hasForge, hasAlchemy, hasArtefacter) {
