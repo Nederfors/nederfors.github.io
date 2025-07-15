@@ -171,6 +171,15 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 }
 .inv-controls button { align-self: initial; }
 
+.count-badge {
+  margin-left: .3rem;
+  background: var(--border);
+  color: var(--txt);
+  padding: 0 .4rem;
+  border-radius: .5rem;
+  font-size: .85rem;
+}
+
 /* ---------- Fast verktygsrad ---------- */
 .toolbar {
   position: fixed;

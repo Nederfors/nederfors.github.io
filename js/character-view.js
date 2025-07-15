@@ -52,8 +52,20 @@ function initCharacter() {
       .sort(sortByType);
 
   const renderSkills = arr=>{
-    dom.valda.innerHTML = arr.length ? '' : '<li class="card">Inga träffar.</li>';
+    const groups = [];
     arr.forEach(p=>{
+      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !p.trait;
+      if(multi){
+        const g = groups.find(x=>x.entry.namn===p.namn);
+        if(g) { g.count++; return; }
+        groups.push({entry:p, count:1});
+      } else {
+        groups.push({entry:p, count:1});
+      }
+    });
+    dom.valda.innerHTML = groups.length ? '' : '<li class="card">Inga träffar.</li>';
+    groups.forEach(g=>{
+      const p = g.entry;
       const lvlSel=p.nivåer?`<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
         ${LVL.filter(l=>p.nivåer[l]).map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
       </select>`:'';
@@ -80,8 +92,9 @@ function initCharacter() {
       const li=document.createElement('li');li.className='card';li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
+      const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
       const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
-      li.innerHTML = `<div class="card-title">${p.namn}</div>${lvlSel}
+      li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
         <div class="card-desc">${desc}${traitInfo}</div>
         ${info}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
       dom.valda.appendChild(li);
@@ -131,7 +144,21 @@ function initCharacter() {
     const name = liEl.dataset.name;
     const tr = liEl.dataset.trait || null;
     const before = storeHelper.getCurrentList(store);
-    const list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
+    const p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
+    let list;
+    const multi = p && p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !tr;
+    if(multi){
+      let removed=false;
+      list=[];
+      for(const it of before){
+        if(!removed && it.namn===name && !it.trait){
+          removed=true; continue;
+        }
+        list.push(it);
+      }
+    }else{
+      list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
+    }
     if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
       if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
         return;
