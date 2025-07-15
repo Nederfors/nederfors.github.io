@@ -527,3 +527,12 @@ select.level {
 #customPopup.open .popup-inner { transform: translateY(0); }
 #customPopup .popup-inner button { width: 100%; }
 
+/* Gör samtliga popups scrollbara om innehållet blir för högt */
+#qualPopup .popup-inner,
+#masterPopup .popup-inner,
+#traitPopup .popup-inner,
+#customPopup .popup-inner {
+  max-height: 100%;
+  overflow-y: auto;
+}
+
