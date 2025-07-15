@@ -1,6 +1,7 @@
 (function(window){
 function initIndex() {
-  const F = { search:'', typ:[], ark:[], test:[] };
+  const F = { search:[], typ:[], ark:[], test:[] };
+  let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
 
@@ -23,15 +24,16 @@ function initIndex() {
   const activeTags =()=>{
     dom.active.innerHTML='';
     const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
-    if(F.search) push(`<span class="tag removable" data-type="search">${F.search} ✕</span>`);
+    F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
     F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
   const filtered = () => DB.filter(p=>{
-    const q = F.search.toLowerCase();
-    const txt = p.namn.toLowerCase().includes(q) || (p.beskrivning||'').toLowerCase().includes(q);
+    const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t=>t.toLowerCase());
+    const text = `${p.namn} ${(p.beskrivning||'')}`.toLowerCase();
+    const txt = terms.every(q => text.includes(q));
     const tags = p.taggar || {};
     const selTags = [...F.typ, ...F.ark, ...F.test];
     const itmTags = [
@@ -104,7 +106,16 @@ function initIndex() {
 
   /* -------- events -------- */
   dom.sIn.addEventListener('input',()=>{
-    F.search = dom.sIn.value; activeTags(); renderList(filtered());
+    sTemp = dom.sIn.value.trim();
+    activeTags(); renderList(filtered());
+  });
+  dom.sIn.addEventListener('keydown',e=>{
+    if(e.key==='Enter'){
+      e.preventDefault();
+      if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
+      dom.sIn.value=''; sTemp='';
+      activeTags(); renderList(filtered());
+    }
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
     dom[sel].addEventListener('change',()=>{
@@ -115,12 +126,12 @@ function initIndex() {
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if(section==='search'){ F.search=''; dom.sIn.value=''; }
+    if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else F[section] = F[section].filter(x=>x!==val);
     activeTags(); renderList(filtered());
   });
   dom.clrBtn.addEventListener('click',()=>{
-    F.search=''; F.typ=[];F.ark=[];F.test=[];
+    F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
     dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderList(filtered());
   });
