@@ -6,6 +6,8 @@ function initCharacter() {
   let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
+  let compact = storeHelper.getCompactEntries(store);
+  dom.entryViewToggle.classList.toggle('active', compact);
 
   /* Dropdowns baserat på karaktärslista */
   (()=>{
@@ -65,6 +67,7 @@ function initCharacter() {
         groups.push({entry:p, count:1});
       }
     });
+    const compact = storeHelper.getCompactEntries(store);
     dom.valda.innerHTML = groups.length ? '' : '<li class="card">Inga träffar.</li>';
     groups.forEach(g=>{
       const p = g.entry;
@@ -91,19 +94,22 @@ function initCharacter() {
       } else if (isYrke(p) || isElityrke(p)) {
         info = `<button class="char-btn" data-yrke="${p.namn}">Arketyp</button>`;
       }
-      const li=document.createElement('li');li.className='card';li.dataset.name=p.namn;
+      const li=document.createElement('li');
+      li.className='card' + (compact ? ' compact' : '');
+      li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
       const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
       const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
       li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
-        <div class="card-desc">${desc}${traitInfo}</div>
-        ${info}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
+        ${compact ? '' : `<div class="card-desc">${desc}${traitInfo}</div>`}
+        ${compact ? `<button class="char-btn" data-info="${encodeURIComponent(desc + traitInfo)}">Info</button>` : info}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
       dom.valda.appendChild(li);
     });
   };
 
   renderSkills(filtered()); activeTags(); updateXP(); renderTraits();
+  window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); };
 
   /* --- filter-events */
   dom.sIn.addEventListener('input', ()=>{sTemp=dom.sIn.value.trim(); activeTags(); renderSkills(filtered()); renderTraits();});
@@ -147,6 +153,13 @@ function initCharacter() {
       const name=info.dataset.yrke;
       const p=storeHelper.getCurrentList(store).find(x=>x.namn===name)||DB.find(x=>x.namn===name);
       if(p) yrkePanel.open(p.namn,yrkeInfoHtml(p));
+      return;
+    }
+    const info2=e.target.closest('button[data-info]');
+    if(info2){
+      const html=decodeURIComponent(info2.dataset.info||'');
+      const title=info2.closest('li')?.querySelector('.card-title')?.textContent||'';
+      yrkePanel.open(title,html);
       return;
     }
     if(e.target.dataset.act!=='rem') return;
