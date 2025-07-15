@@ -1,0 +1,122 @@
+[
+  {
+    "namn": "Bärsärk",
+    "beskrivning": "*Håll dig på avstånd! Jag vill ogärna skada dig.*\n Vredgade andar följer dig och fyller dig med rasande kraft i strid. Vid sidan om slagfältet är du av ett eftertänksamt och tålmodigt kynne, en kontrast som gör dig såväl uppskattad som fruktad. Mest omtalade bland barbarerna är de särskilt utvalda bärsärkakrigare som samlas kring Storhövdingen i Slumrande vredens garde – kanske drömmer du om att bli en av dem, eller om att besegra någon av dem som hämnd för att denne tog ”din plats”?",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
+    "forslag_pa_slakte": ["Barbar", "rese"],
+    "lampliga_formagor": ["Bärsärk", "Järnnäve", "Tvåhandskraft", "Återhämtning"]
+  },
+  {
+    "namn": "Duellant",
+    "beskrivning": "*Var så vänlig, undvik att skvätta blod när jag spetsar dig.*\n Heder och ära är en krigares allt och kan man försvara sitt namn med finess är det ännu bättre. Du har levt ditt liv efter den devisen och eftersom du fortfarande lever har du uppenbarligen en del att komma med i sammanhanget.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick eller Diskret 11+",
+    "forslag_pa_slakte": ["Ambrier", "bortbyting"],
+    "lampliga_formagor": ["Akrobatik", "Fint", "Rustmästare", "Tvillingattack"]
+  },
+  {
+    "namn": "Kapten",
+    "beskrivning": "*Gör som jag sagt så ordnar det sig!*\n Du är en född ledare och har byggt din militära karriär på det. Vapenkonst är för dig endast ett sätt att hålla dig vid liv och kanske var det också en gång ett krav för att få dina underlydandes respekt. Numera är det du som tar fram det bästa hos dina allierade på slagfältet, som guidar och skyddar dem medan ni uppnår era militära mål. Så vinner du deras förtroende.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Övertygande 13+",
+    "forslag_pa_slakte": "Människa (vanligen ambrier)",
+    "lampliga_formagor": ["Dominera", "Ledare", "Rustmästare", "Sköldkamp"]
+  },
+  {
+    "namn": "Soldenär",
+    "beskrivning": "*Mitt svärd och mitt blod, i utbyte mot ditt guld.*\n Du har slagits som ett sätt att leva, för en inkomst. Ambrias furstar hyr regelbundet stridskraft för kampanjer mot Davokars barbarer och Davokars klanledare gör detsamma i retur. Handelshus behöver vakter, pilgrimer likaså. För vem eller hur du har stridit kan ha varierat, men skickligheten med vapen och en instinkt för vilka strider som kan vinnas har varit avgörande för din överlevnad.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Stark 13+",
+    "forslag_pa_slakte": "Människa",
+    "lampliga_formagor": ["Järnnäve", "Rustmästare", "Sköldkamp", "Stångverkan"]
+  },
+  {
+    "namn": "Riddare",
+    "beskrivning": "*Du kan ta livet ifrån mig, inte min heder.*\n Du är en riddare som slåss för att bryta fiendens linjer eller hålla den egna härens. Tungt rustad utanpå och med en djup pliktkänsla inuti strider du för din furstes gunst, dina allierades liv och din egen ära. Kanske drömmer du om att bli en av de pansárer som utgör stommen i Drottningens eget livgarde, eller en av de templárer som slåss i Prios namn.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
+    "forslag_pa_slakte": "Ambrier",
+    "lampliga_formagor": ["Järnnäve", "Livvakt", "Rustmästare", "Tvåhandskraft"]
+  },
+  {
+    "namn": "Häxa",
+    "beskrivning": "*Din önskan är underordnad naturens vilja, acceptera det! Eller dö.*\n Den vilda naturen är ditt hem; att balansera dina egna behov mot naturens är ditt värv. Som häxa är du nära knuten till landet självt och kan lägga dess urkraft till din egen inre styrka. Du förhandlar med naturens väsen, förstår landets flöden och önskningar, och dina krafter härrör från livets och dödens kretslopp.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Viljestark 13+, Träffsäker 11+",
+    "forslag_pa_slakte": ["Barbar", "bortbyting"],
+    "lampliga_formagor": ["Häxkonster", "Mystisk kraft", "Naturlig krigare", "Ritualist"]
+  },
+  {
+    "namn": "Svartkonstnär",
+    "beskrivning": "*Det finns en annan väg; en enklare väg.*\n Du har av desperation eller makthunger drivits in på svartkonstens väg och snart funnit dig både anfrätt av korruption och jagad av fanatiska häxjägare. Kanske ser du din utsatthet som ett bevis på att du behöver ännu mer makt? Eller så är du uppriktigt ångerfull och söker en väg tillbaka till förlåtelse och räddning.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Viljestark 13+, Diskret eller Listig 11+",
+    "forslag_pa_slakte": "Människa",
+    "lampliga_formagor": ["Alkemi", "Mystisk kraft", "Ritualist", "Svartkonst"]
+  },
+  {
+    "namn": "Teurg",
+    "beskrivning": "*Prios ser dig, kättare!*\n Du är teurg, en prästmagiker. Din tro på Laggivaren är orubbligt djup: Prios är solen och själens ljus, människans räddare ur de gamla gudarnas slaveri, världens skapare och allt livs beskyddare. Ur denna rena källa springer en sällsam kraft. Den mystiska kunskap du besitter vore tom och farlig utan tron som kompass och fundament, vilket ofta visas när gudlösa mystiker utövar sina krafter.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Viljestark 13+, Listig eller Övertygande 11+",
+    "forslag_pa_slakte": "Ambrier",
+    "lampliga_formagor": ["Mystisk kraft", "Medicus", "Ritualist", "Teurgi"]
+  },
+  {
+    "namn": "Ordensmagiker",
+    "beskrivning": "*Märkvärdigt, det här måste hembringas för närmare studier.*\n Du är skolad i den gamla ordensmagins hemligheter, visdomar födda i söderns riken och förfinade genom ett millennium av efterforskningar och undervisning. För dig är magin en förlängning av världens djupa lagar, lagar som du noga studerat och förstår att utnyttja till stor och imponerande effekt.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
+    "forslag_pa_slakte": "Ambrier",
+    "lampliga_formagor": ["Mystisk kraft", "Lärd", "Ordensmagi", "Ritualist"]
+  },
+  {
+    "namn": "Självlärd besvärjare",
+    "beskrivning": "*De sa att jag inte tog krafterna på allvar; jag ska visa dem hur fel de hade.*\n Du är en självlärd mystiker, utkastad ur en tradition, aldrig insläppt eller ointresserad av traditionernas trånga värld. Friheten kommer till ett pris: korruptionen lurar bakom hörnet. Och häxjägare ser dig som lovligt byte. Vare sig du vandrar från by till by eller har gömt dig i stadens myller tjänar du ditt levebröd på att erbjuda dina tjänster som finnare av förlorade ting eller som ockult kunskapare.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Vaksam 13+, Viljestark 11+",
+    "forslag_pa_slakte": ["Ambrier", "bortbyting"],
+    "lampliga_formagor": ["Häxsyn", "Mystisk kraft (två stycken)", "Ritualist"]
+  },
+  {
+    "namn": "Bedragare",
+    "beskrivning": "*Två droppar om dagen och du blir aldrig sjuklig igen!*\n Du har valt den sociala arenan till ditt slagfält. Där är din snabba tunga ditt vassaste vapen och dina förtroendeingivande ögon din bästa sköld. Om de fallerar förlitar du dig på beväpning av lättare sort kombinerat med lömska manövrar.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Kvick 13+, Diskret 11+",
+    "forslag_pa_slakte": ["Människa (vanligen ambrier)", "bortbyting"],
+    "lampliga_formagor": ["Akrobatik", "Fint", "Lönnstöt", "Tvillingattack"]
+  },
+  {
+    "namn": "Häxjägare",
+    "beskrivning": "*Hellre en oskyldig under jord än en styggelse på dess yta.*\n Du har vigt ditt liv åt att bekämpa styggelser, kanske som en följd av att ditt eget liv en gång slagits i spillror av det växande och smittsamma mörkret: en nedbränd gård, din familjs grav, en väns vidriga förvandling – någonting påminner dig för alltid om vad som händer när styggelsens kraft inte knäcks i tid. Du skyr inga medel i kampen; du slåss med stål, eld och kanske även ritualer som du har kommit över från nedkämpade svartkonstnärer. Du inser möjligen att bruket av magi driver dig mot förstyggelsen, men du blundar för detta faktum och strider blint vidare med fanatikerns glöd.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Viljestark 13+, Listig eller Träffsäker 11+",
+    "forslag_pa_slakte": "Människa",
+    "lampliga_formagor": ["Monsterlärd", "Prickskytt", "Ritualist", "Ståndaktig"]
+  },
+  {
+    "namn": "Ligist",
+    "beskrivning": "*Dina pengar eller ditt blod, du väljer.*\n Yndaros östliga kvarter är en vildmark lika farlig som Davokar, och lika lukrativ för de som vet hur att skörda dess frukter. Du har vuxit upp i gränderna och skolats av gäng och ligor i konsten att bärga frukten av andras arbete, och dessutom att göra det utan att stadsvakten kommer på dig. Vissa ligister kommer upp sig i smöret då de tar anställning som fogdens män. Då kan de på baroners och grevars mandat agera råskinn och indrivare utan att störas av stadsvakter.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Kvick 13+, Listig 11+",
+    "forslag_pa_slakte": ["Människa", "rese", "svartalf"],
+    "lampliga_formagor": ["Akrobatik", "Giftbrukare", "Stryparkonst", "Tvillingattack"]
+  },
+  {
+    "namn": "Skattletare",
+    "beskrivning": "*Det där altaret... undrar om man inte kan skjuta det åt sidan.*\n Davokars djup rymmer skatter; att lokalisera, bärga och återföra dem till civilisationen är ditt levebröd. Du drömmer om överväxta ruiner och fantiserar om sjunkna tempel, och i motsats till många andra har du visat dig beredd att satsa ditt liv på att lyckas. För att klara dig har du utvecklat en rad färdigheter och det är få situationer i Davokars dunkel som du inte har en strategi för.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Listig 13+, Kvick 11+",
+    "forslag_pa_slakte": ["Människa", "rese", "svartalf"],
+    "lampliga_formagor": ["Akrobatik", "Alkemi", "Stålkast", "Taktiker"]
+  },
+  {
+    "namn": "Utbygdsjägare",
+    "beskrivning": "*Allt som lever kan spåras. Och fällas.*\n Skogens dunkel eller bergens dalgångar är din hemvist och där jagar du bestar för mat och päls eller beskyddar befolkning och resenärer mot faror. Du har lärt dig att röra dig i vildmarken på ett sätt som gör att fienden inte når dig medan dina pilar ändå träffar sina mål.",
+    "taggar": { "typ": ["Yrke"] },
+    "viktiga_karaktarsdrag": "Vaksam 13+, Diskret 11+",
+    "forslag_pa_slakte": ["Barbarättad människa", "bortbyting"],
+    "lampliga_formagor": ["Akrobatik", "Monsterlärd", "Prickskytt", "Sjätte sinne"]
+  }
+]

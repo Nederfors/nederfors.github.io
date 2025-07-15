@@ -1,0 +1,193 @@
+[
+  {
+    "namn": "Vin (landet)",
+    "beskrivning": "Husets bordsvin, lätt och fruktigt från lokala vingårdar.",
+    "taggar": {
+      "typ": [
+        "Dryck"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 3
+    }
+  },
+  {
+    "namn": "Vin (stad)",
+    "beskrivning": "Förnämare stadsvin, lagrat och serverat i glas från hyllad vinkällare.",
+    "taggar": {
+      "typ": [
+        "Dryck"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Öl (landet)",
+    "beskrivning": "Rustikt bondöl bryggt med korn från närområdet.",
+    "taggar": {
+      "typ": [
+        "Dryck"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Öl (stad)",
+    "beskrivning": "Finstämt stadsöl från bryggeri med flera humlesorter.",
+    "taggar": {
+      "typ": [
+        "Dryck"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
+  },
+
+  {
+    "namn": "Bordsdricka (svag stut)",
+    "beskrivning": "Lättare variant av stut – mild maltig smak till vardagsmat.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+  },
+  {
+    "namn": "Flaska Blot (glödgat vin)",
+    "beskrivning": "Kryddat, värmt rödvin som serveras ångande under kyliga kvällar.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Flaska Ludendrank (glödgat vin)",
+    "beskrivning": "Sötare glödgat vin smaksatt med kanel och honung.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Flaska rödvin",
+    "beskrivning": "En enkel rödvinsbutelj av okänd vingård.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Flaska vitt vin",
+    "beskrivning": "Ljust vin med frisk syra, ursprung ej angivet.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Flaska Söderns sluttning",
+    "beskrivning": "Fylligt vin från Alberetors soliga terrasser – rik fruktighet och lång eftersmak.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 15, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Flaska Vearras röda",
+    "beskrivning": "Basvin från Vearra – rustik smak, passar till kraftigare rätter.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Kanna Vesa",
+    "beskrivning": "Blandning av kärnmjölk och getvassla, friskt och omtyckt av alla klaner när man vant sig.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+  },
+  {
+    "namn": "Stop beckjom",
+    "beskrivning": "Barbarernas mustiga öl med kvalitet från fuljom till klanen Zareks bättre brygd.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+  },
+  {
+    "namn": "Stop stut",
+    "beskrivning": "Den vanligaste öltypen i Ambria – enkel och prisvärd.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 3 }
+  },
+  {
+    "namn": "Stop Adersel (trippeljäst öl)",
+    "beskrivning": "Starkt trippeljäsning ger fyllig maltighet och lång eftersmak.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 8, "örtegar": 0 }
+  },
+  {
+    "namn": "Stop Argona (fin stut)",
+    "beskrivning": "Stut av högre klass bryggd av ätten Argona – klar, rund smak.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Stop Hertigens tröst",
+    "beskrivning": "Enkel stut som värmer gott efter långa resor.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Stop Kuruns ära (trippeljäst)",
+    "beskrivning": "Kraftig trippeljäsning med fyllig karamellton.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Stop Urtal (trippeljäst rödöl)",
+    "beskrivning": "Rödskimrande öl med kraftfull maltprofil och tre jäsningar.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+  },
+  {
+    "namn": "Stop Veloum (barbarmust)",
+    "beskrivning": "Ljusare öl sort från norr om Karvosti – svagare än beckjom men smakrik.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Stop Zarekisk beckjom",
+    "beskrivning": "Beckjom bryggd av klanen Zarek – den mest uppskattade varianten.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  
+  {
+    "namn": "Fruktte",
+    "beskrivning": "Brygd på torkad frukt som ger söt, bärig arom.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Järnekste",
+    "beskrivning": "Piggande te på järneksblad med stram beska.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 8 }
+  },
+  {
+    "namn": "Kryddte",
+    "beskrivning": "Svart blad samsas med kanel och nejlika i värmande kopp.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+  },
+  {
+    "namn": "Rökt te",
+    "beskrivning": "Te vars blad rökts över tallved, ger kraftig smak och doft.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+  },
+  {
+    "namn": "Örtte",
+    "beskrivning": "Mild brygd på ängsörter, lugnande och aromatisk.",
+    "taggar": { "typ": [ "Dryck" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 2 }
+  }
+
+]

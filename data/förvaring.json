@@ -1,0 +1,189 @@
+[
+  {
+    "namn": "Bältesväska",
+    "beskrivning": "Liten läderväska som bärs i bältet för småsaker och mynt.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Glasflaska",
+    "beskrivning": "Tålig flaska av glas för att förvara vätskor och tinkturer.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Kista, liten",
+    "beskrivning": "Liten kista av trä med lås för värdesaker eller dokument.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Kista, stor",
+    "beskrivning": "Rymlig kista av kraftigt trä för förvaring av utrustning och kläder.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Koger",
+    "beskrivning": "Behållare av läder eller trä för pilar eller armborstbultar.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Korg",
+    "beskrivning": "Flätad korg av vide eller halm, används för att bära matvaror eller småting.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Lerkrus",
+    "beskrivning": "Krus av bränd lera, passar för mat, dryck eller örter.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Penningpung",
+    "beskrivning": "Liten pung med snodd, särskilt avsedd för förvaring av mynt.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 3
+    }
+  },
+  {
+    "namn": "Ryggsäck",
+    "beskrivning": "Robust säck med remmar, bekväm att bära på ryggen under längre färder.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Ränsel",
+    "beskrivning": "Mindre väska som bärs över axeln, rymmer mat och småredskap.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Smyckat skrin",
+    "beskrivning": "Vackert dekorerad ask, används för smycken och dyrbarheter. Priset varierar beroende på utsmyckning.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 2,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "maxpris": {
+      "daler": 5,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Säck",
+    "beskrivning": "Tygsäck för spannmål, potatis eller annat större innehåll.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Tunna",
+    "beskrivning": "Större träfat för lagring av vätska eller spannmål.",
+    "taggar": {
+      "typ": [
+        "Förvaring"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  }
+]

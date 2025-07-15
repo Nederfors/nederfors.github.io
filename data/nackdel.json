@@ -1,0 +1,119 @@
+[
+  {
+    "namn": "Nattbajsare",
+    "beskrivning": "Vaknar varje natt för att bajsa, vilket kräver att rollpersonen under 10 minuter varje natt måste lämna lägret eller möta gruppens vrede",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ]
+    }
+  },
+
+  {
+    "namn": "Bestialisk",
+    "beskrivning": "Rollpersonen har ett bestialiskt yttre, i form av ett eller ett par iögonfallande drag – jakaarögon, urornebetar, lindormsfjäll på hals och armar eller något annat som väcker rädsla och avsky. Att dölja dragen för den som rollpersonen talar med kräver ett lyckat [Diskret←Vaksam]. Ett misslyckande ger därefter en andra chans att misslyckas med alla Övertygande som avser hjälp eller beskydd; däremot ger det bestialiska yttre en andra chans att lyckas med Övertygande i syfte att hota och skrämma. Personer som rollpersonen hotar, framgångsrikt eller ej, kommer att rapportera rollpersonen som en styggelse till stadsvakt eller motsvarande så snart de får chans därtill.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Blodtörstig",
+    "beskrivning": "Rollpersonen har en stark blodtörst som väcks lätt och är svår att stilla. Blodtörsten väcks om rollpersonen tar skada och leder till att rollpersonen inte skonar några fiender – inte ens de som ger upp. För att kunna skona en fiende krävs en nästan övermäktig ansträngning; det kräver att spelaren offrar en Erfarenhet och lyckas med ett Viljestark.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Drogberoende",
+    "beskrivning": "Rollpersonen har utvecklat ett drogberoende och måste ta en dos av sin drog varje dag eller få abstinenssymtom. Drogen kostar en skilling per dag och kan vara vin, drömsnus, tokrot eller något annat. En alkemist kan tillverka drogen till sig själv eller någon denne bryr sig om för halva priset. Abstinens ger −1 på alla slag under dagen och blir värre för varje dag upp till −5 efter fem dagar. Varje dag av abstinens måste rollpersonen dessutom klara ett [Viljestark –abstinensmodifikationen], om slaget misslyckas överger rollpersonen andra pågående projekt och börja jaga sin dagsdos istället.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Efterlyst",
+    "beskrivning": "Rollpersonen är efterlyst för ett grovt brott, falskt eller sant anklagad. Effekten är att rollpersonen riskerar att bli igenkänd och jagad. En gång per äventyr måste rollpersonen klara ett slag mot Diskret för att inte bli igenkänd.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Fallandesjuk",
+    "beskrivning": "Rollpersonen är drabbad av ett mycket känsligt sinnelag vilket innebär att denne i upphetsat tillstånd kan utsättas för kramper i hela kroppen. Om rollpersonen råkar slå 20 på ett framgångsslag inträffar detta, varpå rollpersonen är utslagen under 1t6 rundor och trött resten av scenen med −1 på alla framgångsslag.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Hederskod",
+    "beskrivning": "Rollpersonen har lagt sig till med en strikt uppförandekod som gäller i alla situationer men som särskilt påverkar hur denne uppför sig i strid. Effekten av detta blir att rollpersonen visserligen kan undvika strid men att denne aldrig flyr från en strid som startat. Fienderna måste besegras eller rollpersonen falla i försöken att nedlägga dem.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Impulsiv",
+    "beskrivning": "Rollpersonen handlar först och tänker sedan. Detta medför att så snart spelaren öppnar munnen och säger att rollperson ska göra något så gör denne det – och spelaren får inte ändra sig. Enda sättet att lägga band på rollpersonen är att offra en Erfarenhet eller acceptera en poäng permanent Korruption.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Mardrömmar",
+    "beskrivning": "Rollpersonen plågas av mardrömmar var och varannan natt, antingen som en följd av saker rollpersonen varit med om eller gjort, eller mer diffust, kanske som ett varsel eller som en följd av en släktförbannelse. Varje natt måste rollpersonen klara ett Viljestark för att få ut sin natts vila. Om slaget misslyckats så har rollpersonen inte kunnat sova ordentligt och får -1 på alla slag dagen efter.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Mystiskt tecken",
+    "beskrivning": "Rollpersonen har ett mystiskt tecken någonstans på kroppen, kanske ett födelsemärke eller ett tecken som uppkommit senare i livet; oavsett löper rollpersonen risk att det ska tolkas som ett styggelsemärke. I situationer där det är befogat måste rollpersonen klara ett slag mot [Diskret←Vaksam] eller ådra sig den hötjugeviftande pöbelns eller någon häxjägares ohälsosamma intresse.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+
+  {
+    "namn": "Mörk hemlighet",
+    "beskrivning": "Rollpersonen har en mörk hemlighet av något slag, som om den kom ut allvarligt skulle hota rollpersonens anseende eller liv. Kanske var rollpersonen medlem i en korrumperad sekt eller så har rollpersonen mördat någon eller skyddat en mördare och aldrig åkt fast för det. Om hemligheten kommer ut får rollpersonen istället nackdelen Paria eller Efterlyst, beroende på hemlighetens natur. Det finns en risk per äventyr att hemligheten börjar uppdagas; rollpersonen måste slå ett slag mot Diskret varje äventyr, ett slag med en andra chans att lyckas. Misslyckas slaget får någon en ledtråd som leder mot ett avslöjande. Kanske dyker det upp fysiska indicier (exempelvis brev), ett vittne som sett något eller så pratar rollpersonen i sömnen. Det kan vara en spelledarperson eller en rollperson som anar oråd, och det är upp till rollpersonen att agera för att tysta eller mörka det som skett. Notera att en spelledarperson kanske hellre utpressar än avslöjar rollpersonen för rättvisan.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Protegé",
+    "beskrivning": "Rollpersonen dras med en protegé som den måste beskydda. Protegén kan vara ett älskat barn, en åldrad och kär mentor, en själsfrände eller bara en dryg släkting vars väl och ve hänger samman med ett framtida arv för rollpersonen. Protegén hanteras som en spelledarperson och har en talang för att hamna i trubbel. Den saknar värden utöver det som ett svagt motstånd har och får inte heller erfarenhet för äventyr – den är lika mycket en börda över tid som den är från start. Om protegén dör eller försvinner drabbas rollpersonen av andra problem; sorg och ånger i form av nackdelar av lämplig sort. Om rollpersonen skyddade sin protegé av kärlek kan nackdelar som Drogberoende eller Mardrömmar passa, om beskyddet mer handlade om egna fördelar kanske det ger Efterlyst eller Ärkefiende istället – protegéns släktingar glömmer inte rollpersonens svek i första taget.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Sjuklig",
+    "beskrivning": "Rollpersonen har en kronisk sjukdom som gör honom eller henne svag. Vardagen fungerar bra men vid skada eller trauma löper rollpersonen större risk att stryka med. Det betyder att Dödsslagen slås med två tärningar och det sämsta, mest missgynnande resultatet används.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Sävlig",
+    "beskrivning": "Varelsen förflyttar sig osedvanligt långsamt. I sammanhang där en mer exakt angivelse är relevant förflyttar sig varelsen 7 meter per handling. Och i anslutning till regeln om Flykt & jakt (sidan 102) ger särdraget −3 på Kvick.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Åldrad",
+    "beskrivning": "Rollpersonen är till åren kommen och har både bra och dåliga dagar. Om det första framgångsslaget en dag lyckas är det en bra dag och allt fungerar som det ska; om första slaget för dagen misslyckas är det en dålig dag – gikten sätter in, kärlkrampen nyper om hjärteroten eller öronen susar. Oavsett uttryck har rollpersonen −1 på alla slag resten av dagen.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  },
+  {
+    "namn": "Ärkefiende",
+    "beskrivning": "Rollpersonen har genom eget agerande eller sitt namn ådragit sig en ärkefiende. Ärkefienden har vigt sitt liv åt att förstöra för – och på sikt förgöra – rollpersonen. Minst en gång per äventyr kommer ärkefiendens påverkan att synas eller anas. Ärkefienden agerar i första hand genom andra; lejer råskinn eller sprider lögner om rollpersonen i hopp om att andra ska göra livet svårt för denne. Exakt vem ärkefienden är, varför denne hatar rollpersonen och vilka resurser ärkefienden förfogar över får spelare och spelledare komma överens om, men det ska vara någon som inte enkelt kan undvikas eller stoppas från vidare framfart.",
+    "taggar": {
+      "typ": ["Nackdel"]
+    }
+  }
+
+]

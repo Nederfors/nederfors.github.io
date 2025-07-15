@@ -1,0 +1,833 @@
+[
+  {
+    "namn": "Bandage",
+    "beskrivning": "Lindor för att stoppa blödningar och skydda sår.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Bläck och fjäder",
+    "beskrivning": "Skrivset för att anteckna eller signera viktiga dokument.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Dryckeshorn",
+    "beskrivning": "Traditionellt horn att dricka ur vid fest eller resa.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Dyrkar",
+    "beskrivning": "En uppsättning verktyg för att öppna lås diskret.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Fackla",
+    "beskrivning": "Handhållen ljuskälla för att lysa upp mörka platser.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Fickspegel",
+    "beskrivning": "Liten spegel för personlig vård eller signalering.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 7,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Filt",
+    "beskrivning": "Tjock filt som skyddar mot kyla under nattläger.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Fiskelina och krok",
+    "beskrivning": "Grundläggande utrustning för att fånga fisk i vildmarken.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 3
+    }
+  },
+  {
+    "namn": "Fiskenät",
+    "beskrivning": "Ett nät för att fånga större mängder fisk i sjö eller flod.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+
+  {
+    "namn": "Flinta och stål",
+    "beskrivning": "Verktyg för att snabbt tända eld vid lägerplats.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Kokkärl",
+    "beskrivning": "Litet kärl av metall för att laga mat över eld.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Rep",
+    "beskrivning": "Slitstarkt rep användbart för många ändamål.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Sovfäll",
+    "beskrivning": "Mjuk fäll för att sova bekvämt på marken.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Tändved",
+    "beskrivning": "Liten bunt torr ved för att enkelt starta en eld.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Vattenskinn",
+    "beskrivning": "Vattentätt skinn att bära dryck i under färd.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Kikare",
+    "beskrivning": "Optiskt instrument för att se långt bort på landskapet.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Klätterutrustning",
+    "beskrivning": "Säker utrustning för att klättra uppför branta ytor.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Kritor",
+    "beskrivning": "Färgade kritor för att markera eller rita på olika ytor.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Lampolja",
+    "beskrivning": "Bränsle till lykta eller oljelampa vid mörker.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Lykta",
+    "beskrivning": "Skyddad ljuskälla för att lysa upp i mörka miljöer.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  },
+  {
+    "namn": "Mässingsklocka",
+    "beskrivning": "Liten klocka av mässing som ger ett starkt klang.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 6,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Nål och tråd",
+    "beskrivning": "Syredskap för att laga kläder och utrustning.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Papper",
+    "beskrivning": "En bunt tomma ark för skrivande eller teckning.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 3
+    }
+  },
+  {
+    "namn": "Pergament",
+    "beskrivning": "Tunt skinn för viktiga dokument och kartor.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Repstege",
+    "beskrivning": "Flexibel stege som kan hängas över kanter eller murar.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Rävsax",
+    "beskrivning": "Fälla avsedd för att fånga mindre djur.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Sejdel",
+    "beskrivning": "Robust dryckeskärl för öl eller mjöd.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Slipsten",
+    "beskrivning": "Slitstark sten för att vässa knivar och verktyg.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  },
+  {
+    "namn": "Snaror",
+    "beskrivning": "Enkla fällor för att fånga smådjur i skogen.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Snöskor",
+    "beskrivning": "Stora skor som gör det lättare att ta sig fram i snö.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Stege",
+    "beskrivning": "Enkel trästege för att nå höga platser.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 7
+    }
+  },
+  {
+    "namn": "Timglas",
+    "beskrivning": "Glasbehållare med sand som mäter tid.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 4,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+
+  {
+    "namn": "Tvål",
+    "beskrivning": "Fast tvål för hygien och rengöring.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Tält",
+    "beskrivning": "Enkelt tygskydd att sova under utomhus.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Vapenvårdsset",
+    "beskrivning": "Kit med verktyg och olja för vapenunderhåll.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Vaxljus",
+    "beskrivning": "Ljus av bivax som brinner länge och stadigt.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  },
+  {
+    "namn": "Vissla",
+    "beskrivning": "Liten visselpipa för signalering och larm.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Änterhake",
+    "beskrivning": "Krok med rep för att ta sig uppför murar och hinder.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+  "namn": "Gruvhacka",
+  "beskrivning": "Robust hacka för att spräcka berg och bryta malm i gruvan.",
+  "taggar": {
+    "typ": [
+      "Diverse"
+    ]
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 5,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Hantverksverktyg",
+  "beskrivning": "Allsidigt set med verktyg för snickare, smed eller skomakare.",
+  "taggar": {
+    "typ": [
+      "Diverse"
+    ]
+  },
+  "grundpris": {
+    "daler": 1,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Hammare",
+  "beskrivning": "Tung hammare av stål, lämplig för spikning och bearbetning av metall.",
+  "taggar": {
+    "typ": [
+      "Diverse"
+    ]
+  },
+  "grundpris": {
+    "daler": 1,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Lie",
+  "beskrivning": "Böjd skärbräda för skörd av sädesslag och gräs.",
+  "taggar": {
+    "typ": [
+      "Diverse"
+    ]
+  },
+  "grundpris": {
+    "daler": 1,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Slägga",
+  "beskrivning": "Massiv slägga som levererar kraftiga slag vid byggnads- och gruvarbete.",
+  "taggar": {
+    "typ": [
+      "Diverse"
+    ]
+  },
+  "grundpris": {
+    "daler": 1,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Spade",
+  "beskrivning": "Stark spade för grävning av jord, sand eller grus.",
+  "taggar": {
+    "typ": [
+      "Diverse"
+    ]
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 3,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Kedja",
+  "beskrivning": "Metallkedja för fästning, lyft eller säkring av tunga föremål.",
+  "taggar": {
+    "typ": [
+      "Diverse"
+    ]
+  },
+  "grundpris": {
+    "daler": 1,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+  {
+    "namn": "Bomullstyg, en rulle",
+    "beskrivning": "Mjuk och slitstark bomullsväv i hela rullar – uppskattad för sömnad av vardagskläder och sänglinne.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Guld, en tacka",
+    "beskrivning": "En tung tacka av rent guld, värdefull för såväl handel som hantverk.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 500, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Gurkmeja, en ask",
+    "beskrivning": "Starkt gulfärgat pulver, används som krydda och färgämne i matlagning och textiler.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+  },
+  {
+    "namn": "Honung, en kruka",
+    "beskrivning": "Söt och gyllene honung i keramikkruka – används både i matlagning och som naturläkemedel.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Ingefära, en ask",
+    "beskrivning": "Stark och värmande krydda, användbar både i mat och som medicinalväxt.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Järn, en tacka",
+    "beskrivning": "Rektangulär tacka av järn – grund för smide och metallslöjd.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Kanel, en ask",
+    "beskrivning": "Sötaktigt, aromatiskt barkpulver som ger värme åt såväl drycker som bakverk.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Kardemumma, en ask",
+    "beskrivning": "Fröna i denna ask ger en intensiv, blommig kryddsmak till mat, kakor och drycker.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Koppar, en tacka",
+    "beskrivning": "En glänsande tacka av koppar – använd för mynt, smycken och hushållsvara.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Kryddnejlika, en ask",
+    "beskrivning": "Torkade blomknoppar med stark, distinkt smak och arom, används till mat och dryck.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 7 }
+  },
+  {
+    "namn": "Kryddor, en ask",
+    "beskrivning": "En blandning av torkade örter och kryddor för att ge smak åt varje maträtt.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 3 }
+  },
+  {
+    "namn": "Kummin, en ask",
+    "beskrivning": "Aromatiska frön med lätt pepprig smak, vanligt i bröd och inläggningar.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Långpeppar, en ask",
+    "beskrivning": "En mer sällsynt variant av peppar med intensiv hetta och sötma.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 12 }
+  },
+  {
+    "namn": "Mynta, en ask",
+    "beskrivning": "Friska blad med kylande smak, ofta använda i te, desserter och läkekonst.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Olja (vegetabilisk), ett lerkrus",
+    "beskrivning": "Krus med ljus vegetabilisk olja för matlagning, lampor och hudvård.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Saffran, en ask",
+    "beskrivning": "Dyrbara röda pistiller, mycket lite räcker långt och ger både färg och arom.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 50, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Salt, en säck",
+    "beskrivning": "Säck fylld med vitt salt – avgörande för konservering, bakning och smak.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Silke, en rulle",
+    "beskrivning": "Glänsande silkesväv, eftertraktad bland både adelsmän och köpmän.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 50, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Silver, en tacka",
+    "beskrivning": "En tung tacka av renaste silver – grund för mynt, smycken och lyxföremål.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 50, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Socker, en säck",
+    "beskrivning": "Vit råsocker i grova kristaller, använd i bakverk, dryck och konservering.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Spannmål, en säck",
+    "beskrivning": "Säck fylld med korn, råg eller vete för gröt, bröd och öl.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Tjära, en tunna",
+    "beskrivning": "Klibbig svart tjära, nödvändig för båtreparationer och byggnadsvård.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Vinäger, ett lerkrus",
+    "beskrivning": "Skarpt och syrligt – används till inläggning, matlagning och rengöring.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Frukttobak, en ask",
+    "beskrivning": "Aromatisk tobak med smak av bär och frukter, mild och söt.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+  },
+  {
+    "namn": "Luktsnus, en ask",
+    "beskrivning": "Finmalt, doftande snus som snusas genom näsan, uppskattat bland överklassen.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Långbottenblad, en ask",
+    "beskrivning": "Starka, solmogna tobaksblad med lång eftersmak – populära bland sjöfolk.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 8, "örtegar": 0 }
+  },
+  {
+    "namn": "Tuggtobak, en ask",
+    "beskrivning": "Kraftigt tuggbar tobak – för sjömän, gruvarbetare och andra som behöver något att bita i.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 6 }
+  },
+  {
+    "namn": "Örttobak, en ask",
+    "beskrivning": "Mild tobak blandad med torkade örter för mjukare smak.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Kritpipa",
+    "beskrivning": "Enkel pipa av vit krita, bräcklig men billig och lätt att byta ut.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+  },
+  {
+    "namn": "Långskaftat sjöskumspipa",
+    "beskrivning": "Vackert snidad pipa med lång skaft av äkta sjöskum, uppskattad för sval rök och fina motiv.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Rotvedspipa",
+    "beskrivning": "Robust pipa skuren ur hård rotved, håller värme länge och är slitstark.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Rökrör",
+    "beskrivning": "Rakt rör i lera eller metall, ger rök utan filtrering och är enkel att bära.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Snusdosa",
+    "beskrivning": "Liten, tät dosa av trä eller metall för att hålla snuset färskt och till hands.",
+    "taggar": { "typ": [ "Diverse" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  }
+
+]

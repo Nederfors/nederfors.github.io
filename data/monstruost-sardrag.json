@@ -1,0 +1,21 @@
+[
+  {
+    "id": 43,
+    "namn": "Skräckslå",
+    "beskrivning": "Varelsen kan genom sin uppenbarelse injaga skräck i sina offer och kräver särdraget Andeform.",
+    "taggar": {
+      "typ": [
+        "Monstruöst särdrag",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Andebesvärjare"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Ett offer måste slå [Viljestark←Viljestark] eller backa undan under sina handlingar tills det lyckas med ett nytt slag.",
+      "Gesäll": "Handling: Aktiv. Alla inom hörhåll påverkas som på novisnivån.",
+      "Mästare": "Handling: Fri. Som gesäll men offren kan inte ens försvara sig innan de lyckas med ett slag per runda."
+    }
+  }
+]

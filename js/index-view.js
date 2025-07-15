@@ -1,0 +1,296 @@
+(function(window){
+function initIndex() {
+  const F = { search:'', typ:[], ark:[], test:[] };
+  let union = storeHelper.getFilterUnion(store);
+  dom.filterUnion.classList.toggle('active', union);
+
+  /* fyll dropdowns */
+  (()=>{
+    const set = { typ:new Set(), ark:new Set(), test:new Set() };
+    DB.forEach(p=>{
+      (p.taggar.typ||[]).forEach(v=>set.typ.add(v));
+      explodeTags(p.taggar.ark_trad).forEach(v=>set.ark.add(v));
+      (p.taggar.test||[]).forEach(v=>set.test.add(v));
+    });
+    const fill=(sel,s,l)=>sel.innerHTML =
+      `<option value="">${l} (alla)</option>` + [...s].sort().map(v=>`<option>${v}</option>`).join('');
+    fill(dom.typSel , set.typ ,'Typ');
+    fill(dom.arkSel , set.ark ,'Arketyp');
+    fill(dom.tstSel , set.test,'Test');
+  })();
+
+  /* render helpers */
+  const activeTags =()=>{
+    dom.active.innerHTML='';
+    const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
+    if(F.search) push(`<span class="tag removable" data-type="search">${F.search} ✕</span>`);
+    F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
+    F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
+    F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
+  };
+
+  const filtered = () => DB.filter(p=>{
+    const q = F.search.toLowerCase();
+    const txt = p.namn.toLowerCase().includes(q) || (p.beskrivning||'').toLowerCase().includes(q);
+    const tags = p.taggar || {};
+    const selTags = [...F.typ, ...F.ark, ...F.test];
+    const itmTags = [
+      ...(tags.typ      ?? []),
+      ...explodeTags(tags.ark_trad),
+      ...(tags.test     ?? [])
+    ];
+    const tagMatch = !selTags.length ||
+      (union ? selTags.some(t => itmTags.includes(t))
+             : selTags.every(t => itmTags.includes(t)));
+
+    return txt && tagMatch;
+  }).sort(sortByType);
+
+  const renderList = arr=>{
+    dom.lista.innerHTML = arr.length ? '' : '<li class="card">Inga träffar.</li>';
+    const charList = storeHelper.getCurrentList(store);
+    arr.forEach(p=>{
+      const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
+      const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
+      const curLvl = charList.find(c=>c.namn===p.namn)?.nivå || 'Novis';
+      const lvlSel = p.nivåer ? `<select class="level" data-name="${p.namn}">
+        ${LVL.filter(l=>p.nivåer[l]).map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
+        </select>` : '';
+      let desc = '';
+      const base = formatText(p.beskrivning || '');
+      if (isYrke(p) || isElityrke(p) || isRas(p)) {
+        desc = base;
+      } else if (p.nivåer) {
+        const levels = Object.entries(p.nivåer)
+          .map(([l,t]) => `<strong>${l}</strong><br>${formatText(t)}`)
+          .join('<br>');
+        desc = base ? `${base}<br>${levels}` : levels;
+      } else {
+        desc = base;
+      }
+      if (isInv(p) && p.grundpris) {
+        desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
+      }
+      let info = '';
+      if (isRas(p)) {
+        info = `<button class="char-btn" data-yrke="${p.namn}">Info</button>`;
+      } else if (isYrke(p) || isElityrke(p)) {
+        info = `<button class="char-btn" data-yrke="${p.namn}">Arketyp</button>`;
+      }
+      const btn  = inChar
+        ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+        : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+      const eliteBtn = isElityrke(p)
+        ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
+        : '';
+      const li=document.createElement('li'); li.className='card';
+      li.innerHTML = `
+        <div class="card-title">${p.namn}</div>
+        ${(p.taggar.typ||[])
+          .concat(explodeTags(p.taggar.ark_trad), p.taggar.test||[])
+          .map(t=>`<span class="tag">${t}</span>`).join(' ')}
+        ${lvlSel}
+        <div class="card-desc">${desc}</div>
+        ${info}${btn}${eliteBtn}`;
+      dom.lista.appendChild(li);
+    });
+  };
+
+  /* första render */
+  renderList(filtered()); activeTags(); updateXP();
+
+  /* expose update function for party toggles */
+  window.indexViewUpdate = () => renderList(filtered());
+
+  /* -------- events -------- */
+  dom.sIn.addEventListener('input',()=>{
+    F.search = dom.sIn.value; activeTags(); renderList(filtered());
+  });
+  [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
+    dom[sel].addEventListener('change',()=>{
+      const v = dom[sel].value; if(v && !F[key].includes(v)) F[key].push(v);
+      dom[sel].value=''; activeTags(); renderList(filtered());
+    });
+  });
+  dom.active.addEventListener('click',e=>{
+    const t=e.target.closest('.tag.removable'); if(!t) return;
+    const section=t.dataset.type, val=t.dataset.val;
+    if(section==='search'){ F.search=''; dom.sIn.value=''; }
+    else F[section] = F[section].filter(x=>x!==val);
+    activeTags(); renderList(filtered());
+  });
+  dom.clrBtn.addEventListener('click',()=>{
+    F.search=''; F.typ=[];F.ark=[];F.test=[];
+    dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
+    activeTags(); renderList(filtered());
+  });
+  dom.filterUnion.addEventListener('click', () => {
+    union = dom.filterUnion.classList.toggle('active');
+    storeHelper.setFilterUnion(store, union);
+    renderList(filtered());
+  });
+
+  /* lista-knappar */
+  dom.lista.addEventListener('click',e=>{
+    const info=e.target.closest('button[data-yrke]');
+    if(info){
+      const name=info.dataset.yrke;
+      const p=DB.find(x=>x.namn===name);
+      if(p) yrkePanel.open(p.namn,yrkeInfoHtml(p));
+      return;
+    }
+    const btn=e.target.closest('button[data-act]');
+    if (!btn) return;
+    if (!store.current) {
+      alert('Ingen rollperson vald.');
+      return;
+    }
+    const name = btn.dataset.name;
+    const p  = DB.find(x=>x.namn===name);
+    const lvlSel = btn.closest('li').querySelector('select.level');
+    const lvl = lvlSel ? lvlSel.value : null;
+
+
+    /* Lägg till kvalitet direkt */
+    if (isQual(p)) {
+      const inv = storeHelper.getInventory(store);
+      if (!inv.length) return alert('Ingen utrustning i inventariet.');
+      const elig = inv.filter(it => {
+        const tag = (invUtil.getEntry(it.name)?.taggar?.typ) || [];
+        return !(
+          ['Diverse','Elixir','Mat','Dryck'].some(t => tag.includes(t)) ||
+          (tag.includes('L\u00e4gre Artefakt') && !['Vapen','Rustning'].some(t => tag.includes(t)))
+        );
+      });
+ if (!elig.length) return alert('Ingen lämplig utrustning att förbättra.');
+ invUtil.openQualPopup(elig, iIdx => {
+        inv[iIdx].kvaliteter = inv[iIdx].kvaliteter||[];
+        const qn = p.namn;
+        if (!inv[iIdx].kvaliteter.includes(qn)) inv[iIdx].kvaliteter.push(qn);
+        invUtil.saveInventory(inv); invUtil.renderInventory();
+      });
+      return;
+    }
+
+    if (btn.dataset.act==='add') {
+      if (isInv(p)) {
+        const inv = storeHelper.getInventory(store);
+        const isElixir = (p.taggar.typ || []).includes('Elixir');
+        const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
+        if (indiv) {
+          const obj = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+          if (isElixir && lvl) obj.level = lvl;
+          inv.push(obj);
+        } else {
+          const match = isElixir
+            ? inv.find(x => x.name===p.namn && (lvl ? x.level === lvl : x.level == null))
+            : inv.find(x => x.name===p.namn);
+          if (match) match.qty++;
+          else {
+            const obj = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+            if (isElixir && lvl) obj.level = lvl;
+            inv.push(obj);
+          }
+        }
+        invUtil.saveInventory(inv); invUtil.renderInventory();
+      } else {
+        const list = storeHelper.getCurrentList(store);
+        if (isRas(p) && list.some(isRas)) {
+          alert('Du kan bara välja en ras.');
+          return;
+        }
+        if (isYrke(p) && list.some(isYrke)) {
+          if (!confirm('Du kan bara välja ett yrke. Lägga till ändå?')) return;
+        }
+        if (isElityrke(p) && list.some(isElityrke)) {
+          if (!confirm('Du kan bara välja ett elityrke. Lägga till ändå?')) return;
+        }
+        if (isElityrke(p)) {
+          const res = eliteReq.check(p, list);
+          if (!res.ok) {
+            const msg = 'Krav ej uppfyllda:\n' +
+              (res.missing.length ? 'Saknar: ' + res.missing.join(', ') + '\n' : '') +
+              (res.master ? '' : 'Ingen av kraven på Mästare-nivå.\n') +
+              'Lägga till ändå?';
+            if (!confirm(msg)) return;
+          }
+        }
+        if (isEliteSkill(p)) {
+          const allowed = explodeTags(p.taggar.ark_trad).some(reqYrke =>
+            list.some(item => isElityrke(item) && item.namn === reqYrke)
+          );
+          if (!allowed) {
+            const msg =
+              'Förmågan är låst till elityrket ' +
+              explodeTags(p.taggar.ark_trad).join(', ') +
+              '.\nLägga till ändå?';
+            if (!confirm(msg)) return;
+          }
+        }
+        if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
+          const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
+          exceptionSkill.pickTrait(used, trait => {
+            if(!trait) return;
+            const existing=list.find(x=>x.namn===p.namn && x.trait===trait);
+            if(existing){
+              existing.nivå=lvl;
+            }else{
+              list.push({ ...p, nivå:lvl, trait });
+            }
+            storeHelper.setCurrentList(store,list); updateXP();
+            renderList(filtered());
+            renderTraits();
+          });
+          return;
+        }
+        list.push({ ...p, nivå: lvl });
+        storeHelper.setCurrentList(store, list); updateXP();
+      }
+    } else { /* rem */
+      if (isInv(p)) {
+        const inv = storeHelper.getInventory(store);
+        const isElixir = (p.taggar.typ || []).includes('Elixir');
+        const idxInv   = inv.findIndex(x => x.name===p.namn && (isElixir ? (lvl ? x.level === lvl : x.level == null) : true));
+        if (idxInv >= 0) {
+          inv[idxInv].qty--; if(inv[idxInv].qty < 1) inv.splice(idxInv,1);
+        }
+        invUtil.saveInventory(inv); invUtil.renderInventory();
+      } else {
+        const tr = btn.closest('li').dataset.trait || null;
+        const before = storeHelper.getCurrentList(store);
+        const list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
+        if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
+          if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
+            return;
+        }
+        storeHelper.setCurrentList(store,list); updateXP();
+      }
+    }
+    renderList(filtered());
+    renderTraits();
+  });
+
+  /* level-byte i listan */
+  dom.lista.addEventListener('change',e=>{
+    if(!e.target.matches('select.level')) return;
+    const name = e.target.dataset.name;
+    const tr = e.target.closest('li').dataset.trait || null;
+    const list = storeHelper.getCurrentList(store);
+    const ent  = list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
+    if (ent){
+      const before = list.map(x => ({...x}));
+      const old = ent.nivå;
+      ent.nivå = e.target.value;
+      if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
+        alert('Förmågan krävs för ett valt elityrke och kan inte ändras.');
+        ent.nivå = old;
+        e.target.value = old;
+        return;
+      }
+      storeHelper.setCurrentList(store,list); updateXP();
+    }
+  });
+}
+
+  window.initIndex = initIndex;
+})(window);

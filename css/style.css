@@ -1,0 +1,529 @@
+/* ===========================================================
+   css/style.css
+   Gemensam styling för index.html & character.html
+   Optimerad 2025-06-19
+   =========================================================== */
+
+/* ---------- Färgpalett ---------- */
+:root {
+  --bg:          #121416;
+  --panel:       #1a1d22;
+  --border:      #2d3138;
+  --card:        #1f2228;
+  --card-border: #353a42;
+  --txt:         #f0f0f0;
+  --subtxt:      #a0a0a0;
+  --accent:      #3d7cff;
+  --mystic:      #a64cff;
+  --neutral:     #5e9cff;
+  --negative:    #8b4513;
+  --danger:      #e74c3c;
+  --shadow:      0 4px 16px #0007;
+}
+
+/* ---------- Reset & grund ---------- */
+* { box-sizing: border-box; }
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--txt);
+  font-family: system-ui, sans-serif;
+  line-height: 1.5;
+}
+body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 90px;         /* plats för toolbar */
+}
+
+/* ---------- Generella komponenter ---------- */
+h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
+
+.app-title {
+  margin: 1.2rem 0 .6rem;
+  font-size: 2.4rem;
+  letter-spacing: .03em;
+  text-align: center;
+}
+
+.tags        { display: flex; flex-wrap: wrap; gap: .4rem; }
+.tag         { background: var(--border); color: var(--subtxt);
+               padding: .15rem .7rem; border-radius: .55rem;
+               font-size: .85rem; white-space: nowrap; }
+.tag.removable { cursor: pointer; }
+.tag.free      { background: var(--accent); color:#fff; }
+.tag.mystic    { border: 1.5px solid var(--mystic); }
+.tag.neutral   { border: 1.5px solid var(--neutral); }
+.tag.negative  { border: 1.5px solid var(--negative); }
+
+.char-btn,
+.toolbar button,
+.toolbar a {
+  padding: .55rem 1.1rem;
+  border: none;
+  border-radius: .6rem;
+  background: var(--accent);
+  color: #fff;
+  cursor: pointer;
+  text-decoration: none;
+  transition: transform .1s ease, opacity .1s ease;
+}
+.char-btn.danger { background: var(--danger); }
+.char-btn.icon   { font-size: 1.1rem; }
+.char-btn:hover  { opacity: .85; }
+.char-btn:active { transform: scale(.95); opacity: .7; }
+
+/* Rad för knappar i filterpanelen */
+.char-btn-row {
+  display: flex;
+  gap: .4rem;
+  margin-bottom: .6rem;
+}
+
+/* Grupp för partytillhörighet */
+.party-toggles {
+  display: flex;
+  gap: .6rem;
+  margin-top: .6rem;
+}
+.party-toggle {
+  padding: .45rem .6rem;
+  border-radius: .6rem;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform .1s ease, opacity .1s ease;
+}
+.party-toggle:hover  { opacity: .85; }
+.party-toggle:active { transform: scale(.95); opacity: .7; }
+.party-toggle.active {
+  background: var(--danger);
+}
+
+/* ---------- Panel (vit/mörk låda) ---------- */
+.panel {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  padding: 2rem 1.6rem;
+  width: 100%;
+  max-width: 520px;
+  box-shadow: var(--shadow);
+}
+
+/* ---------- Input/Select ---------- */
+input, select {
+  width: 100%;
+  padding: .65rem 1rem;
+  border-radius: .6rem;
+  border: 1.5px solid var(--border);
+  background: var(--bg);
+  color: var(--txt);
+  font-size: 1rem;
+}
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+
+/* ---------- Kortlista & kort ---------- */
+.card-list {
+  list-style: none;
+  padding: 0;
+  margin-top: 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.card {
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1rem 1.3rem;
+  display: flex;
+  flex-direction: column;
+  gap: .45rem;
+}
+.card-title { font-size: 1.34rem; font-weight: 600; }
+.card-desc  { font-size: 1.15rem; }
+
+.card button {
+  align-self: flex-end;
+  background: var(--accent);
+  border: none;
+  border-radius: .6rem;
+  color: #fff;
+  padding: .45rem 1.4rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform .1s ease, opacity .1s ease;
+}
+.card button:hover  { opacity: .85; }
+.card button:active { transform: scale(.95); opacity: .7; }
+.card button.danger { background: var(--danger); }
+
+.inv-controls {
+  align-self: flex-end;
+  display: flex;
+  gap: .4rem;
+}
+.inv-controls button { align-self: initial; }
+
+/* ---------- Fast verktygsrad ---------- */
+.toolbar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  z-index: 900;
+  background: var(--panel);
+  border-top: 1.5px solid var(--border);
+  padding: .6rem .8rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+.toolbar select,
+.toolbar input {
+  flex: 1 1 110px;
+  min-width: 90px;
+}
+
+/* Badge för inventarie­knapp */
+#invBadge { background: var(--danger); border-radius: 50%;
+            padding: 0 .45rem; font-size: .75rem; margin-left: .25rem; }
+
+/* XP-räknare i verktygsrad */
+.toolbar .exp-counter {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+  background: var(--border);
+  color: var(--txt);
+  padding: .3rem .7rem;
+  border-radius: .55rem;
+  font-weight: 600;
+  font-size: .9rem;
+  white-space: nowrap;
+}
+.toolbar .exp-counter span {
+  color: var(--accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.exp-counter { font-weight: 500; }
+
+
+/* Specifika paneler använder samma klass plus egna id:n */
+#invPanel    { max-width: 420px; }
+#filterPanel { max-width: 360px; }
+#traitsPanel { max-width: 360px; }
+
+.inv-header { display: flex; justify-content: space-between; align-items: center; }
+
+/* ---------- Pengahantering ---------- */
+.money-form {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  margin-top: 1rem;
+}
+.money-form .money-row {
+  display: flex;
+  gap: .4rem;
+}
+.money-form input {
+  flex: 1;
+  min-width: 6rem;
+}
+
+/* ---------- Select nivå ---------- */
+select.level {
+  align-self: flex-start;
+  margin-top: .2rem;
+  padding: .3rem .6rem;
+  border-radius: .5rem;
+  border: 1px solid var(--border);
+  background: var(--bg);
+  color: var(--txt);
+  font-size: .9rem;
+}
+
+/* ---------- Karaktärsdrag ---------- */
+.traits {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin: 1rem 0;
+}
+.trait {
+  background: var(--card);
+  border: 1.5px solid var(--card-border);
+  border-radius: .9rem;
+  padding: .7rem .6rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: .45rem;
+  text-align: center;
+}
+.trait-controls {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.trait-extra {
+  font-size: .78rem;
+  color: var(--subtxt);
+}
+.trait-btn {
+  background: var(--border);
+  border: 0;
+  border-radius: .45rem;
+  padding: .15rem .6rem;
+  font-size: .82rem;
+  cursor: pointer;
+  line-height: 1;
+  transition: opacity .1s ease, transform .1s ease;
+}
+.trait-btn:hover  { opacity: .85; }
+.trait-btn:active { transform: scale(.94); opacity: .7; }
+.trait-value { font-weight: 700; font-size: 1.25rem; }
+.trait-name  { font-size: .82rem; color: var(--subtxt); }
+.trait-count { font-size: .75rem; color: var(--subtxt); }
+
+/* ---------- Småskärmar ---------- */
+@media (max-width: 420px) {
+  .app-title { font-size: 2rem; }
+  .panel     { padding: 1.6rem 1.2rem; }
+  .toolbar   { padding: .5rem .6rem; gap: .5rem; }
+  .toolbar select, .toolbar input { min-width: 80px; }
+
+  .traits      { gap: .7rem; }
+  .trait       { padding: .55rem .45rem; }
+  .trait-btn   { padding: .1rem .5rem; }
+  .trait-value { font-size: 1.15rem; }
+}
+/* ---------- Off-canvas-paneler från höger ---------- */
+#invPanel,
+#filterPanel,
+#traitsPanel,
+#yrkePanel {
+  position: fixed;
+  top: 0;
+  right: -100%;
+  width: 80%;
+  /* max-width för olika paneler: */
+  /* invPanel   → 420px, filterPanel & traitsPanel → 360px */
+  max-width: none; /* vi sätter nedan individuellt */
+  height: 100%;
+  background: var(--panel);
+  box-shadow: -4px 0 20px #0009;
+  transition: right .25s ease;
+  z-index: 1000;
+  overflow-y: auto;
+  padding: 1.2rem 1rem 2rem;
+}
+
+/* Specifika max-breddar */
+#invPanel    { max-width: 420px; }
+#filterPanel { max-width: 360px; }
+#traitsPanel { max-width: 360px; }
+#yrkePanel   { max-width: 360px; }
+
+/* När klassen .open läggs på – låt panelen glida in */
+#invPanel.open,
+#filterPanel.open,
+#traitsPanel.open,
+#yrkePanel.open {
+  right: 0;
+}
+
+/* ---------- Popup för kvaliteter ---------- */
+#qualPopup {
+  position: fixed;
+  inset: 0;                    /* top/right/bottom/left:0 */
+  width: 100%;
+  height: 100%;
+  display: none;               /* ← döljs tills .open */
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);  /* lite mörkare för tydlighet */
+  z-index: 3000;               /* över alla paneler */
+}
+#qualPopup.open {              /* sätts av JS */
+  display: flex;
+}
+#qualPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#qualPopup #qualOptions {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+}
+#qualPopup .popup-inner h3 {
+  margin: 0;
+}
+#qualPopup .popup-inner button {
+  width: 100%;
+}
+/* ---------- Popup för mästarnivå ---------- */
+#masterPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#masterPopup.open {
+  display: flex;
+}
+#masterPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem 1.2rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform .25s ease;
+}
+#masterPopup.open .popup-inner {
+  transform: translateY(0);
+}
+#masterPopup .popup-inner h3 {
+  margin-top: 0;
+}
+#masterPopup #masterOpts {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  margin-top: .5rem;
+}
+#masterPopup #masterOpts label {
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+  gap: .25rem;
+}
+#masterPopup .or-group {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  padding-left: .8rem;
+  margin-left: .4rem;
+}
+#masterPopup .or-group::before {
+  content: '';
+  position: absolute;
+  left: -.4rem;
+  top: .2rem;
+  bottom: .2rem;
+  width: .4rem;
+  border-left: 2px solid var(--subtxt);
+  border-top: 2px solid var(--subtxt);
+  border-bottom: 2px solid var(--subtxt);
+  border-radius: .4rem 0 0 .4rem;
+}
+#masterPopup .or-sep {
+  text-align: center;
+  color: var(--subtxt);
+  font-style: italic;
+  font-size: .85rem;
+}
+#masterPopup #masterBtns {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+  margin-top: .6rem;
+}
+#masterPopup #masterBtns button { width: 100%; }
+#masterPopup .popup-inner button { width: 100%; }
+
+/* ---------- Popup f\u00f6r Exceptionellt karakt\u00e4rsdrag ---------- */
+#traitPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#traitPopup.open { display: flex; }
+#traitPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem 1.2rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#traitPopup.open .popup-inner { transform: translateY(0); }
+#traitPopup #traitOpts {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+#traitPopup .popup-inner button { width: 100%; }
+
+/* ---------- Popup för eget föremål ---------- */
+#customPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#customPopup.open { display: flex; }
+#customPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem 1.2rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#customPopup.open .popup-inner { transform: translateY(0); }
+#customPopup .popup-inner button { width: 100%; }
+

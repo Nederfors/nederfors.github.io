@@ -1,0 +1,503 @@
+[
+    {
+      "namn": "Enhandsvapen",
+      "beskrivning": "Enhandsvapen omfattar alla typer av vapen som kan svingas i en hand. Exempel på enhandsvapen som är vanliga i davokarregionen är hammare, kroksabel, svärd och yxa.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Duellsvärd",
+      "beskrivning": "I Yndaros är det ambriska duellsvärdet högsta mode, ett fjäderstålsmide med ypperlig precision. Och det kombineras gärna med fäktarens favorit, parerdolken, som ger de lätt rustade duellanterna ett starkare försvar under fäktningsmatcherna.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Precist"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Korpnäbb",
+      "beskrivning": "Ett mindre elegant men likafullt effektivt vapen är korpnäbben, också känd som den kandoriska stridshackan efter staden i Alberetor där den först smiddes. Korpnäbben är en stridsklubba vars järnhuvud försetts med en spik eller näbb av stål, för att bättre slå genom rustningar. Kandorias stridshackesmeder slog sig efter flytten till Yndaros ner i stadsdelen Gamla Kadizar och fortsätter där att ge skäl åt vapnets smeknamn.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Djupverkande"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Stridsgissel",
+      "beskrivning": "Stridsgisslet är ett Ledat vapen där ett järnklot – ofta spikförsett – fäst i en kedja svingas mot fienden. Att parera vapnet är inte lätt, då stålklotet ofta slår runt vapen och sköldkant och ändå når sitt mål.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Ledat"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Korta vapen",
+      "beskrivning": "Lätta vapen består av korta klingor som är snabba att dra och lätta att dölja. Exempel på korta vapen är dolk och kortsvärd.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Kort"]
+      },
+      "stat": {
+        "skada": "1T6",
+        "räckvidd": "0,5 m"
+      },
+      "grundpris": {
+        "daler": 0,
+        "skilling": 2,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Parerdolk",
+      "beskrivning": "I Yndaros har parerdolken med sin breda och v-formade parerstång blivit populär, gärna tillsammans med ett duellsvärd.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Balanserad"]
+      },
+      "stat": {
+        "skada": "1T6",
+        "räckvidd": "0,5 m"
+      },
+      "grundpris": {
+        "daler": 1,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Stylett",
+      "beskrivning": "Den slanka och smidiga styletten är en dolk vars sylvassa spets tränger djupt – en lönnmördares vapen.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Djupverkande"]
+      },
+      "stat": {
+        "skada": "1T6",
+        "räckvidd": "0,5 m"
+      },
+      "grundpris": {
+        "daler": 1,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Långa vapen",
+      "beskrivning": "Långa vapen har räckvidd som fördel och ger användaren ett frislag mot fiender som inte har långa vapen. Ett långt vapen kan användas i en hand, men förlorar då kvaliteten Långt eftersom användaren tvingas hålla längre fram för att alls kunna kontrollera vapnet. Exempel på långa vapen är spjut och stav.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Långt"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "2 m"
+      },
+      "grundpris": {
+        "daler": 0,
+        "skilling": 6,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Hillebard",
+      "beskrivning": "Hillebarden, bland barbarerna känd som pikyxa, har drag av både det långa och det tunga vapnet då det kombinerar en spjutspets med ett yxhuvud. Dess stötar är inte lika snabba som spjutets men dess svepande hugg kan ha en förödande verkan.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Djupverkande"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "2 m"
+      },
+      "grundpris": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Pik",
+      "beskrivning": "Den ambriska pikens smäckra skaft och eldhärdade stålspets glider mot målet med stor precision.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Precist"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "2 m"
+      },
+      "grundpris": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Vandringsstav",
+      "beskrivning": "Den enklare trästaven, inte sällan i tungt trä och härdad nära elden, har de långa vapnens räckvidd men saknar stålspetsade vapnens verkan.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Trubbigt"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "2 m"
+      },
+      "grundpris": {
+        "daler": 0,
+        "skilling": 1,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Obeväpnad attack",
+      "beskrivning": "Obeväpnade attacker används vanligen som desperata kulturvarelsers sista utväg och de är i alla hänseenden mindre effektiva än rovbestars och styggelsers naturliga vapen. Tillsammans med förmågan Naturlig krigare kan dock även en obeväpnad rollperson tillfoga sina fiender ansenlig skada. Exempel på obeväpnade attacker omfattar armbåge, bett, knytnäve, skallning, knogjärn och spark.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Kort"]
+      },
+      "stat": {
+        "skada": "1T4",
+        "räckvidd": "0,5 m"
+      },
+      "grundpris": {
+        "daler": 0,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Stridsklo",
+      "beskrivning": "Kariterna i Davokar har utvecklat en stridsklo som träs på handen och vars långa blad simulerar marakattens klor.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Djupverkande"]
+      },
+      "stat": {
+        "skada": "1T4",
+        "räckvidd": "0,5 m"
+      },
+      "grundpris": {
+        "daler": 0,
+        "skilling": 2,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Sköld",
+      "beskrivning": "Sköldar gör det svårt att träffa bäraren med såväl närstrids- som avståndsvapen. De kombineras oftast med ett enhandsvapen, alternativt med enhandsvapen och kastvapen.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T4",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Bucklare",
+      "beskrivning": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och pikenerare, då den är smidig nog att bära på armen, redo för parader, samtidigt som man använder båda händerna till sitt vapen. Bucklaren är för lätt för att kunna användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Smidig"]
+      },
+      "stat": {
+        "skada": "1T4",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Stålsköld",
+      "beskrivning": "Stålskölden är lika stark som de vanliga träsköldarna men tunnare och mer lättmanövrerad.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Balanserad"]
+      },
+      "stat": {
+        "skada": "1T4",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Tunga vapen",
+      "beskrivning": "Tunga vapen utmärks av att de kräver tvåhandsfattning för att alls kunna användas. De har en oöverträffad skadeverkan i närstrid. Exempel på tunga vapen är pålyxa, krigshammare samt det mäktiga tvåhandssvärdet.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T10",
+        "räckvidd": "1,5 m"
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Bastardsvärd",
+      "beskrivning": "Pansárernas mästersmeder hamrar fram Ambrias finaste vapen, och pansárernas bastardklingor är utsökta sådana i händerna på rätt krigare. Bastardsvärd hanteras med fördel med två händer (som ett tungt vapen) men kan användas i en hand för bruk med sköld. Svingat med en hand tappar bastardsvärdet kvaliteten Precist och gör skada som ett enhandsvapen.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Precist, Bastardvapen"]
+      },
+      "stat": {
+        "skada": "1T10",
+        "räckvidd": "1,5 m"
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Dubbelyxa",
+      "beskrivning": "Barbarernas dubbelyxa (inte att förväxla med den vanligare förekommande pålyxan som endast har ett yxblad på sitt skaft) kallas så efter sina två yxblad och antas vara ett arv från det fallna Symbaroum. Där förekom dubbelyxan både som vapen och som statussymbol. Även efter att det metallurgiska kunnandet i Davokar dalade i och med Symbaroums fall kunde dessa mäktiga vapen smidas, vilket ännu görs åt särskilt framstående klankrigare. Bland ambrierna anses dubbelyxan vara ofin och förråande, lämplig för barbarer och få andra, men dess form är välkänd genom dess likhet med den kungliga runan Labrys.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Djupverkande"]
+      },
+      "stat": {
+        "skada": "1T10",
+        "räckvidd": "1,5 m"
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Stridsslagan",
+      "beskrivning": "Tvåhandsversionen av ett stridsgissel kombinerar enhandsversionens kättingverkan med en större tyngd i slaget. Stridsslagan finns i en rad olika utföranden, från den traditionella varianten med ett träskaft för tvåhandsgrepp, fäst i en kedja med en spikförsedd järnklump i änden. Därtill finns varianter med spikförsedda stålstycken som länkar i varandra, samt modeller där två eller tre kättingar och stålhuvuden samsas om ett och samma skaft. Oavsett utförande delar de alla slagans tyngd och svårighet att försvara sig mot.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Ledat"]
+      },
+      "stat": {
+        "skada": "1T10",
+        "räckvidd": "1,5 m"
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Armborst",
+      "beskrivning": "Ett mekaniskt vapen som avfyrar lod med stor kraft.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T10",
+        "räckvidd": "60 m"
+      },
+      "grundpris": {
+        "daler": 8,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Arbalest",
+      "beskrivning": "Arbalest är ett tungt ambriskt armborst med båge av fjäderstål vilket ger dess lod extra kraft.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Djupverkande"]
+      },
+      "stat": {
+        "skada": "1T10",
+        "räckvidd": "80 m"
+      },
+      "grundpris": {
+        "daler": 8,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Pilbåge",
+      "beskrivning": "Pilbågen är ett bågvapen som skjuter pilar snabbt.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "50 m"
+      },
+      "grundpris": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Långbåge",
+      "beskrivning": "Långbågen är ett väl beprövat vapen inom den ambriska armén, och återfinns alltsedan Det stora kriget i händerna på odalbönder som utgör stommen i rikets bågskyttekompanier.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Precist"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "120 m"
+      },
+      "grundpris": {
+        "daler": 5,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Kastvapen",
+      "beskrivning": "Kastvapen dras som en fri handling och slungas med enhandskraft över korta avstånd. De används ofta innan närstrid och kombineras ofta med sköld. Exempel på kastvapen är kastkniv och kastspjut.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T6",
+        "räckvidd": "10 m"
+      },
+      "grundpris": {
+        "daler": 2,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Spjutslunga",
+      "beskrivning": "Östra Davokars barbarklaner använder gärna spjutslungor – en kastarm med hake som fäster i änden på ett kort spjut och kastar det med stor kraft.",
+      "taggar": {
+        "typ": ["Vapen"],
+        "kvalitet": ["Djupverkande"]
+      },
+      "stat": {
+        "skada": "1T6",
+        "räckvidd": "30 m"
+      },
+      "grundpris": {
+        "daler": 2,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    
+    {
+      "namn": "Enhandssvärd",
+      "beskrivning": "Det enklaste soldatvapnet: en rak stålblank klinga som delas ut till nyrekryter och håller skärpan länge utan särskild omtanke.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 4,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Enkeldolk",
+      "beskrivning": "En kort egg i härdat järn; slips lätt på bryne, ryms i ärm eller stövel och är alltid redo för nödförsvar.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T6",
+        "räckvidd": "0,5 m"
+      },
+      "grundpris": {
+        "daler": 0,
+        "skilling": 8,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Krigsklubba",
+      "beskrivning": "En robust träklubba med järnband runt slaghuvudet; billig, hållbar och vanlig bland vakter som saknar råd för ädlare vapen.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T8",
+        "räckvidd": "1 m"
+      },
+      "grundpris": {
+        "daler": 3,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    },
+    {
+      "namn": "Kortspjut",
+      "beskrivning": "Ett spjut med kortare skaft än armélängden; lätt att kasta men tillräckligt långt för att hålla fienden på avstånd i första handgemänget.",
+      "taggar": {
+        "typ": ["Vapen"]
+      },
+      "stat": {
+        "skada": "1T6",
+        "räckvidd": "1,5 m"
+      },
+      "grundpris": {
+        "daler": 2,
+        "skilling": 0,
+        "örtegar": 0
+      }
+    }
+    ]
