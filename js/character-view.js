@@ -93,6 +93,8 @@ function initCharacter() {
         const extra = yrkeInfoHtml(p);
         if (extra) infoHtml += `<br>${extra}`;
       }
+      const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
+      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml + traitInfo)}">Info</button>`;
 
       const li=document.createElement('li');
       li.className='card' + (compact ? ' compact' : '');
@@ -100,11 +102,10 @@ function initCharacter() {
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
       const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-      const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
       li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
 
         ${compact ? '' : `<div class="card-desc">${desc}${traitInfo}</div>`}
-        ${compact ? `<button class="char-btn" data-info="${encodeURIComponent(desc + traitInfo)}">Info</button>` : info}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
+        ${compact ? infoBtn : ''}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
 
       dom.valda.appendChild(li);
     });
