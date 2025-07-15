@@ -76,12 +76,12 @@ function initIndex() {
       if (isInv(p) && p.grundpris) {
         desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
       }
-      let info = '';
-      if (isRas(p)) {
-        info = `<button class="char-btn" data-yrke="${p.namn}">Info</button>`;
-      } else if (isYrke(p) || isElityrke(p)) {
-        info = `<button class="char-btn" data-yrke="${p.namn}">Arketyp</button>`;
+      let infoHtml = desc;
+      if (isRas(p) || isYrke(p) || isElityrke(p)) {
+        const extra = yrkeInfoHtml(p);
+        if (extra) infoHtml += `<br>${extra}`;
       }
+      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
       const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel');
       const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
       const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
@@ -106,7 +106,7 @@ function initIndex() {
           .map(t=>`<span class="tag">${t}</span>`).join(' ')}
         ${lvlSel}
         ${compact ? '' : `<div class="card-desc">${desc}</div>`}
-        ${compact ? `<button class="char-btn" data-info="${encodeURIComponent(desc)}">Info</button>` : info}${btn}${eliteBtn}`;
+        ${infoBtn}${btn}${eliteBtn}`;
       dom.lista.appendChild(li);
     });
   };
@@ -156,17 +156,10 @@ function initIndex() {
 
   /* lista-knappar */
   dom.lista.addEventListener('click',e=>{
-    const info=e.target.closest('button[data-yrke]');
-    if(info){
-      const name=info.dataset.yrke;
-      const p=DB.find(x=>x.namn===name);
-      if(p) yrkePanel.open(p.namn,yrkeInfoHtml(p));
-      return;
-    }
-    const info2=e.target.closest('button[data-info]');
-    if(info2){
-      const html=decodeURIComponent(info2.dataset.info||'');
-      const title=info2.closest('li')?.querySelector('.card-title')?.textContent||'';
+    const infoBtn=e.target.closest('button[data-info]');
+    if(infoBtn){
+      const html=decodeURIComponent(infoBtn.dataset.info||'');
+      const title=infoBtn.closest('li')?.querySelector('.card-title')?.textContent||'';
       yrkePanel.open(title,html);
       return;
     }
