@@ -6,6 +6,8 @@ function initCharacter() {
   let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
+  let compact = storeHelper.getCompactEntries(store);
+  dom.entryViewToggle.classList.toggle('active', compact);
 
   /* Dropdowns baserat på karaktärslista */
   (()=>{
@@ -65,6 +67,7 @@ function initCharacter() {
         groups.push({entry:p, count:1});
       }
     });
+    const compact = storeHelper.getCompactEntries(store);
     dom.valda.innerHTML = groups.length ? '' : '<li class="card">Inga träffar.</li>';
     groups.forEach(g=>{
       const p = g.entry;
@@ -90,20 +93,25 @@ function initCharacter() {
         const extra = yrkeInfoHtml(p);
         if (extra) infoHtml += `<br>${extra}`;
       }
-      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
-      const li=document.createElement('li');li.className='card';li.dataset.name=p.namn;
+
+      const li=document.createElement('li');
+      li.className='card' + (compact ? ' compact' : '');
+      li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
       const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
       const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
       li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
-        <div class="card-desc">${desc}${traitInfo}</div>
-        ${infoBtn}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
+
+        ${compact ? '' : `<div class="card-desc">${desc}${traitInfo}</div>`}
+        ${compact ? `<button class="char-btn" data-info="${encodeURIComponent(desc + traitInfo)}">Info</button>` : info}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
+
       dom.valda.appendChild(li);
     });
   };
 
   renderSkills(filtered()); activeTags(); updateXP(); renderTraits();
+  window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); };
 
   /* --- filter-events */
   dom.sIn.addEventListener('input', ()=>{sTemp=dom.sIn.value.trim(); activeTags(); renderSkills(filtered()); renderTraits();});
@@ -146,6 +154,13 @@ function initCharacter() {
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');
       const title=infoBtn.closest('li')?.querySelector('.card-title')?.textContent||'';
+      yrkePanel.open(title,html);
+      return;
+    }
+    const info2=e.target.closest('button[data-info]');
+    if(info2){
+      const html=decodeURIComponent(info2.dataset.info||'');
+      const title=info2.closest('li')?.querySelector('.card-title')?.textContent||'';
       yrkePanel.open(title,html);
       return;
     }
