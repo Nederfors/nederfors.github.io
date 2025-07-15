@@ -20,13 +20,19 @@
     document.getElementById('yrkeTitle').textContent = title || '';
     document.getElementById('yrkeContent').innerHTML = html || '';
     const panel = document.getElementById('yrkePanel');
+
+    // Ensure any previous listener is removed to avoid duplicates
+    if(outsideHandler){
+      document.removeEventListener('click', outsideHandler);
+    }
+
     panel.classList.add('open');
     outsideHandler = e => {
       if(!panel.contains(e.target)){
         close();
       }
     };
-    setTimeout(()=>document.addEventListener('click', outsideHandler));
+    setTimeout(() => document.addEventListener('click', outsideHandler));
   }
 
   function close(){
