@@ -79,15 +79,25 @@ function initIndex() {
       } else if (isYrke(p) || isElityrke(p)) {
         info = `<button class="char-btn" data-yrke="${p.namn}">Arketyp</button>`;
       }
-      const btn  = inChar
-        ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-        : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel');
+      const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
+      const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
+      let btn = '';
+      if(multi){
+        const addBtn = count<3 ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
+        const remBtn = count>0 ? `<button data-act="rem" class="char-btn danger" data-name="${p.namn}">−</button>` : '';
+        btn = `<div class="inv-controls">${addBtn}${remBtn}</div>`;
+      }else{
+        btn = inChar
+          ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+          : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+      }
       const eliteBtn = isElityrke(p)
         ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
         : '';
       const li=document.createElement('li'); li.className='card';
       li.innerHTML = `
-        <div class="card-title">${p.namn}</div>
+        <div class="card-title">${p.namn}${badge}</div>
         ${(p.taggar.typ||[])
           .concat(explodeTags(p.taggar.ark_trad), p.taggar.test||[])
           .map(t=>`<span class="tag">${t}</span>`).join(' ')}
@@ -254,6 +264,16 @@ function initIndex() {
           });
           return;
         }
+        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel');
+        if(multi){
+          const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
+          if(cnt >= 3){
+            alert('Denna fördel kan bara tas tre gånger.');
+            return;
+          }
+        }else if(list.some(x=>x.namn===p.namn && !x.trait)){
+          return;
+        }
         list.push({ ...p, nivå: lvl });
         storeHelper.setCurrentList(store, list); updateXP();
       }
@@ -269,7 +289,21 @@ function initIndex() {
       } else {
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
-        const list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
+        let list;
+        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel');
+        if(multi){
+          let removed=false;
+          list = [];
+          for(const it of before){
+            if(!removed && it.namn===p.namn && (tr?it.trait===tr:!it.trait)){
+              removed=true;
+              continue;
+            }
+            list.push(it);
+          }
+        }else{
+          list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
+        }
         if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
           if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
             return;
