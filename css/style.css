@@ -147,6 +147,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 }
 .card-title { font-size: 1.34rem; font-weight: 600; }
 .card-desc  { font-size: 1.15rem; }
+.card.compact .card-desc { display: none; }
 
 .card button {
   align-self: flex-end;

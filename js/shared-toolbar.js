@@ -132,6 +132,7 @@ class SharedToolbar extends HTMLElement {
           <button id="partyAlchemist" class="party-toggle">⚗️</button>
           <button id="partyArtefacter" class="party-toggle">🏺</button>
           <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
+          <button id="entryViewToggle" class="party-toggle" title="Växla kompakt vy">📄</button>
         </div>
       </aside>
 
@@ -172,6 +173,7 @@ class SharedToolbar extends HTMLElement {
       traitsPanel: $('traitsPanel'),
       filterPanel: $('filterPanel')
     };
+    this.entryViewToggle = $('entryViewToggle');
   }
 
   /* ------------------------------------------------------- */

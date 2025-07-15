@@ -13,7 +13,8 @@
       current: '',          // id för vald karaktär
       characters: [],       // [{ id, name }]
       data: {},             // { [charId]: { list: [...], inventory: [], custom: [] } }
-      filterUnion: false
+      filterUnion: false,
+      compactEntries: false
     };
   }
 
@@ -145,6 +146,15 @@
     save(store);
   }
 
+  function getCompactEntries(store) {
+    return Boolean(store.compactEntries);
+  }
+
+  function setCompactEntries(store, val) {
+    store.compactEntries = Boolean(val);
+    save(store);
+  }
+
   function normalizeMoney(m) {
     const res = { ...defaultMoney(), ...(m || {}) };
     res.skilling += Math.floor(res["örtegar"] / 10);
@@ -247,6 +257,8 @@ function defaultTraits() {
     setPartyArtefacter,
     getFilterUnion,
     setFilterUnion,
+    getCompactEntries,
+    setCompactEntries,
     normalizeMoney,
     getTraits,
     setTraits,
