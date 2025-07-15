@@ -114,4 +114,12 @@
     "taggar": {
       "typ": ["Nackdel"]
     }
+  },
+{
+  "namn": "Paria",
+  "beskrivning": "Rollpersonen är av ett släkte som är illa ansett av den styrande majoriteten och som diskrimineras mer eller mindre öppet. Enskilda individer i det omgivande samhället kan vara mindre fördomsfulla men generellt försvåras alla sociala interaktioner för varelsen. Däremot tenderar diskriminerade grupper att hålla samman mot omvärlden och ge varandra mycket hjälp. Rollpersonen tvingas slå två gånger för alla sociala utmaningar och måste ta det sämsta utfallet för att avgöra framgång eller misslyckande. Inom den egna gruppen får varelsen istället en andra chans på alla sociala slag och slår endast för situationer där det verkligen är tveksamt om det som efterfrågas alls är möjligt. Till detta kommer även att rollpersonen börjar spelet med endast fem skilling i sin bältesbörs.",
+  "taggar": {
+    "typ": ["Nackdel"],
+    "ark_trad": [""],
+    "test": ["Övertygande"]
   }]
