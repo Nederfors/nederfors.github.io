@@ -42,6 +42,7 @@ const dom  = {
   sIn   : $T('searchField'),  typSel : $T('typFilter'),
   arkSel: $T('arkFilter'),    tstSel : $T('testFilter'),
   filterUnion: $T('filterUnion'),
+  entryViewToggle: $T('entryViewToggle'),
 
   /* element i main-DOM */
   active : document.getElementById('activeFilters'),
@@ -252,6 +253,14 @@ function bindToolbar() {
       const val = dom.artBtn.classList.toggle('active');
       storeHelper.setPartyArtefacter(store, val);
       invUtil.renderInventory();
+      if (window.indexViewUpdate) window.indexViewUpdate();
+    });
+  }
+  if (dom.entryViewToggle) {
+    if (storeHelper.getCompactEntries(store)) dom.entryViewToggle.classList.add('active');
+    dom.entryViewToggle.addEventListener('click', () => {
+      const val = dom.entryViewToggle.classList.toggle('active');
+      storeHelper.setCompactEntries(store, val);
       if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }

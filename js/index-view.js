@@ -4,6 +4,8 @@ function initIndex() {
   let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
+  let compact = storeHelper.getCompactEntries(store);
+  dom.entryViewToggle.classList.toggle('active', compact);
 
   /* fyll dropdowns */
   (()=>{
@@ -51,6 +53,7 @@ function initIndex() {
   const renderList = arr=>{
     dom.lista.innerHTML = arr.length ? '' : '<li class="card">Inga träffar.</li>';
     const charList = storeHelper.getCurrentList(store);
+    const compact = storeHelper.getCompactEntries(store);
     arr.forEach(p=>{
       const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
       const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
@@ -95,15 +98,15 @@ function initIndex() {
       const eliteBtn = isElityrke(p)
         ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
         : '';
-      const li=document.createElement('li'); li.className='card';
+      const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
       li.innerHTML = `
         <div class="card-title">${p.namn}${badge}</div>
         ${(p.taggar.typ||[])
           .concat(explodeTags(p.taggar.ark_trad), p.taggar.test||[])
           .map(t=>`<span class="tag">${t}</span>`).join(' ')}
         ${lvlSel}
-        <div class="card-desc">${desc}</div>
-        ${info}${btn}${eliteBtn}`;
+        ${compact ? '' : `<div class="card-desc">${desc}</div>`}
+        ${compact ? `<button class="char-btn" data-info="${encodeURIComponent(desc)}">Info</button>` : info}${btn}${eliteBtn}`;
       dom.lista.appendChild(li);
     });
   };
@@ -158,6 +161,13 @@ function initIndex() {
       const name=info.dataset.yrke;
       const p=DB.find(x=>x.namn===name);
       if(p) yrkePanel.open(p.namn,yrkeInfoHtml(p));
+      return;
+    }
+    const info2=e.target.closest('button[data-info]');
+    if(info2){
+      const html=decodeURIComponent(info2.dataset.info||'');
+      const title=info2.closest('li')?.querySelector('.card-title')?.textContent||'';
+      yrkePanel.open(title,html);
       return;
     }
     const btn=e.target.closest('button[data-act]');
