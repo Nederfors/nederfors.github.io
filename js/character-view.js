@@ -85,12 +85,12 @@ function initCharacter() {
       } else {
         desc = base;
       }
-      let info = '';
-      if (isRas(p)) {
-        info = `<button class="char-btn" data-yrke="${p.namn}">Info</button>`;
-      } else if (isYrke(p) || isElityrke(p)) {
-        info = `<button class="char-btn" data-yrke="${p.namn}">Arketyp</button>`;
+      let infoHtml = desc;
+      if (isRas(p) || isYrke(p) || isElityrke(p)) {
+        const extra = yrkeInfoHtml(p);
+        if (extra) infoHtml += `<br>${extra}`;
       }
+      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
       const li=document.createElement('li');li.className='card';li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
@@ -98,7 +98,7 @@ function initCharacter() {
       const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
       li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
         <div class="card-desc">${desc}${traitInfo}</div>
-        ${info}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
+        ${infoBtn}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
       dom.valda.appendChild(li);
     });
   };
@@ -142,11 +142,11 @@ function initCharacter() {
 
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click',e=>{
-    const info=e.target.closest('button[data-yrke]');
-    if(info){
-      const name=info.dataset.yrke;
-      const p=storeHelper.getCurrentList(store).find(x=>x.namn===name)||DB.find(x=>x.namn===name);
-      if(p) yrkePanel.open(p.namn,yrkeInfoHtml(p));
+    const infoBtn=e.target.closest('button[data-info]');
+    if(infoBtn){
+      const html=decodeURIComponent(infoBtn.dataset.info||'');
+      const title=infoBtn.closest('li')?.querySelector('.card-title')?.textContent||'';
+      yrkePanel.open(title,html);
       return;
     }
     if(e.target.dataset.act!=='rem') return;
