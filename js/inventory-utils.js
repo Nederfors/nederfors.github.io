@@ -314,21 +314,9 @@
           const tagTyp  = tagger.typ ?? [];
 
           /* — beskrivning — */
-          let desc = formatText(entry.beskrivning || '');
-          if (entry.nivåer && tagTyp.includes('Elixir')) {
-            if (row.level && entry.nivåer[row.level]) {
-              desc += '<br>' + `<strong>${row.level}</strong><br>${formatText(entry.nivåer[row.level])}`;
-            } else {
-              desc += '<br>' +
-                Object.entries(entry.nivåer)
-                  .map(([l, t]) => `<strong>${l}</strong><br>${formatText(t)}`)
-                  .join('<br>');
-            }
-          } else if (entry.stat) {
-            desc += '<br>' +
-              Object.entries(entry.stat)
-                    .map(([k, v]) => `${k}: ${v}`).join(', ');
-          }
+          // Ingen beskrivningstext ska visas i inventariet.
+          // "desc" används fortfarande för kvaliteter nedan.
+          let desc = '';
 
           /* — kvaliteter — */
           const removedQ = row.removedKval ?? [];
