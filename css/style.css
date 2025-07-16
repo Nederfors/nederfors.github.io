@@ -169,6 +169,8 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   align-self: flex-end;
   display: flex;
   gap: .4rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 .inv-controls button { align-self: initial; }
 
