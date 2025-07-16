@@ -414,7 +414,7 @@
 },
 
 {
-  "namn": "Privilegierad",
+  "namn": "Priviligerad",
   "beskrivning": "Rollpersonen är av ett släkte som har ett högt anseende i sitt samhälle och som därmed erhåller fördelar som andra inte får eller i alla fall måste betala för med silver eller hårt arbete. Rollpersonen får en andra chans att lyckas på alla sociala utmaningar inom sitt samhälle och behöver inte slå framgångsslag annat än i situationer där det verkligen är tveksamt om det som efterfrågas alls är möjligt. Till detta kommer även att rollpersonen börjar spelet med 50 daler i sin bältesbörs.",
   "kan_införskaffas_flera_gånger": false,
   "taggar": {
