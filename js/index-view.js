@@ -181,10 +181,7 @@ function initIndex() {
       if (!inv.length) return alert('Ingen utrustning i inventariet.');
       const elig = inv.filter(it => {
         const tag = (invUtil.getEntry(it.name)?.taggar?.typ) || [];
-        return !(
-          ['Diverse','Elixir','Mat','Dryck'].some(t => tag.includes(t)) ||
-          (tag.includes('L\u00e4gre Artefakt') && !['Vapen','Rustning'].some(t => tag.includes(t)))
-        );
+        return ['Vapen','Rustning'].some(t => tag.includes(t));
       });
  if (!elig.length) return alert('Ingen lämplig utrustning att förbättra.');
  invUtil.openQualPopup(elig, iIdx => {

@@ -355,10 +355,7 @@
 
           /* — knappar — */
           const isGear = ['Vapen', 'Rustning', 'L\u00e4gre Artefakt'].some(t => tagTyp.includes(t));
-          let allowQual = !['Diverse','Elixir','Mat','Dryck'].some(t => tagTyp.includes(t));
-          if (tagTyp.includes('L\u00e4gre Artefakt') && !['Vapen','Rustning'].some(t => tagTyp.includes(t))) {
-            allowQual = false;
-          }
+          const allowQual = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
   : `<button data-act="add" class="char-btn">+</button>
@@ -513,10 +510,7 @@
       // "K+" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (
-          ['Diverse','Elixir','Mat','Dryck'].some(t => tagTyp.includes(t)) ||
-          (tagTyp.includes('L\u00e4gre Artefakt') && !['Vapen','Rustning'].some(t => tagTyp.includes(t)))
-        ) return;
+        if (!['Vapen','Rustning'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
           if (idx >= 0 && qualities[qIdx]) {
