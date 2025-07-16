@@ -101,11 +101,20 @@ function initCharacter() {
       li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
+      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !p.trait;
       const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
+      let btn = '';
+      if(multi){
+        const addBtn = g.count < 3 ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
+        const remBtn = `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">${addBtn ? '−' : '🗑'}</button>`;
+        btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
+      }else{
+        btn = `<button class="char-btn danger icon" data-act="rem">🗑</button>`;
+      }
       li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
 
         ${compact ? '' : `<div class="card-desc">${desc}${traitInfo}</div>`}
-        ${compact ? infoBtn : ''}<button class="char-btn danger icon" data-act="rem">🗑</button>`;
+        ${compact ? infoBtn : ''}${btn}`;
 
       dom.valda.appendChild(li);
     });
@@ -158,36 +167,45 @@ function initCharacter() {
       yrkePanel.open(title,html);
       return;
     }
-    const info2=e.target.closest('button[data-info]');
-    if(info2){
-      const html=decodeURIComponent(info2.dataset.info||'');
-      const title=info2.closest('li')?.querySelector('.card-title')?.textContent||'';
-      yrkePanel.open(title,html);
-      return;
-    }
-    if(e.target.dataset.act!=='rem') return;
-    const liEl = e.target.closest('li');
+    const actBtn=e.target.closest('button[data-act]');
+    if(!actBtn) return;
+    const liEl = actBtn.closest('li');
     const name = liEl.dataset.name;
     const tr = liEl.dataset.trait || null;
     const before = storeHelper.getCurrentList(store);
     const p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
+    if(!p) return;
+    const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !tr;
     let list;
-    const multi = p && p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !tr;
-    if(multi){
-      let removed=false;
-      list=[];
-      for(const it of before){
-        if(!removed && it.namn===name && !it.trait){
-          removed=true; continue;
-        }
-        list.push(it);
-      }
-    }else{
-      list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
-    }
-    if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
-      if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
+    if(actBtn.dataset.act==='add'){
+      if(!multi) return;
+      const cnt = before.filter(x=>x.namn===name && !x.trait).length;
+      if(cnt >= 3){
+        alert('Denna fördel kan bara tas tre gånger.');
         return;
+      }
+      const lvlSel = liEl.querySelector('select.level');
+      const lvl = lvlSel ? lvlSel.value : p.nivå;
+      list = [...before, { ...p, nivå: lvl }];
+    }else if(actBtn.dataset.act==='rem'){
+      if(multi){
+        let removed=false;
+        list=[];
+        for(const it of before){
+          if(!removed && it.namn===name && !it.trait){
+            removed=true; continue;
+          }
+          list.push(it);
+        }
+      }else{
+        list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
+      }
+      if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
+        if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
+          return;
+      }
+    } else {
+      return;
     }
     storeHelper.setCurrentList(store, list);
     renderSkills(filtered());
