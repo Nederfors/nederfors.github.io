@@ -346,9 +346,9 @@
           const allowQual = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
-  : `<button data-act="add" class="char-btn">+</button>
+  : `<button data-act="del" class="char-btn danger">🗑</button>
       <button data-act="sub" class="char-btn">–</button>
-      <button data-act="del" class="char-btn danger">🗑</button>`;
+      <button data-act="add" class="char-btn">+</button>`;
           const freeCnt = Number(row.gratis || 0);
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">K🆓</button>` : '';
