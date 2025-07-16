@@ -432,6 +432,17 @@
     "ark_trad": [""],
     "test": ["Övertygande"]
   }
+},
+
+{
+  "namn": "Vildmarksvana",
+  "beskrivning": "Rollpersonen kan överleva på knappa resurser och är van att hitta mat, föda och skydd i utsatta miljöer. Rollpersonen kan med ett lyckat Vaksam finna tillräckligt med mat och vatten för att föda sig själv under förflyttningar i vildmark eller ruiner. Om rollpersonen ingår i en mindre grupp (upp till 5 personer) kan mat och vatten införskaffas åt dem alla, men i så fall går all tid åt till det. Gruppen kan då inte förflytta sig under tiden.",
+  "kan_införskaffas_flera_gånger": false,
+  "taggar": {
+    "typ": ["Fördel"],
+    "ark_trad": ["Ingen"],
+    "test": ["Vaksam"]
+  }
 }
 
 
