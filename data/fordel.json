@@ -440,7 +440,7 @@
   "kan_införskaffas_flera_gånger": false,
   "taggar": {
     "typ": ["Fördel"],
-    "ark_trad": ["Ingen"],
+    "ark_trad": [""],
     "test": ["Vaksam"]
   }
 }
