@@ -33,8 +33,9 @@ function initIndex() {
   };
 
   const filtered = () => DB.filter(p=>{
-    const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t=>t.toLowerCase());
-    const text = `${p.namn} ${(p.beskrivning||'')}`.toLowerCase();
+    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+      .map(t => searchNormalize(t.toLowerCase()));
+    const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
     const txt = terms.every(q => text.includes(q));
     const tags = p.taggar || {};
     const selTags = [...F.typ, ...F.ark, ...F.test];

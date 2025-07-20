@@ -70,6 +70,21 @@
     return `${d}D ${s}S ${o}\u00d6`;
   }
 
+  // Normalize text for searches by removing diacritics except for
+  // the Swedish characters å, ä and ö. Everything should be in
+  // lowercase before calling this function.
+  function searchNormalize(str){
+    return str
+      .replace(/\u00e5/g,'__ao__')  // å
+      .replace(/\u00e4/g,'__ae__')  // ä
+      .replace(/\u00f6/g,'__oe__')  // ö
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g,'')
+      .replace(/__ao__/g,'\u00e5')
+      .replace(/__ae__/g,'\u00e4')
+      .replace(/__oe__/g,'\u00f6');
+  }
+
   window.LVL = LVL;
   window.EQUIP = EQUIP;
   window.SBASE = SBASE;
@@ -87,4 +102,5 @@
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
   window.formatMoney = formatMoney;
+  window.searchNormalize = searchNormalize;
 })(window);
