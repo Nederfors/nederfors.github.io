@@ -208,6 +208,44 @@ function defaultTraits() {
 
   const RITUAL_COST = 10;
 
+  const TRAD_TO_SKILL = {
+    'Häxkonst': 'Häxkonster',
+    'Svartkonst': 'Svartkonst',
+    'Ordensmagi': 'Ordensmagi',
+    'Stavmagiker': 'Stavmagi',
+    'Teurgi': 'Teurgi',
+    'Trollsång': 'Trollsång',
+    'Symbolism': 'Symbolism'
+  };
+
+  const LEVEL_IDX = { '': 0, Novis: 1, Gesäll: 2, Mästare: 3 };
+
+  function abilityLevel(list, ability) {
+    const ent = list.find(x => x.namn === ability && (x.taggar?.typ || []).includes('Förmåga'));
+    return LEVEL_IDX[ent?.nivå || ''] || 0;
+  }
+
+  function calcPermanentCorruption(list) {
+    let cor = 0;
+    list.forEach(it => {
+      const types = it.taggar?.typ || [];
+      if (!['Mystisk kraft', 'Ritual'].some(t => types.includes(t))) return;
+      const trads = explodeTags(it.taggar?.ark_trad);
+      let lvl = 0;
+      trads.forEach(tr => {
+        const a = TRAD_TO_SKILL[tr];
+        if (a) lvl = Math.max(lvl, abilityLevel(list, a));
+      });
+      if (types.includes('Mystisk kraft')) {
+        const plvl = LEVEL_IDX[it.nivå || 'Novis'] || 1;
+        if (plvl > lvl) cor++;
+      } else if (types.includes('Ritual')) {
+        if (lvl < 1) cor++;
+      }
+    });
+    return cor;
+  }
+
   function calcUsedXP(list) {
     let xp = 0;
 
@@ -265,6 +303,7 @@ function defaultTraits() {
     getBaseXP,
     setBaseXP,
     calcUsedXP,
-    calcTotalXP
+    calcTotalXP,
+    calcPermanentCorruption
   };
 })(window);
