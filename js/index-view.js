@@ -66,18 +66,7 @@ function initIndex() {
             ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
           </select>`
         : '';
-      let desc = '';
-      const base = formatText(p.beskrivning || '');
-      if (isYrke(p) || isElityrke(p) || isRas(p)) {
-        desc = base;
-      } else if (p.nivåer) {
-        const levels = Object.entries(p.nivåer)
-          .map(([l,t]) => `<strong>${l}</strong><br>${formatText(t)}`)
-          .join('<br>');
-        desc = base ? `${base}<br>${levels}` : levels;
-      } else {
-        desc = base;
-      }
+      let desc = abilityHtml(p);
       if (isInv(p) && p.grundpris) {
         desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
       }

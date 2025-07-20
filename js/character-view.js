@@ -79,19 +79,7 @@ function initCharacter() {
           </select>`
         : '';
       const idx=LVL.indexOf(p.nivå);
-      let desc = '';
-      const base = formatText(p.beskrivning || '');
-      if (isYrke(p) || isElityrke(p) || isRas(p)) {
-        desc = base;
-      } else if (p.nivåer) {
-        const levels = LVL.slice(0, idx + 1)
-          .filter(l => p.nivåer[l])
-          .map(l => `<strong>${l}</strong><br>${formatText(p.nivåer[l])}`)
-          .join('<br>');
-        desc = base ? `${base}<br>${levels}` : levels;
-      } else {
-        desc = base;
-      }
+      let desc = abilityHtml(p, p.nivå);
       let infoHtml = desc;
       if (isRas(p) || isYrke(p) || isElityrke(p)) {
         const extra = yrkeInfoHtml(p);
