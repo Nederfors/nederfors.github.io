@@ -149,6 +149,11 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .card-desc  { font-size: 1.15rem; }
 .card.compact .card-desc { display: none; }
 
+/* Lista med niva-beskrivningar for formagor */
+.levels { margin-top: .6rem; }
+.levels dt { font-weight: 600; }
+.levels dd { margin: 0 0 .4rem 1rem; }
+
 .card button {
   align-self: flex-end;
   background: var(--accent);
