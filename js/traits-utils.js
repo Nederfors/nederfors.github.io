@@ -25,7 +25,15 @@
         : Math.max(10, val);
       const pain = Math.ceil(val / 2);
       let extra = '';
+      let beforeExtra = '';
+      let afterExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>`;
       if (k === 'Stark') {
+        let base = val;
+        const hasPack = list.some(e => e.namn === 'Pack\u00e5sna');
+        if (hasPack) base = Math.ceil(base * 1.5);
+        beforeExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>` +
+          `<div class="trait-extra">B\u00e4rkapacitet: ${base}</div>`;
+        afterExtra = '';
         extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
         const maxCor = strongGift ? val * 2 : val;
@@ -42,19 +50,16 @@
           <button class="trait-btn" data-d="1">+1</button>
           <button class="trait-btn" data-d="5">+5</button>
         </div>
+        ${beforeExtra}
         ${extra}
-        <div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>
+        ${afterExtra}
       </div>`;
     }).join('');
 
     dom.traitsTot.textContent = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0),0);
 
     if (dom.traitStats) {
-      const traits = storeHelper.getTraits(store);
-      let base = (traits['Stark'] || 0) + (bonus['Stark'] || 0);
-      const hasPack = storeHelper.getCurrentList(store).some(e => e.namn === 'Packåsna');
-      if (hasPack) base = Math.ceil(base * 1.5);
-      dom.traitStats.textContent = 'Bärkapacitet: ' + base;
+      dom.traitStats.textContent = "";
     }
   }
 
