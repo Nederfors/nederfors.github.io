@@ -7,8 +7,16 @@
     const list  = storeHelper.getCurrentList(store);
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const counts = {};
-    KEYS.forEach(k => { counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length; });
+    KEYS.forEach(k => {
+      counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length;
+    });
     const hasKraftprov = list.some(p => p.namn === 'Kraftprov');
+
+    const strongGift = list.some(
+      p =>
+        p.namn === 'Stark gåva' &&
+        ['Gesäll', 'Mästare'].includes(p.nivå || '')
+    );
 
     dom.traits.innerHTML = KEYS.map(k => {
       const val = (data[k] || 0) + (bonus[k] || 0);
@@ -16,9 +24,14 @@
         ? val + 5
         : Math.max(10, val);
       const pain = Math.ceil(val / 2);
-      const extra = k === 'Stark'
-        ? `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`
-        : '';
+      let extra = '';
+      if (k === 'Stark') {
+        extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
+      } else if (k === 'Viljestark') {
+        const maxCor = strongGift ? val * 2 : val;
+        const thresh = strongGift ? val : Math.ceil(val / 2);
+        extra = `<div class="trait-extra">Maximal korruption: ${maxCor} \u2022 Korruptionstr\u00f6skel: ${thresh}</div>`;
+      }
       return `
       <div class="trait" data-key="${k}">
         <div class="trait-name">${k}</div>
