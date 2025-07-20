@@ -353,12 +353,8 @@
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">K🆓</button>` : '';
 
-          const lvlInfo = tagTyp.includes('Elixir') && row.level
-            ? `<br>Nivå: ${row.level}`
-            : '';
-          const dataLevel = tagTyp.includes('Elixir') && row.level
-            ? ` data-level="${row.level}"`
-            : '';
+          const lvlInfo = '';
+          const dataLevel = '';
           const priceText = formatMoney(
             calcRowCost(row, hasForge, hasAlchemy, hasArtefacter)
           );
@@ -455,25 +451,19 @@
         return;
       }
 
-      // 2b) För + / - / K+ behöver vi id och level
+      // 2b) För + / - / K+ behöver vi id
       const itemName = li.dataset.name;
-      const level    = li.dataset.level;
       const entry    = getEntry(itemName);
-      const isElixir = (entry.taggar?.typ || []).includes('Elixir');
 
       // "+" lägger till qty eller en ny instans
       if (act === 'add') {
         const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t => entry.taggar.typ.includes(t));
         if (indiv) {
-          const obj = { name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] };
-          if (isElixir && level) obj.level = level;
-          inv.push(obj);
+          inv.push({ name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] });
         } else if (idx >= 0) {
           inv[idx].qty++;
         } else {
-          const obj = { name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] };
-          if (isElixir && level) obj.level = level;
-          inv.push(obj);
+          inv.push({ name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] });
         }
         saveInventory(inv);
         renderInventory();
