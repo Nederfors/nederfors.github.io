@@ -37,7 +37,11 @@
     dom.traitsTot.textContent = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0),0);
 
     if (dom.traitStats) {
-      dom.traitStats.textContent = '';
+      const traits = storeHelper.getTraits(store);
+      let base = (traits['Stark'] || 0) + (bonus['Stark'] || 0);
+      const hasPack = storeHelper.getCurrentList(store).some(e => e.namn === 'Packåsna');
+      if (hasPack) base = Math.ceil(base * 1.5);
+      dom.traitStats.textContent = 'Bärkapacitet: ' + base;
     }
   }
 
