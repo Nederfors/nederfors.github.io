@@ -57,10 +57,14 @@ function initIndex() {
     arr.forEach(p=>{
       const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
       const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
-      const curLvl = charList.find(c=>c.namn===p.namn)?.nivå || 'Novis';
-      const lvlSel = p.nivåer ? `<select class="level" data-name="${p.namn}">
-        ${LVL.filter(l=>p.nivåer[l]).map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
-        </select>` : '';
+      const curLvl = charList.find(c=>c.namn===p.namn)?.nivå
+        || LVL.find(l => p.nivåer?.[l]) || 'Novis';
+      const availLvls = LVL.filter(l => p.nivåer?.[l]);
+      const lvlSel = availLvls.length > 1
+        ? `<select class="level" data-name="${p.namn}">
+            ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
+          </select>`
+        : '';
       let desc = '';
       const base = formatText(p.beskrivning || '');
       if (isYrke(p) || isElityrke(p) || isRas(p)) {
@@ -172,7 +176,8 @@ function initIndex() {
     const name = btn.dataset.name;
     const p  = DB.find(x=>x.namn===name);
     const lvlSel = btn.closest('li').querySelector('select.level');
-    const lvl = lvlSel ? lvlSel.value : null;
+    let   lvl = lvlSel ? lvlSel.value : null;
+    if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || null;
 
 
     /* Lägg till kvalitet direkt */
@@ -196,21 +201,14 @@ function initIndex() {
     if (btn.dataset.act==='add') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        const isElixir = (p.taggar.typ || []).includes('Elixir');
         const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
         if (indiv) {
-          const obj = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-          if (isElixir && lvl) obj.level = lvl;
-          inv.push(obj);
+          inv.push({ name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
         } else {
-          const match = isElixir
-            ? inv.find(x => x.name===p.namn && (lvl ? x.level === lvl : x.level == null))
-            : inv.find(x => x.name===p.namn);
+          const match = inv.find(x => x.name===p.namn);
           if (match) match.qty++;
           else {
-            const obj = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-            if (isElixir && lvl) obj.level = lvl;
-            inv.push(obj);
+            inv.push({ name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
@@ -280,8 +278,7 @@ function initIndex() {
     } else { /* rem */
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        const isElixir = (p.taggar.typ || []).includes('Elixir');
-        const idxInv   = inv.findIndex(x => x.name===p.namn && (isElixir ? (lvl ? x.level === lvl : x.level == null) : true));
+        const idxInv   = inv.findIndex(x => x.name===p.namn);
         if (idxInv >= 0) {
           inv[idxInv].qty--; if(inv[idxInv].qty < 1) inv.splice(idxInv,1);
         }

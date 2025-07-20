@@ -71,9 +71,12 @@ function initCharacter() {
     dom.valda.innerHTML = groups.length ? '' : '<li class="card">Inga träffar.</li>';
     groups.forEach(g=>{
       const p = g.entry;
-      const lvlSel=p.nivåer?`<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
-        ${LVL.filter(l=>p.nivåer[l]).map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
-      </select>`:'';
+      const availLvls = LVL.filter(l=>p.nivåer?.[l]);
+      const lvlSel = availLvls.length>1
+        ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
+            ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
+          </select>`
+        : '';
       const idx=LVL.indexOf(p.nivå);
       let desc = '';
       const base = formatText(p.beskrivning || '');
@@ -185,7 +188,8 @@ function initCharacter() {
         return;
       }
       const lvlSel = liEl.querySelector('select.level');
-      const lvl = lvlSel ? lvlSel.value : p.nivå;
+      let   lvl = lvlSel ? lvlSel.value : null;
+      if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
       list = [...before, { ...p, nivå: lvl }];
     }else if(actBtn.dataset.act==='rem'){
       if(multi){
