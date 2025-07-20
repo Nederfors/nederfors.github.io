@@ -578,4 +578,16 @@
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Mentalist"]
   }
-}]
+},
+
+{
+  "namn": "Sjunga världsorm",
+  "beskrivning": "Tradition: Trollsång\n Trollsångaren tar till sitt allra djupaste register och sjunger en sång som antingen kallar eller sänder bort en världsorm. Det förstnämnda är nära nog suicidalt och används endast när trollsångaren har accepterat sin egen död och utför ritualen för att ta med sig så många fiender som möjligt i fördärvet. Det senare används ofta av trollens hovsångare, för att avbryta en världsorms framfart inom ett trollrikes domäner.",
+  "taggar": {
+    "typ": ["Ritual"],
+    "ark_trad": ["Trollsång"],
+    "test": ["Viljestark"]
+  }
+}
+
+]
