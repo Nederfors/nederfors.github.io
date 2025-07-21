@@ -130,23 +130,38 @@ class SharedToolbar extends HTMLElement {
         <div class="filter-group party-toggles">
           <ul class="toggle-list">
             <li>
-              <span class="toggle-desc">Har du en smed i partyt? Halverar priset för vapen och rustningar.</span>
+              <span class="toggle-desc">
+                <span class="toggle-question">Har du en smed i partyt?</span>
+                <span class="toggle-note">Halverar priset för vapen och rustningar.</span>
+              </span>
               <button id="partySmith" class="party-toggle">⚒️</button>
             </li>
             <li>
-              <span class="toggle-desc">Har du en alkemist i partyt? Halverar priset på alla elixir.</span>
+              <span class="toggle-desc">
+                <span class="toggle-question">Har du en alkemist i partyt?</span>
+                <span class="toggle-note">Halverar priset på alla elixir.</span>
+              </span>
               <button id="partyAlchemist" class="party-toggle">⚗️</button>
             </li>
             <li>
-              <span class="toggle-desc">Har du en artefaktmästare i partyt? Halverar priset på Lägre Artefakter.</span>
+              <span class="toggle-desc">
+                <span class="toggle-question">Har du en artefaktmästare i partyt?</span>
+                <span class="toggle-note">Halverar priset på Lägre Artefakter.</span>
+              </span>
               <button id="partyArtefacter" class="party-toggle">🏺</button>
             </li>
             <li>
-              <span class="toggle-desc">Utvidga sökningen? När detta är aktiverat räcker det att någon av markerade filter matchar.</span>
+              <span class="toggle-desc">
+                <span class="toggle-question">Utvidga sökningen?</span>
+                <span class="toggle-note">Bara ett av de markerade filter behöver matcha.</span>
+              </span>
               <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
             </li>
             <li>
-              <span class="toggle-desc">Visa kompakt vy? Slår av eller på kortare listvy.</span>
+              <span class="toggle-desc">
+                <span class="toggle-question">Visa kompakt vy?</span>
+                <span class="toggle-note">Slår av eller på kortare listvy.</span>
+              </span>
               <button id="entryViewToggle" class="party-toggle" title="Växla kompakt vy">🤏</button>
             </li>
           </ul>
