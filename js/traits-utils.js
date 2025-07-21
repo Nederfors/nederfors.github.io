@@ -38,7 +38,9 @@
       } else if (k === 'Viljestark') {
         const maxCor = strongGift ? val * 2 : val;
         const thresh = strongGift ? val : Math.ceil(val / 2);
-        extra = `<div class="trait-extra">Maximal korruption: ${maxCor} \u2022 Korruptionstr\u00f6skel: ${thresh}</div>`;
+        const perm = storeHelper.calcPermanentCorruption(list);
+        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` +
+                `<div class="trait-extra">Maximal korruption: ${maxCor} \u2022 Korruptionstr\u00f6skel: ${thresh}</div>`;
       }
       return `
       <div class="trait" data-key="${k}">
