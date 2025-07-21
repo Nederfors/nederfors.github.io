@@ -388,8 +388,8 @@
           }
 
           /* — knappar — */
-          const isGear = ['Vapen', 'Rustning', 'L\u00e4gre Artefakt'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
+          const isGear = ['Vapen', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter'].some(t => tagTyp.includes(t));
+          const allowQual = ['Vapen','Rustning','Artefakter'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
   : `<button data-act="del" class="char-btn danger">🗑</button>
@@ -505,7 +505,7 @@
 
       // "+" lägger till qty eller en ny instans
       if (act === 'add') {
-        const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t => entry.taggar.typ.includes(t));
+        const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
         if (indiv) {
           inv.push({ name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] });
         } else if (idx >= 0) {
@@ -536,7 +536,7 @@
       // "K+" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (!['Vapen','Rustning'].some(t => tagTyp.includes(t))) return;
+        if (!['Vapen','Rustning','Artefakter'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
           if (idx >= 0 && qualities[qIdx]) {
