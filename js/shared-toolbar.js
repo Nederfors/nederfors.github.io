@@ -153,7 +153,7 @@ class SharedToolbar extends HTMLElement {
             <li>
               <span class="toggle-desc">
                 <span class="toggle-question">Utvidga sökningen?</span>
-                <span class="toggle-note">Bara ett av de markerade filter behöver matcha.</span>
+                <span class="toggle-note">Bara ett av de markerade filtren behöver matcha.</span>
               </span>
               <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
             </li>
