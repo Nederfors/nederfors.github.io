@@ -536,7 +536,7 @@
       // "K+" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (!['Vapen','Rustning'].some(t => tagTyp.includes(t))) return;
+        if (!['Vapen','Rustning','L\u00e4gre Artefakt'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
           if (idx >= 0 && qualities[qIdx]) {
