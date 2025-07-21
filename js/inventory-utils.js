@@ -27,6 +27,22 @@
   function saveInventory(inv) {
     inv.sort(sortInvEntry);
     storeHelper.setInventory(store, inv);
+    recalcArtifactEffects();
+    if (window.updateXP) updateXP();
+  }
+
+  function recalcArtifactEffects() {
+    const inv = storeHelper.getInventory(store);
+    const effects = inv.reduce((acc, row) => {
+      const entry = getEntry(row.name);
+      const tagTyp = entry.taggar?.typ || [];
+      if (!tagTyp.includes('L\u00e4gre Artefakt')) return acc;
+      const eff = row.artifactEffect || entry.artifactEffect;
+      if (eff === 'corruption') acc.corruption += 1;
+      else if (eff === 'xp') acc.xp += 1;
+      return acc;
+    }, { xp:0, corruption:0 });
+    storeHelper.setArtifactEffects(store, effects);
   }
 
   function sortAllInventories() {
@@ -107,6 +123,7 @@
     type.innerHTML = EQUIP.map(t=>`<option>${t}</option>`).join('');
 
     pop.classList.add('open');
+    if (effSel) effSel.value = 'corruption';
     if(effBox) effBox.style.display = type.value === 'Artefakter' ? '' : 'none';
 
     const onType = () => {
@@ -122,7 +139,7 @@
       name.value = '';
       dIn.value = sIn.value = oIn.value = '';
       desc.value = '';
-      if (effSel) effSel.value = '';
+      if (effSel) effSel.value = 'corruption';
       if (effBox) effBox.style.display = 'none';
       type.removeEventListener('change', onType);
     };
@@ -226,6 +243,8 @@
   function renderInventory () {
     if (!dom.invList) return;                        // index-sidan saknar listan
     const allInv = storeHelper.getInventory(store);
+    recalcArtifactEffects();
+    if (window.updateXP) updateXP();
     const cash = storeHelper.normalizeMoney(storeHelper.getMoney(store));
 
     if (dom.invTypeSel) {
@@ -359,9 +378,18 @@
             desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
           }
 
+          const isArtifact = tagTyp.includes('L\u00e4gre Artefakt');
+          const effectVal = row.artifactEffect || entry.artifactEffect || '';
+          if (isArtifact && effectVal) {
+            const txt = effectVal === 'corruption'
+              ? '+1 permanent korruption'
+              : '\u20131 erfarenhet';
+            desc += `<br><span class="tag">${txt}</span>`;
+          }
+
           /* — knappar — */
           const isGear = ['Vapen', 'Rustning', 'L\u00e4gre Artefakt'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
+          const allowQual = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
   : `<button data-act="del" class="char-btn danger">🗑</button>
@@ -370,6 +398,7 @@
           const freeCnt = Number(row.gratis || 0);
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">K🆓</button>` : '';
+          const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
 
           const lvlInfo = row.nivå ? ` <span class="tag level">${row.nivå}</span>` : '';
           const dataLevel = row.nivå ? ` data-level="${row.nivå}"` : '';
@@ -389,6 +418,7 @@
                 ${btnRow}
  ${allowQual ? `<button data-act="addQual" class="char-btn">K+</button>` : ''}
                 ${freeQBtn}
+                ${toggleBtn}
                 ${freeBtn}
               </div>
             </li>`;
@@ -548,6 +578,15 @@
         return;
       }
 
+      // "toggleEffect" växlar artefaktens effekt
+      if (act === 'toggleEffect') {
+        const eff = inv[idx].artifactEffect || entry.artifactEffect || 'corruption';
+        inv[idx].artifactEffect = eff === 'corruption' ? 'xp' : 'corruption';
+        saveInventory(inv);
+        renderInventory();
+        return;
+      }
+
       // "free" ökar gratis-räknaren (loopar när den nått max)
       if (act === 'free') {
         if (idx >= 0) {
@@ -601,6 +640,7 @@
     sortQualsForDisplay,
     openQualPopup,
     openCustomPopup,
+    recalcArtifactEffects,
     renderInventory,
     bindInv,
     bindMoney
