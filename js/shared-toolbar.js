@@ -128,11 +128,28 @@ class SharedToolbar extends HTMLElement {
           <select id="testFilter"></select>
         </div>
         <div class="filter-group party-toggles">
-          <button id="partySmith" class="party-toggle">⚒️</button>
-          <button id="partyAlchemist" class="party-toggle">⚗️</button>
-          <button id="partyArtefacter" class="party-toggle">🏺</button>
-          <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
-          <button id="entryViewToggle" class="party-toggle" title="Växla kompakt vy">🤏</button>
+          <ul class="toggle-list">
+            <li>
+              <span class="toggle-desc">Har du en smed i partyt? Halverar kostnaden för vapen och rustningar.</span>
+              <button id="partySmith" class="party-toggle">⚒️</button>
+            </li>
+            <li>
+              <span class="toggle-desc">Har du en alkemist i partyt? Halverar priset på alla elixir.</span>
+              <button id="partyAlchemist" class="party-toggle">⚗️</button>
+            </li>
+            <li>
+              <span class="toggle-desc">Har du en artefaktmästare i partyt? Denna knapp halverar priset på Lägre Artefakter.</span>
+              <button id="partyArtefacter" class="party-toggle">🏺</button>
+            </li>
+            <li>
+              <span class="toggle-desc">Utvidga sökningen? När detta är aktiverat räcker det att någon av markerade taggar matchar.</span>
+              <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
+            </li>
+            <li>
+              <span class="toggle-desc">Visa kompakt vy? Slår av eller på kortare listvy.</span>
+              <button id="entryViewToggle" class="party-toggle" title="Växla kompakt vy">🤏</button>
+            </li>
+          </ul>
         </div>
       </aside>
 

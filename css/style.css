@@ -84,9 +84,26 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 
 /* Grupp för partytillhörighet */
 .party-toggles {
-  display: flex;
-  gap: .6rem;
+  padding: 0;
   margin-top: .6rem;
+}
+.toggle-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+.toggle-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.toggle-desc {
+  flex: 1;
+  margin-right: .5rem;
+  font-size: .95rem;
 }
 .party-toggle {
   padding: .45rem .6rem;
