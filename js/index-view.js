@@ -180,7 +180,7 @@ function initIndex() {
       if (!inv.length) return alert('Ingen utrustning i inventariet.');
       const elig = inv.filter(it => {
         const tag = (invUtil.getEntry(it.name)?.taggar?.typ) || [];
-        return ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t => tag.includes(t));
+        return ['Vapen','Rustning'].some(t => tag.includes(t));
       });
  if (!elig.length) return alert('Ingen lämplig utrustning att förbättra.');
  invUtil.openQualPopup(elig, iIdx => {
