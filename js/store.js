@@ -238,7 +238,7 @@ function defaultTraits() {
       });
       if (types.includes('Mystisk kraft')) {
         const plvl = LEVEL_IDX[it.nivå || 'Novis'] || 1;
-        if (plvl > lvl) cor++;
+        if (plvl > lvl) cor += (plvl - lvl);
       } else if (types.includes('Ritual')) {
         if (lvl < 1) cor++;
       }
