@@ -196,13 +196,15 @@ function initIndex() {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
         const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
+        const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+        if (p.artifactEffect) rowBase.artifactEffect = p.artifactEffect;
         if (indiv) {
-          inv.push({ name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+          inv.push(rowBase);
         } else {
           const match = inv.find(x => x.name===p.namn);
           if (match) match.qty++;
           else {
-            inv.push({ name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+            inv.push(rowBase);
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();

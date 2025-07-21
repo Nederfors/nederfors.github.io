@@ -95,6 +95,8 @@
     const pop   = bar.shadowRoot.getElementById('customPopup');
     const name  = bar.shadowRoot.getElementById('customName');
     const type  = bar.shadowRoot.getElementById('customType');
+    const effBox= bar.shadowRoot.getElementById('customArtifactEffect');
+    const effSel= effBox ? effBox.querySelector('select') : null;
     const dIn   = bar.shadowRoot.getElementById('customDaler');
     const sIn   = bar.shadowRoot.getElementById('customSkilling');
     const oIn   = bar.shadowRoot.getElementById('customOrtegar');
@@ -105,6 +107,12 @@
     type.innerHTML = EQUIP.map(t=>`<option>${t}</option>`).join('');
 
     pop.classList.add('open');
+    if(effBox) effBox.style.display = type.value === 'Artefakter' ? '' : 'none';
+
+    const onType = () => {
+      if (effBox) effBox.style.display = type.value === 'Artefakter' ? '' : 'none';
+    };
+    type.addEventListener('change', onType);
 
     const close = () => {
       pop.classList.remove('open');
@@ -114,6 +122,9 @@
       name.value = '';
       dIn.value = sIn.value = oIn.value = '';
       desc.value = '';
+      if (effSel) effSel.value = '';
+      if (effBox) effBox.style.display = 'none';
+      type.removeEventListener('change', onType);
     };
     const onAdd = () => {
       const entry = {
@@ -124,7 +135,8 @@
           skilling: Number(sIn.value)||0,
           'örtegar': Number(oIn.value)||0
         },
-        beskrivning: desc.value.trim()
+        beskrivning: desc.value.trim(),
+        artifactEffect: effSel ? effSel.value : ''
       };
       close();
       callback(entry);
@@ -401,7 +413,7 @@
         list.push(entry);
         storeHelper.setCustomEntries(store, list);
         const inv = storeHelper.getInventory(store);
-        inv.push({ name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+        inv.push({ name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
         saveInventory(inv);
         renderInventory();
       });
