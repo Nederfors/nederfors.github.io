@@ -210,7 +210,6 @@ function defaultTraits() {
 
   const TRAD_TO_SKILL = {
     'Häxkonst': 'Häxkonster',
-    'Svartkonst': 'Svartkonst',
     'Ordensmagi': 'Ordensmagi',
     'Stavmagiker': 'Stavmagi',
     'Teurgi': 'Teurgi',
