@@ -112,11 +112,15 @@
   }
 
   function allMystic(){
-    return DB.filter(x => (x.taggar?.typ||[]).includes('Mystisk kraft'));
+    return DB.filter(x =>
+      (x.taggar?.typ || []).includes('Mystisk kraft') &&
+      !isEliteSkill(x));
   }
 
   function allRitual(){
-    return DB.filter(x => (x.taggar?.typ||[]).includes('Ritual'));
+    return DB.filter(x =>
+      (x.taggar?.typ || []).includes('Ritual') &&
+      !isEliteSkill(x));
   }
   function parseNames(str){
     const groups=splitComma(str||'');
