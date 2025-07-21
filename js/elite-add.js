@@ -17,6 +17,14 @@
       const optsNormal = `<option value="Novis">Novis</option><option value="Ges\u00e4ll">Ges\u00e4ll</option><option value="M\u00e4stare">M\u00e4stare</option>`;
       const optsOr = `<option value="skip">Skippa</option>` + optsNormal;
       const optsRit = `<option value="Novis">V\u00e4lj</option><option value="skip">Skippa</option>`;
+
+      if(g.anyMystic || g.anyRitual){
+        const list = (g.anyMystic ? allMystic() : allRitual()).map(e => e.namn).sort();
+        const optsName = `<option value="skip">Skippa</option>` + list.map(n => `<option>${n}</option>`).join('');
+        const label = g.anyMystic ? 'Mystisk kraft' : 'Ritual';
+        return `<label>${label} <select data-ability data-group="${i}">${optsName}</select> <select data-name="" data-group="${i}" class="level">${optsNormal}</select></label>`;
+      }
+
       const html = g.names.map((nm, j) => {
         const opts = g.allRitual ? optsRit : (g.names.length > 1 ? optsOr : optsNormal);
         const sep = j > 0 ? '<div class="or-sep">eller</div>' : '';
@@ -25,18 +33,33 @@
       return g.names.length > 1 ? `<div class="or-group">${html}</div>` : html;
     }).join('');
     pop.classList.add('open');
+    const nameSels = box.querySelectorAll('select[data-ability]');
+    const levelSels = box.querySelectorAll('select[data-name]');
+
+    nameSels.forEach(sel => {
+      const lvl = box.querySelector(`select[data-name][data-group="${sel.dataset.group}"]`);
+      sel.addEventListener('change', () => {
+        lvl.dataset.name = sel.value !== 'skip' ? sel.value : '';
+        check();
+      });
+    });
+
     function close(){
       pop.classList.remove('open');
       box.innerHTML='';
       add.removeEventListener('click',onAdd);
       cls.removeEventListener('click',onCancel);
       pop.removeEventListener('click',onOutside);
-      sels.forEach(s=>s.removeEventListener('change',check));
+      levelSels.forEach(s=>s.removeEventListener('change',check));
+      nameSels.forEach(s=>s.removeEventListener('change',check));
     }
     function onAdd(){
       const sels=box.querySelectorAll('select[data-name]');
       const levels={};
-      sels.forEach(s=>{ if(s.value!=='skip') levels[s.dataset.name]=s.value; });
+      sels.forEach(s=>{
+        if(!s.dataset.name || s.value==='skip') return;
+        levels[s.dataset.name]=s.value;
+      });
       close();
       cb(levels);
     }
@@ -49,13 +72,18 @@
     }
     function check(){
       for(let i=0;i<groups.length;i++){
-        const sgs=box.querySelectorAll(`select[data-group="${i}"]`);
+        const nameSel=box.querySelector(`select[data-ability][data-group="${i}"]`);
+        if(nameSel){
+          if(nameSel.value==='skip'){ add.disabled=true; return; }
+          continue;
+        }
+        const sgs=box.querySelectorAll(`select[data-group="${i}"][data-name]`);
         if(sgs.length && Array.from(sgs).every(x=>x.value==='skip')){ add.disabled=true; return; }
       }
       add.disabled=false;
     }
-    const sels=box.querySelectorAll('select[data-name]');
-    sels.forEach(s=>s.addEventListener('change',check));
+    levelSels.forEach(s=>s.addEventListener('change',check));
+    nameSels.forEach(s=>s.addEventListener('change',check));
     check();
     add.addEventListener('click',onAdd);
     cls.addEventListener('click',onCancel);
@@ -81,6 +109,14 @@
       const ch=str[i]; if(ch==='(') depth++; if(ch===')') depth--; buf+=ch; i++; }
     if(buf.trim()) out.push(buf.trim());
     return out;
+  }
+
+  function allMystic(){
+    return DB.filter(x => (x.taggar?.typ||[]).includes('Mystisk kraft'));
+  }
+
+  function allRitual(){
+    return DB.filter(x => (x.taggar?.typ||[]).includes('Ritual'));
   }
   function parseNames(str){
     const groups=splitComma(str||'');
@@ -111,6 +147,25 @@
     const raw = eliteReq.parse(str||'');
     const out = [];
     raw.forEach(g => {
+      // Check for single-name groups that signal any mystic power/ritual.
+      if(g.length===1){
+        const name = g[0].trim();
+        const mm = name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
+        if(mm && mm[1].trim().toLowerCase()==='valfri'){
+          out.push({anyMystic:true});
+          return;
+        }
+        const rr = name.match(/^Ritualist\s*\(([^)]+)\)/i);
+        if(rr && rr[1].trim().toLowerCase()==='valfri'){
+          out.push({anyRitual:true});
+          return;
+        }
+        if(/^Ritualist$/i.test(name)){
+          out.push({anyRitual:true});
+          return;
+        }
+      }
+
       let names = [];
       g.forEach(name => {
         const m=name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
@@ -135,8 +190,8 @@
       out.push({ names, allRitual });
     });
     out.sort((a, b) => {
-      const ao = a.names.length > 1 ? 1 : 0;
-      const bo = b.names.length > 1 ? 1 : 0;
+      const ao = a.names && a.names.length > 1 ? 1 : 0;
+      const bo = b.names && b.names.length > 1 ? 1 : 0;
       return ao - bo;
     });
     return out;
@@ -150,10 +205,14 @@
   function addReq(entry, levels){
     if(!store.current) return alert('Ingen rollperson vald.');
     const names=parseNames(entry.krav_formagor||'');
-    if(!names.length) return;
+    const listNames = new Set(names);
+    if(levels && typeof levels==='object'){
+      Object.keys(levels).forEach(n=>listNames.add(n));
+    }
+    if(!listNames.size) return;
     const list=storeHelper.getCurrentList(store);
     const isMap = levels && typeof levels === 'object';
-    names.forEach(nm=>{
+    listNames.forEach(nm=>{
       if(isMap && !(nm in levels)) return;
       const lvl = isMap ? levels[nm] : (nm===levels ? 'Mästare' : 'Novis');
       if(!lvl || lvl==='skip') return;
