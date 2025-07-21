@@ -151,7 +151,12 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 /* Lista med niva-beskrivningar for formagor */
 .levels { margin-top: .6rem; }
-.levels dt { font-weight: 600; }
+.levels dt {
+  font-weight: 600;
+  background: rgba(255,255,255,0.05);
+  padding: .2rem .4rem;
+  border-radius: .4rem;
+}
 .levels dd { margin: 0 0 .4rem 1rem; }
 
 .card button {
