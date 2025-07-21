@@ -8,6 +8,7 @@
     'Mat',
     'Dryck',
     'L\u00e4gre Artefakt',
+    'Artefakter',
     'Kl\u00e4der',
     'Musikinstrument',
     'F\u00e4rdmedel',

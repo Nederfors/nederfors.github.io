@@ -151,6 +151,14 @@ class SharedToolbar extends HTMLElement {
           <h3>Nytt föremål</h3>
           <input id="customName" placeholder="Namn">
           <select id="customType"></select>
+          <div id="customArtifactEffect" class="filter-group" style="display:none">
+            <label for="artifactEffect">Effekt</label>
+            <select id="artifactEffect">
+              <option value="">Ingen</option>
+              <option value="corruption">+1 permanent korruption</option>
+              <option value="xp">\u20131 erfarenhet</option>
+            </select>
+          </div>
           <div class="money-row">
             <input id="customDaler" type="number" min="0" placeholder="Daler">
             <input id="customSkilling" type="number" min="0" placeholder="Skilling">

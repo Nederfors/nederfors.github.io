@@ -271,7 +271,8 @@ function bindToolbar() {
 function updateXP() {
   const list  = storeHelper.getCurrentList(store);
   const base  = storeHelper.getBaseXP(store);
-  const used  = storeHelper.calcUsedXP(list);
+  const effects = storeHelper.getArtifactEffects(store);
+  const used  = storeHelper.calcUsedXP(list, effects);
   const total = storeHelper.calcTotalXP(base, list);
   const free  = total - used;
   dom.xpOut.textContent = free;

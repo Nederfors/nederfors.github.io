@@ -12,7 +12,7 @@
     return {
       current: '',          // id för vald karaktär
       characters: [],       // [{ id, name }]
-      data: {},             // { [charId]: { list: [...], inventory: [], custom: [] } }
+      data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{xp:0,corruption:0} } }
       filterUnion: false,
       compactEntries: false
     };
@@ -26,7 +26,15 @@
       const store = { ...emptyStore(), ...parsed };
       if (store.data && typeof store.data === 'object') {
         Object.keys(store.data).forEach(id => {
-          store.data[id] = { custom: [], ...(store.data[id] || {}) };
+          const cur = store.data[id] || {};
+          store.data[id] = {
+            custom: [],
+            artifactEffects: { xp:0, corruption:0 },
+            ...cur
+          };
+          if(!store.data[id].artifactEffects){
+            store.data[id].artifactEffects = { xp:0, corruption:0 };
+          }
         });
       }
       return store;
@@ -85,6 +93,10 @@
     return { "örtegar": 0, skilling: 0, daler: 0 };
   }
 
+  function defaultArtifactEffects() {
+    return { xp: 0, corruption: 0 };
+  }
+
   function getMoney(store) {
     if (!store.current) return defaultMoney();
     const data = store.data[store.current] || {};
@@ -134,6 +146,19 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyArtefacter = Boolean(val);
+    save(store);
+  }
+
+  function getArtifactEffects(store) {
+    if (!store.current) return defaultArtifactEffects();
+    const data = store.data[store.current] || {};
+    return { ...defaultArtifactEffects(), ...(data.artifactEffects || {}) };
+  }
+
+  function setArtifactEffects(store, eff) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].artifactEffects = { ...defaultArtifactEffects(), ...(eff || {}) };
     save(store);
   }
 
@@ -224,7 +249,7 @@ function defaultTraits() {
     return LEVEL_IDX[ent?.nivå || ''] || 0;
   }
 
-  function calcPermanentCorruption(list) {
+  function calcPermanentCorruption(list, extra) {
     let cor = 0;
     list.forEach(it => {
       const types = it.taggar?.typ || [];
@@ -242,10 +267,11 @@ function defaultTraits() {
         if (lvl < 1) cor++;
       }
     });
+    cor += extra?.corruption || 0;
     return cor;
   }
 
-  function calcUsedXP(list) {
+  function calcUsedXP(list, extra) {
     let xp = 0;
 
     list.forEach(item => {
@@ -259,6 +285,7 @@ function defaultTraits() {
       if (types.includes('ritual')) xp += RITUAL_COST;
     });
 
+    xp += extra?.xp || 0;
     return xp;
   }
 
@@ -292,6 +319,8 @@ function defaultTraits() {
     setPartyAlchemist,
     getPartyArtefacter,
     setPartyArtefacter,
+    getArtifactEffects,
+    setArtifactEffects,
     getFilterUnion,
     setFilterUnion,
     getCompactEntries,
