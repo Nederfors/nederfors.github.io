@@ -66,6 +66,7 @@ function initIndex() {
             ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
           </select>`
         : '';
+      const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
       let desc = abilityHtml(p);
       if (isInv(p) && p.grundpris) {
         desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
@@ -93,13 +94,16 @@ function initIndex() {
         ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
         : '';
       const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
+      const tagsHtml = hideDetails ? '' : (p.taggar.typ||[])
+        .concat(explodeTags(p.taggar.ark_trad), p.taggar.test||[])
+        .map(t=>`<span class="tag">${t}</span>`).join(' ');
+      const levelHtml = hideDetails ? '' : lvlSel;
+      const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
       li.innerHTML = `
         <div class="card-title">${p.namn}${badge}</div>
-        ${(p.taggar.typ||[])
-          .concat(explodeTags(p.taggar.ark_trad), p.taggar.test||[])
-          .map(t=>`<span class="tag">${t}</span>`).join(' ')}
-        ${lvlSel}
-        ${compact ? '' : `<div class="card-desc">${desc}</div>`}
+        ${tagsHtml}
+        ${levelHtml}
+        ${descHtml}
         ${infoBtn}${btn}${eliteBtn}`;
       dom.lista.appendChild(li);
     });

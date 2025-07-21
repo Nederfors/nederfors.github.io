@@ -78,6 +78,7 @@ function initCharacter() {
             ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
           </select>`
         : '';
+      const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
       const idx=LVL.indexOf(p.nivå);
       let desc = abilityHtml(p, p.nivå);
       let infoHtml = desc;
@@ -103,10 +104,12 @@ function initCharacter() {
       }else{
         btn = `<button class="char-btn danger icon" data-act="rem">🗑</button>`;
       }
+      const showInfo = compact || hideDetails;
+      const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${traitInfo}</div>` : '';
       li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
 
-        ${compact ? '' : `<div class="card-desc">${desc}${traitInfo}</div>`}
-        ${compact ? infoBtn : ''}${btn}`;
+        ${descHtml}
+        ${showInfo ? infoBtn : ''}${btn}`;
 
       dom.valda.appendChild(li);
     });
