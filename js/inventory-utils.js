@@ -36,7 +36,7 @@
     const effects = inv.reduce((acc, row) => {
       const entry = getEntry(row.name);
       const tagTyp = entry.taggar?.typ || [];
-      if (!tagTyp.includes('L\u00e4gre Artefakt')) return acc;
+      if (!tagTyp.includes('Artefakter')) return acc;
       const eff = row.artifactEffect || entry.artifactEffect;
       if (eff === 'corruption') acc.corruption += 1;
       else if (eff === 'xp') acc.xp += 1;
@@ -284,7 +284,7 @@
       if (hasForge && forgeable) base = Math.floor(base / 2);
       const isElixir = (entry.taggar?.typ || []).includes('Elixir');
       if (isElixir && hasAlchemy) base = Math.floor(base / 2);
-      const isArtifact = (entry.taggar?.typ || []).includes('L\u00e4gre Artefakt');
+      const isArtifact = (entry.taggar?.typ || []).includes('Artefakter');
       if (isArtifact && hasArtefacter) base = Math.floor(base / 2);
       let   price = base;                    // startvärde för kvaliteter
 
@@ -378,7 +378,7 @@
             desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
           }
 
-          const isArtifact = tagTyp.includes('L\u00e4gre Artefakt');
+          const isArtifact = tagTyp.includes('Artefakter');
           const effectVal = row.artifactEffect || entry.artifactEffect || '';
           if (isArtifact && effectVal) {
             const txt = effectVal === 'corruption'
@@ -389,7 +389,7 @@
 
           /* — knappar — */
           const isGear = ['Vapen', 'Rustning', 'L\u00e4gre Artefakt'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t => tagTyp.includes(t));
+          const allowQual = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
   : `<button data-act="del" class="char-btn danger">🗑</button>
@@ -536,7 +536,7 @@
       // "K+" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (!['Vapen','Rustning','L\u00e4gre Artefakt'].some(t => tagTyp.includes(t))) return;
+        if (!['Vapen','Rustning'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
           if (idx >= 0 && qualities[qIdx]) {
