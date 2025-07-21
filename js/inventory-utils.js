@@ -313,10 +313,16 @@
           const tagger  = entry.taggar ?? {};
           const tagTyp  = tagger.typ ?? [];
 
-          /* — beskrivning — */
+          /* — beskrivning / taggar / nivå — */
           // Ingen beskrivningstext ska visas i inventariet.
-          // "desc" används fortfarande för kvaliteter nedan.
+          // "desc" används fortfarande för taggar, nivå och kvaliteter nedan.
           let desc = '';
+          const tags = (tagger.typ || [])
+            .concat(explodeTags(tagger.ark_trad), tagger.test || []);
+          if (tags.length) {
+            const html = tags.map(t => `<span class="tag">${t}</span>`).join(' ');
+            desc += `<div class="tags">${html}</div>`;
+          }
 
           /* — kvaliteter — */
           const removedQ = row.removedKval ?? [];
@@ -353,8 +359,8 @@
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">K🆓</button>` : '';
 
-          const lvlInfo = '';
-          const dataLevel = '';
+          const lvlInfo = row.nivå ? ` <span class="tag level">${row.nivå}</span>` : '';
+          const dataLevel = row.nivå ? ` data-level="${row.nivå}"` : '';
           const priceText = formatMoney(
             calcRowCost(row, hasForge, hasAlchemy, hasArtefacter)
           );
