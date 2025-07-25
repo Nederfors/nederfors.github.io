@@ -453,6 +453,8 @@
         inv.push({ name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
         saveInventory(inv);
         renderInventory();
+        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+        if (window.indexViewUpdate) window.indexViewUpdate();
       });
     });
     dom.invList.addEventListener('click', e => {
