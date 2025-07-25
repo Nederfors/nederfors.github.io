@@ -469,4 +469,569 @@
         "skilling": 0,
         "örtegar": 0
       }
-    }]
+    },
+  
+  {
+  "namn": "Alkemisk granat",
+  "beskrivning": "Den alkemiska granaten är bräschkrukans mindre kusin. Ett robust lerkärl fylls med volatila essenser som när de antänds med stubin – eller om kärlet krossas – leder till ett explosivt resultat. Granaten är knytnävsstor och kan kastas för hand eller med en slunga.\nKastaren siktar på en varelse och får då också slå för att träffa alla som befinner sig på närstrids-avstånd från huvudmålet. En lyckad träff gör att målet tar hela skadetärningen i skada samt att den drabbas av den pågående effekten. Skulle attacken däremot missa varelsen tar den endast halva skadetärningen i skada och undgår att drabbas av någon ytterligare effekt.\nVem som helst kan använda en alkemisk granat, men en otränad användare (dvs. som saknar förmågan Alkemi, Belägringskonst eller Pyroteknik) riskerar ett katastrofalt förlopp. Se regler för Alkemiska vapen på sidan 98 i Spelarens Handbok.",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Brinnande", "Ytverkande (radie)"]
+  },
+  "stat": {
+    "skada": "1T10"
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 4
+  }
+},
+{
+  "namn": "Ballista",
+  "beskrivning": "Ballistan utgörs av ett massivt och stationärt armborst, avsett för beskjutande av fasta mål, truppformationer på slagfält – samt monster av mest robusta sort.\nRedan under Det stora kriget användes ballistan mot mörkermästarnas odöda dragbestar, i syfte att stoppa deras belägringstorn från att nå försvararnas murar. Den praktiken fortsatte vid koloniseringen av Ambria där framför allt häxornas fasansfulla kolosser utgjorde måltavlor. Även idag riktas ballistor mot Davokars mörka bryn från utposter och fort.",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Långsamt", "Massivt"]
+  },
+  "stat": {
+    "skada": "1T12"
+  },
+  "grundpris": {
+    "daler": 50,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Bladdolk",
+  "beskrivning": "Det smäckra handtaget och bladets tunna 5äderstål gör bladdolken enkel att dölja utan att den förlorar sitt sting. Den fästs lätt kring handled eller fotled med ett tunt band, eller mer fantasifullt med en bit kåda i nackbandet. Speciella gördlar eller dolda fack i kläder kan också användas. Vapnet smugglas lätt förbi vakter, för att utföra lönndåd eller för att lämnas vidare till fångar eller liknade.",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Dold", "Kort"]
+  },
+  "stat": {
+    "skada": "1T6"
+  },
+  "grundpris": {
+    "daler": 1,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+
+{
+  "namn": "Blåsrör",
+  "beskrivning": "Blåsrörets enda funktion är att med en liten pil leverera gift till målet. Blåsrörspilen i sig ger ingen skada, men penetrerar rustning om man slår över målets skydd med 1t8 (rollpersoner med förmågan Prickskytt slår 1t10).",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Speciell"]
+  },
+  "stat": {
+    "skada": "1T8"
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 4,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Bola",
+  "beskrivning": "Fångstredskapet bola används av barbarer i Davokar när de vill fånga ett djur levande; eller när de vill sakta ner en fiende för att ta sig nära och gå till närstridsattack. Bolan består av två eller fler vikter fästa i änden på ett rep. Bolan svingas och kastas mot målets ben eller armar i syfte att hindra deras rörelser. Standard är att sikta mot benen och anfallet görs med [Träffsäker←Kvick]. Lyckas attacken hindras målet från att förflytta sig. Att sikta mot armarna är svårare, [Träffsäker←Kvick+3] och vid träff får målet två chanser att misslyckas med framgångsslag som kräver armarna (attacker med vapen). Att ta bort bolan räknas som en stridshandling och kräver ett lyckat slag mot Kvick.",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Speciell"]
+  },
+  "stat": {
+    "skada": "1T10"
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 4,
+    "örtegar": 0
+  }
+},
+  {
+    "namn": "Bräschkruka (på marken)",
+    "beskrivning": "En kruka fylld med alkemiskt tändmedel som vid antändning exploderar med en massiv knall. Om bräschkrukan grävts ned nära ett objekt blir effekten raserande, om krukan står öppet blir effekten istället ytverkande. Notera att den som placerar en bräschkruka måste förse den med stubin för att inte själv fångas av effekten. Vem som helst kan använda en bräschkruka men endast en person med förmågan Belägringskonst eller Pyroteknik kan göra det säkert. Se reglerna för Alkemiska vapen på sidan 98. Bräschskrukan kan också användas som ammunition för katapulter, och har i så fall en ytverkande effekt vid nedslaget.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Brinnande", "Ytverkande"]
+    },
+    "stat": {
+      "skada": "1T12"
+    },
+    "grundpris": {
+      "daler": 25,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Bräschkruka (nedgrävd)",
+    "beskrivning": "En kruka fylld med alkemiskt tändmedel som vid antändning exploderar med en massiv knall. Om bräschkrukan grävts ned nära ett objekt blir effekten raserande, om krukan står öppet blir effekten istället ytverkande. Notera att den som placerar en bräschkruka måste förse den med stubin för att inte själv fångas av effekten. Vem som helst kan använda en bräschkruka men endast en person med förmågan Belägringskonst eller Pyroteknik kan göra det säkert. Se reglerna för Alkemiska vapen på sidan 98. Bräschskrukan kan också användas som ammunition för katapulter, och har i så fall en ytverkande effekt vid nedslaget.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Raserande"]
+    },
+    "stat": {
+      "skada": "1T12"
+    },
+    "grundpris": {
+      "daler": 25,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+  "namn": "Handarmborst",
+  "beskrivning": "Bland Yndaros gäng och tjuvgillen förekommer en lättdold variant av armborstet, som kan skjutas med en hand men som kräver två för att ladda. Genom 5äderstålsbågen är kraften i skottet lika tung som det vanliga armborstets. Lönnmördare applicerar dessutom ofta gift på loden vilket blir synnerligen effektivt.",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Dold"]
+  },
+  "stat": {
+    "skada": "1T10"
+  },
+  "grundpris": {
+    "daler": 8,
+    "skilling": 0,
+    "örtegar": 0
+  }
+}, 
+
+{
+  "namn": "Kampslägga",
+  "beskrivning": "Kampslägga är samlingsnamnet för en rad olika tvåhandsbeläten av synnerlig längd och tyngd. Vapnen är i de flesta fall varianter av hammare, inte sällan med långa spikar på hammarhuvudets träffyta. Men även ett bärbart alkemiskt eldrör som svingas av någon sappör i närstrid räknas som en kampslägga.",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Massiv", "Långsam", "Blodsgjutande"]
+  },
+  "stat": {
+    "skada": "1T10"
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+
+{
+  "namn": "Kastvinge",
+  "beskrivning": "Kastvingen är en utveckling av kastklubban, som genom sina svävande egenskaper i en skicklig kastares hand kan fås att återvända till kastaren om kastet missar målet (kräver ett lyckat Träffsäker, fri handling). I Davokar används kastvingar av härdat trä till jakt på småvilt, medan den som är avsedd för strid har en knivskarp egg av järn runt om hela vingen.",
+  "taggar": {
+    "typ": ["Vapen"],
+    "kvalitet": ["Återvändande"]
+  },
+  "stat": {
+    "skada": "1T6"
+  },
+  "grundpris": {
+    "daler": 2,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+
+  {
+    "namn": "Katapult (raserande)",
+    "beskrivning": "Kastmaskiner har länge använts vid belägringar i Alberetors många krig, och mest frekvent använd då som nu är katapulten. Den är relativt lätt att förflytta i relation till dess stora verkan mot fasta mål och truppsamlingar, jämfört med dess större kusin, trebuchetten. Katapulten kan endast laddas, riktas och avfyras av någon med förmågan Belägringskonst. Katapulten kan laddas med stenbumlingar eller med en bräschkruka, där de förra krossar byggnader och de senare är bättre mot klenare men eldfängda måltavlor, inklusive fientliga formationer på slagfältet.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Raserande", "Ytverkande (radie)"]
+    },
+    "stat": {
+      "skada": "1T12"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Katapult (brinnande)",
+    "beskrivning": "Kastmaskiner har länge använts vid belägringar i Alberetors många krig, och mest frekvent använd då som nu är katapulten. Den är relativt lätt att förflytta i relation till dess stora verkan mot fasta mål och truppsamlingar, jämfört med dess större kusin, trebuchetten. Katapulten kan endast laddas, riktas och avfyras av någon med förmågan Belägringskonst. Katapulten kan laddas med stenbumlingar eller med en bräschkruka, där de förra krossar byggnader och de senare är bättre mot klenare men eldfängda måltavlor, inklusive fientliga formationer på slagfältet.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Brinnande", "Ytverkande (radie)"]
+    },
+    "stat": {
+      "skada": "1T12"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+
+  {
+    "namn": "Kedjestav",
+    "beskrivning": "Kedjestaven är utvecklad bland alver och adopterat av vissa barbarer. Vapnet består av en stav med en kort kedja fäst i ena eller båda ändarna. Kedjan eller kedjorna har vanligen en tyngd eller en kort klinga längst ut, för att ge rätt snärt. Vapnet kan användas som en stav eller för att snärja en fiende.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Långt", "Snärjande"]
+    },
+    "stat": {
+      "skada": "1T8"
+    },
+    "grundpris": {
+      "daler": 3,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Lans",
+    "beskrivning": "Lansens värde för gamla Alberetor kan knappast överskattas; det var med lansar i riddarnas händer som mörkermästarnas största monstrositeter nedlades. Traditionen har fortsatt också i Ambria, där rytteriets dominans i flack terräng snabbt lät drottningens folk trycka barbarer, troll och styggelser tillbaka till Davokars dunkla bryn.\nRyttarlansen är ett förlängt spjut, med grepp och handskydd avsett för bruk till häst. På ett riddjurs rygg räknas lansen som ett långt vapen, även med enhandsgrepp. På marken är lansen alltför lång för att alls kunna användas med en hand.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Långt"]
+    },
+    "stat": {
+      "skada": "1T8"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Långhammare",
+    "beskrivning": "Långhammaren är en bastardvariant av stridshammaren. Den kan användas i en hand tillsammans med sköld men kommer – liksom alla bastardvapen – till sin rätt främst då den svingas i två händer.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Bastardvapen"]
+    },
+    "stat": {
+      "skada": "10"
+    },
+    "grundpris": {
+      "daler": 15,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Långpiska",
+    "beskrivning": "Långpiskan är en utveckling av det vanliga djur- eller slavdrivarverktyget. Långpiskan är avsedd inte bara att driva på utan också att kunna snärja. Dess längd ger en avsevärd snärt, vilket mot ett klent skyddat mål kan ge otäcka sår.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Snärjande", "Ledat", "Trubbigt"]
+    },
+    "stat": {
+      "skada": "1T6"
+    },
+    "grundpris": {
+      "daler": 2,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Pansarstickare",
+    "beskrivning": "Pansarstickaren är ett duellsvärd men med en avsmalnande klinga som slutar i en sylformad spets, avsedd att tränga genom rustning.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Djupverkande"]
+    },
+    "stat": {
+      "skada": "1T8"
+    },
+    "grundpris": {
+      "daler": 5,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Raketbatteri",
+    "beskrivning": "Raketbatteriet är ett belägringsvapen som inte lämpar sig för andra än tränade sappörer att använda. Det består av ett ramverk i trä där hundratals alkemiska raketpilar laddas. Dessa antänds sedan och regnar brinnande och skriande ned över fiendens trupper. Varje varelse som fångas i pilregnet måste klara ett Försvar eller träffas av en brinnande pil. Om man träffas får man slå igen, tills man klarar ett Försvar, då träffas man inte av fler brinnande pilar.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Brinnande", "Ytverkande (radie)"]
+    },
+    "stat": {
+      "skada": "1T10"
+    },
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Repeterarmborst",
+    "beskrivning": "Repeterarmborstet är en mekaniskt avancerad utveckling av armborstet men försett med en hävarmsspännare på undersidan, detta för snabbare omladdning. Endast de skickligaste vapensmeder kan bygga dessa tekniskt avancerade verktyg. Repeterarmborstet laddas om som en fri handling utan att förlora armborstets slagkraft.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Speciell"]
+    },
+    "stat": {
+      "skada": "1T10"
+    },
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Ryttarlångbåge",
+    "beskrivning": "Under Det stora kriget framkom behovet av ett kraftfullt bågskytte från hästryggen. Den traditionella långbågen var för otymplig med sin längd, den kom i vägen för hästen eller tvärt om. Svaret blev ryttarlångbågen, en asymmetrisk långbåge. Bågens nedre lem är kortare än den övre, och bågen kan därmed röras fritt över manken på riddjuret utan att tappa längd och därmed kraft. Vapnet lutas istället karaktäristiskt framåt när det spänns och skjuts, i syfte att behålla spänningsförhållandet mellan de två delarna.\nI Ambria används ryttarlångbågen främst i väster, som ett svar på de vagnsburna barbarernas snabba härjningståg. De traditionella långbågskompanierna är där försvarstrupper, men för att ta upp jakten på fienden behövs rytteri och helst då beridna bågskyttar.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Precist"]
+    },
+    "stat": {
+      "skada": "1T8"
+    },
+    "grundpris": {
+      "daler": 5,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Sammansatt båge",
+    "beskrivning": "Hos vagnsfolket väster om Ambria är bågskyttet högt skattat och bågmakandets konst väl utvecklad. Den sammansatta bågen är gjord i lager av horn och senor över en kärna i trä. Bågen är kortare än en långbåge men utvecklar mer kraft, dock ej med långbågens precision. Dess korta längd gör den lämplig att använda till häst, eller i det trånga utrymmet på en stridskärra dragen av hästar.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Djupverkande"]
+    },
+    "stat": {
+      "skada": "1T8"
+    },
+    "grundpris": {
+      "daler": 5,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Skarprättarsvärd",
+    "beskrivning": "Skarprättarsvärdet ingår i bödelns arsenal och används för att avsluta livet på ädlingar – yxan för borgare och repet för pöbeln – men för vissa bödlar är svärdet också det vapen som reserveras för slagfältet.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Precist", "Långsamt", "Massivt"]
+    },
+    "stat": {
+      "skada": "1T10"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Storslaga",
+    "beskrivning": "Storslagan är en tyngre version av stridsslagan. Som väntat är den tyngre storslagan långsammare men med större verkan på dem som träffas av dess massiva huvud.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Ledat", "Långsamt", "Massivt"]
+    },
+    "stat": {
+      "skada": "1T10"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Trebuchet",
+    "beskrivning": "Belägringarnas drottning är den mäktiga trebuchetten, en kastmaskin med kraft nog att krossa de mäktigaste murar, i alla fall genom längre tids beskjutning. Trebuchetten kan enbart hanteras av någon med förmågan Belägringskonst.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Massiv", "Raserande"]
+    },
+    "stat": {
+      "skada": "1T12"
+    },
+    "grundpris": {
+      "daler": 50,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Änterbila",
+    "beskrivning": "Änterbilan är en långskaftad yxa, en bastardyxa avsedd för stormningar. Den greppas med en hand tillsammans med sköld eller ensamt under klättring uppför stormstegar, för att sedan med tvåhandsgrepp rensa murkrönet medelst tunga hugg. Äldre modeller från Det stora krigets tid användes i strider till sjöss och har då en änterkrok på yxbladets rygg, för att säkra ett bra grepp under klättringen upp på fiendens reling.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Djupverkande", "Långsamt"]
+    },
+    "stat": {
+      "skada": "1T10"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+    },
+
+  {
+    "namn": "Alkemiskt eldrör, bärbart",
+    "beskrivning": "Det bärbara alkemiska eldröret är en portabel version av det stationära belägringsvapnet med samma namn. Det bärbara eldröret består av ett gjutet rör som laddas med alkemiska eldämnen, vilka vid antändning förvandlar eldröret till en förödande eldkastare. Eldröret kan svepas och kan träffa alla fiender framför skytten, ett slag slås för varje mål. De som träffas tar full skadetärning i skada och drabbas av eld som pågående effekt. De som lyckas försvara sig tar halv skada och drabbas inte av någon pågående effekt.\nVem som helst kan använda ett bärbart alkemiskt eldrör, men en användare som saknar förmågan Belägringskonst (gesällnivå) riskerar ett katastrofalt förlopp. Se reglerna för Alkemiska vapen på sidan 98 i Spelarens Handbok.\nEtt bärbart alkemiskt eldrör som svingas i närstrid räknas som en kampslägga.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Brinnande", "Ytverkande (kon)"]
+    },
+    "stat": {
+      "skada": "1T12"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Alkemiskt eldrör, stationärt",
+    "beskrivning": "Det stationära alkemiska eldröret består av ett rör – vanligen en urholkad stock men helgjutna versioner finns också – som laddas med alkemiska eldämnen, vilka vid antändning förvandlar eldröret till en förödande eldkastare. Eldröret kan svepas och kan träffa alla fiender framför skytten, ett slag slås för varje mål. De som träffas tar full skadetärning i skada och drabbas av eld som pågående effekt. De som lyckas försvara sig tar halv skada och drabbas inte av någon pågående effekt.\nEndast personer med förmågan Belägringskonst (gesäll) kan säkert hantera ett stationärt alkemiskt eldrör. Se Alkemiska vapen på sidan 98 i Spelarens Handbok.",
+    "taggar": {
+      "typ": ["Vapen"],
+      "kvalitet": ["Brinnande", "Massivt", "Ytverkande (kon)"]
+    },
+    "stat": {
+      "skada": "1T12"
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+
+  {
+    "namn": "Vanlig pil/lod",
+    "beskrivning": "En vanlig pil eller ett lod som används till båge eller armborst. Standardprojektil utan särskilda kvaliteter.",
+    "taggar": {
+      "typ": ["Pil/Lod"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Precisionspil",
+    "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precis.",
+    "taggar": {
+      "typ": ["Pil/Lod"],
+      "kvalitet": ["Precis"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Brandpil",
+    "beskrivning": "Projektil med ett brandstycke invid spetsen. Används oftast för att sätta eld på målet, må det vara en levande varelse, byggnader eller terräng, se kvaliteten Brinnande.",
+    "taggar": {
+      "typ": ["Pil/Lod"],
+      "kvalitet": ["Brinnande"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Fångstspets",
+    "beskrivning": "En hullingförsedd spets och en tunn silkeslina fäst vid pilen gör att projektilen kan användas för att fånga ett mål. Att dra loss hullingarna är en förflyttningshandling och kräver ett lyckat [Stark –Skada] och även ett lyckat slag ger 1t4 i extra skada. Att förflytta sig med fångstpilen i kroppen gör 1 i skada per runda, rustning skyddar ej.",
+    "taggar": {
+      "typ": ["Pil/Lod"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Hammarpil",
+    "beskrivning": "Den kulformade spetsen är till för att bedöva målet snarare än att skada det. Vid en lyckad träff beräknas skada som vanligt, men sedan används skadan för att se om målet bedövats, [Stark –Skada]. Om målet misslyckas med sitt motståndsslag bedövas det under en runda, och får därmed inte utföra några handlingar.",
+    "taggar": {
+      "typ": ["Pil/Lod"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Pansarbrytande spets",
+    "beskrivning": "Projektilen har en spets som låter skottet enklare slå hål på rustningar. Räknas som Djupverkande mot bepansrade mål.",
+    "taggar": {
+      "typ": ["Pil/Lod"],
+      "kvalitet": ["Djupverkande"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Repklyvare",
+    "beskrivning": "En Y-formad spets avsedd att kapa rep. Att träffa ett rep är mycket svårt, –5 på attackslaget, men å andra sidan kapas då repet.",
+    "taggar": {
+      "typ": ["Pil/Lod"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Svalstjärt",
+    "beskrivning": "Projektilens huvud är brett och avsett att ge ett stort och blödande sår i målet. Nackdelen är att spetsen är mindre effektiv mot rustade mål. Rustningar skyddar 1t4 extra mot svalstjärten, men om den gör skada så blöder målet enligt kvalitén Blodsgjutande.",
+    "taggar": {
+      "typ": ["Pil/Lod"],
+      "kvalitet": ["Blodsgjutande"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Visslare",
+    "beskrivning": "Pilen visslar på sin färd, som signal till allierade.",
+    "taggar": {
+      "typ": ["Pil/Lod"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  },
+  {
+    "namn": "Änterhakespil",
+    "beskrivning": "Pilen skickar en änterhake upp till 10 meter upp eller 30 meter långt bort. Haken är fäst i en tunn lina av silke, med vilken ett grövre rep med fästkrok kan firas upp till änterhaken. När väl repets fästkrok hakat i kan man klättra på repet.",
+    "taggar": {
+      "typ": ["Pil/Lod"]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  }
+]
