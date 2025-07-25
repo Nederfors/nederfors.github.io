@@ -7,10 +7,13 @@ function initIndex() {
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', compact);
 
+  const getEntries = () =>
+    DB.concat(storeHelper.getCustomEntries(store));
+
   /* fyll dropdowns */
-  (()=>{
+  const fillDropdowns = ()=>{
     const set = { typ:new Set(), ark:new Set(), test:new Set() };
-    DB.forEach(p=>{
+    getEntries().forEach(p=>{
       (p.taggar.typ||[]).forEach(v=>set.typ.add(v));
       explodeTags(p.taggar.ark_trad).forEach(v=>set.ark.add(v));
       (p.taggar.test||[]).forEach(v=>set.test.add(v));
@@ -20,7 +23,8 @@ function initIndex() {
     fill(dom.typSel , set.typ ,'Typ');
     fill(dom.arkSel , set.ark ,'Arketyp');
     fill(dom.tstSel , set.test,'Test');
-  })();
+  };
+  fillDropdowns();
 
   /* render helpers */
   const activeTags =()=>{
@@ -32,7 +36,7 @@ function initIndex() {
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
-  const filtered = () => DB.filter(p=>{
+  const filtered = () => getEntries().filter(p=>{
     const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
       .map(t => searchNormalize(t.toLowerCase()));
     const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
@@ -114,6 +118,7 @@ function initIndex() {
 
   /* expose update function for party toggles */
   window.indexViewUpdate = () => renderList(filtered());
+  window.indexViewRefreshFilters = () => fillDropdowns();
 
   /* -------- events -------- */
   dom.sIn.addEventListener('input',()=>{
@@ -168,7 +173,7 @@ function initIndex() {
       return;
     }
     const name = btn.dataset.name;
-    const p  = DB.find(x=>x.namn===name);
+    const p  = getEntries().find(x=>x.namn===name);
     const lvlSel = btn.closest('li').querySelector('select.level');
     let   lvl = lvlSel ? lvlSel.value : null;
     if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || null;
