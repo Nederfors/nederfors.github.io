@@ -81,7 +81,7 @@
       if (stats.skydd) parts.push(`Skydd: ${stats.skydd}`);
       if (stats.hasOwnProperty('begr\u00e4nsning'))
         parts.push(`Begr\u00e4nsning: ${stats['begr\u00e4nsning']}`);
-      return parts.length ? `<br>${parts.join(' ')}` : '';
+      return parts.length ? `<br>${parts.join('<br>')}` : '';
     }
     if (types.includes('Vapen')) {
       const dmg = entry.stat?.skada;
