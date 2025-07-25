@@ -71,6 +71,25 @@
     return `${d}D ${s}S ${o}\u00d6`;
   }
 
+  // Returnera HTML med skada/skydd-stats för vapen och rustningar
+  function itemStatHtml(entry) {
+    if (!entry) return '';
+    const types = entry.taggar?.typ || [];
+    if (types.includes('Rustning')) {
+      const stats = entry.stat || {};
+      const parts = [];
+      if (stats.skydd) parts.push(`Skydd: ${stats.skydd}`);
+      if (stats.hasOwnProperty('begr\u00e4nsning'))
+        parts.push(`Begr\u00e4nsning: ${stats['begr\u00e4nsning']}`);
+      return parts.length ? `<br>${parts.join(' ')}` : '';
+    }
+    if (types.includes('Vapen')) {
+      const dmg = entry.stat?.skada;
+      return dmg ? `<br>Skada: ${dmg}` : '';
+    }
+    return '';
+  }
+
   // Normalize text for searches by removing diacritics except for
   // the Swedish characters å, ä and ö. Everything should be in
   // lowercase before calling this function.
@@ -103,5 +122,6 @@
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
   window.formatMoney = formatMoney;
+  window.itemStatHtml = itemStatHtml;
   window.searchNormalize = searchNormalize;
 })(window);

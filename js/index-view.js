@@ -68,8 +68,11 @@ function initIndex() {
         : '';
       const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
       let desc = abilityHtml(p);
-      if (isInv(p) && p.grundpris) {
-        desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
+      if (isInv(p)) {
+        desc += itemStatHtml(p);
+        if (p.grundpris) {
+          desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
+        }
       }
       let infoHtml = desc;
       if (isRas(p) || isYrke(p) || isElityrke(p)) {

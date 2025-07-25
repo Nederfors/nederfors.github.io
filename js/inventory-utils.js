@@ -354,6 +354,7 @@
             const html = tags.map(t => `<span class="tag">${t}</span>`).join(' ');
             desc += `<div class="tags">${html}</div>`;
           }
+          desc += itemStatHtml(entry);
 
           /* — kvaliteter — */
           const removedQ = row.removedKval ?? [];
