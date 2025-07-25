@@ -6,8 +6,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "1 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 5,
@@ -23,8 +22,7 @@
         "kvalitet": ["Precist"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "1 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 5,
@@ -40,8 +38,7 @@
         "kvalitet": ["Djupverkande"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "1 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 5,
@@ -57,8 +54,7 @@
         "kvalitet": ["Ledat"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "1 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 5,
@@ -74,8 +70,7 @@
         "kvalitet": ["Kort"]
       },
       "stat": {
-        "skada": "1T6",
-        "räckvidd": "0,5 m"
+        "skada": "1T6"
       },
       "grundpris": {
         "daler": 0,
@@ -91,8 +86,7 @@
         "kvalitet": ["Balanserad"]
       },
       "stat": {
-        "skada": "1T6",
-        "räckvidd": "0,5 m"
+        "skada": "1T6"
       },
       "grundpris": {
         "daler": 1,
@@ -108,8 +102,7 @@
         "kvalitet": ["Djupverkande"]
       },
       "stat": {
-        "skada": "1T6",
-        "räckvidd": "0,5 m"
+        "skada": "1T6"
       },
       "grundpris": {
         "daler": 1,
@@ -125,8 +118,7 @@
         "kvalitet": ["Långt"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "2 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 0,
@@ -142,8 +134,7 @@
         "kvalitet": ["Djupverkande"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "2 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 3,
@@ -159,8 +150,7 @@
         "kvalitet": ["Precist"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "2 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 3,
@@ -176,8 +166,7 @@
         "kvalitet": ["Trubbigt"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "2 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 0,
@@ -193,8 +182,7 @@
         "kvalitet": ["Kort"]
       },
       "stat": {
-        "skada": "1T4",
-        "räckvidd": "0,5 m"
+        "skada": "1T4"
       },
       "grundpris": {
         "daler": 0,
@@ -210,8 +198,7 @@
         "kvalitet": ["Djupverkande"]
       },
       "stat": {
-        "skada": "1T4",
-        "räckvidd": "0,5 m"
+        "skada": "1T4"
       },
       "grundpris": {
         "daler": 0,
@@ -226,8 +213,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T4",
-        "räckvidd": "1 m"
+        "skada": "1T4"
       },
       "grundpris": {
         "daler": 3,
@@ -243,8 +229,7 @@
         "kvalitet": ["Smidig"]
       },
       "stat": {
-        "skada": "1T4",
-        "räckvidd": "1 m"
+        "skada": "1T4"
       },
       "grundpris": {
         "daler": 3,
@@ -260,8 +245,7 @@
         "kvalitet": ["Balanserad"]
       },
       "stat": {
-        "skada": "1T4",
-        "räckvidd": "1 m"
+        "skada": "1T4"
       },
       "grundpris": {
         "daler": 3,
@@ -276,8 +260,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T10",
-        "räckvidd": "1,5 m"
+        "skada": "1T10"
       },
       "grundpris": {
         "daler": 10,
@@ -293,8 +276,7 @@
         "kvalitet": ["Precist, Bastardvapen"]
       },
       "stat": {
-        "skada": "1T10",
-        "räckvidd": "1,5 m"
+        "skada": "1T10"
       },
       "grundpris": {
         "daler": 10,
@@ -310,8 +292,7 @@
         "kvalitet": ["Djupverkande"]
       },
       "stat": {
-        "skada": "1T10",
-        "räckvidd": "1,5 m"
+        "skada": "1T10"
       },
       "grundpris": {
         "daler": 10,
@@ -327,8 +308,7 @@
         "kvalitet": ["Ledat"]
       },
       "stat": {
-        "skada": "1T10",
-        "räckvidd": "1,5 m"
+        "skada": "1T10"
       },
       "grundpris": {
         "daler": 10,
@@ -343,8 +323,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T10",
-        "räckvidd": "60 m"
+        "skada": "1T10"
       },
       "grundpris": {
         "daler": 8,
@@ -360,8 +339,7 @@
         "kvalitet": ["Djupverkande"]
       },
       "stat": {
-        "skada": "1T10",
-        "räckvidd": "80 m"
+        "skada": "1T10"
       },
       "grundpris": {
         "daler": 8,
@@ -376,8 +354,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "50 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 5,
@@ -393,8 +370,7 @@
         "kvalitet": ["Precist"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "120 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 5,
@@ -409,8 +385,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T6",
-        "räckvidd": "10 m"
+        "skada": "1T6"
       },
       "grundpris": {
         "daler": 2,
@@ -426,8 +401,7 @@
         "kvalitet": ["Djupverkande"]
       },
       "stat": {
-        "skada": "1T6",
-        "räckvidd": "30 m"
+        "skada": "1T6"
       },
       "grundpris": {
         "daler": 2,
@@ -443,8 +417,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "1 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 4,
@@ -459,8 +432,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T6",
-        "räckvidd": "0,5 m"
+        "skada": "1T6"
       },
       "grundpris": {
         "daler": 0,
@@ -475,8 +447,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T8",
-        "räckvidd": "1 m"
+        "skada": "1T8"
       },
       "grundpris": {
         "daler": 3,
@@ -491,8 +462,7 @@
         "typ": ["Vapen"]
       },
       "stat": {
-        "skada": "1T6",
-        "räckvidd": "1,5 m"
+        "skada": "1T6"
       },
       "grundpris": {
         "daler": 2,
