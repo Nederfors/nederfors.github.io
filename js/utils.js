@@ -2,6 +2,7 @@
   const LVL   = ['Novis','Ges\u00e4ll','M\u00e4stare'];
   const EQUIP = [
     'Vapen',
+    'Pil/Lod',
     'Rustning',
     'Diverse',
     'Elixir',
