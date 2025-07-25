@@ -74,6 +74,16 @@ function initIndex() {
       let desc = abilityHtml(p);
       if (isInv(p)) {
         desc += itemStatHtml(p);
+        const baseQuals = [
+          ...(p.taggar?.kvalitet ?? []),
+          ...splitQuals(p.kvalitet)
+        ];
+        if (baseQuals.length) {
+          const qhtml = baseQuals
+            .map(q => `<span class="tag">${q}</span>`)
+            .join(' ');
+          desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+        }
         if (p.grundpris) {
           desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
         }
