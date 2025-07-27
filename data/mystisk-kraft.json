@@ -687,4 +687,22 @@
       "Gesäll": "Fri. Rollpersonen ger sig själv och sina allierade +1 på Kvick, Stark och Träffsäker så länge sången varar.",
       "Mästare": "Fri. Rollpersonen själv och dennes allierade får +1 på Kvick, Stark och Träffsäker så länge mystikern sjunger. Dessutom återfår mystikern och dess allierade 1T6 Tålighet när sången först inleds. Denna helande effekt kan endast användas en gång per scen."
     }
-  }]
+  },
+{
+  "namn": "Kraftresonans",
+  "beskrivning": "Denna mystiker har lärt sig att lyssna till världens dolda strömningar och väva magins trådar med ovanlig precision och riskmedvetenhet. Genom att kanalisera kraftens djupare resonanser, kan rollpersonen påverka effekterna av mystiska krafter genom att tillfälligt tillåta korruption. Färdigheten ger möjlighet att förbättra, slå om eller förstärka resultatet av mystiska krafter genom att ta emot temporär korruption.",
+  "taggar": {
+    "typ": [
+      "Förmåga"
+    ],
+    "ark_trad": [
+      "Mystiker"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Reaktiv. När effekten av en mystisk kraft har bestämts, får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär korruption), kan rollpersonen slå om effekttärningarna och välja det mest gynnsamma resultatet.",
+    "Gesäll": "Handling: Reaktiv. Efter ett misslyckat försök att aktivera en mystisk kraft, kan rollpersonen ta emot 1T4 temporär korruption och genast försöka på nytt.",
+    "Mästare": "Handling: Reaktiv. Efter att en mystisk kraft har aktiverats kan rollpersonen välja att öka effekten bortom det vanliga genom att släppa in mer av världens råa, fördärvade kraft. Rollpersonen kan dra på sig 1T4 temporär korruption för 1T4 extra effekt, 1T6 för 1T6 extra, och så vidare – styrka och fördärv i balans, men med ödet alltid i vågskålen."
+  }
+}
+]
