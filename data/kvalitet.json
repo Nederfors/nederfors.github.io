@@ -98,4 +98,12 @@
     "taggar": {
       "typ": ["Kvalitet"]
     }
-  }]
+  },
+{
+    "namn": "Speciell",
+    "beskrivning": "Kvalitetens effekt förklaras i utrustningens beskrivning",
+    "taggar": {
+      "typ": ["Kvalitet"]
+    }
+}
+]
