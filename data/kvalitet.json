@@ -86,12 +86,19 @@
     }
   },
   {
-    "namn": "Ytverkande",
-    "beskrivning": "Vapnets effekt breder ut sig över en yta och skadar alla om befinner sig inom verkansområdet. Ett slag slås för varje varelse inom verkansområdet, de som träffas tar full skada och de som lyckas med Försvar tar halv skada. Pågående följdeffekter i form av eld eller syra drabbar endast dem som träffas fullt av den initiala effekten. Det finns två sorters ytverkan, radie och kon, varav den förstnämnda förekommer i två varianter: Närstrid och Kort. Närstridsradie: 1–2 meter, det vill säga en varelse samt de varelser som står i dess direkta anslutning; de som är i närstrid med denne eller skulle kunna vara det utan förflyttning. Kort radie: 10 meter, dvs. alla som befinner sig inom en förflyttnings avstånd från den punkt på marken från vilken effekten utgår. Kon: Skytten avfyrar vapnet och alla framför vapnet inom räckvidden riskerar att träffas. Om man använder skalenlig förflyttning på ett rutnät är konen lika bred som avståndet från vapnet. På närstridsavstånd är den 1−2 meter bred, på kort håll är den ca 10 meter bred och på medellångt håll ca 20 meter bred.",
-    "taggar": {
-      "typ": ["Kvalitet"]
-    }
-  },
+  "namn": "Ytverkande (radie)",
+  "beskrivning": "Vapnets effekt sprider sig ut från en punkt och skadar alla som befinner sig inom en cirkulär verkansområde. Ett slag slås för varje varelse inom området; de som träffas tar full skada, de som lyckas med Försvar tar halv skada. Pågående följdeffekter som eld eller syra påverkar endast de som tar full skada av den initiala effekten. Ytverkande (radie) förekommer i två varianter: Närstridsradie (1–2 meter), vilket innefattar en varelse och de närmaste angränsande; och Kort radie (10 meter), vilket innefattar alla inom en förflyttnings avstånd från den centrala punkten.",
+  "taggar": {
+    "typ": ["Kvalitet"]
+  }
+},
+{
+  "namn": "Ytverkande (kon)",
+  "beskrivning": "Vapnets effekt breder ut sig i en konformad area framför användaren och påverkar alla inom detta område. Ett slag slås för varje varelse i konen; de som träffas tar full skada, de som lyckas med Försvar tar halv skada. Följdeffekter som eld eller syra påverkar endast de som tar full skada av den initiala effekten. Om konen används på ett rutnät är den lika bred som dess längd. Vid närstrid är konen 1–2 meter bred, på kort håll cirka 10 meter, och på medellångt håll cirka 20 meter.",
+  "taggar": {
+    "typ": ["Kvalitet"]
+  }
+},
   {
     "namn": "Återvändande",
     "beskrivning": "Vapnet har egenskaper som gör att det i en skicklig kastares hand kan fås att återvända till kastaren om kastet missar målet (kräver ett lyckat Träffsäker, fri handling).",
