@@ -401,8 +401,12 @@
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">K🆓</button>` : '';
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
 
-          const lvlInfo = row.nivå ? ` <span class="tag level">${row.nivå}</span>` : '';
-          const dataLevel = row.nivå ? ` data-level="${row.nivå}"` : '';
+          const rowLevel = row.nivå ||
+            (tagTyp.includes('Elixir')
+              ? Object.keys(entry.nivåer || {}).find(l => l)
+              : null);
+          const lvlInfo = rowLevel ? ` <span class="tag level">${rowLevel}</span>` : '';
+          const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
           const priceText = formatMoney(
             calcRowCost(row, hasForge, hasAlchemy, hasArtefacter)
           );
