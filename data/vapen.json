@@ -557,7 +557,7 @@
     "beskrivning": "En kruka fylld med alkemiskt tändmedel som vid antändning exploderar med en massiv knall. Om bräschkrukan grävts ned nära ett objekt blir effekten raserande, om krukan står öppet blir effekten istället ytverkande. Notera att den som placerar en bräschkruka måste förse den med stubin för att inte själv fångas av effekten. Vem som helst kan använda en bräschkruka men endast en person med förmågan Belägringskonst eller Pyroteknik kan göra det säkert. Se reglerna för Alkemiska vapen på sidan 98. Bräschskrukan kan också användas som ammunition för katapulter, och har i så fall en ytverkande effekt vid nedslaget.",
     "taggar": {
       "typ": ["Vapen"],
-      "kvalitet": ["Brinnande", "Ytverkande"]
+      "kvalitet": ["Brinnande", "Ytverkande (radie)"]
     },
     "stat": {
       "skada": "1T12"
