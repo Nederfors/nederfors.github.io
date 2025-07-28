@@ -1215,4 +1215,24 @@
     "Gesäll": "Aktiv. Det andra yxkonstnären utvecklar är det mäktiga dubbelhugget: att slå med yxans ena sida och sedan omedelbart följa upp det med ett hugg med andra sidan. Rollpersonen gör två attacker med en stridshandling, båda med en nivå lägre skadetärning än annars.",
     "Mästare": "Passiv. Yxmästaren återvänder till yxandets kärna, det mäktiga hugget. Varje hugg med yxans egg gör 1T4 extra i skada, dock maximalt ett hugg per stridshandling."
   }
+},
+{
+  "namn": "Reningskraft",
+  "beskrivning": "Krigare som tränat sina kroppar till det yttersta kan använda rå styrka för att driva undan korruption från sitt inre. Genom disciplin och fysisk kraft renar rollpersonen sin kropp även mitt i stridens hetta.",
+  "taggar": {
+    "typ": [
+      "Förmåga"
+    ],
+    "ark_trad": [
+      "Krigare"
+    ],
+    "test": [
+      "Stark"
+    ]
+  },
+  "nivåer": {
+    "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Stark bli av med 1T4 temporär korruption. Upprepade försök får göras, men endast ett lyckat försök per scen räknas.",
+    "Gesäll": "Handling: Aktiv. Som Novis men rensningen är 1T6 temporär korruption.",
+    "Mästare": "Handling: Aktiv. Som Gesäll men rollpersonens rensning ger 1T8 temporär korruption. Vid misslyckat slag minskar du ändå 1T4 temporär korruption."
+  }
 }]
