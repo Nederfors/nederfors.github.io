@@ -443,7 +443,177 @@
     "ark_trad": [],
     "test": ["Vaksam"]
   }
-}
+},
 
+  {
+    "namn": "Prios Barn",
+    "beskrivning": "Kan väljas upp till tre gånger. Karaktären är djupt troende och bär Prios ljus med sig även i de mörkaste tider. För varje nivå av denna fördel får karaktären +1 i försvar mot attacker och effekter från genomkorrumperade varelser. Om karaktären bryter med Prios eller går över sin korruptionströskel under spelets gång, blir Prios Barn automatiskt till nackdelen Prios Förtappad av samma grad som Prios Barn är vald till.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": ["Mystiker"],
+      "test": ["Försvar"]
+    }
+  },
+  {
+    "namn": "Prios Tecken",
+    "beskrivning": "Karaktären bär tydliga kännetecken av Prios välsignelse, vilket märks i en utstrålning av ett diskret ljus omkring hen. När karaktären interagerar med personer som är troende får hen +1 på övertygande. Detsamma gäller vid försök att övertyga kättare eller tveksamma om religiösa frågor. Om karaktären vänder sig bort från Prios eller överskrider sin korruptionströskel, ersätts denna fördel med nackdelen Fallen Stjärna.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": ["Mystiker"],
+      "test": ["Övertygande"]
+    }
+  },
+  {
+    "namn": "Prisjakt",
+    "beskrivning": "Karaktären är uppvuxen bland köpmän och försäljare och lärt sig konsten att förhandla till sig ett bra pris. Vare sig det är att se skavanker på ett fullgott svärd eller ge någon tron om att detta är dennes livs affär har karaktären en otrolig känsla för en bra affär. Prisjakt ger karaktären +1 i övertygande vid förhandlande om pris av vara eller tjänst. Kan införskaffas 3 gånger.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Övertygande"]
+    }
+  },
+  {
+    "namn": "Asketisk",
+    "beskrivning": "Karaktären och dess kropp är som ett tempel. Genom ett liv som kretsat kring överlevnad och förnödenheterna som möjliggör det, vare sig det är i stadens slum eller långt ute i skogen har karaktären lärt sig att mat är en resurs som används sparsamt. Karaktären behöver bara hälften så mycket mat i dagligt intag. Undantaget om rollpersonen är skadad eller har nedsatt förmåga på något sätt. Fördelar som Vildmarksvana påverkas inte av asketisk, dvs samma tid krävs för att hitta mat.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Lyckosam",
+    "beskrivning": "Karaktärens liv har av outgrundliga anledningar alltid gått bra. Kniviga situationer har löst sig och rätt vindar har blåst. Regnet har slutat ösa ner lagom till att elden ska göras och ja, ett tursamt liv har levts. Karaktären kan en gång per äventyr (eller så ofta som spelledaren tillåter) möjlighet att slå om ett slag där utfallet inte blev som karaktären ville och använda den bästa utfallet. Denna fördel kan tas upp till 3 gånger, vilket resulterar i fler omkast, men fortfarande bara vid ett tillfälle.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Skattöga",
+    "beskrivning": "Man skulle nästan kunna tro att personens ögon har färgen av daler. För när det kommer till skattletande så har karaktären ett för att veta precis vart man ska gräva eller leta. När ett slag ska göras på fyndtabellen får karaktären lägga till +1 på utfallet, vilket ökar chansen att hitta något värdefullt eller sällsynt. Denna fördel kan väljas upp till 3 gånger.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Välutrustad",
+    "beskrivning": "En karaktär med välutrustad är ingen nybörjare. Det här är en som varit med ett tag och vet vad som krävs av ett äventyr, alternativt fått information av erfarna skattletare om vad som behövs. Karaktären börjar alla äventyr med i sin packning utöver standard: 3 långfärdsbröd, 3 örtkurer, 30m rep, Papper&krita, 3 facklor, 1 mistlur.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Råstyrka",
+    "beskrivning": "(Endast tillgänglig för karaktärer med särdraget Robust) Som dom giganterna dom är, kommer därtill oftast och en styrka som om hämtad direkt ur svartekarnas växtkraft i Davokars djup. Karaktären får i alla slag mot Stark utanför strid lägga till +2 för varje nivå i Robust som denne besitter.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Stark"]
+    }
+  },
+  {
+    "namn": "Tvådelad tunga",
+    "beskrivning": "Om det så var genom uppväxten eller genom studier så har karaktären lärt sig ett andra språk. Tex Barbariska, Svartalfmål, eller det snirkliga språket av dvärgar. Mer komplicerade språk är undantaget, då det kräver för stor visdom att behärska utan genomgående studier (lärd på gesällnivå eller uppåt).",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Teckenspråk",
+    "beskrivning": "Karaktären behärskar ett välutvecklat system av tecken och gester som kan användas för att samtala utan ord. Om två eller fler karaktärer besitter denna fördel kan de kommunicera ljudlöst och diskret på avstånd, så länge de har fri sikt till varandra. Detta gör det möjligt att utbyta information, ge varningar eller koordinera handlingar utan att avslöja sig genom tal.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Kvickfotad",
+    "beskrivning": "Karaktären är ovanligt snabb och smidig i sina rörelser, vilket gör det svårt för motståndare med stora, långsamma vapen att träffa. Karaktären får +1 i försvar mot närstridsattacker som utförs med tunga vapen.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Försvar"]
+    }
+  },
+  {
+    "namn": "Lansvrängare",
+    "beskrivning": "Karaktären har lärt sig att utnyttja svagheterna hos motståndare som använder långa vapen, som spjut, lansar eller stavar. Genom att snabbt förflytta sig in på trångt avstånd och störa rytmen hos den som försöker hålla distans, får karaktären +1 i försvar mot närstridsattacker med vapen som har kvaliteten långt.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Försvar"]
+    }
+  },
+  {
+    "namn": "Hököga",
+    "beskrivning": "Genom snabb reaktionsförmåga och god uppsikt är karaktären skicklig på att upptäcka och undvika projektiler och kastvapen. Karaktären får +1 i försvar mot distansattacker såsom pilar, kastspjut eller andra avståndsvapen.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Försvar"]
+    }
+  },
+  {
+    "namn": "Fäktarmästare",
+    "beskrivning": "Karaktären är särskilt bra på att parera och undvika snabba, precisa slag från enhandsvapen. Karaktären får +1 i försvar mot närstridsattacker med ett enhandsvapen.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Försvar"]
+    }
+  },
+  {
+    "namn": "Virvelväktare",
+    "beskrivning": "Med ovanlig kontroll och blick för rörelsemönster kan karaktären läsa och undvika komplexa anfall, även när en fiende slåss med två vapen. Karaktären får +1 i försvar mot närstridsattacker från motståndare som använder två vapen samtidigt.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Försvar"]
+    }
+  },
+  {
+    "namn": "Stålsatt Vilja",
+    "beskrivning": "Karaktären har tränat upp sin mentala motståndskraft och är svår att rubba med mystiska krafter. Vid försvar mot anfall eller påverkan från magi, ritualer eller andra övernaturliga effekter får karaktären +1 på Viljestark.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": ["Mystiker"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "namn": "Defensiv hållning",
+    "beskrivning": "Karaktären är van att kämpa ur underläge och har utvecklat en naturlig förmåga att skydda sig när oddsen är emot hen. När karaktären möter en motståndare som har övertag, till exempel på grund av position, överraskning eller numerärt överläge, får karaktären +1 i försvar mot deras attacker.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Försvar"]
+    }
+  }
 
 ]
