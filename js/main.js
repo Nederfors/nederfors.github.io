@@ -241,10 +241,13 @@ function bindToolbar() {
   if (dom.alcBtn) {
     if (storeHelper.getPartyAlchemist(store)) dom.alcBtn.classList.add('active');
     dom.alcBtn.addEventListener('click', () => {
-      const val = dom.alcBtn.classList.toggle('active');
-      storeHelper.setPartyAlchemist(store, val);
-      invUtil.renderInventory();
-      if (window.indexViewUpdate) window.indexViewUpdate();
+      openAlchemistPopup(level => {
+        if (level === null) return;
+        dom.alcBtn.classList.toggle('active', Boolean(level));
+        storeHelper.setPartyAlchemist(store, level);
+        invUtil.renderInventory();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+      });
     });
   }
   if (dom.artBtn) {
@@ -264,6 +267,36 @@ function bindToolbar() {
       if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }
+}
+
+function openAlchemistPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('alcPopup');
+  const box  = bar.shadowRoot.getElementById('alcOptions');
+  const cls  = bar.shadowRoot.getElementById('alcCancel');
+  pop.classList.add('open');
+  function close() {
+    pop.classList.remove('open');
+    box.removeEventListener('click', onBtn);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onBtn(e) {
+    const b = e.target.closest('button[data-level]');
+    if (!b) return;
+    const lvl = b.dataset.level;
+    close();
+    cb(lvl);
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
 }
 
 

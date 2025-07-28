@@ -27,6 +27,9 @@
       if (store.data && typeof store.data === 'object') {
         Object.keys(store.data).forEach(id => {
           const cur = store.data[id] || {};
+          if (typeof cur.partyAlchemist === 'boolean') {
+            cur.partyAlchemist = cur.partyAlchemist ? 'Mästare' : '';
+          }
           store.data[id] = {
             custom: [],
             artifactEffects: { xp:0, corruption:0 },
@@ -124,15 +127,17 @@
   }
 
   function getPartyAlchemist(store) {
-    if (!store.current) return false;
+    if (!store.current) return '';
     const data = store.data[store.current] || {};
-    return Boolean(data.partyAlchemist);
+    const val = data.partyAlchemist;
+    if (typeof val === 'string') return val;
+    return val ? 'Mästare' : '';
   }
 
-  function setPartyAlchemist(store, val) {
+  function setPartyAlchemist(store, level) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].partyAlchemist = Boolean(val);
+    store.data[store.current].partyAlchemist = level || '';
     save(store);
   }
 
@@ -332,6 +337,7 @@ function defaultTraits() {
     setBaseXP,
     calcUsedXP,
     calcTotalXP,
-    calcPermanentCorruption
+    calcPermanentCorruption,
+    abilityLevel
   };
 })(window);
