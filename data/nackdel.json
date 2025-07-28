@@ -123,4 +123,115 @@
     "ark_trad": [""],
     "test": ["Övertygande"]
   }
-}]
+},
+  {
+    "namn": "Prios Förtappad",
+    "beskrivning": "Nackdelen går att välja upp till tre gånger. Karaktären har en gång burit Prios välsignelse, men har vänt sig bort från tron eller på annat sätt brutit med prios läror. Karaktären har förlorat sin välsignelse. Karaktären har -1 i försvar mot attacker och effekter från genomkorrumperade varelser.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": ["Försvar"]
+    }
+  },
+  {
+    "namn": "Fallen Stjärna",
+    "beskrivning": "Karaktären har en gång burit Prios välsignelse, men har vänt sig bort från tron eller på annat sätt brutit med prios läror. Ljuset har lämnat karaktären och det är som att det inte längre reflekteras lika starkt från hen, vilket väcker oro, misstro och ibland rent av fientlighet bland de troende. Vid alla sociala interaktioner med prios hängivna eller religiösa auktoriteter får karaktären -1 i övertygande när religiösa frågor diskuteras.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": ["Övertygande"]
+    }
+  },
+  {
+    "namn": "Otursförföljd",
+    "beskrivning": "Alla varelser har olika förutsättningar för överlevnad, vare sig det är i Davokars djupa skogar, eller bland skattletare i Tista fäste. Vissa har helt enkelt bara mer otur. En karaktär med otursförföljd slår ett kritiskt misslyckande inte bara på 20, utan även på 19.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Fobi",
+    "beskrivning": "Rollpersonen har genom omständigheter i sitt förflutna utvecklat en fobi för ett valfritt fenomen, alla situationer som innefattar den valda fobin ger rollpersonen en andra chans att misslyckas med alla sina slag tills källan till fobin avlägsnats. Exempel på fobier skulle kunna vara fobi för folksamlingar, troll, höga höjder eller fåglar.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "namn": "Svagt sinne",
+    "beskrivning": "Karaktären är av ett simpelt sinne och har varken tränat sin psykiska motståndskraft eller kommer från traditioner där man kontinuerligt lär sig om olika magiska krafter som kan påverka ens sinne på olika sätt. Karaktären har -1 i viljestark när det kommer till försvar mot mystiska krafter och ritualer.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "namn": "Lättlurad",
+    "beskrivning": "Karaktären har en naiv och öppenhjärtig natur, vilket gör den särskilt mottaglig för andras inflytande och manipulation. Vare sig det handlar om listiga ord, sofistikerade bedrägerier eller enkla lögner har rollpersonen svårt att ifrågasätta andras avsikter. Varje gång karaktären gör ett slag för att genomskåda bluffar, lögner eller på annat sätt avslöja om någon försöker vilseleda den, får spelaren slå två gånger och måste välja det sämsta resultatet.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": ["Vaksam", "Listig"]
+    }
+  },
+  {
+    "namn": "Mörk skugga",
+    "beskrivning": "Karaktären har ett medfött mörker. Dennes skugga är nästintill lika mörk som en styggelses, karaktärens mor eller far eller annat form av föräldraskap eller utvecklingsfas attakerades av en styggelse och förde därigenom med sig skuggan till karaktären. I övrigt är karaktären opåverkad av skuggan. En gång per äventyr eller så som spelledare bestämmer kommer skuggan att ifrågasättas och karaktären behöver slå övertygande mot viljestark för att undvika att tas för en styggelse och dess efterföljder, så som att bli efterlyst.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": ["Mystiker"],
+      "test": ["Övertygande", "Viljestark"]
+    }
+  },
+  {
+    "namn": "Klumpeduns",
+    "beskrivning": "Karaktären har svårt att röra sig smidigt och är ofta otajmad eller fumlig i sina rörelser. Det kan handla om snubblande steg, vältande muggar eller en förmåga att alltid dra blickarna till sig vid fel tillfälle. När karaktären försöker vara diskret, smyga eller undvika att märkas får karaktären -1 på alla tärningsutslag. Denna nackdel går att införskaffa upp till tre gånger.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": ["Diskret"]
+    }
+  },
+  {
+    "namn": "Blåögd",
+    "beskrivning": "Karaktären talar öppet om sina tankar, känslor och planer utan något socialt filter. Denna ärlighet gör karaktären både lätt att förstå och svår att ogilla, samtidigt som dolda agendor och hemlighetsmakeri känns främmande. Frågor besvaras spontant och sanningsenligt, vilket gör att karaktären har svårt att dölja känslor, avsikter eller viktig information. Om karaktären ställs inför en fråga där det vore klokt att undanhålla sanningen, krävs ett lyckat slag mot Vaksam för att ana oråd och motstå impulsen att avslöja allt.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": ["Vaksam"]
+    }
+  },
+  {
+    "namn": "Avvaktande stridskonst",
+    "beskrivning": "Karaktären har utvecklat en försiktig och observerande stridsteknik och inväntar allierades första drag innan hen själv slår till. Karaktären avvaktar alltså till alla dess allierade agerat innan den gör någonting och hamnar sist i initiativordningen. Nackdelen omöjliggör dessutom för allierade rollpersoner att skjuta på sitt initiativ så att de hamnar efter rollpersonen. Om flera rollpersoner har denna nackdel slår alla spelare en T20 i början av striden och den som slår lägst agerar sist.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [],
+      "test": ["Initiativ"]
+    }
+  },
+  {
+    "namn": "Mörkt förflutet",
+    "beskrivning": "Genom tidigare äventyrs bistra konsekvenser har karaktären fått känna på vad för mörker som ligger runt davokars djup. Karaktären börjar sitt äventyr med en tredjedel av sin korruptionströskel fylld med permanent korruption avrundat uppåt. Så en karaktär med 14 i viljestark har tre korruption, medans en karaktär med 5 viljestark har 1 korruption. Detta gäller även karaktärer som höjt sin korruptionströskel med Stark Gåva.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": ["Mystiker"],
+      "test": ["Viljestark"]
+    }
+  }
+]
