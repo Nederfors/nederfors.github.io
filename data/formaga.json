@@ -1232,7 +1232,7 @@
   },
   "nivåer": {
     "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Stark bli av med 1T4 temporär korruption. Upprepade försök får göras, men endast ett lyckat försök per scen räknas.",
-    "Gesäll": "Handling: Aktiv. Som Novis men rensningen är 1T6 temporär korruption.",
-    "Mästare": "Handling: Aktiv. Som Gesäll men rollpersonens rensning ger 1T8 temporär korruption. Vid misslyckat slag minskar du ändå 1T4 temporär korruption."
+    "Gesäll": "Handling: Aktiv. Som Novis men rensningen tar bort 1T6 temporär korruption.",
+    "Mästare": "Handling: Aktiv. Som Gesäll men rollpersonens rensning tar bort 1T8 temporär korruption."
   }
 }]
