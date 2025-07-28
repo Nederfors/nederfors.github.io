@@ -4,6 +4,7 @@
 
 (function(window){
   const F = { typ: '' };
+  const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const moneyToO = m => (m.daler||0)*SBASE*OBASE + (m.skilling||0)*OBASE + (m['örtegar']||0);
 
   const oToMoney = o => {
@@ -171,14 +172,18 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function calcRowCost(row, hasForge, hasAlchemy, hasArtefacter) {
+  function calcRowCost(row, hasForge, alcLevel, hasArtefacter) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
     let base = moneyToO(entry.grundpris || {});
     const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
     if (hasForge && forgeable) base = Math.floor(base / 2);
-    if (tagTyp.includes('Elixir') && hasAlchemy) base = Math.floor(base / 2);
+    if (tagTyp.includes('Elixir')) {
+      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
+      const req = LEVEL_IDX[lvlName] || 0;
+      if (alcLevel >= req) base = Math.floor(base / 2);
+    }
     if (tagTyp.includes('L\u00e4gre Artefakt') && hasArtefacter) base = Math.floor(base / 2);
     let price = base;
     const baseQuals = [
@@ -214,14 +219,20 @@
 
     const hasForge = storeHelper.getPartySmith(store) ||
       storeHelper.getCurrentList(store).some(x => x.namn === 'Smideskonst');
-    const hasAlchemy = storeHelper.getPartyAlchemist(store) ||
-      storeHelper.getCurrentList(store).some(x => x.namn === 'Alkemi');
+    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+    const skillAlc = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Alkemi');
+    const alcLevel = Math.max(partyAlc, skillAlc);
     const hasArtefacter = storeHelper.getPartyArtefacter(store) ||
       storeHelper.getCurrentList(store).some(x => x.namn === 'Artefaktmakande');
 
     const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
     if (hasForge && forgeable) price = Math.floor(price / 2);
-    if (tagTyp.includes('Elixir') && hasAlchemy) price = Math.floor(price / 2);
+    if (tagTyp.includes('Elixir')) {
+      const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
+      const req = LEVEL_IDX[lvlName] || 0;
+      if (alcLevel >= req) price = Math.floor(price / 2);
+    }
     if (tagTyp.includes('L\u00e4gre Artefakt') && hasArtefacter) price = Math.floor(price / 2);
 
     const baseQuals = [
@@ -270,8 +281,10 @@
     /* ---------- summa i pengar ---------- */
     const hasForge = storeHelper.getPartySmith(store) ||
       storeHelper.getCurrentList(store).some(x => x.namn === 'Smideskonst');
-    const hasAlchemy = storeHelper.getPartyAlchemist(store) ||
-      storeHelper.getCurrentList(store).some(x => x.namn === 'Alkemi');
+    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+    const skillAlc = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Alkemi');
+    const alcLevel = Math.max(partyAlc, skillAlc);
     const hasArtefacter = storeHelper.getPartyArtefacter(store) ||
       storeHelper.getCurrentList(store).some(x => x.namn === 'Artefaktmakande');
 
@@ -283,7 +296,11 @@
       const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
       if (hasForge && forgeable) base = Math.floor(base / 2);
       const isElixir = (entry.taggar?.typ || []).includes('Elixir');
-      if (isElixir && hasAlchemy) base = Math.floor(base / 2);
+      if (isElixir) {
+        const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
+        const req = LEVEL_IDX[lvlName] || 0;
+        if (alcLevel >= req) base = Math.floor(base / 2);
+      }
       const isArtifact = (entry.taggar?.typ || []).includes('Artefakter');
       if (isArtifact && hasArtefacter) base = Math.floor(base / 2);
       let   price = base;                    // startvärde för kvaliteter
@@ -408,7 +425,7 @@
           const lvlInfo = rowLevel ? ` <span class="tag level">${rowLevel}</span>` : '';
           const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
           const priceText = formatMoney(
-            calcRowCost(row, hasForge, hasAlchemy, hasArtefacter)
+            calcRowCost(row, hasForge, alcLevel, hasArtefacter)
           );
 
           return `
