@@ -271,6 +271,14 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .inv-header { display: flex; justify-content: space-between; align-items: center; }
 
+/* Knappar i inventariepanelen */
+.inv-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  margin-top: .6rem;
+}
+
 /* ---------- Pengahantering ---------- */
 .money-form {
   display: flex;
