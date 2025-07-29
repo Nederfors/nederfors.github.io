@@ -45,8 +45,19 @@
     const pa = TYPE_PRIORITIES.hasOwnProperty(ta) ? TYPE_PRIORITIES[ta] : 99;
     const pb = TYPE_PRIORITIES.hasOwnProperty(tb) ? TYPE_PRIORITIES[tb] : 99;
     if(pa !== pb) return pa - pb;
-    const at = (a.taggar?.typ || ['']).join(',');
-    const bt = (b.taggar?.typ || ['']).join(',');
+    const taList = a.taggar?.typ || [];
+    const tbList = b.taggar?.typ || [];
+    const sameElixir = taList.includes('Elixir') && tbList.includes('Elixir');
+    const sameArtefakt = taList.includes('L\u00e4gre Artefakt') && tbList.includes('L\u00e4gre Artefakt');
+    if(sameElixir || sameArtefakt){
+      const aLvl = LVL.find(l=>a.niv\u00e5er?.[l]) || '';
+      const bLvl = LVL.find(l=>b.niv\u00e5er?.[l]) || '';
+      const ai = LVL.indexOf(aLvl);
+      const bi = LVL.indexOf(bLvl);
+      if(ai !== bi) return ai - bi;
+    }
+    const at = taList.join(',');
+    const bt = tbList.join(',');
     if(at < bt) return -1;
     if(at > bt) return 1;
     return (a.namn || '').localeCompare(b.namn || '');
