@@ -35,7 +35,7 @@
     "typ": ["Elixir"]
   },
   "nivåer": {
-    "": "Eldfärg är ett alkemiskt salt som kastas i eld och då ger ifrån sig en klar och tydlig färg. Det används för kommunikation över långa avstånd, där färgerna är tillskrivna en särskild innebörd för allierade betraktare. Saltet är också populärt på fester bland de bemedlade och bland charlataner som vill imponera på enkelt folk."
+    "Novis": "Eldfärg är ett alkemiskt salt som kastas i eld och då ger ifrån sig en klar och tydlig färg. Det används för kommunikation över långa avstånd, där färgerna är tillskrivna en särskild innebörd för allierade betraktare. Saltet är också populärt på fester bland de bemedlade och bland charlataner som vill imponera på enkelt folk."
   },
   "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
 },
@@ -435,4 +435,165 @@
     "Novis": "En örtkur består av ett alkemiskt grötomslag samt bandage. Det doftar förfärligt men helar 1 Tålighet. Örtkuren helar mer om den används av en rollperson med förmågan Medicus."
   },
   "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
-}]
+},
+  {
+    "namn": "Pysslingstoft",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Pysslingstoft är ett glittrande pulver som sprids ut för att dölja spår. En dos räcker för att göra ett spår omöjligt att följa med konventionella spårningstekniker. Ritualer påverkas inte. Pysslingstoft är ett gesällelixir och kostar 4 daler hos de örtkrämare och alkemister som tillverkar det."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Sömndroppar",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Sömndroppar består av en sockerlagsliknande vätska som lätt blandas med annat drickbart utan att påverka smaken nämnvärt. Tillverkningsprocessen är tidskrävande och så svår att endast en mästeralkemist klarar av den. Men även många av dem vägrar att befatta sig med proceduren, då den kraftfulla brygd som tillverkas inte bara söver utan också korrumperar.\n\nDen som får i sig av sömndropparna slocknar ofelbart rundan därpå. Ett lyckat slag mot Stark gör att personen vaknar efter 1T4 rundor, så omtöcknad att denne bara har en handling under nästkommande 1T8 rundor. Misslyckas slaget fortsätter personen att sova under en hel scen (eller en timme om en exakt angivelse är relevant). Den sovande kan väckas innan dess men är då oförmögen att agera, prata eller ens gå för egen maskin.\n\nOavsett om slaget lyckas eller inte drabbas offret av 1T6 temporär korruption, tillräckligt för att styggelsemärka de svagsinta."
+    },
+    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Sanningsserum (medelstarkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Det krävs en gesäll för att tillverka ett effektivt sanningsserum. Den person som mer eller mindre motvilligt inandas pulvret (alternativt dricker det utspätt i vätska) förlorar både samvetsgrannhet och skärpa, vilket gör att den får −5 i Viljestark när det gäller att stå emot förhör där motparten använder Övertygande samt vid motståndsförsök mot ritualen Telepatiskt förhör. Ett lyckat slag mot Stark omvandlar modifikationen till −3.\n\nEffekten sitter i en hel scen."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Sanningsserum (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Skulle serumet i stället tillverkas av en sann alkemimästare blir modifikationen −8, eller −5 efter ett lyckat slag mot Stark.\n\nEffekten sitter i en hel scen."
+    },
+    "grundpris": { "daler": 9, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Dimglob (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Dimgloben är inte större än att den ryms i handflatan och består av ett hölje av torkade löv kring ett omtöcknande pulver baserat på Drönarsporer. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen. Om den träffar slår målet ett slag mot Stark. Lyckas slaget händer ingenting men om det misslyckas blir offret omtöcknat och får minus på alla framgångsslag under 1T4 rundor.\n\nNegativ modifikation: −1."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Dimglob (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Dimgloben är inte större än att den ryms i handflatan och består av ett hölje av torkade löv kring ett omtöcknande pulver baserat på Drönarsporer. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen. Om den träffar slår målet ett slag mot Stark. Lyckas slaget händer ingenting men om det misslyckas blir offret omtöcknat och får minus på alla framgångsslag under 1T4 rundor.\n\nNegativ modifikation: −3."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Dimglob (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Dimgloben är inte större än att den ryms i handflatan och består av ett hölje av torkade löv kring ett omtöcknande pulver baserat på Drönarsporer. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen. Om den träffar slår målet ett slag mot Stark. Lyckas slaget händer ingenting men om det misslyckas blir offret omtöcknat och får minus på alla framgångsslag under 1T4 rundor.\n\nNegativ modifikation: −5."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ljungeld (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Ljungelden består av instabila ämnen som innesluts i Alumnötens tunna skal. Den kan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och flammar upp i en bländande ljusblixt när skalet krossas. Om den träffar slår målet ett slag mot Kvick. Lyckas slaget händer ingenting men om det misslyckas blir offret förblindat i ett antal rundor.\n\nFörblindning: 1 runda."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ljungeld (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Ljungelden består av instabila ämnen som innesluts i Alumnötens tunna skal. Den kan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och flammar upp i en bländande ljusblixt när skalet krossas. Om den träffar slår målet ett slag mot Kvick. Lyckas slaget händer ingenting men om det misslyckas blir offret förblindat i ett antal rundor.\n\nFörblindning: 1T4 rundor."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ljungeld (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Ljungelden består av instabila ämnen som innesluts i Alumnötens tunna skal. Den kan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och flammar upp i en bländande ljusblixt när skalet krossas. Om den träffar slår målet ett slag mot Kvick. Lyckas slaget händer ingenting men om det misslyckas blir offret förblindat i ett antal rundor.\n\nFörblindning: 1T6 rundor."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Knallsten (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Knallstenen kan enklast beskrivas som en mindre, svagare och mer primitiv variant av den alkemiska åskbollen. Instabila substanser formas till en deg och placeras i en knytnävsstor, urgröpt sandsten. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och ger explosionsskada om den träffar.\n\nSkada: 1T4."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Knallsten (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Knallstenen kan enklast beskrivas som en mindre, svagare och mer primitiv variant av den alkemiska åskbollen. Instabila substanser formas till en deg och placeras i en knytnävsstor, urgröpt sandsten. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och ger explosionsskada om den träffar.\n\nSkada: 1T6."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Knallsten (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Knallstenen kan enklast beskrivas som en mindre, svagare och mer primitiv variant av den alkemiska åskbollen. Instabila substanser formas till en deg och placeras i en knytnävsstor, urgröpt sandsten. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och ger explosionsskada om den träffar.\n\nSkada: 1T8."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Frätarklot (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Den alkaliska vätskan i Frätarklotet är innesluten i en klotrund plunta av syratåligt porslin. Pluntan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och om den träffar drabbas offret av dess frätande effekt.\n\nFrätande skada: 1T4 i 1T4 rundor."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Frätarklot (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Den alkaliska vätskan i Frätarklotet är innesluten i en klotrund plunta av syratåligt porslin. Pluntan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och om den träffar drabbas offret av dess frätande effekt.\n\nFrätande skada: 1T6 i 1T6 rundor."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Frätarklot (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Den alkaliska vätskan i Frätarklotet är innesluten i en klotrund plunta av syratåligt porslin. Pluntan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och om den träffar drabbas offret av dess frätande effekt.\n\nFrätande skada: 1T8 i 1T8 rundor."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  }
+]
