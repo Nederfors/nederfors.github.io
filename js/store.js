@@ -295,6 +295,8 @@ function defaultTraits() {
       if (item.nivåer && ['mystisk kraft','förmåga','särdrag','monstruöst särdrag']
           .some(t => types.includes(t))) {
         xp += XP_LADDER[item.nivå || 'Novis'] || 0;
+      } else if (types.includes('monstruöst särdrag')) {
+        xp += RITUAL_COST;
       }
       if (types.includes('fördel')) xp += 5;
       if (types.includes('ritual')) xp += RITUAL_COST;
