@@ -181,29 +181,45 @@
     const dIn   = bar.shadowRoot.getElementById('moneyDaler');
     const sIn   = bar.shadowRoot.getElementById('moneySkilling');
     const oIn   = bar.shadowRoot.getElementById('moneyOrtegar');
-    const save  = bar.shadowRoot.getElementById('moneySave');
+    const setBtn= bar.shadowRoot.getElementById('moneySetBtn');
+    const addBtn= bar.shadowRoot.getElementById('moneyAddBtn');
     const cancel= bar.shadowRoot.getElementById('moneyCancel');
 
     const cur = storeHelper.getMoney(store);
-    dIn.value = cur.daler || 0;
-    sIn.value = cur.skilling || 0;
-    oIn.value = cur['örtegar'] || 0;
+    dIn.value = cur.daler ? cur.daler : '';
+    sIn.value = cur.skilling ? cur.skilling : '';
+    oIn.value = cur['örtegar'] ? cur['örtegar'] : '';
 
     pop.classList.add('open');
 
     const close = () => {
       pop.classList.remove('open');
-      save.removeEventListener('click', onSave);
+      setBtn.removeEventListener('click', onSet);
+      addBtn.removeEventListener('click', onAdd);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
+      dIn.value = sIn.value = oIn.value = '';
     };
-    const onSave = () => {
-      const money = storeHelper.normalizeMoney({
-        daler: Number(dIn.value)||0,
-        skilling: Number(sIn.value)||0,
-        'örtegar': Number(oIn.value)||0
-      });
+    const getInputMoney = () => storeHelper.normalizeMoney({
+      daler: Number(dIn.value)||0,
+      skilling: Number(sIn.value)||0,
+      'örtegar': Number(oIn.value)||0
+    });
+    const onSet = () => {
+      const money = getInputMoney();
       storeHelper.setMoney(store, money);
+      close();
+      renderInventory();
+    };
+    const onAdd = () => {
+      const addMoney = getInputMoney();
+      const curMoney = storeHelper.getMoney(store);
+      const total = storeHelper.normalizeMoney({
+        daler: curMoney.daler + addMoney.daler,
+        skilling: curMoney.skilling + addMoney.skilling,
+        'örtegar': curMoney['örtegar'] + addMoney['örtegar']
+      });
+      storeHelper.setMoney(store, total);
       close();
       renderInventory();
     };
@@ -212,7 +228,8 @@
       if(!pop.querySelector('.popup-inner').contains(e.target)) close();
     };
 
-    save.addEventListener('click', onSave);
+    setBtn.addEventListener('click', onSet);
+    addBtn.addEventListener('click', onAdd);
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
   }
