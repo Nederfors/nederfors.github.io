@@ -176,6 +176,47 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function openMoneyPopup() {
+    const pop   = bar.shadowRoot.getElementById('moneyPopup');
+    const dIn   = bar.shadowRoot.getElementById('moneyDaler');
+    const sIn   = bar.shadowRoot.getElementById('moneySkilling');
+    const oIn   = bar.shadowRoot.getElementById('moneyOrtegar');
+    const save  = bar.shadowRoot.getElementById('moneySave');
+    const cancel= bar.shadowRoot.getElementById('moneyCancel');
+
+    const cur = storeHelper.getMoney(store);
+    dIn.value = cur.daler || 0;
+    sIn.value = cur.skilling || 0;
+    oIn.value = cur['örtegar'] || 0;
+
+    pop.classList.add('open');
+
+    const close = () => {
+      pop.classList.remove('open');
+      save.removeEventListener('click', onSave);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+    };
+    const onSave = () => {
+      const money = storeHelper.normalizeMoney({
+        daler: Number(dIn.value)||0,
+        skilling: Number(sIn.value)||0,
+        'örtegar': Number(oIn.value)||0
+      });
+      storeHelper.setMoney(store, money);
+      close();
+      renderInventory();
+    };
+    const onCancel = () => { close(); };
+    const onOutside = e => {
+      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    save.addEventListener('click', onSave);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+  }
+
   function calcRowCost(row, forgeLvl, alcLevel, hasArtefacter) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
@@ -666,22 +707,9 @@
   }
 
   function bindMoney() {
-    if (!dom.moneyDBtn || !dom.moneySBtn || !dom.moneyOBtn || !dom.moneyResetBtn || !dom.clearInvBtn) return;
+    if (!dom.manageMoneyBtn || !dom.moneyResetBtn || !dom.clearInvBtn) return;
 
-    const add = (field, key) => {
-      const val = Number(field.value) || 0;
-      if (!val) return;
-      const cur = storeHelper.getMoney(store);
-      cur[key] = (cur[key] || 0) + val;
-      const total = storeHelper.normalizeMoney(cur);
-      storeHelper.setMoney(store, total);
-      field.value = '';
-      renderInventory();
-    };
-
-    dom.moneyDBtn.addEventListener('click', () => add(dom.moneyD, 'daler'));
-    dom.moneySBtn.addEventListener('click', () => add(dom.moneyS, 'skilling'));
-    dom.moneyOBtn.addEventListener('click', () => add(dom.moneyO, 'örtegar'));
+    dom.manageMoneyBtn.addEventListener('click', openMoneyPopup);
     dom.moneyResetBtn.addEventListener('click', () => {
       storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
       renderInventory();
@@ -704,6 +732,7 @@
     sortQualsForDisplay,
     openQualPopup,
     openCustomPopup,
+    openMoneyPopup,
     recalcArtifactEffects,
     renderInventory,
     bindInv,

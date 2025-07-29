@@ -21,9 +21,10 @@ const dom  = {
   /* inventarie */
   invList : $T('invList'),      invBadge  : $T('invBadge'),
   wtOut   : $T('weightOut'),    slOut     : $T('slotOut'),
-  moneyD  : $T('moneyDaler'),     moneyDBtn: $T('moneyDalerBtn'),
-  moneyS  : $T('moneySkilling'),  moneySBtn: $T('moneySkillingBtn'),
-  moneyO  : $T('moneyOrtegar'),   moneyOBtn: $T('moneyOrtegarBtn'),
+  moneyD  : $T('moneyDaler'),
+  moneyS  : $T('moneySkilling'),
+  moneyO  : $T('moneyOrtegar'),
+  manageMoneyBtn: $T('manageMoneyBtn'),
   moneyResetBtn: $T('moneyResetBtn'),
   clearInvBtn : $T('clearInvBtn'),
   invTypeSel : $T('invTypeFilter'),
