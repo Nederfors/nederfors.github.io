@@ -121,14 +121,14 @@ class SharedToolbar extends HTMLElement {
             <li>
               <span class="toggle-desc">
                 <span class="toggle-question">Har du en alkemist i partyt?</span>
-                <span class="toggle-note">Halverar priset på alla elixir.</span>
+                <span class="toggle-note">Halverar priset på elixir beroende på alkemistnivå.</span>
               </span>
               <button id="partyAlchemist" class="party-toggle">⚗️</button>
             </li>
             <li>
               <span class="toggle-desc">
               <span class="toggle-question">Har du en artefaktmakare i partyt?</span>
-              <span class="toggle-note">Halverar priset på Lägre Artefakter.</span>
+              <span class="toggle-note">Halverar priset på lägre artefakter beroende på artefaktmakarnivå.</span>
               </span>
               <button id="partyArtefacter" class="party-toggle">🏺</button>
             </li>
