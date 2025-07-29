@@ -79,4 +79,25 @@
         "Mystisk kvalitet"
       ]
     }
-  }]
+  },
+  
+  {
+    "namn": "Hypnotiserande",
+    "beskrivning": "Närstridsvapnet är täckt med ristade, rödfärgade runor som när det svingas kan verka hypnotiserande på en närstridsmotståndare. Varje attack som lyckas med en differens på 5 eller bättre innebär att motståndaren förlorar sin nästkommande stridshandling. Förflyttning och reaktioner är fortfarande möjliga.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet"
+      ]
+    }
+  },
+  {
+    "namn": "Bräckande",
+    "beskrivning": "Den klang som uppstår när ett Bräckande närstridsvapen träffar metall inrymmer försvagande harmonier som steg för steg förstör rustningen eller skölden. En rustning får sitt värde i Bepansring sänkt med 1 för varje lyckad träff, medan en sköld löper risk att bli obrukbar vid varje lyckat försvar [1–5 på 1t20] *",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet"
+      ]
+    }
+  }
+
+]
