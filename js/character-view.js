@@ -43,7 +43,7 @@ function initCharacter() {
         const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
           .map(t => searchNormalize(t.toLowerCase()));
         const text = searchNormalize(`${p.namn} ${(p.beskrivning || '')}`.toLowerCase());
-        const txt = terms.every(q => text.includes(q));
+        const txt = !terms.length || terms.every(q => text.includes(q));
         const tags = p.taggar || {};
         const selTags = [...F.typ, ...F.ark, ...F.test];
         const itmTags = [
@@ -54,7 +54,7 @@ function initCharacter() {
         const tagMatch = !selTags.length ||
           (union ? selTags.some(t => itmTags.includes(t))
                  : selTags.every(t => itmTags.includes(t)));
-        return txt && tagMatch;
+        return union ? (txt || tagMatch) : (txt && tagMatch);
       })
       .sort(sortByType);
   };
