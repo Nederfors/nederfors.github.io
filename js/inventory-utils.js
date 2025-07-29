@@ -65,6 +65,10 @@
     });
   }
 
+  function countPositiveQuals(list) {
+    return list.filter(q => !isNegativeQual(q) && !isNeutralQual(q)).length;
+  }
+
   function openQualPopup(list, callback) {
     const pop  = bar.shadowRoot.getElementById('qualPopup');
     const box  = bar.shadowRoot.getElementById('qualOptions');
@@ -172,20 +176,12 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function calcRowCost(row, hasForge, alcLevel, hasArtefacter) {
+  function calcRowCost(row, forgeLvl, alcLevel, hasArtefacter) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
     let base = moneyToO(entry.grundpris || {});
     const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
-    if (hasForge && forgeable) base = Math.floor(base / 2);
-    if (tagTyp.includes('Elixir')) {
-      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) base = Math.floor(base / 2);
-    }
-    if (tagTyp.includes('L\u00e4gre Artefakt') && hasArtefacter) base = Math.floor(base / 2);
-    let price = base;
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
@@ -195,6 +191,24 @@
       ...baseQuals.filter(q => !removedQ.includes(q)),
       ...(row.kvaliteter || [])
     ];
+    if (forgeLvl && forgeable) {
+      const posCnt = countPositiveQuals(allQuals);
+      const mystCnt = allQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
+      if (
+        (forgeLvl === 1 && posCnt === 0) ||
+        (forgeLvl === 2 && mystCnt === 0 && posCnt <= 1) ||
+        (forgeLvl >= 3 && posCnt <= 2)
+      ) {
+        base = Math.floor(base / 2);
+      }
+    }
+    if (tagTyp.includes('Elixir')) {
+      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
+      const req = LEVEL_IDX[lvlName] || 0;
+      if (alcLevel >= req) base = Math.floor(base / 2);
+    }
+    if (tagTyp.includes('L\u00e4gre Artefakt') && hasArtefacter) base = Math.floor(base / 2);
+    let price = base;
     allQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
@@ -217,8 +231,10 @@
     const tagTyp = tagger.typ ?? [];
     let price = moneyToO(entry.grundpris || {});
 
-    const hasForge = storeHelper.getPartySmith(store) ||
-      storeHelper.getCurrentList(store).some(x => x.namn === 'Smideskonst');
+    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+    const skillForge = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Smideskonst');
+    const forgeLevel = Math.max(partyForge, skillForge);
     const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
     const skillAlc = storeHelper.abilityLevel(
       storeHelper.getCurrentList(store), 'Alkemist');
@@ -227,7 +243,21 @@
       storeHelper.getCurrentList(store).some(x => x.namn === 'Artefaktmakande');
 
     const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
-    if (hasForge && forgeable) price = Math.floor(price / 2);
+    const baseQuals = [
+      ...(tagger.kvalitet ?? []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    if (forgeLevel && forgeable) {
+      const posCnt = countPositiveQuals(baseQuals);
+      const mystCnt = baseQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
+      if (
+        (forgeLevel === 1 && posCnt === 0) ||
+        (forgeLevel === 2 && mystCnt === 0 && posCnt <= 1) ||
+        (forgeLevel >= 3 && posCnt <= 2)
+      ) {
+        price = Math.floor(price / 2);
+      }
+    }
     if (tagTyp.includes('Elixir')) {
       const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
@@ -235,10 +265,7 @@
     }
     if (tagTyp.includes('L\u00e4gre Artefakt') && hasArtefacter) price = Math.floor(price / 2);
 
-    const baseQuals = [
-      ...(tagger.kvalitet ?? []),
-      ...splitQuals(entry.kvalitet)
-    ];
+    
     baseQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
@@ -279,8 +306,10 @@
       .sort(sortInvEntry);
 
     /* ---------- summa i pengar ---------- */
-    const hasForge = storeHelper.getPartySmith(store) ||
-      storeHelper.getCurrentList(store).some(x => x.namn === 'Smideskonst');
+    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+    const skillForge = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Smideskonst');
+    const forgeLvl = Math.max(partyForge, skillForge);
     const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
     const skillAlc = storeHelper.abilityLevel(
       storeHelper.getCurrentList(store), 'Alkemist');
@@ -294,7 +323,26 @@
       let base  = basePrice;
       const tagTyp = entry.taggar?.typ || [];
       const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
-      if (hasForge && forgeable) base = Math.floor(base / 2);
+      const baseQuals = [
+        ...(entry.taggar?.kvalitet ?? []),
+        ...splitQuals(entry.kvalitet)
+      ];
+      const removedQ = row.removedKval ?? [];
+      const allQualsRow = [
+        ...baseQuals.filter(q => !removedQ.includes(q)),
+        ...(row.kvaliteter || [])
+      ];
+      if (forgeLvl && forgeable) {
+        const posCnt = countPositiveQuals(allQualsRow);
+        const mystCnt = allQualsRow.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
+        if (
+          (forgeLvl === 1 && posCnt === 0) ||
+          (forgeLvl === 2 && mystCnt === 0 && posCnt <= 1) ||
+          (forgeLvl >= 3 && posCnt <= 2)
+        ) {
+          base = Math.floor(base / 2);
+        }
+      }
       const isElixir = (entry.taggar?.typ || []).includes('Elixir');
       if (isElixir) {
         const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
@@ -305,15 +353,7 @@
       if (isArtifact && hasArtefacter) base = Math.floor(base / 2);
       let   price = base;                    // startvärde för kvaliteter
 
-      const baseQuals = [
-        ...(entry.taggar?.kvalitet ?? []),
-        ...splitQuals(entry.kvalitet)
-      ];
-      const removedQ = row.removedKval ?? [];
-      const allQuals = [
-        ...baseQuals.filter(q => !removedQ.includes(q)),
-        ...(row.kvaliteter || [])
-      ];
+      const allQuals = allQualsRow;
 
       // varje icke-gratis kvalitet justerar priset
       allQuals.forEach((q) => {
@@ -425,7 +465,7 @@
           const lvlInfo = rowLevel ? ` <span class="tag level">${rowLevel}</span>` : '';
           const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
           const priceText = formatMoney(
-            calcRowCost(row, hasForge, alcLevel, hasArtefacter)
+            calcRowCost(row, forgeLvl, alcLevel, hasArtefacter)
           );
 
           return `
