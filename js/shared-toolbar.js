@@ -206,7 +206,6 @@ class SharedToolbar extends HTMLElement {
         <div class="popup-inner">
           <h3>Alkemistniv\u00e5</h3>
           <div id="alcOptions">
-            <button data-level="" class="char-btn">Ingen</button>
             <button data-level="Novis" class="char-btn">Novis</button>
             <button data-level="Ges\u00e4ll" class="char-btn">Ges\u00e4ll</button>
             <button data-level="M\u00e4stare" class="char-btn">M\u00e4stare</button>
