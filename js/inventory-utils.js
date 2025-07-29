@@ -185,10 +185,8 @@
     const addBtn= bar.shadowRoot.getElementById('moneyAddBtn');
     const cancel= bar.shadowRoot.getElementById('moneyCancel');
 
-    const cur = storeHelper.getMoney(store);
-    dIn.value = cur.daler ? cur.daler : '';
-    sIn.value = cur.skilling ? cur.skilling : '';
-    oIn.value = cur['örtegar'] ? cur['örtegar'] : '';
+    // Fälten ska börja tomma oavsett aktuell summa pengar
+    dIn.value = sIn.value = oIn.value = '';
 
     pop.classList.add('open');
 
