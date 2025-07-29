@@ -30,6 +30,9 @@
           if (typeof cur.partyAlchemist === 'boolean') {
             cur.partyAlchemist = cur.partyAlchemist ? 'Mästare' : '';
           }
+          if (typeof cur.partySmith === 'boolean') {
+            cur.partySmith = cur.partySmith ? 'Mästare' : '';
+          }
           store.data[id] = {
             custom: [],
             artifactEffects: { xp:0, corruption:0 },
@@ -114,15 +117,17 @@
   }
 
   function getPartySmith(store) {
-    if (!store.current) return false;
+    if (!store.current) return '';
     const data = store.data[store.current] || {};
-    return Boolean(data.partySmith);
+    const val = data.partySmith;
+    if (typeof val === 'string') return val;
+    return val ? 'Mästare' : '';
   }
 
-  function setPartySmith(store, val) {
+  function setPartySmith(store, level) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].partySmith = Boolean(val);
+    store.data[store.current].partySmith = level || '';
     save(store);
   }
 

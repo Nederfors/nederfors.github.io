@@ -232,10 +232,13 @@ function bindToolbar() {
   if (dom.forgeBtn) {
     if (storeHelper.getPartySmith(store)) dom.forgeBtn.classList.add('active');
     dom.forgeBtn.addEventListener('click', () => {
-      const val = dom.forgeBtn.classList.toggle('active');
-      storeHelper.setPartySmith(store, val);
-      invUtil.renderInventory();
-      if (window.indexViewUpdate) window.indexViewUpdate();
+      openSmithPopup(level => {
+        if (level === null) return;
+        dom.forgeBtn.classList.toggle('active', Boolean(level));
+        storeHelper.setPartySmith(store, level);
+        invUtil.renderInventory();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+      });
     });
   }
   if (dom.alcBtn) {
@@ -281,6 +284,36 @@ function openAlchemistPopup(cb) {
   const pop  = bar.shadowRoot.getElementById('alcPopup');
   const box  = bar.shadowRoot.getElementById('alcOptions');
   const cls  = bar.shadowRoot.getElementById('alcCancel');
+  pop.classList.add('open');
+  function close() {
+    pop.classList.remove('open');
+    box.removeEventListener('click', onBtn);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onBtn(e) {
+    const b = e.target.closest('button[data-level]');
+    if (!b) return;
+    const lvl = b.dataset.level;
+    close();
+    cb(lvl);
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openSmithPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('smithPopup');
+  const box  = bar.shadowRoot.getElementById('smithOptions');
+  const cls  = bar.shadowRoot.getElementById('smithCancel');
   pop.classList.add('open');
   function close() {
     pop.classList.remove('open');
