@@ -51,28 +51,12 @@ class SharedToolbar extends HTMLElement {
           <label for="invTypeFilter">Kategori</label>
           <select id="invTypeFilter"></select>
         </div>
-        <div id="moneyForm" class="money-form">
-          <div class="money-row">
-            <input id="moneyDaler" type="number" min="0" placeholder="Daler">
-            <button id="moneyDalerBtn" class="char-btn">Lägg till</button>
-          </div>
-          <div class="money-row">
-            <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
-            <button id="moneySkillingBtn" class="char-btn">Lägg till</button>
-          </div>
-          <div class="money-row">
-            <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
-            <button id="moneyOrtegarBtn" class="char-btn">Lägg till</button>
-          </div>
-          <div class="money-row">
-            <button id="moneyResetBtn" class="char-btn danger" style="flex:1">Nollställ pengar</button>
-          </div>
-          <div class="money-row">
-            <button id="clearInvBtn" class="char-btn danger" style="flex:1">Rensa inventarie</button>
-          </div>
-          <div class="money-row">
-            <button id="addCustomBtn" class="char-btn" style="flex:1">Nytt föremål</button>
-          </div>
+        <button id="manageMoneyBtn" class="char-btn" style="flex:1">Hantera pengar</button>
+        <div class="money-row">
+          <button id="clearInvBtn" class="char-btn danger" style="flex:1">Rensa inventarie</button>
+        </div>
+        <div class="money-row">
+          <button id="addCustomBtn" class="char-btn" style="flex:1">Nytt föremål</button>
         </div>
         <ul id="invList" class="card-list"></ul>
       </aside>
@@ -201,6 +185,21 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Pengar ---------- -->
+      <div id="moneyPopup">
+        <div class="popup-inner">
+          <h3>Hantera pengar</h3>
+          <div class="money-row">
+            <input id="moneyDaler" type="number" min="0" placeholder="Daler">
+            <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
+            <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
+          </div>
+          <button id="moneySave" class="char-btn">Spara</button>
+          <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
+          <button id="moneyCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup Alkemistniv\u00e5 ---------- -->
       <div id="alcPopup">
         <div class="popup-inner">
@@ -262,7 +261,7 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
-    const popups = ['qualPopup','customPopup','masterPopup','alcPopup','smithPopup'];
+    const popups = ['qualPopup','customPopup','moneyPopup','masterPopup','alcPopup','smithPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
