@@ -588,6 +588,17 @@
     "ark_trad": ["Trollsång"],
     "test": ["Viljestark"]
   }
+},
+
+{
+  "namn": "Falskt liv",
+  "beskrivning": "Tradition: Svartkonst\nMystikern väver en slöja över en vandöd varelse och kan på så sätt dölja dess dödstecken under det kommande dygnet. Under den tid som effekten varar kommer den vandöde att framstå som levande för alla som vistas i dennes närhet, frånsett att dess skugga är oförändrad – ett lyckat slag mot [Vaksam←Diskret] med förmågan Häxsyn avslöjar att personen är genomkorrumperad.",
+  "taggar": {
+    "typ": ["Ritual"],
+    "ark_trad": ["Svartkonst"],
+    "test": ["Diskret"]
+  }
 }
+
 
 ]
