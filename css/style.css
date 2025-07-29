@@ -686,13 +686,50 @@ select.level {
 }
 #smithPopup .popup-inner button { width: 100%; }
 
+/* ---------- Popup f\u00f6r artefaktmakarniv\u00e5 ---------- */
+#artPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#artPopup.open { display: flex; }
+#artPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem 1.2rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#artPopup.open .popup-inner { transform: translateY(0); }
+#artPopup #artOptions {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+#artPopup .popup-inner button { width: 100%; }
+
 /* Gör samtliga popups scrollbara om innehållet blir för högt */
 #qualPopup .popup-inner,
 #masterPopup .popup-inner,
 #traitPopup .popup-inner,
 #customPopup .popup-inner,
 #alcPopup .popup-inner,
-#smithPopup .popup-inner {
+#smithPopup .popup-inner,
+#artPopup .popup-inner {
   max-height: 100%;
   overflow-y: auto;
 }

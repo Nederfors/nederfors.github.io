@@ -232,7 +232,7 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function calcRowCost(row, forgeLvl, alcLevel, hasArtefacter) {
+  function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
@@ -263,7 +263,11 @@
       const req = LEVEL_IDX[lvlName] || 0;
       if (alcLevel >= req) base = Math.floor(base / 2);
     }
-    if (tagTyp.includes('L\u00e4gre Artefakt') && hasArtefacter) base = Math.floor(base / 2);
+    if (tagTyp.includes('L\u00e4gre Artefakt')) {
+      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
+      const req = LEVEL_IDX[lvlName] || 0;
+      if (artLevel >= req) base = Math.floor(base / 2);
+    }
     let price = base;
     allQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
@@ -295,8 +299,10 @@
     const skillAlc = storeHelper.abilityLevel(
       storeHelper.getCurrentList(store), 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
-    const hasArtefacter = storeHelper.getPartyArtefacter(store) ||
-      storeHelper.getCurrentList(store).some(x => x.namn === 'Artefaktmakande');
+    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+    const skillArt = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Artefaktmakande');
+    const artLevel = Math.max(partyArt, skillArt);
 
     const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
     const baseQuals = [
@@ -319,7 +325,11 @@
       const req = LEVEL_IDX[lvlName] || 0;
       if (alcLevel >= req) price = Math.floor(price / 2);
     }
-    if (tagTyp.includes('L\u00e4gre Artefakt') && hasArtefacter) price = Math.floor(price / 2);
+    if (tagTyp.includes('L\u00e4gre Artefakt')) {
+      const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
+      const req = LEVEL_IDX[lvlName] || 0;
+      if (artLevel >= req) price = Math.floor(price / 2);
+    }
 
     
     baseQuals.forEach(q => {
@@ -370,8 +380,10 @@
     const skillAlc = storeHelper.abilityLevel(
       storeHelper.getCurrentList(store), 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
-    const hasArtefacter = storeHelper.getPartyArtefacter(store) ||
-      storeHelper.getCurrentList(store).some(x => x.namn === 'Artefaktmakande');
+    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+    const skillArt = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Artefaktmakande');
+    const artLevel = Math.max(partyArt, skillArt);
 
     const tot = allInv.reduce((t, row) => {
       const entry = getEntry(row.name);
@@ -405,8 +417,12 @@
         const req = LEVEL_IDX[lvlName] || 0;
         if (alcLevel >= req) base = Math.floor(base / 2);
       }
-      const isArtifact = (entry.taggar?.typ || []).includes('Artefakter');
-      if (isArtifact && hasArtefacter) base = Math.floor(base / 2);
+      const isLArtifact = (entry.taggar?.typ || []).includes('L\u00e4gre Artefakt');
+      if (isLArtifact) {
+        const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
+        const req = LEVEL_IDX[lvlName] || 0;
+        if (artLevel >= req) base = Math.floor(base / 2);
+      }
       let   price = base;                    // startvärde för kvaliteter
 
       const allQuals = allQualsRow;
@@ -515,13 +531,13 @@
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
 
           const rowLevel = row.nivå ||
-            (tagTyp.includes('Elixir')
+            (['Elixir','L\u00e4gre Artefakt'].some(t => tagTyp.includes(t))
               ? Object.keys(entry.nivåer || {}).find(l => l)
               : null);
           const lvlInfo = rowLevel ? ` <span class="tag level">${rowLevel}</span>` : '';
           const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
           const priceText = formatMoney(
-            calcRowCost(row, forgeLvl, alcLevel, hasArtefacter)
+            calcRowCost(row, forgeLvl, alcLevel, artLevel)
           );
 
           return `
