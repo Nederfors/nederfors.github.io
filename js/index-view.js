@@ -36,24 +36,27 @@ function initIndex() {
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
-  const filtered = () => getEntries().filter(p=>{
-    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
-      .map(t => searchNormalize(t.toLowerCase()));
-    const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
-    const txt = terms.every(q => text.includes(q));
-    const tags = p.taggar || {};
-    const selTags = [...F.typ, ...F.ark, ...F.test];
-    const itmTags = [
-      ...(tags.typ      ?? []),
-      ...explodeTags(tags.ark_trad),
-      ...(tags.test     ?? [])
-    ];
-    const tagMatch = !selTags.length ||
-      (union ? selTags.some(t => itmTags.includes(t))
-             : selTags.every(t => itmTags.includes(t)));
+  const filtered = () => {
+    union = storeHelper.getFilterUnion(store);
+    return getEntries().filter(p=>{
+      const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+        .map(t => searchNormalize(t.toLowerCase()));
+      const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
+      const txt = terms.every(q => text.includes(q));
+      const tags = p.taggar || {};
+      const selTags = [...F.typ, ...F.ark, ...F.test];
+      const itmTags = [
+        ...(tags.typ      ?? []),
+        ...explodeTags(tags.ark_trad),
+        ...(tags.test     ?? [])
+      ];
+      const tagMatch = !selTags.length ||
+        (union ? selTags.some(t => itmTags.includes(t))
+               : selTags.every(t => itmTags.includes(t)));
 
-    return txt && tagMatch;
-  }).sort(sortByType);
+      return txt && tagMatch;
+    }).sort(sortByType);
+  };
 
   const renderList = arr=>{
     dom.lista.innerHTML = arr.length ? '' : '<li class="card">Inga träffar.</li>';
@@ -163,11 +166,6 @@ function initIndex() {
     F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
     dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderList(filtered());
-  });
-  dom.filterUnion.addEventListener('click', () => {
-    union = dom.filterUnion.classList.toggle('active');
-    storeHelper.setFilterUnion(store, union);
-    renderList(filtered());
   });
 
   /* lista-knappar */
