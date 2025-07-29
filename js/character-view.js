@@ -43,18 +43,28 @@ function initCharacter() {
         const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
           .map(t => searchNormalize(t.toLowerCase()));
         const text = searchNormalize(`${p.namn} ${(p.beskrivning || '')}`.toLowerCase());
-        const txt = !terms.length || terms.every(q => text.includes(q));
+        const hasTerms = terms.length > 0;
+        const txt = hasTerms && terms.every(q => text.includes(q));
         const tags = p.taggar || {};
         const selTags = [...F.typ, ...F.ark, ...F.test];
+        const hasTags = selTags.length > 0;
         const itmTags = [
           ...(tags.typ      ?? []),
           ...explodeTags(tags.ark_trad),
           ...(tags.test     ?? [])
         ];
-        const tagMatch = !selTags.length ||
-          (union ? selTags.some(t => itmTags.includes(t))
-                 : selTags.every(t => itmTags.includes(t)));
-        return union ? (txt || tagMatch) : (txt && tagMatch);
+        const tagMatch = hasTags && (
+          union ? selTags.some(t => itmTags.includes(t))
+                : selTags.every(t => itmTags.includes(t))
+        );
+        if (union) {
+          if (!hasTerms && !hasTags) return true;
+          if (hasTerms && hasTags) return txt || tagMatch;
+          return hasTerms ? txt : tagMatch;
+        }
+        const txtOk = !hasTerms || txt;
+        const tagOk = !hasTags || tagMatch;
+        return txtOk && tagOk;
       })
       .sort(sortByType);
   };
