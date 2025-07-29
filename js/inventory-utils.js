@@ -221,7 +221,7 @@
       storeHelper.getCurrentList(store).some(x => x.namn === 'Smideskonst');
     const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
     const skillAlc = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Alkemi');
+      storeHelper.getCurrentList(store), 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
     const hasArtefacter = storeHelper.getPartyArtefacter(store) ||
       storeHelper.getCurrentList(store).some(x => x.namn === 'Artefaktmakande');
@@ -283,7 +283,7 @@
       storeHelper.getCurrentList(store).some(x => x.namn === 'Smideskonst');
     const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
     const skillAlc = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Alkemi');
+      storeHelper.getCurrentList(store), 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
     const hasArtefacter = storeHelper.getPartyArtefacter(store) ||
       storeHelper.getCurrentList(store).some(x => x.namn === 'Artefaktmakande');
