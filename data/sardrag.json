@@ -1,0 +1,74 @@
+[
+  {
+    "namn": "Förväxling",
+    "beskrivning": "Endast tillgänglig för Bortbytingar. Rollpersonen har en illusorisk talang som gör att den kan låna andras utseende för en stund. Hos unga bortbytingar är förmågan automatisk, och de kan ha svårt för att inte anta lite av andras utseende och manér om de umgås med dem en längre stund. Hos mogna bortbytingar brukar förmågan växa in under medvetandets kontroll.",
+    "taggar": {
+      "typ": ["Särdrag"],
+      "test": ["Diskret", "Viljestark"]
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark anta en falsk skepnad; form, utseende, röst och kläder av en annan varelse, dock ej av en specifik individ. Bortbytingen kan behålla skenverket under en scen, sedan tynar illusionen bort. Varje person som rollpersonen pratar med genomskådar skenverket om rollpersonen inte lyckas med ett [Diskret←Vaksam].",
+
+      "Gesäll": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark under kort tid anta formen av specifika individer den träffat, och kan inkludera kläder och andra attribut i avbilden. I närstrid mot flera personer är likheten stor nog för att göra det svårt för fienden att träffa rätt. Det är 50 procent chans att fienden träffar sin avbildade kompanjon istället för rollpersonen. Att upprätthålla avbilden kräver koncentration, det vill säga ett slag mot Viljestark varje runda och dessutom ett lyckat [Viljestark -Skada] varje gång bortbytingen skadas.",
+      "Mästare": "Handling: Fri. Rollpersonen kan med ett lyckat Viljestark anta formen av en specifik individ och därtill behålla formen under en scen. Varje person som rollpersonen pratar med genomskådar skenverket om rollpersonen inte lyckas med ett [Diskret←Vaksam]. För att rollpersonen ska lura personer som känner den lånade formen krävs först ett slag på avstånd, och ytterligare ett slag om samtal inleds."
+    }
+  },
+  {
+    "namn": "Kortlivad",
+    "beskrivning": "Varelsens liv är kort även när livsbetingelserna är goda. Varelsen når snabbt mogen ålder och tappar sedan mycket av livets kraft under kommande år. Endast ett fåtal individer av dess sort når fyrtio års ålder, å andra sidan är varelsen kvick att lära och anpassar sig utomordentligt snabbt till nya omgivningar, redan vid fem års ålder är den redo att möta världen. Kortlivad har ingen effekt förutom vad det kan ge rollspelandet.",
+    "taggar": {
+      "typ": ["Särdrag"]
+    }
+  },
+  {
+    "namn": "Långlivad",
+    "beskrivning": "Varelsen har ett fördröjt åldrande sedan den uppnått vuxen ålder. Om inte våld, gift eller sjukdom förkortar varelsens liv kan den leva i två eller till och med tre århundraden. Det längre livsspannet gör att varelsen är van att ta saker i lugnare tempo, men det kompenseras av inställningen att det som är värt att göra är värt att göras väl, vilket över tid resulterar i en betydande grad av expertis. Långlivad har ingen effekt förutom vad det kan ge rollspelandet.",
+    "taggar": {
+      "typ": ["Särdrag"]
+    }
+  },
+  {
+    "namn": "Robust",
+    "beskrivning": "Endast tillgänglig för Resar. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
+    "taggar": {
+      "typ": ["Särdrag"]
+    },
+    "nivåer": {
+      "Novis": "Handling: Speciell. Rollpersonen är cirka två meter lång och råstark. En sådan tornande siluett är lättare att träffa i strid vilket balanseras med en påtaglig stryktålighet. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar dubbelt så mycket. I gengäld ignorerar rollpersonen 1T4 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T4 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −2].",
+      "Gesäll": "Handling: Speciell. Rollpersonen sträcker sig två och en halv meter över marken, väger tvåhundra kilo och dess hud är grov som bark. En sådan varelse lägger kraft i slagen, men är också lätt att träffa. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därmed kostar tre gånger så mycket. I gengäld ignorerar rollpersonen 1T6 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T6 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −3].\n",
+      "Mästare": "Handling: Speciell. Rollpersonen är tre meter lång, väger ett halvt ton och krossar mindre varelser medan fiendens vapen studsar mot hud som mest liknar mossig sten. Att träffa en sådan varelse är lätt, men att skada den allvarligt är svårt. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar fyra gånger så mycket. I gengäld ignorerar rollpersonen 1T8 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T8 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −4]."
+    }
+  },
+  {
+    "namn": "Överlevnadsinstinkt",
+    "beskrivning": "Endast tillgänglig för Svartalf. Rollpersonen är av ett släkte vars livspann är kort men vars livsenergi motsvarar mer seglivade släktens. För vissa av släktets representanter blir energin mest till högljutt gastande och rastlös aktivitet, men för andra ger den möjligheter till en intensiv överlevnadsinstinkt.",
+    "taggar": {
+      "typ": ["Särdrag"]
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Rollpersonens explosiva överlevnadsinstinkt ger en extra förflyttning en gång per scen.",
+      "Gesäll": "Handling: Reaktiv. Rollpersonen litar till sina instinkter och dess förmåga att rulla med slag räddar ofta livet på den. Rollpersonens förädlade överlevnadsinstinkt ger denne permanent +1T4 i Bepansring.",
+      "Mästare": "Handling: Fri. I varje individ av rollpersonens släkte finns en stridslust som ger sig tillkänna i trängda situationer. Rollpersonen har odlat den ettriga aggressionen och kan offra en förflyttningshandling en gång under scenen för att därmed göra en extra stridshandling."
+    }
+  },
+
+  {
+    "namn": "Eonernas visdom",
+    "beskrivning": "Alvernas släkte har genom eonerna samlat på sig en kollektiv visdom; en djup källa till kunnande och insikt som många alver kan ta del av genom meditation. Rollpersonen är en av dem som kan använda gångna generationers kunskaper för att lösa aktuella problem. Helt riskfritt är det inte; i denna mörknande värld drar sökandet till sig korruption. Eonernas visdom ger temporär korruption som om det vore en mystisk kraft.",
+    "taggar": {
+      "typ": ["Särdrag"],
+      "test": ["Viljestark"]
+    },
+    "nivåer": {
+      "Novis": "Handling: Hel runda. Rollpersonen försjunker i en kort trans och får efter ett lyckat Viljestark tillfälligt tillgång till valfri förmåga på novisnivå, undantaget mystiska traditioner samt förmågorna Ritualist och Mystisk kraft. Insikten håller i sig innevarande scen, därefter bleknar den bort.",
+      "Gesäll": "Handling: Aktiv. Rollpersonens närmare kontakt med det kollektiva minnet gör transen ännu kortare men annars är effekten densamma som novisnivån.",
+      "Mästare": "Handling: Aktiv. Rollpersonen kan gräva djupare i det kollektiva minnet och får efter ett lyckat Viljestark tillfälligt tillgång till valfri förmåga på gesällnivå, undantaget mystiska traditioner samt förmågorna Ritualist och Mystisk kraft. Insikten håller i sig innevarande scen, därefter bleknar den bort."
+    }
+  },
+  {
+    "namn": "Jordnära",
+    "beskrivning": "Dvärgsläktet är knutet till världen på ett intimt sätt, nästan som om det hade avlats av själva världens ben och fortfarande är en del av världskroppen. Dvärgar saknar själ och tar skada istället för Korruption; temporär Korruption ger upphov till blödande sår på varelsens kropp. Permanent korruption medför istället en permanent sänkning av beräkningsgrunden för varelsens Smärttröskel. Detta innebär rent praktiskt att Smärttröskeln minskar med 1 för vartannat poäng i permanent korruption som varelsen drabbas av. Tålighet påverkas inte. Om Smärtgränsen når noll avlider varelsen omedelbart. Avlidna dvärgar går inte att återuppväcka som vandöda och går inte heller att tala med genom ritualen Andebesvärjelse. När de dör så ruttnar de tillbaka till skapelsens ursörja och stoft utan att lämna andliga spår efter sig.",
+    "taggar": {
+      "typ": ["Särdrag"]
+    }
+  }]

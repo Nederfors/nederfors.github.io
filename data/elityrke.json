@@ -1,0 +1,475 @@
+[
+  {
+    "namn": "Järnsvuren",
+    "beskrivning": "*\"Aldrig igen!\"*\nJärnpakten tycks få allt mer att stå i vilket ställer stora krav på dess agenter, de järnsvurna. Järnpakten skapades av alverna kring tiden för Symbaroums fall och är nu efter lång tid i skuggorna åter på frammarsch för att försöka bromsa mörkrets tillväxt. Davokar rister i sin sömn men får inte vakna, inte om järnpaktens agenter kan stoppa det.\n\nJärnpakten söker numera sina agenter hos alla släkten och folk; alla som tydligt sympatiserar med kampen testas genom en serie utmaningar av både fysisk och moralisk karaktär. De som klarar sig genom utmaningarna med både liv och lojalitet i behåll inbjuds att svära Järneden. Därefter följer en tid av träning för att bli fullvärdig medlem av järnpakten – en agent hängiven kampen mot korruptionen.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Järnsvuren"]
+    },
+    "krav_formagor": "Lärd, Monsterlärd, Prickskytt, Stångverkan eller Tvillingattack",
+    "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
+    "Elityrkesförmågor": [
+      "Rörlig strid"
+    ],
+    "mojliga_fordelar": [
+      "Bestars tunga",
+      "Blodhund",
+      "Husdjur",
+      "Kontaktnät",
+      "Marschvana",
+      "Stigfinnare",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Blodtörstig",
+      "Mardrömmar"
+    ]
+  },
+  {
+    "namn": "Templár",
+    "beskrivning": "*\"För Prios, den Ende!\"*\nPrioskyrkan och dess företrädare skyddas av templárerna, tungt rustade på utsidan och med trons glöd innanför sina bröstharnesk. Genom trons kraft får solriddarens rustning heligt beskydd och dess blotta närvaro är en styggelserenande kraft; antingen genom sin tros strålglans eller mer konkret genom vapen som brinner med Prios heliga vrede.\n\nPå senare tid har en schism kunnat anas mellan templárernas högsta ledning och delar av Prioskyrkans kuria i Tempelvall. Oenigheten gällde till att börja med hur frågan om soltemplet nära Karvosti skulle hanteras, men det finns också djupare ideologiska skillnader mellan tempelriddarnas lära och vad Prioskyrkan står för. Vad som kommer att följa av denna slitning är inte lätt att gissa; vissa avfärdar den som en naturlig del av kyrkans växande, andra viskar om en möjlig splittring av kyrkan längs åsiktsklyftan som uppstått kring den döende Prios och människans roll i det slutliga dramat.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Templár"]
+    },
+    "krav_formagor": "Järnnäve, Mystisk kraft (Häxhammare) eller Mystisk kraft (Helig aura), Rustmästare, Teurgi",
+    "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
+    "Elityrkesförmågor": [
+      "Bepansrad mystiker"
+    ],
+    "mojliga_fordelar": [
+      "Arvegods",
+      "Besittning",
+      "Kommenderande stämma",
+      "Kontaktnät",
+      "Personlig tjänare",
+      "Privilegierad"
+    ],
+    "tankbara_nackdelar": [
+      "Hederskod",
+      "Mörk hemlighet"
+    ]
+  },
+  {
+    "namn": "Vredesgardist",
+    "beskrivning": "*\"Jag blöder, du dör.\"*\nPå Karvosti vaktas storhövdingen av en utvald skara krigare i Den slumrande vredens garde. Den som mött en vredesgardist i strid eller träning vet att det inte är något trött eller sömnigt över deras stridsteknik. Tvärt om sjuder vredesgardisternas blod av kamplust och med Huldrans hjälp lär de sig att utnyttja blodets kraft i strid. Att skada en vredesgardist väcker oanade krafter hos dem; att såra en erfaren vredesgardist allvarligt är detsamma som att väcka en rasande urorne i människoskepnad.\n\nVarje klan skickar sina nio främsta krigare till Karvosti för att tas upp i vredesgardisternas utvalda skara. Uttagningarna sker inom respektive klan när en av klanens vredesgardister faller i strid eller – mer ovanligt – pensioneras. Den som blir kallad av sin klanhövding kan svårligen säga nej, dels eftersom uppdraget betraktas som ett av de mer ärofulla en klankrigare kan ha, dels då ett nekande sannolikt innebär utstötthet och i värsta fall att man stämplas som fredlös. Det finns berättelser om barbarer som sedan tidigare har lämnat sin klans marker och som vid utnämningen har vägrat att åta sig tjänstgöring på Karvosti. Men det sägs också att dessa förr eller senare alltid får sona trotsigheten med sina liv ...",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Vredesgardist"]
+    },
+    "krav_formagor": "Järnnäve, Rustmästare, Sköldkamp eller Tvillingattack, Återhämtning; Andra krav: Barbarättad människa",
+    "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
+    "Elityrkesförmågor": [
+      "Blodskamp"
+    ],
+    "mojliga_fordelar": [
+      "Arvegods",
+      "Blodsband",
+      "Marschvana",
+      "Packåsna",
+      "Priviligierad",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Bestialisk",
+      "Blodtörstig"
+    ]
+  },
+  {
+    "namn": "Artefaktmakare",
+    "beskrivning": "*\"Jag lägger min själ i det jag skapar.\"*\nAtt skapa artefakter är en högt eftertraktad konst som dock länge varit försvunnen, åtminstone bland alver och människor. Hos trollen har den alltid bevarats som en närmast helig verksamhet. På senare tid har kunskapen också återerövrats av både alver och ambrier, i båda fallen från troll. Alverna har fått den åter som en gåva från en tidigare allierad i dessa mörka tider, och Ordo Magica har också kommit över artefaktmakandets hemligheter på något vis. Kunskapen har snabbt spridits bland ordensmagikerna så att varje kapitel snart har en artefaktmakare på plats.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Artefaktmakare"]
+    },
+    "krav_formagor": "Lärd, Mystisk kraft (valfri), Ritualist, Smideskonst",
+    "viktiga_karaktarsdrag": "Listig 13+, Viljestark 11+",
+    "Elityrkesförmågor": [
+      "Artefaktmakande"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Arvegods",
+      "Besittning",
+      "Förbjuden kunskap",
+      "Kontaktnät"
+    ],
+    "tankbara_nackdelar": [
+      "Protegé",
+      "Åldrad"
+    ]
+  },
+  {
+    "namn": "Stavmagiker",
+    "beskrivning": "*\"Min stav är min själ och mitt vapen\"*\nDe mystiker som går under namnet Stavmagiker kallas så efter de runristade stavar som är deras främsta signum. Dessa stavar är ett uttryck för stavmagikerns kraft och i sig ett fruktat vapen, ett faktum som fått vissa inom Ordo Magica att nedsättande beteckna dem som ”stavkastare” eller ”kvastskaft”. I stavmagikernas ögon är staven en förlängning av mystikerns själ, och tvärt om. För en erfaren stavmagiker är det faktiskt svårt att exakt ange var mystikern slutar och staven börjar; de är del av samma helhet.\n\nOavsett nomenklatur anser sig stavmagikerna vara arvtagare till en orden av krigarmagiker som skyddade Symbaroums kejsare. Efter Symbaroums fall drog sig stavmagikerna tillbaka till sin ordensborg djupt inne i Davokar, och det är först på senare år som deras överlevnad och existens alls har blivit känd bland söderns folk. Stavmagikernas kandidater valdes tidigare ut endast bland de nordliga barbarklanerna för ett asketiskt liv i dödens skugga. Inte sällan valdes bortbytingar ut av de sökande stavmästarna.\n\nI och med Davokars tilltagande förmörkelse har stavmagikerna vidgat sitt upptagsområde så att även mer sydländska talanger kan komma i fråga. Därför skådas de asketiskt klädda krigarmunkarna med sina karakteristiska runstavar emellanåt bland Ambrias hertigdömen och hov, på jakt efter noviser och allierade i kampen mot de fasor som hemsöker Symbaroums ruiner.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Stavmagiker"]
+    },
+    "krav_formagor": "Lärd, Stavkamp, Stångverkan, Mystisk kraft (valfri)",
+    "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
+    "Elityrkesförmågor": [
+      "Mystisk kraft (Stavprojektil)",
+      "Stavmagi",
+      "Ritualist (Blodsregn och Jordstöt)"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Kommenderande stämma",
+      "Marschvana",
+      "Personlig tjänare",
+      "Skräckinjagande",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Hederskod",
+      "Protegé"
+    ]
+  },
+  {
+    "namn": "Andebesvärjare",
+    "beskrivning": "*\"De döda vet och berättar för den som törs lyssna.\"*\n– Häxkonstens vita stig\nHäxor som uteslutande går andebesvärjarens väg är ovanliga och ofta märkta av sitt ensliga vandrande i ödsligheten, där kalla vindar viner och de döda ylar och klagar. Deras resa lämnar dem ofta bleka i anlete likväl som i skugga, kalla i beröring och andedräkt, därtill hålögda med en blick som skär genom skuggor och själar. Andebesvärjare ses därför med respekt och ibland rädsla även av andra häxor, då de dödas sällskap är tärande och farligt. Andebesvärjarnas dödsspådomar är kraftfulla och deras hinsides visdomar värda att lyssna på.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Andebesvärjare"]
+    },
+    "krav_formagor": "Häxkonster, Häxsyn, Mystisk kraft (Ärva skada), Ritualist (Andebesvärjelse)",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Andeplåga",
+      "Skräckslå (monstruöst särdrag)",
+      "Dödsspådom (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Kontaktnät",
+      "Medium",
+      "Seglivad",
+      "Skräckinjagande",
+      "Teckentydare",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Fallandesjuk",
+      "Mardrömmar"
+    ]
+  },
+  {
+    "namn": "Blodvadare",
+    "beskrivning": "*\"All häxkonst börjar med blod.\"*\n– Häxkonstens röda stig\nDe häxor som känner blodet pumpa starkt väljer ibland blodvadarens stig och lär sig känna kraften i livets vätskor och former. De vadar där blodet flyter trögt och passionerat, ofta färgade av sitt livsval; blodvadare är inte sällan hetsiga och lustdrivna, och deras fysiska förändringar omfattar allt som oftast bestialiska drag i form av huggtänder, jakaarögon och pälsliknande hårväxt.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Blodvadare"]
+    },
+    "krav_formagor": "Häxkonster, Medicus, Mystisk kraft (Hamnskifte), Naturlig krigare",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Hjärtebest (ritual)",
+      "Naturligt vapen (monstruöst särdrag)",
+      "Regenerera (monstruöst särdrag)"
+    ],
+    "mojliga_fordelar": [
+      "Bestars tunga",
+      "Husdjur",
+      "Kontaktnät",
+      "Mörkt blod",
+      "Skräckinjagande",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Bestialisk",
+      "Blodtörstig"
+    ]
+  },
+  {
+    "namn": "Demonolog",
+    "beskrivning": "*\"Demoner? Vi är de enda demonerna här.\"*\n– svartkonstspecialisering\nUtanför världen – eller mellan världarna, om man tror på existensen av fler världar – finns Bortomvärlden. I Bortomvärlden jagar själaätande väsen, av folk i gemen oskiljbara från styggelser. Även svartkonstnärer ser likheten med den här världens styggelser men kallar dem ”daemon” för att särskilja deras ursprung. Daemoner kan nämligen tvingas, lockas eller förhandlas in i den fysiska världen av den som känner till passager mellan världarna. Dessa passager kan också utnyttjas av demonologer för att tillfälligt fly världen – eller för att kasta ut en fiende ur världen, för att där tvinga dem att stå öga mot öga med en själaätande daemon.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Demonolog"]
+    },
+    "krav_formagor": "Häxsyn eller Lärd, Mystisk kraft (Ohelig aura), Ritualist (Vanhelgande rit), Svartkonst",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Frammana daemon (ritual)",
+      "Förvisning",
+      "Teleportera",
+      "Tjänardaemon (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Bluffmakare",
+      "Falsk identitet",
+      "Gömställen",
+      "Kontaktnät"
+    ],
+    "tankbara_nackdelar": [
+      "Efterlyst",
+      "Mardrömmar"
+    ]
+  },
+  {
+    "namn": "Grönvävare",
+    "beskrivning": "*\"Min kraft är rotad i djupet.\"*\n– Häxkonstens gröna stig\nDen gröna stigen slingrar sig genom Davokars dunkel, överväxt av snår och rötter, synlig endast för de häxor som uteslutande vandrar den. Där andra fastnar i törnen och går ner sig i moras glider grönvävaren enkelt fram, guidad av vindens viskande i trädens löv och de knotiga stammarnas knarrande röster.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Grönvävare"]
+    },
+    "krav_formagor": "Alkemi, Häxkonster, Mystisk kraft (Örtrankor), Ritualist (Snabbväxt)",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Levande fort (ritual)",
+      "Törnemantel"
+    ],
+    "mojliga_fordelar": [
+      "Förbjuden kunskap",
+      "Gifttålig",
+      "Gröna fingrar",
+      "Kontaktnät",
+      "Stigfinnare",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Mörk hemlighet",
+      "Sävlig"
+    ]
+  },
+  {
+    "namn": "Illusionist",
+    "beskrivning": "*\"Lögnen är min sanning.\"*\n– skola inom ordensmagin\nDe ordensmagiker som verkar som sinnesvrängare går på djupet i sinnets irrgångar och återvänder visare och mäktigare – om de inte själva förlorar sig i skenverk och drömvärldar, en reell fara för dem som utforskar det möjliga och tänkbara snarare än det faktiska. Å andra sidan finns illusionister som hävdar att det är just de mest världsfrånvända kollegorna som bäst förstått verklighetens sanna natur – att allt är en lögn och att vi själva kan välja vad som är sant. Vid sidan av denna starka solipsistiska strömning finns det illusionister som är mycket världsliga, fast förankrade i en krass syn på världen och människans villfarelser, villiga att utnyttja den insikten maximalt för att nå sina mål.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Illusionist"]
+    },
+    "krav_formagor": "Lärd, Mystisk kraft (Illusorisk korrigering eller Obemärkt), Ordensmagi, Ritualist (Falsk terräng, Skenverk)",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Illusionskopia",
+      "Fata morgana (ritual)",
+      "Förhäxad terräng (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Bländverk",
+      "Dubbeltunga",
+      "Falsk identitet",
+      "Kontaktnät",
+      "Skuggyngel"
+    ],
+    "tankbara_nackdelar": [
+      "Drogberoende",
+      "Fallandesjuk"
+    ]
+  },
+  {
+    "namn": "Inkvisitor",
+    "beskrivning": "*\"Bränn alla och låt Prios sortera ut sina egna.\"*\n– vägval inom teurgin\nFör vissa teurger, såväl inom prästerskapet som bland svartkapporna, brinner mörkerhatet starkt och de väljer inkvisitorns väg: att söka upp och förgöra korruptionens tjänare. Inkvisitorer samarbetar gärna med templárer och andra kyrkliga agenter, men saknar intresset att förstå mörkret – det ska förgöras – och tenderar att i motsats till templárernas råa kraft hellre lita till list, bakhåll och rena lönnmord för att nå sina mål. För de flesta inkvisitorer saknar svartkonstnärer och deras sympatisörer helt existensberättigande och sålunda binds inkvisitorn heller inte av några moraliska lagar i kampen mot dem.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Inkvisitor"]
+    },
+    "krav_formagor": "Häxsyn eller Lönnstöt, Mystisk kraft (Anatema eller Obemärkt), Ritualist (Offerrök), Teurgi",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Purgatorium",
+      "Syndarblick (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Blodhund",
+      "Kontaktnät",
+      "Personlig tjänare",
+      "Priviligierad",
+      "Skräckinjagande"
+    ],
+    "tankbara_nackdelar": [
+      "Hederskod",
+      "Mardrömmar"
+    ]
+  },
+  {
+    "namn": "Mentalist",
+    "beskrivning": "*\"Viljan är min lag.\"*\n– skola inom ordensmagin\nDe ordensmagiker som särskilt studerar viljans vassa egg och bräckliga brytpunkter betecknas ofta viljevändare, eller mer formellt mentalister. Viljevändarna härdar sin viljas stål både som vapen och rustning, och blir på så sätt paragoner för sanningen om viljans triumf över materian.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Mentalist"]
+    },
+    "krav_formagor": "Lärd, Mystisk kraft (Bända vilja, Tankekast eller Viljelyft), Ordensmagi, Ritualist (Klärvoajans, Telepatiskt förhör)",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Formeltunnel (ritual)",
+      "Tankestöt"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Kommenderande stämma",
+      "Kontaktnät",
+      "Manipulatör",
+      "Personlig tjänare",
+      "Priviligierad"
+    ],
+    "tankbara_nackdelar": [
+      "Drogberoende",
+      "Fallandesjuk"
+    ]
+  },
+  {
+    "namn": "Nekromantiker",
+    "beskrivning": "*\"Döden är bara början.\"*\n– svartkonstspecialisering\nAndevärlden avser den del av världens utkanter där de dödas andar passerar på väg mot den slutliga vilan – om de inte störs av nekromantiker innan dess. Nekromantikern kan tvinga gränstrakternas andar åter, för att fås att bekänna sina hemligheter eller ta plats i en död kropp och tjäna dödsbesvärjaren i form av dragouler och andra odöda. Förståelsen för dödens mekanik ger också nekromantikern tillgång till andra fasansfulla krafter och ritualer.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Nekromantiker"]
+    },
+    "krav_formagor": "Medicus, Mystisk kraft (Vandråp), Ritualist (Väcka vandöd), Svartkonst",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Spökvandring (mystisk kraft)",
+      "Andeplåga",
+      "Dödsriddare (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Bluffmakare",
+      "Falsk identitet",
+      "Förbjuden kunskap",
+      "Kontaktnät",
+      "Medium"
+    ],
+    "tankbara_nackdelar": [
+      "Efterlyst",
+      "Sjuklig"
+    ]
+  },
+  {
+    "namn": "Pyromantiker",
+    "beskrivning": "*\"Du är på väg att tända en eld du inte kan släcka.\"*\n– skola inom ordensmagin\nFör pyromantikern hyser eldens elementarer en särskild lockelse. Genom studiet av eldens väsen blir pyromantikern en mästare över den exoterma principen så till den grad att elden snarare blir en allierad och ett skydd än ett farligt element att hantera.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Pyromantiker"]
+    },
+    "krav_formagor": "Lärd, Mystisk kraft (Brandvägg eller Svavelkaskad), Ordensmagi, Ritualist (Askans berättelse eller Flammande tjänare)",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Eldsjäl",
+      "Tvillingtjänare (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Eldfödd",
+      "Kontaktnät",
+      "Personlig tjänare",
+      "Skräckinjagande"
+    ],
+    "tankbara_nackdelar": [
+      "Blodtörstig",
+      "Impulsiv"
+    ]
+  },
+  {
+    "namn": "Själasörjare",
+    "beskrivning": "*\"I varje själ står en strid, en spegling av världens kamp.\"*\n– vägval inom teurgin\nEn del teurger ser sig som folkets herdar, som missionärer och helare, och dessa själasörjare har som främsta uppgift att stärka det som är bra, att hålla ljusets flämtande låga levande och ge den bränsle och omsorg. Ofta tar de på sig ledarroller inom kyrkan eller det omgivande samhället, för att nå ut till så många människor som möjligt och därigenom sprida ljuset och sanningen. Många av Prioskyrkans högsta ledare och främsta teurger vandrar själasörjarens väg.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Själasörjare"]
+    },
+    "krav_formagor": "Ledare eller Medicus, Mystisk kraft (Helbrägdagörelse, Helig aura eller Sannform), Ritualist (Exorcism), Teurgi",
+    "viktiga_karaktarsdrag": "",
+    "Elityrkesförmågor": [
+      "Botgöring (ritual)",
+      "Livgivare"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Kontaktnät",
+      "Priviligierad",
+      "Seglivad",
+      "Teckentydare"
+    ],
+    "tankbara_nackdelar": [
+      "Hederskod",
+      "Mörk hemlighet"
+    ]
+  },
+  {
+    "namn": "Drottningspion",
+    "beskrivning": "*\"Drottningen kommer finna det här intressant\"*\nRedan under Det stora kriget fanns hemliga agenter knutna till kungen och hovet i Alberetor. Efter kriget lades verksamheten i malpåse för att åter i dessa orostider återupprättas av drottning Korinthia, i form av Kungliga säkerhetstjänsten. Säkerhetstjänsten består av en samling pålitliga ädlingar som i hemlighet och på drottningens order infiltrerar olika organisationer för insamlande av känslig information – eller spridande av desinformation. Utskottet leds av höga ädlingar medan fältarbetet utförs av ädlingar av lägre börd. En väsentlig del av verksamheten riktas mot drottningens egna allierade inom Prioskyrkan, Ordo Magica, militärväsendet och de olika hertigarna, alltså drottningens nära släktingar. Vissa drottningspioner mäktar inte med att hantera intrigspelet och dess moraliska tvetydigheter, andra slängs ut i kylan efter komprometterande misslyckanden. Före detta drottningspioner lever ett ofta kort liv på ständig flykt undan både fiender och tidigare uppdragsgivare.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Drottningspion"]
+    },
+    "krav_formagor": "Fint, Giftbrukare eller Stryparkonst, Svärdshelgon, Tvillingattack",
+    "viktiga_karaktarsdrag": "Listig 13+, Diskret 11+",
+    "Elityrkesförmågor": [
+      "Pyroteknik"
+    ],
+    "mojliga_fordelar": [
+      "Arvegods",
+      "Besittning",
+      "Bluffmakare",
+      "Falsk identitet",
+      "Gömställen",
+      "Kontaktnät",
+      "Priviligierad"
+    ],
+    "tankbara_nackdelar": [
+      "Efterlyst",
+      "Ärkefiende"
+    ]
+  },
+  {
+    "namn": "Gentlemannatjuv",
+    "beskrivning": "*\"Inbrottssäkert? Vi får väl se.\"*\nVissa tjuvar går ett steg längre än de flesta i skrået när det gäller flärd: att slå till utan våld och utan att efterlämna spår räcker inte för dessa så kallade gentlemannatjuvar; de ställer också kravet på sig själva att kunna utföra sina inbrott med finess. Som kronan på verket lämnar de ofta en symbol – en särskild blomma, ett tarotkort eller kanske en dikt skriven speciellt för rånoffret – för att markera vem som ligger bakom en annars oförklarlig stöld. Vissa gentlemannatjuvar stjäl inte ens värdesaker, eller stjäl inget alls – för dem räcker det med att ta sig in på välbevakade platser och lämna sitt signum där.\n\nGentlemannatjuvarna utgör en elit inom Yndaros tjuvgille. Ibland är de uttråkade högreståndspersoner som egentligen inte behöver stjäla men väljer att göra det för spänningens skull; mer ofta är de av enklare börd med en stark längtan efter ett finare liv de aldrig kan få – ett liv de samtidigt efterapar och hämnas på, på sitt eget poetiska vis.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": ["Gentlemannatjuv"]
+    },
+    "krav_formagor": "Akrobatik, Dominera, Försåtsgillrare, Svärdshelgon eller Tvillingattack",
+    "viktiga_karaktarsdrag": "Övertygande 13+, Listig 11+",
+    "Elityrkesförmågor": [
+      "Manteldans"
+    ],
+    "mojliga_fordelar": [
+      "Arvegods",
+      "Fingerfärdig",
+      "Inbrottstjuv",
+      "Kontaktnät",
+      "Personlig tjänare",
+      "Priviligierad"
+    ],
+    "tankbara_nackdelar": [
+      "Hederskod",
+      "Ärkefiende"
+    ]
+  }]

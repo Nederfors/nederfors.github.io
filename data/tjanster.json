@@ -1,0 +1,183 @@
+[
+  {
+    "namn": "Helpension, höloft på landet",
+    "beskrivning": "Enkel övernattning på höloft med enklare mat på landsbygden. Grundläggande komfort och skydd mot väder.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Helpension, värdshus på landet",
+    "beskrivning": "Ett dygn på värdshus med enkel mat, sovplats och viss trygghet. Ofta vid landsvägar och mindre samhällen.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Helpension, värdshus i stad",
+    "beskrivning": "Stadsvärdshus erbjuder bättre mat och bekvämare säng för resande. I regel säkrare och med mer service.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Liv i fält, fotsoldat per dag",
+    "beskrivning": "Dagslön och enkel försörjning för soldat till fots i fältförhållanden.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Liv i fält, ryttare per dag",
+    "beskrivning": "Daglig ersättning för ryttare med egen häst i krigstjänst eller eskort.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Liv i fält, riddare per dag",
+    "beskrivning": "Lön för riddare i fält, inkluderar både underhåll och militärt ansvar.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Bad på värdshus",
+    "beskrivning": "Tillgång till badbalja och tvål på värdshus, ofta lyx i mindre samhällen.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 3
+    }
+  },
+  {
+    "namn": "Kartritare",
+    "beskrivning": "Professionell som kan framställa detaljerade kartor över land, skog eller stad.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Livvakt per dag",
+    "beskrivning": "Beväpnad eskort för att skydda mot överfall och rån under en dag.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Medicus",
+    "beskrivning": "Medicinsk rådgivning eller behandling. Kostnad för eventuella alkemiska preparat tillkommer.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Mystiker, ritual",
+    "beskrivning": "Specialist på ritualmagi, anlitas vid behov av magiska tjänster eller välsignelser.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Tvätt av kläder",
+    "beskrivning": "Tvätterska eller tvättare som rengör kläder och linne.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 7
+    }
+  },
+  {
+    "namn": "Väg/stadstull",
+    "beskrivning": "Avgift för att passera genom port eller över väg in till stad eller by.",
+    "taggar": {
+      "typ": [
+        "Tjänster"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  }]

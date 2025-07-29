@@ -1,0 +1,599 @@
+[
+  {
+  "namn": "Andevän",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Det mirakulösa medel som kallas Andevän tillverkas i en kittel men det är inte vätskan som buteljeras utan ångan. Den gråvita röken fångas i små keramikpluntor och andas in vid behov. Andevän ger användaren nivå I i det monstruösa särdraget Andeform. Effekten varar i 1t4 rundor, till priset av lika många poäng temporär korruption."
+  },
+  "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Blixtpulver",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Ett fint pulver som när det utsätts för hastig rörelse flammar upp i förblindande ljus. Används tillsammans med förmågan Pyroteknik på novisnivå."
+  },
+  "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Drönardagg",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Drönardagg är ett flytande elixir baserat på drönarsporer men som innehåller accelererande komponenter. Den som får i sig en dos av elixiret somnar omedelbart om denne inte lyckas med ett slag mot Stark, och sover i sådana fall en timme eller tills den erhåller skada. Lyckas slaget blir personen istället omtöcknad med effekten att denne under en timmes tid bara har en handling per runda och inte kan använda några aktiva förmågor."
+  },
+  "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Eldfärg",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Eldfärg är ett alkemiskt salt som kastas i eld och då ger ifrån sig en klar och tydlig färg. Det används för kommunikation över långa avstånd, där färgerna är tillskrivna en särskild innebörd för allierade betraktare. Saltet är också populärt på fester bland de bemedlade och bland charlataner som vill imponera på enkelt folk."
+  },
+  "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Fällande lod",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Alkemisten smörjer in ett lod med tyngande elixir, vilket gör att den som träffas av lodet måste klara ett [Stark –Skada] eller ramla omkull. Det monstruösa särdraget Robust ger +2 på Stark per nivå vid försöket att motstå detta."
+  },
+  "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+},
+
+{
+  "namn": "Giftljus (svagt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Ett till synes vanligt ljus som när det tänds avger ett gift; avslöjas med [Vaksam ← alkemistens Diskret]. Giftet är luftburet och drabbar alla i rummet, eller i närheten om utomhus. Ljuset måste brinna en kortare stund (1t4 rundor) innan giftet frigörs, så mördaren kan själv tända ljuset och lämna rummet om denne så vill. Ett svagt giftljus gör 2 i skada per runda."
+  },
+  "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Giftljus (medelstarkt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Ett till synes vanligt ljus som när det tänds avger ett gift; avslöjas med [Vaksam ← alkemistens Diskret]. Giftet är luftburet och drabbar alla i rummet, eller i närheten om utomhus. Ljuset måste brinna en kortare stund (1t4 rundor) innan giftet frigörs, så mördaren kan själv tända ljuset och lämna rummet om denne så vill. Ett medelstarkt giftljus gör 3 i skada per runda."
+  },
+  "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Homunculus",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Ett frö som planteras och dagen efter föder en hjälpare ur marken. Hjälparen är liten som ett barn och saknar förmågor. Dess karaktärsdrag är samtliga 5 (+5). Den utför tjänster åt skaparen, men förtvinar inom ett månvarv från skapandet. Kvar blir en liten hög med jord. Skapandet av en homunculus är en våldshandling mot naturens ordning vilket ger skaparen 1t6 temporär Korruption."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Klargörande ljus",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Ett vaxljus som när det tänds ger levande väsen (inte vandöda eller styggelser) svagt glödande konturer i mörker vilket försvårar smygande (en andra chans att misslyckas på slag för att smyga, eller en andra chans att upptäcka de som smyger). Effekten gäller alla i rummet eller i närheten om utomhus, även den som tände ljuset och dennes allierade."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Krigsmålning",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Med hjälp av mystisk laddade färger kan en krigare få hjälp i strid. Krigsmålningen ger +1 på antingen Kvick eller Stark för resten av scenen. Krigaren väljer vilket karaktärsdrag som får en bonus när färgen först appliceras."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Motgiftsljus (svagt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Ett ljus som när det tänds sprider motgift till alla i dess direkta närhet. Ett svagt motgiftsljus påverkar alla förgiftade personer i närheten och sänker pågående förgiftningars verkan med en nivå; ett starkt gift blir medelstarkt, ett medelstarkt blir svagt och ett svagt neutraliseras helt. Motgiftsljus har ingen effekt på skada som redan tagits av gift."
+  },
+  "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Motgiftsljus (medelstarkt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Ett ljus som när det tänds sprider motgift till alla i dess direkta närhet. Ett medelstarkt motgiftsljus gör samma sak, men med två nivåers sänkning; ett starkt gift blir svagt och medelstarka och svaga gifter neutraliseras helt. Motgiftsljus har ingen effekt på skada som redan tagits av gift."
+  },
+  "grundpris": { "daler": 9, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Målsökande pil",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Alkemisten marinerar en pil i målsökande essenser och skapar därmed en pil som skjuter förbi andra stridande, dvs. inte kräver fritt skottfält. Skytten måste dock se någon del av målet för att alls kunna träffa med pilen och måste i vanlig ordning slå ett tärningsslag för att träffa."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+
+{
+  "namn": "Purpursav (svag)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. En novis på Alkemi förmår att tillverka en dryck som omedelbart tvättar bort 1t4 temporär korruption från brukarens själ."
+  },
+  "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Purpursav (medelstark)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. Gesällens motsvarighet av elixiret renar användaren från 1t6 temporär korruption."
+  },
+  "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Purpursav (stark)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. Mästarens version av elixiret tvättar bort 1t8 temporär korruption."
+  },
+  "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+},
+
+{
+  "namn": "Rökbomb",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "En rökbomb i form av ett kärl som sprider tät alkemisk rök när den krossas. Röken fyller ett rum eller täcker en grupp som slåss i närstrid om den krossas utomhus. Används tillsammans med förmågan Pyroteknik, gesällnivå."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Skuggbleka",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Det vedervärdigt smakande och osande elixiret användes en gång i tiden av mystiker som ville dölja hur nära de var förstyggelsens rand, vilket gör det till ett garanterat välkommet tillskott i varje svartkonstnärs arsenal av dekokter. Den som tvingar i sig sörjan förvrider sin skugga så att det under en hel scen framstår som om användaren hade 1t6 lägre värde i total korruption."
+  },
+  "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Skymningstinktur",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Ett spritutdrag på torkade exemplar av den extremt sällsynta skymningstisteln. Växtens ovanlighet (man hittar vanligen en eller ett par stjälkar torkade bland andra offergåvor i Davokars ruiner, snarare än en växtplats) tillsammans med dess måttliga medicinska effekter gjorde länge att det inte var någon eftertraktad skatt; den har utvärtes effekt på vissa eksem och möjlig men oklar effekt på senilitet (invärtes bruk). Med drottningmoderns tilltagande ålderssvaghet kom en stark efterfrågan på tisteln från hovet. Berättelsen om hur Lasifor Nattbäcka köpte marken där Tistla Fäste nu ligger för ett fång Skymningstistel gav snart växten ett uppsving och den blev med ens ett hett eftertraktat fynd. Skymningstinktur har på senare tid också fått ytterligare en ny målgrupp, och ett nytt användningsområde; den har visat sig dölja flera av vandödhetens symtom. Desperata drabbade – en del av dem alkemister – sökte sätt att dölja sina dödstecken, och någon fann att skymningstinkturen (drucken, inte struken på huden) gav tillfälligt skenliv åt en vandöd kropp; huden fick rodnad åter, kroppsvärmen steg och andedräktens likdoft avtog drastiskt. Effekten sitter i en vecka per lyckat slag mot [Stark –permanent Korruption]. Om slaget misslyckas sitter effekten i endast ett ytterligare dygn och verkan försvinner sedan helt. Genomkorrumperade varelser får effekten endast ett dygn per dos, inga slag slås."
+  },
+  "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+},
+
+{
+  "namn": "Transformerande brygd (svag)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå I, till en kostnad av 1t4 temporär korruption."
+  },
+  "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Transformerande brygd (medelstark)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå II, till en kostnad av 1t6 temporär korruption."
+  },
+  "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Transformerande brygd (stark)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå III, till en kostnad av 1t8 temporär korruption."
+  },
+  "grundpris": { "daler": 24, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Törnekryp",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "En näve frön kastas på barmark eller jordgolv och rundan efter springer 1t4 törnekryp upp till kastarens tjänst. Törnekrypen är små, vagt människo-lika varelser av taggiga törnen. De talar inte men gnisslar och knakar som pinnar som böjs och gnids mot varandra. Törnekrypen lever under en scen, sedan förtorkar de och ser ut som taggiga häxdockor. Frammanandet av törnekryp är en våldsgärning på den naturliga ordningen vilket ger användaren 1t6 temporär Korruption. Exempelstats för törnekryp finns på sidan 123 i spelarens handbok."
+  },
+  "grundpris": { "daler": 5, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Vigvatten",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Helgat vatten, mättat med Prios ljus, som läker sår och svalkar själar. Dels fungerar det som en Örtkur med +1 på effektslaget (alltså 2 Tålighet tillbaka för dem utan Medicus), dessutom tvättar det bort 1 temporär korruption om användaren har sådan."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+
+{
+  "namn": "Vildtugg",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Den rödaktiga tuggkåda som kallas Vildtugg är ett starkt stimulantia och gör tuggaren piggare, oförsiktigare och aggressivare. En dos Vildtugg flyttar 2 poäng från Diskret, Listig och Viljestark till Kvick, Stark och Träffsäker. Effekten varar under resten av scenen. Scenen efter är användaren tom och svag, –2 på alla karaktärsdrag. Över tid är Vildtugg mycket beroendeframkallande och ger svåra abstinenssymtom om inte en dos per vecka konsumeras, med stor risk för permanent vansinne och död. Inga kända droger motverkar detta."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Åskboll",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "En alkemisk laddning som kastas och exploderar i blixt och dunder. Används tillsammans med förmågan Pyroteknik, mästarnivå."
+  },
+  "grundpris": { "daler": 16, "skilling": 0, "örtegar": 0 }
+},
+
+{
+  "namn": "Elementaressens",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Ett vapen, fyra kastvapen eller alla lod/pilar i ett koger gör 1t4 extra elementarskada under en scen. Alkemisten måste välja vilket element som ska beredas: eld, kyla, syra eller blixt."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Gastdamm",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Gastdammet tvingar ett immateriellt väsen (ett som har det monstruösa särdraget Andeform) att ta fysisk gestalt för resten av scenen. Ett slag mot [Träffsäker←Försvar] krävs för att träffa; om det lyckas skadas anden som vanligt av alla vapen."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Gift (svagt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Svagt gift ger 1t4 i skada under 1t4 rundor."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Gift (medelstarkt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Det medelstarka giftet ger 1t6 i skada under 1t6 rundor."
+  },
+  "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Gift (starkt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Starkt gift ger 1t8 i skada under 1t8 rundor."
+  },
+  "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Kvävarsporer",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Kvävarsporer framställs ur lavar och svampar i Davokar. Elixiret används specifikt med förmågan Stryparkonst."
+  },
+  "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Livselixir",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Livselixiret ger regenererande krafter, 1t6 Tålighet per runda i 1t6 rundor, men också 1 temporär korruption per verksam runda."
+  },
+  "grundpris": { "daler": 16, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Långfärdsbröd",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "En kaka av det mustiga långfärdsbrödet motsvarar en veckas mat för en person."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Magikoncentrat",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "En dos mystisk essens som ger en mystiker en andra chans att lyckas med slaget för Viljestark vid nästkommande försök att använda en mystisk kraft. Ger också +1T4 temporär korruption."
+  },
+  "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Motgift (svagt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "Svagt motgift sänker ett gift med en skadetärning: starkt gift blir medelstarkt, medelstarkt blir svagt och ett svagt neutraliseras helt. Motgiftet kräver ett lyckat Listig för att ha effekt; det har ingen inverkan på skada som redan tagits."
+  },
+  "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Motgift (medelstarkt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Det medelstarka motgiftet sänker ett gift två nivåer: starkt gift blir svagt och både medelstarkt och svagt neutraliseras helt. Motgiftet kräver ett lyckat Listig för att ha effekt; det har ingen inverkan på skada som redan tagits."
+  },
+  "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Motgift (starkt)",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Starkt motgift sänker ett gift tre nivåer. Motgiftet kräver ett lyckat Listig för att ha effekt; det har ingen inverkan på skada som redan tagits."
+  },
+  "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+},
+
+{
+  "namn": "Skyddsolja",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Den alkemiska oljan skyddar mot elementarskada, vilket konkret ger 1t4 extra skydd under en scen mot ett av elementen. Alkemisten måste välja vilket element som oljan ska skydda mot: eld, kyla, syra eller blixt."
+  },
+  "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Syndroppar",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Dropparna ger omedelbart synen åter till en temporärt förblindad varelse."
+  },
+  "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Sporbomb",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Mästare": "Sporbomben används specifikt med förmågan Stryparkonst."
+  },
+  "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Spökljus",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Gesäll": "Ångorna från ljuset synliggör osynliga saker på platsen eller i rummet."
+  },
+  "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+},
+{
+  "namn": "Örtkur",
+  "taggar": {
+    "typ": ["Elixir"]
+  },
+  "nivåer": {
+    "Novis": "En örtkur består av ett alkemiskt grötomslag samt bandage. Det doftar förfärligt men helar 1 Tålighet. Örtkuren helar mer om den används av en rollperson med förmågan Medicus."
+  },
+  "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+},
+  {
+    "namn": "Pysslingstoft",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Pysslingstoft är ett glittrande pulver som sprids ut för att dölja spår. En dos räcker för att göra ett spår omöjligt att följa med konventionella spårningstekniker. Ritualer påverkas inte. Pysslingstoft är ett gesällelixir och kostar 4 daler hos de örtkrämare och alkemister som tillverkar det."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Sömndroppar",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Sömndroppar består av en sockerlagsliknande vätska som lätt blandas med annat drickbart utan att påverka smaken nämnvärt. Tillverkningsprocessen är tidskrävande och så svår att endast en mästeralkemist klarar av den. Men även många av dem vägrar att befatta sig med proceduren, då den kraftfulla brygd som tillverkas inte bara söver utan också korrumperar.\n\nDen som får i sig av sömndropparna slocknar ofelbart rundan därpå. Ett lyckat slag mot Stark gör att personen vaknar efter 1T4 rundor, så omtöcknad att denne bara har en handling under nästkommande 1T8 rundor. Misslyckas slaget fortsätter personen att sova under en hel scen (eller en timme om en exakt angivelse är relevant). Den sovande kan väckas innan dess men är då oförmögen att agera, prata eller ens gå för egen maskin.\n\nOavsett om slaget lyckas eller inte drabbas offret av 1T6 temporär korruption, tillräckligt för att styggelsemärka de svagsinta."
+    },
+    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Sanningsserum (medelstarkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Det krävs en gesäll för att tillverka ett effektivt sanningsserum. Den person som mer eller mindre motvilligt inandas pulvret (alternativt dricker det utspätt i vätska) förlorar både samvetsgrannhet och skärpa, vilket gör att den får −5 i Viljestark när det gäller att stå emot förhör där motparten använder Övertygande samt vid motståndsförsök mot ritualen Telepatiskt förhör. Ett lyckat slag mot Stark omvandlar modifikationen till −3.\n\nEffekten sitter i en hel scen."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Sanningsserum (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Skulle serumet i stället tillverkas av en sann alkemimästare blir modifikationen −8, eller −5 efter ett lyckat slag mot Stark.\n\nEffekten sitter i en hel scen."
+    },
+    "grundpris": { "daler": 9, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Dimglob (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Dimgloben är inte större än att den ryms i handflatan och består av ett hölje av torkade löv kring ett omtöcknande pulver baserat på Drönarsporer. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen. Om den träffar slår målet ett slag mot Stark. Lyckas slaget händer ingenting men om det misslyckas blir offret omtöcknat och får minus på alla framgångsslag under 1T4 rundor.\n\nNegativ modifikation: −1."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Dimglob (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Dimgloben är inte större än att den ryms i handflatan och består av ett hölje av torkade löv kring ett omtöcknande pulver baserat på Drönarsporer. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen. Om den träffar slår målet ett slag mot Stark. Lyckas slaget händer ingenting men om det misslyckas blir offret omtöcknat och får minus på alla framgångsslag under 1T4 rundor.\n\nNegativ modifikation: −3."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Dimglob (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Dimgloben är inte större än att den ryms i handflatan och består av ett hölje av torkade löv kring ett omtöcknande pulver baserat på Drönarsporer. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen. Om den träffar slår målet ett slag mot Stark. Lyckas slaget händer ingenting men om det misslyckas blir offret omtöcknat och får minus på alla framgångsslag under 1T4 rundor.\n\nNegativ modifikation: −5."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ljungeld (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Ljungelden består av instabila ämnen som innesluts i Alumnötens tunna skal. Den kan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och flammar upp i en bländande ljusblixt när skalet krossas. Om den träffar slår målet ett slag mot Kvick. Lyckas slaget händer ingenting men om det misslyckas blir offret förblindat i ett antal rundor.\n\nFörblindning: 1 runda."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ljungeld (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Ljungelden består av instabila ämnen som innesluts i Alumnötens tunna skal. Den kan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och flammar upp i en bländande ljusblixt när skalet krossas. Om den träffar slår målet ett slag mot Kvick. Lyckas slaget händer ingenting men om det misslyckas blir offret förblindat i ett antal rundor.\n\nFörblindning: 1T4 rundor."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ljungeld (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Ljungelden består av instabila ämnen som innesluts i Alumnötens tunna skal. Den kan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och flammar upp i en bländande ljusblixt när skalet krossas. Om den träffar slår målet ett slag mot Kvick. Lyckas slaget händer ingenting men om det misslyckas blir offret förblindat i ett antal rundor.\n\nFörblindning: 1T6 rundor."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Knallsten (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Knallstenen kan enklast beskrivas som en mindre, svagare och mer primitiv variant av den alkemiska åskbollen. Instabila substanser formas till en deg och placeras i en knytnävsstor, urgröpt sandsten. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och ger explosionsskada om den träffar.\n\nSkada: 1T4."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Knallsten (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Knallstenen kan enklast beskrivas som en mindre, svagare och mer primitiv variant av den alkemiska åskbollen. Instabila substanser formas till en deg och placeras i en knytnävsstor, urgröpt sandsten. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och ger explosionsskada om den träffar.\n\nSkada: 1T6."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Knallsten (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Knallstenen kan enklast beskrivas som en mindre, svagare och mer primitiv variant av den alkemiska åskbollen. Instabila substanser formas till en deg och placeras i en knytnävsstor, urgröpt sandsten. Den kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och ger explosionsskada om den träffar.\n\nSkada: 1T8."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Frätarklot (svag)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Novis": "Den alkaliska vätskan i Frätarklotet är innesluten i en klotrund plunta av syratåligt porslin. Pluntan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och om den träffar drabbas offret av dess frätande effekt.\n\nFrätande skada: 1T4 i 1T4 rundor."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Frätarklot (medelstark)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Gesäll": "Den alkaliska vätskan i Frätarklotet är innesluten i en klotrund plunta av syratåligt porslin. Pluntan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och om den träffar drabbas offret av dess frätande effekt.\n\nFrätande skada: 1T6 i 1T6 rundor."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Frätarklot (starkt)",
+    "taggar": {
+      "typ": ["Elixir"]
+    },
+    "nivåer": {
+      "Mästare": "Den alkaliska vätskan i Frätarklotet är innesluten i en klotrund plunta av syratåligt porslin. Pluntan kastas mot ett enskilt offer med ett framgångsslag som om den var ett kastvapen och om den träffar drabbas offret av dess frätande effekt.\n\nFrätande skada: 1T8 i 1T8 rundor."
+    },
+    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+  }
+]

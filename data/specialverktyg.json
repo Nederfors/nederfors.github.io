@@ -1,0 +1,235 @@
+[
+    {
+  "namn": "Artefaktkatalog",
+  "beskrivning": "En vältummad kopia av av trollsmeden Xavaundos visdomar, nedtecknade av ordensmäster Balinda. Boken ger +1 på framgångsslag i Artefaktmakande.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  }
+},
+{
+  "namn": "Bestiarium",
+  "beskrivning": "Ett bestiarium, en fint illustrerad katalog över världens olika fasor, försedd med marginalanteckningar från tidigare ägare rörande de bästa sätten att undvika monstren – eller hur man bäst bekämpar dem. Bestiariet ger +1 på framgångsslag i Monsterlärd.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  }
+},
+{
+  "namn": "Falskspelsutrustning",
+  "beskrivning": "Viktade tärningar, märkta kort och spelpjäser ger användaren +1 på alla framgångsslag i spel (se dock fördelen Falskspelare på sidan 53 för riskerna med att spela falskt).",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  }
+},
+{
+  "namn": "Fältskärsränsel",
+  "beskrivning": "Fältskärens ränsel innehåller verktyg för att skära, bränna och med örter behandla skador och sjukdomar. Fältskärsväskan ger +1 på framgångsslag i Medicus.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  }
+},
+
+{
+  "namn": "Artefaktkatalog",
+  "beskrivning": "En vältummad kopia av av trollsmeden Xavaundos visdomar, nedtecknade av ordensmäster Balinda. Boken ger +1 på framgångsslag i Artefaktmakande.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Bestiarium",
+  "beskrivning": "Ett bestiarium, en fint illustrerad katalog över världens olika fasor, försedd med marginalanteckningar från tidigare ägare rörande de bästa sätten att undvika monstren – eller hur man bäst bekämpar dem. Bestiariet ger +1 på framgångsslag i Monsterlärd.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Falskspelsutrustning",
+  "beskrivning": "Viktade tärningar, märkta kort och spelpjäser ger användaren +1 på alla framgångsslag i spel (se dock fördelen Falskspelare på sidan 53 för riskerna med att spela falskt).",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Fältskärsränsel",
+  "beskrivning": "Fältskärens ränsel innehåller verktyg för att skära, bränna och med örter behandla skador och sjukdomar. Fältskärsväskan ger +1 på framgångsslag i Medicus.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+
+{
+  "namn": "Fältsmedja",
+  "beskrivning": "Den så kallade fältsmedjan är ett måste för varje resande smed. Den består av en uppsättning smidesverktyg, en fältugn med vattenbad och ett litet städ. Den som använder fältsmedjan får +1 på framgångsslag i Smideskonst.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Förfalskningsutrustning",
+  "beskrivning": "Förutom lupp, papper, pergament och en rad pennor och bläck innehåller paketet en samling stämplar, sigill och redan förtryckta brevpapper från en rad olika organisationer, handelshus och liknande. Utrustningen ger användaren +1 på alla framgångsslag i syfte att undgå att få sina förfalskningar genomskådade.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Förklädnasväska",
+  "beskrivning": "Smink, peruker och vax för att ändra ansiktets form, tillsammans med ett grundläggande antal klädesplagg av regional betydelse ger +1 på framgångsslag för den som vill undvika att få sin förklädnad genomskådad.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Försåtsmanual",
+  "beskrivning": "Ett välanvänt exemplar av den omtalade resen Grymkäfts lustfyllda skrift; en lång förteckning av fällor, allt från enkla marsnaror via nålfällor i skrin till massiva mördarpjäser lämpliga för portar till konungars gravvalv. Boken ger +1 på framgångsslag i Försåtsgillrare.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Giftmanual",
+  "beskrivning": "En manual kring användande av gifter, rikt illustrerad med exempel på hur man ska och inte ska göra för att få ut det mesta av sina dekokter. Den som använder giftmanualen får +1 på alla framgångsslag i Giftkunnig.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Kartografverktyg",
+  "beskrivning": "Skrivdon, pergament, passare, linjal och en sextant utgör stommen i kartografverktygen, som tillsammans ger +1 på alla framgångsslag för att upprätta exakta kartor.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Klättringsutrustning",
+  "beskrivning": "En samling rep, säkringar, hakar och verktyg för att klättra i svår terräng. Klättringsutrustningen ger +1 på framgångsslag för att klättra.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Resebibliotek",
+  "beskrivning": "Halvdussinet referensböcker och ett dussin bokrullar kring mer specialiserade ämnen. Resebiblioteket ger +1 på framgångsslag i Lärd.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Reselaboratorium",
+  "beskrivning": "Brännare, retorter, pipetter, mortel och andra saker som en alkemist på vägarna behöver. Reselaboratoriet ger +1 på framgångsslag i Alkemi.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "namn": "Utgrävningsverktyg",
+  "beskrivning": "Ett par spadar, ett mindre spett, en sil och en hink, kompletterat med penslar, mätsnöre med knutar på samt en lupp. Utgrävningsverktygen ger +1 på slag för att hitta skatter i världens ruiner.",
+  "taggar": {
+    "typ": [
+      "Specialverktyg"
+    ]
+  },
+  "grundpris": {
+    "daler": 10,
+    "skilling": 0,
+    "örtegar": 0
+  }
+}]

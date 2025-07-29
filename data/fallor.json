@@ -1,0 +1,62 @@
+[
+  {
+    "namn": "Svag Alkemisk mina",
+    "taggar": {
+      "typ": ["Elixir", "Fälla"]
+    },
+    "nivåer": {
+      "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t8 skada; därefter brinner substansen i 1t4 rundor och ger 1t4 skada per runda."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Medelstark Alkemisk mina",
+    "taggar": {
+      "typ": ["Elixir", "Fälla"]
+    },
+    "nivåer": {
+      "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t10 skada; därefter brinner substansen i 1t6 rundor och ger 1t6 skada per runda."
+    },
+    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Stark Alkemisk mina",
+    "taggar": {
+      "typ": ["Elixir", "Fälla"]
+    },
+    "nivåer": {
+      "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t12 skada; därefter brinner substansen i 1t8 rundor och ger 1t8 skada per runda."
+    },
+    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Svag Mekanisk fälla",
+    "taggar": {
+      "typ": ["Fälla"]
+    },
+    "nivåer": {
+      "Novis": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1t8 skada."
+    },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Medelstark Mekanisk fälla",
+    "taggar": {
+      "typ": ["Fälla"]
+    },
+    "nivåer": {
+      "Gesäll": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1t10 skada."
+    },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Stark Mekanisk fälla",
+    "taggar": {
+      "typ": ["Fälla"]
+    },
+    "nivåer": {
+      "Mästare": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1t12 skada."
+    },
+    "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
+  }
+]

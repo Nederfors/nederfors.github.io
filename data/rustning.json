@@ -1,0 +1,157 @@
+[
+  {
+    "namn": "Flätat silke",
+    "beskrivning": "Flätat silke är det främsta inom lätt bepansning, då trådarnas täta väv avvärjer hugg och spetsar långt bättre än dess tjocklek och tyngd antyder. Flätat silke är känt sedan länge av såväl barbarer som ambrier, och vissa lärde spekulerar i om inte kunskapen kommer från alver och då teoretiskt sett sträcker sig ända tillbaka till Järnpaktens dagar.",
+    "kvalitet": "Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Häxsärk",
+    "beskrivning": "Häxorna binder skyddande andar i ristade benbitar och fallna fienders skallar, och fäster dem på sina klädnader till effektivt skydd.",
+    "kvalitet": "Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ordensrober",
+    "beskrivning": "De flesta ordensnoviser erbjuds en beskyddande ordensrob lagom till sin första längre resa. Dessa kåpor är broderade med angreppsavvisande runor, vilket ger noviserna en något större chans att överleva och därmed slutföra sina mer eller mindre viktiga uppdrag.",
+    "kvalitet": "Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ulvaskinn",
+    "beskrivning": "För fattiga barbarspejare bjuds den otympliga men billiga rustningsvarianten ulvaskinn, ett skinn som på enklaste sätt har garvats och sytts ihop till ett hjälpligt skydd.",
+    "kvalitet": "Otymplig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Välsignad kåpa",
+    "beskrivning": "Teurgernas prästkappor välsignas och skyddas av välvilliga krafter, så att kyrkans främsta ljusbärare ska kunna resa tryggt genom drottningens rike, och därbortom.",
+    "kvalitet": "Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Härdat läder",
+    "beskrivning": "Ett slitstarkt pansar av tjockt, oljat läder som hettats upp och pressats för att bli styvare. Det ger grundläggande skydd utan att lägga märkbar tyngd på bäraren.",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Nitläderpansar",
+    "beskrivning": "Tjocka läderplattor förstärkta med nitar täcker bröst och rygg; skyddet väger lite mer än härdat läder men är billigare än metallrustning.",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Kråkrustning",
+    "beskrivning": "Medeltunga rustningar är dyrare, vilket gjort att vissa krigare plockat, najat och nitat ihop en egen så kallad kråkrustning. Dessa är billigare men ännu mindre smidiga att röra sig i.",
+    "kvalitet": "Otymplig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T6", "begränsning": -3 },
+    "grundpris": { "daler": 5, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Lackerad silkeskyrass",
+    "beskrivning": "Barbarkrigare som har förärats plats i en rik barbarhövdings livgarde kan ibland ses bära en kyrass i lackerat silke, en rustning som trots sin skenbara lätthet skyddar som en bröstplåt. Det lackerade silkets hemligheter har enligt legenden förts över från alver till människor, när Järnpakten ännu var stark och människor stred mot Symbaroums parasitiska mörker.",
+    "kvalitet": "Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T6", "begränsning": -3 },
+    "grundpris": { "daler": 5, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Ringbrynja",
+    "beskrivning": "Tusentals sammanlänkade järnringar fördelar slagkraften över en större yta. Modellen är vanlig bland ambriernas stadsvakter och erbjuder hyggligt skydd till överkomlig kostnad.",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T6", "begränsning": -3 },
+    "grundpris": { "daler": 5, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Fjällpansar",
+    "beskrivning": "Överlappande metallfjäll nitade på ett läderspänne bildar ett flexibelt skydd som fångar och sprider slagenergi. Pansaret bärs ofta av vandringskrigare som vill kombinera rörlighet och säkerhet.",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T6", "begränsning": -3 },
+    "grundpris": { "daler": 5, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Helrustning",
+    "beskrivning": "För de verkligt bemedlade finns den personligt anpassade helrustningen att tillgå, vilken ger största möjliga skydd med mindre begränsning än andra tunga rustningar.",
+    "kvalitet": "Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T8", "begränsning": -4 },
+    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Dubbel ringbrynja",
+    "beskrivning": "Den dubbelträdda ringbrynjan kan endast skapas av de skickligaste smeder, med tunnare ringar trädda två och två i varandra skapas en rustning som är smidig som en ringbrynja men ännu mer tålig.",
+    "kvalitet": "Förstärkt, Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T6", "begränsning": -3 },
+    "grundpris": { "daler": 5, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Fältpansar",
+    "beskrivning": "Fältpansaret är en helrustning smidd av veckade plåtar. Det är inte lika smidigt som en helrustning men är ännu mer härdigt mot hugg och slag.",
+    "kvalitet": "Förstärkt",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T8", "begränsning": -4 },
+    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Lamellpansar",
+    "beskrivning": "Lamellpansaret är en äldre rustningstyp, numera ofta ersatt med det billigare fjällpansaret eller den smidigare ringbrynjan. Vissa lamellrustningar finns dock kvar som arv och en del smeder föredrar dem framför nyare tekniker just för lamellpansarets goda skyddskraft; de förekommer exempelvis hos en del ambriska furstefamiljer av rent sentimentala … förlåt, traditionella skäl. Lamellpansaret ger oavsett enbart skydd över bål axlar och höfter; armar och ben skyddas normalt med nitläder för bibehållen rörlighet.",
+    "kvalitet": "Förstärkt",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T6", "begränsning": -3 },
+    "grundpris": { "daler": 5, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Pansariskt fältpansar",
+    "beskrivning": "Pansárernas mästersmeder har funnit sätt att smida veckade helrustningar som fortfarande behåller sin smidighet; sådana mästersmidda rustningar utgör pansárernas fältpansar.",
+    "kvalitet": "Förstärkt, Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T8", "begränsning": -4 },
+    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Skaldharnesk",
+    "beskrivning": "Trollsångare är ofta krigarpoeter och många bär en smidig rustning av flätat tyg eller läderremmar, stärkt med vapenavvärjande harmonier. Den är stryktålig samtidigt som den knappt hindrar bärarens rörelser, något som gjort den eftertraktad också av andra grupper. Bemedlade duellanter i Yndaros färgar exempelvis ofta sina skaldharnesk i personliga färger, för att bli igenkända på håll.",
+    "kvalitet": "Förstärkt, Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Templárpansar",
+    "beskrivning": "Templárpansar är helrustningar smidda, välsignade och burna av templárernas innersta krets. Denna elit bland eliten ärver sina rustningar av en föregångare som stupat i strid, eller mer sällsynt, dött en stilla död i sin munkcell i Tempelvall. Dessa rustningar ger sina bärare Prios skydd, med välsignelser smidda i stålet och därefter flerfaldigt helgade av såväl fienders som martyrers blod.",
+    "kvalitet": "Helig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T8", "begränsning": -4 },
+    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Vardaglig rustning",
+    "beskrivning": "Svartkonstnärer har alla skäl att gömma sig och det bästa sättet är ofta att se alldaglig ut. Sålunda väver de ofta in mystiskt förstärkta trådar i sina klädnader och får då särkar och mantlar som ser alldagliga ut men skyddar mot hugg och slag. Även andra grupper, så som spioner, försöker komma över dylika skyddande plagg för att se vardagliga ut men vara beredda på kamp om de upptäcks.",
+    "kvalitet": "Dold, Smidig",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T4", "begränsning": -2 },
+    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Vredesskrud",
+    "beskrivning": "Den förstärkta ringbrynja som bärs av krigarna i Den slumrande vredens garde har hämnande, mystiska energier inlästa i ringar och axelskydd. De vredgade besvärjelserna, enligt legenden utvecklade av huldran Bovosin för mer än fyra århundraden sedan, ger stålet sin karaktäristiska blodsfärg, som om krigaren ständigt kom från en hård strid, målad i fienders och eget blod.",
+    "kvalitet": "Vedergällande",
+    "taggar": { "typ": ["Rustning"] },
+    "stat": { "skydd": "1T8", "begränsning": -4 },
+    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+  }]
