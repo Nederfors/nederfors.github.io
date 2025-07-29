@@ -531,7 +531,7 @@
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
 
           const rowLevel = row.nivå ||
-            (['Elixir','L\u00e4gre Artefakt'].some(t => tagTyp.includes(t))
+            (['Elixir','L\u00e4gre Artefakt','F\u00e4lla'].some(t => tagTyp.includes(t))
               ? Object.keys(entry.nivåer || {}).find(l => l)
               : null);
           const lvlInfo = rowLevel ? ` <span class="tag level">${rowLevel}</span>` : '';

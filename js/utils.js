@@ -16,7 +16,8 @@
     'F\u00f6rvaring',
     'G\u00e5rdsdjur',
     'Byggnad',
-    'Specialverktyg'
+    'Specialverktyg',
+    'F\u00e4lla'
   ];
   const SBASE = 10, OBASE = 10;
 
