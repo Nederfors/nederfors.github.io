@@ -604,6 +604,11 @@ select.level {
   gap: .8rem;
 }
 #alcPopup.open .popup-inner { transform: translateY(0); }
+#alcPopup #alcOptions {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
 #alcPopup .popup-inner button { width: 100%; }
 
 /* Gör samtliga popups scrollbara om innehållet blir för högt */
