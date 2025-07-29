@@ -194,7 +194,8 @@ class SharedToolbar extends HTMLElement {
             <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
             <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
           </div>
-          <button id="moneySave" class="char-btn">Spara</button>
+          <button id="moneySetBtn" class="char-btn">Spara som totalen</button>
+          <button id="moneyAddBtn" class="char-btn">Addera till totalen</button>
           <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
           <button id="moneyCancel" class="char-btn danger">Avbryt</button>
         </div>

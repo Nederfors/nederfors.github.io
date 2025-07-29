@@ -24,6 +24,8 @@ const dom  = {
   moneyD  : $T('moneyDaler'),
   moneyS  : $T('moneySkilling'),
   moneyO  : $T('moneyOrtegar'),
+  moneySetBtn: $T('moneySetBtn'),
+  moneyAddBtn: $T('moneyAddBtn'),
   manageMoneyBtn: $T('manageMoneyBtn'),
   moneyResetBtn: $T('moneyResetBtn'),
   clearInvBtn : $T('clearInvBtn'),
