@@ -145,8 +145,8 @@ class SharedToolbar extends HTMLElement {
             </li>
             <li>
               <span class="toggle-desc">
-                <span class="toggle-question">Har du en artefaktmästare i partyt?</span>
-                <span class="toggle-note">Halverar priset på Lägre Artefakter.</span>
+              <span class="toggle-question">Har du en artefaktmakare i partyt?</span>
+              <span class="toggle-note">Halverar priset på Lägre Artefakter.</span>
               </span>
               <button id="partyArtefacter" class="party-toggle">🏺</button>
             </li>

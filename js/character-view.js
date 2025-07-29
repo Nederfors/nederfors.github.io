@@ -35,7 +35,9 @@ function initCharacter() {
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
-  const filtered = () => storeHelper.getCurrentList(store)
+  const filtered = () => {
+    union = storeHelper.getFilterUnion(store);
+    return storeHelper.getCurrentList(store)
       .filter(p => !isInv(p))
       .filter(p => {
         const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
@@ -55,6 +57,7 @@ function initCharacter() {
         return txt && tagMatch;
       })
       .sort(sortByType);
+  };
 
   const renderSkills = arr=>{
     const groups = [];
@@ -145,12 +148,6 @@ function initCharacter() {
     F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
     dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderSkills(filtered()); renderTraits();
-  });
-  dom.filterUnion.addEventListener('click', () => {
-    union = dom.filterUnion.classList.toggle('active');
-    storeHelper.setFilterUnion(store, union);
-    renderSkills(filtered());
-    renderTraits();
   });
 
   /* ta bort & nivåbyte */

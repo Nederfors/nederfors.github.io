@@ -259,6 +259,14 @@ function bindToolbar() {
       if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }
+  if (dom.filterUnion) {
+    if (storeHelper.getFilterUnion(store)) dom.filterUnion.classList.add('active');
+    dom.filterUnion.addEventListener('click', () => {
+      const val = dom.filterUnion.classList.toggle('active');
+      storeHelper.setFilterUnion(store, val);
+      if (window.indexViewUpdate) window.indexViewUpdate();
+    });
+  }
   if (dom.entryViewToggle) {
     if (storeHelper.getCompactEntries(store)) dom.entryViewToggle.classList.add('active');
     dom.entryViewToggle.addEventListener('click', () => {
