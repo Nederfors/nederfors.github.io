@@ -141,16 +141,6 @@
   }
 },
 {
-  "namn": "Förbjuden kunskap",
-  "beskrivning": "Rollpersonen har på något vis kommit över de mystiska traditionernas hemligheter inom alkemi och artefaktmakande; kanske som en följd av infiltration och stöld eller genom att ha tjänat under en vittberest läromästare. Rollpersonen kan med hjälp av förmågorna Alkemi och Artefaktmakande skapa alla elixir och artefakter, även de som ingår i andra traditioners hemligheter.",
-  "kan_införskaffas_flera_gånger": false,
-  "taggar": {
-    "typ": ["Fördel"],
-    "ark_trad": ["Mystiker"],
-    "test": []
-  }
-},
-{
   "namn": "Gifttålig",
   "beskrivning": "Rollpersonen har genom försiktig exponering byggt upp en enastående motståndskraft mot gifter. Gifter drabbar rollpersonen på en nivå lägre än normalt – ett stark gift skadar som ett medelstarkt, ett medelstarkt blir svagt och ett svagt ger bara ett i skada per runda det är verksamt. Verkanstiden påverkas inte, enbart mängden skada per runda. Mot gifter som inte skadar utan har andra negativa effekter får rollpersonen istället en andra chans att lyckas med motståndsslagen.",
   "kan_införskaffas_flera_gånger": false,
