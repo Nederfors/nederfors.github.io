@@ -290,6 +290,13 @@ function initIndex() {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
         }
+        if (p.namn === 'Råstyrka') {
+          const robust = list.find(x => x.namn === 'Robust');
+          const hasRobust = !!robust && (robust.nivå === undefined || robust.nivå !== '');
+          if (!hasRobust) {
+            if (!confirm('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?')) return;
+          }
+        }
         if (isSardrag(p) && (p.taggar.ras || []).length) {
           const races = [];
           const base = list.find(isRas)?.namn;

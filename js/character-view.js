@@ -188,17 +188,25 @@ function initCharacter() {
     if(!p) return;
     const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t)) && !tr;
     let list;
-    if(actBtn.dataset.act==='add'){
-      if(!multi) return;
-      const cnt = before.filter(x=>x.namn===name && !x.trait).length;
-      if(cnt >= 3){
-        alert('Denna fördel eller nackdel kan bara tas tre gånger.');
-        return;
-      }
-      const lvlSel = liEl.querySelector('select.level');
-      let   lvl = lvlSel ? lvlSel.value : null;
-      if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
-      list = [...before, { ...p, nivå: lvl }];
+      if(actBtn.dataset.act==='add'){
+        if(!multi) return;
+        const cnt = before.filter(x=>x.namn===name && !x.trait).length;
+        if(cnt >= 3){
+          alert('Denna fördel eller nackdel kan bara tas tre gånger.');
+          return;
+        }
+        const lvlSel = liEl.querySelector('select.level');
+        let   lvl = lvlSel ? lvlSel.value : null;
+        if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
+        if(name==='Råstyrka'){
+          const robust=before.find(x=>x.namn==='Robust');
+          const hasRobust=!!robust && (robust.nivå===undefined || robust.nivå!=='');
+          if(!hasRobust){
+            if(!confirm('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?'))
+              return;
+          }
+        }
+        list = [...before, { ...p, nivå: lvl }];
     }else if(actBtn.dataset.act==='rem'){
       if(name==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
         if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
