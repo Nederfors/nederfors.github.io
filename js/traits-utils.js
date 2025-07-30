@@ -23,7 +23,7 @@
       const tal  = hasKraftprov && k === 'Stark'
         ? val + 5
         : Math.max(10, val);
-      const pain = Math.ceil(val / 2);
+      let pain = Math.ceil(val / 2);
       let extra = '';
       let beforeExtra = '';
       let afterExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>`;
@@ -31,6 +31,9 @@
         let base = val;
         const hasPack = list.some(e => e.namn === 'Pack\u00e5sna');
         if (hasPack) base = Math.ceil(base * 1.5);
+        const painBonus = list.filter(e => e.namn === 'Sm\u00e4rtt\u00e5lig').length;
+        const painPenalty = list.filter(e => e.namn === 'Br\u00e4cklig').length;
+        pain += painBonus - painPenalty;
         beforeExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>` +
           `<div class="trait-extra">B\u00e4rkapacitet: ${base}</div>`;
         afterExtra = '';
