@@ -238,6 +238,7 @@ function initCharacter() {
       if (actBtn.dataset.act === 'add') {
         const amount = Math.floor(Math.random() * 10) + 11;
         storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
+        alert(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
       } else {
         storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
       }

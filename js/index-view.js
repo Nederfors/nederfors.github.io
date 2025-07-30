@@ -346,6 +346,7 @@ function initIndex() {
         if (p.namn === 'Besittning') {
           const amount = Math.floor(Math.random() * 10) + 11;
           storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
+          alert(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
           invUtil.renderInventory();
         }
 
