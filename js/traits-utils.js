@@ -30,11 +30,14 @@
       const talBase = hasKraftprov && k === 'Stark'
         ? val + 5
         : Math.max(10, val);
-      const tal  = talBase + hardy;
       // Base pain threshold is half of the current Strength value
       // (rounded up). It can be modified by traits such as
-      // Smärttålig and Bräcklig.
-      let pain = Math.ceil(val / 2);
+      // Smärttålig and Bräcklig. We apply modifications from
+      // advantages/disadvantages after all other adjustments.
+      const painBase = Math.ceil(val / 2);
+
+      let tal  = talBase;
+      let pain = painBase;
 
       let extra = '';
       let beforeExtra = '';
@@ -43,21 +46,25 @@
         let base = val;
         const hasPack = list.some(e => e.namn === 'Pack\u00e5sna');
         if (hasPack) base = Math.ceil(base * 1.5);
+
         const painBonus = list.filter(e => e.namn === 'Sm\u00e4rtt\u00e5lig').length;
         const painPenalty = list.filter(e => e.namn === 'Br\u00e4cklig').length;
-        // Sm\u00e4rtt\u00e5lig adds to the threshold while each Br\u00e4cklig
-        // reduces it. Multiple selections stack since we count each entry.
+
+        // Apply advantage/disadvantage effects last
+        tal  += hardy;
         pain += painBonus - painPenalty;
+
         beforeExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>` +
           `<div class="trait-extra">B\u00e4rkapacitet: ${base}</div>`;
         afterExtra = '';
         extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
-        const baseMax = strongGift ? val * 2 : val;
+        const baseMax   = strongGift ? val * 2 : val;
+        const threshBase = strongGift ? val : Math.ceil(val / 2);
+
+        // Apply advantage/disadvantage effects after base calculations
         const maxCor = baseMax + (hasSjalastark ? 1 : 0);
-        let   thresh = strongGift ? val : Math.ceil(val / 2);
-        thresh += resistCount;
-        thresh -= sensCount;
+        let   thresh = threshBase + resistCount - sensCount;
         const effects = storeHelper.getArtifactEffects(store);
         let perm = storeHelper.calcPermanentCorruption(list, effects);
         if (hasDarkPast) perm += Math.ceil(thresh / 3);
