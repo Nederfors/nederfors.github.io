@@ -63,8 +63,27 @@
       : [];
   }
 
+  function applyDarkBloodEffects(list) {
+    const hasDark = list.some(x => x.namn === 'Mörkt blod');
+    const idxBest = list.findIndex(x => x.namn === 'Bestialisk');
+    const extra = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
+
+    if (hasDark) {
+      if (idxBest < 0) {
+        const entry = DB.find(x => x.namn === 'Bestialisk');
+        if (entry) list.push({ ...entry });
+      }
+    } else {
+      if (idxBest >= 0) list.splice(idxBest, 1);
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (extra.includes(list[i].namn)) list.splice(i, 1);
+      }
+    }
+  }
+
   function setCurrentList(store, list) {
     if (!store.current) return;
+    applyDarkBloodEffects(list);
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
     save(store);
@@ -307,11 +326,15 @@ function defaultTraits() {
   }
 
   function countDisadvantages(list) {
-    return list.filter(item =>
-      (item.taggar?.typ || [])
+    const hasDark = list.some(x => x.namn === 'Mörkt blod');
+    return list.filter(item => {
+      const isDis = (item.taggar?.typ || [])
         .map(t => t.toLowerCase())
-        .includes('nackdel')
-    ).length;
+        .includes('nackdel');
+      if (!isDis) return false;
+      if (hasDark && item.namn === 'Bestialisk') return false;
+      return true;
+    }).length;
   }
 
   function calcTotalXP(baseXp, list) {
