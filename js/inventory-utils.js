@@ -741,8 +741,18 @@
       if (act === 'free') {
         if (idx >= 0) {
           const row = inv[idx];
-          row.gratis = Number(row.gratis || 0) + 1;
-          if (row.gratis > row.qty) row.gratis = 0;
+          let newGratis = Number(row.gratis || 0) + 1;
+          if (newGratis > row.qty) newGratis = 0;
+
+          const perkActive = storeHelper.getCurrentList(store)
+            .some(x => x.namn === 'Välutrustad');
+          if (perkActive && row.perk === 'Välutrustad' && newGratis < (row.gratis || 0)) {
+            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) {
+              return;
+            }
+          }
+
+          row.gratis = newGratis;
           saveInventory(inv);
           renderInventory();
         }

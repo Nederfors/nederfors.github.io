@@ -353,7 +353,9 @@ function initIndex() {
             { name: 'Papper', qty: 1 },
             { name: 'Kritor', qty: 1 },
             { name: 'Fackla', qty: 3 },
-            { name: 'Signalhorn', qty: 1 }
+            { name: 'Signalhorn', qty: 1 },
+            { name: 'Långfärdsbröd', qty: 3 },
+            { name: 'Örtkur', qty: 3 }
           ];
           freebies.forEach(it => {
             const row = inv.find(r => r.name === it.name);
@@ -443,7 +445,18 @@ function initIndex() {
         }
         if (p.namn === 'Välutrustad') {
           const inv = storeHelper.getInventory(store);
-          inv.forEach(row => { if (row.perk === 'Välutrustad') delete row.perk; });
+          for (let i = inv.length - 1; i >= 0; i--) {
+            const row = inv[i];
+            if (row.perk === 'Välutrustad') {
+              const removed = Math.min(row.gratis || 0, row.qty);
+              row.qty -= removed;
+              row.gratis = Math.max(0, (row.gratis || 0) - removed);
+              delete row.perk;
+              if (row.qty <= 0) {
+                inv.splice(i, 1);
+              }
+            }
+          }
           invUtil.saveInventory(inv); invUtil.renderInventory();
         }
       }
