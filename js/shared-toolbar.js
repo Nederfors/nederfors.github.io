@@ -29,16 +29,19 @@ class SharedToolbar extends HTMLElement {
 
       <!-- ---------- Verktygsrad ---------- -->
       <footer class="toolbar">
-        <input id="searchField" placeholder="Sök…">
-        <span    class="exp-counter">XP: <span id="xpOut">0</span></span>
-        <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
-
-        <button  id="invToggle"    class="char-btn icon" title="Inventarie">
-          🎒 <span id="invBadge">0</span>
-        </button>
-        <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
-        <button  id="clearFilters" class="char-btn">Rensa filter</button>
-        <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
+        <div class="toolbar-top">
+          <input id="searchField" placeholder="Sök…">
+          <span class="exp-counter">XP: <span id="xpOut">0</span></span>
+        </div>
+        <div class="button-row">
+          <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
+          <button  id="invToggle"    class="char-btn icon" title="Inventarie">
+            🎒 <span id="invBadge">0</span>
+          </button>
+          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
+          <button  id="clearFilters" class="char-btn">Rensa filter</button>
+          <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
+        </div>
       </footer>
 
       <!-- ---------- Inventarie ---------- -->
