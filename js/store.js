@@ -89,30 +89,6 @@
         const entry = DB.find(x => x.namn === 'Bestialisk');
         if (entry) list.push({ ...entry });
       }
-    } else {
-      if (idxBest >= 0) list.splice(idxBest, 1);
-
-      const races = [];
-      const main = list.find(isRas)?.namn || null;
-      if (main) races.push(main);
-      list.forEach(it => {
-        if (it.namn === 'Blodsband' && it.race) races.push(it.race);
-      });
-
-      const raceExtras = {
-        'Rese': ['Robust'],
-        'Troll': ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust']
-      };
-
-      const allowed = new Set();
-      races.forEach(r => {
-        (raceExtras[r] || []).forEach(t => allowed.add(t));
-      });
-
-      for (let i = list.length - 1; i >= 0; i--) {
-        const name = list[i].namn;
-        if (extra.includes(name) && !allowed.has(name)) list.splice(i, 1);
-      }
     }
   }
 
