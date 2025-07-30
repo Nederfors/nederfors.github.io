@@ -120,6 +120,27 @@
       .replace(/__oe__/g,'\u00f6');
   }
 
+  // Copy text to clipboard. Uses the modern Clipboard API when available
+  // and falls back to a temporary textarea element for older browsers.
+  function copyToClipboard(text) {
+    if (navigator && navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.position = 'absolute';
+    ta.style.left = '-9999px';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    try {
+      document.execCommand('copy');
+    } finally {
+      document.body.removeChild(ta);
+    }
+    return Promise.resolve();
+  }
+
   function createSearchSorter(terms){
     const t = (terms||[])
       .map(s => searchNormalize(String(s).toLowerCase()))
@@ -157,4 +178,5 @@
   window.itemStatHtml = itemStatHtml;
   window.searchNormalize = searchNormalize;
   window.createSearchSorter = createSearchSorter;
+  window.copyToClipboard = copyToClipboard;
 })(window);

@@ -222,7 +222,9 @@ function bindToolbar() {
     if (id === 'exportChar') {
       if (!store.current) return alert('Ingen rollperson vald.');
       const code = storeHelper.exportCharacterCode(store, store.current);
-      prompt('Kopiera koden nedan:', code);
+      copyToClipboard(code)
+        .then(() => alert('Karakt\u00e4rskoden har kopierats.'))
+        .catch(() => prompt('Kopiera koden nedan:', code));
     }
 
     /* Importera rollperson -------------------------------- */
