@@ -31,6 +31,7 @@
   function isRas(p){ return (p.taggar?.typ||[]).includes('Ras'); }
   function isElityrke(p){ return (p.taggar?.typ||[]).includes('Elityrke'); }
   function isEliteSkill(p){ return (p.taggar?.typ||[]).includes('Elityrkesf\u00f6rm\u00e5ga'); }
+  function isMonstrousTrait(p){ return (p.taggar?.typ||[]).includes('Monstru\u00f6st s\u00e4rdrag'); }
   function isMysticQual(name){
     return (window.DB?.find(x => x.namn === name)?.taggar?.typ || []).includes('Mystisk kvalitet');
   }
@@ -128,6 +129,7 @@
   window.isRas = isRas;
   window.isElityrke = isElityrke;
   window.isEliteSkill = isEliteSkill;
+  window.isMonstrousTrait = isMonstrousTrait;
   window.isMysticQual = isMysticQual;
   window.isNegativeQual = isNegativeQual;
   window.isNeutralQual = isNeutralQual;

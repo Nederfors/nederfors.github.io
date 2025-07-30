@@ -268,6 +268,13 @@ function initIndex() {
             if (!confirm(msg)) return;
           }
         }
+        if (isMonstrousTrait(p)) {
+          const allowed = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
+            list.some(x => x.namn === 'Mörkt blod');
+          if (!allowed) {
+            if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
+          }
+        }
         if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
           const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
           exceptionSkill.pickTrait(used, trait => {
