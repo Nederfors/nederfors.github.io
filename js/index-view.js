@@ -281,8 +281,11 @@ function initIndex() {
           }
         }
         if (isMonstrousTrait(p)) {
+          const baseRace = list.find(isRas)?.namn;
+          const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
           const allowed = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
-            list.some(x => x.namn === 'Mörkt blod');
+            list.some(x => x.namn === 'Mörkt blod') ||
+            (baseRace === 'Troll' && trollTraits.includes(p.namn));
           if (!allowed) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
