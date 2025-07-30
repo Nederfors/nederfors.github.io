@@ -3,9 +3,13 @@
     "namn": "Skräckslå",
     "beskrivning": "Varelsen kan genom sin uppenbarelse injaga skräck i sina offer och kräver särdraget Andeform.",
     "taggar": {
+      
       "typ": [
       "Monstruöst särdrag",
       "Elityrkesförmåga"
+    ],
+    "ark_trad": [
+      "Andebesvärjare"
     ],
     "test": [
       "Viljestark"
