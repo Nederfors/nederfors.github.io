@@ -39,7 +39,7 @@
   },
   {
     "namn": "Fallandesjuk",
-    "beskrivning": "Rollpersonen är drabbad av ett mycket känsligt sinnelag vilket innebär att denne i upphetsat tillstånd kan utsättas för kramper i hela kroppen. Om rollpersonen råkar slå 20 på ett framgångsslag inträffar detta, varpå rollpersonen är utslagen under 1t6 rundor och trött resten av scenen med −1 på alla framgångsslag.",
+    "beskrivning": "Rollpersonen är drabbad av ett mycket känsligt sinnelag vilket innebär att denne i upphetsat tillstånd kan utsättas för kramper i hela kroppen. Om rollpersonen råkar slå 20 på ett framgångsslag inträffar detta, varpå rollpersonen är utslagen under 1t4 rundor.",
     "taggar": {
       "typ": ["Nackdel"]
     }
@@ -131,7 +131,7 @@
     "taggar": {
       "typ": ["Nackdel"],
       "ark_trad": [],
-      "test": ["Försvar"]
+      "test": [""]
     }
   },
   {
@@ -186,12 +186,12 @@
   },
   {
     "namn": "Mörk skugga",
-    "beskrivning": "Karaktären har ett medfött mörker. Dennes skugga är nästintill lika mörk som en styggelses, karaktärens mor eller far eller annat form av föräldraskap eller utvecklingsfas attakerades av en styggelse och förde därigenom med sig skuggan till karaktären. I övrigt är karaktären opåverkad av skuggan. En gång per äventyr eller så som spelledare bestämmer kommer skuggan att ifrågasättas och karaktären behöver slå övertygande mot viljestark för att undvika att tas för en styggelse och dess efterföljder, så som att bli efterlyst.",
+    "beskrivning": "Karaktären har ett medfött mörker. Dennes skugga är nästintill lika mörk som en styggelses. I övrigt är karaktären opåverkad av skuggan. En gång per äventyr eller så som spelledare bestämmer kommer skuggan att ifrågasättas och karaktären behöver slå ett Övertygande för att undvika att tas för en styggelse.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Nackdel"],
       "ark_trad": ["Mystiker"],
-      "test": ["Övertygande", "Viljestark"]
+      "test": ["Övertygande"]
     }
   },
   {
@@ -226,12 +226,33 @@
   },
   {
     "namn": "Mörkt förflutet",
-    "beskrivning": "Genom tidigare äventyrs bistra konsekvenser har karaktären fått känna på vad för mörker som ligger runt davokars djup. Karaktären börjar sitt äventyr med en tredjedel av sin korruptionströskel fylld med permanent korruption avrundat uppåt. Så en karaktär med 14 i viljestark har tre korruption, medans en karaktär med 5 viljestark har 1 korruption. Detta gäller även karaktärer som höjt sin korruptionströskel med Stark Gåva.",
+    "beskrivning": "Genom tidigare äventyrs bistra konsekvenser har karaktären fått känna på vad för mörker som ligger runt davokars djup. Karaktären börjar sitt äventyr med en tredjedel av sin korruptionströskel fylld med permanent korruption avrundat uppåt. Så en karaktär med 14 i viljestark har tre korruption, medans en karaktär med 5 viljestark har 1 korruption. Detta gäller även karaktärer som höjt sin korruptionströskel med förmågor och fördelar.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Nackdel"],
       "ark_trad": ["Mystiker"],
       "test": ["Viljestark"]
     }
+  },
+{
+    "namn": "Korruptionskänslig",
+    "beskrivning": "Karaktären tar lättare skada av skuggans lockelser. Korruptionströskeln minskar med -1 per nivå (max -3).",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [""],
+      "test": [""]
+    }
+  },
+  {
+    "namn": "Bräcklig",
+    "beskrivning": "Karaktären hanterar smärta sämre. Smärtgränsen minskar med -1 per nivå (max -3).",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Nackdel"],
+      "ark_trad": [""],
+      "test": [""]
+    }
   }
+
 ]
