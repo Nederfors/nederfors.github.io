@@ -238,13 +238,26 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   border-top: 1.5px solid var(--border);
   padding: .6rem .8rem;
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   gap: .6rem;
 }
-.toolbar select,
-.toolbar input {
+.toolbar-top {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+.toolbar-top input {
   flex: 1 1 110px;
   min-width: 90px;
+}
+.button-row {
+  display: flex;
+  gap: .6rem;
+}
+.button-row > a,
+.button-row > button {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Badge för inventarie­knapp */
