@@ -138,6 +138,12 @@
       });
     }
 
+    if (name === 'Robust') {
+      list.forEach(it => {
+        if (it.namn === 'R\u00e5styrka') out.push(it.namn);
+      });
+    }
+
     if (isRas(ent)) {
       const race = name;
       list.forEach(it => {
