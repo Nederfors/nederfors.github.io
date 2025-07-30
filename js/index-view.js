@@ -279,6 +279,14 @@ function initIndex() {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
         }
+        if (isSardrag(p) && (p.taggar.ras || []).length) {
+          const raceName = list.find(isRas)?.namn;
+          const ok = raceName && p.taggar.ras.includes(raceName);
+          if (!ok) {
+            const msg = 'Särdraget är bundet till rasen ' + p.taggar.ras.join(', ') + '.\nLägga till ändå?';
+            if (!confirm(msg)) return;
+          }
+        }
         if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
           const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
           exceptionSkill.pickTrait(used, trait => {

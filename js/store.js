@@ -85,9 +85,27 @@
     }
   }
 
+  function applyRaceTraits(list) {
+    const race = list.find(isRas)?.namn || null;
+    DB.forEach(ent => {
+      if (!((ent.taggar?.typ || []).includes('S\u00e4rdrag'))) return;
+      const ras = ent.taggar?.ras;
+      if (!ras || !Array.isArray(ras)) return;
+      if (ent.niv\u00e5er) return;
+      const idx = list.findIndex(x => x.namn === ent.namn);
+      const allowed = race && ras.includes(race);
+      if (allowed) {
+        if (idx < 0) list.push({ ...ent });
+      } else {
+        if (idx >= 0) list.splice(idx, 1);
+      }
+    });
+  }
+
   function setCurrentList(store, list) {
     if (!store.current) return;
     applyDarkBloodEffects(list);
+    applyRaceTraits(list);
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
     const hasPriv = list.some(x => x.namn === 'Privilegierad');
