@@ -4,4 +4,4 @@ A static web app for managing characters and inventory for the Symbaroum RPG. Op
 
 ## Export/import of characters
 
-Use the **Exportera** button in the filter panel to copy a code representing the current character. The **Importera** button lets you paste such a code to create the same character in your browser.
+Use the **Exportera** button in the filter panel to copy a short code representing the current character. Codes are compressed and only contain references to the built‑in database. The **Importera** button lets you paste such a code to recreate the character (requires that the database is loaded).

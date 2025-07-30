@@ -57,7 +57,9 @@ const dom  = {
 
 /* ---------- Ladda databasen ---------- */
 let DB = [];
+let DBIndex = {};
 window.DB = DB;
+window.DBIndex = DBIndex;
 const DATA_FILES = [
   'diverse.json',
   'elixir.json',
@@ -96,6 +98,9 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
   .then(arrays => {
     DB = arrays.flat().sort(sortByType);
     window.DB = DB;
+    DBIndex = {};
+    DB.forEach(ent => { DBIndex[ent.namn] = ent; });
+    window.DBIndex = DBIndex;
     boot();
   });
 

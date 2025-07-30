@@ -3,7 +3,8 @@ const assert = require('assert');
 // Minimal DOM/window stubs
 global.window = {
   localStorage: { getItem: () => null, setItem: () => {} },
-  DB: []
+  DB: [],
+  DBIndex: {}
 };
 global.localStorage = window.localStorage;
 
@@ -13,6 +14,9 @@ window.DB = [
   { namn: 'R\u00e5styrka', taggar: { typ: ['F\u00f6rdel'] } }
 ];
 global.DB = window.DB;
+window.DB.forEach(e => { window.DBIndex[e.namn] = e; });
+global.DBIndex = window.DBIndex;
+require('../js/lz-string.min.js');
 require('../js/utils');
 global.isRas = window.isRas;
 global.isElityrke = window.isElityrke;
