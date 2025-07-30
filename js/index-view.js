@@ -107,7 +107,7 @@ function initIndex() {
         if (extra) infoHtml += `<br>${extra}`;
       }
       const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
-      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel');
+      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
       const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
       const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
       let btn = '';
@@ -291,11 +291,11 @@ function initIndex() {
           });
           return;
         }
-        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel');
+        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
         if(multi){
           const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
           if(cnt >= 3){
-            alert('Denna fördel kan bara tas tre gånger.');
+            alert('Denna fördel eller nackdel kan bara tas tre gånger.');
             return;
           }
         }else if(list.some(x=>x.namn===p.namn && !x.trait)){
@@ -316,7 +316,7 @@ function initIndex() {
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
         let list;
-        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel');
+        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
         if(multi){
           let removed=false;
           list = [];

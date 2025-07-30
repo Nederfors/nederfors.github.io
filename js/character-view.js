@@ -72,7 +72,7 @@ function initCharacter() {
   const renderSkills = arr=>{
     const groups = [];
     arr.forEach(p=>{
-      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !p.trait;
+      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t)) && !p.trait;
       if(multi){
         const g = groups.find(x=>x.entry.namn===p.namn);
         if(g) { g.count++; return; }
@@ -107,7 +107,7 @@ function initCharacter() {
       li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
-      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !p.trait;
+      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t)) && !p.trait;
       const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
       let btn = '';
       if(multi){
@@ -177,13 +177,13 @@ function initCharacter() {
     const before = storeHelper.getCurrentList(store);
     const p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
     if(!p) return;
-    const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).includes('Fördel') && !tr;
+    const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t)) && !tr;
     let list;
     if(actBtn.dataset.act==='add'){
       if(!multi) return;
       const cnt = before.filter(x=>x.namn===name && !x.trait).length;
       if(cnt >= 3){
-        alert('Denna fördel kan bara tas tre gånger.');
+        alert('Denna fördel eller nackdel kan bara tas tre gånger.');
         return;
       }
       const lvlSel = liEl.querySelector('select.level');
