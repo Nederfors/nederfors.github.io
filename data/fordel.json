@@ -487,8 +487,8 @@
   },
   {
     "namn": "Lyckosam",
-    "beskrivning": "Karaktärens liv har av outgrundliga anledningar alltid gått bra. Kniviga situationer har löst sig och rätt vindar har blåst. Regnet har slutat ösa ner lagom till att elden ska göras och ja, ett tursamt liv har levts. Karaktären kan en gång per äventyr (eller så ofta som spelledaren tillåter) möjlighet att slå om ett slag där utfallet inte blev som karaktären ville och använda den bästa utfallet. Denna fördel kan tas upp till 3 gånger, vilket resulterar i fler omkast, men fortfarande bara vid ett tillfälle.",
-    "kan_införskaffas_flera_gånger": true,
+    "beskrivning": "Karaktärens liv har av outgrundliga anledningar alltid gått bra. Kniviga situationer har löst sig och rätt vindar har blåst. Regnet har slutat ösa ner lagom till att elden ska göras och ja, ett tursamt liv har levts. Karaktären kan en gång per äventyr (eller så ofta som spelledaren tillåter) slå om ett slag där utfallet inte blev som karaktären ville och använda det bästa resultatet. Denna fördel kan bara införskaffas en gång.",
+    "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Fördel"],
       "ark_trad": [],
