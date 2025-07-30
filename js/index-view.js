@@ -365,9 +365,10 @@ function initIndex() {
             if (row) {
               row.qty += it.qty;
               row.gratis = (row.gratis || 0) + it.qty;
+              row.perkGratis = (row.perkGratis || 0) + it.qty;
               if (!row.perk) row.perk = 'Välutrustad';
             } else {
-              inv.push({ name: it.name, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad' });
+              inv.push({ name: it.name, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
             }
           });
           invUtil.saveInventory(inv); invUtil.renderInventory();
@@ -454,10 +455,13 @@ function initIndex() {
           for (let i = inv.length - 1; i >= 0; i--) {
             const row = inv[i];
             if (row.perk === 'Välutrustad') {
-              const removed = Math.min(row.gratis || 0, row.qty);
+              const pg = row.perkGratis || row.gratis || 0;
+              const removed = Math.min(pg, row.qty);
               row.qty -= removed;
               row.gratis = Math.max(0, (row.gratis || 0) - removed);
+              row.perkGratis = Math.max(0, (row.perkGratis || 0) - removed);
               delete row.perk;
+              delete row.perkGratis;
               if (row.qty <= 0) {
                 inv.splice(i, 1);
               }
