@@ -408,7 +408,14 @@ function initIndex() {
           }
         }
         if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
-          if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
+          const deps = before
+            .filter(isElityrke)
+            .filter(el => eliteReq.check(el, before).ok && !eliteReq.check(el, list).ok)
+            .map(el => el.namn);
+          const msg = deps.length
+            ? `Förmågan krävs för: ${deps.join(', ')}. Ta bort ändå?`
+            : 'Förmågan krävs för ett valt elityrke. Ta bort ändå?';
+          if(!confirm(msg))
             return;
         }
         storeHelper.setCurrentList(store,list); updateXP();
