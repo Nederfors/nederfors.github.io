@@ -405,22 +405,10 @@ function initIndex() {
         }else{
           list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
         }
-        if(p.namn==='Blodsband'){
-          const removed = before.find(it => it.namn===p.namn && (tr?it.trait===tr:!it.trait));
-          const race = removed?.race;
-          if(race){
-            const races=[];
-            const base=list.find(isRas)?.namn;
-            if(base) races.push(base);
-            list.forEach(it=>{ if(it.namn==='Blodsband' && it.race) races.push(it.race); });
-            const bad=list.filter(it=>{
-              const ras=it.taggar?.ras||[];
-              return ras.includes(race) && !ras.some(r=>races.includes(r));
-            });
-            if(bad.length){
-              if(!confirm('Blodsband beh\u00f6vs f\u00f6r vissa s\u00e4rdrag. Ta bort \u00e4nd\u00e5?')) return;
-            }
-          }
+        const removed = before.find(it => it.namn===p.namn && (tr?it.trait===tr:!it.trait));
+        const remDeps = storeHelper.getDependents(before, removed);
+        if(remDeps.length){
+          if(!confirm(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`)) return;
         }
         if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
           const deps = before

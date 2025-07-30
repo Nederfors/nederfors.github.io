@@ -216,14 +216,19 @@ function initCharacter() {
       }else{
         list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
       }
+      const removed = before.find(it => it.namn===name && (tr?it.trait===tr:!it.trait));
+      const remDeps = storeHelper.getDependents(before, removed);
+      if(remDeps.length){
+        if(!confirm(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`)) return;
+      }
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         const deps = before
           .filter(isElityrke)
           .filter(el => eliteReq.check(el, before).ok && !eliteReq.check(el, list).ok)
           .map(el => el.namn);
         const msg = deps.length
-          ? `Förmågan krävs för: ${deps.join(', ')}. Ta bort ändå?`
-          : 'Förmågan krävs för ett valt elityrke. Ta bort ändå?';
+          ? `F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${deps.join(', ')}. Ta bort \u00e4nd\u00e5?`
+          : 'F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r ett valt elityrke. Ta bort \u00e4nd\u00e5?';
         if(!confirm(msg))
           return;
       }
