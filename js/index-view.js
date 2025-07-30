@@ -340,6 +340,9 @@ function initIndex() {
         }
         list.push({ ...p, nivå: lvl });
         storeHelper.setCurrentList(store, list); updateXP();
+        if (p.namn === 'Privilegierad') {
+          invUtil.renderInventory();
+        }
         if (p.namn === 'Besittning') {
           const amount = Math.floor(Math.random() * 10) + 11;
           storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
@@ -429,6 +432,9 @@ function initIndex() {
             return;
         }
         storeHelper.setCurrentList(store,list); updateXP();
+        if (p.namn === 'Privilegierad') {
+          invUtil.renderInventory();
+        }
         if (p.namn === 'Besittning') {
           storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
           const cnt = storeHelper.incrementPossessionRemoved(store);

@@ -231,6 +231,18 @@ function initCharacter() {
       return;
     }
     storeHelper.setCurrentList(store, list);
+    if (p.namn === 'Privilegierad') {
+      invUtil.renderInventory();
+    }
+    if (p.namn === 'Besittning') {
+      if (actBtn.dataset.act === 'add') {
+        const amount = Math.floor(Math.random() * 10) + 11;
+        storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
+      } else {
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+      }
+      invUtil.renderInventory();
+    }
     renderSkills(filtered());
     updateXP();
     renderTraits();
