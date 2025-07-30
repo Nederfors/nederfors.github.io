@@ -21,6 +21,8 @@
     );
 
     const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
+    const sensCount   = list.filter(p => p.namn === 'Korruptionskänslig').length;
+    const hasDarkPast = list.some(p => p.namn === 'Mörkt förflutet');
 
     dom.traits.innerHTML = KEYS.map(k => {
       const val = (data[k] || 0) + (bonus[k] || 0);
@@ -53,9 +55,12 @@
       } else if (k === 'Viljestark') {
         const baseMax = strongGift ? val * 2 : val;
         const maxCor = baseMax + (hasSjalastark ? 1 : 0);
-        const thresh = strongGift ? val : Math.ceil(val / 2);
+        let   thresh = strongGift ? val : Math.ceil(val / 2);
+        thresh += resistCount;
+        thresh -= sensCount;
         const effects = storeHelper.getArtifactEffects(store);
-        const perm = storeHelper.calcPermanentCorruption(list, effects);
+        let perm = storeHelper.calcPermanentCorruption(list, effects);
+        if (hasDarkPast) perm += Math.ceil(thresh / 3);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` +
                 `<div class="trait-extra">Maximal korruption: ${maxCor} \u2022 Korruptionstr\u00f6skel: ${thresh}</div>`;
       }
