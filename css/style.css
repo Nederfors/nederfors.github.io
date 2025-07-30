@@ -81,6 +81,10 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   gap: .4rem;
   margin-bottom: .6rem;
 }
+.char-btn-row .char-btn {
+  flex: 1;
+  min-width: 0;
+}
 
 /* Grupp för partytillhörighet */
 .party-toggles {
