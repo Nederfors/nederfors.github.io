@@ -86,18 +86,23 @@
   }
 
   function applyRaceTraits(list) {
-    const race = list.find(isRas)?.namn || null;
+    const races = [];
+    const main = list.find(isRas)?.namn || null;
+    if (main) races.push(main);
+    list.forEach(it => {
+      if (it.namn === 'Blodsband' && it.race) races.push(it.race);
+    });
     DB.forEach(ent => {
       if (!((ent.taggar?.typ || []).includes('S\u00e4rdrag'))) return;
       const ras = ent.taggar?.ras;
       if (!ras || !Array.isArray(ras)) return;
       if (ent.niv\u00e5er) return;
       const idx = list.findIndex(x => x.namn === ent.namn);
-      const allowed = race && ras.includes(race);
+      const allowed = races.some(r => ras.includes(r));
       if (allowed) {
         if (idx < 0) list.push({ ...ent });
-      } else {
-        if (idx >= 0) list.splice(idx, 1);
+      } else if (idx >= 0) {
+        list.splice(idx, 1);
       }
     });
   }

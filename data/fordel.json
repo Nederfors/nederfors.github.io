@@ -12,7 +12,7 @@
   {
     "namn": "Arvegods",
     "beskrivning": "Rollpersonen har genom släktleden erhållit ett arvegods. Välj ett valfritt vapen eller en rustning från listorna på hemsidan och gratismarkera det med två gratis kvaliteter som inte är mystiska kvaliteter.",
-    "kan_införskaffas_flera_gånger": false,
+    "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": ["Fördel"],
       "ark_trad": [],
@@ -32,7 +32,7 @@
   {
     "namn": "Besittning",
     "beskrivning": "Rollpersonen har en affärsrörelse av något slag – en liten taverna, en mindre handelsbod eller annan enklare hantverkstjänst som skomakare eller liknande. Andra möjligheter är en teater eller gycklargrupp. Besittningen kan vara stationär på en plats dit rollpersonen ofta återkommer mellan äventyr, eller rörlig i form av en vagn eller liten flodbåt om det passar spelet bättre. En gång per äventyr (lämpligen mellan äventyr) får spelaren slå mot Listig (för hantverk) eller Övertygande (för tjänster). Framgång ger en vinst om 1t10+10 daler, efter att alla omkostnader för affärsrörelsen är betalda. Om flera rollpersoner har Besittning kan det utgöra andelar i samma rörelse. Varje rollperson slår då separata slag för sin andel.",
-    "kan_införskaffas_flera_gånger": false,
+    "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": ["Fördel"],
       "ark_trad": [],

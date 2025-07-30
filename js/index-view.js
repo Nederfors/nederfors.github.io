@@ -110,6 +110,14 @@ function initIndex() {
         const extra = yrkeInfoHtml(p);
         if (extra) infoHtml += `<br>${extra}`;
       }
+      if (p.namn === 'Blodsband') {
+        const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
+        if (races.length) {
+          const str = races.join(', ');
+          desc += `<br><strong>Raser:</strong> ${str}`;
+          infoHtml += `<br><strong>Raser:</strong> ${str}`;
+        }
+      }
       const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
       const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
       const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
@@ -280,12 +288,26 @@ function initIndex() {
           }
         }
         if (isSardrag(p) && (p.taggar.ras || []).length) {
-          const raceName = list.find(isRas)?.namn;
-          const ok = raceName && p.taggar.ras.includes(raceName);
+          const races = [];
+          const base = list.find(isRas)?.namn;
+          if (base) races.push(base);
+          list.forEach(it => { if (it.namn === 'Blodsband' && it.race) races.push(it.race); });
+          const ok = races.some(r => p.taggar.ras.includes(r));
           if (!ok) {
             const msg = 'Särdraget är bundet till rasen ' + p.taggar.ras.join(', ') + '.\nLägga till ändå?';
             if (!confirm(msg)) return;
           }
+        }
+        if (p.namn === 'Blodsband' && window.bloodBond) {
+          const used=list.filter(x=>x.namn===p.namn).map(x=>x.race).filter(Boolean);
+          bloodBond.pickRace(used, race => {
+            if(!race) return;
+            list.push({ ...p, race });
+            storeHelper.setCurrentList(store,list); updateXP();
+            renderList(filtered());
+            renderTraits();
+          });
+          return;
         }
         if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
           const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
@@ -306,7 +328,7 @@ function initIndex() {
         const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
         if(multi){
           const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
-          if(cnt >= 3){
+          if(p.namn !== 'Blodsband' && cnt >= 3){
             alert('Denna fördel eller nackdel kan bara tas tre gånger.');
             return;
           }
@@ -367,6 +389,23 @@ function initIndex() {
           }
         }else{
           list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
+        }
+        if(p.namn==='Blodsband'){
+          const removed = before.find(it => it.namn===p.namn && (tr?it.trait===tr:!it.trait));
+          const race = removed?.race;
+          if(race){
+            const races=[];
+            const base=list.find(isRas)?.namn;
+            if(base) races.push(base);
+            list.forEach(it=>{ if(it.namn==='Blodsband' && it.race) races.push(it.race); });
+            const bad=list.filter(it=>{
+              const ras=it.taggar?.ras||[];
+              return ras.includes(race) && !ras.some(r=>races.includes(r));
+            });
+            if(bad.length){
+              if(!confirm('Blodsband beh\u00f6vs f\u00f6r vissa s\u00e4rdrag. Ta bort \u00e4nd\u00e5?')) return;
+            }
+          }
         }
         if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
           if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
