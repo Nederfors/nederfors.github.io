@@ -97,6 +97,7 @@ const DATA_FILES = [
 Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
   .then(arrays => {
     DB = arrays.flat().sort(sortByType);
+    DB.forEach((ent, idx) => { ent.id = idx; });
     window.DB = DB;
     DBIndex = {};
     DB.forEach(ent => { DBIndex[ent.namn] = ent; });

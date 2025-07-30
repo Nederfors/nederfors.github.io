@@ -515,6 +515,30 @@ function defaultTraits() {
   }
 
   /* ---------- Hjälpfunktioner för export ---------- */
+
+  function toBase64(arr) {
+    if (typeof btoa === 'function') {
+      let str = '';
+      arr.forEach(c => { str += String.fromCharCode(c); });
+      return btoa(str);
+    }
+    if (typeof Buffer !== 'undefined') {
+      return Buffer.from(arr).toString('base64');
+    }
+    throw new Error('No base64 encoder available');
+  }
+
+  function fromBase64(str) {
+    if (typeof atob === 'function') {
+      const bin = atob(str);
+      return Uint8Array.from(bin, c => c.charCodeAt(0));
+    }
+    if (typeof Buffer !== 'undefined') {
+      return Uint8Array.from(Buffer.from(str, 'base64'));
+    }
+    throw new Error('No base64 decoder available');
+  }
+
   function stripDefaults(data) {
     const obj = { ...(data || {}) };
     const emptyMoney = defaultMoney();
@@ -548,7 +572,8 @@ function defaultTraits() {
   function compressList(list) {
     return (list || []).map(it => {
       if (it && it.namn && window.DBIndex && window.DBIndex[it.namn]) {
-        const row = { n: it.namn };
+        const entry = window.DBIndex[it.namn];
+        const row = entry.id !== undefined ? { i: entry.id } : { n: it.namn };
         if (it.nivå) row.l = it.nivå;
         if (it.trait) row.t = it.trait;
         if (it.race) row.r = it.race;
@@ -560,6 +585,13 @@ function defaultTraits() {
 
   function expandList(list) {
     return (list || []).map(it => {
+      if (it && typeof it.i === 'number' && window.DB && window.DB[it.i]) {
+        const base = { ...window.DB[it.i] };
+        if (it.l) base.nivå = it.l;
+        if (it.t) base.trait = it.t;
+        if (it.r) base.race = it.r;
+        return base;
+      }
       if (it && it.n && window.DBIndex && window.DBIndex[it.n]) {
         const base = { ...window.DBIndex[it.n] };
         if (it.l) base.nivå = it.l;
@@ -574,7 +606,13 @@ function defaultTraits() {
   function compressInventory(inv) {
     return (inv || []).map(row => {
       if (!row || typeof row !== 'object') return row;
-      const res = { n: row.name };
+      let res;
+      if (row.name && window.DBIndex && window.DBIndex[row.name]) {
+        const entry = window.DBIndex[row.name];
+        res = entry.id !== undefined ? { i: entry.id } : { n: row.name };
+      } else {
+        res = { n: row.name };
+      }
       if (row.qty && row.qty !== 1) res.q = row.qty;
       if (row.gratis) res.g = row.gratis;
       if (row.kvaliteter && row.kvaliteter.length) res.k = row.kvaliteter;
@@ -588,6 +626,19 @@ function defaultTraits() {
 
   function expandInventory(inv) {
     return (inv || []).map(row => {
+      if (row && typeof row.i === 'number' && window.DB && window.DB[row.i]) {
+        const name = window.DB[row.i].namn;
+        return {
+          name,
+          qty: row.q || 1,
+          gratis: row.g || 0,
+          kvaliteter: row.k || [],
+          gratisKval: row.gk || [],
+          removedKval: row.rk || [],
+          artifactEffect: row.e || '',
+          nivå: row.l
+        };
+      }
       if (row && row.n) {
         return {
           name: row.n,
@@ -620,12 +671,19 @@ function defaultTraits() {
       })
     };
     const json = JSON.stringify(obj);
-    return window.LZString.compressToEncodedURIComponent(json);
+    const bytes = window.LZString.compressToUint8Array(json);
+    return toBase64(bytes);
   }
 
   function importCharacterCode(store, code) {
     try {
-      const json = window.LZString.decompressFromEncodedURIComponent(code);
+      let json;
+      try {
+        const bytes = fromBase64(code);
+        json = window.LZString.decompressFromUint8Array(bytes);
+      } catch {
+        json = window.LZString.decompressFromEncodedURIComponent(code);
+      }
       const obj = JSON.parse(json);
       const id = 'rp' + Date.now();
       store.characters.push({ id, name: obj.name || 'Ny rollperson' });
