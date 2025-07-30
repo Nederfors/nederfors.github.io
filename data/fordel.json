@@ -507,7 +507,7 @@
   },
   {
     "namn": "Välutrustad",
-    "beskrivning": "En karaktär med välutrustad är ingen nybörjare. Det här är en som varit med ett tag och vet vad som krävs av ett äventyr, alternativt fått information av erfarna skattletare om vad som behövs. Karaktären börjar alla äventyr med i sin packning utöver standard: 3 långfärdsbröd, 3 örtkurer, 30m rep, Papper&krita, 3 facklor, 1 mistlur.",
+    "beskrivning": "En karaktär med välutrustad är ingen nybörjare. Det här är en som varit med ett tag och vet vad som krävs av ett äventyr, alternativt fått information av erfarna skattletare om vad som behövs. Karaktären börjar alla äventyr med i sin packning utöver standard: 3× 10 meter rep, Papper, kritor, 3 facklor, 1 signalhorn. Dessa föremål läggs automatiskt till i inventariet.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Fördel"],

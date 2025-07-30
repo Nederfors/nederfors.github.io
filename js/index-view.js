@@ -307,6 +307,28 @@ function initIndex() {
         }
         list.push({ ...p, nivå: lvl });
         storeHelper.setCurrentList(store, list); updateXP();
+
+        if (p.namn === 'Välutrustad') {
+          const inv = storeHelper.getInventory(store);
+          const freebies = [
+            { name: 'Rep, 10 meter', qty: 3 },
+            { name: 'Papper', qty: 1 },
+            { name: 'Kritor', qty: 1 },
+            { name: 'Fackla', qty: 3 },
+            { name: 'Signalhorn', qty: 1 }
+          ];
+          freebies.forEach(it => {
+            const row = inv.find(r => r.name === it.name);
+            if (row) {
+              row.qty += it.qty;
+              row.gratis = (row.gratis || 0) + it.qty;
+              if (!row.perk) row.perk = 'Välutrustad';
+            } else {
+              inv.push({ name: it.name, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad' });
+            }
+          });
+          invUtil.saveInventory(inv); invUtil.renderInventory();
+        }
       }
     } else { /* rem */
       if (isInv(p)) {
@@ -339,6 +361,11 @@ function initIndex() {
             return;
         }
         storeHelper.setCurrentList(store,list); updateXP();
+        if (p.namn === 'Välutrustad') {
+          const inv = storeHelper.getInventory(store);
+          inv.forEach(row => { if (row.perk === 'Välutrustad') delete row.perk; });
+          invUtil.saveInventory(inv); invUtil.renderInventory();
+        }
       }
     }
     renderList(filtered());

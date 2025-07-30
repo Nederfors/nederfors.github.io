@@ -630,6 +630,12 @@
       // 2a) Röd soptunna tar bort hela posten
       if (act === 'del') {
         if (idx >= 0) {
+          const row = inv[idx];
+          const perkActive = storeHelper.getCurrentList(store)
+            .some(x => x.namn === 'Välutrustad');
+          if (perkActive && row.perk === 'Välutrustad' && row.qty <= row.gratis) {
+            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
+          }
           inv.splice(idx, 1);
           saveInventory(inv);
           renderInventory();
@@ -659,9 +665,15 @@
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
         if (idx >= 0) {
-          if (inv[idx].qty > 1) {
-            inv[idx].qty--;
-            if (inv[idx].gratis > inv[idx].qty) inv[idx].gratis = inv[idx].qty;
+          const row = inv[idx];
+          const perkActive = storeHelper.getCurrentList(store)
+            .some(x => x.namn === 'Välutrustad');
+          if (perkActive && row.perk === 'Välutrustad' && (row.qty - 1) < row.gratis) {
+            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
+          }
+          if (row.qty > 1) {
+            row.qty--;
+            if (row.gratis > row.qty) row.gratis = row.qty;
           } else {
             inv.splice(idx, 1);
           }
