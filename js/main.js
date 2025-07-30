@@ -237,11 +237,8 @@ function bindToolbar() {
       const char = store.characters.find(c => c.id === store.current);
       if (!confirm(`Ta bort “${char.name}”?`)) return;
 
-      store.characters = store.characters.filter(c => c.id !== store.current);
-      delete store.data[store.current];
-      store.current = '';
-
-      storeHelper.save(store);
+      const idToDel = store.current;
+      storeHelper.deleteCharacter(store, idToDel);
       location.reload();
     }
   });

@@ -40,6 +40,9 @@
             custom: [],
             artifactEffects: { xp:0, corruption:0 },
             bonusMoney: defaultMoney(),
+            privMoney: defaultMoney(),
+            possessionMoney: defaultMoney(),
+            possessionRemoved: 0,
             ...cur
           };
           if(!store.data[id].artifactEffects){
@@ -47,6 +50,15 @@
           }
           if(!store.data[id].bonusMoney){
             store.data[id].bonusMoney = defaultMoney();
+          }
+          if(!store.data[id].privMoney){
+            store.data[id].privMoney = defaultMoney();
+          }
+          if(!store.data[id].possessionMoney){
+            store.data[id].possessionMoney = defaultMoney();
+          }
+          if(!store.data[id].possessionRemoved){
+            store.data[id].possessionRemoved = 0;
           }
         });
       }
@@ -114,14 +126,30 @@
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
     const hasPriv = list.some(x => x.namn === 'Privilegierad');
-    const curBonus = store.data[store.current].bonusMoney || defaultMoney();
-    const hasBonus = curBonus.daler || curBonus.skilling || curBonus['örtegar'];
-    if (hasPriv && !hasBonus) {
-      store.data[store.current].bonusMoney = { daler: 50, skilling: 0, 'örtegar': 0 };
-    } else if (!hasPriv && hasBonus) {
-      store.data[store.current].bonusMoney = defaultMoney();
+    const hasPos  = list.some(x => x.namn === 'Besittning');
+
+    const priv = store.data[store.current].privMoney || defaultMoney();
+    const pos  = store.data[store.current].possessionMoney || defaultMoney();
+
+    const privHas = priv.daler || priv.skilling || priv['örtegar'];
+    if (hasPriv && !privHas) {
+      store.data[store.current].privMoney = { daler: 50, skilling: 0, 'örtegar': 0 };
+    } else if (!hasPriv && privHas) {
+      store.data[store.current].privMoney = defaultMoney();
     }
-    save(store);
+
+    if (!hasPos && (pos.daler || pos.skilling || pos['örtegar'])) {
+      store.data[store.current].possessionMoney = defaultMoney();
+    }
+
+    const total = normalizeMoney({
+      daler: store.data[store.current].privMoney.daler + store.data[store.current].possessionMoney.daler,
+      skilling: store.data[store.current].privMoney.skilling + store.data[store.current].possessionMoney.skilling,
+      'örtegar': store.data[store.current].privMoney['örtegar'] + store.data[store.current].possessionMoney['örtegar']
+    });
+    store.data[store.current].bonusMoney = total;
+
+   save(store);
   }
 
   /* ---------- 4. Inventarie­funktioner ---------- */
@@ -183,6 +211,49 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].bonusMoney = { ...defaultMoney(), ...money };
+    save(store);
+  }
+
+  function getPossessionMoney(store) {
+    if (!store.current) return defaultMoney();
+    const data = store.data[store.current] || {};
+    return { ...defaultMoney(), ...(data.possessionMoney || {}) };
+  }
+
+  function setPossessionMoney(store, money) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].possessionMoney = { ...defaultMoney(), ...money };
+    const total = normalizeMoney({
+      daler: (store.data[store.current].privMoney || {}).daler + (money.daler || 0),
+      skilling: (store.data[store.current].privMoney || {}).skilling + (money.skilling || 0),
+      'örtegar': (store.data[store.current].privMoney || {})['örtegar'] + (money['örtegar'] || 0)
+    });
+    store.data[store.current].bonusMoney = total;
+    save(store);
+  }
+
+  function incrementPossessionRemoved(store) {
+    if (!store.current) return 0;
+    store.data[store.current] = store.data[store.current] || {};
+    const cur = Number(store.data[store.current].possessionRemoved || 0) + 1;
+    store.data[store.current].possessionRemoved = cur;
+    save(store);
+    return cur;
+  }
+
+  function resetPossessionRemoved(store) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].possessionRemoved = 0;
+    save(store);
+  }
+
+  function deleteCharacter(store, charId) {
+    if (!charId) return;
+    store.characters = store.characters.filter(c => c.id !== charId);
+    delete store.data[charId];
+    if (store.current === charId) store.current = '';
     save(store);
   }
 
@@ -462,6 +533,11 @@ function defaultTraits() {
     calcPermanentCorruption,
     abilityLevel,
     exportCharacterCode,
-    importCharacterCode
+    importCharacterCode,
+    getPossessionMoney,
+    setPossessionMoney,
+    incrementPossessionRemoved,
+    resetPossessionRemoved,
+    deleteCharacter
   };
 })(window);

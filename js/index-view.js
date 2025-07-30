@@ -340,6 +340,11 @@ function initIndex() {
         }
         list.push({ ...p, nivå: lvl });
         storeHelper.setCurrentList(store, list); updateXP();
+        if (p.namn === 'Besittning') {
+          const amount = Math.floor(Math.random() * 10) + 11;
+          storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
+          invUtil.renderInventory();
+        }
 
         if (p.namn === 'Välutrustad') {
           const inv = storeHelper.getInventory(store);
@@ -422,6 +427,20 @@ function initIndex() {
             return;
         }
         storeHelper.setCurrentList(store,list); updateXP();
+        if (p.namn === 'Besittning') {
+          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          const cnt = storeHelper.incrementPossessionRemoved(store);
+          if (cnt >= 3) {
+            const id = store.current;
+            alert('Karaktären raderas på grund av misstänkt fusk.');
+            storeHelper.deleteCharacter(store, id);
+            location.reload();
+            return;
+          } else if (cnt === 2) {
+            alert('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
+          }
+          invUtil.renderInventory();
+        }
         if (p.namn === 'Välutrustad') {
           const inv = storeHelper.getInventory(store);
           inv.forEach(row => { if (row.perk === 'Välutrustad') delete row.perk; });
