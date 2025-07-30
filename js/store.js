@@ -318,7 +318,7 @@ function defaultTraits() {
     return LEVEL_IDX[ent?.nivå || ''] || 0;
   }
 
-  function calcPermanentCorruption(list, extra) {
+  function calcPermanentCorruption(list, extra, threshold = 0) {
     let cor = 0;
     list.forEach(it => {
       const types = it.taggar?.typ || [];
@@ -337,6 +337,9 @@ function defaultTraits() {
       }
     });
     cor += extra?.corruption || 0;
+    if (list.some(it => it.namn === 'Mörkt förflutet')) {
+      cor += Math.ceil(threshold / 3);
+    }
     return cor;
   }
 

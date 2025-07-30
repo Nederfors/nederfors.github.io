@@ -44,9 +44,11 @@
         extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
         const maxCor = strongGift ? val * 2 : val;
-        const thresh = strongGift ? val : Math.ceil(val / 2);
+        let thresh = strongGift ? val : Math.ceil(val / 2);
+        const korruptionsk = Math.min(3, list.filter(e => e.namn === 'Korruptionskänslig').length);
+        thresh -= korruptionsk;
         const effects = storeHelper.getArtifactEffects(store);
-        const perm = storeHelper.calcPermanentCorruption(list, effects);
+        const perm = storeHelper.calcPermanentCorruption(list, effects, thresh);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` +
                 `<div class="trait-extra">Maximal korruption: ${maxCor} \u2022 Korruptionstr\u00f6skel: ${thresh}</div>`;
       }
