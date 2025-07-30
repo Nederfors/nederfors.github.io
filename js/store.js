@@ -394,6 +394,32 @@ function defaultTraits() {
     return Number(baseXp || 0) + countDisadvantages(list) * 5;
   }
 
+  /* ---------- 7. Export / Import av karaktärer ---------- */
+  function exportCharacterCode(store, id) {
+    const charId = id || store.current;
+    if (!charId) return '';
+    const char = store.characters.find(c => c.id === charId);
+    if (!char) return '';
+    const obj = { name: char.name, data: store.data[charId] || {} };
+    const json = JSON.stringify(obj);
+    return btoa(unescape(encodeURIComponent(json)));
+  }
+
+  function importCharacterCode(store, code) {
+    try {
+      const json = decodeURIComponent(escape(atob(code)));
+      const obj = JSON.parse(json);
+      const id = 'rp' + Date.now();
+      store.characters.push({ id, name: obj.name || 'Ny rollperson' });
+      store.data[id] = obj.data || {};
+      store.current = id;
+      save(store);
+      return id;
+    } catch {
+      return null;
+    }
+  }
+
   /* ---------- 7. Exportera ---------- */
   global.storeHelper = {
     load,
@@ -429,6 +455,8 @@ function defaultTraits() {
     calcUsedXP,
     calcTotalXP,
     calcPermanentCorruption,
-    abilityLevel
+    abilityLevel,
+    exportCharacterCode,
+    importCharacterCode
   };
 })(window);

@@ -15,6 +15,7 @@ const dom  = {
   /* toolbar / panel */
   charSel : $T('charSelect'),   delBtn : $T('deleteChar'),
   newBtn  : $T('newCharBtn'),   xpOut  : $T('xpOut'),
+  exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
   xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
   clrBtn  : $T('clearFilters'),
 
@@ -209,6 +210,25 @@ function bindToolbar() {
 
       storeHelper.save(store);      // sparas nu korrekt
       location.reload();
+    }
+
+    /* Exportera rollperson --------------------------------- */
+    if (id === 'exportChar') {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      const code = storeHelper.exportCharacterCode(store, store.current);
+      prompt('Kopiera koden nedan:', code);
+    }
+
+    /* Importera rollperson -------------------------------- */
+    if (id === 'importChar') {
+      const code = prompt('Klistra in karakt\u00e4rskoden:');
+      if (!code) return;
+      const res = storeHelper.importCharacterCode(store, code.trim());
+      if (res) {
+        location.reload();
+      } else {
+        alert('Felaktig kod.');
+      }
     }
 
     /* Ta bort rollperson ----------------------------------- */
