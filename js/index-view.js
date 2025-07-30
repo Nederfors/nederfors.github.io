@@ -42,9 +42,9 @@ function initIndex() {
 
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
+    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+      .map(t => searchNormalize(t.toLowerCase()));
     return getEntries().filter(p=>{
-      const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
-        .map(t => searchNormalize(t.toLowerCase()));
       const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
       const hasTerms = terms.length > 0;
       const txt = hasTerms && terms.every(q => text.includes(q));
@@ -69,7 +69,7 @@ function initIndex() {
       const txtOk  = !hasTerms || txt;
       const tagOk  = !hasTags || tagMatch;
       return txtOk && tagOk;
-    }).sort(sortByType);
+    }).sort(createSearchSorter(terms));
   };
 
   const renderList = arr=>{
