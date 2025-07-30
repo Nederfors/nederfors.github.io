@@ -633,7 +633,8 @@
           const row = inv[idx];
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
-          if (perkActive && row.perk === 'Välutrustad' && row.qty <= row.gratis) {
+          const pg = row.perkGratis || 0;
+          if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
             if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
           }
           inv.splice(idx, 1);
@@ -668,12 +669,15 @@
           const row = inv[idx];
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
-          if (perkActive && row.perk === 'Välutrustad' && (row.qty - 1) < row.gratis) {
+          const pg = row.perkGratis || 0;
+          const removingPerkItem = (row.qty - 1) < pg;
+          if (perkActive && row.perk === 'Välutrustad' && removingPerkItem) {
             if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
           }
           if (row.qty > 1) {
             row.qty--;
             if (row.gratis > row.qty) row.gratis = row.qty;
+            if (removingPerkItem && pg > 0) row.perkGratis = pg - 1;
           } else {
             inv.splice(idx, 1);
           }
@@ -746,7 +750,12 @@
 
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
-          if (perkActive && row.perk === 'Välutrustad' && newGratis < (row.gratis || 0)) {
+          if (
+            perkActive &&
+            row.perk === 'Välutrustad' &&
+            newGratis < (row.gratis || 0) &&
+            newGratis < (row.perkGratis || 0)
+          ) {
             if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) {
               return;
             }
