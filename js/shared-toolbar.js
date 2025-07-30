@@ -91,6 +91,8 @@ class SharedToolbar extends HTMLElement {
         <div class="char-btn-row">
           <button id="newCharBtn" class="char-btn">Ny rollperson</button>
           <button id="deleteChar" class="char-btn danger">Ta bort rollperson</button>
+          <button id="exportChar" class="char-btn">Exportera</button>
+          <button id="importChar" class="char-btn">Importera</button>
         </div>
 
         <div class="filter-group">
