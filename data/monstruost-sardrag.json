@@ -310,9 +310,9 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. Varelsen kan trollbinda och bita sitt offer, [Viljestark←Viljestark], i samma stridshandling. Blodsugaren sörplar sedan i sig blod, 2 Tålighet per runda, rustning skyddar ej. Offret får varje runda, på sitt initiativ, försöka bryta transen [Viljestark←Viljestark]. Skada på blodsugaren kan också bryta transen, [Viljestark –Skada].",
+    "Novis": "Handling: Aktiv. Varelsen kan trollbinda och bita sitt offer, [Viljestark←Viljestark], i samma stridshandling. Blodsugaren sörplar sedan i sig blod, 1T4 Tålighet per runda, rustning skyddar ej. Offret får varje runda, på sitt initiativ, försöka bryta transen [Viljestark←Viljestark]. Skada på blodsugaren kan också bryta transen, [Viljestark –Skada].",
     "Gesäll": "Handling: Aktiv. Som Novis, men den blodsugande varelsen läker lika mycket Tålighet som den suger i sig från offret.",
-    "Mästare": "Handling: Aktiv. Som Gesäll, men skadan och läkningen är i stället 3 Tålighet per runda. Offret kan inte heller själv bryta transen; det krävs att någon annan skadar blodsugaren för att kontrollen ska förloras, [Viljestark –Skada]."
+    "Mästare": "Handling: Aktiv. Som Gesäll, men skadan och läkningen är i stället 1T6 Tålighet per runda. Offret kan inte heller själv bryta transen; det krävs att någon annan skadar blodsugaren för att kontrollen ska förloras, [Viljestark –Skada]."
   }
 },
 
@@ -359,8 +359,8 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. Varelsen frustar fram en kaskad mot ett mål. Om offret lyckas med ett slag mot [Kvick←Träffsäker] gör kaskaden 3 i skada; om slaget misslyckas blir skadan 6.",
-    "Gesäll": "Handling: Aktiv. Varelsen blåser ur sig en ihållande kaskad. Om det inledande offret lyckas med [Kvick←Träffsäker] gör kaskaden 3 i skada; om slaget misslyckas blir skadan 6. Om offret tar full skada får varelsen försöka styra kaskaden till ytterligare ett mål, och så vidare tills ett av offren lyckas med [Kvick←Träffsäker].",
+    "Novis": "Handling: Aktiv. Varelsen frustar fram en kaskad mot ett mål. Om offret lyckas med ett slag mot [Kvick←Träffsäker] gör kaskaden 1T6 i skada; om slaget misslyckas blir skadan 1T12.",
+    "Gesäll": "Handling: Aktiv. Varelsen blåser ur sig en ihållande kaskad. Om det inledande offret lyckas med [Kvick←Träffsäker] gör kaskaden 1T6 i skada; om slaget misslyckas blir skadan 1T12. Om offret tar full skada får varelsen försöka styra kaskaden till ytterligare ett mål, och så vidare tills ett av offren lyckas med [Kvick←Träffsäker].",
     "Mästare": "Handling: Aktiv. Som Gesäll, men även om ett offer lyckas med slaget fortsätter kedjan; den bryts först vid det andra lyckade slaget."
   }
 },
@@ -562,8 +562,8 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. Varelsen kan stjäla korruption från styggelsesmittade offer, genom att äta dess kött eller suga i sig dess blod. Offret måste vara fogligt, antingen medvetslöst, fasthållet, drogat eller på annat sätt oförmöget att göra motstånd. Offret tar 4 i skada per runda (rustning skyddar ej) medan korruptionssamlaren suger i sig 2 poäng permanent korruption, vilka därmed försvinner från offret. Varelsen kan som en reaktiv handling spendera en poäng insamlad korruption per runda, på något av följande:\n– Ge en fiende en andra chans att misslyckas med ett motståndsslag mot en av korruptionssamlarens förmågor, krafter eller särdrag\n– Ge en fiende en andra chans att misslyckas med Försvar mot en av korruptionssamlarens attacker\n– Ge en fiende en andra chans att misslyckas med en attack mot korruptionssamlaren\n– Tvinga en fiende att slå en andra gång på ett effektslag, och ta det sämre utfallet",
-    "Gesäll": "Handling: Passiv. Som Novis, men varelsens naturliga vapen suger permanent korruption från offret. Så snart varelsen skadar sitt offer förlorar det dessutom 2 poäng permanent korruption. Varelsen kan som reaktiva handlingar spendera två poäng insamlad korruption per runda, på de effekter som listas på Novisnivå.",
+    "Novis": "Handling: Aktiv. Varelsen kan stjäla korruption från styggelsesmittade offer, genom att äta dess kött eller suga i sig dess blod. Offret måste vara fogligt, antingen medvetslöst, fasthållet, drogat eller på annat sätt oförmöget att göra motstånd. Offret tar 1T8 i skada per runda (rustning skyddar ej) medan korruptionssamlaren suger i sig 1T4 poäng permanent korruption, vilka därmed försvinner från offret. Varelsen kan som en reaktiv handling spendera en poäng insamlad korruption per runda, på något av följande:\n– Ge en fiende en andra chans att misslyckas med ett motståndsslag mot en av korruptionssamlarens förmågor, krafter eller särdrag\n– Ge en fiende en andra chans att misslyckas med Försvar mot en av korruptionssamlarens attacker\n– Ge en fiende en andra chans att misslyckas med en attack mot korruptionssamlaren\n– Tvinga en fiende att slå en andra gång på ett effektslag, och ta det sämre utfallet",
+    "Gesäll": "Handling: Passiv. Som Novis, men varelsens naturliga vapen suger permanent korruption från offret. Så snart varelsen skadar sitt offer förlorar det dessutom 1T4 poäng permanent korruption. Varelsen kan som reaktiva handlingar spendera två poäng insamlad korruption per runda, på de effekter som listas på Novisnivå.",
     "Mästare": "Handling: Passiv. Som Gesäll, men varelsen kan som reaktiva handlingar spendera valfritt antal poäng insamlad korruption per runda, på de effekter som listas på Novisnivå."
   }
 },
@@ -579,7 +579,7 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Reaktiv. Med ett lyckat slag mot Vaksam kan varelsen upptäcka utbrott av korruption i närområdet (cirka femhundra meter åt alla håll, om exakthet behövs). Små utbrott (1 poäng temporär korruption) kan inte upptäckas; vid 2 poäng modifieras karaktärsdraget med –5; vid 3 poäng med ±0; vid 4 poäng eller mer med +5. En framgång innebär att varelsen känner av utbrottet och blir varse om riktningen till platsen där det uppstod.",
+    "Novis": "Handling: Reaktiv. Med ett lyckat slag mot Vaksam kan varelsen upptäcka utbrott av korruption i närområdet (cirka femhundra meter åt alla håll, om exakthet behövs). Små utbrott (1 poäng temporär korruption) kan upptäckas med -7 på karaktärsdraget; vid 2 poäng modifieras karaktärsdraget med –5; vid 3 poäng med ±0; vid 4 poäng eller mer med +5. En framgång innebär att varelsen känner av utbrottet och blir varse om riktningen till platsen där det uppstod.",
     "Gesäll": "Handling: Reaktiv. Som Novis, men varelsen vet exakt var utbrottet ägde rum genom platsens kvardröjande energier.",
     "Mästare": "Handling: Reaktiv. Som Gesäll, men varelsen kan även spåra utbrottets källa under ett dygn genom de eteriska spår denne lämnar efter sig."
   }
@@ -596,9 +596,9 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Förflyttning. Alla som står i varelsens väg under förflyttningen måste klara [Stark← Stark] eller ta 2 i skada (rustning skyddar som vanligt) och ramla omkull där de står. Särdraget Robust ger +2 i skada per nivå (+2, +4, +6), samt samma bonus på Stark vid både användandet av och försvar mot Krossande framfart. Om ett offer lyckas med sitt slag avbryts den krossande framfarten. Fiender med förmågan Akrobatik kan välja att försvara sig med [Kvick← Stark] och då ducka undan, men i så fall avbryts inte framfarten vid ett lyckat Försvar.",
-    "Gesäll": "Handling: Förflyttning. Som Novis men skadan är 3.",
-    "Mästare": "Handling: Förflyttning. Som Novis men skadan är 4."
+    "Novis": "Handling: Förflyttning. Alla som står i varelsens väg under förflyttningen måste klara [Stark← Stark] eller ta 1T4 i skada (rustning skyddar som vanligt) och ramla omkull där de står. Särdraget Robust och Särdraget Väldig ger 1T4 extra i skada som ökar i tärningsgrad per nivå (1T4, 1T8, 1T12). Det ger även +2, +4, +6 i bonus på Stark vid både användandet av och försvar mot Krossande framfart. Om ett offer lyckas med sitt slag avbryts den krossande framfarten. Fiender med förmågan Akrobatik kan välja att försvara sig med [Kvick← Stark] och då ducka undan, men i så fall avbryts inte framfarten vid ett lyckat Försvar.",
+    "Gesäll": "Handling: Förflyttning. Som Novis men skadan är 1T6.",
+    "Mästare": "Handling: Förflyttning. Som Novis men skadan är 1T8."
   }
 },
 {
@@ -614,9 +614,9 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Reaktiv. När varelsen träffar med sitt naturliga vapen och gör skada kan den välja att försöka hålla fast offret. För att undvika att fångas måste offret klara [Kvick←Träffsäker]. Om målet blir fasthållet måste det klara [Stark← Stark] för att komma loss, eller ta 2 i skada varje runda medan det sakta krossas (Bepansring ignoreras). En fasthållen fiende får inte agera, men å andra sidan förlorar också varelsen en stridshandling per runda och fasthållet offer.",
-    "Gesäll": "Handling: Reaktiv. Som Novis, men skada 3 per runda.",
-    "Mästare": "Handling: Reaktiv. Som Novis, men skada 4 per runda."
+    "Novis": "Handling: Reaktiv. När varelsen träffar med sitt naturliga vapen och gör skada kan den välja att försöka hålla fast offret. För att undvika att fångas måste offret klara [Kvick←Träffsäker]. Om målet blir fasthållet måste det klara [Stark← Stark] för att komma loss, eller ta 1T4 i skada varje runda medan det sakta krossas (Bepansring ignoreras). En fasthållen fiende får inte agera, men å andra sidan förlorar också varelsen en stridshandling per runda och fasthållet offer.",
+    "Gesäll": "Handling: Reaktiv. Som Novis, men skada 1T6 per runda.",
+    "Mästare": "Handling: Reaktiv. Som Novis, men skada 1T8 per runda."
   }
 },
 {
@@ -758,9 +758,9 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. Varelsen reser sina rötter som en mur ur marken, bred nog för att det ska ta två förflyttningshandlingar att runda den, alternativt för att blockera en grottöppning eller liknande. Muren går att hugga sönder, enligt reglerna för Skada på byggnader i Spelarens handbok (sidan 106). Rotmuren har Tålighet 10, Brytpunkt 5 och Skydd 5. Rotmuren finns kvar under hela scenen om inte varelsen väljer att flytta den med en ny aktiv handling eller om den raseras. I det senare fallet kan varelsen inte framkalla en ny Rotmur förrän ett dygn senare.",
-    "Gesäll": "Handling: Aktiv. Som Novis, men fiender som passerar nära muren måste slå [Kvick←Träffsäker] eller träffas av piskande grenar som ger 3 i skada (ignorerar Bepansring). Enda sättet att undvika detta är att offra ytterligare en förflyttningshandling vid passagen, sammanlagt tre, och därmed passera muren på längre avstånd.",
-    "Mästare": "Handling: Fri. Som Gesäll, men de piskande grenarna gör 5 i skada. Om de träffar och om fienden misslyckas med ett [Stark← Stark] blir denne dessutom fasthållen tills ett slag mot [Stark← Stark] lyckas, alternativt tills väggen raseras eller flyttas. En fasthållen fiende attackeras inte av piskande grenar igen förrän i ögonblicket när den lyckas bryta sig loss."
+    "Novis": "Handling: Aktiv. Varelsen reser sina rötter som en mur ur marken, bred nog för att det ska ta två förflyttningshandlingar att runda den, alternativt för att blockera en grottöppning eller liknande. Muren går att hugga sönder, enligt reglerna för Skada på byggnader i Spelarens handbok (sidan 106). Rotmuren har Tålighet 10, Brytpunkt 5 och Skydd 1T10. Rotmuren finns kvar under hela scenen om inte varelsen väljer att flytta den med en ny aktiv handling eller om den raseras. I det senare fallet kan varelsen inte framkalla en ny Rotmur förrän ett dygn senare.",
+    "Gesäll": "Handling: Aktiv. Som Novis, men fiender som passerar nära muren måste slå [Kvick←Träffsäker] eller träffas av piskande grenar som ger 1T6 i skada (ignorerar Bepansring). Enda sättet att undvika detta är att offra ytterligare en förflyttningshandling vid passagen, sammanlagt tre, och därmed passera muren på längre avstånd.",
+    "Mästare": "Handling: Fri. Som Gesäll, men de piskande grenarna gör 1T10 i skada. Om de träffar och om fienden misslyckas med ett [Stark← Stark] blir denne dessutom fasthållen tills ett slag mot [Stark← Stark] lyckas, alternativt tills väggen raseras eller flyttas. En fasthållen fiende attackeras inte av piskande grenar igen förrän i ögonblicket när den lyckas bryta sig loss."
   }
 },
 {
@@ -786,9 +786,9 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Passiv. Alla som befinner sig inom närstridsavstånd från varelsen drabbas av 2 i skada varje runda (ignorerar Bepansring).",
-    "Gesäll": "Handling: Passiv. Som Novis, men skadan är 3 per runda.",
-    "Mästare": "Handling: Passiv. Som Novis, men skadan är 4 per runda."
+    "Novis": "Handling: Passiv. Alla som befinner sig inom närstridsavstånd från varelsen drabbas av 1T4 i skada varje runda (ignorerar Bepansring).",
+    "Gesäll": "Handling: Passiv. Som Novis, men skadan är 1T6 per runda.",
+    "Mästare": "Handling: Passiv. Som Novis, men skadan är 1T8 per runda."
   }
 },
 {
@@ -803,7 +803,7 @@
     ]
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. När monstret gör skada med ett bett hålls offret fast till nästa runda; det får agera som vanligt frånsett att det inte får förflytta sig. Nästa runda kan monstret försöka sluka målet. Offret slår ett slag mot [Stark← Stark], där särdraget Robust ger +2 i bonus per nivå, för både slukaren och dess offer. Om slaget lyckas sliter sig offret loss från fasthållningen, men om det misslyckas sväljs denne och hamnar i monstrets buk – en ohälsosam miljö som gör 2 i skada per runda, rustning skyddar ej.",
+    "Novis": "Handling: Aktiv. När monstret gör skada med ett bett hålls offret fast till nästa runda; det får agera som vanligt frånsett att det inte får förflytta sig. Nästa runda kan monstret försöka sluka målet. Offret slår ett slag mot [Stark← Stark], där särdraget Robust ger +2 i bonus per nivå, för både slukaren och dess offer. Om slaget lyckas sliter sig offret loss från fasthållningen, men om det misslyckas sväljs denne och hamnar i monstrets buk – en ohälsosam miljö som gör 1T4 i skada per runda, rustning skyddar ej.",
     "Gesäll": "Handling: Aktiv. Som Novis, men bettet behöver bara träffa (inte göra skada) för att offret ska bli fasthållet. Slukande får ske först rundan därpå.",
     "Mästare": "Handling: Reaktiv. Som Gesäll, men försöket att sluka görs som en del av en attack – om bettet träffar slås motståndsslaget för slukandet omedelbart samma runda."
   }
@@ -848,9 +848,9 @@
     "test": ["Stark"]
   },
   "nivåer": {
-    "Novis": "Handling: Förflyttning. Varelsen kan ta ett väldigt skutt och landa en förflyttning från startpunkten (ca 10 meter). Den drabbas inte av frislag från fiender som den landar vid eller passerar, men undgår inte frislag om hoppet innebär att den bryter närstrid.",
-    "Gesäll": "Handling: Förflyttning. Som Novis, men hoppet sker med sådan precision att varelsen kan välja att landa på en fiende. Attacken hanteras som ett frislag med +5 i skada, och målet slås till marken om det misslyckas med ett [Stark←Stark+5].",
-    "Mästare": "Handling: Förflyttning. Som Gesäll, men varelsen kan hoppa upp till två förflyttningshandlingar på längden (ca 20 meter), och upphoppet sker med sådan explosivitet att den också undgår frislag om den bryter närstrid."
+    "Novis": "Handling: Förflyttning. Varelsen kan ta ett väldigt skutt och landa en förflyttning från startpunkten (ca 12 meter). Den drabbas inte av frislag från fiender som den landar vid eller passerar, men undgår inte frislag om hoppet innebär att den bryter närstrid.",
+    "Gesäll": "Handling: Förflyttning. Som Novis, men hoppet sker med sådan precision att varelsen kan välja att landa på en fiende. Attacken hanteras som ett frislag med +1T10 i skada, och målet slås till marken om det misslyckas med ett [Stark←Stark+5].",
+    "Mästare": "Handling: Förflyttning. Som Gesäll, men varelsen kan hoppa upp till två förflyttningshandlingar på längden (ca 24 meter), och upphoppet sker med sådan explosivitet att den också undgår frislag om den bryter närstrid."
   }
 },
 {
@@ -861,9 +861,9 @@
     "test": ["Kvick"]
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. Varelsen frustar fram en eldkaskad mot ett mål. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 6 i skada. Om slaget misslyckas blir skadan 3.",
-    "Gesäll": "Handling: Aktiv. Varelsen blåser ur sig en ihållande eldkvast. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 6 i skada, om slaget misslyckas blir skadan 3. Om målet tar full skada får varelsen försöka styra den flammande elden till ett ytterligare mål, och så vidare tills varelsen misslyckas med [Träffsäker←Kvick].",
-    "Mästare": "Handling: Aktiv. Varelsen frustar fram en veritabel eldstorm. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 6 i skada, om slaget misslyckas blir skadan 3. Även om varelsen misslyckas med slaget en gång fortsätter kedjan, den bryts först vid det andra misslyckade slaget."
+    "Novis": "Handling: Aktiv. Varelsen frustar fram en eldkaskad mot ett mål. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6.",
+    "Gesäll": "Handling: Aktiv. Varelsen blåser ur sig en ihållande eldkvast. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6. Om målet tar full skada får varelsen försöka styra den flammande elden till ett ytterligare mål, och så vidare tills varelsen misslyckas med [Träffsäker←Kvick].",
+    "Mästare": "Handling: Aktiv. Varelsen frustar fram en veritabel eldstorm. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6. Även om varelsen misslyckas med slaget en gång fortsätter kedjan, den bryts först vid det andra misslyckade slaget."
   }
 }
 
