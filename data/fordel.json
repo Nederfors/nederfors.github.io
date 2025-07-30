@@ -477,7 +477,7 @@
   },
   {
     "namn": "Asketisk",
-    "beskrivning": "Karaktären och dess kropp är som ett tempel. Genom ett liv som kretsat kring överlevnad och förnödenheterna som möjliggör det, vare sig det är i stadens slum eller långt ute i skogen har karaktären lärt sig att mat är en resurs som används sparsamt. Karaktären behöver bara hälften så mycket mat i dagligt intag. Undantaget om rollpersonen är skadad eller har nedsatt förmåga på något sätt. Fördelar som Vildmarksvana påverkas inte av asketisk, dvs samma tid krävs för att hitta mat.",
+    "beskrivning": "Karaktären och dess kropp är som ett tempel. Genom ett liv som kretsat kring överlevnad och förnödenheterna som möjliggör det, vare sig det är i stadens slum eller långt ute i skogen har karaktären lärt sig att mat är en resurs som används sparsamt. Karaktären behöver bara hälften så mycket mat i dagligt intag. Undantaget om rollpersonen är skadad eller har nedsatt förmåga på något sätt.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Fördel"],
