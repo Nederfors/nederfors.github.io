@@ -11,6 +11,7 @@
       counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length;
     });
     const hasKraftprov = list.some(p => p.namn === 'Kraftprov');
+    const hasHardnackad = list.some(p => p.namn === 'Hårdnackad');
 
     const strongGift = list.some(
       p =>
@@ -20,9 +21,11 @@
 
     dom.traits.innerHTML = KEYS.map(k => {
       const val = (data[k] || 0) + (bonus[k] || 0);
-      const tal  = hasKraftprov && k === 'Stark'
+      const hardy = hasHardnackad && k === 'Stark' ? 1 : 0;
+      const talBase = hasKraftprov && k === 'Stark'
         ? val + 5
         : Math.max(10, val);
+      const tal  = talBase + hardy;
       const pain = Math.ceil(val / 2);
       let extra = '';
       let beforeExtra = '';
