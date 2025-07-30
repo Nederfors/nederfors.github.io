@@ -106,17 +106,57 @@
     return { xp: 0, corruption: 0 };
   }
 
-  function getMoney(store) {
+  function getBaseMoney(store) {
     if (!store.current) return defaultMoney();
     const data = store.data[store.current] || {};
     return { ...defaultMoney(), ...(data.money || {}) };
   }
 
-  function setMoney(store, money) {
+  function setBaseMoney(store, money) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].money = { ...defaultMoney(), ...money };
     save(store);
+  }
+
+  function getBesittningMoney(store) {
+    if (!store.current) return defaultMoney();
+    const data = store.data[store.current] || {};
+    return { ...defaultMoney(), ...(data.besittningMoney || {}) };
+  }
+
+  function setBesittningMoney(store, money) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    const cur = getBesittningMoney(store);
+    store.data[store.current].besittningMoney = normalizeMoney({
+      daler: cur.daler + (money.daler || 0),
+      skilling: cur.skilling + (money.skilling || 0),
+      'örtegar': cur['örtegar'] + (money['örtegar'] || 0)
+    });
+    save(store);
+  }
+
+  function clearBesittningMoney(store) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].besittningMoney = defaultMoney();
+    save(store);
+  }
+
+  function getMoney(store) {
+    if (!store.current) return defaultMoney();
+    const base = getBaseMoney(store);
+    const ext  = getBesittningMoney(store);
+    return normalizeMoney({
+      daler: base.daler + ext.daler,
+      skilling: base.skilling + ext.skilling,
+      'örtegar': base['örtegar'] + ext['örtegar']
+    });
+  }
+
+  function setMoney(store, money) {
+    setBaseMoney(store, money);
   }
 
   function getPartySmith(store) {
@@ -192,6 +232,19 @@
 
   function setCompactEntries(store, val) {
     store.compactEntries = Boolean(val);
+    save(store);
+  }
+
+  function getBesittningCount(store) {
+    if (!store.current) return 0;
+    const data = store.data[store.current] || {};
+    return Number(data.besittningRemoveCount || 0);
+  }
+
+  function setBesittningCount(store, val) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].besittningRemoveCount = Number(val) || 0;
     save(store);
   }
 
@@ -330,6 +383,13 @@ function defaultTraits() {
     setCustomEntries,
     getMoney,
     setMoney,
+    getBaseMoney,
+    setBaseMoney,
+    getBesittningMoney,
+    setBesittningMoney,
+    clearBesittningMoney,
+    getBesittningCount,
+    setBesittningCount,
     getPartySmith,
     setPartySmith,
     getPartyAlchemist,

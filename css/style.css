@@ -722,6 +722,37 @@ select.level {
 }
 #artPopup .popup-inner button { width: 100%; }
 
+/* ---------- Popup f\u00f6r Besittning ---------- */
+#besittningPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#besittningPopup.open { display: flex; }
+#besittningPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem 1.2rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#besittningPopup.open .popup-inner { transform: translateY(0); }
+#besittningPopup .popup-inner button { width: 100%; }
+
 /* Gör samtliga popups scrollbara om innehållet blir för högt */
 #qualPopup .popup-inner,
 #masterPopup .popup-inner,
@@ -729,7 +760,8 @@ select.level {
 #customPopup .popup-inner,
 #alcPopup .popup-inner,
 #smithPopup .popup-inner,
-#artPopup .popup-inner {
+#artPopup .popup-inner,
+#besittningPopup .popup-inner {
   max-height: 100%;
   overflow-y: auto;
 }

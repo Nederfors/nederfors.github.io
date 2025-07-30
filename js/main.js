@@ -377,6 +377,27 @@ function openArtefacterPopup(cb) {
   pop.addEventListener('click', onOutside);
 }
 
+function openBesittningPopup(amount, cb) {
+  const pop  = bar.shadowRoot.getElementById('besittningPopup');
+  const text = bar.shadowRoot.getElementById('besittningText');
+  const ok   = bar.shadowRoot.getElementById('besittningOk');
+  text.textContent = `Du f\u00e5r ${amount} daler.`;
+  pop.classList.add('open');
+  function close() {
+    pop.classList.remove('open');
+    ok.removeEventListener('click', onOk);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onOk() { close(); if(cb) cb(); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)) {
+      close(); if(cb) cb();
+    }
+  }
+  ok.addEventListener('click', onOk);
+  pop.addEventListener('click', onOutside);
+}
+
 
 
 function updateXP() {

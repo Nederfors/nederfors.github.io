@@ -306,6 +306,11 @@ function initIndex() {
           return;
         }
         list.push({ ...p, nivå: lvl });
+        if(p.namn === 'Besittning') {
+          const gain = 10 + Math.floor(Math.random()*10);
+          storeHelper.setBesittningMoney(store, { daler: gain });
+          openBesittningPopup(gain);
+        }
         storeHelper.setCurrentList(store, list); updateXP();
       }
     } else { /* rem */
@@ -337,6 +342,25 @@ function initIndex() {
         if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
           if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))
             return;
+        }
+        if(p.namn === 'Besittning') {
+          storeHelper.clearBesittningMoney(store);
+          const cnt = storeHelper.getBesittningCount(store) + 1;
+          storeHelper.setBesittningCount(store, cnt);
+          if(cnt === 2) {
+            alert('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
+          } else if(cnt >= 3) {
+            const char = store.characters.find(c=>c.id===store.current);
+            if(char) {
+              store.characters = store.characters.filter(c=>c.id!==store.current);
+              delete store.data[store.current];
+              store.current = '';
+              storeHelper.save(store);
+              alert('Karaktären raderades pga misstänkt fusk.');
+              location.reload();
+              return;
+            }
+          }
         }
         storeHelper.setCurrentList(store,list); updateXP();
       }

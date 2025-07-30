@@ -194,6 +194,11 @@ function initCharacter() {
       let   lvl = lvlSel ? lvlSel.value : null;
       if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
       list = [...before, { ...p, nivå: lvl }];
+      if(p.namn === 'Besittning') {
+        const gain = 10 + Math.floor(Math.random()*10);
+        storeHelper.setBesittningMoney(store, { daler: gain });
+        openBesittningPopup(gain);
+      }
     }else if(actBtn.dataset.act==='rem'){
       if(multi){
         let removed=false;
@@ -206,6 +211,25 @@ function initCharacter() {
         }
       }else{
         list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
+      }
+      if(p.namn === 'Besittning') {
+        storeHelper.clearBesittningMoney(store);
+        const cnt = storeHelper.getBesittningCount(store) + 1;
+        storeHelper.setBesittningCount(store, cnt);
+        if(cnt === 2) {
+          alert('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
+        } else if(cnt >= 3) {
+          const char = store.characters.find(c=>c.id===store.current);
+          if(char) {
+            store.characters = store.characters.filter(c=>c.id!==store.current);
+            delete store.data[store.current];
+            store.current = '';
+            storeHelper.save(store);
+            alert('Karaktären raderades pga misstänkt fusk.');
+            location.reload();
+            return;
+          }
+        }
       }
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         if(!confirm('Förmågan krävs för ett valt elityrke. Ta bort ändå?'))

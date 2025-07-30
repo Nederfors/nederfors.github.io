@@ -211,7 +211,7 @@
     };
     const onAdd = () => {
       const addMoney = getInputMoney();
-      const curMoney = storeHelper.getMoney(store);
+      const curMoney = storeHelper.getBaseMoney(store);
       const total = storeHelper.normalizeMoney({
         daler: curMoney.daler + addMoney.daler,
         skilling: curMoney.skilling + addMoney.skilling,
