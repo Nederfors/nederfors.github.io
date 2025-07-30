@@ -349,7 +349,7 @@
     const allInv = storeHelper.getInventory(store);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
-    const cash = storeHelper.normalizeMoney(storeHelper.getMoney(store));
+    const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
 
     if (dom.invTypeSel) {
       const types = new Set();
