@@ -20,6 +20,8 @@
         ['Gesäll', 'Mästare'].includes(p.nivå || '')
     );
 
+    const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
+
     dom.traits.innerHTML = KEYS.map(k => {
       const val = (data[k] || 0) + (bonus[k] || 0);
       const hardy = hasHardnackad && k === 'Stark' ? 1 : 0;
