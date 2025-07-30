@@ -103,6 +103,11 @@ function initCharacter() {
         const extra = yrkeInfoHtml(p);
         if (extra) infoHtml += `<br>${extra}`;
       }
+      let raceInfo = '';
+      if (p.namn === 'Blodsband' && p.race) {
+        raceInfo = `<br><strong>Ras:</strong> ${p.race}`;
+        infoHtml += raceInfo;
+      }
       const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
       const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml + traitInfo)}">Info</button>`;
 
@@ -122,7 +127,7 @@ function initCharacter() {
         btn = `<button class="char-btn danger icon" data-act="rem">🗑</button>`;
       }
       const showInfo = compact || hideDetails;
-      const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${traitInfo}</div>` : '';
+      const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
       li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
 
         ${descHtml}
