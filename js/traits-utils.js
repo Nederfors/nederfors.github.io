@@ -26,7 +26,10 @@
         ? val + 5
         : Math.max(10, val);
       const tal  = talBase + hardy;
-      const pain = Math.ceil(val / 2);
+      // Base pain threshold is half of the current Strength value
+      // (rounded up). It can be modified by traits such as
+      // Smärttålig and Bräcklig.
+      let pain = Math.ceil(val / 2);
 
       let extra = '';
       let beforeExtra = '';
@@ -37,6 +40,8 @@
         if (hasPack) base = Math.ceil(base * 1.5);
         const painBonus = list.filter(e => e.namn === 'Sm\u00e4rtt\u00e5lig').length;
         const painPenalty = list.filter(e => e.namn === 'Br\u00e4cklig').length;
+        // Sm\u00e4rtt\u00e5lig adds to the threshold while each Br\u00e4cklig
+        // reduces it. Multiple selections stack since we count each entry.
         pain += painBonus - painPenalty;
         beforeExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>` +
           `<div class="trait-extra">B\u00e4rkapacitet: ${base}</div>`;
