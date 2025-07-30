@@ -119,6 +119,49 @@
     });
   }
 
+  function getDependents(list, entry) {
+    if (!entry) return [];
+    const name = entry.namn || entry;
+    const ent = typeof entry === 'string' ? DB.find(x => x.namn === name) : entry;
+    if (!ent) return [];
+    const out = [];
+
+    if (isElityrke(ent)) {
+      list.forEach(it => {
+        if (isEliteSkill(it) && explodeTags(it.taggar?.ark_trad).includes(name)) {
+          out.push(it.namn);
+        }
+      });
+    }
+
+    if (name === 'M\u00f6rkt blod') {
+      const extras = ['Naturligt vapen','Pansar','Robust','Regeneration','Vingar'];
+      list.forEach(it => {
+        if (isMonstrousTrait(it) || it.namn === 'Bestialisk' || extras.includes(it.namn)) {
+          if (it.namn !== name) out.push(it.namn);
+        }
+      });
+    }
+
+    if (isRas(ent)) {
+      const race = name;
+      list.forEach(it => {
+        const ras = it.taggar?.ras || [];
+        if (ras.includes(race)) out.push(it.namn);
+      });
+    }
+
+    if (name === 'Blodsband' && entry.race) {
+      const race = entry.race;
+      list.forEach(it => {
+        const ras = it.taggar?.ras || [];
+        if (ras.includes(race)) out.push(it.namn);
+      });
+    }
+
+    return Array.from(new Set(out));
+  }
+
   function setCurrentList(store, list) {
     if (!store.current) return;
     applyDarkBloodEffects(list);
@@ -538,6 +581,7 @@ function defaultTraits() {
     setPossessionMoney,
     incrementPossessionRemoved,
     resetPossessionRemoved,
-    deleteCharacter
+    deleteCharacter,
+    getDependents
   };
 })(window);
