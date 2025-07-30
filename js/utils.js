@@ -120,6 +120,21 @@
       .replace(/__oe__/g,'\u00f6');
   }
 
+  function createSearchSorter(terms){
+    const t = (terms||[])
+      .map(s => searchNormalize(String(s).toLowerCase()))
+      .filter(Boolean);
+    return function(a,b){
+      const aName = searchNormalize((a.namn||'').toLowerCase());
+      const bName = searchNormalize((b.namn||'').toLowerCase());
+      const aMatch = t.length && t.every(q=>aName.includes(q));
+      const bMatch = t.length && t.every(q=>bName.includes(q));
+      if(aMatch && !bMatch) return -1;
+      if(!aMatch && bMatch) return 1;
+      return sortByType(a,b);
+    };
+  }
+
   window.LVL = LVL;
   window.EQUIP = EQUIP;
   window.SBASE = SBASE;
@@ -141,4 +156,5 @@
   window.formatMoney = formatMoney;
   window.itemStatHtml = itemStatHtml;
   window.searchNormalize = searchNormalize;
+  window.createSearchSorter = createSearchSorter;
 })(window);
