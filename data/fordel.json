@@ -616,8 +616,8 @@
     }
   },
   {
-    "namn": "Motsåndskraft",
-    "beskrivning": "Karaktären har tränat sin vilja att utstå mörkrets inflytande. Karaktärens korruptionströskel ökar med +1 per nivå (max +3).",
+    "namn": "Motståndskraft",
+    "beskrivning": "Karaktären har tränat sin vilja att utstå mörkrets inflytande. Karaktärens korruptionströskel ökar med +1 per gång fördelen är vald (max +3).",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": ["Fördel"],
