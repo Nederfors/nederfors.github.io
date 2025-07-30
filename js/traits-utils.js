@@ -12,6 +12,7 @@
     });
     const hasKraftprov = list.some(p => p.namn === 'Kraftprov');
     const hasHardnackad = list.some(p => p.namn === 'Hårdnackad');
+    const hasSjalastark = list.some(p => p.namn === 'Själastark');
 
     const strongGift = list.some(
       p =>
@@ -45,9 +46,9 @@
         afterExtra = '';
         extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
-        const maxCor = strongGift ? val * 2 : val;
-        const baseThresh = strongGift ? val : Math.ceil(val / 2);
-        const thresh = baseThresh + resistCount;
+        const baseMax = strongGift ? val * 2 : val;
+        const maxCor = baseMax + (hasSjalastark ? 1 : 0);
+        const thresh = strongGift ? val : Math.ceil(val / 2);
         const effects = storeHelper.getArtifactEffects(store);
         const perm = storeHelper.calcPermanentCorruption(list, effects);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` +
