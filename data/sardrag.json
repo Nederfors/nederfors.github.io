@@ -15,21 +15,21 @@
   },
   {
     "namn": "Kortlivad",
-    "beskrivning": "Varelsens liv är kort även när livsbetingelserna är goda. Varelsen når snabbt mogen ålder och tappar sedan mycket av livets kraft under kommande år. Endast ett fåtal individer av dess sort når fyrtio års ålder, å andra sidan är varelsen kvick att lära och anpassar sig utomordentligt snabbt till nya omgivningar, redan vid fem års ålder är den redo att möta världen. Kortlivad har ingen effekt förutom vad det kan ge rollspelandet.",
+    "beskrivning": "Endast tillgänglig för Svartalfer. Varelsens liv är kort även när livsbetingelserna är goda. Varelsen når snabbt mogen ålder och tappar sedan mycket av livets kraft under kommande år. Endast ett fåtal individer av dess sort når fyrtio års ålder, å andra sidan är varelsen kvick att lära och anpassar sig utomordentligt snabbt till nya omgivningar, redan vid fem års ålder är den redo att möta världen. Kortlivad har ingen effekt förutom vad det kan ge rollspelandet.",
     "taggar": {
       "typ": ["Särdrag"]
     }
   },
   {
     "namn": "Långlivad",
-    "beskrivning": "Varelsen har ett fördröjt åldrande sedan den uppnått vuxen ålder. Om inte våld, gift eller sjukdom förkortar varelsens liv kan den leva i två eller till och med tre århundraden. Det längre livsspannet gör att varelsen är van att ta saker i lugnare tempo, men det kompenseras av inställningen att det som är värt att göra är värt att göras väl, vilket över tid resulterar i en betydande grad av expertis. Långlivad har ingen effekt förutom vad det kan ge rollspelandet.",
+    "beskrivning": "Endast tillgänglig för Alver, Resar och BortbytingarVarelsen har ett fördröjt åldrande sedan den uppnått vuxen ålder. Om inte våld, gift eller sjukdom förkortar varelsens liv kan den leva i två eller till och med tre århundraden. Det längre livsspannet gör att varelsen är van att ta saker i lugnare tempo, men det kompenseras av inställningen att det som är värt att göra är värt att göras väl, vilket över tid resulterar i en betydande grad av expertis. Långlivad har ingen effekt förutom vad det kan ge rollspelandet.",
     "taggar": {
       "typ": ["Särdrag"]
     }
   },
   {
     "namn": "Robust",
-    "beskrivning": "Endast tillgänglig för Resar. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
+    "beskrivning": "Endast tillgänglig för Resar och Troll. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
     "taggar": {
       "typ": ["Särdrag"]
     },
@@ -41,7 +41,7 @@
   },
   {
     "namn": "Överlevnadsinstinkt",
-    "beskrivning": "Endast tillgänglig för Svartalf. Rollpersonen är av ett släkte vars livspann är kort men vars livsenergi motsvarar mer seglivade släktens. För vissa av släktets representanter blir energin mest till högljutt gastande och rastlös aktivitet, men för andra ger den möjligheter till en intensiv överlevnadsinstinkt.",
+    "beskrivning": "Endast tillgänglig för Svartalfer. Rollpersonen är av ett släkte vars livspann är kort men vars livsenergi motsvarar mer seglivade släktens. För vissa av släktets representanter blir energin mest till högljutt gastande och rastlös aktivitet, men för andra ger den möjligheter till en intensiv överlevnadsinstinkt.",
     "taggar": {
       "typ": ["Särdrag"]
     },
@@ -54,7 +54,7 @@
 
   {
     "namn": "Eonernas visdom",
-    "beskrivning": "Alvernas släkte har genom eonerna samlat på sig en kollektiv visdom; en djup källa till kunnande och insikt som många alver kan ta del av genom meditation. Rollpersonen är en av dem som kan använda gångna generationers kunskaper för att lösa aktuella problem. Helt riskfritt är det inte; i denna mörknande värld drar sökandet till sig korruption. Eonernas visdom ger temporär korruption som om det vore en mystisk kraft.",
+    "beskrivning": "Endast tillgänglig för Alver. Alvernas släkte har genom eonerna samlat på sig en kollektiv visdom; en djup källa till kunnande och insikt som många alver kan ta del av genom meditation. Rollpersonen är en av dem som kan använda gångna generationers kunskaper för att lösa aktuella problem. Helt riskfritt är det inte; i denna mörknande värld drar sökandet till sig korruption. Eonernas visdom ger temporär korruption som om det vore en mystisk kraft.",
     "taggar": {
       "typ": ["Särdrag"],
       "test": ["Viljestark"]
@@ -67,7 +67,7 @@
   },
   {
     "namn": "Jordnära",
-    "beskrivning": "Dvärgsläktet är knutet till världen på ett intimt sätt, nästan som om det hade avlats av själva världens ben och fortfarande är en del av världskroppen. Dvärgar saknar själ och tar skada istället för Korruption; temporär Korruption ger upphov till blödande sår på varelsens kropp. Permanent korruption medför istället en permanent sänkning av beräkningsgrunden för varelsens Smärttröskel. Detta innebär rent praktiskt att Smärttröskeln minskar med 1 för vartannat poäng i permanent korruption som varelsen drabbas av. Tålighet påverkas inte. Om Smärtgränsen når noll avlider varelsen omedelbart. Avlidna dvärgar går inte att återuppväcka som vandöda och går inte heller att tala med genom ritualen Andebesvärjelse. När de dör så ruttnar de tillbaka till skapelsens ursörja och stoft utan att lämna andliga spår efter sig.",
+    "beskrivning": "Endast tillgänglig för Dvärgar. Dvärgsläktet är knutet till världen på ett intimt sätt, nästan som om det hade avlats av själva världens ben och fortfarande är en del av världskroppen. Dvärgar saknar själ och tar skada istället för Korruption; temporär Korruption ger upphov till blödande sår på varelsens kropp. Permanent korruption medför istället en permanent sänkning av beräkningsgrunden för varelsens Smärttröskel. Detta innebär rent praktiskt att Smärttröskeln minskar med 1 för vartannat poäng i permanent korruption som varelsen drabbas av. Tålighet påverkas inte. Om Smärtgränsen når noll avlider varelsen omedelbart. Avlidna dvärgar går inte att återuppväcka som vandöda och går inte heller att tala med genom ritualen Andebesvärjelse. När de dör så ruttnar de tillbaka till skapelsens ursörja och stoft utan att lämna andliga spår efter sig.",
     "taggar": {
       "typ": ["Särdrag"]
     }

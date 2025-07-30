@@ -243,7 +243,7 @@
 },
 {
   "namn": "Packåsna",
-  "beskrivning": "Rollpersonen är van att bära mycket, tungt och långt. Beräkningen av rollpersonens bärförmåga görs med dennes Stark ×1,5. Se regeln för Bärförmåga på sidan 100.",
+  "beskrivning": "Rollpersonen är van att bära mycket, tungt och långt. Beräkningen av rollpersonens bärförmåga görs med dennes Stark ×1,5. Se regeln för Bärförmåga på sidan 100 i Spelarens handbok.",
   "kan_införskaffas_flera_gånger": false,
   "taggar": {
     "typ": ["Fördel"],
@@ -415,7 +415,7 @@
 
 {
   "namn": "Privilegierad",
-  "beskrivning": "Rollpersonen tillhör en grupp med högt anseende och tydliga fördelar inom sitt eget samhälle, men betraktas som avvikande eller misstänkt utanför detta sammanhang. Inom sitt samhälle får rollpersonen slå två gånger på sociala utmaningar och välja det bästa utfallet. Men i främmande miljöer där den egna gruppen är ovanlig måste rollpersonen istället slå två gånger på sociala utmaningar mot lokalbefolkningen och ta det sämsta resultatet. Rollpersonen börjar spelet med 50 daler i bältesbörsen.",
+  "beskrivning": "Rollpersonen tillhör en grupp med högt anseende och tydliga fördelar inom sitt eget samhälle, men betraktas som avvikande eller misstänkt utanför detta sammanhang. Inom sitt samhälle får rollpersonen slå två gånger på sociala utmaningar och välja det bästa utfallet. Men i främmande miljöer där den egna gruppen är ovanlig måste rollpersonen istället slå två gånger på sociala utmaningar mot lokalbefolkningen och ta det sämsta resultatet. Rollpersonen börjar spelet med 50 daler i bältesbörsen. Pengarna läggs till i inventariet automatiskt.",
   "kan_införskaffas_flera_gånger": false,
   "taggar": {
     "typ": ["Fördel"],
@@ -487,8 +487,8 @@
   },
   {
     "namn": "Lyckosam",
-    "beskrivning": "Karaktärens liv har av outgrundliga anledningar alltid gått bra. Kniviga situationer har löst sig och rätt vindar har blåst. Regnet har slutat ösa ner lagom till att elden ska göras och ja, ett tursamt liv har levts. Karaktären kan en gång per äventyr (eller så ofta som spelledaren tillåter) möjlighet att slå om ett slag där utfallet inte blev som karaktären ville och använda den bästa utfallet. Denna fördel kan tas upp till 3 gånger, vilket resulterar i fler omkast, men fortfarande bara vid ett tillfälle.",
-    "kan_införskaffas_flera_gånger": true,
+    "beskrivning": "Karaktärens liv har av outgrundliga anledningar alltid gått bra. Kniviga situationer har löst sig och rätt vindar har blåst. Regnet har slutat ösa ner lagom till att elden ska göras och ja, ett tursamt liv har levts. Karaktären kan en gång per äventyr (eller så ofta som spelledaren tillåter) slå om ett slag där utfallet inte blev som karaktären ville och använda det bästa resultatet. Denna fördel kan bara införskaffas en gång.",
+    "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Fördel"],
       "ark_trad": [],
@@ -627,13 +627,13 @@
   },
   {
     "namn": "Smärttålig",
-    "beskrivning": "Karaktären har härdat kropp och sinne att uthärda smärta. Karaktärens smärtgräns ökar med +1 per nivå (max +3).",
+    "beskrivning": "Karaktären har härdat kropp och sinne att uthärda smärta. Karaktärens smärtgräns ökar med +1 per gång fördelen väljs (max +3).",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
-      "typ": ["Fördel"],
-      "ark_trad": ["Krigare"],
-      "test": ["Stark"]
-    }
+        "typ": ["Fördel"],
+        "ark_trad": ["Krigare"],
+        "test": []
+      }
   },
   {
     "namn": "Hårdnackad",

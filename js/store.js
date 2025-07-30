@@ -39,10 +39,14 @@
           store.data[id] = {
             custom: [],
             artifactEffects: { xp:0, corruption:0 },
+            bonusMoney: defaultMoney(),
             ...cur
           };
           if(!store.data[id].artifactEffects){
             store.data[id].artifactEffects = { xp:0, corruption:0 };
+          }
+          if(!store.data[id].bonusMoney){
+            store.data[id].bonusMoney = defaultMoney();
           }
         });
       }
@@ -67,6 +71,14 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
+    const hasPriv = list.some(x => x.namn === 'Privilegierad');
+    const curBonus = store.data[store.current].bonusMoney || defaultMoney();
+    const hasBonus = curBonus.daler || curBonus.skilling || curBonus['örtegar'];
+    if (hasPriv && !hasBonus) {
+      store.data[store.current].bonusMoney = { daler: 50, skilling: 0, 'örtegar': 0 };
+    } else if (!hasPriv && hasBonus) {
+      store.data[store.current].bonusMoney = defaultMoney();
+    }
     save(store);
   }
 
@@ -117,6 +129,29 @@
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].money = { ...defaultMoney(), ...money };
     save(store);
+  }
+
+  function getBonusMoney(store) {
+    if (!store.current) return defaultMoney();
+    const data = store.data[store.current] || {};
+    return { ...defaultMoney(), ...(data.bonusMoney || {}) };
+  }
+
+  function setBonusMoney(store, money) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].bonusMoney = { ...defaultMoney(), ...money };
+    save(store);
+  }
+
+  function getTotalMoney(store) {
+    const base = getMoney(store);
+    const bonus = getBonusMoney(store);
+    return normalizeMoney({
+      daler: base.daler + bonus.daler,
+      skilling: base.skilling + bonus.skilling,
+      'örtegar': base['örtegar'] + bonus['örtegar']
+    });
   }
 
   function getPartySmith(store) {
@@ -330,6 +365,9 @@ function defaultTraits() {
     setCustomEntries,
     getMoney,
     setMoney,
+    getBonusMoney,
+    setBonusMoney,
+    getTotalMoney,
     getPartySmith,
     setPartySmith,
     getPartyAlchemist,
