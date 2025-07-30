@@ -341,6 +341,10 @@ function initIndex() {
       } else {
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
+        if(p.namn==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
+          if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
+            return;
+        }
         let list;
         const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
         if(multi){

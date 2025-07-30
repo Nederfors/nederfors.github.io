@@ -195,6 +195,10 @@ function initCharacter() {
       if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
       list = [...before, { ...p, nivå: lvl }];
     }else if(actBtn.dataset.act==='rem'){
+      if(name==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
+        if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
+          return;
+      }
       if(multi){
         let removed=false;
         list=[];
