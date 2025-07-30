@@ -14,9 +14,13 @@ function initCharacter() {
     const lst = storeHelper.getCurrentList(store).filter(p=>!isInv(p));
     const sets = { typ:new Set(), ark:new Set(), test:new Set() };
     lst.forEach(p=>{
-      (p.taggar.typ||[]).forEach(v=>sets.typ.add(v));
+      (p.taggar.typ||[])
+        .filter(Boolean)
+        .forEach(v=>sets.typ.add(v));
       explodeTags(p.taggar.ark_trad).forEach(v=>sets.ark.add(v));
-      (p.taggar.test||[]).forEach(v=>sets.test.add(v));
+      (p.taggar.test||[])
+        .filter(Boolean)
+        .forEach(v=>sets.test.add(v));
     });
     const fill=(sel,set,lbl)=>sel.innerHTML =
       `<option value="">${lbl} (alla)</option>` +

@@ -355,7 +355,9 @@
       const types = new Set();
       allInv.forEach(row => {
         const entry = getEntry(row.name);
-        (entry.taggar?.typ || []).forEach(t => types.add(t));
+        (entry.taggar?.typ || [])
+          .filter(Boolean)
+          .forEach(t => types.add(t));
       });
       dom.invTypeSel.innerHTML =
         '<option value="">Kategori (alla)</option>' +

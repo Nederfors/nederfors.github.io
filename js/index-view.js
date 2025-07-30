@@ -14,9 +14,13 @@ function initIndex() {
   const fillDropdowns = ()=>{
     const set = { typ:new Set(), ark:new Set(), test:new Set() };
     getEntries().forEach(p=>{
-      (p.taggar.typ||[]).forEach(v=>set.typ.add(v));
+      (p.taggar.typ||[])
+        .filter(Boolean)
+        .forEach(v=>set.typ.add(v));
       explodeTags(p.taggar.ark_trad).forEach(v=>set.ark.add(v));
-      (p.taggar.test||[]).forEach(v=>set.test.add(v));
+      (p.taggar.test||[])
+        .filter(Boolean)
+        .forEach(v=>set.test.add(v));
     });
     const fill=(sel,s,l)=>sel.innerHTML =
       `<option value="">${l} (alla)</option>` + [...s].sort().map(v=>`<option>${v}</option>`).join('');
