@@ -390,6 +390,10 @@ function initIndex() {
           if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
             return;
         }
+        if(isMonstrousTrait(p) && before.some(x=>x.namn==='Mörkt blod')){
+          if(!confirm(p.namn+' hänger ihop med Mörkt blod. Ta bort ändå?'))
+            return;
+        }
         let list;
         const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
         if(multi){
@@ -407,7 +411,11 @@ function initIndex() {
         }
         const removed = before.find(it => it.namn===p.namn && (tr?it.trait===tr:!it.trait));
         const remDeps = storeHelper.getDependents(before, removed);
-        if(remDeps.length){
+        if(p.namn==='Mörkt blod' && remDeps.length){
+          if(confirm(`Ta bort även: ${remDeps.join(', ')}?`)){
+            list = list.filter(x => !remDeps.includes(x.namn));
+          }
+        } else if(remDeps.length){
           if(!confirm(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`)) return;
         }
         if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
