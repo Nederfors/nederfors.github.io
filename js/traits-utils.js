@@ -18,6 +18,7 @@
         p.namn === 'Stark gåva' &&
         ['Gesäll', 'Mästare'].includes(p.nivå || '')
     );
+    const korruptCount = list.filter(p => p.namn === 'Korruptionskänslig').length;
 
     dom.traits.innerHTML = KEYS.map(k => {
       const val = (data[k] || 0) + (bonus[k] || 0);
@@ -44,7 +45,8 @@
         extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
         const maxCor = strongGift ? val * 2 : val;
-        const thresh = strongGift ? val : Math.ceil(val / 2);
+        const baseThresh = strongGift ? val : Math.ceil(val / 2);
+        const thresh = Math.max(1, baseThresh - korruptCount);
         const effects = storeHelper.getArtifactEffects(store);
         const perm = storeHelper.calcPermanentCorruption(list, effects);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` +
