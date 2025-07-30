@@ -1,0 +1,106 @@
+[
+  {
+    "namn": "Fiddla",
+    "beskrivning": "Ett ofta tresträngat instrument som spelas med stråke gjord av tagel. Vanligt förekommande i den ambriska bondekulturen.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Flöjt",
+    "beskrivning": "Oräkneliga varianter av flöjter finns, från smäckra metallvarianter till blåsverktyg skapade av vass, trädgrenar och horn. Andra typer av flöjter är panflöjten och skalmejan, den senare med sitt karaktäristiskt gälla ljud.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Luta",
+    "beskrivning": "Stränginstrument med päronformad kropp som spelas med fingrarna eller med ett plektrum.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 0, "skilling": 15, "örtegar": 0 }
+  },
+  {
+    "namn": "Mungiga",
+    "beskrivning": "Den smidiga mungigan medförs av mången daglönare, gycklare och hovnarrar och dess grundtoner utgör bakgrundsljud till många samkväm i Ambrias enklare miljöer.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Mässingslur",
+    "beskrivning": "Redigt bröldon för pompiga sammanhang.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Näverlur",
+    "beskrivning": "Allmogen i ambrias kullar nyttjar dessa lurar för mångahanda syften; skrämma bort monster och onkytt eller locka på valldjuren. Luren används också för att sända budskap över långa avstånd, en ensam herde kan sända till närliggande fäbodar och därifrån blåses budet vidare över nejden. Skickliga lurblåsare spelar dessutom på sitt eget sätt så att andra vet vem som sänder budet; ”baiagornspår finns här”, ”en ko har försvunnit” eller ”svartalfer har stulit allt smör”.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Spinett",
+    "beskrivning": "Klaviatur, populärt vid hovet i Yndaros, och formar tillsammans med lutan ryggraden i den ambriska hovmusiken.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 15, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Säckpipa",
+    "beskrivning": "En skalmeja (typ av flöjt) fäst vid en lädersäck som ger en luftreservoar och väsentligt förenklad spelteknik. Särskilt bland vissa barbarklaner är säckpipan populär, men varianter av instrumentet finns också i ambrisk bondekultur. I Ambrias finare salonger göre den sig icke besvär.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Trumma",
+    "beskrivning": "Ett rytmverktyg som förekommer i mångahanda varianter, från barbarernas enklare don till ambriska arméns metallspända taktverk.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+  },
+  {
+    "namn": "Vevlira",
+    "beskrivning": "Ett stränginstrument som med hjälp av en vev kan ge upphov till typiska knarrljud, använd för att ge tydligare rytm i musiken. Liran har länge varit populär i Ambria (och i Alberetor dessförinnan) men har i just Yndaros kommit att få prägel av tiggarinstrument. Många flyktingar söderifrån försörjer sig nämligen genom att i tid och otid utsätta förbipasserande vandrare för melodi, knarr och malande borduntoner.",
+    "taggar": { "typ": [ "Musikinstrument" ] },
+    "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
+  },
+
+  {
+    "namn": "Flöjt",
+    "beskrivning": "Liten träflöjt som kan användas för signaler eller musik.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+
+{
+    "namn": "Trumma",
+    "beskrivning": "Slaginstrument för musik eller signaler.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
+  },
+
+{
+    "namn": "Signalhorn",
+    "beskrivning": "Horn för att påkalla uppmärksamhet på avstånd.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  }]

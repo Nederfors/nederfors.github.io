@@ -1,0 +1,401 @@
+[
+  {
+    "namn": "Bröd (landet)",
+    "beskrivning": "Färskt bröd bakat i stenugn, basföda vid varje måltid.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Bröd (stad)",
+    "beskrivning": "Färskt stenugnsbakat bröd från stadens bagerier.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Gryta (landet)",
+    "beskrivning": "Mustig gryta med lokalt kött, rotfrukter och örter.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Gryta (stad)",
+    "beskrivning": "Stadskockens gryta med förstklassigt kött och exotiska kryddor.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Kött (landet)",
+    "beskrivning": "Nykött från gårdens slakt, tillagas över öppen eld.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Kött (stad)",
+    "beskrivning": "Finstyckat kött från stadens slaktare, serveras färskt eller rökt.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Ost (landet)",
+    "beskrivning": "Hantverksost av gårdsmjölk, mild och krämig.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Ost (stad)",
+    "beskrivning": "Lagrad ost från stadens ostehandel, mer smakrik och fast.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Stuvning (landet)",
+    "beskrivning": "Lätt grönsaksstuvning med smör och örter från åkern.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
+  },
+  {
+    "namn": "Stuvning (stad)",
+    "beskrivning": "Exotisk stuvning med importerade grönsaker och kryddor.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+
+  {
+    "namn": "Hackebricka (ost & korv)",
+    "beskrivning": "Litet fat med lagrad ost och rökt korv – perfekt som aptitretare.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+  },
+  {
+    "namn": "Friterade bakverk",
+    "beskrivning": "Gyllenbruna degknyten friterade i talg och pudrade med socker.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 2 }
+  },
+  {
+    "namn": "Fruktpaj",
+    "beskrivning": "Generös paj fylld med saftiga frukter och knaprigt täcke.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Fruktpudding",
+    "beskrivning": "Lätt pudding av inkokta frukter och grädde.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+  },
+  {
+    "namn": "Fruktsorbet",
+    "beskrivning": "Iskall sorbet gjord på solmogen frukt – svalkar gott.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 7, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Glass och frukt",
+    "beskrivning": "Söt gräddglass serverad med färsk säsongsfrukt.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 2 }
+  },
+  {
+    "namn": "Honungsrostad ängssyra",
+    "beskrivning": "Spröda blad rostade i honung – söt-syrlig delikatess.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+  },
+  {
+    "namn": "Kanderad ingefära",
+    "beskrivning": "Skivor av kryddig ingefära inbäddade i sockerlag.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Marmeladkonfekt",
+    "beskrivning": "Små gelébitar av bärmarmelad rullade i fint socker.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+  },
+  {
+    "namn": "Marsipanfigurer",
+    "beskrivning": "Noga formade figurer av söt mandelmassa.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Nougatkonfekt",
+    "beskrivning": "Mjuk nougat skuren i små bitar och pudrad med kakao.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 2 }
+  },
+  {
+    "namn": "Nötter i choklad",
+    "beskrivning": "Rostade nötter täckta av mörk choklad.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+  },
+  {
+    "namn": "Smörrostad tryffelskorpa",
+    "beskrivning": "Krispig skorpa rostad i smör och smaksatt med tryffel.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Sockrade rosenblad",
+    "beskrivning": "Rosenblad bestrukna med äggvita och socker, lätt kristalliserade.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Sötsalta stickor",
+    "beskrivning": "Tunna degstänger med söt glasyr och stänk av havssalt.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Våfflor med smör och honung",
+    "beskrivning": "Nystekta våfflor toppade med smält smör och ringlad honung.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+  },
+  {
+    "namn": "Fisksås och hårt bröd",
+    "beskrivning": "Salt fisksås serverad med knaprigt hårt bröd.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Forellpaté med rovor",
+    "beskrivning": "Len paté på rökt forell med kokta rovor vid sidan.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 15, "örtegar": 0 }
+  },
+  {
+    "namn": "Salt sill och rovor",
+    "beskrivning": "Inlagd sill i saltlag serveras med rovor.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Smöröst gös med mös",
+    "beskrivning": "Mört gösfilé bräckt i smör och örter, serverad med mosad kålrot.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 22, "örtegar": 0 }
+  },
+  
+  {
+    "namn": "Vattugröt",
+    "beskrivning": "Tun gröt kokad på vatten och havre, enkel och mättande.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+  },
+  {
+    "namn": "Ölgröt med smörklick",
+    "beskrivning": "Kornrik gröt kokad i öl och toppad med en generös smörklick.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Kryddad gräddgröt",
+    "beskrivning": "Krämig gröt på grädde med kanel och kardemumma.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+  },
+  {
+    "namn": "Helgrillat spädsvin med betor",
+    "beskrivning": "Mört spädsvin grillat hel­gjutet, serverat med ugnsrostade betor.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 6, "örtegar": 0 }
+  },
+  {
+    "namn": "Kungsstek i sky",
+    "beskrivning": "Saftig stek sjuden i egen sky tills köttet faller isär.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 8, "örtegar": 0 }
+  },
+  {
+    "namn": "Långkok med morotsstuvning",
+    "beskrivning": "Mustigt långkokt kött samman med söt morotsstuvning.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Pölsabiff med rovor",
+    "beskrivning": "Kryddig pölsa pressad till biff, serveras med kokta rovor.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Rokakorv med rotmos",
+    "beskrivning": "Rökt korv ackompanjerad av smörigt rotmos.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 12, "örtegar": 0 }
+  },
+  {
+    "namn": "Späckad lunga med svartmos",
+    "beskrivning": "Lunga späckad med fett, bakad långsamt och serverad med blodmos.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 4, "örtegar": 0 }
+  },
+  {
+    "namn": "Fisk och skaldjurspaj",
+    "beskrivning": "Paj fylld med fisk, skaldjur och dilldoftande kräm.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+  },
+  {
+    "namn": "Inälvspaj",
+    "beskrivning": "Kryddig paj av lever, hjärta och njurspad i mördeg.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 4, "örtegar": 0 }
+  },
+  {
+    "namn": "Kålpaj",
+    "beskrivning": "Enkel paj fylld med smörstekt kål.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Köttpaj",
+    "beskrivning": "Saftig köttstuvning inbakad i frasigt skal.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Forellpaj",
+    "beskrivning": "Rökt forell och örter bakade under smörig deg.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 8, "örtegar": 0 }
+  },
+  {
+    "namn": "Njurpaj",
+    "beskrivning": "Mördegspaj fylld med njure i kryddad sås.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+  },
+  {
+    "namn": "Svamppaj",
+    "beskrivning": "Skogs­svamp och grädde bakade till gyllen­brun paj.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 4, "örtegar": 0 }
+  },
+  {
+    "namn": "Blandgryta",
+    "beskrivning": "Gryta på spannmål, ärtor och små fläsktärningar.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Fisk och rovor",
+    "beskrivning": "Mild stuvning av fisk och rovor i gräddig buljong.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+  },
+  {
+    "namn": "Kålstuvning",
+    "beskrivning": "Vitkål långkokt i smör och buljong tills len.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 3 }
+  },
+  {
+    "namn": "Kött och betor",
+    "beskrivning": "Gryta på tärnat kött och rödbetor kokade i kryddig sky.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 8 }
+  },
+  {
+    "namn": "Rotsaksgryta",
+    "beskrivning": "Morot, palsternacka och kålrot sjuder ihop till mustig gryta.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+  },
+  {
+    "namn": "Blodsoppa och mörkt bröd",
+    "beskrivning": "Kryddig soppa på blod och lök, serveras med rågbröd.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+  },
+  {
+    "namn": "Löksoppa med hårt bröd",
+    "beskrivning": "Söt karamelliserad löksoppa, knäckebröd vid sidan.",
+    "taggar": { "typ": [ "Mat" ] },
+    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+  }]

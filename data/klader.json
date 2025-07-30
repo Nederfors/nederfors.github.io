@@ -1,0 +1,337 @@
+[
+  {
+    "namn": "Fattiga trasor",
+    "beskrivning": "Ensamling slitna och lappade kläder, bärs av de allra fattigaste.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Enkel dräkt",
+    "beskrivning": "Enkla vardagskläder för allmoge eller tjänstefolk.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Hantverksklädnad",
+    "beskrivning": "Kläder anpassade för arbete, ofta slitstarka och smutsavvisande.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Borgarstass",
+    "beskrivning": "Välskräddad dräkt för stadens välbärgade borgare.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Ädlings ekipering",
+    "beskrivning": "Praktfull och dyrbar klädsel för adelsmän och högreståndspersoner. Priset varierar med tygets och sömnadens kvalitet.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "maxpris": {
+      "daler": 100,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Byxor",
+    "beskrivning": "Enkla benkläder i tyg eller ylle. Priset varierar beroende på material och kvalitet.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Halsduk",
+    "beskrivning": "Värmande tygstycke för halsen, kan vara enkel eller dekorerad.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
+  },
+  {
+    "namn": "Hatt",
+    "beskrivning": "Huvudbonad som skyddar mot väder eller visar status. Pris varierar med snitt och dekoration.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  },
+  {
+    "namn": "Kappa",
+    "beskrivning": "Varm ytterrock med långa ärmar, bärs över andra plagg. Priset beror på materialets värde.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 10
+    }
+  },
+  {
+    "namn": "Kjol",
+    "beskrivning": "Tygstycke som bärs från midjan och nedåt. Kan vara enkel eller vackert dekorerad.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 10
+    }
+  },
+  {
+    "namn": "Klänning",
+    "beskrivning": "Helkroppsplagg för kvinnor, från enkel vardagsklänning till praktfulla festplagg.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 10,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Kåpa",
+    "beskrivning": "Vid mantel med huva, bärs över kläder för värme och skydd.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Mantel",
+    "beskrivning": "Stort ytterplagg utan ärmar, bärs som skydd mot vind och regn.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 6
+    }
+  },
+  {
+    "namn": "Mask",
+    "beskrivning": "Ansiktstäckande tillbehör för högtider, skådespel eller maskerad.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 10
+    }
+  },
+  {
+    "namn": "Mössa",
+    "beskrivning": "Värmande huvudbonad av tyg eller ull, bärs för att skydda mot kyla.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  },
+  {
+    "namn": "Skjorta",
+    "beskrivning": "Långärmat plagg av linne eller bomull, används under väst eller livplagg.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  },
+  {
+    "namn": "Stövlar",
+    "beskrivning": "Slitstarka läderstövlar för vandring, ridning eller arbete.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "namn": "Särk",
+    "beskrivning": "Underplagg i linne eller bomull, används närmast kroppen.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
+  },
+  {
+    "namn": "Tunika",
+    "beskrivning": "Bekvämt och löst sittande överplagg, bärs av både kvinnor och män.",
+    "taggar": {
+      "typ": [
+        "Kläder"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    },
+    "maxpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 7
+    }
+  }]
