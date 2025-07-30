@@ -514,24 +514,133 @@ function defaultTraits() {
     return Number(baseXp || 0) + countDisadvantages(list) * 5;
   }
 
+  /* ---------- Hjälpfunktioner för export ---------- */
+  function stripDefaults(data) {
+    const obj = { ...(data || {}) };
+    const emptyMoney = defaultMoney();
+    const emptyEff = defaultArtifactEffects();
+
+    ['money','bonusMoney','privMoney','possessionMoney'].forEach(k => {
+      if (obj[k] && JSON.stringify(obj[k]) === JSON.stringify(emptyMoney)) delete obj[k];
+    });
+    if (obj.possessionRemoved === 0) delete obj.possessionRemoved;
+    if (obj.artifactEffects && JSON.stringify(obj.artifactEffects) === JSON.stringify(emptyEff)) delete obj.artifactEffects;
+    ['inventory','list','custom'].forEach(k => {
+      if (Array.isArray(obj[k]) && obj[k].length === 0) delete obj[k];
+    });
+    ['partyAlchemist','partySmith','partyArtefacter'].forEach(k => {
+      if (obj[k] === '') delete obj[k];
+    });
+    if (obj.baseXp === 0) delete obj.baseXp;
+    if (obj.traits) {
+      const def = defaultTraits();
+      const t = {};
+      let changed = false;
+      Object.keys(obj.traits).forEach(key => {
+        if (obj.traits[key] !== def[key]) { t[key] = obj.traits[key]; changed = true; }
+      });
+      obj.traits = changed ? t : undefined;
+      if (!changed) delete obj.traits;
+    }
+    return obj;
+  }
+
+  function compressList(list) {
+    return (list || []).map(it => {
+      if (it && it.namn && window.DBIndex && window.DBIndex[it.namn]) {
+        const row = { n: it.namn };
+        if (it.nivå) row.l = it.nivå;
+        if (it.trait) row.t = it.trait;
+        if (it.race) row.r = it.race;
+        return row;
+      }
+      return it;
+    });
+  }
+
+  function expandList(list) {
+    return (list || []).map(it => {
+      if (it && it.n && window.DBIndex && window.DBIndex[it.n]) {
+        const base = { ...window.DBIndex[it.n] };
+        if (it.l) base.nivå = it.l;
+        if (it.t) base.trait = it.t;
+        if (it.r) base.race = it.r;
+        return base;
+      }
+      return it;
+    });
+  }
+
+  function compressInventory(inv) {
+    return (inv || []).map(row => {
+      if (!row || typeof row !== 'object') return row;
+      const res = { n: row.name };
+      if (row.qty && row.qty !== 1) res.q = row.qty;
+      if (row.gratis) res.g = row.gratis;
+      if (row.kvaliteter && row.kvaliteter.length) res.k = row.kvaliteter;
+      if (row.gratisKval && row.gratisKval.length) res.gk = row.gratisKval;
+      if (row.removedKval && row.removedKval.length) res.rk = row.removedKval;
+      if (row.artifactEffect) res.e = row.artifactEffect;
+      if (row.nivå) res.l = row.nivå;
+      return res;
+    });
+  }
+
+  function expandInventory(inv) {
+    return (inv || []).map(row => {
+      if (row && row.n) {
+        return {
+          name: row.n,
+          qty: row.q || 1,
+          gratis: row.g || 0,
+          kvaliteter: row.k || [],
+          gratisKval: row.gk || [],
+          removedKval: row.rk || [],
+          artifactEffect: row.e || '',
+          nivå: row.l
+        };
+      }
+      return row;
+    });
+  }
+
   /* ---------- 7. Export / Import av karaktärer ---------- */
   function exportCharacterCode(store, id) {
     const charId = id || store.current;
     if (!charId) return '';
     const char = store.characters.find(c => c.id === charId);
     if (!char) return '';
-    const obj = { name: char.name, data: store.data[charId] || {} };
+    const data = store.data[charId] || {};
+    const obj = {
+      name: char.name,
+      data: stripDefaults({
+        ...data,
+        list: compressList(data.list),
+        inventory: compressInventory(data.inventory)
+      })
+    };
     const json = JSON.stringify(obj);
-    return btoa(unescape(encodeURIComponent(json)));
+    return window.LZString.compressToEncodedURIComponent(json);
   }
 
   function importCharacterCode(store, code) {
     try {
-      const json = decodeURIComponent(escape(atob(code)));
+      const json = window.LZString.decompressFromEncodedURIComponent(code);
       const obj = JSON.parse(json);
       const id = 'rp' + Date.now();
       store.characters.push({ id, name: obj.name || 'Ny rollperson' });
-      store.data[id] = obj.data || {};
+      const data = obj.data || {};
+      data.list = expandList(data.list);
+      data.inventory = expandInventory(data.inventory);
+      store.data[id] = {
+        custom: [],
+        artifactEffects: defaultArtifactEffects(),
+        bonusMoney: defaultMoney(),
+        privMoney: defaultMoney(),
+        possessionMoney: defaultMoney(),
+        possessionRemoved: 0,
+        ...data
+      };
       store.current = id;
       save(store);
       return id;
