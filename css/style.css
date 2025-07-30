@@ -66,6 +66,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   border-radius: .6rem;
   background: var(--accent);
   color: #fff;
+  text-align: center;
   cursor: pointer;
   text-decoration: none;
   transition: transform .1s ease, opacity .1s ease;
@@ -80,6 +81,10 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   display: flex;
   gap: .4rem;
   margin-bottom: .6rem;
+}
+.char-btn-row .char-btn {
+  flex: 1;
+  min-width: 0;
 }
 
 /* Grupp för partytillhörighet */
