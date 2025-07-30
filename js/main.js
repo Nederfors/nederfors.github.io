@@ -201,7 +201,7 @@ function bindToolbar() {
     if (id === 'newCharBtn') {
       const name = prompt('Namn på ny rollperson?');
       if (!name) return;
-      const baseXP = Number(dom.xpIn.value) || 0;
+      const baseXP = 0;  // nystartade rollpersoner har alltid 0 XP
       const charId = 'rp' + Date.now();
 
       store.characters.push({ id: charId, name });
