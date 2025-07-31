@@ -114,6 +114,13 @@
     });
   }
 
+  function enforceEarthbound(list) {
+    if (list.some(x => x.namn === 'Jordnära')) {
+      const idx = list.findIndex(x => x.namn === 'Mörkt förflutet');
+      if (idx >= 0) list.splice(idx, 1);
+    }
+  }
+
   function getDependents(list, entry) {
     if (!entry) return [];
     const name = entry.namn || entry;
@@ -167,6 +174,7 @@
     if (!store.current) return;
     applyDarkBloodEffects(list);
     applyRaceTraits(list);
+    enforceEarthbound(list);
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
     const hasPriv = list.some(x => x.namn === 'Privilegierad');

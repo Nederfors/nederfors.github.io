@@ -206,6 +206,10 @@ function initCharacter() {
               return;
           }
         }
+        if(name==='Mörkt förflutet' && before.some(x=>x.namn==='Jordnära')){
+          alert('Jordnära karaktärer kan inte ta Mörkt förflutet.');
+          return;
+        }
         list = [...before, { ...p, nivå: lvl }];
     }else if(actBtn.dataset.act==='rem'){
       if(name==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
