@@ -171,6 +171,7 @@ function initCharacter() {
     F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
     dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderSkills(filtered()); renderTraits();
+    bar.close('filterPanel');
   });
 
   /* ta bort & nivåbyte */
