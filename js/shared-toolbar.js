@@ -271,16 +271,16 @@ class SharedToolbar extends HTMLElement {
           <p>
             <strong>Ny rollperson</strong> skapar en ny karakt\u00e4r.<br>
             <strong>Ta bort rollperson</strong> raderar vald karakt\u00e4r.<br>
-            <strong>Exportera</strong> kopierar karakt\u00e4ren som kod.<br>
-            <strong>Importera</strong> \u00e5terst\u00e4ller en sparad karakt\u00e4r.<br>
-            <strong>⚒️/⚗️/🏺</strong> v\u00e4ljer niv\u00e5 p\u00e5 smed, alkemist och artefaktmakare.<br>
-            <strong>🔭</strong> l\u00e5ter filtren matcha valfri tagg.<br>
-            <strong>🤏</strong> v\u00e4xlar kompakt vy.<br>
-            <strong>ℹ️</strong> visar denna hj\u00e4lp.
+            <strong>Exportera</strong> kopierar karakt\u00e4ren som en delbar kod.<br>
+            <strong>Importera</strong> \u00e5terst\u00e4ller en sparad karakt\u00e4r från kopierad kod.<br>
+            <strong>⚒️/⚗️/🏺</strong> v\u00e4ljer niv\u00e5 p\u00e5 smed, alkemist och artefaktmakare för prisreducieringar.<br>
+            <strong>🔭</strong> l\u00e5ter tillagda filter utöka sökningen istället för att göra den snävare.<br>
+            <strong>🤏</strong> v\u00e4xlar till kompakt vy.<br>
+            <strong>ℹ️</strong> visar denna hj\u00e4lpmeny.
           </p>
           <h3>Inventariepanelen</h3>
           <p>
-            <strong>Nytt f\u00f6rem\u00e5l</strong> l\u00e4gger till eget f\u00f6rem\u00e5l.<br>
+            <strong>Nytt f\u00f6rem\u00e5l</strong> l\u00e4gger till eget f\u00f6rem\u00e5l ifall din karaktär har specialbehov, t.ex för artefakter.<br>
             <strong>Hantera pengar</strong> justerar pengar.<br>
             <strong>Rensa inventarie</strong> tar bort all utrustning.
           </p>
@@ -290,13 +290,13 @@ class SharedToolbar extends HTMLElement {
           </p>
           <h3>Listor och inventarie</h3>
           <p>
-            <strong>L\u00e4gg till</strong> eller <strong>+</strong> l\u00e4gger till posten.<br>
-            <strong>−</strong> minskar antal eller tar bort posten.<br>
-            <strong>Info</strong> visar mer information.<br>
-            <strong>K+</strong> l\u00e4gger till kvalitet.<br>
-            <strong>K🆓</strong> markerar en kvalitet som gratis.<br>
-            <strong>🆓</strong> cyklar antal gratis exemplar.<br>
-            <strong>↔</strong> v\u00e4xlar artefaktens effekt.<br>
+            <strong>L\u00e4gg till</strong> eller <strong>+</strong> l\u00e4gger till posten till karaktären / inventariet.<br>
+            <strong>−</strong> minskar antal eller tar bort posten helt om det bara finns en kvar.<br>
+            <strong>Info</strong> visar mer information om inlägget.<br>
+            <strong>K+</strong> låter dig l\u00e4gga till en kvalitet till föremålet från en lista.<br>
+            <strong>K🆓</strong> markerar den kostande kvaliteten längst till vänster som gratis.<br>
+            <strong>🆓</strong> Gör ett föremål gratis, går att använda flera gånger för en stack av föremål.<br>
+            <strong>↔</strong> v\u00e4xlar artefaktens effekt mellan att kosta 1 erfarenhet eller att ge en permanent korruption.<br>
             <strong>🗑</strong> tar bort posten helt.
           </p>
         </div>
