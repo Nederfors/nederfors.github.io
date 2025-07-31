@@ -40,6 +40,7 @@ const dom  = {
 
   /* traits */
   traits  : $T('traits'),       traitsTot: $T('traitsTotal'),
+  traitsMax: $T('traitsMax'),
   traitStats: $T('traitStats'),
 
   /* filterfält */
