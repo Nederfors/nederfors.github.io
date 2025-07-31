@@ -77,7 +77,7 @@ class SharedToolbar extends HTMLElement {
         <!-- Sammanfattning -->
         <div id="xpSummary" class="exp-counter"></div>
         <div class="exp-counter traits-total" style="text-align:center;">
-          Tot: <span id="traitsTotal">0</span>
+          Tot: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
         </div>
         <div id="traits" class="traits"></div>
         <div id="traitStats" class="exp-counter"></div>

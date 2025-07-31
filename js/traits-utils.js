@@ -88,7 +88,6 @@
     }).join('');
 
     const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0),0);
-    dom.traitsTot.textContent = total;
 
     const lvlMap = { Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
     let maxTot = 80;
@@ -97,10 +96,18 @@
         maxTot += lvlMap[it.nivå] || 0;
       }
     });
+    if (dom.traitsTot) dom.traitsTot.textContent = total;
+    if (dom.traitsMax) dom.traitsMax.textContent = maxTot;
     const parent = dom.traitsTot.closest('.traits-total');
     if (parent) {
-      parent.classList.remove('good','bad');
-      parent.classList.add(total === maxTot ? 'good' : 'bad');
+      parent.classList.remove('good','under','over');
+      if (total === maxTot) {
+        parent.classList.add('good');
+      } else if (total < maxTot) {
+        parent.classList.add('under');
+      } else {
+        parent.classList.add('over');
+      }
     }
 
     if (dom.traitStats) {
