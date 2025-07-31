@@ -466,9 +466,11 @@ function defaultTraits() {
 
   function calcPermanentCorruption(list, extra) {
     let cor = 0;
+    const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
     list.forEach(it => {
       const types = it.taggar?.typ || [];
       if (!['Mystisk kraft', 'Ritual'].some(t => types.includes(t))) return;
+      if (isDwarf && types.includes('Mystisk kraft') && it.namn === 'Vedergällning') return;
       const trads = explodeTags(it.taggar?.ark_trad);
       let lvl = 0;
       trads.forEach(tr => {
