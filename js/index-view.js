@@ -181,7 +181,6 @@ function initIndex() {
     F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
     dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderList(filtered());
-    bar.close('filterPanel');
   });
 
   /* lista-knappar */
