@@ -126,10 +126,14 @@ function initCharacter() {
       }else{
         btn = `<button class="char-btn danger icon" data-act="rem">🗑</button>`;
       }
+      const tagsHtml = (p.taggar?.typ || [])
+        .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
+        .map(t => `<span class="tag">${t}</span>`).join(' ');
       const showInfo = compact || hideDetails;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-      li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>${lvlSel}
-
+      li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>
+        ${tagsHtml}
+        ${lvlSel}
         ${descHtml}
         ${showInfo ? infoBtn : ''}${btn}`;
 
