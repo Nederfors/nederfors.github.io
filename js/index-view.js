@@ -159,6 +159,10 @@ function initIndex() {
   dom.sIn.addEventListener('keydown',e=>{
     if(e.key==='Enter'){
       e.preventDefault();
+      if (tryNilasPopup(sTemp)) {
+        dom.sIn.value=''; sTemp='';
+        return;
+      }
       if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
       dom.sIn.value=''; sTemp='';
       activeTags(); renderList(filtered());
