@@ -1,41 +1,4 @@
 [
-    {
-  "namn": "Artefaktkatalog",
-  "beskrivning": "En vältummad kopia av av trollsmeden Xavaundos visdomar, nedtecknade av ordensmäster Balinda. Boken ger +1 på framgångsslag i Artefaktmakande.",
-  "taggar": {
-    "typ": [
-      "Specialverktyg"
-    ]
-  }
-},
-{
-  "namn": "Bestiarium",
-  "beskrivning": "Ett bestiarium, en fint illustrerad katalog över världens olika fasor, försedd med marginalanteckningar från tidigare ägare rörande de bästa sätten att undvika monstren – eller hur man bäst bekämpar dem. Bestiariet ger +1 på framgångsslag i Monsterlärd.",
-  "taggar": {
-    "typ": [
-      "Specialverktyg"
-    ]
-  }
-},
-{
-  "namn": "Falskspelsutrustning",
-  "beskrivning": "Viktade tärningar, märkta kort och spelpjäser ger användaren +1 på alla framgångsslag i spel (se dock fördelen Falskspelare på sidan 53 för riskerna med att spela falskt).",
-  "taggar": {
-    "typ": [
-      "Specialverktyg"
-    ]
-  }
-},
-{
-  "namn": "Fältskärsränsel",
-  "beskrivning": "Fältskärens ränsel innehåller verktyg för att skära, bränna och med örter behandla skador och sjukdomar. Fältskärsväskan ger +1 på framgångsslag i Medicus.",
-  "taggar": {
-    "typ": [
-      "Specialverktyg"
-    ]
-  }
-},
-
 {
   "namn": "Artefaktkatalog",
   "beskrivning": "En vältummad kopia av av trollsmeden Xavaundos visdomar, nedtecknade av ordensmäster Balinda. Boken ger +1 på framgångsslag i Artefaktmakande.",
