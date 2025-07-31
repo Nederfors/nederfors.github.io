@@ -508,6 +508,23 @@ function defaultTraits() {
     return xp;
   }
 
+  function calcEntryXP(entry) {
+    const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
+    if (types.includes('nackdel')) return -5;
+    let xp = 0;
+    if (
+      entry.nivåer &&
+      ['mystisk kraft', 'förmåga', 'särdrag', 'monstruöst särdrag'].some(t => types.includes(t))
+    ) {
+      xp += XP_LADDER[entry.nivå || 'Novis'] || 0;
+    } else if (types.includes('monstruöst särdrag')) {
+      xp += RITUAL_COST;
+    }
+    if (types.includes('fördel')) xp += 5;
+    if (types.includes('ritual')) xp += RITUAL_COST;
+    return xp;
+  }
+
   function countDisadvantages(list) {
     const hasDark = list.some(x => x.namn === 'Mörkt blod');
     return list.filter(item => {
@@ -750,6 +767,7 @@ function defaultTraits() {
     getBaseXP,
     setBaseXP,
     calcUsedXP,
+    calcEntryXP,
     calcTotalXP,
     calcPermanentCorruption,
     abilityLevel,

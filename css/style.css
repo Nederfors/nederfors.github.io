@@ -179,7 +179,19 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   flex-direction: column;
   gap: .45rem;
 }
-.card-title { font-size: 1.34rem; font-weight: 600; }
+.card-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 1.34rem;
+  font-weight: 600;
+}
+.xp-cost {
+  font-size: .9rem;
+  color: var(--subtxt);
+  font-weight: 500;
+  margin-left: .8rem;
+}
 .card-desc  { font-size: 1.15rem; }
 .card.compact .card-desc { display: none; }
 
