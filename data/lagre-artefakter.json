@@ -242,7 +242,7 @@
     "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
   },
   {
-    "namn": "Själssten",
+    "namn": "Själssten (artefakt)",
     "taggar": { "typ": ["Lägre Artefakt"] },
     "nivåer": {
       "Mästare": "Det föremål som krävs för utförande av ritualen med samma namn."
