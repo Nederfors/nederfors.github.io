@@ -87,7 +87,21 @@
       </div>`;
     }).join('');
 
-    dom.traitsTot.textContent = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0),0);
+    const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0),0);
+    dom.traitsTot.textContent = total;
+
+    const lvlMap = { Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
+    let maxTot = 80;
+    list.forEach(it => {
+      if (it.namn === 'Exceptionellt karaktärsdrag') {
+        maxTot += lvlMap[it.nivå] || 0;
+      }
+    });
+    const parent = dom.traitsTot.closest('.traits-total');
+    if (parent) {
+      parent.classList.remove('good','bad');
+      parent.classList.add(total === maxTot ? 'good' : 'bad');
+    }
 
     if (dom.traitStats) {
       dom.traitStats.textContent = "";
