@@ -389,7 +389,8 @@ select.level {
 #invPanel,
 #filterPanel,
 #traitsPanel,
-#yrkePanel {
+#yrkePanel,
+#infoPanel {
   position: fixed;
   top: 0;
   right: -100%;
@@ -411,13 +412,23 @@ select.level {
 #filterPanel { max-width: 360px; }
 #traitsPanel { max-width: 360px; }
 #yrkePanel   { max-width: 360px; }
+#infoPanel   { max-width: 360px; }
 
 /* När klassen .open läggs på – låt panelen glida in */
 #invPanel.open,
 #filterPanel.open,
 #traitsPanel.open,
-#yrkePanel.open {
+#yrkePanel.open,
+#infoPanel.open {
   right: 0;
+}
+
+.info-list {
+  list-style: disc;
+  padding-left: 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
 }
 
 /* ---------- Popup för kvaliteter ---------- */

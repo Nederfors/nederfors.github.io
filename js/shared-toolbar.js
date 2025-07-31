@@ -151,8 +151,30 @@ class SharedToolbar extends HTMLElement {
               </span>
               <button id="entryViewToggle" class="party-toggle" title="Växla kompakt vy">🤏</button>
             </li>
+            <li style="text-align:center;">
+              <button id="helpToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
+            </li>
           </ul>
         </div>
+      </aside>
+
+      <!-- ---------- Hjälp ---------- -->
+      <aside id="infoPanel" class="offcanvas">
+        <header class="inv-header">
+          <h2>Hjälp</h2>
+          <button class="char-btn icon" data-close="infoPanel">✕</button>
+        </header>
+        <ul class="info-list">
+          <li>🔄 <strong>Byt vy</strong> – växlar mellan lista och rollperson.</li>
+          <li>🎒 <strong>Inventarie</strong> – öppnar inventariepanelen.</li>
+          <li>📊 <strong>Egenskaper</strong> – öppnar panelen för egenskaper.</li>
+          <li><strong>Rensa filter</strong> – tar bort alla aktiva filter.</li>
+          <li>⚙️ <strong>Filter</strong> – visar filterpanelen.</li>
+          <li><strong>Ny rollperson</strong> – skapar en ny rollperson.</li>
+          <li><strong>Ta bort rollperson</strong> – raderar vald rollperson.</li>
+          <li><strong>Exportera</strong> – kopierar en kod för vald rollperson.</li>
+          <li><strong>Importera</strong> – laddar en rollperson från kod.</li>
+        </ul>
       </aside>
 
       <!-- ---------- Popup Kvalitet ---------- -->
@@ -255,7 +277,8 @@ class SharedToolbar extends HTMLElement {
     this.panels = {
       invPanel   : $('invPanel'),
       traitsPanel: $('traitsPanel'),
-      filterPanel: $('filterPanel')
+      filterPanel: $('filterPanel'),
+      infoPanel  : $('infoPanel')
     };
     this.entryViewToggle = $('entryViewToggle');
   }
@@ -269,13 +292,14 @@ class SharedToolbar extends HTMLElement {
     if (btn.id === 'invToggle')    return this.toggle('invPanel');
     if (btn.id === 'traitsToggle') return this.toggle('traitsPanel');
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
+    if (btn.id === 'helpToggle')   return this.toggle('infoPanel');
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
   }
 
   handleOutsideClick(e) {
     const path = e.composedPath();
-    const toggles = ['invToggle','traitsToggle','filterToggle'];
+    const toggles = ['invToggle','traitsToggle','filterToggle','helpToggle'];
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
