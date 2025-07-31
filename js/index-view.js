@@ -136,8 +136,8 @@ function initIndex() {
         ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
         : '';
       const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
-      const tagsHtml = hideDetails ? '' : (p.taggar.typ||[])
-        .concat(explodeTags(p.taggar.ark_trad), p.taggar.test||[])
+      const tagsHtml = (p.taggar?.typ || [])
+        .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
         .map(t=>`<span class="tag">${t}</span>`).join(' ');
       const levelHtml = hideDetails ? '' : lvlSel;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
