@@ -262,6 +262,16 @@
     "ark_trad": [],
     "test": []
   }
+},
+{
+  "namn": "Labbar",
+  "beskrivning": "Varelsen har illa utvecklade händer, och har därmed svårt att utföra finmotoriska handlingar så som att dyrka ett lås eller liknande. Så snart en utmaning kräver fingerfärdighet får varelsen en andra chans att misslyckas.",
+  "taggar": {
+    "typ": [
+      "Nackdel"
+    ]
+  }
 }
+
 
 ]
