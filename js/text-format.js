@@ -2,9 +2,14 @@
   function formatText(str){
     if(!str) return '';
     return str
-      .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-      .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-      .replace(/\n/g, '<br>');
+      .split(/\n{2,}/)                   // dela upp i stycken vid tomma rader
+      .map(p => p
+        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        .replace(/\n/g, '<br>')
+      )
+      .map(p => `<p>${p}</p>`)            // wrappa varje stycke i <p>
+      .join('');
   }
 
   function abilityHtml(p, maxLevel){
@@ -21,7 +26,7 @@
       }
     });
     const lvlHtml = `<dl class="levels">${lvls.join('')}</dl>`;
-    return base ? `<p>${base}</p>${lvlHtml}` : lvlHtml;
+    return base ? `${base}${lvlHtml}` : lvlHtml;
   }
   window.formatText = formatText;
   window.abilityHtml = abilityHtml;
