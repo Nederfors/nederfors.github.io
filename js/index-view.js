@@ -299,6 +299,10 @@ function initIndex() {
             if (!confirm('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?')) return;
           }
         }
+        if (p.namn === 'Mörkt förflutet' && list.some(x => x.namn === 'Jordnära')) {
+          alert('Jordnära karaktärer kan inte ta Mörkt förflutet.');
+          return;
+        }
         if (isSardrag(p) && (p.taggar.ras || []).length) {
           const races = [];
           const base = list.find(isRas)?.namn;
