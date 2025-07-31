@@ -470,20 +470,6 @@
   }
 },
 {
-  "namn": "Följeslagare",
-  "beskrivning": "Varelsen påträffas aldrig ensam, utan har ständigt sina följeslagare i släptåg. Särdraget anger inte vilka följeslagarna är, endast deras nivå av motstånd. Följeslagarna kan bestå av avkomma, lojala tjänare eller annat som passar monstret i fråga. Notera att en varelse måste vara av minst Utmanande motstånd för att kunna ha särdraget Följeslagare.",
-  "taggar": {
-    "typ": [
-      "Monstruöst särdrag"
-    ]
-  },
-  "nivåer": {
-    "Novis": "Handling: Passiv. Varelsen åtföljs av en följeslagare, vars motståndsnivå är två steg lägre än varelsens.",
-    "Gesäll": "Handling: Passiv. Som Novis, men följeslagarna är två till antalet.",
-    "Mästare": "Handling: Passiv. Som Novis, men följeslagarna är tre till antalet."
-  }
-},
-{
   "namn": "Gripklor",
   "beskrivning": "Varelsens gripklor gör skada som obeväpnade attacker, och ger dessutom chansen att hålla fast motståndaren – vanligen i syfte att dra bytet mot malande käftar.",
   "taggar": {
