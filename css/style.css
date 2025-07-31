@@ -300,6 +300,10 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 
 .exp-counter { font-weight: 500; }
 
+/* Rödmarkering för negativa värden */
+.exp-counter.under { color: #ffb0b0; }
+.exp-counter.under span { color: inherit; }
+
 
 /* Specifika paneler använder samma klass plus egna id:n */
 #invPanel    { max-width: 420px; }

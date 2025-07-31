@@ -415,8 +415,12 @@ function updateXP() {
   const free  = total - used;
   dom.xpOut.textContent = free;
   dom.xpIn.value = base;
-  if (dom.xpSum) dom.xpSum.textContent =
-    `Använt: ${used} • Oanvänt: ${free} • Totalt: ${total}`;
+  const xpContainer = dom.xpOut.closest('.exp-counter');
+  if (xpContainer) xpContainer.classList.toggle('under', free < 0);
+  if (dom.xpSum) {
+    dom.xpSum.textContent = `Använt: ${used} • Oanvänt: ${free} • Totalt: ${total}`;
+    dom.xpSum.classList.toggle('under', free < 0);
+  }
 }
 /* -----------------------------------------------------------
    Synk när annan flik ändrar localStorage
