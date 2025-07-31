@@ -34,7 +34,7 @@
     }
   },
   {
-    "namn": "Blodsband",
+    "namn": "Blodsbest",
     "beskrivning": "Tradition: Häxkonst\nMagins korrumperande verkan är inte okänd för mystiker. Ibland är korruption ett nödvändigt pris att betala för att lyckas med det mystikern har före- satt sig, och på liknande sätt kan korrumperandet av mystikerns bjära vara ett offer nödvändigt för att mystikern ska kunna fortsätta att tjäna sitt folk eller följa sitt kall.\nMystikern kan med hjälp av blodsbandet dela korruption med sin bjära. Varje genomförande av Blodsband kräver ett lyckat Viljestark från mysti- kern. En lyckad ritual gör att mystikern gör sig av med 1t4 i permanent korruption vilket ger bjäran 1t6 i permanent korruption. Bjäran får alla de vanliga tecknen på korruption. Om den förstyggas tappar mystikern kontrollen över bjäran, vilken då direkt går till attack mot sin tidigare vän.\nRitualen kostar en (1) Erfarenhet att utföra oavsett om den lyckas eller ej. Mystikern kan inte göra ritualen för någon annans räkning.",
     "taggar": {
       "typ": ["Ritual"],
@@ -385,7 +385,7 @@
 },
 {
   "namn": "Hjärtebest",
-  "beskrivning": "Tradition: Endast tillgänglig för Blodvadare\nDen högre nivån av ritualen Bjära knyter besten till mystikerns själ och hjärta; om bjäran dödas återvänder den återuppstånden i gryningen dagen därpå. Mystikern tar skada när hjärtebesten dödas, som tidigare. Och i händelse av att hjärtebesten genomkorrumperas – genom ritualen Blodsband eller på annat sätt – så bryts bandet mellan mystiker och best för evigt.",
+  "beskrivning": "Tradition: Endast tillgänglig för Blodvadare\nDen högre nivån av ritualen Bjära knyter besten till mystikerns själ och hjärta; om bjäran dödas återvänder den återuppstånden i gryningen dagen därpå. Mystikern tar skada när hjärtebesten dödas, som tidigare. Och i händelse av att hjärtebesten genomkorrumperas – genom ritualen Blodsbest eller på annat sätt – så bryts bandet mellan mystiker och best för evigt.",
   "taggar": {
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Blodvadare"]
@@ -496,7 +496,7 @@
 },
 {
   "namn": "Tjänardaemon",
-  "beskrivning": "Tradition: Endast tillgänglig för Demonolog\nDen högre nivån av ritualen Frammana daemon binder en tjänardeamon vid demonologens sida. Daemonen är svag vid skapandet men kan sedan lära sig av erfarenhet och hanteras av spelaren som en andra rollperson. Daemonen kan också bli föremål för ritualen Blodsband.",
+  "beskrivning": "Tradition: Endast tillgänglig för Demonolog\nDen högre nivån av ritualen Frammana daemon binder en tjänardeamon vid demonologens sida. Daemonen är svag vid skapandet men kan sedan lära sig av erfarenhet och hanteras av spelaren som en andra rollperson. Daemonen kan också bli föremål för ritualen Blodsbest.",
   "taggar": {
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Demonolog"]
