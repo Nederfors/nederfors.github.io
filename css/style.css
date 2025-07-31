@@ -335,6 +335,12 @@ select.level {
   gap: 1rem;
   margin: 1rem 0;
 }
+.traits-total {
+  margin-top: .5rem;
+  font-weight: 600;
+}
+.traits-total.good { color: #8fda8c; }
+.traits-total.bad  { color: #ff8989; }
 .trait {
   background: var(--card);
   border: 1.5px solid var(--card-border);
