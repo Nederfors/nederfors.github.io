@@ -256,7 +256,7 @@
   },
 {
   "namn": "Mumsare",
-  "beskrivning": "Rollpersonen är antingen storväxt eller rent av korpulent byggd. För att tillgodose rollpersonens aptit kräver det en större mängd mat än vad en ”vanlig” person äter under en dag. Rollpersonen behöver 1,5 portioner varje dag för att äta sig mätt. Om efterfrågan överstiger tillgången och rollpersonen inte kan tillgodose sig själv med tillräckligt mycket mat får rollpersonen -1 på allt hen försöker göra för varje dag som inte uppfyllts med tillräckligt mycket mat.",
+  "beskrivning": "Rollpersonen är antingen storväxt eller rent av korpulent byggd. För att tillgodose rollpersonens aptit kräver det en större mängd mat än vad en ”vanlig” person äter under en dag. Rollpersonen behöver 1,5 portioner varje dag för att äta sig mätt. Om efterfrågan överstiger tillgången och rollpersonen inte kan tillgodose sig själv med tillräckligt mycket mat får rollpersonen -1 på allt hen försöker göra för varje dag i rad utan tillräckligt mycket mat.",
   "taggar": {
     "typ": ["Nackdel"],
     "ark_trad": [],
