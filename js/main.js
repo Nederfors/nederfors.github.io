@@ -404,6 +404,44 @@ function openArtefacterPopup(cb) {
   pop.addEventListener('click', onOutside);
 }
 
+function openNilasPopup(cb) {
+  const pop = bar.shadowRoot.getElementById('nilasPopup');
+  const yes = bar.shadowRoot.getElementById('nilasYes');
+  const no  = bar.shadowRoot.getElementById('nilasNo');
+  pop.classList.add('open');
+  function close() {
+    pop.classList.remove('open');
+    yes.removeEventListener('click', onYes);
+    no.removeEventListener('click', onNo);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onYes() { close(); cb(true); }
+  function onNo()  { close(); cb(false); }
+  function onOutside(e) {
+    if (!pop.querySelector('.popup-inner').contains(e.target)) {
+      close();
+      cb(false);
+    }
+  }
+  yes.addEventListener('click', onYes);
+  no.addEventListener('click', onNo);
+  pop.addEventListener('click', onOutside);
+}
+
+function tryNilasPopup(term) {
+  if (term.toLowerCase() !== 'nilas') return false;
+  if (storeHelper.getNilasPopupSeen(store)) return false;
+  openNilasPopup(agree => {
+    if (agree) {
+      const xp = storeHelper.getBaseXP(store) + 1;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    }
+    storeHelper.setNilasPopupSeen(store, true);
+  });
+  return true;
+}
+
 
 
 function updateXP() {

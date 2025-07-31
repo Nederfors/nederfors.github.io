@@ -60,6 +60,9 @@
           if(!store.data[id].possessionRemoved){
             store.data[id].possessionRemoved = 0;
           }
+          if(store.data[id].nilasPopupShown === undefined){
+            store.data[id].nilasPopupShown = false;
+          }
         });
       }
       return store;
@@ -395,6 +398,19 @@
     save(store);
   }
 
+  function getNilasPopupSeen(store) {
+    if (!store.current) return false;
+    const data = store.data[store.current] || {};
+    return Boolean(data.nilasPopupShown);
+  }
+
+  function setNilasPopupSeen(store, val) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].nilasPopupShown = Boolean(val);
+    save(store);
+  }
+
   function normalizeMoney(m) {
     const res = { ...defaultMoney(), ...(m || {}) };
     res.skilling += Math.floor(res["örtegar"] / 10);
@@ -582,6 +598,7 @@ function defaultTraits() {
     ['partyAlchemist','partySmith','partyArtefacter'].forEach(k => {
       if (obj[k] === '') delete obj[k];
     });
+    if (obj.nilasPopupShown === false) delete obj.nilasPopupShown;
     if (obj.baseXp === 0) delete obj.baseXp;
     if (obj.traits) {
       const def = defaultTraits();
@@ -761,6 +778,8 @@ function defaultTraits() {
     setFilterUnion,
     getCompactEntries,
     setCompactEntries,
+    getNilasPopupSeen,
+    setNilasPopupSeen,
     normalizeMoney,
     getTraits,
     setTraits,
