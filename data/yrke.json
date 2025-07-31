@@ -24,7 +24,7 @@
     "lampliga_formagor": ["Dominera", "Ledare", "Rustmästare", "Sköldkamp"]
   },
   {
-    "namn": "Soldenär",
+    "namn": "Säljsvärd",
     "beskrivning": "*Mitt svärd och mitt blod, i utbyte mot ditt guld.*\n Du har slagits som ett sätt att leva, för en inkomst. Ambrias furstar hyr regelbundet stridskraft för kampanjer mot Davokars barbarer och Davokars klanledare gör detsamma i retur. Handelshus behöver vakter, pilgrimer likaså. För vem eller hur du har stridit kan ha varierat, men skickligheten med vapen och en instinkt för vilka strider som kan vinnas har varit avgörande för din överlevnad.",
     "taggar": { "typ": ["Yrke"] },
     "viktiga_karaktarsdrag": "Stark 13+",
