@@ -71,7 +71,7 @@ class SharedToolbar extends HTMLElement {
 
         <!-- Erfarenhetspoäng -->
         <div class="filter-group">
-          <label for="xpInput">Total erf</label>
+          <label for="xpInput">Erfarenhetspoäng</label>
           <input id="xpInput" type="number" min="0" value="0">
         </div>
         <!-- Sammanfattning -->
