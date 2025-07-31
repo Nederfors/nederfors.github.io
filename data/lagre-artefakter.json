@@ -247,6 +247,6 @@
     "nivåer": {
       "Mästare": "Det föremål som krävs för utförande av ritualen med samma namn."
     },
-    "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+    "grundpris": { "daler": 100, "skilling": 0, "örtegar": 0 }
   }
 ]
