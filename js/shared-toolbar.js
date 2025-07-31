@@ -69,7 +69,7 @@ class SharedToolbar extends HTMLElement {
           <button class="char-btn icon" data-close="traitsPanel">✕</button>
         </header>
 
-        <!-- Total erf -->
+        <!-- Erfarenhetspoäng -->
         <div class="filter-group">
           <label for="xpInput">Total erf</label>
           <input id="xpInput" type="number" min="0" value="0">
