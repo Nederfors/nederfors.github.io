@@ -257,8 +257,8 @@ class SharedToolbar extends HTMLElement {
         <div class="popup-inner">
           <h3>Nilas \u00e4r b\u00e4st. H\u00e5ller du med?</h3>
           <div class="button-row">
-            <button id="nilasYes" class="char-btn">Ja!</button>
             <button id="nilasNo" class="char-btn">Nej!</button>
+            <button id="nilasYes" class="char-btn">Ja!</button>
           </div>
         </div>
       </div>
