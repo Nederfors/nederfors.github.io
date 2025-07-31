@@ -6,12 +6,6 @@
     "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
   },
   {
-    "namn": "Flöjt",
-    "beskrivning": "Oräkneliga varianter av flöjter finns, från smäckra metallvarianter till blåsverktyg skapade av vass, trädgrenar och horn. Andra typer av flöjter är panflöjten och skalmejan, den senare med sitt karaktäristiskt gälla ljud.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
-  },
-  {
     "namn": "Luta",
     "beskrivning": "Stränginstrument med päronformad kropp som spelas med fingrarna eller med ett plektrum.",
     "taggar": { "typ": [ "Musikinstrument" ] },
@@ -63,21 +57,6 @@
   {
     "namn": "Flöjt",
     "beskrivning": "Liten träflöjt som kan användas för signaler eller musik.",
-    "taggar": {
-      "typ": [
-        "Diverse"
-      ]
-    },
-    "grundpris": {
-      "daler": 0,
-      "skilling": 3,
-      "örtegar": 0
-    }
-  },
-
-{
-    "namn": "Trumma",
-    "beskrivning": "Slaginstrument för musik eller signaler.",
     "taggar": {
       "typ": [
         "Diverse"
