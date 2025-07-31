@@ -123,10 +123,13 @@ function initCharacter() {
       const tagsHtml = (p.taggar?.typ || [])
         .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
         .map(t => `<span class="tag">${t}</span>`).join(' ');
+      const xpVal = storeHelper.calcEntryXP(p);
+      const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
+      const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
       const showInfo = compact || hideDetails;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-      li.innerHTML = `<div class="card-title">${p.namn}${badge}</div>
-        ${tagsHtml}
+      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
+        <div class="tags">${tagsHtml}</div>
         ${lvlSel}
         ${descHtml}
         ${showInfo ? infoBtn : ''}${btn}`;
