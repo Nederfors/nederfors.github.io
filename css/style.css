@@ -404,13 +404,15 @@ select.level {
   z-index: 1000;
   overflow-y: auto;
   padding: 1.2rem 1rem 2rem;
+  font-size: 1rem;
 }
 
 /* Specifika max-breddar */
 #invPanel    { max-width: 420px; }
 #filterPanel { max-width: 360px; }
 #traitsPanel { max-width: 360px; }
-#yrkePanel   { max-width: 360px; }
+#yrkePanel   { max-width: 360px; font-size: 1.2rem; line-height: 1.6; }
+#yrkePanel p { margin: 0 0 1rem; }
 
 /* När klassen .open läggs på – låt panelen glida in */
 #invPanel.open,
@@ -418,6 +420,13 @@ select.level {
 #traitsPanel.open,
 #yrkePanel.open {
   right: 0;
+}
+
+@media (min-width: 1024px) {
+  #invPanel    { max-width: 520px; }
+  #filterPanel { max-width: 460px; }
+  #traitsPanel { max-width: 460px; }
+  #yrkePanel   { max-width: 520px; }
 }
 
 /* ---------- Popup för kvaliteter ---------- */
