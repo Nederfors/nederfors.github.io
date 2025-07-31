@@ -150,6 +150,13 @@ class SharedToolbar extends HTMLElement {
               </span>
               <button id="entryViewToggle" class="party-toggle" title="Växla kompakt vy">🤏</button>
             </li>
+            <li>
+              <span class="toggle-desc">
+                <span class="toggle-question">Behöver du hjälp?</span>
+                <span class="toggle-note">Öppnar en översikt av alla knappar.</span>
+              </span>
+              <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
+            </li>
           </ul>
         </div>
       </aside>
@@ -245,6 +252,56 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Hj\u00e4lp ---------- -->
+      <aside id="infoPanel" class="offcanvas">
+        <header class="inv-header">
+          <h2>Hj\u00e4lp</h2>
+          <button class="char-btn icon" data-close="infoPanel">✕</button>
+        </header>
+        <div class="help-content">
+          <h3>Verktygsrad</h3>
+          <p>
+            <strong>🔄</strong> Byter mellan index- och rollpersons-vy.<br>
+            <strong>🎒</strong> \u00d6ppnar inventariet.<br>
+            <strong>📊</strong> \u00d6ppnar egenskaper.<br>
+            <strong>Rensa filter</strong> nollst\u00e4ller filtren.<br>
+            <strong>⚙️</strong> \u00d6ppnar filtermenyn.
+          </p>
+          <h3>Filtermenyn</h3>
+          <p>
+            <strong>Ny rollperson</strong> skapar en ny karakt\u00e4r.<br>
+            <strong>Ta bort rollperson</strong> raderar vald karakt\u00e4r.<br>
+            <strong>Exportera</strong> kopierar karakt\u00e4ren som kod.<br>
+            <strong>Importera</strong> \u00e5terst\u00e4ller en sparad karakt\u00e4r.<br>
+            <strong>⚒️/⚗️/🏺</strong> v\u00e4ljer niv\u00e5 p\u00e5 smed, alkemist och artefaktmakare.<br>
+            <strong>🔭</strong> l\u00e5ter filtren matcha valfri tagg.<br>
+            <strong>🤏</strong> v\u00e4xlar kompakt vy.<br>
+            <strong>ℹ️</strong> visar denna hj\u00e4lp.
+          </p>
+          <h3>Inventariepanelen</h3>
+          <p>
+            <strong>Nytt f\u00f6rem\u00e5l</strong> l\u00e4gger till eget f\u00f6rem\u00e5l.<br>
+            <strong>Hantera pengar</strong> justerar pengar.<br>
+            <strong>Rensa inventarie</strong> tar bort all utrustning.
+          </p>
+          <h3>Egenskapspanelen</h3>
+          <p>
+            H\u00e4r kan du ange total erfarenhet och se summering av valda f\u00f6rm\u00e5gor.
+          </p>
+          <h3>Listor och inventarie</h3>
+          <p>
+            <strong>L\u00e4gg till</strong> eller <strong>+</strong> l\u00e4gger till posten.<br>
+            <strong>−</strong> minskar antal eller tar bort posten.<br>
+            <strong>Info</strong> visar mer information.<br>
+            <strong>K+</strong> l\u00e4gger till kvalitet.<br>
+            <strong>K🆓</strong> markerar en kvalitet som gratis.<br>
+            <strong>🆓</strong> cyklar antal gratis exemplar.<br>
+            <strong>↔</strong> v\u00e4xlar artefaktens effekt.<br>
+            <strong>🗑</strong> tar bort posten helt.
+          </p>
+        </div>
+      </aside>
+
     `;
   }
 
@@ -254,7 +311,8 @@ class SharedToolbar extends HTMLElement {
     this.panels = {
       invPanel   : $('invPanel'),
       traitsPanel: $('traitsPanel'),
-      filterPanel: $('filterPanel')
+      filterPanel: $('filterPanel'),
+      infoPanel  : $('infoPanel')
     };
     this.entryViewToggle = $('entryViewToggle');
   }
@@ -268,13 +326,14 @@ class SharedToolbar extends HTMLElement {
     if (btn.id === 'invToggle')    return this.toggle('invPanel');
     if (btn.id === 'traitsToggle') return this.toggle('traitsPanel');
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
+    if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
   }
 
   handleOutsideClick(e) {
     const path = e.composedPath();
-    const toggles = ['invToggle','traitsToggle','filterToggle'];
+    const toggles = ['invToggle','traitsToggle','filterToggle','infoToggle'];
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open

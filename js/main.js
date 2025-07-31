@@ -47,6 +47,7 @@ const dom  = {
   arkSel: $T('arkFilter'),    tstSel : $T('testFilter'),
   filterUnion: $T('filterUnion'),
   entryViewToggle: $T('entryViewToggle'),
+  infoToggle: $T('infoToggle'),
 
   /* element i main-DOM */
   active : document.getElementById('activeFilters'),
