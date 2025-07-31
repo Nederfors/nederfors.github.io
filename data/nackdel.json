@@ -216,7 +216,7 @@
   },
   {
     "namn": "Tveksam stridskonst",
-    "beskrivning": "Karaktären har utvecklat en tveksam och räddhågsen stridsteknik och inväntar allierades första drag innan hen själv vågar slår till. Karaktären avvaktar alltså till alla dess allierade agerat innan den gör någonting och hamnar sist i initiativordningen. Nackdelen omöjliggör dessutom för allierade rollpersoner att skjuta på sitt initiativ så att de hamnar efter rollpersonen. Om flera rollpersoner har denna nackdel slår alla spelare en T20 i början av striden och den som slår lägst agerar sist.",
+    "beskrivning": "Karaktären har utvecklat en tveksam och räddhågsen stridsteknik och inväntar allierades första drag innan hen själv vågar slår till. Karaktären avvaktar alltså till alla dess allierade agerat innan den gör någonting och hamnar sist i initiativordningen. Nackdelen omöjliggör dessutom för allierade rollpersoner att skjuta på sitt initiativ så att de hamnar efter rollpersonen. Om flera rollpersoner har denna nackdel slår alla spelare en T20 i början av striden och den som slår lägst agerar sist. Om fler än hälften av gruppen har nackdelen så tvekar gruppen i sin helhet så mycket att fienden alltid får agera först.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Nackdel"],
