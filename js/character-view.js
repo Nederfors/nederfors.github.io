@@ -57,17 +57,11 @@ function initCharacter() {
           ...explodeTags(tags.ark_trad),
           ...(tags.test     ?? [])
         ];
-        const tagMatch = hasTags && (
+        const tagOk = !hasTags || (
           union ? selTags.some(t => itmTags.includes(t))
                 : selTags.every(t => itmTags.includes(t))
         );
-        if (union) {
-          if (!hasTerms && !hasTags) return true;
-          if (hasTerms && hasTags) return txt || tagMatch;
-          return hasTerms ? txt : tagMatch;
-        }
         const txtOk = !hasTerms || txt;
-        const tagOk = !hasTags || tagMatch;
         return txtOk && tagOk;
       })
       .sort(createSearchSorter(terms));
