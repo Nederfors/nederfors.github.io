@@ -8,6 +8,7 @@ global.window = {
 
 require('../js/lz-string.min.js');
 require('../js/utils');
+global.isMonstrousTrait = window.isMonstrousTrait;
 require('../js/store');
 
 delete global.window.DB;

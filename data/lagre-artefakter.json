@@ -70,6 +70,7 @@
     "nivåer": {
       "Gesäll": "För blodvadande häxor är identifikationen med bestar stor och djurmasken markerar deras närhet till djuren. Varje djurmask med kraft symboliserar ett djur och ger +1 på ett karaktärsdrag som associeras med djuret; antingen Diskret, Kvick, Listig, Stark eller Vaksam."
     },
+    "traits": ["Diskret", "Kvick", "Listig", "Stark", "Vaksam"],
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
   },
   {

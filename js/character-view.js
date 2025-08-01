@@ -123,9 +123,10 @@ function initCharacter() {
       const tagsHtml = (p.taggar?.typ || [])
         .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
         .map(t => `<span class="tag">${t}</span>`).join(' ');
-      const xpVal = storeHelper.calcEntryXP(p);
+      const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
       const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
       const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
+      li.dataset.xp = xpVal;
       const showInfo = compact || hideDetails;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
       li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
@@ -179,8 +180,10 @@ function initCharacter() {
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');
-      const title=infoBtn.closest('li')?.querySelector('.card-title')?.textContent||'';
-      yrkePanel.open(title,html);
+      const liEl = infoBtn.closest('li');
+      const title = liEl?.querySelector('.card-title > span')?.textContent || '';
+      const xpVal = liEl?.dataset.xp ? Number(liEl.dataset.xp) : undefined;
+      yrkePanel.open(title, html, xpVal);
       return;
     }
     const actBtn=e.target.closest('button[data-act]');

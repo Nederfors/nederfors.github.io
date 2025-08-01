@@ -134,12 +134,13 @@ function initIndex() {
         .map(t=>`<span class="tag">${t}</span>`).join(' ');
       const levelHtml = hideDetails ? '' : lvlSel;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
+      const showInfo = compact || hideDetails;
       li.innerHTML = `
         <div class="card-title">${p.namn}${badge}</div>
         ${tagsHtml}
         ${levelHtml}
         ${descHtml}
-        ${infoBtn}${btn}${eliteBtn}`;
+        ${showInfo ? infoBtn : ''}${btn}${eliteBtn}`;
       dom.lista.appendChild(li);
     });
   };
@@ -281,10 +282,12 @@ function initIndex() {
           const baseRace = list.find(isRas)?.namn;
           const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
           const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
+          const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
           const allowed = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
             list.some(x => x.namn === 'Mörkt blod') ||
             (baseRace === 'Troll' && trollTraits.includes(p.namn)) ||
-            (baseRace === 'Vandöd' && undeadTraits.includes(p.namn));
+            (baseRace === 'Vandöd' && undeadTraits.includes(p.namn)) ||
+            (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(p.namn));
           if (!allowed) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }

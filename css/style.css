@@ -311,6 +311,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 #traitsPanel { max-width: 360px; }
 
 .inv-header { display: flex; justify-content: space-between; align-items: center; }
+.inv-actions { display: flex; align-items: baseline; gap: .4rem; }
 
 /* Knappar i inventariepanelen */
 .inv-buttons {
