@@ -480,6 +480,20 @@ function defaultTraits() {
     return LEVEL_IDX[ent?.nivå || ''] || 0;
   }
 
+  function isFreeMonsterTrait(list, item) {
+    if (!isMonstrousTrait(item)) return false;
+    const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
+    if (lvl !== 1) return false;
+    const hamnskifte = abilityLevel(list, 'Hamnskifte');
+    if (['Naturligt vapen', 'Pansar'].includes(item.namn)) {
+      return hamnskifte >= 2;
+    }
+    if (['Regeneration', 'Robust'].includes(item.namn)) {
+      return hamnskifte >= 3;
+    }
+    return false;
+  }
+
   function calcPermanentCorruption(list, extra) {
     let cor = 0;
     const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
@@ -512,9 +526,13 @@ function defaultTraits() {
 
       if (item.nivåer && ['mystisk kraft','förmåga','särdrag','monstruöst särdrag']
           .some(t => types.includes(t))) {
-        xp += XP_LADDER[item.nivå || 'Novis'] || 0;
+        if (isFreeMonsterTrait(list, item)) {
+          xp += 0;
+        } else {
+          xp += XP_LADDER[item.nivå || 'Novis'] || 0;
+        }
       } else if (types.includes('monstruöst särdrag')) {
-        xp += RITUAL_COST;
+        xp += isFreeMonsterTrait(list, item) ? 0 : RITUAL_COST;
       }
       if (types.includes('fördel')) xp += 5;
       if (types.includes('ritual')) xp += RITUAL_COST;
@@ -524,7 +542,7 @@ function defaultTraits() {
     return xp;
   }
 
-  function calcEntryXP(entry) {
+  function calcEntryXP(entry, list) {
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) return -5;
     let xp = 0;
@@ -532,9 +550,9 @@ function defaultTraits() {
       entry.nivåer &&
       ['mystisk kraft', 'förmåga', 'särdrag', 'monstruöst särdrag'].some(t => types.includes(t))
     ) {
-      xp += XP_LADDER[entry.nivå || 'Novis'] || 0;
+      xp += isFreeMonsterTrait(list || [], entry) ? 0 : (XP_LADDER[entry.nivå || 'Novis'] || 0);
     } else if (types.includes('monstruöst särdrag')) {
-      xp += RITUAL_COST;
+      xp += isFreeMonsterTrait(list || [], entry) ? 0 : RITUAL_COST;
     }
     if (types.includes('fördel')) xp += 5;
     if (types.includes('ritual')) xp += RITUAL_COST;
