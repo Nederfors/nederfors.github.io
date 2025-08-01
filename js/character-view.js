@@ -70,7 +70,7 @@ function initCharacter() {
   const renderSkills = arr=>{
     const groups = [];
     arr.forEach(p=>{
-      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t)) && !p.trait;
+      const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
       if(multi){
         const g = groups.find(x=>x.entry.namn===p.namn);
         if(g) { g.count++; return; }
@@ -110,7 +110,7 @@ function initCharacter() {
       li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
-      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t)) && !p.trait;
+      const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
       const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
       let btn = '';
       if(multi){
@@ -129,7 +129,7 @@ function initCharacter() {
       li.dataset.xp = xpVal;
       const showInfo = compact || hideDetails;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
+      li.innerHTML = `<div class="card-title"><span>${p.form === "beast" ? `${p.namn}: Hamnskifte` : p.namn}${badge}</span>${xpHtml}</div>
         <div class="tags">${tagsHtml}</div>
         ${lvlSel}
         ${descHtml}
@@ -194,7 +194,7 @@ function initCharacter() {
     const before = storeHelper.getCurrentList(store);
     const p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
     if(!p) return;
-    const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t)) && !tr;
+    const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
     let list;
       if(actBtn.dataset.act==='add'){
         if(!multi) return;
