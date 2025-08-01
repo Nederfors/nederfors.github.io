@@ -112,14 +112,15 @@ function initIndex() {
         }
       }
       const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
-      const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-      const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
-      const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
-      let btn = '';
-      if(multi){
-        const addBtn = count<3 ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-        const remBtn = count>0 ? `<button data-act="rem" class="char-btn danger" data-name="${p.namn}">−</button>` : '';
-        btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
+        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
+        const limit = storeHelper.monsterStackLimit(charList, p.namn);
+        const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
+        let btn = '';
+        if(multi){
+          const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
+          const remBtn = count>0 ? `<button data-act="rem" class="char-btn danger" data-name="${p.namn}">−</button>` : '';
+          btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
       }else{
         btn = inChar
           ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
@@ -370,8 +371,9 @@ function initIndex() {
         const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         if(multi){
           const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
-          if(p.namn !== 'Blodsband' && cnt >= 3){
-            alert('Denna fördel eller nackdel kan bara tas tre gånger.');
+          const limit = storeHelper.monsterStackLimit(list, p.namn);
+          if(p.namn !== 'Blodsband' && cnt >= limit){
+            alert(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
             return;
           }
         }else if(list.some(x=>x.namn===p.namn && !x.trait)){

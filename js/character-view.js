@@ -70,14 +70,14 @@ function initCharacter() {
   const renderSkills = arr=>{
     const groups = [];
     arr.forEach(p=>{
-      const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-      if(multi){
-        const g = groups.find(x=>x.entry.namn===p.namn);
-        if(g) { g.count++; return; }
-        groups.push({entry:p, count:1});
-      } else {
-        groups.push({entry:p, count:1});
-      }
+        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+        if(multi && !['Naturligt vapen','Pansar','Regeneration','Robust'].includes(p.namn)){
+          const g = groups.find(x=>x.entry.namn===p.namn);
+          if(g) { g.count++; return; }
+          groups.push({entry:p, count:1});
+        } else {
+          groups.push({entry:p, count:1});
+        }
     });
     const compact = storeHelper.getCompactEntries(store);
     dom.valda.innerHTML = groups.length ? '' : '<li class="card">Inga träffar.</li>';
@@ -111,12 +111,14 @@ function initCharacter() {
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
       const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-      const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-      let btn = '';
-      if(multi){
-        const addBtn = g.count < 3 ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-        const remBtn = `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">${addBtn ? '−' : '🗑'}</button>`;
-        btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
+        const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
+        const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
+        const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
+        let btn = '';
+        if(multi){
+          const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
+          const remBtn = `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">${addBtn ? '−' : '🗑'}</button>`;
+          btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
       }else{
         btn = `<button class="char-btn danger icon" data-act="rem">🗑</button>`;
       }
@@ -196,13 +198,14 @@ function initCharacter() {
     if(!p) return;
     const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
     let list;
-      if(actBtn.dataset.act==='add'){
-        if(!multi) return;
-        const cnt = before.filter(x=>x.namn===name && !x.trait).length;
-        if(cnt >= 3){
-          alert('Denna fördel eller nackdel kan bara tas tre gånger.');
-          return;
-        }
+        if(actBtn.dataset.act==='add'){
+          if(!multi) return;
+          const cnt = before.filter(x=>x.namn===name && !x.trait).length;
+          const limit = storeHelper.monsterStackLimit(before, name);
+          if(cnt >= limit){
+            alert(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
+            return;
+          }
         const lvlSel = liEl.querySelector('select.level');
         let   lvl = lvlSel ? lvlSel.value : null;
         if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;

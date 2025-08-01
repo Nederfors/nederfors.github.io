@@ -541,6 +541,22 @@ function defaultTraits() {
     return 0;
   }
 
+  function monsterStackLimit(list, name) {
+    const entry = window.DBIndex?.[name];
+    if (!entry || !isMonstrousTrait(entry)) return 3;
+    const hamlvl = abilityLevel(list, 'Hamnskifte');
+
+    if (['Naturligt vapen', 'Pansar'].includes(name)) {
+      return hamlvl >= 2 ? 2 : 1;
+    }
+
+    if (['Regeneration', 'Robust'].includes(name)) {
+      return hamlvl >= 3 ? 2 : 1;
+    }
+
+    return 1;
+  }
+
   function calcPermanentCorruption(list, extra) {
     let cor = 0;
     const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
@@ -886,6 +902,7 @@ function defaultTraits() {
     hamnskifteNoviceLimit,
     isFreeMonsterTrait,
     monsterTraitDiscount,
+    monsterStackLimit,
     exportCharacterCode,
     importCharacterCode,
     getPossessionMoney,
