@@ -51,7 +51,7 @@
     "beskrivning": "Endast tillgänglig för Resar och Troll. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
     "taggar": {
       "typ": [
-        "Särdrag"
+        "Särdrag",  "Monstruöst särdrag"
       ],
       "ras": [
         "Rese",
