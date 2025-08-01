@@ -295,13 +295,23 @@ function initIndex() {
           const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
           const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
           const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
+          const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
           monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
             list.some(x => x.namn === 'Mörkt blod') ||
             (baseRace === 'Troll' && trollTraits.includes(p.namn)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(p.namn)) ||
-            (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(p.namn));
+            (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(p.namn)) ||
+            (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen','Pansar'].includes(p.namn)) ||
+            (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration'].includes(p.namn));
           if (!monsterOk) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
+          }
+        }
+        if (p.namn === 'Robust') {
+          const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
+          const robustOk = hamLvl >= 3 && lvl === 'Novis';
+          if (!robustOk) {
+            if (!confirm('Robust kan normalt inte väljas. Lägga till ändå?')) return;
           }
         }
         if (p.namn === 'Råstyrka') {
