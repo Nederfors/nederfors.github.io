@@ -442,6 +442,13 @@ function tryNilasPopup(term) {
   return true;
 }
 
+function tryBomb(term) {
+  if (term.toLowerCase() !== 'bomb') return false;
+  storeHelper.deleteAllCharacters(store);
+  location.reload();
+  return true;
+}
+
 
 
 function updateXP() {
