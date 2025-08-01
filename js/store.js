@@ -124,6 +124,20 @@
     }
   }
 
+  function applyHamnskifteTraits(list) {
+    const hamLvl = abilityLevel(list, 'Hamnskifte');
+    const extras = [];
+    if (hamLvl >= 2) extras.push('Naturligt vapen', 'Pansar');
+    if (hamLvl >= 3) extras.push('Robust', 'Regeneration');
+    extras.forEach(name => {
+      const idx = list.findIndex(it => it.namn === name && it.form === 'beast');
+      if (idx < 0) {
+        const entry = DB.find(e => e.namn === name);
+        if (entry) list.push({ ...entry, form: 'beast' });
+      }
+    });
+  }
+
   function getDependents(list, entry) {
     if (!entry) return [];
     const name = entry.namn || entry;
@@ -154,6 +168,13 @@
       });
     }
 
+    if (name === 'Hamnskifte') {
+      const extras = ['Naturligt vapen','Pansar','Robust','Regeneration'];
+      list.forEach(it => {
+        if (extras.includes(it.namn) && it.form === 'beast') out.push(it.namn);
+      });
+    }
+
     if (isRas(ent)) {
       const race = name;
       list.forEach(it => {
@@ -178,6 +199,7 @@
     applyDarkBloodEffects(list);
     applyRaceTraits(list);
     enforceEarthbound(list);
+    applyHamnskifteTraits(list);
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
     const hasPriv = list.some(x => x.namn === 'Privilegierad');
