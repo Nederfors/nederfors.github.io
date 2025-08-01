@@ -57,6 +57,8 @@ Både i index-vyn och i din karaktär visas poster som kort.
 - **🆓** gör hela föremålet gratis vid beräkning av totalkostnad.
 - **↔** finns på artefakter och växlar dess effekt mellan att ge 1 XP eller permanent korruption.
 - **🗑** tar bort posten helt.
+- Monstruösa särdrag som blir gratis via Hamnskifte eller Blodvadare ger ett val
+  mellan *best-form (gratis)* och *normal form* när de läggs till.
 
 ### 8. Export och import
 Se avsnittet ovan. Exportera kopierar all data för karaktären som en sträng i urklipp. Importera klistrar in en tidigare sträng och återställer karaktären. All data sparas i webblagring så inget backend behövs.

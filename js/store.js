@@ -509,6 +509,7 @@ function defaultTraits() {
   }
 
   function isFreeMonsterTrait(list, item) {
+    if (item.form !== 'beast') return false;
     const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
     if (lvl !== 1) return false; // Only Novis level can be free
 
@@ -526,6 +527,7 @@ function defaultTraits() {
   }
 
   function monsterTraitDiscount(list, item) {
+    if (item.form !== 'beast') return 0;
     const hamnskifte = abilityLevel(list, 'Hamnskifte');
 
     if (hamnskifte >= 2 && ['Naturligt vapen', 'Pansar'].includes(item.namn)) {
@@ -705,6 +707,7 @@ function defaultTraits() {
         if (it.nivå) row.l = it.nivå;
         if (it.trait) row.t = it.trait;
         if (it.race) row.r = it.race;
+        if (it.form) row.f = it.form;
         return row;
       }
       return it;
@@ -718,6 +721,7 @@ function defaultTraits() {
         if (it.l) base.nivå = it.l;
         if (it.t) base.trait = it.t;
         if (it.r) base.race = it.r;
+        if (it.f) base.form = it.f;
         return base;
       }
       if (it && it.n && window.DBIndex && window.DBIndex[it.n]) {
@@ -725,6 +729,7 @@ function defaultTraits() {
         if (it.l) base.nivå = it.l;
         if (it.t) base.trait = it.t;
         if (it.r) base.race = it.r;
+        if (it.f) base.form = it.f;
         return base;
       }
       return it;
