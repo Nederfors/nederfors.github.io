@@ -451,6 +451,15 @@ function initIndex() {
           if(!confirm(p.namn+' hänger ihop med Mörkt blod. Ta bort ändå?'))
             return;
         }
+        if(isMonstrousTrait(p) && p.form==='beast' && before.some(x=>x.namn==='Hamnskifte')){
+          if(!confirm(p.namn+' hänger ihop med Hamnskifte. Ta bort ändå?'))
+            return;
+          const rem=storeHelper.getHamnskifteRemoved(store);
+          if(!rem.includes(p.namn)){
+            rem.push(p.namn);
+            storeHelper.setHamnskifteRemoved(store, rem);
+          }
+        }
         let list;
         const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         if(multi){
@@ -471,6 +480,11 @@ function initIndex() {
         if(p.namn==='Mörkt blod' && remDeps.length){
           if(confirm(`Ta bort även: ${remDeps.join(', ')}?`)){
             list = list.filter(x => !remDeps.includes(x.namn));
+          }
+        } else if(p.namn==='Hamnskifte' && remDeps.length){
+          if(confirm(`Ta bort även: ${remDeps.join(', ')}?`)){
+            list = list.filter(x => !(remDeps.includes(x.namn) && x.form==='beast'));
+            storeHelper.setHamnskifteRemoved(store, []);
           }
         } else if(remDeps.length){
           if(!confirm(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`)) return;
@@ -551,6 +565,37 @@ function initIndex() {
         ent.nivå = old;
         e.target.value = old;
         return;
+      }
+      if(name==='Hamnskifte'){
+        const lvlMap={"":0,Novis:1, Gesäll:2, Mästare:3};
+        const oldIdx=lvlMap[old]||0;
+        const newIdx=lvlMap[ent.nivå]||0;
+        let toRemove=[];
+        if(oldIdx>=3 && newIdx<3) toRemove.push('Robust','Regeneration');
+        if(oldIdx>=2 && newIdx<2) toRemove.push('Naturligt vapen','Pansar');
+        toRemove=toRemove.filter(n=>list.some(x=>x.namn===n && x.form==='beast'));
+        if(toRemove.length){
+          if(!confirm(`Ta bort även: ${toRemove.join(', ')}?`)){
+            ent.nivå=old; e.target.value=old; return;
+          }
+          for(let i=list.length-1;i>=0;i--){
+            if(toRemove.includes(list[i].namn) && list[i].form==='beast') list.splice(i,1);
+          }
+          const rem=storeHelper.getHamnskifteRemoved(store).filter(x=>!toRemove.includes(x));
+          storeHelper.setHamnskifteRemoved(store, rem);
+        }
+        const toAdd=[];
+        if(newIdx>=2 && oldIdx<2) toAdd.push('Naturligt vapen','Pansar');
+        if(newIdx>=3 && oldIdx<3) toAdd.push('Robust','Regeneration');
+        let rem=storeHelper.getHamnskifteRemoved(store);
+        toAdd.forEach(n=>{
+          if(!list.some(x=>x.namn===n && x.form==='beast') && !rem.includes(n)){
+            const entry=window.DBIndex?.[n];
+            if(entry) list.push({ ...entry, form:'beast' });
+          }
+          rem=rem.filter(x=>x!==n);
+        });
+        storeHelper.setHamnskifteRemoved(store, rem);
       }
       storeHelper.setCurrentList(store,list); updateXP();
     }
