@@ -548,6 +548,7 @@ function defaultTraits() {
           : (XP_LADDER[item.nivå || 'Novis'] || 0);
         cost = Math.max(0, cost - monsterTraitDiscount(list, item));
         xp += cost;
+
       } else if (types.includes('monstruöst särdrag')) {
         let cost = isFreeMonsterTrait(list, item) ? 0 : RITUAL_COST;
         cost = Math.max(0, cost - monsterTraitDiscount(list, item));
