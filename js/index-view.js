@@ -309,7 +309,7 @@ function initIndex() {
         }
         if (p.namn === 'Robust') {
           const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
-          const robustOk = hamLvl >= 3 && lvl === 'Novis';
+          const robustOk = monsterOk || (hamLvl >= 3 && lvl === 'Novis');
           if (!robustOk) {
             if (!confirm('Robust kan normalt inte väljas. Lägga till ändå?')) return;
           }
