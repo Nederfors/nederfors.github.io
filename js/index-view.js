@@ -118,8 +118,8 @@ function initIndex() {
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
         let btn = '';
         if(multi){
-          const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-          const remBtn = count>0 ? `<button data-act="rem" class="char-btn danger" data-name="${p.namn}">−</button>` : '';
+          const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
+          const remBtn = count>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
           btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
       }else{
         btn = inChar
