@@ -532,7 +532,15 @@ function defaultTraits() {
         if (isFreeMonsterTrait(list, item)) {
           xp += 0;
         } else {
-          xp += XP_LADDER[item.nivå || 'Novis'] || 0;
+          let cost = XP_LADDER[item.nivå || 'Novis'] || 0;
+          if (
+            types.includes('monstruöst särdrag') &&
+            LEVEL_IDX[item.nivå || 'Novis'] > 1 &&
+            isFreeMonsterTrait(list, { ...item, nivå: 'Novis' })
+          ) {
+            cost -= XP_LADDER['Novis'];
+          }
+          xp += cost;
         }
       } else if (types.includes('monstruöst särdrag')) {
         xp += isFreeMonsterTrait(list, item) ? 0 : RITUAL_COST;
@@ -553,7 +561,19 @@ function defaultTraits() {
       entry.nivåer &&
       ['mystisk kraft', 'förmåga', 'särdrag', 'monstruöst särdrag'].some(t => types.includes(t))
     ) {
-      xp += isFreeMonsterTrait(list || [], entry) ? 0 : (XP_LADDER[entry.nivå || 'Novis'] || 0);
+      if (isFreeMonsterTrait(list || [], entry)) {
+        xp += 0;
+      } else {
+        let cost = XP_LADDER[entry.nivå || 'Novis'] || 0;
+        if (
+          types.includes('monstruöst särdrag') &&
+          LEVEL_IDX[entry.nivå || 'Novis'] > 1 &&
+          isFreeMonsterTrait(list || [], { ...entry, nivå: 'Novis' })
+        ) {
+          cost -= XP_LADDER['Novis'];
+        }
+        xp += cost;
+      }
     } else if (types.includes('monstruöst särdrag')) {
       xp += isFreeMonsterTrait(list || [], entry) ? 0 : RITUAL_COST;
     }
