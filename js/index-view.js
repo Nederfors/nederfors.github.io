@@ -134,12 +134,13 @@ function initIndex() {
         .map(t=>`<span class="tag">${t}</span>`).join(' ');
       const levelHtml = hideDetails ? '' : lvlSel;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
+      const showInfo = compact || hideDetails;
       li.innerHTML = `
         <div class="card-title">${p.namn}${badge}</div>
         ${tagsHtml}
         ${levelHtml}
         ${descHtml}
-        ${infoBtn}${btn}${eliteBtn}`;
+        ${showInfo ? infoBtn : ''}${btn}${eliteBtn}`;
       dom.lista.appendChild(li);
     });
   };
