@@ -12,7 +12,7 @@
     const pop=document.getElementById('beastPopup');
     const box=pop.querySelector('#beastOpts');
     const cls=pop.querySelector('#beastCancel');
-    box.innerHTML=`<button data-form="normal" class="char-btn">Humanoid form (vanlig kostnad)</button><button data-form="beast" class="char-btn">F\u00f6r hamnskifte (\u221210 XP)</button>`;
+    box.innerHTML=`<button data-form="normal" class="char-btn">Humanoid form (vanlig kostnad)</button><button data-form="beast" class="char-btn">F\u00f6r hamnskifte (gratis upp till novisniv\u00e5)</button>`;
     pop.classList.add('open');
     function close(){
       pop.classList.remove('open');
