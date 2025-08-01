@@ -123,7 +123,7 @@ function initCharacter() {
       const tagsHtml = (p.taggar?.typ || [])
         .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
         .map(t => `<span class="tag">${t}</span>`).join(' ');
-      const xpVal = storeHelper.calcEntryXP(p);
+      const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
       const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
       const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
       li.dataset.xp = xpVal;
