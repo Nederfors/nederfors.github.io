@@ -43,6 +43,7 @@
             privMoney: defaultMoney(),
             possessionMoney: defaultMoney(),
             possessionRemoved: 0,
+            hamnskifteRemoved: [],
             ...cur
           };
           if(!store.data[id].artifactEffects){
@@ -59,6 +60,9 @@
           }
           if(!store.data[id].possessionRemoved){
             store.data[id].possessionRemoved = 0;
+          }
+          if(!Array.isArray(store.data[id].hamnskifteRemoved)){
+            store.data[id].hamnskifteRemoved = [];
           }
           if(store.data[id].nilasPopupShown === undefined){
             store.data[id].nilasPopupShown = false;
@@ -124,18 +128,37 @@
     }
   }
 
-  function applyHamnskifteTraits(list) {
+  function applyHamnskifteTraits(store, list) {
+    if (!store.current) return;
+    const data = store.data[store.current] || {};
+    const removed = Array.isArray(data.hamnskifteRemoved) ? data.hamnskifteRemoved : [];
+
     const hamLvl = abilityLevel(list, 'Hamnskifte');
-    const extras = [];
-    if (hamLvl >= 2) extras.push('Naturligt vapen', 'Pansar');
-    if (hamLvl >= 3) extras.push('Robust', 'Regeneration');
-    extras.forEach(name => {
+    const needed = [];
+    if (hamLvl >= 2) needed.push('Naturligt vapen', 'Pansar');
+    if (hamLvl >= 3) needed.push('Robust', 'Regeneration');
+
+    const allowed = new Set(needed);
+    const all = ['Naturligt vapen','Pansar','Robust','Regeneration'];
+
+    for (let i=list.length-1; i>=0; i--) {
+      const it = list[i];
+      if (all.includes(it.namn) && it.form === 'beast' && !allowed.has(it.namn)) {
+        list.splice(i,1);
+        const idx = removed.indexOf(it.namn);
+        if (idx >= 0) removed.splice(idx,1);
+      }
+    }
+
+    needed.forEach(name => {
       const idx = list.findIndex(it => it.namn === name && it.form === 'beast');
-      if (idx < 0) {
+      if (idx < 0 && !removed.includes(name)) {
         const entry = DB.find(e => e.namn === name);
         if (entry) list.push({ ...entry, form: 'beast' });
       }
     });
+
+    store.data[store.current].hamnskifteRemoved = removed;
   }
 
   function getDependents(list, entry) {
@@ -199,7 +222,7 @@
     applyDarkBloodEffects(list);
     applyRaceTraits(list);
     enforceEarthbound(list);
-    applyHamnskifteTraits(list);
+    applyHamnskifteTraits(store, list);
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
     const hasPriv = list.some(x => x.namn === 'Privilegierad');
@@ -323,6 +346,19 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].possessionRemoved = 0;
+    save(store);
+  }
+
+  function getHamnskifteRemoved(store) {
+    if (!store.current) return [];
+    const data = store.data[store.current] || {};
+    return Array.isArray(data.hamnskifteRemoved) ? data.hamnskifteRemoved : [];
+  }
+
+  function setHamnskifteRemoved(store, arr) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].hamnskifteRemoved = arr;
     save(store);
   }
 
@@ -715,6 +751,7 @@ function defaultTraits() {
       if (obj[k] && JSON.stringify(obj[k]) === JSON.stringify(emptyMoney)) delete obj[k];
     });
     if (obj.possessionRemoved === 0) delete obj.possessionRemoved;
+    if (Array.isArray(obj.hamnskifteRemoved) && obj.hamnskifteRemoved.length === 0) delete obj.hamnskifteRemoved;
     if (obj.artifactEffects && JSON.stringify(obj.artifactEffects) === JSON.stringify(emptyEff)) delete obj.artifactEffects;
     ['inventory','list','custom'].forEach(k => {
       if (Array.isArray(obj[k]) && obj[k].length === 0) delete obj[k];
@@ -931,6 +968,8 @@ function defaultTraits() {
     setPossessionMoney,
     incrementPossessionRemoved,
     resetPossessionRemoved,
+    getHamnskifteRemoved,
+    setHamnskifteRemoved,
     deleteCharacter,
     getDependents
   };
