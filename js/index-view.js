@@ -377,7 +377,14 @@ function initIndex() {
         }else if(list.some(x=>x.namn===p.namn && !x.trait)){
           return;
         }
-        list.push({ ...p, nivå: lvl });
+        let form = 'normal';
+        if (isMonstrousTrait(p)) {
+          const test = { ...p, nivå: lvl, form: 'beast' };
+          if (storeHelper.isFreeMonsterTrait(list, test)) {
+            form = confirm('Välj "best-form" (gratis)?\nVälj Avbryt för normal form som kostar XP.') ? 'beast' : 'normal';
+          }
+        }
+        list.push({ ...p, nivå: lvl, form });
         storeHelper.setCurrentList(store, list); updateXP();
         if (p.namn === 'Privilegierad') {
           invUtil.renderInventory();
