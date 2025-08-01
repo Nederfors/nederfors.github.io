@@ -476,7 +476,10 @@ function defaultTraits() {
   const LEVEL_IDX = { '': 0, Novis: 1, Gesäll: 2, Mästare: 3 };
 
   function abilityLevel(list, ability) {
-    const ent = list.find(x => x.namn === ability && (x.taggar?.typ || []).includes('Förmåga'));
+    const ent = list.find(x =>
+      x.namn === ability &&
+      (x.taggar?.typ || []).some(t => ['Förmåga', 'Mystisk kraft'].includes(t))
+    );
     return LEVEL_IDX[ent?.nivå || ''] || 0;
   }
 
