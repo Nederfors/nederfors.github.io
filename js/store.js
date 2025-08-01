@@ -483,6 +483,31 @@ function defaultTraits() {
     return LEVEL_IDX[ent?.nivå || ''] || 0;
   }
 
+  function hasOtherMonsterAccess(list, trait) {
+    const baseRace = list.find(isRas)?.namn;
+    const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
+    const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
+    const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
+    if (list.some(x => x.namn === 'Mörkt blod')) return true;
+    if (baseRace === 'Troll' && trollTraits.includes(trait)) return true;
+    if (baseRace === 'Vandöd' && undeadTraits.includes(trait)) return true;
+    if (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(trait)) return true;
+    return false;
+  }
+
+  function hamnskifteNoviceLimit(list, trait, level) {
+    const lvl = LEVEL_IDX[level || 'Novis'] || 1;
+    if (lvl <= 1) return false;
+    const hamlvl = abilityLevel(list, 'Hamnskifte');
+    if (['Naturligt vapen', 'Pansar'].includes(trait) && hamlvl >= 2) {
+      return !hasOtherMonsterAccess(list, trait);
+    }
+    if (['Regeneration', 'Robust'].includes(trait) && hamlvl >= 3) {
+      return !hasOtherMonsterAccess(list, trait);
+    }
+    return false;
+  }
+
   function isFreeMonsterTrait(list, item) {
     const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
     if (lvl !== 1) return false; // Only Novis level can be free
@@ -853,6 +878,7 @@ function defaultTraits() {
     calcPermanentCorruption,
     calcPainThreshold,
     abilityLevel,
+    hamnskifteNoviceLimit,
     monsterTraitDiscount,
     exportCharacterCode,
     importCharacterCode,

@@ -306,6 +306,10 @@ function initIndex() {
           if (!monsterOk) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
+          if (storeHelper.hamnskifteNoviceLimit(list, p.namn, lvl)) {
+            alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
+            return;
+          }
         }
         if (p.namn === 'Robust') {
           const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
@@ -520,6 +524,12 @@ function initIndex() {
       ent.nivå = e.target.value;
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         alert('Förmågan krävs för ett valt elityrke och kan inte ändras.');
+        ent.nivå = old;
+        e.target.value = old;
+        return;
+      }
+      if (storeHelper.hamnskifteNoviceLimit(list, name, ent.nivå)) {
+        alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
         ent.nivå = old;
         e.target.value = old;
         return;

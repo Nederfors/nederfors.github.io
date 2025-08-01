@@ -298,6 +298,12 @@ function initCharacter() {
         e.target.value = old;
         return;
       }
+      if (storeHelper.hamnskifteNoviceLimit(list, name, ent.nivå)) {
+        alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
+        ent.nivå = old;
+        e.target.value = old;
+        return;
+      }
       storeHelper.setCurrentList(store,list); updateXP();
     }
     renderSkills(filtered()); renderTraits();
