@@ -154,7 +154,7 @@
       const idx = list.findIndex(it => it.namn === name && it.form === 'beast');
       if (idx < 0 && !removed.includes(name)) {
         const entry = DB.find(e => e.namn === name);
-        if (entry) list.push({ ...entry, form: 'beast' });
+        if (entry) list.push({ ...entry, form: 'beast', nivå: 'Novis' });
       }
     });
 
