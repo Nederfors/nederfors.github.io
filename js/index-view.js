@@ -306,6 +306,10 @@ function initIndex() {
           if (!monsterOk) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
+          if (!list.some(x => x.namn === 'Blodvadare') && ['Naturligt vapen','Pansar','Regeneration','Robust'].includes(p.namn) && lvl !== 'Novis') {
+            alert('Du måste ha elityrket Blodvadare för att ta ' + p.namn + ' på högre nivå än Novis.');
+            return;
+          }
         }
         if (p.namn === 'Robust') {
           const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
@@ -518,6 +522,19 @@ function initIndex() {
       const before = list.map(x => ({...x}));
       const old = ent.nivå;
       ent.nivå = e.target.value;
+      if (!list.some(x => x.namn === 'Blodvadare') && ['Naturligt vapen','Pansar','Regeneration','Robust'].includes(name) && ent.nivå !== 'Novis') {
+        alert('Du måste ha elityrket Blodvadare för att ta ' + name + ' på högre nivå än Novis.');
+        ent.nivå = old;
+        e.target.value = old;
+        return;
+      }
+      if (name === 'Hamnskifte' && !list.some(x => x.namn === 'Blodvadare')) {
+        if (ent.nivå === 'Gesäll') {
+          alert('Utan Blodvadare kan du inte ta Pansar eller Naturligt vapen över Novis-nivå.');
+        } else if (ent.nivå === 'Mästare') {
+          alert('Utan Blodvadare kan du inte ta Robust eller Regeneration över Novis-nivå.');
+        }
+      }
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         alert('Förmågan krävs för ett valt elityrke och kan inte ändras.');
         ent.nivå = old;
