@@ -30,6 +30,7 @@
     storeHelper.setInventory(store, inv);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
+    if (window.renderTraits) renderTraits();
   }
 
   function recalcArtifactEffects() {
@@ -486,6 +487,9 @@
             desc += `<div class="tags">${html}</div>`;
           }
           desc += itemStatHtml(entry);
+          if (row.trait) {
+            desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
+          }
 
           /* — kvaliteter — */
           const removedQ = row.removedKval ?? [];
@@ -545,7 +549,7 @@
           return `
             <li class="card"
                 data-idx="${idx}"
-                data-name="${row.name}"${dataLevel}>
+                data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title">${row.name}</div>
               <div class="card-desc">
                 ${desc}${freeCnt ? ` <span class="tag free">Gratis${freeCnt>1? '×'+freeCnt:''}</span>` : ''}${lvlInfo}<br>Antal: ${row.qty}<br>Pris: ${priceText}
@@ -651,15 +655,31 @@
       // "+" lägger till qty eller en ny instans
       if (act === 'add') {
         const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
-        if (indiv) {
-          inv.push({ name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] });
-        } else if (idx >= 0) {
-          inv[idx].qty++;
+        const addRow = trait => {
+          const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+          if (trait) obj.trait = trait;
+          if (indiv) {
+            inv.push(obj);
+          } else if (idx >= 0 && (!trait || inv[idx].trait === trait)) {
+            inv[idx].qty++;
+          } else if (idx >= 0 && trait && inv[idx].trait !== trait) {
+            inv.push(obj);
+          } else {
+            inv.push(obj);
+          }
+          saveInventory(inv);
+          renderInventory();
+        };
+        if (entry.traits && window.maskSkill) {
+          const used = inv.filter(it => it.name===entry.namn).map(it=>it.trait).filter(Boolean);
+          maskSkill.pickTrait(used, trait => {
+            if(!trait) return;
+            if (used.includes(trait) && !confirm('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?')) return;
+            addRow(trait);
+          });
         } else {
-          inv.push({ name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] });
+          addRow();
         }
-        saveInventory(inv);
-        renderInventory();
         return;
       }
 
