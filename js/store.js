@@ -884,6 +884,7 @@ function defaultTraits() {
     calcPainThreshold,
     abilityLevel,
     hamnskifteNoviceLimit,
+    isFreeMonsterTrait,
     monsterTraitDiscount,
     exportCharacterCode,
     importCharacterCode,
