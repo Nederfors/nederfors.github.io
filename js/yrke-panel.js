@@ -7,7 +7,10 @@
     panel.innerHTML = `
       <header class="inv-header">
         <h2 id="yrkeTitle"></h2>
-        <button id="yrkeClose" class="char-btn icon">✕</button>
+        <div class="inv-actions">
+          <span id="yrkeXp" class="xp-cost"></span>
+          <button id="yrkeClose" class="char-btn icon">✕</button>
+        </div>
       </header>
       <div id="yrkeContent"></div>
     `;
@@ -15,9 +18,17 @@
     panel.querySelector('#yrkeClose').addEventListener('click', close);
   }
 
-  function open(title, html){
+  function open(title, html, xp){
     create();
     document.getElementById('yrkeTitle').textContent = title || '';
+    const xpEl = document.getElementById('yrkeXp');
+    if (xpEl) {
+      if (xp === undefined || xp === null) xpEl.textContent = '';
+      else {
+        const xpText = xp < 0 ? `+${-xp}` : xp;
+        xpEl.textContent = `Erf: ${xpText}`;
+      }
+    }
     document.getElementById('yrkeContent').innerHTML = html || '';
     const panel = document.getElementById('yrkePanel');
 
