@@ -281,7 +281,7 @@ function initIndex() {
         if (isMonstrousTrait(p)) {
           const baseRace = list.find(isRas)?.namn;
           const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
-          const undeadTraits = ['Gravkyla', 'Skräckslå'];
+          const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
           const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
           const allowed = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
             list.some(x => x.namn === 'Mörkt blod') ||
