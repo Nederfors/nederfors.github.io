@@ -481,16 +481,19 @@ function defaultTraits() {
   }
 
   function isFreeMonsterTrait(list, item) {
-    if (!isMonstrousTrait(item)) return false;
     const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
-    if (lvl !== 1) return false;
+    if (lvl !== 1) return false; // Only Novis level can be free
+
     const hamnskifte = abilityLevel(list, 'Hamnskifte');
+
     if (['Naturligt vapen', 'Pansar'].includes(item.namn)) {
       return hamnskifte >= 2;
     }
+
     if (['Regeneration', 'Robust'].includes(item.namn)) {
       return hamnskifte >= 3;
     }
+
     return false;
   }
 
