@@ -557,6 +557,18 @@ function defaultTraits() {
     return Number(baseXp || 0) + countDisadvantages(list) * 5;
   }
 
+  function calcPainThreshold(strength, list, extra) {
+    const painBonus = list.filter(e => e.namn === 'Smärttålig').length;
+    const painPenalty = list.filter(e => e.namn === 'Bräcklig').length;
+    let pain = Math.ceil(Number(strength || 0) / 2);
+    pain += painBonus - painPenalty;
+    const perm = calcPermanentCorruption(list, extra);
+    if (list.some(e => e.namn === 'Jordnära')) {
+      pain -= Math.floor(perm / 2);
+    }
+    return pain;
+  }
+
   /* ---------- Hjälpfunktioner för export ---------- */
 
   function toBase64(arr) {
@@ -789,6 +801,7 @@ function defaultTraits() {
     calcEntryXP,
     calcTotalXP,
     calcPermanentCorruption,
+    calcPainThreshold,
     abilityLevel,
     exportCharacterCode,
     importCharacterCode,

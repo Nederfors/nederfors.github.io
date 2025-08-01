@@ -5,6 +5,9 @@
     const KEYS = ['Diskret','Kvick','Listig','Stark','Tr\u00e4ffs\u00e4ker','Vaksam','Viljestark','\u00d6vertygande'];
 
     const list  = storeHelper.getCurrentList(store);
+    const effects = storeHelper.getArtifactEffects(store);
+    const permBase = storeHelper.calcPermanentCorruption(list, effects);
+    const hasEarth = list.some(p => p.namn === 'Jordnära');
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const counts = {};
     KEYS.forEach(k => {
@@ -30,14 +33,9 @@
       const talBase = hasKraftprov && k === 'Stark'
         ? val + 5
         : Math.max(10, val);
-      // Base pain threshold is half of the current Strength value
-      // (rounded up). It can be modified by traits such as
-      // Smärttålig and Bräcklig. We apply modifications from
-      // advantages/disadvantages after all other adjustments.
-      const painBase = Math.ceil(val / 2);
-
+      // Base pain threshold is derived from Strength and modifiers
       let tal  = talBase;
-      let pain = painBase;
+      let pain = 0;
 
       let extra = '';
       let beforeExtra = '';
@@ -47,12 +45,9 @@
         const hasPack = list.some(e => e.namn === 'Pack\u00e5sna');
         if (hasPack) base = Math.ceil(base * 1.5);
 
-        const painBonus = list.filter(e => e.namn === 'Sm\u00e4rtt\u00e5lig').length;
-        const painPenalty = list.filter(e => e.namn === 'Br\u00e4cklig').length;
-
         // Apply advantage/disadvantage effects last
         tal  += hardy;
-        pain += painBonus - painPenalty;
+        pain = storeHelper.calcPainThreshold(val, list, effects);
 
         beforeExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>` +
           `<div class="trait-extra">B\u00e4rkapacitet: ${base}</div>`;
@@ -65,8 +60,7 @@
         // Apply advantage/disadvantage effects after base calculations
         const maxCor = baseMax + (hasSjalastark ? 1 : 0);
         let   thresh = threshBase + resistCount - sensCount;
-        const effects = storeHelper.getArtifactEffects(store);
-        let perm = storeHelper.calcPermanentCorruption(list, effects);
+        let perm = hasEarth ? (permBase % 2) : permBase;
         if (hasDarkPast) perm += Math.ceil(thresh / 3);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` +
                 `<div class="trait-extra">Maximal korruption: ${maxCor} \u2022 Korruptionstr\u00f6skel: ${thresh}</div>`;

@@ -36,4 +36,12 @@ window.storeHelper.setCurrentList(store, list);
 const hasDarkPast = store.data.c.list.some(x => x.namn === 'Mörkt förflutet');
 assert.strictEqual(hasDarkPast, false);
 
+// Additional check for Earthbound effects on pain threshold and corruption
+const effects = { corruption: 2 };
+const perm = window.storeHelper.calcPermanentCorruption(store.data.c.list, effects);
+assert.strictEqual(perm, 2);
+const pain = window.storeHelper.calcPainThreshold(10, store.data.c.list, effects);
+assert.strictEqual(pain, 4);
+assert.strictEqual(perm % 2, 0);
+
 console.log('All tests passed.');
