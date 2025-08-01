@@ -289,17 +289,18 @@ function initIndex() {
             if (!confirm(msg)) return;
           }
         }
+        let monsterOk = false;
         if (isMonstrousTrait(p)) {
           const baseRace = list.find(isRas)?.namn;
           const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
           const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
           const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
-          const allowed = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
+          monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
             list.some(x => x.namn === 'Mörkt blod') ||
             (baseRace === 'Troll' && trollTraits.includes(p.namn)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(p.namn)) ||
             (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(p.namn));
-          if (!allowed) {
+          if (!monsterOk) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
         }
@@ -314,7 +315,7 @@ function initIndex() {
           alert('Jordnära karaktärer kan inte ta Mörkt förflutet.');
           return;
         }
-        if (isSardrag(p) && (p.taggar.ras || []).length) {
+        if (isSardrag(p) && (p.taggar.ras || []).length && !(isMonstrousTrait(p) && monsterOk)) {
           const races = [];
           const base = list.find(isRas)?.namn;
           if (base) races.push(base);
