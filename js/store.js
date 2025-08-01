@@ -494,6 +494,24 @@ function defaultTraits() {
     return false;
   }
 
+  function calcMonsterTraitCost(list, item) {
+    if (!isMonstrousTrait(item)) return null;
+    const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
+    const ham = abilityLevel(list, 'Hamnskifte');
+    const base = item.nivåer ? (XP_LADDER[item.nivå || 'Novis'] || 0) : RITUAL_COST;
+    if (['Naturligt vapen', 'Pansar'].includes(item.namn) && ham >= 2) {
+      if (lvl === 1) return 0;
+      if (lvl === 2) return 20;
+      if (lvl === 3) return 50;
+    }
+    if (['Regeneration', 'Robust'].includes(item.namn) && ham >= 3) {
+      if (lvl === 1) return 0;
+      if (lvl === 2) return 20;
+      if (lvl === 3) return 50;
+    }
+    return base;
+  }
+
   function calcPermanentCorruption(list, extra) {
     let cor = 0;
     const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
@@ -523,16 +541,16 @@ function defaultTraits() {
 
     list.forEach(item => {
       const types = (item.taggar?.typ || []).map(t => t.toLowerCase());
-
-      if (item.nivåer && ['mystisk kraft','förmåga','särdrag','monstruöst särdrag']
-          .some(t => types.includes(t))) {
-        if (isFreeMonsterTrait(list, item)) {
-          xp += 0;
-        } else {
-          xp += XP_LADDER[item.nivå || 'Novis'] || 0;
-        }
+      const mCost = calcMonsterTraitCost(list, item);
+      if (mCost !== null) {
+        xp += mCost;
+      } else if (
+        item.nivåer &&
+        ['mystisk kraft','förmåga','särdrag','monstruöst särdrag'].some(t => types.includes(t))
+      ) {
+        xp += XP_LADDER[item.nivå || 'Novis'] || 0;
       } else if (types.includes('monstruöst särdrag')) {
-        xp += isFreeMonsterTrait(list, item) ? 0 : RITUAL_COST;
+        xp += RITUAL_COST;
       }
       if (types.includes('fördel')) xp += 5;
       if (types.includes('ritual')) xp += RITUAL_COST;
@@ -546,13 +564,16 @@ function defaultTraits() {
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) return -5;
     let xp = 0;
-    if (
+    const mCost = calcMonsterTraitCost(list || [], entry);
+    if (mCost !== null) {
+      xp += mCost;
+    } else if (
       entry.nivåer &&
       ['mystisk kraft', 'förmåga', 'särdrag', 'monstruöst särdrag'].some(t => types.includes(t))
     ) {
-      xp += isFreeMonsterTrait(list || [], entry) ? 0 : (XP_LADDER[entry.nivå || 'Novis'] || 0);
+      xp += XP_LADDER[entry.nivå || 'Novis'] || 0;
     } else if (types.includes('monstruöst särdrag')) {
-      xp += isFreeMonsterTrait(list || [], entry) ? 0 : RITUAL_COST;
+      xp += RITUAL_COST;
     }
     if (types.includes('fördel')) xp += 5;
     if (types.includes('ritual')) xp += RITUAL_COST;
@@ -824,6 +845,7 @@ function defaultTraits() {
     calcPermanentCorruption,
     calcPainThreshold,
     abilityLevel,
+    calcMonsterTraitCost,
     exportCharacterCode,
     importCharacterCode,
     getPossessionMoney,

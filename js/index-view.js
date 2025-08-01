@@ -294,12 +294,20 @@ function initIndex() {
           const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
           const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
           const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
-          const allowed = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
+          const allowedBase = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
             list.some(x => x.namn === 'Mörkt blod') ||
             (baseRace === 'Troll' && trollTraits.includes(p.namn)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(p.namn)) ||
             (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(p.namn));
-          if (!allowed) {
+          const ham = storeHelper.abilityLevel(list, 'Hamnskifte');
+          const lvlName = lvl || 'Novis';
+          const hamFree = lvlName === 'Novis' && (
+            (ham >= 2 && ['Naturligt vapen','Pansar'].includes(p.namn)) ||
+            (ham >= 3 && ['Regeneration','Robust'].includes(p.namn))
+          );
+          const needsWarn = !allowedBase && !hamFree;
+          const overNovis = ham > 0 && ['Naturligt vapen','Pansar','Regeneration','Robust'].includes(p.namn) && lvlName !== 'Novis';
+          if (needsWarn || overNovis) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
         }

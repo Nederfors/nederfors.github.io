@@ -53,5 +53,17 @@ function test(){
   // Mästare Hamnskifte: all four free
   assert.strictEqual(xpFor([hamMas, reg, rob]), 60);
 
+  // Discounted higher levels with Hamnskifte
+  const nvGes = { namn:'Naturligt vapen', taggar:{typ:['Monstruöst särdrag']}, nivå:'Gesäll' };
+  const regGes = { namn:'Regeneration', taggar:{typ:['Monstruöst särdrag']}, nivå:'Gesäll' };
+  const regMas = { namn:'Regeneration', taggar:{typ:['Monstruöst särdrag']}, nivå:'Mästare' };
+
+  // Gesäll Hamnskifte gives 20 XP cost for Gesäll nivå
+  assert.strictEqual(xpFor([hamGes, nvGes]), 50);
+
+  // Mästare Hamnskifte gives 20/50 XP costs
+  assert.strictEqual(xpFor([hamMas, regGes]), 80);
+  assert.strictEqual(xpFor([hamMas, regMas]), 110);
+
   console.log('All tests passed.');
 }
