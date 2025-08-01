@@ -112,7 +112,7 @@ function initIndex() {
         }
       }
       const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
-      const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
+      const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
       const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
       const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
       let btn = '';
@@ -367,7 +367,7 @@ function initIndex() {
           });
           return;
         }
-        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
+        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         if(multi){
           const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
           if(p.namn !== 'Blodsband' && cnt >= 3){
@@ -378,48 +378,57 @@ function initIndex() {
           return;
         }
         let form = 'normal';
+        const finishAdd = () => {
+          storeHelper.setCurrentList(store, list); updateXP();
+          if (p.namn === 'Privilegierad') {
+            invUtil.renderInventory();
+          }
+          if (p.namn === 'Besittning') {
+            const amount = Math.floor(Math.random() * 10) + 11;
+            storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
+            alert(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
+            invUtil.renderInventory();
+          }
+          if (p.namn === 'Välutrustad') {
+            const inv = storeHelper.getInventory(store);
+            const freebies = [
+              { name: 'Rep, 10 meter', qty: 3 },
+              { name: 'Papper', qty: 1 },
+              { name: 'Kritor', qty: 1 },
+              { name: 'Fackla', qty: 3 },
+              { name: 'Signalhorn', qty: 1 },
+              { name: 'Långfärdsbröd', qty: 3 },
+              { name: 'Örtkur', qty: 3 }
+            ];
+            freebies.forEach(it => {
+              const row = inv.find(r => r.name === it.name);
+              if (row) {
+                row.qty += it.qty;
+                row.gratis = (row.gratis || 0) + it.qty;
+                row.perkGratis = (row.perkGratis || 0) + it.qty;
+                if (!row.perk) row.perk = 'Välutrustad';
+              } else {
+                inv.push({ name: it.name, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
+              }
+            });
+            invUtil.saveInventory(inv); invUtil.renderInventory();
+          }
+          renderList(filtered());
+          renderTraits();
+        };
         if (isMonstrousTrait(p)) {
           const test = { ...p, nivå: lvl, form: 'beast' };
-          if (storeHelper.isFreeMonsterTrait(list, test)) {
-            form = confirm('Välj "best-form" (gratis)?\nVälj Avbryt för normal form som kostar XP.') ? 'beast' : 'normal';
+          if (storeHelper.isFreeMonsterTrait(list, test) && window.beastForm) {
+            beastForm.pickForm(res => {
+              if(!res) return;
+              list.push({ ...p, nivå: lvl, form: res });
+              finishAdd();
+            });
+            return;
           }
         }
         list.push({ ...p, nivå: lvl, form });
-        storeHelper.setCurrentList(store, list); updateXP();
-        if (p.namn === 'Privilegierad') {
-          invUtil.renderInventory();
-        }
-        if (p.namn === 'Besittning') {
-          const amount = Math.floor(Math.random() * 10) + 11;
-          storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
-          alert(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
-          invUtil.renderInventory();
-        }
-
-        if (p.namn === 'Välutrustad') {
-          const inv = storeHelper.getInventory(store);
-          const freebies = [
-            { name: 'Rep, 10 meter', qty: 3 },
-            { name: 'Papper', qty: 1 },
-            { name: 'Kritor', qty: 1 },
-            { name: 'Fackla', qty: 3 },
-            { name: 'Signalhorn', qty: 1 },
-            { name: 'Långfärdsbröd', qty: 3 },
-            { name: 'Örtkur', qty: 3 }
-          ];
-          freebies.forEach(it => {
-            const row = inv.find(r => r.name === it.name);
-            if (row) {
-              row.qty += it.qty;
-              row.gratis = (row.gratis || 0) + it.qty;
-              row.perkGratis = (row.perkGratis || 0) + it.qty;
-              if (!row.perk) row.perk = 'Välutrustad';
-            } else {
-              inv.push({ name: it.name, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
-            }
-          });
-          invUtil.saveInventory(inv); invUtil.renderInventory();
-        }
+        finishAdd();
       }
     } else { /* rem */
       if (isInv(p)) {
@@ -441,7 +450,7 @@ function initIndex() {
             return;
         }
         let list;
-        const multi = p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ['Fördel','Nackdel'].includes(t));
+        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         if(multi){
           let removed=false;
           list = [];
