@@ -5,7 +5,10 @@
     const KEYS = ['Diskret','Kvick','Listig','Stark','Tr\u00e4ffs\u00e4ker','Vaksam','Viljestark','\u00d6vertygande'];
 
     const list  = storeHelper.getCurrentList(store);
-    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const exBonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.animalMask ? animalMask.getBonuses() : {};
+    const bonus = {};
+    KEYS.forEach(k => { bonus[k] = (exBonus[k]||0) + (maskBonus[k]||0); });
     const counts = {};
     KEYS.forEach(k => {
       counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length;
@@ -96,6 +99,8 @@
         maxTot += lvlMap[it.nivå] || 0;
       }
     });
+    const maskCnt = storeHelper.getInventory(store).filter(r => r.name === 'Djurmask').length;
+    maxTot += maskCnt;
     if (dom.traitsTot) dom.traitsTot.textContent = total;
     if (dom.traitsMax) dom.traitsMax.textContent = maxTot;
     const parent = dom.traitsTot.closest('.traits-total');
@@ -124,7 +129,9 @@
       const d   = Number(btn.dataset.d);
 
       const t   = storeHelper.getTraits(store);
-      const bonus = window.exceptionSkill ? exceptionSkill.getBonus(key) : 0;
+      const b1 = window.exceptionSkill ? exceptionSkill.getBonus(key) : 0;
+      const b2 = window.animalMask ? animalMask.getBonus(key) : 0;
+      const bonus = b1 + b2;
       const min   = bonus;
       const next  = Math.max(0, (t[key] || 0) + d);
       t[key] = Math.max(min - bonus, next);

@@ -486,6 +486,9 @@
             desc += `<div class="tags">${html}</div>`;
           }
           desc += itemStatHtml(entry);
+          if (row.trait) {
+            desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
+          }
 
           /* — kvaliteter — */
           const removedQ = row.removedKval ?? [];
@@ -651,6 +654,15 @@
       // "+" lägger till qty eller en ny instans
       if (act === 'add') {
         const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
+        if (entry.namn === 'Djurmask' && window.animalMask) {
+          const used = inv.filter(x => x.name === 'Djurmask' && x.trait).map(x => x.trait);
+          animalMask.pickTrait(used, trait => {
+            if(!trait) return;
+            inv.push({ name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], trait });
+            saveInventory(inv); renderInventory(); renderTraits();
+          });
+          return;
+        }
         if (indiv) {
           inv.push({ name: entry.namn, qty: 1, gratis:0, gratisKval:[], removedKval:[] });
         } else if (idx >= 0) {

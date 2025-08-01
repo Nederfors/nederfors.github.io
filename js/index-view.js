@@ -230,6 +230,16 @@ function initIndex() {
     if (btn.dataset.act==='add') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
+        if (p.namn === 'Djurmask' && window.animalMask) {
+          const used = inv.filter(x => x.name === 'Djurmask' && x.trait).map(x => x.trait);
+          animalMask.pickTrait(used, trait => {
+            if(!trait) return;
+            const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], trait };
+            inv.push(rowBase);
+            invUtil.saveInventory(inv); invUtil.renderInventory(); renderTraits();
+          });
+          return;
+        }
         const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
         const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
         if (p.artifactEffect) rowBase.artifactEffect = p.artifactEffect;
