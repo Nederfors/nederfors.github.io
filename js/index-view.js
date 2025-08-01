@@ -234,16 +234,27 @@ function initIndex() {
         const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
         const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
         if (p.artifactEffect) rowBase.artifactEffect = p.artifactEffect;
-        if (indiv) {
-          inv.push(rowBase);
-        } else {
-          const match = inv.find(x => x.name===p.namn);
-          if (match) match.qty++;
-          else {
+        const addRow = trait => {
+          if (trait) rowBase.trait = trait;
+          if (indiv) {
             inv.push(rowBase);
+          } else {
+            const match = inv.find(x => x.name===p.namn && (!trait || x.trait===trait));
+            if (match) match.qty++;
+            else inv.push(rowBase);
           }
+          invUtil.saveInventory(inv); invUtil.renderInventory();
+        };
+        if (p.traits && window.maskSkill) {
+          const used = inv.filter(it => it.name===p.namn).map(it=>it.trait).filter(Boolean);
+          maskSkill.pickTrait(used, trait => {
+            if(!trait) return;
+            if (used.includes(trait) && !confirm('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?')) return;
+            addRow(trait);
+          });
+        } else {
+          addRow();
         }
-        invUtil.saveInventory(inv); invUtil.renderInventory();
       } else {
         const list = storeHelper.getCurrentList(store);
         if (isRas(p) && list.some(isRas)) {

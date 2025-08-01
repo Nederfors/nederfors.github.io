@@ -694,6 +694,7 @@ function defaultTraits() {
       if (row.removedKval && row.removedKval.length) res.rk = row.removedKval;
       if (row.artifactEffect) res.e = row.artifactEffect;
       if (row.nivå) res.l = row.nivå;
+      if (row.trait) res.t = row.trait;
       return res;
     });
   }
@@ -710,7 +711,8 @@ function defaultTraits() {
           gratisKval: row.gk || [],
           removedKval: row.rk || [],
           artifactEffect: row.e || '',
-          nivå: row.l
+          nivå: row.l,
+          trait: row.t
         };
       }
       if (row && row.n) {
@@ -722,7 +724,8 @@ function defaultTraits() {
           gratisKval: row.gk || [],
           removedKval: row.rk || [],
           artifactEffect: row.e || '',
-          nivå: row.l
+          nivå: row.l,
+          trait: row.t
         };
       }
       return row;

@@ -9,6 +9,7 @@
     const permBase = storeHelper.calcPermanentCorruption(list, effects);
     const hasEarth = list.some(p => p.namn === 'Jordnära');
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(storeHelper.getInventory(store)) : {};
     const counts = {};
     KEYS.forEach(k => {
       counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length;
@@ -28,7 +29,7 @@
     const hasDarkPast = list.some(p => p.namn === 'Mörkt förflutet');
 
     dom.traits.innerHTML = KEYS.map(k => {
-      const val = (data[k] || 0) + (bonus[k] || 0);
+      const val = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
       const hardy = hasHardnackad && k === 'Stark' ? 1 : 0;
       const talBase = hasKraftprov && k === 'Stark'
         ? val + 5
@@ -81,7 +82,7 @@
       </div>`;
     }).join('');
 
-    const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0),0);
+    const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0)+(maskBonus[k]||0),0);
 
     const lvlMap = { Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
     let maxTot = 80;
@@ -89,6 +90,10 @@
       if (it.namn === 'Exceptionellt karaktärsdrag') {
         maxTot += lvlMap[it.nivå] || 0;
       }
+    });
+    const inv = storeHelper.getInventory(store);
+    inv.forEach(row => {
+      if (row.name === 'Djurmask' && row.trait) maxTot += 1;
     });
     if (dom.traitsTot) dom.traitsTot.textContent = total;
     if (dom.traitsMax) dom.traitsMax.textContent = maxTot;
@@ -118,7 +123,9 @@
       const d   = Number(btn.dataset.d);
 
       const t   = storeHelper.getTraits(store);
-      const bonus = window.exceptionSkill ? exceptionSkill.getBonus(key) : 0;
+      const bonusEx = window.exceptionSkill ? exceptionSkill.getBonus(key) : 0;
+      const bonusMask = window.maskSkill ? maskSkill.getBonus(key) : 0;
+      const bonus = bonusEx + bonusMask;
       const min   = bonus;
       const next  = Math.max(0, (t[key] || 0) + d);
       t[key] = Math.max(min - bonus, next);
