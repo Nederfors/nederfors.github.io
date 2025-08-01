@@ -370,6 +370,13 @@
     save(store);
   }
 
+  function deleteAllCharacters(store) {
+    store.characters = [];
+    store.data = {};
+    store.current = '';
+    save(store);
+  }
+
   function getTotalMoney(store) {
     const base = getMoney(store);
     const bonus = getBonusMoney(store);
@@ -971,6 +978,7 @@ function defaultTraits() {
     getHamnskifteRemoved,
     setHamnskifteRemoved,
     deleteCharacter,
+    deleteAllCharacters,
     getDependents
   };
 })(window);

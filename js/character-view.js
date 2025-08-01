@@ -149,6 +149,10 @@ function initCharacter() {
   dom.sIn.addEventListener('keydown',e=>{
     if(e.key==='Enter'){
       e.preventDefault();
+      if (tryBomb(sTemp)) {
+        dom.sIn.value=''; sTemp='';
+        return;
+      }
       if (tryNilasPopup(sTemp)) {
         dom.sIn.value=''; sTemp='';
         return;
