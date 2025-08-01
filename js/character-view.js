@@ -116,8 +116,8 @@ function initCharacter() {
         const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
         let btn = '';
         if(multi){
-          const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-          const remBtn = `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">${addBtn ? '−' : '🗑'}</button>`;
+          const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
+          const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
           btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
       }else{
         btn = `<button class="char-btn danger icon" data-act="rem">🗑</button>`;
