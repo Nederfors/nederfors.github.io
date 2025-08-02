@@ -284,6 +284,16 @@ function initCharacter() {
       }
       invUtil.renderInventory();
     }
+    if (p.namn === 'Välutrustad') {
+      const inv = storeHelper.getInventory(store);
+      if (actBtn.dataset.act === 'add') {
+        invUtil.addWellEquippedItems(inv);
+      } else {
+        invUtil.removeWellEquippedItems(inv);
+      }
+      invUtil.saveInventory(inv);
+      invUtil.renderInventory();
+    }
     renderSkills(filtered());
     updateXP();
     renderTraits();

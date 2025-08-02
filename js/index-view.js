@@ -397,26 +397,7 @@ function initIndex() {
           }
           if (p.namn === 'Välutrustad') {
             const inv = storeHelper.getInventory(store);
-            const freebies = [
-              { name: 'Rep, 10 meter', qty: 3 },
-              { name: 'Papper', qty: 1 },
-              { name: 'Kritor', qty: 1 },
-              { name: 'Fackla', qty: 3 },
-              { name: 'Signalhorn', qty: 1 },
-              { name: 'Långfärdsbröd', qty: 3 },
-              { name: 'Örtkur', qty: 3 }
-            ];
-            freebies.forEach(it => {
-              const row = inv.find(r => r.name === it.name);
-              if (row) {
-                row.qty += it.qty;
-                row.gratis = (row.gratis || 0) + it.qty;
-                row.perkGratis = (row.perkGratis || 0) + it.qty;
-                if (!row.perk) row.perk = 'Välutrustad';
-              } else {
-                inv.push({ name: it.name, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
-              }
-            });
+            invUtil.addWellEquippedItems(inv);
             invUtil.saveInventory(inv); invUtil.renderInventory();
           }
           renderList(filtered());
@@ -522,25 +503,11 @@ function initIndex() {
           }
           invUtil.renderInventory();
         }
-        if (p.namn === 'Välutrustad') {
-          const inv = storeHelper.getInventory(store);
-          for (let i = inv.length - 1; i >= 0; i--) {
-            const row = inv[i];
-            if (row.perk === 'Välutrustad') {
-              const pg = row.perkGratis || row.gratis || 0;
-              const removed = Math.min(pg, row.qty);
-              row.qty -= removed;
-              row.gratis = Math.max(0, (row.gratis || 0) - removed);
-              row.perkGratis = Math.max(0, (row.perkGratis || 0) - removed);
-              delete row.perk;
-              delete row.perkGratis;
-              if (row.qty <= 0) {
-                inv.splice(i, 1);
-              }
-            }
+          if (p.namn === 'Välutrustad') {
+            const inv = storeHelper.getInventory(store);
+            invUtil.removeWellEquippedItems(inv);
+            invUtil.saveInventory(inv); invUtil.renderInventory();
           }
-          invUtil.saveInventory(inv); invUtil.renderInventory();
-        }
       }
     }
     renderList(filtered());
