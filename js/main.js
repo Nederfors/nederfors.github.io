@@ -443,7 +443,7 @@ function tryNilasPopup(term) {
 }
 
 function tryBomb(term) {
-  if (term.toLowerCase() !== 'bomb') return false;
+  if (term !== 'BOMB!') return false;
   storeHelper.deleteAllCharacters(store);
   location.reload();
   return true;
