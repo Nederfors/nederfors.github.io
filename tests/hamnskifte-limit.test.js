@@ -28,16 +28,20 @@ global.isMonstrousTrait = window.isMonstrousTrait;
 global.isRas = window.isRas;
 require('../js/store');
 
-function limit(list, name, lvl){
-  return window.storeHelper.hamnskifteNoviceLimit(list, name, lvl);
+function limit(list, item, lvl){
+  return window.storeHelper.hamnskifteNoviceLimit(list, item, lvl);
 }
 
 (function test(){
   const hamGes = { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå:'Gesäll' };
-  assert.strictEqual(limit([hamGes], 'Naturligt vapen', 'Gesäll'), true);
-  assert.strictEqual(limit([hamGes, { namn:'Blodvadare', taggar:{typ:['Yrke']} }], 'Naturligt vapen', 'Gesäll'), false);
-  assert.strictEqual(limit([hamGes, { namn:'Mörkt blod', taggar:{typ:['Fördel']} }], 'Naturligt vapen', 'Gesäll'), false);
+  const nvBeast = { namn:'Naturligt vapen', taggar:{typ:['Monstruöst särdrag']}, form:'beast' };
+  assert.strictEqual(limit([hamGes, nvBeast], nvBeast, 'Gesäll'), true);
+  assert.strictEqual(limit([hamGes, nvBeast, { namn:'Blodvadare', taggar:{typ:['Yrke']} }], nvBeast, 'Gesäll'), false);
+  assert.strictEqual(limit([hamGes, nvBeast, { namn:'Mörkt blod', taggar:{typ:['Fördel']} }], nvBeast, 'Gesäll'), true);
   const hamMas = { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå:'Mästare' };
-  assert.strictEqual(limit([hamMas], 'Robust', 'Gesäll'), true);
+  const robBeast = { namn:'Robust', taggar:{typ:['Monstruöst särdrag']}, form:'beast' };
+  assert.strictEqual(limit([hamMas, robBeast], robBeast, 'Gesäll'), true);
+  const robBase = { namn:'Robust', taggar:{typ:['Monstruöst särdrag']} };
+  assert.strictEqual(limit([hamMas, robBeast, robBase], robBase, 'Gesäll'), false);
   console.log('All tests passed.');
 })();

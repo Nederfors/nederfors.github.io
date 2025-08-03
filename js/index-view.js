@@ -314,7 +314,7 @@ function initIndex() {
           if (!monsterOk) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
-          if (storeHelper.hamnskifteNoviceLimit(list, p.namn, lvl)) {
+          if (storeHelper.hamnskifteNoviceLimit(list, p, lvl)) {
             alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
             return;
           }
@@ -534,7 +534,7 @@ function initIndex() {
         e.target.value = old;
         return;
       }
-      if (storeHelper.hamnskifteNoviceLimit(list, name, ent.nivå)) {
+      if (storeHelper.hamnskifteNoviceLimit(list, ent, ent.nivå)) {
         alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
         ent.nivå = old;
         e.target.value = old;
