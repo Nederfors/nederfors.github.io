@@ -37,10 +37,10 @@ function test(){
     return window.storeHelper.calcUsedXP(list, {});
   }
 
-  const nv = { ...window.DB.find(x => x.namn === 'Naturligt vapen'), form:'beast' };
-  const pan = { ...window.DB.find(x => x.namn === 'Pansar'), form:'beast' };
-  const reg = { ...window.DB.find(x => x.namn === 'Regeneration'), form:'beast' };
-  const rob = { ...window.DB.find(x => x.namn === 'Robust'), form:'beast' };
+  const nv = { ...window.DB.find(x => x.namn === 'Naturligt vapen'), namn:'Naturligt vapen: Hamnskifte', form:'beast' };
+  const pan = { ...window.DB.find(x => x.namn === 'Pansar'), namn:'Pansar: Hamnskifte', form:'beast' };
+  const reg = { ...window.DB.find(x => x.namn === 'Regeneration'), namn:'Regeneration: Hamnskifte', form:'beast' };
+  const rob = { ...window.DB.find(x => x.namn === 'Robust'), namn:'Robust: Hamnskifte', form:'beast' };
   const hamGes = { namn:'Hamnskifte', taggar:{typ:['Förmåga','Mystisk kraft']}, nivå:'Gesäll' };
   const hamMas = { namn:'Hamnskifte', taggar:{typ:['Förmåga','Mystisk kraft']}, nivå:'Mästare' };
 

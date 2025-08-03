@@ -69,9 +69,10 @@ function initCharacter() {
 
   const renderSkills = arr=>{
     const groups = [];
+    const hamNames = Object.values(storeHelper.HAMNSKIFTE_NAMES);
     arr.forEach(p=>{
         const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-        if(multi && !['Naturligt vapen','Pansar','Regeneration','Robust'].includes(p.namn)){
+        if(multi && !['Naturligt vapen','Pansar','Regeneration','Robust', ...hamNames].includes(p.namn)){
           const g = groups.find(x=>x.entry.namn===p.namn);
           if(g) { g.count++; return; }
           groups.push({entry:p, count:1});
@@ -131,7 +132,7 @@ function initCharacter() {
       li.dataset.xp = xpVal;
       const showInfo = compact || hideDetails;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-      li.innerHTML = `<div class="card-title"><span>${p.form === "beast" ? `${p.namn}: Hamnskifte` : p.namn}${badge}</span>${xpHtml}</div>
+      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
         <div class="tags">${tagsHtml}</div>
         ${lvlSel}
         ${descHtml}

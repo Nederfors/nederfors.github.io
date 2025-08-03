@@ -35,9 +35,9 @@ function xpFor(items){
 
 function test(){
   const hamGes = { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå:'Gesäll' };
-  const nvGes = { namn:'Naturligt vapen', taggar:{typ:['Monstruöst särdrag']}, nivå:'Gesäll', form:'beast' };
+  const nvGes = { ...window.DB.find(x=>x.namn==='Naturligt vapen'), namn:'Naturligt vapen: Hamnskifte', nivå:'Gesäll', form:'beast' };
   const hamMas = { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå:'Mästare' };
-  const regGes = { namn:'Regeneration', taggar:{typ:['Monstruöst särdrag']}, nivå:'Gesäll', form:'beast' };
+  const regGes = { ...window.DB.find(x=>x.namn==='Regeneration'), namn:'Regeneration: Hamnskifte', nivå:'Gesäll', form:'beast' };
 
   assert.strictEqual(xpFor([hamGes, nvGes]), 50);
   assert.strictEqual(xpFor([hamMas, regGes]), 80);

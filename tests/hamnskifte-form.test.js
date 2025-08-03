@@ -33,10 +33,10 @@ function xpFor(items){
 
 (function test(){
   const hamGes = { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå:'Gesäll' };
-  const nvBeast = { namn:'Naturligt vapen', taggar:{typ:['Monstruöst särdrag']}, form:'beast' };
+  const nvBeast = { namn:'Naturligt vapen: Hamnskifte', taggar:{typ:['Monstruöst särdrag']}, form:'beast' };
   const nvNorm = { namn:'Naturligt vapen', taggar:{typ:['Monstruöst särdrag']}, form:'normal' };
   const hamMas = { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå:'Mästare' };
-  const regBeast = { namn:'Regeneration', taggar:{typ:['Monstruöst särdrag']}, form:'beast' };
+  const regBeast = { namn:'Regeneration: Hamnskifte', taggar:{typ:['Monstruöst särdrag']}, form:'beast' };
   const regNorm = { namn:'Regeneration', taggar:{typ:['Monstruöst särdrag']}, form:'normal' };
 
   assert.strictEqual(xpFor([hamGes, nvNorm]), 40);
