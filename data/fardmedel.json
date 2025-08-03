@@ -11,7 +11,8 @@
       "daler": 200,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far1"
   },
   {
     "namn": "Galär",
@@ -25,7 +26,8 @@
       "daler": 1000,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far2"
   },
   {
     "namn": "Kanot",
@@ -39,7 +41,8 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far3"
   },
   {
     "namn": "Kärra",
@@ -53,7 +56,8 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far4"
   },
   {
     "namn": "Ridhäst, lätt",
@@ -67,7 +71,8 @@
       "daler": 5,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far5"
   },
   {
     "namn": "Ridhäst, tung",
@@ -81,7 +86,8 @@
       "daler": 7,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far6"
   },
   {
     "namn": "Mulåsna",
@@ -95,7 +101,8 @@
       "daler": 3,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far7"
   },
   {
     "namn": "Roddbåt",
@@ -109,7 +116,8 @@
       "daler": 3,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far8"
   },
   {
     "namn": "Släde",
@@ -123,7 +131,8 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "far9"
   },
   {
     "namn": "Vagn",
@@ -137,5 +146,7 @@
       "daler": 5,
       "skilling": 0,
       "örtegar": 0
-    }
-  }]
+    },
+    "id": "far10"
+  }
+]
