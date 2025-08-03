@@ -332,7 +332,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 .exp-counter { font-weight: 500; }
 
 /* Rödmarkering för negativa värden */
-.exp-counter.under { color: #ffb0b0; }
+.exp-counter.under { color: #ff4040; }
 .exp-counter.under span { color: inherit; }
 
 
