@@ -131,4 +131,18 @@ store.data.c.list = [ { namn: 'Stavkamp', nivå: 'Novis', taggar: { typ: ['Förm
 const res10 = window.calcDefense(15);
 assert.deepStrictEqual(res10, [ { value: 17 } ]);
 
+// A shield grants +1 defense
+window.DB.push({ namn: 'Sköld', taggar: { typ: ['Vapen', 'Sköld'] } });
+window.DBIndex['Sköld'] = window.DB[window.DB.length - 1];
+store.data.c.inventory = [ { name: 'Sköld', qty: 1 } ];
+store.data.c.list = [];
+const res11 = window.calcDefense(15);
+assert.deepStrictEqual(res11, [ { value: 16 } ]);
+
+// Sköldkamp Novis grants an additional +1 defense when using a shield
+store.data.c.inventory = [ { name: 'Sköld', qty: 1 } ];
+store.data.c.list = [ { namn: 'Sköldkamp', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
+const res12 = window.calcDefense(15);
+assert.deepStrictEqual(res12, [ { value: 17 } ]);
+
 console.log('All tests passed.');
