@@ -306,6 +306,7 @@ function initIndex() {
             list.some(x => x.namn === 'Mörkt blod') ||
             (baseRace === 'Troll' && trollTraits.includes(p.namn)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(p.namn)) ||
+            (baseRace === 'Rese' && p.namn === 'Robust') ||
             (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(p.namn)) ||
             ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && p.namn === 'Diminutiv') ||
             (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen','Pansar'].includes(p.namn)) ||
