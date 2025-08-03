@@ -68,8 +68,33 @@ const res3 = window.calcDefense(15);
 assert.deepStrictEqual(res3, [ { value: 16 } ]);
 
 // Balanced weapon bonus stacks with armor
+window.DB.push({
+  namn: 'Kråkrustning',
+  taggar: { typ: ['Rustning'] },
+  kvalitet: 'Otymplig',
+  stat: { skydd: '1T6', begränsning: -3 }
+});
+window.DBIndex['Kråkrustning'] = window.DB[3];
 store.data.c.inventory.unshift({ name: 'Kråkrustning', qty: 1 });
 const res4 = window.calcDefense(15);
-assert.deepStrictEqual(res4, [ { name: 'Kråkrustning', value: 13 } ]);
+assert.deepStrictEqual(res4, [ { name: 'Kråkrustning', value: 12 } ]);
+
+// Tvillingattack grants +1 defense when wielding two weapons
+window.DB.push({ namn: 'Kniv', taggar: { typ: ['Vapen'] } });
+window.DB.push({ namn: 'Yxa', taggar: { typ: ['Vapen'] } });
+store.data.c.inventory = [
+  { name: 'Kniv', qty: 1 },
+  { name: 'Yxa', qty: 1 }
+];
+store.data.c.list = [
+  { namn: 'Tvillingattack', nivå: 'Novis', taggar: { typ: ['Förmåga'] } }
+];
+const res5 = window.calcDefense(15);
+assert.deepStrictEqual(res5, [ { value: 16 } ]);
+
+// No bonus with only one weapon
+store.data.c.inventory = [ { name: 'Kniv', qty: 1 } ];
+const res6 = window.calcDefense(15);
+assert.deepStrictEqual(res6, [ { value: 15 } ]);
 
 console.log('All tests passed.');
