@@ -19,13 +19,18 @@ function initCharacter() {
   const conflictList = document.getElementById('conflictList');
 
   function conflictEntryHtml(p){
-    const lvlHtml = LVL.map(l=>{
-      return p.taggar?.handling?.[l]?.includes('Aktiv')
-        ? `<dt>${l}</dt><dd>${formatText(p.nivåer?.[l]||'')}</dd>`
-        : '';
-    }).filter(Boolean).join('');
-    const desc = lvlHtml ? `<div class="card-desc"><dl class="levels">${lvlHtml}</dl></div>` : '';
-    return `<li class="card"><div class="card-title"><span>${p.namn}</span></div>${desc}</li>`;
+    const compact = storeHelper.getCompactEntries(store);
+    const maxIdx = LVL.indexOf(p.nivå || LVL[0]);
+    const lvlHtml = LVL.filter((_, i) => i <= maxIdx)
+      .map(l => p.taggar?.handling?.[l]?.includes('Aktiv')
+        ? `<dt>${l}</dt><dd>${formatText(p.nivåer?.[l] || '')}</dd>`
+        : '')
+      .filter(Boolean)
+      .join('');
+    const desc = (!compact && lvlHtml)
+      ? `<div class="card-desc"><dl class="levels">${lvlHtml}</dl></div>`
+      : '';
+    return `<li class="card${compact ? ' compact' : ''}"><div class="card-title"><span>${p.namn}</span></div>${desc}</li>`;
   }
 
   function renderConflicts(list){
@@ -256,17 +261,9 @@ function initCharacter() {
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
       const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-        const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
-        const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
-        const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-        let btn = '';
-        if(multi){
-          const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
-          const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-          btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
-      }else{
-        btn = `<button class="char-btn danger icon" data-act="rem">🗑</button>`;
-      }
+      const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
+      const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
+      const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
       const tagsHtml = (p.taggar?.typ || [])
         .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
         .map(t => `<span class="tag">${t}</span>`).join(' ');
@@ -277,10 +274,18 @@ function initCharacter() {
       const conflictBtn = hasActive
         ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}">💔</button>`
         : '';
+      let btn = '';
+      if(multi){
+        const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
+        const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
+        btn = `<div class="inv-controls">${remBtn}${conflictBtn}${addBtn}</div>`;
+      }else{
+        btn = `<div class="inv-controls"><button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
+      }
       li.dataset.xp = xpVal;
       const showInfo = compact || hideDetails;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span><span class="title-actions">${xpHtml}${conflictBtn}</span></div>
+      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span><span class="title-actions">${xpHtml}</span></div>
         <div class="tags">${tagsHtml}</div>
         ${lvlSel}
         ${descHtml}
