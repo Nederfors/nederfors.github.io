@@ -24,16 +24,16 @@
 </head>
 <body data-role="character">
 
-  <!-- Översiktsknapp -->
-  <button id="summaryToggle" class="char-btn icon summary-btn" title="Visa översikt">📋</button>
-
   <h1 class="app-title">ROLLPERSON</h1>
 
   <div id="activeFilters" class="tags"></div>
 
   <!-- Panel för valda förmågor / krafter -->
   <div class="panel">
-    <h2 id="charName" style="margin-top:0;"></h2>
+    <div class="panel-header">
+      <h2 id="charName" style="margin:0;"></h2>
+      <button id="summaryToggle" class="char-btn icon summary-btn" title="Visa översikt">📋</button>
+    </div>
     <ul id="valda" class="card-list"></ul>
   </div>
 
