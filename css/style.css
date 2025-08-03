@@ -81,10 +81,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 
 /* Knapp för översiktsmeny */
 .summary-btn {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
-  z-index: 1100;
+  margin-left: auto;
 }
 
 /* Innehåll i översiktspanel */
@@ -174,6 +171,13 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   width: 100%;
   max-width: 520px;
   box-shadow: var(--shadow);
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .8rem;
 }
 
 /* ---------- Input/Select ---------- */
