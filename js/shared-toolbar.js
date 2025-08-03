@@ -155,7 +155,7 @@ class SharedToolbar extends HTMLElement {
                 <span class="toggle-question">Tvinga försvarskaraktärsdrag?</span>
                 <span class="toggle-note">Välj karaktärsdrag via meny.</span>
               </span>
-              <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🛡️</button>
+              <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
             </li>
             <li>
               <span class="toggle-desc">
