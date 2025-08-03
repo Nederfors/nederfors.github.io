@@ -198,14 +198,14 @@
       }
       if (k === 'Diskret') {
         if (storeHelper.abilityLevel(list, 'Fint') >= 1) {
-          extra += '<div class="trait-extra">Används som träffsäker för attacker i närstrid med kort eller precist vapen</div>';
+          extra += '<div class="trait-extra">Kan användas som träffsäker för attacker i närstrid med kort eller precist vapen</div>';
         }
         if (storeHelper.abilityLevel(list, 'Lönnstöt') >= 1) {
-          extra += '<div class="trait-extra">Används som träffsäker för attacker med Övertag</div>';
+          extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med Övertag</div>';
         }
       }
       if (k === 'Listig' && storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
-        extra += '<div class="trait-extra">Används som träffsäker för attacker med allt utom tunga vapen</div>';
+        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med allt utom tunga vapen</div>';
       }
       if (k === 'Vaksam') {
         const sjatteSinneLvl = Math.max(
@@ -213,16 +213,16 @@
           storeHelper.abilityLevel(list, 'Sjätte sinne')
         );
         if (sjatteSinneLvl >= 3) {
-          extra += '<div class="trait-extra">Används som träffsäker</div>';
+          extra += '<div class="trait-extra">Kan användas som träffsäker</div>';
         } else if (sjatteSinneLvl >= 1) {
-          extra += '<div class="trait-extra">Används som träffsäker för attacker med avståndsvapen</div>';
+          extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med avståndsvapen</div>';
         }
       }
       if (k === 'Stark' && storeHelper.abilityLevel(list, 'Järnnäve') >= 1) {
-        extra += '<div class="trait-extra">Används som träffsäker för attacker i närstrid</div>';
+        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker i närstrid</div>';
       }
       if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Dominera') >= 1) {
-        extra += '<div class="trait-extra">Används som träffsäker för attacker i närstrid</div>';
+        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker i närstrid</div>';
       }
       if (k === defTrait) {
         const defHtml = defs.map(d => `<div class="trait-extra">Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`).join('');
