@@ -1,536 +1,771 @@
 [
   {
+    "id": "y1",
     "namn": "Bärsärkare",
     "beskrivning": "*Håll dig på avstånd! Jag vill ogärna skada dig.*\n Vredgade andar följer dig och fyller dig med rasande kraft i strid. Vid sidan om slagfältet är du av ett eftertänksamt och tålmodigt kynne, en kontrast som gör dig såväl uppskattad som fruktad. Mest omtalade bland barbarerna är de särskilt utvalda bärsärkakrigare som samlas kring Storhövdingen i Slumrande vredens garde – kanske drömmer du om att bli en av dem, eller om att besegra någon av dem som hämnd för att denne tog ”din plats”?",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
-    "forslag_pa_slakte": ["Barbar", "rese"],
-    "lampliga_formagor": ["Bärsärk", "Järnnäve", "Tvåhandskraft", "Återhämtning"]
+    "forslag_pa_slakte": [
+      "Barbar",
+      "rese"
+    ],
+    "lampliga_formagor": [
+      "Bärsärk",
+      "Järnnäve",
+      "Tvåhandskraft",
+      "Återhämtning"
+    ]
   },
   {
+    "id": "y2",
     "namn": "Duellant",
     "beskrivning": "*Var så vänlig, undvik att skvätta blod när jag spetsar dig.*\n Heder och ära är en krigares allt och kan man försvara sitt namn med finess är det ännu bättre. Du har levt ditt liv efter den devisen och eftersom du fortfarande lever har du uppenbarligen en del att komma med i sammanhanget.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick eller Diskret 11+",
-    "forslag_pa_slakte": ["Ambrier", "bortbyting"],
-    "lampliga_formagor": ["Akrobatik", "Fint", "Rustmästare", "Tvillingattack"]
+    "forslag_pa_slakte": [
+      "Ambrier",
+      "bortbyting"
+    ],
+    "lampliga_formagor": [
+      "Akrobatik",
+      "Fint",
+      "Rustmästare",
+      "Tvillingattack"
+    ]
   },
   {
+    "id": "y3",
     "namn": "Kapten",
     "beskrivning": "*Gör som jag sagt så ordnar det sig!*\n Du är en född ledare och har byggt din militära karriär på det. Vapenkonst är för dig endast ett sätt att hålla dig vid liv och kanske var det också en gång ett krav för att få dina underlydandes respekt. Numera är det du som tar fram det bästa hos dina allierade på slagfältet, som guidar och skyddar dem medan ni uppnår era militära mål. Så vinner du deras förtroende.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Övertygande 13+",
     "forslag_pa_slakte": "Människa (vanligen ambrier)",
-    "lampliga_formagor": ["Dominera", "Ledare", "Rustmästare", "Sköldkamp"]
+    "lampliga_formagor": [
+      "Dominera",
+      "Ledare",
+      "Rustmästare",
+      "Sköldkamp"
+    ]
   },
   {
+    "id": "y4",
     "namn": "Säljsvärd",
     "beskrivning": "*Mitt svärd och mitt blod, i utbyte mot ditt guld.*\n Du har slagits som ett sätt att leva, för en inkomst. Ambrias furstar hyr regelbundet stridskraft för kampanjer mot Davokars barbarer och Davokars klanledare gör detsamma i retur. Handelshus behöver vakter, pilgrimer likaså. För vem eller hur du har stridit kan ha varierat, men skickligheten med vapen och en instinkt för vilka strider som kan vinnas har varit avgörande för din överlevnad.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Stark 13+",
     "forslag_pa_slakte": "Människa",
-    "lampliga_formagor": ["Järnnäve", "Rustmästare", "Sköldkamp", "Stångverkan"]
+    "lampliga_formagor": [
+      "Järnnäve",
+      "Rustmästare",
+      "Sköldkamp",
+      "Stångverkan"
+    ]
   },
   {
+    "id": "y5",
     "namn": "Riddare",
     "beskrivning": "*Du kan ta livet ifrån mig, inte min heder.*\n Du är en riddare som slåss för att bryta fiendens linjer eller hålla den egna härens. Tungt rustad utanpå och med en djup pliktkänsla inuti strider du för din furstes gunst, dina allierades liv och din egen ära. Kanske drömmer du om att bli en av de pansárer som utgör stommen i Drottningens eget livgarde, eller en av de templárer som slåss i Prios namn.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
     "forslag_pa_slakte": "Ambrier",
-    "lampliga_formagor": ["Järnnäve", "Livvakt", "Rustmästare", "Tvåhandskraft"]
+    "lampliga_formagor": [
+      "Järnnäve",
+      "Livvakt",
+      "Rustmästare",
+      "Tvåhandskraft"
+    ]
   },
   {
+    "id": "y6",
     "namn": "Häxa",
     "beskrivning": "*Din önskan är underordnad naturens vilja, acceptera det! Eller dö.*\n Den vilda naturen är ditt hem; att balansera dina egna behov mot naturens är ditt värv. Som häxa är du nära knuten till landet självt och kan lägga dess urkraft till din egen inre styrka. Du förhandlar med naturens väsen, förstår landets flöden och önskningar, och dina krafter härrör från livets och dödens kretslopp.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Viljestark 13+, Träffsäker 11+",
-    "forslag_pa_slakte": ["Barbar", "bortbyting"],
-    "lampliga_formagor": ["Häxkonster", "Mystisk kraft", "Naturlig krigare", "Ritualist"]
+    "forslag_pa_slakte": [
+      "Barbar",
+      "bortbyting"
+    ],
+    "lampliga_formagor": [
+      "Häxkonster",
+      "Mystisk kraft",
+      "Naturlig krigare",
+      "Ritualist"
+    ]
   },
   {
+    "id": "y7",
     "namn": "Svartkonstnär",
     "beskrivning": "*Det finns en annan väg; en enklare väg.*\n Du har av desperation eller makthunger drivits in på svartkonstens väg och snart funnit dig både anfrätt av korruption och jagad av fanatiska häxjägare. Kanske ser du din utsatthet som ett bevis på att du behöver ännu mer makt? Eller så är du uppriktigt ångerfull och söker en väg tillbaka till förlåtelse och räddning.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Viljestark 13+, Diskret eller Listig 11+",
     "forslag_pa_slakte": "Människa",
-    "lampliga_formagor": ["Alkemi", "Mystisk kraft", "Ritualist", "Svartkonst"]
+    "lampliga_formagor": [
+      "Alkemi",
+      "Mystisk kraft",
+      "Ritualist",
+      "Svartkonst"
+    ]
   },
   {
+    "id": "y8",
     "namn": "Teurg",
     "beskrivning": "*Prios ser dig, kättare!*\n Du är teurg, en prästmagiker. Din tro på Laggivaren är orubbligt djup: Prios är solen och själens ljus, människans räddare ur de gamla gudarnas slaveri, världens skapare och allt livs beskyddare. Ur denna rena källa springer en sällsam kraft. Den mystiska kunskap du besitter vore tom och farlig utan tron som kompass och fundament, vilket ofta visas när gudlösa mystiker utövar sina krafter.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Viljestark 13+, Listig eller Övertygande 11+",
     "forslag_pa_slakte": "Ambrier",
-    "lampliga_formagor": ["Mystisk kraft", "Medicus", "Ritualist", "Teurgi"]
+    "lampliga_formagor": [
+      "Mystisk kraft",
+      "Medicus",
+      "Ritualist",
+      "Teurgi"
+    ]
   },
   {
+    "id": "y9",
     "namn": "Ordensmagiker",
     "beskrivning": "*Märkvärdigt, det här måste hembringas för närmare studier.*\n Du är skolad i den gamla ordensmagins hemligheter, visdomar födda i söderns riken och förfinade genom ett millennium av efterforskningar och undervisning. För dig är magin en förlängning av världens djupa lagar, lagar som du noga studerat och förstår att utnyttja till stor och imponerande effekt.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
     "forslag_pa_slakte": "Ambrier",
-    "lampliga_formagor": ["Mystisk kraft", "Lärd", "Ordensmagi", "Ritualist"]
+    "lampliga_formagor": [
+      "Mystisk kraft",
+      "Lärd",
+      "Ordensmagi",
+      "Ritualist"
+    ]
   },
   {
+    "id": "y10",
     "namn": "Självlärd besvärjare",
     "beskrivning": "*De sa att jag inte tog krafterna på allvar; jag ska visa dem hur fel de hade.*\n Du är en självlärd mystiker, utkastad ur en tradition, aldrig insläppt eller ointresserad av traditionernas trånga värld. Friheten kommer till ett pris: korruptionen lurar bakom hörnet. Och häxjägare ser dig som lovligt byte. Vare sig du vandrar från by till by eller har gömt dig i stadens myller tjänar du ditt levebröd på att erbjuda dina tjänster som finnare av förlorade ting eller som ockult kunskapare.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Vaksam 13+, Viljestark 11+",
-    "forslag_pa_slakte": ["Ambrier", "bortbyting"],
-    "lampliga_formagor": ["Häxsyn", "Mystisk kraft (två stycken)", "Ritualist"]
+    "forslag_pa_slakte": [
+      "Ambrier",
+      "bortbyting"
+    ],
+    "lampliga_formagor": [
+      "Häxsyn",
+      "Mystisk kraft (två stycken)",
+      "Ritualist"
+    ]
   },
   {
+    "id": "y11",
     "namn": "Bedragare",
     "beskrivning": "*Två droppar om dagen och du blir aldrig sjuklig igen!*\n Du har valt den sociala arenan till ditt slagfält. Där är din snabba tunga ditt vassaste vapen och dina förtroendeingivande ögon din bästa sköld. Om de fallerar förlitar du dig på beväpning av lättare sort kombinerat med lömska manövrar.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Kvick 13+, Diskret 11+",
-    "forslag_pa_slakte": ["Människa (vanligen ambrier)", "bortbyting"],
-    "lampliga_formagor": ["Akrobatik", "Fint", "Lönnstöt", "Tvillingattack"]
+    "forslag_pa_slakte": [
+      "Människa (vanligen ambrier)",
+      "bortbyting"
+    ],
+    "lampliga_formagor": [
+      "Akrobatik",
+      "Fint",
+      "Lönnstöt",
+      "Tvillingattack"
+    ]
   },
   {
+    "id": "y12",
     "namn": "Häxjägare",
     "beskrivning": "*Hellre en oskyldig under jord än en styggelse på dess yta.*\n Du har vigt ditt liv åt att bekämpa styggelser, kanske som en följd av att ditt eget liv en gång slagits i spillror av det växande och smittsamma mörkret: en nedbränd gård, din familjs grav, en väns vidriga förvandling – någonting påminner dig för alltid om vad som händer när styggelsens kraft inte knäcks i tid. Du skyr inga medel i kampen; du slåss med stål, eld och kanske även ritualer som du har kommit över från nedkämpade svartkonstnärer. Du inser möjligen att bruket av magi driver dig mot förstyggelsen, men du blundar för detta faktum och strider blint vidare med fanatikerns glöd.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Viljestark 13+, Listig eller Träffsäker 11+",
     "forslag_pa_slakte": "Människa",
-    "lampliga_formagor": ["Monsterlärd", "Prickskytt", "Ritualist", "Ståndaktig"]
+    "lampliga_formagor": [
+      "Monsterlärd",
+      "Prickskytt",
+      "Ritualist",
+      "Ståndaktig"
+    ]
   },
   {
+    "id": "y13",
     "namn": "Ligist",
     "beskrivning": "*Dina pengar eller ditt blod, du väljer.*\n Yndaros östliga kvarter är en vildmark lika farlig som Davokar, och lika lukrativ för de som vet hur att skörda dess frukter. Du har vuxit upp i gränderna och skolats av gäng och ligor i konsten att bärga frukten av andras arbete, och dessutom att göra det utan att stadsvakten kommer på dig. Vissa ligister kommer upp sig i smöret då de tar anställning som fogdens män. Då kan de på baroners och grevars mandat agera råskinn och indrivare utan att störas av stadsvakter.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Kvick 13+, Listig 11+",
-    "forslag_pa_slakte": ["Människa", "rese", "svartalf"],
-    "lampliga_formagor": ["Akrobatik", "Giftbrukare", "Stryparkonst", "Tvillingattack"]
+    "forslag_pa_slakte": [
+      "Människa",
+      "rese",
+      "svartalf"
+    ],
+    "lampliga_formagor": [
+      "Akrobatik",
+      "Giftbrukare",
+      "Stryparkonst",
+      "Tvillingattack"
+    ]
   },
   {
+    "id": "y14",
     "namn": "Skattletare",
     "beskrivning": "*Det där altaret... undrar om man inte kan skjuta det åt sidan.*\n Davokars djup rymmer skatter; att lokalisera, bärga och återföra dem till civilisationen är ditt levebröd. Du drömmer om överväxta ruiner och fantiserar om sjunkna tempel, och i motsats till många andra har du visat dig beredd att satsa ditt liv på att lyckas. För att klara dig har du utvecklat en rad färdigheter och det är få situationer i Davokars dunkel som du inte har en strategi för.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Listig 13+, Kvick 11+",
-    "forslag_pa_slakte": ["Människa", "rese", "svartalf"],
-    "lampliga_formagor": ["Akrobatik", "Alkemi", "Stålkast", "Taktiker"]
+    "forslag_pa_slakte": [
+      "Människa",
+      "rese",
+      "svartalf"
+    ],
+    "lampliga_formagor": [
+      "Akrobatik",
+      "Alkemi",
+      "Stålkast",
+      "Taktiker"
+    ]
   },
   {
+    "id": "y15",
     "namn": "Utbygdsjägare",
     "beskrivning": "*Allt som lever kan spåras. Och fällas.*\n Skogens dunkel eller bergens dalgångar är din hemvist och där jagar du bestar för mat och päls eller beskyddar befolkning och resenärer mot faror. Du har lärt dig att röra dig i vildmarken på ett sätt som gör att fienden inte når dig medan dina pilar ändå träffar sina mål.",
-    "taggar": { "typ": ["Yrke"] },
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
     "viktiga_karaktarsdrag": "Vaksam 13+, Diskret 11+",
-    "forslag_pa_slakte": ["Barbarättad människa", "bortbyting"],
-    "lampliga_formagor": ["Akrobatik", "Monsterlärd", "Prickskytt", "Sjätte sinne"]
+    "forslag_pa_slakte": [
+      "Barbarättad människa",
+      "bortbyting"
+    ],
+    "lampliga_formagor": [
+      "Akrobatik",
+      "Monsterlärd",
+      "Prickskytt",
+      "Sjätte sinne"
+    ]
   },
-{
-  "namn": "Jägare",
-  "beskrivning": "Det kan knappast ifrågasättas att Jägaren är en arketypisk karaktär av stor betydelse för både Ambria och skogarnas klaner. I gemene ambriers ögon är de kanske inte mycket mer värda än tjuvar, men för många (särskilt bland de som bor i Davokars närhet) är de att likställa med hjältar. Smutsiga av vildmarkslort och med framtidens ljus i blick är jägarna en förutsättning för det stora projektet att kultivera Davokar och utvinna dess rikedomar. Jägare finns bland både ambrier och barbarer och utmärks ofta av sin skicklighet med projektilvapen och därmed relaterade taktiker. Exakt hur de slåss beror främst på om de har specialiserat sig på att jaga brottslingar, monster eller svartkonstnärer. Jägarens olika måltavlor till trots, det som förenar dem är en högt utvecklad känsla för vart bytet går, hur det rör sig och vart det ska ta vägen härnäst; allt en förståelse som med dödlig precision sammanfattas i den arketypiska förmågan Jaktinstinkt.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Vaksam, Diskret, Kvick, Träffsäker, Listig",
-  "forslag_pa_slakte": [
-    "alver", 
-    "alvtagna", 
-    "människor", 
-    "svartalftsjägare", 
-    "resar", 
-    "dvärgar"
-  ],
-  "lampliga_formagor": [
-    "Jaktinstinkt (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
-    "Akrobatik",
-    "Snabbdrag",
-    "Snabbeld",
-    "Alkemi",
-    "Försåtsgillrare",
-    "Giftbrukare",
-    "Lärd",
-    "Medicus",
-    "Monsterlärd",
-    "Smideskonst",
-    "Taktiker",
-    "Järnnäve",
-    "Närstridsskytte",
-    "Prickskytt",
-    "Spjutdans",
-    "Stålkast",
-    "Stångverkan",
-    "Tvillingattack",
-    "Häxsyn",
-    "Sjätte sinne",
-    "Livvakt",
-    "Ståndaktig",
-    "Dominera",
-    "Ledare",
-    "Exceptionellt karaktärsdrag",
-    "Ritualist",
-    "Rustmästare",
-    "Ryttarkonst",
-    "Återhämtning"
-  ]
-},
-{
-  "namn": "Prisjägare",
-  "beskrivning": "*”Avskum, jag? Förvisso, men avskum du behöver låter det som.”*\nRedan under Det stora kriget förekom desertörer; tvivlet på möjligheten att besegra Mörkermästarna var vida spritt. För att stävja problemet satte kung Ynedar, drottning Korinthias far, ett stående pris på fanflyktingars huvuden, och därmed upprät­tades indirekt prisjägarnas skrå. Traditionen att betala för efterlystas infångande lever vidare och prisjägare tvingas nu inte bara jaga i rikets utmarker och städer utan också i Davokar, dit de mest desperata – och för prisjägaren ofta mest värdefulla – målen flyr.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Träffsäker 13+, Vaksam 11+",
-  "forslag_pa_slakte": [
-    "Människa",
-    "dvärg"
-  ],
-  "lampliga_formagor": [
-    "Prickskytt",
-    "Snärjande strid",
-    "Tjyvknep",
-    "Blodhund",
-    "Marschvana",
-    "Packåsna",
-    "Skvallerbytta",
-    "Kontaktnät",
-    "Vildmarksvana",
-    "Hederskod",
-    "Impulsiv"
-  ]
-},
-{
-  "namn": "Monsterjägare",
-  "beskrivning": "*”Låt mig ta hand om ert … problem.”*\nI takt med att fler och fler ambrier har slagit ner sina bopålar i Davokars skugga har dessa bosättningar också kommit att hemsökas av skogens hungriga, hämndlystna eller rent livshatande fasor. För att möta hotet har dådkraftiga individer utvecklat tekniker och samlat kunskaper för monsterjakt – och det ofta höga priset på monstertroféer skadar förstås inte heller! Även skogarnas barbarer har sina monsterjägare, men de jagar inte för troféer och eftersom barbarerna håller sig till häxornas tabun bosätter de sig inte heller på provocerande platser.\nMerparten av de ambriska monsterjägarna ingår i något av de monsterjägarsällskap som har utvecklats i och kring platser som Tistla Fäste och Kastor. Dessa sammanslutningar både konkurrerar och samarbetar i det pågående arbetet med att hålla gränsbosättningarna säkra – och sällskapens medlemmar rika. Särskilt det senare, rikedomen, har lockat en del barbarättade monsterjägare söderut, där dessa med sin kunskap om skogen och dess monster har blivit synnerligen framgångsrika troféesamlare.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Listig 13+, Träffsäker 11+",
-  "forslag_pa_slakte": [
-    "Människa"
-  ],
-  "lampliga_formagor": [
-    "Försåtsgillrare",
-    "Monsterlärd",
-    "Prickskytt",
-    "Stångverkan",
-    "Blodhund",
-    "Kartograf",
-    "Packåsna",
-    "Personlig tjänare",
-    "Kontaktnät",
-    "Priviligierad",
-    "Vildmarksvana",
-    "Drogberoende",
-    "Ärkefiende"
-  ],
-  "monsterjägarsällskap": "I Tistla Fäste har monsterjägarna samlats i en rad sällskap, där Röda klon utgör den mest kända sammanslutningen men inte alls den enda. Andra namnkunniga sällskap är de skrytsamma uppkomlingarna Markas pålspetsare och de mer allvarsamma teratologerna i Nikanors taxidermiska gille, vilka försöker samla in monsterkadaver i bästa skick i lärdomssyfte. Flera av dessa har mer eller mindre öppet etablerat utposter nära Karvosti och är frekventa kunder i den nyöppnade handelsboden Grymkäfts fällor, där den pensionerade rese som givit boden dess namn säljer snillrika fångstmedel till hugade spekulanter."
-},
-
-{
-  "namn": "Krigare",
-  "beskrivning": "vem som helst kan lyfta ett vapen mot överheten, mot dem som har mer eller för att lojalt tjäna sin furste. Krigets konstant har lett till framväxten av militära ordnar och grupper som på olika sätt förvaltar en stridskunskap och en livsstil som speglar deras syn på världen. Spelarens handbok introducerar ett antal nya krigaryrken, yrken som alla på sina vis är unika uttryck för hur krigets ständiga närvaro lett till utveckling av kunskap, gemenskaper och institutioner i såväl Ambria som Davokar. De priostrogna templárerna utgör det kanske yttersta uttrycket för att underkastelse ger sällsam kraft. Vredesgardisterna på Karvosti tjänar förvisso sin storhövding men frågan är om de inte egentligen dör för varandra, för sina blodssystrar och bröder snarare än någon högre princip. Från östra Davokar kommer runristade krigare, vars hud är ett pergament som sammanfattar symbolisternas krigskunskap, utan krav på hur den används. Bland såväl troll som alver finns också starka krigartraditioner – trollens runsmeder svingar sina hammare lika hemtamt i smedja som på slagfält, medan alvtagna människor ofta dansar en spjutdans lika gammal som den är dödlig. Krigarnas mest uttalade särdrag är något de alla har gemensamt: det faktum att de alla ska vara som starkast när bördan är som störst. Denna strävan fångas i den arketypiska förmågan *Kraftprov*.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Stark, Kvick, Träffsäker, Viljestark, Övertygande, Oberoende",
-  "forslag_pa_slakte": [
-    "alvtagen människa",
-    "troll",
-    "vandöd"
-  ],
-  "lampliga_formagor": [
-    "Kraftprov (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
-    "Akrobatik",
-    "Snabbdrag",
-    "Järnnäve",
-    "Hammarrytm",
-    "Spjutdans",
-    "Stångverkan",
-    "Tvillingattack",
-    "Tvåhandskraft",
-    "Sköldkamp",
-    "Livvakt",
-    "Ståndaktig",
-    "Dominera",
-    "Ledare",
-    "Bärsärk",
-    "Exceptionellt karaktärsdrag",
-    "Opportunist",
-    "Runtatuering",
-    "Rustmästare",
-    "Ryttarkonst",
-    "Stridsgisslare",
-    "Svärdshelgon",
-    "Yxkonstnär",
-    "Återhämtning"
-  ]
-},
-
-{
-  "namn": "Ristad krigare",
-  "beskrivning": "*”Min vrede brinner på min kropp, känn dess hetta”*\nMånga barbarkrigare låter täcka sina kroppar med tatueringar, men just Vajvods ristade krigare särskiljer sig då de tatueras av symbolister – mystiker med sällsam förståelse för tecknens kraft. De främsta av de ristade krigarna tjänar som livgarde för Vajvods klanhövding.\nOckså bland svartalfer och troll återfinns ristade krigare, en tradition som utvecklats oberoende av vajvodernas symbolism. Bland både troll och svartalfer utgör ristade krigare en elit bland eliter. Inte sällan ses ristade krigare slåss närmast sina härskare på slagfältet, må det vara bland trollen i underjordens salar eller hos svartalferna under skogens trädtak.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
-  "forslag_pa_slakte": [
-    "Barbarättad människa",
-    "svartalf",
-    "troll"
-  ],
-  "lampliga_formagor": [
-    "Järnnäve",
-    "Runtatuering",
-    "Stångverkan",
-    "Tvåhandskraft",
-    "Marschvana",
-    "Seglivad",
-    "Skräckinjagande",
-    "Vildmarksvana",
-    "Impulsiv",
-    "Mörk hemlighet"
-  ]
-},
-
-{
-  "namn": "Runsmed",
-  "beskrivning": "*”Världens rytm ekar i mina hammarslag”*\nBland trollen finns krigare som svurit en helig ed att endast slåss med vapen de själva smitt och iförda rustningar de själva hamrat fram. Dessa runsmeder är bland de främsta av underjordens smeder, därtill fruktade krigare i egen rätt. Det tycks som att också resar dras till den skapande elden och även alverna odlar kunskapen om de djupa smideskonsterna; inte sällan hålls hammarna av alvtagna människor.\nI Ambria finns starka smidestraditioner och även om dessa smeder ofta själva svingar vapen med självförtroende saknar de flesta trollens hängivelse till både smedja och slagfält. På senare tid har dock även ambriska smeder börjat lära de gamla konsterna och därmed nå nya höjder i sitt smide.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Stark 13+, Listig 11+",
-  "forslag_pa_slakte": [
-    "Alvtagen människa",
-    "rese",
-    "troll"
-  ],
-  "lampliga_formagor": [
-    "Hammarrytm",
-    "Tvåhandskraft",
-    "Järnnäve",
-    "Smideskonst",
-    "Arvegods",
-    "Kontaktnät",
-    "Marschvana",
-    "Packåsna",
-    "Mystiskt tecken",
-    "Protegé"
-  ]
-},
-
-{
-  "namn": "Vapenmästare",
-  "beskrivning": "*”Du vill överleva, jag vill dö på ett sätt som alla minns med vördnad”*\nInom krigarkasten i Ambria och Davokar återfinns individer som helt och hållet gått in för att bemästra sitt vapen och dess stridsteknik. Dessa vapenmästare har med enveten träning kommit att uppnå särskild skicklighet med vapnet, inte sällan knutet till en uttalad filosofi om kampen, livet och döden. I Ambria är de kända som Svärdshelgon, eftersom de ägnar sitt liv åt att nå perfektion. Bland Davokars barbarer är de kända som Yxkonstnärer, och inte sällan använder de en yxa i varje hand – en tradition som också har plockats upp av vissa svartalfsstammar i Davokar. Alvernas andliga motsvarighet till vapenmästare kallas Spjutdansare, en konst som inte sällan utövas av alvtagna människor. Hos trollen anses kättingvapnen särskilt ädla då de både är extra krävande och effektiva i rätt händer. Sådana Stridsgisslare återfinns faktiskt också – oberoende av trollens förkärlek för länkade vapen – på Ambrias arenor, inte sällan i resars händer.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
-  "forslag_pa_slakte": [
-    "Svärdshelgon: Ambrier, bortbyting",
-    "Stridsgisslare: Rese, troll",
-    "Spjutdansare: Alv, alvtagen människa",
-    "Yxkonstnär: Barbarättad människa, svartalf"
-  ],
-  "lampliga_formagor": [
-    "Svärdshelgon: Akrobatik, Rustmästare, Svärdshelgon",
-    "Stridsgisslare: Tvåhandskraft, Snärjande strid, Stridsgisslare",
-    "Spjutdansare: Akrobatik, Stavkamp, Stångverkan eller Snärjande strid (om kedjestav används)",
-    "Yxkonstnär: Akrobatik, Tvillingattack, Yxkonstnär",
-    "Arvegods",
-    "Kommenderande stämma",
-    "Kontaktnät",
-    "Personlig tjänare",
-    "Priviligierad",
-    "Seglivad",
-    "Taktisk spelare",
-    "Hederskod",
-    "Ärkefiende"
-  ]
-},
-{
-  "namn": "Mystiker",
-  "beskrivning": "symbaroums spelvärld är väldig och förunderlig, och många är de mystiska traditioner som utvecklats genom historien. Förutom de vanligen förekommande traditionerna återfinns andra i Davokar – symbolisterna som med sin runmagi har tolkningsföreträde framför häxorna i klan Vajvod, de asketiska stavmagikerna i Davokars djup samt trollsångarna, vanliga bland troll och alver. Därtill kan artefaktmakarna räknas, de mystiker som gjuter sin kraft i den lägre ordningens artefakter snarare än uttrycker den i mystiska krafter eller ritualer.\nI de etablerade traditioner som beskrivs i grundboken återfinns underströmmar med särskild inriktning, kallade fördjupningar. Häxkonsterna har sina stigar, ordensmagin sina skolor, teurgin två vägar och svartkonstnärerna kan specialisera sig.\nHäxor talar ofta om tre stigar i Davokar, om blodets röda stig, växandets gröna stig och andarnas vita stig. Det finns häxor som väljer att uteslutande vandra en av de tre stigarna och de kallas då Blodvadare, Grönvävare eller Andebesvärjare.\nInom ordensmagin finns sedan gammalt tre strömningar, utifrån eldens mysterium, sinnets villfarelser och den rena viljans makt över varat. Kring var och en av dessa tre har en skola bildats, kända som Pyromantiken, Illusionismen och Mentalismen. Det är inget krav från orden att en mystiker väljer en skola, men det anses extra fint att göra det. Särskilt i de större ordenskapitlen, där konkurrensen om avancemang inom orden är som mest intensiv, kan tillhörighet till en skola ge fördelar i form av välvilliga kollegor och mentorer.\nBland teurger finns också en fråga att ställa sig: är man en bekämpare av mörkret eller en vårdare av ljuset? Långt ifrån alla teurger väljer, utan balanserar dessa motstridiga synsätt under hela sitt liv. Men de flesta väljer och går in för sin livsuppgift med förtröstan att andra teurger kommer att välja andra vägen och därmed bringa balans i det stora hela.\nSvartkonsten är troligen lika gammal som de äldsta av de andra traditionerna. Dess utövare har oftast behövt verka i det fördolda och därmed inte kunna dra nytta av kunskapsspridning på samma sätt som de accepterade traditionerna. Detta till trots har specialiserade undertraditioner utvecklats i form av dödsbesvärjarna, kända som nekromantiker, och de vämjeliga demonologer som betvingar och förhandlar med styggelser och andra utomvärldsmakter.\nAlla dessa fördjupningar räknas som Elityrken, det vill säga de kräver mer av sina utövare än de flesta yrken gör, men ger i gengäld tillgång till särskilda förmågor.\nOavsett väg, skola eller fördjupning bottnar alla mystiker i viljan att förstå och styra sin omvärld, en dröm som kommer till uttryck i den arketypiska förmågan *Stark gåva*.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande, Oberoende",
-  "forslag_pa_slakte": [
-    "alver",
-    "troll",
-    "vandöd",
-    "alvtagen människa"
-  ],
-  "lampliga_formagor": [
-    "Stark gåva (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
-    "Akrobatik",
-    "Alkemi",
-    "Lärd",
-    "Medicus",
-    "Monsterlärd",
-    "Smideskonst",
-    "Ståndaktig",
-    "Naturlig krigare",
-    "Stångverkan",
-    "Häxsyn",
-    "Sjätte sinne",
-    "Mystisk kraft",
-    "Dominera",
-    "Ledare",
-    "Bärsärk",
-    "Exceptionellt karaktärsdrag",
-    "Häxkonster",
-    "Ordensmagi",
-    "Ritualist",
-    "Stavmagi",
-    "Symbolism",
-    "Teurgi",
-    "Trollsång",
-    "Återhämtning"
-  ]
-},
-
-{
-  "namn": "Symbolist",
-  "beskrivning": "*”Jag målar och världen lyder”*\nAtt symboler och tecken har kraft är välkänt och utnyttjat i de flesta mystiska traditioner, åtminstone i ritualer. Den renodlade symbolismen är en mystisk tradition som nästan uteslutande bygger sin makt på tecken och symboler. Symbolismen kom till Davokar via mystiker från öster, vilka efter flykten över Ravennerna funnit fristad i flodriket som senare blev klanen Vajvods land. Symbolismen – främmande, kraftfull och dekadent – antas av ambriska lärde vara en viktig faktor i varför östra Davokars barbarer är avståndstagande till Karvosti och den av Huldran styrde Storhövdingen där; både som en förklaring till att man av filosofiska och kulturella skäl tar avstånd från häxornas ledare, och till att klan Vajvod faktiskt är mer öppen för omvärlden än andra klaner i Davokar, möjligen Odaiova undantaget. Vajvods storhövding Zoltar den Gamle har inte heller en häxa vid sin sida utan en symbolist, tränad vid Azurtemplet, symbolisternas samlingsplats i hjärtat av Vajvods älvslandskap.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
-  "forslag_pa_slakte": [
-    "Barbarättad människa (klan Vajvod)",
-    "svartalf",
-    "troll"
-  ],
-  "lampliga_formagor": [
-    "Mystisk kraft (vanligen Beskyddande runor)",
-    "Ritualist (vanligen Rista runtatuering)",
-    "Symbolism",
-    "Arkivarie",
-    "Arvegods",
-    "Kartograf",
-    "Kontaktnät",
-    "Teckentydare",
-    "Mystiskt tecken",
-    "Åldrad"
-  ]
-},
-
-{
-  "namn": "Trollsångare",
-  "beskrivning": "*”Skapelsens sång ekar i min röst”*\nSången som kraftkälla får sitt mest tydliga uttryck bland de trollsjungande skalderna, vars röster väcker mysterier och vinner strider. Skaldekonsten finns i alla kulturer men dess mest kraftfulla varianter återfinns hos alver, dvärgar och troll – ibland hörs också trollsång ljuda från resars mäktiga strupar. Hos alla dessa kombineras trollsången inte sällan med fysiska attribut och skalderna är många gånger krigarpoeter vilka med kraft i både stämma och vapenarm leder sina allierade mot seger.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Övertygande 13+, Stark 11+",
-  "forslag_pa_slakte": [
-    "Alv",
-    "dvärg",
-    "rese",
-    "troll"
-  ],
-  "lampliga_formagor": [
-    "Ledare",
-    "Mystisk kraft (lämpligen Kampsång)",
-    "Trollsång",
-    "Arkivarie",
-    "Arvegods",
-    "Berättare",
-    "Kommenderande stämma",
-    "Kontaktnät",
-    "Musikant",
-    "Mystiskt tecken",
-    "Mörk hemlighet"
-  ]
-},
-
-{
-  "namn": "Tjuv",
-  "beskrivning": "de stora krigen tycks vara slut, eller i varje fall ha tagit en paus. Men i skuggorna fortsätter maktkampen i Ambria, en strid som sprider sig in i Davokar. Drottningens spioner finns överallt och är i mångas ögon enbart lönnmördare med ett finare namn. I Yndaros positionerar sig tjuvgillen i kampen om stadens resurser, medan ett fåtal gentlemannatjuvar tjusar folkets fantasier om ädlingar som väljer faran över tristessen.\nOrdet ”krigslist” får sin definition i form av alkemiskt beväpnade sappörer som med sin belägringskonst kan få fiendens borg att rasa – en konst som även i detta skymningsläge används vid uppbyggandet av stödjepunkter i Davokar, alternativt vid attentat mot desamma. Djupast är skuggorna kring de avhoppare som insett svärtan i sin tidigare kult och försöker ta sig ur den, jagade av både häxjägare och sina tidigare sektfränder.\nTjuvar enas endast i sin strävan att ha handlingsfrihet och i sina snabba motanfall mot dem som försöker tvinga dem i en riktning eller inskränka deras frihet; denna drivkraft fångas bäst i den arketypiska förmågan *Blixtsnabba reflexer*.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Diskret, Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande, Oberoende",
-  "forslag_pa_slakte": [
-    "dvärgar",
-    "vandöd"
-  ],
-  "lampliga_formagor": [
-    "Blixtsnabba reflexer (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
-    "Fint",
-    "Lönnstöt",
-    "Akrobatik",
-    "Knivgöra",
-    "Snabbdrag",
-    "Snabbeld",
-    "Alkemi",
-    "Försåtsgillrare",
-    "Giftbrukare",
-    "Lärd",
-    "Medicus",
-    "Monsterlärd",
-    "Smideskonst",
-    "Stryparkonst",
-    "Taktiker",
-    "Tjyvknep",
-    "Ståndaktig",
-    "Naturlig krigare",
-    "Prickskytt",
-    "Stålkast",
-    "Stångverkan",
-    "Tvillingattack",
-    "Häxsyn",
-    "Sjätte sinne",
-    "Dominera",
-    "Ledare",
-    "Exceptionellt karaktärsdrag",
-    "Opportunist",
-    "Ritualist",
-    "Ryttarkonst",
-    "Återhämtning"
-  ]
-},
-
-{
-  "namn": "Före detta kultist",
-  "beskrivning": "*”Min mästares ord var min lag. Nu gäller det att överleva.”*\nMånga svartkonstnärer skapar kulter runt sin tro och person, utlovandes droginducerade insikter och svart frälsning till dem som väljer att följa mystikern genom mörkret. Avhoppare från sådana sekter är få och de som överlever någon längre tid efter avhoppet är ännu färre, jagade av både sina tidigare medkultister likväl som av häxjägare och svartkappor. Situationen underlättas inte av kultistens egna bördor – förnedrande saker gjorda för att behaga mästaren och utstuderat grymma handlingar utförda i sektens namn tynger de flesta avhoppare och hemsöker deras drömmar också långt efter avhoppet.\nEn del före detta kultister var en gång djupt övertygade fanatiker, för andra var medlemskapet ett mer pragmatiskt val motiverat av ambition eller girighet. Om man får tro svartkappornas förhörsprotokoll är det dock desperation som är den vanligaste bevekelsegrunden för kultisterna; livets orättvisor i kombination med en karismatisk ledare som lovar upprättelse och styrka, om än en svart sådan. Oavsett vilket var kultistens vägväl aldrig oskyldigt och inget som kan göras ogjort; initiationen fläckar för alltid kultistens händer med blod.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Listig 13+, Viljestark 11+",
-  "forslag_pa_slakte": [
-    "Bortbyting",
-    "människa",
-    "vandöd"
-  ],
-  "lampliga_formagor": [
-    "Alkemi",
-    "Giftbrukare",
-    "Kanalisering",
-    "Bluffmakare",
-    "Bländverk",
-    "Dubbeltunga",
-    "Falsk identitet",
-    "Gömställen",
-    "Kontaktnät",
-    "Drogberoende",
-    "Efterlyst"
-  ]
-},
-
-{
-  "namn": "Gillestjuv",
-  "beskrivning": "*”Vad gör du på mitt revir?”*\nTjuvgillen har en om inte stolt så åtminstone lång tradition i Alberetor, en tradition som snarast gick stärkt ur flytten norrut. Var och en av Ambrias städer har minst ett tjuvgille, större städer har vanligen flera knutna till olika stadsdelar.\nVem som helst kvalificerar inte som gillestjuv; gatans ficktjuvar och enkelspåriga ligister må utgöra rekryteringsgrunden men endast de listigaste och mest diskreta kan räkna med att tas upp i gillet. Att slå till utan att märkas och att veta vem man inte ska röra är en hederssak för gillestjuvarna.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Listig 13+, Kvick 11+",
-  "forslag_pa_slakte": [
-    "Bortbyting",
-    "människa",
-    "svartalf"
-  ],
-  "lampliga_formagor": [
-    "Försåtsgillrare",
-    "Knivgöra eller Tjyvknep",
-    "Opportunist",
-    "Bluffmakare",
-    "Falskspelare",
-    "Fingerfärdig",
-    "Gömställen",
-    "Inbrottstjuv",
-    "Kontaktnät",
-    "Impulsiv",
-    "Protegé"
-  ]
-},
-
-{
-  "namn": "Sappör",
-  "beskrivning": "*”Din rustning och dina murar är min förbränningskammare.”*\nKrig bedrivs i form av fältslag och belägringar, och för båda dessa behövs kvalificerade fältarbeten. I Ambria tillfaller sådana uppgifter främst hennes majestäts sappörkår, 7:e hären, Yndarien. Ordo Magica har också en egen avdelning för slagfältsalkemi vid sitt fäste i Agrella. Kända som ”pansaralkemisterna” står denna sappörelit till Kasandriens tjänst. Även de andra hertigdömena har sappörförband men knappast av samma kvalitet. Alla sappörer tränas i belägringsvapnens konst, från ballistor till trebuchetter, och de mer kvalificerade hanterar vant de alkemiska vapnen. Sappörer tränas även i enklare fortifikationsarbeten som att bygga ryttarhinder samt att gräva löpgravar och underminerande tunnlar.\nOrdo Magica har insett att resar är synnerligen lämp­liga som pansaralkemister och ordensmagikerna har på försök skolat in ett antal resar i de alkemiska vapnens bruk. Dessa eftertänksamma bjässar har också övertygande visat att man kan utnyttja det alkemiska eldrörets tyngd och goda grepp som ett inte oävet tvåhandskrossvapen. Detta förväntas öka sappörens överlevnad, då de efter att ha bränt av sitt fruktade alkemiska eldrör befinner sig på oroande kort håll från fienden.",
-  "taggar": { "typ": ["Yrke"] },
-  "viktiga_karaktarsdrag": "Listig 13+, Träffsäker 11+",
-  "forslag_pa_slakte": [
-    "Ambrier",
-    "rese"
-  ],
-  "lampliga_formagor": [
-    "Alkemi eller Smideskonst",
-    "Belägringskonst",
-    "Rustmästare eller Tvåhandskraft",
-    "Fingerfärdig",
-    "Kontaktnät",
-    "Marschvana",
-    "Packåsna",
-    "Drogberoende",
-    "Sävlig"
-  ]
-}
+  {
+    "id": "y16",
+    "namn": "Jägare",
+    "beskrivning": "Det kan knappast ifrågasättas att Jägaren är en arketypisk karaktär av stor betydelse för både Ambria och skogarnas klaner. I gemene ambriers ögon är de kanske inte mycket mer värda än tjuvar, men för många (särskilt bland de som bor i Davokars närhet) är de att likställa med hjältar. Smutsiga av vildmarkslort och med framtidens ljus i blick är jägarna en förutsättning för det stora projektet att kultivera Davokar och utvinna dess rikedomar. Jägare finns bland både ambrier och barbarer och utmärks ofta av sin skicklighet med projektilvapen och därmed relaterade taktiker. Exakt hur de slåss beror främst på om de har specialiserat sig på att jaga brottslingar, monster eller svartkonstnärer. Jägarens olika måltavlor till trots, det som förenar dem är en högt utvecklad känsla för vart bytet går, hur det rör sig och vart det ska ta vägen härnäst; allt en förståelse som med dödlig precision sammanfattas i den arketypiska förmågan Jaktinstinkt.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Vaksam, Diskret, Kvick, Träffsäker, Listig",
+    "forslag_pa_slakte": [
+      "alver",
+      "alvtagna",
+      "människor",
+      "svartalftsjägare",
+      "resar",
+      "dvärgar"
+    ],
+    "lampliga_formagor": [
+      "Jaktinstinkt (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
+      "Akrobatik",
+      "Snabbdrag",
+      "Snabbeld",
+      "Alkemi",
+      "Försåtsgillrare",
+      "Giftbrukare",
+      "Lärd",
+      "Medicus",
+      "Monsterlärd",
+      "Smideskonst",
+      "Taktiker",
+      "Järnnäve",
+      "Närstridsskytte",
+      "Prickskytt",
+      "Spjutdans",
+      "Stålkast",
+      "Stångverkan",
+      "Tvillingattack",
+      "Häxsyn",
+      "Sjätte sinne",
+      "Livvakt",
+      "Ståndaktig",
+      "Dominera",
+      "Ledare",
+      "Exceptionellt karaktärsdrag",
+      "Ritualist",
+      "Rustmästare",
+      "Ryttarkonst",
+      "Återhämtning"
+    ]
+  },
+  {
+    "id": "y17",
+    "namn": "Prisjägare",
+    "beskrivning": "*”Avskum, jag? Förvisso, men avskum du behöver låter det som.”*\nRedan under Det stora kriget förekom desertörer; tvivlet på möjligheten att besegra Mörkermästarna var vida spritt. För att stävja problemet satte kung Ynedar, drottning Korinthias far, ett stående pris på fanflyktingars huvuden, och därmed upprät­tades indirekt prisjägarnas skrå. Traditionen att betala för efterlystas infångande lever vidare och prisjägare tvingas nu inte bara jaga i rikets utmarker och städer utan också i Davokar, dit de mest desperata – och för prisjägaren ofta mest värdefulla – målen flyr.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Träffsäker 13+, Vaksam 11+",
+    "forslag_pa_slakte": [
+      "Människa",
+      "dvärg"
+    ],
+    "lampliga_formagor": [
+      "Prickskytt",
+      "Snärjande strid",
+      "Tjyvknep",
+      "Blodhund",
+      "Marschvana",
+      "Packåsna",
+      "Skvallerbytta",
+      "Kontaktnät",
+      "Vildmarksvana",
+      "Hederskod",
+      "Impulsiv"
+    ]
+  },
+  {
+    "id": "y18",
+    "namn": "Monsterjägare",
+    "beskrivning": "*”Låt mig ta hand om ert … problem.”*\nI takt med att fler och fler ambrier har slagit ner sina bopålar i Davokars skugga har dessa bosättningar också kommit att hemsökas av skogens hungriga, hämndlystna eller rent livshatande fasor. För att möta hotet har dådkraftiga individer utvecklat tekniker och samlat kunskaper för monsterjakt – och det ofta höga priset på monstertroféer skadar förstås inte heller! Även skogarnas barbarer har sina monsterjägare, men de jagar inte för troféer och eftersom barbarerna håller sig till häxornas tabun bosätter de sig inte heller på provocerande platser.\nMerparten av de ambriska monsterjägarna ingår i något av de monsterjägarsällskap som har utvecklats i och kring platser som Tistla Fäste och Kastor. Dessa sammanslutningar både konkurrerar och samarbetar i det pågående arbetet med att hålla gränsbosättningarna säkra – och sällskapens medlemmar rika. Särskilt det senare, rikedomen, har lockat en del barbarättade monsterjägare söderut, där dessa med sin kunskap om skogen och dess monster har blivit synnerligen framgångsrika troféesamlare.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Listig 13+, Träffsäker 11+",
+    "forslag_pa_slakte": [
+      "Människa"
+    ],
+    "lampliga_formagor": [
+      "Försåtsgillrare",
+      "Monsterlärd",
+      "Prickskytt",
+      "Stångverkan",
+      "Blodhund",
+      "Kartograf",
+      "Packåsna",
+      "Personlig tjänare",
+      "Kontaktnät",
+      "Priviligierad",
+      "Vildmarksvana",
+      "Drogberoende",
+      "Ärkefiende"
+    ],
+    "monsterjägarsällskap": "I Tistla Fäste har monsterjägarna samlats i en rad sällskap, där Röda klon utgör den mest kända sammanslutningen men inte alls den enda. Andra namnkunniga sällskap är de skrytsamma uppkomlingarna Markas pålspetsare och de mer allvarsamma teratologerna i Nikanors taxidermiska gille, vilka försöker samla in monsterkadaver i bästa skick i lärdomssyfte. Flera av dessa har mer eller mindre öppet etablerat utposter nära Karvosti och är frekventa kunder i den nyöppnade handelsboden Grymkäfts fällor, där den pensionerade rese som givit boden dess namn säljer snillrika fångstmedel till hugade spekulanter."
+  },
+  {
+    "id": "y19",
+    "namn": "Krigare",
+    "beskrivning": "vem som helst kan lyfta ett vapen mot överheten, mot dem som har mer eller för att lojalt tjäna sin furste. Krigets konstant har lett till framväxten av militära ordnar och grupper som på olika sätt förvaltar en stridskunskap och en livsstil som speglar deras syn på världen. Spelarens handbok introducerar ett antal nya krigaryrken, yrken som alla på sina vis är unika uttryck för hur krigets ständiga närvaro lett till utveckling av kunskap, gemenskaper och institutioner i såväl Ambria som Davokar. De priostrogna templárerna utgör det kanske yttersta uttrycket för att underkastelse ger sällsam kraft. Vredesgardisterna på Karvosti tjänar förvisso sin storhövding men frågan är om de inte egentligen dör för varandra, för sina blodssystrar och bröder snarare än någon högre princip. Från östra Davokar kommer runristade krigare, vars hud är ett pergament som sammanfattar symbolisternas krigskunskap, utan krav på hur den används. Bland såväl troll som alver finns också starka krigartraditioner – trollens runsmeder svingar sina hammare lika hemtamt i smedja som på slagfält, medan alvtagna människor ofta dansar en spjutdans lika gammal som den är dödlig. Krigarnas mest uttalade särdrag är något de alla har gemensamt: det faktum att de alla ska vara som starkast när bördan är som störst. Denna strävan fångas i den arketypiska förmågan *Kraftprov*.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Stark, Kvick, Träffsäker, Viljestark, Övertygande, Oberoende",
+    "forslag_pa_slakte": [
+      "alvtagen människa",
+      "troll",
+      "vandöd"
+    ],
+    "lampliga_formagor": [
+      "Kraftprov (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
+      "Akrobatik",
+      "Snabbdrag",
+      "Järnnäve",
+      "Hammarrytm",
+      "Spjutdans",
+      "Stångverkan",
+      "Tvillingattack",
+      "Tvåhandskraft",
+      "Sköldkamp",
+      "Livvakt",
+      "Ståndaktig",
+      "Dominera",
+      "Ledare",
+      "Bärsärk",
+      "Exceptionellt karaktärsdrag",
+      "Opportunist",
+      "Runtatuering",
+      "Rustmästare",
+      "Ryttarkonst",
+      "Stridsgisslare",
+      "Svärdshelgon",
+      "Yxkonstnär",
+      "Återhämtning"
+    ]
+  },
+  {
+    "id": "y20",
+    "namn": "Ristad krigare",
+    "beskrivning": "*”Min vrede brinner på min kropp, känn dess hetta”*\nMånga barbarkrigare låter täcka sina kroppar med tatueringar, men just Vajvods ristade krigare särskiljer sig då de tatueras av symbolister – mystiker med sällsam förståelse för tecknens kraft. De främsta av de ristade krigarna tjänar som livgarde för Vajvods klanhövding.\nOckså bland svartalfer och troll återfinns ristade krigare, en tradition som utvecklats oberoende av vajvodernas symbolism. Bland både troll och svartalfer utgör ristade krigare en elit bland eliter. Inte sällan ses ristade krigare slåss närmast sina härskare på slagfältet, må det vara bland trollen i underjordens salar eller hos svartalferna under skogens trädtak.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
+    "forslag_pa_slakte": [
+      "Barbarättad människa",
+      "svartalf",
+      "troll"
+    ],
+    "lampliga_formagor": [
+      "Järnnäve",
+      "Runtatuering",
+      "Stångverkan",
+      "Tvåhandskraft",
+      "Marschvana",
+      "Seglivad",
+      "Skräckinjagande",
+      "Vildmarksvana",
+      "Impulsiv",
+      "Mörk hemlighet"
+    ]
+  },
+  {
+    "id": "y21",
+    "namn": "Runsmed",
+    "beskrivning": "*”Världens rytm ekar i mina hammarslag”*\nBland trollen finns krigare som svurit en helig ed att endast slåss med vapen de själva smitt och iförda rustningar de själva hamrat fram. Dessa runsmeder är bland de främsta av underjordens smeder, därtill fruktade krigare i egen rätt. Det tycks som att också resar dras till den skapande elden och även alverna odlar kunskapen om de djupa smideskonsterna; inte sällan hålls hammarna av alvtagna människor.\nI Ambria finns starka smidestraditioner och även om dessa smeder ofta själva svingar vapen med självförtroende saknar de flesta trollens hängivelse till både smedja och slagfält. På senare tid har dock även ambriska smeder börjat lära de gamla konsterna och därmed nå nya höjder i sitt smide.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Stark 13+, Listig 11+",
+    "forslag_pa_slakte": [
+      "Alvtagen människa",
+      "rese",
+      "troll"
+    ],
+    "lampliga_formagor": [
+      "Hammarrytm",
+      "Tvåhandskraft",
+      "Järnnäve",
+      "Smideskonst",
+      "Arvegods",
+      "Kontaktnät",
+      "Marschvana",
+      "Packåsna",
+      "Mystiskt tecken",
+      "Protegé"
+    ]
+  },
+  {
+    "id": "y22",
+    "namn": "Vapenmästare",
+    "beskrivning": "*”Du vill överleva, jag vill dö på ett sätt som alla minns med vördnad”*\nInom krigarkasten i Ambria och Davokar återfinns individer som helt och hållet gått in för att bemästra sitt vapen och dess stridsteknik. Dessa vapenmästare har med enveten träning kommit att uppnå särskild skicklighet med vapnet, inte sällan knutet till en uttalad filosofi om kampen, livet och döden. I Ambria är de kända som Svärdshelgon, eftersom de ägnar sitt liv åt att nå perfektion. Bland Davokars barbarer är de kända som Yxkonstnärer, och inte sällan använder de en yxa i varje hand – en tradition som också har plockats upp av vissa svartalfsstammar i Davokar. Alvernas andliga motsvarighet till vapenmästare kallas Spjutdansare, en konst som inte sällan utövas av alvtagna människor. Hos trollen anses kättingvapnen särskilt ädla då de både är extra krävande och effektiva i rätt händer. Sådana Stridsgisslare återfinns faktiskt också – oberoende av trollens förkärlek för länkade vapen – på Ambrias arenor, inte sällan i resars händer.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
+    "forslag_pa_slakte": [
+      "Svärdshelgon: Ambrier, bortbyting",
+      "Stridsgisslare: Rese, troll",
+      "Spjutdansare: Alv, alvtagen människa",
+      "Yxkonstnär: Barbarättad människa, svartalf"
+    ],
+    "lampliga_formagor": [
+      "Svärdshelgon: Akrobatik, Rustmästare, Svärdshelgon",
+      "Stridsgisslare: Tvåhandskraft, Snärjande strid, Stridsgisslare",
+      "Spjutdansare: Akrobatik, Stavkamp, Stångverkan eller Snärjande strid (om kedjestav används)",
+      "Yxkonstnär: Akrobatik, Tvillingattack, Yxkonstnär",
+      "Arvegods",
+      "Kommenderande stämma",
+      "Kontaktnät",
+      "Personlig tjänare",
+      "Priviligierad",
+      "Seglivad",
+      "Taktisk spelare",
+      "Hederskod",
+      "Ärkefiende"
+    ]
+  },
+  {
+    "id": "y23",
+    "namn": "Mystiker",
+    "beskrivning": "symbaroums spelvärld är väldig och förunderlig, och många är de mystiska traditioner som utvecklats genom historien. Förutom de vanligen förekommande traditionerna återfinns andra i Davokar – symbolisterna som med sin runmagi har tolkningsföreträde framför häxorna i klan Vajvod, de asketiska stavmagikerna i Davokars djup samt trollsångarna, vanliga bland troll och alver. Därtill kan artefaktmakarna räknas, de mystiker som gjuter sin kraft i den lägre ordningens artefakter snarare än uttrycker den i mystiska krafter eller ritualer.\nI de etablerade traditioner som beskrivs i grundboken återfinns underströmmar med särskild inriktning, kallade fördjupningar. Häxkonsterna har sina stigar, ordensmagin sina skolor, teurgin två vägar och svartkonstnärerna kan specialisera sig.\nHäxor talar ofta om tre stigar i Davokar, om blodets röda stig, växandets gröna stig och andarnas vita stig. Det finns häxor som väljer att uteslutande vandra en av de tre stigarna och de kallas då Blodvadare, Grönvävare eller Andebesvärjare.\nInom ordensmagin finns sedan gammalt tre strömningar, utifrån eldens mysterium, sinnets villfarelser och den rena viljans makt över varat. Kring var och en av dessa tre har en skola bildats, kända som Pyromantiken, Illusionismen och Mentalismen. Det är inget krav från orden att en mystiker väljer en skola, men det anses extra fint att göra det. Särskilt i de större ordenskapitlen, där konkurrensen om avancemang inom orden är som mest intensiv, kan tillhörighet till en skola ge fördelar i form av välvilliga kollegor och mentorer.\nBland teurger finns också en fråga att ställa sig: är man en bekämpare av mörkret eller en vårdare av ljuset? Långt ifrån alla teurger väljer, utan balanserar dessa motstridiga synsätt under hela sitt liv. Men de flesta väljer och går in för sin livsuppgift med förtröstan att andra teurger kommer att välja andra vägen och därmed bringa balans i det stora hela.\nSvartkonsten är troligen lika gammal som de äldsta av de andra traditionerna. Dess utövare har oftast behövt verka i det fördolda och därmed inte kunna dra nytta av kunskapsspridning på samma sätt som de accepterade traditionerna. Detta till trots har specialiserade undertraditioner utvecklats i form av dödsbesvärjarna, kända som nekromantiker, och de vämjeliga demonologer som betvingar och förhandlar med styggelser och andra utomvärldsmakter.\nAlla dessa fördjupningar räknas som Elityrken, det vill säga de kräver mer av sina utövare än de flesta yrken gör, men ger i gengäld tillgång till särskilda förmågor.\nOavsett väg, skola eller fördjupning bottnar alla mystiker i viljan att förstå och styra sin omvärld, en dröm som kommer till uttryck i den arketypiska förmågan *Stark gåva*.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande, Oberoende",
+    "forslag_pa_slakte": [
+      "alver",
+      "troll",
+      "vandöd",
+      "alvtagen människa"
+    ],
+    "lampliga_formagor": [
+      "Stark gåva (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
+      "Akrobatik",
+      "Alkemi",
+      "Lärd",
+      "Medicus",
+      "Monsterlärd",
+      "Smideskonst",
+      "Ståndaktig",
+      "Naturlig krigare",
+      "Stångverkan",
+      "Häxsyn",
+      "Sjätte sinne",
+      "Mystisk kraft",
+      "Dominera",
+      "Ledare",
+      "Bärsärk",
+      "Exceptionellt karaktärsdrag",
+      "Häxkonster",
+      "Ordensmagi",
+      "Ritualist",
+      "Stavmagi",
+      "Symbolism",
+      "Teurgi",
+      "Trollsång",
+      "Återhämtning"
+    ]
+  },
+  {
+    "id": "y24",
+    "namn": "Symbolist",
+    "beskrivning": "*”Jag målar och världen lyder”*\nAtt symboler och tecken har kraft är välkänt och utnyttjat i de flesta mystiska traditioner, åtminstone i ritualer. Den renodlade symbolismen är en mystisk tradition som nästan uteslutande bygger sin makt på tecken och symboler. Symbolismen kom till Davokar via mystiker från öster, vilka efter flykten över Ravennerna funnit fristad i flodriket som senare blev klanen Vajvods land. Symbolismen – främmande, kraftfull och dekadent – antas av ambriska lärde vara en viktig faktor i varför östra Davokars barbarer är avståndstagande till Karvosti och den av Huldran styrde Storhövdingen där; både som en förklaring till att man av filosofiska och kulturella skäl tar avstånd från häxornas ledare, och till att klan Vajvod faktiskt är mer öppen för omvärlden än andra klaner i Davokar, möjligen Odaiova undantaget. Vajvods storhövding Zoltar den Gamle har inte heller en häxa vid sin sida utan en symbolist, tränad vid Azurtemplet, symbolisternas samlingsplats i hjärtat av Vajvods älvslandskap.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
+    "forslag_pa_slakte": [
+      "Barbarättad människa (klan Vajvod)",
+      "svartalf",
+      "troll"
+    ],
+    "lampliga_formagor": [
+      "Mystisk kraft (vanligen Beskyddande runor)",
+      "Ritualist (vanligen Rista runtatuering)",
+      "Symbolism",
+      "Arkivarie",
+      "Arvegods",
+      "Kartograf",
+      "Kontaktnät",
+      "Teckentydare",
+      "Mystiskt tecken",
+      "Åldrad"
+    ]
+  },
+  {
+    "id": "y25",
+    "namn": "Trollsångare",
+    "beskrivning": "*”Skapelsens sång ekar i min röst”*\nSången som kraftkälla får sitt mest tydliga uttryck bland de trollsjungande skalderna, vars röster väcker mysterier och vinner strider. Skaldekonsten finns i alla kulturer men dess mest kraftfulla varianter återfinns hos alver, dvärgar och troll – ibland hörs också trollsång ljuda från resars mäktiga strupar. Hos alla dessa kombineras trollsången inte sällan med fysiska attribut och skalderna är många gånger krigarpoeter vilka med kraft i både stämma och vapenarm leder sina allierade mot seger.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Övertygande 13+, Stark 11+",
+    "forslag_pa_slakte": [
+      "Alv",
+      "dvärg",
+      "rese",
+      "troll"
+    ],
+    "lampliga_formagor": [
+      "Ledare",
+      "Mystisk kraft (lämpligen Kampsång)",
+      "Trollsång",
+      "Arkivarie",
+      "Arvegods",
+      "Berättare",
+      "Kommenderande stämma",
+      "Kontaktnät",
+      "Musikant",
+      "Mystiskt tecken",
+      "Mörk hemlighet"
+    ]
+  },
+  {
+    "id": "y26",
+    "namn": "Tjuv",
+    "beskrivning": "de stora krigen tycks vara slut, eller i varje fall ha tagit en paus. Men i skuggorna fortsätter maktkampen i Ambria, en strid som sprider sig in i Davokar. Drottningens spioner finns överallt och är i mångas ögon enbart lönnmördare med ett finare namn. I Yndaros positionerar sig tjuvgillen i kampen om stadens resurser, medan ett fåtal gentlemannatjuvar tjusar folkets fantasier om ädlingar som väljer faran över tristessen.\nOrdet ”krigslist” får sin definition i form av alkemiskt beväpnade sappörer som med sin belägringskonst kan få fiendens borg att rasa – en konst som även i detta skymningsläge används vid uppbyggandet av stödjepunkter i Davokar, alternativt vid attentat mot desamma. Djupast är skuggorna kring de avhoppare som insett svärtan i sin tidigare kult och försöker ta sig ur den, jagade av både häxjägare och sina tidigare sektfränder.\nTjuvar enas endast i sin strävan att ha handlingsfrihet och i sina snabba motanfall mot dem som försöker tvinga dem i en riktning eller inskränka deras frihet; denna drivkraft fångas bäst i den arketypiska förmågan *Blixtsnabba reflexer*.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Diskret, Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande, Oberoende",
+    "forslag_pa_slakte": [
+      "dvärgar",
+      "vandöd"
+    ],
+    "lampliga_formagor": [
+      "Blixtsnabba reflexer (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
+      "Fint",
+      "Lönnstöt",
+      "Akrobatik",
+      "Knivgöra",
+      "Snabbdrag",
+      "Snabbeld",
+      "Alkemi",
+      "Försåtsgillrare",
+      "Giftbrukare",
+      "Lärd",
+      "Medicus",
+      "Monsterlärd",
+      "Smideskonst",
+      "Stryparkonst",
+      "Taktiker",
+      "Tjyvknep",
+      "Ståndaktig",
+      "Naturlig krigare",
+      "Prickskytt",
+      "Stålkast",
+      "Stångverkan",
+      "Tvillingattack",
+      "Häxsyn",
+      "Sjätte sinne",
+      "Dominera",
+      "Ledare",
+      "Exceptionellt karaktärsdrag",
+      "Opportunist",
+      "Ritualist",
+      "Ryttarkonst",
+      "Återhämtning"
+    ]
+  },
+  {
+    "id": "y27",
+    "namn": "Före detta kultist",
+    "beskrivning": "*”Min mästares ord var min lag. Nu gäller det att överleva.”*\nMånga svartkonstnärer skapar kulter runt sin tro och person, utlovandes droginducerade insikter och svart frälsning till dem som väljer att följa mystikern genom mörkret. Avhoppare från sådana sekter är få och de som överlever någon längre tid efter avhoppet är ännu färre, jagade av både sina tidigare medkultister likväl som av häxjägare och svartkappor. Situationen underlättas inte av kultistens egna bördor – förnedrande saker gjorda för att behaga mästaren och utstuderat grymma handlingar utförda i sektens namn tynger de flesta avhoppare och hemsöker deras drömmar också långt efter avhoppet.\nEn del före detta kultister var en gång djupt övertygade fanatiker, för andra var medlemskapet ett mer pragmatiskt val motiverat av ambition eller girighet. Om man får tro svartkappornas förhörsprotokoll är det dock desperation som är den vanligaste bevekelsegrunden för kultisterna; livets orättvisor i kombination med en karismatisk ledare som lovar upprättelse och styrka, om än en svart sådan. Oavsett vilket var kultistens vägväl aldrig oskyldigt och inget som kan göras ogjort; initiationen fläckar för alltid kultistens händer med blod.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Listig 13+, Viljestark 11+",
+    "forslag_pa_slakte": [
+      "Bortbyting",
+      "människa",
+      "vandöd"
+    ],
+    "lampliga_formagor": [
+      "Alkemi",
+      "Giftbrukare",
+      "Kanalisering",
+      "Bluffmakare",
+      "Bländverk",
+      "Dubbeltunga",
+      "Falsk identitet",
+      "Gömställen",
+      "Kontaktnät",
+      "Drogberoende",
+      "Efterlyst"
+    ]
+  },
+  {
+    "id": "y28",
+    "namn": "Gillestjuv",
+    "beskrivning": "*”Vad gör du på mitt revir?”*\nTjuvgillen har en om inte stolt så åtminstone lång tradition i Alberetor, en tradition som snarast gick stärkt ur flytten norrut. Var och en av Ambrias städer har minst ett tjuvgille, större städer har vanligen flera knutna till olika stadsdelar.\nVem som helst kvalificerar inte som gillestjuv; gatans ficktjuvar och enkelspåriga ligister må utgöra rekryteringsgrunden men endast de listigaste och mest diskreta kan räkna med att tas upp i gillet. Att slå till utan att märkas och att veta vem man inte ska röra är en hederssak för gillestjuvarna.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Listig 13+, Kvick 11+",
+    "forslag_pa_slakte": [
+      "Bortbyting",
+      "människa",
+      "svartalf"
+    ],
+    "lampliga_formagor": [
+      "Försåtsgillrare",
+      "Knivgöra eller Tjyvknep",
+      "Opportunist",
+      "Bluffmakare",
+      "Falskspelare",
+      "Fingerfärdig",
+      "Gömställen",
+      "Inbrottstjuv",
+      "Kontaktnät",
+      "Impulsiv",
+      "Protegé"
+    ]
+  },
+  {
+    "id": "y29",
+    "namn": "Sappör",
+    "beskrivning": "*”Din rustning och dina murar är min förbränningskammare.”*\nKrig bedrivs i form av fältslag och belägringar, och för båda dessa behövs kvalificerade fältarbeten. I Ambria tillfaller sådana uppgifter främst hennes majestäts sappörkår, 7:e hären, Yndarien. Ordo Magica har också en egen avdelning för slagfältsalkemi vid sitt fäste i Agrella. Kända som ”pansaralkemisterna” står denna sappörelit till Kasandriens tjänst. Även de andra hertigdömena har sappörförband men knappast av samma kvalitet. Alla sappörer tränas i belägringsvapnens konst, från ballistor till trebuchetter, och de mer kvalificerade hanterar vant de alkemiska vapnen. Sappörer tränas även i enklare fortifikationsarbeten som att bygga ryttarhinder samt att gräva löpgravar och underminerande tunnlar.\nOrdo Magica har insett att resar är synnerligen lämp­liga som pansaralkemister och ordensmagikerna har på försök skolat in ett antal resar i de alkemiska vapnens bruk. Dessa eftertänksamma bjässar har också övertygande visat att man kan utnyttja det alkemiska eldrörets tyngd och goda grepp som ett inte oävet tvåhandskrossvapen. Detta förväntas öka sappörens överlevnad, då de efter att ha bränt av sitt fruktade alkemiska eldrör befinner sig på oroande kort håll från fienden.",
+    "taggar": {
+      "typ": [
+        "Yrke"
+      ]
+    },
+    "viktiga_karaktarsdrag": "Listig 13+, Träffsäker 11+",
+    "forslag_pa_slakte": [
+      "Ambrier",
+      "rese"
+    ],
+    "lampliga_formagor": [
+      "Alkemi eller Smideskonst",
+      "Belägringskonst",
+      "Rustmästare eller Tvåhandskraft",
+      "Fingerfärdig",
+      "Kontaktnät",
+      "Marschvana",
+      "Packåsna",
+      "Drogberoende",
+      "Sävlig"
+    ]
+  }
 ]
