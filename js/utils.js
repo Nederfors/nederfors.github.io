@@ -2,6 +2,7 @@
   const LVL   = ['Novis','Ges\u00e4ll','M\u00e4stare'];
   const EQUIP = [
     'Vapen',
+    'Sköld',
     'Pil/Lod',
     'Rustning',
     'Diverse',
@@ -114,7 +115,7 @@
       }
       return parts.length ? `<br>${parts.join('<br>')}` : '';
     }
-    if (types.includes('Vapen')) {
+    if (types.includes('Vapen') || types.includes('Sköld')) {
       const dmg = entry.stat?.skada;
       return dmg ? `<br>Skada: ${dmg}` : '';
     }
