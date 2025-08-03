@@ -17,8 +17,7 @@ function initCharacter() {
   const conflictPanel = document.getElementById('conflictPanel');
   const conflictClose = document.getElementById('conflictClose');
   const conflictList = document.getElementById('conflictList');
-  const conflictAbility = document.getElementById('conflictAbility');
-  const conflictLevels = document.getElementById('conflictLevels');
+  const conflictTitle = document.getElementById('conflictTitle');
 
   function conflictEntryHtml(p){
     const compact = storeHelper.getCompactEntries(store);
@@ -349,10 +348,13 @@ function initCharacter() {
       const current = storeHelper.getCurrentList(store).find(x=>x.namn===currentName);
       const idx = LVL.indexOf(current?.nivå || LVL[0]);
       const curLvls = LVL.filter((l, i) => i <= idx && current?.taggar?.handling?.[l]?.includes('Aktiv'));
-      conflictAbility.textContent = currentName;
-      conflictLevels.innerHTML = curLvls.map(l=>`<span class="tag">${l}</span>`).join('');
+      const lvlWord = curLvls.length === 1 ? 'nivån' : 'nivåerna';
+      const levelsText = curLvls.length ? ` på ${lvlWord} [${curLvls.join(', ')}]` : '';
+      conflictTitle.textContent = `${currentName}${levelsText} kan ej användas samtidigt som:`;
       const others = storeHelper.getCurrentList(store)
-        .filter(x=>x.namn!==currentName && LVL.some((l, i) => i <= LVL.indexOf(x.nivå || LVL[0]) && x.taggar?.handling?.[l]?.includes('Aktiv')));
+        .filter(x => x.namn !== currentName && LVL.some((l, i) =>
+          i <= LVL.indexOf(x.nivå || LVL[0]) && x.taggar?.handling?.[l]?.includes('Aktiv')
+        ));
       renderConflicts(others);
       conflictPanel.classList.add('open');
       return;

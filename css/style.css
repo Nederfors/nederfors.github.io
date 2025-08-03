@@ -232,15 +232,6 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   padding: .2rem .5rem;
   font-size: 1.1rem;
 }
-
-#conflictAbility {
-  font-weight: 600;
-  margin: 0 0 .5rem;
-}
-
-#conflictLevels {
-  margin: 0 0 1rem;
-}
 .card-desc  { font-size: 1.15rem; }
 .card.compact .card-desc { display: none; }
 
