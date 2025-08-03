@@ -4,9 +4,12 @@
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
 
-    const hasBalancedWeapon = inv.some(row => {
+    let hasBalancedWeapon = false;
+    let weaponCount = 0;
+    inv.forEach(row => {
       const entry = invUtil.getEntry(row.name);
-      if (!entry || !((entry.taggar?.typ || []).includes('Vapen'))) return false;
+      if (!entry || !((entry.taggar?.typ || []).includes('Vapen'))) return;
+      weaponCount += 1;
       const tagger = entry.taggar || {};
       const baseQ = [
         ...(tagger.kvalitet || []),
@@ -17,7 +20,7 @@
         ...baseQ.filter(q => !removed.includes(q)),
         ...(row.kvaliteter || [])
       ];
-      return allQ.includes('Balanserat');
+      if (allQ.includes('Balanserat')) hasBalancedWeapon = true;
     });
 
     let res = inv.reduce((out,row)=>{
@@ -42,6 +45,11 @@
     }, []);
 
     res = res.length ? res : [ { value: kvick } ];
+
+    const twinLvl = storeHelper.abilityLevel(list, 'Tvillingattack');
+    if (twinLvl >= 1 && weaponCount >= 2) {
+      res.forEach(r => { r.value += 1; });
+    }
 
     if (hasBalancedWeapon) {
       res.forEach(r => { r.value += 1; });
