@@ -36,6 +36,13 @@ window.DB.push({
 });
 window.DBIndex['Otymplig rustning'] = window.DB[1];
 
+window.DB.push({
+  namn: 'Kråkrustning',
+  taggar: { typ: ['Rustning'] },
+  stat: { skydd: '1T6', begränsning: -3 }
+});
+window.DBIndex['Kråkrustning'] = window.DB[2];
+
 const defaultMoney = { 'örtegar':0, skilling:0, daler:0 };
 const store = { current: 'c', data: { c: { inventory: [ { name: 'Smidig rustning', qty: 1 } ], list: [], privMoney: defaultMoney, possessionMoney: defaultMoney } } };
 
@@ -62,7 +69,7 @@ assert.deepStrictEqual(res2, [ { value: 15 } ]);
 
 // A balanced weapon grants +1 defense even without armor
 window.DB.push({ namn: 'Svärd', taggar: { typ: ['Vapen'] } });
-window.DBIndex['Svärd'] = window.DB[1];
+window.DBIndex['Svärd'] = window.DB[3];
 store.data.c.inventory = [ { name: 'Svärd', qty: 1, kvaliteter: ['Balanserat'] } ];
 const res3 = window.calcDefense(15);
 assert.deepStrictEqual(res3, [ { value: 16 } ]);
@@ -96,5 +103,16 @@ assert.deepStrictEqual(res5, [ { value: 16 } ]);
 store.data.c.inventory = [ { name: 'Kniv', qty: 1 } ];
 const res6 = window.calcDefense(15);
 assert.deepStrictEqual(res6, [ { value: 15 } ]);
+
+// Manteldans Novis should grant +1 defense
+store.data.c.inventory = [];
+store.data.c.list = [ { namn: 'Manteldans', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
+const res5 = window.calcDefense(15);
+assert.deepStrictEqual(res5, [ { value: 16 } ]);
+
+// Manteldans stacks with balanced weapon
+store.data.c.inventory = [ { name: 'Svärd', qty: 1, kvaliteter: ['Balanserat'] } ];
+const res6 = window.calcDefense(15);
+assert.deepStrictEqual(res6, [ { value: 17 } ]);
 
 console.log('All tests passed.');

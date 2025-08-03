@@ -55,6 +55,11 @@
       res.forEach(r => { r.value += 1; });
     }
 
+    const mantleLvl = storeHelper.abilityLevel(list, 'Manteldans');
+    if (mantleLvl >= 1) {
+      res.forEach(r => { r.value += 1; });
+    }
+
     return res;
   }
 
