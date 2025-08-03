@@ -17,6 +17,8 @@ function initCharacter() {
   const conflictPanel = document.getElementById('conflictPanel');
   const conflictClose = document.getElementById('conflictClose');
   const conflictList = document.getElementById('conflictList');
+  const conflictAbility = document.getElementById('conflictAbility');
+  const conflictLevels = document.getElementById('conflictLevels');
 
   function conflictEntryHtml(p){
     const compact = storeHelper.getCompactEntries(store);
@@ -270,9 +272,9 @@ function initCharacter() {
       const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
       const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
       const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
-      const hasActive = LVL.some(l=>p.taggar?.handling?.[l]?.includes('Aktiv'));
-      const conflictBtn = hasActive
-        ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}">💔</button>`
+      const activeLvls = LVL.filter((l, i) => i <= LVL.indexOf(p.nivå || LVL[0]) && p.taggar?.handling?.[l]?.includes('Aktiv'));
+      const conflictBtn = activeLvls.length
+        ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeLvls.join(', ')}">💔</button>`
         : '';
       let btn = '';
       if(multi){
@@ -339,9 +341,14 @@ function initCharacter() {
   dom.valda.addEventListener('click',e=>{
     const conflictBtn = e.target.closest('.conflict-btn');
     if(conflictBtn){
-      const current = conflictBtn.dataset.name;
+      const currentName = conflictBtn.dataset.name;
+      const current = storeHelper.getCurrentList(store).find(x=>x.namn===currentName);
+      const idx = LVL.indexOf(current?.nivå || LVL[0]);
+      const curLvls = LVL.filter((l, i) => i <= idx && current?.taggar?.handling?.[l]?.includes('Aktiv'));
+      conflictAbility.textContent = currentName;
+      conflictLevels.innerHTML = curLvls.map(l=>`<span class="tag">${l}</span>`).join('');
       const others = storeHelper.getCurrentList(store)
-        .filter(x=>x.namn!==current && x.taggar?.handling?.[x.nivå]?.includes('Aktiv'));
+        .filter(x=>x.namn!==currentName && x.taggar?.handling?.[x.nivå]?.includes('Aktiv'));
       renderConflicts(others);
       conflictPanel.classList.add('open');
       return;
