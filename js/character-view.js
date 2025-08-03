@@ -23,16 +23,20 @@ function initCharacter() {
   function conflictEntryHtml(p){
     const compact = storeHelper.getCompactEntries(store);
     const maxIdx = LVL.indexOf(p.nivå || LVL[0]);
+    const lvlTags = LVL.filter((l, i) => i <= maxIdx && p.taggar?.handling?.[l]?.includes('Aktiv'));
     const lvlHtml = LVL.filter((_, i) => i <= maxIdx)
       .map(l => p.taggar?.handling?.[l]?.includes('Aktiv')
         ? `<dt>${l}</dt><dd>${formatText(p.nivåer?.[l] || '')}</dd>`
         : '')
       .filter(Boolean)
       .join('');
+    const tagHtml = compact && lvlTags.length
+      ? `<div class="tags">${lvlTags.map(l=>`<span class="tag">${l}</span>`).join('')}</div>`
+      : '';
     const desc = (!compact && lvlHtml)
       ? `<div class="card-desc"><dl class="levels">${lvlHtml}</dl></div>`
       : '';
-    return `<li class="card${compact ? ' compact' : ''}"><div class="card-title"><span>${p.namn}</span></div>${desc}</li>`;
+    return `<li class="card${compact ? ' compact' : ''}"><div class="card-title"><span>${p.namn}</span></div>${tagHtml}${desc}</li>`;
   }
 
   function renderConflicts(list){
@@ -348,7 +352,7 @@ function initCharacter() {
       conflictAbility.textContent = currentName;
       conflictLevels.innerHTML = curLvls.map(l=>`<span class="tag">${l}</span>`).join('');
       const others = storeHelper.getCurrentList(store)
-        .filter(x=>x.namn!==currentName && x.taggar?.handling?.[x.nivå]?.includes('Aktiv'));
+        .filter(x=>x.namn!==currentName && LVL.some((l, i) => i <= LVL.indexOf(x.nivå || LVL[0]) && x.taggar?.handling?.[l]?.includes('Aktiv')));
       renderConflicts(others);
       conflictPanel.classList.add('open');
       return;
