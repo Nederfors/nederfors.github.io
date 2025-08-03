@@ -18,6 +18,22 @@ function initCharacter() {
   const conflictClose = document.getElementById('conflictClose');
   const conflictList = document.getElementById('conflictList');
 
+  function conflictEntryHtml(p){
+    const lvlHtml = LVL.map(l=>{
+      return p.taggar?.handling?.[l]?.includes('Aktiv')
+        ? `<dt>${l}</dt><dd>${formatText(p.nivåer?.[l]||'')}</dd>`
+        : '';
+    }).filter(Boolean).join('');
+    const desc = lvlHtml ? `<div class="card-desc"><dl class="levels">${lvlHtml}</dl></div>` : '';
+    return `<li class="card"><div class="card-title"><span>${p.namn}</span></div>${desc}</li>`;
+  }
+
+  function renderConflicts(list){
+    conflictList.innerHTML = list.length
+      ? list.map(conflictEntryHtml).join('')
+      : '<li class="card">Inga konflikter.</li>';
+  }
+
   function renderSummary(){
     const list = storeHelper.getCurrentList(store);
     const inv = storeHelper.getInventory(store);
@@ -257,7 +273,7 @@ function initCharacter() {
       const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
       const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
       const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
-      const hasActive = p.taggar?.handling?.[p.nivå]?.includes('Aktiv');
+      const hasActive = LVL.some(l=>p.taggar?.handling?.[l]?.includes('Aktiv'));
       const conflictBtn = hasActive
         ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}">💔</button>`
         : '';
@@ -321,9 +337,7 @@ function initCharacter() {
       const current = conflictBtn.dataset.name;
       const others = storeHelper.getCurrentList(store)
         .filter(x=>x.namn!==current && x.taggar?.handling?.[x.nivå]?.includes('Aktiv'));
-      conflictList.innerHTML = others.length
-        ? others.map(x=>`<li class="card">${x.namn}</li>`).join('')
-        : '<li class="card">Inga konflikter.</li>';
+      renderConflicts(others);
       conflictPanel.classList.add('open');
       return;
     }
