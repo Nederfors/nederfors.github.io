@@ -36,4 +36,9 @@ window.store = store;
 const res = window.calcDefense(15);
 assert.deepStrictEqual(res, [ { name: 'Kråkrustning', value: 12 } ]);
 
+// No armor should still yield a defense value with zero limitation
+store.data.c.inventory = [];
+const res2 = window.calcDefense(15);
+assert.deepStrictEqual(res2, [ { value: 15 } ]);
+
 console.log('All tests passed.');

@@ -3,7 +3,7 @@
     const inv = storeHelper.getInventory(store);
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
-    return inv.reduce((out,row)=>{
+    const res = inv.reduce((out,row)=>{
       const entry = invUtil.getEntry(row.name);
       if(!entry || !((entry.taggar?.typ||[]).includes('Rustning'))) return out;
       const tagger = entry.taggar || {};
@@ -23,6 +23,7 @@
       out.push({ name: row.name, value: kvick + limit });
       return out;
     }, []);
+    return res.length ? res : [ { value: kvick } ];
   }
 
   function renderTraits(){
@@ -82,7 +83,9 @@
         extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
       } else if (k === 'Kvick') {
         const defs = calcDefense(val);
-        extra = defs.map(d => `<div class="trait-extra">F\u00f6rsvar (${d.name}): ${d.value}</div>`).join('');
+        extra = defs
+          .map(d => `<div class="trait-extra">F\u00f6rsvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`)
+          .join('');
       } else if (k === 'Viljestark') {
         const baseMax   = strongGift ? val * 2 : val;
         const threshBase = strongGift ? val : Math.ceil(val / 2);
