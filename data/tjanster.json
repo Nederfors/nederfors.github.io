@@ -1,5 +1,6 @@
 [
   {
+    "id": "t1",
     "namn": "Helpension, höloft på landet",
     "beskrivning": "Enkel övernattning på höloft med enklare mat på landsbygden. Grundläggande komfort och skydd mot väder.",
     "taggar": {
@@ -14,6 +15,7 @@
     }
   },
   {
+    "id": "t2",
     "namn": "Helpension, värdshus på landet",
     "beskrivning": "Ett dygn på värdshus med enkel mat, sovplats och viss trygghet. Ofta vid landsvägar och mindre samhällen.",
     "taggar": {
@@ -28,6 +30,7 @@
     }
   },
   {
+    "id": "t3",
     "namn": "Helpension, värdshus i stad",
     "beskrivning": "Stadsvärdshus erbjuder bättre mat och bekvämare säng för resande. I regel säkrare och med mer service.",
     "taggar": {
@@ -42,6 +45,7 @@
     }
   },
   {
+    "id": "t4",
     "namn": "Liv i fält, fotsoldat per dag",
     "beskrivning": "Dagslön och enkel försörjning för soldat till fots i fältförhållanden.",
     "taggar": {
@@ -56,6 +60,7 @@
     }
   },
   {
+    "id": "t5",
     "namn": "Liv i fält, ryttare per dag",
     "beskrivning": "Daglig ersättning för ryttare med egen häst i krigstjänst eller eskort.",
     "taggar": {
@@ -70,6 +75,7 @@
     }
   },
   {
+    "id": "t6",
     "namn": "Liv i fält, riddare per dag",
     "beskrivning": "Lön för riddare i fält, inkluderar både underhåll och militärt ansvar.",
     "taggar": {
@@ -84,6 +90,7 @@
     }
   },
   {
+    "id": "t7",
     "namn": "Bad på värdshus",
     "beskrivning": "Tillgång till badbalja och tvål på värdshus, ofta lyx i mindre samhällen.",
     "taggar": {
@@ -98,6 +105,7 @@
     }
   },
   {
+    "id": "t8",
     "namn": "Kartritare",
     "beskrivning": "Professionell som kan framställa detaljerade kartor över land, skog eller stad.",
     "taggar": {
@@ -112,6 +120,7 @@
     }
   },
   {
+    "id": "t9",
     "namn": "Livvakt per dag",
     "beskrivning": "Beväpnad eskort för att skydda mot överfall och rån under en dag.",
     "taggar": {
@@ -126,6 +135,7 @@
     }
   },
   {
+    "id": "t10",
     "namn": "Läkare",
     "beskrivning": "Medicinsk rådgivning eller behandling. Kostnad för eventuella alkemiska preparat tillkommer.",
     "taggar": {
@@ -140,6 +150,7 @@
     }
   },
   {
+    "id": "t11",
     "namn": "Mystiker, ritual",
     "beskrivning": "Specialist på ritualmagi, anlitas vid behov av magiska tjänster eller välsignelser.",
     "taggar": {
@@ -154,6 +165,7 @@
     }
   },
   {
+    "id": "t12",
     "namn": "Tvätt av kläder",
     "beskrivning": "Tvätterska eller tvättare som rengör kläder och linne.",
     "taggar": {
@@ -168,6 +180,7 @@
     }
   },
   {
+    "id": "t13",
     "namn": "Väg/stadstull",
     "beskrivning": "Avgift för att passera genom port eller över väg in till stad eller by.",
     "taggar": {
