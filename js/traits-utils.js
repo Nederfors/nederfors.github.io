@@ -1,4 +1,30 @@
 (function(window){
+  function calcDefense(kvick){
+    const inv = storeHelper.getInventory(store);
+    const list = storeHelper.getCurrentList(store);
+    const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
+    return inv.reduce((out,row)=>{
+      const entry = invUtil.getEntry(row.name);
+      if(!entry || !((entry.taggar?.typ||[]).includes('Rustning'))) return out;
+      const tagger = entry.taggar || {};
+      const baseQ = [
+        ...(tagger.kvalitet || []),
+        ...splitQuals(entry.kvalitet)
+      ];
+      const removed = row.removedKval || [];
+      const allQ = [
+        ...baseQ.filter(q=>!removed.includes(q)),
+        ...(row.kvaliteter || [])
+      ];
+      let limit = entry.stat?.['begränsning'] || 0;
+      if(allQ.includes('Smidig')) limit += 2;
+      if(allQ.includes('Otymplig')) limit -= 1;
+      if(rustLvl >= 2) limit = 0;
+      out.push({ name: row.name, value: kvick + limit });
+      return out;
+    }, []);
+  }
+
   function renderTraits(){
     if(!dom.traits) return;
     const data = storeHelper.getTraits(store);
@@ -54,6 +80,9 @@
           `<div class="trait-extra">B\u00e4rkapacitet: ${base}</div>`;
         afterExtra = '';
         extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
+      } else if (k === 'Kvick') {
+        const defs = calcDefense(val);
+        extra = defs.map(d => `<div class="trait-extra">F\u00f6rsvar (${d.name}): ${d.value}</div>`).join('');
       } else if (k === 'Viljestark') {
         const baseMax   = strongGift ? val * 2 : val;
         const threshBase = strongGift ? val : Math.ceil(val / 2);
@@ -136,4 +165,5 @@
 
   window.renderTraits = renderTraits;
   window.bindTraits = bindTraits;
+  window.calcDefense = calcDefense;
 })(window);
