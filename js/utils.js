@@ -87,15 +87,31 @@
   }
 
   // Returnera HTML med skada/skydd-stats för vapen och rustningar
-  function itemStatHtml(entry) {
+  function itemStatHtml(entry, row) {
     if (!entry) return '';
     const types = entry.taggar?.typ || [];
     if (types.includes('Rustning')) {
       const stats = entry.stat || {};
       const parts = [];
       if (stats.skydd) parts.push(`Skydd: ${stats.skydd}`);
-      if (stats.hasOwnProperty('begr\u00e4nsning'))
-        parts.push(`Begr\u00e4nsning: ${stats['begr\u00e4nsning']}`);
+      if (stats.hasOwnProperty('begr\u00e4nsning')) {
+        let limit = stats['begr\u00e4nsning'];
+        if (row) {
+          const removed = row.removedKval || [];
+          const baseQuals = [
+            ...(entry.taggar?.kvalitet || []),
+            ...splitQuals(entry.kvalitet)
+          ];
+          const baseQ = baseQuals.filter(q => !removed.includes(q));
+          const allQ = [...baseQ, ...(row.kvaliteter || [])];
+          if (allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
+          if (allQ.includes('Otymplig') || allQ.includes('Otympligt')) limit -= 1;
+          const list = storeHelper.getCurrentList(store);
+          const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
+          if (rustLvl >= 2) limit = 0;
+        }
+        parts.push(`Begr\u00e4nsning: ${limit}`);
+      }
       return parts.length ? `<br>${parts.join('<br>')}` : '';
     }
     if (types.includes('Vapen')) {

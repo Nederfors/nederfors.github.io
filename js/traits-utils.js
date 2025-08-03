@@ -34,8 +34,8 @@
         ...(row.kvaliteter || [])
       ];
       let limit = entry.stat?.['begränsning'] || 0;
-      if(allQ.includes('Smidig')) limit += 2;
-      if(allQ.includes('Otymplig')) limit -= 1;
+      if(allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
+      if(allQ.includes('Otymplig') || allQ.includes('Otympligt')) limit -= 1;
       if(rustLvl >= 2) limit = 0;
       out.push({ name: row.name, value: kvick + limit });
       return out;

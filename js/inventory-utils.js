@@ -525,7 +525,7 @@
             const html = tags.map(t => `<span class="tag">${t}</span>`).join(' ');
             desc += `<div class="tags">${html}</div>`;
           }
-          desc += itemStatHtml(entry);
+          desc += itemStatHtml(entry, row);
           if (row.trait) {
             desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
           }
