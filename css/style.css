@@ -898,6 +898,42 @@ select.level {
 }
 #artPopup .popup-inner button { width: 100%; }
 
+/* ---------- Popup för försvarskaraktärsdrag ---------- */
+#defensePopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#defensePopup.open { display: flex; }
+#defensePopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem 1.2rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: center;
+  transform: translateY(100%);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#defensePopup.open .popup-inner { transform: translateY(0); }
+#defensePopup #defenseOptions {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+#defensePopup .popup-inner button { width: 100%; }
+
 /* ---------- Popup f\u00f6r Nilas-fr\u00e5gan ---------- */
 #nilasPopup {
   position: fixed;
@@ -934,6 +970,7 @@ select.level {
 #alcPopup .popup-inner,
 #smithPopup .popup-inner,
 #artPopup .popup-inner,
+#defensePopup .popup-inner,
 #nilasPopup .popup-inner {
   max-height: 100%;
   overflow-y: auto;
