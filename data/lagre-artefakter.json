@@ -244,10 +244,11 @@
   },
   {
     "namn": "Runstav",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": { "typ": ["Lägre Artefakt", "Vapen"], "kvalitet": ["Balanserat"] },
     "nivåer": {
       "Mästare": "Stavmagikernas signum är den personliga runstaven, etsad med elementens runor. Staven avger i ägarens hand en skyddande aura, skydd 1t4, samt utgör också i övrigt grunden för mystikerns krafter."
     },
+    "stat": { "skada": "1T8" },
     "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
   },
   {
