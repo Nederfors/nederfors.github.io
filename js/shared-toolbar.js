@@ -313,6 +313,7 @@ class SharedToolbar extends HTMLElement {
             <strong>⚒️/⚗️/🏺</strong> v\u00e4ljer niv\u00e5 p\u00e5 smed, alkemist och artefaktmakare för prisreducieringar.<br>
             <strong>🔭</strong> l\u00e5ter tillagda filter utöka sökningen istället för att göra den snävare.<br>
             <strong>🤏</strong> v\u00e4xlar till kompakt vy.<br>
+            <strong>🏃</strong> l\u00e5ter dig v\u00e4lja f\u00f6rsvarskarakt\u00e4rsdrag manuellt.<br>
             <strong>ℹ️</strong> visar denna hj\u00e4lpmeny.
           </p>
           <h3>Inventariepanelen</h3>
@@ -324,6 +325,10 @@ class SharedToolbar extends HTMLElement {
           <h3>Egenskapspanelen</h3>
           <p>
             H\u00e4r kan du ange total erfarenhet och se summering av valda f\u00f6rm\u00e5gor.
+          </p>
+          <h3>Rollpersonspanelen</h3>
+          <p>
+            <strong>📋</strong> visar en sammanfattning av f\u00f6rsvar, korruption, b\u00e4rkapacitet, h\u00e4lsa och tr\u00e4ffs\u00e4kerhet.<br>
           </p>
           <h3>Listor och inventarie</h3>
           <p>
