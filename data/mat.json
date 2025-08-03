@@ -1,5 +1,6 @@
 [
   {
+    "id": "ma1",
     "namn": "Bröd (landet)",
     "beskrivning": "Färskt bröd bakat i stenugn, basföda vid varje måltid.",
     "taggar": {
@@ -14,6 +15,7 @@
     }
   },
   {
+    "id": "ma2",
     "namn": "Bröd (stad)",
     "beskrivning": "Färskt stenugnsbakat bröd från stadens bagerier.",
     "taggar": {
@@ -28,6 +30,7 @@
     }
   },
   {
+    "id": "ma3",
     "namn": "Gryta (landet)",
     "beskrivning": "Mustig gryta med lokalt kött, rotfrukter och örter.",
     "taggar": {
@@ -42,6 +45,7 @@
     }
   },
   {
+    "id": "ma4",
     "namn": "Gryta (stad)",
     "beskrivning": "Stadskockens gryta med förstklassigt kött och exotiska kryddor.",
     "taggar": {
@@ -56,6 +60,7 @@
     }
   },
   {
+    "id": "ma5",
     "namn": "Kött (landet)",
     "beskrivning": "Nykött från gårdens slakt, tillagas över öppen eld.",
     "taggar": {
@@ -70,6 +75,7 @@
     }
   },
   {
+    "id": "ma6",
     "namn": "Kött (stad)",
     "beskrivning": "Finstyckat kött från stadens slaktare, serveras färskt eller rökt.",
     "taggar": {
@@ -84,6 +90,7 @@
     }
   },
   {
+    "id": "ma7",
     "namn": "Ost (landet)",
     "beskrivning": "Hantverksost av gårdsmjölk, mild och krämig.",
     "taggar": {
@@ -98,6 +105,7 @@
     }
   },
   {
+    "id": "ma8",
     "namn": "Ost (stad)",
     "beskrivning": "Lagrad ost från stadens ostehandel, mer smakrik och fast.",
     "taggar": {
@@ -112,6 +120,7 @@
     }
   },
   {
+    "id": "ma9",
     "namn": "Stuvning (landet)",
     "beskrivning": "Lätt grönsaksstuvning med smör och örter från åkern.",
     "taggar": {
@@ -126,6 +135,7 @@
     }
   },
   {
+    "id": "ma10",
     "namn": "Stuvning (stad)",
     "beskrivning": "Exotisk stuvning med importerade grönsaker och kryddor.",
     "taggar": {
@@ -139,263 +149,649 @@
       "örtegar": 0
     }
   },
-
   {
+    "id": "ma11",
     "namn": "Hackebricka (ost & korv)",
     "beskrivning": "Litet fat med lagrad ost och rökt korv – perfekt som aptitretare.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma12",
     "namn": "Friterade bakverk",
     "beskrivning": "Gyllenbruna degknyten friterade i talg och pudrade med socker.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 2 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
   },
   {
+    "id": "ma13",
     "namn": "Fruktpaj",
     "beskrivning": "Generös paj fylld med saftiga frukter och knaprigt täcke.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma14",
     "namn": "Fruktpudding",
     "beskrivning": "Lätt pudding av inkokta frukter och grädde.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
   },
   {
+    "id": "ma15",
     "namn": "Fruktsorbet",
     "beskrivning": "Iskall sorbet gjord på solmogen frukt – svalkar gott.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 7, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 7,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma16",
     "namn": "Glass och frukt",
     "beskrivning": "Söt gräddglass serverad med färsk säsongsfrukt.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 2 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
   },
   {
+    "id": "ma17",
     "namn": "Honungsrostad ängssyra",
     "beskrivning": "Spröda blad rostade i honung – söt-syrlig delikatess.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma18",
     "namn": "Kanderad ingefära",
     "beskrivning": "Skivor av kryddig ingefära inbäddade i sockerlag.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma19",
     "namn": "Marmeladkonfekt",
     "beskrivning": "Små gelébitar av bärmarmelad rullade i fint socker.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma20",
     "namn": "Marsipanfigurer",
     "beskrivning": "Noga formade figurer av söt mandelmassa.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma21",
     "namn": "Nougatkonfekt",
     "beskrivning": "Mjuk nougat skuren i små bitar och pudrad med kakao.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 2 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 2
+    }
   },
   {
+    "id": "ma22",
     "namn": "Nötter i choklad",
     "beskrivning": "Rostade nötter täckta av mörk choklad.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 1 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
   },
   {
+    "id": "ma23",
     "namn": "Smörrostad tryffelskorpa",
     "beskrivning": "Krispig skorpa rostad i smör och smaksatt med tryffel.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
   },
   {
+    "id": "ma24",
     "namn": "Sockrade rosenblad",
     "beskrivning": "Rosenblad bestrukna med äggvita och socker, lätt kristalliserade.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
   },
   {
+    "id": "ma25",
     "namn": "Sötsalta stickor",
     "beskrivning": "Tunna degstänger med söt glasyr och stänk av havssalt.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
   },
   {
+    "id": "ma26",
     "namn": "Våfflor med smör och honung",
     "beskrivning": "Nystekta våfflor toppade med smält smör och ringlad honung.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma27",
     "namn": "Fisksås och hårt bröd",
     "beskrivning": "Salt fisksås serverad med knaprigt hårt bröd.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
   },
   {
+    "id": "ma28",
     "namn": "Forellpaté med rovor",
     "beskrivning": "Len paté på rökt forell med kokta rovor vid sidan.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 15, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 15,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma29",
     "namn": "Salt sill och rovor",
     "beskrivning": "Inlagd sill i saltlag serveras med rovor.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma30",
     "namn": "Smöröst gös med mös",
     "beskrivning": "Mört gösfilé bräckt i smör och örter, serverad med mosad kålrot.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 22, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 22,
+      "örtegar": 0
+    }
   },
-  
   {
+    "id": "ma31",
     "namn": "Vattugröt",
     "beskrivning": "Tun gröt kokad på vatten och havre, enkel och mättande.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
   },
   {
+    "id": "ma32",
     "namn": "Ölgröt med smörklick",
     "beskrivning": "Kornrik gröt kokad i öl och toppad med en generös smörklick.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma33",
     "namn": "Kryddad gräddgröt",
     "beskrivning": "Krämig gröt på grädde med kanel och kardemumma.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma34",
     "namn": "Helgrillat spädsvin med betor",
     "beskrivning": "Mört spädsvin grillat hel­gjutet, serverat med ugnsrostade betor.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 6, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 6,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma35",
     "namn": "Kungsstek i sky",
     "beskrivning": "Saftig stek sjuden i egen sky tills köttet faller isär.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 8, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 8,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma36",
     "namn": "Långkok med morotsstuvning",
     "beskrivning": "Mustigt långkokt kött samman med söt morotsstuvning.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma37",
     "namn": "Pölsabiff med rovor",
     "beskrivning": "Kryddig pölsa pressad till biff, serveras med kokta rovor.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma38",
     "namn": "Rokakorv med rotmos",
     "beskrivning": "Rökt korv ackompanjerad av smörigt rotmos.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 12, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 12,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma39",
     "namn": "Späckad lunga med svartmos",
     "beskrivning": "Lunga späckad med fett, bakad långsamt och serverad med blodmos.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 4, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 4,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma40",
     "namn": "Fisk och skaldjurspaj",
     "beskrivning": "Paj fylld med fisk, skaldjur och dilldoftande kräm.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma41",
     "namn": "Inälvspaj",
     "beskrivning": "Kryddig paj av lever, hjärta och njurspad i mördeg.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 4, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 4,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma42",
     "namn": "Kålpaj",
     "beskrivning": "Enkel paj fylld med smörstekt kål.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma43",
     "namn": "Köttpaj",
     "beskrivning": "Saftig köttstuvning inbakad i frasigt skal.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma44",
     "namn": "Forellpaj",
     "beskrivning": "Rökt forell och örter bakade under smörig deg.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 8, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 8,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma45",
     "namn": "Njurpaj",
     "beskrivning": "Mördegspaj fylld med njure i kryddad sås.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 2, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 2,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma46",
     "namn": "Svamppaj",
     "beskrivning": "Skogs­svamp och grädde bakade till gyllen­brun paj.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 4, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 4,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma47",
     "namn": "Blandgryta",
     "beskrivning": "Gryta på spannmål, ärtor och små fläsktärningar.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
   },
   {
+    "id": "ma48",
     "namn": "Fisk och rovor",
     "beskrivning": "Mild stuvning av fisk och rovor i gräddig buljong.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
   },
   {
+    "id": "ma49",
     "namn": "Kålstuvning",
     "beskrivning": "Vitkål långkokt i smör och buljong tills len.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 3 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 3
+    }
   },
   {
+    "id": "ma50",
     "namn": "Kött och betor",
     "beskrivning": "Gryta på tärnat kött och rödbetor kokade i kryddig sky.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 8 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 8
+    }
   },
   {
+    "id": "ma51",
     "namn": "Rotsaksgryta",
     "beskrivning": "Morot, palsternacka och kålrot sjuder ihop till mustig gryta.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
   },
   {
+    "id": "ma52",
     "namn": "Blodsoppa och mörkt bröd",
     "beskrivning": "Kryddig soppa på blod och lök, serveras med rågbröd.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 5 }
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 5
+    }
   },
   {
+    "id": "ma53",
     "namn": "Löksoppa med hårt bröd",
     "beskrivning": "Söt karamelliserad löksoppa, knäckebröd vid sidan.",
-    "taggar": { "typ": [ "Mat" ] },
-    "grundpris": { "daler": 0, "skilling": 0, "örtegar": 4 }
-  }]
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 4
+    }
+  }
+]
