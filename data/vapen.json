@@ -3,7 +3,7 @@
       "namn": "Enhandsvapen",
       "beskrivning": "Enhandsvapen omfattar alla typer av vapen som kan svingas i en hand. Exempel på enhandsvapen som är vanliga i davokarregionen är hammare, kroksabel, svärd och yxa.",
       "taggar": {
-        "typ": ["Vapen", "Sköld"]
+        "typ": ["Sköld"]
       },
       "stat": {
         "skada": "1T8"
@@ -210,7 +210,7 @@
       "namn": "Sköld",
       "beskrivning": "Sköldar gör det svårt att träffa bäraren med såväl närstrids- som avståndsvapen. De kombineras oftast med ett enhandsvapen, alternativt med enhandsvapen och kastvapen.",
       "taggar": {
-        "typ": ["Vapen", "Sköld"]
+        "typ": ["Sköld"]
       },
       "stat": {
         "skada": "1T4"
@@ -225,7 +225,7 @@
       "namn": "Bucklare",
       "beskrivning": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och pikenerare, då den är smidig nog att bära på armen, redo för parader, samtidigt som man använder båda händerna till sitt vapen. Bucklaren är för lätt för att kunna användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
       "taggar": {
-        "typ": ["Vapen", "Sköld"],
+        "typ": ["Sköld"],
         "kvalitet": ["Smidig"]
       },
       "stat": {
@@ -241,7 +241,7 @@
       "namn": "Stålsköld",
       "beskrivning": "Stålskölden är lika stark som de vanliga träsköldarna men tunnare och mer lättmanövrerad.",
       "taggar": {
-        "typ": ["Vapen", "Sköld"],
+        "typ": ["Sköld"],
         "kvalitet": ["Balanserad"]
       },
       "stat": {
