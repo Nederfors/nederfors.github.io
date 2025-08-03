@@ -62,6 +62,15 @@ assert.deepStrictEqual(res, [ { name: 'Otymplig rustning', value: 12 } ]);
 html = window.itemStatHtml(window.DBIndex['Otymplig rustning'], store.data.c.inventory[0]);
 assert(html.includes('Begränsning: -3'));
 
+// Rustmästare (Gesäll) removes armor limitation penalty
+store.data.c.inventory = [ { name: 'Kråkrustning', qty: 1 } ];
+store.data.c.list = [ { namn: 'Rustmästare', nivå: 'Gesäll', taggar: { typ: ['Förmåga'] } } ];
+res = window.calcDefense(15);
+assert.deepStrictEqual(res, [ { name: 'Kråkrustning', value: 15 } ]);
+html = window.itemStatHtml(window.DBIndex['Kråkrustning'], store.data.c.inventory[0]);
+assert(html.includes('Begränsning: 0'));
+store.data.c.list = [];
+
 // No armor should still yield a defense value with zero limitation
 store.data.c.inventory = [];
 const res2 = window.calcDefense(15);
