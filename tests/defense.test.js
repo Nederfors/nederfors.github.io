@@ -53,4 +53,17 @@ store.data.c.inventory.unshift({ name: 'Kråkrustning', qty: 1 });
 const res4 = window.calcDefense(15);
 assert.deepStrictEqual(res4, [ { name: 'Kråkrustning', value: 13 } ]);
 
+// A shield grants +1 defense
+window.DB.push({ namn: 'Stålsköld', taggar: { typ: ['Vapen'], kvalitet: ['Balanserad'] } });
+window.DBIndex['Stålsköld'] = window.DB[2];
+store.data.c.inventory = [ { name: 'Stålsköld', qty: 1 } ];
+store.data.c.list = [];
+const res5 = window.calcDefense(15);
+assert.deepStrictEqual(res5, [ { value: 16 } ]);
+
+// Shieldfighter adds another +1 when Sköldkamp is known
+store.data.c.list = [ { namn: 'Sköldkamp', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
+const res6 = window.calcDefense(15);
+assert.deepStrictEqual(res6, [ { value: 17 } ]);
+
 console.log('All tests passed.');

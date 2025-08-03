@@ -3,10 +3,20 @@
     const inv = storeHelper.getInventory(store);
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
+    const shieldLvl = storeHelper.abilityLevel(list, 'Sköldkamp');
+
+    const shieldItem = inv.find(row => {
+      const name = (row.name || '').toLowerCase();
+      return name.includes('sköld') || name === 'bucklare';
+    });
+    const hasShield = !!shieldItem;
+    const canUseShieldSkill = hasShield && (shieldItem.name.toLowerCase().includes('sköld'));
 
     const hasBalancedWeapon = inv.some(row => {
       const entry = invUtil.getEntry(row.name);
       if (!entry || !((entry.taggar?.typ || []).includes('Vapen'))) return false;
+      const ename = (entry.namn || '').toLowerCase();
+      if (ename.includes('sköld') || ename === 'bucklare') return false;
       const tagger = entry.taggar || {};
       const baseQ = [
         ...(tagger.kvalitet || []),
@@ -43,8 +53,14 @@
 
     res = res.length ? res : [ { value: kvick } ];
 
-    if (hasBalancedWeapon) {
-      res.forEach(r => { r.value += 1; });
+    let bonus = 0;
+    if (hasBalancedWeapon) bonus += 1;
+    if (hasShield) {
+      bonus += 1;
+      if (canUseShieldSkill && shieldLvl >= 1) bonus += 1;
+    }
+    if (bonus) {
+      res.forEach(r => { r.value += bonus; });
     }
 
     return res;
