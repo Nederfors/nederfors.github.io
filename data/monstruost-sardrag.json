@@ -18,7 +18,8 @@
       "Novis": "Handling: Aktiv. Ett offer måste slå [Viljestark←Viljestark] eller backa undan under sina handlingar tills det lyckas med ett nytt slag.",
       "Gesäll": "Handling: Aktiv. Alla inom hörhåll påverkas som på novisnivån.",
       "Mästare": "Handling: Fri. Som gesäll men offren kan inte ens försvara sig innan de lyckas med ett slag per runda."
-    }
+    },
+    "id": "mo1"
   },
   {
     "namn": "Frätande attack",
@@ -32,7 +33,8 @@
       "Novis": "Handling: Reaktiv. Den frätande attacken är svag och gör 1t6 i skada i 1t6 rundor.",
       "Gesäll": "Handling: Reaktiv. Den frätande attacken är medelstark och gör 1t8 i skada i 1t8 rundor.",
       "Mästare": "Handling: Reaktiv. Den frätande attacken är stark och gör 1t10 i skada i 1t10 rundor."
-    }
+    },
+    "id": "mo2"
   },
   {
     "namn": "Frätande blod",
@@ -46,7 +48,8 @@
       "Novis": "Handling: Reaktiv. Det frätande blodet är svagt och gör 1t6 i skada i 1t6 rundor.",
       "Gesäll": "Handling: Reaktiv. Det frätande blodet är medelstarkt och gör 1t8 i skada i 1t8 rundor.",
       "Mästare": "Handling: Reaktiv. Det frätande blodet är starkt och gör 1t10 i skada i 1t10 rundor."
-    }
+    },
+    "id": "mo3"
   },
   {
     "namn": "Fångstnät",
@@ -63,7 +66,8 @@
       "Novis": "Handling: Passiv. De sega trådarna i fångstnätet tvingar alla som passerar att slå [Kvick←Listig] eller fastna i trådarna. Att komma loss kräver sedan ett lyckat [Stark←Listig], ett slag per runda. En fångad varelse får inte förflytta sig och får två chanser att misslyckas med alla handlingar, om ett av slagen misslyckas fallerar försöket.",
       "Gesäll": "Handling: Aktiv. Förutom passiva fångsttrådar (som nivå Novis) kan varelsen kasta fångstnät mot en fiende som en handling. Offret undgår attacken om den lyckas med [Kvick←Träffsäker]. En varelse som träffas måste klara [Stark←Listig] för att komma loss, ett slag per runda. En fångad varelse får inte förflytta sig och får två chanser att misslyckas med alla handlingar, om ett av slagen misslyckas fallerar försöket.",
       "Mästare": "Handling: Aktiv. Fångstnätet är nära nog levande och lyder sin skapare; dels finns den passiva fångstkvaliteten (som nivå Novis) men själva nätet kan också skjuta upp till tre (3) fångsttrådar per runda, var och en med effekt som på nivå II."
-    }
+    },
+    "id": "mo4"
   },
   {
     "namn": "Giftig",
@@ -80,7 +84,8 @@
       "Novis": "Handling: Passiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
       "Gesäll": "Handling: Passiv. Giftet är medelstarkt och gör 1t6 i skada i 1t6 rundor.",
       "Mästare": "Handling: Passiv. Giftet är starkt och gör 1t8 i skada i 1t8 rundor."
-    }
+    },
+    "id": "mo5"
   },
   {
     "namn": "Alternativ skada",
@@ -94,7 +99,8 @@
       "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 alternativ skada, Bepansring skyddar ej.",
       "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 alternativ skada, Bepansring skyddar ej.",
       "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 alternativ skada, Bepansring skyddar ej."
-    }
+    },
+    "id": "mo6"
   },
   {
     "namn": "Andeform",
@@ -108,7 +114,8 @@
       "Novis": "Handling: Passiv. Varelsen passerar fysiska barriärer utan problem men kan inte korsa vatten ens på broar, med båt eller i luften. Anden tar halv skada av vapenattacker. Alkemiska effekter på vapen, liksom mystiska krafter ger full skada. Magiska vapen ger också full skada.",
       "Gesäll": "Handling: Passiv. Som Novis men anden tar halv skada av vapenattacker, alkemiska/mystiska attacker och magiska vapen.",
       "Mästare": "Handling: Passiv. Som Novis men endast mystiska krafter och magiska vapen skadar anden, och dessa gör då halv skada."
-    }
+    },
+    "id": "mo7"
   },
   {
     "namn": "Giftspott",
@@ -125,7 +132,8 @@
       "Novis": "Handling: Aktiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
       "Gesäll": "Handling: Aktiv. Giftet är medelstarkt och gör 1t6 i skada i 1t6 rundor.",
       "Mästare": "Handling: Aktiv. Giftet är starkt och gör 1t8 i skada i 1t8 rundor."
-    }
+    },
+    "id": "mo8"
   },
   {
     "namn": "Gravkyla",
@@ -142,7 +150,8 @@
       "Novis": "Handling: Fri. Varelsen sprider gravens paralyserade kyla omkring sig; rollpersoner på närstridsavstånd paralyseras om de misslyckas med Viljestark. Ett slag slås per runda, lyckas rollpersonen får den agera som vanligt. En rollperson som bryter gravkylan kan inte drabbas igen under samma scen.",
       "Gesäll": "Handling: Fri. Som Novis med tillägget att gravkylan också gör 1t4 per runda för dem som drabbas och Bepansring skyddar ej.",
       "Mästare": "Handling: Fri. Som Gesäll men effekten drabbar de rollpersoner som misslyckas med [Viljestark←Viljestark]."
-    }
+    },
+    "id": "mo9"
   },
   {
     "namn": "Korrumperande attack",
@@ -156,7 +165,8 @@
       "Novis": "Handling: Passiv. Varelsens attacker osar av korruption och smittar den som skadas av attacken. Ett offer som tar minst 1 i skada av attacken får också 1t4 temporär korruption.",
       "Gesäll": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1t6 temporär korruption.",
       "Mästare": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1t8 temporär korruption."
-    }
+    },
+    "id": "mo10"
   },
   {
     "namn": "Manifestering",
@@ -170,7 +180,8 @@
       "Novis": "Handling: Fri. Anden kan manifestera sig fysiskt och får då agera som om den hade en fysisk kropp i en runda. Om 1 rundas förflyttning räcker för att korsa vatten kan anden göra det. Andens obeväpnade eller naturliga vapen kan användas under rundan och den tar skada av allt som skadar fysiska varelser.",
       "Gesäll": "Handling: Fri. Anden kan manifestera sig med de vapen och den rustning den hade då den dog och kan slåss med dem. Anden förblir fysisk så länge den behagar, men kan inte avbryta mitt i en runda. Har anden inlett rundan som fysisk spelas rundan med anden i fysisk form. Anden kan vandra en hel scen i fysisk form om den vill, exempelvis för att korsa vatten. Om anden tvingas eller väljer att återfå andeformen när den befinner sig över vatten kastas den tillbaka till fast mark.",
       "Mästare": "Handling: Speciell. Anden behärskar manifestering till fullo och kan agera fysiskt med de handlingar den så önskar men är i allt övrigt immateriell. Den attackerar som fysisk och försvarar sig som ande. Anden kan inte skadas på annat sätt än det som beskrivs av dess nivå i Andeform. Anden kan vandra obehindrat i fysisk form om den vill, exempelvis för en längre båtresa. Om anden tvingas eller väljer att återfå andeform när den befinner sig över vatten kastas den tillbaka till fast mark."
-    }
+    },
+    "id": "mo11"
   },
   {
     "namn": "Naturligt vapen",
@@ -184,7 +195,8 @@
       "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 i skada istället för 1t4.",
       "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 i skada.",
       "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 i skada. Det naturliga vapnet har kvaliteten Långt och ger alltså frislag initialt i striden mot dem med kortare vapen."
-    }
+    },
+    "id": "mo12"
   },
   {
     "namn": "Pansar",
@@ -198,7 +210,8 @@
       "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1t4.",
       "Gesäll": "Handling: Passiv. Pansaret skyddar 1t6.",
       "Mästare": "Handling: Passiv. Pansaret skyddar 1t8."
-    }
+    },
+    "id": "mo13"
   },
   {
     "namn": "Regeneration",
@@ -212,7 +225,8 @@
       "Novis": "Handling: Passiv. Varelsen regenererar 1t4 Tålighet per runda.",
       "Gesäll": "Handling: Passiv. Varelsen regenererar 1t6 Tålighet per runda.",
       "Mästare": "Handling: Passiv. Varelsen regenererar 1t8 Tålighet per runda."
-    }
+    },
+    "id": "mo14"
   },
   {
     "namn": "Svärm",
@@ -229,7 +243,8 @@
       "Novis": "Handling: Speciell. Svärm tar halv skada av alla attacker. Om svärm skadas och går ner till mindre än hälften av sin Tålighet kommer de ingående delarnas överlevnadsinstinkt att ta över och dess flockinstinkt dra med sig resten av svärm på flykt. Mentala angrepp (där svärm försvarar sig med Viljestark) påverkar hela svärm.",
       "Gesäll": "Handling: Speciell. Svärm tar halv skada av alla attacker. Om svärm skadas så pass att dess Smärtgräns överskrids genom en enstaka attack kommer de ingående delarnas överlevnadsinstinkt att ta över och dess flockinstinkt dra med sig resten av svärm på flykt. Svärm får två försök på sig att motstå mentala angrepp (där svärm försvarar sig med Viljestark).",
       "Mästare": "Handling: Speciell. Svärmens medvetande styr den så att den endast tar en fjärdedels skada av alla attacker. Svärmens sammanhållning är total och svärm kommer inte att fly förrän det övergripande intellektet väljer att göra det. Svärm får två försök på sig att motstå mentala angrepp (där svärm försvarar sig med Viljestark)."
-    }
+    },
+    "id": "mo15"
   },
   {
     "namn": "Trollbinda",
@@ -246,7 +261,8 @@
       "Novis": "Handling: Aktiv. Varelsens blick tvingar offret att klara [Viljestark←Viljestark] eller förlora båda sina nästkommande handlingar.",
       "Gesäll": "Handling: Aktiv. Varelsens ljuva sång eller dess hypnotiska läte tvingar alla offer att slå för [Viljestark←Viljestark] eller ägna nästkommande runda åt att göra ingenting.",
       "Mästare": "Handling: Aktiv. Som Gesäll men offren står trollbundna tills de klarar ett [Viljestark←Viljestark]. Om de tar skada på något sätt bryts också förtrollningen."
-    }
+    },
+    "id": "mo16"
   },
   {
     "namn": "Vandödhet",
@@ -260,7 +276,8 @@
       "Novis": "Handling: Passiv. Den vandöde påverkas inte av gifter eller sjukdomar, men tar skada av fysiska effekter som vanligt med undantag av att Smärtgräns inte används (smärta och chock påverkar inte den vandöde). Den vandöde läker inte naturligt och påverkas inte av alkemiska läkeelixir utan måste äta rått kött (levande eller nyligen dödat) eller dricka blod för att läka, varje poäng Tålighet som konsumeras läker 2 Tålighet på den vandöde.",
       "Gesäll": "Handling: Passiv. Som Novis men den vandöde tar halv skada av vanliga fysiska effekter så som vapen eller elementarskada. Mystiska krafter som ignorerar Bepansring gör skada som vanligt.",
       "Mästare": "Handling: Passiv. Som Gesäll men den vandöde tar också halv skada av alkemiska och mystiska effekter (dock full skada av magiska vapen och heliga effekter)."
-    }
+    },
+    "id": "mo17"
   },
   {
     "namn": "Vingar",
@@ -274,7 +291,8 @@
       "Novis": "Handling: Passiv. Varelsen kan flyga under sin förflyttning och alltså undgå fria attacker vid passage över en fiende.",
       "Gesäll": "Handling: Passiv. Varelsen kan ryttla, det vill säga stanna stilla i luften och då i praktiken inte göra någon förflyttning men samtidigt befinna sig utom räckhåll för närstridsattacker. Att ryttla är ingen handling.",
       "Mästare": "Handling: Passiv. Varelsen kan göra svepande attacker, det vill säga använda en del av sin förflyttning innan en attack och resten efter. På så sätt fastnar varelsen inte i närstrid men kan utföra närstridsattacker själv."
-    }
+    },
+    "id": "mo18"
   },
   {
     "namn": "Amfibisk",
@@ -283,7 +301,8 @@
       "typ": [
         "Monstruöst särdrag"
       ]
-    }
+    },
+    "id": "mo19"
   },
   {
     "namn": "Blixtsnabb",
@@ -297,7 +316,8 @@
       "Novis": "Handling: Reaktiv. När varelsen träffar med en stridshandling en får denne genast göra ett frislag mot en fiende inom räckhåll, oavsett om den första handlingen gav skada eller inte.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men om den inledande attacken ger skada får varelsen genast göra två frislag mot fiender inom räckhåll.",
       "Mästare": "Handling: Reaktiv. När varelsen utför en attack en får denne dessutom göra två frislag mot fiender inom räckhåll, oavsett om den inledande attacken träffar eller inte."
-    }
+    },
+    "id": "mo20"
   },
   {
     "namn": "Blodtörst",
@@ -314,7 +334,8 @@
       "Novis": "Handling: Aktiv. Varelsen kan trollbinda och bita sitt offer, [Viljestark←Viljestark], i samma stridshandling. Blodsugaren sörplar sedan i sig blod, 1T4 Tålighet per runda, rustning skyddar ej. Offret får varje runda, på sitt initiativ, försöka bryta transen [Viljestark←Viljestark]. Skada på blodsugaren kan också bryta transen, [Viljestark –Skada].",
       "Gesäll": "Handling: Aktiv. Som Novis, men den blodsugande varelsen läker lika mycket Tålighet som den suger i sig från offret.",
       "Mästare": "Handling: Aktiv. Som Gesäll, men skadan och läkningen är i stället 1T6 Tålighet per runda. Offret kan inte heller själv bryta transen; det krävs att någon annan skadar blodsugaren för att kontrollen ska förloras, [Viljestark –Skada]."
-    }
+    },
+    "id": "mo21"
   },
   {
     "namn": "Bräckare",
@@ -331,7 +352,8 @@
       "Novis": "Handling: Reaktiv. Varelsens attacker kan fälla omkull fiender som tar skada. Offret undviker att falla om det lyckas med ett slag mot [Stark←Stark], där varje nivå i särdraget Robust ger +2 i Stark för både anfallare och försvarare.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men fiender som skadas riskerar att kastas undan. Om en träffad fiende misslyckas med slaget mot [Stark←Stark] kastas denne 1T6 meter bakåt och tar skada som av ett fall från motsvarande höjd. En kastad fiende landar liggande på rygg.",
       "Mästare": "Handling: Passiv. Varelsens brutala attacker får kvaliteten Raserande (se Spelarens handbok, sidan 118)."
-    }
+    },
+    "id": "mo22"
   },
   {
     "namn": "Diminutiv",
@@ -343,7 +365,8 @@
       "test": [
         "Diskret"
       ]
-    }
+    },
+    "id": "mo23"
   },
   {
     "namn": "Dödlig andedräkt",
@@ -360,7 +383,8 @@
       "Novis": "Handling: Aktiv. Varelsen frustar fram en kaskad mot ett mål. Om offret lyckas med ett slag mot [Kvick←Träffsäker] gör kaskaden 1T6 i skada; om slaget misslyckas blir skadan 1T12.",
       "Gesäll": "Handling: Aktiv. Varelsen blåser ur sig en ihållande kaskad. Om det inledande offret lyckas med [Kvick←Träffsäker] gör kaskaden 1T6 i skada; om slaget misslyckas blir skadan 1T12. Om offret tar full skada får varelsen försöka styra kaskaden till ytterligare ett mål, och så vidare tills ett av offren lyckas med [Kvick←Träffsäker].",
       "Mästare": "Handling: Aktiv. Som Gesäll, men även om ett offer lyckas med slaget fortsätter kedjan; den bryts först vid det andra lyckade slaget."
-    }
+    },
+    "id": "mo24"
   },
   {
     "namn": "Dödsryckningar",
@@ -374,7 +398,8 @@
       "Novis": "Handling: Reaktiv. Varelsens dödskamp låter den göra ett frislag mot en fiende inom närstridsavstånd, som en reaktion på attacken som dödade den.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men attacken utförs som en vanlig stridshandling.",
       "Mästare": "Handling: Reaktiv. Som Gesäll, men varelsen får attackera upp till fem fiender som den kan nå utan att förflytta sig."
-    }
+    },
+    "id": "mo25"
   },
   {
     "namn": "Formförändring",
@@ -388,7 +413,8 @@
       "Novis": "Handling: Aktiv. Varelsen kan simulera ett av de listade särdragen till motsvarande nivå Novis.",
       "Gesäll": "Handling: Aktiv. Varelsen kan simulera två av de listade särdragen till motsvarande nivå Novis, eller ett särdrag till nivå Gesäll.",
       "Mästare": "Handling: Aktiv. Varelsen kan simulera två av de listade särdragen till motsvarande nivå Gesäll, eller ett särdrag till nivå Mästare."
-    }
+    },
+    "id": "mo26"
   },
   {
     "namn": "Frammanare",
@@ -405,7 +431,8 @@
       "Novis": "Handling: Aktiv. En gång per scen kan frammanaren med ett lyckat Viljestark kalla en daemonisk Inkräktare till platsen.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men när frammanaren träffas av en fientlig attack får denne en gång per runda dessutom slå att slag mot Viljestark – om slaget lyckas kallas en daemonisk Inkräktare genast till platsen.",
       "Mästare": "Handling: Fri. En gång per runda kan frammanaren med ett lyckat Viljestark kalla en daemonisk Inkräktare till platsen. Om detta lyckas ersätter det gesällnivåns reaktiva frammanande liksom novisnivåns aktiva frammanande. Om mästarnivåns fria handling misslyckas kan frammanaren välja att aktivera novisnivåns kraft, dock endast en gång per scen."
-    }
+    },
+    "id": "mo27"
   },
   {
     "namn": "Grävare",
@@ -422,7 +449,8 @@
       "Novis": "Handling: Passiv. Varelsen kan med halverad hastighet förflytta sig under marken och därmed undgå alla fria attacker som annars uppkommer vid passage av eller närmande till en fiende.",
       "Gesäll": "Handling: Passiv. Varelsen förflyttar sig under mark med normal hastighet och med sådan smidighet att den kan göra del av sin förflyttning före en attack och resten efter. På så sätt kan varelsen dyka upp för att attackera och sedan försvinna igen, utom räckhåll för attacker. Enda sättet att undvika grävarens attacker är att smyga, [Diskret←Vaksam], eller att förflytta sig upp på berg, byggnader eller i träd.",
       "Mästare": "Handling: Hel runda. Varelsen kan dyka ner i marken och där underminera ett mindre område för att skapa ett slukhål under en samling fienders fötter. Upp till fem fiender som står bredvid varandra påverkas; de som misslyckas med ett slag mot Kvick rasar ned i hålet och utsätts alla för frislag från grävaren. Att ta sig upp ur ett slukhål kräver ett lyckat slag mot Kvick och en förflyttning; offer med förmågan Akrobatik får en andra chans att lyckas med slaget."
-    }
+    },
+    "id": "mo28"
   },
   {
     "namn": "Fri själ",
@@ -431,7 +459,8 @@
       "typ": [
         "Monstruöst särdrag"
       ]
-    }
+    },
+    "id": "mo29"
   },
   {
     "namn": "Fångsttunga",
@@ -443,7 +472,8 @@
       "test": [
         "Stark"
       ]
-    }
+    },
+    "id": "mo30"
   },
   {
     "namn": "Följeslagare",
@@ -457,7 +487,8 @@
       "Novis": "Handling: Passiv. Varelsen åtföljs av en följeslagare, vars motståndsnivå är två steg lägre än varelsens.",
       "Gesäll": "Handling: Passiv. Som Novis, men följeslagarna är två till antalet.",
       "Mästare": "Handling: Passiv. Som Novis, men följeslagarna är tre till antalet."
-    }
+    },
+    "id": "mo31"
   },
   {
     "namn": "Gripklor",
@@ -474,7 +505,8 @@
       "Novis": "Handling: Aktiv. Varelsen får utföra två attacker mot en fiende, en med varje klo. Om båda attackerna träffar kan varelsen försöka gripa tag om offret, vilket händer om offret misslyckas med [Stark←Stark]. Ett greppat offer kan agera som vanligt frånsett att det kan inte förflytta sig. Offret hålls fast under rundan det greppas och dras mot varelsen rundan efter om offret misslyckas med [Stark←Stark]. Lyckas offret kommer det loss.",
       "Gesäll": "Handling: Aktiv. Som Novis, men endast en kloattack behöver träffa för att fienden ska kunna greppas.",
       "Mästare": "Handling: Aktiv. Om en gripklo träffar dras offret direkt till anfallaren om det misslyckas med [Stark←Stark]. Lyckas offret sitter det ändå fast och ett nytt försök att dra det till sig får göras nästa runda; greppet lossnar inte förrän varelsen dör eller väljer att släppa."
-    }
+    },
+    "id": "mo32"
   },
   {
     "namn": "Hemsökelse",
@@ -491,7 +523,8 @@
       "Novis": "Handling: Reaktiv. Varelsen kan besätta ett offer den berör, exempelvis efter ett lyckat anfall som ger skada. Offret måste slå [Viljestark←Viljestark]; om det misslyckas blir offret slav under andens vilja, och kan fås att utföra vilka handlingar som helst utom att ta sitt eget liv. Efter första dygnet slår offret ett andra motståndsslag; om det misslyckas varar effekten i en vecka, varefter ännu ett slag slås. Misslyckas även det sitter besattheten i en månad. Och när den månaden har passerat slås det sista slaget som om det misslyckas innebär att besattheten blir permanent. Besattheten kan dock brytas när som helst genom ett lyckat utförande av ritualen Exorcism.",
       "Gesäll": "Handling: Reaktiv. När varelsen eller den kropp den har besatt når 0 i Tålighet kastar sig anden mot den som utförde den dräpande attacken i ett försök att besätta denne. Besättande går till som på nivå Novis och om attacken drabbade en besatt kropp faller denna ihop, medvetslös under resten av scenen, balanserande på dödens brant.",
       "Mästare": "Handling: Reaktiv. Varelsen kan besätta som på nivå Novis eller Gesäll men varaktigheten är direkt permanent, tills en exorcism utförs eller varelsen av någon anledning väljer att lämna offret."
-    }
+    },
+    "id": "mo33"
   },
   {
     "namn": "Hämnande arvtagare",
@@ -505,7 +538,8 @@
       "Novis": "Handling: Reaktiv. Vid dödsögonblicket lösgör sig eller manifesteras en varelse för att hämnas innehavaren av särdraget. Hämnarens motståndsnivå är två steg lägre än den dödes.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men två varelser lösgör sig eller manifesteras.",
       "Mästare": "Handling: Reaktiv. Som Novis, men tre varelser lösgör sig eller manifesteras."
-    }
+    },
+    "id": "mo34"
   },
   {
     "namn": "Infestering",
@@ -519,7 +553,8 @@
       "Novis": "Handling: Reaktiv. Parasitens infestering kräver ett lyckat anfall som gör skada. Därefter behöver parasiten en hel runda för att tränga in i värdkroppen. Under den rundan kan offret eller en allierad offra en stridshandling för att avlägsna parasiten – ger 1T8 i skada på värden, eller 1T4 med ett lyckat slag mot Listig. Att ta bort en parasit som väl har trängt in kräver ett lyckat Listig med förmågan Medicus; varje försök ger offret 1T10 i skada. (Ignorerar Bepansring)",
       "Gesäll": "Handling: Reaktiv. Efter en skadande attack tränger parasiten genast in i värdkroppen. Att ta bort den kräver ett lyckat Listig med förmågan Medicus; varje försök ger offret 1T12 i skada.",
       "Mästare": "Handling: Reaktiv. Som Gesäll, men varje försök att ta bort parasiten ger offret 1T20 i skada."
-    }
+    },
+    "id": "mo35"
   },
   {
     "namn": "Kollektiv kraft",
@@ -528,7 +563,8 @@
       "typ": [
         "Monstruöst särdrag"
       ]
-    }
+    },
+    "id": "mo36"
   },
   {
     "namn": "Korruptionssamlare",
@@ -545,7 +581,8 @@
       "Novis": "Handling: Aktiv. Varelsen kan stjäla korruption från styggelsesmittade offer, genom att äta dess kött eller suga i sig dess blod. Offret måste vara fogligt, antingen medvetslöst, fasthållet, drogat eller på annat sätt oförmöget att göra motstånd. Offret tar 1T8 i skada per runda (rustning skyddar ej) medan korruptionssamlaren suger i sig 1T4 poäng permanent korruption, vilka därmed försvinner från offret. Varelsen kan som en reaktiv handling spendera en poäng insamlad korruption per runda, på något av följande:\n– Ge en fiende en andra chans att misslyckas med ett motståndsslag mot en av korruptionssamlarens förmågor, krafter eller särdrag\n– Ge en fiende en andra chans att misslyckas med Försvar mot en av korruptionssamlarens attacker\n– Ge en fiende en andra chans att misslyckas med en attack mot korruptionssamlaren\n– Tvinga en fiende att slå en andra gång på ett effektslag, och ta det sämre utfallet",
       "Gesäll": "Handling: Passiv. Som Novis, men varelsens naturliga vapen suger permanent korruption från offret. Så snart varelsen skadar sitt offer förlorar det dessutom 1T4 poäng permanent korruption. Varelsen kan som reaktiva handlingar spendera två poäng insamlad korruption per runda, på de effekter som listas på Novisnivå.",
       "Mästare": "Handling: Passiv. Som Gesäll, men varelsen kan som reaktiva handlingar spendera valfritt antal poäng insamlad korruption per runda, på de effekter som listas på Novisnivå."
-    }
+    },
+    "id": "mo37"
   },
   {
     "namn": "Korruptionssensitiv",
@@ -562,7 +599,8 @@
       "Novis": "Handling: Reaktiv. Med ett lyckat slag mot Vaksam kan varelsen upptäcka utbrott av korruption i närområdet (cirka femhundra meter åt alla håll, om exakthet behövs). Små utbrott (1 poäng temporär korruption) kan upptäckas med -7 på karaktärsdraget; vid 2 poäng modifieras karaktärsdraget med –5; vid 3 poäng med ±0; vid 4 poäng eller mer med +5. En framgång innebär att varelsen känner av utbrottet och blir varse om riktningen till platsen där det uppstod.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men varelsen vet exakt var utbrottet ägde rum genom platsens kvardröjande energier.",
       "Mästare": "Handling: Reaktiv. Som Gesäll, men varelsen kan även spåra utbrottets källa under ett dygn genom de eteriska spår denne lämnar efter sig."
-    }
+    },
+    "id": "mo38"
   },
   {
     "namn": "Krossande framfart",
@@ -579,7 +617,8 @@
       "Novis": "Handling: Förflyttning. Alla som står i varelsens väg under förflyttningen måste klara [Stark←Stark] eller ta 1T4 i skada (rustning skyddar som vanligt) och ramla omkull där de står. Särdraget Robust och Särdraget Väldig ger 1T4 extra i skada som ökar i tärningsgrad per nivå (1T4, 1T8, 1T12). Det ger även +2, +4, +6 i bonus på Stark vid både användandet av och försvar mot Krossande framfart. Om ett offer lyckas med sitt slag avbryts den krossande framfarten. Fiender med förmågan Akrobatik kan välja att försvara sig med [Kvick← Stark] och då ducka undan, men i så fall avbryts inte framfarten vid ett lyckat Försvar.",
       "Gesäll": "Handling: Förflyttning. Som Novis men skadan är 1T6.",
       "Mästare": "Handling: Förflyttning. Som Novis men skadan är 1T8."
-    }
+    },
+    "id": "mo39"
   },
   {
     "namn": "Krossande kram",
@@ -597,7 +636,8 @@
       "Novis": "Handling: Reaktiv. När varelsen träffar med sitt naturliga vapen och gör skada kan den välja att försöka hålla fast offret. För att undvika att fångas måste offret klara [Kvick←Träffsäker]. Om målet blir fasthållet måste det klara [Stark←Stark] för att komma loss, eller ta 1T4 i skada varje runda medan det sakta krossas (Bepansring ignoreras). En fasthållen fiende får inte agera, men å andra sidan förlorar också varelsen en stridshandling per runda och fasthållet offer.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men skada 1T6 per runda.",
       "Mästare": "Handling: Reaktiv. Som Novis, men skada 1T8 per runda."
-    }
+    },
+    "id": "mo40"
   },
   {
     "namn": "Livskraftig",
@@ -614,7 +654,8 @@
       "Novis": "Handling: Passiv. Monstrets Tålighet beräknas på dess Stark x 1,5 (avrundat uppåt).",
       "Gesäll": "Handling: Passiv. Monstrets Tålighet beräknas på dess Stark x 2.",
       "Mästare": "Handling: Passiv. Monstrets Tålighet beräknas på dess Stark x 3."
-    }
+    },
+    "id": "mo41"
   },
   {
     "namn": "Livssinne",
@@ -631,7 +672,8 @@
       "Novis": "Handling: Passiv. Varelsen förnimmer de svagaste vibrationer i mark och luft, och kan upptäcka varelser bakom bastanta väggar och stängda dörrar eller genom metertjocka lager av jord. Den som försöker undgå upptäckt måste lyckas med ett slag mot [Diskret←Vaksam].",
       "Gesäll": "Handling: Passiv. Som Novis, men vid upptäckt är precisionen så exakt att varelsen kan anfalla den upptäckte även genom barriären. Om väggen, dörren, jordskorpan eller liknande är tjock måste varelsen behärska särdrag som låter den passera barriären, som exempelvis Andeform, Bräckare eller Grävare.",
       "Mästare": "Handling: Passiv. Med denna nivå av Livssinne kan varelsen till och med använda mystiska krafter mot upptäckta fiender i närheten, som om de befann sig inom synhåll."
-    }
+    },
+    "id": "mo42"
   },
   {
     "namn": "Mystisk motståndskraft",
@@ -645,7 +687,8 @@
       "Novis": "Handling: Passiv. Alla som försöker påverka eller skada varelsen med mystiska krafter måste slå framgångsslaget två gånger och lyckas med båda för att kraften ska ta effekt.",
       "Gesäll": "Handling: Passiv. Som Novis, men vid ett misslyckande speglas kraftens effekt vidare mot en annan slumpvis utvald person inom synhåll från varelsen. Förutom att den attackerande mystikern drabbas av eventuell temporär korruption fungerar det precis som om det var varelsen som behärskade och hade använt kraften i fråga.",
       "Mästare": "Handling: Passiv. Som Gesäll, men den motståndskraftiga varelsen har sådan kontroll att den själv får välja mot vilken fiende kraften ska speglas."
-    }
+    },
+    "id": "mo43"
   },
   {
     "namn": "Månghövdad",
@@ -659,7 +702,8 @@
       "Novis": "Handling: Passiv. Varelsen har två extremiteter eller huvuden och kan agera med dem separat. Varelsen har två stridshandlingar per runda.",
       "Gesäll": "Handling: Passiv. Varelsen har fyra extremiteter eller huvuden och kan agera med dem separat. Varelsen har fyra stridshandlingar per runda. Särdragen Pansar och Robust räknas som en nivå lägre för varelsen.",
       "Mästare": "Handling: Passiv. Varelsen har åtta extremiteter eller huvuden och kan agera med dem separat. Varelsen har åtta stridshandlingar per runda. Särdragen Pansar och Robust räknas som två nivåer lägre för varelsen."
-    }
+    },
+    "id": "mo44"
   },
   {
     "namn": "Nattorientering",
@@ -668,7 +712,8 @@
       "typ": [
         "Monstruöst särdrag"
       ]
-    }
+    },
+    "id": "mo45"
   },
   {
     "namn": "Observant",
@@ -677,7 +722,8 @@
       "typ": [
         "Monstruöst särdrag"
       ]
-    }
+    },
+    "id": "mo46"
   },
   {
     "namn": "Osynlighet",
@@ -694,7 +740,8 @@
       "Novis": "Handling: Aktiv. Varelsen kan göra sig osynlig och blir då omöjlig att attackera med direkta attacker. För att angripa med areaattacker så som alkemiska granater och liknande måste angriparen lyckas med ett [Vaksam← Diskret]; detsamma gäller för att träffa monstret med improviserade vapen för att avslöja det – sand, damm, mjöl eller liknande som gör varelsen delvis synlig under resten av striden. Att attackera en delvis synlig varelse kräver först ett slag mot [Vaksam← Diskret]; om det slaget lyckas sker attacken som vanligt.",
       "Gesäll": "Handling: Aktiv. Som Novis, men om varelsen görs delvis synlig håller effekten bara i sig en runda, varefter varelsen kan agera för att bli osynlig igen.",
       "Mästare": "Handling: Fri. Varelsens osynlighet är nu rutinmässig; den behöver inte lägga aktiva handlingar på att bli osynlig. Detta gör också att den endast är delvis synlig i en runda om den avslöjas enligt nivå Novis; efter en runda blir den osynlig igen utan att behöva lägga en aktiv handling på det."
-    }
+    },
+    "id": "mo47"
   },
   {
     "namn": "Paralyserande gift",
@@ -708,7 +755,8 @@
       "Novis": "Handling: Passiv. Vid varje attack som ger skada slår offret ett slag mot Stark. Om slaget lyckas blir offret omtöcknat och får två chanser att misslyckas med framgångsslag och reaktiva handlingar under en runda; om slaget misslyckas kan offret bara utföra reaktiva handlingar och då med två chanser att misslyckas.",
       "Gesäll": "Handling: Passiv. Som Novis, men om slaget misslyckas kan offret bara utföra reaktiva handlingar under de nästkommande 1T4 rundorna och då med två chanser att misslyckas.",
       "Mästare": "Handling: Passiv. Slaget som offret gör är [Stark −5]. Om det lyckas kan offret bara utföra reaktiva handlingar under de nästkommande 1T4 rundorna och då med två chanser att misslyckas; om slaget misslyckas är offret helt handlingsförlamat i 1T8 rundor."
-    }
+    },
+    "id": "mo48"
   },
   {
     "namn": "Penetrerande attack",
@@ -722,7 +770,8 @@
       "Novis": "Handling: Passiv. Attacken har skadevärde 4.",
       "Gesäll": "Handling: Passiv. Attacken har skadevärde 5.",
       "Mästare": "Handling: Passiv. Attacken har skadevärde 6."
-    }
+    },
+    "id": "mo49"
   },
   {
     "namn": "Rotmur",
@@ -740,7 +789,8 @@
       "Novis": "Handling: Aktiv. Varelsen reser sina rötter som en mur ur marken, bred nog för att det ska ta två förflyttningshandlingar att runda den, alternativt för att blockera en grottöppning eller liknande. Muren går att hugga sönder, enligt reglerna för Skada på byggnader i Spelarens handbok (sidan 106). Rotmuren har Tålighet 10, Brytpunkt 5 och Skydd 1T10. Rotmuren finns kvar under hela scenen om inte varelsen väljer att flytta den med en ny aktiv handling eller om den raseras. I det senare fallet kan varelsen inte framkalla en ny Rotmur förrän ett dygn senare.",
       "Gesäll": "Handling: Aktiv. Som Novis, men fiender som passerar nära muren måste slå [Kvick←Träffsäker] eller träffas av piskande grenar som ger 1T6 i skada (ignorerar Bepansring). Enda sättet att undvika detta är att offra ytterligare en förflyttningshandling vid passagen, sammanlagt tre, och därmed passera muren på längre avstånd.",
       "Mästare": "Handling: Fri. Som Gesäll, men de piskande grenarna gör 1T10 i skada. Om de träffar och om fienden misslyckas med ett [Stark← Stark] blir denne dessutom fasthållen tills ett slag mot [Stark← Stark] lyckas, alternativt tills väggen raseras eller flyttas. En fasthållen fiende attackeras inte av piskande grenar igen förrän i ögonblicket när den lyckas bryta sig loss."
-    }
+    },
+    "id": "mo50"
   },
   {
     "namn": "Ryggsköldar",
@@ -754,7 +804,8 @@
       "Novis": "Handling: Passiv. Varelsen kan när som helst välja att dra ihop sig under sina ryggsköldar – skyddsvärdet för dess naturliga pansar dubbleras men den får inte utföra några aktiva handlingar under rundan.",
       "Gesäll": "Handling: Passiv. Varelsens förflyttningar sker i skydd av ryggsköldarna, men den blottar sig om den själv utför en stridshandling. Detta ger varelsen dubbel effekt av Pansar om den inte gör annat än förflyttar sig under en runda, samt mot frislag orsakade av att den passerar fiender, förflyttar sig in i närstrid eller drar sig ur närstrid.",
       "Mästare": "Handling: Reaktiv. Varelsen kan utnyttja sina sköldar reaktivt mot alla attacker. När varelsen träffas av en attack slår anfallaren ett nytt framgångsslag; om det andra slaget misslyckas träffar attacken visserligen fortfarande, men varelsen drar sig in mellan ryggsköldarna och dess Pansar får dubbel effekt mot angreppet."
-    }
+    },
+    "id": "mo51"
   },
   {
     "namn": "Skadande aura",
@@ -768,7 +819,8 @@
       "Novis": "Handling: Passiv. Alla som befinner sig inom närstridsavstånd från varelsen drabbas av 1T4 i skada varje runda (ignorerar Bepansring).",
       "Gesäll": "Handling: Passiv. Som Novis, men skadan är 1T6 per runda.",
       "Mästare": "Handling: Passiv. Som Novis, men skadan är 1T8 per runda."
-    }
+    },
+    "id": "mo52"
   },
   {
     "namn": "Slukare",
@@ -785,7 +837,8 @@
       "Novis": "Handling: Aktiv. När monstret gör skada med ett bett hålls offret fast till nästa runda; det får agera som vanligt frånsett att det inte får förflytta sig. Nästa runda kan monstret försöka sluka målet. Offret slår ett slag mot [Stark← Stark], där särdraget Robust ger +2 i bonus per nivå, för både slukaren och dess offer. Om slaget lyckas sliter sig offret loss från fasthållningen, men om det misslyckas sväljs denne och hamnar i monstrets buk – en ohälsosam miljö som gör 1T4 i skada per runda, rustning skyddar ej.",
       "Gesäll": "Handling: Aktiv. Som Novis, men bettet behöver bara träffa (inte göra skada) för att offret ska bli fasthållet. Slukande får ske först rundan därpå.",
       "Mästare": "Handling: Reaktiv. Som Gesäll, men försöket att sluka görs som en del av en attack – om bettet träffar slås motståndsslaget för slukandet omedelbart samma runda."
-    }
+    },
+    "id": "mo53"
   },
   {
     "namn": "Smittsam",
@@ -799,7 +852,8 @@
       "Novis": "Handling: Reaktiv. Varje varelse som skadas av monstrets naturliga vapen måste klara ett slag mot Stark eller smittas av en svag sjukdom.",
       "Gesäll": "Handling: Reaktiv. Som Novis, men sjukdomen är medelstark.",
       "Mästare": "Handling: Reaktiv. Som Novis, men sjukdomen är stark."
-    }
+    },
+    "id": "mo54"
   },
   {
     "namn": "Väldig",
@@ -813,7 +867,8 @@
       "Novis": "Handling: Passiv. Varelsens båda handlingar går åt när den attackerar; den kan alltså inte förflytta sig och attackera under samma runda. I gengäld träffar dess attacker med en kraft som vanlig rustning har svårt att skydda mot – målet slår för Bepansring två gånger och det lägsta utfallet gäller.",
       "Gesäll": "Handling: Passiv. Som Novis, men varelsens väldiga kroppshydda gör den oförmögen att utföra reaktiva handlingar (exempelvis Försvar) i samband med förflyttning. Å andra sidan är varelsens räckvidd och storlek nu sådan att fienden har svårt att parera eller hinna undvika attackerna – målet har två chanser att misslyckas med sitt Försvar.",
       "Mästare": "Handling: Passiv. Som Gesäll, med tillägget att varelsens massiva kropp inte längre kan skadas av vanliga vapen och projektiler. Varelsen tar bara skada av magiska vapen och mystiska krafter."
-    }
+    },
+    "id": "mo55"
   },
   {
     "namn": "Hoppförmåga",
@@ -830,7 +885,8 @@
       "Novis": "Handling: Förflyttning. Varelsen kan ta ett väldigt skutt och landa en förflyttning från startpunkten (ca 12 meter). Den drabbas inte av frislag från fiender som den landar vid eller passerar, men undgår inte frislag om hoppet innebär att den bryter närstrid.",
       "Gesäll": "Handling: Förflyttning. Som Novis, men hoppet sker med sådan precision att varelsen kan välja att landa på en fiende. Attacken hanteras som ett frislag med +1T10 i skada, och målet slås till marken om det misslyckas med ett [Stark←Stark+5].",
       "Mästare": "Handling: Förflyttning. Som Gesäll, men varelsen kan hoppa upp till två förflyttningshandlingar på längden (ca 24 meter), och upphoppet sker med sådan explosivitet att den också undgår frislag om den bryter närstrid."
-    }
+    },
+    "id": "mo56"
   },
   {
     "namn": "Eldflåsare",
@@ -847,6 +903,7 @@
       "Novis": "Handling: Aktiv. Varelsen frustar fram en eldkaskad mot ett mål. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6.",
       "Gesäll": "Handling: Aktiv. Varelsen blåser ur sig en ihållande eldkvast. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6. Om målet tar full skada får varelsen försöka styra den flammande elden till ett ytterligare mål, och så vidare tills varelsen misslyckas med [Träffsäker←Kvick].",
       "Mästare": "Handling: Aktiv. Varelsen frustar fram en veritabel eldstorm. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6. Även om varelsen misslyckas med slaget en gång fortsätter kedjan, den bryts först vid det andra misslyckade slaget."
-    }
+    },
+    "id": "mo57"
   }
 ]
