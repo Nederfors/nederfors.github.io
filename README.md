@@ -2,7 +2,37 @@
 
 A static web app for managing characters and inventory for the Symbaroum RPG. Open `index.html` to browse items and `character.html` to manage a character sheet locally in your browser.
 
-## Export/import of characters
+## Innehåll
+- [Kom igång](#kom-igång)
+- [Funktioner](#funktioner)
+- [Projektstruktur](#projektstruktur)
+- [Export och import av rollpersoner](#export-och-import-av-rollpersoner)
+- [Användarmanual](#användarmanual)
+- [Utveckling och bidrag](#utveckling-och-bidrag)
+
+## Kom igång
+1. Klona eller ladda ned detta repo.
+2. Öppna `index.html` för att bläddra bland föremål och förmågor.
+3. Öppna `character.html` för att arbeta med en rollperson.
+4. För en lokal webbserver kan du exempelvis köra `python3 -m http.server` och besöka `http://localhost:8000`.
+
+Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
+
+## Funktioner
+- Hantera flera rollpersoner med erfarenhetspoäng, inventarie och specialförmågor.
+- Filtrera listor på taggar och sökord.
+- Paneler för inventarie (`🎒`) och egenskaper (`📊`).
+- Export och import av rollpersoner via komprimerade koder.
+- All information lagras i webbläsarens `localStorage`, vilket gör att dina val finns kvar mellan besök.
+
+## Projektstruktur
+- `index.html` – bläddra bland föremål och förmågor.
+- `character.html` – hantera en specifik rollperson.
+- `data/` – JSON-filer med databasen över föremål, färdigheter m.m.
+- `js/` – JavaScript-moduler för lagring, logik och användargränssnitt.
+- `css/` – stilmallar.
+
+## Export och import av rollpersoner
 
 Use the **Exportera** button in the filter panel to copy a short code representing the current character. Codes are compressed and only contain references to the built‑in database. The **Importera** button lets you paste such a code to recreate the character (requires that the database is loaded).
 ## Användarmanual
@@ -68,3 +98,6 @@ Se avsnittet ovan. Exportera kopierar all data för karaktären som en sträng i
 - Alla dina val sparas automatiskt i webblagringen på datorn.
 - Klicka på taggar i en lista för att snabbt filtrera på samma typ eller arketyp.
 - Hjälpmenyn (ℹ️) innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
+
+## Utveckling och bidrag
+Projektet består av statisk HTML, CSS och JavaScript utan byggsteg. Ändringar i `data/` och `js/` reflekteras direkt i webbläsaren. Förslag, felrapporter och förbättringar tas emot via pull requests.
