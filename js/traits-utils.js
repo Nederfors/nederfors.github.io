@@ -3,7 +3,24 @@
     const inv = storeHelper.getInventory(store);
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
-    const res = inv.reduce((out,row)=>{
+
+    const hasBalancedWeapon = inv.some(row => {
+      const entry = invUtil.getEntry(row.name);
+      if (!entry || !((entry.taggar?.typ || []).includes('Vapen'))) return false;
+      const tagger = entry.taggar || {};
+      const baseQ = [
+        ...(tagger.kvalitet || []),
+        ...splitQuals(entry.kvalitet)
+      ];
+      const removed = row.removedKval || [];
+      const allQ = [
+        ...baseQ.filter(q => !removed.includes(q)),
+        ...(row.kvaliteter || [])
+      ];
+      return allQ.includes('Balanserat');
+    });
+
+    let res = inv.reduce((out,row)=>{
       const entry = invUtil.getEntry(row.name);
       if(!entry || !((entry.taggar?.typ||[]).includes('Rustning'))) return out;
       const tagger = entry.taggar || {};
@@ -23,7 +40,14 @@
       out.push({ name: row.name, value: kvick + limit });
       return out;
     }, []);
-    return res.length ? res : [ { value: kvick } ];
+
+    res = res.length ? res : [ { value: kvick } ];
+
+    if (hasBalancedWeapon) {
+      res.forEach(r => { r.value += 1; });
+    }
+
+    return res;
   }
 
   function renderTraits(){
