@@ -647,16 +647,6 @@ function defaultTraits() {
     const base = HAMNSKIFTE_BASE[name] || name;
     const entry = window.DBIndex?.[base];
     if (!entry || !isMonstrousTrait(entry)) return 3;
-    const hamlvl = abilityLevel(list, 'Hamnskifte');
-
-    if (['Naturligt vapen', 'Pansar'].includes(base)) {
-      return hamlvl >= 2 ? 2 : 1;
-    }
-
-    if (['Regeneration', 'Robust'].includes(base)) {
-      return hamlvl >= 3 ? 2 : 1;
-    }
-
     return 1;
   }
 

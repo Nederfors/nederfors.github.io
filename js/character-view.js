@@ -69,10 +69,9 @@ function initCharacter() {
 
   const renderSkills = arr=>{
     const groups = [];
-    const hamNames = Object.values(storeHelper.HAMNSKIFTE_NAMES);
     arr.forEach(p=>{
-        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-        if(multi && !['Naturligt vapen','Pansar','Regeneration','Robust', ...hamNames].includes(p.namn)){
+        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+        if(multi){
           const g = groups.find(x=>x.entry.namn===p.namn);
           if(g) { g.count++; return; }
           groups.push({entry:p, count:1});
@@ -111,7 +110,7 @@ function initCharacter() {
       li.dataset.name=p.namn;
       if(p.trait) li.dataset.trait=p.trait;
       if(p.trait) li.dataset.trait=p.trait;
-      const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+      const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
         const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
@@ -201,7 +200,7 @@ function initCharacter() {
     const before = storeHelper.getCurrentList(store);
     const p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
     if(!p) return;
-    const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
+    const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
     let list;
         if(actBtn.dataset.act==='add'){
           if(!multi) return;

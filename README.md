@@ -58,7 +58,8 @@ Både i index-vyn och i din karaktär visas poster som kort.
 - **↔** finns på artefakter och växlar dess effekt mellan att ge 1 XP eller permanent korruption.
 - **🗑** tar bort posten helt.
 - Monstruösa särdrag som blir gratis via Hamnskifte eller Blodvadare ger ett val mellan Humanoid eller Hamnskifte (−10 XP) när de läggs till.
-- Naturligt vapen, Pansar, Regeneration och Robust kan tas högst två gånger med Hamnskifte (annars en gång) och visas som separata poster.
+- Naturligt vapen, Pansar, Regeneration och Robust kan bara tas en gång och visas som separata poster.
+- Monstruösa särdrag kan inte staplas.
 
 ### 8. Export och import
 Se avsnittet ovan. Exportera kopierar all data för karaktären som en sträng i urklipp. Importera klistrar in en tidigare sträng och återställer karaktären. All data sparas i webblagring så inget backend behövs.
