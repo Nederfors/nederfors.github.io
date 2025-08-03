@@ -30,5 +30,15 @@ assert.strictEqual(getDefenseTraitName([
   { namn:'Fint', nivå:'Gesäll' },
   { namn:'Pareringsmästare', nivå:'Novis' }
 ]), 'Diskret');
+// Novis levels shouldn't trigger Vaksam
+assert.strictEqual(
+  getDefenseTraitName([{ namn: 'Sjätte Sinne', nivå: 'Novis' }]),
+  'Kvick'
+);
+// Fint has priority over Sjätte Sinne
+assert.strictEqual(getDefenseTraitName([
+  { namn: 'Fint', nivå: 'Gesäll' },
+  { namn: 'Sjätte Sinne', nivå: 'Gesäll' }
+]), 'Diskret');
 
 console.log('All tests passed.');

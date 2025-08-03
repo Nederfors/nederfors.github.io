@@ -117,10 +117,20 @@
   function getDefenseTraitName(list) {
     const forced = storeHelper.getDefenseTrait(store);
     if (forced) return forced;
-    if (storeHelper.abilityLevel(list, 'Fint') >= 2) return 'Diskret';
-    if (storeHelper.abilityLevel(list, 'Sjätte Sinne') >= 2) return 'Vaksam';
-    if (storeHelper.abilityLevel(list, 'Taktiker') >= 2) return 'Listig';
-    if (storeHelper.abilityLevel(list, 'Pareringsmästare') >= 1) return 'Tr\u00e4ffs\u00e4ker';
+
+    const ABILITY_TRAITS = [
+      { ability: 'Fint',            level: 2, trait: 'Diskret' },
+      { ability: 'Sjätte Sinne',    level: 2, trait: 'Vaksam' },
+      { ability: 'Taktiker',        level: 2, trait: 'Listig' },
+      { ability: 'Pareringsmästare', level: 1, trait: 'Tr\u00e4ffs\u00e4ker' }
+    ];
+
+    for (const { ability, level, trait } of ABILITY_TRAITS) {
+      if (storeHelper.abilityLevel(list, ability) >= level) {
+        return trait;
+      }
+    }
+
     return 'Kvick';
   }
 
