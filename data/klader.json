@@ -1,5 +1,6 @@
 [
   {
+    "id": "kl1",
     "namn": "Fattiga trasor",
     "beskrivning": "Ensamling slitna och lappade kläder, bärs av de allra fattigaste.",
     "taggar": {
@@ -14,6 +15,7 @@
     }
   },
   {
+    "id": "kl2",
     "namn": "Enkel dräkt",
     "beskrivning": "Enkla vardagskläder för allmoge eller tjänstefolk.",
     "taggar": {
@@ -28,6 +30,7 @@
     }
   },
   {
+    "id": "kl3",
     "namn": "Hantverksklädnad",
     "beskrivning": "Kläder anpassade för arbete, ofta slitstarka och smutsavvisande.",
     "taggar": {
@@ -42,6 +45,7 @@
     }
   },
   {
+    "id": "kl4",
     "namn": "Borgarstass",
     "beskrivning": "Välskräddad dräkt för stadens välbärgade borgare.",
     "taggar": {
@@ -56,6 +60,7 @@
     }
   },
   {
+    "id": "kl5",
     "namn": "Ädlings ekipering",
     "beskrivning": "Praktfull och dyrbar klädsel för adelsmän och högreståndspersoner. Priset varierar med tygets och sömnadens kvalitet.",
     "taggar": {
@@ -75,6 +80,7 @@
     }
   },
   {
+    "id": "kl6",
     "namn": "Byxor",
     "beskrivning": "Enkla benkläder i tyg eller ylle. Priset varierar beroende på material och kvalitet.",
     "taggar": {
@@ -94,6 +100,7 @@
     }
   },
   {
+    "id": "kl7",
     "namn": "Halsduk",
     "beskrivning": "Värmande tygstycke för halsen, kan vara enkel eller dekorerad.",
     "taggar": {
@@ -113,6 +120,7 @@
     }
   },
   {
+    "id": "kl8",
     "namn": "Hatt",
     "beskrivning": "Huvudbonad som skyddar mot väder eller visar status. Pris varierar med snitt och dekoration.",
     "taggar": {
@@ -132,6 +140,7 @@
     }
   },
   {
+    "id": "kl9",
     "namn": "Kappa",
     "beskrivning": "Varm ytterrock med långa ärmar, bärs över andra plagg. Priset beror på materialets värde.",
     "taggar": {
@@ -151,6 +160,7 @@
     }
   },
   {
+    "id": "kl10",
     "namn": "Kjol",
     "beskrivning": "Tygstycke som bärs från midjan och nedåt. Kan vara enkel eller vackert dekorerad.",
     "taggar": {
@@ -170,6 +180,7 @@
     }
   },
   {
+    "id": "kl11",
     "namn": "Klänning",
     "beskrivning": "Helkroppsplagg för kvinnor, från enkel vardagsklänning till praktfulla festplagg.",
     "taggar": {
@@ -189,6 +200,7 @@
     }
   },
   {
+    "id": "kl12",
     "namn": "Kåpa",
     "beskrivning": "Vid mantel med huva, bärs över kläder för värme och skydd.",
     "taggar": {
@@ -208,6 +220,7 @@
     }
   },
   {
+    "id": "kl13",
     "namn": "Mantel",
     "beskrivning": "Stort ytterplagg utan ärmar, bärs som skydd mot vind och regn.",
     "taggar": {
@@ -227,6 +240,7 @@
     }
   },
   {
+    "id": "kl14",
     "namn": "Mask",
     "beskrivning": "Ansiktstäckande tillbehör för högtider, skådespel eller maskerad.",
     "taggar": {
@@ -246,6 +260,7 @@
     }
   },
   {
+    "id": "kl15",
     "namn": "Mössa",
     "beskrivning": "Värmande huvudbonad av tyg eller ull, bärs för att skydda mot kyla.",
     "taggar": {
@@ -265,6 +280,7 @@
     }
   },
   {
+    "id": "kl16",
     "namn": "Skjorta",
     "beskrivning": "Långärmat plagg av linne eller bomull, används under väst eller livplagg.",
     "taggar": {
@@ -284,6 +300,7 @@
     }
   },
   {
+    "id": "kl17",
     "namn": "Stövlar",
     "beskrivning": "Slitstarka läderstövlar för vandring, ridning eller arbete.",
     "taggar": {
@@ -298,6 +315,7 @@
     }
   },
   {
+    "id": "kl18",
     "namn": "Särk",
     "beskrivning": "Underplagg i linne eller bomull, används närmast kroppen.",
     "taggar": {
@@ -317,6 +335,7 @@
     }
   },
   {
+    "id": "kl19",
     "namn": "Tunika",
     "beskrivning": "Bekvämt och löst sittande överplagg, bärs av både kvinnor och män.",
     "taggar": {
