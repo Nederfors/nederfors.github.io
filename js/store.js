@@ -836,7 +836,7 @@ function defaultTraits() {
 
   function expandList(list) {
     return (list || []).map(it => {
-      if (it && typeof it.i === 'number' && window.DB && window.DB[it.i]) {
+      if (it && it.i !== undefined && window.DB && window.DB[it.i]) {
         const base = { ...window.DB[it.i] };
         if (it.l) base.nivå = it.l;
         if (it.t) base.trait = it.t;
@@ -880,7 +880,7 @@ function defaultTraits() {
 
   function expandInventory(inv) {
     return (inv || []).map(row => {
-      if (row && typeof row.i === 'number' && window.DB && window.DB[row.i]) {
+      if (row && row.i !== undefined && window.DB && window.DB[row.i]) {
         const name = window.DB[row.i].namn;
         return {
           name,
