@@ -200,6 +200,9 @@
         const defHtml = defs.map(d => `<div class="trait-extra">Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`).join('');
         extra += defHtml;
       }
+      if (k === 'Listig' && storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
+        extra += '<div class="trait-extra">Används som träffsäker för attacker med allt utom tunga vapen</div>';
+      }
       return `
       <div class="trait" data-key="${k}">
         <div class="trait-name">${k}</div>
