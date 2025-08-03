@@ -7,6 +7,17 @@
 (function (global) {
   const STORAGE_KEY = 'rpall';
 
+  const HAMNSKIFTE_NAMES = {
+    'Naturligt vapen': 'Naturligt vapen: Hamnskifte',
+    'Pansar': 'Pansar: Hamnskifte',
+    'Robust': 'Robust: Hamnskifte',
+    'Regeneration': 'Regeneration: Hamnskifte'
+  };
+
+  const HAMNSKIFTE_BASE = Object.fromEntries(
+    Object.entries(HAMNSKIFTE_NAMES).map(([k,v]) => [v,k])
+  );
+
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
     return {
@@ -142,32 +153,47 @@
     if (hamLvl >= 2) needed.push('Naturligt vapen', 'Pansar');
     if (hamLvl >= 3) needed.push('Robust', 'Regeneration');
 
-    const allowed = new Set(needed);
-    const all = ['Naturligt vapen','Pansar','Robust','Regeneration'];
+    const all = Object.keys(HAMNSKIFTE_NAMES);
+    const hamNames = HAMNSKIFTE_NAMES;
+    const allHamNames = Object.values(hamNames);
 
-    for (let i=list.length-1; i>=0; i--) {
-      const it = list[i];
-      if (all.includes(it.namn) && it.form === 'beast' && !allowed.has(it.namn)) {
-        list.splice(i,1);
-        const idx = removed.indexOf(it.namn);
-        if (idx >= 0) removed.splice(idx,1);
-      }
-    }
+    let customs = getCustomEntries(store).filter(e => !allHamNames.includes(e.namn));
 
-    needed.forEach(name => {
-      const idx = list.findIndex(it => it.namn === name && it.form === 'beast');
-      if (idx < 0 && !removed.includes(name)) {
-        const entry = DB.find(e => e.namn === name);
-        if (entry) list.push({ ...entry, form: 'beast', nivå: 'Novis' });
+    all.forEach(base => {
+      const hamName = hamNames[base];
+      if (!needed.includes(base)) {
+        for (let i=list.length-1;i>=0;i--) {
+          if (list[i].namn === hamName) {
+            list.splice(i,1);
+            const idx = removed.indexOf(base);
+            if (idx >= 0) removed.splice(idx,1);
+          }
+        }
+        customs = customs.filter(c => c.namn !== hamName);
       }
     });
 
+    needed.forEach(base => {
+      const hamName = hamNames[base];
+      if (!customs.some(c => c.namn === hamName)) {
+        const entry = DB.find(e => e.namn === base);
+        if (entry) customs.push({ ...entry, namn: hamName, form: 'beast' });
+      }
+      const idx = list.findIndex(it => it.namn === hamName);
+      if (idx < 0 && !removed.includes(base)) {
+        const entry = customs.find(e => e.namn === hamName);
+        if (entry) list.push({ ...entry, nivå: 'Novis' });
+      }
+    });
+
+    setCustomEntries(store, customs);
     store.data[store.current].hamnskifteRemoved = removed;
   }
 
   function getDependents(list, entry) {
     if (!entry) return [];
-    const name = entry.namn || entry;
+    let name = entry.namn || entry;
+    name = HAMNSKIFTE_BASE[name] || name;
     const ent = typeof entry === 'string' ? DB.find(x => x.namn === name) : entry;
     if (!ent) return [];
     const out = [];
@@ -196,9 +222,9 @@
     }
 
     if (name === 'Hamnskifte') {
-      const extras = ['Naturligt vapen','Pansar','Robust','Regeneration'];
+      const extras = Object.values(HAMNSKIFTE_NAMES);
       list.forEach(it => {
-        if (extras.includes(it.namn) && it.form === 'beast') out.push(it.namn);
+        if (extras.includes(it.namn)) out.push(it.namn);
       });
     }
 
@@ -568,31 +594,33 @@ function defaultTraits() {
   function hamnskifteNoviceLimit(list, item, level) {
     const lvl = LEVEL_IDX[level || 'Novis'] || 1;
     if (lvl <= 1) return false;
-    if (item.form !== 'beast') return false;
+    const base = HAMNSKIFTE_BASE[item.namn];
+    if (!base) return false;
     const hamlvl = abilityLevel(list, 'Hamnskifte');
     const hasBloodvader = list.some(x => x.namn === 'Blodvadare');
     if (hasBloodvader) return false;
-    if (['Naturligt vapen', 'Pansar'].includes(item.namn) && hamlvl >= 2) {
+    if (['Naturligt vapen', 'Pansar'].includes(base) && hamlvl >= 2) {
       return true;
     }
-    if (['Regeneration', 'Robust'].includes(item.namn) && hamlvl >= 3) {
+    if (['Regeneration', 'Robust'].includes(base) && hamlvl >= 3) {
       return true;
     }
     return false;
   }
 
   function isFreeMonsterTrait(list, item) {
-    if (item.form !== 'beast') return false;
+    const base = HAMNSKIFTE_BASE[item.namn];
+    if (!base) return false;
     const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
     if (lvl !== 1) return false; // Only Novis level can be free
 
     const hamnskifte = abilityLevel(list, 'Hamnskifte');
 
-    if (['Naturligt vapen', 'Pansar'].includes(item.namn)) {
+    if (['Naturligt vapen', 'Pansar'].includes(base)) {
       return hamnskifte >= 2;
     }
 
-    if (['Regeneration', 'Robust'].includes(item.namn)) {
+    if (['Regeneration', 'Robust'].includes(base)) {
       return hamnskifte >= 3;
     }
 
@@ -600,14 +628,15 @@ function defaultTraits() {
   }
 
   function monsterTraitDiscount(list, item) {
-    if (item.form !== 'beast') return 0;
+    const base = HAMNSKIFTE_BASE[item.namn];
+    if (!base) return 0;
     const hamnskifte = abilityLevel(list, 'Hamnskifte');
 
-    if (hamnskifte >= 2 && ['Naturligt vapen', 'Pansar'].includes(item.namn)) {
+    if (hamnskifte >= 2 && ['Naturligt vapen', 'Pansar'].includes(base)) {
       return 10;
     }
 
-    if (hamnskifte >= 3 && ['Regeneration', 'Robust'].includes(item.namn)) {
+    if (hamnskifte >= 3 && ['Regeneration', 'Robust'].includes(base)) {
       return 10;
     }
 
@@ -615,15 +644,16 @@ function defaultTraits() {
   }
 
   function monsterStackLimit(list, name) {
-    const entry = window.DBIndex?.[name];
+    const base = HAMNSKIFTE_BASE[name] || name;
+    const entry = window.DBIndex?.[base];
     if (!entry || !isMonstrousTrait(entry)) return 3;
     const hamlvl = abilityLevel(list, 'Hamnskifte');
 
-    if (['Naturligt vapen', 'Pansar'].includes(name)) {
+    if (['Naturligt vapen', 'Pansar'].includes(base)) {
       return hamlvl >= 2 ? 2 : 1;
     }
 
-    if (['Regeneration', 'Robust'].includes(name)) {
+    if (['Regeneration', 'Robust'].includes(base)) {
       return hamlvl >= 3 ? 2 : 1;
     }
 
@@ -989,6 +1019,8 @@ function defaultTraits() {
     setHamnskifteRemoved,
     deleteCharacter,
     deleteAllCharacters,
-    getDependents
+    getDependents,
+    HAMNSKIFTE_NAMES,
+    HAMNSKIFTE_BASE
   };
 })(window);

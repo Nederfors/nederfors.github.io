@@ -173,7 +173,7 @@ assert.deepStrictEqual(res11, [ { value: 16 } ]);
   // Robust: Hamnskifte ignores inventory but allows abilities
   store.data.c.inventory = [ { name: 'Sv\u00e4rd', qty: 1, kvaliteter: ['Balanserat'] } ];
   store.data.c.list = [
-    { namn: 'Robust', niv\u00e5: 'Novis', taggar: { typ: ['S\u00e4rdrag'] }, form: 'beast' },
+    { namn: 'Robust: Hamnskifte', niv\u00e5: 'Novis', taggar: { typ: ['S\u00e4rdrag'] }, form: 'beast' },
     { namn: 'Manteldans', niv\u00e5: 'Novis', taggar: { typ: ['F\u00f6rm\u00e5ga'] } }
   ];
   const res16 = window.calcDefense(15);

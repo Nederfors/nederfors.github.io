@@ -6,10 +6,11 @@
 
     const PEN = { Novis: 2, 'Gesäll': 3, 'Mästare': 4 };
     const robustPenalty = list
-      .filter(x => x.namn === 'Robust' && x.form !== 'beast')
+      .filter(x => x.namn === 'Robust')
       .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
+    const hamRobustName = storeHelper.HAMNSKIFTE_NAMES['Robust'];
     const hamRobustPenalty = list
-      .filter(x => x.namn === 'Robust' && x.form === 'beast')
+      .filter(x => x.namn === hamRobustName)
       .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
 
     let hasBalancedWeapon = false;
@@ -105,7 +106,7 @@
 
     let hamRes = [];
     if (hamRobustPenalty) {
-      hamRes = [ { name: 'Robust: Hamnskifte', value: kvick - hamRobustPenalty } ];
+      hamRes = [ { name: hamRobustName, value: kvick - hamRobustPenalty } ];
       if (mantleLvl >= 1) {
         hamRes.forEach(r => { r.value += 1; });
       }

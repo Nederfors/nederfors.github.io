@@ -296,6 +296,7 @@ function initIndex() {
         }
         let monsterOk = false;
         if (isMonstrousTrait(p)) {
+          const baseName = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
           const baseRace = list.find(isRas)?.namn;
           const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
           const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
@@ -304,13 +305,13 @@ function initIndex() {
           const bloodRaces = list.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
           monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
             list.some(x => x.namn === 'Mörkt blod') ||
-            (baseRace === 'Troll' && trollTraits.includes(p.namn)) ||
-            (baseRace === 'Vandöd' && undeadTraits.includes(p.namn)) ||
-            (baseRace === 'Rese' && p.namn === 'Robust') ||
-            (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(p.namn)) ||
-            ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && p.namn === 'Diminutiv') ||
-            (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen','Pansar'].includes(p.namn)) ||
-            (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration','Robust'].includes(p.namn));
+            (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
+            (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
+            (baseRace === 'Rese' && baseName === 'Robust') ||
+            (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
+            ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && baseName === 'Diminutiv') ||
+            (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen','Pansar'].includes(baseName)) ||
+            (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration','Robust'].includes(baseName));
           if (!monsterOk) {
             if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
           }
@@ -319,7 +320,7 @@ function initIndex() {
             return;
           }
         }
-        if (p.namn === 'Robust') {
+        if (storeHelper.HAMNSKIFTE_BASE[p.namn] ? storeHelper.HAMNSKIFTE_BASE[p.namn] === 'Robust' : p.namn === 'Robust') {
           const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
           const robustOk = monsterOk || (hamLvl >= 3 && lvl === 'Novis');
           if (!robustOk) {
@@ -439,12 +440,13 @@ function initIndex() {
           if(!confirm(p.namn+' hänger ihop med Mörkt blod. Ta bort ändå?'))
             return;
         }
-        if(isMonstrousTrait(p) && p.form==='beast' && before.some(x=>x.namn==='Hamnskifte')){
+        if(storeHelper.HAMNSKIFTE_BASE[p.namn] && before.some(x=>x.namn==='Hamnskifte')){
           if(!confirm(p.namn+' hänger ihop med Hamnskifte. Ta bort ändå?'))
             return;
           const rem=storeHelper.getHamnskifteRemoved(store);
-          if(!rem.includes(p.namn)){
-            rem.push(p.namn);
+          const base=storeHelper.HAMNSKIFTE_BASE[p.namn];
+          if(!rem.includes(base)){
+            rem.push(base);
             storeHelper.setHamnskifteRemoved(store, rem);
           }
         }
@@ -471,7 +473,7 @@ function initIndex() {
           }
         } else if(p.namn==='Hamnskifte' && remDeps.length){
           if(confirm(`Ta bort även: ${remDeps.join(', ')}?`)){
-            list = list.filter(x => !(remDeps.includes(x.namn) && x.form==='beast'));
+            list = list.filter(x => !remDeps.includes(x.namn));
             storeHelper.setHamnskifteRemoved(store, []);
           }
         } else if(remDeps.length){
@@ -547,13 +549,15 @@ function initIndex() {
         let toRemove=[];
         if(oldIdx>=3 && newIdx<3) toRemove.push('Robust','Regeneration');
         if(oldIdx>=2 && newIdx<2) toRemove.push('Naturligt vapen','Pansar');
-        toRemove=toRemove.filter(n=>list.some(x=>x.namn===n && x.form==='beast'));
+        toRemove=toRemove.filter(n=>list.some(x=>x.namn===storeHelper.HAMNSKIFTE_NAMES[n]));
         if(toRemove.length){
-          if(!confirm(`Ta bort även: ${toRemove.join(', ')}?`)){
+          const dispNames=toRemove.map(n=>storeHelper.HAMNSKIFTE_NAMES[n]);
+          if(!confirm(`Ta bort även: ${dispNames.join(', ')}?`)){
             ent.nivå=old; e.target.value=old; return;
           }
           for(let i=list.length-1;i>=0;i--){
-            if(toRemove.includes(list[i].namn) && list[i].form==='beast') list.splice(i,1);
+            const base=storeHelper.HAMNSKIFTE_BASE[list[i].namn];
+            if(base && toRemove.includes(base)) list.splice(i,1);
           }
           const rem=storeHelper.getHamnskifteRemoved(store).filter(x=>!toRemove.includes(x));
           storeHelper.setHamnskifteRemoved(store, rem);
@@ -563,9 +567,10 @@ function initIndex() {
         if(newIdx>=3 && oldIdx<3) toAdd.push('Robust','Regeneration');
         let rem=storeHelper.getHamnskifteRemoved(store);
         toAdd.forEach(n=>{
-          if(!list.some(x=>x.namn===n && x.form==='beast') && !rem.includes(n)){
+          const hamName=storeHelper.HAMNSKIFTE_NAMES[n];
+          if(!list.some(x=>x.namn===hamName) && !rem.includes(n)){
             const entry=window.DBIndex?.[n];
-            if(entry) list.push({ ...entry, form:'beast' });
+            if(entry) list.push({ ...entry, namn:hamName, form:'beast' });
           }
           rem=rem.filter(x=>x!==n);
         });

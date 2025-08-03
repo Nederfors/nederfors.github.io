@@ -41,6 +41,8 @@ function limit(list, name){
   assert.strictEqual(limit([hamMas], 'Regeneration'), 2);
   assert.strictEqual(limit([hamMas], 'Robust'), 2);
   assert.strictEqual(limit([hamMas], 'Vingar'), 1);
+  assert.strictEqual(limit([hamGes], 'Naturligt vapen: Hamnskifte'), 2);
+  assert.strictEqual(limit([hamMas], 'Regeneration: Hamnskifte'), 2);
 
   console.log('All tests passed.');
 })();

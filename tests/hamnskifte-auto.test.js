@@ -33,19 +33,20 @@ function traitsFor(level){
   const store = { current: 'c', data: { c: { privMoney: defaultMoney, possessionMoney: defaultMoney } } };
   const list = [ { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå: level } ];
   window.storeHelper.setCurrentList(store, list);
-  return store.data.c.list.filter(x => ['Naturligt vapen','Pansar','Robust','Regeneration'].includes(x.namn)).map(x => x.namn).sort();
+  const names = Object.values(window.storeHelper.HAMNSKIFTE_NAMES);
+  return store.data.c.list.filter(x => names.includes(x.namn)).map(x => x.namn).sort();
 }
 
 assert.deepStrictEqual(traitsFor('Novis'), []);
-assert.deepStrictEqual(traitsFor('Gesäll'), ['Naturligt vapen','Pansar'].sort());
-assert.deepStrictEqual(traitsFor('Mästare'), ['Naturligt vapen','Pansar','Regeneration','Robust'].sort());
+assert.deepStrictEqual(traitsFor('Gesäll'), ['Naturligt vapen: Hamnskifte','Pansar: Hamnskifte'].sort());
+assert.deepStrictEqual(traitsFor('Mästare'), ['Naturligt vapen: Hamnskifte','Pansar: Hamnskifte','Regeneration: Hamnskifte','Robust: Hamnskifte'].sort());
 
 (function testDependents(){
   const store = { current:'c', data:{ c:{ privMoney:defaultMoney, possessionMoney:defaultMoney } } };
   const list = [ { namn:'Hamnskifte', taggar:{typ:['Förmåga']}, nivå:'Gesäll' } ];
   window.storeHelper.setCurrentList(store, list);
   const deps = window.storeHelper.getDependents(store.data.c.list, 'Hamnskifte').sort();
-  assert.deepStrictEqual(deps, ['Naturligt vapen','Pansar']);
+  assert.deepStrictEqual(deps, ['Naturligt vapen: Hamnskifte','Pansar: Hamnskifte']);
 })();
 
 console.log('All tests passed.');

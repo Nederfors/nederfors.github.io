@@ -12,7 +12,7 @@ const abilityLevel = () => 0;
 
 function canTake(list){
   const p = { namn: 'Diminutiv', taggar: { typ: ['Monstruöst särdrag'] } };
-  return fn(p, list, 'Novis', isRas, { abilityLevel });
+  return fn(p, list, 'Novis', isRas, { abilityLevel, HAMNSKIFTE_BASE: {} });
 }
 
 assert.strictEqual(canTake([{ namn:'Andrik', taggar:{ typ:['Ras'] } }]), true);
