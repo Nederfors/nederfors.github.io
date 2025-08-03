@@ -196,6 +196,9 @@
         if (hasDarkPast) perm += Math.ceil(thresh / 3);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
       }
+      if (k === 'Diskret' && storeHelper.abilityLevel(list, 'Lönnstöt') >= 1) {
+        extra += '<div class="trait-extra">Används som träffsäker för attacker med Övertag</div>';
+      }
       if (k === defTrait) {
         const defHtml = defs.map(d => `<div class="trait-extra">Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`).join('');
         extra += defHtml;
