@@ -165,6 +165,7 @@
     const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
     const sensCount   = list.filter(p => p.namn === 'Korruptionskänslig').length;
     const hasDarkPast = list.some(p => p.namn === 'Mörkt förflutet');
+    const hasFint = storeHelper.abilityLevel(list, 'Fint') >= 1;
 
     const defTrait = getDefenseTraitName(list);
     const defs = calcDefense(vals[defTrait]);
@@ -195,6 +196,9 @@
         let perm = hasEarth ? (permBase % 2) : permBase;
         if (hasDarkPast) perm += Math.ceil(thresh / 3);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
+      }
+      if (k === 'Diskret' && hasFint) {
+        extra += '<div class="trait-extra">Används som träffsäker för attacker i närstrid med kort eller precist vapen</div>';
       }
       if (k === defTrait) {
         const defHtml = defs.map(d => `<div class="trait-extra">Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`).join('');
