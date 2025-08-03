@@ -196,6 +196,31 @@
         if (hasDarkPast) perm += Math.ceil(thresh / 3);
         extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
       }
+      if (k === 'Diskret') {
+        if (storeHelper.abilityLevel(list, 'Fint') >= 1) {
+          extra += '<div class="trait-extra">Används som träffsäker för attacker i närstrid med kort eller precist vapen</div>';
+        }
+        if (storeHelper.abilityLevel(list, 'Lönnstöt') >= 1) {
+          extra += '<div class="trait-extra">Används som träffsäker för attacker med Övertag</div>';
+        }
+      }
+      if (k === 'Listig' && storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
+        extra += '<div class="trait-extra">Används som träffsäker för attacker med allt utom tunga vapen</div>';
+      }
+      if (k === 'Vaksam') {
+        const sjatteSinneLvl = Math.max(
+          storeHelper.abilityLevel(list, 'Sjätte Sinne'),
+          storeHelper.abilityLevel(list, 'Sjätte sinne')
+        );
+        if (sjatteSinneLvl >= 3) {
+          extra += '<div class="trait-extra">Används som träffsäker</div>';
+        } else if (sjatteSinneLvl >= 1) {
+          extra += '<div class="trait-extra">Används som träffsäker för attacker med avståndsvapen</div>';
+        }
+      }
+      if (k === 'Stark' && storeHelper.abilityLevel(list, 'Järnnäve') >= 1) {
+        extra += '<div class="trait-extra">Används som träffsäker för attacker i närstrid</div>';
+      }
       if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Dominera') >= 1) {
         extra += '<div class="trait-extra">Används som träffsäker för attacker i närstrid</div>';
       }
