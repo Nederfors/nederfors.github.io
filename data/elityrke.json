@@ -6,7 +6,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Järnsvuren"]
+      "ark_trad": [
+        "Järnsvuren"
+      ]
     },
     "krav_formagor": "Lärd, Monsterlärd, Prickskytt, Stångverkan eller Tvillingattack",
     "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
@@ -25,7 +27,8 @@
     "tankbara_nackdelar": [
       "Blodtörstig",
       "Mardrömmar"
-    ]
+    ],
+    "id": "elit1"
   },
   {
     "namn": "Templár",
@@ -34,7 +37,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Templár"]
+      "ark_trad": [
+        "Templár"
+      ]
     },
     "krav_formagor": "Järnnäve, Mystisk kraft (Häxhammare) eller Mystisk kraft (Helig aura), Rustmästare, Teurgi",
     "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
@@ -52,7 +57,8 @@
     "tankbara_nackdelar": [
       "Hederskod",
       "Mörk hemlighet"
-    ]
+    ],
+    "id": "elit2"
   },
   {
     "namn": "Vredesgardist",
@@ -61,7 +67,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Vredesgardist"]
+      "ark_trad": [
+        "Vredesgardist"
+      ]
     },
     "krav_formagor": "Järnnäve, Rustmästare, Sköldkamp eller Tvillingattack, Återhämtning; Andra krav: Barbarättad människa",
     "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
@@ -79,7 +87,8 @@
     "tankbara_nackdelar": [
       "Bestialisk",
       "Blodtörstig"
-    ]
+    ],
+    "id": "elit3"
   },
   {
     "namn": "Artefaktmakare",
@@ -88,7 +97,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Artefaktmakare"]
+      "ark_trad": [
+        "Artefaktmakare"
+      ]
     },
     "krav_formagor": "Lärd, Mystisk kraft (valfri), Ritualist, Smideskonst",
     "viktiga_karaktarsdrag": "Listig 13+, Viljestark 11+",
@@ -104,7 +115,8 @@
     "tankbara_nackdelar": [
       "Protegé",
       "Åldrad"
-    ]
+    ],
+    "id": "elit4"
   },
   {
     "namn": "Stavmagiker",
@@ -113,7 +125,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Stavmagiker"]
+      "ark_trad": [
+        "Stavmagiker"
+      ]
     },
     "krav_formagor": "Lärd, Stavkamp, Stångverkan, Mystisk kraft (valfri)",
     "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
@@ -133,7 +147,8 @@
     "tankbara_nackdelar": [
       "Hederskod",
       "Protegé"
-    ]
+    ],
+    "id": "elit5"
   },
   {
     "namn": "Andebesvärjare",
@@ -142,7 +157,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Andebesvärjare"]
+      "ark_trad": [
+        "Andebesvärjare"
+      ]
     },
     "krav_formagor": "Häxkonster, Häxsyn, Mystisk kraft (Ärva skada), Ritualist (Andebesvärjelse)",
     "viktiga_karaktarsdrag": "",
@@ -162,7 +179,8 @@
     "tankbara_nackdelar": [
       "Fallandesjuk",
       "Mardrömmar"
-    ]
+    ],
+    "id": "elit6"
   },
   {
     "namn": "Blodvadare",
@@ -171,7 +189,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Blodvadare"]
+      "ark_trad": [
+        "Blodvadare"
+      ]
     },
     "krav_formagor": "Häxkonster, Medicus, Mystisk kraft (Hamnskifte), Naturlig krigare",
     "viktiga_karaktarsdrag": "",
@@ -181,7 +201,6 @@
       "Regeneration",
       "Pansar",
       "Robust"
-      
     ],
     "mojliga_fordelar": [
       "Bestars tunga",
@@ -194,7 +213,8 @@
     "tankbara_nackdelar": [
       "Bestialisk",
       "Blodtörstig"
-    ]
+    ],
+    "id": "elit7"
   },
   {
     "namn": "Demonolog",
@@ -203,7 +223,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Demonolog"]
+      "ark_trad": [
+        "Demonolog"
+      ]
     },
     "krav_formagor": "Häxsyn eller Lärd, Mystisk kraft (Ohelig aura), Ritualist (Vanhelgande rit), Svartkonst",
     "viktiga_karaktarsdrag": "",
@@ -223,7 +245,8 @@
     "tankbara_nackdelar": [
       "Efterlyst",
       "Mardrömmar"
-    ]
+    ],
+    "id": "elit8"
   },
   {
     "namn": "Grönvävare",
@@ -232,7 +255,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Grönvävare"]
+      "ark_trad": [
+        "Grönvävare"
+      ]
     },
     "krav_formagor": "Alkemi, Häxkonster, Mystisk kraft (Örtrankor), Ritualist (Snabbväxt)",
     "viktiga_karaktarsdrag": "",
@@ -250,7 +275,8 @@
     "tankbara_nackdelar": [
       "Mörk hemlighet",
       "Sävlig"
-    ]
+    ],
+    "id": "elit9"
   },
   {
     "namn": "Illusionist",
@@ -259,7 +285,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Illusionist"]
+      "ark_trad": [
+        "Illusionist"
+      ]
     },
     "krav_formagor": "Lärd, Mystisk kraft (Illusorisk korrigering eller Obemärkt), Ordensmagi, Ritualist (Falsk terräng, Skenverk)",
     "viktiga_karaktarsdrag": "",
@@ -278,7 +306,8 @@
     "tankbara_nackdelar": [
       "Drogberoende",
       "Fallandesjuk"
-    ]
+    ],
+    "id": "elit10"
   },
   {
     "namn": "Inkvisitor",
@@ -287,7 +316,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Inkvisitor"]
+      "ark_trad": [
+        "Inkvisitor"
+      ]
     },
     "krav_formagor": "Häxsyn eller Lönnstöt, Mystisk kraft (Anatema eller Obemärkt), Ritualist (Offerrök), Teurgi",
     "viktiga_karaktarsdrag": "",
@@ -306,7 +337,8 @@
     "tankbara_nackdelar": [
       "Hederskod",
       "Mardrömmar"
-    ]
+    ],
+    "id": "elit11"
   },
   {
     "namn": "Mentalist",
@@ -315,7 +347,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Mentalist"]
+      "ark_trad": [
+        "Mentalist"
+      ]
     },
     "krav_formagor": "Lärd, Mystisk kraft (Bända vilja, Tankekast eller Viljelyft), Ordensmagi, Ritualist (Klärvoajans, Telepatiskt förhör)",
     "viktiga_karaktarsdrag": "",
@@ -334,7 +368,8 @@
     "tankbara_nackdelar": [
       "Drogberoende",
       "Fallandesjuk"
-    ]
+    ],
+    "id": "elit12"
   },
   {
     "namn": "Nekromantiker",
@@ -343,7 +378,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Nekromantiker"]
+      "ark_trad": [
+        "Nekromantiker"
+      ]
     },
     "krav_formagor": "Medicus, Mystisk kraft (Vandråp), Ritualist (Väcka vandöd), Svartkonst",
     "viktiga_karaktarsdrag": "",
@@ -362,7 +399,8 @@
     "tankbara_nackdelar": [
       "Efterlyst",
       "Sjuklig"
-    ]
+    ],
+    "id": "elit13"
   },
   {
     "namn": "Pyromantiker",
@@ -371,7 +409,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Pyromantiker"]
+      "ark_trad": [
+        "Pyromantiker"
+      ]
     },
     "krav_formagor": "Lärd, Mystisk kraft (Brandvägg eller Svavelkaskad), Ordensmagi, Ritualist (Askans berättelse eller Flammande tjänare)",
     "viktiga_karaktarsdrag": "",
@@ -389,7 +429,8 @@
     "tankbara_nackdelar": [
       "Blodtörstig",
       "Impulsiv"
-    ]
+    ],
+    "id": "elit14"
   },
   {
     "namn": "Själasörjare",
@@ -398,7 +439,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Själasörjare"]
+      "ark_trad": [
+        "Själasörjare"
+      ]
     },
     "krav_formagor": "Ledare eller Medicus, Mystisk kraft (Helbrägdagörelse, Helig aura eller Sannform), Ritualist (Exorcism), Teurgi",
     "viktiga_karaktarsdrag": "",
@@ -416,7 +459,8 @@
     "tankbara_nackdelar": [
       "Hederskod",
       "Mörk hemlighet"
-    ]
+    ],
+    "id": "elit15"
   },
   {
     "namn": "Drottningspion",
@@ -425,7 +469,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Drottningspion"]
+      "ark_trad": [
+        "Drottningspion"
+      ]
     },
     "krav_formagor": "Fint, Giftbrukare eller Stryparkonst, Svärdshelgon, Tvillingattack",
     "viktiga_karaktarsdrag": "Listig 13+, Diskret 11+",
@@ -444,7 +490,8 @@
     "tankbara_nackdelar": [
       "Efterlyst",
       "Ärkefiende"
-    ]
+    ],
+    "id": "elit16"
   },
   {
     "namn": "Gentlemannatjuv",
@@ -453,7 +500,9 @@
       "typ": [
         "Elityrke"
       ],
-      "ark_trad": ["Gentlemannatjuv"]
+      "ark_trad": [
+        "Gentlemannatjuv"
+      ]
     },
     "krav_formagor": "Akrobatik, Dominera, Försåtsgillrare, Svärdshelgon eller Tvillingattack",
     "viktiga_karaktarsdrag": "Övertygande 13+, Listig 11+",
@@ -471,5 +520,7 @@
     "tankbara_nackdelar": [
       "Hederskod",
       "Ärkefiende"
-    ]
-  }]
+    ],
+    "id": "elit17"
+  }
+]
