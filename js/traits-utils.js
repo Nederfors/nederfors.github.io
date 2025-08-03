@@ -3,6 +3,7 @@
     const inv = storeHelper.getInventory(store);
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
+    const stavLvl = storeHelper.abilityLevel(list, 'Stavkamp');
 
     const hasBalancedWeapon = inv.some(row => {
       const entry = invUtil.getEntry(row.name);
@@ -19,6 +20,32 @@
       ];
       return allQ.includes('Balanserat');
     });
+
+    const staffNames = ['Runstav', 'Vandringsstav', 'Trästav'];
+    let hasLongWeapon = false;
+    let hasLongStaff = false;
+    if (stavLvl >= 1) {
+      inv.forEach(row => {
+        const entry = invUtil.getEntry(row.name);
+        if (!entry || !((entry.taggar?.typ || []).includes('Vapen'))) return;
+        const tagger = entry.taggar || {};
+        const baseQ = [
+          ...(tagger.kvalitet || []),
+          ...splitQuals(entry.kvalitet)
+        ];
+        const removed = row.removedKval || [];
+        const allQ = [
+          ...baseQ.filter(q => !removed.includes(q)),
+          ...(row.kvaliteter || [])
+        ];
+        const name = entry.namn || row.name;
+        const isLong = allQ.includes('Långt') || staffNames.includes(name);
+        if (isLong) {
+          hasLongWeapon = true;
+          if (staffNames.includes(name)) hasLongStaff = true;
+        }
+      });
+    }
 
     let res = inv.reduce((out,row)=>{
       const entry = invUtil.getEntry(row.name);
@@ -45,6 +72,11 @@
 
     if (hasBalancedWeapon) {
       res.forEach(r => { r.value += 1; });
+    }
+
+    if (stavLvl >= 1 && hasLongWeapon) {
+      const bonus = hasLongStaff ? 2 : 1;
+      res.forEach(r => { r.value += bonus; });
     }
 
     return res;

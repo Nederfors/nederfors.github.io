@@ -68,8 +68,25 @@ const res3 = window.calcDefense(15);
 assert.deepStrictEqual(res3, [ { value: 16 } ]);
 
 // Balanced weapon bonus stacks with armor
+window.DB.push({ namn: 'Kråkrustning', taggar: { typ: ['Rustning'] }, stat: { skydd: '1T4', begränsning: -3 } });
+window.DBIndex['Kråkrustning'] = window.DB[window.DB.length - 1];
 store.data.c.inventory.unshift({ name: 'Kråkrustning', qty: 1 });
 const res4 = window.calcDefense(15);
 assert.deepStrictEqual(res4, [ { name: 'Kråkrustning', value: 13 } ]);
+
+// Stavkamp grants +1 defense with a long weapon
+window.DB.push({ namn: 'Spjut', taggar: { typ: ['Vapen'], kvalitet: ['Långt'] } });
+window.DBIndex['Spjut'] = window.DB[window.DB.length - 1];
+store.data.c.inventory = [ { name: 'Spjut', qty: 1 } ];
+store.data.c.list = [ { namn: 'Stavkamp', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
+const res5 = window.calcDefense(15);
+assert.deepStrictEqual(res5, [ { value: 16 } ]);
+
+// Stavkamp grants +2 defense with a runstav or trästav
+window.DB.push({ namn: 'Runstav', taggar: { typ: ['Vapen'], kvalitet: ['Långt'] } });
+window.DBIndex['Runstav'] = window.DB[window.DB.length - 1];
+store.data.c.inventory = [ { name: 'Runstav', qty: 1 } ];
+const res6 = window.calcDefense(15);
+assert.deepStrictEqual(res6, [ { value: 17 } ]);
 
 console.log('All tests passed.');
