@@ -5,6 +5,8 @@
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
 
     let hasBalancedWeapon = false;
+    let hasLongWeapon = false;
+    let hasLongStaff = false;
     let weaponCount = 0;
     inv.forEach(row => {
       const entry = invUtil.getEntry(row.name);
@@ -21,6 +23,17 @@
         ...(row.kvaliteter || [])
       ];
       if (allQ.includes('Balanserat')) hasBalancedWeapon = true;
+      if (allQ.includes('L\u00e5ngt')) {
+        hasLongWeapon = true;
+        const lname = (row.name || '').toLowerCase();
+        if ([
+          'runstav',
+          'vandringsstav',
+          'tr\u00e4stav'
+        ].includes(lname)) {
+          hasLongStaff = true;
+        }
+      }
     });
 
     let res = inv.reduce((out,row)=>{
@@ -53,6 +66,12 @@
 
     if (hasBalancedWeapon) {
       res.forEach(r => { r.value += 1; });
+    }
+
+    const stafffightLvl = storeHelper.abilityLevel(list, 'Stavkamp');
+    if (stafffightLvl >= 1) {
+      const bonus = hasLongStaff ? 2 : (hasLongWeapon ? 1 : 0);
+      if (bonus) res.forEach(r => { r.value += bonus; });
     }
 
     const mantleLvl = storeHelper.abilityLevel(list, 'Manteldans');
