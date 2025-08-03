@@ -2,7 +2,7 @@
   {
     "id": "ford1",
     "namn": "Arkivarie",
-    "beskrivning": "Rollpersonen är tränad i att ordna upp och söka information. Rollpersonen får +1 på alla slag i att göra efterforskningar i arkiv och bibliotek. Arkivarie kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "beskrivning": "Rollpersonen är tränad i att ordna upp och söka information. Rollpersonen får +1 på alla slag i listig när det kommer till att göra efterforskningar i arkiv och bibliotek. Arkivarie kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": [
@@ -61,14 +61,14 @@
   {
     "id": "ford5",
     "namn": "Bestars tunga",
-    "beskrivning": "Rollpersonen har en förmåga att tala med varelser ur kategorin bestar. Bestar har sina begräsningar men kan svara på frågor om vilka varelser som rör sig eller har rört sig inom ett område, hur många de är (en, två eller många). Bestarna gör inte rollpersonen några tjänster, utan konverserar som de skulle med en likvärdig artfrände.",
+    "beskrivning": "Rollpersonen har en förmåga att tala med varelser ur kategorin bestar. Bestar har sina begräsningar men kan med ett lyckat slag mot övertygandesvara på frågor om vilka varelser som rör sig eller har rört sig inom ett område, hur många de är (en, två eller många). Bestarna gör inte rollpersonen några tjänster, utan konverserar som de skulle med en likvärdig artfrände.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": ["Övertygande"]
     }
   },
   {
@@ -113,7 +113,6 @@
         "Fördel"
       ],
       "ark_trad": [
-        "Mystiker"
       ],
       "test": []
     }
