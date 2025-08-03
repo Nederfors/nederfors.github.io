@@ -221,7 +221,7 @@ function initIndex() {
       if (!inv.length) return alert('Ingen utrustning i inventariet.');
       const elig = inv.filter(it => {
         const tag = (invUtil.getEntry(it.name)?.taggar?.typ) || [];
-        return ['Vapen','Rustning'].some(t => tag.includes(t));
+        return ['Vapen','Sköld','Rustning'].some(t => tag.includes(t));
       });
  if (!elig.length) return alert('Ingen lämplig utrustning att förbättra.');
  invUtil.openQualPopup(elig, iIdx => {
@@ -236,7 +236,7 @@ function initIndex() {
     if (btn.dataset.act==='add') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
+        const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
         const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
         if (p.artifactEffect) rowBase.artifactEffect = p.artifactEffect;
         const addRow = trait => {

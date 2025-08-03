@@ -21,7 +21,7 @@
       const entry = invUtil.getEntry(row.name);
       if (!entry) return;
       const types = entry.taggar?.typ || [];
-      if (!types.includes('Vapen')) return;
+      if (!types.includes('Vapen') && !types.includes('Sköld')) return;
       weaponCount += 1;
       if (types.includes('Sköld')) hasShield = true;
       const tagger = entry.taggar || {};

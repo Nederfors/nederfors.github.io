@@ -277,7 +277,7 @@
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
     let base = moneyToO(entry.grundpris || {});
-    const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
+    const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
@@ -344,7 +344,7 @@
       storeHelper.getCurrentList(store), 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
 
-    const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
+    const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
@@ -432,7 +432,7 @@
       const basePrice = moneyToO(entry.grundpris || {});
       let base  = basePrice;
       const tagTyp = entry.taggar?.typ || [];
-      const forgeable = ['Vapen','Rustning'].some(t => tagTyp.includes(t));
+      const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
       const baseQuals = [
         ...(entry.taggar?.kvalitet ?? []),
         ...splitQuals(entry.kvalitet)
@@ -563,8 +563,8 @@
           }
 
           /* — knappar — */
-          const isGear = ['Vapen', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t));
+          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter'].some(t => tagTyp.includes(t));
+          const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
   : `<button data-act="del" class="char-btn danger">🗑</button>
@@ -693,7 +693,7 @@
 
       // "+" lägger till qty eller en ny instans
       if (act === 'add') {
-        const indiv = ['Vapen','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
+        const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
         const addRow = trait => {
           const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
           if (trait) obj.trait = trait;
@@ -749,7 +749,7 @@
       // "K+" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (!['Vapen','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t))) return;
+        if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
           if (idx >= 0 && qualities[qIdx]) {
