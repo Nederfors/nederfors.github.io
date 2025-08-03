@@ -7,11 +7,15 @@
     let hasBalancedWeapon = false;
     let hasLongWeapon = false;
     let hasLongStaff = false;
+    let hasShield = false;
     let weaponCount = 0;
     inv.forEach(row => {
       const entry = invUtil.getEntry(row.name);
-      if (!entry || !((entry.taggar?.typ || []).includes('Vapen'))) return;
+      if (!entry) return;
+      const types = entry.taggar?.typ || [];
+      if (!types.includes('Vapen')) return;
       weaponCount += 1;
+      if (types.includes('Sköld')) hasShield = true;
       const tagger = entry.taggar || {};
       const baseQ = [
         ...(tagger.kvalitet || []),
@@ -66,6 +70,14 @@
 
     if (hasBalancedWeapon) {
       res.forEach(r => { r.value += 1; });
+    }
+
+    if (hasShield) {
+      res.forEach(r => { r.value += 1; });
+      const shieldfightLvl = storeHelper.abilityLevel(list, 'Sköldkamp');
+      if (shieldfightLvl >= 1) {
+        res.forEach(r => { r.value += 1; });
+      }
     }
 
     const stafffightLvl = storeHelper.abilityLevel(list, 'Stavkamp');
