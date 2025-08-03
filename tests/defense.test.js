@@ -140,9 +140,37 @@ const res11 = window.calcDefense(15);
 assert.deepStrictEqual(res11, [ { value: 16 } ]);
 
 // Sköldkamp Novis grants an additional +1 defense when using a shield
-store.data.c.inventory = [ { name: 'Sköld', qty: 1 } ];
-store.data.c.list = [ { namn: 'Sköldkamp', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
-const res12 = window.calcDefense(15);
-assert.deepStrictEqual(res12, [ { value: 17 } ]);
+  store.data.c.inventory = [ { name: 'Sköld', qty: 1 } ];
+  store.data.c.list = [ { namn: 'Sköldkamp', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
+  const res12 = window.calcDefense(15);
+  assert.deepStrictEqual(res12, [ { value: 17 } ]);
 
-console.log('All tests passed.');
+  // Robust Novis reduces defense by 2
+  store.data.c.inventory = [];
+  store.data.c.list = [ { namn: 'Robust', nivå: 'Novis', taggar: { typ: ['S\u00e4rdrag'] } } ];
+  const res13 = window.calcDefense(15);
+  assert.deepStrictEqual(res13, [ { value: 13 } ]);
+
+  // Robust Ges\u00e4ll reduces defense by 3
+  store.data.c.list[0].niv\u00e5 = 'Ges\u00e4ll';
+  const res14 = window.calcDefense(15);
+  assert.deepStrictEqual(res14, [ { value: 12 } ]);
+
+  // Robust M\u00e4stare reduces defense by 4
+  store.data.c.list[0].niv\u00e5 = 'M\u00e4stare';
+  const res15 = window.calcDefense(15);
+  assert.deepStrictEqual(res15, [ { value: 11 } ]);
+
+  // Robust: Hamnskifte ignores inventory but allows abilities
+  store.data.c.inventory = [ { name: 'Sv\u00e4rd', qty: 1, kvaliteter: ['Balanserat'] } ];
+  store.data.c.list = [
+    { namn: 'Robust', niv\u00e5: 'Novis', taggar: { typ: ['S\u00e4rdrag'] }, form: 'beast' },
+    { namn: 'Manteldans', niv\u00e5: 'Novis', taggar: { typ: ['F\u00f6rm\u00e5ga'] } }
+  ];
+  const res16 = window.calcDefense(15);
+  assert.deepStrictEqual(res16, [
+    { value: 17 },
+    { name: 'Robust: Hamnskifte', value: 14 }
+  ]);
+
+  console.log('All tests passed.');

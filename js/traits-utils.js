@@ -4,6 +4,14 @@
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
 
+    const PEN = { Novis: 2, 'Gesäll': 3, 'Mästare': 4 };
+    const robustPenalty = list
+      .filter(x => x.namn === 'Robust' && x.form !== 'beast')
+      .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
+    const hamRobustPenalty = list
+      .filter(x => x.namn === 'Robust' && x.form === 'beast')
+      .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
+
     let hasBalancedWeapon = false;
     let hasLongWeapon = false;
     let hasLongStaff = false;
@@ -63,6 +71,10 @@
 
     res = res.length ? res : [ { value: kvick } ];
 
+    if (robustPenalty) {
+      res.forEach(r => { r.value -= robustPenalty; });
+    }
+
     const twinLvl = storeHelper.abilityLevel(list, 'Tvillingattack');
     if (twinLvl >= 1 && weaponCount >= 2) {
       res.forEach(r => { r.value += 1; });
@@ -91,7 +103,15 @@
       res.forEach(r => { r.value += 1; });
     }
 
-    return res;
+    let hamRes = [];
+    if (hamRobustPenalty) {
+      hamRes = [ { name: 'Robust: Hamnskifte', value: kvick - hamRobustPenalty } ];
+      if (mantleLvl >= 1) {
+        hamRes.forEach(r => { r.value += 1; });
+      }
+    }
+
+    return res.concat(hamRes);
   }
 
   function renderTraits(){
