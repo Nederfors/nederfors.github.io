@@ -338,6 +338,7 @@ class SharedToolbar extends HTMLElement {
             <strong>K+</strong> låter dig l\u00e4gga till en kvalitet till föremålet från en lista.<br>
             <strong>K🆓</strong> markerar den kostande kvaliteten längst till vänster som gratis.<br>
             <strong>🆓</strong> Gör ett föremål gratis, går att använda flera gånger för en stack av föremål.<br>
+            <strong>💔</strong> visar vilka andra aktiva f\u00f6rm\u00e5gor som inte kan anv\u00e4ndas samtidigt.<br>
             <strong>↔</strong> v\u00e4xlar artefaktens effekt mellan att kosta 1 erfarenhet eller att ge en permanent korruption.<br>
             <strong>🗑</strong> tar bort posten helt.
           </p>
