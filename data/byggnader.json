@@ -1,5 +1,6 @@
 [
   {
+    "id": "b1",
     "namn": "Torp",
     "beskrivning": "Enkel bostad med liten tomt, oftast för en familj eller ensam brukare.",
     "taggar": {
@@ -14,6 +15,7 @@
     }
   },
   {
+    "id": "b2",
     "namn": "Gård",
     "beskrivning": "Självförsörjande gård med boningshus, ladugård och enklare uthus.",
     "taggar": {
@@ -28,6 +30,7 @@
     }
   },
   {
+    "id": "b3",
     "namn": "Vakttorn, trä",
     "beskrivning": "Utsiktstorn av trä för spaning och bevakning över landskapet.",
     "taggar": {
@@ -42,6 +45,7 @@
     }
   },
   {
+    "id": "b4",
     "namn": "Vakttorn, sten",
     "beskrivning": "Stabilt torn av sten, byggt för långvarig bevakning och försvar.",
     "taggar": {
@@ -56,6 +60,7 @@
     }
   },
   {
+    "id": "b5",
     "namn": "Fort, trä",
     "beskrivning": "Enklare befästning av trä för skydd mot angrepp.",
     "taggar": {
@@ -70,6 +75,7 @@
     }
   },
   {
+    "id": "b6",
     "namn": "Gods",
     "beskrivning": "Större lantligt säteri med herrgård, ekonomibyggnader och mark.",
     "taggar": {
@@ -84,6 +90,7 @@
     }
   },
   {
+    "id": "b7",
     "namn": "Fort, sten",
     "beskrivning": "Befästning av sten med bastioner, murar och försvarstorn.",
     "taggar": {
@@ -98,6 +105,7 @@
     }
   },
   {
+    "id": "b8",
     "namn": "Borg",
     "beskrivning": "Stark försvarsanläggning med höga murar och flera torn.",
     "taggar": {
@@ -112,6 +120,7 @@
     }
   },
   {
+    "id": "b9",
     "namn": "Slott",
     "beskrivning": "Praktfull residensbyggnad med stora salar och imponerande försvarsverk.",
     "taggar": {
