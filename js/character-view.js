@@ -340,6 +340,13 @@ function initCharacter() {
     activeTags(); renderSkills(filtered()); renderTraits();
   });
 
+  function formatLevels(list){
+    if(list.length===0) return '';
+    if(list.length===1) return list[0];
+    if(list.length===2) return `${list[0]} och ${list[1]}`;
+    return `${list.slice(0,-1).join(', ')} och ${list[list.length-1]}`;
+  }
+
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click',e=>{
     const conflictBtn = e.target.closest('.conflict-btn');
@@ -349,7 +356,7 @@ function initCharacter() {
       const idx = LVL.indexOf(current?.nivå || LVL[0]);
       const curLvls = LVL.filter((l, i) => i <= idx && current?.taggar?.handling?.[l]?.includes('Aktiv'));
       const lvlWord = curLvls.length === 1 ? 'nivån' : 'nivåerna';
-      const levelsText = curLvls.length ? ` på ${lvlWord} [${curLvls.join(', ')}]` : '';
+      const levelsText = curLvls.length ? ` på ${lvlWord} ${formatLevels(curLvls)}` : '';
       conflictTitle.textContent = `${currentName}${levelsText} kan ej användas samtidigt som:`;
       const others = storeHelper.getCurrentList(store)
         .filter(x => x.namn !== currentName && LVL.some((l, i) =>
