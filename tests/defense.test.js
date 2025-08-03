@@ -68,8 +68,23 @@ const res3 = window.calcDefense(15);
 assert.deepStrictEqual(res3, [ { value: 16 } ]);
 
 // Balanced weapon bonus stacks with armor
-store.data.c.inventory.unshift({ name: 'Kråkrustning', qty: 1 });
+store.data.c.inventory.unshift({ name: 'Otymplig rustning', qty: 1 });
 const res4 = window.calcDefense(15);
-assert.deepStrictEqual(res4, [ { name: 'Kråkrustning', value: 13 } ]);
+assert.deepStrictEqual(res4, [ { name: 'Otymplig rustning', value: 13 } ]);
+
+// Robust trait reduces defense
+store.data.c.inventory = [];
+store.data.c.list = [ { namn: 'Robust', taggar: { typ: ['S\u00e4rdrag'] }, nivå: 'Novis' } ];
+const res5 = window.calcDefense(15);
+assert.deepStrictEqual(res5, [ { value: 13 } ]);
+
+// Robust via Hamnskifte adds separate defense value
+store.data.c.inventory = [ { name: 'Smidig rustning', qty: 1 } ];
+store.data.c.list = [ { namn: 'Robust', taggar: { typ: ['Monstruöst särdrag'] }, nivå: 'Novis', form: 'beast' } ];
+const res6 = window.calcDefense(15);
+assert.deepStrictEqual(res6, [
+  { name: 'Smidig rustning', value: 15 },
+  { name: 'Hamnskifte', value: 13 }
+]);
 
 console.log('All tests passed.');

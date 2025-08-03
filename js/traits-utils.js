@@ -4,6 +4,12 @@
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
 
+    const LEVEL_PENALTY = { Novis: 2, 'Gesäll': 3, 'Mästare': 4 };
+    const robust = list.find(p => p.namn === 'Robust' && p.form !== 'beast');
+    const hamRobust = list.find(p => p.namn === 'Robust' && p.form === 'beast');
+    const robustPenalty = LEVEL_PENALTY[robust?.nivå] || 0;
+    const hamPenalty = LEVEL_PENALTY[hamRobust?.nivå] || 0;
+
     const hasBalancedWeapon = inv.some(row => {
       const entry = invUtil.getEntry(row.name);
       if (!entry || !((entry.taggar?.typ || []).includes('Vapen'))) return false;
@@ -45,6 +51,14 @@
 
     if (hasBalancedWeapon) {
       res.forEach(r => { r.value += 1; });
+    }
+
+    if (robustPenalty) {
+      res.forEach(r => { r.value -= robustPenalty; });
+    }
+
+    if (hamRobust) {
+      res.push({ name: 'Hamnskifte', value: kvick - hamPenalty });
     }
 
     return res;
