@@ -187,6 +187,9 @@
         beforeExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>` + `<div class="trait-extra">Bärkapacitet: ${base}</div>`;
         afterExtra = '';
         extra = `<div class="trait-extra">Tålighet: ${tal} • Smärtgräns: ${pain}</div>`;
+        if (storeHelper.abilityLevel(list, 'Järnnäve') >= 1) {
+          extra += `<div class="trait-extra">Används som träffsäker för attacker i närstrid</div>`;
+        }
       } else if (k === 'Viljestark') {
         const baseMax   = strongGift ? val * 2 : val;
         const threshBase = strongGift ? val : Math.ceil(val / 2);
