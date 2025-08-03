@@ -12,7 +12,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Ett offer måste slå [Viljestark←Viljestark] eller backa undan under sina handlingar tills det lyckas med ett nytt slag.",
@@ -27,7 +38,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Den frätande attacken är svag och gör 1t6 i skada i 1t6 rundor.",
@@ -42,7 +64,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Det frätande blodet är svagt och gör 1t6 i skada i 1t6 rundor.",
@@ -60,7 +93,18 @@
       ],
       "test": [
         "Listig, Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. De sega trådarna i fångstnätet tvingar alla som passerar att slå [Kvick←Listig] eller fastna i trådarna. Att komma loss kräver sedan ett lyckat [Stark←Listig], ett slag per runda. En fångad varelse får inte förflytta sig och får två chanser att misslyckas med alla handlingar, om ett av slagen misslyckas fallerar försöket.",
@@ -78,7 +122,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
@@ -93,7 +148,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 alternativ skada, Bepansring skyddar ej.",
@@ -108,7 +174,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen passerar fysiska barriärer utan problem men kan inte korsa vatten ens på broar, med båt eller i luften. Anden tar halv skada av vapenattacker. Alkemiska effekter på vapen, liksom mystiska krafter ger full skada. Magiska vapen ger också full skada.",
@@ -126,7 +203,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
@@ -144,7 +232,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Varelsen sprider gravens paralyserade kyla omkring sig; rollpersoner på närstridsavstånd paralyseras om de misslyckas med Viljestark. Ett slag slås per runda, lyckas rollpersonen får den agera som vanligt. En rollperson som bryter gravkylan kan inte drabbas igen under samma scen.",
@@ -159,7 +258,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsens attacker osar av korruption och smittar den som skadas av attacken. Ett offer som tar minst 1 i skada av attacken får också 1t4 temporär korruption.",
@@ -174,7 +284,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Anden kan manifestera sig fysiskt och får då agera som om den hade en fysisk kropp i en runda. Om 1 rundas förflyttning räcker för att korsa vatten kan anden göra det. Andens obeväpnade eller naturliga vapen kan användas under rundan och den tar skada av allt som skadar fysiska varelser.",
@@ -189,7 +310,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 i skada istället för 1t4.",
@@ -204,7 +336,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1t4.",
@@ -219,7 +362,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen regenererar 1t4 Tålighet per runda.",
@@ -237,7 +391,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Svärm tar halv skada av alla attacker. Om svärm skadas och går ner till mindre än hälften av sin Tålighet kommer de ingående delarnas överlevnadsinstinkt att ta över och dess flockinstinkt dra med sig resten av svärm på flykt. Mentala angrepp (där svärm försvarar sig med Viljestark) påverkar hela svärm.",
@@ -255,7 +420,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsens blick tvingar offret att klara [Viljestark←Viljestark] eller förlora båda sina nästkommande handlingar.",
@@ -270,7 +446,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Den vandöde påverkas inte av gifter eller sjukdomar, men tar skada av fysiska effekter som vanligt med undantag av att Smärtgräns inte används (smärta och chock påverkar inte den vandöde). Den vandöde läker inte naturligt och påverkas inte av alkemiska läkeelixir utan måste äta rått kött (levande eller nyligen dödat) eller dricka blod för att läka, varje poäng Tålighet som konsumeras läker 2 Tålighet på den vandöde.",
@@ -285,7 +472,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen kan flyga under sin förflyttning och alltså undgå fria attacker vid passage över en fiende.",
@@ -310,7 +508,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. När varelsen träffar med en stridshandling en får denne genast göra ett frislag mot en fiende inom räckhåll, oavsett om den första handlingen gav skada eller inte.",
@@ -328,7 +537,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen kan trollbinda och bita sitt offer, [Viljestark←Viljestark], i samma stridshandling. Blodsugaren sörplar sedan i sig blod, 1T4 Tålighet per runda, rustning skyddar ej. Offret får varje runda, på sitt initiativ, försöka bryta transen [Viljestark←Viljestark]. Skada på blodsugaren kan också bryta transen, [Viljestark –Skada].",
@@ -346,7 +566,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Varelsens attacker kan fälla omkull fiender som tar skada. Offret undviker att falla om det lyckas med ett slag mot [Stark←Stark], där varje nivå i särdraget Robust ger +2 i Stark för både anfallare och försvarare.",
@@ -377,7 +608,18 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen frustar fram en kaskad mot ett mål. Om offret lyckas med ett slag mot [Kvick←Träffsäker] gör kaskaden 1T6 i skada; om slaget misslyckas blir skadan 1T12.",
@@ -392,7 +634,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Varelsens dödskamp låter den göra ett frislag mot en fiende inom närstridsavstånd, som en reaktion på attacken som dödade den.",
@@ -407,7 +660,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen kan simulera ett av de listade särdragen till motsvarande nivå Novis.",
@@ -425,7 +689,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. En gång per scen kan frammanaren med ett lyckat Viljestark kalla en daemonisk Inkräktare till platsen.",
@@ -443,7 +718,18 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen kan med halverad hastighet förflytta sig under marken och därmed undgå alla fria attacker som annars uppkommer vid passage av eller närmande till en fiende.",
@@ -481,7 +767,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen åtföljs av en följeslagare, vars motståndsnivå är två steg lägre än varelsens.",
@@ -499,7 +796,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen får utföra två attacker mot en fiende, en med varje klo. Om båda attackerna träffar kan varelsen försöka gripa tag om offret, vilket händer om offret misslyckas med [Stark←Stark]. Ett greppat offer kan agera som vanligt frånsett att det kan inte förflytta sig. Offret hålls fast under rundan det greppas och dras mot varelsen rundan efter om offret misslyckas med [Stark←Stark]. Lyckas offret kommer det loss.",
@@ -517,7 +825,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Varelsen kan besätta ett offer den berör, exempelvis efter ett lyckat anfall som ger skada. Offret måste slå [Viljestark←Viljestark]; om det misslyckas blir offret slav under andens vilja, och kan fås att utföra vilka handlingar som helst utom att ta sitt eget liv. Efter första dygnet slår offret ett andra motståndsslag; om det misslyckas varar effekten i en vecka, varefter ännu ett slag slås. Misslyckas även det sitter besattheten i en månad. Och när den månaden har passerat slås det sista slaget som om det misslyckas innebär att besattheten blir permanent. Besattheten kan dock brytas när som helst genom ett lyckat utförande av ritualen Exorcism.",
@@ -532,7 +851,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Vid dödsögonblicket lösgör sig eller manifesteras en varelse för att hämnas innehavaren av särdraget. Hämnarens motståndsnivå är två steg lägre än den dödes.",
@@ -547,7 +877,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Parasitens infestering kräver ett lyckat anfall som gör skada. Därefter behöver parasiten en hel runda för att tränga in i värdkroppen. Under den rundan kan offret eller en allierad offra en stridshandling för att avlägsna parasiten – ger 1T8 i skada på värden, eller 1T4 med ett lyckat slag mot Listig. Att ta bort en parasit som väl har trängt in kräver ett lyckat Listig med förmågan Medicus; varje försök ger offret 1T10 i skada. (Ignorerar Bepansring)",
@@ -575,7 +916,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen kan stjäla korruption från styggelsesmittade offer, genom att äta dess kött eller suga i sig dess blod. Offret måste vara fogligt, antingen medvetslöst, fasthållet, drogat eller på annat sätt oförmöget att göra motstånd. Offret tar 1T8 i skada per runda (rustning skyddar ej) medan korruptionssamlaren suger i sig 1T4 poäng permanent korruption, vilka därmed försvinner från offret. Varelsen kan som en reaktiv handling spendera en poäng insamlad korruption per runda, på något av följande:\n– Ge en fiende en andra chans att misslyckas med ett motståndsslag mot en av korruptionssamlarens förmågor, krafter eller särdrag\n– Ge en fiende en andra chans att misslyckas med Försvar mot en av korruptionssamlarens attacker\n– Ge en fiende en andra chans att misslyckas med en attack mot korruptionssamlaren\n– Tvinga en fiende att slå en andra gång på ett effektslag, och ta det sämre utfallet",
@@ -593,7 +945,18 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Med ett lyckat slag mot Vaksam kan varelsen upptäcka utbrott av korruption i närområdet (cirka femhundra meter åt alla håll, om exakthet behövs). Små utbrott (1 poäng temporär korruption) kan upptäckas med -7 på karaktärsdraget; vid 2 poäng modifieras karaktärsdraget med –5; vid 3 poäng med ±0; vid 4 poäng eller mer med +5. En framgång innebär att varelsen känner av utbrottet och blir varse om riktningen till platsen där det uppstod.",
@@ -611,7 +974,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Förflyttning"
+        ],
+        "Gesäll": [
+          "Förflyttning"
+        ],
+        "Mästare": [
+          "Förflyttning"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Förflyttning. Alla som står i varelsens väg under förflyttningen måste klara [Stark←Stark] eller ta 1T4 i skada (rustning skyddar som vanligt) och ramla omkull där de står. Särdraget Robust och Särdraget Väldig ger 1T4 extra i skada som ökar i tärningsgrad per nivå (1T4, 1T8, 1T12). Det ger även +2, +4, +6 i bonus på Stark vid både användandet av och försvar mot Krossande framfart. Om ett offer lyckas med sitt slag avbryts den krossande framfarten. Fiender med förmågan Akrobatik kan välja att försvara sig med [Kvick← Stark] och då ducka undan, men i så fall avbryts inte framfarten vid ett lyckat Försvar.",
@@ -630,7 +1004,18 @@
       "test": [
         "Träffsäker",
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. När varelsen träffar med sitt naturliga vapen och gör skada kan den välja att försöka hålla fast offret. För att undvika att fångas måste offret klara [Kvick←Träffsäker]. Om målet blir fasthållet måste det klara [Stark←Stark] för att komma loss, eller ta 1T4 i skada varje runda medan det sakta krossas (Bepansring ignoreras). En fasthållen fiende får inte agera, men å andra sidan förlorar också varelsen en stridshandling per runda och fasthållet offer.",
@@ -648,7 +1033,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Monstrets Tålighet beräknas på dess Stark x 1,5 (avrundat uppåt).",
@@ -666,7 +1062,18 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen förnimmer de svagaste vibrationer i mark och luft, och kan upptäcka varelser bakom bastanta väggar och stängda dörrar eller genom metertjocka lager av jord. Den som försöker undgå upptäckt måste lyckas med ett slag mot [Diskret←Vaksam].",
@@ -681,7 +1088,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Alla som försöker påverka eller skada varelsen med mystiska krafter måste slå framgångsslaget två gånger och lyckas med båda för att kraften ska ta effekt.",
@@ -696,7 +1114,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen har två extremiteter eller huvuden och kan agera med dem separat. Varelsen har två stridshandlingar per runda.",
@@ -734,7 +1163,18 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen kan göra sig osynlig och blir då omöjlig att attackera med direkta attacker. För att angripa med areaattacker så som alkemiska granater och liknande måste angriparen lyckas med ett [Vaksam← Diskret]; detsamma gäller för att träffa monstret med improviserade vapen för att avslöja det – sand, damm, mjöl eller liknande som gör varelsen delvis synlig under resten av striden. Att attackera en delvis synlig varelse kräver först ett slag mot [Vaksam← Diskret]; om det slaget lyckas sker attacken som vanligt.",
@@ -749,7 +1189,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Vid varje attack som ger skada slår offret ett slag mot Stark. Om slaget lyckas blir offret omtöcknat och får två chanser att misslyckas med framgångsslag och reaktiva handlingar under en runda; om slaget misslyckas kan offret bara utföra reaktiva handlingar och då med två chanser att misslyckas.",
@@ -764,7 +1215,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Attacken har skadevärde 4.",
@@ -783,7 +1245,18 @@
       "test": [
         "Träffsäker",
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen reser sina rötter som en mur ur marken, bred nog för att det ska ta två förflyttningshandlingar att runda den, alternativt för att blockera en grottöppning eller liknande. Muren går att hugga sönder, enligt reglerna för Skada på byggnader i Spelarens handbok (sidan 106). Rotmuren har Tålighet 10, Brytpunkt 5 och Skydd 1T10. Rotmuren finns kvar under hela scenen om inte varelsen väljer att flytta den med en ny aktiv handling eller om den raseras. I det senare fallet kan varelsen inte framkalla en ny Rotmur förrän ett dygn senare.",
@@ -798,7 +1271,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsen kan när som helst välja att dra ihop sig under sina ryggsköldar – skyddsvärdet för dess naturliga pansar dubbleras men den får inte utföra några aktiva handlingar under rundan.",
@@ -813,7 +1297,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Alla som befinner sig inom närstridsavstånd från varelsen drabbas av 1T4 i skada varje runda (ignorerar Bepansring).",
@@ -831,7 +1326,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. När monstret gör skada med ett bett hålls offret fast till nästa runda; det får agera som vanligt frånsett att det inte får förflytta sig. Nästa runda kan monstret försöka sluka målet. Offret slår ett slag mot [Stark← Stark], där särdraget Robust ger +2 i bonus per nivå, för både slukaren och dess offer. Om slaget lyckas sliter sig offret loss från fasthållningen, men om det misslyckas sväljs denne och hamnar i monstrets buk – en ohälsosam miljö som gör 1T4 i skada per runda, rustning skyddar ej.",
@@ -846,7 +1352,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Varje varelse som skadas av monstrets naturliga vapen måste klara ett slag mot Stark eller smittas av en svag sjukdom.",
@@ -861,7 +1378,18 @@
     "taggar": {
       "typ": [
         "Monstruöst särdrag"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Varelsens båda handlingar går åt när den attackerar; den kan alltså inte förflytta sig och attackera under samma runda. I gengäld träffar dess attacker med en kraft som vanlig rustning har svårt att skydda mot – målet slår för Bepansring två gånger och det lägsta utfallet gäller.",
@@ -879,7 +1407,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Förflyttning"
+        ],
+        "Gesäll": [
+          "Förflyttning"
+        ],
+        "Mästare": [
+          "Förflyttning"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Förflyttning. Varelsen kan ta ett väldigt skutt och landa en förflyttning från startpunkten (ca 12 meter). Den drabbas inte av frislag från fiender som den landar vid eller passerar, men undgår inte frislag om hoppet innebär att den bryter närstrid.",
@@ -897,7 +1436,18 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Varelsen frustar fram en eldkaskad mot ett mål. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6.",
