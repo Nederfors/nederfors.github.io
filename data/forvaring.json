@@ -11,7 +11,8 @@
       "daler": 0,
       "skilling": 0,
       "örtegar": 5
-    }
+    },
+    "id": "forv1"
   },
   {
     "namn": "Glasflaska",
@@ -25,7 +26,8 @@
       "daler": 0,
       "skilling": 1,
       "örtegar": 0
-    }
+    },
+    "id": "forv2"
   },
   {
     "namn": "Kista, liten",
@@ -39,7 +41,8 @@
       "daler": 0,
       "skilling": 3,
       "örtegar": 0
-    }
+    },
+    "id": "forv3"
   },
   {
     "namn": "Kista, stor",
@@ -53,7 +56,8 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "forv4"
   },
   {
     "namn": "Koger",
@@ -67,7 +71,8 @@
       "daler": 0,
       "skilling": 1,
       "örtegar": 0
-    }
+    },
+    "id": "forv5"
   },
   {
     "namn": "Korg",
@@ -81,7 +86,8 @@
       "daler": 0,
       "skilling": 0,
       "örtegar": 2
-    }
+    },
+    "id": "forv6"
   },
   {
     "namn": "Lerkrus",
@@ -95,7 +101,8 @@
       "daler": 0,
       "skilling": 0,
       "örtegar": 5
-    }
+    },
+    "id": "forv7"
   },
   {
     "namn": "Penningpung",
@@ -109,7 +116,8 @@
       "daler": 0,
       "skilling": 0,
       "örtegar": 3
-    }
+    },
+    "id": "forv8"
   },
   {
     "namn": "Ryggsäck",
@@ -123,7 +131,8 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "forv9"
   },
   {
     "namn": "Ränsel",
@@ -137,7 +146,8 @@
       "daler": 0,
       "skilling": 1,
       "örtegar": 0
-    }
+    },
+    "id": "forv10"
   },
   {
     "namn": "Smyckat skrin",
@@ -156,7 +166,8 @@
       "daler": 5,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "id": "forv11"
   },
   {
     "namn": "Säck",
@@ -170,7 +181,8 @@
       "daler": 0,
       "skilling": 0,
       "örtegar": 2
-    }
+    },
+    "id": "forv12"
   },
   {
     "namn": "Tunna",
@@ -184,5 +196,7 @@
       "daler": 0,
       "skilling": 0,
       "örtegar": 4
-    }
-  }]
+    },
+    "id": "forv13"
+  }
+]
