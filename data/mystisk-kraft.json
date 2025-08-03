@@ -13,7 +13,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat [Viljestark←Viljestark] skingra en pågående effekt på en varelse, även på sig själv under förutsättning att mystikern är i stånd att använda magi. Det är den påverkande mystikerns Viljestark som används som motstånd.",
@@ -35,7 +46,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern kallar andar till sin hjälp och dessa transparenta skepnader anfaller en fiende. Fienden misslyckas automatiskt med alla slag för koncentration gällande mystiska krafter; alla andra framgångsslag får en andra chans att misslyckas. Mystikern måste klara ett Viljestark varje runda för att vidmakthålla andarnas hjälp.",
@@ -57,7 +79,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Runornas kraft ger 1T4 extra i skydd tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada]. Skyddstärningen slås separat vid varje träff och adderas till målets rustning, om någon.",
@@ -78,7 +111,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kallar med ett lyckat Viljestark upp en vägg av virvlande flammor alldeles framför sig (närstridsavstånd). Väggen är bred nog för att täcka de flesta korridorer och dela av de flesta rum. I större salar och utomhus krävs dubbel förflyttning för att komma runt brandväggen men den går då också att flyga över med en enkel förflyttning.  \nVäggen går att passera igenom med vanlig förflyttning men alla som gör det tar 1T12 i brinnande skada. Mindre brännbara objekt som pilar och lod bränns sönder om de skjuts genom brandväggen. Det går att kalla upp brandväggen på en grupp av fiender som då automatiskt tar skada, förutsatt att dessa befinner sig på linje framför mystikern. Brandväggen finns kvar tills mystikern misslyckas med ett Viljestark, ett slag per runda.",
@@ -101,7 +145,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern tar kontrollen över en varelse med [Viljestark←Viljestark]. Kontrollen kräver koncentration och pågår tills mystikern bryter koncentrationen eller misslyckas med [Viljestark←Viljestark]. Svårighetsgraden ökar för varje runda: mystikerns Viljestark får en kumulativ modifikation −1 för varje runda efter den första. Den kontrollerade varelsen kan endast utföra en (1) handling per runda och kan inte använda aktiva eller reaktionsförmågor/krafter under effekten. Om den kontrollerade varelsen tar skada måste mystikern slå [Viljestark←Skada]; vid misslyckande bryts kontrollen.",
@@ -123,7 +178,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern låter sitt vapen dansa och använder Viljestark istället för både Träffsäker (anfall) och Kvick (försvar). I övrigt gäller samma regler som i närstrid. Novisen måste fokusera på vapnet når det slåss, vilket inte tillåter att mystikern använder andra krafter eller förmågor medan vapnet dansar.",
@@ -145,7 +211,18 @@
       "test": [
         "Viljestark",
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Varje fiende i närheten skadas om mystikern lyckas med [Viljestark←Stark]. Skadan är 1T4 per runda, rustning skyddar ej. Effekten fortsätter tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada].",
@@ -165,7 +242,18 @@
       "ark_trad": [
         "Pyromantiker"
       ],
-      "test": []
+      "test": [],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. När eldsjälen träffas i närstrid slår flammor ut och skadar angriparen, 1T6 skada, rustning skyddar som vanligt. Mystikern tar dessutom mindre skada av eld, 1T6 extra skydd mot just eld.",
@@ -187,7 +275,18 @@
       "test": [
         "Övertygande",
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Fri. Rollpersonen kan med ett lyckat [Övertygande←Viljestark] påtvinga varje skadad fiende en andra chans att misslyckas med framgångsslag så länge sången pågår. Ett slag slås per skadad fiende.",
@@ -208,7 +307,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Symbolen utlöser en kedja av förblindande energi, den fiende som står närmast symbolen drabbas först [Viljestark←Viljestark]; om fienden förblindas görs ett försök att förblinda nästa fiende och så vidare tills en fiende klarar sig undan förblindning. Effekten varar en runda, sedan återkommer synen till samtliga drabbade.",
@@ -229,7 +339,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Symbolen utlöser en kedja av fördrivande energi, den fiende som står närmast symbolen drabbas först [Viljestark←Viljestark]; om fienden fördrivs görs ett försök att fördriva nästa fiende och så vidare tills en fiende klarar sig undan fördrivning. Varelser som fördrivs måste lämna platsen så snabbt de kan och får inte återvända under scenen.",
@@ -251,7 +372,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. En gång per runda kan mystikers mörka blick göra så att en fiende automatiskt får en andra chans att misslyckas med sina framgångsslag mot mystikern (slå två gånger, misslyckas ena slaget fallerar försöket). Effekten pågår tills mystikern misslyckas med ett Viljestark.",
@@ -272,7 +404,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat [Viljestark←Viljestark] förvirra en fiende så att denne inte vet vad den gör. Slå 1T6 varje runda fram till att mystikern tappar koncentrationen eller misslyckas med [Viljestark←Viljestark]: 1–2, offret står stilla och blinkar dumt; 3–4, offret anfaller sin närmaste allierade; 5–6, offret anfaller sin närmaste fiende. Om det är oklart vem som är närmast så slås en tärning för att se vem det blir.",
@@ -294,7 +437,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen river upp en tillfällig reva i världsväven och kastar med ett lyckat [Viljestark←Viljestark] ut en fiende ur världen under en runda. Fienden återvänder nästa runda på rollpersonens initiativ och på samma plats – ångande av ovärldens dimma, med 1T4 i skada (rustning skyddar ej), samt med 1T4 temporär korruption. Ett misslyckat försök drar automatiskt in en vredgad styggelse genom såret i världsväven.",
@@ -315,7 +469,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan genom ett lyckat Viljestark anta formen av en liten best (däggdjur eller kräldjur), en praktisk form för flykt eller spaning men verkningslös i strid. Mystikern behåller sina karaktärsdrag men får en andra chans att lyckas med alla slag för Diskret och Kvick. Dessutom får fiender inte slå frislag mot mystikern i bestform, vare sig hon drar sig ur närstrid eller passerar en fiende. Mystikern behöver inte slå för Viljestark för att stanna i formen men måste klara ett Viljestark för att komma ur den. Mystikern räknas som en best under förvandlingen. Om mystikern utsätts för krafter som påverkar bestar kan hon välja att stanna i bestform och alltså påverkas av kraften, eller välja att avbryta effekten och återgå till sin ursprungliga form.",
@@ -337,7 +502,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat Viljestark och beröring hela 1T6 Tålighet hos målet. Kraften fungerar också på mystikern själv.",
@@ -358,7 +534,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat Viljestark sända ut en aura av heliga energier som skadar styggelser och odöda. Skada är 1T6, Bepansring skyddar ej. Effekten påverkar varelser inom synavstånd från mystikern och pågår tills denne misslyckas med Viljestark eller tappar koncentrationen. Mystikern kan undanta allierade styggelser eller vandöda från effekten.",
@@ -379,7 +566,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Fri. Rollpersonen ger sig själv och sina allierade +1 på antingen Listig, Viljestark eller Övertygande (den allierade väljer vilket karaktärsdrag som får bonusen) så länge sången varar.",
@@ -398,7 +596,18 @@
       "ark_trad": [
         "Teurgi"
       ],
-      "test": []
+      "test": [],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Helig eld omsluter novisens närstridsvapen och ger +1T4 i skada, eller +1T6 om motståndaren är en styggelse eller en odöd. Effekten varar under hela scenen.",
@@ -419,7 +628,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktion. Mystikern kan en gång per runda med ett lyckat Viljestark korrigera verkligheten och därigenom få slå om ett misslyckat Försvar.",
@@ -441,7 +661,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern skapar 1T4 illusionskopior av sig själv med ett lyckat Viljestark. Om en illusionskopia träffas upphör denna att finnas. Areaeffekter träffar mystikern som vanligt och skingrar alla illusionskopior.",
@@ -464,7 +695,18 @@
       "test": [
         "Viljestark",
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern planterar larver inne i fiendens kropp, vilka sedan äter sig ut. 1T4 i skada per runda, Bepansring skyddar ej. Effekten är automatisk första rundan och pågår tills mystikern misslyckas med [Viljestark←Stark].",
@@ -486,7 +728,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern renar 1T4 temporär korruption från en varelse inom synhåll. Eventuella överskjutande poäng läker istället fysisk skada på varelsen. Kraften kan användas på livgivaren själv.",
@@ -507,7 +760,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen kastar med ett lyckat [Viljestark←Kvick] ut en svart blixt mot en fiende. Om anfallet lyckas träffas målet av blixten och tar 1T6 i skada, rustning skyddar ej. Målet fångas dessutom och kan inte agera förrän det lyckas bryta sig ur kraften, vilket kräver ett lyckat Viljestark (ett slag slås per runda efter den första) eller att mystikern tappar koncentrationen [Viljestark –Skada].",
@@ -528,7 +792,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan sjunka ner i jorden med ett lyckat Viljestark. Där är mystikern osårbar men också oförmögen att agera. Mystikern måste slå ett lyckat Viljestark varje runda för att stanna i naturens trygga famn. Om det misslyckas återförs mystikern till markytan.",
@@ -550,7 +825,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat [Viljestark←Viljestark] tyna bort ur en varelses sinnesvärld. Mystikern förblir osynlig för den varelsen tills mystikern gör en attack eller tar skada på något sätt.",
@@ -571,7 +857,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat Viljestark sända ut en aura av oheliga energier som skadar kulturvarelser och bestar inom synhåll. Skada är 1T6 och Bepansring skyddar ej. Effekten påverkar alla kulturvarelser och bestar oavsett om de är allierade med denne eller ej och pågår tills mystikern misslyckas med Viljestark eller tappar koncentrationen [Viljestark -Skada].",
@@ -593,7 +890,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern tvingar en fiende att slå 1T20 mot sin korruption. Ett misslyckande ger varelsen kraftiga smärtor vilket förlamar den under en hel runda. Genomkorrumperade varelser tar istället automatiskt 1T6 skada, bepansring skyddar ej.",
@@ -615,7 +923,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Mystikerns klarsyn gör att denne får slå ett [Viljestark←Viljestark] för att genomskåda varje illusion, transformation eller annan effekt som döljer sakers sanna form inom synhåll. Illusioner som genomskådas upplöses, transformationer kvarstår men mystikern ser det som finns bakom dem.",
@@ -637,7 +956,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Sfären låter mystikern välja att parera med Viljestark istället för med Kvick. Sfären skyddar mot närstrids och avståndsattacker men inte mot mystiska krafter. Endast förflyttning är förenligt med sfären – inte ens de ersättande handlingarna som vanligtvis kan utföras istället för förflyttning är möjliga med bibehållen sfär.",
@@ -659,7 +989,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. Mystikern gör en närstridsattack som vanligt och tillsammans med den en sinnesstöt, riktad mot fiendens förmåga att försvara sig. Rollpersonen får en andra chans att lyckas med angreppet.",
@@ -681,7 +1022,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ],
+        "Novis": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Hel runda. Med ett lyckat Viljestark träder mystikern in i spökform. Denna immateriella form varar under en förflyttning (ca 10 meter), vilket gör att mystikern kan passera även de tjockaste murar, eller för den delen kan röra sig genom sina fiender på ett slagfält. Attacker mot mystikern ignoreras, om de inte sker med mystiska krafter eller artefakter – dessa ger då halv skada. Förflyttningen är det enda mystikern kan göra på sin runda, och efter förflyttningen återtar mystikern sin fysiska form.",
@@ -703,7 +1055,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern kastar sin stav och kan slå mot Viljestark istället för mot Träffsäker för att träffa. Staven gör 1T8 i skada. Effekten av en eventuell elementarenergi från förmågan Stavmagi tillkommer.",
@@ -724,7 +1087,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. En varelse träffas; slå 1T4 mot målets totala korruption. Är utfallet lika med eller lägre än korruptionsvärdet helas varelsen med slagets värde, om det är över tar varelsen slagets utfall i temporär korruption.",
@@ -746,7 +1120,18 @@
       "test": [
         "Viljestark",
         "Kvick"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern slår ut med en svavelosande eldkaskad mot ett mål. Om mystikern lyckas med [Viljestark←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6.",
@@ -770,7 +1155,18 @@
         "Kvick",
         "Träffsäker",
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan kasta material från omgivningen som vapen eller använda samma material som sköld. Om det används för anfall slås [Viljestark←Kvick] för träff och skadan är 1T8. Om materialet används som tillfällig sköld används [Viljestark←Träffsäker] för att Parera fysiska attacker och [Viljestark←Viljestark] om det är fråga om en magisk projektil. Skyddet förstörs av en träff.",
@@ -792,7 +1188,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen kan med ett lyckat Viljestark kliva ut ur världen och återkomma igen inom en dubbel förflyttnings avstånd. Mystikern tar 1T4 skada av resan i Bortomvärlden, rustning skyddar ej. Teleporteringen ger inte fiender rätt till frislag även om den görs i närstrid. Mystikern måste se platsen för återkomsten när kraften utförs, det går inte att kliva rakt in i okänd mark. Misslyckas försöket kommer istället en vredgad daemon in genom revan.",
@@ -813,7 +1220,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Om mystikern lyckas med [Viljestark←Viljestark] förvandlas målet till en harmlös best (däggdjur eller kräldjur, mystikern väljer). Effekten kräver koncentration och fortsätter tills mystikern bryter koncentrationen eller misslyckas med en kontroll [Viljestark←Viljestark]. Svårigheten ökar för varje runda efter den första: mystikerns Viljestark får en kumulativ modifikation −1 så länge effekten hålls. Om den förvandlade varelsen tar skada måste mystikern omedelbart slå [Viljestark←Skada]; vid misslyckande bryts effekten. Den förvandlade varelsen behåller värden och passiva egenskaper från sina monstruösa särdrag men saknar alla förmågor/krafter, kan inte göra attacker, reaktioner eller använda föremål.",
@@ -832,7 +1250,18 @@
       "ark_trad": [
         "Svartkonst"
       ],
-      "test": []
+      "test": [],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Svartkonstnären tänder en illvillig flamma kring sitt närstridsvapen, vilken gör 1T4 extra i skada.",
@@ -853,7 +1282,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern styr med ett Viljestark det heliga ljuset mot ett mål, vilket ger 1T6 i brännskada. Om målet är en styggelse eller en vandöd blir skadan 1T10.",
@@ -875,7 +1315,18 @@
       "test": [
         "Viljestark",
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat Viljestark levitera sig själv och sväva över slagfältet utom räckhåll för fiendens närstridsvapen. Mystikern kan förflytta sig motsvarande ett steg per runda när denne leviterar. Avståndsattacker och flygande fiender är fortfarande ett problem. Mystikern stannar i luften tills koncentrationen bryts eller tills scenen är över. Om koncentrationen bryts faller mystikern ned till marken och tar 1T6 i skada, Bepansring skyddar ej.",
@@ -896,7 +1347,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern förtrollar ett knippe (upp till fem) pilar med ett lyckat Viljestark. Pilarna svävar sedan bredvid mystikern under resten av scenen och kan avfyras en per runda som en fri handling (en pil kan skjutas samma runda som kraften aktiveras). Pilarna träffar osvikligt sitt mål. Om pilen som används har en kvalitet eller speciella egenskaper läggs dessa till effekten av pilen. Pilen gör 1T6 skada.",
@@ -917,7 +1379,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Med ett lyckat Viljestark låter sig mystikern omslutas av en värmande hetta. Värmen skyddar som 1T4 extra Bepansring. Styggelser eller vandöda som anfaller mystikern i närstrid tar dessutom 1T4 i skada av värmen, Bepansring skyddar ej. Den välsignade skölden varar scenen ut.",
@@ -939,7 +1412,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Mystikern kan med ett lyckat Viljestark dra skadans ande till sig från en skadad varelse inom synhåll. Det helar målet 1T6 Tålighet och mystikern tar själv lika mycket i skada.",
@@ -961,7 +1445,18 @@
       "test": [
         "Viljestark",
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kallar snärjande rankor ur jorden och kan snärja en fiende med ett lyckat Viljestark. Den snärjda varelsen kan inte röra sig men kan använda avståndsvapen och besvärjelser. Varelsen är snärjd tills mystikern misslyckas med [Viljestark←Stark].",
@@ -983,7 +1478,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern låter sig omslingras av växtlighet vilket ger 1T4 extra bepansring, 1T6 om mystikern dessutom står still under rundan.",
@@ -1005,7 +1511,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen kan uttala domedagsord över en fiende och slå [Viljestark←Viljestark]; ett lyckat försök gör att oturen samlas tjock runt målet. Alla som anfaller fienden får en andra chans att lyckas med sina anfallsslag under resten av scenen. Endast en fiende i taget kan bindas till undergång med vedergällningens kraft; att byta mål är en ny stridshandling.",
@@ -1027,7 +1544,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Mystikern kan kalla en svag best till sin sida, som hjälp i strid mot andra fiender.",
@@ -1048,7 +1576,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Fri. Rollpersonen ger sig själv och sina allierade +1 på antingen Kvick, Stark eller Träffsäker (den allierade väljer vilket karaktärsdrag som får bonusen) så länge sången varar.",
@@ -1069,7 +1608,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Symbolen utlöser en kedja av ilande plågor; det offer som står närmast symbolen drabbas först [Viljestark←Viljestark]; om den drabbas slås ett slag för nästa fiende och så vidare tills någon kan stå emot kraftens energier. Effekten varar en runda och innebär att offren inte kan utföra några aktiva handlingar.",
@@ -1090,7 +1640,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Symbolen väcker en otyglad stridslust hos en kedja av varelser; det offer som står närmast symbolen drabbas först [Viljestark←Viljestark]; om den drabbas slås ett slag för nästa fiende och så vidare tills någon kan stå emot kraftens energier. Effekten varar en runda och innebär att offret genast attackerar den person som råkar stå närmast, vän eller fiende.",

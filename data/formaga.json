@@ -12,7 +12,18 @@
       ],
       "test": [
         "Kvick"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen får slå mot Kvick för att undvika att dra på sig frislag från fiender i närstrid. Det gäller både vid passage av fiender eller för att dra sig ur en närstrid med en fiende. Om slaget misslyckas kan spelaren välja att antingen bli kvar eller att förflytta sig i alla fall, och då ådra sig ett frislag på vanligt vis.",
@@ -33,7 +44,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Rollpersonen kan använda Listig för att samla in örter och mineraler för att skapa en dos av ett noviselixir. Insamlandet av ingredienser och bryggandet tar en hel dag i ett ordentligt laboratorie och två dagar i fält oavsett om slaget lyckas eller ej. Rollpersonen får också en gång per äventyr slå för att ha förberett ett specifikt elixir upp till novisnivå i förväg, även om hen inte har uttryckt sig ha gjort detta i ett tidigare skede.",
@@ -51,7 +73,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen kan som en fri handling gå in helt för att skada och gör då +1T6 i extra skada med sina närstridsattacker. Nackdelen är att rollpersonen försvarar sig illa. Det karaktärsdrag som Försvar baseras på räknas som 5 avseende Försvar.",
@@ -72,7 +105,18 @@
       ],
       "test": [
         "Övertygande"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen kan med sin överväldigande personlighet dominera en fiende i strid. Rollpersonen kan använda Övertygande istället för Träffsäker i närstrid.",
@@ -90,7 +134,18 @@
       ],
       "ark_trad": [
         "Krigare, Mystiker, Tjuv"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Rollpersonen har strävsamt odlat ett av sina karaktärsdrag, vilket ger +1 i Karaktärsdraget.",
@@ -111,7 +166,18 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen kan välja att anfalla med Diskret istället för med Träffsäker, när anfallet sker med ett Kort eller Precist närstridsvapen.",
@@ -132,7 +198,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen kan som en fri handling applicera en dos gift eller annat alkemiskt elixir på ett vapen. En dos räcker till en träff med vapnet, sedan måste mer av elixiret appliceras. Ett slag mot [Listig←Stark] behövs för att giftet ska ha effekt; om det lyckas börjar offret ta skada. Hur mycket skada ett gift gör per runda och hur länge det verkar beror på giftets styrka (se sidan 153).",
@@ -150,7 +227,18 @@
       ],
       "ark_trad": [
         "Mystiker, Häxkonst"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Häxan har lärt sig grunderna i häxkonsten och vet hur att skydda sig mot de mörkare inslagen i läran. Häxan får ingen permanent korruption av att lära sig häxkonstens krafter till novisnivå, och inte heller av att lära sig häxkonstens ritualer. Däremot har novisen inget skydd mot den temporära korruption som följer av att använda krafter och ritualer.",
@@ -171,7 +259,18 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen får som en fri handling slå [Vaksam←Diskret] för att försöka se en varelses, plats eller ett föremåls tydligaste skugga. Varje försök sker till en kostnad av 1 temporär Korruption.",
@@ -192,7 +291,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen kan utnyttja sin styrka till fullo och använda Stark istället för Träffsäker när den anfaller i närstrid.",
@@ -213,7 +323,18 @@
       ],
       "test": [
         "Övertygande"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonens starka personlighet gör att denne får använda Övertygande istället för Viljestark, exempelvis vid användandet av mystiska krafter, dock inte som grund för korruptionströskel.",
@@ -234,7 +355,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen kan med ett lyckat Viljestark ta de slag som träffar en närbelägen allierad. Rollpersonen får ej försvara sig, attackerna träffar automatiskt.",
@@ -255,7 +387,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen har en grundlig skolning; med ett lyckat slag mot Listig kan denne lista ut vad en artefakt har för egenskaper och krafter. På samma sätt kan novisen med ett lyckat Listig översätta en text eller förstå vad som sägs på ett annat mänskligt språk. Att uttala enklare fraser på andra mänskliga språk kräver inget slag, men för att konversera krävs ett lyckat slag i Listig.",
@@ -276,7 +419,18 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. En attack per runda som görs i Övertag gör 1T4 extra skada, utöver den extra skada som övertaget redan ger. Rollpersonen kan välja att använda Diskret i stället för Träffsäker för attacker i Övertag. Lönnstöt kan endast göras en gång per runda, oavsett andra förhållanden.",
@@ -297,7 +451,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen är en habil fältskär och kan med ett lyckat slag i Listig ge 1T6 Tålighet tillbaka till patienten, eller 1T8 Tålighet om en örtkur används. Förmågan kan endast användas två gånger per patient och dag.",
@@ -318,7 +483,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen har studerat monster och kan med ett lyckat slag i Listig känna igen och dra sig till minnes styrkor och svagheter för ett monster per runda. Spelledaren berättar för spelaren om varelsens beskrivning och värden.",
@@ -336,7 +512,18 @@
       ],
       "ark_trad": [
         "Krigare, Tjuv"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen har lärt sig att utnyttja sin medfödda stridsförmåga på ett effektivt sätt. Skadan för obeväpnade attacker är 1T6. Om varelsen har särdraget Naturligt vapen ökar skadan istället ett steg från det naturliga vapnets nivå.",
@@ -354,7 +541,18 @@
       ],
       "ark_trad": [
         "Ordensmagi"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Ordensmagikern får ingen permanent Korruption av att lära sig ordensmagins krafter till novisnivå, och inte heller av att lära sig ordensmagins ritualer. Däremot har novisen inget skydd mot den temporära Korruption som följer av att använda krafter och ritualer.",
@@ -375,7 +573,18 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Skadan för armborst och bågskytte ökar till 1T12 respektive 1T10, istället för det normala 1T10 och 1T8.",
@@ -396,7 +605,18 @@
       ],
       "test": [
         "Kvick"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen kan utnyttja sin rustning maximalt vilket gör att en högre tärningsnivå används för att slå rustningens skydd: lätt rustning skyddar 1T6, medeltung rustning skyddar 1T8 och tung rustning skyddar 1T10.",
@@ -414,7 +634,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen är van att rida och strida uppsutten på ett riddjur. Rollpersonen vet hur att utnyttja riddjurets tyngd i en kavallerichock och får +1T6 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken.",
@@ -435,7 +666,18 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen har en stark intuition vilket låter denne slå Vaksam istället för Träffsäker vid attacker med avståndsvapen.",
@@ -456,7 +698,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Skadan för vapenhandens attacker ökar med ett steg, alltså till 1T10 om rollpersonen slåss med ett enhandsvapen eller till 1T8 om attackerna sker med ett Kort vapen. Sköldkampsnovisen hanterar också sin sköld effektivare som defensivt verktyg, och får +2 i Försvar istället för det vanliga +1.",
@@ -475,7 +728,18 @@
       "ark_trad": [
         "Krigare",
         "Tjuv"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen kan dra en pil och hugga med den i närstrid som en reaktion på en närstridsattack mot rollpersonen. Rollpersonen måste lyckas med en vanlig närstridsattack mot anfallaren. Attacken gör 1T6 i skada och pilens kvaliteter (om några) räknas in i attacken.",
@@ -493,7 +757,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen får en andra chans att lyckas med frislag till följd av att en fiende bryter närstrid.",
@@ -514,7 +789,18 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen kan använda blixtpulver framställt av en alkemist till att blända en fiende i närstrid. Kräver ett slag mot [Träffsäker←Kvick], en lyckad attack gör 1T4 i blixtskada (rustning skyddar ej) och målet förblindas i 1T4 rundor. Pyroteknikern kan också hantera alkemiska granater och alkemiska minor utan risk för ett katastrofalt misslyckande.",
@@ -535,7 +821,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen behärskar de grundläggande brottargreppen och kan anfalla med dem också mot en väpnad motståndare. Rollpersonen kan brottas med egna vapen i händerna; de behöver inte släppas eller stoppas undan. Angreppet görs som vanligt och om det lyckas har brottaren sin fiende i ett fast grepp. Brottaren kan sedan försöka kasta sin fiende eller bara hålla fast denne; båda alternativen kräver ett [Stark←Stark]. Kastet gör 1T4 i skada, rustning skyddar ej och lämnar fienden liggande på rygg. Alternativet till kast, fasthållningen, gör ingen skada, men fienden är oförmögen att agera förrän brottaren misslyckas med ett [Stark←Stark]. Alla allierade till brottaren har dessutom övertag mot den fasthållne fienden. Brottaren själv kan inte heller agera med mer än att hålla fast, vilket lämnar denne blottad för fiender: de får övertag mot brottaren.",
@@ -556,7 +853,18 @@
       ],
       "test": [
         "Kvick"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen kan med ett lyckat Kvick dra ett vapen som en fri handling och alltså få använda det som vanligt. Alternativt kan rollpersonen med ett lyckat Kvick ladda om ett armborst som en fri handling.",
@@ -577,7 +885,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Stryparnovisen kan anfalla från Övertag och gör med ett lyckat anfallsslag 1T6 i skada per runda, Bepansring skyddar inte. Varelsen som stryps kan dessutom inte agera förrän stryparen avlägsnats; rollpersonen behåller strypgreppet med ett lyckat [Listig←Listig].",
@@ -599,7 +918,18 @@
       "test": [
         "Stark",
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen får en andra chans på slag i Stark och Viljestark för att avbryta pågående effekter av fysisk natur: fällor, gifter och alkemiska effekter. Även energier från mystiska krafter omfattas, så länge som dessa är fysiskt manifesterade i form av eld, syra eller liknande.",
@@ -617,7 +947,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Skadan med långa vapen ökar med ett steg, till 1T10 för spjut och hillebard och till 1T8 för stav.",
@@ -635,7 +976,18 @@
       ],
       "ark_trad": [
         "Krigare, Tjuv"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen har börjat förstå stålkastandets gåta. Skadan för kastvapen ökar till 1T8.",
@@ -656,7 +1008,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Svartkonstnären har tagit sina första stapplande steg nedför den mörka magins hala trappa och funnit sätt att inte tappa fotfästet helt. Svartkonstnären kan mildra Korruption. Genom att lyckas med ett Viljestark varje gång svartkonstnären drabbas av Korruption får denne endast en (1) Korruption.",
@@ -677,7 +1040,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen har studerat stridens taktik och genomskådat dess elementa. Rollpersonen kan beräkna sitt initiativ på Listig istället för Kvick.",
@@ -695,7 +1069,18 @@
       ],
       "ark_trad": [
         "Teurgi"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Teurgen får ingen permanent Korruption av att lära sig teurgins krafter till novisnivå, och inte heller av att lära sig teurgins ritualer. Däremot har novisen inget skydd mot den temporära Korruption som följer av att använda krafter och ritualer.",
@@ -713,7 +1098,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen hanterar säkert två vapen, ett i varje hand. Novisen slåss med ett enhandsvapen i huvudhanden och ett Kort vapen i andra handen. Rollpersonen gör två anfall mot samma mål, skada 1T8 respektive 1T6. Fienden försvarar sig separat mot de båda anfallen. Som passiv förmåga får novisen också en defensiv bonus på +1 till sitt Försvar, såklart endast då denne hanterar ett vapen i varje hand.",
@@ -731,7 +1127,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Skadan med tunga vapen ökar till 1T12.",
@@ -752,7 +1159,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Viljestark återhämta 1T4 Tålighet. Upprepade försök får göras, men endast ett lyckat försök per stridsscen räknas.",
@@ -771,7 +1189,18 @@
       ],
       "ark_trad": [
         "Artefaktmakare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Rollpersonen kan med ett lyckat slag i Listig skapa en novisartefakt.",
@@ -786,7 +1215,18 @@
     "taggar": {
       "typ": [
         "Förmåga"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Speciell. Rollpersonen är tränad i att använda en ballista och att på plats konstruera belägringstorn. Rollpersonen kan hantera alkemiska granater och riskerar inte att de detonerar av misstag vilket en otränad användare måste oroa sig för.",
@@ -805,7 +1245,18 @@
       ],
       "ark_trad": [
         "Templár"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Passiv. Rollpersonens mystiska krafter påverkas inte av att bära medeltung rustning. Rustningen begränsar Försvar som vanligt.",
@@ -824,7 +1275,18 @@
       ],
       "ark_trad": [
         "Tjuv"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. I situationer då rollpersonen utsätts för en effekt som kan ge full eller halv skada (exempelvis mot alkemiska granater och vissa mystiska krafter, så som Svavelkaskad) tar rollpersonen halv skada istället för hel och ingen istället för halv. Om rollpersonen exempelvis utsätts för kraften Svavelkaskad, vilken normalt gör 1T12 vid träff och 1T6 vid miss, omvandlas detta till 1T6 skada vid träff och ingen skada alls vid en miss.",
@@ -843,7 +1305,18 @@
       ],
       "ark_trad": [
         "Vredesgardist"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. Rollpersonen drar kraft ur sitt eget spillda blod. När Tålighet når hälften får rollpersonen en andra chans att lyckas med alla anfallsslag i närstrid.",
@@ -864,7 +1337,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen kan med ett lyckat Listig gillra eller desarmera en mekanisk fälla som en stridshandling. Effekten av fällan beror på dess sort, se fällor i kapitlet om Utrustning (sidan 127). Rollpersonen kan också bygga en improviserad fälla, vilket dock tar en hel runda i anspråk. Rollpersonens improviserade fällor gör 1T6 i skada.",
@@ -885,7 +1369,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. Rollpersonen kan med hammarens hjälp krossa fiendens sköld. Vid ett misslyckat angrepp mot en fiende som försvarar sig med sköld (dvs fienden parerar rollpersonens attack) får rollpersonen slå mot [Stark←Kvick]. Lyckas det krossas skölden om den är i trä; om den är i metall slits spännremmarna av och stålskölden slås ut fiendens grepp. Dessutom tar sköldbäraren 1T6 i skada av slagets tyngd.",
@@ -903,7 +1398,18 @@
       ],
       "ark_trad": [
         "Jägare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Speciell. Jägaren utser ett byte inom synhåll och får en andra chans att lyckas med alla avståndsattacker mot det målet. Bytet utses i samband med en attack mot målet, och målet gäller sedan som byte tills det dör eller scenen är slut.",
@@ -924,7 +1430,18 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. Rollpersonen kan välja att ta emot temporär Korruption som är på väg att drabba en annan person inom synhåll.",
@@ -945,7 +1462,18 @@
       ],
       "test": [
         "Kvick"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Passiv. Rollpersonen kan välja att anfalla med Kvick istället för med Träffsäker för angrepp gjorda med kniv.",
@@ -966,7 +1494,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Passiv. Rollpersonen tål mer stryk än andra och räknar sin Tålighet som [Stark +5]. Detta har ingen påverkan på Smärtgräns, den är densamma som tidigare, Stark/2.",
@@ -985,7 +1524,18 @@
       ],
       "ark_trad": [
         "Gentlemannatjuv"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Passiv. Rollpersonens mantel, eller improviserat tygstycke hållet i en hand, ger +1 Försvar.",
@@ -1003,7 +1553,18 @@
       ],
       "ark_trad": [
         "Symbolism, Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. Runtatueringen ger 1T4 i extra bepansring mot en träffande attack – närhelst runkrigaren så önskar. Rustningseffekten ger nämligen en temporär Korruption per användande. Runkrigaren måste bestämma sig för att aktivera tatueringen samtidigt som eventuellt annat skydd slås. Dessutom skyddar tecknen bäraren mot väder och vind som om de var rejäla kläder.",
@@ -1022,7 +1583,18 @@
       ],
       "ark_trad": [
         "Järnsvuren"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Passiv. Rollpersonen kan dela upp sin förflyttning och göra en del av sin förflyttning före sin stridshandling och en del efter – detta i syfte att utnyttja terrängens skottfält och skydd maximalt. Rollpersonen drar fortfarande på sig frislag av fiender om den uppdelade förflyttningen leder in den järnsvurne på närstridsavstånd.",
@@ -1040,7 +1612,18 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Rollpersonen kan med ett lyckat Listig göra ett novissmide. Rollpersonen kan också med ett lyckat Listig laga en skadad rustning eller anpassa en rustning för större och mindre varelser. Novissmiden omfattar alla vanliga vapen och rustningar, inklusive dem med kvaliteterna Kort och Långt. Inga andra kvaliteter kan smidas av novissmeden.",
@@ -1058,7 +1641,18 @@
       ],
       "ark_trad": [
         "Jägare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen kan offra sin förflyttningshandling till att skjuta en extra pil, totalt alltså två pilar. Detta kan bara göras om stridshandlingen också är ett bågskott. Skotten slås separat, måste inte gå mot samma mål men kan såklart göra det.",
@@ -1076,7 +1670,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen får en andra chans att lyckas snärja en fiende (kräver ett vapen med kvaliteten Snärjande, se sidan 118).",
@@ -1094,7 +1699,18 @@
       ],
       "ark_trad": [
         "Mystiker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften kostar enbart en temporär Korruption att använda. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där; en gåva knuten till Ritualist (alltså då samtliga ritualer) eller till Häxsyn gör att dessa istället kostar en temporär Korruption att använda. Även särdrag som Eonernas visdom eller Spökvandring kan väljas. Signaturkraften påverkar inte eventuell kostnad i permanent Korruption för att lära sig en kraft utanför en mystisk tradition, enbart mängden temporär korruption som ges vid dess användande.",
@@ -1112,7 +1728,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Reaktiv. Rollpersonen parerar skickligt inkommande attacker och får +1 på Försvar; med den enkla trästaven eller en runstav – snabbare och mer balanserade än de andra vapnen i kategorin – blir bonusen +2 på Försvar.",
@@ -1131,7 +1758,18 @@
       ],
       "ark_trad": [
         "Stavmagiker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Speciell. Stavmagikern binder sin själ i en stav, ristad med elementens fyra runor. Staven binder all korruption som stavmagikern skulle ha fått genom att lära sig stavmagiska krafter. Om stavmagikern redan har permanent korruption när staven binds till mystikern så sänks den permanenta korruptionen med 1T6. Detta kan bara göras en gång, om staven skulle försvinna och måste ersättas sker ingen ytterligare sänkning. Dessutom kan stavmagikern som en fri handling aktivera en elementarruna och göra 1T4 extra skada med staven, vare sig den används tillsammans med stavmagiska krafter eller brukas som närstridsvapen. Stavmagikern väljer mellan eld, blixt, köld eller syra. Att aktivera en elementarruna ger ingen korruption.",
@@ -1149,7 +1787,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Passiv. I rollpersonens händer får ett ledat vapen också kvaliteten Snärjande och kan därmed användas för att snärja en fiende istället för att låta det slå runt försvaret.",
@@ -1167,7 +1816,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Passiv. Rollpersonen har börjat inse fördelarna med att slåss med ett balanserat svärd i ena handen och en parerdolk i andra. Skadan för duellsvärdet ökar till 1T10 istället för normala 1T8.",
@@ -1185,7 +1845,18 @@
       ],
       "ark_trad": [
         "Mystiker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Speciell. Symbolisten har precis börjat förstå runornas makt. Krafttecknen måste ges fysisk form – ristade, målade, broderare, tatuerade – vilket tar lång tid. Novisens krafter tar lika mycket tid som ritualer att färdigställa; en timme. De kan däremot aktiveras som en stridshandling; aktiveringen består av att symbolisten yttrar ett antal utlösande kraftord. Symbolisten måste se symbolen eller vara i dess direkta närhet (närstridsavstånd) för att kunna aktivera den. Symbolisten kan ha maximalt en symbol av varje mystisk kraft förberedd på detta sätt. När en förberedd symbol utlösts måste den laddas igen, som om den gjordes på nytt.",
@@ -1203,7 +1874,18 @@
       ],
       "ark_trad": [
         "Tjuv"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Tjuvknep som ”rännstenskyss” (skallning) eller ”svartalfskram” (skrevspark) kommer naturligt till rollpersonen i pressade lägen. Ett sådant tjuvknep gör 1T6 i skada och om fienden tar skada får rollpersonen också ett frislag mot målet.",
@@ -1221,7 +1903,18 @@
       ],
       "ark_trad": [
         "Jägare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen kan ägna hela sin runda (stridshandling och förflyttning) till att sikta noga och träffa ett mycket litet mål på fienden; skjuta ett vapen ur handen, skjuta fast en kroppsdel i närliggande vägg eller träd – eller sikta på ögonen och förblinda fienden. Attacken slås som vanligt och om den träffar och skadar så inträffar också extraeffekten; ett vapen tappas och måste plockas upp igen, en pil som skjuter fast en fiende i en vägg måste dras ut eller brytas av, och en träff nära ögonen förblindar fienden tillfälligt. Fienden måste oavsett spendera en stridshandling på att åtgärda problemet.",
@@ -1240,7 +1933,18 @@
       ],
       "ark_trad": [
         "Trollsång"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till novisnivå men har inget skydd mot temporär korruption när den använder sina krafter. Trollsångens tradition innehåller inga ritualer. Däremot får trollsångaren en andra chans att lyckas med ett slag per scen för att påverka ett sinne (alltså där motståndaren försvarar sig med Viljestark). Omslaget kan inte användas för att skapa eller upprätthålla en kedja av förtrollningar.",
@@ -1258,7 +1962,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Aktiv. Det allra första en yxkonstnär lär sig är att stöta med yxans kortända, för att med smärta distrahera motståndare inför kommande krafthugg. Stöten gör 1T6 i skada och ett lyckat [Träffsäker←Viljestark] bedövar den fienden; om fienden bedövas får yxkonstnären direkt ett frislag mot målet.",
@@ -1279,7 +1994,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Stark bli av med 1T4 temporär korruption. Upprepade försök får göras, men endast ett lyckat försök per scen räknas.",
@@ -1297,7 +2023,18 @@
       ],
       "ark_trad": [
         "Mystiker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. När effekten av en mystisk kraft har bestämts, får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär korruption), kan rollpersonen slå om effekttärningarna och välja det mest gynnsamma resultatet.",
@@ -1315,7 +2052,18 @@
       ],
       "ark_trad": [
         "Krigare"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Attackera med en piska i en hand och ett enhandsvapen i den andra. Om en attack med piskan träffar får rollpersonen en fri attack med enhandsvapnet, oavsett om piskan gör skada eller inte.",
@@ -1336,7 +2084,15 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Tvåhandssvärd får kvaliteten Långt i novisens händer, och kan därmed användas tillsammans med förmågan Stångverkan.",
@@ -1356,7 +2112,18 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Förflyttning"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Förflyttning. Iförd minst medeltung rustning får rollpersonen +1T6 Bepansring mot alla attacker som träffar under förflyttningens gång.",
@@ -1377,7 +2144,18 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Karaktären är van vid att lugna sig, sikta och andas rätt. Genom att avstå från sin förflyttningshandling får hen en andra chans att träffa med sitt anfall under samma runda.",
@@ -1399,7 +2177,18 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Karaktären kan med precision träffa och avleda inkommande attacker i närstrid. Karaktären får använda Träffsäker som grund för Försvar i strid, så länge de håller ett närstridsvapen eller har förmågan Naturlig krigare.",
@@ -1421,7 +2210,18 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
     },
     "nivåer": {
       "Novis": "Handling: reaktiv När rollpersonen skadar en måltavla får hen med ett lyckat slag mot “Träffsäker” också placera ett “Målmärke” på offret. Offret räknas som målmärkt till slutet av rollpersonens nästa runda. Varje lyckad attack mot målet ger +1 skada. Endast ett mål kan vara målmärkt åt gången av rollpersonen och målmärkningen tappas om det går en hel runda utan lyckade anfall från rollpersonen.",
