@@ -1,5 +1,6 @@
 [
   {
+    "id": "a1",
     "namn": "Daglönare, landsbygd",
     "beskrivning": "Tillfällig arbetskraft på landsbygden, anlitas för jordbruk, enklare hantverk eller tunga lyft.",
     "taggar": {
@@ -14,6 +15,7 @@
     }
   },
   {
+    "id": "a2",
     "namn": "Daglönare, stad",
     "beskrivning": "Arbetare i stadsmiljö, utför tillfälliga sysslor som bärhjälp, städning och enklare hantverk.",
     "taggar": {
@@ -28,6 +30,7 @@
     }
   },
   {
+    "id": "a3",
     "namn": "Hantverkare",
     "beskrivning": "Yrkesperson med egen verkstad, utför hantverk inom bygg, läder, smide eller snickeri.",
     "taggar": {
@@ -42,6 +45,7 @@
     }
   },
   {
+    "id": "a4",
     "namn": "Fältskär",
     "beskrivning": "Läkekunnig person, utbildad för att behandla sjukdomar och skador.",
     "taggar": {
@@ -56,6 +60,7 @@
     }
   },
   {
+    "id": "a5",
     "namn": "Riddare, frilans",
     "beskrivning": "Beväpnad ryttare som säljer sina tjänster till högstbjudande, ofta för strid eller eskort.",
     "taggar": {
@@ -70,6 +75,7 @@
     }
   },
   {
+    "id": "a6",
     "namn": "Soldenär",
     "beskrivning": "Yrkeskrigare, anställd på dagsbasis för bevakning, strid eller eskort.",
     "taggar": {
@@ -84,6 +90,7 @@
     }
   },
   {
+    "id": "a7",
     "namn": "Ryttare",
     "beskrivning": "Soldat till häst, används för snabb truppförflyttning och kavalleriuppdrag.",
     "taggar": {
@@ -96,4 +103,5 @@
       "skilling": 0,
       "örtegar": 0
     }
-  }]
+  }
+]
