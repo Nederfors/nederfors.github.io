@@ -112,7 +112,7 @@ function initIndex() {
         }
       }
       const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
-        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
         const limit = storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
@@ -376,7 +376,7 @@ function initIndex() {
           });
           return;
         }
-        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         if(multi){
           const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
           const limit = storeHelper.monsterStackLimit(list, p.namn);
@@ -451,7 +451,7 @@ function initIndex() {
           }
         }
         let list;
-        const multi = isMonstrousTrait(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         if(multi){
           let removed=false;
           list = [];
