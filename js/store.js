@@ -44,6 +44,7 @@
             possessionMoney: defaultMoney(),
             possessionRemoved: 0,
             hamnskifteRemoved: [],
+            forcedDefense: '',
             ...cur
           };
           if(!store.data[id].artifactEffects){
@@ -63,6 +64,9 @@
           }
           if(!Array.isArray(store.data[id].hamnskifteRemoved)){
             store.data[id].hamnskifteRemoved = [];
+          }
+          if(store.data[id].forcedDefense === undefined){
+            store.data[id].forcedDefense = '';
           }
           if(store.data[id].nilasPopupShown === undefined){
             store.data[id].nilasPopupShown = false;
@@ -429,6 +433,19 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyArtefacter = level || '';
+    save(store);
+  }
+
+  function getDefenseTrait(store) {
+    if (!store.current) return '';
+    const data = store.data[store.current] || {};
+    return data.forcedDefense || '';
+  }
+
+  function setDefenseTrait(store, trait) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].forcedDefense = trait || '';
     save(store);
   }
 
@@ -946,6 +963,8 @@ function defaultTraits() {
     setPartyAlchemist,
     getPartyArtefacter,
     setPartyArtefacter,
+    getDefenseTrait,
+    setDefenseTrait,
     getArtifactEffects,
     setArtifactEffects,
     getFilterUnion,

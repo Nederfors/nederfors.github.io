@@ -37,6 +37,7 @@ const dom  = {
   forgeBtn : $T('partySmith'),
   alcBtn  : $T('partyAlchemist'),
   artBtn  : $T('partyArtefacter'),
+  defBtn  : $T('forceDefense'),
 
   /* traits */
   traits  : $T('traits'),       traitsTot: $T('traitsTotal'),
@@ -296,6 +297,17 @@ function bindToolbar() {
       });
     });
   }
+  if (dom.defBtn) {
+    if (storeHelper.getDefenseTrait(store)) dom.defBtn.classList.add('active');
+    dom.defBtn.addEventListener('click', () => {
+      openDefensePopup(trait => {
+        if (trait === null) return;
+        dom.defBtn.classList.toggle('active', Boolean(trait));
+        storeHelper.setDefenseTrait(store, trait);
+        if (window.renderTraits) renderTraits();
+      });
+    });
+  }
   if (dom.filterUnion) {
     if (storeHelper.getFilterUnion(store)) dom.filterUnion.classList.add('active');
     dom.filterUnion.addEventListener('click', () => {
@@ -391,6 +403,36 @@ function openArtefacterPopup(cb) {
     const lvl = b.dataset.level;
     close();
     cb(lvl);
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openDefensePopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('defensePopup');
+  const box  = bar.shadowRoot.getElementById('defenseOptions');
+  const cls  = bar.shadowRoot.getElementById('defenseCancel');
+  pop.classList.add('open');
+  function close() {
+    pop.classList.remove('open');
+    box.removeEventListener('click', onBtn);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onBtn(e) {
+    const b = e.target.closest('button[data-trait]');
+    if (!b) return;
+    const tr = b.dataset.trait;
+    close();
+    cb(tr);
   }
   function onCancel() { close(); cb(null); }
   function onOutside(e) {

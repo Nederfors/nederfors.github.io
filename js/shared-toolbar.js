@@ -152,6 +152,13 @@ class SharedToolbar extends HTMLElement {
             </li>
             <li>
               <span class="toggle-desc">
+                <span class="toggle-question">Tvinga försvarskaraktärsdrag?</span>
+                <span class="toggle-note">Välj karaktärsdrag via meny.</span>
+              </span>
+              <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🛡️</button>
+            </li>
+            <li>
+              <span class="toggle-desc">
                 <span class="toggle-question">Behöver du hjälp?</span>
                 <span class="toggle-note">Öppnar en översikt av alla knappar.</span>
               </span>
@@ -252,6 +259,25 @@ class SharedToolbar extends HTMLElement {
       </div>
       </div>
 
+      <!-- ---------- Popup Försvarskaraktärsdrag ---------- -->
+      <div id="defensePopup">
+        <div class="popup-inner">
+          <h3>Försvarskaraktärsdrag</h3>
+          <div id="defenseOptions">
+            <button data-trait="" class="char-btn">Automatiskt</button>
+            <button data-trait="Diskret" class="char-btn">Diskret</button>
+            <button data-trait="Kvick" class="char-btn">Kvick</button>
+            <button data-trait="Listig" class="char-btn">Listig</button>
+            <button data-trait="Stark" class="char-btn">Stark</button>
+            <button data-trait="Träffsäker" class="char-btn">Träffsäker</button>
+            <button data-trait="Vaksam" class="char-btn">Vaksam</button>
+            <button data-trait="Viljestark" class="char-btn">Viljestark</button>
+            <button data-trait="Övertygande" class="char-btn">Övertygande</button>
+          </div>
+          <button id="defenseCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Nilas Popup ---------- -->
       <div id="nilasPopup">
         <div class="popup-inner">
@@ -348,7 +374,7 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
-    const popups = ['qualPopup','customPopup','moneyPopup','masterPopup','alcPopup','smithPopup','artPopup','nilasPopup'];
+    const popups = ['qualPopup','customPopup','moneyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','nilasPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

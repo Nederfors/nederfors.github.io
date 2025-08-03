@@ -114,6 +114,16 @@
     return res.concat(hamRes);
   }
 
+  function getDefenseTraitName(list) {
+    const forced = storeHelper.getDefenseTrait(store);
+    if (forced) return forced;
+    if (storeHelper.abilityLevel(list, 'Fint') >= 2) return 'Diskret';
+    if (storeHelper.abilityLevel(list, 'Sjätte Sinne') >= 2) return 'Vaksam';
+    if (storeHelper.abilityLevel(list, 'Taktiker') >= 2) return 'Listig';
+    if (storeHelper.abilityLevel(list, 'Pareringsmästare') >= 1) return 'Tr\u00e4ffs\u00e4ker';
+    return 'Kvick';
+  }
+
   function renderTraits(){
     if(!dom.traits) return;
     const data = storeHelper.getTraits(store);
@@ -126,8 +136,10 @@
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(storeHelper.getInventory(store)) : {};
     const counts = {};
+    const vals = {};
     KEYS.forEach(k => {
       counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length;
+      vals[k] = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
     });
     const hasKraftprov = list.some(p => p.namn === 'Kraftprov');
     const hasHardnackad = list.some(p => p.namn === 'Hårdnackad');
@@ -143,55 +155,46 @@
     const sensCount   = list.filter(p => p.namn === 'Korruptionskänslig').length;
     const hasDarkPast = list.some(p => p.namn === 'Mörkt förflutet');
 
+    const defTrait = getDefenseTraitName(list);
+    const defs = calcDefense(vals[defTrait]);
+
     dom.traits.innerHTML = KEYS.map(k => {
-      const val = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
+      const val = vals[k];
       const hardy = hasHardnackad && k === 'Stark' ? 1 : 0;
-      const talBase = hasKraftprov && k === 'Stark'
-        ? val + 5
-        : Math.max(10, val);
-      // Base pain threshold is derived from Strength and modifiers
+      const talBase = hasKraftprov && k === 'Stark' ? val + 5 : Math.max(10, val);
       let tal  = talBase;
       let pain = 0;
-
       let extra = '';
       let beforeExtra = '';
-      let afterExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>`;
+      let afterExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>`;
       if (k === 'Stark') {
         let base = val;
-        const hasPack = list.some(e => e.namn === 'Pack\u00e5sna');
+        const hasPack = list.some(e => e.namn === 'Packåsna');
         if (hasPack) base = Math.ceil(base * 1.5);
-
-        // Apply advantage/disadvantage effects last
         tal  += hardy;
         pain = storeHelper.calcPainThreshold(val, list, effects);
-
-        beforeExtra = `<div class="trait-count">F\u00f6rm\u00e5gor: ${counts[k]}</div>` +
-          `<div class="trait-extra">B\u00e4rkapacitet: ${base}</div>`;
+        beforeExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>` + `<div class="trait-extra">Bärkapacitet: ${base}</div>`;
         afterExtra = '';
-        extra = `<div class="trait-extra">T\u00e5lighet: ${tal} \u2022 Sm\u00e4rtgr\u00e4ns: ${pain}</div>`;
-      } else if (k === 'Kvick') {
-        const defs = calcDefense(val);
-        extra = defs
-          .map(d => `<div class="trait-extra">F\u00f6rsvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`)
-          .join('');
+        extra = `<div class="trait-extra">Tålighet: ${tal} • Smärtgräns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
         const baseMax   = strongGift ? val * 2 : val;
         const threshBase = strongGift ? val : Math.ceil(val / 2);
-
-        // Apply advantage/disadvantage effects after base calculations
         const maxCor = baseMax + (hasSjalastark ? 1 : 0);
         let   thresh = threshBase + resistCount - sensCount;
         let perm = hasEarth ? (permBase % 2) : permBase;
         if (hasDarkPast) perm += Math.ceil(thresh / 3);
-        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` +
-                `<div class="trait-extra">Maximal korruption: ${maxCor} \u2022 Korruptionstr\u00f6skel: ${thresh}</div>`;
+        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
+      }
+      if (k === defTrait) {
+        const defHtml = defs.map(d => `<div class="trait-extra">Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`).join('');
+        extra += defHtml;
       }
       return `
       <div class="trait" data-key="${k}">
         <div class="trait-name">${k}</div>
         <div class="trait-controls">
-          <button class="trait-btn" data-d="-5">\u22125</button>
-          <button class="trait-btn" data-d="-1">\u22121</button>
+          <button class="trait-btn" data-d="-5">−5</button>
+          <button class="trait-btn" data-d="-1">−1</button>
           <div class="trait-value">${val}</div>
           <button class="trait-btn" data-d="1">+1</button>
           <button class="trait-btn" data-d="5">+5</button>
@@ -257,4 +260,5 @@
   window.renderTraits = renderTraits;
   window.bindTraits = bindTraits;
   window.calcDefense = calcDefense;
+  window.getDefenseTraitName = getDefenseTraitName;
 })(window);
