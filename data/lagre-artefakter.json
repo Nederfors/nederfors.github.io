@@ -1,262 +1,562 @@
 [
   {
+    "id": "l1",
     "namn": "Formelpergament (Novis)",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Novis": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå (beroende på nivå i pergamentet), som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till samma nivå som kraften på pergamentet eller högre, alternativt besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
     },
-    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 2,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l2",
     "namn": "Golpadda",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Novis": "En figurin, ofta en padda, som fungerar som ett larm. Användaren – som måste behärska minst en mystisk kraft – viskar ett kriterium till figurinen: kriteriet måste vara fysiskt och ske i närheten av golpaddan, så som att ”någon passerar i gläntan” eller att ”dörren öppnas utifrån”. Golpaddan avger en högljudd kväkning som väcker alla närvarande när kriteriet uppfylls."
     },
-    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l3",
     "namn": "Mötessten",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Novis": "En sten laddas med en inbjudan till en viss person, som då instinktivt förstår var stenens ägare väntar i ögonblicket då stenen vidrörs. Endast en varelse som behärskar en mystisk kraft kan hantera en mötessten."
     },
-    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 2,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l4",
     "namn": "Ordensmedaljong",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Novis": "Ordo Magicas medaljonger delas ut till noviser och följer sedan med mystikern genom karriären inom orden. När mystikern uppnår en adepts status ändras symbolen till den nya nivån, och detsamma händer när mästarnivån nås. Vissa ordenskapitel har gjort medaljongen obligatorisk och har också knutit andra funktioner till den, så som vilka dörrar bäraren kan öppna eller en förutbestämd nivå som krävs för att aktivera kapitlets Magiska cirkel."
     },
-    "grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 2,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l5",
     "namn": "Pestmask",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Novis": "I en värld full av smittor och gifter är det inte underligt att många metoder – verkningsfulla eller endast skrockfulla – mot sådana fenomen har utvecklats. De teurgiska själavårdarna bär kraftfulla pestmasker som skydd mot smitta och gift. Bäraren av pestmasken får använda sitt Viljestark för att motstå sjukdomar och gifter, istället för Stark."
     },
-    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l6",
     "namn": "Ritualkodex",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Novis": "En ritual nedtecknas i en kodex på ett sådant sätt att en annan ritualist kan använda den, trots att de inte behärskar ritualen. Kodexen förbrukas när ritualen används."
     },
-    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 4,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l7",
     "namn": "Sårläkande spindel",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Novis": "En liten spindelfigurin läggs på ett öppet sår. Där spinner den snabbt in sig själv och skadan, som sedan läker snabbt, 1t12 Tålighet under ett dygn. Spindeln har ingen effekt på skada av gifter eller andra inre tillstånd. Spindeln kryper upp ur såret när dess läkning är gjord, och kan sedan användas igen på nya skador. Den sårläkande spindeln ger 1t4 temporär Korruption till den som helas."
     },
-    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 4,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
-
   {
+    "id": "l8",
     "namn": "Anletsbark",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Grönvävande häxor täcker ofta sitt anlete med en mask av bark, som en symbol för en önskan att gå upp i det växande. Många av dessa masker hyser kraft och ger då ett omslag per scen för slag rörande krafter som omfattar växter och det växande, exempelvis Törnemantel eller Örtrankor. Det kan röra slag för att använda sådana krafter eller för att motstå effekten av sådana krafter."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l9",
     "namn": "Djurmask",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "För blodvadande häxor är identifikationen med bestar stor och djurmasken markerar deras närhet till djuren. Varje djurmask med kraft symboliserar ett djur och ger +1 på ett karaktärsdrag som associeras med djuret; antingen Diskret, Kvick, Listig, Stark eller Vaksam."
     },
-    "traits": ["Diskret", "Kvick", "Listig", "Stark", "Vaksam"],
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "traits": [
+      "Diskret",
+      "Kvick",
+      "Listig",
+      "Stark",
+      "Vaksam"
+    ],
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l10",
     "namn": "Dödsmask",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Nekromantikers strävan efter att dominera döden har lett till bärandet av hiskeliga dödsmasker, fyllda med kraft. Dödsmasken ger +1 på alla slag för krafter och ritualer som påverkar döden, eller motstår döden; exempelvis kraften Vandråp och ritualen Väcka vandöd."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l11",
     "namn": "Formelpergament (Gesäll)",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå (beroende på nivå i pergamentet), som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till samma nivå som kraften på pergamentet eller högre, alternativt besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
     },
-    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 4,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l12",
     "namn": "Formelsigill (Gesäll)",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
     },
-    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
-  },
-{
-    "namn": "Formelsigill (Novis)",
-    "taggar": { "typ": ["Lägre Artefakt"] },
-    "nivåer": {
-      "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
-    },
-    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l13",
+    "namn": "Formelsigill (Novis)",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
+    "nivåer": {
+      "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+    },
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "l14",
     "namn": "Gniststen",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Pyromantikernas krafter eldas på av denna glödande bärnsten. Gniststenen är en svagare släkting till de omtalade eldstenar som forntida mästerglödgare kunde skapa av frammanade eldandar. Nutida pyromantiker får nöja sig med lägre artefakter som gniststenar, vilka förvisso inte är illa för den vars krafter väsentligen handlar om elden och det brinnande. Mystiska krafter med eldeffekter får +1 på effekttärningen när de skapas av en mystiker med en gniststen i sin hand eller på toppen av sin stav."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l15",
     "namn": "Häxfläta",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "En fläta av tre sorters hår eller päls håller döden på avstånd. Häxflätan ger +1 på Stark vid Dödsslag. Spelledarpersoner som bär flätan slår också för Dödsslag, då med +1."
     },
-    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l16",
     "namn": "Härskarring",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Framstående viljevändare bland ordensmagikerna bär ofta en ring i guld på fingret, handleden, överarmen eller på hjässan som ett pannband. För dem är detta ett tecken på härskarens ädla strävan. Mången gång är dessa också gjutna med viljan att dominera allt levande, för det allmänna godas skull. Dessa guldringar ger +1 på alla slag för ordensmagins mystiska krafter och ritualer som böjer målets vilja, samt motståndet mot dem; specifikt Bända vilja och Telepatiskt förhör."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l17",
     "namn": "Järnkrona",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Demonologer bär ofta kronor av rostigt järn vid brytandet i tillvarons murar. Dessa järnkronor ger +1 på slag för att manipulera världens ramar, som de mystiska krafterna Förvisning och Teleportering samt ritualen Frammana daemon."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l18",
     "namn": "Lyckomynt",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Ett guldmynt som har tursamma energier bundna till sig. Myntet bärs i fickan och ger +1 på ett framgångsslag, användbart en gång per scen. Den som leker med sådana krafter riskerar dock att drabbas av dess motsats; om slaget som myntet modifierar blir 20 kommer bäraren att ha otur under resten av scenen, motsvarat av att alla framgångsslag får en andra chans att misslyckas."
     },
-    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l19",
     "namn": "Marlitmantel",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Skinnet av en skygg marlit, en mästerligt smygjagande ödla, som genom behandling med särskilt bevarande kemikalier behållit sina kameleontlika egenskaper efter bestens död. Bäraren får +1 i Diskret när det gäller att smyga och gömma sig."
     },
-    "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 4,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l20",
     "namn": "Ritualfokus",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Ett traditionsspecifikt objekt som ger +1 på alla framgångsslag för ritualer ur en viss mystisk tradition."
     },
-    "grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l21",
     "namn": "Solmask",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Teurgernas solmasker skänker andlig värme till de själskalla och sprider ljus dit där inget annat ljus når in. Buren av en teurg kan de dessutom assistera i fördrivandet och bekämpandet av odöda och styggelser. Masken skänker ljus kring bäraren som om denne bar på en fackla, samt att krafter med helig eller fördrivande effekt får +1 på sin effekttärning."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l22",
     "namn": "Stavfot",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Stavmagikerns stav kan få extra kraft i kast och stöt med hjälp av en stavfot, smidd under kastandet av härdande besvärjelser. Stavfoten fästs på en stav och ger +1 på effekttärningen för angrepp med staven som vapen, samt på alla krafter som direkt använder staven som vapen. Även om stavfoten vanligen sitter på en runstav så kan den också fästas på vanliga trästavar och har då samma effekt."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l23",
     "namn": "Stavhuvud",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Stavmagikern kan dra extra fokus ur ett stavhuvud fäst på sin runstav. Stavhuvudet – inte sällan i formen av en vacker sten infattad i meteoritjärn – ger +1 på slag för att lyckas med krafter som inte direkt innefattar staven som vapen: Blodsregn, Sfär och de av symbolismens krafter vilka ingår i stavmagin."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l24",
     "namn": "Svepduk",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Häxornas andebesvärjare bär ofta en ansiktsduk eller del av en liksvepning under sitt samröre med de dödas andar, då detta skänker andarna lugn och ger andebesvärjaren närmare kontakt med dem. Mystikern som bär svepduken får +1 på alla slag mot Viljestark som rör hanteringen av andar, vare sig det gäller kontrollen över dem (som kraften Andeplåga) eller motståndskraft mot dem (dvs. mot monstruösa särdrag från andar som angriper Viljestark)."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l25",
     "namn": "Tankekristall",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Gesäll": "Ordo Magicas illusionister använder ofta en prisma för att beskriva hur uppfattningen av världen kan brytas ned och förstås. Vissa av dessa kristaller är fyllda med sådan mängd tankeväckande energi att de ger bäraren +1 på alla slag för krafter som skapar illusioner."
     },
-    "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
-
   {
+    "id": "l26",
     "namn": "Fjärrvapen",
-    "taggar": { "typ": ["Lägre Artefakt", "Vapen"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt",
+        "Vapen"
+      ]
+    },
     "nivåer": {
       "Mästare": "Ett vapen som smids med kraften att slå, sticka eller skära på avstånd. Endast mystiker (definierat som någon som besitter en mystisk kraft) förstår hur denna kraft kan användas. Attackerna slås som i närstrid men verkar på avstånd och de kräver fritt skottfält, som andra avståndsattacker. Aktiva förmågor kan användas men på en nivå lägre än annars: en mästare kan använda en gesällförmåga genom ett fjärrvapen, en gesäll kan nyttja förmågan på novisnivå. En novis kan inte använda förmågan tillsammans med fjärrvapen."
     },
-    "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l27",
     "namn": "Formelpergament (Mästare)",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Mästare": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå (beroende på nivå i pergamentet), som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till samma nivå som kraften på pergamentet eller högre, alternativt besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
     },
-    "grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 6,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l28",
     "namn": "Formelsigill (Mästare)",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Mästare": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
     },
-    "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l29",
     "namn": "Mystiskt fokus",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Mästare": "Ett traditionspecifikt fokus som ger +1 på slag för traditionens samtliga mystiska krafter, dock kan det endast användas en gång per scen. Däremot kan dess bonus då användas tillsammans med eventuella andra lägre artefakter som ger bonus på framgångsslag för den mystiska kraften i fråga. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
     },
-    "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l30",
     "namn": "Ritualsigill",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Mästare": "Artefaktmakaren binder en ritual i ett sigill, som när det bryts utlöser ritualens effekt. Skaparen av sigillet måste inte själv behärska ritualen men behöver någon med sig som kan ritualen vid skapandet av sigillet, eller ha tillgång till en ritualkodex med ritualen (kodexen förstörs då när sigillet skapas). Den som bryter sigillet drabbas av temporär korruption som vanligt."
     },
-    "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l31",
     "namn": "Runstav",
-    "taggar": { "typ": ["Lägre Artefakt", "Vapen"], "kvalitet": ["Balanserat", "Långt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt",
+        "Vapen"
+      ],
+      "kvalitet": [
+        "Balanserat",
+        "Långt"
+      ]
+    },
     "nivåer": {
       "Mästare": "Stavmagikernas signum är den personliga runstaven, etsad med elementens runor. Staven avger i ägarens hand en skyddande aura, skydd 1t4, samt utgör också i övrigt grunden för mystikerns krafter."
     },
-    "stat": { "skada": "1T8" },
-    "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
+    "stat": {
+      "skada": "1T8"
+    },
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
+    "id": "l32",
     "namn": "Själssten (artefakt)",
-    "taggar": { "typ": ["Lägre Artefakt"] },
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
     "nivåer": {
       "Mästare": "Det föremål som krävs för utförande av ritualen med samma namn."
     },
-    "grundpris": { "daler": 100, "skilling": 0, "örtegar": 0 }
+    "grundpris": {
+      "daler": 100,
+      "skilling": 0,
+      "örtegar": 0
+    }
   }
 ]
