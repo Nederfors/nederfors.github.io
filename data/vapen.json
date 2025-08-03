@@ -163,7 +163,7 @@
       "beskrivning": "Den enklare trästaven, inte sällan i tungt trä och härdad nära elden, har de långa vapnens räckvidd men saknar stålspetsade vapnens verkan.",
       "taggar": {
         "typ": ["Vapen"],
-        "kvalitet": ["Trubbigt"]
+        "kvalitet": ["Trubbigt", "Långt"]
       },
       "stat": {
         "skada": "1T8"
