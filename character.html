@@ -24,6 +24,9 @@
 </head>
 <body data-role="character">
 
+  <!-- Översiktsknapp -->
+  <button id="summaryToggle" class="char-btn icon summary-btn" title="Visa översikt">📋</button>
+
   <h1 class="app-title">ROLLPERSON</h1>
 
   <div id="activeFilters" class="tags"></div>
@@ -33,6 +36,15 @@
     <h2 id="charName" style="margin-top:0;"></h2>
     <ul id="valda" class="card-list"></ul>
   </div>
+
+  <!-- Slide-in översiktspanel -->
+  <aside id="summaryPanel">
+    <header class="inv-header">
+      <h2>Översikt</h2>
+      <button class="char-btn icon" id="summaryClose">✕</button>
+    </header>
+    <div id="summaryContent" class="summary-content"></div>
+  </aside>
 
   <!-- Gemensam toolbar + paneler (inventarie, egenskaper, filter) -->
   <shared-toolbar></shared-toolbar>

@@ -9,6 +9,122 @@ function initCharacter() {
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', compact);
 
+  const summaryBtn = document.getElementById('summaryToggle');
+  const summaryPanel = document.getElementById('summaryPanel');
+  const summaryClose = document.getElementById('summaryClose');
+  const summaryContent = document.getElementById('summaryContent');
+
+  function renderSummary(){
+    const list = storeHelper.getCurrentList(store);
+    const inv = storeHelper.getInventory(store);
+    const traits = storeHelper.getTraits(store);
+    const effects = storeHelper.getArtifactEffects(store);
+    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(inv) : {};
+    const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+    const vals = {};
+    KEYS.forEach(k=>{ vals[k] = (traits[k]||0) + (bonus[k]||0) + (maskBonus[k]||0); });
+
+    const hasPack = list.some(e=>e.namn==='Packåsna');
+    const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
+    const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
+    const valStark = vals['Stark'];
+    const hardy = hasHardnackad ? 1 : 0;
+    let capacity = valStark;
+    if(hasPack) capacity = Math.ceil(capacity * 1.5);
+    const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
+    const tal = talBase + hardy;
+    const pain = storeHelper.calcPainThreshold(valStark, list, effects);
+
+    const valWill = vals['Viljestark'];
+    const strongGift = list.some(p=>p.namn==='Stark gåva' && ['Gesäll','Mästare'].includes(p.nivå||''));
+    const hasSjalastark = list.some(p=>p.namn==='Själastark');
+    const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
+    const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
+    const hasDarkPast = list.some(p=>p.namn==='Mörkt förflutet');
+    const permBase = storeHelper.calcPermanentCorruption(list, effects);
+    const hasEarth = list.some(p=>p.namn==='Jordnära');
+    const baseMax = strongGift ? valWill * 2 : valWill;
+    const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
+    const maxCor = baseMax + (hasSjalastark ? 1 : 0);
+    let thresh = threshBase + resistCount - sensCount;
+    let perm = hasEarth ? (permBase % 2) : permBase;
+    if(hasDarkPast) perm += Math.ceil(thresh / 3);
+
+    const defTrait = getDefenseTraitName(list);
+    const kvickForDef = vals[defTrait];
+    const defenseList = calcDefense(kvickForDef);
+    const defenseHtml = defenseList.map(d=>`<li>Försvar${d.name ? ' ('+d.name+')' : ''}: ${d.value}</li>`).join('');
+
+    const cond = [];
+    if(storeHelper.abilityLevel(list,'Fint') >= 1){
+      cond.push('Diskret som träffsäker för kort eller precist vapen i närstrid');
+    }
+    if(storeHelper.abilityLevel(list,'Lönnstöt') >= 1){
+      cond.push('Diskret som träffsäker vid attacker med Övertag');
+    }
+    if(storeHelper.abilityLevel(list,'Taktiker') >= 3){
+      cond.push('Listig som träffsäker för allt utom tunga vapen');
+    }
+    const sjatte = Math.max(
+      storeHelper.abilityLevel(list,'Sjätte Sinne'),
+      storeHelper.abilityLevel(list,'Sjätte sinne')
+    );
+    if(sjatte >= 3){
+      cond.push('Vaksam som träffsäker');
+    } else if(sjatte >= 1){
+      cond.push('Vaksam som träffsäker för avståndsattacker');
+    }
+    if(storeHelper.abilityLevel(list,'Järnnäve') >= 1){
+      cond.push('Stark som träffsäker i närstrid');
+    }
+    if(storeHelper.abilityLevel(list,'Dominera') >= 1){
+      cond.push('Övertygande som träffsäker i närstrid');
+    }
+    if(!cond.length) cond.push('Inga särskilda ersättningar');
+
+    summaryContent.innerHTML = `
+      <section class="summary-section">
+        <h3>Försvar</h3>
+        <ul>${defenseHtml}</ul>
+      </section>
+      <section class="summary-section">
+        <h3>Korruption</h3>
+        <ul>
+          <li>Maximal korruption: ${maxCor}</li>
+          <li>Permanent korruption: ${perm}</li>
+          <li>Korruptionströskel: ${thresh}</li>
+        </ul>
+      </section>
+      <section class="summary-section">
+        <h3>Bärkapacitet</h3>
+        <ul><li>${capacity}</li></ul>
+      </section>
+      <section class="summary-section">
+        <h3>Hälsa</h3>
+        <ul>
+          <li>Tålighet: ${tal}</li>
+          <li>Smärtgräns: ${pain}</li>
+        </ul>
+      </section>
+      <section class="summary-section">
+        <h3>Träffsäkerhet</h3>
+        <ul>${cond.map(c=>`<li>${c}</li>`).join('')}</ul>
+      </section>
+    `;
+  }
+
+  summaryBtn.addEventListener('click',()=>{
+    renderSummary();
+    summaryPanel.classList.toggle('open');
+  });
+  summaryClose.addEventListener('click',()=>summaryPanel.classList.remove('open'));
+  document.addEventListener('click',e=>{
+    if(!summaryPanel.contains(e.target) && e.target!==summaryBtn){
+      summaryPanel.classList.remove('open');
+    }
+  });
+
   /* Dropdowns baserat på karaktärslista */
   (()=>{
     const lst = storeHelper.getCurrentList(store).filter(p=>!isInv(p));

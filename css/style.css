@@ -79,6 +79,33 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 .char-btn:hover  { opacity: .85; }
 .char-btn:active { transform: scale(.95); opacity: .7; }
 
+/* Knapp för översiktsmeny */
+.summary-btn {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 1100;
+}
+
+/* Innehåll i översiktspanel */
+.summary-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+.summary-section h3 {
+  margin: 0 0 .5rem;
+  font-size: 1.1rem;
+}
+.summary-section ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: .3rem;
+}
+
 /* Rad för knappar i filterpanelen */
 .char-btn-row {
   display: flex;
@@ -309,6 +336,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
 #invPanel    { max-width: 420px; }
 #filterPanel { max-width: 360px; }
 #traitsPanel { max-width: 360px; }
+#summaryPanel{ max-width: 360px; }
 
 .inv-header { display: flex; justify-content: space-between; align-items: center; }
 .inv-actions { display: flex; align-items: baseline; gap: .4rem; }
@@ -421,7 +449,8 @@ select.level {
 #filterPanel,
 #traitsPanel,
 #yrkePanel,
-#infoPanel {
+#infoPanel,
+#summaryPanel {
   position: fixed;
   top: 0;
   right: -100%;
@@ -443,6 +472,7 @@ select.level {
 #invPanel    { max-width: 420px; }
 #filterPanel { max-width: 360px; }
 #traitsPanel { max-width: 360px; }
+#summaryPanel{ max-width: 360px; }
 #yrkePanel   { max-width: 360px; font-size: 1.2rem; line-height: 1.6; }
 #infoPanel   { max-width: 360px; font-size: 1.1rem; line-height: 1.5; }
 #yrkePanel p { margin: 0 0 1rem; }
@@ -453,7 +483,8 @@ select.level {
 #filterPanel.open,
 #traitsPanel.open,
 #yrkePanel.open,
-#infoPanel.open {
+#infoPanel.open,
+#summaryPanel.open {
   right: 0;
 }
 
@@ -461,6 +492,7 @@ select.level {
   #invPanel    { max-width: 520px; }
   #filterPanel { max-width: 460px; }
   #traitsPanel { max-width: 460px; }
+  #summaryPanel{ max-width: 460px; }
   #yrkePanel   { max-width: 520px; }
   #infoPanel   { max-width: 520px; }
 }
