@@ -14,6 +14,10 @@ function initCharacter() {
   const summaryClose = document.getElementById('summaryClose');
   const summaryContent = document.getElementById('summaryContent');
 
+  const conflictPanel = document.getElementById('conflictPanel');
+  const conflictClose = document.getElementById('conflictClose');
+  const conflictList = document.getElementById('conflictList');
+
   function renderSummary(){
     const list = storeHelper.getCurrentList(store);
     const inv = storeHelper.getInventory(store);
@@ -122,6 +126,15 @@ function initCharacter() {
   document.addEventListener('click',e=>{
     if(!summaryPanel.contains(e.target) && e.target!==summaryBtn){
       summaryPanel.classList.remove('open');
+    }
+  });
+
+  conflictClose.addEventListener('click',()=>conflictPanel.classList.remove('open'));
+  document.addEventListener('click',e=>{
+    if(conflictPanel.classList.contains('open') &&
+      !conflictPanel.contains(e.target) &&
+      !e.target.closest('.conflict-btn')){
+      conflictPanel.classList.remove('open');
     }
   });
 
@@ -244,10 +257,14 @@ function initCharacter() {
       const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
       const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
       const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
+      const hasActive = p.taggar?.handling?.[p.nivå]?.includes('Aktiv');
+      const conflictBtn = hasActive
+        ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}">💔</button>`
+        : '';
       li.dataset.xp = xpVal;
       const showInfo = compact || hideDetails;
       const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
+      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span><span class="title-actions">${xpHtml}${conflictBtn}</span></div>
         <div class="tags">${tagsHtml}</div>
         ${lvlSel}
         ${descHtml}
@@ -299,6 +316,17 @@ function initCharacter() {
 
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click',e=>{
+    const conflictBtn = e.target.closest('.conflict-btn');
+    if(conflictBtn){
+      const current = conflictBtn.dataset.name;
+      const others = storeHelper.getCurrentList(store)
+        .filter(x=>x.namn!==current && x.taggar?.handling?.[x.nivå]?.includes('Aktiv'));
+      conflictList.innerHTML = others.length
+        ? others.map(x=>`<li class="card">${x.namn}</li>`).join('')
+        : '<li class="card">Inga konflikter.</li>';
+      conflictPanel.classList.add('open');
+      return;
+    }
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');

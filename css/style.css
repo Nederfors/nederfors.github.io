@@ -209,6 +209,7 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   display: flex;
   flex-direction: column;
   gap: .45rem;
+  position: relative;
 }
 .card-title {
   display: flex;
@@ -217,11 +218,19 @@ input:focus, select:focus { outline: none; border-color: var(--accent); }
   font-size: 1.34rem;
   font-weight: 600;
 }
+.card-title .title-actions {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+}
 .xp-cost {
   font-size: .9rem;
   color: var(--subtxt);
   font-weight: 500;
-  margin-left: .8rem;
+}
+.conflict-btn {
+  padding: .2rem .5rem;
+  font-size: 1.1rem;
 }
 .card-desc  { font-size: 1.15rem; }
 .card.compact .card-desc { display: none; }
@@ -454,7 +463,8 @@ select.level {
 #traitsPanel,
 #yrkePanel,
 #infoPanel,
-#summaryPanel {
+#summaryPanel,
+#conflictPanel {
   position: fixed;
   top: 0;
   right: -100%;
@@ -477,6 +487,7 @@ select.level {
 #filterPanel { max-width: 360px; }
 #traitsPanel { max-width: 360px; }
 #summaryPanel{ max-width: 360px; }
+#conflictPanel { max-width: 360px; }
 #yrkePanel   { max-width: 360px; font-size: 1.2rem; line-height: 1.6; }
 #infoPanel   { max-width: 360px; font-size: 1.1rem; line-height: 1.5; }
 #yrkePanel p { margin: 0 0 1rem; }
@@ -488,7 +499,8 @@ select.level {
 #traitsPanel.open,
 #yrkePanel.open,
 #infoPanel.open,
-#summaryPanel.open {
+#summaryPanel.open,
+#conflictPanel.open {
   right: 0;
 }
 
@@ -497,6 +509,7 @@ select.level {
   #filterPanel { max-width: 460px; }
   #traitsPanel { max-width: 460px; }
   #summaryPanel{ max-width: 460px; }
+  #conflictPanel{ max-width: 460px; }
   #yrkePanel   { max-width: 520px; }
   #infoPanel   { max-width: 520px; }
 }
