@@ -1,5 +1,6 @@
 [
   {
+    "id": "g1",
     "namn": "Får",
     "beskrivning": "Ett ullproducerande tamdjur som ger kött och mjölk, trivs bäst i flock.",
     "taggar": {
@@ -14,6 +15,7 @@
     }
   },
   {
+    "id": "g2",
     "namn": "Gris",
     "beskrivning": "Robust djur som förser gården med kött och läder.",
     "taggar": {
@@ -28,6 +30,7 @@
     }
   },
   {
+    "id": "g3",
     "namn": "Hund",
     "beskrivning": "Lojal följeslagare, används för vakthållning, jakt eller vallning.",
     "taggar": {
@@ -42,6 +45,7 @@
     }
   },
   {
+    "id": "g4",
     "namn": "Höna",
     "beskrivning": "Tamhöna som ger färska ägg och håller skadedjur borta.",
     "taggar": {
@@ -56,6 +60,7 @@
     }
   },
   {
+    "id": "g5",
     "namn": "Ko",
     "beskrivning": "Mjölkproducerande nötboskap som även ger kött och draghjälp.",
     "taggar": {
@@ -70,6 +75,7 @@
     }
   },
   {
+    "id": "g6",
     "namn": "Oxe",
     "beskrivning": "Stark dragare, oumbärlig vid åkerbruk och tunga transporter.",
     "taggar": {
@@ -84,6 +90,7 @@
     }
   },
   {
+    "id": "g7",
     "namn": "Tjur",
     "beskrivning": "Vuxen hanne av nötboskap, viktig för avel och ibland för kraft.",
     "taggar": {
@@ -98,6 +105,7 @@
     }
   },
   {
+    "id": "g8",
     "namn": "Tupp",
     "beskrivning": "Färgstark hane som vaktar hönsflocken och gal i gryningen.",
     "taggar": {
@@ -112,6 +120,7 @@
     }
   },
   {
+    "id": "g9",
     "namn": "Åsna",
     "beskrivning": "Tåligt lastdjur, uppskattad för sin styrka och sitt lugn.",
     "taggar": {
@@ -124,4 +133,5 @@
       "skilling": 0,
       "örtegar": 0
     }
-  }]
+  }
+]
