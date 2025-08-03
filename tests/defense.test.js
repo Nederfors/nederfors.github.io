@@ -84,7 +84,7 @@ window.DB.push({
 window.DBIndex['Kråkrustning'] = window.DB[3];
 store.data.c.inventory.unshift({ name: 'Kråkrustning', qty: 1 });
 const res4 = window.calcDefense(15);
-assert.deepStrictEqual(res4, [ { name: 'Kråkrustning', value: 12 } ]);
+assert.deepStrictEqual(res4, [ { name: 'Kråkrustning', value: 13 } ]);
 
 // Tvillingattack grants +1 defense when wielding two weapons
 window.DB.push({ namn: 'Kniv', taggar: { typ: ['Vapen'] } });
@@ -107,12 +107,28 @@ assert.deepStrictEqual(res6, [ { value: 15 } ]);
 // Manteldans Novis should grant +1 defense
 store.data.c.inventory = [];
 store.data.c.list = [ { namn: 'Manteldans', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
-const res5 = window.calcDefense(15);
-assert.deepStrictEqual(res5, [ { value: 16 } ]);
+const res7 = window.calcDefense(15);
+assert.deepStrictEqual(res7, [ { value: 16 } ]);
 
 // Manteldans stacks with balanced weapon
 store.data.c.inventory = [ { name: 'Svärd', qty: 1, kvaliteter: ['Balanserat'] } ];
-const res6 = window.calcDefense(15);
-assert.deepStrictEqual(res6, [ { value: 17 } ]);
+const res8 = window.calcDefense(15);
+assert.deepStrictEqual(res8, [ { value: 17 } ]);
+
+// Stavkamp grants +1 defense with a long weapon
+window.DB.push({ namn: 'Spjut', taggar: { typ: ['Vapen'], kvalitet: ['Långt'] } });
+window.DBIndex['Spjut'] = window.DB[window.DB.length - 1];
+store.data.c.inventory = [ { name: 'Spjut', qty: 1 } ];
+store.data.c.list = [ { namn: 'Stavkamp', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
+const res9 = window.calcDefense(15);
+assert.deepStrictEqual(res9, [ { value: 16 } ]);
+
+// Stavkamp grants +2 defense with a long runstav or trästav
+window.DB.push({ namn: 'Vandringsstav', taggar: { typ: ['Vapen'], kvalitet: ['Långt'] } });
+window.DBIndex['Vandringsstav'] = window.DB[window.DB.length - 1];
+store.data.c.inventory = [ { name: 'Vandringsstav', qty: 1 } ];
+store.data.c.list = [ { namn: 'Stavkamp', nivå: 'Novis', taggar: { typ: ['Förmåga'] } } ];
+const res10 = window.calcDefense(15);
+assert.deepStrictEqual(res10, [ { value: 17 } ]);
 
 console.log('All tests passed.');
