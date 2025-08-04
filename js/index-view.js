@@ -111,6 +111,15 @@ function initIndex() {
           infoHtml += `<br><strong>Raser:</strong> ${str}`;
         }
       }
+      let spec = null;
+      if (p.namn === 'Monsterlärd') {
+        spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
+        if (spec) {
+          const t = `<br><strong>Specialisering:</strong> ${spec}`;
+          desc += t;
+          infoHtml += t;
+        }
+      }
       const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
@@ -130,6 +139,7 @@ function initIndex() {
         ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
         : '';
       const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
+      if (spec) li.dataset.trait = spec;
       const tagsHtml = (p.taggar?.typ || [])
         .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
         .map(t=>`<span class="tag">${t}</span>`).join(' ');
@@ -360,6 +370,16 @@ function initIndex() {
           });
           return;
         }
+        if (p.namn === 'Monsterlärd' && ['Gesäll','Mästare'].includes(lvl) && window.monsterLore) {
+          monsterLore.pickSpec(spec => {
+            if(!spec) return;
+            list.push({ ...p, nivå: lvl, trait: spec });
+            storeHelper.setCurrentList(store,list); updateXP();
+            renderList(filtered());
+            renderTraits();
+          });
+          return;
+        }
         if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
           const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
           exceptionSkill.pickTrait(used, trait => {
@@ -541,6 +561,24 @@ function initIndex() {
         ent.nivå = old;
         e.target.value = old;
         return;
+      }
+      if(name==='Monsterlärd'){
+        if(['Gesäll','Mästare'].includes(ent.nivå)){
+          if(!ent.trait && window.monsterLore){
+            monsterLore.pickSpec(spec=>{
+              if(!spec){ ent.nivå=old; e.target.value=old; return; }
+              ent.trait=spec;
+              storeHelper.setCurrentList(store,list); updateXP();
+              renderList(filtered()); renderTraits();
+            });
+            return;
+          }
+        }else if(ent.trait){
+          delete ent.trait;
+          storeHelper.setCurrentList(store,list); updateXP();
+          renderList(filtered()); renderTraits();
+          return;
+        }
       }
       if(name==='Hamnskifte'){
         const lvlMap={"":0,Novis:1, Gesäll:2, Mästare:3};

@@ -257,8 +257,14 @@ function initCharacter() {
         raceInfo = `<br><strong>Ras:</strong> ${p.race}`;
         infoHtml += raceInfo;
       }
-      const traitInfo = p.trait ? `<br><strong>Karaktärsdrag:</strong> ${p.trait}` : '';
-      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml + traitInfo)}">Info</button>`;
+      let traitInfo = '';
+      if (p.trait) {
+        traitInfo = p.namn === 'Monsterlärd'
+          ? `<br><strong>Specialisering:</strong> ${p.trait}`
+          : `<br><strong>Karaktärsdrag:</strong> ${p.trait}`;
+        infoHtml += traitInfo;
+      }
+      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
 
       const li=document.createElement('li');
       li.className='card' + (compact ? ' compact' : '');
@@ -503,6 +509,24 @@ function initCharacter() {
         ent.nivå = old;
         e.target.value = old;
         return;
+      }
+      if(name==='Monsterlärd'){
+        if(['Gesäll','Mästare'].includes(ent.nivå)){
+          if(!ent.trait && window.monsterLore){
+            monsterLore.pickSpec(spec=>{
+              if(!spec){ ent.nivå=old; e.target.value=old; return; }
+              ent.trait=spec;
+              storeHelper.setCurrentList(store,list); updateXP();
+              renderSkills(filtered()); renderTraits();
+            });
+            return;
+          }
+        }else if(ent.trait){
+          delete ent.trait;
+          storeHelper.setCurrentList(store,list); updateXP();
+          renderSkills(filtered()); renderTraits();
+          return;
+        }
       }
       storeHelper.setCurrentList(store,list); updateXP();
     }
