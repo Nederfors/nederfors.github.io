@@ -93,14 +93,13 @@ const exportPdf = {
       this.setField(`Korruption, artefakt ${i}`, art.korruption || art.corruption || '');
     });
 
-    const bytes = await this.pdfDoc.save();
-    const blob = new Blob([bytes], { type: 'application/pdf' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = (char.name || 'character') + '.pdf';
-    a.click();
-    URL.revokeObjectURL(url);
+    const pdfBytes = await this.pdfDoc.save();
+    const blob = new Blob([pdfBytes], { type: 'application/pdf' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${char.name || 'karaktar'}.pdf`;
+    link.click();
+    URL.revokeObjectURL(link.href);
   }
 };
 
