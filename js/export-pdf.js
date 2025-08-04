@@ -1,6 +1,7 @@
 const exportPdf = {
   pdfDoc: null,
   form: null,
+  font: null,
   fieldTemplate: null,
   fieldTypes: null,
 
@@ -11,9 +12,11 @@ const exportPdf = {
       fetch('export/symbaroum_pdf_fields_template.json').then(r => r.json()),
       fetch('export/symbaroum_pdf_fields_types.json').then(r => r.json())
     ]);
-    const { PDFDocument } = PDFLib;
+    const { PDFDocument, StandardFonts } = PDFLib;
     this.pdfDoc = await PDFDocument.load(pdfBytes);
+    this.font = await this.pdfDoc.embedFont(StandardFonts.Helvetica);
     this.form = this.pdfDoc.getForm();
+    this.form.updateFieldAppearances(this.font);
     this.fieldTemplate = templateJson;
     this.fieldTypes = typesJson;
   },
@@ -25,6 +28,7 @@ const exportPdf = {
       if (type === '/Tx') {
         const field = this.form.getTextField(name);
         field.setText(String(value ?? ''));
+        field.updateAppearances(this.font);
       } else if (type === '/Btn') {
         const field = this.form.getCheckBox(name);
         value ? field.check() : field.uncheck();
@@ -58,7 +62,11 @@ const exportPdf = {
 
     Object.entries(traits).forEach(([k, v]) => this.setField(k, v));
 
-    const abilities = list.filter(it => (it.taggar?.typ || []).some(t => ['Förmåga', 'Mystisk kraft'].includes(t)));
+    let truncated = false;
+    const abilityLimit = Object.keys(this.fieldTemplate).filter(k => k.startsWith('Namn, förmåga')).length;
+    const abilitiesAll = list.filter(it => (it.taggar?.typ || []).some(t => ['Förmåga', 'Mystisk kraft'].includes(t)));
+    const abilities = abilitiesAll.slice(0, abilityLimit);
+    if (abilitiesAll.length > abilities.length) truncated = true;
     abilities.forEach((ab, idx) => {
       const i = idx + 1;
       this.setField(`Namn, förmåga ${i}`, ab.namn);
@@ -82,8 +90,11 @@ const exportPdf = {
     this.setField('Övriga tillgångar', `Priv ${fmt(priv)} | Bes ${fmt(poss)}`);
 
     const inventory = storeHelper.getInventory(store);
-    const artifacts = inventory.filter(it => (it.taggar?.typ || []).some(t => t.includes('Artefakt')));
-    artifacts.slice(0, 6).forEach((art, idx) => {
+    const artifactsAll = inventory.filter(it => (it.taggar?.typ || []).some(t => t.includes('Artefakt')));
+    const artifactLimit = Object.keys(this.fieldTemplate).filter(k => k.startsWith('Namn, artefakt')).length;
+    const artifacts = artifactsAll.slice(0, artifactLimit);
+    if (artifactsAll.length > artifacts.length) truncated = true;
+    artifacts.forEach((art, idx) => {
       const i = idx + 1;
       const powers = art.nivåer
         ? Object.entries(art.nivåer).map(([lvl, desc]) => `${lvl}: ${desc}`).join(' ')
@@ -92,6 +103,10 @@ const exportPdf = {
       this.setField(`Krafter, artefakt ${i}`, powers);
       this.setField(`Korruption, artefakt ${i}`, art.korruption || art.corruption || '');
     });
+
+    if (truncated) {
+      alert('PDF-mallen saknar plats för alla poster.');
+    }
 
     const pdfBytes = await this.pdfDoc.save();
     const blob = new Blob([pdfBytes], { type: 'application/pdf' });
