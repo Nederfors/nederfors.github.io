@@ -1,4 +1,4 @@
-const exportPdf = {
+window.exportPdf = {
   pdfDoc: null,
   form: null,
   font: null,
@@ -129,5 +129,3 @@ const exportPdf = {
     URL.revokeObjectURL(link.href);
   }
 };
-
-window.exportPdf = exportPdf;
