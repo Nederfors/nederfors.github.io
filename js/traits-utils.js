@@ -120,14 +120,16 @@
     if (forced) return forced;
 
     const ABILITY_TRAITS = [
-      { ability: 'Fint',            level: 2, trait: 'Diskret' },
-      { ability: 'Sjätte Sinne',    level: 2, trait: 'Vaksam' },
-      { ability: 'Taktiker',        level: 2, trait: 'Listig' },
+      { ability: 'Fint', level: 2, trait: 'Diskret' },
+      { ability: ['Sjätte Sinne', 'Sjätte sinne'], level: 2, trait: 'Vaksam' },
+      { ability: 'Taktiker', level: 2, trait: 'Listig' },
       { ability: 'Pareringsmästare', level: 1, trait: 'Tr\u00e4ffs\u00e4ker' }
     ];
 
     for (const { ability, level, trait } of ABILITY_TRAITS) {
-      if (storeHelper.abilityLevel(list, ability) >= level) {
+      const abilities = Array.isArray(ability) ? ability : [ability];
+      const highest = abilities.reduce((max, a) => Math.max(max, storeHelper.abilityLevel(list, a)), 0);
+      if (highest >= level) {
         return trait;
       }
     }
