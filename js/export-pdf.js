@@ -12,7 +12,11 @@ const exportPdf = {
       fetch('export/symbaroum_pdf_fields_template.json').then(r => r.json()),
       fetch('export/symbaroum_pdf_fields_types.json').then(r => r.json())
     ]);
-    const { PDFDocument, StandardFonts } = PDFLib;
+    if (!window.PDFLib) {
+      console.error('PDFLib är inte tillgängligt. Kan inte exportera PDF.');
+      return;
+    }
+    const { PDFDocument, StandardFonts } = window.PDFLib;
     this.pdfDoc = await PDFDocument.load(pdfBytes);
     this.font = await this.pdfDoc.embedFont(StandardFonts.Helvetica);
     this.form = this.pdfDoc.getForm();
@@ -40,6 +44,7 @@ const exportPdf = {
 
   async exportCharacterPdf(store, charId) {
     await this.loadAssets();
+    if (!this.pdfDoc) return;
     const char = store.characters.find(c => c.id === charId);
     if (!char) return;
 
