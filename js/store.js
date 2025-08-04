@@ -392,6 +392,14 @@
     save(store);
   }
 
+  function renameCharacter(store, charId, newName) {
+    if (!charId || !newName) return;
+    const char = store.characters.find(c => c.id === charId);
+    if (!char) return;
+    char.name = newName;
+    save(store);
+  }
+
   function deleteCharacter(store, charId) {
     if (!charId) return;
     store.characters = store.characters.filter(c => c.id !== charId);
@@ -1007,6 +1015,7 @@ function defaultTraits() {
     resetPossessionRemoved,
     getHamnskifteRemoved,
     setHamnskifteRemoved,
+    renameCharacter,
     deleteCharacter,
     deleteAllCharacters,
     getDependents,
