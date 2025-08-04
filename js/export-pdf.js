@@ -70,9 +70,8 @@ const exportPdf = {
     let truncated = false;
     const abilityLimit = Object.keys(this.fieldTemplate).filter(k => k.startsWith('Namn, förmåga')).length;
     const abilitiesAll = list.filter(it => (it.taggar?.typ || []).some(t => ['Förmåga', 'Mystisk kraft'].includes(t)));
-    const abilities = abilitiesAll.slice(0, abilityLimit);
-    if (abilitiesAll.length > abilities.length) truncated = true;
-    abilities.forEach((ab, idx) => {
+    if (abilitiesAll.length > abilityLimit) truncated = true;
+    abilitiesAll.slice(0, abilityLimit).forEach((ab, idx) => {
       const i = idx + 1;
       this.setField(`Namn, förmåga ${i}`, ab.namn);
       this.setField(`Typ, förmåga ${i}`, (ab.taggar?.typ || []).join(', '));
@@ -97,9 +96,8 @@ const exportPdf = {
     const inventory = storeHelper.getInventory(store);
     const artifactsAll = inventory.filter(it => (it.taggar?.typ || []).some(t => t.includes('Artefakt')));
     const artifactLimit = Object.keys(this.fieldTemplate).filter(k => k.startsWith('Namn, artefakt')).length;
-    const artifacts = artifactsAll.slice(0, artifactLimit);
-    if (artifactsAll.length > artifacts.length) truncated = true;
-    artifacts.forEach((art, idx) => {
+    if (artifactsAll.length > artifactLimit) truncated = true;
+    artifactsAll.slice(0, artifactLimit).forEach((art, idx) => {
       const i = idx + 1;
       const powers = art.nivåer
         ? Object.entries(art.nivåer).map(([lvl, desc]) => `${lvl}: ${desc}`).join(' ')
@@ -107,6 +105,15 @@ const exportPdf = {
       this.setField(`Namn, artefakt ${i}`, art.namn);
       this.setField(`Krafter, artefakt ${i}`, powers);
       this.setField(`Korruption, artefakt ${i}`, art.korruption || art.corruption || '');
+    });
+
+    const itemLimit = Object.keys(this.fieldTemplate).filter(k => k.startsWith('Föremål ')).length;
+    const itemsAll = inventory.filter(it => !(it.taggar?.typ || []).some(t => t.includes('Artefakt')));
+    if (itemsAll.length > itemLimit) truncated = true;
+    itemsAll.slice(0, itemLimit).forEach((it, idx) => {
+      const i = idx + 1;
+      this.setField(`Föremål ${i}`, it.namn || it.name || '');
+      this.setField(`Antal, föremål ${i}`, it.qty ?? it.antal ?? '');
     });
 
     if (truncated) {
