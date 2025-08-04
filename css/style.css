@@ -105,13 +105,13 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 
 /* Rad för knappar i filterpanelen */
 .char-btn-row {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
   gap: .4rem;
   margin-bottom: .6rem;
 }
 .char-btn-row .char-btn {
-  flex: 1;
-  min-width: 0;
+  width: 100%;
 }
 
 /* Grupp för partytillhörighet */
