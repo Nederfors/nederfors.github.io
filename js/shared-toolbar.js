@@ -20,6 +20,10 @@ class SharedToolbar extends HTMLElement {
     this._outsideHandler = e => this.handleOutsideClick(e);
     document.addEventListener('click', this._outsideHandler);
     this.initSwitchLink();
+
+    const nativeGetElementById = document.getElementById.bind(document);
+    document.getElementById = id =>
+      nativeGetElementById(id) || this.shadowRoot.getElementById(id);
   }
 
   /* ------------------------------------------------------- */
@@ -97,6 +101,7 @@ class SharedToolbar extends HTMLElement {
           <button id="deleteChar" class="char-btn danger">Ta bort rollperson</button>
           <button id="exportChar" class="char-btn">Exportera</button>
           <button id="importChar" class="char-btn">Importera</button>
+          <button id="exportCharPdf" class="char-btn">Exportera PDF</button>
         </div>
 
         <div class="filter-group">
