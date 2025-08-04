@@ -8,6 +8,9 @@
 const ROLE   = document.body.dataset.role;           // 'index' | 'character'
 let   store  = storeHelper.load();                   // Lokal lagring
 
+/* Extern PDF-exportfunktion */
+const exportPdf = window.exportPdf;
+
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
 const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM
@@ -253,6 +256,11 @@ function bindToolbar() {
       copyToClipboard(code)
         .then(() => alert('Karakt\u00e4rskoden har kopierats.'))
         .catch(() => prompt('Kopiera koden nedan:', code));
+    }
+
+    if (id === 'exportCharPdf') {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      exportPdf.exportCharacterPdf(store, store.current);
     }
 
     /* Importera rollperson -------------------------------- */
