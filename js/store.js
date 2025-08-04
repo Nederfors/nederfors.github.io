@@ -392,6 +392,18 @@
     save(store);
   }
 
+  function duplicateCharacter(store, sourceId) {
+    if (!sourceId) return null;
+    const char = store.characters.find(c => c.id === sourceId);
+    if (!char) return null;
+    const newId = 'rp' + Date.now();
+    store.characters.push({ id: newId, name: `${char.name} (kopia)` });
+    const data = store.data[sourceId] ? JSON.parse(JSON.stringify(store.data[sourceId])) : {};
+    store.data[newId] = data;
+    save(store);
+    return newId;
+  }
+
   function renameCharacter(store, charId, newName) {
     if (!charId || !newName) return;
     const char = store.characters.find(c => c.id === charId);
@@ -1015,6 +1027,7 @@ function defaultTraits() {
     resetPossessionRemoved,
     getHamnskifteRemoved,
     setHamnskifteRemoved,
+    duplicateCharacter,
     renameCharacter,
     deleteCharacter,
     deleteAllCharacters,

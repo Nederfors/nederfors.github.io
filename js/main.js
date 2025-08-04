@@ -14,7 +14,7 @@ const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM
 const dom  = {
   /* toolbar / panel */
   charSel : $T('charSelect'),   delBtn : $T('deleteChar'),
-  newBtn  : $T('newCharBtn'),   xpOut  : $T('xpOut'),
+  newBtn  : $T('newCharBtn'),   dupBtn : $T('duplicateChar'),   xpOut  : $T('xpOut'),
   exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
   xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
   clrBtn  : $T('clearFilters'),
@@ -222,6 +222,17 @@ function bindToolbar() {
 
       storeHelper.save(store);      // sparas nu korrekt
       location.reload();
+    }
+
+    /* Kopiera rollperson ----------------------------------- */
+    if (id === 'duplicateChar') {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      const newId = storeHelper.duplicateCharacter(store, store.current);
+      if (newId) {
+        store.current = newId;
+        storeHelper.save(store);
+        location.reload();
+      }
     }
 
     /* Byt namn på rollperson -------------------------------- */
