@@ -224,6 +224,17 @@ function bindToolbar() {
       location.reload();
     }
 
+    /* Byt namn på rollperson -------------------------------- */
+    if (id === 'renameChar') {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      const char = store.characters.find(c => c.id === store.current);
+      const newName = prompt('Nytt namn?', char ? char.name : '');
+      if (!newName) return;
+      storeHelper.renameCharacter(store, store.current, newName);
+      refreshCharSelect();
+      if (dom.cName) dom.cName.textContent = newName;
+    }
+
     /* Exportera rollperson --------------------------------- */
     if (id === 'exportChar') {
       if (!store.current) return alert('Ingen rollperson vald.');
