@@ -92,6 +92,7 @@ class SharedToolbar extends HTMLElement {
 
         <div class="char-btn-row">
           <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+          <button id="duplicateChar" class="char-btn">Duplicera</button>
           <button id="deleteChar" class="char-btn danger">Ta bort rollperson</button>
           <button id="exportChar" class="char-btn">Exportera</button>
           <button id="importChar" class="char-btn">Importera</button>
@@ -307,6 +308,7 @@ class SharedToolbar extends HTMLElement {
           <h3>Filtermenyn</h3>
           <p>
             <strong>Ny rollperson</strong> skapar en ny karakt\u00e4r.<br>
+            <strong>Duplicera</strong> kopierar vald karakt\u00e4r.<br>
             <strong>Ta bort rollperson</strong> raderar vald karakt\u00e4r.<br>
             <strong>Exportera</strong> kopierar karakt\u00e4ren som en delbar kod.<br>
             <strong>Importera</strong> \u00e5terst\u00e4ller en sparad karakt\u00e4r från kopierad kod.<br>

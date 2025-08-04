@@ -15,6 +15,7 @@ const dom  = {
   /* toolbar / panel */
   charSel : $T('charSelect'),   delBtn : $T('deleteChar'),
   newBtn  : $T('newCharBtn'),   xpOut  : $T('xpOut'),
+  dupBtn  : $T('duplicateChar'),
   exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
   xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
   clrBtn  : $T('clearFilters'),
@@ -221,6 +222,15 @@ function bindToolbar() {
       store.current = charId;
 
       storeHelper.save(store);      // sparas nu korrekt
+      location.reload();
+    }
+
+    /* Duplicera rollperson ---------------------------------- */
+    if (id === 'duplicateChar') {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      const newId = storeHelper.duplicateCharacter(store, store.current);
+      store.current = newId;
+      storeHelper.save(store);
       location.reload();
     }
 

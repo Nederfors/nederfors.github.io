@@ -392,6 +392,18 @@
     save(store);
   }
 
+  function duplicateCharacter(store, sourceId) {
+    if (!sourceId) return null;
+    const src = store.characters.find(c => c.id === sourceId);
+    if (!src) return null;
+    const newId = 'rp' + Date.now();
+    const name = `${src.name} (kopia)`;
+    store.characters.push({ id: newId, name });
+    store.data[newId] = JSON.parse(JSON.stringify(store.data[sourceId] || {}));
+    save(store);
+    return newId;
+  }
+
   function deleteCharacter(store, charId) {
     if (!charId) return;
     store.characters = store.characters.filter(c => c.id !== charId);
@@ -1007,6 +1019,7 @@ function defaultTraits() {
     resetPossessionRemoved,
     getHamnskifteRemoved,
     setHamnskifteRemoved,
+    duplicateCharacter,
     deleteCharacter,
     deleteAllCharacters,
     getDependents,
