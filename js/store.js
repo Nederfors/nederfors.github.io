@@ -344,6 +344,12 @@
     save(store);
   }
 
+  function getPrivMoney(store) {
+    if (!store.current) return defaultMoney();
+    const data = store.data[store.current] || {};
+    return { ...defaultMoney(), ...(data.privMoney || {}) };
+  }
+
   function getPossessionMoney(store) {
     if (!store.current) return defaultMoney();
     const data = store.data[store.current] || {};
@@ -987,6 +993,7 @@ function defaultTraits() {
     setMoney,
     getBonusMoney,
     setBonusMoney,
+    getPrivMoney,
     getTotalMoney,
     getPartySmith,
     setPartySmith,
