@@ -56,6 +56,7 @@
             possessionRemoved: 0,
             hamnskifteRemoved: [],
             forcedDefense: '',
+            notes: defaultNotes(),
             ...cur
           };
           if(!store.data[id].artifactEffects){
@@ -75,6 +76,9 @@
           }
           if(!Array.isArray(store.data[id].hamnskifteRemoved)){
             store.data[id].hamnskifteRemoved = [];
+          }
+          if(!store.data[id].notes){
+            store.data[id].notes = defaultNotes();
           }
           if(store.data[id].forcedDefense === undefined){
             store.data[id].forcedDefense = '';
@@ -852,6 +856,11 @@ function defaultTraits() {
     });
     if (obj.nilasPopupShown === false) delete obj.nilasPopupShown;
     if (obj.baseXp === 0) delete obj.baseXp;
+    if (obj.notes) {
+      const def = defaultNotes();
+      const allEmpty = Object.keys(def).every(key => !obj.notes[key]);
+      if (allEmpty) delete obj.notes;
+    }
     if (obj.traits) {
       const def = defaultTraits();
       const t = {};
@@ -969,7 +978,8 @@ function defaultTraits() {
       data: stripDefaults({
         ...data,
         list: compressList(data.list),
-        inventory: compressInventory(data.inventory)
+        inventory: compressInventory(data.inventory),
+        notes: data.notes
       })
     };
     const json = JSON.stringify(obj);
@@ -999,8 +1009,12 @@ function defaultTraits() {
         privMoney: defaultMoney(),
         possessionMoney: defaultMoney(),
         possessionRemoved: 0,
+        notes: defaultNotes(),
         ...data
       };
+      if(!store.data[id].notes){
+        store.data[id].notes = defaultNotes();
+      }
       store.current = id;
       save(store);
       return id;
