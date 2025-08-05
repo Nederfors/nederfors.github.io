@@ -402,6 +402,32 @@ function initCharacter() {
         const lvlSel = liEl.querySelector('select.level');
         let   lvl = lvlSel ? lvlSel.value : null;
         if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
+        if(isMonstrousTrait(p)){
+          const baseName = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
+          const baseRace = before.find(isRas)?.namn;
+          const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
+          const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
+          const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
+          const hamLvl = storeHelper.abilityLevel(before, 'Hamnskifte');
+          const bloodRaces = before.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
+          let monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
+            (before.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
+            (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
+            (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
+            (baseRace === 'Rese' && baseName === 'Robust') ||
+            (before.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
+            ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && baseName === 'Diminutiv') ||
+            (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen','Pansar'].includes(baseName)) ||
+            (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration','Robust'].includes(baseName));
+          if(!monsterOk){
+            if(!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?'))
+              return;
+          }
+          if (storeHelper.hamnskifteNoviceLimit(before, p, lvl)) {
+            alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
+            return;
+          }
+        }
         if(name==='Råstyrka'){
           const robust=before.find(x=>x.namn==='Robust');
           const hasRobust=!!robust && (robust.nivå===undefined || robust.nivå!=='');
@@ -420,7 +446,8 @@ function initCharacter() {
         if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
           return;
       }
-      if(isMonstrousTrait(p) && before.some(x=>x.namn==='Mörkt blod')){
+      const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
+      if(isMonstrousTrait(p) && storeHelper.DARK_BLOOD_TRAITS.includes(baseRem) && before.some(x=>x.namn==='Mörkt blod')){
         if(!confirm(name+' hänger ihop med Mörkt blod. Ta bort ändå?'))
           return;
       }
