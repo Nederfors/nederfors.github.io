@@ -104,6 +104,8 @@ class SharedToolbar extends HTMLElement {
           <button id="exportCharPdf" class="char-btn">Exportera PDF</button>
         </div>
 
+        <a id="notesLink" class="char-btn icon" title="Anteckningar" href="notes.html">📜</a>
+
         <div class="filter-group">
           <label for="charSelect">Välj rollperson</label>
           <select id="charSelect"></select>
@@ -408,8 +410,16 @@ class SharedToolbar extends HTMLElement {
 
   initSwitchLink() {
     const role = document.body.dataset.role;
-    this.shadowRoot.getElementById('switchRole').href =
-      role === 'index' ? 'character.html' : 'index.html';
+    const link = this.shadowRoot.getElementById('switchRole');
+    if (role === 'notes') {
+      link.href = 'index.html';
+      link.textContent = '↩️';
+      link.title = 'Till index';
+    } else {
+      link.href = role === 'index' ? 'character.html' : 'index.html';
+      link.textContent = '🔄';
+      link.title = 'Byt vy';
+    }
   }
 }
 
