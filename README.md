@@ -7,6 +7,7 @@ A static web app for managing characters and inventory for the Symbaroum RPG. Op
 - [Funktioner](#funktioner)
 - [Projektstruktur](#projektstruktur)
 - [Export och import av rollpersoner](#export-och-import-av-rollpersoner)
+- [Anteckningssidan](#anteckningssidan)
 - [Användarmanual](#användarmanual)
 - [Utveckling och bidrag](#utveckling-och-bidrag)
 
@@ -35,6 +36,11 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 ## Export och import av rollpersoner
 
 Use the **Exportera** button in the filter panel to copy a short code representing the current character. Codes are compressed and only contain references to the built‑in database. The **Importera** button lets you paste such a code to recreate the character (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
+
+## Anteckningssidan
+
+`notes.html` är en fristående sida där du kan skriva bakgrund och övriga anteckningar för rollpersonen. All text sparas i webbläsarens lagring och inkluderas automatiskt vid export och import av rollpersonen.
+
 ## Användarmanual
 
 ### 1. Kom igång

@@ -307,7 +307,7 @@ class SharedToolbar extends HTMLElement {
         <div class="help-content">
           <h3>Verktygsrad</h3>
           <p>
-            <strong>🔄</strong> Byter mellan index- och rollpersons-vy.<br>
+            <strong>🔄/↩️</strong> Byter mellan index- och rollpersons-vy. Anteckningssidan använder ↩️ för att gå tillbaka.<br>
             <strong>🎒</strong> \u00d6ppnar inventariet.<br>
             <strong>📊</strong> \u00d6ppnar egenskaper.<br>
             <strong>Rensa filter</strong> nollst\u00e4ller filtren.<br>
@@ -319,6 +319,7 @@ class SharedToolbar extends HTMLElement {
             <strong>Ta bort rollperson</strong> raderar vald karakt\u00e4r.<br>
             <strong>Exportera</strong> kopierar karakt\u00e4ren som en delbar kod.<br>
             <strong>Importera</strong> \u00e5terst\u00e4ller en sparad karakt\u00e4r från kopierad kod.<br>
+            <strong>📜</strong> \u00f6ppnar anteckningssidan.<br>
             <strong>⚒️/⚗️/🏺</strong> v\u00e4ljer niv\u00e5 p\u00e5 smed, alkemist och artefaktmakare för prisreducieringar.<br>
             <strong>🔭</strong> l\u00e5ter tillagda filter utöka sökningen istället för att göra den snävare.<br>
             <strong>🤏</strong> v\u00e4xlar till kompakt vy.<br>
