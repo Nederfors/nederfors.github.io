@@ -167,13 +167,6 @@ class SharedToolbar extends HTMLElement {
             </li>
             <li>
               <span class="toggle-desc">
-                <span class="toggle-question">Exportera som PDF?</span>
-                <span class="toggle-note">Laddar ner karaktärsbladet som PDF.</span>
-              </span>
-              <button id="exportCharPdf" class="party-toggle" title="Exportera till PDF">🪪</button>
-            </li>
-            <li>
-              <span class="toggle-desc">
                 <span class="toggle-question">Behöver du hjälp?</span>
                 <span class="toggle-note">Öppnar en översikt av alla knappar.</span>
               </span>
