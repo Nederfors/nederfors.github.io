@@ -21,7 +21,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 ## Funktioner
 - Hantera flera rollpersoner med erfarenhetspoäng, inventarie och specialförmågor.
 - Filtrera listor på taggar och sökord.
-- Paneler för inventarie (`🎒`) och egenskaper (`📊`).
+- Paneler för inventarie (`🎒`), egenskaper (`📊`) och anteckningar (`📜`).
 - Export och import av rollpersoner via komprimerade koder.
 - All information lagras i webbläsarens `localStorage`, vilket gör att dina val finns kvar mellan besök.
 
@@ -34,7 +34,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 
 ## Export och import av rollpersoner
 
-Use the **Exportera** button in the filter panel to copy a short code representing the current character. Codes are compressed and only contain references to the built‑in database. The **Importera** button lets you paste such a code to recreate the character (requires that the database is loaded).
+Use the **Exportera** button in the filter panel to copy a short code representing the current character. Codes are compressed and only contain references to the built‑in database. The **Importera** button lets you paste such a code to recreate the character (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
 ## Användarmanual
 
 ### 1. Kom igång
@@ -49,6 +49,7 @@ Verktygsraden innehåller:
 - `XP:` visar hur mycket erfarenhet du har använt. Detta uppdateras automatiskt.
 - `🎒` öppnar inventariet.
 - `📊` öppnar egenskapspanelen.
+- `📜` öppnar anteckningspanelen.
 - `Rensa filter` tar bort alla aktiva sökord och valda filter.
 - `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
 
@@ -77,7 +78,10 @@ I listan för varje föremål finns knappar för att öka/minska antal, markera 
 - Panelen räknar ut använd XP, kostnader från artefakter samt eventuell korruption.
 - Du kan även se en lista över uppnådda totala poäng i olika kategorier.
 
-### 7. Arbeta med listorna
+### 7. Anteckningspanelen
+`📜` låter dig skriva fria anteckningar om rollpersonen. Dessa sparas tillsammans med karaktären och följer med vid export och import om något fält innehåller text.
+
+### 8. Arbeta med listorna
 Både i index-vyn och i din karaktär visas poster som kort.
 - **Lägg till** eller `+` lägger till posten.
 - `−` tar bort en instans av posten eller hela raden om det bara finns en.
@@ -91,10 +95,10 @@ Både i index-vyn och i din karaktär visas poster som kort.
 - Naturligt vapen, Pansar, Regeneration och Robust kan bara tas en gång och visas som separata poster.
 - Monstruösa särdrag kan inte staplas.
 
-### 8. Export och import
-Se avsnittet ovan. Exportera kopierar all data för karaktären som en sträng i urklipp. Importera klistrar in en tidigare sträng och återställer karaktären. All data sparas i webblagring så inget backend behövs.
+### 9. Export och import
+Se avsnittet ovan. Exportera kopierar all data för karaktären som en sträng i urklipp. Importera klistrar in en tidigare sträng och återställer karaktären. Anteckningar följer med så länge minst ett fält innehåller text. All data sparas i webblagring så inget backend behövs.
 
-### 9. Tips och tricks
+### 10. Tips och tricks
 - Alla dina val sparas automatiskt i webblagringen på datorn.
 - Klicka på taggar i en lista för att snabbt filtrera på samma typ eller arketyp.
 - Hjälpmenyn (ℹ️) innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
