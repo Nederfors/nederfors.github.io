@@ -7,14 +7,21 @@ window.exportPdf = {
 
   async loadAssets() {
     if (this.pdfDoc) return;
-    const [pdfBytes, templateJson, typesJson, fontBytes] = await Promise.all([
-      fetch('export/symbaroum_rollformular.pdf').then(r => r.arrayBuffer()),
-      fetch('export/symbaroum_pdf_fields_template.json').then(r => r.json()),
-      fetch('export/symbaroum_pdf_fields_types.json').then(r => r.json()),
-      // "Libre Caslon Display" är licensierad under SIL Open Font License
-      // och kan distribueras tillsammans med projektet. Se Libre_Caslon_Display/OFL.txt.
-      fetch('Libre_Caslon_Display/LibreCaslonDisplay-Regular.ttf').then(r => r.arrayBuffer())
-    ]);
+    let pdfBytes, templateJson, typesJson, fontBytes;
+    try {
+      [pdfBytes, templateJson, typesJson, fontBytes] = await Promise.all([
+        fetch('export/symbaroum_rollformular.pdf').then(r => r.arrayBuffer()),
+        fetch('export/symbaroum_pdf_fields_template.json').then(r => r.json()),
+        fetch('export/symbaroum_pdf_fields_types.json').then(r => r.json()),
+        // "Libre Caslon Display" är licensierad under SIL Open Font License
+        // och kan distribueras tillsammans med projektet. Se Libre_Caslon_Display/OFL.txt.
+        fetch('Libre_Caslon_Display/LibreCaslonDisplay-Regular.ttf').then(r => r.arrayBuffer())
+      ]);
+    } catch (err) {
+      console.error('Kunde inte ladda PDF-resurser', err);
+      alert('Kunde inte ladda PDF-resurser.');
+      return;
+    }
     if (!window.PDFLib) {
       console.error('PDFLib är inte tillgängligt. Kan inte exportera PDF.');
       return;
