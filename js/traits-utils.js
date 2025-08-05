@@ -120,6 +120,7 @@
     if (forced) return forced;
 
     const ABILITY_TRAITS = [
+      { ability: 'Dansande vapen', level: 3, trait: 'Viljestark' },
       { ability: 'Fint', level: 2, trait: 'Diskret' },
       { ability: ['Sjätte Sinne', 'Sjätte sinne'], level: 2, trait: 'Vaksam' },
       { ability: 'Taktiker', level: 2, trait: 'Listig' },
