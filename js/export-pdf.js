@@ -65,6 +65,19 @@ window.exportPdf = {
     this.setField('Total erfarenhet', totalXp);
     this.setField('Oanvänd erfarenhet', unusedXp);
 
+    const notes = storeHelper.getNotes(store);
+    this.setField('Skugga', notes.shadow);
+    this.setField('Ålder', notes.age);
+    this.setField('Utseende', notes.appearance);
+    this.setField('Manér', notes.manner);
+    this.setField('Citat', notes.quote);
+    this.setField('Personligt mål', notes.goal);
+    this.setField('Drivkrafter', notes.drives);
+    this.setField('Lojaliteter', notes.loyalties);
+    this.setField('Älskar', notes.likes);
+    this.setField('Hatar', notes.hates);
+    this.setField('Bakgrund', notes.background);
+
     Object.entries(traits).forEach(([k, v]) => this.setField(k, v));
 
     let truncated = false;
