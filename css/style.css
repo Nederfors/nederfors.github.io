@@ -1061,3 +1061,46 @@ select.level {
   overflow-y: auto;
 }
 
+/* ---------- Form-grid för anteckningar på karaktärsbladet ---------- */
+.field-row {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: .4rem;
+  color: var(--subtxt);
+  font-size: .95rem;
+}
+
+.form-group input,
+.form-group textarea {
+  margin-bottom: .6rem;
+}
+
+/* Större textfält för ”Bakgrund” */
+textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+/* Knapprad längst ner */
+.char-btn-row {
+  margin-top: 1.2rem;
+}
+
+/* Mobil: stapla kolumnerna */
+@media (max-width: 600px) {
+  .field-row {
+    flex-direction: column;
+  }
+}
+
+
