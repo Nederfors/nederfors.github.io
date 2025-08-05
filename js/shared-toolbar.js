@@ -101,7 +101,6 @@ class SharedToolbar extends HTMLElement {
           <button id="deleteChar" class="char-btn danger">Ta bort rollperson</button>
           <button id="exportChar" class="char-btn">Exportera</button>
           <button id="importChar" class="char-btn">Importera</button>
-          <button id="exportCharPdf" class="char-btn">Exportera PDF</button>
         </div>
 
         <a id="notesLink" class="char-btn icon" title="Anteckningar" href="notes.html">📜</a>
@@ -165,6 +164,13 @@ class SharedToolbar extends HTMLElement {
                 <span class="toggle-note">Välj karaktärsdrag via meny.</span>
               </span>
               <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
+            </li>
+            <li>
+              <span class="toggle-desc">
+                <span class="toggle-question">Exportera som PDF?</span>
+                <span class="toggle-note">Laddar ner karaktärsbladet som PDF.</span>
+              </span>
+              <button id="exportCharPdf" class="party-toggle" title="Exportera till PDF">🪪</button>
             </li>
             <li>
               <span class="toggle-desc">
