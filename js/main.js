@@ -179,6 +179,7 @@ function boot() {
   if (dom.traits) { renderTraits(); bindTraits(); }
   if (ROLE === 'index')     initIndex();
   if (ROLE === 'character') initCharacter();
+  if (ROLE === 'notes')     initNotes();
 }
 
 /* ===========================================================

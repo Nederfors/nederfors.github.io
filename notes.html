@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>Anteckningar</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/pdf-lib.min.js" defer></script>
+  <script src="js/export-pdf.js" defer></script>
+  <script src="js/text-format.js" defer></script>
+  <script src="js/lz-string.min.js" defer></script>
+  <script src="js/store.js"          defer></script>
+  <script src="js/utils.js"          defer></script>
+  <script src="js/inventory-utils.js" defer></script>
+  <script src="js/traits-utils.js" defer></script>
+  <script src="js/shared-toolbar.js" defer></script>
+  <script src="js/yrke-panel.js"  defer></script>
+  <script src="js/elite-req.js"   defer></script>
+  <script src="js/notes-view.js"  defer></script>
+  <script src="js/main.js"        defer></script>
+  <script src="js/exceptionellt.js" defer></script>
+  <script src="js/djurmask.js" defer></script>
+  <script src="js/beastform.js" defer></script>
+  <script src="js/bloodbond.js" defer></script>
+  <script src="js/monsterlard.js" defer></script>
+</head>
+<body data-role="notes">
+
+  <div class="panel">
+    <h1 class="app-title">Anteckningar</h1>
+    <form id="characterForm">
+
+      <!-- -------- Kortfattat -------- -->
+      <h3>Kortfattat</h3>
+      <div class="field-row">
+        <div class="form-group">
+          <label for="shadow">Skugga</label>
+          <input type="text" id="shadow" name="shadow" placeholder="Ex. ’Smygaren’">
+        </div>
+        <div class="form-group">
+          <label for="age">Ålder</label>
+          <input type="text" id="age" name="age" placeholder="T.ex. 34">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="form-group">
+          <label for="appearance">Utseende</label>
+          <input type="text" id="appearance" name="appearance" placeholder="Kort beskrivning">
+        </div>
+        <div class="form-group">
+          <label for="manner">Manér</label>
+          <input type="text" id="manner" name="manner" placeholder="Särskilda drag">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="quote">Citat</label>
+        <input type="text" id="quote" name="quote" placeholder="Signaturcitat">
+      </div>
+
+      <!-- -------- Mellanlångt -------- -->
+      <h3>Mellanlångt</h3>
+      <div class="field-row">
+        <div class="form-group">
+          <label for="goal">Personligt mål</label>
+          <input type="text" id="goal" name="goal" placeholder="Livsmål, ambition">
+        </div>
+        <div class="form-group">
+          <label for="drives">Drivkrafter</label>
+          <input type="text" id="drives" name="drives" placeholder="Vad får dem att agera?">
+        </div>
+      </div>
+      <div class="field-row">
+        <div class="form-group">
+          <label for="loyalties">Lojaliteter</label>
+          <input type="text" id="loyalties" name="loyalties" placeholder="T.ex. familj, gille">
+        </div>
+        <div class="form-group">
+          <label for="likes">Älskar</label>
+          <input type="text" id="likes" name="likes" placeholder="T.ex. skogar, böcker">
+        </div>
+      </div>
+      <div class="form-group">
+        <label for="hates">Hatar</label>
+        <input type="text" id="hates" name="hates" placeholder="T.ex. orättvisa, korruption">
+      </div>
+
+      <!-- -------- Lång text -------- -->
+      <h3>Bakgrund</h3>
+      <div class="form-group">
+        <label for="background">Berätta om bakgrund</label>
+        <textarea id="background" name="background" rows="6" placeholder="Här kan du skriva längre text…"></textarea>
+      </div>
+
+      <!-- -------- Knappar -------- -->
+      <div class="char-btn-row">
+        <button type="submit" class="char-btn">Spara</button>
+        <button type="reset"  class="char-btn danger">Rensa</button>
+      </div>
+
+    </form>
+  </div>
+
+  <shared-toolbar></shared-toolbar>
+
+</body>
+</html>
