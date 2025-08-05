@@ -111,6 +111,9 @@ function initCharacter() {
     if(storeHelper.abilityLevel(list,'Dominera') >= 1){
       cond.push('Övertygande som träffsäker i närstrid');
     }
+    if(storeHelper.abilityLevel(list,'Ledare') >= 1){
+      cond.push('Övertygande istället för Viljestark vid mystiska förmågor och ritualer');
+    }
     if(!cond.length) cond.push('Inga särskilda ersättningar');
 
     summaryContent.innerHTML = `

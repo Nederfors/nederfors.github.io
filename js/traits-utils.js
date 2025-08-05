@@ -226,6 +226,9 @@
       if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Dominera') >= 1) {
         extra += '<div class="trait-extra">Kan användas som träffsäker för attacker i närstrid</div>';
       }
+      if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Ledare') >= 1) {
+        extra += '<div class="trait-extra">Kan användas istället för Viljestark vid användandet av mystiska förmågor och ritualer</div>';
+      }
       if (k === defTrait) {
         const defHtml = defs.map(d => `<div class="trait-extra">Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`).join('');
         extra += defHtml;
