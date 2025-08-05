@@ -28,6 +28,11 @@ window.exportPdf = {
     }
     const { PDFDocument } = window.PDFLib;
     this.pdfDoc = await PDFDocument.load(pdfBytes);
+    if (window.fontkit) {
+      this.pdfDoc.registerFontkit(window.fontkit);
+    } else {
+      console.warn('fontkit saknas; använder standardteckensnitt');
+    }
     this.font = await this.pdfDoc.embedFont(fontBytes);
     this.form = this.pdfDoc.getForm();
     this.form.updateFieldAppearances(this.font);
