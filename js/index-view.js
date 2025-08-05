@@ -314,7 +314,7 @@ function initIndex() {
           const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
           const bloodRaces = list.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
           monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
-            list.some(x => x.namn === 'Mörkt blod') ||
+            (list.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
             (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
             (baseRace === 'Rese' && baseName === 'Robust') ||
@@ -456,7 +456,8 @@ function initIndex() {
           if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
             return;
         }
-        if(isMonstrousTrait(p) && before.some(x=>x.namn==='Mörkt blod')){
+        const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
+        if(isMonstrousTrait(p) && storeHelper.DARK_BLOOD_TRAITS.includes(baseRem) && before.some(x=>x.namn==='Mörkt blod')){
           if(!confirm(p.namn+' hänger ihop med Mörkt blod. Ta bort ändå?'))
             return;
         }
