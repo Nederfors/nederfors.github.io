@@ -580,6 +580,36 @@ function defaultTraits() {
     save(store);
   }
 
+  /* ---------- 6b. Anteckningar ---------- */
+  function defaultNotes() {
+    return {
+      shadow: '',
+      age: '',
+      appearance: '',
+      manner: '',
+      quote: '',
+      goal: '',
+      drives: '',
+      loyalties: '',
+      likes: '',
+      hates: '',
+      background: ''
+    };
+  }
+
+  function getNotes(store) {
+    if (!store.current) return defaultNotes();
+    const data = store.data[store.current] || {};
+    return { ...defaultNotes(), ...(data.notes || {}) };
+  }
+
+  function setNotes(store, notes) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].notes = { ...defaultNotes(), ...notes };
+    save(store);
+  }
+
   /* ---------- 6. XP-hantering ---------- */
   const XP_LADDER = { Novis: 10, Gesäll: 30, Mästare: 60 };
 
@@ -989,6 +1019,8 @@ function defaultTraits() {
     setInventory,
     getCustomEntries,
     setCustomEntries,
+    getNotes,
+    setNotes,
     getMoney,
     setMoney,
     getBonusMoney,
