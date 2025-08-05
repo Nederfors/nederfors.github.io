@@ -18,6 +18,8 @@
     Object.entries(HAMNSKIFTE_NAMES).map(([k,v]) => [v,k])
   );
 
+  const DARK_BLOOD_TRAITS = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
+
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
     return {
@@ -108,7 +110,6 @@
   function applyDarkBloodEffects(list) {
     const hasDark = list.some(x => x.namn === 'Mörkt blod');
     const idxBest = list.findIndex(x => x.namn === 'Bestialisk');
-    const extra = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
 
     if (hasDark) {
       if (idxBest < 0) {
@@ -211,9 +212,9 @@
     }
 
     if (name === 'M\u00f6rkt blod') {
-      const extras = ['Naturligt vapen','Pansar','Robust','Regeneration','Vingar'];
       list.forEach(it => {
-        if (isMonstrousTrait(it) || it.namn === 'Bestialisk' || extras.includes(it.namn)) {
+        const base = HAMNSKIFTE_BASE[it.namn] || it.namn;
+        if (it.namn === 'Bestialisk' || DARK_BLOOD_TRAITS.includes(base)) {
           if (it.namn !== name) out.push(it.namn);
         }
       });
@@ -763,7 +764,11 @@ function defaultTraits() {
 
   function calcEntryXP(entry, list) {
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
-    if (types.includes('nackdel')) return -5;
+    if (types.includes('nackdel')) {
+      const hasDark = (list || []).some(x => x.namn === 'Mörkt blod');
+      if (entry.namn === 'Bestialisk' && hasDark) return 0;
+      return -5;
+    }
     let xp = 0;
     if (
       entry.nivåer &&
@@ -1086,6 +1091,7 @@ function defaultTraits() {
     deleteAllCharacters,
     getDependents,
     HAMNSKIFTE_NAMES,
-    HAMNSKIFTE_BASE
+    HAMNSKIFTE_BASE,
+    DARK_BLOOD_TRAITS
   };
 })(window);
