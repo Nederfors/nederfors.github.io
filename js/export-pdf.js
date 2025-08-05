@@ -7,18 +7,21 @@ window.exportPdf = {
 
   async loadAssets() {
     if (this.pdfDoc) return;
-    const [pdfBytes, templateJson, typesJson] = await Promise.all([
+    const [pdfBytes, templateJson, typesJson, fontBytes] = await Promise.all([
       fetch('export/symbaroum_rollformular.pdf').then(r => r.arrayBuffer()),
       fetch('export/symbaroum_pdf_fields_template.json').then(r => r.json()),
-      fetch('export/symbaroum_pdf_fields_types.json').then(r => r.json())
+      fetch('export/symbaroum_pdf_fields_types.json').then(r => r.json()),
+      // "Libre Caslon Display" är licensierad under SIL Open Font License
+      // och kan distribueras tillsammans med projektet. Se Libre_Caslon_Display/OFL.txt.
+      fetch('Libre_Caslon_Display/LibreCaslonDisplay-Regular.ttf').then(r => r.arrayBuffer())
     ]);
     if (!window.PDFLib) {
       console.error('PDFLib är inte tillgängligt. Kan inte exportera PDF.');
       return;
     }
-    const { PDFDocument, StandardFonts } = window.PDFLib;
+    const { PDFDocument } = window.PDFLib;
     this.pdfDoc = await PDFDocument.load(pdfBytes);
-    this.font = await this.pdfDoc.embedFont(StandardFonts.Helvetica);
+    this.font = await this.pdfDoc.embedFont(fontBytes);
     this.form = this.pdfDoc.getForm();
     this.form.updateFieldAppearances(this.font);
     this.fieldTemplate = templateJson;
@@ -31,8 +34,15 @@ window.exportPdf = {
     try {
       if (type === '/Tx') {
         const field = this.form.getTextField(name);
-        field.setText(String(value ?? ''));
-        field.updateAppearances(this.font);
+        const text = String(value ?? '');
+        field.setText(text);
+        const width = field.getWidth();
+        const height = field.getHeight();
+        let fontSize = 12;
+        while (fontSize > 4 && (this.font.widthOfTextAtSize(text, fontSize) > width || this.font.heightAtSize(fontSize) > height)) {
+          fontSize -= 0.5;
+        }
+        field.updateAppearances(this.font, { fontSize });
       } else if (type === '/Btn') {
         const field = this.form.getCheckBox(name);
         value ? field.check() : field.uncheck();
