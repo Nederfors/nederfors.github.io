@@ -1,6 +1,6 @@
 (function(window){
   const fields = ['shadow','age','appearance','manner','quote','faction','goal','drives','loyalties','likes','hates','background'];
-  let form, editBtn, clearBtn, btnRow;
+  let form, editBtn, clearBtn;
 
   function showView(){
     const notes = storeHelper.getNotes(store);
@@ -20,7 +20,6 @@
     form.classList.remove('hidden');
     form.classList.add('view-mode');
     editBtn.classList.remove('hidden');
-    btnRow.classList.add('hidden');
   }
 
   function showEdit(){
@@ -35,7 +34,6 @@
       if(typeof autoResize === 'function') autoResize(el);
     });
     editBtn.classList.add('hidden');
-    btnRow.classList.remove('hidden');
     form.classList.remove('view-mode');
   }
 
@@ -44,7 +42,6 @@
     if(!form) return;
     editBtn = document.getElementById('editBtn');
     clearBtn = document.getElementById('clearBtn');
-    btnRow = form.querySelector('.char-btn-row');
 
     showView();
 
