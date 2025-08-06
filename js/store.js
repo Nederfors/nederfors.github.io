@@ -592,6 +592,7 @@ function defaultTraits() {
       age: '',
       appearance: '',
       manner: '',
+      faction: '',
       quote: '',
       goal: '',
       drives: '',
