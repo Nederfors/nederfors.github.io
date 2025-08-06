@@ -169,6 +169,7 @@ function boot() {
   invUtil.sortAllInventories();
   refreshCharSelect();
   bindToolbar();
+  bindTempExportButtons(); // TEMP
   invUtil.renderInventory();
   invUtil.bindInv();
   invUtil.bindMoney();
@@ -348,6 +349,54 @@ function bindToolbar() {
       const val = dom.entryViewToggle.classList.toggle('active');
       storeHelper.setCompactEntries(store, val);
       if (window.indexViewUpdate) window.indexViewUpdate();
+    });
+  }
+}
+
+// TEMP: extra compression export buttons on index page
+function bindTempExportButtons() {
+  const lzmaBtn = document.getElementById('exportLZMA');
+  if (lzmaBtn) {
+    lzmaBtn.addEventListener('click', async () => {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      try {
+        const code = await storeHelper.exportCharacterCodeLZMA(store, store.current);
+        copyToClipboard(code)
+          .then(() => alert('Karakt\u00e4rskoden har kopierats (LZMA).'))
+          .catch(() => prompt('Kopiera koden nedan:', code));
+      } catch {
+        alert('Export misslyckades.');
+      }
+    });
+  }
+
+  const brotliBtn = document.getElementById('exportBrotli');
+  if (brotliBtn) {
+    brotliBtn.addEventListener('click', async () => {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      try {
+        const code = await storeHelper.exportCharacterCodeBrotli(store, store.current);
+        copyToClipboard(code)
+          .then(() => alert('Karakt\u00e4rskoden har kopierats (Brotli).'))
+          .catch(() => prompt('Kopiera koden nedan:', code));
+      } catch {
+        alert('Export misslyckades.');
+      }
+    });
+  }
+
+  const zstdBtn = document.getElementById('exportZstd');
+  if (zstdBtn) {
+    zstdBtn.addEventListener('click', async () => {
+      if (!store.current) return alert('Ingen rollperson vald.');
+      try {
+        const code = await storeHelper.exportCharacterCodeZstd(store, store.current);
+        copyToClipboard(code)
+          .then(() => alert('Karakt\u00e4rskoden har kopierats (Zstd).'))
+          .catch(() => prompt('Kopiera koden nedan:', code));
+      } catch {
+        alert('Export misslyckades.');
+      }
     });
   }
 }
