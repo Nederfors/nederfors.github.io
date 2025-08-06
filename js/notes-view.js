@@ -1,6 +1,6 @@
 (function(window){
   const fields = ['shadow','age','appearance','manner','quote','faction','goal','drives','loyalties','likes','hates','background'];
-  let form, previewBtn, editBtn, notesDisplay;
+  let form, editBtn, clearBtn, notesDisplay;
 
   const esc = str => (str||'').replace(/[&<>"']/g, c=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','\'':'&#39;'
@@ -28,17 +28,12 @@
     `;
   }
 
-  function showPreview(){
-    const obj={};
-    fields.forEach(id=>{
-      const el=form.querySelector('#'+id);
-      obj[id]=el?el.value:'';
-    });
-    storeHelper.setNotes(store,obj);
-    notesDisplay.innerHTML = renderView(obj);
-    notesDisplay.appendChild(editBtn);
+  function showView(){
+    const notes = storeHelper.getNotes(store);
+    notesDisplay.innerHTML = renderView(notes);
     form.classList.add('hidden');
     notesDisplay.classList.remove('hidden');
+    editBtn.classList.remove('hidden');
   }
 
   function showEdit(){
@@ -49,20 +44,17 @@
     });
     form.classList.remove('hidden');
     notesDisplay.classList.add('hidden');
+    editBtn.classList.add('hidden');
   }
 
   function initNotes() {
     form = document.getElementById('characterForm');
     if(!form) return;
-    previewBtn = document.getElementById('previewBtn');
     editBtn = document.getElementById('editBtn');
+    clearBtn = document.getElementById('clearBtn');
     notesDisplay = document.getElementById('notesDisplay');
 
-    const notes = storeHelper.getNotes(store);
-    fields.forEach(id=>{
-      const el=form.querySelector('#'+id);
-      if(el) el.value=notes[id]||'';
-    });
+    showView();
 
     form.addEventListener('submit',e=>{
       e.preventDefault();
@@ -72,10 +64,16 @@
         obj[id]=el?el.value:'';
       });
       storeHelper.setNotes(store,obj);
-      alert('Anteckningar sparade!');
+      showView();
     });
 
-    if(previewBtn) previewBtn.onclick = showPreview;
+    if(clearBtn) clearBtn.onclick = ()=>{
+      fields.forEach(id=>{
+        const el=form.querySelector('#'+id);
+        if(el) el.value='';
+      });
+    };
+
     if(editBtn) editBtn.onclick = showEdit;
   }
 

@@ -108,7 +108,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 /* Rad för knappar i filterpanelen */
 .char-btn-row {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
   gap: .4rem;
   margin-bottom: .6rem;
 }
