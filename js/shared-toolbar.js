@@ -308,49 +308,53 @@ class SharedToolbar extends HTMLElement {
         <div class="help-content">
           <h3>Verktygsrad</h3>
           <p>
-            <strong>🔄/↩️</strong> Byter mellan index- och rollpersons-vy. Anteckningssidan använder ↩️ för att gå tillbaka.<br>
-            <strong>🎒</strong> \u00d6ppnar inventariet.<br>
-            <strong>📊</strong> \u00d6ppnar egenskaper.<br>
-            <strong>Rensa filter</strong> nollst\u00e4ller filtren.<br>
-            <strong>⚙️</strong> \u00d6ppnar filtermenyn.
+            <strong>🧝 / 📇</strong> växlar mellan index och rollperson (ikonen ändras beroende på sida).<br>
+            <strong>📜 / 📇</strong> öppnar anteckningssidan (ikonen ändras beroende på sida).<br>
+            <strong>🎒</strong> öppnar inventariepanelen.<br>
+            <strong>📊</strong> öppnar egenskapspanelen.<br>
+            <strong>Rensa filter</strong> nollställer alla filter.<br>
+            <strong>⚙️</strong> öppnar filtermenyn.
           </p>
           <h3>Filtermenyn</h3>
           <p>
-            <strong>Ny rollperson</strong> skapar en ny karakt\u00e4r.<br>
-            <strong>Ta bort rollperson</strong> raderar vald karakt\u00e4r.<br>
-            <strong>Exportera</strong> kopierar karakt\u00e4ren som en delbar kod.<br>
-            <strong>Importera</strong> \u00e5terst\u00e4ller en sparad karakt\u00e4r från kopierad kod.<br>
-            <strong>📜</strong> \u00f6ppnar anteckningssidan.<br>
-            <strong>⚒️/⚗️/🏺</strong> v\u00e4ljer niv\u00e5 p\u00e5 smed, alkemist och artefaktmakare för prisreducieringar.<br>
-            <strong>🔭</strong> l\u00e5ter tillagda filter utöka sökningen istället för att göra den snävare.<br>
-            <strong>🤏</strong> v\u00e4xlar till kompakt vy.<br>
-            <strong>🏃</strong> l\u00e5ter dig v\u00e4lja f\u00f6rsvarskarakt\u00e4rsdrag manuellt.<br>
-            <strong>ℹ️</strong> visar denna hj\u00e4lpmeny.
+            <strong>Ny rollperson</strong> skapar en ny karaktär.<br>
+            <strong>Kopiera rollperson</strong> duplicerar den valda karaktären.<br>
+            <strong>Byt namn</strong> ändrar karaktärens namn.<br>
+            <strong>Ta bort rollperson</strong> raderar karaktären.<br>
+            <strong>Exportera</strong> kopierar karaktären som kod.<br>
+            <strong>Importera</strong> återställer en karaktär från kod.<br>
+            <strong>⚒️ / ⚗️ / 🏺</strong> anger nivå på smed, alkemist och artefaktmakare.<br>
+            <strong>🔭</strong> utvidgar sökningen (OR-filter).<br>
+            <strong>🤏</strong> växlar kompakt listvy.<br>
+            <strong>🏃</strong> låter dig välja försvarskaraktärsdrag manuellt.<br>
+            <strong>ℹ️</strong> visar denna hjälpmeny.
           </p>
           <h3>Inventariepanelen</h3>
           <p>
-            <strong>Nytt f\u00f6rem\u00e5l</strong> l\u00e4gger till eget f\u00f6rem\u00e5l ifall din karaktär har specialbehov, t.ex för artefakter.<br>
+            <strong>Nytt föremål</strong> lägger till eget föremål.<br>
             <strong>Hantera pengar</strong> justerar pengar.<br>
-            <strong>Rensa inventarie</strong> tar bort all utrustning.
+            <strong>Rensa inventarie</strong> tömmer inventariet.
           </p>
           <h3>Egenskapspanelen</h3>
-          <p>
-            H\u00e4r kan du ange total erfarenhet och se summering av valda f\u00f6rm\u00e5gor.
-          </p>
+          <p>Ange total XP och få en summering av valda förmågor.</p>
           <h3>Rollpersonspanelen</h3>
+          <p><strong>📋</strong> visar en sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</p>
+          <h3>Anteckningssidan</h3>
           <p>
-            <strong>📋</strong> visar en sammanfattning av f\u00f6rsvar, korruption, b\u00e4rkapacitet, h\u00e4lsa och tr\u00e4ffs\u00e4kerhet.<br>
+            <strong>✏️ Redigera</strong> växlar mellan läs- och redigeringsläge.<br>
+            <strong>Sudda</strong> rensar alla fält.<br>
+            <strong>Spara</strong> sparar anteckningarna.
           </p>
           <h3>Listor och inventarie</h3>
           <p>
-            <strong>L\u00e4gg till</strong> eller <strong>+</strong> l\u00e4gger till posten till karaktären / inventariet.<br>
-            <strong>−</strong> minskar antal eller tar bort posten helt om det bara finns en kvar.<br>
-            <strong>Info</strong> visar mer information om inlägget.<br>
-            <strong>K+</strong> låter dig l\u00e4gga till en kvalitet till föremålet från en lista.<br>
-            <strong>K🆓</strong> markerar den kostande kvaliteten längst till vänster som gratis.<br>
-            <strong>🆓</strong> Gör ett föremål gratis, går att använda flera gånger för en stack av föremål.<br>
-            <strong>💔</strong> visar vilka andra aktiva f\u00f6rm\u00e5gor som inte kan anv\u00e4ndas samtidigt.<br>
-            <strong>↔</strong> v\u00e4xlar artefaktens effekt mellan att kosta 1 erfarenhet eller att ge en permanent korruption.<br>
+            <strong>Lägg till / +</strong> lägger till posten.<br>
+            <strong>−</strong> minskar antal eller tar bort posten.<br>
+            <strong>Info</strong> visar detaljer.<br>
+            <strong>K+</strong> lägger till kvalitet.<br>
+            <strong>K🆓</strong> markerar en kostande kvalitet som gratis.<br>
+            <strong>🆓</strong> gör ett föremål gratis.<br>
+            <strong>💔</strong> visar konflikter.<br>
+            <strong>↔</strong> växlar artefaktens kostnad mellan XP och permanent korruption.<br>
             <strong>🗑</strong> tar bort posten helt.
           </p>
         </div>
