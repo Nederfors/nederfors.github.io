@@ -8,6 +8,8 @@
   <link rel="stylesheet" href="css/style.css">
   <script src="js/text-format.js" defer></script>
   <script src="js/lz-string.min.js" defer></script>
+  <!-- TEMP: LZMA library for compression tests -->
+  <script src="https://cdn.jsdelivr.net/npm/lzma@2.3.2/src/lzma.js" defer></script>
   <script src="js/base91.js" defer></script>
   <script src="js/store.js"        defer></script>
   <script src="js/utils.js"        defer></script>
@@ -28,6 +30,13 @@
 <body data-role="index">
 
   <h1 class="app-title">SYMBAROUM V.10</h1>
+
+  <!-- TEMP: Compression test buttons -->
+  <div id="temp-compress-buttons">
+    <button id="exportLZMA">Export LZMA</button>
+    <button id="exportBrotli">Export Brotli</button>
+    <button id="exportZstd">Export Zstd</button>
+  </div>
 
   <div id="activeFilters" class="tags"></div>
 

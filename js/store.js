@@ -991,6 +991,81 @@ function defaultTraits() {
     return toBase91(bytes);
   }
 
+  // TEMP: alternative export using LZMA
+  async function exportCharacterCodeLZMA(store, id) {
+    const charId = id || store.current;
+    if (!charId) return '';
+    const char = store.characters.find(c => c.id === charId);
+    if (!char) return '';
+    const data = store.data[charId] || {};
+    const obj = {
+      name: char.name,
+      data: stripDefaults({
+        ...data,
+        list: compressList(data.list),
+        inventory: compressInventory(data.inventory),
+        notes: data.notes
+      })
+    };
+    const json = JSON.stringify(obj);
+    return await new Promise((resolve, reject) => {
+      const lzma = new LZMA('https://cdn.jsdelivr.net/npm/lzma@2.3.2/src/lzma_worker.js');
+      lzma.compress(json, 9, res => {
+        const bytes = res instanceof Uint8Array ? res : Uint8Array.from(res);
+        resolve(toBase91(bytes));
+      }, err => reject(err));
+    });
+  }
+
+  // TEMP: alternative export using Brotli
+  async function exportCharacterCodeBrotli(store, id) {
+    const charId = id || store.current;
+    if (!charId) return '';
+    const char = store.characters.find(c => c.id === charId);
+    if (!char) return '';
+    const data = store.data[charId] || {};
+    const obj = {
+      name: char.name,
+      data: stripDefaults({
+        ...data,
+        list: compressList(data.list),
+        inventory: compressInventory(data.inventory),
+        notes: data.notes
+      })
+    };
+    const json = JSON.stringify(obj);
+    const mod = await import('https://esm.sh/brotli-wasm@3.0.1');
+    const brotli = await mod.default;
+    const bytes = new TextEncoder().encode(json);
+    const compressed = brotli.compress(bytes, { quality: 11 });
+    return toBase91(new Uint8Array(compressed));
+  }
+
+  // TEMP: alternative export using Zstandard
+  async function exportCharacterCodeZstd(store, id) {
+    const charId = id || store.current;
+    if (!charId) return '';
+    const char = store.characters.find(c => c.id === charId);
+    if (!char) return '';
+    const data = store.data[charId] || {};
+    const obj = {
+      name: char.name,
+      data: stripDefaults({
+        ...data,
+        list: compressList(data.list),
+        inventory: compressInventory(data.inventory),
+        notes: data.notes
+      })
+    };
+    const json = JSON.stringify(obj);
+    const mod = await import('https://esm.sh/@foxglove/wasm-zstd@1.0.1');
+    const zstd = mod.default;
+    await zstd.isLoaded;
+    const bytes = new TextEncoder().encode(json);
+    const compressed = zstd.compress(bytes, 22);
+    return toBase91(new Uint8Array(compressed));
+  }
+
   function importCharacterCode(store, code) {
     try {
       let json;
@@ -1082,6 +1157,9 @@ function defaultTraits() {
     monsterTraitDiscount,
     monsterStackLimit,
     exportCharacterCode,
+    exportCharacterCodeLZMA,   // TEMP
+    exportCharacterCodeBrotli, // TEMP
+    exportCharacterCodeZstd,   // TEMP
     importCharacterCode,
     getPossessionMoney,
     setPossessionMoney,
