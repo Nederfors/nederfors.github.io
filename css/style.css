@@ -113,13 +113,14 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   margin-bottom: .6rem;
 }
 .char-btn-row.three-col {
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 .char-btn-row.three-col + .char-btn-row.three-col {
   margin-top: 0;
 }
 .char-btn-row .char-btn {
   width: 100%;
+  height: 100%;
 }
 
 /* Grupp för partytillhörighet */
