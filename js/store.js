@@ -820,18 +820,16 @@ function defaultTraits() {
 
   /* ---------- Hjälpfunktioner för export ---------- */
 
-  function toBase64(arr) {
-    if (typeof btoa === 'function') {
-      let str = '';
-      arr.forEach(c => { str += String.fromCharCode(c); });
-      return btoa(str);
-    }
-    if (typeof Buffer !== 'undefined') {
-      return Buffer.from(arr).toString('base64');
-    }
-    throw new Error('No base64 encoder available');
+  function toBase91(arr) {
+    return window.base91.encode(arr);
   }
 
+  function fromBase91(str) {
+    const res = window.base91.decode(str);
+    return res instanceof Uint8Array ? res : Uint8Array.from(res);
+  }
+
+  // Legacy Base64 decoder for bakåtkompatibilitet
   function fromBase64(str) {
     if (typeof atob === 'function') {
       const bin = atob(str);
@@ -990,17 +988,22 @@ function defaultTraits() {
     };
     const json = JSON.stringify(obj);
     const bytes = window.LZString.compressToUint8Array(json);
-    return toBase64(bytes);
+    return toBase91(bytes);
   }
 
   function importCharacterCode(store, code) {
     try {
       let json;
       try {
-        const bytes = fromBase64(code);
+        const bytes = fromBase91(code);
         json = window.LZString.decompressFromUint8Array(bytes);
       } catch {
-        json = window.LZString.decompressFromEncodedURIComponent(code);
+        try {
+          const bytes = fromBase64(code);
+          json = window.LZString.decompressFromUint8Array(bytes);
+        } catch {
+          json = window.LZString.decompressFromEncodedURIComponent(code);
+        }
       }
       const obj = JSON.parse(json);
       const id = 'rp' + Date.now();
