@@ -1,6 +1,6 @@
 (function(window){
   const fields = ['shadow','age','appearance','manner','quote','faction','goal','drives','loyalties','likes','hates','background'];
-  let form, editBtn, clearBtn, btnRow;
+  let form, editBtn, clearBtn, saveBtn, btnRow;
 
   function showView(){
     const notes = storeHelper.getNotes(store);
@@ -19,8 +19,10 @@
     });
     form.classList.remove('hidden');
     form.classList.add('view-mode');
+    btnRow.classList.remove('hidden');
     editBtn.classList.remove('hidden');
-    btnRow.classList.add('hidden');
+    clearBtn.classList.remove('hidden');
+    saveBtn.classList.add('hidden');
   }
 
   function showEdit(){
@@ -35,7 +37,8 @@
       if(typeof autoResize === 'function') autoResize(el);
     });
     editBtn.classList.add('hidden');
-    btnRow.classList.remove('hidden');
+    clearBtn.classList.add('hidden');
+    saveBtn.classList.remove('hidden');
     form.classList.remove('view-mode');
   }
 
@@ -44,6 +47,7 @@
     if(!form) return;
     editBtn = document.getElementById('editBtn');
     clearBtn = document.getElementById('clearBtn');
+    saveBtn = document.getElementById('saveBtn');
     btnRow = form.querySelector('.char-btn-row');
 
     showView();
@@ -60,10 +64,8 @@
     });
 
     if(clearBtn) clearBtn.onclick = ()=>{
-      fields.forEach(id=>{
-        const el=form.querySelector('#'+id);
-        if(el) el.value='';
-      });
+      storeHelper.setNotes(store, {});
+      showView();
     };
 
     if(editBtn) editBtn.onclick = showEdit;
