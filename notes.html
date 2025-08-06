@@ -56,6 +56,11 @@
         <input type="text" id="quote" name="quote" placeholder="Signaturcitat">
       </div>
 
+      <div class="form-group">
+        <label for="faction">Fraktion/ätt/klan/stam</label>
+        <input type="text" id="faction" name="faction" placeholder="T.ex. ätt eller klan">
+      </div>
+
       <!-- -------- Mellanlångt -------- -->
       <h3>Mellanlångt</h3>
       <div class="field-row">
@@ -94,9 +99,14 @@
       <div class="char-btn-row">
         <button type="submit" class="char-btn">Spara</button>
         <button type="reset"  class="char-btn danger">Rensa</button>
+        <button type="button" id="previewBtn" class="char-btn">Visa anteckningar</button>
       </div>
 
     </form>
+  </div>
+
+  <div id="notesDisplay" class="panel hidden">
+    <button id="editBtn" class="char-btn">Redigera</button>
   </div>
 
   <shared-toolbar></shared-toolbar>

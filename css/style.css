@@ -79,6 +79,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 .char-btn:hover  { opacity: .85; }
 .char-btn:active { transform: scale(.95); opacity: .7; }
 
+.hidden { display: none; }
+
 /* Knapp för översiktsmeny */
 .summary-btn {
   margin-left: auto;
@@ -1094,6 +1096,10 @@ textarea {
 /* Knapprad längst ner */
 .char-btn-row {
   margin-top: 1.2rem;
+}
+
+#notesDisplay {
+  white-space: pre-wrap;
 }
 
 /* Mobil: stapla kolumnerna */
