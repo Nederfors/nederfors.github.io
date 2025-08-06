@@ -26,8 +26,14 @@
 <body data-role="notes">
 
   <div class="panel">
-    <h1 class="app-title">Anteckningar</h1>
-    <form id="characterForm">
+    <div class="panel-header">
+      <h1 class="app-title">Anteckningar</h1>
+      <button id="editBtn" class="char-btn icon">✏️ Redigera</button>
+    </div>
+
+    <div id="notesDisplay"></div>
+
+    <form id="characterForm" class="hidden">
 
       <!-- -------- Kortfattat -------- -->
       <h3>Kortfattat</h3>
@@ -97,16 +103,11 @@
 
       <!-- -------- Knappar -------- -->
       <div class="char-btn-row">
+        <button type="button" id="clearBtn" class="char-btn danger">Sudda</button>
         <button type="submit" class="char-btn">Spara</button>
-        <button type="reset"  class="char-btn danger">Rensa</button>
-        <button type="button" id="previewBtn" class="char-btn">Visa anteckningar</button>
       </div>
 
     </form>
-  </div>
-
-  <div id="notesDisplay" class="panel hidden">
-    <button id="editBtn" class="char-btn">Redigera</button>
   </div>
 
   <shared-toolbar></shared-toolbar>
