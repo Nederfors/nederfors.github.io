@@ -6,11 +6,16 @@
     const notes = storeHelper.getNotes(store);
     fields.forEach(id=>{
       const el=form.querySelector('#'+id);
-      if(el){
-        el.value=notes[id]||'';
-        el.disabled=true;
-        if(typeof autoResize === 'function') autoResize(el);
+      if(!el) return;
+      el.value=notes[id]||'';
+      el.disabled=true;
+      let box=el.parentElement.querySelector('.note-box');
+      if(!box){
+        box=document.createElement('div');
+        box.className='note-box';
+        el.parentElement.appendChild(box);
       }
+      box.textContent=el.value;
     });
     form.classList.remove('hidden');
     form.classList.add('view-mode');
@@ -22,11 +27,12 @@
     const notes = storeHelper.getNotes(store);
     fields.forEach(id=>{
       const el=form.querySelector('#'+id);
-      if(el){
-        el.value=notes[id]||'';
-        el.disabled=false;
-        if(typeof autoResize === 'function') autoResize(el);
-      }
+      if(!el) return;
+      el.value=notes[id]||'';
+      el.disabled=false;
+      const box=el.parentElement.querySelector('.note-box');
+      if(box) box.remove();
+      if(typeof autoResize === 'function') autoResize(el);
     });
     editBtn.classList.add('hidden');
     btnRow.classList.remove('hidden');

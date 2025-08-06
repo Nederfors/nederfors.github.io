@@ -1102,9 +1102,17 @@ textarea.auto-resize {
 }
 
 .view-mode .auto-resize {
-  border: none;
-  background: transparent;
-  padding: 0;
+  display: none;
+}
+
+.note-box {
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: 1rem;
+  padding: 1rem 1.3rem;
+  margin-bottom: .6rem;
+  white-space: pre-wrap;
+  min-height: 2.6rem;
 }
 
 /* Knapprad längst ner */
