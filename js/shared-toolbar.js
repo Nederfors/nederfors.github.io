@@ -19,7 +19,10 @@ class SharedToolbar extends HTMLElement {
     this.shadowRoot.addEventListener('click', e => this.handleClick(e));
     this._outsideHandler = e => this.handleOutsideClick(e);
     document.addEventListener('click', this._outsideHandler);
-    this.initSwitchLink();
+    this.updateToolbarLinks();
+
+    // Expose method for dynamic updates
+    window.updateToolbarLinks = () => this.updateToolbarLinks();
 
     const nativeGetElementById = document.getElementById.bind(document);
     document.getElementById = id =>
@@ -39,6 +42,7 @@ class SharedToolbar extends HTMLElement {
         </div>
         <div class="button-row">
           <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
+          <a       id="notesLink"  class="char-btn icon" title="Anteckningar">📜</a>
           <button  id="invToggle"    class="char-btn icon" title="Inventarie">
             🎒 <span id="invBadge">0</span>
           </button>
@@ -102,8 +106,6 @@ class SharedToolbar extends HTMLElement {
           <button id="exportChar" class="char-btn">Exportera</button>
           <button id="importChar" class="char-btn">Importera</button>
         </div>
-
-        <a id="notesLink" class="char-btn icon" title="Anteckningar" href="notes.html">📜</a>
 
         <div class="filter-group">
           <label for="charSelect">Välj rollperson</label>
@@ -408,17 +410,36 @@ class SharedToolbar extends HTMLElement {
   open(id)  { Object.values(this.panels).forEach(p=>p.classList.remove('open')); this.panels[id]?.classList.add('open'); }
   close(id) { this.panels[id]?.classList.remove('open'); }
 
-  initSwitchLink() {
+  updateToolbarLinks() {
     const role = document.body.dataset.role;
-    const link = this.shadowRoot.getElementById('switchRole');
-    if (role === 'notes') {
-      link.href = 'index.html';
-      link.textContent = '↩️';
-      link.title = 'Till index';
+    const switchLink = this.shadowRoot.getElementById('switchRole');
+    const notesLink  = this.shadowRoot.getElementById('notesLink');
+
+    if (role === 'character') {
+      switchLink.href = 'index.html';
+      switchLink.textContent = '📇';
+      switchLink.title = 'Till index';
+
+      notesLink.href = 'notes.html';
+      notesLink.textContent = '📜';
+      notesLink.title = 'Anteckningar';
+    } else if (role === 'notes') {
+      switchLink.href = 'character.html';
+      switchLink.textContent = '🧝';
+      switchLink.title = 'Till rollperson';
+
+      notesLink.href = 'index.html';
+      notesLink.textContent = '📇';
+      notesLink.title = 'Till index';
     } else {
-      link.href = role === 'index' ? 'character.html' : 'index.html';
-      link.textContent = '🔄';
-      link.title = 'Byt vy';
+      // Default to index
+      switchLink.href = 'character.html';
+      switchLink.textContent = '🧝';
+      switchLink.title = 'Till rollperson';
+
+      notesLink.href = 'notes.html';
+      notesLink.textContent = '📜';
+      notesLink.title = 'Anteckningar';
     }
   }
 }
