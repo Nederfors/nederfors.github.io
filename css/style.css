@@ -1098,9 +1098,12 @@ select.level {
 
 /* Textfält som expanderar nedåt */
 textarea.auto-resize {
+  width: 100%;
+  max-width: 100%;
   min-height: 2.6rem;
   resize: none;
   overflow: hidden;
+  overflow-wrap: break-word;
 }
 
 #background.auto-resize {
@@ -1116,12 +1119,15 @@ textarea.auto-resize {
 }
 
 .note-box {
+  width: 100%;
+  max-width: 100%;
   background: var(--card);
   border: 2px solid var(--card-border);
   border-radius: 1rem;
   padding: 1rem 1.3rem;
   margin-bottom: .6rem;
   white-space: pre-wrap;
+  overflow-wrap: break-word;
   min-height: 2.6rem;
 }
 
