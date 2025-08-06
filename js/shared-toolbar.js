@@ -98,13 +98,15 @@ class SharedToolbar extends HTMLElement {
           <button class="char-btn icon" data-close="filterPanel">✕</button>
         </header>
 
-        <div class="char-btn-row">
-          <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+        <div class="char-btn-row three-col">
           <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
           <button id="renameChar" class="char-btn">Byt namn</button>
+          <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+        </div>
+        <div class="char-btn-row three-col">
           <button id="deleteChar" class="char-btn danger">Ta bort rollperson</button>
-          <button id="exportChar" class="char-btn">Exportera</button>
           <button id="importChar" class="char-btn">Importera</button>
+          <button id="exportChar" class="char-btn">Exportera</button>
         </div>
 
         <div class="filter-group">
