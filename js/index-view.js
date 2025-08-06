@@ -167,6 +167,7 @@ function initIndex() {
   dom.sIn.addEventListener('input',()=>{
     sTemp = dom.sIn.value.trim();
     activeTags(); renderList(filtered());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   dom.sIn.addEventListener('keydown',e=>{
     if(e.key==='Enter'){
@@ -182,6 +183,7 @@ function initIndex() {
       if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
       dom.sIn.value=''; sTemp='';
       activeTags(); renderList(filtered());
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
