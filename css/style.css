@@ -1105,6 +1105,10 @@ textarea.auto-resize {
   display: none;
 }
 
+.view-mode .char-btn-row {
+  display: none;
+}
+
 .note-box {
   background: var(--card);
   border: 2px solid var(--card-border);
