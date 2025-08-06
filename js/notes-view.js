@@ -9,9 +9,11 @@
       if(el){
         el.value=notes[id]||'';
         el.disabled=true;
+        if(typeof autoResize === 'function') autoResize(el);
       }
     });
     form.classList.remove('hidden');
+    form.classList.add('view-mode');
     editBtn.classList.remove('hidden');
     btnRow.classList.add('hidden');
   }
@@ -23,10 +25,12 @@
       if(el){
         el.value=notes[id]||'';
         el.disabled=false;
+        if(typeof autoResize === 'function') autoResize(el);
       }
     });
     editBtn.classList.add('hidden');
     btnRow.classList.remove('hidden');
+    form.classList.remove('view-mode');
   }
 
   function initNotes() {

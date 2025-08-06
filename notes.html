@@ -15,6 +15,7 @@
   <script src="js/shared-toolbar.js" defer></script>
   <script src="js/yrke-panel.js"  defer></script>
   <script src="js/elite-req.js"   defer></script>
+  <script src="js/auto-resize.js" defer></script>
   <script src="js/notes-view.js"  defer></script>
   <script src="js/main.js"        defer></script>
   <script src="js/exceptionellt.js" defer></script>
@@ -38,31 +39,31 @@
       <div class="field-row">
         <div class="form-group">
           <label for="shadow">Skugga</label>
-          <input type="text" id="shadow" name="shadow" placeholder="Ex. ’Smygaren’">
+          <textarea id="shadow" name="shadow" class="auto-resize" placeholder="Ex. ’Smygaren’"></textarea>
         </div>
         <div class="form-group">
           <label for="age">Ålder</label>
-          <input type="text" id="age" name="age" placeholder="T.ex. 34">
+          <textarea id="age" name="age" class="auto-resize" placeholder="T.ex. 34"></textarea>
         </div>
       </div>
       <div class="field-row">
         <div class="form-group">
           <label for="appearance">Utseende</label>
-          <input type="text" id="appearance" name="appearance" placeholder="Kort beskrivning">
+          <textarea id="appearance" name="appearance" class="auto-resize" placeholder="Kort beskrivning"></textarea>
         </div>
         <div class="form-group">
           <label for="manner">Manér</label>
-          <input type="text" id="manner" name="manner" placeholder="Särskilda drag">
+          <textarea id="manner" name="manner" class="auto-resize" placeholder="Särskilda drag"></textarea>
         </div>
       </div>
       <div class="form-group">
         <label for="quote">Citat</label>
-        <input type="text" id="quote" name="quote" placeholder="Signaturcitat">
+        <textarea id="quote" name="quote" class="auto-resize" placeholder="Signaturcitat"></textarea>
       </div>
 
       <div class="form-group">
         <label for="faction">Fraktion/ätt/klan/stam</label>
-        <input type="text" id="faction" name="faction" placeholder="T.ex. ätt eller klan">
+        <textarea id="faction" name="faction" class="auto-resize" placeholder="T.ex. ätt eller klan"></textarea>
       </div>
 
       <!-- -------- Mellanlångt -------- -->
@@ -70,33 +71,33 @@
       <div class="field-row">
         <div class="form-group">
           <label for="goal">Personligt mål</label>
-          <input type="text" id="goal" name="goal" placeholder="Livsmål, ambition">
+          <textarea id="goal" name="goal" class="auto-resize" placeholder="Livsmål, ambition"></textarea>
         </div>
         <div class="form-group">
           <label for="drives">Drivkrafter</label>
-          <input type="text" id="drives" name="drives" placeholder="Vad får dem att agera?">
+          <textarea id="drives" name="drives" class="auto-resize" placeholder="Vad får dem att agera?"></textarea>
         </div>
       </div>
       <div class="field-row">
         <div class="form-group">
           <label for="loyalties">Lojaliteter</label>
-          <input type="text" id="loyalties" name="loyalties" placeholder="T.ex. familj, gille">
+          <textarea id="loyalties" name="loyalties" class="auto-resize" placeholder="T.ex. familj, gille"></textarea>
         </div>
         <div class="form-group">
           <label for="likes">Älskar</label>
-          <input type="text" id="likes" name="likes" placeholder="T.ex. skogar, böcker">
+          <textarea id="likes" name="likes" class="auto-resize" placeholder="T.ex. skogar, böcker"></textarea>
         </div>
       </div>
       <div class="form-group">
         <label for="hates">Hatar</label>
-        <input type="text" id="hates" name="hates" placeholder="T.ex. orättvisa, korruption">
+        <textarea id="hates" name="hates" class="auto-resize" placeholder="T.ex. orättvisa, korruption"></textarea>
       </div>
 
       <!-- -------- Lång text -------- -->
       <h3>Bakgrund</h3>
       <div class="form-group">
         <label for="background">Berätta om bakgrund</label>
-        <textarea id="background" name="background" rows="6" placeholder="Här kan du skriva längre text…"></textarea>
+        <textarea id="background" name="background" class="auto-resize" placeholder="Här kan du skriva längre text…"></textarea>
       </div>
 
       <!-- -------- Knappar -------- -->

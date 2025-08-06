@@ -183,7 +183,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 /* ---------- Input/Select ---------- */
-input, select {
+input, select, textarea {
   width: 100%;
   padding: .65rem 1rem;
   border-radius: .6rem;
@@ -192,7 +192,10 @@ input, select {
   color: var(--txt);
   font-size: 1rem;
 }
-input:focus, select:focus { outline: none; border-color: var(--accent); }
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--accent);
+}
 
 /* ---------- Kortlista & kort ---------- */
 .card-list {
@@ -1087,10 +1090,21 @@ select.level {
   margin-bottom: .6rem;
 }
 
-/* Större textfält för ”Bakgrund” */
-textarea {
+/* Textfält som expanderar nedåt */
+textarea.auto-resize {
+  min-height: 2.6rem;
+  resize: none;
+  overflow: hidden;
+}
+
+#background.auto-resize {
   min-height: 8rem;
-  resize: vertical;
+}
+
+.view-mode .auto-resize {
+  border: none;
+  background: transparent;
+  padding: 0;
 }
 
 /* Knapprad längst ner */
