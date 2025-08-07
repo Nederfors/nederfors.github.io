@@ -29,6 +29,7 @@
     'Yrke',
     'Elityrke',
     'Förmåga',
+    'Mystisk kraft',
     'Ritual',
     'Fördel',
     'Nackdel',
@@ -45,6 +46,33 @@
     'Mat',
     'Dryck'
   ];
+
+  const CAT_DISPLAY = {
+    'Ras': 'Raser',
+    'Yrke': 'Yrken',
+    'Elityrke': 'Elityrken',
+    'Förmåga': 'Förmågor',
+    'Mystisk kraft': 'Mystiska krafter',
+    'Ritual': 'Ritualer',
+    'Fördel': 'Fördelar',
+    'Nackdel': 'Nackdelar',
+    'Särdrag': 'Särdrag',
+    'Rustning': 'Rustningar',
+    'Vapen': 'Vapen',
+    'Pil/Lod': 'Pilar/Lod',
+    'Kvalitet': 'Kvaliteter',
+    'Mystisk kvalitet': 'Mystiska kvaliteter',
+    'Elixir': 'Elixir',
+    'Lägre Artefakt': 'Lägre Artefakter',
+    'Specialverktyg': 'Specialverktyg',
+    'Diverse': 'Diverse',
+    'Mat': 'Mat',
+    'Dryck': 'Drycker'
+  };
+
+  function catName(cat){
+    return CAT_DISPLAY[cat] || cat;
+  }
 
   function catComparator(a, b){
     const ai = CAT_ORDER.indexOf(a);
@@ -228,4 +256,5 @@
   window.createSearchSorter = createSearchSorter;
   window.copyToClipboard = copyToClipboard;
   window.catComparator = catComparator;
+  window.catName = catName;
 })(window);
