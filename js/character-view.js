@@ -9,6 +9,16 @@ function initCharacter() {
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', compact);
 
+  let catsMinimized = false;
+  const updateCatToggle = () => {
+    catsMinimized = [...document.querySelectorAll('.cat-group > details')]
+      .every(d => !d.open);
+    dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
+    dom.catToggle.title = catsMinimized
+      ? 'Öppna alla kategorier'
+      : 'Minimera alla kategorier';
+  };
+
   const summaryBtn = document.getElementById('summaryToggle');
   const summaryPanel = document.getElementById('summaryPanel');
   const summaryClose = document.getElementById('summaryClose');
@@ -343,10 +353,21 @@ function initCharacter() {
       });
       dom.valda.appendChild(catLi);
     });
+    updateCatToggle();
   };
 
   renderSkills(filtered()); activeTags(); updateXP(); renderTraits();
   window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); };
+
+  dom.catToggle.addEventListener('click', () => {
+    const details = document.querySelectorAll('.cat-group > details');
+    if (catsMinimized) {
+      details.forEach(d => { d.open = true; });
+    } else {
+      details.forEach(d => { d.open = false; });
+    }
+    updateCatToggle();
+  });
 
   /* --- filter-events */
   dom.sIn.addEventListener('input', ()=>{sTemp=dom.sIn.value.trim(); activeTags(); renderSkills(filtered()); renderTraits();});
