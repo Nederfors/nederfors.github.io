@@ -572,7 +572,7 @@
       <button data-act="add" class="char-btn">+</button>`;
           const freeCnt = Number(row.gratis || 0);
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
-          const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">K🆓</button>` : '';
+          const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
 
           const rowLevel = row.nivå ||
@@ -595,7 +595,7 @@
               </div>
               <div class="inv-controls">
                 ${btnRow}
- ${allowQual ? `<button data-act="addQual" class="char-btn">K+</button>` : ''}
+ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
                 ${freeQBtn}
                 ${toggleBtn}
                 ${freeBtn}
@@ -687,7 +687,7 @@
         return;
       }
 
-      // 2b) För + / - / K+ behöver vi id
+      // 2b) För + / - / 🔨 behöver vi id
       const itemName = li.dataset.name;
       const entry    = getEntry(itemName);
 
@@ -746,7 +746,7 @@
         return;
       }
 
-      // "K+" öppnar popup för att lägga kvalitet
+      // "🔨" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
         if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t))) return;
