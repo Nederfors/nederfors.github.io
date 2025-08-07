@@ -18,6 +18,7 @@ const dom  = {
   exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
   xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
   xpMinus : $T('xpMinus'),      xpPlus : $T('xpPlus'),
+  xpTotal : $T('xpTotal'),      xpUsed : $T('xpUsed'),       xpFree : $T('xpFree'),
 
   /* inventarie */
   invList : $T('invList'),      invBadge  : $T('invBadge'),
@@ -546,10 +547,10 @@ function updateXP() {
   dom.xpIn.value = base;
   const xpContainer = dom.xpOut.closest('.exp-counter');
   if (xpContainer) xpContainer.classList.toggle('under', free < 0);
-  if (dom.xpSum) {
-    dom.xpSum.textContent = `Använt: ${used} • Oanvänt: ${free} • Totalt: ${total}`;
-    dom.xpSum.classList.toggle('under', free < 0);
-  }
+  if (dom.xpTotal) dom.xpTotal.textContent = total;
+  if (dom.xpUsed)  dom.xpUsed.textContent  = used;
+  if (dom.xpFree)  dom.xpFree.textContent  = free;
+  if (dom.xpSum)   dom.xpSum.classList.toggle('under', free < 0);
 }
 /* -----------------------------------------------------------
    Synk när annan flik ändrar localStorage
