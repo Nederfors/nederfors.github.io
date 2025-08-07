@@ -288,22 +288,22 @@ function initCharacter() {
       const conflictBtn = activeLvls.length
         ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeLvls.join(', ')}">💔</button>`
         : '';
-      let btn = '';
-      if(multi){
-        const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
-        const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-        btn = `<div class="inv-controls">${remBtn}${conflictBtn}${addBtn}</div>`;
-      }else{
-        btn = `<div class="inv-controls"><button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
-      }
-      li.dataset.xp = xpVal;
-      const showInfo = compact || hideDetails;
-      const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-      li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span><span class="title-actions">${xpHtml}</span></div>
+        const showInfo = compact || hideDetails;
+        let btn = '';
+        if(multi){
+          const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
+          const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
+          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${remBtn}${conflictBtn}${addBtn}</div>`;
+        }else{
+          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}<button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
+        }
+        li.dataset.xp = xpVal;
+        const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
+        li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span><span class="title-actions">${xpHtml}</span></div>
         <div class="tags">${tagsHtml}</div>
         ${lvlSel}
         ${descHtml}
-        ${showInfo ? infoBtn : ''}${btn}`;
+        ${btn}`;
 
       dom.valda.appendChild(li);
     });
