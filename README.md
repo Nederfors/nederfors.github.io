@@ -92,8 +92,8 @@ Både i index-vyn och i din karaktär visas poster som kort.
 - **Lägg till** eller `+` lägger till posten.
 - `−` tar bort en instans av posten eller hela raden om det bara finns en.
 - **Info** visar beskrivning och eventuella regler.
-- **K+** låter dig välja en extra kvalitet till ett vapen, rustning eller en artefakt.
-- **K🆓** markerar en av kvaliteterna som gratis.
+- **🔨** låter dig välja en extra kvalitet till ett vapen, rustning eller en artefakt.
+- **☭** markerar en av kvaliteterna som gratis.
 - **🆓** gör hela föremålet gratis vid beräkning av totalkostnad.
 - **↔** finns på artefakter och växlar dess effekt mellan att ge 1 XP eller permanent korruption.
 - **🗑** tar bort posten helt.
