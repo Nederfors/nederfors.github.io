@@ -100,7 +100,9 @@ function initIndex() {
       const catLi=document.createElement('li');
       catLi.className='cat-group';
       catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      const detailsEl = catLi.querySelector('details');
       const listEl=catLi.querySelector('ul');
+      detailsEl.addEventListener('toggle', updateCatToggle);
       cats[cat].forEach(p=>{
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
         const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
@@ -210,6 +212,8 @@ function initIndex() {
   };
 
   const updateCatToggle = () => {
+    catsMinimized = [...document.querySelectorAll('.cat-group > details')]
+      .every(d => !d.open);
     dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
     dom.catToggle.title = catsMinimized
       ? 'Öppna alla kategorier'
@@ -267,10 +271,12 @@ function initIndex() {
   });
 
   dom.catToggle.addEventListener('click', () => {
-    catsMinimized = !catsMinimized;
-    document.querySelectorAll('.cat-group > details').forEach(d => {
-      d.open = !catsMinimized;
-    });
+    const details = document.querySelectorAll('.cat-group > details');
+    if (catsMinimized) {
+      details.forEach(d => { d.open = true; });
+    } else {
+      details.forEach(d => { d.open = false; });
+    }
     updateCatToggle();
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
