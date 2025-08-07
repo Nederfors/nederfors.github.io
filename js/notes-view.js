@@ -1,6 +1,7 @@
 (function(window){
   const fields = ['shadow','age','appearance','manner','quote','faction','goal','drives','loyalties','likes','hates','background'];
   let form, editBtn, clearBtn, charLink, isEditing=false;
+  let catsMinimized = false;
 
   function showView(){
     const notes = storeHelper.getNotes(store);
@@ -60,6 +61,32 @@
     charLink = document.getElementById('charLink');
 
     showView();
+
+    const updateCatToggle = () => {
+      const details = document.querySelectorAll('.note-field');
+      catsMinimized = [...details].every(d => !d.open);
+      if (dom.catToggle) {
+        dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
+        dom.catToggle.title = catsMinimized
+          ? 'Öppna alla fält'
+          : 'Minimera alla fält';
+      }
+    };
+
+    updateCatToggle();
+    document.querySelectorAll('.note-field').forEach(d => {
+      d.addEventListener('toggle', updateCatToggle);
+    });
+
+    if (dom.catToggle) dom.catToggle.addEventListener('click', () => {
+      const details = document.querySelectorAll('.note-field');
+      if (catsMinimized) {
+        details.forEach(d => { d.open = true; });
+      } else {
+        details.forEach(d => { d.open = false; });
+      }
+      updateCatToggle();
+    });
 
     form.addEventListener('submit',e=>{
       e.preventDefault();
