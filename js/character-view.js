@@ -277,8 +277,10 @@ function initCharacter() {
     catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details open><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
-      const listEl=catLi.querySelector('ul');
+      catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      const detailsEl = catLi.querySelector('details');
+      detailsEl.addEventListener('toggle', updateCatToggle);
+      const listEl=detailsEl.querySelector('ul');
       cats[cat].forEach(g=>{
         const p = g.entry;
         const availLvls = LVL.filter(l=>p.nivåer?.[l]);
