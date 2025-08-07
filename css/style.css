@@ -37,6 +37,9 @@ body {
   align-items: center;
   margin-bottom: 90px;         /* plats för toolbar */
 }
+shared-toolbar {
+  display: block;
+}
 
 /* ---------- Generella komponenter ---------- */
 h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
