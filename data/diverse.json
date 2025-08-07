@@ -1168,5 +1168,20 @@
       "skilling": 1,
       "örtegar": 0
     }
+  },
+  {
+    "id": "di79",
+    "namn": "Fältutrustning",
+    "beskrivning": "Samlat paket med nödvändig utrustning för fältlivet.",
+    "taggar": {
+      "typ": [
+        "Diverse"
+      ]
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
   }
 ]

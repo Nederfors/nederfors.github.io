@@ -699,37 +699,53 @@
       const itemName = li.dataset.name;
       const entry    = getEntry(itemName);
 
-      // "+" lägger till qty eller en ny instans
-      if (act === 'add') {
-        const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
-        const addRow = trait => {
-          const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-          if (trait) obj.trait = trait;
-          if (indiv) {
-            inv.push(obj);
-          } else if (idx >= 0 && (!trait || inv[idx].trait === trait)) {
-            inv[idx].qty++;
-          } else if (idx >= 0 && trait && inv[idx].trait !== trait) {
-            inv.push(obj);
+        // "+" lägger till qty eller en ny instans
+        if (act === 'add') {
+          if (entry.namn === 'Fältutrustning') {
+            const bundle = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+            bundle.forEach(namn => {
+              const ent = getEntry(namn);
+              if (!ent.namn) return;
+              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => ent.taggar.typ.includes(t));
+              const existing = inv.findIndex(r => r.name === ent.namn);
+              if (indivItem || existing === -1) {
+                inv.push({ name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+              } else {
+                inv[existing].qty++;
+              }
+            });
+            saveInventory(inv);
+            renderInventory();
           } else {
-            inv.push(obj);
+            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
+            const addRow = trait => {
+              const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+              if (trait) obj.trait = trait;
+              if (indiv) {
+                inv.push(obj);
+              } else if (idx >= 0 && (!trait || inv[idx].trait === trait)) {
+                inv[idx].qty++;
+              } else if (idx >= 0 && trait && inv[idx].trait !== trait) {
+                inv.push(obj);
+              } else {
+                inv.push(obj);
+              }
+              saveInventory(inv);
+              renderInventory();
+            };
+            if (entry.traits && window.maskSkill) {
+              const used = inv.filter(it => it.name===entry.namn).map(it=>it.trait).filter(Boolean);
+              maskSkill.pickTrait(used, trait => {
+                if(!trait) return;
+                if (used.includes(trait) && !confirm('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?')) return;
+                addRow(trait);
+              });
+            } else {
+              addRow();
+            }
           }
-          saveInventory(inv);
-          renderInventory();
-        };
-        if (entry.traits && window.maskSkill) {
-          const used = inv.filter(it => it.name===entry.namn).map(it=>it.trait).filter(Boolean);
-          maskSkill.pickTrait(used, trait => {
-            if(!trait) return;
-            if (used.includes(trait) && !confirm('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?')) return;
-            addRow(trait);
-          });
-        } else {
-          addRow();
+          return;
         }
-        return;
-      }
-
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
         if (idx >= 0) {
