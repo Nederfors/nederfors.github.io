@@ -66,61 +66,72 @@ function initIndex() {
   };
 
   const renderList = arr=>{
-    dom.lista.innerHTML = arr.length ? '' : '<li class="card">Inga träffar.</li>';
+    dom.lista.innerHTML = '';
+    if(!arr.length){ dom.lista.innerHTML = '<li class="card">Inga träffar.</li>'; return; }
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
+    const cats = {};
     arr.forEach(p=>{
-      const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
-      const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
-      const curLvl = charList.find(c=>c.namn===p.namn)?.nivå
-        || LVL.find(l => p.nivåer?.[l]) || 'Novis';
-      const availLvls = LVL.filter(l => p.nivåer?.[l]);
-      const lvlSel = availLvls.length > 1
-        ? `<select class="level" data-name="${p.namn}">
-            ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
-          </select>`
-        : '';
-      const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
-      let desc = abilityHtml(p);
-      if (isInv(p)) {
-        desc += itemStatHtml(p);
-        const baseQuals = [
-          ...(p.taggar?.kvalitet ?? []),
-          ...splitQuals(p.kvalitet)
-        ];
-        if (baseQuals.length) {
-          const qhtml = baseQuals
-            .map(q => `<span class="tag">${q}</span>`)
-            .join(' ');
-          desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+      const cat = p.taggar?.typ?.[0] || 'Övrigt';
+      (cats[cat] ||= []).push(p);
+    });
+    Object.keys(cats).sort().forEach(cat=>{
+      const catLi=document.createElement('li');
+      catLi.className='cat-group';
+      catLi.innerHTML=`<details open><summary>${cat}</summary><ul class="card-list"></ul></details>`;
+      const listEl=catLi.querySelector('ul');
+      cats[cat].forEach(p=>{
+        const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
+        const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
+        const curLvl = charList.find(c=>c.namn===p.namn)?.nivå
+          || LVL.find(l => p.nivåer?.[l]) || 'Novis';
+        const availLvls = LVL.filter(l => p.nivåer?.[l]);
+        const lvlSel = availLvls.length > 1
+          ? `<select class="level" data-name="${p.namn}">
+              ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
+            </select>`
+          : '';
+        const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
+        let desc = abilityHtml(p);
+        if (isInv(p)) {
+          desc += itemStatHtml(p);
+          const baseQuals = [
+            ...(p.taggar?.kvalitet ?? []),
+            ...splitQuals(p.kvalitet)
+          ];
+          if (baseQuals.length) {
+            const qhtml = baseQuals
+              .map(q => `<span class="tag">${q}</span>`)
+              .join(' ');
+            desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+          }
+          if (p.grundpris) {
+            desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
+          }
         }
-        if (p.grundpris) {
-          desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
+        let infoHtml = desc;
+        if (isRas(p) || isYrke(p) || isElityrke(p)) {
+          const extra = yrkeInfoHtml(p);
+          if (extra) infoHtml += `<br>${extra}`;
         }
-      }
-      let infoHtml = desc;
-      if (isRas(p) || isYrke(p) || isElityrke(p)) {
-        const extra = yrkeInfoHtml(p);
-        if (extra) infoHtml += `<br>${extra}`;
-      }
-      if (p.namn === 'Blodsband') {
-        const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
-        if (races.length) {
-          const str = races.join(', ');
-          desc += `<br><strong>Raser:</strong> ${str}`;
-          infoHtml += `<br><strong>Raser:</strong> ${str}`;
+        if (p.namn === 'Blodsband') {
+          const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
+          if (races.length) {
+            const str = races.join(', ');
+            desc += `<br><strong>Raser:</strong> ${str}`;
+            infoHtml += `<br><strong>Raser:</strong> ${str}`;
+          }
         }
-      }
-      let spec = null;
-      if (p.namn === 'Monsterlärd') {
-        spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
-        if (spec) {
-          const t = `<br><strong>Specialisering:</strong> ${spec}`;
-          desc += t;
-          infoHtml += t;
+        let spec = null;
+        if (p.namn === 'Monsterlärd') {
+          spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
+          if (spec) {
+            const t = `<br><strong>Specialisering:</strong> ${spec}`;
+            desc += t;
+            infoHtml += t;
+          }
         }
-      }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         const count = isInv(p)
@@ -163,9 +174,11 @@ function initIndex() {
           ${levelHtml}
           ${descHtml}
           ${btn}`;
-        dom.lista.appendChild(li);
+        listEl.appendChild(li);
       });
-    };
+      dom.lista.appendChild(catLi);
+    });
+  };
 
   /* första render */
   renderList(filtered()); activeTags(); updateXP();

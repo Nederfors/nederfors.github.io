@@ -216,6 +216,16 @@ input:focus, select:focus, textarea:focus {
   flex-direction: column;
   gap: 1rem;
 }
+
+.cat-group > details > summary {
+  font-size: 1.3rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cat-group .card-list {
+  margin-top: .6rem;
+}
 .card {
   background: var(--card);
   border: 2px solid var(--card-border);
