@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Installera som webapp</title>
+  <link rel="stylesheet" href="css/style.css">
+  <style>
+    main { max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
+    ol { padding-left: 1.2rem; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Installera som webapp</h1>
+
+    <section id="android">
+      <h2>Chrome på Android</h2>
+      <ol>
+        <li>Öppna menyn ⋮.</li>
+        <li>Välj <em>Lägg till på startskärmen</em>.</li>
+        <li>Bekräfta genom att trycka på <em>Lägg till</em>.</li>
+      </ol>
+    </section>
+
+    <section id="ios">
+      <h2>Safari på iOS</h2>
+      <ol>
+        <li>Tryck på delningsikonen.</li>
+        <li>Välj <em>Lägg till på hemskärmen</em>.</li>
+        <li>Tryck på <em>Lägg till</em>.</li>
+      </ol>
+    </section>
+
+    <section id="chrome">
+      <h2>Chrome på dator</h2>
+      <ol>
+        <li>Klicka på installationsikonen i adressfältet.</li>
+        <li>Välj <em>Installera</em>.</li>
+      </ol>
+    </section>
+
+    <section id="firefox">
+      <h2>Firefox</h2>
+      <p>Firefox har begränsat stöd för webappar. Du kan skapa en genväg via webbläsarens meny.</p>
+    </section>
+
+    <section id="edge">
+      <h2>Edge</h2>
+      <ol>
+        <li>Klicka på menyn ⋯.</li>
+        <li>Välj <em>Appar &gt; Installera webbplats som app</em>.</li>
+      </ol>
+    </section>
+
+    <section id="general">
+      <h2>Övriga webbläsare</h2>
+      <p>Sök efter ett alternativ som <em>Lägg till på startskärmen</em> i webbläsarens meny.</p>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const target = location.hash.slice(1) || 'general';
+      document.querySelectorAll('section').forEach(sec => {
+        sec.style.display = (sec.id === target) ? 'block' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
