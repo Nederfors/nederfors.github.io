@@ -1,6 +1,6 @@
 (function(window){
   const fields = ['shadow','age','appearance','manner','quote','faction','goal','drives','loyalties','likes','hates','background'];
-  let form, editBtn, clearBtn;
+  let form, editBtn, clearBtn, charLink, isEditing=false;
 
   function showView(){
     const notes = storeHelper.getNotes(store);
@@ -18,7 +18,12 @@
       box.textContent=el.value;
     });
     form.classList.add('view-mode');
-    editBtn.classList.remove('hidden');
+    isEditing=false;
+    if(editBtn){
+      editBtn.textContent='✏️';
+      editBtn.title='Redigera';
+      editBtn.onclick = showEdit;
+    }
   }
 
   function showEdit(){
@@ -32,8 +37,19 @@
       if(box) box.remove();
       if(typeof autoResize === 'function') autoResize(el);
     });
-    editBtn.classList.add('hidden');
     form.classList.remove('view-mode');
+    isEditing=true;
+    if(editBtn){
+      editBtn.textContent='❌';
+      editBtn.title='Stäng utan att spara';
+      editBtn.onclick = cancelEdit;
+    }
+  }
+
+  function cancelEdit(){
+    if(confirm('Nu stängs redigering utan att spara, är du säker?')){
+      showView();
+    }
   }
 
   function initNotes() {
@@ -41,6 +57,7 @@
     if(!form) return;
     editBtn = document.getElementById('editBtn');
     clearBtn = document.getElementById('clearBtn');
+    charLink = document.getElementById('charLink');
 
     showView();
 
@@ -56,11 +73,19 @@
     });
 
     if(clearBtn) clearBtn.onclick = ()=>{
-      fields.forEach(id=>{
-        const el=form.querySelector('#'+id);
-        if(el) el.value='';
-      });
+      if(!isEditing || confirm('Du håller på att sudda ut alla dina anteckningar, är du säker?')){
+        fields.forEach(id=>{
+          const el=form.querySelector('#'+id);
+          if(el) el.value='';
+        });
+      }
     };
+
+    if(charLink) charLink.addEventListener('click',e=>{
+      if(isEditing && !confirm('Nu stängs redigering utan att spara, är du säker?')){
+        e.preventDefault();
+      }
+    });
 
     if(editBtn) editBtn.onclick = showEdit;
   }
