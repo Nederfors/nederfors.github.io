@@ -56,7 +56,7 @@ Verktygsraden innehåller:
 - `🎒` öppnar inventariet.
 - `📊` öppnar egenskapspanelen.
 - `📜` öppnar anteckningspanelen.
-- `Rensa filter` tar bort alla aktiva sökord och valda filter.
+- Skriv `lol` i sökfältet och tryck Enter för att rensa alla filter.
 - `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
 
 ### 4. Filtermenyn

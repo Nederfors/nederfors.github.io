@@ -17,7 +17,6 @@ const dom  = {
   newBtn  : $T('newCharBtn'),   dupBtn : $T('duplicateChar'),   xpOut  : $T('xpOut'),
   exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
   xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
-  clrBtn  : $T('clearFilters'),
 
   /* inventarie */
   invList : $T('invList'),      invBadge  : $T('invBadge'),

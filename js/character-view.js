@@ -317,6 +317,13 @@ function initCharacter() {
   dom.sIn.addEventListener('keydown',e=>{
     if(e.key==='Enter'){
       e.preventDefault();
+      const term = sTemp.toLowerCase();
+      if (term === 'lol') {
+        F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
+        dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
+        activeTags(); renderSkills(filtered()); renderTraits();
+        return;
+      }
       if (tryBomb(sTemp)) {
         dom.sIn.value=''; sTemp='';
         return;
@@ -341,11 +348,6 @@ function initCharacter() {
     const sec=t.dataset.type,val=t.dataset.val;
     if(sec==='search'){F.search=F.search.filter(x=>x!==val);} 
     else F[sec]=F[sec].filter(x=>x!==val);
-    activeTags(); renderSkills(filtered()); renderTraits();
-  });
-  dom.clrBtn.addEventListener('click',()=>{
-    F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
-    dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderSkills(filtered()); renderTraits();
   });
 
