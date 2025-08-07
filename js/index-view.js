@@ -128,9 +128,15 @@ function initIndex() {
         const showInfo = compact || hideDetails;
         let btn = '';
         if(multi){
-          const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
-          const remBtn = count>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${remBtn}${addBtn}</div>`;
+          if(count>0){
+            const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
+            const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
+            const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
+            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}</div>`;
+          }else{
+            const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}</div>`;
+          }
         }else{
           const mainBtn = inChar
             ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
@@ -239,6 +245,7 @@ function initIndex() {
     }
     const name = btn.dataset.name;
     const p  = getEntries().find(x=>x.namn===name);
+    const act = btn.dataset.act;
     const lvlSel = btn.closest('li').querySelector('select.level');
     let   lvl = lvlSel ? lvlSel.value : null;
     if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || null;
@@ -262,7 +269,7 @@ function initIndex() {
       return;
     }
 
-    if (btn.dataset.act==='add') {
+    if (act==='add') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
         const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
@@ -460,12 +467,17 @@ function initIndex() {
         list.push({ ...p, nivå: lvl, form });
         finishAdd();
       }
-    } else { /* rem */
+    } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        const idxInv   = inv.findIndex(x => x.name===p.namn);
+        const idxInv = inv.findIndex(x => x.name===p.namn);
         if (idxInv >= 0) {
-          inv[idxInv].qty--; if(inv[idxInv].qty < 1) inv.splice(idxInv,1);
+          if (act === 'del' || act === 'rem') {
+            inv.splice(idxInv,1);
+          } else {
+            inv[idxInv].qty--;
+            if (inv[idxInv].qty < 1) inv.splice(idxInv,1);
+          }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
       } else {
@@ -491,8 +503,9 @@ function initIndex() {
           }
         }
         let list;
-        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-        if(multi){
+        if(act === 'del' || act === 'rem'){
+          list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
+        }else{
           let removed=false;
           list = [];
           for(const it of before){
@@ -502,8 +515,6 @@ function initIndex() {
             }
             list.push(it);
           }
-        }else{
-          list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
         }
         const removed = before.find(it => it.namn===p.namn && (tr?it.trait===tr:!it.trait));
         const remDeps = storeHelper.getDependents(before, removed);
@@ -524,7 +535,7 @@ function initIndex() {
             .filter(isElityrke)
             .filter(el => eliteReq.check(el, before).ok && !eliteReq.check(el, list).ok)
             .map(el => el.namn);
-          const msg = deps.length
+        const msg = deps.length
             ? `Förmågan krävs för: ${deps.join(', ')}. Ta bort ändå?`
             : 'Förmågan krävs för ett valt elityrke. Ta bort ändå?';
           if(!confirm(msg))
