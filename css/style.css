@@ -468,8 +468,8 @@ select.level {
   .trait-value { font-size: 1.15rem; }
   .inv-controls { gap: .25rem; flex-wrap: nowrap; }
   .inv-controls .char-btn {
-    padding: .42rem .6rem;
-    font-size: 1.3rem;
+    padding: .3rem .5rem;
+    font-size: .9rem;
   }
 }
 /* ---------- Off-canvas-paneler från höger ---------- */
