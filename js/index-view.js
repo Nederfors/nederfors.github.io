@@ -173,10 +173,15 @@ function initIndex() {
     if(e.key==='Enter'){
       e.preventDefault();
       const term = sTemp.toLowerCase();
-      if (term === 'webapp' && window.deferredPrompt) {
-        window.deferredPrompt.prompt();
-        window.deferredPrompt.userChoice.finally(() => window.deferredPrompt = null);
-        alert('Installationsprompten har öppnats.');
+      if (term === 'webapp') {
+        if (window.deferredPrompt) {
+          window.deferredPrompt.prompt();
+          window.deferredPrompt.userChoice
+            .then(() => window.deferredPrompt = null)
+            .catch(() => window.deferredPrompt = null);
+        } else {
+          alert('Installationsprompten är inte tillgänglig.');
+        }
         dom.sIn.value = ''; sTemp = '';
         return;
       }
