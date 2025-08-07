@@ -391,8 +391,10 @@ class SharedToolbar extends HTMLElement {
         <div class="help-content">
           <h3>Verktygsrad</h3>
           <p>
+            <strong>▼</strong> minimerar eller expanderar alla kategorier.<br>
             <strong>🧝 / 📇</strong> växlar mellan index och rollperson (ikonen ändras beroende på sida).<br>
-            <strong>📜 / 📇</strong> öppnar anteckningssidan (ikonen ändras beroende på sida).<br>
+            <strong>📜</strong> öppnar anteckningssidan (i rollpersonens sidhuvud).<br>
+            <strong>📇 / 🧝</strong> på anteckningssidan går till index respektive rollperson.<br>
             <strong>🎒</strong> öppnar inventariepanelen.<br>
             <strong>📊</strong> öppnar egenskapspanelen.<br>
             <strong>Skriv "lol"</strong> i sökfältet nollställer alla filter.<br>
