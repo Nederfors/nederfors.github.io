@@ -277,6 +277,12 @@ function initCharacter() {
             : `<br><strong>Karaktärsdrag:</strong> ${p.trait}`;
           infoHtml += traitInfo;
         }
+        const tagsHtml = (p.taggar?.typ || [])
+          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
+          .map(t => `<span class="tag">${t}</span>`).join(' ');
+        if (compact && tagsHtml) {
+          infoHtml += `<br><div class="tags">${tagsHtml}</div>`;
+        }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
 
         const li=document.createElement('li');
@@ -287,9 +293,6 @@ function initCharacter() {
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
         const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-        const tagsHtml = (p.taggar?.typ || [])
-          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
-          .map(t => `<span class="tag">${t}</span>`).join(' ');
         const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
         const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
         const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
@@ -308,8 +311,11 @@ function initCharacter() {
         }
         li.dataset.xp = xpVal;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
+        const tagsDiv = (!compact && tagsHtml)
+          ? `<div class="tags">${tagsHtml}</div>`
+          : '';
         li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span><span class="title-actions">${xpHtml}</span></div>
-        <div class="tags">${tagsHtml}</div>
+        ${tagsDiv}
         ${lvlSel}
         ${descHtml}
         ${btn}`;
