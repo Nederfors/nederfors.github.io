@@ -282,8 +282,8 @@ input:focus, select:focus, textarea:focus {
 }
 .inv-controls button {
   align-self: initial;
-  flex: 1;
-  min-width: 0;
+  flex: 0 0 auto;
+  padding: .45rem .6rem;
 }
 
 .count-badge {
