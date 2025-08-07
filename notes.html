@@ -44,68 +44,67 @@
     <form id="characterForm">
 
       <!-- -------- Bakgrund -------- -->
-      <h3>Berätta om rollpersonens bakgrund</h3>
-      <div class="form-group">
-        <label for="background">Berätta om rollpersonens bakgrund</label>
+      <details class="note-field" open>
+        <summary>Berätta om rollpersonens bakgrund</summary>
         <textarea id="background" name="background" class="auto-resize" placeholder="Här kan du skriva längre text…"></textarea>
-      </div>
+      </details>
 
       <!-- -------- Kortfattat -------- -->
-      <div class="field-row">
-        <div class="form-group">
-          <label for="shadow">Skugga</label>
-          <textarea id="shadow" name="shadow" class="auto-resize" placeholder="Ex. ’Smygaren’"></textarea>
+        <div class="field-row">
+          <details class="note-field" open>
+            <summary>Skugga</summary>
+            <textarea id="shadow" name="shadow" class="auto-resize" placeholder="Ex. ’Smygaren’"></textarea>
+          </details>
+          <details class="note-field" open>
+            <summary>Ålder</summary>
+            <textarea id="age" name="age" class="auto-resize" placeholder="T.ex. 34"></textarea>
+          </details>
         </div>
-        <div class="form-group">
-          <label for="age">Ålder</label>
-          <textarea id="age" name="age" class="auto-resize" placeholder="T.ex. 34"></textarea>
+        <div class="field-row">
+          <details class="note-field" open>
+            <summary>Utseende</summary>
+            <textarea id="appearance" name="appearance" class="auto-resize" placeholder="Kort beskrivning"></textarea>
+          </details>
+          <details class="note-field" open>
+            <summary>Manér</summary>
+            <textarea id="manner" name="manner" class="auto-resize" placeholder="Särskilda drag"></textarea>
+          </details>
         </div>
-      </div>
-      <div class="field-row">
-        <div class="form-group">
-          <label for="appearance">Utseende</label>
-          <textarea id="appearance" name="appearance" class="auto-resize" placeholder="Kort beskrivning"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="manner">Manér</label>
-          <textarea id="manner" name="manner" class="auto-resize" placeholder="Särskilda drag"></textarea>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="quote">Citat</label>
-        <textarea id="quote" name="quote" class="auto-resize" placeholder="Signaturcitat"></textarea>
-      </div>
+        <details class="note-field" open>
+          <summary>Citat</summary>
+          <textarea id="quote" name="quote" class="auto-resize" placeholder="Signaturcitat"></textarea>
+        </details>
 
-      <div class="form-group">
-        <label for="faction">Fraktion/ätt/klan/stam</label>
-        <textarea id="faction" name="faction" class="auto-resize" placeholder="T.ex. ätt eller klan"></textarea>
-      </div>
+        <details class="note-field" open>
+          <summary>Fraktion/ätt/klan/stam</summary>
+          <textarea id="faction" name="faction" class="auto-resize" placeholder="T.ex. ätt eller klan"></textarea>
+        </details>
 
       <!-- -------- Mellanlångt -------- -->
-      <div class="field-row">
-        <div class="form-group">
-          <label for="goal">Personligt mål</label>
-          <textarea id="goal" name="goal" class="auto-resize" placeholder="Livsmål, ambition"></textarea>
+        <div class="field-row">
+          <details class="note-field" open>
+            <summary>Personligt mål</summary>
+            <textarea id="goal" name="goal" class="auto-resize" placeholder="Livsmål, ambition"></textarea>
+          </details>
+          <details class="note-field" open>
+            <summary>Drivkrafter</summary>
+            <textarea id="drives" name="drives" class="auto-resize" placeholder="Vad får dem att agera?"></textarea>
+          </details>
         </div>
-        <div class="form-group">
-          <label for="drives">Drivkrafter</label>
-          <textarea id="drives" name="drives" class="auto-resize" placeholder="Vad får dem att agera?"></textarea>
+        <div class="field-row">
+          <details class="note-field" open>
+            <summary>Lojaliteter</summary>
+            <textarea id="loyalties" name="loyalties" class="auto-resize" placeholder="T.ex. familj, gille"></textarea>
+          </details>
+          <details class="note-field" open>
+            <summary>Älskar</summary>
+            <textarea id="likes" name="likes" class="auto-resize" placeholder="T.ex. skogar, böcker"></textarea>
+          </details>
         </div>
-      </div>
-      <div class="field-row">
-        <div class="form-group">
-          <label for="loyalties">Lojaliteter</label>
-          <textarea id="loyalties" name="loyalties" class="auto-resize" placeholder="T.ex. familj, gille"></textarea>
-        </div>
-        <div class="form-group">
-          <label for="likes">Älskar</label>
-          <textarea id="likes" name="likes" class="auto-resize" placeholder="T.ex. skogar, böcker"></textarea>
-        </div>
-      </div>
-      <div class="form-group">
-        <label for="hates">Hatar</label>
-        <textarea id="hates" name="hates" class="auto-resize" placeholder="T.ex. orättvisa, korruption"></textarea>
-      </div>
+        <details class="note-field" open>
+          <summary>Hatar</summary>
+          <textarea id="hates" name="hates" class="auto-resize" placeholder="T.ex. orättvisa, korruption"></textarea>
+        </details>
 
       <!-- -------- Knappar -------- -->
       <div class="char-btn-row">
