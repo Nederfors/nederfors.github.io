@@ -191,7 +191,6 @@ function initIndex() {
   dom.sIn.addEventListener('input',()=>{
     sTemp = dom.sIn.value.trim();
     activeTags(); renderList(filtered());
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   });
   dom.sIn.addEventListener('keydown',e=>{
     if(e.key==='Enter'){
