@@ -173,6 +173,13 @@ function initIndex() {
     if(e.key==='Enter'){
       e.preventDefault();
       const term = sTemp.toLowerCase();
+      if (term === 'webapp' && window.deferredPrompt) {
+        window.deferredPrompt.prompt();
+        window.deferredPrompt.userChoice.finally(() => window.deferredPrompt = null);
+        alert('Installationsprompten har öppnats.');
+        dom.sIn.value = ''; sTemp = '';
+        return;
+      }
       if (term === 'lol') {
         F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
