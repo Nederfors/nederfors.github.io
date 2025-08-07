@@ -157,7 +157,11 @@ class SharedToolbar extends HTMLElement {
         <!-- Erfarenhetspoäng -->
         <div class="filter-group">
           <label for="xpInput">Erfarenhetspoäng</label>
-          <input id="xpInput" type="number" min="0" value="0">
+          <div class="xp-control">
+            <button id="xpMinus" class="char-btn icon" type="button">&minus;</button>
+            <input id="xpInput" type="number" min="0" value="0">
+            <button id="xpPlus" class="char-btn icon" type="button">+</button>
+          </div>
         </div>
         <!-- Sammanfattning -->
         <div id="xpSummary" class="exp-counter"></div>

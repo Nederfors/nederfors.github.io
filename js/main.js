@@ -17,6 +17,7 @@ const dom  = {
   newBtn  : $T('newCharBtn'),   dupBtn : $T('duplicateChar'),   xpOut  : $T('xpOut'),
   exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
   xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
+  xpMinus : $T('xpMinus'),      xpPlus : $T('xpPlus'),
 
   /* inventarie */
   invList : $T('invList'),      invBadge  : $T('invBadge'),
@@ -285,6 +286,21 @@ function bindToolbar() {
     storeHelper.setBaseXP(store, xp);
     updateXP();
   });
+
+  if (dom.xpPlus) {
+    dom.xpPlus.addEventListener('click', () => {
+      const xp = storeHelper.getBaseXP(store) + 1;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
+  if (dom.xpMinus) {
+    dom.xpMinus.addEventListener('click', () => {
+      const xp = Math.max(0, storeHelper.getBaseXP(store) - 1);
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
 
   if (dom.forgeBtn) {
     if (storeHelper.getPartySmith(store)) dom.forgeBtn.classList.add('active');
