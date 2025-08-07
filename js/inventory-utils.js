@@ -502,7 +502,7 @@
       <li class="card">
         <div class="card-title">Pengar</div>
         <div class="card-desc">
-          ${cash.daler} daler, ${cash.skilling} skilling, ${cash['örtegar']} örtegar
+          Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö
           <br>Kostnad: ${tot.d}D ${tot.s}S ${tot.o}Ö
           <br>Oanvänt: <span id="unusedOut">0D 0S 0Ö</span>
         </div>
