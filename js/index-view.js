@@ -172,6 +172,14 @@ function initIndex() {
   dom.sIn.addEventListener('keydown',e=>{
     if(e.key==='Enter'){
       e.preventDefault();
+      const term = sTemp.toLowerCase();
+      if (term === 'lol') {
+        F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
+        dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
+        activeTags(); renderList(filtered());
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       if (tryBomb(sTemp)) {
         dom.sIn.value=''; sTemp='';
         return;
@@ -197,11 +205,6 @@ function initIndex() {
     const section=t.dataset.type, val=t.dataset.val;
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else F[section] = F[section].filter(x=>x!==val);
-    activeTags(); renderList(filtered());
-  });
-  dom.clrBtn.addEventListener('click',()=>{
-    F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
-    dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
     activeTags(); renderList(filtered());
   });
 

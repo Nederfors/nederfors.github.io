@@ -41,7 +41,6 @@ class SharedToolbar extends HTMLElement {
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <button  id="clearFilters" class="char-btn">Rensa filter</button>
           <a       id="notesLink"  class="char-btn icon" title="Anteckningar">📜</a>
           <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
           <button  id="invToggle"    class="char-btn icon" title="Inventarie">
@@ -314,7 +313,7 @@ class SharedToolbar extends HTMLElement {
             <strong>📜 / 📇</strong> öppnar anteckningssidan (ikonen ändras beroende på sida).<br>
             <strong>🎒</strong> öppnar inventariepanelen.<br>
             <strong>📊</strong> öppnar egenskapspanelen.<br>
-            <strong>Rensa filter</strong> nollställer alla filter.<br>
+            <strong>Skriv "lol"</strong> i sökfältet nollställer alla filter.<br>
             <strong>⚙️</strong> öppnar filtermenyn.
           </p>
           <h3>Filtermenyn</h3>
