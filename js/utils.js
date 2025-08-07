@@ -60,6 +60,7 @@
     'Rustning': 'Rustningar',
     'Vapen': 'Vapen',
     'Pil/Lod': 'Pilar/Lod',
+    'Sköld': 'Sköldar',
     'Kvalitet': 'Kvaliteter',
     'Mystisk kvalitet': 'Mystiska kvaliteter',
     'Elixir': 'Elixir',
@@ -67,7 +68,10 @@
     'Specialverktyg': 'Specialverktyg',
     'Diverse': 'Diverse',
     'Mat': 'Mat',
-    'Dryck': 'Drycker'
+    'Dryck': 'Drycker',
+    'Byggnad': 'Byggnader',
+    'Förvaring': 'Förvaringsföremål',
+    'Fälla': 'Fällor'
   };
 
   function catName(cat){
