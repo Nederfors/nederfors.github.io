@@ -133,6 +133,12 @@ function initIndex() {
             infoHtml += t;
           }
         }
+        const tagsHtml = (p.taggar?.typ || [])
+          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
+          .map(t=>`<span class="tag">${t}</span>`).join(' ');
+        if (compact && tagsHtml) {
+          infoHtml += `<br><div class="tags">${tagsHtml}</div>`;
+        }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         const count = isInv(p)
@@ -163,10 +169,9 @@ function initIndex() {
         }
         const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
         if (spec) li.dataset.trait = spec;
-        const tagsHtml = (p.taggar?.typ || [])
-          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
-          .map(t=>`<span class="tag">${t}</span>`).join(' ');
-        const tagsDiv = tagsHtml ? `<div class="tags">${tagsHtml}</div>` : '';
+        const tagsDiv = (!compact && tagsHtml)
+          ? `<div class="tags">${tagsHtml}</div>`
+          : '';
         const levelHtml = hideDetails ? '' : lvlSel;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
         const priceHtml = priceText ? `<div class="card-price">${priceText}</div>` : '';
