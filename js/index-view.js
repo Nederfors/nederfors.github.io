@@ -174,14 +174,14 @@ function initIndex() {
       e.preventDefault();
       const term = sTemp.toLowerCase();
       if (term === 'webapp') {
-        if (window.deferredPrompt) {
-          window.deferredPrompt.prompt();
-          window.deferredPrompt.userChoice
-            .then(() => window.deferredPrompt = null)
-            .catch(() => window.deferredPrompt = null);
-        } else {
-          alert('Installationsprompten är inte tillgänglig.');
-        }
+        const ua = navigator.userAgent.toLowerCase();
+        let anchor = 'general';
+        if (/iphone|ipad|ipod/.test(ua)) anchor = 'ios';
+        else if (/android/.test(ua)) anchor = 'android';
+        else if (/edg|edge/.test(ua)) anchor = 'edge';
+        else if (/firefox/.test(ua)) anchor = 'firefox';
+        else if (/chrome/.test(ua)) anchor = 'chrome';
+        window.open(`webapp.html#${anchor}`, '_blank');
         dom.sIn.value = ''; sTemp = '';
         return;
       }
