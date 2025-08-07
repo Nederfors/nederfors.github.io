@@ -6,6 +6,7 @@ function initIndex() {
   dom.filterUnion.classList.toggle('active', union);
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', compact);
+  let catsMinimized = false;
 
   const getEntries = () =>
     DB.concat(storeHelper.getCustomEntries(store));
@@ -79,7 +80,7 @@ function initIndex() {
     Object.keys(cats).sort().forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details open><summary>${cat}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${cat}</summary><ul class="card-list"></ul></details>`;
       const listEl=catLi.querySelector('ul');
       cats[cat].forEach(p=>{
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
@@ -178,6 +179,14 @@ function initIndex() {
       });
       dom.lista.appendChild(catLi);
     });
+    updateCatToggle();
+  };
+
+  const updateCatToggle = () => {
+    dom.catToggle.textContent = catsMinimized ? '📈' : '📉';
+    dom.catToggle.title = catsMinimized
+      ? 'Öppna alla kategorier'
+      : 'Minimera alla kategorier';
   };
 
   /* första render */
@@ -229,6 +238,14 @@ function initIndex() {
       activeTags(); renderList(filtered());
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  });
+
+  dom.catToggle.addEventListener('click', () => {
+    catsMinimized = !catsMinimized;
+    document.querySelectorAll('.cat-group > details').forEach(d => {
+      d.open = !catsMinimized;
+    });
+    updateCatToggle();
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
     dom[sel].addEventListener('change',()=>{

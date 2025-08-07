@@ -45,6 +45,7 @@ const dom  = {
   traitStats: $T('traitStats'),
 
   /* filterfält */
+  catToggle: $T('catToggle'),
   sIn   : $T('searchField'),  typSel : $T('typFilter'),
   arkSel: $T('arkFilter'),    tstSel : $T('testFilter'),
   filterUnion: $T('filterUnion'),
