@@ -156,15 +156,20 @@ class SharedToolbar extends HTMLElement {
 
         <!-- Erfarenhetspoäng -->
         <div class="filter-group">
-          <label for="xpInput">Erfarenhetspoäng</label>
           <div class="xp-control">
             <button id="xpMinus" class="char-btn icon" type="button">&minus;</button>
-            <input id="xpInput" type="number" min="0" value="0">
+            <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
             <button id="xpPlus" class="char-btn icon" type="button">+</button>
           </div>
+          <div id="xpSummary" class="card exp-counter">
+            <div class="card-title">Erfarenhetspoäng</div>
+            <div class="card-desc">
+              Totalt: <span id="xpTotal">0</span><br>
+              Använt: <span id="xpUsed">0</span><br>
+              Oanvänt: <span id="xpFree">0</span>
+            </div>
+          </div>
         </div>
-        <!-- Sammanfattning -->
-        <div id="xpSummary" class="exp-counter"></div>
         <div class="exp-counter traits-total" style="text-align:center;">
           Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
         </div>
