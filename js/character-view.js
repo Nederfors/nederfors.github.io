@@ -245,7 +245,7 @@ function initCharacter() {
       const cat = g.entry.taggar?.typ?.[0] || 'Övrigt';
       (cats[cat] ||= []).push(g);
     });
-    Object.keys(cats).sort().forEach(cat=>{
+    Object.keys(cats).sort(catComparator).forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
       catLi.innerHTML=`<details open><summary>${cat}</summary><ul class="card-list"></ul></details>`;

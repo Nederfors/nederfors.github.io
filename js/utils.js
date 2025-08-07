@@ -24,6 +24,37 @@
 
   const TYPE_PRIORITIES = { Ras: 0, Yrke: 1, Elityrke: 2 };
 
+  const CAT_ORDER = [
+    'Ras',
+    'Yrke',
+    'Elityrke',
+    'Förmåga',
+    'Ritual',
+    'Fördel',
+    'Nackdel',
+    'Särdrag',
+    'Rustning',
+    'Vapen',
+    'Pil/Lod',
+    'Kvalitet',
+    'Mystisk kvalitet',
+    'Elixir',
+    'Lägre Artefakt',
+    'Specialverktyg',
+    'Diverse',
+    'Mat',
+    'Dryck'
+  ];
+
+  function catComparator(a, b){
+    const ai = CAT_ORDER.indexOf(a);
+    const bi = CAT_ORDER.indexOf(b);
+    if (ai !== -1 && bi !== -1) return ai - bi;
+    if (ai !== -1) return -1;
+    if (bi !== -1) return 1;
+    return a.localeCompare(b);
+  }
+
   function isInv(p){ return (p.taggar?.typ||[]).some(t => EQUIP.includes(t)); }
   function isQual(p){
     return (p.taggar?.typ||[]).some(t => ['Kvalitet','Mystisk kvalitet'].includes(t));
@@ -196,4 +227,5 @@
   window.searchNormalize = searchNormalize;
   window.createSearchSorter = createSearchSorter;
   window.copyToClipboard = copyToClipboard;
+  window.catComparator = catComparator;
 })(window);
