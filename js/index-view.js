@@ -83,6 +83,8 @@ function initIndex() {
         : '';
       const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
       let desc = abilityHtml(p);
+      let priceHtml = '';
+      let priceInfo = '';
       if (isInv(p)) {
         desc += itemStatHtml(p);
         const baseQuals = [
@@ -96,10 +98,12 @@ function initIndex() {
           desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
         }
         if (p.grundpris) {
-          desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
+          const priceStr = formatMoney(invUtil.calcEntryCost(p));
+          priceHtml = `<div class="card-price">Pris: ${priceStr}</div>`;
+          priceInfo = `<br>Pris: ${priceStr}`;
         }
       }
-      let infoHtml = desc;
+      let infoHtml = desc + priceInfo;
       if (isRas(p) || isYrke(p) || isElityrke(p)) {
         const extra = yrkeInfoHtml(p);
         if (extra) infoHtml += `<br>${extra}`;
@@ -162,6 +166,7 @@ function initIndex() {
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}
+          ${priceHtml}
           ${btn}`;
         dom.lista.appendChild(li);
       });

@@ -249,6 +249,12 @@ input:focus, select:focus, textarea:focus {
 }
 .card-desc  { font-size: 1.15rem; }
 .card.compact .card-desc { display: none; }
+.card-price {
+  position: absolute;
+  left: 1.3rem;
+  bottom: 1rem;
+  font-size: .9rem;
+}
 
 /* Lista med niva-beskrivningar for formagor */
 .levels { margin-top: .6rem; }
