@@ -165,7 +165,12 @@
     const add   = bar.shadowRoot.getElementById('customAdd');
     const cancel= bar.shadowRoot.getElementById('customCancel');
 
-    type.innerHTML = EQUIP.map(t=>`<option>${t}</option>`).join('');
+    const equipOptions = EQUIP
+      .slice()
+      .sort((a, b) => catName(a).localeCompare(catName(b)))
+      .map(t => `<option value="${t}">${catName(t)}</option>`)
+      .join('');
+    type.innerHTML = equipOptions;
 
     pop.classList.add('open');
     if (effSel) effSel.value = 'corruption';
@@ -401,8 +406,11 @@
       });
       dom.invTypeSel.innerHTML =
         '<option value="">Kategori (alla)</option>' +
-        [...types].sort().map(t =>
-          `<option${t===F.typ?' selected':''}>${t}</option>`).join('');
+        [...types]
+          .sort((a, b) => catName(a).localeCompare(catName(b)))
+          .map(t =>
+            `<option value="${t}"${t===F.typ?' selected':''}>${catName(t)}</option>`)
+          .join('');
     }
 
     const inv = allInv
