@@ -68,6 +68,7 @@ function initIndex() {
   const renderList = arr=>{
     dom.lista.innerHTML = arr.length ? '' : '<li class="card">Inga träffar.</li>';
     const charList = storeHelper.getCurrentList(store);
+    const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
     arr.forEach(p=>{
       const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
@@ -121,31 +122,33 @@ function initIndex() {
         }
       }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
-        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-        const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
-        const limit = storeHelper.monsterStackLimit(charList, p.namn);
+        const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const count = isInv(p)
+          ? invList.filter(c => c.name===p.namn).reduce((sum,c)=>sum+(c.qty||1),0)
+          : charList.filter(c => c.namn===p.namn && !c.trait).length;
+        const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
         const showInfo = compact || hideDetails;
+        const eliteBtn = isElityrke(p)
+          ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
+          : '';
         let btn = '';
         if(multi){
           if(count>0){
             const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
             const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
             const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}</div>`;
+            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${eliteBtn}</div>`;
           }else{
             const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}</div>`;
+            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}${eliteBtn}</div>`;
           }
         }else{
           const mainBtn = inChar
             ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
             : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${mainBtn}</div>`;
+          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
         }
-        const eliteBtn = isElityrke(p)
-          ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
-          : '';
         const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
         if (spec) li.dataset.trait = spec;
         const tagsHtml = (p.taggar?.typ || [])
@@ -159,7 +162,7 @@ function initIndex() {
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}
-          ${btn}${eliteBtn}`;
+          ${btn}`;
         dom.lista.appendChild(li);
       });
     };
@@ -265,6 +268,7 @@ function initIndex() {
         const qn = p.namn;
         if (!inv[iIdx].kvaliteter.includes(qn)) inv[iIdx].kvaliteter.push(qn);
         invUtil.saveInventory(inv); invUtil.renderInventory();
+        renderList(filtered());
       });
       return;
     }
@@ -285,6 +289,7 @@ function initIndex() {
             else inv.push(rowBase);
           }
           invUtil.saveInventory(inv); invUtil.renderInventory();
+          renderList(filtered());
         };
         if (p.traits && window.maskSkill) {
           const used = inv.filter(it => it.name===p.namn).map(it=>it.trait).filter(Boolean);
@@ -480,6 +485,7 @@ function initIndex() {
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
+        renderList(filtered());
       } else {
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
