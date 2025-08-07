@@ -73,11 +73,30 @@ function initIndex() {
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
     const cats = {};
+    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+      .map(t => searchNormalize(t.toLowerCase()));
+    const searchActive = terms.length > 0;
+    const catNameMatch = {};
     arr.forEach(p=>{
       const cat = p.taggar?.typ?.[0] || 'Övrigt';
       (cats[cat] ||= []).push(p);
+      if (searchActive) {
+        const name = searchNormalize((p.namn || '').toLowerCase());
+        if (terms.every(q => name.includes(q))) {
+          catNameMatch[cat] = true;
+        }
+      }
     });
-    Object.keys(cats).sort(catComparator).forEach(cat=>{
+    const catKeys = Object.keys(cats);
+    catKeys.sort((a,b)=>{
+      if (searchActive) {
+        const aMatch = catNameMatch[a] ? 1 : 0;
+        const bMatch = catNameMatch[b] ? 1 : 0;
+        if (aMatch !== bMatch) return bMatch - aMatch;
+      }
+      return catComparator(a,b);
+    });
+    catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
       catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
