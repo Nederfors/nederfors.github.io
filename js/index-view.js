@@ -191,7 +191,7 @@ function initIndex() {
   };
 
   const updateCatToggle = () => {
-    dom.catToggle.textContent = catsMinimized ? '📈' : '📉';
+    dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
     dom.catToggle.title = catsMinimized
       ? 'Öppna alla kategorier'
       : 'Minimera alla kategorier';

@@ -115,7 +115,7 @@ class SharedToolbar extends HTMLElement {
       <!-- ---------- Verktygsrad ---------- -->
       <footer class="toolbar">
         <div class="toolbar-top">
-          <button id="catToggle" class="char-btn icon" title="Minimera alla kategorier">📉</button>
+          <button id="catToggle" class="char-btn icon" title="Minimera alla kategorier">▼</button>
           <input id="searchField" placeholder="Sök…">
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
