@@ -1,0 +1,15 @@
+{
+  "name": "Symbaroum Companion",
+  "short_name": "Symbaroum",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#121416",
+  "theme_color": "#121416",
+  "icons": [
+    {
+      "src": "icons/icon_DA",
+      "sizes": "16x16 24x24 32x32 48x48 64x64 128x128 256x256 512x512",
+      "type": "image/x-icon"
+    }
+  ]
+}
