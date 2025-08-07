@@ -80,7 +80,7 @@ function initIndex() {
     Object.keys(cats).sort(catComparator).forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${cat}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const listEl=catLi.querySelector('ul');
       cats[cat].forEach(p=>{
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';

@@ -248,7 +248,7 @@ function initCharacter() {
     Object.keys(cats).sort(catComparator).forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details open><summary>${cat}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details open><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const listEl=catLi.querySelector('ul');
       cats[cat].forEach(g=>{
         const p = g.entry;
