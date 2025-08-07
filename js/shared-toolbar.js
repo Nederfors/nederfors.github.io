@@ -32,6 +32,84 @@ class SharedToolbar extends HTMLElement {
   /* ------------------------------------------------------- */
   render() {
     this.shadowRoot.innerHTML = `
+      <style>
+        :host { display: block; }
+
+        .toolbar {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          z-index: 900;
+          background: var(--panel);
+          border-top: 1.5px solid var(--border);
+          padding: .6rem .8rem;
+          display: flex;
+          flex-direction: column;
+          gap: .6rem;
+        }
+        .toolbar-top {
+          display: flex;
+          align-items: center;
+          gap: .6rem;
+        }
+        .toolbar-top input {
+          flex: 1 1 110px;
+          min-width: 90px;
+        }
+        .button-row {
+          display: flex;
+          gap: .6rem;
+        }
+        .button-row > a,
+        .button-row > button {
+          flex: 1;
+          min-width: 0;
+        }
+        #invBadge {
+          background: var(--danger);
+          border-radius: 50%;
+          padding: 0 .45rem;
+          font-size: .75rem;
+          margin-left: .25rem;
+        }
+        .toolbar .exp-counter {
+          display: flex;
+          align-items: center;
+          gap: .3rem;
+          background: var(--border);
+          color: var(--txt);
+          padding: .3rem .7rem;
+          border-radius: .55rem;
+          font-weight: 600;
+          font-size: .9rem;
+          white-space: nowrap;
+        }
+        .toolbar .exp-counter span {
+          color: var(--accent);
+          font-variant-numeric: tabular-nums;
+        }
+        .char-btn,
+        .toolbar button,
+        .toolbar a {
+          padding: .55rem 1.1rem;
+          border: none;
+          border-radius: .6rem;
+          background: var(--accent);
+          color: #fff;
+          cursor: pointer;
+          text-decoration: none;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          transition: transform .1s ease, opacity .1s ease;
+        }
+        .char-btn.danger { background: var(--danger); }
+        .char-btn.icon   { font-size: 1.1rem; }
+        .char-btn:hover  { opacity: .85; }
+        .char-btn:active { transform: scale(.95); opacity: .7; }
+      </style>
       <link rel="stylesheet" href="css/style.css">
 
       <!-- ---------- Verktygsrad ---------- -->
