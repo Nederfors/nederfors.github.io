@@ -508,16 +508,11 @@ class SharedToolbar extends HTMLElement {
     const role = document.body.dataset.role;
     const switchLink = this.shadowRoot.getElementById('switchRole');
 
-    if (role === 'character') {
+    if (role === 'character' || role === 'notes') {
       switchLink.href = 'index.html';
       switchLink.textContent = '📇';
       switchLink.title = 'Till index';
-    } else if (role === 'notes') {
-      switchLink.href = 'character.html';
-      switchLink.textContent = '🧝';
-      switchLink.title = 'Till rollperson';
     } else {
-      // Default to index
       switchLink.href = 'character.html';
       switchLink.textContent = '🧝';
       switchLink.title = 'Till rollperson';

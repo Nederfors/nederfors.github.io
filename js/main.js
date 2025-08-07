@@ -1,11 +1,11 @@
 /* ===========================================================
-   js/main.js – gemensam logik för index- och character-vy
+   js/main.js – gemensam logik för index-, character- och notes-vy
    Fungerar ihop med Web Component <shared-toolbar>
    2025-06-20
    =========================================================== */
 
 /* ---------- Grunddata & konstanter ---------- */
-const ROLE   = document.body.dataset.role;           // 'index' | 'character'
+const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
 let   store  = storeHelper.load();                   // Lokal lagring
 
 /* ---------- Snabb DOM-access ---------- */
@@ -168,14 +168,19 @@ function yrkeInfoHtml(p) {
    GEMENSAM INIT
    =========================================================== */
 function boot() {
-  invUtil.sortAllInventories();
+  if (window.invUtil) {
+    invUtil.sortAllInventories();
+    invUtil.renderInventory();
+    invUtil.bindInv();
+    invUtil.bindMoney();
+  }
   refreshCharSelect();
   bindToolbar();
-  invUtil.renderInventory();
-  invUtil.bindInv();
-  invUtil.bindMoney();
 
-  if (dom.traits) { renderTraits(); bindTraits(); }
+  if (dom.traits && typeof renderTraits === 'function') {
+    renderTraits();
+    if (typeof bindTraits === 'function') bindTraits();
+  }
   if (ROLE === 'index')     initIndex();
   if (ROLE === 'character') initCharacter();
   if (ROLE === 'notes')     initNotes();

@@ -17,7 +17,6 @@
       }
       box.textContent=el.value;
     });
-    form.classList.remove('hidden');
     form.classList.add('view-mode');
     editBtn.classList.remove('hidden');
   }
