@@ -238,56 +238,65 @@ function initCharacter() {
         }
     });
     const compact = storeHelper.getCompactEntries(store);
-    dom.valda.innerHTML = groups.length ? '' : '<li class="card">Inga träffar.</li>';
+    dom.valda.innerHTML = '';
+    if(!groups.length){ dom.valda.innerHTML = '<li class="card">Inga träffar.</li>'; return; }
+    const cats = {};
     groups.forEach(g=>{
-      const p = g.entry;
-      const availLvls = LVL.filter(l=>p.nivåer?.[l]);
-      const lvlSel = availLvls.length>1
-        ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
-            ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
-          </select>`
-        : '';
-      const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
-      const idx=LVL.indexOf(p.nivå);
-      let desc = abilityHtml(p, p.nivå);
-      let infoHtml = desc;
-      if (isRas(p) || isYrke(p) || isElityrke(p)) {
-        const extra = yrkeInfoHtml(p);
-        if (extra) infoHtml += `<br>${extra}`;
-      }
-      let raceInfo = '';
-      if (p.namn === 'Blodsband' && p.race) {
-        raceInfo = `<br><strong>Ras:</strong> ${p.race}`;
-        infoHtml += raceInfo;
-      }
-      let traitInfo = '';
-      if (p.trait) {
-        traitInfo = p.namn === 'Monsterlärd'
-          ? `<br><strong>Specialisering:</strong> ${p.trait}`
-          : `<br><strong>Karaktärsdrag:</strong> ${p.trait}`;
-        infoHtml += traitInfo;
-      }
-      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
+      const cat = g.entry.taggar?.typ?.[0] || 'Övrigt';
+      (cats[cat] ||= []).push(g);
+    });
+    Object.keys(cats).sort().forEach(cat=>{
+      const catLi=document.createElement('li');
+      catLi.className='cat-group';
+      catLi.innerHTML=`<details open><summary>${cat}</summary><ul class="card-list"></ul></details>`;
+      const listEl=catLi.querySelector('ul');
+      cats[cat].forEach(g=>{
+        const p = g.entry;
+        const availLvls = LVL.filter(l=>p.nivåer?.[l]);
+        const lvlSel = availLvls.length>1
+          ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
+              ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
+            </select>`
+          : '';
+        const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
+        let desc = abilityHtml(p, p.nivå);
+        let infoHtml = desc;
+        if (isRas(p) || isYrke(p) || isElityrke(p)) {
+          const extra = yrkeInfoHtml(p);
+          if (extra) infoHtml += `<br>${extra}`;
+        }
+        let raceInfo = '';
+        if (p.namn === 'Blodsband' && p.race) {
+          raceInfo = `<br><strong>Ras:</strong> ${p.race}`;
+          infoHtml += raceInfo;
+        }
+        let traitInfo = '';
+        if (p.trait) {
+          traitInfo = p.namn === 'Monsterlärd'
+            ? `<br><strong>Specialisering:</strong> ${p.trait}`
+            : `<br><strong>Karaktärsdrag:</strong> ${p.trait}`;
+          infoHtml += traitInfo;
+        }
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
 
-      const li=document.createElement('li');
-      li.className='card' + (compact ? ' compact' : '');
-      li.dataset.name=p.namn;
-      if(p.trait) li.dataset.trait=p.trait;
-      if(p.trait) li.dataset.trait=p.trait;
-      const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-      const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
-      const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
-      const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-      const tagsHtml = (p.taggar?.typ || [])
-        .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
-        .map(t => `<span class="tag">${t}</span>`).join(' ');
-      const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
-      const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
-      const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
-      const activeLvls = LVL.filter((l, i) => i <= LVL.indexOf(p.nivå || LVL[0]) && p.taggar?.handling?.[l]?.includes('Aktiv'));
-      const conflictBtn = activeLvls.length
-        ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeLvls.join(', ')}">💔</button>`
-        : '';
+        const li=document.createElement('li');
+        li.className='card' + (compact ? ' compact' : '');
+        li.dataset.name=p.namn;
+        if(p.trait) li.dataset.trait=p.trait;
+        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+        const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
+        const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
+        const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
+        const tagsHtml = (p.taggar?.typ || [])
+          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
+          .map(t => `<span class="tag">${t}</span>`).join(' ');
+        const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
+        const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
+        const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
+        const activeLvls = LVL.filter((l, i) => i <= LVL.indexOf(p.nivå || LVL[0]) && p.taggar?.handling?.[l]?.includes('Aktiv'));
+        const conflictBtn = activeLvls.length
+          ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeLvls.join(', ')}">💔</button>`
+          : '';
         const showInfo = compact || hideDetails;
         let btn = '';
         if(multi){
@@ -305,7 +314,9 @@ function initCharacter() {
         ${descHtml}
         ${btn}`;
 
-      dom.valda.appendChild(li);
+        listEl.appendChild(li);
+      });
+      dom.valda.appendChild(catLi);
     });
   };
 
