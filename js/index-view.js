@@ -137,8 +137,8 @@ function initIndex() {
         const tagsHtml = (p.taggar?.typ || [])
           .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
           .map(t=>`<span class="tag">${t}</span>`).join(' ');
-        if (compact && tagsHtml) {
-          infoHtml += `<br><div class="tags">${tagsHtml}</div>`;
+        if (tagsHtml) {
+          infoHtml = `<div class="tags">${tagsHtml}</div><br>${infoHtml}`;
         }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
