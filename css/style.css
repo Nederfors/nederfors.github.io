@@ -471,6 +471,10 @@ select.level {
     padding: .3rem .5rem;
     font-size: .9rem;
   }
+  .inv-controls .char-btn[data-elite-req] {
+    padding: .15rem .25rem;
+    font-size: .45rem;
+  }
 }
 /* ---------- Off-canvas-paneler från höger ---------- */
 #invPanel,
