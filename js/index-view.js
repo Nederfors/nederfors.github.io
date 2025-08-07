@@ -94,6 +94,7 @@ function initIndex() {
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
         let desc = abilityHtml(p);
+        let priceText = '';
         if (isInv(p)) {
           desc += itemStatHtml(p);
           const baseQuals = [
@@ -107,10 +108,10 @@ function initIndex() {
             desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
           }
           if (p.grundpris) {
-            desc += `<br>Pris: ${formatMoney(invUtil.calcEntryCost(p))}`;
+            priceText = formatMoney(invUtil.calcEntryCost(p));
           }
         }
-        let infoHtml = desc;
+        let infoHtml = priceText ? `${desc}<br>Pris: ${priceText}` : desc;
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
           if (extra) infoHtml += `<br>${extra}`;
@@ -168,11 +169,13 @@ function initIndex() {
         const tagsDiv = tagsHtml ? `<div class="tags">${tagsHtml}</div>` : '';
         const levelHtml = hideDetails ? '' : lvlSel;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
+        const priceHtml = priceText ? `<div class="card-price">${priceText}</div>` : '';
         li.innerHTML = `
           <div class="card-title">${p.namn}${badge}</div>
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}
+          ${priceHtml}
           ${btn}`;
         listEl.appendChild(li);
       });
