@@ -120,7 +120,6 @@ class SharedToolbar extends HTMLElement {
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <a       id="notesLink"  class="char-btn icon" title="Anteckningar">📜</a>
           <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
           <button  id="invToggle"    class="char-btn icon" title="Inventarie">
             🎒 <span id="invBadge">0</span>
@@ -501,33 +500,20 @@ class SharedToolbar extends HTMLElement {
   updateToolbarLinks() {
     const role = document.body.dataset.role;
     const switchLink = this.shadowRoot.getElementById('switchRole');
-    const notesLink  = this.shadowRoot.getElementById('notesLink');
 
     if (role === 'character') {
       switchLink.href = 'index.html';
       switchLink.textContent = '📇';
       switchLink.title = 'Till index';
-
-      notesLink.href = 'notes.html';
-      notesLink.textContent = '📜';
-      notesLink.title = 'Anteckningar';
     } else if (role === 'notes') {
       switchLink.href = 'character.html';
       switchLink.textContent = '🧝';
       switchLink.title = 'Till rollperson';
-
-      notesLink.href = 'index.html';
-      notesLink.textContent = '📇';
-      notesLink.title = 'Till index';
     } else {
       // Default to index
       switchLink.href = 'character.html';
       switchLink.textContent = '🧝';
       switchLink.title = 'Till rollperson';
-
-      notesLink.href = 'notes.html';
-      notesLink.textContent = '📜';
-      notesLink.title = 'Anteckningar';
     }
   }
 }
