@@ -279,9 +279,9 @@ function initCharacter() {
         }
         const tagsHtml = (p.taggar?.typ || [])
           .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
-          .map(t => `<span class="tag">${t}</span>`).join(' ');
-        if (compact && tagsHtml) {
-          infoHtml += `<br><div class="tags">${tagsHtml}</div>`;
+          .map(t=>`<span class="tag">${t}</span>`).join(' ');
+        if (tagsHtml) {
+          infoHtml = `<div class="tags">${tagsHtml}</div><br>${infoHtml}`;
         }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
 
