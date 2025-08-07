@@ -120,41 +120,43 @@ function initIndex() {
           infoHtml += t;
         }
       }
-      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         const count = charList.filter(c => c.namn===p.namn && !c.trait).length;
         const limit = storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
+        const showInfo = compact || hideDetails;
         let btn = '';
         if(multi){
           const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
           const remBtn = count>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-          btn = `<div class="inv-controls">${remBtn}${addBtn}</div>`;
-      }else{
-        btn = inChar
-          ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-          : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-      }
-      const eliteBtn = isElityrke(p)
-        ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
-        : '';
-      const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
-      if (spec) li.dataset.trait = spec;
-      const tagsHtml = (p.taggar?.typ || [])
-        .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
-        .map(t=>`<span class="tag">${t}</span>`).join(' ');
-      const levelHtml = hideDetails ? '' : lvlSel;
-      const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
-      const showInfo = compact || hideDetails;
-      li.innerHTML = `
-        <div class="card-title">${p.namn}${badge}</div>
-        ${tagsHtml}
-        ${levelHtml}
-        ${descHtml}
-        ${showInfo ? infoBtn : ''}${btn}${eliteBtn}`;
-      dom.lista.appendChild(li);
-    });
-  };
+          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${remBtn}${addBtn}</div>`;
+        }else{
+          const mainBtn = inChar
+            ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+            : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${mainBtn}</div>`;
+        }
+        const eliteBtn = isElityrke(p)
+          ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
+          : '';
+        const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
+        if (spec) li.dataset.trait = spec;
+        const tagsHtml = (p.taggar?.typ || [])
+          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
+          .map(t=>`<span class="tag">${t}</span>`).join(' ');
+        const tagsDiv = tagsHtml ? `<div class="tags">${tagsHtml}</div>` : '';
+        const levelHtml = hideDetails ? '' : lvlSel;
+        const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
+        li.innerHTML = `
+          <div class="card-title">${p.namn}${badge}</div>
+          ${tagsDiv}
+          ${levelHtml}
+          ${descHtml}
+          ${btn}${eliteBtn}`;
+        dom.lista.appendChild(li);
+      });
+    };
 
   /* första render */
   renderList(filtered()); activeTags(); updateXP();
