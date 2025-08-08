@@ -11,6 +11,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -31,6 +32,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -51,6 +53,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -71,6 +74,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -91,6 +95,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -110,6 +115,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -129,6 +135,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -149,6 +156,7 @@
     },
     "stat": {
       "skydd": "1T6",
+      "vikt": 1.5,
       "begränsning": -3
     },
     "grundpris": {
@@ -169,6 +177,7 @@
     },
     "stat": {
       "skydd": "1T6",
+      "vikt": 1.5,
       "begränsning": -3
     },
     "grundpris": {
@@ -188,6 +197,7 @@
     },
     "stat": {
       "skydd": "1T6",
+      "vikt": 1.5,
       "begränsning": -3
     },
     "grundpris": {
@@ -207,6 +217,7 @@
     },
     "stat": {
       "skydd": "1T6",
+      "vikt": 1.5,
       "begränsning": -3
     },
     "grundpris": {
@@ -227,6 +238,7 @@
     },
     "stat": {
       "skydd": "1T8",
+      "vikt": 2.0,
       "begränsning": -4
     },
     "grundpris": {
@@ -247,6 +259,7 @@
     },
     "stat": {
       "skydd": "1T6",
+      "vikt": 1.5,
       "begränsning": -3
     },
     "grundpris": {
@@ -267,6 +280,7 @@
     },
     "stat": {
       "skydd": "1T8",
+      "vikt": 2.0,
       "begränsning": -4
     },
     "grundpris": {
@@ -287,6 +301,7 @@
     },
     "stat": {
       "skydd": "1T6",
+      "vikt": 1.5,
       "begränsning": -3
     },
     "grundpris": {
@@ -307,6 +322,7 @@
     },
     "stat": {
       "skydd": "1T8",
+      "vikt": 2.0,
       "begränsning": -4
     },
     "grundpris": {
@@ -327,6 +343,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -347,6 +364,7 @@
     },
     "stat": {
       "skydd": "1T8",
+      "vikt": 2.0,
       "begränsning": -4
     },
     "grundpris": {
@@ -367,6 +385,7 @@
     },
     "stat": {
       "skydd": "1T4",
+      "vikt": 1.0,
       "begränsning": -2
     },
     "grundpris": {
@@ -387,6 +406,7 @@
     },
     "stat": {
       "skydd": "1T8",
+      "vikt": 2.0,
       "begränsning": -4
     },
     "grundpris": {
