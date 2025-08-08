@@ -8,6 +8,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 0.6
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -22,6 +25,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 0.9
     },
     "grundpris": {
       "daler": 0,
@@ -38,6 +44,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 1.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 5,
@@ -53,6 +62,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 1.1
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -67,6 +79,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 1.5
     },
     "grundpris": {
       "daler": 10,
@@ -88,6 +103,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 0.4
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -107,6 +125,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 0,
@@ -128,6 +149,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 0.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -147,6 +171,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 1.8
     },
     "grundpris": {
       "daler": 0,
@@ -168,6 +195,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 0.5
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -187,6 +217,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 0.9
     },
     "grundpris": {
       "daler": 0,
@@ -208,6 +241,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 1.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -227,6 +263,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 0,
@@ -248,6 +287,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 0.1
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -267,6 +309,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 0,
@@ -288,6 +333,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 0.3
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -308,6 +356,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 1.6
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -322,6 +373,9 @@
       "typ": [
         "Kläder"
       ]
+    },
+    "stat": {
+      "vikt": 0.4
     },
     "grundpris": {
       "daler": 0,
@@ -343,6 +397,9 @@
         "Kläder"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -353,4 +410,5 @@
       "skilling": 0,
       "örtegar": 7
     }
-  }]
+  }
+]
