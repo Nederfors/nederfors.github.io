@@ -182,9 +182,7 @@
       let beforeExtra = '';
       let afterExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>`;
       if (k === 'Stark') {
-        let base = val;
-        const hasPack = list.some(e => e.namn === 'Packåsna');
-        if (hasPack) base = Math.ceil(base * 1.5);
+        const base = storeHelper.calcCarryCapacity(val, list);
         tal  += hardy;
         pain = storeHelper.calcPainThreshold(val, list, effects);
         beforeExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>` + `<div class="trait-extra">Bärkapacitet: ${base}</div>`;
