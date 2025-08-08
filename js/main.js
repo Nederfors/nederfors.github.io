@@ -184,6 +184,7 @@ function boot() {
   if (ROLE === 'index')     initIndex();
   if (ROLE === 'character') initCharacter();
   if (ROLE === 'notes')     initNotes();
+  ensureCharacterSelected();
 }
 
 /* ===========================================================
@@ -537,6 +538,47 @@ function tryBomb(term) {
   storeHelper.deleteAllCharacters(store);
   location.reload();
   return true;
+}
+
+function ensureCharacterSelected() {
+  if (store.current) return;
+  const pop = document.createElement('div');
+  pop.id = 'charPopup';
+  pop.innerHTML = '<div class="popup-inner"><p id="charPopupMsg"></p><div id="charPopupContent"></div></div>';
+  document.body.appendChild(pop);
+  const msg = pop.querySelector('#charPopupMsg');
+  const content = pop.querySelector('#charPopupContent');
+  if (store.characters.length) {
+    msg.textContent = 'Oj då, denna hemsida är bajs utan någon karaktär så det är bäst att du väljer en!';
+    const sel = document.createElement('select');
+    sel.innerHTML = '<option value="">Välj rollperson…</option>' +
+      store.characters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    sel.addEventListener('change', () => {
+      if (!sel.value) return;
+      store.current = sel.value;
+      storeHelper.save(store);
+      location.reload();
+    });
+    content.appendChild(sel);
+  } else {
+    msg.textContent = 'Oj då, denna hemsida är bajs utan någon karaktär så det är bäst att du skapar en!';
+    const btn = document.createElement('button');
+    btn.className = 'char-btn';
+    btn.textContent = 'Ny rollperson';
+    btn.addEventListener('click', () => {
+      const name = prompt('Namn på ny rollperson?');
+      if (!name) return;
+      const baseXP = 0;
+      const charId = 'rp' + Date.now();
+      store.characters.push({ id: charId, name });
+      store.data[charId] = { baseXp: baseXP, custom: [] };
+      store.current = charId;
+      storeHelper.save(store);
+      location.reload();
+    });
+    content.appendChild(btn);
+  }
+  setTimeout(() => pop.classList.add('open'), 0);
 }
 
 
