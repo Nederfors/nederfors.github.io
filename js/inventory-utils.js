@@ -669,10 +669,10 @@
         return;
       }
 
-      // 2) Klick på rubriken för att expandera/kollapsa posten
-      const title = e.target.closest('.card-title');
-      if (title) {
-        const li = title.closest('li.card');
+      // 2) Klick på collapse-knappen för att expandera/kollapsa posten
+      const collapseBtn = e.target.closest('.collapse-btn');
+      if (collapseBtn) {
+        const li = collapseBtn.closest('li.card');
         li.classList.toggle('compact');
         return;
       }
