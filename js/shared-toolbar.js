@@ -133,7 +133,10 @@ class SharedToolbar extends HTMLElement {
       <aside id="invPanel" class="offcanvas">
         <header class="inv-header">
           <h2>Inventarie</h2>
-          <button class="char-btn icon" data-close="invPanel">✕</button>
+          <div class="inv-actions">
+            <button id="collapseAllInv" class="char-btn icon" title="Kollapsa alla">▶</button>
+            <button class="char-btn icon" data-close="invPanel">✕</button>
+          </div>
         </header>
         <div class="filter-group">
           <label for="invTypeFilter">Kategori</label>
