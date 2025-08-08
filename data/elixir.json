@@ -14,6 +14,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -31,6 +34,9 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -48,6 +54,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -65,6 +74,9 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -82,6 +94,9 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -99,6 +114,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -116,6 +134,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -133,6 +154,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -150,6 +174,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -167,6 +194,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -184,6 +214,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -201,6 +234,9 @@
       "daler": 9,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -218,6 +254,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -235,6 +274,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -252,6 +294,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -269,6 +314,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -286,6 +334,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -303,6 +354,9 @@
       "daler": 3,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -320,6 +374,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -337,6 +394,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -354,6 +414,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -371,6 +434,9 @@
       "daler": 24,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -388,6 +454,9 @@
       "daler": 5,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -405,6 +474,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -422,6 +494,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -439,6 +514,9 @@
       "daler": 16,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -456,6 +534,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -473,6 +554,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -490,6 +574,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -507,6 +594,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -524,6 +614,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -541,6 +634,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -558,6 +654,9 @@
       "daler": 16,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -572,9 +671,12 @@
       "Novis": "En kaka av det mustiga långfärdsbrödet motsvarar en veckas mat för en person."
     },
     "grundpris": {
-      "daler": 2,
-      "skilling": 0,
-      "örtegar": 0
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 5
+    },
+    "stat": {
+      "vikt": 0.15
     }
   },
   {
@@ -592,6 +694,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -609,6 +714,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -626,6 +734,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -643,6 +754,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -660,6 +774,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -677,6 +794,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -694,6 +814,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -711,6 +834,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -728,6 +854,9 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -745,6 +874,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -762,6 +894,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -779,6 +914,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -796,6 +934,9 @@
       "daler": 9,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -813,6 +954,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -830,6 +974,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -847,6 +994,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -864,6 +1014,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -881,6 +1034,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -898,6 +1054,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -915,6 +1074,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -932,6 +1094,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -949,6 +1114,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -966,6 +1134,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -983,6 +1154,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -1000,6 +1174,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   }
 ]
