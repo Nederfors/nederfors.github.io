@@ -14,6 +14,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -31,6 +34,9 @@
       "daler": 1,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -48,6 +54,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -65,6 +74,9 @@
       "daler": 2,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -82,6 +94,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -99,6 +114,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -116,6 +134,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -133,6 +154,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -157,6 +181,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -174,6 +201,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -191,6 +221,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -208,6 +241,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -225,6 +261,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -242,6 +281,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -259,6 +301,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -276,6 +321,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -293,6 +341,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -310,6 +361,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -327,6 +381,9 @@
       "daler": 4,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -344,6 +401,9 @@
       "daler": 8,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -361,6 +421,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -378,6 +441,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -395,6 +461,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -412,6 +481,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -429,6 +501,9 @@
       "daler": 10,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -447,6 +522,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -464,6 +542,9 @@
       "daler": 6,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -481,6 +562,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -498,6 +582,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -515,6 +602,9 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   },
   {
@@ -534,7 +624,8 @@
       "Mästare": "Stavmagikernas signum är den personliga runstaven, etsad med elementens runor. Staven avger i ägarens hand en skyddande aura, skydd 1t4, samt utgör också i övrigt grunden för mystikerns krafter."
     },
     "stat": {
-      "skada": "1T8"
+      "skada": "1T8",
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 12,
@@ -557,6 +648,9 @@
       "daler": 100,
       "skilling": 0,
       "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
     }
   }
 ]
