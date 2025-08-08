@@ -178,6 +178,10 @@ function initIndex() {
         }
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
+        const xpVal = isInv(p) ? null : storeHelper.calcEntryXP(p, charList);
+        const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
+        const xpHtml = xpVal != null ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        const titleActions = xpHtml ? `<span class="title-actions">${xpHtml}</span>` : '';
         const showInfo = compact || hideDetails;
         const eliteBtn = isElityrke(p)
           ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
@@ -208,7 +212,7 @@ function initIndex() {
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
         const priceHtml = priceText ? `<div class="card-price">${priceText}</div>` : '';
         li.innerHTML = `
-          <div class="card-title">${p.namn}${badge}</div>
+          <div class="card-title"><span>${p.namn}${badge}</span>${titleActions}</div>
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}
