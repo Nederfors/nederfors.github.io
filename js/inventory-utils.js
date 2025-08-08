@@ -677,10 +677,25 @@
       const li  = btn.closest('li');
       const idx = Number(li.dataset.idx);
       const inv = storeHelper.getInventory(store);
+      const itemName = li.dataset.name;
+      const entry    = getEntry(itemName);
 
       // 2a) Röd soptunna tar bort hela posten
       if (act === 'del') {
-        if (idx >= 0) {
+        if (entry.namn === 'Fältutrustning') {
+          const bundle = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+          const counts = bundle.map(n => inv.find(r => r.name === n)?.qty || 0);
+          const removeCnt = Math.min(...counts);
+          bundle.forEach(n => {
+            const i = inv.findIndex(r => r.name === n);
+            if (i >= 0) {
+              inv[i].qty -= removeCnt;
+              if (inv[i].qty <= 0) inv.splice(i,1);
+            }
+          });
+          saveInventory(inv);
+          renderInventory();
+        } else if (idx >= 0) {
           const row = inv[idx];
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
@@ -696,8 +711,6 @@
       }
 
       // 2b) För + / - / 🔨 behöver vi id
-      const itemName = li.dataset.name;
-      const entry    = getEntry(itemName);
 
         // "+" lägger till qty eller en ny instans
         if (act === 'add') {
@@ -748,7 +761,18 @@
         }
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
-        if (idx >= 0) {
+        if (entry.namn === 'Fältutrustning') {
+          const bundle = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+          bundle.forEach(n => {
+            const i = inv.findIndex(r => r.name === n);
+            if (i >= 0) {
+              inv[i].qty--;
+              if (inv[i].qty <= 0) inv.splice(i,1);
+            }
+          });
+          saveInventory(inv);
+          renderInventory();
+        } else if (idx >= 0) {
           const row = inv[idx];
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');

@@ -164,7 +164,13 @@ function initIndex() {
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         const count = isInv(p)
-          ? invList.filter(c => c.name===p.namn).reduce((sum,c)=>sum+(c.qty||1),0)
+          ? (p.namn === 'Fältutrustning'
+              ? (() => {
+                  const bundle = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+                  const counts = bundle.map(n => invList.find(r => r.name === n)?.qty || 0);
+                  return counts.every(c => c > 0) ? Math.min(...counts) : 0;
+                })()
+              : invList.filter(c => c.name===p.namn).reduce((sum,c)=>sum+(c.qty||1),0))
           : charList.filter(c => c.namn===p.namn && !c.trait).length;
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
@@ -555,13 +561,28 @@ function initIndex() {
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        const idxInv = inv.findIndex(x => x.name===p.namn);
-        if (idxInv >= 0) {
-          if (act === 'del' || act === 'rem') {
-            inv.splice(idxInv,1);
-          } else {
-            inv[idxInv].qty--;
-            if (inv[idxInv].qty < 1) inv.splice(idxInv,1);
+        if (p.namn === 'Fältutrustning') {
+          const bundle = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+          const counts = bundle.map(n => inv.find(r => r.name === n)?.qty || 0);
+          const removeCnt = (act === 'del' || act === 'rem')
+            ? Math.min(...counts)
+            : 1;
+          bundle.forEach(n => {
+            const idx = inv.findIndex(r => r.name === n);
+            if (idx >= 0) {
+              inv[idx].qty -= removeCnt;
+              if (inv[idx].qty <= 0) inv.splice(idx,1);
+            }
+          });
+        } else {
+          const idxInv = inv.findIndex(x => x.name===p.namn);
+          if (idxInv >= 0) {
+            if (act === 'del' || act === 'rem') {
+              inv.splice(idxInv,1);
+            } else {
+              inv[idxInv].qty--;
+              if (inv[idxInv].qty < 1) inv.splice(idxInv,1);
+            }
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
