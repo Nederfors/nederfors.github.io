@@ -508,7 +508,7 @@
     /* ---------- kort för pengar ---------- */
     const moneyCard = `
       <li class="card compact">
-        <div class="card-title">Pengar</div>
+        <div class="card-title"><span><span class="collapse-btn"></span>Pengar</span></div>
         <div class="card-desc">
           Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö
           <br>Kostnad: ${tot.d}D ${tot.s}S ${tot.o}Ö
@@ -597,7 +597,7 @@
             <li class="card compact"
                 data-idx="${idx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title">${row.name}</div>
+              <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
               <div class="card-desc">
                 ${desc}${freeCnt ? ` <span class="tag free">Gratis${freeCnt>1? '×'+freeCnt:''}</span>` : ''}${lvlInfo}<br>Antal: ${row.qty}<br>Pris: ${priceText}
               </div>

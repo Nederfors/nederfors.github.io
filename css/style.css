@@ -261,6 +261,17 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   gap: .4rem;
 }
+.card-title .collapse-btn {
+  width: 1rem;
+  display: inline-block;
+  margin-right: .4rem;
+}
+.card-title .collapse-btn::before {
+  content: '▼';
+}
+.card.compact .card-title .collapse-btn::before {
+  content: '▶';
+}
 .xp-cost {
   font-size: .9rem;
   color: var(--subtxt);
