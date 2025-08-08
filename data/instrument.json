@@ -3,66 +3,164 @@
     "id": "i1",
     "namn": "Fiddla",
     "beskrivning": "Ett ofta tresträngat instrument som spelas med stråke gjord av tagel. Vanligt förekommande i den ambriska bondekulturen.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 0.45
+    },
+    "grundpris": {
+      "daler": 3,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
     "id": "i2",
     "namn": "Luta",
     "beskrivning": "Stränginstrument med päronformad kropp som spelas med fingrarna eller med ett plektrum.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 0, "skilling": 15, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 1.2
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 15,
+      "örtegar": 0
+    }
   },
   {
     "id": "i3",
     "namn": "Mungiga",
     "beskrivning": "Den smidiga mungigan medförs av mången daglönare, gycklare och hovnarrar och dess grundtoner utgör bakgrundsljud till många samkväm i Ambrias enklare miljöer.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 0, "skilling": 5, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 0.03
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 5,
+      "örtegar": 0
+    }
   },
   {
     "id": "i4",
     "namn": "Mässingslur",
     "beskrivning": "Redigt bröldon för pompiga sammanhang.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 0.7
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
     "id": "i5",
     "namn": "Näverlur",
     "beskrivning": "Allmogen i ambrias kullar nyttjar dessa lurar för mångahanda syften; skrämma bort monster och onkytt eller locka på valldjuren. Luren används också för att sända budskap över långa avstånd, en ensam herde kan sända till närliggande fäbodar och därifrån blåses budet vidare över nejden. Skickliga lurblåsare spelar dessutom på sitt eget sätt så att andra vet vem som sänder budet; ”baiagornspår finns här”, ”en ko har försvunnit” eller ”svartalfer har stulit allt smör”.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 0, "skilling": 1, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 0.5
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 1,
+      "örtegar": 0
+    }
   },
   {
     "id": "i6",
     "namn": "Spinett",
     "beskrivning": "Klaviatur, populärt vid hovet i Yndaros, och formar tillsammans med lutan ryggraden i den ambriska hovmusiken.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 15, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 18.0
+    },
+    "grundpris": {
+      "daler": 15,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
     "id": "i7",
     "namn": "Säckpipa",
     "beskrivning": "En skalmeja (typ av flöjt) fäst vid en lädersäck som ger en luftreservoar och väsentligt förenklad spelteknik. Särskilt bland vissa barbarklaner är säckpipan populär, men varianter av instrumentet finns också i ambrisk bondekultur. I Ambrias finare salonger göre den sig icke besvär.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 1.2
+    },
+    "grundpris": {
+      "daler": 1,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
   {
     "id": "i8",
     "namn": "Trumma",
     "beskrivning": "Ett rytmverktyg som förekommer i mångahanda varianter, från barbarernas enklare don till ambriska arméns metallspända taktverk.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 0, "skilling": 3, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 1.0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 3,
+      "örtegar": 0
+    }
   },
   {
     "id": "i9",
     "namn": "Vevlira",
     "beskrivning": "Ett stränginstrument som med hjälp av en vev kan ge upphov till typiska knarrljud, använd för att ge tydligare rytm i musiken. Liran har länge varit populär i Ambria (och i Alberetor dessförinnan) men har i just Yndaros kommit att få prägel av tiggarinstrument. Många flyktingar söderifrån försörjer sig nämligen genom att i tid och otid utsätta förbipasserande vandrare för melodi, knarr och malande borduntoner.",
-    "taggar": { "typ": [ "Musikinstrument" ] },
-    "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 }
+    "taggar": {
+      "typ": [
+        "Musikinstrument"
+      ]
+    },
+    "stat": {
+      "vikt": 4.5
+    },
+    "grundpris": {
+      "daler": 3,
+      "skilling": 0,
+      "örtegar": 0
+    }
   },
-
   {
     "id": "i10",
     "namn": "Flöjt",
@@ -72,13 +170,15 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.06
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 3,
       "örtegar": 0
     }
   },
-
   {
     "id": "i11",
     "namn": "Signalhorn",
@@ -88,9 +188,13 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
       "örtegar": 4
     }
-  }]
+  }
+]
