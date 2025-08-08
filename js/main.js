@@ -32,6 +32,7 @@ const dom  = {
   moneyResetBtn: $T('moneyResetBtn'),
   clearInvBtn : $T('clearInvBtn'),
   invTypeSel : $T('invTypeFilter'),
+  collapseAllBtn: $T('collapseAllInv'),
   unusedOut: $T('unusedOut'),
 
   /* smith filter */
