@@ -11,6 +11,8 @@ function initIndex() {
   const getEntries = () =>
     DB.concat(storeHelper.getCustomEntries(store));
 
+  const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+
   /* fyll dropdowns */
   const fillDropdowns = ()=>{
     const set = { typ:new Set(), ark:new Set(), test:new Set() };
@@ -163,9 +165,17 @@ function initIndex() {
         }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-        const count = isInv(p)
-          ? invList.filter(c => c.name===p.namn).reduce((sum,c)=>sum+(c.qty||1),0)
-          : charList.filter(c => c.namn===p.namn && !c.trait).length;
+        let count;
+        if (isInv(p)) {
+          if (p.namn === 'Fältutrustning') {
+            const qtys = FALT_BUNDLE.map(n => invList.find(c => c.name === n)?.qty || 0);
+            count = Math.min(...qtys);
+          } else {
+            count = invList.filter(c => c.name===p.namn).reduce((sum,c)=>sum+(c.qty||1),0);
+          }
+        } else {
+          count = charList.filter(c => c.namn===p.namn && !c.trait).length;
+        }
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
         const showInfo = compact || hideDetails;
@@ -339,8 +349,7 @@ function initIndex() {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
         if (p.namn === 'Fältutrustning') {
-          const bundle = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
-          bundle.forEach(namn => {
+          FALT_BUNDLE.forEach(namn => {
             const ent = invUtil.getEntry(namn);
             if (!ent.namn) return;
             const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter']
@@ -555,13 +564,28 @@ function initIndex() {
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        const idxInv = inv.findIndex(x => x.name===p.namn);
-        if (idxInv >= 0) {
-          if (act === 'del' || act === 'rem') {
-            inv.splice(idxInv,1);
-          } else {
-            inv[idxInv].qty--;
-            if (inv[idxInv].qty < 1) inv.splice(idxInv,1);
+        if (p.namn === 'Fältutrustning') {
+          const removeCnt = (act === 'del' || act === 'rem')
+            ? Math.min(...FALT_BUNDLE.map(n => inv.find(r => r.name === n)?.qty || 0))
+            : 1;
+          if (removeCnt > 0) {
+            FALT_BUNDLE.forEach(n => {
+              const idxRow = inv.findIndex(r => r.name === n);
+              if (idxRow >= 0) {
+                inv[idxRow].qty -= removeCnt;
+                if (inv[idxRow].qty < 1) inv.splice(idxRow,1);
+              }
+            });
+          }
+        } else {
+          const idxInv = inv.findIndex(x => x.name===p.namn);
+          if (idxInv >= 0) {
+            if (act === 'del' || act === 'rem') {
+              inv.splice(idxInv,1);
+            } else {
+              inv[idxInv].qty--;
+              if (inv[idxInv].qty < 1) inv.splice(idxInv,1);
+            }
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
