@@ -806,6 +806,14 @@ function defaultTraits() {
     return Number(baseXp || 0) + countDisadvantages(list) * 5;
   }
 
+  function calcCarryCapacity(strength, list) {
+    let base = Number(strength || 0);
+    if (Array.isArray(list) && list.some(e => e.namn === 'Packåsna')) {
+      base = Math.ceil(base * 1.5);
+    }
+    return base;
+  }
+
   function calcPainThreshold(strength, list, extra) {
     const painBonus = list.filter(e => e.namn === 'Smärttålig').length;
     const painPenalty = list.filter(e => e.namn === 'Bräcklig').length;
@@ -1073,6 +1081,7 @@ function defaultTraits() {
     calcEntryXP,
     calcTotalXP,
     calcPermanentCorruption,
+    calcCarryCapacity,
     calcPainThreshold,
     abilityLevel,
     hamnskifteNoviceLimit,

@@ -418,8 +418,8 @@
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
     const valStark = (traits['Stark']||0) + (bonus['Stark']||0) + (maskBonus['Stark']||0);
-    let maxCapacity = valStark * 5;
-    if (list.some(e=>e.namn==='Packåsna')) maxCapacity = Math.ceil(maxCapacity * 1.5);
+    const baseCap = storeHelper.calcCarryCapacity(valStark, list);
+    const maxCapacity = baseCap * 5;
     const remainingCap = maxCapacity - usedWeight;
 
     if (dom.invTypeSel) {

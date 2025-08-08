@@ -65,13 +65,11 @@ function initCharacter() {
     const vals = {};
     KEYS.forEach(k=>{ vals[k] = (traits[k]||0) + (bonus[k]||0) + (maskBonus[k]||0); });
 
-    const hasPack = list.some(e=>e.namn==='Packåsna');
     const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
     const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
     const valStark = vals['Stark'];
+    const capacity = storeHelper.calcCarryCapacity(valStark, list);
     const hardy = hasHardnackad ? 1 : 0;
-    let capacity = valStark;
-    if(hasPack) capacity = Math.ceil(capacity * 1.5);
     const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
     const tal = talBase + hardy;
     const pain = storeHelper.calcPainThreshold(valStark, list, effects);
