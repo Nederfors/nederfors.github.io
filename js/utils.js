@@ -187,6 +187,10 @@
     return '';
   }
 
+  function formatWeight(w) {
+    return `${Math.round(w * 10) / 10} kg`;
+  }
+
   // Normalize text for searches by removing diacritics except for
   // the Swedish characters å, ä and ö. Everything should be in
   // lowercase before calling this function.
@@ -258,6 +262,7 @@
   window.splitQuals = splitQuals;
   window.formatMoney = formatMoney;
   window.itemStatHtml = itemStatHtml;
+  window.formatWeight = formatWeight;
   window.searchNormalize = searchNormalize;
   window.createSearchSorter = createSearchSorter;
   window.copyToClipboard = copyToClipboard;

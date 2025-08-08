@@ -119,6 +119,7 @@ function initIndex() {
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
         let desc = abilityHtml(p);
         let priceText = '';
+        let weightText = '';
         if (isInv(p)) {
           desc += itemStatHtml(p);
           const baseQuals = [
@@ -134,8 +135,14 @@ function initIndex() {
           if (p.grundpris) {
             priceText = formatMoney(invUtil.calcEntryCost(p));
           }
+          const baseW = p.vikt ?? p.stat?.vikt ?? 0;
+          const massCnt = baseQuals.filter(q => q === 'Massivt').length;
+          if (baseW || massCnt) {
+            const w = baseW + massCnt;
+            weightText = `<br>Vikt: ${formatWeight(w)}`;
+          }
         }
-        let infoHtml = priceText ? `${desc}<br>Pris: ${priceText}` : desc;
+        let infoHtml = priceText ? `${desc}<br>Pris: ${priceText}${weightText}` : `${desc}${weightText}`;
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
           if (extra) infoHtml += `<br>${extra}`;

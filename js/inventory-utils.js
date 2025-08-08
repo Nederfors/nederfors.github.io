@@ -331,6 +331,22 @@
     return oToMoney(totalO);
   }
 
+  function calcRowWeight(row) {
+    const entry  = getEntry(row.name);
+    const base   = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
+    const removed = row.removedKval ?? [];
+    const baseQuals = [
+      ...(entry.taggar?.kvalitet ?? []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const allQuals = [
+      ...baseQuals.filter(q => !removed.includes(q)),
+      ...(row.kvaliteter || [])
+    ];
+    const massCnt = allQuals.filter(q => q === 'Massivt').length;
+    return (base + massCnt) * row.qty;
+  }
+
   function calcEntryCost(entry) {
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
@@ -395,6 +411,16 @@
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+
+    const usedWeight = allInv.reduce((s, r) => s + calcRowWeight(r), 0);
+    const list = storeHelper.getCurrentList(store);
+    const traits = storeHelper.getTraits(store);
+    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
+    const valStark = (traits['Stark']||0) + (bonus['Stark']||0) + (maskBonus['Stark']||0);
+    let maxCapacity = valStark * 5;
+    if (list.some(e=>e.namn==='Packåsna')) maxCapacity = Math.ceil(maxCapacity * 1.5);
+    const remainingCap = maxCapacity - usedWeight;
 
     if (dom.invTypeSel) {
       const types = new Set();
@@ -516,6 +542,16 @@
         </div>
       </li>`;
 
+    const capCard = `
+      <li class="card compact">
+        <div class="card-title"><span><span class="collapse-btn"></span>Bärkapacitet</span></div>
+        <div class="card-desc cap-info ${remainingCap < 0 ? 'cap-neg' : 'cap-pos'}">
+          <div class="cap-row"><span class="label">Maxkapacitet:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
+          <div class="cap-row"><span class="label">Använd vikt:</span><span class="value">${formatWeight(usedWeight)}</span></div>
+          <div class="cap-row"><span class="label">Återstående kapacitet:</span><span class="value">${formatWeight(remainingCap)}</span></div>
+        </div>
+      </li>`;
+
     /* ---------- kort för varje föremål ---------- */
     const itemCards = inv.length
       ? inv.map((row, idx) => {
@@ -592,6 +628,7 @@
           const priceText = formatMoney(
             calcRowCost(row, forgeLvl, alcLevel, artLevel)
           );
+          const weightText = formatWeight(calcRowWeight(row));
 
           return `
             <li class="card compact"
@@ -599,11 +636,11 @@
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
               <div class="card-desc">
-                ${desc}${freeCnt ? ` <span class="tag free">Gratis${freeCnt>1? '×'+freeCnt:''}</span>` : ''}${lvlInfo}<br>Antal: ${row.qty}<br>Pris: ${priceText}
+                ${desc}${freeCnt ? ` <span class="tag free">Gratis${freeCnt>1? '×'+freeCnt:''}</span>` : ''}${lvlInfo}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
               </div>
               <div class="inv-controls">
                 ${btnRow}
- ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
+${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
                 ${freeQBtn}
                 ${toggleBtn}
                 ${freeBtn}
@@ -613,9 +650,9 @@
     : '<li class="card">Inga föremål.</li>';
 
     /* ---------- skriv ut ---------- */
-    dom.invList.innerHTML       = moneyCard + itemCards;
-    if (dom.wtOut) dom.wtOut.textContent = allInv.reduce((s, r) => s + (r.vikt || 0) * r.qty, 0);
-    if (dom.slOut) dom.slOut.textContent = allInv.reduce((s, r) => s + r.qty, 0);
+    dom.invList.innerHTML       = moneyCard + capCard + itemCards;
+    if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
+    if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
     dom.invBadge.textContent    = allInv.reduce((s, r) => s + r.qty, 0);
     dom.unusedOut = $T('unusedOut');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
