@@ -507,7 +507,7 @@
 
     /* ---------- kort för pengar ---------- */
     const moneyCard = `
-      <li class="card compact">
+      <li class="card inv-compact">
         <div class="card-title">Pengar</div>
         <div class="card-desc">
           Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö
@@ -594,7 +594,7 @@
           );
 
           return `
-            <li class="card compact"
+            <li class="card inv-compact"
                 data-idx="${idx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title">${row.name}</div>
@@ -673,7 +673,7 @@
       const title = e.target.closest('.card-title');
       if (title) {
         const li = title.closest('li.card');
-        li.classList.toggle('compact');
+        li.classList.toggle('inv-compact');
         return;
       }
 
