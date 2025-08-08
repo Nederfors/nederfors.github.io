@@ -60,6 +60,10 @@
     clearBtn = document.getElementById('clearBtn');
     charLink = document.getElementById('charLink');
 
+    if (dom.cName) {
+      dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
+    }
+
     showView();
 
     const updateCatToggle = () => {
