@@ -271,8 +271,10 @@ input:focus, select:focus, textarea:focus {
   font-size: 1.1rem;
 }
 .card-desc  { font-size: 1.15rem; }
-.card.compact .card-desc { display: none; }
-.card.compact .inv-controls { display: none; }
+.card.compact .card-desc,
+.card.inv-compact .card-desc { display: none; }
+.card.compact .inv-controls,
+.card.inv-compact .inv-controls { display: none; }
 .card-price {
   position: absolute;
   bottom: 0.6rem;
