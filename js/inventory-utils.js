@@ -619,6 +619,15 @@
     dom.invBadge.textContent    = allInv.reduce((s, r) => s + r.qty, 0);
     dom.unusedOut = $T('unusedOut');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
+    if (dom.collapseAllBtn) updateCollapseBtnState();
+  }
+
+  function updateCollapseBtnState() {
+    if (!dom.collapseAllBtn || !dom.invList) return;
+    const cards = [...dom.invList.querySelectorAll('li.card')];
+    const anyOpen = cards.some(li => !li.classList.contains('compact'));
+    dom.collapseAllBtn.textContent = anyOpen ? '▶' : '▼';
+    dom.collapseAllBtn.title = anyOpen ? 'Kollapsa alla' : 'Öppna alla';
   }
 
   function bindInv() {
@@ -643,6 +652,14 @@
         if (window.indexViewUpdate) window.indexViewUpdate();
       });
     });
+    if (dom.collapseAllBtn) {
+      dom.collapseAllBtn.addEventListener('click', () => {
+        const cards = [...dom.invList.querySelectorAll('li.card')];
+        const anyOpen = cards.some(li => !li.classList.contains('compact'));
+        cards.forEach(li => li.classList.toggle('compact', anyOpen));
+        updateCollapseBtnState();
+      });
+    }
     dom.invList.addEventListener('click', e => {
       // 1) Klick på kryss för att ta bort en enskild kvalitet
       const removeTagBtn = e.target.closest('.tag.removable[data-qual]');
@@ -674,6 +691,7 @@
       if (collapseBtn) {
         const li = collapseBtn.closest('li.card');
         li.classList.toggle('compact');
+        updateCollapseBtnState();
         return;
       }
 
