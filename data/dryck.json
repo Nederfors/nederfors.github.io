@@ -82,6 +82,9 @@
         "Dryck"
       ]
     },
+    "stat": {
+      "vikt": 1.0
+    },
     "grundpris": {
       "daler": 3,
       "skilling": 0,
@@ -96,6 +99,9 @@
       "typ": [
         "Dryck"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 2,
@@ -112,6 +118,9 @@
         "Dryck"
       ]
     },
+    "stat": {
+      "vikt": 1.0
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -126,6 +135,9 @@
       "typ": [
         "Dryck"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 1,
@@ -142,6 +154,9 @@
         "Dryck"
       ]
     },
+    "stat": {
+      "vikt": 1.0
+    },
     "grundpris": {
       "daler": 15,
       "skilling": 0,
@@ -156,6 +171,9 @@
       "typ": [
         "Dryck"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 2,
