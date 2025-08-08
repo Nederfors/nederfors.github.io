@@ -686,10 +686,10 @@
         return;
       }
 
-      // 2) Klick på collapse-knappen för att expandera/kollapsa posten
-      const collapseBtn = e.target.closest('.collapse-btn');
-      if (collapseBtn) {
-        const li = collapseBtn.closest('li.card');
+      // 2) Klick på titeln för att expandera/kollapsa posten
+      const cardTitle = e.target.closest('.card-title');
+      if (cardTitle) {
+        const li = cardTitle.closest('li.card');
         li.classList.toggle('compact');
         updateCollapseBtnState();
         return;
