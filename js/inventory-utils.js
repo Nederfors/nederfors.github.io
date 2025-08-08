@@ -507,7 +507,7 @@
 
     /* ---------- kort för pengar ---------- */
     const moneyCard = `
-      <li class="card">
+      <li class="card compact">
         <div class="card-title">Pengar</div>
         <div class="card-desc">
           Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö
@@ -594,7 +594,7 @@
           );
 
           return `
-            <li class="card"
+            <li class="card compact"
                 data-idx="${idx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title">${row.name}</div>
@@ -669,7 +669,15 @@
         return;
       }
 
-      // 2) Klick på knapp i inventarielistan
+      // 2) Klick på rubriken för att expandera/kollapsa posten
+      const title = e.target.closest('.card-title');
+      if (title) {
+        const li = title.closest('li.card');
+        li.classList.toggle('compact');
+        return;
+      }
+
+      // 3) Klick på knapp i inventarielistan
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
 
@@ -678,7 +686,7 @@
       const idx = Number(li.dataset.idx);
       const inv = storeHelper.getInventory(store);
 
-      // 2a) Röd soptunna tar bort hela posten
+      // 3a) Röd soptunna tar bort hela posten
       if (act === 'del') {
         if (idx >= 0) {
           const row = inv[idx];
@@ -695,7 +703,7 @@
         return;
       }
 
-      // 2b) För + / - / 🔨 behöver vi id
+      // 3b) För + / - / 🔨 behöver vi id
       const itemName = li.dataset.name;
       const entry    = getEntry(itemName);
 

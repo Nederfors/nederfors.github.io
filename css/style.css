@@ -254,6 +254,7 @@ input:focus, select:focus, textarea:focus {
   align-items: baseline;
   font-size: calc(1.34rem - 2px);
   font-weight: 600;
+  cursor: pointer;
 }
 .card-title .title-actions {
   display: flex;
@@ -271,6 +272,7 @@ input:focus, select:focus, textarea:focus {
 }
 .card-desc  { font-size: 1.15rem; }
 .card.compact .card-desc { display: none; }
+.card.compact .inv-controls { display: none; }
 .card-price {
   position: absolute;
   bottom: 0.6rem;
