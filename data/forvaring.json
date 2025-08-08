@@ -7,6 +7,9 @@
         "Förvaring"
       ]
     },
+    "stat": {
+      "vikt": 0.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -21,6 +24,9 @@
       "typ": [
         "Förvaring"
       ]
+    },
+    "stat": {
+      "vikt": 0.2
     },
     "grundpris": {
       "daler": 0,
@@ -37,6 +43,9 @@
         "Förvaring"
       ]
     },
+    "stat": {
+      "vikt": 2.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 3,
@@ -51,6 +60,9 @@
       "typ": [
         "Förvaring"
       ]
+    },
+    "stat": {
+      "vikt": 6.0
     },
     "grundpris": {
       "daler": 1,
@@ -67,6 +79,9 @@
         "Förvaring"
       ]
     },
+    "stat": {
+      "vikt": 0.4
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -81,6 +96,9 @@
       "typ": [
         "Förvaring"
       ]
+    },
+    "stat": {
+      "vikt": 0.5
     },
     "grundpris": {
       "daler": 0,
@@ -97,6 +115,9 @@
         "Förvaring"
       ]
     },
+    "stat": {
+      "vikt": 0.6
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -111,6 +132,9 @@
       "typ": [
         "Förvaring"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 0,
@@ -127,6 +151,9 @@
         "Förvaring"
       ]
     },
+    "stat": {
+      "vikt": 0.8
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -142,6 +169,9 @@
         "Förvaring"
       ]
     },
+    "stat": {
+      "vikt": 0.5
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -156,6 +186,9 @@
       "typ": [
         "Förvaring"
       ]
+    },
+    "stat": {
+      "vikt": 0.8
     },
     "grundpris": {
       "daler": 2,
@@ -177,6 +210,9 @@
         "Förvaring"
       ]
     },
+    "stat": {
+      "vikt": 0.3
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -191,6 +227,9 @@
       "typ": [
         "Förvaring"
       ]
+    },
+    "stat": {
+      "vikt": 7.0
     },
     "grundpris": {
       "daler": 0,
