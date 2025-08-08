@@ -8,6 +8,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.05
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -22,6 +25,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 0,
@@ -38,6 +44,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -52,6 +61,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 1,
@@ -68,6 +80,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.4
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -82,6 +97,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.15
     },
     "grundpris": {
       "daler": 7,
@@ -98,6 +116,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.8
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -112,6 +133,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.02
     },
     "grundpris": {
       "daler": 0,
@@ -128,6 +152,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 1.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -142,6 +169,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 0,
@@ -158,6 +188,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.8
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -172,6 +205,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.2
     },
     "grundpris": {
       "daler": 0,
@@ -188,6 +224,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 1.8
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -202,6 +241,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.5
     },
     "grundpris": {
       "daler": 0,
@@ -218,6 +260,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 3,
@@ -232,6 +277,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.5
     },
     "grundpris": {
       "daler": 10,
@@ -248,6 +296,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 3.0
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -262,6 +313,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 0,
@@ -278,6 +332,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.5
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -292,6 +349,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.6
     },
     "grundpris": {
       "daler": 0,
@@ -308,6 +368,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.3
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 6,
@@ -322,6 +385,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.01
     },
     "grundpris": {
       "daler": 0,
@@ -338,6 +404,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.2
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -352,6 +421,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.15
     },
     "grundpris": {
       "daler": 0,
@@ -368,6 +440,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 2.5
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 3,
@@ -382,6 +457,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 0,
@@ -398,6 +476,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.3
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -412,6 +493,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 0,
@@ -428,6 +512,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.1
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 3,
@@ -442,6 +529,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.2
     },
     "grundpris": {
       "daler": 0,
@@ -458,6 +548,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 4.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -472,6 +565,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.3
     },
     "grundpris": {
       "daler": 4,
@@ -488,6 +584,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.1
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -502,6 +601,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 4.0
     },
     "grundpris": {
       "daler": 0,
@@ -518,6 +620,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.5
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 5,
@@ -532,6 +637,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 0,
@@ -548,6 +656,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.02
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 2,
@@ -562,6 +673,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.5
     },
     "grundpris": {
       "daler": 1,
@@ -578,6 +692,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 2.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 5,
@@ -592,6 +709,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.5
     },
     "grundpris": {
       "daler": 1,
@@ -608,6 +728,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 1.0
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -622,6 +745,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.5
     },
     "grundpris": {
       "daler": 1,
@@ -638,6 +764,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 2.0
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -652,6 +781,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.5
     },
     "grundpris": {
       "daler": 0,
@@ -668,6 +800,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 2.0
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -682,6 +817,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 3.0
     },
     "grundpris": {
       "daler": 1,
@@ -698,6 +836,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 4.0
+    },
     "grundpris": {
       "daler": 500,
       "skilling": 0,
@@ -712,6 +853,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 0,
@@ -728,6 +872,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 1.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -742,6 +889,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 0,
@@ -758,6 +908,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 2.5
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -772,6 +925,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 1,
@@ -788,6 +944,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.05
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -802,6 +961,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 2.8
     },
     "grundpris": {
       "daler": 0,
@@ -818,6 +980,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.05
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -832,6 +997,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 0,
@@ -848,6 +1016,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.05
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -862,6 +1033,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 0,
@@ -878,6 +1052,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.04
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -892,6 +1069,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 0,
@@ -908,6 +1088,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.01
+    },
     "grundpris": {
       "daler": 50,
       "skilling": 0,
@@ -922,6 +1105,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 4.0
     },
     "grundpris": {
       "daler": 0,
@@ -938,6 +1124,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 1.5
+    },
     "grundpris": {
       "daler": 50,
       "skilling": 0,
@@ -952,6 +1141,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 2.2
     },
     "grundpris": {
       "daler": 50,
@@ -968,6 +1160,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 3.0
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -982,6 +1177,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 8.0
     },
     "grundpris": {
       "daler": 0,
@@ -998,6 +1196,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 20.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 5,
@@ -1012,6 +1213,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 1.0
     },
     "grundpris": {
       "daler": 0,
@@ -1028,6 +1232,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.1
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -1042,6 +1249,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 2,
@@ -1058,6 +1268,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.1
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 8,
@@ -1072,6 +1285,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.1
     },
     "grundpris": {
       "daler": 0,
@@ -1088,6 +1304,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.1
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 2,
@@ -1102,6 +1321,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.05
     },
     "grundpris": {
       "daler": 0,
@@ -1118,6 +1340,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.08
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -1132,6 +1357,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 0.08
     },
     "grundpris": {
       "daler": 0,
@@ -1148,6 +1376,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.08
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -1163,6 +1394,9 @@
         "Diverse"
       ]
     },
+    "stat": {
+      "vikt": 0.1
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -1177,6 +1411,9 @@
       "typ": [
         "Diverse"
       ]
+    },
+    "stat": {
+      "vikt": 4.8
     },
     "grundpris": {
       "daler": 0,
