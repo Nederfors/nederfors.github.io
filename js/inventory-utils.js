@@ -769,11 +769,13 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         const act = btn.dataset.act;
         if (act === 'moneyPlus' || act === 'moneyMinus') {
           const cur = storeHelper.getMoney(store);
-          let totalO = moneyToO(cur);
-          totalO += act === 'moneyPlus' ? SBASE * OBASE : -SBASE * OBASE;
-          if (totalO < 0) totalO = 0;
-          const newMoney = oToMoney(totalO);
-          storeHelper.setMoney(store, newMoney);
+          const delta = act === 'moneyPlus' ? 1 : -1;
+          const newD = (cur.daler || 0) + delta;
+          if (newD < 0) {
+            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, daler: newD });
+          }
           renderInventory();
           return;
         }
