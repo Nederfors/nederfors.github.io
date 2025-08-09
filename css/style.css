@@ -1279,3 +1279,16 @@ textarea.auto-resize {
 .cap-row .value { flex: 1; text-align: right; font-variant-numeric: tabular-nums; }
 .cap-neg { color: var(--danger); }
 
+.formal-section { margin-bottom: .8rem; }
+.formal-section:last-child { margin-bottom: 0; }
+.formal-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 600;
+  margin-bottom: .3rem;
+}
+.money-control { display: flex; gap: .3rem; }
+.money-control .char-btn { padding: .3rem .6rem; }
+.cap-food { color: var(--txt); }
+
