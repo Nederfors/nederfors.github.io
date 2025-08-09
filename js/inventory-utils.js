@@ -564,8 +564,8 @@
           <div class="inv-buttons">
             <button id="addCustomBtn" class="char-btn icon" title="Nytt föremål">🆕</button>
             <button id="manageMoneyBtn" class="char-btn icon" title="Hantera pengar">🏦</button>
-            <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
             <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
+            <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
           </div>
           <div class="formal-section">
             <div class="formal-title">Pengar
@@ -574,8 +574,8 @@
                 <button data-act="moneyPlus" class="char-btn icon">+</button>
               </div>
             </div>
-            Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö<br>
-            Oanvänt: <span id="unusedOut">0D 0S 0Ö</span>
+            <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
+            <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
 ${moneyRow}
           </div>
           <div class="formal-section ${remainingCap < 0 ? 'cap-neg' : ''}">
