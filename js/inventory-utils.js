@@ -552,7 +552,7 @@
     }).length;
 
     const moneyRow = moneyWeight
-      ? `          <div class="cap-row"><span class="label">Pengar:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
+      ? `            <div class="cap-row"><span class="label">Pengavikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
       : '';
 
     /* ---------- kort för formaliteter (pengar & bärkapacitet) ---------- */
@@ -570,13 +570,13 @@
             </div>
             Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö<br>
             Oanvänt: <span id="unusedOut">0D 0S 0Ö</span>
+${moneyRow}
           </div>
           <div class="formal-section ${remainingCap < 0 ? 'cap-neg' : ''}">
             <div class="formal-title">Bärkapacitet</div>
-            <div class="cap-row cap-food"><span class="label">Mat:</span><span class="value">${foodCount}</span></div>
             <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
-${moneyRow}
             <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
+            <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
           </div>
         </div>
       </li>`;
