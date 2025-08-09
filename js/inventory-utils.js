@@ -546,30 +546,38 @@
     const diff  = oToMoney(Math.abs(diffO));
     const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
 
-    /* ---------- kort för pengar ---------- */
-    const moneyKey = '__money__';
-    const moneyCard = `
-      <li class="card${openKeys.has(moneyKey) ? '' : ' compact'}" data-special="${moneyKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Pengar</span></div>
-        <div class="card-desc">
-          Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö
-          <br>Kostnad: ${tot.d}D ${tot.s}S ${tot.o}Ö
-          <br>Oanvänt: <span id="unusedOut">0D 0S 0Ö</span>
-        </div>
-      </li>`;
+    const foodCount = allInv.filter(row => {
+      const entry = getEntry(row.name);
+      return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
+    }).length;
 
-    const capKey = '__capacity__';
     const moneyRow = moneyWeight
       ? `          <div class="cap-row"><span class="label">Pengar:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
       : '';
-    const capCard = `
-      <li class="card${openKeys.has(capKey) ? '' : ' compact'}" data-special="${capKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Bärkapacitet</span></div>
-        <div class="card-desc ${remainingCap < 0 ? 'cap-neg' : ''}">
-          <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
-          <div class="cap-row"><span class="label">Använd:</span><span class="value">${formatWeight(usedWeight)}</span></div>
+
+    /* ---------- kort för formaliteter (pengar & bärkapacitet) ---------- */
+    const formalKey = '__formal__';
+    const formalCard = `
+      <li class="card${openKeys.has(formalKey) ? '' : ' compact'}" data-special="${formalKey}">
+        <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter</span></div>
+        <div class="card-desc">
+          <div class="formal-section">
+            <div class="formal-title">Pengar
+              <div class="money-control">
+                <button data-act="moneyMinus" class="char-btn icon">&minus;</button>
+                <button data-act="moneyPlus" class="char-btn icon">+</button>
+              </div>
+            </div>
+            Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö<br>
+            Oanvänt: <span id="unusedOut">0D 0S 0Ö</span>
+          </div>
+          <div class="formal-section ${remainingCap < 0 ? 'cap-neg' : ''}">
+            <div class="formal-title">Bärkapacitet</div>
+            <div class="cap-row cap-food"><span class="label">Mat:</span><span class="value">${foodCount}</span></div>
+            <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
 ${moneyRow}
-          <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
+            <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
+          </div>
         </div>
       </li>`;
 
@@ -672,7 +680,7 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
     : '<li class="card">Inga föremål.</li>';
 
     /* ---------- skriv ut ---------- */
-    dom.invList.innerHTML       = moneyCard + capCard + itemCards;
+    dom.invList.innerHTML       = formalCard + itemCards;
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
     dom.invBadge.textContent    = allInv.reduce((s, r) => s + r.qty, 0);
@@ -758,10 +766,20 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
 
-      const act = btn.dataset.act;
-      const li  = btn.closest('li');
-      const idx = Number(li.dataset.idx);
-      const inv = storeHelper.getInventory(store);
+        const act = btn.dataset.act;
+        if (act === 'moneyPlus' || act === 'moneyMinus') {
+          const cur = storeHelper.getMoney(store);
+          let totalO = moneyToO(cur);
+          totalO += act === 'moneyPlus' ? SBASE * OBASE : -SBASE * OBASE;
+          if (totalO < 0) totalO = 0;
+          const newMoney = oToMoney(totalO);
+          storeHelper.setMoney(store, newMoney);
+          renderInventory();
+          return;
+        }
+        const li  = btn.closest('li');
+        const idx = Number(li.dataset.idx);
+        const inv = storeHelper.getInventory(store);
 
       // 3a) Röd soptunna tar bort hela posten
       if (act === 'del') {
