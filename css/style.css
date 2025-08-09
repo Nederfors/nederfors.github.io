@@ -421,6 +421,7 @@ input:focus, select:focus, textarea:focus {
 /* Knappar i inventariepanelen */
 .inv-buttons {
   display: flex;
+  flex-wrap: wrap;
   gap: .4rem;
   margin-bottom: .6rem;
 }
