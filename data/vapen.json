@@ -669,7 +669,7 @@
     },
     "stat": {
       "skada": "1T12",
-      "vikt": 2.5
+      "vikt": 35.0
     },
     "grundpris": {
       "daler": 50,
@@ -872,7 +872,7 @@
     },
     "stat": {
       "skada": "1T12",
-      "vikt": 2.5
+      "vikt": 20.0
     },
     "grundpris": {
       "daler": 10,
@@ -895,7 +895,7 @@
     },
     "stat": {
       "skada": "1T12",
-      "vikt": 2.5
+      "vikt": 20.0
     },
     "grundpris": {
       "daler": 10,
@@ -1031,7 +1031,7 @@
     },
     "stat": {
       "skada": "1T10",
-      "vikt": 2.0
+      "vikt": 15.0
     },
     "grundpris": {
       "daler": 8,
@@ -1168,7 +1168,7 @@
     },
     "stat": {
       "skada": "1T12",
-      "vikt": 2.5
+      "vikt": 60.0
     },
     "grundpris": {
       "daler": 50,
@@ -1214,7 +1214,7 @@
     },
     "stat": {
       "skada": "1T12",
-      "vikt": 2.5
+      "vikt": 5.0
     },
     "grundpris": {
       "daler": 10,
@@ -1238,7 +1238,7 @@
     },
     "stat": {
       "skada": "1T12",
-      "vikt": 2.5
+      "vikt": 10.0
     },
     "grundpris": {
       "daler": 10,
