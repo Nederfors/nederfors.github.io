@@ -407,6 +407,10 @@
 
   function renderInventory () {
     if (!dom.invList) return;                        // index-sidan saknar listan
+    const openKeys = new Set(
+      [...dom.invList.querySelectorAll('li.card:not(.compact)')]
+        .map(li => `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+    );
     const allInv = storeHelper.getInventory(store);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
@@ -629,9 +633,10 @@
             calcRowCost(row, forgeLvl, alcLevel, artLevel)
           );
           const weightText = formatWeight(calcRowWeight(row));
+          const key = `${row.name}|${row.trait || ''}|${rowLevel || ''}`;
 
           return `
-            <li class="card compact"
+            <li class="card${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${idx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
