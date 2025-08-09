@@ -561,6 +561,12 @@
       <li class="card${openKeys.has(formalKey) ? '' : ' compact'}" data-special="${formalKey}">
         <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter</span></div>
         <div class="card-desc">
+          <div class="inv-buttons">
+            <button id="addCustomBtn" class="char-btn icon" title="Nytt föremål">🆕</button>
+            <button id="manageMoneyBtn" class="char-btn icon" title="Hantera pengar">🏦</button>
+            <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
+            <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
+          </div>
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
@@ -577,11 +583,6 @@ ${moneyRow}
             <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
             <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
             <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
-          </div>
-          <div class="inv-buttons">
-            <button id="addCustomBtn" class="char-btn" style="flex:1">Nytt föremål</button>
-            <button id="manageMoneyBtn" class="char-btn" style="flex:1">Hantera pengar</button>
-            <button id="clearInvBtn" class="char-btn danger" style="flex:1">Rensa inventarie</button>
           </div>
         </div>
       </li>`;

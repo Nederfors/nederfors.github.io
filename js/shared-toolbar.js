@@ -421,9 +421,10 @@ class SharedToolbar extends HTMLElement {
           </p>
           <h3>Inventariepanelen</h3>
           <p>
-            <strong>Nytt föremål</strong> lägger till eget föremål.<br>
-            <strong>Hantera pengar</strong> justerar pengar.<br>
-            <strong>Rensa inventarie</strong> tömmer inventariet.
+            <strong>🆕</strong> lägger till eget föremål.<br>
+            <strong>🏦</strong> justerar pengar.<br>
+            <strong>🧹</strong> tömmer inventariet.<br>
+            <strong>x²</strong> saknar funktion ännu.
           </p>
           <h3>Egenskapspanelen</h3>
           <p>Ange total XP och få en summering av valda förmågor.</p>
