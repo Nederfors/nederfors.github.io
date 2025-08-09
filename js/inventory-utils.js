@@ -412,7 +412,7 @@
     if (!dom.invList) return;                        // index-sidan saknar listan
     const openKeys = new Set(
       [...dom.invList.querySelectorAll('li.card:not(.compact)')]
-        .map(li => `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+        .map(li => li.dataset.special || `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
     );
     const allInv = storeHelper.getInventory(store);
     recalcArtifactEffects();
@@ -539,8 +539,9 @@
     const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
 
     /* ---------- kort för pengar ---------- */
+    const moneyKey = '__money__';
     const moneyCard = `
-      <li class="card compact">
+      <li class="card${openKeys.has(moneyKey) ? '' : ' compact'}" data-special="${moneyKey}">
         <div class="card-title"><span><span class="collapse-btn"></span>Pengar</span></div>
         <div class="card-desc">
           Kontant: ${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö
@@ -549,8 +550,9 @@
         </div>
       </li>`;
 
+    const capKey = '__capacity__';
     const capCard = `
-      <li class="card compact">
+      <li class="card${openKeys.has(capKey) ? '' : ' compact'}" data-special="${capKey}">
         <div class="card-title"><span><span class="collapse-btn"></span>Bärkapacitet</span></div>
         <div class="card-desc ${remainingCap < 0 ? 'cap-neg' : ''}">
           <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
