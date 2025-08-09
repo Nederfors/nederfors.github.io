@@ -1274,10 +1274,8 @@ textarea.auto-resize {
   margin-top: .6rem;
 }
 
-.cap-info { font-size: .85rem; }
 .cap-row { display: flex; }
 .cap-row .label { flex: 1; }
 .cap-row .value { flex: 1; text-align: right; font-variant-numeric: tabular-nums; }
-.cap-info.cap-neg { color: var(--danger); }
-.cap-info.cap-pos { color: #4caf50; }
+.cap-neg { color: var(--danger); }
 

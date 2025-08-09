@@ -545,10 +545,10 @@
     const capCard = `
       <li class="card compact">
         <div class="card-title"><span><span class="collapse-btn"></span>Bärkapacitet</span></div>
-        <div class="card-desc cap-info ${remainingCap < 0 ? 'cap-neg' : 'cap-pos'}">
-          <div class="cap-row"><span class="label">Maxkapacitet:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
-          <div class="cap-row"><span class="label">Använd vikt:</span><span class="value">${formatWeight(usedWeight)}</span></div>
-          <div class="cap-row"><span class="label">Återstående kapacitet:</span><span class="value">${formatWeight(remainingCap)}</span></div>
+        <div class="card-desc ${remainingCap < 0 ? 'cap-neg' : ''}">
+          <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
+          <div class="cap-row"><span class="label">Använd:</span><span class="value">${formatWeight(usedWeight)}</span></div>
+          <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
         </div>
       </li>`;
 
