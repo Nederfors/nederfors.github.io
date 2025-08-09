@@ -578,6 +578,11 @@ ${moneyRow}
             <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
             <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
           </div>
+          <div class="inv-buttons">
+            <button id="addCustomBtn" class="char-btn" style="flex:1">Nytt föremål</button>
+            <button id="manageMoneyBtn" class="char-btn" style="flex:1">Hantera pengar</button>
+            <button id="clearInvBtn" class="char-btn danger" style="flex:1">Rensa inventarie</button>
+          </div>
         </div>
       </li>`;
 
@@ -687,6 +692,8 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
     dom.unusedOut = $T('unusedOut');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
     if (dom.collapseAllBtn) updateCollapseBtnState();
+    bindInv();
+    bindMoney();
   }
 
   function updateCollapseBtnState() {
@@ -699,13 +706,13 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
 
   function bindInv() {
     if (dom.invTypeSel) {
-      dom.invTypeSel.addEventListener('change', () => {
+      dom.invTypeSel.onchange = () => {
         F.typ = dom.invTypeSel.value;
         renderInventory();
-      });
+      };
     }
     const customBtn = $T('addCustomBtn');
-    if (customBtn) customBtn.addEventListener('click', () => {
+    if (customBtn) customBtn.onclick = () => {
       openCustomPopup(entry => {
         if (!entry) return;
         const list = storeHelper.getCustomEntries(store);
@@ -718,16 +725,16 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
         if (window.indexViewUpdate) window.indexViewUpdate();
       });
-    });
+    };
     if (dom.collapseAllBtn) {
-      dom.collapseAllBtn.addEventListener('click', () => {
+      dom.collapseAllBtn.onclick = () => {
         const cards = [...dom.invList.querySelectorAll('li.card')];
         const anyOpen = cards.some(li => !li.classList.contains('compact'));
         cards.forEach(li => li.classList.toggle('compact', anyOpen));
         updateCollapseBtnState();
-      });
+      };
     }
-    dom.invList.addEventListener('click', e => {
+    dom.invList.onclick = e => {
       // 1) Klick på kryss för att ta bort en enskild kvalitet
       const removeTagBtn = e.target.closest('.tag.removable[data-qual]');
       if (removeTagBtn) {
@@ -955,21 +962,24 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         }
         return;
       }
-    });
+    };
   }
 
   function bindMoney() {
-    if (!dom.manageMoneyBtn || !dom.moneyResetBtn || !dom.clearInvBtn) return;
+    const manageBtn = $T('manageMoneyBtn');
+    const resetBtn  = $T('moneyResetBtn');
+    const clearBtn  = $T('clearInvBtn');
+    if (!manageBtn || !resetBtn || !clearBtn) return;
 
-    dom.manageMoneyBtn.addEventListener('click', openMoneyPopup);
-    dom.moneyResetBtn.addEventListener('click', () => {
+    manageBtn.onclick = openMoneyPopup;
+    resetBtn.onclick = () => {
       storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
       renderInventory();
-    });
-    if (dom.clearInvBtn) dom.clearInvBtn.addEventListener('click', () => {
+    };
+    clearBtn.onclick = () => {
       saveInventory([]);
       renderInventory();
-    });
+    };
   }
 
   window.invUtil = {

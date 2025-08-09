@@ -143,11 +143,6 @@ class SharedToolbar extends HTMLElement {
           <label for="invTypeFilter">Kategori</label>
           <select id="invTypeFilter"></select>
         </div>
-        <div class="inv-buttons">
-          <button id="addCustomBtn" class="char-btn" style="flex:1">Nytt föremål</button>
-          <button id="manageMoneyBtn" class="char-btn" style="flex:1">Hantera pengar</button>
-          <button id="clearInvBtn" class="char-btn danger" style="flex:1">Rensa inventarie</button>
-        </div>
         <ul id="invList" class="card-list"></ul>
       </aside>
 
