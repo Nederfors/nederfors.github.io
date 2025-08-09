@@ -419,7 +419,7 @@
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
     const valStark = (traits['Stark']||0) + (bonus['Stark']||0) + (maskBonus['Stark']||0);
     const baseCap = storeHelper.calcCarryCapacity(valStark, list);
-    const maxCapacity = baseCap * 5;
+    const maxCapacity = baseCap;
     const remainingCap = maxCapacity - usedWeight;
 
     if (dom.invTypeSel) {
