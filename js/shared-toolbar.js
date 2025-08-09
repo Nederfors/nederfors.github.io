@@ -315,6 +315,16 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Antal ---------- -->
+      <div id="qtyPopup">
+        <div class="popup-inner">
+          <h3>Lägg till antal</h3>
+          <input id="qtyInput" type="number" min="1" step="1" placeholder="Antal">
+          <div id="qtyItemList"></div>
+          <button id="qtyCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup Alkemistniv\u00e5 ---------- -->
       <div id="alcPopup">
         <div class="popup-inner">

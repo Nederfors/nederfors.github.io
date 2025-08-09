@@ -280,6 +280,47 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function openQtyPopup() {
+    const pop   = bar.shadowRoot.getElementById('qtyPopup');
+    const inEl  = bar.shadowRoot.getElementById('qtyInput');
+    const list  = bar.shadowRoot.getElementById('qtyItemList');
+    const cancel= bar.shadowRoot.getElementById('qtyCancel');
+
+    inEl.value = '';
+    const inv = storeHelper.getInventory(store);
+    list.innerHTML = inv.map((row,i)=> `<button data-idx="${i}" class="char-btn">${row.name}</button>`).join('');
+
+    pop.classList.add('open');
+
+    const close = () => {
+      pop.classList.remove('open');
+      list.removeEventListener('click', onBtn);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      list.innerHTML = '';
+      inEl.value = '';
+    };
+    const onBtn = e => {
+      const b = e.target.closest('button[data-idx]');
+      if (!b) return;
+      const idx = Number(b.dataset.idx);
+      const qty = parseInt(inEl.value, 10);
+      if (!qty || qty <= 0) return;
+      inv[idx].qty += qty;
+      saveInventory(inv);
+      renderInventory();
+      close();
+    };
+    const onCancel = () => { close(); };
+    const onOutside = e => {
+      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    list.addEventListener('click', onBtn);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+  }
+
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
@@ -712,6 +753,8 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         renderInventory();
       };
     }
+    const squareBtn = $T('squareBtn');
+    if (squareBtn) squareBtn.onclick = openQtyPopup;
     const customBtn = $T('addCustomBtn');
     if (customBtn) customBtn.onclick = () => {
       openCustomPopup(entry => {
@@ -996,6 +1039,7 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
     openQualPopup,
     openCustomPopup,
     openMoneyPopup,
+    openQtyPopup,
     recalcArtifactEffects,
     addWellEquippedItems,
     removeWellEquippedItems,
