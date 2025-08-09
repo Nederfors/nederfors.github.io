@@ -188,7 +188,7 @@
   }
 
   function formatWeight(w) {
-    return `${Math.round(w * 10) / 10} kg`;
+    return `${Number(w).toFixed(2)} kg`;
   }
 
   // Normalize text for searches by removing diacritics except for

@@ -185,7 +185,7 @@
         const base = storeHelper.calcCarryCapacity(val, list);
         tal  += hardy;
         pain = storeHelper.calcPainThreshold(val, list, effects);
-        beforeExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>` + `<div class="trait-extra">Bärkapacitet: ${base}</div>`;
+        beforeExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>` + `<div class="trait-extra">Bärkapacitet: ${formatWeight(base)}</div>`;
         afterExtra = '';
         extra = `<div class="trait-extra">Tålighet: ${tal} • Smärtgräns: ${pain}</div>`;
       } else if (k === 'Viljestark') {

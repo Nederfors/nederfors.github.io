@@ -139,7 +139,7 @@ function initCharacter() {
       </section>
       <section class="summary-section">
         <h3>Bärkapacitet</h3>
-        <ul><li>${capacity}</li></ul>
+        <ul><li>${formatWeight(capacity)}</li></ul>
       </section>
       <section class="summary-section">
         <h3>Hälsa</h3>
