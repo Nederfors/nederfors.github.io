@@ -350,6 +350,13 @@
     return (base + massCnt) * row.qty;
   }
 
+  function calcMoneyWeight(money) {
+    const d = money.daler    || 0;
+    const s = money.skilling || 0;
+    const o = money['örtegar'] || 0;
+    return (d + s + o) * 0.02;
+  }
+
   function calcEntryCost(entry) {
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
@@ -419,7 +426,8 @@
     if (window.updateXP) updateXP();
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
 
-    const usedWeight = allInv.reduce((s, r) => s + calcRowWeight(r), 0);
+    const moneyWeight = calcMoneyWeight(cash);
+    const usedWeight = allInv.reduce((s, r) => s + calcRowWeight(r), 0) + moneyWeight;
     const list = storeHelper.getCurrentList(store);
     const traits = storeHelper.getTraits(store);
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
@@ -551,12 +559,16 @@
       </li>`;
 
     const capKey = '__capacity__';
+    const moneyRow = moneyWeight
+      ? `          <div class="cap-row"><span class="label">Pengar:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
+      : '';
     const capCard = `
       <li class="card${openKeys.has(capKey) ? '' : ' compact'}" data-special="${capKey}">
         <div class="card-title"><span><span class="collapse-btn"></span>Bärkapacitet</span></div>
         <div class="card-desc ${remainingCap < 0 ? 'cap-neg' : ''}">
           <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
           <div class="cap-row"><span class="label">Använd:</span><span class="value">${formatWeight(usedWeight)}</span></div>
+${moneyRow}
           <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
         </div>
       </li>`;
