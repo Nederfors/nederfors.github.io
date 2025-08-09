@@ -524,6 +524,11 @@ select.level {
     padding: .15rem .25rem;
     font-size: .45rem;
   }
+  .inv-buttons { gap: .3rem; flex-wrap: nowrap; }
+  .inv-buttons .char-btn {
+    padding: .35rem .6rem;
+    font-size: .9rem;
+  }
   .header-actions {
     gap: .4rem;
   }
@@ -980,6 +985,11 @@ select.level {
 }
 #qtyPopup.open .popup-inner { transform: translateY(0); }
 #qtyPopup .popup-inner button { width: 100%; }
+#qtyItemList {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
 
 /* ---------- Popup för alkemistnivå ---------- */
 #alcPopup {
