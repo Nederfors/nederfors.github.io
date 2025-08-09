@@ -73,7 +73,7 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 ### 5. Inventariepanelen
 Via `🎒` kommer du åt allt du har samlat på dig.
 - **Kategori** låter dig filtrera inventarielistan på typ av utrustning.
-- **Nytt föremål** lägger till ett eget objekt. Här kan du även bestämma grundpris och beskrivning.
+- **Nytt föremål** lägger till ett eget objekt. Här kan du även bestämma vikt, grundpris och beskrivning.
 - **Hantera pengar** öppnar en popup där du kan nollställa, addera eller ersätta dina pengar.
 - **Rensa inventarie** tar bort all utrustning.
 I listan för varje föremål finns knappar för att öka/minska antal, markera som gratis, redigera kvaliteter och mer.

@@ -156,6 +156,7 @@
     const pop   = bar.shadowRoot.getElementById('customPopup');
     const name  = bar.shadowRoot.getElementById('customName');
     const type  = bar.shadowRoot.getElementById('customType');
+    const wIn   = bar.shadowRoot.getElementById('customWeight');
     const effBox= bar.shadowRoot.getElementById('customArtifactEffect');
     const effSel= effBox ? effBox.querySelector('select') : null;
     const dIn   = bar.shadowRoot.getElementById('customDaler');
@@ -188,6 +189,7 @@
       pop.removeEventListener('click', onOutside);
       name.value = '';
       dIn.value = sIn.value = oIn.value = '';
+      wIn.value = '';
       desc.value = '';
       if (effSel) effSel.value = 'corruption';
       if (effBox) effBox.style.display = 'none';
@@ -197,6 +199,7 @@
       const entry = {
         namn: name.value.trim(),
         taggar: { typ: [type.value] },
+        vikt: Number(wIn.value)||0,
         grundpris: {
           daler: Number(dIn.value)||0,
           skilling: Number(sIn.value)||0,
