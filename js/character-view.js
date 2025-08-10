@@ -250,6 +250,10 @@ function initCharacter() {
         }
     });
     const compact = storeHelper.getCompactEntries(store);
+    const openCats = new Set(
+      [...dom.valda.querySelectorAll('.cat-group > details[open]')]
+        .map(d => d.dataset.cat)
+    );
     dom.valda.innerHTML = '';
     if(!groups.length){ dom.valda.innerHTML = '<li class="card">Inga träffar.</li>'; return; }
     const cats = {};
@@ -279,7 +283,7 @@ function initCharacter() {
     catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details data-cat="${cat}"${openCats.has(cat) ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       detailsEl.addEventListener('toggle', updateCatToggle);
       const listEl=detailsEl.querySelector('ul');
