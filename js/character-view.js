@@ -207,9 +207,12 @@ function initCharacter() {
 
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
+    const onlySel = storeHelper.getOnlySelected(store);
     const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
       .map(t => searchNormalize(t.toLowerCase()));
-    return storeHelper.getCurrentList(store)
+    const base = storeHelper.getCurrentList(store);
+    const nameSet = onlySel ? new Set(base.map(x => x.namn)) : null;
+    return base
       .filter(p => !isInv(p))
       .filter(p => {
         const text = searchNormalize(`${p.namn} ${(p.beskrivning || '')}`.toLowerCase());
@@ -228,7 +231,8 @@ function initCharacter() {
                 : selTags.every(t => itmTags.includes(t))
         );
         const txtOk = !hasTerms || txt;
-        return txtOk && tagOk;
+        const selOk = !nameSet || nameSet.has(p.namn);
+        return txtOk && tagOk && selOk;
       })
       .sort(createSearchSorter(terms));
   };
@@ -390,6 +394,7 @@ function initCharacter() {
       if (term === 'lol') {
         F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
+        storeHelper.setOnlySelected(store, false);
         activeTags(); renderSkills(filtered()); renderTraits();
         return;
       }
@@ -408,15 +413,23 @@ function initCharacter() {
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
     dom[sel].addEventListener('change',()=>{
-      const v=dom[sel].value; if(v&&!F[key].includes(v)) F[key].push(v);
+      const v=dom[sel].value;
+      if (sel === 'tstSel' && !v) {
+        F[key] = [];
+        storeHelper.setOnlySelected(store, false);
+        activeTags(); renderSkills(filtered()); renderTraits();
+        return;
+      }
+      if(v&&!F[key].includes(v)) F[key].push(v);
       dom[sel].value=''; activeTags(); renderSkills(filtered()); renderTraits();
     });
   });
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const sec=t.dataset.type,val=t.dataset.val;
-    if(sec==='search'){F.search=F.search.filter(x=>x!==val);} 
+    if(sec==='search'){F.search=F.search.filter(x=>x!==val);}
     else F[sec]=F[sec].filter(x=>x!==val);
+    if(sec==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
     activeTags(); renderSkills(filtered()); renderTraits();
   });
 

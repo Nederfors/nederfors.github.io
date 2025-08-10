@@ -180,12 +180,12 @@
       let pain = 0;
       let extra = '';
       let beforeExtra = '';
-      let afterExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>`;
+      let afterExtra = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>`;
       if (k === 'Stark') {
         const base = storeHelper.calcCarryCapacity(val, list);
         tal  += hardy;
         pain = storeHelper.calcPainThreshold(val, list, effects);
-        beforeExtra = `<div class="trait-count">Förmågor: ${counts[k]}</div>` + `<div class="trait-extra">Bärkapacitet: ${formatWeight(base)}</div>`;
+        beforeExtra = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>` + `<div class="trait-extra">Bärkapacitet: ${formatWeight(base)}</div>`;
         afterExtra = '';
         extra = `<div class="trait-extra">Tålighet: ${tal} • Smärtgräns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
@@ -283,6 +283,17 @@
   function bindTraits(){
     if(!dom.traits) return;
     dom.traits.addEventListener('click', e => {
+      const countBtn = e.target.closest('.trait-count');
+      if (countBtn) {
+        const trait = countBtn.dataset.trait;
+        if (dom.tstSel) {
+          dom.tstSel.value = trait;
+          dom.tstSel.dispatchEvent(new Event('change'));
+        }
+        storeHelper.setOnlySelected(store, true);
+        if (typeof indexViewUpdate === 'function') indexViewUpdate();
+        return;
+      }
       const btn = e.target.closest('.trait-btn');
       if(!btn) return;
       const key = btn.closest('.trait').dataset.key;

@@ -45,8 +45,12 @@ function initIndex() {
 
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
+    const onlySel = storeHelper.getOnlySelected(store);
     const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
       .map(t => searchNormalize(t.toLowerCase()));
+    const nameSet = onlySel
+      ? new Set(storeHelper.getCurrentList(store).map(x => x.namn))
+      : null;
     return getEntries().filter(p=>{
       const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
       const hasTerms = terms.length > 0;
@@ -64,7 +68,8 @@ function initIndex() {
               : selTags.every(t => itmTags.includes(t))
       );
       const txtOk  = !hasTerms || txt;
-      return tagOk && txtOk;
+      const selOk = !onlySel || nameSet.has(p.namn);
+      return tagOk && txtOk && selOk;
     }).sort(createSearchSorter(terms));
   };
 
@@ -272,6 +277,7 @@ function initIndex() {
       if (term === 'lol') {
         F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
+        storeHelper.setOnlySelected(store, false);
         activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
@@ -302,7 +308,14 @@ function initIndex() {
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
     dom[sel].addEventListener('change',()=>{
-      const v = dom[sel].value; if(v && !F[key].includes(v)) F[key].push(v);
+      const v = dom[sel].value;
+      if (sel === 'tstSel' && !v) {
+        F[key] = [];
+        storeHelper.setOnlySelected(store, false);
+        activeTags(); renderList(filtered());
+        return;
+      }
+      if(v && !F[key].includes(v)) F[key].push(v);
       dom[sel].value=''; activeTags(); renderList(filtered());
     });
   });
@@ -311,6 +324,7 @@ function initIndex() {
     const section=t.dataset.type, val=t.dataset.val;
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else F[section] = F[section].filter(x=>x!==val);
+    if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
     activeTags(); renderList(filtered());
   });
 

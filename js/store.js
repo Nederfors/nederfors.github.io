@@ -27,7 +27,8 @@
       characters: [],       // [{ id, name }]
       data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{xp:0,corruption:0} } }
       filterUnion: false,
-      compactEntries: false
+      compactEntries: false,
+      onlySelected: false
     };
   }
 
@@ -534,6 +535,15 @@
 
   function setCompactEntries(store, val) {
     store.compactEntries = Boolean(val);
+    save(store);
+  }
+
+  function getOnlySelected(store) {
+    return Boolean(store.onlySelected);
+  }
+
+  function setOnlySelected(store, val) {
+    store.onlySelected = Boolean(val);
     save(store);
   }
 
@@ -1070,6 +1080,8 @@ function defaultTraits() {
     setFilterUnion,
     getCompactEntries,
     setCompactEntries,
+    getOnlySelected,
+    setOnlySelected,
     getNilasPopupSeen,
     setNilasPopupSeen,
     normalizeMoney,
