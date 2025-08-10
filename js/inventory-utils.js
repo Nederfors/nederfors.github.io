@@ -595,7 +595,7 @@
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
     const moneyRow = moneyWeight
-      ? `            <div class="cap-row"><span class="label">Pengavikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
+      ? `            <div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
       : '';
 
     /* ---------- kort för formaliteter (pengar & bärkapacitet) ---------- */
