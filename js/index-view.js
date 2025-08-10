@@ -74,6 +74,10 @@ function initIndex() {
   };
 
   const renderList = arr=>{
+    const openCats = new Set(
+      [...dom.lista.querySelectorAll('.cat-group > details[open]')]
+        .map(d => d.dataset.cat)
+    );
     dom.lista.innerHTML = '';
     if(!arr.length){ dom.lista.innerHTML = '<li class="card">Inga träffar.</li>'; return; }
     const charList = storeHelper.getCurrentList(store);
@@ -106,7 +110,7 @@ function initIndex() {
     catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details${catsMinimized ? '' : ' open'}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details data-cat="${cat}"${openCats.has(cat) ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=catLi.querySelector('ul');
       detailsEl.addEventListener('toggle', updateCatToggle);
