@@ -434,7 +434,7 @@ class SharedToolbar extends HTMLElement {
             <strong>🆕</strong> lägger till eget föremål.<br>
               <strong>💰</strong> justerar pengar.<br>
             <strong>🧹</strong> tömmer inventariet.<br>
-            <strong>x²</strong> saknar funktion ännu.
+            <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.
           </p>
           <h3>Egenskapspanelen</h3>
           <p>Ange total XP och få en summering av valda förmågor.</p>
