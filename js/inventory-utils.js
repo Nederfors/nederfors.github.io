@@ -638,15 +638,24 @@ ${moneyRow}
           const tagger  = entry.taggar ?? {};
           const tagTyp  = tagger.typ ?? [];
 
+          const freeCnt = Number(row.gratis || 0);
+          const rowLevel = row.nivå ||
+            ([ 'Elixir','L\u00e4gre Artefakt','F\u00e4lla' ].some(t => tagTyp.includes(t))
+              ? Object.keys(entry.nivåer || {}).find(l => l)
+              : null);
+          const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
+
           /* — beskrivning / taggar / nivå — */
           // Ingen beskrivningstext ska visas i inventariet.
           // "desc" används fortfarande för taggar, nivå och kvaliteter nedan.
           let desc = '';
-          const tags = (tagger.typ || [])
-            .concat(explodeTags(tagger.ark_trad), tagger.test || []);
-          if (tags.length) {
-            const html = tags.map(t => `<span class="tag">${t}</span>`).join(' ');
-            desc += `<div class="tags">${html}</div>`;
+          const tagList = (tagger.typ || [])
+            .concat(explodeTags(tagger.ark_trad), tagger.test || [])
+            .map(t => `<span class="tag">${t}</span>`);
+          if (rowLevel) tagList.push(`<span class="tag level">${rowLevel}</span>`);
+          if (freeCnt) tagList.push(`<span class="tag free removable" data-free="1">Gratis${freeCnt>1?`×${freeCnt}`:''} ✕</span>`);
+          if (tagList.length) {
+            desc += `<div class="tags">${tagList.join(' ')}</div>`;
           }
           desc += itemStatHtml(entry, row);
           if (row.trait) {
@@ -693,17 +702,11 @@ ${moneyRow}
   : `<button data-act="del" class="char-btn danger">🗑</button>
       <button data-act="sub" class="char-btn">–</button>
       <button data-act="add" class="char-btn">+</button>`;
-          const freeCnt = Number(row.gratis || 0);
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
 
-          const rowLevel = row.nivå ||
-            (['Elixir','L\u00e4gre Artefakt','F\u00e4lla'].some(t => tagTyp.includes(t))
-              ? Object.keys(entry.nivåer || {}).find(l => l)
-              : null);
-          const lvlInfo = rowLevel ? ` <span class="tag level">${rowLevel}</span>` : '';
-          const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
+          // rowLevel och dataLevel beräknades tidigare
           const priceText = formatMoney(
             calcRowCost(row, forgeLvl, alcLevel, artLevel)
           );
@@ -716,7 +719,7 @@ ${moneyRow}
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
               <div class="card-desc">
-                ${desc}${lvlInfo}${freeCnt ? ` <span class="tag free removable" data-free="1">Gratis${freeCnt>1? '×'+freeCnt:''} ✕</span>` : ''}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
+                ${desc}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
               </div>
               <div class="inv-controls">
                 ${btnRow}
