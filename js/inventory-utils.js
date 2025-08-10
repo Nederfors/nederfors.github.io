@@ -303,10 +303,10 @@
     const onBtn = e => {
       const b = e.target.closest('button[data-idx]');
       if (!b) return;
-      const idx = Number(b.dataset.idx);
+      const realIdx = Number(b.dataset.idx);
       const qty = parseInt(inEl.value, 10);
       if (!qty || qty <= 0) return;
-      inv[idx].qty += qty;
+      inv[realIdx].qty += qty;
       saveInventory(inv);
       renderInventory();
       close();
@@ -632,7 +632,8 @@ ${moneyRow}
 
     /* ---------- kort för varje föremål ---------- */
     const itemCards = inv.length
-      ? inv.map((row, idx) => {
+      ? inv.map((row) => {
+          const realIdx = allInv.indexOf(row);
           const entry   = getEntry(row.name);
           const tagger  = entry.taggar ?? {};
           const tagTyp  = tagger.typ ?? [];
@@ -711,7 +712,7 @@ ${moneyRow}
 
           return `
             <li class="card${openKeys.has(key) ? '' : ' compact'}"
-                data-idx="${idx}"
+                data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
               <div class="card-desc">
@@ -785,20 +786,20 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
       const removeTagBtn = e.target.closest('.tag.removable[data-qual]');
       if (removeTagBtn) {
         const li   = removeTagBtn.closest('li');
-        const idx  = Number(li.dataset.idx);
+        const realIdx  = Number(li.dataset.idx);
         const q    = removeTagBtn.dataset.qual;
         const inv  = storeHelper.getInventory(store);
         const isBase = removeTagBtn.dataset.base === '1';
         if (isBase) {
-          inv[idx].removedKval = inv[idx].removedKval || [];
-          if (!inv[idx].removedKval.includes(q)) inv[idx].removedKval.push(q);
-          if (inv[idx].gratisKval) {
-            inv[idx].gratisKval = inv[idx].gratisKval.filter(x => x !== q);
+          inv[realIdx].removedKval = inv[realIdx].removedKval || [];
+          if (!inv[realIdx].removedKval.includes(q)) inv[realIdx].removedKval.push(q);
+          if (inv[realIdx].gratisKval) {
+            inv[realIdx].gratisKval = inv[realIdx].gratisKval.filter(x => x !== q);
           }
-        } else if (inv[idx]?.kvaliteter) {
-          inv[idx].kvaliteter = inv[idx].kvaliteter.filter(x => x !== q);
-          if (inv[idx].gratisKval) {
-            inv[idx].gratisKval = inv[idx].gratisKval.filter(x => x !== q);
+        } else if (inv[realIdx]?.kvaliteter) {
+          inv[realIdx].kvaliteter = inv[realIdx].kvaliteter.filter(x => x !== q);
+          if (inv[realIdx].gratisKval) {
+            inv[realIdx].gratisKval = inv[realIdx].gratisKval.filter(x => x !== q);
           }
         }
         saveInventory(inv);
@@ -833,20 +834,20 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
           return;
         }
         const li  = btn.closest('li');
-        const idx = Number(li.dataset.idx);
+        const realIdx = Number(li.dataset.idx);
         const inv = storeHelper.getInventory(store);
 
       // 3a) Röd soptunna tar bort hela posten
       if (act === 'del') {
-        if (idx >= 0) {
-          const row = inv[idx];
+        if (realIdx >= 0) {
+          const row = inv[realIdx];
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
           if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
             if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
           }
-          inv.splice(idx, 1);
+          inv.splice(realIdx, 1);
           saveInventory(inv);
           renderInventory();
         }
@@ -881,9 +882,9 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
               if (trait) obj.trait = trait;
               if (indiv) {
                 inv.push(obj);
-              } else if (idx >= 0 && (!trait || inv[idx].trait === trait)) {
-                inv[idx].qty++;
-              } else if (idx >= 0 && trait && inv[idx].trait !== trait) {
+              } else if (realIdx >= 0 && (!trait || inv[realIdx].trait === trait)) {
+                inv[realIdx].qty++;
+              } else if (realIdx >= 0 && trait && inv[realIdx].trait !== trait) {
                 inv.push(obj);
               } else {
                 inv.push(obj);
@@ -906,8 +907,8 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         }
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
-        if (idx >= 0) {
-          const row = inv[idx];
+        if (realIdx >= 0) {
+          const row = inv[realIdx];
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
@@ -920,7 +921,7 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
             if (row.gratis > row.qty) row.gratis = row.qty;
             if (removingPerkItem && pg > 0) row.perkGratis = pg - 1;
           } else {
-            inv.splice(idx, 1);
+            inv.splice(realIdx, 1);
           }
           saveInventory(inv);
           renderInventory();
@@ -934,18 +935,18 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
-          if (idx >= 0 && qualities[qIdx]) {
-            inv[idx].kvaliteter = inv[idx].kvaliteter || [];
+          if (realIdx >= 0 && qualities[qIdx]) {
+            inv[realIdx].kvaliteter = inv[realIdx].kvaliteter || [];
             const qn = qualities[qIdx].namn;
-            const removed = inv[idx].removedKval ?? [];
+            const removed = inv[realIdx].removedKval ?? [];
             const baseQuals = [
               ...(entry.taggar?.kvalitet ?? []),
               ...splitQuals(entry.kvalitet)
             ];
             const baseQ = baseQuals.filter(q => !removed.includes(q));
-            const existing = [...baseQ, ...inv[idx].kvaliteter];
+            const existing = [...baseQ, ...inv[realIdx].kvaliteter];
             if (!existing.includes(qn)) {
-              inv[idx].kvaliteter.push(qn);
+              inv[realIdx].kvaliteter.push(qn);
               saveInventory(inv);
               renderInventory();
             }
@@ -956,18 +957,18 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
 
       // "freeQual" markerar äldsta icke-gratis kvalitet som gratis
       if (act === 'freeQual') {
-        const removed = inv[idx].removedKval ?? [];
+        const removed = inv[realIdx].removedKval ?? [];
         const baseQuals = [
           ...(entry.taggar?.kvalitet ?? []),
           ...splitQuals(entry.kvalitet)
         ];
         const baseQ = baseQuals.filter(q => !removed.includes(q));
-        const allQ = [...baseQ, ...(inv[idx].kvaliteter ?? [])];
+        const allQ = [...baseQ, ...(inv[realIdx].kvaliteter ?? [])];
         if (!allQ.length) return;
-        inv[idx].gratisKval = (inv[idx].gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-        const qName = allQ.find(q => !inv[idx].gratisKval.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
+        inv[realIdx].gratisKval = (inv[realIdx].gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+        const qName = allQ.find(q => !inv[realIdx].gratisKval.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
         if (!qName) return;                  // alla redan gratis eller ej giltiga
-        inv[idx].gratisKval.push(qName);
+        inv[realIdx].gratisKval.push(qName);
         saveInventory(inv);
         renderInventory();
         return;
@@ -975,8 +976,8 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
 
       // "toggleEffect" växlar artefaktens effekt
       if (act === 'toggleEffect') {
-        const eff = inv[idx].artifactEffect || entry.artifactEffect || 'corruption';
-        inv[idx].artifactEffect = eff === 'corruption' ? 'xp' : 'corruption';
+        const eff = inv[realIdx].artifactEffect || entry.artifactEffect || 'corruption';
+        inv[realIdx].artifactEffect = eff === 'corruption' ? 'xp' : 'corruption';
         saveInventory(inv);
         renderInventory();
         return;
@@ -984,8 +985,8 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
 
       // "free" ökar gratis-räknaren (loopar när den nått max)
       if (act === 'free') {
-        if (idx >= 0) {
-          const row = inv[idx];
+        if (realIdx >= 0) {
+          const row = inv[realIdx];
           let newGratis = Number(row.gratis || 0) + 1;
           if (newGratis > row.qty) newGratis = 0;
 
