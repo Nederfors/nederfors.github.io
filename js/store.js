@@ -148,6 +148,14 @@
     }
   }
 
+  function enforceDwarf(list) {
+    if (list.some(x => x.namn === 'Dvärg')) {
+      for (let i = list.length - 1; i >= 0; i--) {
+        if (list[i].namn === 'Korruptionskänslig') list.splice(i, 1);
+      }
+    }
+  }
+
   function applyHamnskifteTraits(store, list) {
     if (!store.current) return;
     const data = store.data[store.current] || {};
@@ -257,6 +265,7 @@
     applyDarkBloodEffects(list);
     applyRaceTraits(list);
     enforceEarthbound(list);
+    enforceDwarf(list);
     applyHamnskifteTraits(store, list);
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;

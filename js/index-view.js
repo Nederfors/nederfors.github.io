@@ -403,9 +403,22 @@ function initIndex() {
         }
       } else {
         const list = storeHelper.getCurrentList(store);
+        if (p.namn === 'Korruptionskänslig' && list.some(x => x.namn === 'Dvärg')) {
+          alert('Dvärgar kan inte ta Korruptionskänslig.');
+          return;
+        }
         if (isRas(p) && list.some(isRas)) {
           alert('Du kan bara välja en ras.');
           return;
+        }
+        if (p.namn === 'Dvärg') {
+          const hasKorrupt = list.some(x => x.namn === 'Korruptionskänslig');
+          if (hasKorrupt) {
+            if (!confirm('Du har korruptionskänslig, om du väljer till rasen Dvärg så kommer den nackdelen tas bort. Fortsätt?')) return;
+            for (let i = list.length - 1; i >= 0; i--) {
+              if (list[i].namn === 'Korruptionskänslig') list.splice(i, 1);
+            }
+          }
         }
         if (isYrke(p) && list.some(isYrke)) {
           if (!confirm('Du kan bara välja ett yrke. Lägga till ändå?')) return;
