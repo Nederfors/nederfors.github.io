@@ -1199,6 +1199,11 @@ select.level {
 }
 #charPopup.open .popup-inner { transform: scale(1); }
 #charPopup .popup-inner button { width: 100%; }
+#charPopupContent {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
 
 /* Gör samtliga popups scrollbara om innehållet blir för högt */
 #qualPopup .popup-inner,
