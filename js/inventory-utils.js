@@ -716,7 +716,7 @@ ${moneyRow}
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
               <div class="card-desc">
-                ${desc}${freeCnt ? ` <span class="tag free">Gratis${freeCnt>1? '×'+freeCnt:''}</span>` : ''}${lvlInfo}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
+                ${desc}${freeCnt ? ` <span class="tag free removable" data-free="1">Gratis${freeCnt>1? '×'+freeCnt:''} ✕</span>` : ''}${lvlInfo}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
               </div>
               <div class="inv-controls">
                 ${btnRow}
@@ -782,24 +782,29 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
       };
     }
     dom.invList.onclick = e => {
-      // 1) Klick på kryss för att ta bort en enskild kvalitet
-      const removeTagBtn = e.target.closest('.tag.removable[data-qual]');
+      // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
+      const removeTagBtn = e.target.closest('.tag.removable');
       if (removeTagBtn) {
         const li   = removeTagBtn.closest('li');
         const realIdx  = Number(li.dataset.idx);
-        const q    = removeTagBtn.dataset.qual;
         const inv  = storeHelper.getInventory(store);
-        const isBase = removeTagBtn.dataset.base === '1';
-        if (isBase) {
-          inv[realIdx].removedKval = inv[realIdx].removedKval || [];
-          if (!inv[realIdx].removedKval.includes(q)) inv[realIdx].removedKval.push(q);
-          if (inv[realIdx].gratisKval) {
-            inv[realIdx].gratisKval = inv[realIdx].gratisKval.filter(x => x !== q);
-          }
-        } else if (inv[realIdx]?.kvaliteter) {
-          inv[realIdx].kvaliteter = inv[realIdx].kvaliteter.filter(x => x !== q);
-          if (inv[realIdx].gratisKval) {
-            inv[realIdx].gratisKval = inv[realIdx].gratisKval.filter(x => x !== q);
+        if (removeTagBtn.dataset.free) {
+          inv[realIdx].gratis = 0;
+        } else if (removeTagBtn.dataset.qual) {
+          const q    = removeTagBtn.dataset.qual;
+          if (removeTagBtn.classList.contains('free')) {
+            inv[realIdx].gratisKval = (inv[realIdx].gratisKval || []).filter(x => x !== q);
+          } else {
+            const isBase = removeTagBtn.dataset.base === '1';
+            if (isBase) {
+              inv[realIdx].removedKval = inv[realIdx].removedKval || [];
+              if (!inv[realIdx].removedKval.includes(q)) inv[realIdx].removedKval.push(q);
+            } else if (inv[realIdx]?.kvaliteter) {
+              inv[realIdx].kvaliteter = inv[realIdx].kvaliteter.filter(x => x !== q);
+            }
+            if (inv[realIdx].gratisKval) {
+              inv[realIdx].gratisKval = inv[realIdx].gratisKval.filter(x => x !== q);
+            }
           }
         }
         saveInventory(inv);
