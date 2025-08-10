@@ -1,0 +1,178 @@
+/**
+ * online-export.js
+ * 
+ * Användning i korthet:
+ * 1) Lägg två knappar i HTML:
+ *    <button id="exportOnlineBtn">Exportera online</button>
+ *    <button id="importOnlineBtn">Importera</button>
+ * 
+ * 2) Inkludera denna fil längst ned innan </body>:
+ *    <script src="online-export.js"></script>
+ * 
+ * 3) Konfigurera APPS_URL om det behövs (nedan är redan din URL).
+ * 
+ * 4) Lägg till två hookar i din app:
+ *    - window.getCurrentJsonForExport = () => ({ ...din data... });
+ *    - window.loadImportedJson = (obj) => { ...hantera importerad data... };
+ * 
+ * 5) Klart. Knapparna börjar fungera direkt om element med ID ovan finns.
+ */
+
+// Din Apps Script Web App URL (inkl. /exec)
+const APPS_URL = 'https://script.google.com/macros/s/AKfycbzJeAxY90mHOAgkXEsS_tPN5XgTOzm4iSsuOS6FWwSD_rZxkokJ6aP6fIu3sL7Vnr4m/exec';
+
+// Mappar som visas för besökare (keys matchar Apps Script CONFIG.FOLDERS)
+const FOLDERS = [
+  { key: 'daniel', label: 'Daniel' },
+  { key: 'david',  label: 'David' },
+  { key: 'elin',   label: 'Elin' },
+  { key: 'isac',   label: 'Isac' },
+  { key: 'leo',    label: 'Leo' },
+  { key: 'victor', label: 'Victor' }
+];
+
+// Beständig anonym klientnyckel för rate limit (sparas i localStorage)
+const CLIENT_KEY_STORAGE = 'jsonGatewayClientId';
+function getClientKey() {
+  let k = localStorage.getItem(CLIENT_KEY_STORAGE);
+  if (!k) {
+    // Skapa Base64-url-liknande nyckel
+    const rand = crypto.getRandomValues(new Uint8Array(24));
+    k = btoa(String.fromCharCode(...rand)).replace(/[+/=]/g, s => ({'+':'-','/':'_','=':''}[s]));
+    localStorage.setItem(CLIENT_KEY_STORAGE, k);
+  }
+  return k;
+}
+
+/* -------- Modal -------- */
+(function ensureModal(){
+  if (document.getElementById('onlineModal')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'onlineModal';
+  wrap.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:9999;';
+  wrap.innerHTML = `
+    <div style="background:white; margin:10vh auto; padding:16px; width:90%; max-width:520px; border-radius:12px;">
+      <h3 id="modalTitle" style="margin:0 0 8px 0;">Online</h3>
+      <div id="modalBody"></div>
+      <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
+        <button id="modalCancel" type="button">Avbryt</button>
+        <button id="modalOk" type="button">OK</button>
+      </div>
+    </div>`;
+  document.body.appendChild(wrap);
+})();
+
+const modal = document.getElementById('onlineModal');
+const modalTitle = document.getElementById('modalTitle');
+const modalBody = document.getElementById('modalBody');
+const modalOk = document.getElementById('modalOk');
+const modalCancel = document.getElementById('modalCancel');
+
+function openModal(title, bodyHTML, onOk) {
+  modalTitle.textContent = title;
+  modalBody.innerHTML = bodyHTML;
+  modal.style.display = 'block';
+  const okHandler = async () => {
+    modalOk.removeEventListener('click', okHandler);
+    modal.style.display = 'none';
+    await onOk();
+  };
+  modalOk.addEventListener('click', okHandler);
+}
+modalCancel.addEventListener('click', () => (modal.style.display = 'none'));
+
+/* -------- Hookar med standardbeteende -------- */
+if (typeof window.getCurrentJsonForExport !== 'function') {
+  window.getCurrentJsonForExport = () => ({ savedAt: new Date().toISOString(), data: window.myAppState || {} });
+}
+if (typeof window.loadImportedJson !== 'function') {
+  window.loadImportedJson = (obj) => { window.myAppState = obj; alert('Import klar.'); };
+}
+
+/* -------- Hjälpfunktioner -------- */
+async function safeJson(res) {
+  try { return await res.json(); } catch { return null; }
+}
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+/* -------- Export -------- */
+function setupExport() {
+  const btn = document.getElementById('exportOnlineBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const folderOptions = FOLDERS.map(f => `<option value="${f.key}">${f.label}</option>`).join('');
+    const defaultName = `export_${new Date().toISOString().replace(/[:.]/g,'-')}.json`;
+    const body = `
+      <label>Mapp:<br/><select id="folderPick">${folderOptions}</select></label><br/><br/>
+      <label>Filnamn:<br/><input id="fileName" value="${defaultName}" style="width:100%"/></label>
+      <p style="font-size:12px;opacity:.7;margin-top:8px;">Om filnamnet redan finns skrivs den över.</p>
+    `;
+    openModal('Exportera online', body, async () => {
+      const folderKey = document.getElementById('folderPick').value;
+      const fileName = document.getElementById('fileName').value.trim();
+
+      const payload = window.getCurrentJsonForExport();
+      const jsonText = JSON.stringify(payload);
+
+      const form = new URLSearchParams();
+      form.set('folderKey', folderKey);
+      form.set('filename', fileName);
+      form.set('json', jsonText);
+      form.set('clientKey', getClientKey());
+
+      const res = await fetch(APPS_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+        body: form.toString()
+      });
+      const data = await safeJson(res);
+      if (!data || data.ok !== true) {
+        alert('Uppladdning misslyckades' + (data && data.error ? `: ${data.error}` : ''));
+        return;
+        }
+      alert(data.overwritten ? `Skrev över: ${data.name}` : `Uppladdad: ${data.name}`);
+    });
+  });
+}
+
+/* -------- Import -------- */
+function setupImport() {
+  const btn = document.getElementById('importOnlineBtn');
+  if (!btn) return;
+  btn.addEventListener('click', async () => {
+    const folderOptions = FOLDERS.map(f => `<option value="${f.key}">${f.label}</option>`).join('');
+    const body = `<label>Mapp:<br/><select id="folderPick">${folderOptions}</select></label>`;
+    openModal('Välj mapp', body, async () => {
+      const folderKey = document.getElementById('folderPick').value;
+
+      const listUrl = `${APPS_URL}?action=list&folderKey=${encodeURIComponent(folderKey)}`;
+      const res = await fetch(listUrl);
+      const data = await safeJson(res);
+      const files = (data && data.files) || [];
+      if (!files.length) { alert('Inga filer hittades'); return; }
+
+      const options = files.map(f => `<option value="${f.id}">${escapeHtml(f.name)} — ${f.modified}</option>`).join('');
+      const body2 = `<label>Fil:<br/><select id="filePick" size="8" style="width:100%">${options}</select></label>`;
+      openModal('Välj fil', body2, async () => {
+        const fileId = document.getElementById('filePick').value;
+        const getUrl = `${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}`;
+        const res2 = await fetch(getUrl);
+        const text = await res2.text();
+        try {
+          const obj = JSON.parse(text);
+          window.loadImportedJson(obj);
+        } catch {
+          alert('Filen innehåller inte giltig JSON.');
+        }
+      });
+    });
+  });
+}
+
+// Init
+document.addEventListener('DOMContentLoaded', () => {
+  setupExport();
+  setupImport();
+});
