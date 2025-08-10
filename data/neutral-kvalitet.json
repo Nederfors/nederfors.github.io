@@ -25,5 +25,6 @@
     "beskrivning": "Vapnet kan användas i både en och två händer, även om vapnet främst kommer till sin rätt när det används med båda händerna. Bastardvapnet tappar sina kvaliteter om det används med en hand, men då kan användaren också använda sköld vilket i vissa lägen är att föredra. En annan fördel är att vapnet kan användas till häst, hållet i en hand tills ryttaren sitter av och då kan nyttja dess fulla tvåhandskraft.",
     "taggar": {
       "typ": ["Kvalitet"]
-    }
+    },
+    "neutral": true
   }]
