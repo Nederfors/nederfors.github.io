@@ -347,9 +347,9 @@ function initIndex() {
       });
  if (!elig.length) return alert('Ingen lämplig utrustning att förbättra.');
  invUtil.openQualPopup(elig, iIdx => {
-        inv[iIdx].kvaliteter = inv[iIdx].kvaliteter||[];
+        elig[iIdx].kvaliteter = elig[iIdx].kvaliteter||[];
         const qn = p.namn;
-        if (!inv[iIdx].kvaliteter.includes(qn)) inv[iIdx].kvaliteter.push(qn);
+        if (!elig[iIdx].kvaliteter.includes(qn)) elig[iIdx].kvaliteter.push(qn);
         invUtil.saveInventory(inv); invUtil.renderInventory();
         renderList(filtered());
       });
