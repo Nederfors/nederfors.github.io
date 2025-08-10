@@ -716,7 +716,7 @@ ${moneyRow}
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
               <div class="card-desc">
-                ${desc}${freeCnt ? ` <span class="tag free removable" data-free="1">Gratis${freeCnt>1? '×'+freeCnt:''} ✕</span>` : ''}${lvlInfo}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
+                ${desc}${lvlInfo}${freeCnt ? ` <span class="tag free removable" data-free="1">Gratis${freeCnt>1? '×'+freeCnt:''} ✕</span>` : ''}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
               </div>
               <div class="inv-controls">
                 ${btnRow}
