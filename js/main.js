@@ -559,12 +559,27 @@ function ensureCharacterSelected() {
     });
     content.appendChild(sel);
   } else {
-    msg.textContent = 'Oj då, denna hemsida är bajs utan någon karaktär så det är bäst att du skapar en!';
-    const btn = document.createElement('button');
-    btn.className = 'char-btn';
-    btn.textContent = 'Ny rollperson';
-    btn.addEventListener('click', () => {
-      const name = prompt('Namn på ny rollperson?');
+    msg.textContent = 'Oj då, denna hemsida är bajs utan någon karaktär så det är bäst att du skapar eller importerar en!';
+
+    const importBtn = document.createElement('button');
+    importBtn.className = 'char-btn';
+    importBtn.textContent = 'Importera rollperson';
+    importBtn.addEventListener('click', () => {
+      const code = prompt('Klistra in karakt\u00e4rskoden:');
+      if (!code) return;
+      const res = storeHelper.importCharacterCode(store, code.trim());
+      if (res) {
+        location.reload();
+      } else {
+        alert('Felaktig kod.');
+      }
+    });
+
+    const btnNew = document.createElement('button');
+    btnNew.className = 'char-btn';
+    btnNew.textContent = 'Ny rollperson';
+    btnNew.addEventListener('click', () => {
+      const name = prompt('Namn p\u00e5 ny rollperson?');
       if (!name) return;
       const baseXP = 0;
       const charId = 'rp' + Date.now();
@@ -574,7 +589,8 @@ function ensureCharacterSelected() {
       storeHelper.save(store);
       location.reload();
     });
-    content.appendChild(btn);
+
+    content.append(importBtn, btnNew);
   }
   setTimeout(() => pop.classList.add('open'), 0);
 }
