@@ -587,10 +587,12 @@
     const diff  = oToMoney(Math.abs(diffO));
     const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
 
-    const foodCount = allInv.filter(row => {
-      const entry = getEntry(row.name);
-      return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
-    }).length;
+    const foodCount = allInv
+      .filter(row => {
+        const entry = getEntry(row.name);
+        return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
+      })
+      .reduce((sum, row) => sum + (row.qty || 0), 0);
 
     const moneyRow = moneyWeight
       ? `            <div class="cap-row"><span class="label">Pengavikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
@@ -604,7 +606,7 @@
         <div class="card-desc">
           <div class="inv-buttons">
             <button id="addCustomBtn" class="char-btn icon" title="Nytt föremål">🆕</button>
-            <button id="manageMoneyBtn" class="char-btn icon" title="Hantera pengar">🏦</button>
+            <button id="manageMoneyBtn" class="char-btn icon" title="Hantera pengar">💰</button>
             <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
             <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
           </div>

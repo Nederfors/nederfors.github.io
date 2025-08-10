@@ -432,7 +432,7 @@ class SharedToolbar extends HTMLElement {
           <h3>Inventariepanelen</h3>
           <p>
             <strong>🆕</strong> lägger till eget föremål.<br>
-            <strong>🏦</strong> justerar pengar.<br>
+              <strong>💰</strong> justerar pengar.<br>
             <strong>🧹</strong> tömmer inventariet.<br>
             <strong>x²</strong> saknar funktion ännu.
           </p>
@@ -496,7 +496,7 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
-    const popups = ['qualPopup','customPopup','moneyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','nilasPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','qtyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','nilasPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
