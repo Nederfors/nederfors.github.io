@@ -167,7 +167,6 @@ function yrkeInfoHtml(p) {
    =========================================================== */
 function boot() {
   if (window.invUtil) {
-    invUtil.sortAllInventories();
     invUtil.renderInventory();
     invUtil.bindInv();
     invUtil.bindMoney();

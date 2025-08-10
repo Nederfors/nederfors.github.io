@@ -250,6 +250,10 @@ input:focus, select:focus, textarea:focus {
   position: relative;
 }
 
+#invList li.card[draggable="true"] {
+  cursor: move;
+}
+
 /* särställ "Formaliteter"-kortet med blå kant */
 .card[data-special="__formal__"] {
   border: 2px solid var(--accent);
