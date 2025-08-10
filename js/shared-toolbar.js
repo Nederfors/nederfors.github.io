@@ -421,8 +421,8 @@ class SharedToolbar extends HTMLElement {
             <strong>Kopiera rollperson</strong> duplicerar den valda karaktären.<br>
             <strong>Byt namn</strong> ändrar karaktärens namn.<br>
             <strong>Ta bort rollperson</strong> raderar karaktären.<br>
-            <strong>Exportera</strong> kopierar karaktären som kod.<br>
-            <strong>Importera</strong> återställer en karaktär från kod.<br>
+            <strong>Exportera</strong> laddar ner karaktären som JSON-fil.<br>
+            <strong>Importera</strong> läser in en karaktär från JSON-fil.<br>
             <strong>⚒️ / ⚗️ / 🏺</strong> anger nivå på smed, alkemist och artefaktmakare.<br>
             <strong>🔭</strong> utvidgar sökningen (OR-filter).<br>
             <strong>🤏</strong> växlar kompakt listvy.<br>
