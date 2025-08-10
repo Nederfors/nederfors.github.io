@@ -680,7 +680,7 @@
   {
     "id": "v33",
     "namn": "Bladdolk",
-    "beskrivning": "Det smäckra handtaget och bladets tunna 5äderstål gör bladdolken enkel att dölja utan att den förlorar sitt sting. Den fästs lätt kring handled eller fotled med ett tunt band, eller mer fantasifullt med en bit kåda i nackbandet. Speciella gördlar eller dolda fack i kläder kan också användas. Vapnet smugglas lätt förbi vakter, för att utföra lönndåd eller för att lämnas vidare till fångar eller liknade.",
+    "beskrivning": "Det smäckra handtaget och bladets tunna stål gör bladdolken enkel att dölja utan att den förlorar sitt sting. Den fästs lätt kring handled eller fotled med ett tunt band, eller mer fantasifullt med en bit kåda i nackbandet. Speciella gördlar eller dolda fack i kläder kan också användas. Vapnet smugglas lätt förbi vakter, för att utföra lönndåd eller för att lämnas vidare till fångar eller liknade.",
     "taggar": {
       "typ": [
         "Vapen"
@@ -810,7 +810,7 @@
       "skilling": 0,
       "örtegar": 0
     }
-  }, 
+  },
   {
     "id": "v39",
     "namn": "Kampslägga",
