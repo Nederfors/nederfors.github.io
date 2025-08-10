@@ -835,31 +835,7 @@ function defaultTraits() {
     return pain;
   }
 
-  /* ---------- Hjälpfunktioner för export ---------- */
-
-  function toBase64(arr) {
-    if (typeof btoa === 'function') {
-      let binary = '';
-      arr.forEach(b => { binary += String.fromCharCode(b); });
-      return btoa(binary);
-    }
-    if (typeof Buffer !== 'undefined') {
-      return Buffer.from(arr).toString('base64');
-    }
-    throw new Error('No base64 encoder available');
-  }
-
-  // Legacy Base64 decoder for bakåtkompatibilitet
-  function fromBase64(str) {
-    if (typeof atob === 'function') {
-      const bin = atob(str);
-      return Uint8Array.from(bin, c => c.charCodeAt(0));
-    }
-    if (typeof Buffer !== 'undefined') {
-      return Uint8Array.from(Buffer.from(str, 'base64'));
-    }
-    throw new Error('No base64 decoder available');
-  }
+  /* ---------- Hjälpfunktioner för export/import ---------- */
 
   function stripDefaults(data) {
     const obj = { ...(data || {}) };
@@ -991,13 +967,13 @@ function defaultTraits() {
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */
-  function exportCharacterCode(store, id) {
+  function exportCharacterJSON(store, id) {
     const charId = id || store.current;
-    if (!charId) return '';
+    if (!charId) return null;
     const char = store.characters.find(c => c.id === charId);
-    if (!char) return '';
+    if (!char) return null;
     const data = store.data[charId] || {};
-    const obj = {
+    return {
       name: char.name,
       data: stripDefaults({
         ...data,
@@ -1006,21 +982,10 @@ function defaultTraits() {
         notes: data.notes
       })
     };
-    const json = JSON.stringify(obj);
-    const bytes = window.LZString.compressToUint8Array(json);
-    return toBase64(bytes);
   }
 
-  function importCharacterCode(store, code) {
+  function importCharacterJSON(store, obj) {
     try {
-      let json;
-      try {
-        const bytes = fromBase64(code);
-        json = window.LZString.decompressFromUint8Array(bytes);
-      } catch {
-        json = window.LZString.decompressFromEncodedURIComponent(code);
-      }
-      const obj = JSON.parse(json);
       const id = 'rp' + Date.now();
       store.characters.push({ id, name: obj.name || 'Ny rollperson' });
       const data = obj.data || {};
@@ -1036,7 +1001,7 @@ function defaultTraits() {
         notes: defaultNotes(),
         ...data
       };
-      if(!store.data[id].notes){
+      if (!store.data[id].notes) {
         store.data[id].notes = defaultNotes();
       }
       store.current = id;
@@ -1097,8 +1062,8 @@ function defaultTraits() {
     isFreeMonsterTrait,
     monsterTraitDiscount,
     monsterStackLimit,
-    exportCharacterCode,
-    importCharacterCode,
+    exportCharacterJSON,
+    importCharacterJSON,
     getPossessionMoney,
     setPossessionMoney,
     incrementPossessionRemoved,

@@ -23,7 +23,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 - Hantera flera rollpersoner med erfarenhetspoäng, inventarie och specialförmågor.
 - Filtrera listor på taggar och sökord.
 - Paneler för inventarie (`🎒`), egenskaper (`📊`) och anteckningar (`📜`).
-- Export och import av rollpersoner via komprimerade koder.
+- Export och import av rollpersoner via JSON-filer.
 - All information lagras i webbläsarens `localStorage`, vilket gör att dina val finns kvar mellan besök.
 
 ## Projektstruktur
@@ -35,7 +35,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 
 ## Export och import av rollpersoner
 
-Use the **Exportera** button in the filter panel to copy a short code representing the current character. Codes are compressed and only contain references to the built‑in database. The **Importera** button lets you paste such a code to recreate the character (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
+Use the **Exportera** button in the filter panel to download a JSON file representing the current character. The **Importera** button lets you select such a file to recreate the character (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
 
 ## Anteckningssidan
 

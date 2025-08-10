@@ -256,22 +256,41 @@ function bindToolbar() {
     /* Exportera rollperson --------------------------------- */
     if (id === 'exportChar') {
       if (!store.current) return alert('Ingen rollperson vald.');
-      const code = storeHelper.exportCharacterCode(store, store.current);
-      copyToClipboard(code)
-        .then(() => alert('Karakt\u00e4rskoden har kopierats.'))
-        .catch(() => prompt('Kopiera koden nedan:', code));
+      const data = storeHelper.exportCharacterJSON(store, store.current);
+      if (!data) return;
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${data.name || 'rollperson'}.json`;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
     }
 
     /* Importera rollperson -------------------------------- */
     if (id === 'importChar') {
-      const code = prompt('Klistra in karakt\u00e4rskoden:');
-      if (!code) return;
-      const res = storeHelper.importCharacterCode(store, code.trim());
-      if (res) {
-        location.reload();
-      } else {
-        alert('Felaktig kod.');
-      }
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = 'application/json';
+      inp.addEventListener('change', () => {
+        const file = inp.files && inp.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const obj = JSON.parse(reader.result);
+            const res = storeHelper.importCharacterJSON(store, obj);
+            if (res) {
+              location.reload();
+            } else {
+              alert('Felaktig fil.');
+            }
+          } catch {
+            alert('Felaktig fil.');
+          }
+        };
+        reader.readAsText(file);
+      });
+      inp.click();
     }
 
     /* Ta bort rollperson ----------------------------------- */
@@ -565,14 +584,29 @@ function ensureCharacterSelected() {
     importBtn.className = 'char-btn';
     importBtn.textContent = 'Importera rollperson';
     importBtn.addEventListener('click', () => {
-      const code = prompt('Klistra in karakt\u00e4rskoden:');
-      if (!code) return;
-      const res = storeHelper.importCharacterCode(store, code.trim());
-      if (res) {
-        location.reload();
-      } else {
-        alert('Felaktig kod.');
-      }
+      const inp = document.createElement('input');
+      inp.type = 'file';
+      inp.accept = 'application/json';
+      inp.addEventListener('change', () => {
+        const file = inp.files && inp.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try {
+            const obj = JSON.parse(reader.result);
+            const res = storeHelper.importCharacterJSON(store, obj);
+            if (res) {
+              location.reload();
+            } else {
+              alert('Felaktig fil.');
+            }
+          } catch {
+            alert('Felaktig fil.');
+          }
+        };
+        reader.readAsText(file);
+      });
+      inp.click();
     });
 
     const btnNew = document.createElement('button');
