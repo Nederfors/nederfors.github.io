@@ -73,7 +73,7 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 ### 5. Inventariepanelen
 Via `🎒` kommer du åt allt du har samlat på dig.
 - **Kategori** låter dig filtrera inventarielistan på typ av utrustning.
-- Under **Formaliteter** hittar du knappar för **🆕**, **🏦**, **🧹** och **x²** (kommer snart).
+- Under **Formaliteter 🔎** hittar du knappar för **🆕**, **🏦**, **🧹** och **x²** (kommer snart).
 I listan för varje föremål finns knappar för att öka/minska antal, markera som gratis, redigera kvaliteter och mer.
 
 ### 6. Egenskapspanelen

@@ -600,7 +600,7 @@
     const formalKey = '__formal__';
     const formalCard = `
       <li class="card${openKeys.has(formalKey) ? '' : ' compact'}" data-special="${formalKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter</span></div>
+        <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter 🔎</span></div>
         <div class="card-desc">
           <div class="inv-buttons">
             <button id="addCustomBtn" class="char-btn icon" title="Nytt föremål">🆕</button>
