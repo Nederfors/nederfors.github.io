@@ -720,6 +720,7 @@ ${moneyRow}
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+          const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
 
           // rowLevel och dataLevel beräknades tidigare
           const priceText = formatMoney(
@@ -732,7 +733,7 @@ ${moneyRow}
             <li class="card${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title"><span><span class="collapse-btn"></span>${row.name}</span></div>
+              <div class="card-title"><span><span class="collapse-btn"></span>${row.name}${badge}</span></div>
               <div class="card-desc">
                 ${desc}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
               </div>
