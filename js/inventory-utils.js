@@ -6,6 +6,7 @@
   const F = { typ: '' };
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const moneyToO = m => (m.daler||0)*SBASE*OBASE + (m.skilling||0)*OBASE + (m['örtegar']||0);
+  let dragIdx = null;
 
   const oToMoney = o => {
     const d = Math.floor(o / (SBASE * OBASE)); o %= SBASE * OBASE;
@@ -26,7 +27,6 @@
   }
 
   function saveInventory(inv) {
-    inv.sort(sortInvEntry);
     storeHelper.setInventory(store, inv);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
@@ -515,8 +515,7 @@
         if (!F.typ) return true;
         const entry = getEntry(row.name);
         return (entry.taggar?.typ || []).includes(F.typ);
-      })
-      .sort(sortInvEntry);
+      });
 
     /* ---------- summa i pengar ---------- */
     const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
@@ -730,7 +729,7 @@ ${moneyRow}
           const key = `${row.name}|${row.trait || ''}|${rowLevel || ''}`;
 
           return `
-            <li class="card${openKeys.has(key) ? '' : ' compact'}"
+            <li class="card${openKeys.has(key) ? '' : ' compact'}" draggable="true"
                 data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}${badge}</span></div>
@@ -1042,6 +1041,30 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         return;
       }
     };
+
+    dom.invList.addEventListener('dragstart', e => {
+      const li = e.target.closest('li[data-idx]');
+      if (!li || e.target.closest('button')) return;
+      dragIdx = Number(li.dataset.idx);
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', '');
+    });
+    dom.invList.addEventListener('dragover', e => {
+      if (e.target.closest('li[data-idx]') || e.target === dom.invList) e.preventDefault();
+    });
+    dom.invList.addEventListener('drop', e => {
+      e.preventDefault();
+      const li = e.target.closest('li[data-idx]');
+      const inv = storeHelper.getInventory(store);
+      if (dragIdx === null || !inv) return;
+      let dropIdx = li ? Number(li.dataset.idx) : inv.length;
+      if (dragIdx < dropIdx) dropIdx--;
+      const [moved] = inv.splice(dragIdx, 1);
+      inv.splice(dropIdx, 0, moved);
+      dragIdx = null;
+      saveInventory(inv);
+      renderInventory();
+    });
   }
 
   function bindMoney() {
