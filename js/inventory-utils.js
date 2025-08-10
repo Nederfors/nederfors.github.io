@@ -306,7 +306,22 @@
       const realIdx = Number(b.dataset.idx);
       const qty = parseInt(inEl.value, 10);
       if (!qty || qty <= 0) return;
-      inv[realIdx].qty += qty;
+
+      const row   = inv[realIdx];
+      const entry = getEntry(row.name);
+      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter']
+        .some(t => entry.taggar?.typ?.includes(t));
+
+      if (indiv) {
+        for (let i = 0; i < qty; i++) {
+          const clone = JSON.parse(JSON.stringify(row));
+          clone.qty = 1;
+          inv.push(clone);
+        }
+      } else {
+        row.qty += qty;
+      }
+
       saveInventory(inv);
       renderInventory();
       close();
