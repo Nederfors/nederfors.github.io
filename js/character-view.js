@@ -466,6 +466,10 @@ function initCharacter() {
     const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
     let list;
         if(actBtn.dataset.act==='add'){
+          if(name==='Korruptionskänslig' && before.some(x=>x.namn==='Dvärg')){
+            alert('Dvärgar kan inte ta Korruptionskänslig.');
+            return;
+          }
           if(!multi) return;
           const cnt = before.filter(x=>x.namn===name && !x.trait).length;
           const limit = storeHelper.monsterStackLimit(before, name);
