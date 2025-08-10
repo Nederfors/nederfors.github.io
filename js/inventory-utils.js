@@ -789,7 +789,15 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         const realIdx  = Number(li.dataset.idx);
         const inv  = storeHelper.getInventory(store);
         if (removeTagBtn.dataset.free) {
-          inv[realIdx].gratis = 0;
+          const row = inv[realIdx];
+          const perkActive = storeHelper.getCurrentList(store)
+            .some(x => x.namn === 'Välutrustad');
+          const pg = row.perkGratis || 0;
+          if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
+            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
+          }
+          row.gratis = 0;
+          if (pg > 0) row.perkGratis = 0;
         } else if (removeTagBtn.dataset.qual) {
           const q    = removeTagBtn.dataset.qual;
           if (removeTagBtn.classList.contains('free')) {
