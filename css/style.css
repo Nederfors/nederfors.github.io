@@ -508,7 +508,7 @@ select.level {
 .trait-btn:active { transform: scale(.94); opacity: .7; }
 .trait-value { font-weight: 700; font-size: 1.25rem; }
 .trait-name  { font-size: .82rem; color: var(--subtxt); }
-.trait-count { font-size: .75rem; color: var(--subtxt); }
+.trait-count { font-size: .75rem; color: var(--subtxt); background: none; border: none; padding: 0; cursor: pointer; }
 
 /* ---------- Småskärmar ---------- */
 @media (max-width: 420px) {
