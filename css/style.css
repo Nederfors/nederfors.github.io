@@ -1322,6 +1322,18 @@ textarea.auto-resize {
   text-align: center;
 }
 
+/* Remove default number input spinners so XP is adjusted only via buttons */
+.xp-control input::-webkit-outer-spin-button,
+.xp-control input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.xp-control input[type="number"] {
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
 #xpSummary {
   margin-top: .6rem;
 }
