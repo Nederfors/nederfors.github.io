@@ -3,14 +3,13 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Exempel – Export/Import online</title>
+    <title>Exempel – Export online</title>
   </head>
   <body>
     <h1>Exempel</h1>
 
     <div style="display:flex; gap:8px; margin:12px 0;">
       <button id="exportOnlineBtn">Exportera online</button>
-      <button id="importOnlineBtn">Importera</button>
     </div>
 
     <script>
@@ -19,7 +18,6 @@
 
       // Hookar (valfritt – standard finns i JS-filen om dessa saknas)
       window.getCurrentJsonForExport = () => ({ savedAt: new Date().toISOString(), data: window.myAppState });
-      window.loadImportedJson = (obj) => { window.myAppState = obj; alert('Import klar: ' + JSON.stringify(obj)); };
     </script>
 
     <!-- Lägg denna rad precis innan </body> i din riktiga sida -->

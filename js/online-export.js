@@ -2,20 +2,18 @@
  * online-export.js
  * 
  * Användning i korthet:
- * 1) Lägg två knappar i HTML:
+ * 1) Lägg en knapp i HTML:
  *    <button id="exportOnlineBtn">Exportera online</button>
- *    <button id="importOnlineBtn">Importera</button>
  * 
  * 2) Inkludera denna fil längst ned innan </body>:
  *    <script src="online-export.js"></script>
  * 
  * 3) Konfigurera APPS_URL om det behövs (nedan är redan din URL).
  * 
- * 4) Lägg till två hookar i din app:
+ * 4) Lägg till en hook i din app:
  *    - window.getCurrentJsonForExport = () => ({ ...din data... });
- *    - window.loadImportedJson = (obj) => { ...hantera importerad data... };
- * 
- * 5) Klart. Knapparna börjar fungera direkt om element med ID ovan finns.
+ *
+ * 5) Klart. Knappen börjar fungera direkt om element med ID ovan finns.
  */
 
 // Din Apps Script Web App URL (inkl. /exec)
@@ -23,7 +21,6 @@ const APPS_URL = 'https://script.google.com/macros/s/AKfycbz7H5mEeUNBqjh1im5fFiR
 
 // Ursprung att skicka till Apps Script (inkluderas i alla anrop)
 const ORIGIN = window.location.origin;
-const ORIGIN_ENC = encodeURIComponent(ORIGIN);
 
 // Mappar som visas för besökare (keys matchar Apps Script CONFIG.FOLDERS)
 const FOLDERS = [
@@ -91,16 +88,9 @@ modalCancel.addEventListener('click', () => (modal.style.display = 'none'));
 if (typeof window.getCurrentJsonForExport !== 'function') {
   window.getCurrentJsonForExport = () => ({ savedAt: new Date().toISOString(), data: window.myAppState || {} });
 }
-if (typeof window.loadImportedJson !== 'function') {
-  window.loadImportedJson = (obj) => { window.myAppState = obj; alert('Import klar.'); };
-}
-
 /* -------- Hjälpfunktioner -------- */
 async function safeJson(res) {
   try { return await res.json(); } catch { return null; }
-}
-function escapeHtml(s) {
-  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
 /* -------- Export -------- */
@@ -145,48 +135,7 @@ function setupExport() {
   });
 }
 
-/* -------- Import -------- */
-function setupImport() {
-  const btn = ROOT.getElementById('importOnlineBtn');
-  if (!btn) return;
-  btn.addEventListener('click', async () => {
-    const folderOptions = FOLDERS.map(f => `<option value="${f.key}">${f.label}</option>`).join('');
-    const body = `<label>Mapp:<br/><select id="folderPick">${folderOptions}</select></label>`;
-    openModal('Välj mapp', body, async () => {
-      const folderKey = document.getElementById('folderPick').value;
-
-      const listUrl = `${APPS_URL}?action=list&folderKey=${encodeURIComponent(folderKey)}&origin=${ORIGIN_ENC}`;
-      let data;
-      try {
-        const res = await fetch(listUrl);
-        data = await safeJson(res);
-      } catch (err) {
-        console.error('Kunde inte hämta filer', err);
-        return;
-      }
-      const files = (data && data.files) || [];
-      if (!files.length) { console.warn('Inga filer hittades'); return; }
-
-      const options = files.map(f => `<option value="${f.id}">${escapeHtml(f.name)} — ${f.modified}</option>`).join('');
-      const body2 = `<label>Fil:<br/><select id="filePick" size="8" style="width:100%">${options}</select></label>`;
-      openModal('Välj fil', body2, async () => {
-        const fileId = document.getElementById('filePick').value;
-        const getUrl = `${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}&origin=${ORIGIN_ENC}`;
-        try {
-          const res2 = await fetch(getUrl);
-          const text = await res2.text();
-          const obj = JSON.parse(text);
-          window.loadImportedJson(obj);
-        } catch (err) {
-          console.error('Kunde inte importera filen', err);
-        }
-      });
-    });
-  });
-}
-
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   setupExport();
-  setupImport();
 });
