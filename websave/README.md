@@ -2,7 +2,7 @@
 
 Denna paket innehåller:
 - `apps_script/Code.gs` – koden för Google Apps Script Web App (backend).
-- `web/online-export.js` – färdig klientkod (export/import + enkel modal + rate limit-nyckel).
+- `web/online-export.js` – färdig klientkod (export + enkel modal + rate limit-nyckel).
 - `web/snippet.html` – minimalt exempel på hur du kopplar in knapparna.
 
 ## 1) Skapa och publicera Web App
@@ -19,11 +19,10 @@ Denna paket innehåller:
 
 > Koden skriver över filer med samma filnamn i vald mapp. Rate limit är aktiv: max 60 POST/minut per klientnyckel och 600 globalt.
 
-## 2) Lägg till knappar på din webb
-Placera två knappar där du vill i din HTML:
+## 2) Lägg till knapp på din webb
+Placera en knapp där du vill i din HTML:
 ```html
 <button id="exportOnlineBtn">Exportera online</button>
-<button id="importOnlineBtn">Importera</button>
 ```
 
 ## 3) Lägg in klientkoden
@@ -36,8 +35,8 @@ Lägg in den precis före `</body>`:
 Klientkoden är redan inställd på din Web App URL.
 Den skapar en anonym `clientKey` i `localStorage` och skickar den till backend för rate limit.
 
-## 4) Hookar för export/import
-Minimikrav: tillhandahåll två funktioner i din sida **före** du laddar `online-export.js`.
+## 4) Hook för export
+Minimikrav: tillhandahåll funktionen i din sida **före** du laddar `online-export.js`.
 Om du inte gör det används standardbeteende.
 
 ```html
@@ -47,19 +46,12 @@ Om du inte gör det används standardbeteende.
     savedAt: new Date().toISOString(),
     data: window.myAppState || {}
   });
-
-  // Ta emot importerad JSON
-  window.loadImportedJson = (obj) => {
-    window.myAppState = obj;
-    alert('Import klar.');
-  };
 </script>
 ```
 
 ## 5) Test lokalt
 - Starta din sida på `http://localhost:5500`.
 - Klicka **Exportera online** → välj mapp → ange filnamn → OK.
-- Klicka **Importera** → välj mapp → välj fil → OK.
 
 ## 6) Mappar i Drive
 Följande mappar används:
