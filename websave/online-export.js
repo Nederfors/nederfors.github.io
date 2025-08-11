@@ -49,14 +49,13 @@ function getClientKey() {
   if (document.getElementById('onlineModal')) return;
   const wrap = document.createElement('div');
   wrap.id = 'onlineModal';
-  wrap.style.cssText = 'display:none; position:fixed; inset:0; background:rgba(0,0,0,.3); z-index:9999;';
   wrap.innerHTML = `
-    <div style="background:white; margin:10vh auto; padding:16px; width:90%; max-width:520px; border-radius:12px;">
-      <h3 id="modalTitle" style="margin:0 0 8px 0;">Online</h3>
+    <div class="modal-panel panel">
+      <h3 id="modalTitle">Online</h3>
       <div id="modalBody"></div>
-      <div style="margin-top:12px; display:flex; gap:8px; justify-content:flex-end;">
-        <button id="modalCancel" type="button">Avbryt</button>
-        <button id="modalOk" type="button">OK</button>
+      <div class="modal-actions">
+        <button id="modalCancel" type="button" class="char-btn">Avbryt</button>
+        <button id="modalOk" type="button" class="char-btn">OK</button>
       </div>
     </div>`;
   document.body.appendChild(wrap);
@@ -122,17 +121,18 @@ function setupExport() {
       form.set('json', jsonText);
       form.set('clientKey', getClientKey());
 
-      const res = await fetch(APPS_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-        body: form.toString()
-      });
-      const data = await safeJson(res);
-      if (!data || data.ok !== true) {
-        alert('Uppladdning misslyckades' + (data && data.error ? `: ${data.error}` : ''));
-        return;
-        }
-      alert(data.overwritten ? `Skrev över: ${data.name}` : `Uppladdad: ${data.name}`);
+      try {
+        const res = await fetch(APPS_URL, {
+          method: 'POST',
+          body: form
+        });
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await safeJson(res);
+        if (!data || data.ok !== true) throw new Error(data && data.error ? data.error : '');
+        alert(data.overwritten ? `Skrev över: ${data.name}` : `Uppladdad: ${data.name}`);
+      } catch (err) {
+        alert('Uppladdning misslyckades' + (err && err.message ? `: ${err.message}` : ''));
+      }
     });
   });
 }
@@ -148,8 +148,14 @@ function setupImport() {
       const folderKey = document.getElementById('folderPick').value;
 
       const listUrl = `${APPS_URL}?action=list&folderKey=${encodeURIComponent(folderKey)}`;
-      const res = await fetch(listUrl);
-      const data = await safeJson(res);
+      let data;
+      try {
+        const res = await fetch(listUrl);
+        data = await safeJson(res);
+      } catch (err) {
+        alert('Kunde inte hämta filer' + (err && err.message ? `: ${err.message}` : ''));
+        return;
+      }
       const files = (data && data.files) || [];
       if (!files.length) { alert('Inga filer hittades'); return; }
 
@@ -158,13 +164,13 @@ function setupImport() {
       openModal('Välj fil', body2, async () => {
         const fileId = document.getElementById('filePick').value;
         const getUrl = `${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}`;
-        const res2 = await fetch(getUrl);
-        const text = await res2.text();
         try {
+          const res2 = await fetch(getUrl);
+          const text = await res2.text();
           const obj = JSON.parse(text);
           window.loadImportedJson(obj);
-        } catch {
-          alert('Filen innehåller inte giltig JSON.');
+        } catch (err) {
+          alert('Kunde inte importera filen' + (err && err.message ? `: ${err.message}` : ''));
         }
       });
     });
