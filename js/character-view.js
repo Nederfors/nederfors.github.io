@@ -478,6 +478,7 @@ function initCharacter() {
     const name = liEl.dataset.name;
     const tr = liEl.dataset.trait || null;
     const before = storeHelper.getCurrentList(store);
+    const disBefore = storeHelper.countDisadvantages(before);
     const p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
     if(!p) return;
     const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
@@ -536,6 +537,10 @@ function initCharacter() {
           return;
         }
         list = [...before, { ...p, nivå: lvl }];
+        const disAfter = storeHelper.countDisadvantages(list);
+        if (disAfter === 5 && disBefore < 5) {
+          alert('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
+        }
     }else if(actBtn.dataset.act==='rem'){
       if(name==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
         if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
