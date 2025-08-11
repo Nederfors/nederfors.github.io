@@ -782,12 +782,36 @@ function defaultTraits() {
     return xp;
   }
 
+  function getDisadvantages(list) {
+    const hasDark = list.some(x => x.namn === 'Mörkt blod');
+    return list.filter(item => {
+      const isDis = (item.taggar?.typ || [])
+        .map(t => t.toLowerCase())
+        .includes('nackdel');
+      if (!isDis) return false;
+      if (hasDark && item.namn === 'Bestialisk') return false;
+      return true;
+    });
+  }
+
+  function countDisadvantages(list) {
+    return getDisadvantages(list).length;
+  }
+
+  function disadvantagesWithXP(list) {
+    return getDisadvantages(list).slice(0,5);
+  }
+
   function calcEntryXP(entry, list) {
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) {
       const hasDark = (list || []).some(x => x.namn === 'Mörkt blod');
       if (entry.namn === 'Bestialisk' && hasDark) return 0;
-      return -5;
+      const disXp = disadvantagesWithXP(list || []);
+      if ((list || []).includes(entry)) {
+        return disXp.includes(entry) ? -5 : 0;
+      }
+      return disXp.length < 5 ? -5 : 0;
     }
     let xp = 0;
     if (
@@ -809,20 +833,8 @@ function defaultTraits() {
     return xp;
   }
 
-  function countDisadvantages(list) {
-    const hasDark = list.some(x => x.namn === 'Mörkt blod');
-    return list.filter(item => {
-      const isDis = (item.taggar?.typ || [])
-        .map(t => t.toLowerCase())
-        .includes('nackdel');
-      if (!isDis) return false;
-      if (hasDark && item.namn === 'Bestialisk') return false;
-      return true;
-    }).length;
-  }
-
   function calcTotalXP(baseXp, list) {
-    return Number(baseXp || 0) + countDisadvantages(list) * 5;
+    return Number(baseXp || 0) + disadvantagesWithXP(list).length * 5;
   }
 
   function calcCarryCapacity(strength, list) {
@@ -1067,6 +1079,7 @@ function defaultTraits() {
     calcUsedXP,
     calcEntryXP,
     calcTotalXP,
+    countDisadvantages,
     calcPermanentCorruption,
     calcCarryCapacity,
     calcPainThreshold,

@@ -421,6 +421,12 @@ function initIndex() {
         }
       } else {
         const list = storeHelper.getCurrentList(store);
+        const disBefore = storeHelper.countDisadvantages(list);
+        const checkDisadvWarning = () => {
+          if (storeHelper.countDisadvantages(list) === 5 && disBefore < 5) {
+            alert('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
+          }
+        };
         if (p.namn === 'Korruptionskänslig' && list.some(x => x.namn === 'Dvärg')) {
           alert('Dvärgar kan inte ta Korruptionskänslig.');
           return;
@@ -526,6 +532,7 @@ function initIndex() {
           bloodBond.pickRace(used, race => {
             if(!race) return;
             list.push({ ...p, race });
+            checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
@@ -536,6 +543,7 @@ function initIndex() {
           monsterLore.pickSpec(spec => {
             if(!spec) return;
             list.push({ ...p, nivå: lvl, trait: spec });
+            checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
@@ -552,6 +560,7 @@ function initIndex() {
             }else{
               list.push({ ...p, nivå:lvl, trait });
             }
+            checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
@@ -571,6 +580,7 @@ function initIndex() {
         }
         let form = 'normal';
         const finishAdd = () => {
+          checkDisadvWarning();
           storeHelper.setCurrentList(store, list); updateXP();
           if (p.namn === 'Privilegierad') {
             invUtil.renderInventory();
