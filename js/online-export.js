@@ -88,6 +88,9 @@ modalCancel.addEventListener('click', () => (modal.style.display = 'none'));
 if (typeof window.getCurrentJsonForExport !== 'function') {
   window.getCurrentJsonForExport = () => ({ savedAt: new Date().toISOString(), data: window.myAppState || {} });
 }
+if (typeof window.loadImportedJson !== 'function') {
+  window.loadImportedJson = obj => console.warn('Ingen import-hook definierad', obj);
+}
 /* -------- Hjälpfunktioner -------- */
 async function safeJson(res) {
   try { return await res.json(); } catch { return null; }
@@ -135,7 +138,58 @@ function setupExport() {
   });
 }
 
+/* -------- Import -------- */
+function setupImport() {
+  const btn = ROOT.getElementById('importOnlineBtn');
+  if (!btn) return;
+  btn.addEventListener('click', () => {
+    const folderOptions = FOLDERS.map(f => `<option value="${f.key}">${f.label}</option>`).join('');
+    const body = `
+      <label>Mapp:<br/><select id="folderPick">${folderOptions}</select></label><br/><br/>
+      <label>Fil:<br/><select id="filePick"></select></label>
+    `;
+    openModal('Importera online', body, async () => {
+      const fileId = document.getElementById('filePick').value;
+      if (!fileId) return;
+      try {
+        const res = await fetch(`${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}&origin=${encodeURIComponent(ORIGIN)}`);
+        if (!res.ok) throw new Error(res.statusText);
+        const obj = await safeJson(res);
+        if (!obj) throw new Error('Bad JSON');
+        window.loadImportedJson(obj);
+      } catch (err) {
+        console.error('Nedladdning misslyckades', err);
+      }
+    });
+
+    const folderPick = document.getElementById('folderPick');
+    const filePick = document.getElementById('filePick');
+
+    async function loadList() {
+      const key = folderPick.value;
+      filePick.innerHTML = '<option>Laddar...</option>';
+      try {
+        const res = await fetch(`${APPS_URL}?action=list&folderKey=${encodeURIComponent(key)}&origin=${encodeURIComponent(ORIGIN)}`);
+        if (!res.ok) throw new Error(res.statusText);
+        const data = await safeJson(res);
+        if (data && Array.isArray(data.files) && data.files.length) {
+          filePick.innerHTML = data.files.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+        } else {
+          filePick.innerHTML = '<option value="">(tom)</option>';
+        }
+      } catch (err) {
+        console.error('Listning misslyckades', err);
+        filePick.innerHTML = '<option value="">Fel</option>';
+      }
+    }
+
+    folderPick.addEventListener('change', loadList);
+    loadList();
+  });
+}
+
 // Init
 document.addEventListener('DOMContentLoaded', () => {
   setupExport();
+  setupImport();
 });
