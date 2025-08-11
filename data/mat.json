@@ -886,5 +886,23 @@
       "skilling": 1,
       "örtegar": 0
     }
+  },
+ {
+    "id": "ma56",
+    "namn": "Ägg",
+    "beskrivning": "Ett redigt hönsaägg. Du behöver äta många ägg för att bli mätt, fler än vad man tror (21 stycken).",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "stat": {
+      "vikt": 0.01
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 1
+    }
   }
 ]
