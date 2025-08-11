@@ -21,6 +21,10 @@
 // Din Apps Script Web App URL (inkl. /exec)
 const APPS_URL = 'https://script.google.com/macros/s/AKfycbzO0FNuuBUTU8D_tXZ1Hxhjf1Q6n2n37RVLYvhOHzY25kigbLVQDdNNFJ-mvC0cc1sd/exec';
 
+// Ursprung att skicka till Apps Script (inkluderas i alla anrop)
+const ORIGIN = window.location.origin;
+const ORIGIN_ENC = encodeURIComponent(ORIGIN);
+
 // Mappar som visas för besökare (keys matchar Apps Script CONFIG.FOLDERS)
 const FOLDERS = [
   { key: 'daniel', label: 'Daniel' },
@@ -123,6 +127,7 @@ function setupExport() {
       form.set('filename', fileName);
       form.set('json', jsonText);
       form.set('clientKey', getClientKey());
+      form.set('origin', ORIGIN);
 
       try {
         const res = await fetch(APPS_URL, {
@@ -150,7 +155,7 @@ function setupImport() {
     openModal('Välj mapp', body, async () => {
       const folderKey = document.getElementById('folderPick').value;
 
-      const listUrl = `${APPS_URL}?action=list&folderKey=${encodeURIComponent(folderKey)}`;
+      const listUrl = `${APPS_URL}?action=list&folderKey=${encodeURIComponent(folderKey)}&origin=${ORIGIN_ENC}`;
       let data;
       try {
         const res = await fetch(listUrl);
@@ -166,7 +171,7 @@ function setupImport() {
       const body2 = `<label>Fil:<br/><select id="filePick" size="8" style="width:100%">${options}</select></label>`;
       openModal('Välj fil', body2, async () => {
         const fileId = document.getElementById('filePick').value;
-        const getUrl = `${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}`;
+        const getUrl = `${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}&origin=${ORIGIN_ENC}`;
         try {
           const res2 = await fetch(getUrl);
           const text = await res2.text();
