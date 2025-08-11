@@ -14,8 +14,8 @@ Denna paket innehåller:
    - **Execute as**: *Me*.
    - **Who has access**: *Anyone*.
 6. **Deploy** och godkänn Drive-behörigheter.
-7. Kopiera **Web app URL** – du har redan denna:  
-   `https://script.google.com/macros/s/AKfycbzJeAxY90mHOAgkXEsS_tPN5XgTOzm4iSsuOS6FWwSD_rZxkokJ6aP6fIu3sL7Vnr4m/exec`
+7. Kopiera **Web app URL** – du har redan denna:
+   `https://script.google.com/macros/s/AKfycbzO0FNuuBUTU8D_tXZ1Hxhjf1Q6n2n37RVLYvhOHzY25kigbLVQDdNNFJ-mvC0cc1sd/exec`
 
 > Koden skriver över filer med samma filnamn i vald mapp. Rate limit är aktiv: max 60 POST/minut per klientnyckel och 600 globalt.
 

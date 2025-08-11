@@ -19,7 +19,7 @@
  */
 
 // Din Apps Script Web App URL (inkl. /exec)
-const APPS_URL = 'https://script.google.com/macros/s/AKfycbzJeAxY90mHOAgkXEsS_tPN5XgTOzm4iSsuOS6FWwSD_rZxkokJ6aP6fIu3sL7Vnr4m/exec';
+const APPS_URL = 'https://script.google.com/macros/s/AKfycbzO0FNuuBUTU8D_tXZ1Hxhjf1Q6n2n37RVLYvhOHzY25kigbLVQDdNNFJ-mvC0cc1sd/exec';
 
 // Mappar som visas för besökare (keys matchar Apps Script CONFIG.FOLDERS)
 const FOLDERS = [
