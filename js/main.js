@@ -267,41 +267,83 @@ function bindToolbar() {
     /* Exportera rollperson --------------------------------- */
     if (id === 'exportChar') {
       if (!store.current) return alert('Ingen rollperson vald.');
-      const data = storeHelper.exportCharacterJSON(store, store.current);
-      if (!data) return;
-      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${data.name || 'rollperson'}.json`;
-      a.click();
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      (async () => {
+        const data = storeHelper.exportCharacterJSON(store, store.current);
+        if (!data) return;
+        const jsonText = JSON.stringify(data, null, 2);
+        const suggested = `${data.name || 'rollperson'}.json`;
+
+        if (window.showSaveFilePicker) {
+          try {
+            const handle = await window.showSaveFilePicker({
+              suggestedName: suggested,
+              types: [{
+                description: 'JSON',
+                accept: { 'application/json': ['.json'] }
+              }]
+            });
+            const writable = await handle.createWritable();
+            await writable.write(jsonText);
+            await writable.close();
+          } catch (err) {
+            if (err && err.name !== 'AbortError') {
+              alert('Sparande misslyckades');
+            }
+          }
+        } else {
+          const blob = new Blob([jsonText], { type: 'application/json' });
+          const a = document.createElement('a');
+          a.href = URL.createObjectURL(blob);
+          a.download = suggested;
+          a.click();
+          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+        }
+      })();
     }
 
     /* Importera rollperson -------------------------------- */
     if (id === 'importChar') {
-      const inp = document.createElement('input');
-      inp.type = 'file';
-      inp.accept = 'application/json';
-      inp.addEventListener('change', () => {
-        const file = inp.files && inp.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          try {
-            const obj = JSON.parse(reader.result);
-            const res = storeHelper.importCharacterJSON(store, obj);
-            if (res) {
-              location.reload();
-            } else {
-              alert('Felaktig fil.');
-            }
-          } catch {
+      (async () => {
+        try {
+          let text;
+          if (window.showOpenFilePicker) {
+            const [handle] = await window.showOpenFilePicker({
+              types: [{
+                description: 'JSON',
+                accept: { 'application/json': ['.json'] }
+              }]
+            });
+            const file = await handle.getFile();
+            text = await file.text();
+          } else {
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'application/json';
+            text = await new Promise((resolve, reject) => {
+              inp.addEventListener('change', () => {
+                const file = inp.files && inp.files[0];
+                if (!file) return reject(new Error('Ingen fil vald'));
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = () => reject(reader.error || new Error('Läsfel'));
+                reader.readAsText(file);
+              });
+              inp.click();
+            });
+          }
+          const obj = JSON.parse(text);
+          const res = storeHelper.importCharacterJSON(store, obj);
+          if (res) {
+            location.reload();
+          } else {
             alert('Felaktig fil.');
           }
-        };
-        reader.readAsText(file);
-      });
-      inp.click();
+        } catch (err) {
+          if (err && err.name !== 'AbortError') {
+            alert('Felaktig fil.');
+          }
+        }
+      })();
     }
 
     /* Ta bort rollperson ----------------------------------- */
