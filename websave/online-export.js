@@ -131,7 +131,7 @@ function setupExport() {
         if (!data || data.ok !== true) throw new Error(data && data.error ? data.error : '');
         alert(data.overwritten ? `Skrev över: ${data.name}` : `Uppladdad: ${data.name}`);
       } catch (err) {
-        alert('Uppladdning misslyckades' + (err && err.message ? `: ${err.message}` : ''));
+        console.error('Uppladdning misslyckades', err);
       }
     });
   });
@@ -153,11 +153,11 @@ function setupImport() {
         const res = await fetch(listUrl);
         data = await safeJson(res);
       } catch (err) {
-        alert('Kunde inte hämta filer' + (err && err.message ? `: ${err.message}` : ''));
+        console.error('Kunde inte hämta filer', err);
         return;
       }
       const files = (data && data.files) || [];
-      if (!files.length) { alert('Inga filer hittades'); return; }
+      if (!files.length) { console.warn('Inga filer hittades'); return; }
 
       const options = files.map(f => `<option value="${f.id}">${escapeHtml(f.name)} — ${f.modified}</option>`).join('');
       const body2 = `<label>Fil:<br/><select id="filePick" size="8" style="width:100%">${options}</select></label>`;
@@ -170,7 +170,7 @@ function setupImport() {
           const obj = JSON.parse(text);
           window.loadImportedJson(obj);
         } catch (err) {
-          alert('Kunde inte importera filen' + (err && err.message ? `: ${err.message}` : ''));
+          console.error('Kunde inte importera filen', err);
         }
       });
     });
