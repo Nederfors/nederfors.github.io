@@ -8,6 +8,18 @@
 const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
 let   store  = storeHelper.load();                   // Lokal lagring
 
+// Hookar för online-export/import
+window.getCurrentJsonForExport = () =>
+  storeHelper.exportCharacterJSON(store, store.current);
+window.loadImportedJson = obj => {
+  const res = storeHelper.importCharacterJSON(store, obj);
+  if (res) {
+    location.reload();
+  } else {
+    alert('Felaktig fil.');
+  }
+};
+
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
 const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM
