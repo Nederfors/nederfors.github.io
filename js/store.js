@@ -826,9 +826,10 @@ function defaultTraits() {
   }
 
   function calcCarryCapacity(strength, list) {
-    let base = Number(strength || 0);
+    const str = Number(strength || 0);
+    let base = str + 3;
     if (Array.isArray(list) && list.some(e => e.namn === 'Packåsna')) {
-      base = Math.ceil(base * 1.5);
+      base = Math.ceil(str * 1.5) + 3;
     }
     return base;
   }
