@@ -28,7 +28,7 @@ const CONFIG = {
 };
 
 function doGet(e) {
-  const origin = pickAllowedOrigin_();
+  const origin = pickAllowedOrigin_(e);
   const action = (e && e.parameter && e.parameter.action) || 'ping';
 
   if (action === 'ping') {
@@ -70,7 +70,7 @@ function doGet(e) {
 }
 
 function doPost(e) {
-  const origin = pickAllowedOrigin_();
+  const origin = pickAllowedOrigin_(e);
 
   if (!e || !e.parameter) return error_(origin, 400, 'No data');
 
@@ -130,8 +130,13 @@ function fileLivesInAllowedFolder_(file) {
   return false;
 }
 
-function pickAllowedOrigin_() {
-  // En enkel plats för ev. framtida logik. Apps Script behöver inte CORS-header här för "simple requests".
+function pickAllowedOrigin_(e) {
+  // Läs origin från event-objektet och verifiera mot tillåtna domäner
+  const origin = e && e.parameter && e.parameter.origin;
+  if (origin && CONFIG.ALLOWED_ORIGINS.indexOf(origin) !== -1) {
+    return origin;
+  }
+  // Fallback om inget giltigt origin angavs
   return CONFIG.ALLOWED_ORIGINS[0];
 }
 
