@@ -35,7 +35,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 
 ## Export och import av rollpersoner
 
-Use the **Exportera** button in the filter panel to download a JSON file representing the current character. The **Importera** button lets you select such a file to recreate the character (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
+Use the **Exportera** button in the filter panel to download a JSON file representing the current character. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the file is downloaded normally. The **Importera** button lets you select such a file to recreate the character (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
 
 ## Anteckningssidan
 
