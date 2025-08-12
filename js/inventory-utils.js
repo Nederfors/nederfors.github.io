@@ -1079,8 +1079,10 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
       renderInventory();
     };
     clearBtn.onclick = () => {
-      saveInventory([]);
-      renderInventory();
+      if (confirm('Du håller på att tömma hela inventariet, är du säker?')) {
+        saveInventory([]);
+        renderInventory();
+      }
     };
   }
 
