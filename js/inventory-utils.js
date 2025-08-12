@@ -7,6 +7,7 @@
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const moneyToO = m => (m.daler||0)*SBASE*OBASE + (m.skilling||0)*OBASE + (m['örtegar']||0);
   let dragIdx = null;
+  let dragEl = null;
 
   const oToMoney = o => {
     const d = Math.floor(o / (SBASE * OBASE)); o %= SBASE * OBASE;
@@ -729,7 +730,7 @@ ${moneyRow}
           const key = `${row.name}|${row.trait || ''}|${rowLevel || ''}`;
 
           return `
-            <li class="card${openKeys.has(key) ? '' : ' compact'}" draggable="true"
+            <li class="card${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${row.name}${badge}</span></div>
@@ -1042,28 +1043,56 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
       }
     };
 
-    dom.invList.addEventListener('dragstart', e => {
+    const getDragAfterElement = (container, y) => {
+      const els = [...container.querySelectorAll('li[data-idx]:not(.dragging)')];
+      return els.reduce((closest, child) => {
+        const box = child.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
+      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    };
+
+    dom.invList.addEventListener('pointerdown', e => {
       const li = e.target.closest('li[data-idx]');
       if (!li || e.target.closest('button')) return;
       dragIdx = Number(li.dataset.idx);
-      e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', '');
-    });
-    dom.invList.addEventListener('dragover', e => {
-      if (e.target.closest('li[data-idx]') || e.target === dom.invList) e.preventDefault();
-    });
-    dom.invList.addEventListener('drop', e => {
-      e.preventDefault();
-      const li = e.target.closest('li[data-idx]');
-      const inv = storeHelper.getInventory(store);
-      if (dragIdx === null || !inv) return;
-      let dropIdx = li ? Number(li.dataset.idx) : inv.length;
-      if (dragIdx < dropIdx) dropIdx--;
-      const [moved] = inv.splice(dragIdx, 1);
-      inv.splice(dropIdx, 0, moved);
-      dragIdx = null;
-      saveInventory(inv);
-      renderInventory();
+      dragEl = li;
+      li.classList.add('dragging');
+      li.setPointerCapture(e.pointerId);
+
+      const onMove = ev => {
+        if (!dragEl) return;
+        ev.preventDefault();
+        const after = getDragAfterElement(dom.invList, ev.clientY);
+        if (after == null) {
+          dom.invList.appendChild(dragEl);
+        } else {
+          dom.invList.insertBefore(dragEl, after);
+        }
+      };
+
+      const onUp = ev => {
+        if (!dragEl) return;
+        onMove(ev);
+        dragEl.classList.remove('dragging');
+        dragEl.releasePointerCapture(ev.pointerId);
+        const inv = storeHelper.getInventory(store);
+        if (dragIdx !== null && inv) {
+          const items = [...dom.invList.querySelectorAll('li[data-idx]')];
+          const dropIdx = items.indexOf(dragEl);
+          const [moved] = inv.splice(dragIdx, 1);
+          inv.splice(dropIdx, 0, moved);
+          saveInventory(inv);
+          renderInventory();
+        }
+        dragIdx = null;
+        dragEl = null;
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+      };
+
+      window.addEventListener('pointermove', onMove);
+      window.addEventListener('pointerup', onUp);
     });
   }
 

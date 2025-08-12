@@ -250,8 +250,13 @@ input:focus, select:focus, textarea:focus {
   position: relative;
 }
 
-#invList li.card[draggable="true"] {
-  cursor: move;
+#invList li.card {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+#invList li.card.dragging {
+  cursor: grabbing;
 }
 
 /* särställ "Formaliteter"-kortet med blå kant */
