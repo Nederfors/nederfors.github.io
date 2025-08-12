@@ -393,10 +393,7 @@ class SharedToolbar extends HTMLElement {
       <div id="exportPopup">
         <div class="popup-inner">
           <h3>Exportera</h3>
-          <div id="exportOptions">
-            <button id="exportCurrent" class="char-btn">Aktiv rollperson</button>
-            <button id="exportAll" class="char-btn">Alla rollpersoner</button>
-          </div>
+          <div id="exportOptions"></div>
           <button id="exportCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
