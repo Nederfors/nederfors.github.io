@@ -264,7 +264,6 @@ class SharedToolbar extends HTMLElement {
           </ul>
         </div>
         <div class="char-btn-row">
-          <button id="importOnlineBtn" class="char-btn">Importera online</button>
           <button id="exportOnlineBtn" class="char-btn">Exportera online</button>
         </div>
       </aside>
