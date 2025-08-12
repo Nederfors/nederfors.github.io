@@ -2260,5 +2260,26 @@
     "Gesäll": "Handling: Reaktiv. Om den andra aktiva handlingen av en allierad denna runda lyckas mot samlingsmålet får du utse en allierad inom räckvidd som får göra ett frislag mot samma mål (närstrid om inom närstridsavstånd, annars avståndsvapen om laddat).",
     "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets bepansring."
   }
+},
+{
+  "id": "form75",
+  "namn": "Koreograferad strid",
+  "beskrivning": "Striden följer ett nummer: steg, sväng, snitt. Rollpersonen tränar fotarbete och rytmisk tajming; kroppen sätter tempot och klingan följer takten.",
+  "taggar": {
+    "typ": ["Förmåga"],
+    "ark_trad": ["Krigare", "Tjuv"],
+    "test": ["Kvick"],
+    "handling": {
+      "Novis": ["Passiv"],
+      "Gesäll": ["Reaktiv"],
+      "Mästare": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen.",
+    "Gesäll": "Handling: Reaktiv. När en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
+    "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets bepansring."
+  }
 }
+
 ]
