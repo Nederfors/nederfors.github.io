@@ -86,6 +86,23 @@
     storeHelper.setArtifactEffects(store, effects);
   }
 
+  function makeNameMap(inv) {
+    const counts = {};
+    inv.forEach(r => { counts[r.name] = (counts[r.name] || 0) + 1; });
+    const idx = {};
+    const map = new Map();
+    inv.forEach(r => {
+      const n = r.name;
+      if (counts[n] > 1) {
+        idx[n] = (idx[n] || 0) + 1;
+        map.set(r, `${n} ${idx[n]}`);
+      } else {
+        map.set(r, n);
+      }
+    });
+    return map;
+  }
+
   function sortAllInventories() {
     Object.keys(store.data || {}).forEach(id => {
       const arr = store.data[id]?.inventory;
@@ -114,9 +131,11 @@
     const box  = bar.shadowRoot.getElementById('qualOptions');
     const cls  = bar.shadowRoot.getElementById('qualCancel');
 
+    const nameMap = makeNameMap(storeHelper.getInventory(store));
     /* bygg knappar: stöd både namn och name */
     box.innerHTML = list.map((item,i)=>{
-      const label = item.namn || item.name;
+      const base = item.namn || item.name;
+      const label = nameMap.get(item) || base;
       const gCnt  = Number(item.gratis || 0);
       const mark  = gCnt ? ` 🆓${gCnt>1?`×${gCnt}`:''}` : '';
       return `<button data-i="${i}" class="char-btn">${label}${mark}</button>`;
@@ -288,7 +307,8 @@
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
-    list.innerHTML = inv.map((row,i)=> `<button data-idx="${i}" class="char-btn">${row.name}</button>`).join('');
+    const nameMap = makeNameMap(inv);
+    list.innerHTML = inv.map((row,i)=> `<button data-idx="${i}" class="char-btn">${nameMap.get(row)}</button>`).join('');
 
     pop.classList.add('open');
 
@@ -478,6 +498,7 @@
         .map(li => li.dataset.special || `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
     );
     const allInv = storeHelper.getInventory(store);
+    const nameMap = makeNameMap(allInv);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
@@ -732,7 +753,7 @@ ${moneyRow}
             <li class="card${openKeys.has(key) ? '' : ' compact'}" draggable="true"
                 data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title"><span><span class="collapse-btn"></span>${row.name}${badge}</span></div>
+              <div class="card-title"><span><span class="collapse-btn"></span>${nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
                 ${desc}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
               </div>
@@ -1092,6 +1113,7 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
     sortAllInventories,
     getEntry,
     calcEntryCost,
+    makeNameMap,
     filter: F,
     sortQualsForDisplay,
     openQualPopup,
