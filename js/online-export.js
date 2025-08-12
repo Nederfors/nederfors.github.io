@@ -89,7 +89,9 @@ if (typeof window.getCurrentJsonForExport !== 'function') {
   window.getCurrentJsonForExport = () => ({ savedAt: new Date().toISOString(), data: window.myAppState || {} });
 }
 if (typeof window.loadImportedJson !== 'function') {
-  window.loadImportedJson = obj => console.warn('Ingen import-hook definierad', obj);
+  const noImport = obj => console.warn('Ingen import-hook definierad', obj);
+  noImport._isDefaultHook = true;
+  window.loadImportedJson = noImport;
 }
 /* -------- Hjälpfunktioner -------- */
 async function safeJson(res) {
@@ -142,6 +144,11 @@ function setupExport() {
 function setupImport() {
   const btn = ROOT.getElementById('importOnlineBtn');
   if (!btn) return;
+  if (!window.loadImportedJson || window.loadImportedJson._isDefaultHook) {
+    btn.disabled = true;
+    btn.title = 'Import stöds inte här';
+    return;
+  }
   btn.addEventListener('click', () => {
     const folderOptions = FOLDERS.map(f => `<option value="${f.key}">${f.label}</option>`).join('');
     const body = `
