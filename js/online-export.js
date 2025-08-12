@@ -152,7 +152,7 @@ function setupImport() {
       const fileId = document.getElementById('filePick').value;
       if (!fileId) return;
       try {
-        const res = await fetch(`${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}&origin=${encodeURIComponent(ORIGIN)}`);
+        const res = await fetch(`${APPS_URL}?action=get&fileId=${encodeURIComponent(fileId)}&origin=${encodeURIComponent(ORIGIN)}&clientKey=${encodeURIComponent(getClientKey())}`);
         if (!res.ok) throw new Error(res.statusText);
         const obj = await safeJson(res);
         if (!obj) throw new Error('Bad JSON');
@@ -169,7 +169,7 @@ function setupImport() {
       const key = folderPick.value;
       filePick.innerHTML = '<option>Laddar...</option>';
       try {
-        const res = await fetch(`${APPS_URL}?action=list&folderKey=${encodeURIComponent(key)}&origin=${encodeURIComponent(ORIGIN)}`);
+        const res = await fetch(`${APPS_URL}?action=list&folderKey=${encodeURIComponent(key)}&origin=${encodeURIComponent(ORIGIN)}&clientKey=${encodeURIComponent(getClientKey())}`);
         if (!res.ok) throw new Error(res.statusText);
         const data = await safeJson(res);
         if (data && Array.isArray(data.files) && data.files.length) {
