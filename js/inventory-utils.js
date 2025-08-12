@@ -220,9 +220,9 @@
         taggar: { typ: [type.value] },
         vikt: Number(wIn.value)||0,
         grundpris: {
-          daler: Number(dIn.value)||0,
-          skilling: Number(sIn.value)||0,
-          'örtegar': Number(oIn.value)||0
+          daler: Math.max(0, Number(dIn.value)||0),
+          skilling: Math.max(0, Number(sIn.value)||0),
+          'örtegar': Math.max(0, Number(oIn.value)||0)
         },
         beskrivning: desc.value.trim(),
         artifactEffect: effSel ? effSel.value : ''
@@ -406,7 +406,7 @@
       }
     });
     const free = Math.min(Number(row.gratis || 0), row.qty);
-    const totalO = price * row.qty - base * free;
+    const totalO = Math.max(0, price * row.qty - base * free);
     return oToMoney(totalO);
   }
 
@@ -488,6 +488,7 @@
       else if (neut)  price *= 1;
       else            price *= myst ? 10 : 5;
     });
+    price = Math.max(0, price);
     return oToMoney(price);
   }
 
@@ -609,7 +610,7 @@
       });
 
       const free = Math.min(Number(row.gratis || 0), row.qty);
-      const totalO = price * row.qty - base * free;
+      const totalO = Math.max(0, price * row.qty - base * free);
       const m = oToMoney(totalO);
       t.d += m.d; t.s += m.s; t.o += m.o;
       return t;
