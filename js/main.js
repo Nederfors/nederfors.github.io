@@ -266,39 +266,15 @@ function bindToolbar() {
 
     /* Exportera rollperson --------------------------------- */
     if (id === 'exportChar') {
-      if (!store.current) return alert('Ingen rollperson vald.');
-      (async () => {
-        const data = storeHelper.exportCharacterJSON(store, store.current);
-        if (!data) return;
-        const jsonText = JSON.stringify(data, null, 2);
-        const suggested = `${data.name || 'rollperson'}.json`;
-
-        if (window.showSaveFilePicker) {
-          try {
-            const handle = await window.showSaveFilePicker({
-              suggestedName: suggested,
-              types: [{
-                description: 'JSON',
-                accept: { 'application/json': ['.json'] }
-              }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(jsonText);
-            await writable.close();
-          } catch (err) {
-            if (err && err.name !== 'AbortError') {
-              alert('Sparande misslyckades');
-            }
-          }
-        } else {
-          const blob = new Blob([jsonText], { type: 'application/json' });
-          const a = document.createElement('a');
-          a.href = URL.createObjectURL(blob);
-          a.download = suggested;
-          a.click();
-          setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      if (!store.characters.length) return alert('Inga rollpersoner att exportera.');
+      openExportPopup(async choice => {
+        if (choice === 'current') {
+          if (!store.current) return alert('Ingen rollperson vald.');
+          await exportCharacterFile(store.current);
+        } else if (choice === 'all') {
+          await exportAllCharacters();
         }
-      })();
+      });
     }
 
     /* Importera rollperson -------------------------------- */
@@ -570,6 +546,76 @@ function openDefensePopup(cb) {
     }
   }
   box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+async function saveJsonFile(jsonText, suggested) {
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{
+          description: 'JSON',
+          accept: { 'application/json': ['.json'] }
+        }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(jsonText);
+      await writable.close();
+    } catch (err) {
+      if (err && err.name !== 'AbortError') {
+        alert('Sparande misslyckades');
+      }
+    }
+  } else {
+    const blob = new Blob([jsonText], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = suggested;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+}
+
+async function exportCharacterFile(id) {
+  const data = storeHelper.exportCharacterJSON(store, id);
+  if (!data) return;
+  const jsonText = JSON.stringify(data, null, 2);
+  const suggested = `${data.name || 'rollperson'}.json`;
+  await saveJsonFile(jsonText, suggested);
+}
+
+async function exportAllCharacters() {
+  for (const c of store.characters) {
+    await exportCharacterFile(c.id);
+  }
+}
+
+function openExportPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('exportPopup');
+  const cur  = bar.shadowRoot.getElementById('exportCurrent');
+  const all  = bar.shadowRoot.getElementById('exportAll');
+  const cls  = bar.shadowRoot.getElementById('exportCancel');
+  pop.classList.add('open');
+  function close() {
+    pop.classList.remove('open');
+    cur.removeEventListener('click', onCur);
+    all.removeEventListener('click', onAll);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onCur() { close(); cb('current'); }
+  function onAll() { close(); cb('all'); }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  cur.addEventListener('click', onCur);
+  all.addEventListener('click', onAll);
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
 }

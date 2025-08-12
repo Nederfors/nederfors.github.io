@@ -1145,6 +1145,39 @@ select.level {
 }
 #defensePopup .popup-inner button { width: 100%; }
 
+/* ---------- Popup för export ---------- */
+#exportPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#exportPopup.open { display: flex; }
+#exportPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#exportOptions {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+#exportPopup .popup-inner button { width: 100%; }
+
 /* ---------- Popup f\u00f6r Nilas-fr\u00e5gan ---------- */
 #nilasPopup {
   position: fixed;
@@ -1218,6 +1251,7 @@ select.level {
 #smithPopup .popup-inner,
 #artPopup .popup-inner,
 #defensePopup .popup-inner,
+#exportPopup .popup-inner,
 #nilasPopup .popup-inner,
 #charPopup .popup-inner {
   max-height: 100%;
