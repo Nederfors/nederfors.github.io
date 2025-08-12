@@ -1,6 +1,7 @@
 (function(window){
   function calcDefense(kvick){
     const inv = storeHelper.getInventory(store);
+    const nameMap = invUtil.makeNameMap(inv);
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
 
@@ -66,7 +67,7 @@
       if(allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
       if(allQ.includes('Otymplig') || allQ.includes('Otympligt')) limit -= 1;
       if(rustLvl >= 2) limit = 0;
-      out.push({ name: row.name, value: kvick + limit });
+      out.push({ name: nameMap.get(row), value: kvick + limit });
       return out;
     }, []);
 
