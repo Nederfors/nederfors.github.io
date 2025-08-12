@@ -305,38 +305,47 @@ function bindToolbar() {
     if (id === 'importChar') {
       (async () => {
         try {
-          let text;
+          let files;
           if (window.showOpenFilePicker) {
-            const [handle] = await window.showOpenFilePicker({
+            const handles = await window.showOpenFilePicker({
+              multiple: true,
               types: [{
                 description: 'JSON',
                 accept: { 'application/json': ['.json'] }
               }]
             });
-            const file = await handle.getFile();
-            text = await file.text();
+            files = await Promise.all(handles.map(h => h.getFile()));
           } else {
             const inp = document.createElement('input');
             inp.type = 'file';
             inp.accept = 'application/json';
-            text = await new Promise((resolve, reject) => {
+            inp.multiple = true;
+            files = await new Promise((resolve, reject) => {
               inp.addEventListener('change', () => {
-                const file = inp.files && inp.files[0];
-                if (!file) return reject(new Error('Ingen fil vald'));
-                const reader = new FileReader();
-                reader.onload = () => resolve(reader.result);
-                reader.onerror = () => reject(reader.error || new Error('Läsfel'));
-                reader.readAsText(file);
+                const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
+                if (!list) return reject(new Error('Ingen fil vald'));
+                resolve(list);
               });
               inp.click();
             });
           }
-          const obj = JSON.parse(text);
-          const res = storeHelper.importCharacterJSON(store, obj);
-          if (res) {
+          let ok = false;
+          for (const file of files) {
+            try {
+              const text = await file.text();
+              const obj = JSON.parse(text);
+              const res = storeHelper.importCharacterJSON(store, obj);
+              if (res) {
+                ok = true;
+              } else {
+                alert('Felaktig fil.');
+              }
+            } catch {
+              alert('Felaktig fil.');
+            }
+          }
+          if (ok) {
             location.reload();
-          } else {
-            alert('Felaktig fil.');
           }
         } catch (err) {
           if (err && err.name !== 'AbortError') {
@@ -640,24 +649,28 @@ function ensureCharacterSelected() {
       const inp = document.createElement('input');
       inp.type = 'file';
       inp.accept = 'application/json';
-      inp.addEventListener('change', () => {
-        const file = inp.files && inp.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
+      inp.multiple = true;
+      inp.addEventListener('change', async () => {
+        const files = inp.files ? Array.from(inp.files) : [];
+        if (!files.length) return;
+        let ok = false;
+        for (const file of files) {
           try {
-            const obj = JSON.parse(reader.result);
+            const text = await file.text();
+            const obj = JSON.parse(text);
             const res = storeHelper.importCharacterJSON(store, obj);
             if (res) {
-              location.reload();
+              ok = true;
             } else {
               alert('Felaktig fil.');
             }
           } catch {
             alert('Felaktig fil.');
           }
-        };
-        reader.readAsText(file);
+        }
+        if (ok) {
+          location.reload();
+        }
       });
       inp.click();
     });

@@ -35,7 +35,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 
 ## Export och import av rollpersoner
 
-Use the **Exportera** button in the filter panel to download a JSON file representing the current character. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the file is downloaded normally. The **Importera** button lets you select such a file to recreate the character (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
+Use the **Exportera** button in the filter panel to download a JSON file representing the current character. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the file is downloaded normally. The **Importera** button lets you select one or more such files to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
 
 ## Anteckningssidan
 
@@ -64,7 +64,7 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 - **Ny rollperson** skapar en tom karaktär och gör den aktiv.
 - **Ta bort rollperson** raderar den aktuella karaktären.
 - **Exportera** kopierar karaktären som en kompakt kod.
-- **Importera** återställer en karaktär från en sparad kod.
+- **Importera** återställer en eller flera karaktärer från sparade filer.
 - **⚒️**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
 - **🔭** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
 - **🤏** växlar mellan vanlig och kompakt listvy.
