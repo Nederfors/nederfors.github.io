@@ -1074,48 +1074,60 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
       }, { offset: Number.NEGATIVE_INFINITY }).element;
     };
 
-    dom.invList.addEventListener('pointerdown', e => {
-      const li = e.target.closest('li[data-idx]');
-      if (!li || e.target.closest('button')) return;
-      dragIdx = Number(li.dataset.idx);
-      dragEl = li;
-      li.classList.add('dragging');
-      li.setPointerCapture(e.pointerId);
+      dom.invList.addEventListener('pointerdown', e => {
+        const li = e.target.closest('li[data-idx]');
+        if (!li || e.target.closest('button')) return;
 
-      const onMove = ev => {
-        if (!dragEl) return;
-        ev.preventDefault();
-        const after = getDragAfterElement(dom.invList, ev.clientY);
-        if (after == null) {
-          dom.invList.appendChild(dragEl);
-        } else {
-          dom.invList.insertBefore(dragEl, after);
-        }
-      };
+        let pressTimer;
 
-      const onUp = ev => {
-        if (!dragEl) return;
-        onMove(ev);
-        dragEl.classList.remove('dragging');
-        dragEl.releasePointerCapture(ev.pointerId);
-        const inv = storeHelper.getInventory(store);
-        if (dragIdx !== null && inv) {
-          const items = [...dom.invList.querySelectorAll('li[data-idx]')];
-          const dropIdx = items.indexOf(dragEl);
-          const [moved] = inv.splice(dragIdx, 1);
-          inv.splice(dropIdx, 0, moved);
-          saveInventory(inv);
-          renderInventory();
-        }
-        dragIdx = null;
-        dragEl = null;
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-      };
+        const onMove = ev => {
+          if (!dragEl) return;
+          ev.preventDefault();
+          const after = getDragAfterElement(dom.invList, ev.clientY);
+          if (after == null) {
+            dom.invList.appendChild(dragEl);
+          } else {
+            dom.invList.insertBefore(dragEl, after);
+          }
+        };
 
-      window.addEventListener('pointermove', onMove);
-      window.addEventListener('pointerup', onUp);
-    });
+        const startDrag = () => {
+          dragIdx = Number(li.dataset.idx);
+          dragEl = li;
+          li.classList.add('dragging');
+          li.setPointerCapture(e.pointerId);
+          window.addEventListener('pointermove', onMove);
+        };
+
+        const onUp = ev => {
+          clearTimeout(pressTimer);
+          if (!dragEl) {
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
+            return;
+          }
+          onMove(ev);
+          dragEl.classList.remove('dragging');
+          dragEl.releasePointerCapture(ev.pointerId);
+          const inv = storeHelper.getInventory(store);
+          if (dragIdx !== null && inv) {
+            const items = [...dom.invList.querySelectorAll('li[data-idx]')];
+            const dropIdx = items.indexOf(dragEl);
+            const [moved] = inv.splice(dragIdx, 1);
+            inv.splice(dropIdx, 0, moved);
+            saveInventory(inv);
+            renderInventory();
+          }
+          dragIdx = null;
+          dragEl = null;
+          window.removeEventListener('pointermove', onMove);
+          window.removeEventListener('pointerup', onUp);
+        };
+
+        pressTimer = setTimeout(startDrag, 200);
+
+        window.addEventListener('pointerup', onUp);
+      });
   }
 
   function bindMoney() {
