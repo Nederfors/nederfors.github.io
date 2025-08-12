@@ -221,6 +221,7 @@ function initIndex() {
         }
         const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
         if (spec) li.dataset.trait = spec;
+        if (xpVal != null) li.dataset.xp = xpVal;
         const tagsDiv = (!compact && tagsHtml)
           ? `<div class="tags">${tagsHtml}</div>`
           : '';
@@ -337,8 +338,10 @@ function initIndex() {
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');
-      const title=infoBtn.closest('li')?.querySelector('.card-title')?.textContent||'';
-      yrkePanel.open(title,html);
+      const liEl = infoBtn.closest('li');
+      const title=liEl?.querySelector('.card-title > span')?.textContent||'';
+      const xpVal = liEl?.dataset.xp != null ? Number(liEl.dataset.xp) : undefined;
+      yrkePanel.open(title,html,xpVal);
       return;
     }
     const btn=e.target.closest('button[data-act]');

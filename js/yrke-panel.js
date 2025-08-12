@@ -6,11 +6,9 @@
     panel.id = 'yrkePanel';
     panel.innerHTML = `
       <header class="inv-header">
+        <div class="inv-actions"><span id="yrkeXp" class="xp-cost"></span></div>
         <h2 id="yrkeTitle"></h2>
-        <div class="inv-actions">
-          <span id="yrkeXp" class="xp-cost"></span>
-          <button id="yrkeClose" class="char-btn icon">✕</button>
-        </div>
+        <div class="inv-actions"><button id="yrkeClose" class="char-btn icon">✕</button></div>
       </header>
       <div id="yrkeContent"></div>
     `;
