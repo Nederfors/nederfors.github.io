@@ -260,11 +260,10 @@ function bindToolbar() {
     if (id === 'exportChar') {
       if (!store.characters.length) return alert('Inga rollpersoner att exportera.');
       openExportPopup(async choice => {
-        if (choice === 'current') {
-          if (!store.current) return alert('Ingen rollperson vald.');
-          await exportCharacterFile(store.current);
-        } else if (choice === 'all') {
+        if (choice === 'all') {
           await exportAllCharacters();
+        } else if (choice) {
+          await exportCharacterFile(choice);
         }
       });
     }
@@ -586,19 +585,15 @@ async function exportAllCharacters() {
 
 function openExportPopup(cb) {
   const pop  = bar.shadowRoot.getElementById('exportPopup');
-  const cur  = bar.shadowRoot.getElementById('exportCurrent');
-  const all  = bar.shadowRoot.getElementById('exportAll');
+  const opts = bar.shadowRoot.getElementById('exportOptions');
   const cls  = bar.shadowRoot.getElementById('exportCancel');
   pop.classList.add('open');
   function close() {
     pop.classList.remove('open');
-    cur.removeEventListener('click', onCur);
-    all.removeEventListener('click', onAll);
     cls.removeEventListener('click', onCancel);
     pop.removeEventListener('click', onOutside);
+    opts.innerHTML = '';
   }
-  function onCur() { close(); cb('current'); }
-  function onAll() { close(); cb('all'); }
   function onCancel() { close(); cb(null); }
   function onOutside(e) {
     if(!pop.querySelector('.popup-inner').contains(e.target)){
@@ -606,8 +601,24 @@ function openExportPopup(cb) {
       cb(null);
     }
   }
-  cur.addEventListener('click', onCur);
-  all.addEventListener('click', onAll);
+  opts.innerHTML = '';
+  const addBtn = (label, value) => {
+    const b = document.createElement('button');
+    b.className = 'char-btn';
+    b.textContent = label;
+    b.addEventListener('click', () => { close(); cb(value); });
+    opts.appendChild(b);
+  };
+  addBtn('Alla rollpersoner', 'all');
+  const currentId = store.current;
+  if (currentId) {
+    const curChar = store.characters.find(c => c.id === currentId);
+    if (curChar) addBtn(curChar.name || 'Namnlös', curChar.id);
+  }
+  for (const c of store.characters) {
+    if (c.id === currentId) continue;
+    addBtn(c.name || 'Namnlös', c.id);
+  }
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
 }
