@@ -18,6 +18,14 @@
 
       // Hookar (valfritt – standard finns i JS-filen om dessa saknas)
       window.getCurrentJsonForExport = () => ({ savedAt: new Date().toISOString(), data: window.myAppState });
+      window.loadImportedJson = obj => {
+        if (obj && obj.data) {
+          window.myAppState = obj.data;
+          alert('Importerade data!');
+        } else {
+          alert('Import stöds inte här');
+        }
+      };
     </script>
 
     <!-- Lägg denna rad precis innan </body> i din riktiga sida -->

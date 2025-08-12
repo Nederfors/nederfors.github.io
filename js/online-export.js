@@ -85,10 +85,11 @@ function openModal(title, bodyHTML, onOk) {
 modalCancel.addEventListener('click', () => (modal.style.display = 'none'));
 
 /* -------- Hookar med standardbeteende -------- */
+const HAS_IMPORT_HOOK = typeof window.loadImportedJson === 'function';
 if (typeof window.getCurrentJsonForExport !== 'function') {
   window.getCurrentJsonForExport = () => ({ savedAt: new Date().toISOString(), data: window.myAppState || {} });
 }
-if (typeof window.loadImportedJson !== 'function') {
+if (!HAS_IMPORT_HOOK) {
   window.loadImportedJson = obj => console.warn('Ingen import-hook definierad', obj);
 }
 /* -------- Hjälpfunktioner -------- */
@@ -142,6 +143,10 @@ function setupExport() {
 function setupImport() {
   const btn = ROOT.getElementById('importOnlineBtn');
   if (!btn) return;
+  if (!HAS_IMPORT_HOOK) {
+    btn.disabled = true;
+    return;
+  }
   btn.addEventListener('click', () => {
     const folderOptions = FOLDERS.map(f => `<option value="${f.key}">${f.label}</option>`).join('');
     const body = `
