@@ -2270,9 +2270,9 @@
     "ark_trad": ["Krigare", "Tjuv"],
     "test": ["Kvick"],
     "handling": {
-      "Novis": ["Passiv"],
+      "Novis": ["Speciell"],
       "Gesäll": ["Reaktiv"],
-      "Mästare": ["Aktiv"]
+      "Mästare": ["Reaktiv"]
     }
   },
   "nivåer": {
