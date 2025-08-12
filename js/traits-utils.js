@@ -206,6 +206,9 @@
           extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med Övertag</div>';
         }
       }
+      if (k === 'Kvick' && storeHelper.abilityLevel(list, 'Koreograferad strid') >= 1) {
+        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker som utförs efter en förflyttning</div>';
+      }
       if (k === 'Listig' && storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
         extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med allt utom tunga vapen</div>';
       }
