@@ -17,7 +17,7 @@
  */
 
 // Din Apps Script Web App URL (inkl. /exec)
-const APPS_URL = 'https://script.google.com/macros/s/AKfycbz7H5mEeUNBqjh1im5fFiRlCcj7PMKyql3oJmGs92KATGaaX6ey7H9j8veSZ5q4mVdI/exec';
+const APPS_URL = 'https://script.google.com/macros/s/AKfycbwmzYExWhTHIjOzvg58n9zzmt9geHnnggBt8O2zRWbQUkmw2S22D_0jCxZMxMLtdHri/exec';
 
 // Ursprung att skicka till Apps Script (inkluderas i alla anrop)
 const ORIGIN = window.location.origin;
