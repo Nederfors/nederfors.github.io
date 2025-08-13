@@ -1,0 +1,86 @@
+[
+  {
+    "id": "t1",
+    "namn": "Kostnad för Skattletarlicens",
+    "kolumner": [
+      "antal personer",
+      "kostnad månad",
+      "kostnad år",
+      "extra tillägg"
+    ],
+    "rader": [
+      {
+        "antal personer": "Individuell",
+        "kostnad månad": "2",
+        "kostnad år": "9 daler",
+        "extra tillägg": "—"
+      },
+      {
+        "antal personer": "Sällskap 2–5",
+        "kostnad månad": "10",
+        "kostnad år": "50 daler",
+        "extra tillägg": "—"
+      },
+      {
+        "antal personer": "Sällskap 6–8",
+        "kostnad månad": "25",
+        "kostnad år": "90 daler",
+        "extra tillägg": "—"
+      },
+      {
+        "antal personer": "Sällskap 9–10",
+        "kostnad månad": "55",
+        "kostnad år": "180 daler",
+        "extra tillägg": "—"
+      },
+      {
+        "antal personer": "Obegränsat",
+        "kostnad månad": "—",
+        "kostnad år": "450 daler",
+        "extra tillägg": "—"
+      },
+      {
+        "antal personer": "Avverkningsstillägg",
+        "kostnad månad": "—",
+        "kostnad år": "—",
+        "extra tillägg": "3–10 daler"
+      },
+      {
+        "antal personer": "Skördetillägg",
+        "kostnad månad": "—",
+        "kostnad år": "—",
+        "extra tillägg": "5–12 daler"
+      },
+      {
+        "antal personer": "Utforskartillägg",
+        "kostnad månad": "—",
+        "kostnad år": "—",
+        "extra tillägg": "5 daler/person"
+      },
+      {
+        "antal personer": "Vagnstillägg",
+        "kostnad månad": "—",
+        "kostnad år": "—",
+        "extra tillägg": "5 daler/vagn"
+      },
+      {
+        "antal personer": "Inkompetenstillägg",
+        "kostnad månad": "—",
+        "kostnad år": "—",
+        "extra tillägg": "5–15 daler"
+      },
+      {
+        "antal personer": "Avsiktstillägg",
+        "kostnad månad": "—",
+        "kostnad år": "—",
+        "extra tillägg": "5–50 daler"
+      },
+      {
+        "antal personer": "Övrigt",
+        "kostnad månad": "—",
+        "kostnad år": "—",
+        "extra tillägg": "1–50 daler"
+      }
+    ]
+  }
+]

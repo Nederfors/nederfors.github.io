@@ -101,6 +101,15 @@ const DATA_FILES = [
   'fallor.json'
 ].map(f => `data/${f}`);
 
+const TABELLER_FILE = 'data/tabeller.json';
+let TABELLER = [];
+fetch(TABELLER_FILE)
+  .then(r => r.json())
+  .then(arr => {
+    TABELLER = arr;
+    window.TABELLER = TABELLER;
+  });
+
 Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
   .then(arrays => {
     DB = arrays.flat().sort(sortByType);
