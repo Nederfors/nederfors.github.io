@@ -2225,7 +2225,7 @@
     },
     "nivåer": {
       "Novis": "Handling: reaktiv När rollpersonen skadar en måltavla får hen med ett lyckat slag mot “Träffsäker” också placera ett “Målmärke” på offret. Offret räknas som målmärkt till slutet av rollpersonens nästa runda. Varje lyckad attack mot målet ger +1 skada. Endast ett mål kan vara målmärkt åt gången av rollpersonen och målmärkningen tappas om det går en hel runda utan lyckade anfall från rollpersonen.",
-      "Gesäll": "Handling: reaktiv. Varje attack mot ett målmärkt offer av rollpersonen räknas som ett övertag, oavsett positionering.",
+      "Gesäll": "Handling: reaktiv. En attack per runda mot ett målmärkt offer av rollpersonen räknas som ett övertag, oavsett positionering.",
       "Mästare": "Handling: Speciell. Rollpersonens målmärkning är så effektiv att effekterna för novis och gesällnivå gäller även för dess allierade, novisnivån ökar då i skada med varje karaktär som lyckats med en attack mot målet medans målmärket är aktivt."
     }
   },
