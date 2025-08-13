@@ -1449,21 +1449,28 @@ textarea.auto-resize {
   overflow: auto;
   position: relative;
 }
-#tabellPopup #tabellClose {
-  position: absolute;
-  top: .4rem;
-  right: .4rem;
+#tabellPopup .popup-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  margin-bottom: 1rem;
+}
+#tabellPopup #tabellClose { flex-shrink: 0; }
+#tabellPopup #tabellTitle {
+  margin: 0;
+  font-size: 1.2rem;
 }
 #tabellPopup table {
   border-collapse: collapse;
-  width: max-content;
+  width: 100%;
+  table-layout: auto;
 }
 #tabellPopup th,
 #tabellPopup td {
   border: 1px solid var(--card-border);
   padding: .3rem .6rem;
   text-align: left;
-  word-break: normal;
+  word-break: break-word;
 }
 #tabellPopup th { background: var(--card); }
 
