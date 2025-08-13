@@ -1,6 +1,6 @@
 [
   {
-    "id": "t1",
+    "id": "ta1",
     "namn": "Kostnad för Skattletarlicens",
     "taggar": { "typ": ["Tabell"] },
     "kolumner": [
@@ -83,5 +83,796 @@
         "extra tillägg": "1–50 daler"
       }
     ]
-  }
+  },
+
+  {
+    "id": "ta2",
+    "namn": "Kostnad för boende i Tistla Fäste",
+    "taggar": { "typ": ["Tabell"] },
+    "kolumner": [
+      "kvalitet",
+      "exempel",
+      "1 natt",
+      "1 vecka",
+      "1 månad",
+      "ägarskap"
+    ],
+    "rader": [
+      {
+        "kvalitet": "Exklusivt",
+        "exempel": "Hovet & Harpan, Det Bevingade Stopet",
+        "1 natt": "1 daler",
+        "1 vecka": "—",
+        "1 månad": "—",
+        "ägarskap": "—"
+      },
+      {
+        "kvalitet": "Fint",
+        "exempel": "Sömnerskans vila, Ruinen",
+        "1 natt": "2 skilling",
+        "1 vecka": "1 daler",
+        "1 månad": "4 daler",
+        "ägarskap": "—"
+      },
+      {
+        "kvalitet": "Ordinärt",
+        "exempel": "Häxan & Bjäran, Herr Arkerios",
+        "1 natt": "1 skilling",
+        "1 vecka": "5 skilling",
+        "1 månad": "2 daler",
+        "ägarskap": "—"
+      },
+      {
+        "kvalitet": "Simpelt",
+        "exempel": "Rosengården, Baracken",
+        "1 natt": "5 örtegar",
+        "1 vecka": "2 skilling",
+        "1 månad": "1 daler",
+        "ägarskap": "—"
+      },
+      {
+        "kvalitet": "Hyra fint",
+        "exempel": "Trerummare vid Antiktorget",
+        "1 natt": "—",
+        "1 vecka": "2 daler",
+        "1 månad": "10 daler",
+        "ägarskap": "—"
+      },
+      {
+        "kvalitet": "Hyra ordinärt",
+        "exempel": "Trerummare vid Västerport",
+        "1 natt": "—",
+        "1 vecka": "1 daler",
+        "1 månad": "4 daler",
+        "ägarskap": "—"
+      },
+      {
+        "kvalitet": "Hyra simpelt",
+        "exempel": "Enrummare öster om Paddans Torg",
+        "1 natt": "—",
+        "1 vecka": "5 skilling",
+        "1 månad": "2 daler",
+        "ägarskap": "—"
+      },
+      {
+        "kvalitet": "Köpa fint",
+        "exempel": "Trerummare vid Antiktorget",
+        "1 natt": "—",
+        "1 vecka": "—",
+        "1 månad": "—",
+        "ägarskap": "500 daler"
+      },
+      {
+        "kvalitet": "Köpa ordinärt",
+        "exempel": "Trerummare vid Västerport",
+        "1 natt": "—",
+        "1 vecka": "—",
+        "1 månad": "—",
+        "ägarskap": "300 daler"
+      },
+      {
+        "kvalitet": "Köpa simpelt",
+        "exempel": "Enrummare öster om Paddans Torg",
+        "1 natt": "—",
+        "1 vecka": "—",
+        "1 månad": "—",
+        "ägarskap": "100 daler"
+      }
+    ]
+  },
+  {
+  "id": "ta3",
+  "namn": "Varelsers skuggor",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "varelse",
+    "färg på skugga"
+  ],
+  "rader": [
+    {
+      "varelse": "Naturnära väsen",
+      "färg på skugga": "Grönt, rött och vitt, ibland andra klara grundfärger."
+    },
+    {
+      "varelse": "Civiliserat väsen",
+      "färg på skugga": "Guld, silver, koppar, ibland andra metalliska nyanser."
+    },
+    {
+      "varelse": "Korrumperat väsen",
+      "färg på skugga": "Svart och lila dominerar hos styggelser och varelser som är nära att helt korrumperas, medan varelser som bara berört eller berörts av korruptionen får förändringar i sina grundfärger så som ärgad koppar, svartnat silver, sjukligt grönt, rostbruna stråk i det röda eller askgrå fläckar i det vita."
+    }
+  ]
+},
+{
+  "id": "ta4",
+  "namn": "Styggelsemärken",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "exempel på stigman"
+  ],
+  "rader": [
+    { "exempel på stigman": "Ett varande sår som inte läker" },
+    { "exempel på stigman": "Missfärgat hudområde, blemmor eller svåra eksem" },
+    { "exempel på stigman": "Bölder i mun och hals, som spricker vid olämpliga tillfällen" },
+    { "exempel på stigman": "Rovtänder eller naglar som antar kloliknande form" },
+    { "exempel på stigman": "Ett märke som med fantasi kan ses som en mörk runa eller otäck symbol" },
+    { "exempel på stigman": "Ögon som glittrar svagt i mörkret" },
+    { "exempel på stigman": "Gulnade ögon eller ögon som faktiskt svartnar vid vrede, hunger eller lust" },
+    { "exempel på stigman": "En svag odör av förruttnelse vilar runt personen, trots att den ser hälsosam ut" },
+    { "exempel på stigman": "Andedräkt som osar svavel" },
+    { "exempel på stigman": "Vener som bultar svart vid vrede eller andra starka känslor" },
+    { "exempel på stigman": "Mörka stråk i blodet, syns när varelsen blöder" },
+    { "exempel på stigman": "Kall som ett lik eller febervarm utan andra sjukdomstecken" },
+    { "exempel på stigman": "Ondsint tungomålstal i sömnen" },
+    { "exempel på stigman": "Sömngång med dragning till smittade artefakter och onda platser" },
+    { "exempel på stigman": "Tillbakabildning av syn, övergång till att förlita sig mer på andra sinnen" },
+    { "exempel på stigman": "Smak på kadaver, måste äta något dött och surnat varje dag för att inte svälta" },
+    { "exempel på stigman": "Smak för rått kött, måste äta färskt rått kött varje dag för att inte svälta" },
+    { "exempel på stigman": "Törst på varmt blod, måste dricka varmt blod varje dag för att inte törsta" }
+  ]
+},
+{
+  "id": "ta5",
+  "namn": "Färdsätt och tid",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "färdsätt",
+    "ambrias slätter",
+    "ljusa davokar",
+    "mörka davokar"
+  ],
+  "rader": [
+    {
+      "färdsätt": "Dagsmarsch",
+      "ambrias slätter": "20 km",
+      "ljusa davokar": "20 km",
+      "mörka davokar": "10 km"
+    },
+    {
+      "färdsätt": "Forcerad marsch*",
+      "ambrias slätter": "40 km",
+      "ljusa davokar": "30 km",
+      "mörka davokar": "15 km"
+    },
+    {
+      "färdsätt": "Dödsmarsch**",
+      "ambrias slätter": "60 km",
+      "ljusa davokar": "40 km",
+      "mörka davokar": "20 km"
+    },
+    {
+      "färdsätt": "Dagsritt",
+      "ambrias slätter": "40 km",
+      "ljusa davokar": "30 km",
+      "mörka davokar": "10 km"
+    },
+    {
+      "färdsätt": "Forcerad ritt*",
+      "ambrias slätter": "60 km",
+      "ljusa davokar": "45 km",
+      "mörka davokar": "15 km"
+    },
+    {
+      "färdsätt": "Dödsritt**",
+      "ambrias slätter": "70 km",
+      "ljusa davokar": "50 km",
+      "mörka davokar": "20 km"
+    }
+  ]
+},
+{
+  "id": "ta6",
+  "namn": "Avståndskategorier",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "avståndskategori",
+    "effekt på avståndsvapen",
+    "ungefärligt avstånd",
+    "antal förflyttningar"
+  ],
+  "rader": [
+    {
+      "avståndskategori": "Närstrid",
+      "effekt på avståndsvapen": "Anfall endast möjligt under första rundan och bara om initiativet hålls av skytten",
+      "ungefärligt avstånd": "1–2 meter",
+      "antal förflyttningar": "Ingen"
+    },
+    {
+      "avståndskategori": "Kort",
+      "effekt på avståndsvapen": "+2 på Träffsäker, +1T4 i skada",
+      "ungefärligt avstånd": "10 meter",
+      "antal förflyttningar": "1"
+    },
+    {
+      "avståndskategori": "Medellångt",
+      "effekt på avståndsvapen": "Ingen",
+      "ungefärligt avstånd": "20 meter",
+      "antal förflyttningar": "2"
+    },
+    {
+      "avståndskategori": "Långt",
+      "effekt på avståndsvapen": "–2 på Träffsäker",
+      "ungefärligt avstånd": "50 meter",
+      "antal förflyttningar": "5"
+    },
+    {
+      "avståndskategori": "Extremt",
+      "effekt på avståndsvapen": "–5 på Träffsäker, –1T4 i skada",
+      "ungefärligt avstånd": "100 meter",
+      "antal förflyttningar": "10"
+    }
+  ]
+},
+{
+  "id": "ta7",
+  "namn": "Monstertroféer",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "svårighetsgrad",
+    "exempel",
+    "gott skick",
+    "dåligt skick"
+  ],
+  "rader": [
+    {
+      "svårighetsgrad": "Svagt",
+      "exempel": "Grottrocka, Jakaar",
+      "gott skick": "1 daler",
+      "dåligt skick": "–"
+    },
+    {
+      "svårighetsgrad": "Ordinärt",
+      "exempel": "Baiagorn, Mara, Marlit",
+      "gott skick": "10 daler",
+      "dåligt skick": "1 daler"
+    },
+    {
+      "svårighetsgrad": "Utmanande",
+      "exempel": "Managaal (yngel), Trollslända, Urorne",
+      "gott skick": "100 daler",
+      "dåligt skick": "10 daler"
+    },
+    {
+      "svårighetsgrad": "Starkt",
+      "exempel": "Lindorm, Koloss, Världsorm (tunnlare)",
+      "gott skick": "500 daler",
+      "dåligt skick": "50 daler"
+    },
+    {
+      "svårighetsgrad": "Mäktigt",
+      "exempel": "Drake, Världsorm (vältrare), Ärketroll",
+      "gott skick": "1000 daler",
+      "dåligt skick": "100 daler"
+    },
+    {
+      "svårighetsgrad": "Legendariskt",
+      "exempel": "Unika, legendariska individer",
+      "gott skick": "10000 daler",
+      "dåligt skick": "1000 daler"
+    }
+  ]
+},
+
+{
+  "id": "ta8",
+  "namn": "Skada på byggnader",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "struktur",
+    "tålighet",
+    "brytpunkt",
+    "skydd*"
+  ],
+  "rader": [
+    {
+      "struktur": "Torp",
+      "tålighet": "10",
+      "brytpunkt": "5",
+      "skydd*": "5"
+    },
+    {
+      "struktur": "Gård",
+      "tålighet": "10",
+      "brytpunkt": "5",
+      "skydd*": "10"
+    },
+    {
+      "struktur": "Vakttorn, trä",
+      "tålighet": "10",
+      "brytpunkt": "5",
+      "skydd*": "15"
+    },
+    {
+      "struktur": "Vakttorn, sten",
+      "tålighet": "40",
+      "brytpunkt": "20",
+      "skydd*": "20"
+    },
+    {
+      "struktur": "Fort, trä",
+      "tålighet": "50",
+      "brytpunkt": "25",
+      "skydd*": "15"
+    },
+    {
+      "struktur": "Gods",
+      "tålighet": "100",
+      "brytpunkt": "50",
+      "skydd*": "10"
+    },
+    {
+      "struktur": "Fort, sten",
+      "tålighet": "200",
+      "brytpunkt": "100",
+      "skydd*": "20"
+    },
+    {
+      "struktur": "Borg",
+      "tålighet": "500",
+      "brytpunkt": "250",
+      "skydd*": "20"
+    },
+    {
+      "struktur": "Slott",
+      "tålighet": "1000",
+      "brytpunkt": "500",
+      "skydd*": "20"
+    }
+  ]
+},
+
+{
+  "id": "ta9",
+  "namn": "Träffområden",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "1t10",
+    "kroppsdel",
+    "effekt vid överskriden smärtgräns"
+  ],
+  "rader": [
+    {
+      "1t10": "1",
+      "kroppsdel": "Höger ben",
+      "effekt vid överskriden smärtgräns": "Ramlar omkull. Halv förflyttning resten av scenen."
+    },
+    {
+      "1t10": "2",
+      "kroppsdel": "Vänster ben",
+      "effekt vid överskriden smärtgräns": "Ramlar omkull. Halv förflyttning resten av scenen."
+    },
+    {
+      "1t10": "3–5",
+      "kroppsdel": "Bål",
+      "effekt vid överskriden smärtgräns": "Tappar luften, får inte agera på en runda."
+    },
+    {
+      "1t10": "6–7",
+      "kroppsdel": "Höger arm",
+      "effekt vid överskriden smärtgräns": "Tappar det man håller i handen vid ett misslyckat Kvick. En andra chans att misslyckas med alla slag som kräver att armen används under resten av scenen."
+    },
+    {
+      "1t10": "8–9",
+      "kroppsdel": "Vänster arm",
+      "effekt vid överskriden smärtgräns": "Tappar det man håller i handen vid ett misslyckat Kvick. En andra chans att misslyckas med alla slag som kräver att armen används under resten av scenen."
+    },
+    {
+      "1t10": "10",
+      "kroppsdel": "Huvud",
+      "effekt vid överskriden smärtgräns": "Målet tar 1t6 extra i skada och blir dessutom medvetslöst i 1T4 rundor."
+    }
+  ]
+},
+
+{
+  "id": "ta10",
+  "namn": "Kostnad för boende i Yndaros",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "värdshus",
+    "typ",
+    "1 natt",
+    "1 vecka",
+    "1 månad",
+    "ägarskap"
+  ],
+  "rader": [
+    {
+      "värdshus": "Tornet",
+      "typ": "Sovsal/Enkelt Rum",
+      "1 natt": "0,5/1 skilling",
+      "1 vecka": "2/4 skilling",
+      "1 månad": "2 daler",
+      "ägarskap": "—"
+    },
+    {
+      "värdshus": "Titanernas djup",
+      "typ": "Två- eller fyrbäddsrum",
+      "1 natt": "1 skilling",
+      "1 vecka": "3 skilling",
+      "1 månad": "15 skilling",
+      "ägarskap": "—"
+    },
+    {
+      "värdshus": "Zoltars värdshus",
+      "typ": "Tvåbäddsrum",
+      "1 natt": "2 skilling",
+      "1 vecka": "9 skilling",
+      "1 månad": "3 daler",
+      "ägarskap": "—"
+    },
+    {
+      "värdshus": "Tornet",
+      "typ": "Svit",
+      "1 natt": "1 daler",
+      "1 vecka": "4 daler",
+      "1 månad": "—",
+      "ägarskap": "—"
+    },
+    {
+      "värdshus": "Kohinoors",
+      "typ": "Rum/Svit",
+      "1 natt": "3/5 daler",
+      "1 vecka": "12/20 daler",
+      "1 månad": "—",
+      "ägarskap": "—"
+    },
+    {
+      "värdshus": "Inkvartering",
+      "typ": "Hemma hos stadsbo",
+      "1 natt": "0,3–3 skilling",
+      "1 vecka": "2–15 skilling",
+      "1 månad": "1–4 daler",
+      "ägarskap": "—"
+    },
+    {
+      "värdshus": "Köpa fint",
+      "typ": "Trerummare vid Katedralen",
+      "1 natt": "—",
+      "1 vecka": "—",
+      "1 månad": "—",
+      "ägarskap": "2 000 daler"
+    },
+    {
+      "värdshus": "Köpa ordinärt",
+      "typ": "Trerummare i Nya Staden",
+      "1 natt": "—",
+      "1 vecka": "—",
+      "1 månad": "—",
+      "ägarskap": "600 daler"
+    },
+    {
+      "värdshus": "Köpa simpelt",
+      "typ": "Enrummare vid Månglarnas torg",
+      "1 natt": "—",
+      "1 vecka": "—",
+      "1 månad": "—",
+      "ägarskap": "150 daler"
+    }
+  ]
+},
+
+{
+  "id": "ta11",
+  "namn": "Den ambriska tideräkningens månader",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "ordning",
+    "säsong",
+    "månad",
+    "folkgud",
+    "annat"
+  ],
+  "rader": [
+    {
+      "ordning": "#1",
+      "säsong": "Sommar",
+      "månad": "Ynedar",
+      "folkgud": "Jordemor",
+      "annat": "Högsommarmånaden"
+    },
+    {
+      "ordning": "#2",
+      "säsong": "Höst",
+      "månad": "Olandan",
+      "folkgud": "Värdinnan",
+      "annat": "Skördemånaden"
+    },
+    {
+      "ordning": "#3",
+      "säsong": "Höst",
+      "månad": "Andonia",
+      "folkgud": "Vildungen",
+      "annat": "Skrumpmånaden"
+    },
+    {
+      "ordning": "#4",
+      "säsong": "Höst",
+      "månad": "Tomol",
+      "folkgud": "Stigfinnaren",
+      "annat": "Slaktmånaden"
+    },
+    {
+      "ordning": "#5",
+      "säsong": "Vinter",
+      "månad": "Serliela",
+      "folkgud": "Stigfinnaren",
+      "annat": "Regnmånaden"
+    },
+    {
+      "ordning": "#6",
+      "säsong": "Vinter",
+      "månad": "Morangal",
+      "folkgud": "Beskyddaren",
+      "annat": "Mörkermånaden"
+    },
+    {
+      "ordning": "#7",
+      "säsong": "Vinter",
+      "månad": "Ofeliya",
+      "folkgud": "Bödeln",
+      "annat": "Midvintermånaden"
+    },
+    {
+      "ordning": "#8",
+      "säsong": "Vår",
+      "månad": "Agani",
+      "folkgud": "Bödeln",
+      "annat": "Bristmånaden"
+    },
+    {
+      "ordning": "#9",
+      "säsong": "Vår",
+      "månad": "Elisial",
+      "folkgud": "Valvbyggaren",
+      "annat": "Tömånaden"
+    },
+    {
+      "ordning": "#10",
+      "säsong": "Vår",
+      "månad": "Verion",
+      "folkgud": "Livgivaren",
+      "annat": "Såningsmånaden"
+    },
+    {
+      "ordning": "#11",
+      "säsong": "Sommar",
+      "månad": "Konelia",
+      "folkgud": "Livgivaren",
+      "annat": "Blomningsmånaden"
+    },
+    {
+      "ordning": "#12",
+      "säsong": "Sommar",
+      "månad": "Leandro",
+      "folkgud": "Jordemor",
+      "annat": "Frodighetsmånaden"
+    }
+  ]
+},
+
+{
+  "id": "ta12",
+  "namn": "Karaktärsdrag för angrepp",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "förmåga",
+    "karaktärsdrag",
+    "förutsättning"
+  ],
+  "rader": [
+    {
+      "förmåga": "Dominera (novis)",
+      "karaktärsdrag": "Övertygande",
+      "förutsättning": "Närstridsattacker"
+    },
+    {
+      "förmåga": "Fint (novis)",
+      "karaktärsdrag": "Diskret",
+      "förutsättning": "Vapen med kvaliteterna Kort eller Precist"
+    },
+    {
+      "förmåga": "Järnnäve (novis)",
+      "karaktärsdrag": "Stark",
+      "förutsättning": "Närstridsattacker"
+    },
+    {
+      "förmåga": "Knivgöra (novis)",
+      "karaktärsdrag": "Kvick",
+      "förutsättning": "Knivliknande vapen med kvaliteten Kort"
+    },
+    {
+      "förmåga": "Ledare (novis)",
+      "karaktärsdrag": "Övertygande",
+      "förutsättning": "Mystiska krafter baserade på Viljestark"
+    },
+    {
+      "förmåga": "Lönnstöt (novis)",
+      "karaktärsdrag": "Diskret",
+      "förutsättning": "Attacker med Övertag"
+    },
+    {
+      "förmåga": "Sjätte sinne (novis)",
+      "karaktärsdrag": "Vaksam",
+      "förutsättning": "Avståndsattacker"
+    },
+    {
+      "förmåga": "Taktiker (mästare)",
+      "karaktärsdrag": "Listig",
+      "förutsättning": "Allt utom Tunga vapen"
+    }
+  ]
+},
+{
+  "id": "ta13",
+  "namn": "Kompetensnivå",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "kompetensnivå",
+    "erfarenhet",
+    "antal äventyr",
+    "beskrivning"
+  ],
+  "rader": [
+    {
+      "kompetensnivå": "Nybörjare (startnivå)",
+      "erfarenhet": "50",
+      "antal äventyr": "0",
+      "beskrivning": "Rollpersonerna har förmågor på novisnivå och enstaka på gesällnivå."
+    },
+    {
+      "kompetensnivå": "Erfarna",
+      "erfarenhet": "100",
+      "antal äventyr": "ca. 5",
+      "beskrivning": "Alla rollpersoner har förmågor på gesällnivå. Gruppen har en till två artefakter; de flesta har vapen/rustningar med kvaliteter."
+    },
+    {
+      "kompetensnivå": "Veteraner",
+      "erfarenhet": "200",
+      "antal äventyr": "ca. 15",
+      "beskrivning": "Alla rollpersoner har flera förmågor på mästarnivå. Alla i gruppen har en artefakt och alla har vapen eller rustning med kvaliteter."
+    },
+    {
+      "kompetensnivå": "Hjältar",
+      "erfarenhet": "300",
+      "antal äventyr": "ca. 25",
+      "beskrivning": "Några i gruppen har två eller fler artefakter och alla deras vapen och rustningar har minst en kvalitet."
+    }
+  ]
+},
+
+{
+  "id": "ta14",
+  "namn": "Monster som studieobjekt",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "svårighetsgrad",
+    "exempel",
+    "levande",
+    "död"
+  ],
+  "rader": [
+    {
+      "svårighetsgrad": "Svagt",
+      "exempel": "Trollskugga, Kristallflugor",
+      "levande": "1 daler",
+      "död": "–"
+    },
+    {
+      "svårighetsgrad": "Ordinärt",
+      "exempel": "Skallbitare (nykläckt), Arak (giftdråpare)",
+      "levande": "5 daler",
+      "död": "–"
+    },
+    {
+      "svårighetsgrad": "Utmanande",
+      "exempel": "Glint, Illvätte, Nefarani",
+      "levande": "50 daler",
+      "död": "5 daler"
+    },
+    {
+      "svårighetsgrad": "Starkt",
+      "exempel": "Arak (upphöjd), Gwann, Rovpil (strypare)",
+      "levande": "500 daler",
+      "död": "50 daler"
+    },
+    {
+      "svårighetsgrad": "Mäktigt",
+      "exempel": "Skallbitare (drottning), Urstyggelse",
+      "levande": "5000 daler",
+      "död": "500 daler"
+    },
+    {
+      "svårighetsgrad": "Legendariskt",
+      "exempel": "Unika, legendariska individer",
+      "levande": "50000 daler",
+      "död": "5000 daler"
+    }
+  ]
+},
+
+{
+  "id": "ta15",
+  "namn": "Kostnad för boende på/vid Karvosti",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "namn",
+    "beskrivning",
+    "1 natt",
+    "1 vecka",
+    "1 månad",
+    "ägarskap"
+  ],
+  "rader": [
+    {
+      "namn": "Pilgrimsläger",
+      "beskrivning": "Tältplats",
+      "1 natt": "3 örtegar",
+      "1 vecka": "1 skilling",
+      "1 månad": "4 skilling",
+      "ägarskap": "—"
+    },
+    {
+      "namn": "Marknadsplatsen",
+      "beskrivning": "Tält-/vagnsplats",
+      "1 natt": "5 örtegar",
+      "1 vecka": "2 skilling",
+      "1 månad": "8 skilling",
+      "ägarskap": "—"
+    },
+    {
+      "namn": "Segerhöken",
+      "beskrivning": "Sovsal eller tvåbäddsrum",
+      "1 natt": "1 daler",
+      "1 vecka": "5 daler",
+      "1 månad": "15 daler",
+      "ägarskap": "—"
+    },
+    {
+      "namn": "Borgen",
+      "beskrivning": "Två- eller fyrbäddsrum",
+      "1 natt": "2-9 skilling",
+      "1 vecka": "1-6 daler",
+      "1 månad": "4-15 daler",
+      "ägarskap": "—"
+    },
+    {
+      "namn": "Grottan",
+      "beskrivning": "Fäll på marken",
+      "1 natt": "1 skilling",
+      "1 vecka": "—",
+      "1 månad": "—",
+      "ägarskap": "—"
+    },
+    {
+      "namn": "Braddokkugru",
+      "beskrivning": "Plats i hydda",
+      "1 natt": "2-5 örtegar",
+      "1 vecka": "—",
+      "1 månad": "—",
+      "ägarskap": "—"
+    }
+  ]
+}
+
 ]
