@@ -508,7 +508,7 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','qtyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','qtyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
