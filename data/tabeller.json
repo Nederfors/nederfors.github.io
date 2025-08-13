@@ -2,6 +2,7 @@
   {
     "id": "t1",
     "namn": "Kostnad för Skattletarlicens",
+    "taggar": { "typ": ["Tabell"] },
     "kolumner": [
       "antal personer",
       "kostnad månad",

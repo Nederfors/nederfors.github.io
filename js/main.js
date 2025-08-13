@@ -108,6 +108,12 @@ fetch(TABELLER_FILE)
   .then(arr => {
     TABELLER = arr;
     window.TABELLER = TABELLER;
+    if (typeof window.indexViewUpdate === 'function') {
+      window.indexViewUpdate();
+      if (typeof window.indexViewRefreshFilters === 'function') {
+        window.indexViewRefreshFilters();
+      }
+    }
   });
 
 Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
