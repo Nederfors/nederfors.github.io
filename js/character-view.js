@@ -466,6 +466,10 @@ function initCharacter() {
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');
+      if(infoBtn.dataset.tabell!=null){
+        tabellPopup.open(html);
+        return;
+      }
       const liEl = infoBtn.closest('li');
       const title = liEl?.querySelector('.card-title > span')?.textContent || '';
       const xpVal = liEl?.dataset.xp ? Number(liEl.dataset.xp) : undefined;

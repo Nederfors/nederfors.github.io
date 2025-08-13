@@ -127,7 +127,7 @@ function initIndex() {
       cats[cat].forEach(p=>{
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
-          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
+          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1">Info</button>`;
           const tagsHtml = (p.taggar?.typ || [])
             .map(t => `<span class="tag">${t}</span>`)
             .join(' ');
@@ -364,6 +364,10 @@ function initIndex() {
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');
+      if(infoBtn.dataset.tabell!=null){
+        tabellPopup.open(html);
+        return;
+      }
       const liEl = infoBtn.closest('li');
       const title=liEl?.querySelector('.card-title > span')?.textContent||'';
       const xpVal = liEl?.dataset.xp != null ? Number(liEl.dataset.xp) : undefined;
