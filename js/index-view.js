@@ -9,9 +9,19 @@ function initIndex() {
   let catsMinimized = false;
 
   const getEntries = () =>
-    DB.concat(storeHelper.getCustomEntries(store));
+    DB
+      .concat(window.TABELLER || [])
+      .concat(storeHelper.getCustomEntries(store));
 
   const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+
+  const tabellInfoHtml = p => {
+    const head = `<tr>${p.kolumner.map(c => `<th>${c}</th>`).join('')}</tr>`;
+    const body = p.rader
+      .map(r => `<tr>${p.kolumner.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`)
+      .join('');
+    return `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+  };
 
   /* fyll dropdowns */
   const fillDropdowns = ()=>{
@@ -115,6 +125,22 @@ function initIndex() {
       const listEl=catLi.querySelector('ul');
       detailsEl.addEventListener('toggle', updateCatToggle);
       cats[cat].forEach(p=>{
+        if (p.kolumner && p.rader) {
+          const infoHtml = tabellInfoHtml(p);
+          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
+          const tagsHtml = (p.taggar?.typ || [])
+            .map(t => `<span class="tag">${t}</span>`)
+            .join(' ');
+          const tagsDiv = tagsHtml ? `<div class="tags">${tagsHtml}</div>` : '';
+          const li = document.createElement('li');
+          li.className = 'card';
+          li.innerHTML = `
+            <div class="card-title"><span>${p.namn}</span></div>
+            ${tagsDiv}
+            <div class="inv-controls">${infoBtn}</div>`;
+          listEl.appendChild(li);
+          return;
+        }
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
         const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
         const curLvl = charList.find(c=>c.namn===p.namn)?.nivå

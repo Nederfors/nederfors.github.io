@@ -586,6 +586,20 @@ select.level {
 #yrkePanel   { max-width: 360px; font-size: 1.2rem; line-height: 1.6; }
 #infoPanel   { max-width: 360px; font-size: 1.1rem; line-height: 1.5; }
 #yrkePanel p { margin: 0 0 1rem; }
+#yrkePanel table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: .5rem 0 1rem;
+}
+#yrkePanel th,
+#yrkePanel td {
+  border: 1px solid var(--card-border);
+  padding: .3rem .6rem;
+  text-align: left;
+}
+#yrkePanel th {
+  background: var(--card);
+}
 #infoPanel p { margin: 0 0 1rem; }
 
 /* När klassen .open läggs på – låt panelen glida in */
