@@ -1424,6 +1424,51 @@ textarea.auto-resize {
 .money-control .char-btn { padding: .3rem .6rem; }
 .cap-food { color: var(--txt); }
 
+/* ---------- Popup för tabeller ---------- */
+#tabellPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#tabellPopup.open { display: flex; }
+#tabellPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  position: relative;
+}
+#tabellPopup #tabellClose {
+  position: absolute;
+  top: .4rem;
+  right: .4rem;
+}
+#tabellPopup table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+#tabellPopup th,
+#tabellPopup td {
+  border: 1px solid var(--card-border);
+  padding: .3rem .6rem;
+  text-align: left;
+  word-break: break-word;
+}
+#tabellPopup th { background: var(--card); }
+
 /* ---------- Online modal ---------- */
 #onlineModal {
   display: none;
