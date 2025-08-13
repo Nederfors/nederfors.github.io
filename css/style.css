@@ -1446,8 +1446,7 @@ textarea.auto-resize {
   width: 90%;
   max-width: 600px;
   max-height: 90vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: auto;
   position: relative;
 }
 #tabellPopup #tabellClose {
@@ -1456,16 +1455,15 @@ textarea.auto-resize {
   right: .4rem;
 }
 #tabellPopup table {
-  width: 100%;
   border-collapse: collapse;
-  table-layout: fixed;
+  width: max-content;
 }
 #tabellPopup th,
 #tabellPopup td {
   border: 1px solid var(--card-border);
   padding: .3rem .6rem;
   text-align: left;
-  word-break: break-word;
+  word-break: normal;
 }
 #tabellPopup th { background: var(--card); }
 
