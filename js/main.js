@@ -8,10 +8,6 @@
 const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
 let   store  = storeHelper.load();                   // Lokal lagring
 
-// Hook för online-export
-window.getCurrentJsonForExport = () =>
-  storeHelper.exportCharacterJSON(store, store.current);
-
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
 const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM

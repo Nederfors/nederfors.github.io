@@ -263,9 +263,6 @@ class SharedToolbar extends HTMLElement {
             </li>
           </ul>
         </div>
-        <div class="char-btn-row">
-          <button id="exportOnlineBtn" class="char-btn">Exportera online</button>
-        </div>
       </aside>
 
       <!-- ---------- Popup Kvalitet ---------- -->
