@@ -16,7 +16,8 @@ function initIndex() {
   const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
 
   const tabellInfoHtml = p => {
-    const head = `<tr>${p.kolumner.map(c => `<th>${c}</th>`).join('')}</tr>`;
+    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
+    const head = `<tr>${p.kolumner.map(c => `<th>${cap(c)}</th>`).join('')}</tr>`;
     const body = p.rader
       .map(r => `<tr>${p.kolumner.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`)
       .join('');
@@ -364,12 +365,12 @@ function initIndex() {
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');
-      if(infoBtn.dataset.tabell!=null){
-        tabellPopup.open(html);
-        return;
-      }
       const liEl = infoBtn.closest('li');
       const title=liEl?.querySelector('.card-title > span')?.textContent||'';
+      if(infoBtn.dataset.tabell!=null){
+        tabellPopup.open(html, title);
+        return;
+      }
       const xpVal = liEl?.dataset.xp != null ? Number(liEl.dataset.xp) : undefined;
       yrkePanel.open(title,html,xpVal);
       return;

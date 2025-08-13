@@ -5,17 +5,24 @@
     wrap.id = 'tabellPopup';
     wrap.innerHTML = `
       <div class="popup-inner">
-        <button id="tabellClose" class="char-btn icon">✕</button>
+        <div class="popup-header">
+          <button id="tabellClose" class="char-btn icon">✕</button>
+          <h2 id="tabellTitle"></h2>
+        </div>
         <div id="tabellContent"></div>
       </div>
     `;
     document.body.appendChild(wrap);
     wrap.querySelector('#tabellClose').addEventListener('click', close);
+    wrap.addEventListener('click', e => {
+      if (e.target === wrap) close();
+    });
   }
 
-  function open(html){
+  function open(html, title){
     create();
     document.getElementById('tabellContent').innerHTML = html || '';
+    document.getElementById('tabellTitle').textContent = title || '';
     document.getElementById('tabellPopup').classList.add('open');
   }
 
