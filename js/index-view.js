@@ -48,6 +48,9 @@ function initIndex() {
   const activeTags =()=>{
     dom.active.innerHTML='';
     const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
+    if (storeHelper.getOnlySelected(store)) {
+      push('<span class="tag removable" data-type="onlySel">Endast valda ✕</span>');
+    }
     F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
     F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
@@ -282,7 +285,7 @@ function initIndex() {
   renderList(filtered()); activeTags(); updateXP();
 
   /* expose update function for party toggles */
-  window.indexViewUpdate = () => renderList(filtered());
+  window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
   window.indexViewRefreshFilters = () => fillDropdowns();
 
   /* -------- events -------- */
@@ -355,6 +358,7 @@ function initIndex() {
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
+    else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = F[section].filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
     activeTags(); renderList(filtered());
