@@ -1722,7 +1722,7 @@
     "nivåer": {
       "Novis": "Handling: Reaktiv. Vid ett lyckat Viljestark kan mystikern “låsa” ett lyckat slag hen gör under scenen. En gång innan scenen tar slut kan detta resultat ersätta ett framtida slag av samma typ för mystikern. Bara ett lyckat slag kan vara låst åt gången och det förbrukas när det har använts, varpå ett nytt misslyckande kan låsas",
       "Gesäll": "Handling: Reaktiv. Vid ett lyckat Viljestark kan mystikern “låsa” ett misslyckat slag som en motståndare gör under scenen. En gång innan scenen tar slut kan detta resultat ersätta ett framtida slag av samma typ av motståndaren. Bara ett misslyckat slag kan vara låst åt gången och det förbrukas när det har använts, varpå ett nytt misslyckande kan låsas",
-      "Mästare": "Handling: Aktiv. Mystikern snärjer tidens trådar kring sig själv och rycker till, vilket gör att hen försvinner. När som helst innan scenens slut kan de återuppträda var som helst de rimligen kunnat nå (givet två förflyttningshandlingar per runda de varit borta) och agera omedelbart, därefter fortsätter initiativet som vanligt. Varje spelrunda som mystikern befinner sig utanför tidsrymden drabbas denne av 1 temporär korruption."
+      "Mästare": "Handling: Aktiv. Mystikern snärjer tidens trådar kring sig själv och rycker till, vilket gör att hen försvinner. När som helst innan scenens slut kan hen återuppträda var som helst de rimligen kunnat nå (givet två förflyttningshandlingar per runda de varit borta) och agera omedelbart, därefter fortsätter initiativet som vanligt. Varje spelrunda som mystikern befinner sig utanför tidsrymden drabbas denne av 1 temporär korruption."
     },
     "id": "mystiskkr53"
 },
