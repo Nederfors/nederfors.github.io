@@ -1688,9 +1688,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Fri. Vid ett lyckat Viljesrtark riktar mystikern in sig på en individ så att denne får en andra chans att misslyckas med ett framgångsslag, så länge de är inom hörhåll för mystikerns talade ord.",
-      "Gesäll": "Handling: Fri. Vid ett lyckat Viljestark kan mystikern förmå målet att glömma någonting, så länge det är inom hörhåll för mystikerns talade ord. Det som glöms bort måste sammanfattas tydligt på cirka sex ord. Exempel: ”Glöm att du såg mig idag”, ”Glöm det senaste samtalet du hade” eller ”Glöm dagens lösenord till porten”.",
-      "Mästare": "Handling: Fri. Vid ett lyckat Viljestark agerar målet på ett sätt som känns helt logiskt för dem själva och försvarar handlingen mot andras invändningar. En enskild handling, formulerad i högst ett dussin ord, blir målets överväldigande drivkraft. Instruktionen gäller endast så länge målet är inom hörhåll och kraften varar. Exempel: ”Fördöm drottning Korinthias suveränitet och kalla henne bedragare och svartkonstnär”, ”Lås upp dörren till skattkammaren och beordra vakten att gå” eller ”Beordra en dags uppskov i vakternas jakt på hertigarnas mördare.”"
+      "Novis": "Handling: Fri. Vid ett lyckat Viljestark mot Viljestark riktar mystikern in sig på en individ så att denne får en andra chans att misslyckas med ett framgångsslag, så länge de är inom hörhåll för mystikerns talade ord.",
+      "Gesäll": "Handling: Fri. Vid ett lyckat Viljestark mot Viljestark kan mystikern förmå målet att glömma någonting, så länge det är inom hörhåll för mystikerns talade ord. Det som glöms bort måste sammanfattas tydligt på cirka sex ord. Exempel: ”Glöm att du såg mig idag”, ”Glöm det senaste samtalet du hade” eller ”Glöm dagens lösenord till porten”.",
+      "Mästare": "Handling: Fri. Vid ett lyckat Viljestark mot Viljestark agerar målet på ett sätt som känns helt logiskt för dem själva och försvarar handlingen mot andras invändningar. En enskild handling, formulerad i högst ett dussin ord, blir målets överväldigande drivkraft. Instruktionen gäller endast så länge målet är inom hörhåll och kraften varar. Exempel: ”Fördöm drottning Korinthias suveränitet och kalla henne bedragare och svartkonstnär”, ”Lås upp dörren till skattkammaren och beordra vakten att gå” eller ”Beordra en dags uppskov i vakternas jakt på hertigarnas mördare.”"
     },
     "id": "mystiskkr52"
 },
