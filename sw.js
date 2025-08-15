@@ -3,7 +3,6 @@ const URLS_TO_CACHE = [
   '/',
   '/index.html',
   '/character.html',
-  '/karaktarsblad.html',
   '/notes.html',
   '/css/style.css',
   '/icons/icon_DA'
