@@ -1628,6 +1628,7 @@
     },
     "id": "mystiskkr50"
   },
+
   {
     "namn": "Stridssymbol",
     "beskrivning": "Tradition: Symbolism\nDe som ser symbolens eggande motiv drabbas av en sjudande stridslust som om de inte står emot inspirerar till ett skoningslöst, eller till och med självföraktande, bärsärkaraseri.",
@@ -1659,5 +1660,104 @@
       "Mästare": "Aktiv. Som Gesäll, men de drabbade blir så stridsrusiga att de inte försvarar sig mot inkommande attacker; alla attacker mot en drabbad träffar automatiskt."
     },
     "id": "mystiskkr51"
-  }
+  },
+
+  {
+    "namn": "Gaslyktande",
+    "beskrivning": "Mystikern kan genom talets kraft påverka ett mål på ett sätt som förändrar hur denne minns, agerar eller lyckas i sina handlingar. Effekten varar endast så länge målet är inom hörhåll för mystikerns ord och kraften pågår. Till skillnad från andra mystiska krafter så kommer ett offer som drabbas av denna förmåga inte att märka att de har blivit manipulerade med.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Ordensmagi"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Fri"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Vid ett lyckat Viljesrtark riktar mystikern in sig på en individ så att denne får en andra chans att misslyckas med ett framgångsslag, så länge de är inom hörhåll för mystikerns talade ord.",
+      "Gesäll": "Handling: Fri. Vid ett lyckat Viljestark kan mystikern förmå målet att glömma någonting, så länge det är inom hörhåll för mystikerns talade ord. Det som glöms bort måste sammanfattas tydligt på cirka sex ord. Exempel: ”Glöm att du såg mig idag”, ”Glöm det senaste samtalet du hade” eller ”Glöm dagens lösenord till porten”.",
+      "Mästare": "Handling: Fri. Vid ett lyckat Viljestark agerar målet på ett sätt som känns helt logiskt för dem själva och försvarar handlingen mot andras invändningar. En enskild handling, formulerad i högst ett dussin ord, blir målets överväldigande drivkraft. Instruktionen gäller endast så länge målet är inom hörhåll och kraften varar. Exempel: ”Fördöm drottning Korinthias suveränitet och kalla henne bedragare och svartkonstnär”, ”Lås upp dörren till skattkammaren och beordra vakten att gå” eller ”Beordra en dags uppskov i vakternas jakt på hertigarnas mördare.”"
+    },
+    "id": "mystiskkr52"
+},
+{
+    "namn": "Orokes Ödesväv",
+    "beskrivning": "Genom Orokes välsignelse får mystikern tillgång till tidens dolda väv, där varje tråd bär på ögonblick som ännu inte inträffat och minnen som redan bleknat. Med vilja och fokus kan de dra, knyta om och tänja dessa trådar för att förändra skeendet, låta handlingar ske för tidigt eller för sent, eller sudda ut avgörande stunder helt. För de som står i vägen kan detta kännas som att världen plötsligt rör sig emot dem, medan mystikern själv vandrar fritt mellan ögonblicken.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Häxkonst"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Reaktiv. Vid ett lyckat Viljestark kan mystikern “låsa” ett lyckat slag hen gör under scenen. En gång innan scenen tar slut kan detta resultat ersätta ett framtida slag av samma typ för mystikern. Bara ett lyckat slag kan vara låst åt gången och det förbrukas när det har använts, varpå ett nytt misslyckande kan låsas",
+      "Gesäll": "Handling: Reaktiv. Vid ett lyckat Viljestark kan mystikern “låsa” ett misslyckat slag som en motståndare gör under scenen. En gång innan scenen tar slut kan detta resultat ersätta ett framtida slag av samma typ av motståndaren. Bara ett lyckat slag kan vara låst åt gången och det förbrukas när det har använts, varpå ett nytt misslyckande kan låsas",
+      "Mästare": "Handling: Aktiv. Mystikern snärjer tidens trådar kring sig själv och rycker till, vilket gör att hen försvinner. När som helst innan scenens slut kan de återuppträda var som helst de rimligen kunnat nå (givet två förflyttningshandlingar per runda de varit borta) och agera omedelbart, därefter fortsätter initiativet som vanligt. Varje spelrunda som mystikern befinner sig utanför tidsrymden drabbas denne av 1 temporär korruption."
+    },
+    "id": "mystiskkr53"
+},
+
+{
+  "namn": "Förskjutning",
+  "beskrivning": "Ordensmagikern manipulerar rummet med strikta tecken och noggrant dragna linjer. Med små, exakta skiftningar kan materia flyttas över korta avstånd utan att lämna spår. Vittnen som anar sprickorna mellan positionerna känner hur världen hakar upp sig ett ögonblick, som om platserna byter plats under deras fötter.",
+  "taggar": {
+    "typ": [
+      "Mystisk kraft"
+    ],
+    "ark_trad": [
+      "Ordensmagi"
+    ],
+    "test": [
+      "Viljestark"
+    ],
+    "handling": {
+      "Novis": [
+        "Aktiv"
+      ],
+      "Gesäll": [
+        "Aktiv"
+      ],
+      "Mästare": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Novis": "Handling: Aktiv. Med ett lyckat [Viljestark←Kvick] kan mystikern rikta kraften mot ett föremål i någon annans grepp och förskjuta det: antingen till sin egen hand eller 10 steg bort i en slumpmässig riktning. Slaget avspeglar mystikerns koordination mot målets reaktion. Föremål som är fastlåsta eller fästa i oorganiskt material kan inte förskjutas.",
+    "Gesäll": "Handling: Aktiv. Med ett lyckat [Viljestark←Viljestark] mot ett mål inom två förflyttningshandlingar byter mystikern och målet plats. Båda varelserna ser för ett ögonblick det ljus- och skuggspel som döljer sig mellan plan innan de står på den andres position. Förskjutningen utlöser inte fri attack, även om någon lämnar närstrid. Efter bytet slår mystikern ett till slag mot Viljestark; vid misslyckande tar både mystikern och målet 1T4 temporär korruption.",
+    "Mästare": "Handling: Aktiv. Med ett lyckat slag mot Viljestark förskjuter mystikern ett litet föremål inuti ett mål. Målet tar omedelbart 1T6 skada (Bepansring skyddar ej) och tar därefter 1T6 genomträngande skada varje runda då det utför en grov kroppsrörelse (de flesta Aktiva, Förflyttnings- och Reaktiva handlingar; spelledaren avgör). Förblir målet stilla eller utför en passiv handling, uteblir fortsatt skada. Effekten kvarstår tills föremålet avlägsnas: antingen genom Medicus på Gesällnivå eller högre, eller genom improviserad kirurgi som omedelbart orsakar 2T6 skada (Bepansring skyddar ej)."
+  },
+  "id": "mystiskkr55"
+}
+
 ]
