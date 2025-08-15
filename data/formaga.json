@@ -2256,7 +2256,7 @@
     }
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande dirigera handlingar mot ett samlingsmål inom hör- eller synhåll. När två olika allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
+    "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande <- Försvar göra ett anfall som dirigerar handlingar mot ett samlingsmål. När två andra allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
     "Gesäll": "Handling: Reaktiv. Om den andra aktiva handlingen av en allierad denna runda lyckas mot samlingsmålet får du utse en allierad inom räckvidd som får göra ett frislag mot samma mål (närstrid om inom närstridsavstånd, annars avståndsvapen om laddat).",
     "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets bepansring."
   }
