@@ -715,5 +715,16 @@
       "typ": ["Ritual"],
       "ark_trad": ["Häxkonst"]
     }
+  },
+
+  {
+    "id": "ri76",
+    "namn": "Lockelse",
+    "beskrivning": "Tradition: Trollsång\nI forna tider använde trollen denna kulande, svävande melodi för att kalla till sig varandra, inför förestående hot eller i samband med viktiga högtider. Ofta stämde andra trollsångare in i låten medan de vandrade mot den plats där sjungandet startat, och på så sätt kunde väldigt många individer nås med lockelsens budskap.\nDen sjungande mystikern måste välja vilken melodi han eller hon ska sjunga. Det finns en sång för varje familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se tabell 30 på sidan 209 i Symbaroums grundbok). Alla varelser av den utvalda familjen som befinner sig inom en dagsmarsch avstånd från sångaren känner sig kallade dit. Den som hör sången är dock helt fri att ignorera lockelsen om denne tycker sig ha viktigare ärenden på annat håll.",
+    "taggar": {
+      "typ": ["Ritual"],
+      "ark_trad": ["Trollsång"]
+    }
   }
+
 ]
