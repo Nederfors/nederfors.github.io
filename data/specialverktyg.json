@@ -264,16 +264,6 @@
 },
 {
   "id": "sp16",
-  "namn": "Alkemikit",
-  "beskrivning": "Kompakt fältset med brännare, små retorter, pipetter och mortel. Ger +1 på framgångsslag i Alkemi.",
-  "taggar": {
-    "typ": ["Specialverktyg"]
-  },
-  "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
-  "stat": { "vikt": 1.0 }
-},
-{
-  "id": "sp17",
   "namn": "Dyrksats",
   "beskrivning": "Finmekaniska dyrkar, spännstift, fjäderkrok och polerad spegelplåt för insyn i lås. Ger +1 på framgångsslag för dyrkning och tyst öppning; enkla fällmekanismer kan kringgås.",
   "taggar": {
@@ -283,7 +273,7 @@
   "stat": { "vikt": 1.0 }
 },
 {
-  "id": "sp18",
+  "id": "sp17",
   "namn": "Spejarglas med grålinser",
   "beskrivning": "Stöttålig kikare med grålinser och avståndsskala. Ger +1 på framgångsslag i spaning på långt håll och tidig hotidentifiering.",
   "taggar": {
@@ -293,7 +283,7 @@
   "stat": { "vikt": 1.0 }
 },
 {
-  "id": "sp19",
+  "id": "sp18",
   "namn": "Detektiv-kit",
   "beskrivning": "Markörpinnar, knutlina, krita, gjutram för fotspår och glasburkar för spårprov. Ger +1 på framgångsslag för att följa spår i svår terräng och dåligt väder.",
   "taggar": {
