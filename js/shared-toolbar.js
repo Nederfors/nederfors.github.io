@@ -325,6 +325,17 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Pris ---------- -->
+      <div id="pricePopup">
+        <div class="popup-inner">
+          <h3>Multiplicera pris</h3>
+          <input id="priceFactor" type="number" step="0.1" placeholder="Faktor">
+          <div id="priceItemList"></div>
+          <button id="priceApply" class="char-btn">Verkställ</button>
+          <button id="priceCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup Alkemistniv\u00e5 ---------- -->
       <div id="alcPopup">
         <div class="popup-inner">
@@ -505,7 +516,7 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','qtyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','qtyPopup','pricePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

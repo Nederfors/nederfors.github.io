@@ -357,6 +357,54 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function openPricePopup() {
+    const pop    = bar.shadowRoot.getElementById('pricePopup');
+    const inEl   = bar.shadowRoot.getElementById('priceFactor');
+    const list   = bar.shadowRoot.getElementById('priceItemList');
+    const apply  = bar.shadowRoot.getElementById('priceApply');
+    const cancel = bar.shadowRoot.getElementById('priceCancel');
+
+    inEl.value = '';
+    const inv = storeHelper.getInventory(store);
+    const nameMap = makeNameMap(inv);
+    list.innerHTML = inv
+      .map((row,i) => `
+        <label><input type="checkbox" data-idx="${i}"> ${nameMap.get(row)}</label>`)
+      .join('');
+
+    pop.classList.add('open');
+
+    const close = () => {
+      pop.classList.remove('open');
+      apply.removeEventListener('click', onApply);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      list.innerHTML = '';
+      inEl.value = '';
+    };
+    const onApply = () => {
+      const factor = parseFloat(inEl.value);
+      if (Number.isNaN(factor)) return;
+      const checks = [...list.querySelectorAll('input[type="checkbox"][data-idx]:checked')];
+      checks.forEach(chk => {
+        const idx = Number(chk.dataset.idx);
+        const row = inv[idx];
+        row.priceMult = (row.priceMult || 1) * factor;
+      });
+      saveInventory(inv);
+      renderInventory();
+      close();
+    };
+    const onCancel = () => { close(); };
+    const onOutside = e => {
+      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    apply.addEventListener('click', onApply);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+  }
+
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
@@ -406,6 +454,7 @@
         else            price *= myst ? 10 : 5;
       }
     });
+    price *= row.priceMult || 1;
     const free = Math.min(Number(row.gratis || 0), row.qty);
     const totalO = Math.max(0, price * row.qty - base * free);
     return oToMoney(totalO);
@@ -644,6 +693,7 @@
           <div class="inv-buttons">
             <button id="addCustomBtn" class="char-btn icon" title="Nytt föremål">🆕</button>
             <button id="manageMoneyBtn" class="char-btn icon" title="Hantera pengar">💰</button>
+            <button id="multiPriceBtn" class="char-btn icon" title="Multiplicera pris">💸</button>
             <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
             <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
           </div>
@@ -1132,11 +1182,13 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
 
   function bindMoney() {
     const manageBtn = $T('manageMoneyBtn');
+    const multiBtn  = $T('multiPriceBtn');
     const resetBtn  = $T('moneyResetBtn');
     const clearBtn  = $T('clearInvBtn');
-    if (!manageBtn || !resetBtn || !clearBtn) return;
+    if (!manageBtn || !multiBtn || !resetBtn || !clearBtn) return;
 
     manageBtn.onclick = openMoneyPopup;
+    multiBtn.onclick  = openPricePopup;
     resetBtn.onclick = () => {
       storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
       renderInventory();
@@ -1164,6 +1216,7 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
     openCustomPopup,
     openMoneyPopup,
     openQtyPopup,
+    openPricePopup,
     recalcArtifactEffects,
     addWellEquippedItems,
     removeWellEquippedItems,
