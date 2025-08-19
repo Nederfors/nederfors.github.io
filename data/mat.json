@@ -44,6 +44,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -58,6 +61,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.8
     },
     "grundpris": {
       "daler": 0,
@@ -74,6 +80,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -88,6 +97,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.8
     },
     "grundpris": {
       "daler": 0,
@@ -140,6 +152,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.5
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -155,6 +170,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.6
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 1,
@@ -169,6 +187,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.6
     },
     "grundpris": {
       "daler": 0,
@@ -203,6 +224,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.6
+    },
     "grundpris": {
       "daler": 1,
       "skilling": 0,
@@ -217,6 +241,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.4
     },
     "grundpris": {
       "daler": 0,
@@ -233,6 +260,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.3
+    },
     "grundpris": {
       "daler": 7,
       "skilling": 0,
@@ -247,6 +277,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.4
     },
     "grundpris": {
       "daler": 0,
@@ -425,6 +458,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.3
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 3,
@@ -439,6 +475,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.4
     },
     "grundpris": {
       "daler": 0,
@@ -455,6 +494,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.4
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 15,
@@ -469,6 +511,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.5
     },
     "grundpris": {
       "daler": 0,
@@ -485,6 +530,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.6
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 22,
@@ -499,6 +547,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.5
     },
     "grundpris": {
       "daler": 0,
@@ -515,6 +566,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.6
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 2,
@@ -529,6 +583,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.6
     },
     "grundpris": {
       "daler": 1,
@@ -545,6 +602,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 6.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 6,
@@ -559,6 +619,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 1.5
     },
     "grundpris": {
       "daler": 0,
@@ -575,6 +638,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 1.0
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 5,
@@ -589,6 +655,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.9
     },
     "grundpris": {
       "daler": 0,
@@ -605,6 +674,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 12,
@@ -620,6 +692,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.8
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 4,
@@ -634,6 +709,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.8
     },
     "grundpris": {
       "daler": 0,
@@ -704,6 +782,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 8,
@@ -755,6 +836,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -769,6 +853,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.6
     },
     "grundpris": {
       "daler": 0,
@@ -785,6 +872,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.5
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -799,6 +889,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.8
     },
     "grundpris": {
       "daler": 0,
@@ -815,6 +908,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -830,6 +926,9 @@
         "Mat"
       ]
     },
+    "stat": {
+      "vikt": 0.7
+    },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
@@ -844,6 +943,9 @@
       "typ": [
         "Mat"
       ]
+    },
+    "stat": {
+      "vikt": 0.6
     },
     "grundpris": {
       "daler": 0,
@@ -887,7 +989,7 @@
       "örtegar": 0
     }
   },
- {
+  {
     "id": "ma56",
     "namn": "Ägg",
     "beskrivning": "Ett redigt hönsaägg. Du behöver äta många ägg för att bli mätt, fler än vad man tror (21 stycken).",
