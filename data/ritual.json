@@ -298,7 +298,7 @@
     "beskrivning": "Tradition: Häxkonst\nMystikern kan med ett lyckat Viljestark sjunga en aspekt av mörka Davokar till ro, och kan på så sätt passera en specifik styggelse utan att den reagerar – mystikern och dess allierade blir i princip osynliga för styggelsen. Om mystikern eller hennes allierade uppträder aggressivt bryts ritualen, och detsamma sker om mystikern slutar sjunga för att exempelvis kasta en besvärjelse.",
     "taggar": {
       "typ": ["Ritual"],
-      "ark_trad": ["Häxkonst"],
+      "ark_trad": ["Häxkonst", "Trollsång"],
       "test": ["Viljestark"]
     }
   },
