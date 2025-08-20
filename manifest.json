@@ -1,6 +1,6 @@
 {
-  "name": "Symbaroum Companion",
-  "short_name": "Symbaroum",
+  "name": "Symbapedia",
+  "short_name": "Symbapedia",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#121416",
