@@ -258,8 +258,11 @@ input:focus, select:focus, textarea:focus {
 
 #invList li.card {
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-y;
   user-select: none;
+}
+#invList.drag-mode li.card {
+  touch-action: none;
 }
 #invList li.card.dragging {
   cursor: grabbing;

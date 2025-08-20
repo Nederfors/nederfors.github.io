@@ -1155,9 +1155,11 @@ ${moneyRow}
     }
     if (dom.dragToggle) {
       dom.dragToggle.classList.toggle('danger', dragEnabled);
+      if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
       dom.dragToggle.onclick = () => {
         dragEnabled = !dragEnabled;
         dom.dragToggle.classList.toggle('danger', dragEnabled);
+        if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
       };
     }
     const getRowInfo = (inv, li) => {
