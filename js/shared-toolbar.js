@@ -437,27 +437,32 @@ class SharedToolbar extends HTMLElement {
             <strong>Skriv "lol"</strong> i sökfältet nollställer alla filter.<br>
             <strong>⚙️</strong> öppnar filtermenyn.
           </p>
-          <h3>Filtermenyn</h3>
-          <p>
-            <strong>Ny rollperson</strong> skapar en ny karaktär.<br>
-            <strong>Kopiera rollperson</strong> duplicerar den valda karaktären.<br>
-            <strong>Byt namn</strong> ändrar karaktärens namn.<br>
-            <strong>Ta bort rollperson</strong> raderar karaktären.<br>
-            <strong>Exportera</strong> laddar ner karaktären som JSON-fil.<br>
-            <strong>Importera</strong> läser in en karaktär från JSON-fil.<br>
-            <strong>⚒️ / ⚗️ / 🏺</strong> anger nivå på smed, alkemist och artefaktmakare.<br>
-            <strong>🔭</strong> utvidgar sökningen (OR-filter).<br>
-            <strong>🤏</strong> växlar kompakt listvy.<br>
-            <strong>🏃</strong> låter dig välja försvarskaraktärsdrag manuellt.<br>
-            <strong>ℹ️</strong> visar denna hjälpmeny.
-          </p>
-          <h3>Inventariepanelen</h3>
-          <p>
-            <strong>🆕</strong> lägger till eget föremål.<br>
+            <h3>Filtermenyn</h3>
+            <p>
+              <strong>Välj rollperson</strong> byter aktiv rollperson.<br>
+              <strong>Typ</strong>, <strong>Arketyp</strong> och <strong>Test</strong> filtrerar listor.<br>
+              <strong>Ny rollperson</strong> skapar en ny karaktär.<br>
+              <strong>Kopiera rollperson</strong> duplicerar den valda karaktären.<br>
+              <strong>Byt namn</strong> ändrar karaktärens namn.<br>
+              <strong>Ta bort rollperson</strong> raderar karaktären.<br>
+              <strong>Exportera</strong> laddar ner karaktären som JSON-fil.<br>
+              <strong>Importera</strong> läser in en karaktär från JSON-fil.<br>
+              <strong>⚒️ / ⚗️ / 🏺</strong> anger nivå på smed, alkemist och artefaktmakare.<br>
+              <strong>🔭</strong> utvidgar sökningen (OR-filter).<br>
+              <strong>🤏</strong> växlar kompakt listvy.<br>
+              <strong>🏃</strong> låter dig välja försvarskaraktärsdrag manuellt.<br>
+              <strong>ℹ️</strong> visar denna hjälpmeny.
+            </p>
+            <h3>Inventariepanelen</h3>
+            <p>
+              <strong>▶</strong> kollapsar alla kategorier.<br>
+              <strong>🆕</strong> lägger till eget föremål.<br>
               <strong>💰</strong> justerar pengar.<br>
-            <strong>🧹</strong> tömmer inventariet.<br>
-            <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.
-          </p>
+              <strong>💸</strong> multiplicerar priset för valda föremål.<br>
+              <strong>🧹</strong> tömmer inventariet.<br>
+              <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.<br>
+              <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.
+            </p>
           <h3>Egenskapspanelen</h3>
           <p>Ange total XP och få en summering av valda förmågor. Knappen "Förmågor: X" filtrerar listan och aktiverar filtret "Endast valda". Ta bort filtret genom att klicka på taggen "Endast valda".</p>
           <h3>Rollpersonspanelen</h3>
