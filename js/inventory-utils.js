@@ -979,6 +979,7 @@ function openVehiclePopup(preselectId) {
             <button id="multiPriceBtn" class="char-btn icon" title="Multiplicera pris">💸</button>
             <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
             ${vehicleBtns}
+            <button id="dragToggle" class="char-btn icon" title="Ändra ordning">🔀</button>
             <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
           </div>
           <div class="formal-section">
@@ -1105,6 +1106,7 @@ ${moneyRow}
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
     dom.invBadge.textContent    = allInv.reduce((s, r) => s + r.qty, 0);
     dom.unusedOut = $T('unusedOut');
+    dom.dragToggle = $T('dragToggle');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
     if (dom.collapseAllBtn) updateCollapseBtnState();
     bindInv();
