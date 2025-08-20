@@ -1178,13 +1178,6 @@ ${moneyRow}
       if (cardTitle) {
         const li = cardTitle.closest('li.card');
         li.classList.toggle('compact');
-        if (!li.classList.contains('compact')) {
-          let parent = li.parentElement.closest('li.card.compact');
-          while (parent) {
-            parent.classList.remove('compact');
-            parent = parent.parentElement.closest('li.card.compact');
-          }
-        }
         updateCollapseBtnState();
         return;
       }
