@@ -1440,20 +1440,7 @@ select.level {
 }
 
 /* Gör samtliga popups scrollbara om innehållet blir för högt */
-#qualPopup .popup-inner,
-#masterPopup .popup-inner,
-#traitPopup .popup-inner,
-#customPopup .popup-inner,
-#pricePopup .popup-inner,
-#vehiclePopup .popup-inner,
-#deleteContainerPopup .popup-inner,
-#alcPopup .popup-inner,
-#smithPopup .popup-inner,
-#artPopup .popup-inner,
-#defensePopup .popup-inner,
-#exportPopup .popup-inner,
-#nilasPopup .popup-inner,
-#charPopup .popup-inner {
+.popup-inner {
   max-height: 100%;
   overflow-y: auto;
 }
@@ -1690,6 +1677,8 @@ textarea.auto-resize {
   margin: 10vh auto;
   padding: 1.6rem;
   color: var(--txt);
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 #onlineModal .modal-actions {
