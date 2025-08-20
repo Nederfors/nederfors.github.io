@@ -617,6 +617,77 @@ function openVehiclePopup(preselectId) {
     pop.addEventListener('click', onOutside);
   }
 
+  function openSaveFreePopup() {
+    const pop    = bar.shadowRoot.getElementById('saveFreePopup');
+    const cancel = bar.shadowRoot.getElementById('saveFreeCancel');
+    const confirm= bar.shadowRoot.getElementById('saveFreeConfirm');
+
+    pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
+
+    const close = () => {
+      pop.classList.remove('open');
+      cancel.removeEventListener('click', onCancel);
+      confirm.removeEventListener('click', onConfirm);
+      pop.removeEventListener('click', onOutside);
+    };
+    const onConfirm = () => { massFreeAndSave(); close(); };
+    const onCancel  = () => { close(); };
+    const onOutside = e => {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    cancel.addEventListener('click', onCancel);
+    confirm.addEventListener('click', onConfirm);
+    pop.addEventListener('click', onOutside);
+  }
+
+  function massFreeAndSave() {
+    const allInv = storeHelper.getInventory(store);
+    const flat   = flattenInventory(allInv);
+    const cash   = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+
+    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+    const skillForge = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Smideskonst');
+    const forgeLvl = Math.max(partyForge, skillForge);
+    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+    const skillAlc = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Alkemist');
+    const alcLevel = Math.max(partyAlc, skillAlc);
+    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+    const skillArt = storeHelper.abilityLevel(
+      storeHelper.getCurrentList(store), 'Artefaktmakande');
+    const artLevel = Math.max(partyArt, skillArt);
+
+    const tot = flat.reduce((t, row) => {
+      const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
+      t.d += m.d; t.s += m.s; t.o += m.o;
+      return t;
+    }, { d:0, s:0, o:0 });
+    tot.s += Math.floor(tot.o / OBASE); tot.o %= OBASE;
+    tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
+    const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
+    const diff  = oToMoney(Math.max(0, diffO));
+    storeHelper.setMoney(store, diff);
+
+    flat.forEach(row => {
+      row.gratis = row.qty;
+      const entry = getEntry(row.name);
+      const removed = row.removedKval ?? [];
+      const baseQuals = [
+        ...(entry.taggar?.kvalitet ?? []),
+        ...splitQuals(entry.kvalitet)
+      ];
+      const baseQ = baseQuals.filter(q => !removed.includes(q));
+      const allQ = [...baseQ, ...(row.kvaliteter || [])];
+      row.gratisKval = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+    });
+
+    saveInventory(allInv);
+    renderInventory();
+  }
+
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
@@ -987,6 +1058,7 @@ function openVehiclePopup(preselectId) {
             <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
             ${vehicleBtns}
             <button id="dragToggle" class="char-btn icon" title="Ändra ordning">🔀</button>
+            <button id="saveFreeBtn" class="char-btn icon" title="Spara och gör allt gratis">💾</button>
             <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
           </div>
           <div class="formal-section">
@@ -1528,10 +1600,12 @@ ${moneyRow}
     const multiBtn  = $T('multiPriceBtn');
     const resetBtn  = $T('moneyResetBtn');
     const clearBtn  = $T('clearInvBtn');
-    if (!manageBtn || !multiBtn || !resetBtn || !clearBtn) return;
+    const saveFreeBtn = $T('saveFreeBtn');
+    if (!manageBtn || !multiBtn || !resetBtn || !clearBtn || !saveFreeBtn) return;
 
     manageBtn.onclick = openMoneyPopup;
     multiBtn.onclick  = openPricePopup;
+    saveFreeBtn.onclick = openSaveFreePopup;
     resetBtn.onclick = () => {
       storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
       renderInventory();
@@ -1570,6 +1644,8 @@ ${moneyRow}
     openQtyPopup,
     openPricePopup,
     openVehiclePopup,
+    openSaveFreePopup,
+    massFreeAndSave,
     recalcArtifactEffects,
     addWellEquippedItems,
     removeWellEquippedItems,
