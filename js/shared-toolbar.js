@@ -478,12 +478,14 @@ class SharedToolbar extends HTMLElement {
             <h3>Inventariepanelen</h3>
             <p>
               <strong>▶</strong> kollapsar alla kategorier.<br>
+              <strong>🔀</strong> växlar dragläge för att ändra ordningen på föremål.<br>
               <strong>🆕</strong> lägger till eget föremål.<br>
               <strong>💰</strong> justerar pengar.<br>
               <strong>💸</strong> multiplicerar priset för valda föremål.<br>
               <strong>🧹</strong> tömmer inventariet.<br>
               <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.<br>
-              <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.
+              <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.<br>
+              <strong>🛞 / 🐎</strong> lastar markerade föremål på valt färdmedel.
             </p>
           <h3>Egenskapspanelen</h3>
           <p>Ange total XP och få en summering av valda förmågor. Knappen "Förmågor: X" filtrerar listan och aktiverar filtret "Endast valda". Ta bort filtret genom att klicka på taggen "Endast valda".</p>
@@ -505,6 +507,7 @@ class SharedToolbar extends HTMLElement {
             <strong>🆓</strong> gör ett föremål gratis.<br>
             <strong>💔</strong> visar konflikter.<br>
             <strong>↔</strong> växlar artefaktens kostnad mellan XP och permanent korruption.<br>
+            <strong>⬆️</strong> flyttar föremålet från färdmedlet tillbaka till inventariet.<br>
             <strong>🗑</strong> tar bort posten helt.
           </p>
           <h3>Installera som webapp</h3>
