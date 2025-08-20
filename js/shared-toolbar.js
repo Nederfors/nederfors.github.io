@@ -566,9 +566,19 @@ class SharedToolbar extends HTMLElement {
     if (!panel) return;
     const isOpen = panel.classList.contains('open');
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
-    if (!isOpen) panel.classList.add('open');
+    if (!isOpen) {
+      panel.classList.add('open');
+      panel.scrollTop = 0;
+    }
   }
-  open(id)  { Object.values(this.panels).forEach(p=>p.classList.remove('open')); this.panels[id]?.classList.add('open'); }
+  open(id)  {
+    Object.values(this.panels).forEach(p=>p.classList.remove('open'));
+    const panel = this.panels[id];
+    if (panel) {
+      panel.classList.add('open');
+      panel.scrollTop = 0;
+    }
+  }
   close(id) { this.panels[id]?.classList.remove('open'); }
 
   updateToolbarLinks() {

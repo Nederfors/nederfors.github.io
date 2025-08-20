@@ -36,6 +36,7 @@
     }
 
     panel.classList.add('open');
+    panel.scrollTop = 0;
     outsideHandler = e => {
       if(!panel.contains(e.target)){
         close();

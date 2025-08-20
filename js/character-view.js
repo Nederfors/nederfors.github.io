@@ -189,7 +189,8 @@ function initCharacter() {
 
   summaryBtn.addEventListener('click',()=>{
     renderSummary();
-    summaryPanel.classList.toggle('open');
+    const isOpen = summaryPanel.classList.toggle('open');
+    if (isOpen) summaryPanel.scrollTop = 0;
   });
   summaryClose.addEventListener('click',()=>summaryPanel.classList.remove('open'));
   document.addEventListener('click',e=>{
@@ -493,6 +494,7 @@ function initCharacter() {
         ));
       renderConflicts(others);
       conflictPanel.classList.add('open');
+      conflictPanel.scrollTop = 0;
       return;
     }
     const infoBtn=e.target.closest('button[data-info]');

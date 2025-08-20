@@ -438,6 +438,7 @@ function openAlchemistPopup(cb) {
   const box  = bar.shadowRoot.getElementById('alcOptions');
   const cls  = bar.shadowRoot.getElementById('alcCancel');
   pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
     pop.classList.remove('open');
     box.removeEventListener('click', onBtn);
@@ -468,6 +469,7 @@ function openSmithPopup(cb) {
   const box  = bar.shadowRoot.getElementById('smithOptions');
   const cls  = bar.shadowRoot.getElementById('smithCancel');
   pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
     pop.classList.remove('open');
     box.removeEventListener('click', onBtn);
@@ -498,6 +500,7 @@ function openArtefacterPopup(cb) {
   const box  = bar.shadowRoot.getElementById('artOptions');
   const cls  = bar.shadowRoot.getElementById('artCancel');
   pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
     pop.classList.remove('open');
     box.removeEventListener('click', onBtn);
@@ -528,6 +531,7 @@ function openDefensePopup(cb) {
   const box  = bar.shadowRoot.getElementById('defenseOptions');
   const cls  = bar.shadowRoot.getElementById('defenseCancel');
   pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
     pop.classList.remove('open');
     box.removeEventListener('click', onBtn);
@@ -600,6 +604,7 @@ function openExportPopup(cb) {
   const opts = bar.shadowRoot.getElementById('exportOptions');
   const cls  = bar.shadowRoot.getElementById('exportCancel');
   pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
     pop.classList.remove('open');
     cls.removeEventListener('click', onCancel);
@@ -640,6 +645,7 @@ function openNilasPopup(cb) {
   const yes = bar.shadowRoot.getElementById('nilasYes');
   const no  = bar.shadowRoot.getElementById('nilasNo');
   pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
     pop.classList.remove('open');
     yes.removeEventListener('click', onYes);
@@ -753,7 +759,10 @@ function ensureCharacterSelected() {
 
     content.append(importBtn, btnNew);
   }
-  setTimeout(() => pop.classList.add('open'), 0);
+  setTimeout(() => {
+    pop.classList.add('open');
+    (pop.querySelector('.popup-inner') || pop).scrollTop = 0;
+  }, 0);
 }
 
 

@@ -33,6 +33,7 @@
       return g.names.length > 1 ? `<div class="or-group">${html}</div>` : html;
     }).join('');
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
     const nameSels = box.querySelectorAll('select[data-ability]');
     const levelSels = box.querySelectorAll('select[data-name]');
 

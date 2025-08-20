@@ -14,6 +14,7 @@
     const cls=pop.querySelector('#bloodCancel');
     box.innerHTML=options.map((n,i)=>`<button data-i="${i}" class="char-btn">${n}</button>`).join('');
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
     function close(){
       pop.classList.remove('open');
       box.innerHTML='';
