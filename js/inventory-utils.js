@@ -93,6 +93,17 @@
     }, []);
   }
 
+  function flattenInventoryWithPath(arr, prefix = []) {
+    return arr.reduce((acc, row, idx) => {
+      const path = [...prefix, idx];
+      acc.push({ row, path });
+      if (Array.isArray(row.contains)) {
+        acc.push(...flattenInventoryWithPath(row.contains, path));
+      }
+      return acc;
+    }, []);
+  }
+
   function recalcArtifactEffects() {
     const inv = flattenInventory(storeHelper.getInventory(store));
     const effects = inv.reduce((acc, row) => {
@@ -333,8 +344,11 @@
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
-    const nameMap = makeNameMap(inv);
-    list.innerHTML = inv.map((row,i)=> `<button data-idx="${i}" class="char-btn">${nameMap.get(row)}</button>`).join('');
+    const flat = flattenInventoryWithPath(inv);
+    const nameMap = makeNameMap(flat.map(f => f.row));
+    list.innerHTML = flat
+      .map(obj => `<button data-path="${obj.path.join('.')}" class="char-btn">${nameMap.get(obj.row)}</button>`)
+      .join('');
 
     pop.classList.add('open');
 
@@ -347,13 +361,18 @@
       inEl.value = '';
     };
     const onBtn = e => {
-      const b = e.target.closest('button[data-idx]');
+      const b = e.target.closest('button[data-path]');
       if (!b) return;
-      const realIdx = Number(b.dataset.idx);
       const qty = parseInt(inEl.value, 10);
       if (!qty || qty <= 0) return;
-
-      const row   = inv[realIdx];
+      const path = b.dataset.path.split('.').map(Number);
+      let parentArr = inv;
+      let row = null;
+      path.forEach((pIdx, i) => {
+        row = parentArr[pIdx];
+        if (i < path.length - 1) parentArr = row.contains || [];
+      });
+      if (!row) return;
       const entry = getEntry(row.name);
       const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter']
         .some(t => entry.taggar?.typ?.includes(t));
@@ -362,7 +381,7 @@
         for (let i = 0; i < qty; i++) {
           const clone = JSON.parse(JSON.stringify(row));
           clone.qty = 1;
-          inv.push(clone);
+          parentArr.push(clone);
         }
       } else {
         row.qty += qty;
@@ -391,10 +410,11 @@
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
-    const nameMap = makeNameMap(inv);
-    list.innerHTML = inv
-      .map((row,i) => `
-        <label class="price-item"><span>${nameMap.get(row)}</span><input type="checkbox" data-idx="${i}"></label>`)
+    const flat = flattenInventoryWithPath(inv);
+    const nameMap = makeNameMap(flat.map(f => f.row));
+    list.innerHTML = flat
+      .map(obj => `
+        <label class="price-item"><span>${nameMap.get(obj.row)}</span><input type="checkbox" data-path="${obj.path.join('.')}"></label>`)
       .join('');
 
     pop.classList.add('open');
@@ -410,11 +430,16 @@
     const onApply = () => {
       const factor = parseFloat(inEl.value);
       if (Number.isNaN(factor)) return;
-      const checks = [...list.querySelectorAll('input[type="checkbox"][data-idx]:checked')];
+      const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')];
       checks.forEach(chk => {
-        const idx = Number(chk.dataset.idx);
-        const row = inv[idx];
-        row.priceMult = (row.priceMult || 1) * factor;
+        const path = chk.dataset.path.split('.').map(Number);
+        let arr = inv;
+        let row = null;
+        path.forEach((idx, i) => {
+          row = arr[idx];
+          if (i < path.length - 1) arr = row.contains || [];
+        });
+        if (row) row.priceMult = (row.priceMult || 1) * factor;
       });
       saveInventory(inv);
       renderInventory();
@@ -928,13 +953,33 @@ ${moneyRow}
 
           const sublist = (row.contains && row.contains.length)
             ? `<ul class="card-list vehicle-items">${row.contains.map((c,j)=>{
+                const centry = getEntry(c.name);
+                const ctagger = centry.taggar ?? {};
+                const ctagTyp = ctagger.typ ?? [];
                 const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
                 const cWeight = formatWeight(calcRowWeight(c));
                 const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
-                return `<li class="card" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}">
+                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter'].some(t => ctagTyp.includes(t));
+                const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => ctagTyp.includes(t));
+                const cBtnRow = cIsGear
+                  ? `<button data-act="del" class="char-btn danger">🗑</button>`
+                  : `<button data-act="del" class="char-btn danger">🗑</button>
+                     <button data-act="sub" class="char-btn">–</button>
+                     <button data-act="add" class="char-btn">+</button>`;
+                const cFreeBtn = `<button data-act="free" class="char-btn${c.gratis? ' danger':''}">🆓</button>`;
+                const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
+                const cToggleBtn = ctagTyp.includes('Artefakter') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+                return `<li class="card compact" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}">
                   <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
                   <div class="card-desc">Pris: ${cPrice}<br>Vikt: ${cWeight}</div>
-                  <div class="inv-controls"><button data-act="vehicleRemove" class="char-btn">⬆️</button></div>
+                  <div class="inv-controls">
+                    ${cBtnRow}
+                    ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
+                    ${cFreeQBtn}
+                    ${cToggleBtn}
+                    ${cFreeBtn}
+                    <button data-act="vehicleRemove" class="char-btn">⬆️</button>
+                  </div>
                 </li>`;}).join('')}</ul>`
             : '';
 
@@ -1010,15 +1055,26 @@ ${moneyRow}
         updateCollapseBtnState();
       };
     }
+    const getRowInfo = (inv, li) => {
+      const idx = Number(li.dataset.idx);
+      if (!Number.isNaN(idx)) return { row: inv[idx], parentArr: inv, idx };
+      const p = Number(li.dataset.parent);
+      const c = Number(li.dataset.child);
+      if (!Number.isNaN(p) && !Number.isNaN(c)) {
+        const arr = inv[p].contains || [];
+        return { row: arr[c], parentArr: arr, idx: c };
+      }
+      return { row: null, parentArr: inv, idx: -1 };
+    };
     dom.invList.onclick = e => {
       // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
       const removeTagBtn = e.target.closest('.tag.removable');
       if (removeTagBtn) {
         const li   = removeTagBtn.closest('li');
-        const realIdx  = Number(li.dataset.idx);
         const inv  = storeHelper.getInventory(store);
+        const { row } = getRowInfo(inv, li);
+        if (!row) return;
         if (removeTagBtn.dataset.free) {
-          const row = inv[realIdx];
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
@@ -1030,21 +1086,21 @@ ${moneyRow}
         } else if (removeTagBtn.dataset.qual) {
           const q    = removeTagBtn.dataset.qual;
           if (removeTagBtn.classList.contains('free')) {
-            inv[realIdx].gratisKval = (inv[realIdx].gratisKval || []).filter(x => x !== q);
+            row.gratisKval = (row.gratisKval || []).filter(x => x !== q);
           } else {
             const isBase = removeTagBtn.dataset.base === '1';
             if (isBase) {
-              inv[realIdx].removedKval = inv[realIdx].removedKval || [];
-              if (!inv[realIdx].removedKval.includes(q)) inv[realIdx].removedKval.push(q);
-            } else if (inv[realIdx]?.kvaliteter) {
-              inv[realIdx].kvaliteter = inv[realIdx].kvaliteter.filter(x => x !== q);
+              row.removedKval = row.removedKval || [];
+              if (!row.removedKval.includes(q)) row.removedKval.push(q);
+            } else if (row?.kvaliteter) {
+              row.kvaliteter = row.kvaliteter.filter(x => x !== q);
             }
-            if (inv[realIdx].gratisKval) {
-              inv[realIdx].gratisKval = inv[realIdx].gratisKval.filter(x => x !== q);
+            if (row.gratisKval) {
+              row.gratisKval = row.gratisKval.filter(x => x !== q);
             }
           }
         } else if (removeTagBtn.dataset.mult) {
-          delete inv[realIdx].priceMult;
+          delete row.priceMult;
         }
         saveInventory(inv);
         renderInventory();
@@ -1064,46 +1120,42 @@ ${moneyRow}
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
 
-        const act = btn.dataset.act;
-        if (act === 'vehicleRemove') {
-          const parent = Number(btn.closest('li').dataset.parent);
-          const child = Number(btn.closest('li').dataset.child);
-          const inv = storeHelper.getInventory(store);
-          if (!Number.isNaN(parent) && !Number.isNaN(child)) {
-            const [moved] = (inv[parent].contains || []).splice(child, 1);
-            if (moved) inv.push(moved);
-            saveInventory(inv);
-            renderInventory();
-          }
-          return;
-        }
-        if (act === 'moneyPlus' || act === 'moneyMinus') {
-          const cur = storeHelper.getMoney(store);
-          const delta = act === 'moneyPlus' ? 1 : -1;
-          const newD = (cur.daler || 0) + delta;
-          if (newD < 0) {
-            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          } else {
-            storeHelper.setMoney(store, { ...cur, daler: newD });
-          }
+      const act = btn.dataset.act;
+      const li  = btn.closest('li');
+      const inv = storeHelper.getInventory(store);
+      const { row, parentArr, idx } = getRowInfo(inv, li);
+      if (act === 'vehicleRemove') {
+        if (parentArr !== inv && idx >= 0) {
+          const [moved] = parentArr.splice(idx, 1);
+          if (moved) inv.push(moved);
+          saveInventory(inv);
           renderInventory();
-          return;
         }
-        const li  = btn.closest('li');
-        const realIdx = Number(li.dataset.idx);
-        const inv = storeHelper.getInventory(store);
+        return;
+      }
+      if (act === 'moneyPlus' || act === 'moneyMinus') {
+        const cur = storeHelper.getMoney(store);
+        const delta = act === 'moneyPlus' ? 1 : -1;
+        const newD = (cur.daler || 0) + delta;
+        if (newD < 0) {
+          storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        } else {
+          storeHelper.setMoney(store, { ...cur, daler: newD });
+        }
+        renderInventory();
+        return;
+      }
 
       // 3a) Röd soptunna tar bort hela posten
       if (act === 'del') {
-        if (realIdx >= 0) {
-          const row = inv[realIdx];
+        if (row) {
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
           if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
             if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
           }
-          inv.splice(realIdx, 1);
+          parentArr.splice(idx, 1);
           saveInventory(inv);
           renderInventory();
         }
@@ -1137,13 +1189,13 @@ ${moneyRow}
               const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
               if (trait) obj.trait = trait;
               if (indiv) {
-                inv.push(obj);
-              } else if (realIdx >= 0 && (!trait || inv[realIdx].trait === trait)) {
-                inv[realIdx].qty++;
-              } else if (realIdx >= 0 && trait && inv[realIdx].trait !== trait) {
-                inv.push(obj);
+                parentArr.push(obj);
+              } else if (row && (!trait || row.trait === trait)) {
+                row.qty++;
+              } else if (row && trait && row.trait !== trait) {
+                parentArr.push(obj);
               } else {
-                inv.push(obj);
+                parentArr.push(obj);
               }
               saveInventory(inv);
               renderInventory();
@@ -1163,8 +1215,7 @@ ${moneyRow}
         }
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
-        if (realIdx >= 0) {
-          const row = inv[realIdx];
+        if (row) {
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
@@ -1177,7 +1228,7 @@ ${moneyRow}
             if (row.gratis > row.qty) row.gratis = row.qty;
             if (removingPerkItem && pg > 0) row.perkGratis = pg - 1;
           } else {
-            inv.splice(realIdx, 1);
+            parentArr.splice(idx, 1);
           }
           saveInventory(inv);
           renderInventory();
@@ -1191,18 +1242,18 @@ ${moneyRow}
         if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
-          if (realIdx >= 0 && qualities[qIdx]) {
-            inv[realIdx].kvaliteter = inv[realIdx].kvaliteter || [];
+          if (row && qualities[qIdx]) {
+            row.kvaliteter = row.kvaliteter || [];
             const qn = qualities[qIdx].namn;
-            const removed = inv[realIdx].removedKval ?? [];
+            const removed = row.removedKval ?? [];
             const baseQuals = [
               ...(entry.taggar?.kvalitet ?? []),
               ...splitQuals(entry.kvalitet)
             ];
             const baseQ = baseQuals.filter(q => !removed.includes(q));
-            const existing = [...baseQ, ...inv[realIdx].kvaliteter];
+            const existing = [...baseQ, ...row.kvaliteter];
             if (!existing.includes(qn)) {
-              inv[realIdx].kvaliteter.push(qn);
+              row.kvaliteter.push(qn);
               saveInventory(inv);
               renderInventory();
             }
@@ -1213,18 +1264,18 @@ ${moneyRow}
 
       // "freeQual" markerar äldsta icke-gratis kvalitet som gratis
       if (act === 'freeQual') {
-        const removed = inv[realIdx].removedKval ?? [];
+        const removed = row.removedKval ?? [];
         const baseQuals = [
           ...(entry.taggar?.kvalitet ?? []),
           ...splitQuals(entry.kvalitet)
         ];
         const baseQ = baseQuals.filter(q => !removed.includes(q));
-        const allQ = [...baseQ, ...(inv[realIdx].kvaliteter ?? [])];
+        const allQ = [...baseQ, ...(row.kvaliteter ?? [])];
         if (!allQ.length) return;
-        inv[realIdx].gratisKval = (inv[realIdx].gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-        const qName = allQ.find(q => !inv[realIdx].gratisKval.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
-        if (!qName) return;                  // alla redan gratis eller ej giltiga
-        inv[realIdx].gratisKval.push(qName);
+        row.gratisKval = (row.gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+        const qName = allQ.find(q => !row.gratisKval.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
+        if (!qName) return;
+        row.gratisKval.push(qName);
         saveInventory(inv);
         renderInventory();
         return;
@@ -1232,8 +1283,8 @@ ${moneyRow}
 
       // "toggleEffect" växlar artefaktens effekt
       if (act === 'toggleEffect') {
-        const eff = inv[realIdx].artifactEffect || entry.artifactEffect || 'corruption';
-        inv[realIdx].artifactEffect = eff === 'corruption' ? 'xp' : 'corruption';
+        const eff = row.artifactEffect || entry.artifactEffect || 'corruption';
+        row.artifactEffect = eff === 'corruption' ? 'xp' : 'corruption';
         saveInventory(inv);
         renderInventory();
         return;
@@ -1241,8 +1292,7 @@ ${moneyRow}
 
       // "free" ökar gratis-räknaren (loopar när den nått max)
       if (act === 'free') {
-        if (realIdx >= 0) {
-          const row = inv[realIdx];
+        if (row) {
           let newGratis = Number(row.gratis || 0) + 1;
           if (newGratis > row.qty) newGratis = 0;
 
