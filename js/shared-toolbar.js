@@ -347,6 +347,16 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
+      <div id="deleteContainerPopup">
+        <div class="popup-inner">
+          <p>Du håller på att ta bort ett föremål som innehåller föremål. Vill du ta bort föremålen i föremålet?</p>
+          <button id="deleteContainerAll" class="char-btn danger">Ja, ta bort allt</button>
+          <button id="deleteContainerOnly" class="char-btn">Ta bara bort föremålet</button>
+          <button id="deleteContainerCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup Alkemistniv\u00e5 ---------- -->
       <div id="alcPopup">
         <div class="popup-inner">
