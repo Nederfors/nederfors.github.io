@@ -548,7 +548,7 @@ select.level {
     padding: .15rem .25rem;
     font-size: .45rem;
   }
-  .inv-buttons { gap: .3rem; flex-wrap: nowrap; }
+  .inv-buttons { gap: .3rem; flex-wrap: wrap; }
   .inv-buttons .char-btn {
     padding: .35rem .6rem;
     font-size: .9rem;
