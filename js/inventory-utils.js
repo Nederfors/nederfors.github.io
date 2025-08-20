@@ -5,6 +5,18 @@
 (function(window){
   const F = { typ: '' };
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+  const VEHICLE_EMOJI = {
+    'Vagn': '🚚',
+    'Släde': '🛷',
+    'Roddbåt': '🚣',
+    'Ridhäst, lätt': '🐎',
+    'Ridhäst, tung': '🐴',
+    'Mulåsna': '🫏',
+    'Kärra': '🛒',
+    'Kanot': '🛶',
+    'Galär': '⛵',
+    'Flodbåt': '🛥️'
+  };
   const moneyToO = m => (m.daler||0)*SBASE*OBASE + (m.skilling||0)*OBASE + (m['örtegar']||0);
   let dragIdx = null;
   let dragEl = null;
@@ -73,8 +85,16 @@
     }
   }
 
+  function flattenInventory(arr) {
+    return arr.reduce((acc, row) => {
+      acc.push(row);
+      if (Array.isArray(row.contains)) acc.push(...flattenInventory(row.contains));
+      return acc;
+    }, []);
+  }
+
   function recalcArtifactEffects() {
-    const inv = storeHelper.getInventory(store);
+    const inv = flattenInventory(storeHelper.getInventory(store));
     const effects = inv.reduce((acc, row) => {
       const entry = getEntry(row.name);
       const tagTyp = entry.taggar?.typ || [];
@@ -105,9 +125,14 @@
   }
 
   function sortAllInventories() {
+    const sortRec = arr => {
+      if (!Array.isArray(arr)) return;
+      arr.sort(sortInvEntry);
+      arr.forEach(r => sortRec(r.contains));
+    };
     Object.keys(store.data || {}).forEach(id => {
       const arr = store.data[id]?.inventory;
-      if (Array.isArray(arr)) arr.sort(sortInvEntry);
+      sortRec(arr);
     });
     storeHelper.save(store);
   }
@@ -405,6 +430,71 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function openVehiclePopup(preselectId) {
+    const pop    = bar.shadowRoot.getElementById('vehiclePopup');
+    const sel    = bar.shadowRoot.getElementById('vehicleSelect');
+    const list   = bar.shadowRoot.getElementById('vehicleItemList');
+    const apply  = bar.shadowRoot.getElementById('vehicleApply');
+    const cancel = bar.shadowRoot.getElementById('vehicleCancel');
+
+    const inv = storeHelper.getInventory(store);
+    const vehicles = inv
+      .map((row,i)=>({row, entry:getEntry(row.name), idx:i}))
+      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
+    if (!vehicles.length) return;
+
+    sel.innerHTML = vehicles
+      .map(v => `<option value="${v.idx}">${v.entry.namn}</option>`)
+      .join('');
+    if (preselectId) {
+      const found = vehicles.find(v => v.entry.id === preselectId);
+      if (found) sel.value = String(found.idx);
+    }
+
+    const movable = inv
+      .map((row,i)=>({row,i}))
+      .filter(v => !(vehicles.some(vh => vh.idx === v.i)));
+    const nameMap = makeNameMap(inv);
+    list.innerHTML = movable
+      .map(m => `<label class="price-item"><span>${nameMap.get(m.row)}</span><input type="checkbox" data-idx="${m.i}"></label>`)
+      .join('');
+
+    pop.classList.add('open');
+
+    const close = () => {
+      pop.classList.remove('open');
+      apply.removeEventListener('click', onApply);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      sel.innerHTML = '';
+      list.innerHTML = '';
+    };
+    const onApply = () => {
+      const vIdx = Number(sel.value);
+      if (Number.isNaN(vIdx)) return;
+      const vehicle = inv[vIdx];
+      vehicle.contains = vehicle.contains || [];
+      const checks = [...list.querySelectorAll('input[type="checkbox"][data-idx]:checked')]
+        .map(ch => Number(ch.dataset.idx))
+        .sort((a,b) => b-a);
+      checks.forEach(idx => {
+        vehicle.contains.push(inv.splice(idx,1)[0]);
+      });
+      vehicle.contains.sort(sortInvEntry);
+      saveInventory(inv);
+      renderInventory();
+      close();
+    };
+    const onCancel = () => { close(); };
+    const onOutside = e => {
+      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    apply.addEventListener('click', onApply);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+  }
+
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
@@ -473,7 +563,10 @@
       ...(row.kvaliteter || [])
     ];
     const massCnt = allQuals.filter(q => q === 'Massivt').length;
-    return (base + massCnt) * row.qty;
+    const sub = Array.isArray(row.contains)
+      ? row.contains.reduce((s, r) => s + calcRowWeight(r), 0)
+      : 0;
+    return (base + massCnt) * row.qty + sub;
   }
 
   function calcMoneyWeight(money) {
@@ -549,6 +642,7 @@
         .map(li => li.dataset.special || `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
     );
     const allInv = storeHelper.getInventory(store);
+    const flatInv = flattenInventory(allInv);
     const nameMap = makeNameMap(allInv);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
@@ -564,6 +658,10 @@
     const baseCap = storeHelper.calcCarryCapacity(valStark, list);
     const maxCapacity = baseCap;
     const remainingCap = maxCapacity - usedWeight;
+
+    const vehicles = allInv
+      .map((row,i)=>({ row, entry:getEntry(row.name), idx:i }))
+      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
 
     if (dom.invTypeSel) {
       const types = new Set();
@@ -603,7 +701,7 @@
       storeHelper.getCurrentList(store), 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
 
-    const tot = allInv.reduce((t, row) => {
+    const tot = flatInv.reduce((t, row) => {
       const entry = getEntry(row.name);
       const basePrice = moneyToO(entry.grundpris || {});
       let base  = basePrice;
@@ -673,7 +771,7 @@
     const diff  = oToMoney(Math.abs(diffO));
     const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
 
-    const foodCount = allInv
+    const foodCount = flatInv
       .filter(row => {
         const entry = getEntry(row.name);
         return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
@@ -686,6 +784,9 @@
 
     /* ---------- kort för formaliteter (pengar & bärkapacitet) ---------- */
     const formalKey = '__formal__';
+    const vehicleBtns = vehicles
+      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn icon" title="Lasta i ${v.entry.namn}">${VEHICLE_EMOJI[v.entry.namn] || '🛞'}</button>`)
+      .join('');
     const formalCard = `
       <li class="card${openKeys.has(formalKey) ? '' : ' compact'}" data-special="${formalKey}">
         <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter 🔎</span></div>
@@ -695,6 +796,7 @@
             <button id="manageMoneyBtn" class="char-btn icon" title="Hantera pengar">💰</button>
             <button id="multiPriceBtn" class="char-btn icon" title="Multiplicera pris">💸</button>
             <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
+            ${vehicleBtns}
             <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
           </div>
           <div class="formal-section">
@@ -808,6 +910,18 @@ ${moneyRow}
           const weightText = formatWeight(calcRowWeight(row));
           const key = `${row.name}|${row.trait || ''}|${rowLevel || ''}`;
 
+          const sublist = (row.contains && row.contains.length)
+            ? `<ul class="card-list vehicle-items">${row.contains.map((c,j)=>{
+                const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
+                const cWeight = formatWeight(calcRowWeight(c));
+                const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
+                return `<li class="card" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}">
+                  <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
+                  <div class="card-desc">Pris: ${cPrice}<br>Vikt: ${cWeight}</div>
+                  <div class="inv-controls"><button data-act="vehicleRemove" class="char-btn">⬆️</button></div>
+                </li>`;}).join('')}</ul>`
+            : '';
+
           return `
             <li class="card${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
@@ -823,6 +937,7 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
                 ${toggleBtn}
                 ${freeBtn}
               </div>
+              ${sublist}
             </li>`;
       }).join('')
     : '<li class="card">Inga föremål.</li>';
@@ -934,6 +1049,18 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
       if (!btn) return;
 
         const act = btn.dataset.act;
+        if (act === 'vehicleRemove') {
+          const parent = Number(btn.closest('li').dataset.parent);
+          const child = Number(btn.closest('li').dataset.child);
+          const inv = storeHelper.getInventory(store);
+          if (!Number.isNaN(parent) && !Number.isNaN(child)) {
+            const [moved] = (inv[parent].contains || []).splice(child, 1);
+            if (moved) inv.push(moved);
+            saveInventory(inv);
+            renderInventory();
+          }
+          return;
+        }
         if (act === 'moneyPlus' || act === 'moneyMinus') {
           const cur = storeHelper.getMoney(store);
           const delta = act === 'moneyPlus' ? 1 : -1;
@@ -1208,6 +1335,15 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
         renderInventory();
       }
     };
+
+    const inv = storeHelper.getInventory(store);
+    inv
+      .map(row => ({row, entry:getEntry(row.name)}))
+      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'))
+      .forEach(v => {
+        const b = $T(`vehicleBtn-${v.entry.id}`);
+        if (b) b.onclick = () => openVehiclePopup(v.entry.id);
+      });
   }
 
   window.invUtil = {
@@ -1226,6 +1362,7 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
     openMoneyPopup,
     openQtyPopup,
     openPricePopup,
+    openVehiclePopup,
     recalcArtifactEffects,
     addWellEquippedItems,
     removeWellEquippedItems,
