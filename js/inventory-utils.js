@@ -669,7 +669,11 @@ function openVehiclePopup(preselectId) {
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.max(0, diffO));
-    storeHelper.setMoney(store, diff);
+    storeHelper.setMoney(store, {
+      daler: diff.d,
+      skilling: diff.s,
+      'örtegar': diff.o
+    });
 
     flat.forEach(row => {
       row.gratis = row.qty;
