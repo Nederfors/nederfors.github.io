@@ -494,7 +494,7 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function openVehiclePopup(preselectId) {
+function openVehiclePopup(preselectId) {
     const pop    = bar.shadowRoot.getElementById('vehiclePopup');
     const sel    = bar.shadowRoot.getElementById('vehicleSelect');
     const list   = bar.shadowRoot.getElementById('vehicleItemList');
@@ -577,6 +577,34 @@
     };
 
     apply.addEventListener('click', onApply);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+}
+
+  function openDeleteContainerPopup(removeAll, removeOnly) {
+    const pop    = bar.shadowRoot.getElementById('deleteContainerPopup');
+    const allBtn = bar.shadowRoot.getElementById('deleteContainerAll');
+    const onlyBtn= bar.shadowRoot.getElementById('deleteContainerOnly');
+    const cancel = bar.shadowRoot.getElementById('deleteContainerCancel');
+
+    pop.classList.add('open');
+
+    const close = () => {
+      pop.classList.remove('open');
+      allBtn.removeEventListener('click', onAll);
+      onlyBtn.removeEventListener('click', onOnly);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+    };
+    const onAll = () => { removeAll(); close(); };
+    const onOnly = () => { removeOnly(); close(); };
+    const onCancel = () => { close(); };
+    const onOutside = e => {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    allBtn.addEventListener('click', onAll);
+    onlyBtn.addEventListener('click', onOnly);
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
   }
@@ -1221,9 +1249,28 @@ ${moneyRow}
           if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
             if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
           }
-          parentArr.splice(idx, 1);
-          saveInventory(inv);
-          renderInventory();
+          const entry  = getEntry(row.name);
+          const tagTyp = entry.taggar?.typ || [];
+          const isVeh  = tagTyp.includes('F\u00e4rdmedel');
+          const hasStuff = Array.isArray(row.contains) && row.contains.length > 0;
+          if (isVeh && hasStuff) {
+            openDeleteContainerPopup(
+              () => {
+                parentArr.splice(idx, 1);
+                saveInventory(inv);
+                renderInventory();
+              },
+              () => {
+                parentArr.splice(idx, 1, ...(row.contains || []));
+                saveInventory(inv);
+                renderInventory();
+              }
+            );
+          } else {
+            parentArr.splice(idx, 1);
+            saveInventory(inv);
+            renderInventory();
+          }
         }
         return;
       }
