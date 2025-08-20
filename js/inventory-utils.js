@@ -1443,72 +1443,77 @@ ${moneyRow}
       }
     };
 
-    const getDragAfterElement = (container, y) => {
-      const els = [...container.querySelectorAll('li[data-idx]:not(.dragging)')];
-      return els.reduce((closest, child) => {
-        const box = child.getBoundingClientRect();
-        const offset = y - box.top - box.height / 2;
-        return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
-      }, { offset: Number.NEGATIVE_INFINITY }).element;
+    if (dom.invList) {
+      dom.invList.removeEventListener('pointerdown', handlePointerDown);
+      dom.invList.addEventListener('pointerdown', handlePointerDown);
+    }
+  }
+
+  function getDragAfterElement(container, y) {
+    const els = [...container.querySelectorAll('li[data-idx]:not(.dragging)')];
+    return els.reduce((closest, child) => {
+      const box = child.getBoundingClientRect();
+      const offset = y - box.top - box.height / 2;
+      return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
+    }, { offset: Number.NEGATIVE_INFINITY }).element;
+  }
+
+  function handlePointerDown(e) {
+    if (!dragEnabled) return;
+    const li = e.target.closest('li[data-idx]');
+    if (!li || e.target.closest('button')) return;
+
+    let pressTimer;
+
+    const onMove = ev => {
+      if (!dragEl) return;
+      ev.preventDefault();
+      const after = getDragAfterElement(dom.invList, ev.clientY);
+      if (after == null) {
+        dom.invList.appendChild(dragEl);
+      } else {
+        dom.invList.insertBefore(dragEl, after);
+      }
     };
 
-      dom.invList.addEventListener('pointerdown', e => {
-        if (!dragEnabled) return;
-        const li = e.target.closest('li[data-idx]');
-        if (!li || e.target.closest('button')) return;
+    const startDrag = () => {
+      dragIdx = Number(li.dataset.idx);
+      dragEl = li;
+      li.classList.add('dragging');
+      li.setPointerCapture(e.pointerId);
+      window.addEventListener('pointermove', onMove);
+    };
 
-        let pressTimer;
+    const onUp = ev => {
+      clearTimeout(pressTimer);
+      if (!dragEl) {
+        window.removeEventListener('pointermove', onMove);
+        window.removeEventListener('pointerup', onUp);
+        return;
+      }
+      onMove(ev);
+      dragEl.classList.remove('dragging');
+      dragEl.releasePointerCapture(ev.pointerId);
+      const inv = storeHelper.getInventory(store);
+      if (dragIdx !== null && inv) {
+        const items = [...dom.invList.querySelectorAll('li[data-idx]')];
+        const dropIdx = items.indexOf(dragEl);
+        const [moved] = inv.splice(dragIdx, 1);
+        inv.splice(dropIdx, 0, moved);
+        saveInventory(inv);
+        renderInventory();
+      }
+      dragIdx = null;
+      dragEl = null;
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+    };
 
-        const onMove = ev => {
-          if (!dragEl) return;
-          ev.preventDefault();
-          const after = getDragAfterElement(dom.invList, ev.clientY);
-          if (after == null) {
-            dom.invList.appendChild(dragEl);
-          } else {
-            dom.invList.insertBefore(dragEl, after);
-          }
-        };
+    // Require a slightly longer press before drag to avoid
+    // accidental drags when scrolling on touch devices
+    pressTimer = setTimeout(startDrag, 400);
 
-        const startDrag = () => {
-          dragIdx = Number(li.dataset.idx);
-          dragEl = li;
-          li.classList.add('dragging');
-          li.setPointerCapture(e.pointerId);
-          window.addEventListener('pointermove', onMove);
-        };
-
-        const onUp = ev => {
-          clearTimeout(pressTimer);
-          if (!dragEl) {
-            window.removeEventListener('pointermove', onMove);
-            window.removeEventListener('pointerup', onUp);
-            return;
-          }
-          onMove(ev);
-          dragEl.classList.remove('dragging');
-          dragEl.releasePointerCapture(ev.pointerId);
-          const inv = storeHelper.getInventory(store);
-          if (dragIdx !== null && inv) {
-            const items = [...dom.invList.querySelectorAll('li[data-idx]')];
-            const dropIdx = items.indexOf(dragEl);
-            const [moved] = inv.splice(dragIdx, 1);
-            inv.splice(dropIdx, 0, moved);
-            saveInventory(inv);
-            renderInventory();
-          }
-          dragIdx = null;
-          dragEl = null;
-          window.removeEventListener('pointermove', onMove);
-          window.removeEventListener('pointerup', onUp);
-        };
-
-        // Require a slightly longer press before drag to avoid
-        // accidental drags when scrolling on touch devices
-        pressTimer = setTimeout(startDrag, 400);
-
-        window.addEventListener('pointerup', onUp);
-      });
+    window.addEventListener('pointerup', onUp);
   }
 
   function bindMoney() {
