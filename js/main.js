@@ -30,6 +30,7 @@ const dom  = {
   moneyAddBtn: $T('moneyAddBtn'),
   invTypeSel : $T('invTypeFilter'),
   collapseAllBtn: $T('collapseAllInv'),
+  dragToggle: $T('dragToggle'),
   unusedOut: $T('unusedOut'),
 
   /* smith filter */

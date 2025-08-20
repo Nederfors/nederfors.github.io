@@ -20,6 +20,7 @@
   const moneyToO = m => (m.daler||0)*SBASE*OBASE + (m.skilling||0)*OBASE + (m['örtegar']||0);
   let dragIdx = null;
   let dragEl = null;
+  let dragEnabled = false;
 
   const oToMoney = o => {
     const d = Math.floor(o / (SBASE * OBASE)); o %= SBASE * OBASE;
@@ -1150,6 +1151,13 @@ ${moneyRow}
         updateCollapseBtnState();
       };
     }
+    if (dom.dragToggle) {
+      dom.dragToggle.classList.toggle('danger', dragEnabled);
+      dom.dragToggle.onclick = () => {
+        dragEnabled = !dragEnabled;
+        dom.dragToggle.classList.toggle('danger', dragEnabled);
+      };
+    }
     const getRowInfo = (inv, li) => {
       const idx = Number(li.dataset.idx);
       if (!Number.isNaN(idx)) return { row: inv[idx], parentArr: inv, idx };
@@ -1441,6 +1449,7 @@ ${moneyRow}
     };
 
       dom.invList.addEventListener('pointerdown', e => {
+        if (!dragEnabled) return;
         const li = e.target.closest('li[data-idx]');
         if (!li || e.target.closest('button')) return;
 
