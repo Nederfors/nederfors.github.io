@@ -36,10 +36,22 @@
   function sortInvEntry(a, b) {
     const entA = getEntry(a.name);
     const entB = getEntry(b.name);
+    const isVehA = (entA.taggar?.typ || []).includes('F\u00e4rdmedel');
+    const isVehB = (entB.taggar?.typ || []).includes('F\u00e4rdmedel');
+    if (isVehA && !isVehB) return 1;
+    if (!isVehA && isVehB) return -1;
     return sortByType(entA, entB);
   }
 
   function saveInventory(inv) {
+    const nonVeh = [];
+    const veh = [];
+    inv.forEach(row => {
+      const entry = getEntry(row.name);
+      if ((entry.taggar?.typ || []).includes('F\u00e4rdmedel')) veh.push(row);
+      else nonVeh.push(row);
+    });
+    inv.splice(0, inv.length, ...nonVeh, ...veh);
     storeHelper.setInventory(store, inv);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
