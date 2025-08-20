@@ -649,7 +649,11 @@
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
 
     const moneyWeight = calcMoneyWeight(cash);
-    const usedWeight = allInv.reduce((s, r) => s + calcRowWeight(r), 0) + moneyWeight;
+    const usedWeight = allInv.reduce((s, r) => {
+      const entry = getEntry(r.name);
+      const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
+      return s + (isVeh ? 0 : calcRowWeight(r));
+    }, 0) + moneyWeight;
     const list = storeHelper.getCurrentList(store);
     const traits = storeHelper.getTraits(store);
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
@@ -826,6 +830,12 @@ ${moneyRow}
           const entry   = getEntry(row.name);
           const tagger  = entry.taggar ?? {};
           const tagTyp  = tagger.typ ?? [];
+          const isVehicle = tagTyp.includes('F\u00e4rdmedel');
+          const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
+          const rowWeight = calcRowWeight(row);
+          const loadWeight = rowWeight - baseWeight * row.qty;
+          const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
+          const remaining = capacity - loadWeight;
 
           const freeCnt = Number(row.gratis || 0);
           const rowLevel = row.nivå ||
@@ -907,8 +917,14 @@ ${moneyRow}
           const priceText = formatMoney(
             calcRowCost(row, forgeLvl, alcLevel, artLevel)
           );
-          const weightText = formatWeight(calcRowWeight(row));
+          const weightText = formatWeight(rowWeight);
           const key = `${row.name}|${row.trait || ''}|${rowLevel || ''}`;
+          let vehicleInfo = '';
+          let cardClass = '';
+          if (isVehicle) {
+            vehicleInfo = `<br>B\u00e4rkapacitet: ${formatWeight(capacity)}<br>\u00c5terst\u00e5ende: ${formatWeight(remaining)}`;
+            if (remaining < 0) cardClass = ' vehicle-over';
+          }
 
           const sublist = (row.contains && row.contains.length)
             ? `<ul class="card-list vehicle-items">${row.contains.map((c,j)=>{
@@ -923,16 +939,16 @@ ${moneyRow}
             : '';
 
           return `
-            <li class="card${openKeys.has(key) ? '' : ' compact'}"
+            <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
-                ${desc}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}
+                ${desc}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}${vehicleInfo}
               </div>
               <div class="inv-controls">
                 ${btnRow}
-${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
+                ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
                 ${freeQBtn}
                 ${toggleBtn}
                 ${freeBtn}

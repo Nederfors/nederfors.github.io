@@ -18,6 +18,7 @@
   --neutral:     #5e9cff;
   --negative:    #8b4513;
   --danger:      #e74c3c;
+  --danger-bg:   #3c1a1a;
   --shadow:      0 4px 16px #0007;
 }
 
@@ -249,6 +250,10 @@ input:focus, select:focus, textarea:focus {
   flex-direction: column;
   gap: .45rem;
   position: relative;
+}
+
+.card.vehicle-over {
+  background: var(--danger-bg);
 }
 
 #invList li.card {
