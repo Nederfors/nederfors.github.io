@@ -1148,6 +1148,21 @@ select.level {
   border-color: var(--accent);
 }
 
+.vehicle-group {
+  position: relative;
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .4rem .6rem .6rem;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+.vehicle-group .vehicle-icon {
+  position: absolute;
+  top: .2rem;
+  right: .4rem;
+}
+
 /* ---------- Popup för alkemistnivå ---------- */
 #alcPopup {
   position: fixed;

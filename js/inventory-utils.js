@@ -358,9 +358,23 @@
     const inv = storeHelper.getInventory(store);
     const flat = flattenInventoryWithPath(inv);
     const nameMap = makeNameMap(flat.map(f => f.row));
-    list.innerHTML = flat
+    const vehicles = inv
+      .map((row,i)=>({ row, entry:getEntry(row.name), idx:i }))
+      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
+    const vehIdx = vehicles.map(v => v.idx);
+    const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
+    const vehicleHtml = vehicles.map(v => {
+      const items = flattenInventoryWithPath(v.row.contains || [], [v.idx]);
+      if (!items.length) return '';
+      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
+      const inner = items
+        .map(o => `<button data-path="${o.path.join('.')}" class="char-btn">${nameMap.get(o.row)}</button>`)
+        .join('');
+      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
+    }).join('');
+    list.innerHTML = regular
       .map(obj => `<button data-path="${obj.path.join('.')}" class="char-btn">${nameMap.get(obj.row)}</button>`)
-      .join('');
+      .join('') + vehicleHtml;
 
     pop.classList.add('open');
 
@@ -424,10 +438,23 @@
     const inv = storeHelper.getInventory(store);
     const flat = flattenInventoryWithPath(inv);
     const nameMap = makeNameMap(flat.map(f => f.row));
-    list.innerHTML = flat
+    const vehicles = inv
+      .map((row,i)=>({ row, entry:getEntry(row.name), idx:i }))
+      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
+    const vehIdx = vehicles.map(v => v.idx);
+    const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
+    const vehicleHtml = vehicles.map(v => {
+      const items = flattenInventoryWithPath(v.row.contains || [], [v.idx]);
+      if (!items.length) return '';
+      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
+      const inner = items.map(o => `
+        <label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`).join('');
+      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
+    }).join('');
+    list.innerHTML = regular
       .map(obj => `
         <label class="price-item"><span>${nameMap.get(obj.row)}</span><input type="checkbox" data-path="${obj.path.join('.')}"></label>`)
-      .join('');
+      .join('') + vehicleHtml;
 
     pop.classList.add('open');
 
@@ -488,13 +515,21 @@
       if (found) sel.value = String(found.idx);
     }
 
-    const movable = inv
-      .map((row,i)=>({row,i}))
-      .filter(v => !(vehicles.some(vh => vh.idx === v.i)));
-    const nameMap = makeNameMap(inv);
-    list.innerHTML = movable
-      .map(m => `<label class="price-item"><span>${nameMap.get(m.row)}</span><input type="checkbox" data-idx="${m.i}"></label>`)
-      .join('');
+    const flat = flattenInventoryWithPath(inv);
+    const nameMap = makeNameMap(flat.map(f => f.row));
+    const vehIdx = vehicles.map(v => v.idx);
+    const movable = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length === 1));
+    const outside = movable.filter(obj => !vehIdx.includes(obj.path[0]));
+    const vehicleHtml = vehicles.map(v => {
+      const items = movable.filter(o => o.path[0] === v.idx);
+      if (!items.length) return '';
+      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
+      const inner = items.map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`).join('');
+      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
+    }).join('');
+    list.innerHTML = outside
+      .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`)
+      .join('') + vehicleHtml;
 
     pop.classList.add('open');
 
@@ -511,11 +546,25 @@
       if (Number.isNaN(vIdx)) return;
       const vehicle = inv[vIdx];
       vehicle.contains = vehicle.contains || [];
-      const checks = [...list.querySelectorAll('input[type="checkbox"][data-idx]:checked')]
-        .map(ch => Number(ch.dataset.idx))
-        .sort((a,b) => b-a);
-      checks.forEach(idx => {
-        vehicle.contains.push(inv.splice(idx,1)[0]);
+      const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
+        .map(ch => ch.dataset.path.split('.').map(Number))
+        .sort((a,b)=>{
+          for (let i=0; i<Math.max(a.length,b.length); i++) {
+            const av=a[i], bv=b[i];
+            if (av===undefined) return 1;
+            if (bv===undefined) return -1;
+            if (av!==bv) return bv-av;
+          }
+          return 0;
+        });
+      checks.forEach(path => {
+        if (path[0] === vIdx) return;
+        let arr = inv;
+        for (let i = 0; i < path.length - 1; i++) {
+          arr = arr[path[i]].contains || [];
+        }
+        const item = arr.splice(path[path.length - 1], 1)[0];
+        vehicle.contains.push(item);
       });
       vehicle.contains.sort(sortInvEntry);
       saveInventory(inv);
