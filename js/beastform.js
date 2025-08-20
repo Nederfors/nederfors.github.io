@@ -14,6 +14,7 @@
     const cls=pop.querySelector('#beastCancel');
     box.innerHTML=`<button data-form="normal" class="char-btn">Humanoid form (vanlig kostnad)</button><button data-form="beast" class="char-btn">F\u00f6r hamnskifte (gratis upp till novisniv\u00e5)</button>`;
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
     function close(){
       pop.classList.remove('open');
       box.innerHTML='';

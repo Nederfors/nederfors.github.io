@@ -193,6 +193,7 @@
 
     /* öppna */
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
 
     /* local helpers */
     const close = () => {
@@ -243,6 +244,7 @@
     type.innerHTML = equipOptions;
 
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
     if (effSel) effSel.value = 'corruption';
     if(effBox) effBox.style.display = type.value === 'Artefakter' ? '' : 'none';
 
@@ -306,6 +308,7 @@
     dIn.value = sIn.value = oIn.value = '';
 
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
 
     const close = () => {
       pop.classList.remove('open');
@@ -378,6 +381,7 @@
       .join('') + vehicleHtml;
 
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
 
     const close = () => {
       pop.classList.remove('open');
@@ -458,6 +462,7 @@
       .join('') + vehicleHtml;
 
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
 
     const close = () => {
       pop.classList.remove('open');
@@ -533,6 +538,7 @@ function openVehiclePopup(preselectId) {
       .join('') + vehicleHtml;
 
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
 
     const close = () => {
       pop.classList.remove('open');
@@ -589,6 +595,7 @@ function openVehiclePopup(preselectId) {
     const cancel = bar.shadowRoot.getElementById('deleteContainerCancel');
 
     pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
 
     const close = () => {
       pop.classList.remove('open');

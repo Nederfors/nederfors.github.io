@@ -23,7 +23,9 @@
     create();
     document.getElementById('tabellContent').innerHTML = html || '';
     document.getElementById('tabellTitle').textContent = title || '';
-    document.getElementById('tabellPopup').classList.add('open');
+    const pop = document.getElementById('tabellPopup');
+    pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
   }
 
   function close(){
