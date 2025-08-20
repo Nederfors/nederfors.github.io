@@ -355,7 +355,7 @@
 
       const row   = inv[realIdx];
       const entry = getEntry(row.name);
-      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter']
+      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel']
         .some(t => entry.taggar?.typ?.includes(t));
 
       if (indiv) {
@@ -901,7 +901,7 @@ ${moneyRow}
           }
 
           /* — knappar — */
-          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter'].some(t => tagTyp.includes(t));
+          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter', 'Färdmedel'].some(t => tagTyp.includes(t));
           const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
@@ -1121,7 +1121,7 @@ ${moneyRow}
             bundle.forEach(namn => {
               const ent = getEntry(namn);
               if (!ent.namn) return;
-              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => ent.taggar.typ.includes(t));
+              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel'].some(t => ent.taggar.typ.includes(t));
               const existing = inv.findIndex(r => r.name === ent.namn);
               if (indivItem || existing === -1) {
                 inv.push({ name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
@@ -1132,7 +1132,7 @@ ${moneyRow}
             saveInventory(inv);
             renderInventory();
           } else {
-            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter'].some(t => entry.taggar.typ.includes(t));
+            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel'].some(t => entry.taggar.typ.includes(t));
             const addRow = trait => {
               const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
               if (trait) obj.trait = trait;

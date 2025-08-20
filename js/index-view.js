@@ -419,7 +419,7 @@ function initIndex() {
           FALT_BUNDLE.forEach(namn => {
             const ent = invUtil.getEntry(namn);
             if (!ent.namn) return;
-            const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter']
+            const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel']
               .some(t=>ent.taggar.typ.includes(t));
             const existing = inv.find(r => r.name === ent.namn);
             if (indivItem || !existing) {
@@ -431,7 +431,7 @@ function initIndex() {
           invUtil.saveInventory(inv); invUtil.renderInventory();
           renderList(filtered());
         } else {
-          const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt'].some(t=>p.taggar.typ.includes(t));
+          const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Färdmedel'].some(t=>p.taggar.typ.includes(t));
           const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
           if (p.artifactEffect) rowBase.artifactEffect = p.artifactEffect;
           const addRow = trait => {
