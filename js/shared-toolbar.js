@@ -135,6 +135,7 @@ class SharedToolbar extends HTMLElement {
           <h2>Inventarie</h2>
 
           <div class="inv-actions">
+            <button id="dragToggle" class="char-btn icon" title="Ändra ordning">🔀</button>
             <button id="collapseAllInv" class="char-btn icon" title="Kollapsa alla">▶</button>
             <button class="char-btn icon" data-close="invPanel">✕</button>
           </div>
