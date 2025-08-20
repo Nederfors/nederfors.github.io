@@ -7,6 +7,9 @@
         "Färdmedel"
       ]
     },
+    "stat": {
+      "bärkapacitet": 300
+    },
     "grundpris": {
       "daler": 200,
       "skilling": 0,
@@ -21,6 +24,9 @@
       "typ": [
         "Färdmedel"
       ]
+    },
+    "stat": {
+      "bärkapacitet": 1500
     },
     "grundpris": {
       "daler": 1000,
@@ -37,6 +43,9 @@
         "Färdmedel"
       ]
     },
+    "stat": {
+      "bärkapacitet": 80
+    },
     "grundpris": {
       "daler": 2,
       "skilling": 0,
@@ -51,6 +60,9 @@
       "typ": [
         "Färdmedel"
       ]
+    },
+    "stat": {
+      "bärkapacitet": 100
     },
     "grundpris": {
       "daler": 1,
@@ -67,6 +79,9 @@
         "Färdmedel"
       ]
     },
+    "stat": {
+      "bärkapacitet": 35
+    },
     "grundpris": {
       "daler": 5,
       "skilling": 0,
@@ -81,6 +96,9 @@
       "typ": [
         "Färdmedel"
       ]
+    },
+    "stat": {
+      "bärkapacitet": 45
     },
     "grundpris": {
       "daler": 7,
@@ -97,6 +115,9 @@
         "Färdmedel"
       ]
     },
+    "stat": {
+      "bärkapacitet": 50
+    },
     "grundpris": {
       "daler": 3,
       "skilling": 0,
@@ -111,6 +132,9 @@
       "typ": [
         "Färdmedel"
       ]
+    },
+    "stat": {
+      "bärkapacitet": 120
     },
     "grundpris": {
       "daler": 3,
@@ -127,6 +151,9 @@
         "Färdmedel"
       ]
     },
+    "stat": {
+      "bärkapacitet": 120
+    },
     "grundpris": {
       "daler": 2,
       "skilling": 0,
@@ -141,6 +168,9 @@
       "typ": [
         "Färdmedel"
       ]
+    },
+    "stat": {
+      "bärkapacitet": 200
     },
     "grundpris": {
       "daler": 5,
