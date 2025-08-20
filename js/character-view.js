@@ -124,7 +124,39 @@ function initCharacter() {
     }
     if(!cond.length) cond.push('Inga särskilda ersättningar');
 
+    const baseXP = storeHelper.getBaseXP(store);
+    const usedXP = storeHelper.calcUsedXP(list, effects);
+    const totalXP = storeHelper.calcTotalXP(baseXP, list);
+    const freeXP = totalXP - usedXP;
+
+    const data = store.data[store.current] || {};
+    const bonusMoney = storeHelper.normalizeMoney(data.bonusMoney);
+    const privMoney = storeHelper.normalizeMoney(data.privMoney);
+    const posMoney = storeHelper.normalizeMoney(data.possessionMoney);
+    const totalMoney = storeHelper.normalizeMoney({
+      daler: bonusMoney.daler + privMoney.daler + posMoney.daler,
+      skilling: bonusMoney.skilling + privMoney.skilling + posMoney.skilling,
+      'örtegar': bonusMoney['örtegar'] + privMoney['örtegar'] + posMoney['örtegar']
+    });
+
     summaryContent.innerHTML = `
+      <section class="summary-section">
+        <h3>XP</h3>
+        <ul>
+          <li>Total XP: ${totalXP}</li>
+          <li>Använt XP: ${usedXP}</li>
+          <li>XP kvar: ${freeXP}</li>
+        </ul>
+      </section>
+      <section class="summary-section">
+        <h3>Ekonomi</h3>
+        <ul>
+          <li>Bonus: ${formatMoney(bonusMoney)}</li>
+          <li>Privat: ${formatMoney(privMoney)}</li>
+          <li>Egendom: ${formatMoney(posMoney)}</li>
+          <li>Totalt: ${formatMoney(totalMoney)}</li>
+        </ul>
+      </section>
       <section class="summary-section">
         <h3>Försvar</h3>
         <ul>${defenseHtml}</ul>
