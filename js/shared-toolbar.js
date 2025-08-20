@@ -432,6 +432,8 @@ class SharedToolbar extends HTMLElement {
             <strong>📇 / 🧝</strong> på anteckningssidan går till index respektive rollperson.<br>
             <strong>🎒</strong> öppnar inventariepanelen.<br>
             <strong>📊</strong> öppnar egenskapspanelen.<br>
+            <strong>Skriv ett ord och tryck Enter</strong> för att filtrera listan.<br>
+            <strong>Klicka på taggarna under sökfältet</strong> för att ta bort filter.<br>
             <strong>Skriv "lol"</strong> i sökfältet nollställer alla filter.<br>
             <strong>⚙️</strong> öppnar filtermenyn.
           </p>
@@ -457,7 +459,7 @@ class SharedToolbar extends HTMLElement {
             <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.
           </p>
           <h3>Egenskapspanelen</h3>
-          <p>Ange total XP och få en summering av valda förmågor.</p>
+          <p>Ange total XP och få en summering av valda förmågor. Knappen "Förmågor: X" filtrerar listan och aktiverar filtret "Endast valda". Ta bort filtret genom att klicka på taggen "Endast valda".</p>
           <h3>Rollpersonspanelen</h3>
           <p><strong>📋</strong> visar en sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</p>
           <h3>Anteckningssidan</h3>
@@ -477,6 +479,11 @@ class SharedToolbar extends HTMLElement {
             <strong>💔</strong> visar konflikter.<br>
             <strong>↔</strong> växlar artefaktens kostnad mellan XP och permanent korruption.<br>
             <strong>🗑</strong> tar bort posten helt.
+          </p>
+          <h3>Installera som webapp</h3>
+          <p>
+            Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.<br>
+            Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
           </p>
         </div>
       </aside>
