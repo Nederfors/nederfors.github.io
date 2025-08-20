@@ -532,6 +532,37 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function openRemovePopup(callback) {
+    const pop    = bar.shadowRoot.getElementById('removePopup');
+    const allBtn = bar.shadowRoot.getElementById('removeAll');
+    const itemBtn= bar.shadowRoot.getElementById('removeItem');
+    const cancel = bar.shadowRoot.getElementById('removeCancel');
+
+    pop.classList.add('open');
+
+    const close = () => {
+      pop.classList.remove('open');
+      allBtn.removeEventListener('click', onAll);
+      itemBtn.removeEventListener('click', onItem);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+    };
+    const onAll = () => { close(); callback('all'); };
+    const onItem = () => { close(); callback('item'); };
+    const onCancel = () => { close(); callback(null); };
+    const onOutside = e => {
+      if(!pop.querySelector('.popup-inner').contains(e.target)) {
+        close();
+        callback(null);
+      }
+    };
+
+    allBtn.addEventListener('click', onAll);
+    itemBtn.addEventListener('click', onItem);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+  }
+
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.name);
     const tagger = entry.taggar ?? {};
@@ -1179,9 +1210,25 @@ ${moneyRow}
           if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
             if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
           }
-          parentArr.splice(idx, 1);
-          saveInventory(inv);
-          renderInventory();
+          const entry = getEntry(row.name);
+          const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
+          if (isVeh && Array.isArray(row.contains) && row.contains.length > 0) {
+            openRemovePopup(choice => {
+              if (choice === 'all') {
+                parentArr.splice(idx, 1);
+              } else if (choice === 'item') {
+                parentArr.splice(idx, 1, ...row.contains);
+              } else {
+                return; // avbryt
+              }
+              saveInventory(inv);
+              renderInventory();
+            });
+          } else {
+            parentArr.splice(idx, 1);
+            saveInventory(inv);
+            renderInventory();
+          }
         }
         return;
       }

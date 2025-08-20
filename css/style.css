@@ -1148,6 +1148,34 @@ select.level {
   border-color: var(--accent);
 }
 
+/* ---------- Popup för borttagning med innehåll ---------- */
+#removePopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#removePopup.open { display: flex; }
+#removePopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#removePopup .popup-inner button { width: 100%; }
+
 /* ---------- Popup för alkemistnivå ---------- */
 #alcPopup {
   position: fixed;
@@ -1402,6 +1430,7 @@ select.level {
 #defensePopup .popup-inner,
 #exportPopup .popup-inner,
 #nilasPopup .popup-inner,
+#removePopup .popup-inner,
 #charPopup .popup-inner {
   max-height: 100%;
   overflow-y: auto;
