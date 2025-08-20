@@ -1060,10 +1060,11 @@ ${moneyRow}
                      <button data-act="add" class="char-btn">+</button>`;
                 const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
                 const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
+                const cKey = `${c.name}|${c.trait || ''}|${cRowLevel || ''}`;
                 const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakter') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-                return `<li class="card compact" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
+                return `<li class="card${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
                   <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br>Pris: ${cPrice}<br>Vikt: ${cWeight}</div>
                   <div class="inv-controls">
