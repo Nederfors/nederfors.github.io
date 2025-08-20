@@ -1183,7 +1183,9 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
           window.removeEventListener('pointerup', onUp);
         };
 
-        pressTimer = setTimeout(startDrag, 200);
+        // Require a slightly longer press before drag to avoid
+        // accidental drags when scrolling on touch devices
+        pressTimer = setTimeout(startDrag, 400);
 
         window.addEventListener('pointerup', onUp);
       });
