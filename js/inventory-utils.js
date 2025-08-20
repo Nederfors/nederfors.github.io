@@ -672,6 +672,69 @@
     return oToMoney(price);
   }
 
+  function buildRowDesc(entry, row) {
+    const tagger = entry.taggar ?? {};
+    const tagTyp = tagger.typ ?? [];
+    const freeCnt = Number(row.gratis || 0);
+    const rowLevel = row.nivå || (
+      ['Elixir','L\u00e4gre Artefakt','F\u00e4lla'].some(t => tagTyp.includes(t))
+        ? Object.keys(entry.nivåer || {}).find(l => l) || null
+        : null
+    );
+    let desc = '';
+    const tagList = (tagger.typ || [])
+      .concat(explodeTags(tagger.ark_trad), tagger.test || [])
+      .map(t => `<span class="tag">${t}</span>`);
+    if (rowLevel) tagList.push(`<span class="tag level">${rowLevel}</span>`);
+    if (freeCnt) tagList.push(`<span class="tag free removable" data-free="1">Gratis${freeCnt>1?`×${freeCnt}`:''} ✕</span>`);
+    const priceMult = row.priceMult;
+    if (priceMult && Math.abs(priceMult - 1) > 0.001) {
+      const mTxt = Number.isInteger(priceMult)
+        ? priceMult
+        : priceMult.toFixed(2).replace(/\.?0+$/, '');
+      tagList.push(`<span class="tag price-mult removable" data-mult="1">×${mTxt} ✕</span>`);
+    }
+    if (tagList.length) {
+      desc += `<div class="tags">${tagList.join(' ')}</div>`;
+    }
+    desc += itemStatHtml(entry, row);
+    if (row.trait) {
+      desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
+    }
+
+    const removedQ = row.removedKval ?? [];
+    const baseQuals = [
+      ...(tagger.kvalitet ?? []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const baseQ = baseQuals.filter(q => !removedQ.includes(q));
+    const addQ  = row.kvaliteter ?? [];
+    const freeQ = (row.gratisKval ?? []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+    const all = sortQualsForDisplay([
+      ...baseQ.map(q => ({q, base:true})),
+      ...addQ.map(q => ({q, base:false}))
+    ]);
+    if (all.length) {
+      const qhtml = all.map(obj => {
+        const q = obj.q;
+        const cls = `tag removable${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
+        const baseAttr = obj.base ? ' data-base="1"' : '';
+        return `<span class="${cls}" data-qual="${q}"${baseAttr}>${q} ✕</span>`;
+      }).join('');
+      desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+    }
+
+    const isArtifact = tagTyp.includes('Artefakter');
+    const effectVal = row.artifactEffect || entry.artifactEffect || '';
+    if (isArtifact && effectVal) {
+      const txt = effectVal === 'corruption'
+        ? '+1 permanent korruption'
+        : '\u20131 erfarenhet';
+      desc += `<br><span class="tag">${txt}</span>`;
+    }
+    return { desc, rowLevel, freeCnt };
+  }
+
   function renderInventory () {
     if (!dom.invList) return;                        // index-sidan saknar listan
     const openKeys = new Set(
@@ -865,8 +928,7 @@ ${moneyRow}
       ? inv.map((row) => {
           const realIdx = allInv.indexOf(row);
           const entry   = getEntry(row.name);
-          const tagger  = entry.taggar ?? {};
-          const tagTyp  = tagger.typ ?? [];
+          const tagTyp  = entry.taggar?.typ ?? [];
           const isVehicle = tagTyp.includes('F\u00e4rdmedel');
           const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
           const rowWeight = calcRowWeight(row);
@@ -874,68 +936,10 @@ ${moneyRow}
           const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
           const remaining = capacity - loadWeight;
 
-          const freeCnt = Number(row.gratis || 0);
-          const rowLevel = row.nivå ||
-            ([ 'Elixir','L\u00e4gre Artefakt','F\u00e4lla' ].some(t => tagTyp.includes(t))
-              ? Object.keys(entry.nivåer || {}).find(l => l)
-              : null);
+          const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
           const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
 
-          /* — beskrivning / taggar / nivå — */
-          // Ingen beskrivningstext ska visas i inventariet.
-          // "desc" används fortfarande för taggar, nivå och kvaliteter nedan.
-          let desc = '';
-          const tagList = (tagger.typ || [])
-            .concat(explodeTags(tagger.ark_trad), tagger.test || [])
-            .map(t => `<span class="tag">${t}</span>`);
-          if (rowLevel) tagList.push(`<span class="tag level">${rowLevel}</span>`);
-          if (freeCnt) tagList.push(`<span class="tag free removable" data-free="1">Gratis${freeCnt>1?`×${freeCnt}`:''} ✕</span>`);
-          const priceMult = row.priceMult;
-          if (priceMult && Math.abs(priceMult - 1) > 0.001) {
-            const mTxt = Number.isInteger(priceMult)
-              ? priceMult
-              : priceMult.toFixed(2).replace(/\.?0+$/, '');
-            tagList.push(`<span class="tag price-mult removable" data-mult="1">×${mTxt} ✕</span>`);
-          }
-          if (tagList.length) {
-            desc += `<div class="tags">${tagList.join(' ')}</div>`;
-          }
-          desc += itemStatHtml(entry, row);
-          if (row.trait) {
-            desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
-          }
-
-          /* — kvaliteter — */
-          const removedQ = row.removedKval ?? [];
-          const baseQuals = [
-            ...(tagger.kvalitet ?? []),
-            ...splitQuals(entry.kvalitet)
-          ];
-          const baseQ = baseQuals.filter(q => !removedQ.includes(q));
-          const addQ  = row.kvaliteter ?? [];
-          const freeQ = (row.gratisKval ?? []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-          const all = sortQualsForDisplay([
-            ...baseQ.map(q => ({q, base:true})),
-            ...addQ.map(q => ({q, base:false}))
-          ]);
-          if (all.length) {
-            const qhtml = all.map(obj => {
-              const q = obj.q;
-              const cls = `tag removable${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
-              const baseAttr = obj.base ? ' data-base="1"' : '';
-              return `<span class="${cls}" data-qual="${q}"${baseAttr}>${q} ✕</span>`;
-            }).join('');
-            desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
-          }
-
           const isArtifact = tagTyp.includes('Artefakter');
-          const effectVal = row.artifactEffect || entry.artifactEffect || '';
-          if (isArtifact && effectVal) {
-            const txt = effectVal === 'corruption'
-              ? '+1 permanent korruption'
-              : '\u20131 erfarenhet';
-            desc += `<br><span class="tag">${txt}</span>`;
-          }
 
           /* — knappar — */
           const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter', 'Färdmedel'].some(t => tagTyp.includes(t));
@@ -966,8 +970,7 @@ ${moneyRow}
           const sublist = (row.contains && row.contains.length)
             ? `<ul class="card-list vehicle-items">${row.contains.map((c,j)=>{
                 const centry = getEntry(c.name);
-                const ctagger = centry.taggar ?? {};
-                const ctagTyp = ctagger.typ ?? [];
+                const ctagTyp = centry.taggar?.typ ?? [];
                 const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
                 const cWeight = formatWeight(calcRowWeight(c));
                 const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
@@ -978,12 +981,14 @@ ${moneyRow}
                   : `<button data-act="del" class="char-btn danger">🗑</button>
                      <button data-act="sub" class="char-btn">–</button>
                      <button data-act="add" class="char-btn">+</button>`;
-                const cFreeBtn = `<button data-act="free" class="char-btn${c.gratis? ' danger':''}">🆓</button>`;
+                const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
+                const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
+                const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakter') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-                return `<li class="card compact" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}">
+                return `<li class="card compact" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
                   <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
-                  <div class="card-desc">Pris: ${cPrice}<br>Vikt: ${cWeight}</div>
+                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br>Pris: ${cPrice}<br>Vikt: ${cWeight}</div>
                   <div class="inv-controls">
                     ${cBtnRow}
                     ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
