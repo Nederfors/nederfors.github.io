@@ -57,7 +57,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
                padding: .15rem .7rem; border-radius: .55rem;
                font-size: .85rem; white-space: nowrap; }
 .tag.removable { cursor: pointer; }
-.tag.free      { background: var(--accent); color:#fff; }
+.tag.free,
+.tag.price-mult { background: var(--accent); color:#fff; }
 .tag.mystic    { border: 1.5px solid var(--mystic); }
 .tag.neutral   { border: 1.5px solid var(--neutral); }
 .tag.negative  { border: 1.5px solid var(--negative); }
@@ -1054,6 +1055,31 @@ select.level {
   display: flex;
   flex-direction: column;
   gap: .4rem;
+}
+#priceItemList .price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .4rem .6rem;
+}
+#priceItemList .price-item span {
+  flex: 1;
+}
+#priceItemList .price-item input[type="checkbox"] {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--card-border);
+  border-radius: .25rem;
+  background: var(--bg);
+  cursor: pointer;
+}
+#priceItemList .price-item input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
 }
 
 /* ---------- Popup för alkemistnivå ---------- */

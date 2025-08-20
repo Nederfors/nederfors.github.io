@@ -369,7 +369,7 @@
     const nameMap = makeNameMap(inv);
     list.innerHTML = inv
       .map((row,i) => `
-        <label><input type="checkbox" data-idx="${i}"> ${nameMap.get(row)}</label>`)
+        <label class="price-item"><span>${nameMap.get(row)}</span><input type="checkbox" data-idx="${i}"></label>`)
       .join('');
 
     pop.classList.add('open');
@@ -741,6 +741,13 @@ ${moneyRow}
             .map(t => `<span class="tag">${t}</span>`);
           if (rowLevel) tagList.push(`<span class="tag level">${rowLevel}</span>`);
           if (freeCnt) tagList.push(`<span class="tag free removable" data-free="1">Gratis${freeCnt>1?`×${freeCnt}`:''} ✕</span>`);
+          const priceMult = row.priceMult;
+          if (priceMult && Math.abs(priceMult - 1) > 0.001) {
+            const mTxt = Number.isInteger(priceMult)
+              ? priceMult
+              : priceMult.toFixed(2).replace(/\.?0+$/, '');
+            tagList.push(`<span class="tag price-mult removable" data-mult="1">×${mTxt} ✕</span>`);
+          }
           if (tagList.length) {
             desc += `<div class="tags">${tagList.join(' ')}</div>`;
           }
@@ -905,6 +912,8 @@ ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
               inv[realIdx].gratisKval = inv[realIdx].gratisKval.filter(x => x !== q);
             }
           }
+        } else if (removeTagBtn.dataset.mult) {
+          delete inv[realIdx].priceMult;
         }
         saveInventory(inv);
         renderInventory();
