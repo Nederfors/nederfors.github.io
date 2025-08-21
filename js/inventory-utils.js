@@ -1312,7 +1312,7 @@ ${moneyRow}
       }
       return { row: null, parentArr: inv, idx: -1 };
     };
-    dom.invList.onclick = e => {
+    dom.invList.onclick = async e => {
       // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
       const removeTagBtn = e.target.closest('.tag.removable');
       if (removeTagBtn) {
@@ -1325,7 +1325,7 @@ ${moneyRow}
             .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
           if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
+            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
           }
           row.gratis = 0;
           if (pg > 0) row.perkGratis = 0;
@@ -1399,7 +1399,7 @@ ${moneyRow}
             .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
           if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
+            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
           }
           const entry  = getEntry(row.name);
           const tagTyp = entry.taggar?.typ || [];
@@ -1467,9 +1467,9 @@ ${moneyRow}
             };
             if (entry.traits && window.maskSkill) {
               const used = inv.filter(it => it.name===entry.namn).map(it=>it.trait).filter(Boolean);
-              maskSkill.pickTrait(used, trait => {
+              maskSkill.pickTrait(used, async trait => {
                 if(!trait) return;
-                if (used.includes(trait) && !confirm('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?')) return;
+                if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(trait);
               });
             } else {
@@ -1486,7 +1486,7 @@ ${moneyRow}
           const pg = row.perkGratis || 0;
           const removingPerkItem = (row.qty - 1) < pg;
           if (perkActive && row.perk === 'Välutrustad' && removingPerkItem) {
-            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) return;
+            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
           }
           if (row.qty > 1) {
             row.qty--;
@@ -1569,7 +1569,7 @@ ${moneyRow}
             newGratis < (row.gratis || 0) &&
             newGratis < (row.perkGratis || 0)
           ) {
-            if (!confirm('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?')) {
+            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) {
               return;
             }
           }
@@ -1678,8 +1678,8 @@ ${moneyRow}
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) openAdvMoneyPopup(doReset); else doReset();
     };
-    clearBtn.onclick = () => {
-      if (confirm('Du håller på att tömma hela inventariet, är du säker?')) {
+    clearBtn.onclick = async () => {
+      if (await confirmPopup('Du håller på att tömma hela inventariet, är du säker?')) {
         saveInventory([]);
         renderInventory();
       }

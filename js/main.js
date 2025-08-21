@@ -227,7 +227,7 @@ function bindToolbar() {
   });
 
   /* one–time delegation för alla knappar i toolbar + paneler */
-  bar.shadowRoot.addEventListener('click', e => {
+  bar.shadowRoot.addEventListener('click', async e => {
     const id = e.target.closest('button, a')?.id;
     if (!id) return;
 
@@ -248,7 +248,7 @@ function bindToolbar() {
 
     /* Kopiera rollperson ----------------------------------- */
     if (id === 'duplicateChar') {
-      if (!store.current) return alert('Ingen rollperson vald.');
+      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
       const newId = storeHelper.duplicateCharacter(store, store.current);
       if (newId) {
         store.current = newId;
@@ -259,7 +259,7 @@ function bindToolbar() {
 
     /* Byt namn på rollperson -------------------------------- */
     if (id === 'renameChar') {
-      if (!store.current) return alert('Ingen rollperson vald.');
+      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
       const char = store.characters.find(c => c.id === store.current);
       const newName = prompt('Nytt namn?', char ? char.name : '');
       if (!newName) return;
@@ -270,7 +270,7 @@ function bindToolbar() {
 
     /* Exportera rollperson --------------------------------- */
     if (id === 'exportChar') {
-      if (!store.characters.length) return alert('Inga rollpersoner att exportera.');
+      if (!store.characters.length) { await alertPopup('Inga rollpersoner att exportera.'); return; }
       openExportPopup(async choice => {
         if (choice === 'all') {
           await exportAllCharacters();
@@ -317,10 +317,10 @@ function bindToolbar() {
               if (res) {
                 ok = true;
               } else {
-                alert('Felaktig fil.');
+                await alertPopup('Felaktig fil.');
               }
             } catch {
-              alert('Felaktig fil.');
+              await alertPopup('Felaktig fil.');
             }
           }
           if (ok) {
@@ -328,7 +328,7 @@ function bindToolbar() {
           }
         } catch (err) {
           if (err && err.name !== 'AbortError') {
-            alert('Felaktig fil.');
+            await alertPopup('Felaktig fil.');
           }
         }
       })();
@@ -336,9 +336,9 @@ function bindToolbar() {
 
     /* Ta bort rollperson ----------------------------------- */
     if (id === 'deleteChar') {
-      if (!store.current) return alert('Ingen rollperson vald.');
+      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
       const char = store.characters.find(c => c.id === store.current);
-      if (!confirm(`Ta bort “${char.name}”?`)) return;
+      if (!(await confirmPopup(`Ta bort “${char.name}”?`))) return;
 
       const idToDel = store.current;
       storeHelper.deleteCharacter(store, idToDel);
@@ -572,7 +572,7 @@ async function saveJsonFile(jsonText, suggested) {
       await writable.close();
     } catch (err) {
       if (err && err.name !== 'AbortError') {
-        alert('Sparande misslyckades');
+        await alertPopup('Sparande misslyckades');
       }
     }
   } else {
@@ -729,10 +729,10 @@ function ensureCharacterSelected() {
             if (res) {
               ok = true;
             } else {
-              alert('Felaktig fil.');
+              await alertPopup('Felaktig fil.');
             }
           } catch {
-            alert('Felaktig fil.');
+            await alertPopup('Felaktig fil.');
           }
         }
         if (ok) {

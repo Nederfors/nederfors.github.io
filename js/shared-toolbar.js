@@ -27,6 +27,9 @@ class SharedToolbar extends HTMLElement {
     const nativeGetElementById = document.getElementById.bind(document);
     document.getElementById = id =>
       nativeGetElementById(id) || this.shadowRoot.getElementById(id);
+
+    window.alertPopup = msg => this.openDialog(msg);
+    window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
   }
 
   /* ------------------------------------------------------- */
@@ -266,7 +269,7 @@ class SharedToolbar extends HTMLElement {
       </aside>
 
       <!-- ---------- Popup Kvalitet ---------- -->
-      <div id="qualPopup">
+      <div id="qualPopup" class="popup">
         <div class="popup-inner">
           <h3 id="qualTitle">Välj kvalitet</h3>
           <div id="qualOptions"></div>
@@ -275,7 +278,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Custom ---------- -->
-      <div id="customPopup">
+      <div id="customPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Nytt föremål</h3>
           <input id="customName" placeholder="Namn">
@@ -300,7 +303,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Pengar ---------- -->
-      <div id="moneyPopup">
+      <div id="moneyPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Hantera pengar</h3>
           <div class="money-row">
@@ -316,7 +319,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Spara & Gratis ---------- -->
-      <div id="saveFreePopup">
+      <div id="saveFreePopup" class="popup">
         <div class="popup-inner">
           <p>Du håller på att markera allt i ditt inventarie som gratis och spara dina oanvända pengar som dina enda pengar. Är du säker på att du vill fortsätta?</p>
           <div class="confirm-row">
@@ -327,7 +330,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Varning Fördelspengar ---------- -->
-      <div id="advMoneyPopup">
+      <div id="advMoneyPopup" class="popup">
         <div class="popup-inner">
           <p>Du håller på att ändra pengar du fått från en fördel.</p>
           <div class="confirm-row">
@@ -338,7 +341,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Antal ---------- -->
-      <div id="qtyPopup">
+      <div id="qtyPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Lägg till antal</h3>
           <input id="qtyInput" type="number" min="1" step="1" placeholder="Antal">
@@ -348,7 +351,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Pris ---------- -->
-      <div id="pricePopup">
+      <div id="pricePopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Multiplicera pris</h3>
           <input id="priceFactor" type="number" step="0.1" placeholder="Faktor">
@@ -359,7 +362,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Färdmedel ---------- -->
-      <div id="vehiclePopup">
+      <div id="vehiclePopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Flytta till färdmedel</h3>
           <select id="vehicleSelect"></select>
@@ -370,7 +373,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
-      <div id="deleteContainerPopup">
+      <div id="deleteContainerPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <p>Du håller på att ta bort ett föremål som innehåller föremål. Vill du ta bort föremålen i föremålet?</p>
           <button id="deleteContainerAll" class="char-btn danger">Ja, ta bort allt</button>
@@ -380,7 +383,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Alkemistniv\u00e5 ---------- -->
-      <div id="alcPopup">
+      <div id="alcPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Alkemistniv\u00e5</h3>
           <div id="alcOptions">
@@ -394,7 +397,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Smedsniv\u00e5 ---------- -->
-      <div id="smithPopup">
+      <div id="smithPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Smedsniv\u00e5</h3>
           <div id="smithOptions">
@@ -408,7 +411,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Artefaktmakarniv\u00e5 ---------- -->
-      <div id="artPopup">
+      <div id="artPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Artefaktmakarniv\u00e5</h3>
           <div id="artOptions">
@@ -422,7 +425,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Försvarskaraktärsdrag ---------- -->
-      <div id="defensePopup">
+      <div id="defensePopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Försvarskaraktärsdrag</h3>
           <div id="defenseOptions">
@@ -441,7 +444,7 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Popup Export ---------- -->
-      <div id="exportPopup">
+      <div id="exportPopup" class="popup">
         <div class="popup-inner">
           <h3>Exportera</h3>
           <div id="exportOptions"></div>
@@ -450,12 +453,23 @@ class SharedToolbar extends HTMLElement {
       </div>
 
       <!-- ---------- Nilas Popup ---------- -->
-      <div id="nilasPopup">
+      <div id="nilasPopup" class="popup">
         <div class="popup-inner">
           <h3>Nilas \u00e4r b\u00e4st. H\u00e5ller du med?</h3>
           <div class="button-row">
             <button id="nilasNo" class="char-btn">Nej!</button>
             <button id="nilasYes" class="char-btn">Ja!</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Dialog Popup ---------- -->
+      <div id="dialogPopup" class="popup">
+        <div class="popup-inner">
+          <p id="dialogMessage"></p>
+          <div class="confirm-row">
+            <button id="dialogCancel" class="char-btn danger">Avbryt</button>
+            <button id="dialogOk" class="char-btn">OK</button>
           </div>
         </div>
       </div>
@@ -574,7 +588,7 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','vehiclePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','vehiclePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
@@ -602,6 +616,37 @@ class SharedToolbar extends HTMLElement {
     }
   }
   close(id) { this.panels[id]?.classList.remove('open'); }
+
+  openDialog(message, opts = {}) {
+    const { cancel = false, okText = 'OK', cancelText = 'Avbryt' } = opts;
+    return new Promise(resolve => {
+      const pop   = this.shadowRoot.getElementById('dialogPopup');
+      const msgEl = this.shadowRoot.getElementById('dialogMessage');
+      const okBtn = this.shadowRoot.getElementById('dialogOk');
+      const cancelBtn = this.shadowRoot.getElementById('dialogCancel');
+      msgEl.textContent = message;
+      cancelBtn.style.display = cancel ? '' : 'none';
+      okBtn.textContent = okText;
+      cancelBtn.textContent = cancelText;
+      pop.classList.add('open');
+      pop.querySelector('.popup-inner').scrollTop = 0;
+      const close = res => {
+        pop.classList.remove('open');
+        okBtn.removeEventListener('click', onOk);
+        cancelBtn.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        resolve(res);
+      };
+      const onOk = () => close(true);
+      const onCancel = () => close(false);
+      const onOutside = e => {
+        if (!pop.querySelector('.popup-inner').contains(e.target)) close(false);
+      };
+      okBtn.addEventListener('click', onOk);
+      cancelBtn.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+    });
+  }
 
   updateToolbarLinks() {
     const role = document.body.dataset.role;
