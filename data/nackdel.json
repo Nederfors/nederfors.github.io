@@ -253,6 +253,7 @@
       ]
     }
   },
+
   {
     "id": "na23",
     "namn": "Lättlurad",
@@ -397,6 +398,114 @@
       "typ": [
         "Nackdel"
       ]
+    }
+  },
+  {
+    "id": "na33",
+    "namn": "Ljusskygg",
+    "beskrivning": "Skarpa sken bränner i ögonen, som om solen själv bar agg. I fullt dagsljus eller nära starka ljuskällor blir blicken osäker och handen stel. Effekt: I starkt ljus får rollpersonen −1 på Vaksam.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Vaksam"]
+    }
+  },
+  {
+    "id": "na34",
+    "namn": "Nattblind",
+    "beskrivning": "Skymning förvandlar världen till en osäker grå massa och när mörkret faller går detaljer helt förlorade. I dunkel eller mörker utanför den egna ljuskällan får rollpersonen −1 på Vaksam.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Vaksam"]
+    }
+  },
+  {
+    "id": "na35",
+    "namn": "Vattentyngd",
+    "beskrivning": "Strömmen griper tag, kläder suger fast och varje steg eller armtag blir till en kamp. Rollpersonen har alltid trivts bättre på torra land än i vattnet och när vattnet går över knäna måste rollpersonen alltid slå två slag och välja det sämsta för alla handlingar.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na36",
+    "namn": "Hafspackare",
+    "beskrivning": "Remmar ligger snett, vikter hamnar fel och tyngden biter där den inte borde. Orken att organisera och packa effektivt saknas helt. Rollpersonens bärkapacitet räknas ut med Stark*0.75, avrundat uppåt.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Stark"]
+    }
+  },
+  {
+    "id": "na37",
+    "namn": "Borttappare",
+    "beskrivning": "Ett spänne här, en påse där – lägerplatsen skördar alltid sitt tionde. Trots trötta blickar från medresenärer är rollpersonen hopplös. Varje gång lägret packas ihop krävs ett slag mot Vaksam +3. Vid misslyckande tappas ett föremål ur rollpersonens packning, antingen avgjort av spelledare eller av tärningen.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Vaksam"]
+    }
+  },
+  {
+    "id": "na38",
+    "namn": "Regntrög",
+    "beskrivning": "Droppar blir kedjor, leran vill hålla kvar stegen och kroppen svarar långsammare. Rollpersonen har alltid föredragit att ligga kvar i tältet och dra när regnet faller och får således -1 på Kvick och Stark när det regnar.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Kvick", "Stark"]
+    }
+  },
+  {
+    "id": "na39",
+    "namn": "Värmeklen",
+    "beskrivning": "Hettans tyngd tömmer musklerna på kraft och luften känns tjock som sirap. Om temperaturen är hög eller solljuset direkt, får rollpersonen −1 på alla framgångsslag. ",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na40",
+    "namn": "Obekväm talare",
+    "beskrivning": "Många blickar låser tungan och får panna och händer att veva hejvilt medans stämbanden stämmer upp till stamning. Inför publik med tre eller fler åhörare (egna kumpaner räknas) får rollpersonen −1 på Övertygande.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Övertygande"]
+    }
+  },
+  {
+    "id": "na41",
+    "namn": "Dålig maskhållare",
+    "beskrivning": "Blicken flackar, rösten spricker och lögnen spricker med den. Att ljuga är ingenting som rollpersonen är bekväm med, så när hen ljuger slås Övertygande två gånger och det sämsta resultatet gäller.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Övertygande"]
+    }
+  },
+  {
+    "id": "na42",
+    "namn": "Blodskygg",
+    "beskrivning": "Synen av eget blod gör kroppen att darra och sinnet att förvänta sig värre än det är. Varje gång rollpersonen tar blodsgjutande skada krävs ett slag mot Viljestark; misslyckas slaget behandlas skadan som om smärtgränsen passerats och dess följder tillämpas.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "na43",
+    "namn": "Korruptionsmagnet",
+    "beskrivning": "Skuggan fäster lätt och lämnar ogärna. Rollpersonen har alltid varit förföljd av mörkret, vare sig hen har valt det själv eller inte. Varje gång rollpersonen tar korruption krävs ett slag mot Viljestark; vid misslyckande tillkommer +1 tillfällig korruption.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "na44",
+    "namn": "Dåligt lokalsinne",
+    "beskrivning": "Stigar flyter ihop och landmärken vägrar fastna. Rollpersonen är helt enkelt usel på att hitta och för att hen ska kunna ta sig någonstans utan ledsagare krävs ett lyckat slag mot Vaksam; vid misslyckande går rollpersonen vilse eller blir stående enligt spelledarens val.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Vaksam"]
     }
   }
 ]
