@@ -1959,7 +1959,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till novisnivå men har inget skydd mot temporär korruption när den använder sina krafter. Trollsångens tradition innehåller inga ritualer. Däremot får trollsångaren en andra chans att lyckas med ett slag per scen för att påverka ett sinne (alltså där motståndaren försvarar sig med Viljestark). Omslaget kan inte användas för att skapa eller upprätthålla en kedja av förtrollningar.",
+      "Novis": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till novisnivå men har inget skydd mot temporär korruption när den använder sina krafter. Dessutom får trollsångaren en andra chans att lyckas med ett slag per scen för att påverka ett sinne (alltså där motståndaren försvarar sig med Viljestark). Omslaget kan inte användas för att skapa eller upprätthålla en kedja av förtrollningar.",
       "Gesäll": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till gesällnivå. Trollsångargesällen får slå om ett slag vid ett försök att skapa eller upprätthålla en kedja av förtrollningar där motståndaren försvarar sig med Viljestark.",
       "Mästare": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till mästarnivå. Trollsångarmästaren får en andra chans att lyckas med alla de slag som slås för att skapa och upprätthålla en kedja av förtrollningar där motståndaren försvarar sig med Viljestark."
     }
