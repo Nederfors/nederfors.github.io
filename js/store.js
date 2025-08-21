@@ -268,8 +268,10 @@
     enforceEarthbound(list);
     enforceDwarf(list);
     applyHamnskifteTraits(store, list);
+    const prev = store.data[store.current]?.list || [];
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
+    const hadPriv = prev.some(x => x.namn === 'Privilegierad');
     const hasPriv = list.some(x => x.namn === 'Privilegierad');
     const hasPos  = list.some(x => x.namn === 'Besittning');
 
@@ -277,7 +279,7 @@
     const pos  = store.data[store.current].possessionMoney || defaultMoney();
 
     const privHas = priv.daler || priv.skilling || priv['örtegar'];
-    if (hasPriv && !privHas) {
+    if (hasPriv && !hadPriv) {
       store.data[store.current].privMoney = { daler: 50, skilling: 0, 'örtegar': 0 };
     } else if (!hasPriv && privHas) {
       store.data[store.current].privMoney = defaultMoney();
@@ -363,6 +365,19 @@
     if (!store.current) return defaultMoney();
     const data = store.data[store.current] || {};
     return { ...defaultMoney(), ...(data.privMoney || {}) };
+  }
+
+  function setPrivMoney(store, money) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].privMoney = { ...defaultMoney(), ...money };
+    const total = normalizeMoney({
+      daler: (money.daler || 0) + ((store.data[store.current].possessionMoney || {}).daler || 0),
+      skilling: (money.skilling || 0) + ((store.data[store.current].possessionMoney || {}).skilling || 0),
+      'örtegar': (money['örtegar'] || 0) + ((store.data[store.current].possessionMoney || {})['örtegar'] || 0)
+    });
+    store.data[store.current].bonusMoney = total;
+    save(store);
   }
 
   function getPossessionMoney(store) {
@@ -1052,6 +1067,7 @@ function defaultTraits() {
     getBonusMoney,
     setBonusMoney,
     getPrivMoney,
+    setPrivMoney,
     getTotalMoney,
     getPartySmith,
     setPartySmith,
