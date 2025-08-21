@@ -323,11 +323,28 @@
       skilling: Number(sIn.value)||0,
       'örtegar': Number(oIn.value)||0
     });
+    const maybeAdv = fn => {
+      const priv = storeHelper.getPrivMoney(store);
+      const pos  = storeHelper.getPossessionMoney(store);
+      const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
+      if (hasAdv) {
+        close();
+        openAdvMoneyPopup(() => {
+          storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          fn();
+        });
+      } else {
+        close();
+        fn();
+      }
+    };
     const onSet = () => {
       const money = getInputMoney();
-      storeHelper.setMoney(store, money);
-      close();
-      renderInventory();
+      maybeAdv(() => {
+        storeHelper.setMoney(store, money);
+        renderInventory();
+      });
     };
     const onAdd = () => {
       const addMoney = getInputMoney();
@@ -337,9 +354,10 @@
         skilling: curMoney.skilling + addMoney.skilling,
         'örtegar': curMoney['örtegar'] + addMoney['örtegar']
       });
-      storeHelper.setMoney(store, total);
-      close();
-      renderInventory();
+      maybeAdv(() => {
+        storeHelper.setMoney(store, total);
+        renderInventory();
+      });
     };
     const onCancel = () => { close(); };
     const onOutside = e => {
@@ -617,6 +635,31 @@ function openVehiclePopup(preselectId) {
     pop.addEventListener('click', onOutside);
   }
 
+  function openAdvMoneyPopup(onConfirm) {
+    const pop    = bar.shadowRoot.getElementById('advMoneyPopup');
+    const cancel = bar.shadowRoot.getElementById('advMoneyCancel');
+    const confirm= bar.shadowRoot.getElementById('advMoneyConfirm');
+
+    pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
+
+    const close = () => {
+      pop.classList.remove('open');
+      cancel.removeEventListener('click', onCancel);
+      confirm.removeEventListener('click', onConf);
+      pop.removeEventListener('click', onOutside);
+    };
+    const onConf = () => { onConfirm(); close(); };
+    const onCancel = () => { close(); };
+    const onOutside = e => {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    cancel.addEventListener('click', onCancel);
+    confirm.addEventListener('click', onConf);
+    pop.addEventListener('click', onOutside);
+  }
+
   function openSaveFreePopup() {
     const pop    = bar.shadowRoot.getElementById('saveFreePopup');
     const cancel = bar.shadowRoot.getElementById('saveFreeCancel');
@@ -631,7 +674,18 @@ function openVehiclePopup(preselectId) {
       confirm.removeEventListener('click', onConfirm);
       pop.removeEventListener('click', onOutside);
     };
-    const onConfirm = () => { massFreeAndSave(); close(); };
+    const onConfirm = () => {
+      const priv = storeHelper.getPrivMoney(store);
+      const pos  = storeHelper.getPossessionMoney(store);
+      const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
+      if (hasAdv) {
+        close();
+        openAdvMoneyPopup(() => { massFreeAndSave(); });
+      } else {
+        massFreeAndSave();
+        close();
+      }
+    };
     const onCancel  = () => { close(); };
     const onOutside = e => {
       if (!pop.querySelector('.popup-inner').contains(e.target)) close();
@@ -669,6 +723,8 @@ function openVehiclePopup(preselectId) {
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.max(0, diffO));
+    storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+    storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
     storeHelper.setMoney(store, {
       daler: diff.d,
       skilling: diff.s,
@@ -1611,8 +1667,16 @@ ${moneyRow}
     multiBtn.onclick  = openPricePopup;
     saveFreeBtn.onclick = openSaveFreePopup;
     resetBtn.onclick = () => {
-      storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-      renderInventory();
+      const doReset = () => {
+        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        renderInventory();
+      };
+      const priv = storeHelper.getPrivMoney(store);
+      const pos  = storeHelper.getPossessionMoney(store);
+      const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
+      if (hasAdv) openAdvMoneyPopup(doReset); else doReset();
     };
     clearBtn.onclick = () => {
       if (confirm('Du håller på att tömma hela inventariet, är du säker?')) {
