@@ -250,6 +250,7 @@ input:focus, select:focus, textarea:focus {
   flex-direction: column;
   gap: .45rem;
   position: relative;
+  transition: outline .1s ease, outline-offset .1s ease, box-shadow .1s ease;
 }
 
 .card.vehicle-over {
@@ -266,6 +267,8 @@ input:focus, select:focus, textarea:focus {
 }
 #invList li.card.dragging {
   cursor: grabbing;
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
 }
 
 /* särställ "Formaliteter"-kortet med blå kant */
