@@ -159,11 +159,7 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "test": [
-        "Stark",
-        "Listig",
-        "Vaksam"
-      ]
+      "test": []
     }
   },
   {
@@ -176,9 +172,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Listig"
-      ]
+      "test": []
     }
   },
   {
@@ -216,7 +210,7 @@
   {
     "id": "ford15",
     "namn": "Gifttålig",
-    "beskrivning": "Rollpersonen har genom försiktig exponering byggt upp en enastående motståndskraft mot gifter. Gifter drabbar rollpersonen på en nivå lägre än normalt – ett stark gift skadar som ett medelstarkt, ett medelstarkt blir svagt och ett svagt ger bara ett i skada per runda det är verksamt. Verkanstiden påverkas inte, enbart mängden skada per runda. Mot gifter som inte skadar utan har andra negativa effekter får rollpersonen istället en andra chans att lyckas med motståndsslagen.",
+    "beskrivning": "Rollpersonen har genom försiktig exponering byggt upp en enastående motståndskraft mot gifter. Gifter drabbar rollpersonen på en nivå lägre än normalt – ett stark gift skadar som ett medelstarkt, ett medelstarkt blir svagt och ett svagt ger bara ett i skada per runda det är verksamt. Verkanstiden påverkas inte, enbart mängden skada per runda. Mot gifter som inte skadar utan har andra negativa effekter får rollpersonen istället en andra chans att lyckas med motståndsslagen mot Stark.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
@@ -240,9 +234,7 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "test": [
-        "Listig"
-      ]
+      "test": []
     }
   },
   {
@@ -283,9 +275,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Stark"
-      ]
+      "test": []
     }
   },
   {
@@ -406,9 +396,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Listig"
-      ]
+      "test": []
     }
   },
   {
@@ -507,9 +495,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Listig"
-      ]
+      "test": []
     }
   },
   {
@@ -572,9 +558,7 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "test": [
-        "Listig"
-      ]
+      "test": []
     }
   },
   {
@@ -660,9 +644,7 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "test": [
-        "Försvar"
-      ]
+      "test": []
     }
   },
   {
@@ -800,9 +782,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Försvar"
-      ]
+      "test": []
     }
   },
   {
@@ -815,9 +795,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Försvar"
-      ]
+      "test": []
     }
   },
   {
@@ -830,9 +808,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Försvar"
-      ]
+      "test": []
     }
   },
   {
@@ -845,9 +821,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Försvar"
-      ]
+      "test": []
     }
   },
   {
@@ -860,9 +834,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Försvar"
-      ]
+      "test": []
     }
   },
   {
@@ -892,9 +864,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Försvar"
-      ]
+      "test": []
     }
   },
   {
@@ -909,9 +879,7 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "test": [
-        "Viljestark"
-      ]
+      "test": []
     }
   },
   {
@@ -941,9 +909,7 @@
       "ark_trad": [
         "Krigare"
       ],
-      "test": [
-        "Stark"
-      ]
+      "test": []
     }
   },
   {
@@ -958,9 +924,7 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "test": [
-        "Viljestark"
-      ]
+      "test": []
     }
   }
 ]
