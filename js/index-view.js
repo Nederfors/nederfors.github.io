@@ -772,7 +772,7 @@ function initIndex() {
   });
 
   /* level-byte i listan */
-  dom.lista.addEventListener('change',e=>{
+  dom.lista.addEventListener('change', async e=>{
     if(!e.target.matches('select.level')) return;
     const name = e.target.dataset.name;
     const tr = e.target.closest('li').dataset.trait || null;
