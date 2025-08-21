@@ -366,7 +366,7 @@ function initIndex() {
   });
 
   /* lista-knappar */
-  dom.lista.addEventListener('click',e=>{
+  dom.lista.addEventListener('click', async e=>{
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       const html=decodeURIComponent(infoBtn.dataset.info||'');
@@ -383,7 +383,7 @@ function initIndex() {
     const btn=e.target.closest('button[data-act]');
     if (!btn) return;
     if (!store.current) {
-      alert('Ingen rollperson vald.');
+      await alertPopup('Ingen rollperson vald.');
       return;
     }
     const name = btn.dataset.name;
@@ -397,12 +397,12 @@ function initIndex() {
     /* Lägg till kvalitet direkt */
     if (isQual(p)) {
       const inv = storeHelper.getInventory(store);
-      if (!inv.length) return alert('Ingen utrustning i inventariet.');
+      if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
       const elig = inv.filter(it => {
         const tag = (invUtil.getEntry(it.name)?.taggar?.typ) || [];
         return ['Vapen','Sköld','Rustning'].some(t => tag.includes(t));
       });
- if (!elig.length) return alert('Ingen lämplig utrustning att förbättra.');
+ if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
  invUtil.openQualPopup(elig, iIdx => {
         elig[iIdx].kvaliteter = elig[iIdx].kvaliteter||[];
         const qn = p.namn;
@@ -449,9 +449,9 @@ function initIndex() {
           };
           if (p.traits && window.maskSkill) {
             const used = inv.filter(it => it.name===p.namn).map(it=>it.trait).filter(Boolean);
-            maskSkill.pickTrait(used, trait => {
+            maskSkill.pickTrait(used, async trait => {
               if(!trait) return;
-              if (used.includes(trait) && !confirm('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?')) return;
+              if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
               addRow(trait);
             });
           } else {
@@ -461,33 +461,33 @@ function initIndex() {
       } else {
         const list = storeHelper.getCurrentList(store);
         const disBefore = storeHelper.countDisadvantages(list);
-        const checkDisadvWarning = () => {
+        const checkDisadvWarning = async () => {
           if (storeHelper.countDisadvantages(list) === 5 && disBefore < 5) {
-            alert('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
+            await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
           }
         };
         if (p.namn === 'Korruptionskänslig' && list.some(x => x.namn === 'Dvärg')) {
-          alert('Dvärgar kan inte ta Korruptionskänslig.');
+          await alertPopup('Dvärgar kan inte ta Korruptionskänslig.');
           return;
         }
         if (isRas(p) && list.some(isRas)) {
-          alert('Du kan bara välja en ras.');
+          await alertPopup('Du kan bara välja en ras.');
           return;
         }
         if (p.namn === 'Dvärg') {
           const hasKorrupt = list.some(x => x.namn === 'Korruptionskänslig');
           if (hasKorrupt) {
-            if (!confirm('Du har korruptionskänslig, om du väljer till rasen Dvärg så kommer den nackdelen tas bort. Fortsätt?')) return;
+            if (!(await confirmPopup('Du har korruptionskänslig, om du väljer till rasen Dvärg så kommer den nackdelen tas bort. Fortsätt?'))) return;
             for (let i = list.length - 1; i >= 0; i--) {
               if (list[i].namn === 'Korruptionskänslig') list.splice(i, 1);
             }
           }
         }
         if (isYrke(p) && list.some(isYrke)) {
-          if (!confirm('Du kan bara välja ett yrke. Lägga till ändå?')) return;
+          if (!(await confirmPopup('Du kan bara välja ett yrke. Lägga till ändå?'))) return;
         }
         if (isElityrke(p) && list.some(isElityrke)) {
-          if (!confirm('Du kan bara välja ett elityrke. Lägga till ändå?')) return;
+          if (!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
         }
         if (isElityrke(p)) {
           const res = eliteReq.check(p, list);
@@ -496,7 +496,7 @@ function initIndex() {
               (res.missing.length ? 'Saknar: ' + res.missing.join(', ') + '\n' : '') +
               (res.master ? '' : 'Ingen av kraven på Mästare-nivå.\n') +
               'Lägga till ändå?';
-            if (!confirm(msg)) return;
+            if (!(await confirmPopup(msg))) return;
           }
         }
         if (isEliteSkill(p)) {
@@ -508,7 +508,7 @@ function initIndex() {
               'Förmågan är låst till elityrket ' +
               explodeTags(p.taggar.ark_trad).join(', ') +
               '.\nLägga till ändå?';
-            if (!confirm(msg)) return;
+            if (!(await confirmPopup(msg))) return;
           }
         }
         let monsterOk = false;
@@ -530,10 +530,10 @@ function initIndex() {
             (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen','Pansar'].includes(baseName)) ||
             (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration','Robust'].includes(baseName));
           if (!monsterOk) {
-            if (!confirm('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')) return;
+            if (!(await confirmPopup('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?'))) return;
           }
           if (storeHelper.hamnskifteNoviceLimit(list, p, lvl)) {
-            alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
+            await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
             return;
           }
         }
@@ -541,18 +541,18 @@ function initIndex() {
           const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
           const robustOk = monsterOk || (hamLvl >= 3 && lvl === 'Novis');
           if (!robustOk) {
-            if (!confirm('Robust kan normalt inte väljas. Lägga till ändå?')) return;
+            if (!(await confirmPopup('Robust kan normalt inte väljas. Lägga till ändå?'))) return;
           }
         }
         if (p.namn === 'Råstyrka') {
           const robust = list.find(x => x.namn === 'Robust');
           const hasRobust = !!robust && (robust.nivå === undefined || robust.nivå !== '');
           if (!hasRobust) {
-            if (!confirm('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?')) return;
+            if (!(await confirmPopup('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?'))) return;
           }
         }
         if (p.namn === 'Mörkt förflutet' && list.some(x => x.namn === 'Jordnära')) {
-          alert('Jordnära karaktärer kan inte ta Mörkt förflutet.');
+          await alertPopup('Jordnära karaktärer kan inte ta Mörkt förflutet.');
           return;
         }
         if (isSardrag(p) && (p.taggar.ras || []).length && !(isMonstrousTrait(p) && monsterOk)) {
@@ -563,15 +563,15 @@ function initIndex() {
           const ok = races.some(r => p.taggar.ras.includes(r));
           if (!ok) {
             const msg = 'Särdraget är bundet till rasen ' + p.taggar.ras.join(', ') + '.\nLägga till ändå?';
-            if (!confirm(msg)) return;
+            if (!(await confirmPopup(msg))) return;
           }
         }
         if (p.namn === 'Blodsband' && window.bloodBond) {
           const used=list.filter(x=>x.namn===p.namn).map(x=>x.race).filter(Boolean);
-          bloodBond.pickRace(used, race => {
+          bloodBond.pickRace(used, async race => {
             if(!race) return;
             list.push({ ...p, race });
-            checkDisadvWarning();
+            await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
@@ -579,10 +579,10 @@ function initIndex() {
           return;
         }
         if (p.namn === 'Monsterlärd' && ['Gesäll','Mästare'].includes(lvl) && window.monsterLore) {
-          monsterLore.pickSpec(spec => {
+          monsterLore.pickSpec(async spec => {
             if(!spec) return;
             list.push({ ...p, nivå: lvl, trait: spec });
-            checkDisadvWarning();
+            await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
@@ -591,7 +591,7 @@ function initIndex() {
         }
         if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
           const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
-          exceptionSkill.pickTrait(used, trait => {
+          exceptionSkill.pickTrait(used, async trait => {
             if(!trait) return;
             const existing=list.find(x=>x.namn===p.namn && x.trait===trait);
             if(existing){
@@ -599,7 +599,7 @@ function initIndex() {
             }else{
               list.push({ ...p, nivå:lvl, trait });
             }
-            checkDisadvWarning();
+            await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
@@ -611,15 +611,15 @@ function initIndex() {
           const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
           const limit = storeHelper.monsterStackLimit(list, p.namn);
           if(p.namn !== 'Blodsband' && cnt >= limit){
-            alert(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
+            await alertPopup(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
             return;
           }
         }else if(list.some(x=>x.namn===p.namn && !x.trait)){
           return;
         }
         let form = 'normal';
-        const finishAdd = () => {
-          checkDisadvWarning();
+        const finishAdd = async () => {
+          await checkDisadvWarning();
           storeHelper.setCurrentList(store, list); updateXP();
           if (p.namn === 'Privilegierad') {
             invUtil.renderInventory();
@@ -627,7 +627,7 @@ function initIndex() {
           if (p.namn === 'Besittning') {
             const amount = Math.floor(Math.random() * 10) + 11;
             storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
-            alert(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
+            await alertPopup(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
             invUtil.renderInventory();
           }
           if (p.namn === 'Välutrustad') {
@@ -641,16 +641,16 @@ function initIndex() {
         if (isMonstrousTrait(p)) {
           const test = { ...p, nivå: lvl, form: 'beast' };
           if (storeHelper.isFreeMonsterTrait(list, test) && window.beastForm) {
-            beastForm.pickForm(res => {
+            beastForm.pickForm(async res => {
               if(!res) return;
               list.push({ ...p, nivå: lvl, form: res });
-              finishAdd();
+              await finishAdd();
             });
             return;
           }
         }
         list.push({ ...p, nivå: lvl, form });
-        finishAdd();
+        await finishAdd();
       }
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
@@ -685,16 +685,16 @@ function initIndex() {
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
         if(p.namn==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
-          if(!confirm('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?'))
+          if(!(await confirmPopup('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?')))
             return;
         }
         const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
         if(isMonstrousTrait(p) && storeHelper.DARK_BLOOD_TRAITS.includes(baseRem) && before.some(x=>x.namn==='Mörkt blod')){
-          if(!confirm(p.namn+' hänger ihop med Mörkt blod. Ta bort ändå?'))
+          if(!(await confirmPopup(p.namn+' hänger ihop med Mörkt blod. Ta bort ändå?')))
             return;
         }
         if(storeHelper.HAMNSKIFTE_BASE[p.namn] && before.some(x=>x.namn==='Hamnskifte')){
-          if(!confirm(p.namn+' hänger ihop med Hamnskifte. Ta bort ändå?'))
+          if(!(await confirmPopup(p.namn+' hänger ihop med Hamnskifte. Ta bort ändå?')))
             return;
           const rem=storeHelper.getHamnskifteRemoved(store);
           const base=storeHelper.HAMNSKIFTE_BASE[p.namn];
@@ -720,16 +720,16 @@ function initIndex() {
         const removed = before.find(it => it.namn===p.namn && (tr?it.trait===tr:!it.trait));
         const remDeps = storeHelper.getDependents(before, removed);
         if(p.namn==='Mörkt blod' && remDeps.length){
-          if(confirm(`Ta bort även: ${remDeps.join(', ')}?`)){
+          if(await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)){
             list = list.filter(x => !remDeps.includes(x.namn));
           }
         } else if(p.namn==='Hamnskifte' && remDeps.length){
-          if(confirm(`Ta bort även: ${remDeps.join(', ')}?`)){
+          if(await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)){
             list = list.filter(x => !remDeps.includes(x.namn));
             storeHelper.setHamnskifteRemoved(store, []);
           }
         } else if(remDeps.length){
-          if(!confirm(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`)) return;
+          if(!(await confirmPopup(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`))) return;
         }
         if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
           const deps = before
@@ -739,7 +739,7 @@ function initIndex() {
         const msg = deps.length
             ? `Förmågan krävs för: ${deps.join(', ')}. Ta bort ändå?`
             : 'Förmågan krävs för ett valt elityrke. Ta bort ändå?';
-          if(!confirm(msg))
+          if(!(await confirmPopup(msg)))
             return;
         }
         storeHelper.setCurrentList(store,list); updateXP();
@@ -751,12 +751,12 @@ function initIndex() {
           const cnt = storeHelper.incrementPossessionRemoved(store);
           if (cnt >= 3) {
             const id = store.current;
-            alert('Karaktären raderas på grund av misstänkt fusk.');
+            await alertPopup('Karaktären raderas på grund av misstänkt fusk.');
             storeHelper.deleteCharacter(store, id);
             location.reload();
             return;
           } else if (cnt === 2) {
-            alert('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
+            await alertPopup('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
           }
           invUtil.renderInventory();
         }
@@ -783,13 +783,13 @@ function initIndex() {
       const old = ent.nivå;
       ent.nivå = e.target.value;
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
-        alert('Förmågan krävs för ett valt elityrke och kan inte ändras.');
+        await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
         ent.nivå = old;
         e.target.value = old;
         return;
       }
       if (storeHelper.hamnskifteNoviceLimit(list, ent, ent.nivå)) {
-        alert('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
+        await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
         ent.nivå = old;
         e.target.value = old;
         return;
@@ -822,7 +822,7 @@ function initIndex() {
         toRemove=toRemove.filter(n=>list.some(x=>x.namn===storeHelper.HAMNSKIFTE_NAMES[n]));
         if(toRemove.length){
           const dispNames=toRemove.map(n=>storeHelper.HAMNSKIFTE_NAMES[n]);
-          if(!confirm(`Ta bort även: ${dispNames.join(', ')}?`)){
+          if(!(await confirmPopup(`Ta bort även: ${dispNames.join(', ')}?`))){
             ent.nivå=old; e.target.value=old; return;
           }
           for(let i=list.length-1;i>=0;i--){

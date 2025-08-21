@@ -47,8 +47,8 @@
     }
   }
 
-  function cancelEdit(){
-    if(confirm('Nu stängs redigering utan att spara, är du säker?')){
+  async function cancelEdit(){
+    if(await confirmPopup('Nu stängs redigering utan att spara, är du säker?')){
       showView();
     }
   }
@@ -103,8 +103,8 @@
       showView();
     });
 
-    if(clearBtn) clearBtn.onclick = ()=>{
-      if(!isEditing || confirm('Du håller på att sudda ut alla dina anteckningar, är du säker?')){
+    if(clearBtn) clearBtn.onclick = async ()=>{
+      if(!isEditing || await confirmPopup('Du håller på att sudda ut alla dina anteckningar, är du säker?')){
         fields.forEach(id=>{
           const el=form.querySelector('#'+id);
           if(el) el.value='';
@@ -112,8 +112,8 @@
       }
     };
 
-    if(charLink) charLink.addEventListener('click',e=>{
-      if(isEditing && !confirm('Nu stängs redigering utan att spara, är du säker?')){
+    if(charLink) charLink.addEventListener('click',async e=>{
+      if(isEditing && !(await confirmPopup('Nu stängs redigering utan att spara, är du säker?'))){
         e.preventDefault();
       }
     });

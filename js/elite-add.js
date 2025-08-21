@@ -3,6 +3,7 @@
     if(document.getElementById('masterPopup')) return;
     const div=document.createElement('div');
     div.id='masterPopup';
+    div.className='popup popup-bottom';
     div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">V\u00e4lj niv\u00e5</h3><div id="masterOpts"></div><div id="masterBtns"><button id="masterAdd" class="char-btn">L\u00e4gg till</button><button id="masterCancel" class="char-btn danger">Avbryt</button></div></div>`;
     document.body.appendChild(div);
   }
@@ -207,8 +208,8 @@
     return (entry?.taggar?.typ||[]).includes('Ritual');
   }
 
-  function addReq(entry, levels){
-    if(!store.current) return alert('Ingen rollperson vald.');
+  async function addReq(entry, levels){
+    if(!store.current){ await alertPopup('Ingen rollperson vald.'); return; }
     const names=parseNames(entry.krav_formagor||'');
     const listNames = new Set(names);
     if(levels && typeof levels==='object'){
@@ -230,32 +231,32 @@
     storeHelper.setCurrentList(store,list);
   }
 
-  function addElite(entry){
-    if(!store.current) return alert('Ingen rollperson vald.');
+  async function addElite(entry){
+    if(!store.current){ await alertPopup('Ingen rollperson vald.'); return; }
     const list = storeHelper.getCurrentList(store);
     if(list.some(x=>x.namn===entry.namn)) return;
-    if(list.some(isElityrke)){
-      if(!confirm('Du kan bara välja ett elityrke. Lägga till ändå?')) return;
+      if(list.some(isElityrke)){
+      if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
     }
     const res = eliteReq.check(entry, list);
-    if(!res.ok){
+      if(!res.ok){
       const msg = 'Krav ej uppfyllda:\n' +
         (res.missing.length ? 'Saknar: ' + res.missing.join(', ') + '\n' : '') +
         (res.master ? '' : 'Ingen av kraven på Mästare-nivå.\n') +
         'Lägga till ändå?';
-      if(!confirm(msg)) return;
+      if(!(await confirmPopup(msg))) return;
     }
     list.push({ ...entry });
     storeHelper.setCurrentList(store, list);
   }
 
-  function handle(btn){
+  async function handle(btn){
     const name=btn.dataset.eliteReq;
     const entry=DB.find(x=>x.namn===name);
     if(!entry) return;
     const groups=parseGroupRequirements(entry.krav_formagor||'');
     if(!groups.length){
-      addReq(entry); addElite(entry); updateXP(); location.reload(); return;
+      await addReq(entry); await addElite(entry); updateXP(); location.reload(); return;
     }
     openPopup(groups, levels=>{
       if(!levels) return;
