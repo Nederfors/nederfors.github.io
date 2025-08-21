@@ -925,5 +925,27 @@
       ],
       "test": []
     }
+  },
+  {
+    "id": "ford65",
+    "namn": "Lagspelare",
+    "beskrivning": "Rollpersonen läser sina lagkamraters rytm och kliver in precis när öppningen finns. Om två allierade innan rollpersonen i ordningen lyckades med anfall mot samma måltavla rider rollpersonen på momentumet och får +1 på sin nästa aktiva handling mot den måltavlan.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "id": "ford66",
+    "namn": "Stridsraseri",
+    "beskrivning": "När blodet rinner och blicken smalnar pressar du kroppen över gränsen. Så länge din Tålighet är lika med eller lägre än halva ditt maximum får du +1 på alla slag mot Stark.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Stark"]
+    }
   }
 ]
