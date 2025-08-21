@@ -1,6 +1,8 @@
 (function(window){
 function initIndex() {
-  dom.cName.textContent = store.characters.find(c=>c.id===store.current)?.name||'';
+  if (dom.cName) {
+    dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
+  }
   const F = { search:[], typ:[], ark:[], test:[] };
   let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
