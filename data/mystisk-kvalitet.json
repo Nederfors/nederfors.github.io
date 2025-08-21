@@ -109,7 +109,6 @@
       ]
     }
   },
-  [
   {
     "id": "mystiskkv12",
     "namn": "Blodsdrickande",
@@ -140,6 +139,5 @@
     "beskrivning": "Vapnet kan inte tas bort från bäraren; det kan varken stjälas eller tappas och på något mystiskt vis verkar det alltid finnas till hands när bäraren behöver det och behöver således inte dras som en handling. Nackdelen är att det inte heller frivilligt kan lämnas bort, även om det skulle krävas av bäraren.",
     "taggar": { "typ": ["Mystisk kvalitet"] }
   }
-]
 
 ]
