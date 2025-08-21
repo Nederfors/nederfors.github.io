@@ -6,7 +6,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": []
     }
   },
   {
@@ -16,7 +17,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": ["Diskret", "Övertygande"]
     }
   },
   {
@@ -26,7 +28,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": ["Viljestark"]
     }
   },
   {
@@ -36,7 +39,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": ["Viljestark"]
     }
   },
   {
@@ -46,7 +50,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": ["Diskret"]
     }
   },
   {
@@ -86,7 +91,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": ["Viljestark"]
     }
   },
   {
@@ -96,7 +102,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": ["Diskret"]
     }
   },
   {
@@ -106,7 +113,8 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": ["Diskret"]
     }
   },
   {
@@ -186,7 +194,6 @@
       ],
       "ark_trad": [],
       "test": [
-        ""
       ]
     }
   },
@@ -335,7 +342,6 @@
         "Mystiker"
       ],
       "test": [
-        "Viljestark"
       ]
     }
   },
@@ -352,7 +358,6 @@
         ""
       ],
       "test": [
-        ""
       ]
     }
   },
@@ -369,7 +374,6 @@
         ""
       ],
       "test": [
-        ""
       ]
     }
   },
