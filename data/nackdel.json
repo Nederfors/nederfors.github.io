@@ -24,7 +24,7 @@
   {
     "id": "na3",
     "namn": "Blodtörstig",
-    "beskrivning": "Rollpersonen har en stark blodtörst som väcks lätt och är svår att stilla. Blodtörsten väcks om rollpersonen tar skada och leder till att rollpersonen inte skonar några fiender – inte ens de som ger upp. För att kunna skona en fiende krävs en nästan övermäktig ansträngning; det kräver att spelaren offrar en Erfarenhet och lyckas med ett Viljestark.",
+    "beskrivning": "Rollpersonen har en stark blodtörst som väcks lätt och är svår att stilla. Blodtörsten väcks om rollpersonen tar skada och leder till att rollpersonen inte skonar några fiender – inte ens de som ger upp. För att kunna skona en fiende krävs en nästan övermäktig ansträngning; det kräver att spelaren offrar en Erfarenhet eller lyckas med ett Viljestark -5.",
     "taggar": {
       "typ": [
         "Nackdel"
@@ -438,8 +438,8 @@
   },
   {
     "id": "na37",
-    "namn": "Borttappare",
-    "beskrivning": "Ett spänne här, en påse där – lägerplatsen skördar alltid sitt tionde. Trots trötta blickar från medresenärer är rollpersonen hopplös. Varje gång lägret packas ihop krävs ett slag mot Vaksam +3. Vid misslyckande tappas ett föremål ur rollpersonens packning, antingen avgjort av spelledare eller av tärningen.",
+    "namn": "Slarvig",
+    "beskrivning": "Ett spänne här, en påse där – lägerplatsen skördar alltid sitt tionde. Trots trötta blickar från medresenärer är rollpersonen hopplöst slarvig. Varje gång lägret packas ihop krävs ett slag mot Vaksam +3. Vid misslyckande tappas ett föremål ur rollpersonens packning, antingen avgjort av spelledare eller av tärningen.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Vaksam"]
@@ -466,7 +466,7 @@
   {
     "id": "na40",
     "namn": "Obekväm talare",
-    "beskrivning": "Många blickar låser tungan och får panna och händer att veva hejvilt medans stämbanden stämmer upp till stamning. Inför publik med tre eller fler åhörare (egna kumpaner räknas) får rollpersonen −1 på Övertygande.",
+    "beskrivning": "Många blickar låser tungan, pannan att börja svettas och händer att veva hejvilt medans stämbanden stämmer upp till stamning. Inför publik med tre eller fler åhörare (egna kumpaner räknas) får rollpersonen −1 på Övertygande.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Övertygande"]
@@ -507,5 +507,29 @@
       "typ": ["Nackdel"],
       "test": ["Vaksam"]
     }
-  }
+  },
+  {
+"id": "na45",
+"namn": "Hämndlysten",
+"beskrivning": "Det första blodet väcker en blind fixering; smärtan måste hämnas och rollpersonen har en tydlig måltavla. Första gången rollpersonen tar skada i en strid måste nästa aktiva handling riktas mot källan till skadan. Tvånget kan bara brytas med ett lyckat slag mot Viljestark −5 eller genom att offra 1 Erfarenhet.",
+"taggar": { "typ": ["Nackdel"], "test": ["Viljestark"] }
+},
+{
+"id": "na46",
+"namn": "Dålig kondition",
+"beskrivning": "Efter några utfall bränner lungorna och greppet tappar stadga. Rollpersonens flås är verkligen inte vad det brukade vara och det snabba stridstempot är svårt att hålla jämn takt med. Var tredje stridsrunda får rollpersonen −1 på Försvar och −1 på Träffsäker, kumulativt, tills striden är över.",
+"taggar": { "typ": ["Nackdel"], "test": [] }
+},
+{
+"id": "na47",
+"namn": "Trängselpanik",
+"beskrivning": "När fiender pressar på blir stegen osäkra och gardet öppnas. Är det inte lite trångt här? Hjärtat börjar banka, ögonen flackar och motståndare får övertag mot rollpersonen så snart minst två fiender befinner sig i närstridsräckvidd, även utan flankering.",
+"taggar": { "typ": ["Nackdel"], "test": [] }
+},
+{
+"id": "na48",
+"namn": "Giftkänslig",
+"beskrivning": "Kroppen reagerar hårt på främmande ämnen. Effekt: Varje gift som drabbar rollpersonen räknas som en nivå starkare än normalt: svagt gift räknas som medelstarkt, medelstarkt räknas som starkt och starkt gift räknas som ett jättestarkt, det vill säga att det gör +1t4 skada i +1t4 rundor.",
+"taggar": { "typ": ["Nackdel"], "test": [] }
+}
 ]
