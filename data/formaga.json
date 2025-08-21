@@ -820,7 +820,7 @@
         "Krigare"
       ],
       "test": [
-        "Stark"
+        "Stark", "Kvick"
       ],
       "handling": {
         "Novis": [
@@ -1189,6 +1189,9 @@
       ],
       "ark_trad": [
         "Artefaktmakare"
+      ],
+      "test": [
+        "Listig"
       ],
       "handling": {
         "Novis": [
@@ -1729,6 +1732,9 @@
       "ark_trad": [
         "Krigare"
       ],
+      "test": [
+        "Träffsäker"
+      ],
       "handling": {
         "Novis": [
           "Reaktiv"
@@ -1875,6 +1881,9 @@
       "ark_trad": [
         "Tjuv"
       ],
+      "test": [
+        "Listig"
+      ],
       "handling": {
         "Novis": [
           "Aktiv"
@@ -1903,6 +1912,9 @@
       ],
       "ark_trad": [
         "Jägare"
+      ],
+      "test": [
+        "Träffsäker"
       ],
       "handling": {
         "Novis": [
@@ -1962,6 +1974,9 @@
       ],
       "ark_trad": [
         "Krigare"
+      ],
+      "test": [
+        "Träffsäker"
       ],
       "handling": {
         "Novis": [
@@ -2158,7 +2173,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. Karaktären är van vid att lugna sig, sikta och andas rätt. Genom att avstå från sin förflyttningshandling får hen en andra chans att träffa med sitt anfall under samma runda.",
+      "Novis": "Handling: Reaktiv. Karaktären är van vid att lugna sig, sikta och andas rätt. Genom att avstå från sin förflyttningshandling får hen en andra chans att träffa med sitt anfall under samma runda om hen anfaller med Träffsäker.",
       "Gesäll": "Handling: Speciell. Karaktären har ett vältränat öga och träffsäkerhet. Således kan hen lätt sikta in sig på svagheter hos sin motståndare. Alla anfall som görs med karaktärsdraget “Träffsäker” gör 1t4 extra i skada.",
       "Mästare": "Handling: Aktiv. Karaktären behärskar konsten att sikta på särskilda kroppsdelar och deras svagheter. Genom att offra en förflyttning får karaktären sikta på specifika kroppsdelar utan minusmodifikation på sitt slag. En väl siktad attack ignorerar bepansring och om slaget överstiger smärtgräns tillämpas en effekt enligt träfftabellen på sidan 108 i Spelarens Handbok."
     }
