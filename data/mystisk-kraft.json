@@ -209,8 +209,7 @@
         "Symbolism"
       ],
       "test": [
-        "Viljestark",
-        "Stark"
+        "Viljestark"
       ],
       "handling": {
         "Novis": [
@@ -233,7 +232,7 @@
   },
   {
     "namn": "Eldsjäl",
-    "beskrivning": "Tradition: Endast tillgänglig för Pyromantiker\nMaterial: Inget, men eldsjälar har ofta fysiska tecken på sin närhet till eldens element; glödande blick, eldrött hår, värme som strålar från kroppen.\nOrdensmagiker har funnit att de som verkligen dedikerar sig till studiet av eldens väsen lär sig att använda den som ett instinktivt skydd och vapen. De mest hängivna sägs till och med kunna dra kraft ur anfallande eld och paradoxalt nog låta de annars brännande krafterna hela mystikern.",
+    "beskrivning": "Tradition: Endast tillgänglig för Pyromantiker\nMaterial: Inget, men eldsjälar har ofta fysiska tecken på sin närhet till eldens element; glödande blick, eldrött hår, värme som strålar från kroppen.\nOrdensmagiker har funnit att de som verkligen dedikerar sig till studiet av eldens väsen lär sig att använda den som ett instinktivt skydd och vapen. De mest hängivna sägs till och med kunna dra kraft ur anfallande eld och paradoxalt nog låta de annars brännande krafterna hela mystikern. Inga slag behövs för att aktivera kraften, men mystikern tar korruption som vanligt om den aktiveras.",
     "taggar": {
       "typ": [
         "Mystisk kraft",
@@ -273,8 +272,7 @@
         "Trollsång"
       ],
       "test": [
-        "Övertygande",
-        "Viljestark"
+        "Övertygande"
       ],
       "handling": {
         "Novis": [
@@ -588,7 +586,7 @@
   },
   {
     "namn": "Häxhammare",
-    "beskrivning": "Material: Ett närstridsvapen helgat med ritualen Helgande rit.  \nMystikern behärskar förmågan att i likhet med den legendariska ljusbringaren Ofelya av Attio innesluta sitt närstridsvapen med helig och styggelsehatande eld.",
+    "beskrivning": "Material: Ett närstridsvapen helgat med ritualen Helgande rit.  \nMystikern behärskar förmågan att i likhet med den legendariska ljusbringaren Ofelya av Attio innesluta sitt närstridsvapen med helig och styggelsehatande eld. För att aktivera Häxhammare krävs ett lyckat slag mot Viljestark.",
     "taggar": {
       "typ": [
         "Mystisk kraft"
@@ -596,7 +594,7 @@
       "ark_trad": [
         "Teurgi"
       ],
-      "test": [],
+      "test": ["Viljestark"],
       "handling": {
         "Novis": [
           "Fri"
@@ -693,8 +691,7 @@
         "Svartkonst"
       ],
       "test": [
-        "Viljestark",
-        "Stark"
+        "Viljestark"
       ],
       "handling": {
         "Novis": [
@@ -1118,8 +1115,7 @@
         "Ordensmagi"
       ],
       "test": [
-        "Viljestark",
-        "Kvick"
+        "Viljestark"
       ],
       "handling": {
         "Novis": [
@@ -1151,10 +1147,7 @@
         "Ordensmagi"
       ],
       "test": [
-        "Viljestark",
-        "Kvick",
-        "Träffsäker",
-        "Stark"
+        "Viljestark"
       ],
       "handling": {
         "Novis": [
@@ -1242,7 +1235,7 @@
   },
   {
     "namn": "Vandråp",
-    "beskrivning": "Material: Ett vapen fläckat av ritualen Vanhelgande rit. \n Svartkonstnärens vapen omhöljs av ond kraft vilken bidrar till att öka skadan mot levande varelser. Ännu värre är att varelser som dräps med vandråpets illvilliga makt återuppväcks som dragouler, vandrande lik, i svartkonstnärens våld. Vandöda som skapas med vandråpet har samma värden som monstret dragoul (läs mer på sidan 230). De vandöda dör på riktigt efter scenens slut.",
+    "beskrivning": "Material: Ett vapen fläckat av ritualen Vanhelgande rit. \n Svartkonstnärens vapen omhöljs av ond kraft vilken bidrar till att öka skadan mot levande varelser. Ännu värre är att varelser som dräps med vandråpets illvilliga makt återuppväcks som dragouler, vandrande lik, i svartkonstnärens våld. Vandöda som skapas med vandråpet har samma värden som monstret dragoul (läs mer på sidan 230). De vandöda dör på riktigt efter scenens slut. För att aktivera kraften krävs ett lyckat slag mot Viljestark",
     "taggar": {
       "typ": [
         "Mystisk kraft"
@@ -1250,13 +1243,13 @@
       "ark_trad": [
         "Svartkonst"
       ],
-      "test": [],
+      "test": ["Viljestark"],
       "handling": {
         "Novis": [
-          "Aktiv"
+          "Fri"
         ],
         "Gesäll": [
-          "Aktiv"
+          "Fri"
         ],
         "Mästare": [
           "Fri"
@@ -1264,8 +1257,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Svartkonstnären tänder en illvillig flamma kring sitt närstridsvapen, vilken gör 1T4 extra i skada.",
-      "Gesäll": "Handling: Aktiv. Varelser som dödas med det vandräpande vapnet reser sig följande runda som en dragoul, lojal mot svartkonstnären.",
+      "Novis": "Handling: Fri. Svartkonstnären tänder en illvillig flamma kring sitt närstridsvapen, vilken gör 1T4 extra i skada.",
+      "Gesäll": "Handling: Fri. Varelser som dödas med det vandräpande vapnet reser sig följande runda som en dragoul, lojal mot svartkonstnären.",
       "Mästare": "Handling: Fri. Svartkonstnärens vandräpande vapen gör 1T8 extra i skada istället för novisens 1T4."
     },
     "id": "mystiskkr39"
@@ -1313,8 +1306,7 @@
         "Ordensmagi"
       ],
       "test": [
-        "Viljestark",
-        "Stark"
+        "Viljestark"
       ],
       "handling": {
         "Novis": [
@@ -1443,8 +1435,7 @@
         "Häxkonst"
       ],
       "test": [
-        "Viljestark",
-        "Stark"
+        "Viljestark"
       ],
       "handling": {
         "Novis": [
