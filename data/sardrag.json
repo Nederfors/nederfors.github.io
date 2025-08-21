@@ -192,8 +192,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Fri. Med ett lyckat [Viljestark←Listig] kan varelsen få en fiende att bli orimligt provocerad. Om det lyckas får varelsen en andra chans att lyckas med alla slag där den försöker undgå att påverkas av fiendens handlingar (exempelvis Försvar). Endast en fiende i taget kan bringas ur fattningen på detta sätt. Effekten kvarstår under resten av scenen utan ytterligare slag, men om varelsen vill provocera en annan fiende krävs ett nytt slag.",
-      "Gesäll": "Handling: Fri. Som I, men fienden blir också oförsiktig mot anfall. Om slaget mot [Viljestark←Listig] lyckas får varelsen dessutom en andra chans att lyckas med framgångsslag mot fienden.",
+      "Novis": "Handling: Fri. Med ett lyckat [Listig←Viljestark] kan varelsen få en fiende att bli orimligt provocerad. Om det lyckas får varelsen en andra chans att lyckas med alla slag där den försöker undgå att påverkas av fiendens handlingar (exempelvis Försvar). Endast en fiende i taget kan bringas ur fattningen på detta sätt. Effekten kvarstår under resten av scenen utan ytterligare slag, men om varelsen vill provocera en annan fiende krävs ett nytt slag.",
+      "Gesäll": "Handling: Fri. Som I, men fienden blir också oförsiktig mot anfall. Om slaget mot [Listig←Viljestark] lyckas får varelsen dessutom en andra chans att lyckas med framgångsslag mot fienden.",
       "Mästare": "Handling: Aktiv. Varelsen är en mästerlig retsticka och kan med ett lyckat slag mot Listig bringa en hel grupp av fienden ur balans. Lyckas slaget blir samtliga fiender högröda av överilad ilska och varelsen får en andra chans på Försvar, motståndsslag och anfall mot samtliga fiender under resten av scenen."
     }
   }
