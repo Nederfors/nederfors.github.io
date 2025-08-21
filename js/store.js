@@ -103,9 +103,9 @@
 
   /* ---------- 3. Förmåge­lista per karaktär ---------- */
   function getCurrentList(store) {
-    return store.current
-      ? (store.data[store.current]?.list || [])
-      : [];
+    if (!store.current) return [];
+    const list = store.data[store.current]?.list || [];
+    return list.map(x => ({ ...x }));
   }
 
   function applyDarkBloodEffects(list) {
