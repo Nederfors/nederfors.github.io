@@ -531,5 +531,41 @@
 "namn": "Giftkänslig",
 "beskrivning": "Kroppen reagerar hårt på främmande ämnen. Effekt: Varje gift som drabbar rollpersonen räknas som en nivå starkare än normalt: svagt gift räknas som medelstarkt, medelstarkt räknas som starkt och starkt gift räknas som ett jättestarkt, det vill säga att det gör +1t4 skada i +1t4 rundor.",
 "taggar": { "typ": ["Nackdel"], "test": [] }
-}
+},
+  {
+    "id": "na49",
+    "namn": "Artefaktsjuka",
+    "beskrivning": "Rollpersonen dras till föremål med uråldig kraft; greppet hårdnar när runorna blänker. Om ett föremål som rollpersonen hittat visar sig vara en artefakt måste hen klara ett slag mot Viljestark för att inte reflexmässigt binda sig till den. Vid misslyckande binds rollpersonen och kan inte frivilligt lämna ifrån sig artefakten under scenen, samt prioriterar att skydda eller återta den om den hotas. När habegäret har lugnat ner sig så är det fullt möjligt att bryta kopplingen till artefakten med Ritualen 'Bryta Länk', men kostnaden som har betalats för den finns kvar för alltid. Den här nackdelen kan enbart införskaffas om rollpersonen i sig även har förmåga att själv identifiera artefakter.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "na50",
+    "namn": "Draksjuka",
+    "beskrivning": "Glansen av guld väcker en brinnande girighet. När skatter och annan kuriosa som tycks sakna ägare kommer inom synhåll måste rollpersonen klara ett Viljestark −5; vid misslyckande kastar sig rollpersonen genast över bytet med sin nästa aktiva handling, oavsett om det röjer position, bryter strid eller lockar fara.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "na51",
+    "namn": "Edsbunden",
+    "beskrivning": "Ord räknas som ed och avtal som heliga. När ett löfte eller avtal har slutits måste rollpersonen göra allt för att fullfölja det inom ett rimligt tidsspann; om fullföljande visar sig omöjligt måste rollpersonen så snart som möjligt söka upp motparten och försöka gottgöra med ersättning, tjänst eller uppriktig bekännelse. Fram tills en sådan gottgörning har kunnat bli erbjuden så har rollpersonen -1 på allt hen försöker göra.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na52",
+    "namn": "Hävdningsproblem",
+    "beskrivning": "Stoltheten tänder snabbare än förnuftet när ögon vänds mot rollpersonen. Vid offentlig provokation eller utmaning från en annan person får rollpersonen slå ett slag mot Viljestark; misslyckas slaget måste rollpersonen genast göra ett obeväpnat utfall mot utmanaren.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark"]
+    }
+  }
 ]
