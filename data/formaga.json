@@ -58,9 +58,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Speciell. Rollpersonen kan använda Listig för att samla in örter och mineraler för att skapa en dos av ett noviselixir. Insamlandet av ingredienser och bryggandet tar en hel dag i ett ordentligt laboratorie och två dagar i fält oavsett om slaget lyckas eller ej. Rollpersonen får också en gång per äventyr slå för att ha förberett ett specifikt elixir upp till novisnivå i förväg, även om hen inte har uttryckt sig ha gjort detta i ett tidigare skede.",
-      "Gesäll": "Handling: Speciell. Som erkänd alkemist kan rollpersonen använda Listig för att samla in örter och mineraler för att skapa ett gesällelixir eller 1T4 doser av ett noviselixir.  Insamlandet av ingredienser och bryggandet tar en hel dag i ett ordentligt laboratorie och två dagar i fält oavsett om slaget lyckas eller ej. Rollpersonen får också en gång per äventyr slå för att ha förberett ett specifikt elixir upp till gesällnivå i förväg, även om hen inte har uttryckt sig ha gjort detta i ett tidigare skede.",
-      "Mästare": "Handling: Speciell. Som vida omtalad mästaralkemist kan rollpersonen använda Listig för att samla örter och mineraler för att skapa en dos mästarelixir, 1T4 doser av ett gesällelixir eller 1T8 doser av ett noviselixir.  Insamlandet av ingredienser och bryggandet tar en hel dag i ett ordentligt laboratorie och två dagar i fält oavsett om slaget lyckas eller ej. Rollpersonen får också en gång per äventyr slå för att ha förberett ett specifikt elixir upp till mästarnivå i förväg, även om hen inte har uttryckt sig ha gjort detta i ett tidigare skede."
+      "Novis": "Handling: Speciell. Rollpersonen kan använda Listig för att samla in örter och mineraler för att skapa en dos av ett noviselixir. Insamlandet av ingredienser och bryggandet tar en hel dag i ett ordentligt laboratorium och två dagar i fält oavsett om slaget lyckas eller ej. Rollpersonen får också en gång per äventyr slå för att ha förberett ett specifikt elixir upp till novisnivå i förväg, även om hen inte har uttryckt sig ha gjort detta i ett tidigare skede.",
+      "Gesäll": "Handling: Speciell. Som erkänd alkemist kan rollpersonen använda Listig för att samla in örter och mineraler för att skapa ett gesällelixir eller 1T4 doser av ett noviselixir.  Insamlandet av ingredienser och bryggandet tar en hel dag i ett ordentligt laboratorium och två dagar i fält oavsett om slaget lyckas eller ej. Rollpersonen får också en gång per äventyr slå för att ha förberett ett specifikt elixir upp till gesällnivå i förväg, även om hen inte har uttryckt sig ha gjort detta i ett tidigare skede.",
+      "Mästare": "Handling: Speciell. Som vida omtalad mästaralkemist kan rollpersonen använda Listig för att samla örter och mineraler för att skapa en dos mästarelixir, 1T4 doser av ett gesällelixir eller 1T8 doser av ett noviselixir.  Insamlandet av ingredienser och bryggandet tar en hel dag i ett ordentligt laboratorium och två dagar i fält oavsett om slaget lyckas eller ej. Rollpersonen får också en gång per äventyr slå för att ha förberett ett specifikt elixir upp till mästarnivå i förväg, även om hen inte har uttryckt sig ha gjort detta i ett tidigare skede."
     }
   },
   {
@@ -1023,7 +1023,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Svartkonstnären har tagit sina första stapplande steg nedför den mörka magins hala trappa och funnit sätt att inte tappa fotfästet helt. Svartkonstnären kan mildra Korruption. Genom att lyckas med ett Viljestark varje gång svartkonstnären drabbas av Korruption får denne endast en (1) Korruption.",
-      "Gesäll": "Handling: Reaktion. Svartkonstnären kan använda sin egen Korruption för att lyckas med mystiska krafter. Varje gång svartkonstnären misslyckas med en kraft får denne slå igen, mot sin Korruption. Om det andra slaget lyckas aktiveras kraften som tänkt, men svartkonstnären får också +1T4 ytterligare i temporär Korruption.",
+      "Gesäll": "Handling: Reaktiv. Svartkonstnären kan använda sin egen Korruption för att lyckas med mystiska krafter. Varje gång svartkonstnären misslyckas med en kraft får denne slå igen, mot sin Korruption. Om det andra slaget lyckas aktiveras kraften som tänkt, men svartkonstnären får också +1T4 ytterligare i temporär Korruption.",
       "Mästare": "Handling: Speciell. Svartkonstnären kan utnyttja andras Korruption för att få sin vilja fram. Varje gång svartkonstnären ska påverka en annan varelses Viljestark kan denne välja att slå mot deras Skugga istället (alltså varelsens Viljestark minus total Korruption). Genomkorrumperade väsen är märkligt immuna mot detta, det är som om de drar kraft från själva världens mörker för att ostörda fortsätta sitt dunkla värv (om en varelse är genomkorrumperad anges det under dess skugga)."
     }
   },
@@ -1181,7 +1181,7 @@
   {
     "id": "form39",
     "namn": "Artefaktmakande",
-    "beskrivning": "Endast tillgänglig för Artefaktmakare. Artefaktmakandets storhetstid tycks passerad och de gamla runsmedernas mäktigaste hemligheter är förlorade. De skapande konsterna lever dock än, om än i en blygsammare skala i skuggan av världens tilltagande korruption. Rollpersonen är skolad inom artefaktmakandets konstart och kan skapa lägre artefakter. Högre artefakter återfinns numera endast i Symbaroums ruiner men trots det är artefaktmakandet en tradition som håller huvudet högt också i denna skymningstid. Rollpersonen är också inläst på legendariska artefakter och kan förstå sig på hur artefakter fungerar. Artefaktmakande motsvarar förmågan Lärd när det gäller att analysera artefakter, men påverkar inte bruket av dem. Artefakterna beskrivs närmare i avsnittet Utrustning på sidan 124-127. Vidare tar varje artifakt en hel dag att tillverka om rollpersonen har tillgång till ordentliga arbetsverktyg och förhållanden och två heldagar att göra i fält, oavsett om slaget lyckas eller inte. Material för tillverkning kostar halva artefaktens värde efter att makandet är klart och kan inte införskaffas i fält, förutom under specifika omständigheter som avgörs av spelledaren,",
+    "beskrivning": "Endast tillgänglig för Artefaktmakare. Artefaktmakandets storhetstid tycks passerad och de gamla runsmedernas mäktigaste hemligheter är förlorade. De skapande konsterna lever dock än, om än i en blygsammare skala i skuggan av världens tilltagande korruption. Rollpersonen är skolad inom artefaktmakandets konstart och kan skapa lägre artefakter. Högre artefakter återfinns numera endast i Symbaroums ruiner men trots det är artefaktmakandet en tradition som håller huvudet högt också i denna skymningstid. Rollpersonen är också inläst på legendariska artefakter och kan förstå sig på hur artefakter fungerar. Artefaktmakande motsvarar förmågan Lärd när det gäller att analysera artefakter, men påverkar inte bruket av dem. Artefakterna beskrivs närmare i avsnittet Utrustning på sidan 124-127. Vidare tar varje artefakt en hel dag att tillverka om rollpersonen har tillgång till ordentliga arbetsverktyg och förhållanden och två heldagar att göra i fält, oavsett om slaget lyckas eller inte. Material för tillverkning kostar halva artefaktens värde efter att makandet är klart och kan inte införskaffas i fält, förutom under specifika omständigheter som avgörs av spelledaren,",
     "taggar": {
       "typ": [
         "Förmåga",
@@ -1208,7 +1208,7 @@
     "nivåer": {
       "Novis": "Rollpersonen kan med ett lyckat slag i Listig skapa en novisartefakt.",
       "Gesäll": "Som erkänd artefaktmakare kan rollpersonen med ett lyckat Listig skapa en gesällartefakt.",
-      "Mästare": "Som vida omtalad artefaktmäster kan rollpersonen slå ett slag mot Listig för att skapa en Mästarartefakt."
+      "Mästare": "Som vida omtalad artefaktmästare kan rollpersonen slå ett slag mot Listig för att skapa en Mästarartefakt."
     }
   },
   {
@@ -1629,9 +1629,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Rollpersonen kan med ett lyckat Listig göra ett novissmide. Rollpersonen kan också med ett lyckat Listig laga en skadad rustning eller anpassa en rustning för större och mindre varelser. Novissmiden omfattar alla vanliga vapen och rustningar, inklusive dem med kvaliteterna Kort och Långt. Inga andra kvaliteter kan smidas av novissmeden.",
-      "Gesäll": "Rollpersonen kan med ett lyckat Listig göra ett gesällsmide. Gesällsmiden omfattar en kvalitet i tillägg till Kort eller Långt. Samtliga vapen och rustningar som listas i grundboken och Spelarens handbok är inom gesällens förmåga, dock ej vapen och rustningar med mystiska kvaliteter eller sådana med fler än en kvalitet utöver Kort eller Långt. Gesällen kan inte heller smida bort negativa kvaliteter.",
-      "Mästare": "Rollpersonen kan med ett Listig göra ett mästersmide. Mästersmeder äger förmågan att addera flera kvaliteter till vapen och rustningar, alternativt att avlägsna negativa kvaliteter. Mästersmeder kan också smida in mystiska kvaliteter i vapen och rustningar.."
+      "Novis": "Handling: Speciell. Rollpersonen kan med ett lyckat Listig göra ett novissmide. Rollpersonen kan också med ett lyckat Listig laga en skadad rustning eller anpassa en rustning för större och mindre varelser. Novissmiden omfattar alla vanliga vapen och rustningar, inklusive dem med kvaliteterna Kort och Långt. Inga andra kvaliteter kan smidas av novissmeden.",
+      "Gesäll": "Handling: Speciell. Rollpersonen kan med ett lyckat Listig göra ett gesällsmide. Gesällsmiden omfattar en kvalitet i tillägg till Kort eller Långt. Samtliga vapen och rustningar som listas i grundboken och Spelarens handbok är inom gesällens förmåga, dock ej vapen och rustningar med mystiska kvaliteter eller sådana med fler än en kvalitet utöver Kort eller Långt. Gesällen kan inte heller smida bort negativa kvaliteter.",
+      "Mästare": "Handling: Speciell. Rollpersonen kan med ett Listig göra ett mästersmide. Mästersmeder äger förmågan att addera flera kvaliteter till vapen och rustningar, alternativt att avlägsna negativa kvaliteter. Mästersmeder kan också smida in mystiska kvaliteter i vapen och rustningar.."
     }
   },
   {
@@ -2239,8 +2239,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: reaktiv När rollpersonen skadar en måltavla får hen med ett lyckat slag mot “Träffsäker” också placera ett “Målmärke” på offret. Offret räknas som målmärkt till slutet av rollpersonens nästa runda. Varje lyckad attack mot målet ger +1 skada. Endast ett mål kan vara målmärkt åt gången av rollpersonen och målmärkningen tappas om det går en hel runda utan lyckade anfall från rollpersonen.",
-      "Gesäll": "Handling: reaktiv. En attack per runda mot ett målmärkt offer av rollpersonen räknas som ett övertag, oavsett positionering.",
+      "Novis": "Handling: Reaktiv När rollpersonen skadar en måltavla får hen med ett lyckat slag mot “Träffsäker” också placera ett “Målmärke” på offret. Offret räknas som målmärkt till slutet av rollpersonens nästa runda. Varje lyckad attack mot målet ger +1 skada. Endast ett mål kan vara målmärkt åt gången av rollpersonen och målmärkningen tappas om det går en hel runda utan lyckade anfall från rollpersonen.",
+      "Gesäll": "Handling: Reaktiv. En attack per runda mot ett målmärkt offer av rollpersonen räknas som ett övertag, oavsett positionering.",
       "Mästare": "Handling: Speciell. Rollpersonens målmärkning är så effektiv att effekterna för novis och gesällnivå gäller även för dess allierade, novisnivån ökar då i skada med varje karaktär som lyckats med en attack mot målet medans målmärket är aktivt."
     }
   },
