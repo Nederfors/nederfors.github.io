@@ -128,5 +128,25 @@
     "taggar": {
       "typ": ["Kvalitet"]
     }
+  },
+
+  {
+    "id": "kv17",
+    "namn": "Genomträngande",
+    "beskrivning": "Vapnet ignorerar 1 i Bepansring vid träff, gäller bara mot rustningar.",
+    "taggar": { "typ": ["Kvalitet"] }
+  },
+  {
+    "id": "kv18",
+    "namn": "Skottfast",
+    "beskrivning": "Rustningen ger +1t4 i Bepansring mot avståndsattacker.",
+    "taggar": { "typ": ["Kvalitet"] }
+  },
+  {
+    "id": "kv19",
+    "namn": "Snabbhölster",
+    "beskrivning": "Att dra eller byta till detta vapen är en fri handling.",
+    "taggar": { "typ": ["Kvalitet"] }
   }
+
 ]
