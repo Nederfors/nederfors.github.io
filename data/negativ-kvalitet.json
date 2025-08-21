@@ -28,4 +28,33 @@
       "typ": ["Kvalitet"]
     },
     "negativ": true
-  }]
+  },
+  {
+    "id": "neg4",
+    "namn": "Obalanserat",
+    "beskrivning": "Vapnet är dåligt balanserat; bäraren får −1 i Försvar.",
+    "taggar": { "typ": ["Kvalitet"] },
+    "negativ": true
+  },
+  {
+    "id": "neg5",
+    "namn": "Skört",
+    "beskrivning": "Vid ett kritiskt misslyckande (försvar för rustning, anfall för vapen) blir föremålet obrukbart tills det har lagats.",
+    "taggar": { "typ": ["Kvalitet"] },
+    "negativ": true
+  },
+  {
+    "id": "neg6",
+    "namn": "Klumpigt",
+    "beskrivning": "Bäraren får −1 på Träffsäker med detta vapen.",
+    "taggar": { "typ": ["Kvalitet"] },
+    "negativ": true
+  },
+  {
+    "id": "neg7",
+    "namn": "Genomsläpplig",
+    "beskrivning": "Rustningens skydd sänks en tärningsnivå mot vassa anfall (svärd, dolkar, pilar, lod).",
+    "taggar": { "typ": ["Kvalitet"] },
+    "negativ": true
+  }
+]
