@@ -61,7 +61,7 @@
   {
     "id": "ford5",
     "namn": "Bestars tunga",
-    "beskrivning": "Rollpersonen har en förmåga att tala med varelser ur kategorin bestar. Bestar har sina begräsningar men kan med ett lyckat slag mot övertygandesvara på frågor om vilka varelser som rör sig eller har rört sig inom ett område, hur många de är (en, två eller många). Bestarna gör inte rollpersonen några tjänster, utan konverserar som de skulle med en likvärdig artfrände.",
+    "beskrivning": "Rollpersonen har en förmåga att tala med varelser ur kategorin bestar. Bestar har sina begräsningar men kan med ett lyckat slag mot övertygande svara på frågor om vilka varelser som rör sig eller har rört sig inom ett område, hur många de är (en, två eller många). Bestarna gör inte rollpersonen några tjänster, utan konverserar som de skulle med en likvärdig artfrände.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
