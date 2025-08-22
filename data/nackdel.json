@@ -544,7 +544,7 @@
   {
     "id": "na50",
     "namn": "Draksjuka",
-    "beskrivning": "Glansen av guld väcker en brinnande girighet. När skatter och annan kuriosa som tycks sakna ägare kommer inom synhåll måste rollpersonen klara ett Viljestark −5; vid misslyckande kastar sig rollpersonen genast över bytet med sin nästa aktiva handling, oavsett om det röjer position, bryter strid eller lockar fara.",
+    "beskrivning": "Glansen av guld väcker en brinnande girighet. När skatter och annan kuriosa som tycks sakna ägare kommer inom synhåll måste rollpersonen klara ett Viljestark −5 eller spendera 1 erfarenhet; vid misslyckande kastar sig rollpersonen genast över bytet med sin nästa aktiva handling, oavsett om det röjer position, bryter strid eller lockar fara.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Viljestark"]
@@ -563,6 +563,223 @@
     "id": "na52",
     "namn": "Hävdningsproblem",
     "beskrivning": "Stoltheten tänder snabbare än förnuftet när ögon vänds mot rollpersonen. Vid offentlig provokation eller utmaning från en annan person får rollpersonen slå ett slag mot Viljestark; misslyckas slaget måste rollpersonen genast göra ett obeväpnat utfall mot utmanaren.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "na53",
+    "namn": "Mystiskt fokus",
+    "beskrivning": "Rollpersonens mystik är knuten till ett särskilt fokus; vad som krävs anges i beskrivningen för den aktuella mystiska förmågan. Saknas detta fokus när förmågan eller en ritual används får rollpersonen −1 på slaget.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na54",
+    "namn": "Svart tungomål",
+    "beskrivning": "Rollpersonens magi är inlärd genom svart tungomål vars klang väcker misstänksamhet. När magi används i närheten av andra måste rollpersonen klara ett slag mot Diskret; vid misslyckande drar handlingen oönskad uppmärksamhet och någon i närheten försöker anmäla rollpersonen till lokala myndigheter eller motsvarande.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Diskret"]
+    }
+  },
+  {
+    "id": "na55",
+    "namn": "Traditionsrivalitet",
+    "beskrivning": "Rollpersonen är så övertygad om sin egen mystiska tradition att samarbete med andra skolor kärvar. Vid kommunikation eller förhandling med mystiker från andra traditioner slås två tärningar mot Övertygande och det sämsta resultatet gäller.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Övertygande"]
+    }
+  },
+  {
+    "id": "na56",
+    "namn": "Signaturvapenbunden",
+    "beskrivning": "Rollpersonen har ett eller flera favoritvapen och är van vid deras tyngd och balans. När dessa saknas i strid kryper oro och otakt på; rollpersonen får en andra chans att misslyckas med alla sina framgångsslag tills favoritvapnen åter är i handen.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na57",
+    "namn": "Ödessyner",
+    "beskrivning": "Varje natt drömmer rollpersonen ovanligt klara syner. Varje morgon slås ett Listig; vid misslyckande anser rollpersonen att drömmen var profetisk och måste ägna den första timmen åt att anteckna och loggföra synerna. Saknas bläck eller pergament blir rollpersonen ofokuserad och ängslig och får således −1 på alla handlingar tills profetian dokumenterats.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na58",
+    "namn": "Korruptionsblod",
+    "beskrivning": "När rollpersonen drabbas av smärta väcks ett fräsande magiskt hat och korruptionen svarar. Varje gång rollpersonens blod gjuts får hen 1 tillfällig korruption.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na59",
+    "namn": "Höjdskräck",
+    "beskrivning": "Branter, broar, tak och stegar gör händer fuktiga och steg osäkra. Så länge rollpersonen befinner sig där minsta risk att falla och skada sig finns får hen en andra chans att misslyckas med alla sina framgångsslag.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na60",
+    "namn": "Hjältekomplex",
+    "beskrivning": "När fiendesidan har en tydlig ledare dras blicken dit och allt annat bleknar. Rollpersonen måste fokusera på ledaren och välja denne som mål för offensiva handlingar framför underhuggare så länge ledaren är synlig och inom räckvidd.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+
+  {
+    "id": "na61",
+    "namn": "Dålig självsäkerhet",
+    "beskrivning": "När ett försök går snett gror tvivlet och färgar nästa försök. Om ett slag misslyckas får rollpersonens nästa slag av samma handlingstyp −1 under scenen. Typ avser om handlingen är aktiv, reaktiv eller passiv osv.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na62",
+    "namn": "Tvångsritual",
+    "beskrivning": "Rollpersonen har bundit en vardaglig situation till en ofrånkomlig ritual. Vid skapande väljs en återkommande situation (exempelvis innan strid, vid dörrtrösklar, före förhandlingar) och en specifik ritual (exempelvis räkna steg, knyta remmar, röra vid metall tre gånger). Varje gång situationen uppstår måste rollpersonen ägna minst en aktiv handling åt ritualen. Hindras ritualen får rollpersonen en andra chans att lyckas på alla sina slag under scenen. Situationen ska kunna inträffa flera gånger per dag och ritualen ska faktiskt fördröja rollpersonens agerande; rena morgonrutiner i tryggt läger räknas normalt inte.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na63",
+    "namn": "Konflikträdd",
+    "beskrivning": "Skärpta ord och blottade tänder får modet att vika. När någon hotar rollpersonen slås ett [Viljestark←Övertygande] mot hotet; vid misslyckande ger rollpersonen efter och försöker dessutom få sina allierade att göra detsamma.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark", "Övertygande"]
+    }
+  },
+  {
+    "id": "na64",
+    "namn": "Tunnelseende",
+    "beskrivning": "När målet känns nära smalnar världen till en linje. Om en tydlig måltavla eller uppgift valts och avståndet motsvarar högst en dagsmarsch eller dags arbete får rollpersonen −1 på Vaksam tills målet nåtts (exempel: besegra en viss fiende, nå en bestämd plats, utforska en ruin).",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Vaksam"]
+    }
+  },
+  {
+    "id": "na65",
+    "namn": "Beslutsångest",
+    "beskrivning": "När hoten kommer från flera håll låser sig valet. I strider mot fler än en fiende måste rollpersonen börja med ett slag mot Listig för att välja måltavla; vid misslyckande blir rollpersonen stående till nästa runda och får då slå på nytt.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na66",
+    "namn": "Övertolkare",
+    "beskrivning": "I kontakt med andra personer är rollpersonen övertygad om att det alltid finns en dold agenda – stadsvakten antyder en muta, uppdragsgivaren vill egentligen ha måltavlan mördad och den allierade önskar bara att rollpersonen ska försvinna men är för artig för att säga det. Rollpersonen måste klara ett slag mot Listig i alla sociala sammanhang och vid misslyckande läser hen in en subtext som väljs av spelledaren.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na67",
+    "namn": "Katastroftänk",
+    "beskrivning": "När motgångarna staplas växer den lamslående oron. Om rollpersonen misslyckas med två slag i rad måste hen i början av nästa runda slå Listig; vid misslyckande avstår rollpersonen sin nästa aktiva handling och slår på nytt vid början av varje runda tills hen lyckas. Försvar får genomföras som vanligt.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na68",
+    "namn": "Introvert",
+    "beskrivning": "Stora sällskap tär på kraften. Efter en scen där fem eller fler för rollpersonen utomstående kulturvarelser närvarar behöver rollpersonen en timmes avskild vila; om det inte är möjligt får rollpersonen −1 på alla framgångsslag tills återhämtning skett.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na69",
+    "namn": "Konsensustvång",
+    "beskrivning": "Oenighet fryser fötterna. Om flera allierade uttrycker oförenliga planer vägrar rollpersonen att fortsätta agera tills någon av de invändande först lyckas med ett [Övertygande] mot rollpersonen. Om det slaget misslyckas får rollpersonen -1 på alla sina handlingar under den kommande scenen.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": []
+    }
+  },
+  {
+    "id": "na70",
+    "namn": "Minnessåll",
+    "beskrivning": "Detaljer rinner mellan fingrarna. När rollpersonen försöker minnas något som hen har sett eller hört får hen en andra chans att misslyckas med slag mot Listig för att återkalla minnet.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na71",
+    "namn": "Kontrollbehov",
+    "beskrivning": "Tanken på det lämnade och potentiellt glömda gnager: släckte jag elden? Kom jag ihåg hela packningen? Borde jag köpt det där extra elixiret? För att lämna läger eller göra avfärd från någon form av boplats måste rollpersonen lyckas med ett slag mot Listig; vid misslyckande skjuts avresan upp en timme, varefter ett nytt Listig kan slås. Om rollpersonen tvingas iväg ändå får hen en andra chans att misslyckas med alla sina slag under resten av dagen.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na72",
+    "namn": "Panikångest",
+    "beskrivning": "När tre eller fler fiender omringar rollpersonen och hens bröst ihop sig, andingen blir tung och allt fokus går till flyktvägar. Rollpersonen måste klara ett slag mot Viljestark −5 eller spendera 1 erfarenhet för att kunna agera; vid misslyckande kan rollpersonen enbart utföra förflyttningshandlingar tills hen inte längre är omringad.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "na73",
+    "namn": "Förföljelsemani",
+    "beskrivning": "Främlingarss blickar tolkas som hot och varje ord får skarpa kanter. Var det inte hon som satt och stirrade på dig med onda ögat på pubben igår? I samtal med okända kulturvarelser måste rollpersonen klara ett slag mot Listig; vid misslyckande fastnar övertygelsen om fientlig avsikt och kan inte rubbas av förhandling eller övertalning. Rollpersonen får bara slå ett slag per person hen möter, sen gäller det ufallet resten av rollpersonens liv.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na74",
+    "namn": "Overklighetskänslor",
+    "beskrivning": "Efter att ha stått vid dödens tröskel och slagit dödsslag, men återvänt, skaver världen som en dröm. Rollpersonen måste lyckas med ett slag mot Vaksam −5 eller spendera 1 Erfarenhet för att orientera sig och kunna fortsätta agera; tills dess förblir rollpersonen desorienterad och tar inga aktiva handlingar.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Vaksam"]
+    }
+  },
+  {
+    "id": "na75",
+    "namn": "Övermod",
+    "beskrivning": "Segerns rus blottar rollpersonens övermod. När rollpersonen just fällt en fiende eller skaffat sig tydligt övertag måste hen slå Listig; vid misslyckande fylls hen av övermod och får −1 på Försvar resten av striden. Effekten ökar kumulativt om situationen upprepas.",
+    "taggar": {
+      "typ": ["Nackdel"],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "na76",
+    "namn": "Traumatiserad",
+    "beskrivning": "Ett tidigare sår i själen har en tydlig trigger som valts vid skapandet av rollpersonen. När rollpersonen möter denna trigger måste hen slå Viljestark −5 eller spendera 1 Erfarenhet. Vid misslyckande försöker rollpersonen oskadliggöra källan till triggern med alla medel, och den som försöker hindra blir i nästa stund ännu ett hinder att undanröja.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Viljestark"]
