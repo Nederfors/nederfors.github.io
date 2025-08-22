@@ -770,7 +770,7 @@
   {
     "id": "na75",
     "namn": "Övermod",
-    "beskrivning": "Segerns rus blottar rollpersonens övermod. När rollpersonen just fällt en fiende eller skaffat sig tydligt övertag måste hen slå Listig; vid misslyckande fylls hen av övermod och får −1 på Försvar resten av striden. Effekten ökar kumulativt om situationen upprepas.",
+    "beskrivning": "Segerns rus blottar rollpersonens övermod. När rollpersonen just fällt en fiende eller skaffat sig tydligt övertag måste hen slå ett slag mot Listig; vid misslyckande fylls hen av övermod och får −1 på Försvar resten av striden. Effekten ökar kumulativt om situationen upprepas.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Listig"]
