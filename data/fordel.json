@@ -1029,8 +1029,8 @@
   {
     "id": "ford74",
     "namn": "Vägvisare",
-    "beskrivning": "Grenar viskar riktning och marken talar i tecken som andra missar. Rollpersonen tycks se stigar där andra bara ser snår och vet hur en hittar de mest väldolda lederna i skog och mark. När rollpersonen leder färden i skog får hela sällskapet +1 på Diskret för att undvika upptäckt.",
-    "kan_införskaffas_flera_gånger": false,
+    "beskrivning": "Grenar viskar riktning och marken talar i tecken som andra missar. Rollpersonen tycks se stigar där andra bara ser snår och vet hur en hittar de mest väldolda lederna i skog och mark. När rollpersonen leder färden i skog får hela sällskapet +1 på Diskret för att undvika upptäckt. Denna fördel kan införskaffas upp till tre gånger för att ge en kumulativ effekt.",
+    "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": ["Fördel"],
       "ark_trad": [],
@@ -1047,5 +1047,104 @@
     "ark_trad": [],
     "test": []
   }
-}
+},
+  {
+    "id": "ford76",
+    "namn": "Betvingande röst",
+    "beskrivning": "Tränad andning och kalibrerad stämma ger rollpersonen en ton som bär mer än ord; en klang som krokar i lyssnarens inre när en mystisk kraft läggs på. Blicken fokuserar, rytmen saktar ned, och instruktionen faller som en säck över viljan hos den som hör. En gång per dag får rollpersonen slå ett extra slag och välja det bästa utfallet när en mystisk kraft används för att påverka någons sinne.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": ["Mystiker"],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "ford77",
+    "namn": "Stegrytm",
+    "beskrivning": "Foten landar där marken ger fart, höften följer och axeln svänger bort från hotet; rollpersonens rörelsemönster växlar tempo utan att bryta flödet och varje steg blir till en liten fördel i trängsel och stök. Rollpersonen får +1 på Kvick när vid genomförande av förflyttningsmanövrer i strid. Fördelen kan införskaffas upp till tre gånger för en kumulativ effekt.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Kvick"]
+    }
+  },
+  {
+    "id": "ford78",
+    "namn": "Giftkännare",
+    "beskrivning": "Rollpersonen har hållit på med gift sedan barnsben, varje nyans i smaken viftar med varningsflaggor och det obehagliga illamåendet verkar som en bekännelse. Rollpersonen som lärt kroppen och näsan vad brygder gör kan namnge dem på lukt och reaktion. Fördelen kan bara väljas av rollpersoner med förmågan Giftbrukare och låter rollpersonen slå mot Listig för att identifiera gifter; om ämnet identifieras korrekt får rollpersonen en andra chans att lyckas med Stark mot dess verkan.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Listig", "Stark"]
+    }
+  },
+  {
+    "id": "ford79",
+    "namn": "Ödesglimt",
+    "beskrivning": "Ett stick av föraning sveper över sinnet; vägarna fram träder fram en blinkning innan beslutet tas. Priset känns som ett kort brännmärke på själen, ett märke som snart bleknar men aldrig helt glöms. En gång per dag vid ett Listig- eller Vaksam-slag, får rollpersonen slå två tärningar och välja det bästa, men tar 1 tillfällig korruption.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": ["Mystiker"],
+      "test": ["Listig", "Vaksam"]
+    }
+  },
+  {
+    "id": "ford80",
+    "namn": "Tyst andning",
+    "beskrivning": "Bröstkorgen rör sig knappt, luftens väg är jämn och lukt späs ut med tålamod; rollpersonens närvaro blir svår att läsa för rovdjur och väsen som litar på öron och nos.  Mot varelser som förlitar sig på hörsel eller lukt får rollpersonen +1 på Diskret.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Diskret"]
+    }
+  },
+  {
+    "id": "ford81",
+    "namn": "Väktarblick",
+    "beskrivning": "Rummen sorteras i lager: vem ser, vem låtsas inte se och vem döljer en tvekan med handen för nära bältet. Rollpersonen läser flödet kring portar, marknadsstånd och salar och noterar var stål och bakhåll väntar. I befolkade miljöer får rollpersonen +1 på Vaksam för att upptäcka bevakning, bakhåll eller dolda vapen. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Vaksam"]
+    }
+  },
+  {
+    "id": "ford82",
+    "namn": "Järnmage",
+    "beskrivning": "Brygder som vrider andras inälvor rinner som varmt vatten genom rollpersonens system; lång vana vid bägare med bismak har byggt en sköld som inte syns men märks när gifterna biter dåligt. En gång per dag får rollpersonen ignorera en negativ effekt av ett elixir.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "id": "ford83",
+    "namn": "Ryktestolkare",
+    "beskrivning": "Vid bål, bardiskar och rastplatser flätar rollpersonen lösryckta ord till helheter; en felaktig betoning, ett namn i förbifarten, en felställd dryck och mönstret faller på plats. Här väger list tyngre än vaksam blick. Rollpersonen får använda Listig i stället för Vaksam för att lyssna efter rykten.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Listig"]
+    }
+  },
+  {
+    "id": "ford84",
+    "namn": "Stigkedja",
+    "beskrivning": "Tecken ropas kort, händer visar riktning och avstånd hålls utan att sällskapet spricker i svår terräng. Rollpersonen binder ihop leden med vana ögon och kroppsspråk som alla förstår när marken vill splittra gruppen. En gång per etapp, när rollpersonen leder ett spritt sällskap i svår terräng, får alla allierade inom synhåll +1 på sitt första Vaksam för att hålla formation och undvika att tappas bort. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Vaksam"]
+    }
+  }
 ]
