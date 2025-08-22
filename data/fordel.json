@@ -947,5 +947,105 @@
       "ark_trad": [],
       "test": ["Stark"]
     }
+  },
+
+  {
+    "id": "ford67",
+    "namn": "Vandrarsinne",
+    "beskrivning": "År på vandringsstigar har slipat rollpersonens omdöme för färd och framkomlighet. När resan löper från punkt A till punkt B, och ett avgörande val eller handgrepp kräver ett slag – att finna vadställe, läsa terräng, välja led, undvika snår, förkorta marsch eller säkra transport – får rollpersonen en gång per etapp en andra chans att lyckas. Fördelen får inte användas i strid.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "id": "ford68",
+    "namn": "Månblick",
+    "beskrivning": "När månen stiger och visar sin skiva ser rollpersonen världen som dag. Så länge månen syns på himlen uppfattar rollpersonen detaljer, rörelser och färdvägar utan de vanliga svårigheterna i nattmörker; effekten gäller under bar himmel eller där månljus faktiskt faller, men inte i slutna rum eller djupa gångar utan månens ljus.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "id": "ford69",
+    "namn": "Första Hjälpen",
+    "beskrivning": "Blicken fastnar på bleka läppar och svagt andetag; händerna arbetar innan tvekan hinner fram. En gång per strid får rollpersonen ett andra slag att lyckas med ett försök att återuppliva en allierad som ligger inför döden och får således slå två tärningar och välja det bästa resultatet",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "id": "ford70",
+    "namn": "Outtrötlig",
+    "beskrivning": "Vakenblicken falnar inte trots kalla timmar vid eldens kant. Rollpersonen kan hålla upp till två vakter per natt utan att påverkas negativt av sömnbrist under följande dag; rytm och disciplin bär kroppen när andra gäspningar tar över.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": []
+    }
+  },
+  {
+    "id": "ford71",
+    "namn": "Jordfast",
+    "beskrivning": "Fötter hittar fäste, tyngdpunkten sitter lågt och greppet svarar när kraft möter kraft. Rollpersonen får +1 på Stark för att stå emot knuffar, nedslag och fasthållning.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Stark"]
+    }
+  },
+  {
+    "id": "ford72",
+    "namn": "Smittsam optimist",
+    "beskrivning": "Ett ord, en blick, och tyngden i luften lättar runt truppens axlar. I början av en strid kan rollpersonen med ett lyckat Övertygande bära hoppet genom leden; alla allierade får då +1 på sitt första slag i scenen.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Övertygande"]
+    }
+  },
+  {
+    "id": "ford73",
+    "namn": "Skuggskärmad",
+    "beskrivning": "Mörkret letar vägar in men möts av ett tunt, tåligt hinnskydd kring själen. Varje gång tillfällig korruption tilldelas tar rollpersonen alltid 1 mindre än tärningsutfallet visar, men aldrig mindre än 1. Denna fördel går bara att ha så länge karaktären inte har någon permanent korruption. Om korruptionströskeln överskrids omvandlas denna fördel till nackdelen 'Korruptionsmagnet'",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": ["Mystiker"],
+      "test": []
+    }
+  },
+  {
+    "id": "ford74",
+    "namn": "Vägvisare",
+    "beskrivning": "Grenar viskar riktning och marken talar i tecken som andra missar. Rollpersonen tycks se stigar där andra bara ser snår och vet hur en hittar de mest väldolda lederna i skog och mark. När rollpersonen leder färden i skog får hela sällskapet +1 på Diskret för att undvika upptäckt.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": ["Fördel"],
+      "ark_trad": [],
+      "test": ["Diskret"]
+    }
+  },
+ {
+  "id": "ford75",
+  "namn": "Orädd",
+  "beskrivning": "Rollpersonen möter hot, tvång och skräck utan att rygga. Hen får alltså +1 på alla slag som syftar på att motstå skräck, hot och försök till tvingande påverkan.",
+  "kan_införskaffas_flera_gånger": false,
+  "taggar": {
+    "typ": ["Fördel"],
+    "ark_trad": [],
+    "test": []
   }
+}
 ]
