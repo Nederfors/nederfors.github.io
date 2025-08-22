@@ -2,7 +2,7 @@
   {
     "id": "na1",
     "namn": "Nattbajsare",
-    "beskrivning": "Vaknar varje natt för att bajsa, vilket kräver att rollpersonen under 10 minuter varje natt måste lämna lägret eller möta gruppens vrede",
+    "beskrivning": "Vaknar varje natt för att bajsa, vilket kräver att rollpersonen under 10 minuter varje natt måste lämna lägret eller möta gruppens vrede.",
     "taggar": {
       "typ": [
         "Nackdel"
@@ -186,7 +186,7 @@
   {
     "id": "na18",
     "namn": "Prios Förtappad",
-    "beskrivning": "Nackdelen går att välja upp till tre gånger. Karaktären har en gång burit Prios välsignelse, men har vänt sig bort från tron eller på annat sätt brutit med prios läror. Karaktären har förlorat sin välsignelse. Karaktären har -1 i försvar mot attacker och effekter från genomkorrumperade varelser.",
+    "beskrivning": "Karaktären har en gång burit Prios välsignelse, men har vänt sig bort från tron eller på annat sätt brutit med prios läror. Karaktären har förlorat sin välsignelse. Karaktären har -1 i försvar mot attacker och effekter från genomkorrumperade varelser. Nackdelen kan skaffas upp till tre gånger för en kumulativ effekt.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": [
@@ -403,7 +403,7 @@
   {
     "id": "na33",
     "namn": "Ljusskygg",
-    "beskrivning": "Skarpa sken bränner i ögonen, som om solen själv bar agg. I fullt dagsljus eller nära starka ljuskällor blir blicken osäker och handen stel. Effekt: I starkt ljus får rollpersonen −1 på Vaksam.",
+    "beskrivning": "Det bländande ljuset skär in i ögonen som glödande nålar, som om himlakropparna själva hatade det dödliga köttet. Under solens skarpa sken eller i närheten av flammande ljuskällor darrar blicken och handen tappar sin säkerhet. I sådant ljus får rollpersonen −1 på Vaksam.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Vaksam"]
@@ -412,7 +412,7 @@
   {
     "id": "na34",
     "namn": "Nattblind",
-    "beskrivning": "Skymning förvandlar världen till en osäker grå massa och när mörkret faller går detaljer helt förlorade. I dunkel eller mörker utanför den egna ljuskällan får rollpersonen −1 på Vaksam.",
+    "beskrivning": "När skymningen breder ut sig löses konturer upp i en fladdrande grå dimma. När natten tar över slukas världen helt av skuggorna, och detaljer försvinner som om de aldrig funnits. I dunkel eller mörker får rollpersonen ytterligare −1 på Vaksam.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Vaksam"]
@@ -466,7 +466,7 @@
   {
     "id": "na40",
     "namn": "Obekväm talare",
-    "beskrivning": "Många blickar låser tungan, pannan att börja svettas och händer att veva hejvilt medans stämbanden stämmer upp till stamning. Inför publik med tre eller fler åhörare (egna kumpaner räknas) får rollpersonen −1 på Övertygande.",
+    "beskrivning": "När flera ögon vänds mot rollpersonen tynger tystnaden. Orden fastnar på tungan, svetten bryter fram i pannan och gesterna blir ryckiga som om kroppen försöker fly. Rösten spricker och stapplar, och självsäkerheten smulas sönder under publikens blickar. Inför fyra eller fler åhörare – kumpaner inräknade – får rollpersonen −1 på Övertygande.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Övertygande"]
@@ -474,8 +474,8 @@
   },
   {
     "id": "na41",
-    "namn": "Dålig maskhållare",
-    "beskrivning": "Blicken flackar, rösten spricker och lögnen spricker med den. Att ljuga är ingenting som rollpersonen är bekväm med, så när hen ljuger slås Övertygande två gånger och det sämsta resultatet gäller.",
+    "namn": "Darrande uppsyn",
+    "beskrivning": "Ögonen kan inte hålla fast, rösten bär på sprickor och varje lögn känns som ett skärsår i munnen. Rollpersonen saknar den kyliga trygghet som krävs för att väva lögner, och varje försök blir ett spel mot den egna nervositeten. När hen ljuger slås Övertygande två gånger och det sämsta resultatet gäller.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Övertygande"]
@@ -607,7 +607,7 @@
   {
     "id": "na57",
     "namn": "Ödessyner",
-    "beskrivning": "Varje natt drömmer rollpersonen ovanligt klara syner. Varje morgon slås ett Listig; vid misslyckande anser rollpersonen att drömmen var profetisk och måste ägna den första timmen åt att anteckna och loggföra synerna. Saknas bläck eller pergament blir rollpersonen ofokuserad och ängslig och får således −1 på alla handlingar tills profetian dokumenterats.",
+    "beskrivning": "Varje natt drömmer rollpersonen ovanligt klara syner. Varje morgon slås ett Listig; vid misslyckande anser rollpersonen att drömmen var profetisk och måste ägna dagens första timme åt att anteckna och loggföra synerna. Saknas bläck eller pergament blir rollpersonen ofokuserad och ängslig och får således −1 på alla handlingar tills profetian dokumenterats.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Listig"]
@@ -616,7 +616,7 @@
   {
     "id": "na58",
     "namn": "Korruptionsblod",
-    "beskrivning": "När rollpersonen drabbas av smärta väcks ett fräsande magiskt hat och korruptionen svarar. Varje gång rollpersonens blod gjuts får hen 1 tillfällig korruption.",
+    "beskrivning": "När köttet brister och smärtan slår till vaknar något mörkare än bara vrede. Ett fräsande hat, genomsyrat av mystik, slingrar sig genom rollpersonens inre. Korruptionen känner smaken av blod och svarar som en hungrig best. Varje gång rollpersonen tar skada drabbas hen även av 1 temporär korruption.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
@@ -662,7 +662,7 @@
   {
     "id": "na63",
     "namn": "Konflikträdd",
-    "beskrivning": "Skärpta ord och blottade tänder får modet att vika. När någon hotar rollpersonen slås ett [Viljestark←Övertygande] mot hotet; vid misslyckande ger rollpersonen efter och försöker dessutom få sina allierade att göra detsamma.",
+    "beskrivning": "Skärpta ord och blottade tänder får modet att vika. När någon riktar hot eller ilska mot rollpersonen får hen slå ett slag på [Viljestark←Övertygande]; vid misslyckande ger rollpersonen efter och försöker dessutom få sina allierade att göra detsamma.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Viljestark", "Övertygande"]
@@ -698,10 +698,10 @@
   {
     "id": "na67",
     "namn": "Katastroftänk",
-    "beskrivning": "När motgångarna staplas växer den lamslående oron. Om rollpersonen misslyckas med två slag i rad måste hen i början av nästa runda slå Listig; vid misslyckande avstår rollpersonen sin nästa aktiva handling och slår på nytt vid början av varje runda tills hen lyckas. Försvar får genomföras som vanligt.",
+    "beskrivning": "När motgångarna staplas växer den lamslående oron. Om rollpersonen misslyckas med två slag i rad måste hen i början av nästa runda slå ett slag mot Viljestark; vid misslyckande avstår rollpersonen sin nästa aktiva handling och slår på nytt vid början av varje runda tills hen lyckas. Försvar får genomföras som vanligt.",
     "taggar": {
       "typ": ["Nackdel"],
-      "test": ["Listig"]
+      "test": ["Viljestark"]
     }
   },
   {
@@ -716,7 +716,7 @@
   {
     "id": "na69",
     "namn": "Konsensustvång",
-    "beskrivning": "Oenighet fryser fötterna. Om flera allierade uttrycker oförenliga planer vägrar rollpersonen att fortsätta agera tills någon av de invändande först lyckas med ett [Övertygande] mot rollpersonen. Om det slaget misslyckas får rollpersonen -1 på alla sina handlingar under den kommande scenen.",
+    "beskrivning": "Oenighet fryser fötterna. Om flera allierade uttrycker oförenliga planer vägrar rollpersonen att fortsätta agera tills någon av de invändande först lyckas med ett [Övertygande] mot rollpersonen. Om det slaget misslyckas får rollpersonen -1 på alla sina handlingar under nästa scen.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
@@ -743,7 +743,7 @@
   {
     "id": "na72",
     "namn": "Panikångest",
-    "beskrivning": "När tre eller fler fiender omringar rollpersonen och hens bröst ihop sig, andingen blir tung och allt fokus går till flyktvägar. Rollpersonen måste klara ett slag mot Viljestark −5 eller spendera 1 erfarenhet för att kunna agera; vid misslyckande kan rollpersonen enbart utföra förflyttningshandlingar tills hen inte längre är omringad.",
+    "beskrivning": "När fienderna tränger sig på och utrymmet krymper slår skräcken som en järnhand om bröstet. Hjärtat bultar så hårt att ljudet fyller öronen, luften vägrar nå lungorna och världen blir till tunnelseende. Allt fokus slukas av att finna en utväg, att undkomma, att slita sig fri. När tre eller fler fiender omringar rollpersonen måste hen klara ett slag mot Viljestark −5 eller betala 1 erfarenhet för att samla sig nog att handla. Vid misslyckande är rollpersonen oförmögen att utföra något annat än förflyttningshandlingar tills hotet lättar och omringningen bryts.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Viljestark"]
