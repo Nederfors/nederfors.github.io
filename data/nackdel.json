@@ -501,7 +501,7 @@
   },
   {
     "id": "na44",
-    "namn": "Dåligt lokalsinne",
+    "namn": "Orienteringssvårigheter",
     "beskrivning": "Stigar flyter ihop och landmärken vägrar fastna. Rollpersonen är helt enkelt usel på att hitta och för att hen ska kunna ta sig någonstans utan ledsagare krävs ett lyckat slag mot Vaksam; vid misslyckande går rollpersonen vilse eller blir stående enligt spelledarens val.",
     "taggar": {
       "typ": ["Nackdel"],
@@ -643,8 +643,8 @@
 
   {
     "id": "na61",
-    "namn": "Dålig självsäkerhet",
-    "beskrivning": "När ett försök går snett gror tvivlet och färgar nästa försök. Om ett slag misslyckas får rollpersonens nästa slag av samma handlingstyp −1 under scenen. Typ avser om handlingen är aktiv, reaktiv eller passiv osv.",
+    "namn": "Självtvivel",
+    "beskrivning": "När misslyckandet slår rot skakar det rollpersonens självförtroende. Ett snedsteg lämnar spår – handen darrar, tanken hackar, kroppen tvekar. Varje gång ett försök faller platt växer osäkerheten, och nästa handling av samma slag bär med sig ett frö av tvivel. Därför får rollpersonen −1 på nästa slag mot samma karaktärsdrag.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
