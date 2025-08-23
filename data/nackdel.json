@@ -439,7 +439,7 @@
   {
     "id": "na37",
     "namn": "Slarvig",
-    "beskrivning": "Ett spänne här, en påse där – lägerplatsen skördar alltid sitt tionde. Trots trötta blickar från medresenärer är rollpersonen hopplöst slarvig. Varje gång lägret packas ihop krävs ett slag mot Vaksam +3. Vid misslyckande tappas ett föremål ur rollpersonens packning, antingen avgjort av spelledare eller av tärningen.",
+    "beskrivning": "Ett spänne här, en påse där – lägerplatsen skördar alltid sitt tionde. Trots trötta blickar från medresenärer är rollpersonen hopplöst slarvig. Varje gång lägret packas ihop krävs ett slag mot Vaksam. Vid misslyckande tappas ett föremål till ett värde av som mest 10 daler ur rollpersonens packning, antingen avgjort av spelledare eller av tärningen.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Vaksam"]
