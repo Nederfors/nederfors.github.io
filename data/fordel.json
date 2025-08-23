@@ -18,7 +18,7 @@
     "id": "ford2",
     "namn": "Arvegods",
     "beskrivning": "Rollpersonen har genom släktleden erhållit ett arvegods. Välj ett valfritt vapen eller en rustning från listorna på hemsidan och gratismarkera det med två gratis kvaliteter som inte är mystiska kvaliteter.",
-    "kan_införskaffas_flera_gånger": true,
+    "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Fördel"
