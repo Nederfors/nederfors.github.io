@@ -124,7 +124,7 @@
   {
     "id": "mystiskkv14",
     "namn": "Vindkraft",
-    "beskrivning": "Avståndsattacker med detta vapen tycks styras mot fiendernas svaga punkter av vinden själv. Detta gör att de ignorerar 1t4 i Bepansring.",
+    "beskrivning": "Avståndsattacker med detta vapen tycks styras mot fiendernas svaga punkter av vinden själv. Denna dödliga precission gör att projektilerna ignorerar 1t4 i Bepansring när de träffar sin måltavla.",
     "taggar": { "typ": ["Mystisk kvalitet"] }
   },
   {
@@ -138,6 +138,12 @@
     "namn": "Själslåst",
     "beskrivning": "Vapnet kan inte tas bort från bäraren; det kan varken stjälas eller tappas och på något mystiskt vis verkar det alltid finnas till hands när bäraren behöver det och behöver således inte dras som en handling. Nackdelen är att det inte heller frivilligt kan lämnas bort, även om det skulle krävas av bäraren.",
     "taggar": { "typ": ["Mystisk kvalitet"] }
-  }
+  },
 
+{
+"id": "mystiskkv17",
+"namn": "Översköld",
+"beskrivning": "I rustningens väv slumrar en gammal skyddsformel som växer sig starkare i stillhet. Så länge bäraren undgår fiendens slag fylls dess aura av kraft. Varje runda i strid då bäraren inte träffas av en fysisk attack laddas skyddet och förstärker rustningens bepansring med +1. Vid nästa fysiska träff bryts laddningen och kraften frigörs, varpå auran åter börjar samla styrka från början nästa runda.",
+"taggar": { "typ": ["Mystisk kvalitet"] }
+}
 ]
