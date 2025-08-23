@@ -185,6 +185,7 @@ function initIndex() {
         let desc = abilityHtml(p);
         let priceText = '';
         let weightText = '';
+        let priceLabel = '';
         if (isInv(p)) {
           desc += itemStatHtml(p);
           const baseQuals = [
@@ -199,6 +200,7 @@ function initIndex() {
           }
           if (p.grundpris) {
             priceText = formatMoney(invUtil.calcEntryCost(p));
+            priceLabel = 'Pris:';
           }
           const baseW = p.vikt ?? p.stat?.vikt ?? 0;
           const massCnt = baseQuals.filter(q => q === 'Massivt').length;
@@ -206,8 +208,18 @@ function initIndex() {
             const w = baseW + massCnt;
             weightText = `<br>Vikt: ${formatWeight(w)}`;
           }
+        } else if (isEmployment(p)) {
+          if (p.grundpris) {
+            priceText = formatMoney(p.grundpris);
+            priceLabel = 'Dagslön:';
+          }
+        } else if (isService(p)) {
+          if (p.grundpris) {
+            priceText = formatMoney(p.grundpris);
+            priceLabel = 'Pris:';
+          }
         }
-        let infoHtml = priceText ? `${desc}<br>Pris: ${priceText}${weightText}` : `${desc}${weightText}`;
+        let infoHtml = priceText ? `${desc}<br>${priceLabel} ${priceText}${weightText}` : `${desc}${weightText}`;
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
           if (extra) infoHtml += `<br>${extra}`;
@@ -250,7 +262,7 @@ function initIndex() {
         }
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
-        const xpVal = isInv(p) ? null : storeHelper.calcEntryXP(p, charList);
+        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(p, charList);
         const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
         const xpHtml = xpVal != null ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
         const titleActions = xpHtml ? `<span class="title-actions">${xpHtml}</span>` : '';
@@ -258,22 +270,27 @@ function initIndex() {
         const eliteBtn = isElityrke(p)
           ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
           : '';
+        const allowAdd = !(isService(p) || isEmployment(p));
         let btn = '';
-        if(multi){
-          if(count>0){
-            const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
-            const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
-            const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${eliteBtn}</div>`;
+        if (allowAdd) {
+          if(multi){
+            if(count>0){
+              const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
+              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
+              const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
+              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${eliteBtn}</div>`;
+            }else{
+              const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}${eliteBtn}</div>`;
+            }
           }else{
-            const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}${eliteBtn}</div>`;
+            const mainBtn = inChar
+              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+              : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
           }
-        }else{
-          const mainBtn = inChar
-            ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-            : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
+        } else {
+          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}</div>`;
         }
         const li=document.createElement('li');
         li.className='card' + (compact ? ' compact' : '');
@@ -285,7 +302,7 @@ function initIndex() {
           : '';
         const levelHtml = hideDetails ? '' : lvlSel;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
-        const priceHtml = priceText ? `<div class="card-price">${priceText}</div>` : '';
+        const priceHtml = priceText ? `<div class="card-price">${priceLabel} ${priceText}</div>` : '';
         li.innerHTML = `
           <div class="card-title"><span>${p.namn}${badge}</span>${titleActions}</div>
           ${tagsDiv}
