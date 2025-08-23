@@ -157,6 +157,18 @@
     }
   }
 
+  function enforcePackAnimal(list) {
+    const packIdx = list.findIndex(x => x.namn === 'Packåsna');
+    const hafsIdx = list.findIndex(x => x.namn === 'Hafspackare');
+    if (packIdx >= 0 && hafsIdx >= 0) {
+      if (packIdx > hafsIdx) {
+        list.splice(packIdx, 1);
+      } else {
+        list.splice(hafsIdx, 1);
+      }
+    }
+  }
+
   function applyHamnskifteTraits(store, list) {
     if (!store.current) return;
     const data = store.data[store.current] || {};
@@ -267,6 +279,7 @@
     applyRaceTraits(list);
     enforceEarthbound(list);
     enforceDwarf(list);
+    enforcePackAnimal(list);
     applyHamnskifteTraits(store, list);
     const prev = store.data[store.current]?.list || [];
     store.data[store.current] = store.data[store.current] || {};
