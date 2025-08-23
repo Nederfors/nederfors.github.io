@@ -1244,6 +1244,8 @@ ${moneyRow}
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
     dom.invBadge.textContent    = allInv.reduce((s, r) => s + r.qty, 0);
+    dom.invBadge.classList.add('badge-pulse');
+    setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
     dom.unusedOut = $T('unusedOut');
     dom.dragToggle = $T('dragToggle');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
@@ -1448,22 +1450,40 @@ ${moneyRow}
             });
             saveInventory(inv);
             renderInventory();
+            bundle.forEach(namn => {
+              const i = inv.findIndex(r => r.name === namn);
+              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(namn)}"][data-idx="${i}"]`);
+              if (li) {
+                li.classList.add('inv-flash');
+                setTimeout(() => li.classList.remove('inv-flash'), 600);
+              }
+            });
           } else {
             const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel'].some(t => entry.taggar.typ.includes(t));
             const addRow = trait => {
               const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
               if (trait) obj.trait = trait;
+              let flashIdx;
               if (indiv) {
                 parentArr.push(obj);
+                flashIdx = parentArr.length - 1;
               } else if (row && (!trait || row.trait === trait)) {
                 row.qty++;
+                flashIdx = idx;
               } else if (row && trait && row.trait !== trait) {
                 parentArr.push(obj);
+                flashIdx = parentArr.length - 1;
               } else {
                 parentArr.push(obj);
+                flashIdx = parentArr.length - 1;
               }
               saveInventory(inv);
               renderInventory();
+              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(entry.namn)}"][data-idx="${flashIdx}"]`);
+              if (li) {
+                li.classList.add('inv-flash');
+                setTimeout(() => li.classList.remove('inv-flash'), 600);
+              }
             };
             if (entry.traits && window.maskSkill) {
               const used = inv.filter(it => it.name===entry.namn).map(it=>it.trait).filter(Boolean);
@@ -1497,6 +1517,11 @@ ${moneyRow}
           }
           saveInventory(inv);
           renderInventory();
+          const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(itemName)}"][data-idx="${idx}"]`);
+          if (li) {
+            li.classList.add('inv-flash');
+            setTimeout(() => li.classList.remove('inv-flash'), 600);
+          }
         }
         return;
       }
