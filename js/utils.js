@@ -99,6 +99,8 @@
   function isEliteSkill(p){ return (p.taggar?.typ||[]).includes('Elityrkesf\u00f6rm\u00e5ga'); }
   function isMonstrousTrait(p){ return (p.taggar?.typ||[]).includes('Monstru\u00f6st s\u00e4rdrag'); }
   function isSardrag(p){ return (p.taggar?.typ||[]).includes('S\u00e4rdrag'); }
+  function isEmployment(p){ return (p.taggar?.typ||[]).includes('Anställning'); }
+  function isService(p){ return (p.taggar?.typ||[]).includes('Tjänster'); }
   function isMysticQual(name){
     return (window.DB?.find(x => x.namn === name)?.taggar?.typ || []).includes('Mystisk kvalitet');
   }
@@ -254,6 +256,8 @@
   window.isEliteSkill = isEliteSkill;
   window.isMonstrousTrait = isMonstrousTrait;
   window.isSardrag = isSardrag;
+  window.isEmployment = isEmployment;
+  window.isService = isService;
   window.isMysticQual = isMysticQual;
   window.isNegativeQual = isNegativeQual;
   window.isNeutralQual = isNeutralQual;
