@@ -29,6 +29,16 @@ function initCharacter() {
   const conflictList = document.getElementById('conflictList');
   const conflictTitle = document.getElementById('conflictTitle');
 
+  const flashAdded = (name, trait) => {
+    const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
+    const items = dom.valda?.querySelectorAll(selector);
+    const li = items?.[items.length - 1];
+    if (li) {
+      li.classList.add('inv-flash');
+      setTimeout(() => li.classList.remove('inv-flash'), 1000);
+    }
+  };
+
   function conflictEntryHtml(p){
     const compact = storeHelper.getCompactEntries(store);
     const maxIdx = LVL.indexOf(p.nivå || LVL[0]);
@@ -651,6 +661,9 @@ function initCharacter() {
     renderSkills(filtered());
     updateXP();
     renderTraits();
+    if (actBtn.dataset.act === 'add') {
+      flashAdded(name, tr);
+    }
 
   });
   dom.valda.addEventListener('change', async e=>{

@@ -418,8 +418,7 @@ input:focus, select:focus, textarea:focus {
 /* animation when inventory items change */
 .inv-flash { animation: invFlash 1s ease-out; }
 @keyframes invFlash {
-  0% { background: var(--accent); }
-  50% { background: rgba(61, 124, 255, 0.35); }
+  0% { background: rgba(61, 124, 255, 0.5); }
   100% { background: var(--card); }
 }
 
