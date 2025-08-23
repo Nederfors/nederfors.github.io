@@ -1407,6 +1407,8 @@ ${moneyRow}
           const tagTyp = entry.taggar?.typ || [];
           const isVeh  = tagTyp.includes('F\u00e4rdmedel');
           const hasStuff = Array.isArray(row.contains) && row.contains.length > 0;
+          li.classList.add('rm-flash');
+          await new Promise(r => setTimeout(r, 100));
           if (isVeh && hasStuff) {
             openDeleteContainerPopup(
               () => {
@@ -1519,8 +1521,8 @@ ${moneyRow}
           renderInventory();
           const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(itemName)}"][data-idx="${idx}"]`);
           if (li) {
-            li.classList.add('inv-flash');
-            setTimeout(() => li.classList.remove('inv-flash'), 600);
+            li.classList.add('rm-flash');
+            setTimeout(() => li.classList.remove('rm-flash'), 600);
           }
         }
         return;

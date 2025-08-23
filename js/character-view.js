@@ -39,6 +39,13 @@ function initCharacter() {
     }
   };
 
+  const flashRemoved = li => {
+    if (li) {
+      li.classList.add('rm-flash');
+      setTimeout(() => li.classList.remove('rm-flash'), 1000);
+    }
+  };
+
   function conflictEntryHtml(p){
     const compact = storeHelper.getCompactEntries(store);
     const maxIdx = LVL.indexOf(p.nivå || LVL[0]);
@@ -631,6 +638,8 @@ function initCharacter() {
         if(!(await confirmPopup(msg)))
           return;
       }
+      flashRemoved(liEl);
+      await new Promise(r => setTimeout(r, 100));
     } else {
       return;
     }
@@ -709,6 +718,7 @@ function initCharacter() {
       storeHelper.setCurrentList(store,list); updateXP();
     }
     renderSkills(filtered()); renderTraits();
+    flashAdded(name, tr);
   });
 }
 

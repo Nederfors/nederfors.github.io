@@ -29,6 +29,17 @@ function initIndex() {
     }
   };
 
+  const flashRemoved = (name, trait) => {
+    const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
+    const root = dom.lista || document;
+    const items = root.querySelectorAll(selector);
+    const li = items?.[items.length - 1];
+    if (li) {
+      li.classList.add('rm-flash');
+      setTimeout(() => li.classList.remove('rm-flash'), 1000);
+    }
+  };
+
   const tabellInfoHtml = p => {
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
     const head = `<tr>${p.kolumner.map(c => `<th>${cap(c)}</th>`).join('')}</tr>`;
@@ -403,6 +414,7 @@ function initIndex() {
       return;
     }
     const name = btn.dataset.name;
+    const tr = btn.closest('li').dataset.trait || null;
     const p  = getEntries().find(x=>x.namn===name);
     const act = btn.dataset.act;
     const lvlSel = btn.closest('li').querySelector('select.level');
@@ -816,6 +828,11 @@ function initIndex() {
     }
     renderList(filtered());
     renderTraits();
+    if (act==='add') {
+      flashAdded(name, tr);
+    } else if (act==='sub' || act==='del' || act==='rem') {
+      flashRemoved(name, tr);
+    }
   });
 
   /* level-byte i listan */
@@ -895,6 +912,8 @@ function initIndex() {
       }
       storeHelper.setCurrentList(store,list); updateXP();
     }
+    renderList(filtered()); renderTraits();
+    flashAdded(name, tr);
   });
 }
 
