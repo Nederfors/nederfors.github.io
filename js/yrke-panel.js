@@ -37,6 +37,7 @@
 
     panel.classList.add('open');
     panel.scrollTop = 0;
+    window.updateScrollLock?.();
     outsideHandler = e => {
       if(!panel.contains(e.target)){
         close();
@@ -47,7 +48,10 @@
 
   function close(){
     const p = document.getElementById('yrkePanel');
-    if(p) p.classList.remove('open');
+    if(p) {
+      p.classList.remove('open');
+      window.updateScrollLock?.();
+    }
     if(outsideHandler){
       document.removeEventListener('click', outsideHandler);
       outsideHandler = null;

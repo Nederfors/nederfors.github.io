@@ -33,10 +33,10 @@ class SharedToolbar extends HTMLElement {
 
     /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
     this.updateScrollLock = () => {
-      const panelOpen = Object.values(this.panels).some(p => p.classList.contains('open'));
-      const shadowPop = this.shadowRoot.querySelector('.popup.open');
-      const docPop = document.querySelector('.popup.open');
-      const anyOpen = panelOpen || shadowPop || docPop;
+      const selector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open';
+      const docOpen = document.querySelector(selector);
+      const shadowOpen = this.shadowRoot.querySelector(selector);
+      const anyOpen = docOpen || shadowOpen;
       document.body.classList.toggle('menu-open', anyOpen);
     };
     window.updateScrollLock = () => this.updateScrollLock();
