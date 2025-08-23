@@ -416,10 +416,11 @@ input:focus, select:focus, textarea:focus {
             padding: 0 .45rem; font-size: .75rem; margin-left: .25rem; }
 
 /* animation when inventory items change */
-.inv-flash { animation: invFlash .6s ease; }
+.inv-flash { animation: invFlash 1s ease-out; }
 @keyframes invFlash {
-  from { background: var(--accent); }
-  to   { background: var(--card); }
+  0% { background: var(--accent); }
+  50% { background: rgba(61, 124, 255, 0.35); }
+  100% { background: var(--card); }
 }
 
 /* pulse effect for inventory badge */
