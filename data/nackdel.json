@@ -430,7 +430,7 @@
   {
     "id": "na36",
     "namn": "Hafspackare",
-    "beskrivning": "Remmar ligger snett, vikter hamnar fel och tyngden biter där den inte borde. Orken att organisera och packa effektivt saknas helt. Rollpersonens bärkapacitet räknas ut med Stark*0.75, avrundat uppåt.",
+    "beskrivning": "Remmar ligger snett, vikter hamnar fel och tyngden biter där den inte borde. Orken att organisera och packa effektivt saknas helt. Rollpersonens bärkapacitet räknas ut med Stark*0.5, avrundat uppåt.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Stark"]
