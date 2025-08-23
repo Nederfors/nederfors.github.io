@@ -591,6 +591,14 @@ function initCharacter() {
           await alertPopup('Jordnära karaktärer kan inte ta Mörkt förflutet.');
           return;
         }
+        if(name==='Packåsna' && before.some(x=>x.namn==='Hafspackare')){
+          await alertPopup('Karaktärer med Hafspackare kan inte ta Packåsna.');
+          return;
+        }
+        if(name==='Hafspackare' && before.some(x=>x.namn==='Packåsna')){
+          await alertPopup('Karaktärer med Packåsna kan inte ta Hafspackare.');
+          return;
+        }
         list = [...before, { ...p, nivå: lvl }];
         const disAfter = storeHelper.countDisadvantages(list);
         if (disAfter === 5 && disBefore < 5) {
