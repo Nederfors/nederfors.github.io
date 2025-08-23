@@ -38,6 +38,10 @@ body {
   align-items: center;
   margin-bottom: 90px;         /* plats för toolbar */
 }
+
+body.menu-open {
+  overflow: hidden;
+}
 shared-toolbar {
   display: block;
 }
