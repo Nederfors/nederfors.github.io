@@ -421,7 +421,7 @@
   {
     "id": "na35",
     "namn": "Vattentyngd",
-    "beskrivning": "Strömmen griper tag, kläder suger fast och varje steg eller armtag blir till en kamp. Rollpersonen har alltid trivts bättre på torra land än i vattnet och när vattnet går över knäna måste rollpersonen alltid slå två slag och välja det sämsta för alla handlingar.",
+    "beskrivning": "SNär vattnet stiger blir kroppen en fånge. Strömmen drar, kläderna klibbar och varje rörelse förlorar sin kraft. Lungorna fylls av oro och marken under fötterna känns förrädisk. Rollpersonen är mer hemma på fast land, och i djupare vatten blir varje handling en kamp mot både elementen och sig själv. Så snart vattnet når över knäna måste rollpersonen slå två slag för alla handlingar och ta det sämsta resultatet.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
@@ -448,7 +448,7 @@
   {
     "id": "na38",
     "namn": "Regntrög",
-    "beskrivning": "Droppar blir kedjor, leran vill hålla kvar stegen och kroppen svarar långsammare. Rollpersonen har alltid föredragit att ligga kvar i tältet och dra när regnet faller och får således -1 på Kvick och Stark när det regnar.",
+    "beskrivning": "När himlen öppnar sig blir varje droppe en tyngd som drar ner kroppen. Kläder klibbar fast, marken förvandlas till ett sugande fängelse av lera och varje rörelse känns seg som om världen själv stretade emot. Rollpersonen har alltid hatat regnet, sökt skydd under duk och tältduk istället för att möta det. När skyfallet kommer tappar kroppen sin snabbhet och styrka. När det regnar får rollpersonen −1 på alla slag mot Kvick och Stark.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Kvick", "Stark"]
@@ -456,8 +456,8 @@
   },
   {
     "id": "na39",
-    "namn": "Värmeklen",
-    "beskrivning": "Hettans tyngd tömmer musklerna på kraft och luften känns tjock som sirap. Om temperaturen är hög eller solljuset direkt, får rollpersonen −1 på alla framgångsslag. ",
+    "namn": "Extremsvettig",
+    "beskrivning": "När solen bränner och luften dallrar förvandlas varje rörelse till en kamp mot kroppen själv. Svetten svider i ögonen, musklerna mattas och varje andetag känns som att dra i sig tung, seg sirap. Rollpersonen tappar orken och blir långsam i både tanke och handling. Om temperaturen är hög eller solljuset gassar direkt får rollpersonen −1 på alla framgångsslag.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
@@ -522,8 +522,8 @@
 },
 {
 "id": "na47",
-"namn": "Trängselpanik",
-"beskrivning": "När fiender pressar på blir stegen osäkra och gardet öppnas. Är det inte lite trångt här? Hjärtat börjar banka, ögonen flackar och motståndare får övertag mot rollpersonen så snart minst två fiender befinner sig i närstridsräckvidd, även utan flankering.",
+"namn": "Flackande gard",
+"beskrivning": "När utrymmet krymper och fiender tränger sig på sviker nerverna. Luften känns tjock, hjärtat rusar och blicken far utan att finna fäste. Rörelserna blir osäkra, gardet lämnar glipor och varje slag känns felriktat. Så snart minst två fiender står inom närstridsräckvidd tappar rollpersonen sitt lugn, och motståndarna får ett Övertag – även utan att de flankerar.",
 "taggar": { "typ": ["Nackdel"], "test": [] }
 },
 {
@@ -588,8 +588,8 @@
   },
   {
     "id": "na55",
-    "namn": "Traditionsrivalitet",
-    "beskrivning": "Rollpersonen är så övertygad om sin egen mystiska tradition att samarbete med andra skolor kärvar. Vid kommunikation eller förhandling med mystiker från andra traditioner slås två tärningar mot Övertygande och det sämsta resultatet gäller.",
+    "namn": "Dogmatiker",
+    "beskrivning": "Rollpersonen ser sin egen mystiska tradition som den rätta vägen och har svårt att visa respekt för andras läror. När ord växlas med främmande skolor färgas tonen av misstänksamhet, förakt eller nedlåtenhet. Samarbete blir en kamp mot den egna övertygelsen, och förhandlingar kantas av skarpa ord eller kyliga avstånd. Vid kommunikation eller förhandling med mystiker från andra traditioner slås två tärningar mot Övertygande, och det sämsta resultatet gäller.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Övertygande"]
@@ -598,7 +598,7 @@
   {
     "id": "na56",
     "namn": "Signaturvapenbunden",
-    "beskrivning": "Rollpersonen har ett eller flera favoritvapen och är van vid deras tyngd och balans. När dessa saknas i strid kryper oro och otakt på; rollpersonen får en andra chans att misslyckas med alla sina framgångsslag tills favoritvapnen åter är i handen.",
+    "beskrivning": "Ett enda vapen kan bli mer än stål och trä – det blir en förlängning av kroppen, ett välbekant eko i varje rörelse. Rollpersonen känner sitt signaturvapens tyngd och balans lika självklart som sin egen andning. När vapnet inte finns nära smyger osäkerheten fram: slagen tappar rytm, rörelserna blir kantiga och striden känns främmande. Utan sitt signaturvapen i hand får rollpersonen en andra chans att misslyckas med alla sina framgångsslag. Om rollpersonen dessutom har förmågan Tvillingattack har hen också två signaturvapen.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
@@ -644,7 +644,7 @@
   {
     "id": "na61",
     "namn": "Självtvivel",
-    "beskrivning": "När misslyckandet slår rot skakar det rollpersonens självförtroende. Ett snedsteg lämnar spår – handen darrar, tanken hackar, kroppen tvekar. Varje gång ett försök faller platt växer osäkerheten, och nästa handling av samma slag bär med sig ett frö av tvivel. Därför får rollpersonen −1 på nästa slag mot samma karaktärsdrag.",
+    "beskrivning": "Rollpersonen bär en ständig osäkerhet på sina axlar. Varje handling kantas av frågan: ”Klarar jag verkligen detta?” När något går fel bekräftas tvivlet, och den egna förmågan känns ännu mer bristfällig. Självförtroendet skakar, stegen blir tunga och nästa försök känns redan dömt att vackla. När rollpersonen misslyckas med ett slag får hen −1 på nästa slag mot samma karaktärsdrag.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
@@ -653,7 +653,7 @@
   {
     "id": "na62",
     "namn": "Tvångsritual",
-    "beskrivning": "Rollpersonen har bundit en vardaglig situation till en ofrånkomlig ritual. Vid skapande väljs en återkommande situation (exempelvis innan strid, vid dörrtrösklar, före förhandlingar) och en specifik ritual (exempelvis räkna steg, knyta remmar, röra vid metall tre gånger). Varje gång situationen uppstår måste rollpersonen ägna minst en aktiv handling åt ritualen. Hindras ritualen får rollpersonen en andra chans att lyckas på alla sina slag under scenen. Situationen ska kunna inträffa flera gånger per dag och ritualen ska faktiskt fördröja rollpersonens agerande; rena morgonrutiner i tryggt läger räknas normalt inte.",
+    "beskrivning": "Rollpersonen har bundit en vardaglig situation till en ofrånkomlig ritual. Vid skapande väljs en återkommande situation (exempelvis innan strid, vid dörrtrösklar, före förhandlingar) och en specifik ritual (exempelvis räkna steg, knyta remmar, röra vid metall tre gånger). Varje gång situationen uppstår måste rollpersonen ägna minst en aktiv handling åt ritualen. Hindras ritualen får rollpersonen en andra chans att lyckas på alla sina slag under resten av scenen. Situationen ska inträffa minst en gång per dag och ritualen ska faktiskt fördröja rollpersonens agerande; rena morgonrutiner i tryggt läger räknas normalt inte.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
@@ -671,7 +671,7 @@
   {
     "id": "na64",
     "namn": "Tunnelseende",
-    "beskrivning": "När målet känns nära smalnar världen till en linje. Om en tydlig måltavla eller uppgift valts och avståndet motsvarar högst en dagsmarsch eller dags arbete får rollpersonen −1 på Vaksam tills målet nåtts (exempel: besegra en viss fiende, nå en bestämd plats, utforska en ruin).",
+    "beskrivning": "När målet står klart bleknar allt runtomkring. Världen smalnar till en stig som leder rakt fram, och inget annat tycks spela roll. Blicken fastnar, öronen stänger ute och faror vid sidan förbises. Om rollpersonen har en tydlig måltavla eller uppgift, och avståndet motsvarar högst en dagsmarsch eller en dags arbete, får hen −1 på Vaksam tills målet är nått. Exempel kan vara att besegra en viss fiende, nå en bestämd plats eller utforska en ruin.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Vaksam"]
