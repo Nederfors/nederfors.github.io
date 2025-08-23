@@ -551,14 +551,18 @@ class SharedToolbar extends HTMLElement {
               <strong>🔀</strong> växlar dragläge för att ändra ordningen på föremål.<br>
               <strong>🆕</strong> lägger till eget föremål.<br>
               <strong>💰</strong> justerar pengar.<br>
+              &nbsp;&nbsp;<em>Spara som totalen</em> ersätter summan helt.<br>
+              &nbsp;&nbsp;<em>Addera till totalen</em> lägger till beloppet.<br>
+              &nbsp;&nbsp;<em>Nollställ pengar</em> sätter totalen till noll.<br>
               <strong>💸</strong> multiplicerar priset för valda föremål.<br>
+              <strong>💾</strong> sparar inventariet och markerar alla föremål som gratis.<br>
               <strong>🧹</strong> tömmer inventariet.<br>
               <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.<br>
               <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.<br>
               <strong>🛞 / 🐎</strong> lastar markerade föremål på valt färdmedel.
             </p>
           <h3>Egenskapspanelen</h3>
-          <p>Ange total XP och få en summering av valda förmågor. Knappen "Förmågor: X" filtrerar listan och aktiverar filtret "Endast valda". Ta bort filtret genom att klicka på taggen "Endast valda".</p>
+          <p>Ange total XP och få en summering av valda förmågor. Knapparna <strong>−</strong> och <strong>+</strong> minskar respektive ökar totala erfarenhetspoäng. Knappen "Förmågor: X" filtrerar listan och aktiverar filtret "Endast valda". Ta bort filtret genom att klicka på taggen "Endast valda".</p>
           <h3>Rollpersonspanelen</h3>
           <p><strong>📋</strong> visar en sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</p>
           <h3>Anteckningssidan</h3>
@@ -577,6 +581,7 @@ class SharedToolbar extends HTMLElement {
             <strong>🆓</strong> gör ett föremål gratis.<br>
             <strong>💔</strong> visar konflikter.<br>
             <strong>↔</strong> växlar artefaktens kostnad mellan XP och permanent korruption.<br>
+            <strong>⬇️</strong> lastar föremålet på valt färdmedel.<br>
             <strong>⬆️</strong> flyttar föremålet från färdmedlet tillbaka till inventariet.<br>
             <strong>🗑</strong> tar bort posten helt.
           </p>
