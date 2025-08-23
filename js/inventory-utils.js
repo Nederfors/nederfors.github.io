@@ -1479,12 +1479,16 @@ ${moneyRow}
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
               }
+              const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
               renderInventory();
-              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(entry.namn)}"][data-idx="${flashIdx}"]`);
-              if (li) {
-                li.classList.add('inv-flash');
-                setTimeout(() => li.classList.remove('inv-flash'), 600);
+              const selector = !Number.isNaN(parentIdx)
+                ? `li[data-name="${CSS.escape(entry.namn)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
+                : `li[data-name="${CSS.escape(entry.namn)}"][data-idx="${flashIdx}"]`;
+              const flashEl = dom.invList?.querySelector(selector);
+              if (flashEl) {
+                flashEl.classList.add('inv-flash');
+                setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
               }
             };
             if (entry.traits && window.maskSkill) {
@@ -1517,12 +1521,16 @@ ${moneyRow}
           } else {
             parentArr.splice(idx, 1);
           }
+          const parentIdx = Number(li.dataset.parent);
           saveInventory(inv);
           renderInventory();
-          const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(itemName)}"][data-idx="${idx}"]`);
-          if (li) {
-            li.classList.add('rm-flash');
-            setTimeout(() => li.classList.remove('rm-flash'), 600);
+          const selector = !Number.isNaN(parentIdx)
+            ? `li[data-name="${CSS.escape(itemName)}"][data-parent="${parentIdx}"][data-child="${idx}"]`
+            : `li[data-name="${CSS.escape(itemName)}"][data-idx="${idx}"]`;
+          const flashEl = dom.invList?.querySelector(selector);
+          if (flashEl) {
+            flashEl.classList.add('rm-flash');
+            setTimeout(() => flashEl.classList.remove('rm-flash'), 600);
           }
         }
         return;
