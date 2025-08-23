@@ -416,7 +416,7 @@ input:focus, select:focus, textarea:focus {
             padding: 0 .45rem; font-size: .75rem; margin-left: .25rem; }
 
 /* animation when inventory items change */
-.inv-flash { animation: invFlash 1s ease-out; }
+.inv-flash { animation: invFlash .6s ease-out; }
 @keyframes invFlash {
   0% { background: rgba(61, 124, 255, 0.5); }
   100% { background: var(--card); }
