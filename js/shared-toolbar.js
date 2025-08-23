@@ -396,6 +396,16 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Töm färdmedel ---------- -->
+      <div id="vehicleRemovePopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Ta ur från färdmedel</h3>
+          <div id="vehicleRemoveItemList"></div>
+          <button id="vehicleRemoveApply" class="char-btn">Verkställ</button>
+          <button id="vehicleRemoveCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
       <div id="deleteContainerPopup" class="popup popup-bottom">
         <div class="popup-inner">
@@ -612,7 +622,7 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','vehiclePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

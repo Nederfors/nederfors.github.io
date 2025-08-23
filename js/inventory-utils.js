@@ -606,6 +606,66 @@ function openVehiclePopup(preselectId) {
     pop.addEventListener('click', onOutside);
 }
 
+  function openVehicleRemovePopup(vIdx) {
+    const pop    = bar.shadowRoot.getElementById('vehicleRemovePopup');
+    const list   = bar.shadowRoot.getElementById('vehicleRemoveItemList');
+    const apply  = bar.shadowRoot.getElementById('vehicleRemoveApply');
+    const cancel = bar.shadowRoot.getElementById('vehicleRemoveCancel');
+
+    const inv = storeHelper.getInventory(store);
+    const vehicle = inv[vIdx];
+    if (!vehicle || !Array.isArray(vehicle.contains) || !vehicle.contains.length) return;
+
+    const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
+    const nameMap = makeNameMap(items.map(i => i.row));
+    list.innerHTML = items
+      .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`)
+      .join('');
+
+    pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
+
+    const close = () => {
+      pop.classList.remove('open');
+      apply.removeEventListener('click', onApply);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      list.innerHTML = '';
+    };
+    const onApply = () => {
+      const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
+        .map(ch => ch.dataset.path.split('.').map(Number))
+        .sort((a,b)=>{
+          for (let i=0;i<Math.max(a.length,b.length);i++) {
+            const av=a[i], bv=b[i];
+            if (av===undefined) return 1;
+            if (bv===undefined) return -1;
+            if (av!==bv) return bv-av;
+          }
+          return 0;
+        });
+      checks.forEach(path => {
+        let arr = inv;
+        for (let i=0; i<path.length-1; i++) {
+          arr = arr[path[i]].contains || [];
+        }
+        const item = arr.splice(path[path.length-1],1)[0];
+        if (item) inv.push(item);
+      });
+      saveInventory(inv);
+      renderInventory();
+      close();
+    };
+    const onCancel = () => { close(); };
+    const onOutside = e => {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    apply.addEventListener('click', onApply);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+  }
+
   function openDeleteContainerPopup(removeAll, removeOnly) {
     const pop    = bar.shadowRoot.getElementById('deleteContainerPopup');
     const allBtn = bar.shadowRoot.getElementById('deleteContainerAll');
@@ -1214,7 +1274,6 @@ ${moneyRow}
                     ${cFreeQBtn}
                     ${cToggleBtn}
                     ${cFreeBtn}
-                    <button data-act="vehicleRemove" class="char-btn">⬆️</button>
                   </div>
                 </li>`;}).join('')}</ul>`
             : '';
@@ -1233,6 +1292,7 @@ ${moneyRow}
                 ${freeQBtn}
                 ${toggleBtn}
                 ${freeBtn}
+                ${isVehicle ? `<button data-act="vehicleLoad" class="char-btn">⬇️</button><button data-act="vehicleUnload" class="char-btn">⬆️</button>` : ''}
               </div>
               ${sublist}
             </li>`;
@@ -1372,13 +1432,13 @@ ${moneyRow}
       const li  = btn.closest('li');
       const inv = storeHelper.getInventory(store);
       const { row, parentArr, idx } = getRowInfo(inv, li);
-      if (act === 'vehicleRemove') {
-        if (parentArr !== inv && idx >= 0) {
-          const [moved] = parentArr.splice(idx, 1);
-          if (moved) inv.push(moved);
-          saveInventory(inv);
-          renderInventory();
-        }
+      if (act === 'vehicleLoad') {
+        const entry = getEntry(row.name);
+        if (entry?.id) openVehiclePopup(entry.id);
+        return;
+      }
+      if (act === 'vehicleUnload') {
+        openVehicleRemovePopup(idx);
         return;
       }
       if (act === 'moneyPlus' || act === 'moneyMinus') {
@@ -1739,6 +1799,7 @@ ${moneyRow}
     openQtyPopup,
     openPricePopup,
     openVehiclePopup,
+    openVehicleRemovePopup,
     openSaveFreePopup,
     massFreeAndSave,
     recalcArtifactEffects,

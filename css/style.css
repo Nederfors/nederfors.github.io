@@ -1221,13 +1221,16 @@ select.level {
   gap: .8rem;
 }
 #vehiclePopup.open .popup-inner { transform: translateY(0); }
-#vehiclePopup .popup-inner button { width: 100%; }
-#vehicleItemList {
+#vehiclePopup .popup-inner button,
+#vehicleRemovePopup .popup-inner button { width: 100%; }
+#vehicleItemList,
+#vehicleRemoveItemList {
   display: flex;
   flex-direction: column;
   gap: .4rem;
 }
-#vehicleItemList .price-item {
+#vehicleItemList .price-item,
+#vehicleRemoveItemList .price-item {
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -1236,10 +1239,12 @@ select.level {
   border-radius: .6rem;
   padding: .4rem .6rem;
 }
-#vehicleItemList .price-item span {
+#vehicleItemList .price-item span,
+#vehicleRemoveItemList .price-item span {
   flex: 1;
 }
-#vehicleItemList .price-item input[type="checkbox"] {
+#vehicleItemList .price-item input[type="checkbox"],
+#vehicleRemoveItemList .price-item input[type="checkbox"] {
   appearance: none;
   width: 1.1rem;
   height: 1.1rem;
@@ -1248,7 +1253,8 @@ select.level {
   background: var(--bg);
   cursor: pointer;
 }
-#vehicleItemList .price-item input[type="checkbox"]:checked {
+#vehicleItemList .price-item input[type="checkbox"]:checked,
+#vehicleRemoveItemList .price-item input[type="checkbox"]:checked {
   background: var(--accent);
   border-color: var(--accent);
 }
