@@ -433,21 +433,41 @@ function initIndex() {
           });
           invUtil.saveInventory(inv); invUtil.renderInventory();
           renderList(filtered());
+          FALT_BUNDLE.forEach(namn => {
+            const i = inv.findIndex(r => r.name === namn);
+            const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(namn)}"][data-idx="${i}"]`);
+            if (li) {
+              li.classList.add('inv-flash');
+              setTimeout(() => li.classList.remove('inv-flash'), 1000);
+            }
+          });
         } else {
           const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Färdmedel'].some(t=>p.taggar.typ.includes(t));
           const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
           if (p.artifactEffect) rowBase.artifactEffect = p.artifactEffect;
           const addRow = trait => {
             if (trait) rowBase.trait = trait;
+            let flashIdx;
             if (indiv) {
               inv.push(rowBase);
+              flashIdx = inv.length - 1;
             } else {
               const match = inv.find(x => x.name===p.namn && (!trait || x.trait===trait));
-              if (match) match.qty++;
-              else inv.push(rowBase);
+              if (match) {
+                match.qty++;
+                flashIdx = inv.indexOf(match);
+              } else {
+                inv.push(rowBase);
+                flashIdx = inv.length - 1;
+              }
             }
             invUtil.saveInventory(inv); invUtil.renderInventory();
             renderList(filtered());
+            const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
+            if (li) {
+              li.classList.add('inv-flash');
+              setTimeout(() => li.classList.remove('inv-flash'), 1000);
+            }
           };
           if (p.traits && window.maskSkill) {
             const used = inv.filter(it => it.name===p.namn).map(it=>it.trait).filter(Boolean);
