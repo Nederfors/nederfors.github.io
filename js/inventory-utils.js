@@ -1327,7 +1327,7 @@ ${moneyRow}
     dom.invList.innerHTML       = formalCard + itemCards;
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-    dom.invBadge.textContent    = allInv.reduce((s, r) => s + r.qty, 0);
+    dom.invBadge.textContent    = flatInv.reduce((s, r) => s + r.qty, 0);
     dom.invBadge.classList.add('badge-pulse');
     setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
     dom.unusedOut = $T('unusedOut');
