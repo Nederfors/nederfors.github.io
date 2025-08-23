@@ -20,7 +20,8 @@ function initIndex() {
 
   const flashAdded = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
-    const items = dom.valda?.querySelectorAll(selector);
+    const root = dom.lista || document;
+    const items = root.querySelectorAll(selector);
     const li = items?.[items.length - 1];
     if (li) {
       li.classList.add('inv-flash');
@@ -149,14 +150,15 @@ function initIndex() {
             .map(t => `<span class="tag">${t}</span>`)
             .join(' ');
           const tagsDiv = tagsHtml ? `<div class="tags">${tagsHtml}</div>` : '';
-          const li = document.createElement('li');
-          li.className = 'card';
-          li.innerHTML = `
+        const li = document.createElement('li');
+        li.className = 'card';
+        li.dataset.name = p.namn;
+        li.innerHTML = `
             <div class="card-title"><span>${p.namn}</span></div>
             ${tagsDiv}
             <div class="inv-controls">${infoBtn}</div>`;
-          listEl.appendChild(li);
-          return;
+        listEl.appendChild(li);
+        return;
         }
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
         const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
@@ -262,7 +264,9 @@ function initIndex() {
             : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
           btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
         }
-        const li=document.createElement('li'); li.className='card' + (compact ? ' compact' : '');
+        const li=document.createElement('li');
+        li.className='card' + (compact ? ' compact' : '');
+        li.dataset.name = p.namn;
         if (spec) li.dataset.trait = spec;
         if (xpVal != null) li.dataset.xp = xpVal;
         const tagsDiv = (!compact && tagsHtml)
