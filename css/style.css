@@ -1205,7 +1205,8 @@ select.level {
   z-index: 3000;
 }
 #vehiclePopup.open { display: flex; }
-#vehiclePopup .popup-inner {
+#vehiclePopup .popup-inner,
+#vehicleRemovePopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -1220,7 +1221,8 @@ select.level {
   flex-direction: column;
   gap: .8rem;
 }
-#vehiclePopup.open .popup-inner { transform: translateY(0); }
+#vehiclePopup.open .popup-inner,
+#vehicleRemovePopup.open .popup-inner { transform: translateY(0); }
 #vehiclePopup .popup-inner button,
 #vehicleRemovePopup .popup-inner button { width: 100%; }
 #vehicleItemList,
