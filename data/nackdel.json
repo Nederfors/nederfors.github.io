@@ -784,5 +784,15 @@
       "typ": ["Nackdel"],
       "test": ["Viljestark"]
     }
-  }
+  },
+  {
+"id": "na77",
+"namn": "Äckelmagad",
+"beskrivning": "Lukten av slakt, sötman från förruttnelse eller synen av slemmiga rester får magen att vända sig som av egen vilja; käkarna låser, saliven rinner och blicken flackar efter en plats att gömma skammen. I stridsvimlet kan det triggas av färska lik, vid lägerelden med slaktrester – det räcker att sinnena fylls av det som kroppen vägrar godta för att äcklet ska kliva fram och rycka undan mattan. När sådant äckel tar grepp måste rollpersonen slå ett slag mot Viljestark; vid misslyckande kräks rollpersonen upp allt som ätits och druckits under dagen och behöver därefter äta och dricka en extra gång för att tillgodose sitt dagliga näringsbehov.",
+"kan_införskaffas_flera_gånger": false,
+"taggar": {
+"typ": ["Nackdel"],
+"test": ["Viljestark"]
+}
+}
 ]
