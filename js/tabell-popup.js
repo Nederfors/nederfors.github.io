@@ -26,11 +26,15 @@
     const pop = document.getElementById('tabellPopup');
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
+    window.updateScrollLock?.();
   }
 
   function close(){
     const p = document.getElementById('tabellPopup');
-    if(p) p.classList.remove('open');
+    if(p) {
+      p.classList.remove('open');
+      window.updateScrollLock?.();
+    }
   }
 
   window.tabellPopup = { open, close };

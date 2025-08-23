@@ -30,6 +30,30 @@ class SharedToolbar extends HTMLElement {
 
     window.alertPopup = msg => this.openDialog(msg);
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
+
+    /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
+    this.updateScrollLock = () => {
+      const panelOpen = Object.values(this.panels).some(p => p.classList.contains('open'));
+      const shadowPop = this.shadowRoot.querySelector('.popup.open');
+      const docPop = document.querySelector('.popup.open');
+      const anyOpen = panelOpen || shadowPop || docPop;
+      document.body.classList.toggle('menu-open', anyOpen);
+    };
+    window.updateScrollLock = () => this.updateScrollLock();
+
+    const obsCfg = { attributes: true, attributeFilter: ['class'], subtree: true };
+    this._bodyObserver = new MutationObserver(this.updateScrollLock);
+    this._bodyObserver.observe(document.body, obsCfg);
+    this._shadowObserver = new MutationObserver(this.updateScrollLock);
+    this._shadowObserver.observe(this.shadowRoot, obsCfg);
+
+    this.updateScrollLock();
+  }
+
+  disconnectedCallback() {
+    document.removeEventListener('click', this._outsideHandler);
+    this._bodyObserver?.disconnect();
+    this._shadowObserver?.disconnect();
   }
 
   /* ------------------------------------------------------- */
