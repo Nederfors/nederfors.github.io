@@ -606,21 +606,39 @@ function openVehiclePopup(preselectId) {
     pop.addEventListener('click', onOutside);
 }
 
-  function openVehicleRemovePopup(vIdx) {
+  function openVehicleRemovePopup(preselectIdx) {
     const pop    = bar.shadowRoot.getElementById('vehicleRemovePopup');
+    const sel    = bar.shadowRoot.getElementById('vehicleRemoveSelect');
     const list   = bar.shadowRoot.getElementById('vehicleRemoveItemList');
     const apply  = bar.shadowRoot.getElementById('vehicleRemoveApply');
     const cancel = bar.shadowRoot.getElementById('vehicleRemoveCancel');
 
     const inv = storeHelper.getInventory(store);
-    const vehicle = inv[vIdx];
-    if (!vehicle || !Array.isArray(vehicle.contains) || !vehicle.contains.length) return;
+    const vehicles = inv
+      .map((row,i)=>({row, entry:getEntry(row.name), idx:i}))
+      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
+    if (!vehicles.length) return;
 
-    const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
-    const nameMap = makeNameMap(items.map(i => i.row));
-    list.innerHTML = items
-      .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`)
+    sel.innerHTML = vehicles
+      .map(v => `<option value="${v.idx}">${v.entry.namn}</option>`)
       .join('');
+    if (typeof preselectIdx === 'number') sel.value = String(preselectIdx);
+
+    const fillList = () => {
+      const vIdx = Number(sel.value);
+      const vehicle = inv[vIdx];
+      if (!vehicle || !Array.isArray(vehicle.contains)) {
+        list.innerHTML = '';
+        return;
+      }
+      const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
+      const nameMap = makeNameMap(items.map(i => i.row));
+      list.innerHTML = items
+        .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`)
+        .join('');
+    };
+
+    fillList();
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
@@ -629,10 +647,15 @@ function openVehiclePopup(preselectId) {
       pop.classList.remove('open');
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
+      sel.removeEventListener('change', fillList);
       pop.removeEventListener('click', onOutside);
+      sel.innerHTML = '';
       list.innerHTML = '';
     };
     const onApply = () => {
+      const vIdx = Number(sel.value);
+      const vehicle = inv[vIdx];
+      if (!vehicle) return;
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
         .sort((a,b)=>{
@@ -663,6 +686,7 @@ function openVehiclePopup(preselectId) {
 
     apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
+    sel.addEventListener('change', fillList);
     pop.addEventListener('click', onOutside);
   }
 

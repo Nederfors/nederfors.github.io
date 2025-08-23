@@ -396,10 +396,11 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- ---------- Popup Töm färdmedel ---------- -->
+      <!-- ---------- Popup Ta ut ur färdmedel ---------- -->
       <div id="vehicleRemovePopup" class="popup popup-bottom">
         <div class="popup-inner">
-          <h3>Ta ur från färdmedel</h3>
+          <h3>Ta ut ur färdmedel</h3>
+          <select id="vehicleRemoveSelect"></select>
           <div id="vehicleRemoveItemList"></div>
           <button id="vehicleRemoveApply" class="char-btn">Verkställ</button>
           <button id="vehicleRemoveCancel" class="char-btn danger">Avbryt</button>
