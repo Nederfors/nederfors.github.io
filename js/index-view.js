@@ -18,6 +18,16 @@ function initIndex() {
 
   const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
 
+  const flashAdded = (name, trait) => {
+    const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
+    const items = dom.valda?.querySelectorAll(selector);
+    const li = items?.[items.length - 1];
+    if (li) {
+      li.classList.add('inv-flash');
+      setTimeout(() => li.classList.remove('inv-flash'), 1000);
+    }
+  };
+
   const tabellInfoHtml = p => {
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
     const head = `<tr>${p.kolumner.map(c => `<th>${cap(c)}</th>`).join('')}</tr>`;
@@ -592,22 +602,26 @@ function initIndex() {
           const used=list.filter(x=>x.namn===p.namn).map(x=>x.race).filter(Boolean);
           bloodBond.pickRace(used, async race => {
             if(!race) return;
-            list.push({ ...p, race });
+            const added = { ...p, race };
+            list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
+            flashAdded(added.namn, added.trait);
           });
           return;
         }
         if (p.namn === 'Monsterlärd' && ['Gesäll','Mästare'].includes(lvl) && window.monsterLore) {
           monsterLore.pickSpec(async spec => {
             if(!spec) return;
-            list.push({ ...p, nivå: lvl, trait: spec });
+            const added = { ...p, nivå: lvl, trait: spec };
+            list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
+            flashAdded(added.namn, added.trait);
           });
           return;
         }
@@ -616,15 +630,19 @@ function initIndex() {
           exceptionSkill.pickTrait(used, async trait => {
             if(!trait) return;
             const existing=list.find(x=>x.namn===p.namn && x.trait===trait);
+            let added;
             if(existing){
               existing.nivå=lvl;
+              added = existing;
             }else{
-              list.push({ ...p, nivå:lvl, trait });
+              added = { ...p, nivå:lvl, trait };
+              list.push(added);
             }
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             renderList(filtered());
             renderTraits();
+            flashAdded(added.namn, added.trait);
           });
           return;
         }
@@ -640,7 +658,7 @@ function initIndex() {
           return;
         }
         let form = 'normal';
-        const finishAdd = async () => {
+        const finishAdd = async added => {
           await checkDisadvWarning();
           storeHelper.setCurrentList(store, list); updateXP();
           if (p.namn === 'Privilegierad') {
@@ -659,20 +677,23 @@ function initIndex() {
           }
           renderList(filtered());
           renderTraits();
+          flashAdded(added.namn, added.trait);
         };
         if (isMonstrousTrait(p)) {
           const test = { ...p, nivå: lvl, form: 'beast' };
           if (storeHelper.isFreeMonsterTrait(list, test) && window.beastForm) {
             beastForm.pickForm(async res => {
               if(!res) return;
-              list.push({ ...p, nivå: lvl, form: res });
-              await finishAdd();
+              const added = { ...p, nivå: lvl, form: res };
+              list.push(added);
+              await finishAdd(added);
             });
             return;
           }
         }
-        list.push({ ...p, nivå: lvl, form });
-        await finishAdd();
+        const added = { ...p, nivå: lvl, form };
+        list.push(added);
+        await finishAdd(added);
       }
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
