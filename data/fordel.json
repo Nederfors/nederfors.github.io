@@ -1095,7 +1095,7 @@
   {
     "id": "ford80",
     "namn": "Tyst andning",
-    "beskrivning": "Bröstkorgen rör sig knappt, luftens väg är jämn och lukt späs ut med tålamod; rollpersonens närvaro blir svår att läsa för rovdjur och väsen som litar på öron och nos.  Mot varelser som förlitar sig på hörsel eller lukt får rollpersonen +1 på Diskret.",
+    "beskrivning": "Bröstkorgen rör sig knappt, luftens väg är jämn och lukt späs ut med tålamod; rollpersonens närvaro blir svår att läsa för rovdjur och väsen som litar på öron och nos.  Mot varelser som förlitar sig på hörsel eller lukt får rollpersonen +1 på Diskret. Detsamma gäller även i kompakt mörker. Fördelen kan skaffas upp till tre gånger för en kumulativ effekt",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": ["Fördel"],
