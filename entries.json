@@ -269,5 +269,26 @@
         "Kvalitet"
       ]
     }
+
+  },
+  {
+    "id": 32,
+    "namn": "Lätt",
+    "beskrivning": "Minskar vikten på föremålet.",
+    "taggar": {
+      "typ": [
+        "Kvalitet"
+      ]
+    }
+  },
+  {
+    "id": 33,
+    "namn": "Hållbar",
+    "beskrivning": "Tål hårda tag utan att gå sönder.",
+    "taggar": {
+      "typ": [
+        "Kvalitet"
+      ]
+    }
   }
 ]

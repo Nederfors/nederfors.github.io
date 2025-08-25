@@ -201,7 +201,29 @@ document.addEventListener('DOMContentLoaded', async () => {
       const lvl  = li.querySelector('select.level')?.value || 'Novis';
 
       if (btn.dataset.act === 'add') {
-        if (isInv(entry)) {
+        if (entry.taggar?.typ?.includes('Kvalitet')) {
+          const inv = storeHelper.getInventory(store);
+          const equip = inv.filter(it => {
+            const e = ALL.find(x => x.id === it.itemId);
+            return e && (e.taggar?.typ?.includes('Vapen') || e.taggar?.typ?.includes('Rustning'));
+          });
+          if (!equip.length) { alert('Inga vapen eller rustningar i inventariet.'); return; }
+          const msg = equip.map((it,i)=>`${i+1}: ${it.name} ${(it.kval||[]).join(', ')}`).join('\n');
+          const ch = prompt('Välj föremål att ändra kvalitet på:\n'+msg);
+          const n  = Number(ch);
+          if (!n || n<1 || n>equip.length) return;
+          const item = equip[n-1];
+          const q = entry.namn;
+          item.kval = item.kval || [];
+          const qi = item.kval.indexOf(q);
+          if (qi>=0) {
+            if (!confirm('Ta bort kvaliteten?')) return;
+            item.kval.splice(qi,1);
+          } else {
+            item.kval.push(q);
+          }
+          storeHelper.setInventory(store, inv); renderInv();
+        } else if (isInv(entry)) {
           let kval = entry.taggar?.kvalitet || [];
           if (entry.taggar?.typ?.includes('Vapen') || entry.taggar?.typ?.includes('Rustning')) {
             const inp = prompt('Kvaliteter (kommaseparerade):', kval.join(', '));
@@ -209,6 +231,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             kval = inp.split(',').map(s=>s.trim()).filter(Boolean);
           }
           const inv = storeHelper.getInventory(store);
+
           const idx = inv.findIndex(x=>x.itemId===id && x.level===lvl && JSON.stringify(x.kval||[])===JSON.stringify(kval));
           if (idx>=0) { inv[idx].qty++; }
           else { inv.push({itemId:id,name:entry.namn,qty:1,level:lvl,kval}); }
