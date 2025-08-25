@@ -367,13 +367,21 @@ function initCharacter() {
         const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
         const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
-        const tagsHtml = [xpTag]
+        const infoTagsHtml = [xpTag]
           .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
           .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
           .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .filter(Boolean)
           .join(' ');
-        if (tagsHtml) {
-          infoHtml = `<div class="tags">${tagsHtml}</div><br>${infoHtml}`;
+        const tagsHtml = []
+          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
+          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .filter(Boolean)
+          .join(' ');
+        const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
+        if (infoTagsHtml) {
+          infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
         }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
 
@@ -403,7 +411,7 @@ function initCharacter() {
         const tagsDiv = (!compact && tagsHtml)
           ? `<div class="tags">${tagsHtml}</div>`
           : '';
-        li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span></div>
+        li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
         ${tagsDiv}
         ${lvlSel}
         ${descHtml}
@@ -525,8 +533,7 @@ function initCharacter() {
         tabellPopup.open(html, title);
         return;
       }
-      const xpVal = liEl?.dataset.xp ? Number(liEl.dataset.xp) : undefined;
-      yrkePanel.open(title, html, xpVal);
+      yrkePanel.open(title, html);
       return;
     }
     const actBtn=e.target.closest('button[data-act]');

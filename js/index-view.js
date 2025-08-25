@@ -244,14 +244,21 @@ function initIndex() {
         const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(p, charList);
         const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
         const xpTag = xpVal != null ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
-        const tagsHtml = [xpTag]
+        const infoTagsHtml = [xpTag]
           .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
           .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
           .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
           .filter(Boolean)
           .join(' ');
-        if (tagsHtml) {
-          infoHtml = `<div class="tags">${tagsHtml}</div><br>${infoHtml}`;
+        const tagsHtml = []
+          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
+          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .filter(Boolean)
+          .join(' ');
+        const xpHtml = xpVal != null ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        if (infoTagsHtml) {
+          infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
         }
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
@@ -306,7 +313,7 @@ function initIndex() {
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
         const priceHtml = priceText ? `<div class="card-price">${priceLabel} ${priceText}</div>` : '';
         li.innerHTML = `
-          <div class="card-title"><span>${p.namn}${badge}</span></div>
+          <div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}
@@ -422,8 +429,7 @@ function initIndex() {
         tabellPopup.open(html, title);
         return;
       }
-      const xpVal = liEl?.dataset.xp != null ? Number(liEl.dataset.xp) : undefined;
-      yrkePanel.open(title,html,xpVal);
+      yrkePanel.open(title, html);
       return;
     }
     const btn=e.target.closest('button[data-act]');
