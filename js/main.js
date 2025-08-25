@@ -4,6 +4,67 @@
    2025-06-20
    =========================================================== */
 
+/* ---------- Back-navigering för menyer & popups ---------- */
+(function() {
+  const overlayStack = [];
+  const openMap = new Map();
+  let isPop = false;
+  let manualClose = false;
+
+  function isOverlay(el) {
+    if (!(el instanceof HTMLElement)) return false;
+    if (el.classList.contains('popup') || el.classList.contains('offcanvas')) return true;
+    return /Popup$/.test(el.id) || /Panel$/.test(el.id);
+  }
+
+  function observe(root) {
+    const obs = new MutationObserver(muts => {
+      for (const m of muts) {
+        const el = m.target;
+        if (!isOverlay(el)) continue;
+        const isOpen = el.classList.contains('open');
+        const wasOpen = openMap.get(el) || false;
+        if (isOpen && !wasOpen) {
+          openMap.set(el, true);
+          overlayStack.push(el);
+          history.pushState({ overlay: el.id }, '');
+        } else if (!isOpen && wasOpen) {
+          openMap.set(el, false);
+          const idx = overlayStack.lastIndexOf(el);
+          if (idx >= 0) overlayStack.splice(idx, 1);
+          if (!isPop) {
+            manualClose = true;
+            history.back();
+          }
+        }
+      }
+    });
+    obs.observe(root, { attributes: true, attributeFilter: ['class'], subtree: true });
+  }
+
+  function initObservers() {
+    observe(document.body);
+    const bar = document.querySelector('shared-toolbar');
+    if (bar && bar.shadowRoot) observe(bar.shadowRoot);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initObservers);
+  } else {
+    initObservers();
+  }
+
+  window.addEventListener('popstate', () => {
+    if (manualClose) { manualClose = false; return; }
+    const el = overlayStack[overlayStack.length - 1];
+    if (el) {
+      isPop = true;
+      el.classList.remove('open');
+      isPop = false;
+    }
+  });
+})();
+
 /* ---------- Grunddata & konstanter ---------- */
 const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
 let   store  = storeHelper.load();                   // Lokal lagring
