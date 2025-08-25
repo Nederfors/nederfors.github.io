@@ -364,9 +364,14 @@ function initCharacter() {
             : `<br><strong>Karaktärsdrag:</strong> ${p.trait}`;
           infoHtml += traitInfo;
         }
-        const tagsHtml = (p.taggar?.typ || [])
-          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
-          .map(t=>`<span class="tag">${t}</span>`).join(' ');
+        const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
+        const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
+        const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
+        const tagsHtml = [xpTag]
+          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
+          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .join(' ');
         if (tagsHtml) {
           infoHtml = `<div class="tags">${tagsHtml}</div><br>${infoHtml}`;
         }
@@ -380,9 +385,6 @@ function initCharacter() {
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
         const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-        const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
-        const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
-        const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
         const activeLvls = LVL.filter((l, i) => i <= LVL.indexOf(p.nivå || LVL[0]) && p.taggar?.handling?.[l]?.includes('Aktiv'));
         const conflictBtn = activeLvls.length
           ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeLvls.join(', ')}">💔</button>`
@@ -401,7 +403,7 @@ function initCharacter() {
         const tagsDiv = (!compact && tagsHtml)
           ? `<div class="tags">${tagsHtml}</div>`
           : '';
-        li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span><span class="title-actions">${xpHtml}</span></div>
+        li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span></div>
         ${tagsDiv}
         ${lvlSel}
         ${descHtml}

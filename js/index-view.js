@@ -241,9 +241,15 @@ function initIndex() {
             infoHtml += t;
           }
         }
-        const tagsHtml = (p.taggar?.typ || [])
-          .concat(explodeTags(p.taggar?.ark_trad), p.taggar?.test || [])
-          .map(t=>`<span class="tag">${t}</span>`).join(' ');
+        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(p, charList);
+        const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
+        const xpTag = xpVal != null ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
+        const tagsHtml = [xpTag]
+          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
+          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .filter(Boolean)
+          .join(' ');
         if (tagsHtml) {
           infoHtml = `<div class="tags">${tagsHtml}</div><br>${infoHtml}`;
         }
@@ -262,10 +268,6 @@ function initIndex() {
         }
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
-        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(p, charList);
-        const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
-        const xpHtml = xpVal != null ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
-        const titleActions = xpHtml ? `<span class="title-actions">${xpHtml}</span>` : '';
         const showInfo = compact || hideDetails;
         const eliteBtn = isElityrke(p)
           ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
@@ -304,7 +306,7 @@ function initIndex() {
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
         const priceHtml = priceText ? `<div class="card-price">${priceLabel} ${priceText}</div>` : '';
         li.innerHTML = `
-          <div class="card-title"><span>${p.namn}${badge}</span>${titleActions}</div>
+          <div class="card-title"><span>${p.namn}${badge}</span></div>
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}

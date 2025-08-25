@@ -311,6 +311,9 @@ input:focus, select:focus, textarea:focus {
   color: var(--subtxt);
   font-weight: 500;
 }
+.tag.xp-cost {
+  font-size: .85rem;
+}
 .conflict-btn {
   padding: .2rem .5rem;
   font-size: 1.1rem;
