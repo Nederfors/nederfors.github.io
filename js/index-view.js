@@ -938,9 +938,29 @@ function initIndex() {
         storeHelper.setHamnskifteRemoved(store, rem);
       }
       storeHelper.setCurrentList(store,list); updateXP();
+      renderList(filtered()); renderTraits();
+      flashAdded(name, tr);
+      return;
     }
-    renderList(filtered()); renderTraits();
-    flashAdded(name, tr);
+
+    /* uppdatera pris om förmågan inte lagts till */
+    const p = getEntries().find(x=>x.namn===name);
+    if(!p) return;
+    const lvl = e.target.value;
+    const xpVal = (isInv(p) || isEmployment(p) || isService(p))
+      ? null
+      : storeHelper.calcEntryXP({ ...p, nivå:lvl }, list);
+    const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
+    const liEl = e.target.closest('li');
+    if (xpVal != null) liEl.dataset.xp = xpVal; else delete liEl.dataset.xp;
+    const xpSpan = liEl.querySelector('.card-title .xp-cost');
+    if (xpSpan) xpSpan.textContent = `Erf: ${xpText}`;
+    const infoBtn = liEl.querySelector('button[data-info]');
+    if (infoBtn?.dataset.info) {
+      const infoHtml = decodeURIComponent(infoBtn.dataset.info);
+      const newInfo = infoHtml.replace(/(<span class="tag xp-cost">Erf: )[^<]*/, `$1${xpText}`);
+      infoBtn.dataset.info = encodeURIComponent(newInfo);
+    }
   });
 }
 
