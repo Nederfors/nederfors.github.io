@@ -311,6 +311,9 @@ input:focus, select:focus, textarea:focus {
   color: var(--subtxt);
   font-weight: 500;
 }
+.card-title .xp-cost {
+  margin-left: auto;
+}
 .tag.xp-cost {
   font-size: .85rem;
 }
