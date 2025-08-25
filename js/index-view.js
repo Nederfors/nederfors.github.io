@@ -241,7 +241,9 @@ function initIndex() {
             infoHtml += t;
           }
         }
-        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(p, charList);
+        const charEntry = charList.find(c => c.namn === p.namn);
+        const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
+        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
         const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
         const xpTag = xpVal != null ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
         const infoTagsHtml = [xpTag]
