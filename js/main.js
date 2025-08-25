@@ -60,7 +60,8 @@
     if (el) {
       isPop = true;
       el.classList.remove('open');
-      isPop = false;
+      // Vänta tills MutationObserver hunnit reagera innan flaggan återställs
+      setTimeout(() => { isPop = false; });
     }
   });
 })();
