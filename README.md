@@ -57,7 +57,6 @@ Verktygsraden innehåller:
 - `📊` öppnar egenskapspanelen.
 - `📜` öppnar anteckningspanelen.
 - Skriv `lol` i sökfältet och tryck Enter för att rensa alla filter.
-- Skriv `Molly<3` i sökfältet för att visa alla artefakter.
 - `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
 
 ### 4. Filtermenyn
