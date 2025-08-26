@@ -11,13 +11,14 @@ function initIndex() {
   dom.entryViewToggle.classList.toggle('active', compact);
   let catsMinimized = false;
   let showArtifacts = false;
+  let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
 
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
       .concat(storeHelper.getCustomEntries(store));
     if (showArtifacts) return base;
-    return base.filter(p => !(p.taggar?.typ || []).includes('Artefakt'));
+    return base.filter(p => !(p.taggar?.typ || []).includes('Artefakt') || revealedArtifacts.has(p.namn));
   };
   const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
 
@@ -98,7 +99,14 @@ function initIndex() {
     if (!showArtifacts && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1 && !sTemp) {
       const term = terms[0];
       const art = DB.find(p => isArtifact(p) && searchNormalize((p.namn || '').toLowerCase()) === term);
-      if (art) return [art];
+      if (art) {
+        if (!revealedArtifacts.has(art.namn)) {
+          revealedArtifacts.add(art.namn);
+          storeHelper.addRevealedArtifact(store, art.namn);
+          fillDropdowns();
+        }
+        return [art];
+      }
     }
     return getEntries().filter(p=>{
       const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
@@ -379,6 +387,9 @@ function initIndex() {
         F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
+        storeHelper.clearRevealedArtifacts(store);
+        revealedArtifacts.clear();
+        fillDropdowns();
         activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
