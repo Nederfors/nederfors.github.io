@@ -28,7 +28,8 @@ class SharedToolbar extends HTMLElement {
     document.getElementById = id =>
       nativeGetElementById(id) || this.shadowRoot.getElementById(id);
 
-    window.alertPopup = msg => this.openDialog(msg);
+    window.openDialog  = (msg, opts) => this.openDialog(msg, opts);
+    window.alertPopup  = msg => this.openDialog(msg);
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
 
     /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
@@ -505,6 +506,7 @@ class SharedToolbar extends HTMLElement {
           <div class="confirm-row">
             <button id="dialogCancel" class="char-btn danger">Avbryt</button>
             <button id="dialogOk" class="char-btn">OK</button>
+            <button id="dialogExtra" class="char-btn">Extra</button>
           </div>
         </div>
       </div>
@@ -658,32 +660,47 @@ class SharedToolbar extends HTMLElement {
   close(id) { this.panels[id]?.classList.remove('open'); }
 
   openDialog(message, opts = {}) {
-    const { cancel = false, okText = 'OK', cancelText = 'Avbryt' } = opts;
+    const {
+      cancel = false,
+      okText = 'OK',
+      cancelText = 'Avbryt',
+      extraText
+    } = opts;
     return new Promise(resolve => {
-      const pop   = this.shadowRoot.getElementById('dialogPopup');
-      const msgEl = this.shadowRoot.getElementById('dialogMessage');
-      const okBtn = this.shadowRoot.getElementById('dialogOk');
-      const cancelBtn = this.shadowRoot.getElementById('dialogCancel');
+      const pop      = this.shadowRoot.getElementById('dialogPopup');
+      const msgEl    = this.shadowRoot.getElementById('dialogMessage');
+      const okBtn    = this.shadowRoot.getElementById('dialogOk');
+      const cancelBtn= this.shadowRoot.getElementById('dialogCancel');
+      const extraBtn = this.shadowRoot.getElementById('dialogExtra');
       msgEl.textContent = message;
       cancelBtn.style.display = cancel ? '' : 'none';
       okBtn.textContent = okText;
       cancelBtn.textContent = cancelText;
+      if (extraText) {
+        extraBtn.style.display = '';
+        extraBtn.textContent = extraText;
+      } else {
+        extraBtn.style.display = 'none';
+      }
       pop.classList.add('open');
       pop.querySelector('.popup-inner').scrollTop = 0;
       const close = res => {
         pop.classList.remove('open');
         okBtn.removeEventListener('click', onOk);
         cancelBtn.removeEventListener('click', onCancel);
+        extraBtn.removeEventListener('click', onExtra);
         pop.removeEventListener('click', onOutside);
         resolve(res);
       };
       const onOk = () => close(true);
       const onCancel = () => close(false);
+      const onExtra = () => close('extra');
       const onOutside = e => {
         if (!pop.querySelector('.popup-inner').contains(e.target)) close(false);
       };
       okBtn.addEventListener('click', onOk);
       cancelBtn.addEventListener('click', onCancel);
+      extraBtn.addEventListener('click', onExtra);
       pop.addEventListener('click', onOutside);
     });
   }

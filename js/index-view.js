@@ -528,8 +528,19 @@ function initIndex() {
           const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
           const tagTyp = p.taggar?.typ || [];
           if (tagTyp.includes('Artefakt')) {
-            const payXP = await confirmPopup('Betala 1 XP? (Avbryt = +1 permanent korruption)');
-            rowBase.artifactEffect = payXP ? 'xp' : 'corruption';
+            const choice = await openDialog('Betala 1 XP eller ta +1 permanent korruption?', {
+              cancel: true,
+              cancelText: 'Avbryt',
+              okText: '-1 erf',
+              extraText: '+1 korruption'
+            });
+            if (choice === true) {
+              rowBase.artifactEffect = 'xp';
+            } else if (choice === 'extra') {
+              rowBase.artifactEffect = 'corruption';
+            } else {
+              return;
+            }
           } else if (p.artifactEffect) {
             rowBase.artifactEffect = p.artifactEffect;
           }
