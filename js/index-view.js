@@ -10,11 +10,16 @@ function initIndex() {
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', compact);
   let catsMinimized = false;
+  let showArtifacts = false;
 
-  const getEntries = () =>
-    DB
+  const getEntries = () => {
+    const base = DB
       .concat(window.TABELLER || [])
       .concat(storeHelper.getCustomEntries(store));
+    if (showArtifacts) return base;
+    return base.filter(p => !(p.taggar?.typ || []).includes('Artefakt'));
+  };
+  const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
 
   const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
 
@@ -90,6 +95,11 @@ function initIndex() {
     const nameSet = onlySel
       ? new Set(storeHelper.getCurrentList(store).map(x => x.namn))
       : null;
+    if (!showArtifacts && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1 && !sTemp) {
+      const term = terms[0];
+      const art = DB.find(p => isArtifact(p) && searchNormalize((p.namn || '').toLowerCase()) === term);
+      if (art) return [art];
+    }
     return getEntries().filter(p=>{
       const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
       const hasTerms = terms.length > 0;
@@ -373,6 +383,14 @@ function initIndex() {
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
+      if (term === 'molly<3') {
+        showArtifacts = true;
+        dom.sIn.value=''; sTemp='';
+        fillDropdowns();
+        activeTags(); renderList(filtered());
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
       if (tryBomb(sTemp)) {
         dom.sIn.value=''; sTemp='';
         return;
@@ -475,7 +493,7 @@ function initIndex() {
           FALT_BUNDLE.forEach(namn => {
             const ent = invUtil.getEntry(namn);
             if (!ent.namn) return;
-            const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel']
+            const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
               .some(t=>ent.taggar.typ.includes(t));
             const existing = inv.find(r => r.name === ent.namn);
             if (indivItem || !existing) {
@@ -495,9 +513,15 @@ function initIndex() {
             }
           });
         } else {
-          const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Färdmedel'].some(t=>p.taggar.typ.includes(t));
+          const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t=>p.taggar.typ.includes(t));
           const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-          if (p.artifactEffect) rowBase.artifactEffect = p.artifactEffect;
+          const tagTyp = p.taggar?.typ || [];
+          if (tagTyp.includes('Artefakt')) {
+            const payXP = await confirmPopup('Betala 1 XP? (Avbryt = +1 permanent korruption)');
+            rowBase.artifactEffect = payXP ? 'xp' : 'corruption';
+          } else if (p.artifactEffect) {
+            rowBase.artifactEffect = p.artifactEffect;
+          }
           const addRow = trait => {
             if (trait) rowBase.trait = trait;
             let flashIdx;
@@ -515,6 +539,15 @@ function initIndex() {
               }
             }
             invUtil.saveInventory(inv); invUtil.renderInventory();
+            if (tagTyp.includes('Artefakt')) {
+              const list = storeHelper.getCurrentList(store);
+              if (!list.some(x => x.namn === p.namn && x.noInv)) {
+                list.push({ ...p, noInv: true });
+                storeHelper.setCurrentList(store, list);
+              }
+              if (window.updateXP) updateXP();
+              if (window.renderTraits) renderTraits();
+            }
             renderList(filtered());
             const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
             if (li) {
@@ -766,6 +799,15 @@ function initIndex() {
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
+        if ((p.taggar?.typ || []).includes('Artefakt')) {
+          const still = inv.some(r => r.name === p.namn);
+          if (!still) {
+            let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === p.namn && x.noInv));
+            storeHelper.setCurrentList(store, list);
+            if (window.updateXP) updateXP();
+            if (window.renderTraits) renderTraits();
+          }
+        }
         renderList(filtered());
       } else {
         const tr = btn.closest('li').dataset.trait || null;

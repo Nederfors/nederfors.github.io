@@ -156,6 +156,7 @@ const DATA_FILES = [
   'dryck.json',
   'sardrag.json',
   'monstruost-sardrag.json',
+  'artefakter.json',
   'lagre-artefakter.json',
   'fallor.json'
 ].map(f => `data/${f}`);
