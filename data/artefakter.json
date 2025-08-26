@@ -219,7 +219,336 @@
     "örtegar": 0
   }
 }
-
+,{
+  "id": "ar07",
+  "namn": "Fullangra, kungstjänaren",
+  "beskrivning": "Fullangra, kungstjänarEn\nDen krumma dvärgen Fullangra – eller Långnog\nsom hon kallar sig själv – fångades av forntida\nsvartkonstnärer och bands i den snidade träask\nsom bär hennes avbild. Hon har genom seklen tjänat\nmånga mästare, krigsherrar och småkungar, alltid\ntroget men aldrig utan att knota och gnälla. Hennes\ndåliga humör fick den senaste ägaren, konung\nHurian Lo-Apak att tröttna och stoppa in skrinet\ni skattkammaren istället för att utnyttja hennes\ntjänster. Sekler av ensamt surande i skrinet har\nfått Fullangra att mjukna något och hon kommer\ntjäna sin nästa mästare med mer av muttranden\noch viskat gnäll än högljutt missnöje.\nFullangra talar en urgammal symbarisk dialekt\noch kan varken läsa eller skriva. I och med att någon\nbinder artefakten till sig uppstår ett mystiskt band\nmellan denne och dvärgen som innebär att de kan\nkommunicera på telepatisk väg, men för andra\nkrävs förmågan Lärd till mästarnivå samt ett lyckat\nslag mot Listig för att möjliggöra ett samtal. Noteras\nbör också att hon inte anger sitt dopnamn till någon,\ninte ens till sin mästare: hon använder istället sitt\nbruksnamn, Långnog.\nFullangra har följande egenskaper och krafter,\nvilka skrinets mästare kan utnyttja:",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ],
+      "Förmåga 3": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Trotjänare\nFullangra kan beordras att agera livvakt, vakta en\nplats, hämta något, lämna bud, hantera en spak\neller kort och gott dra till staden för att sälja rov.\nHon utför uppdraget plikttroget och behöver inte\näta eller sova. Hon tar inga initiativ utöver givna\ndirektiv. Om uppdraget tar slut men hon saknar\norder kommer hon att återvända till skrinet på\nmystisk väg och vänta där.\nOm uppdraget placerar Fullangra i närheten\nav skrinets mästare fungerar hon som en andra\nrollperson åt denne. Fullangra rör sig alltid i döds-\nmarsch-tempo, utan vila. Varje längre uppdrag\nkräver sålunda ett slag med 1T20: 20 innebär att\nFullangra fångats av monster eller förolyckats på\nannat sätt. Då återvänder hon mystiskt till skrinet\noch vägrar surande att lämna det på en vecka.\nHandling: Aktiv\nKorruption: 1\nFullangra, Kungstjänaren\n”Begrav mig stående, jag har levt på knä”\nManér Muttrar mycket för sig själv och\nbetraktar omvärlden med bister\nblick\nSläkte Dvärg\nMotstånd Ordinärt\nSärdrag Jordnära (se sidan 39),\nMinnesmästare (se sidan 39)\nDiskret 10 (0), Kvick 10 (0), Listig 13 (−3),\nStark 15 (−5), Träffsäker 5 (−5), Vaksam 11 (−1),\nViljestark 9 (−1), Övertygande 7 (+3)\nFörmågor Järnäve (Novis), Naturlig krigare\n(Gesäll), Stryparkonst (Novis)\nBeväpning Hårda nypor 1T6+1T4 , två\nattacker mot samma mål\nStypning 1T6 per runda\nBepansring Ingen\nFörsvar 10\nTålighet 15 Smärtgräns 6\nUtrustning Ingen\nSkugga Som dimma över Davokars gölar,\nmed enstaka sotflagor irrande i\ndet vita (korruption: 3)\nTaktik: Fullangra lyder order, till punkt och pricka.\nOm Fullangra dödas (når 0 i Tålighet, hon slår inga\ndödsslag) återvänder hon till skrinet och slickar\nsin sår i dagarna sju.",
+    "Förmåga 2": "Tabell 2: Fullangras chans att lyckas med ett mördarstråt\nmotstånD chans att lyckas\nSvagt Slå 1T20, Fullangra lyckas på allt utom 20.\nOrdinärt Slå 1T20, Fullangra lyckas om slaget är 10 eller lägre (misslyckas på 11–20)\nUtmanande Slå 1T20, Fullangra lyckas om slaget är 5 eller under (misslyckas på 6–20)\nStarkt Slå 1T20, Fullangra lyckas endast om slaget är 1 (misslyckas på 2–20\n\nMördarstråt\nFullangra kan också bevekas att göra grymmare\ndåd, men då mot kravet att hon släpps fri. Om skri-\nnets mästare låter henne gå efter en sista illgärning\nkan hon fås att ge sig ut på strypargöra. Hon söker\ndå upp en av mästaren angiven fiende och försöker\ndräpa denne. Tidsåtgången är densamma som om\nrollpersonen själv försökte göra det. Fullangras\nchans att lyckas beror på vilket offrets motstånd\när, se tabell 2.\nOm Fullangra misslyckas med uppdraget inne-\nbär det att hon dödats eller fångats in, och då\nåterkommer hon inte till skrinet. Överlever hon\nkommer hon så snart uppdraget är utfört att söka\nupp närmaste dvärgfränder, vilket troligen är i\nYndaros.\nHandling: Aktiv\nKorruption: 1T4, varav ett permanent.",
+    "Förmåga 3": "Frihetens gengåva\nFör den mästare som ger Fullangra hennes frihet\nåter utan krav på motprestation kommer dvärgen\natt åkalla de gamla makter hon fortfarande känner\nnamnet på och genom dem ge sin befriare en av\nnedanstående gåvor:\nÄrva korruption: Fullangra tar på sig 1T6 av\nbefriarens permanenta korruption, som tack för\nsin frihet.\nÖvernaturligt beskydd: Fullangras bön till\ngamla makter ger befriaren beskydd. Skyddet\nkommer i form av 1T6 erfarenhet som endast får\nanvändas i enlighet med den alternativa regeln\nOmslag för erfarenhet (sidan 179 i Grundboken).\nVad Fullangra gör med sin frihet är upp till spel-\nledaren."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 2
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+}
+,{
+  "id": "ar08",
+  "namn": "Själaslukaren",
+  "beskrivning": "själaslukarEn\nStridshammaren Själaslukaren ska enligt legen-\nderna ha skapats i österlandet bortom Ravennerna\ni syfte att tillfredsställa en anonym krigsherres\nhärsklystnad. Vapnet var illa omtalat redan i\nSymbaroum om man får tro de krönikor där\ndet omnämns, ofta med påståenden som att det”smiddes i avundsjuka och härdades i missunn-\nsamhet”. Ingen av dess ägare i gamla Symbaroum\npåstås heller ha gått goda öden till mötes.\nNär Själaslukaren hittas i mausoleet har den en\nmystisk kraft lagrad från ett tidigare offer: Helig\naura (Novis).",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt",
+      "Vapen"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Reaktiv"
+      ],
+      "Förmåga 2": [
+        "Samma som den lagrade kraften"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Liktjuv. Själaslukaren kan ”suga åt sig” en mystisk kraft som involverar karaktärsdraget Viljestark från en varelse den dräper och lagra den i sitt runristade huvud. För att det ska hända måste hammaren fälla det dödande slaget och dess mästare måste välja att ersätta den redan lagrade förmågan med en från det nya offret. Handling: Reaktiv. Korruption: 1T4.",
+    "Förmåga 2": "Parasitens storhet. Vapnets mästare kan använda den mystiska kraft som har lagrats i vapnet, som om den var mästarens egen. Bärarens Viljestark räknas som 15 i sammanhang som har med användningen av den lagrade kraften att göra, dock utan att ha någon inverkan på bärarens korruptionströskel. Handling: Samma som den lagrade kraften. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 2
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar09",
+  "namn": "Brandskär",
+  "beskrivning": "branDskär\nKastyxan Brandskär hyser vilda andar av eld\noch aska vilka låter den flamma upp och också\nflyga genom luften tillbaka till kastarens hand.\nLegenderna är märkligt tysta om vapnets ursprung,\nmen det är inte otänkbart att vapnet är den brin-\nnande yxa som sades svingas av monsterjägaren\nKsandukha, hon som enligt legenderna dräpte\nDavokars sista drake.\nVapnets huvud glöder och osar svagt och ger\n+1T4 i skada på alla attacker. Vapnets mästare är\nmärkligt opåverkad av dess hetta och kan hantera\ndet som en vanlig kastyxa.\nDet eldfängda vapnet söker sig alltid tillbaka till\nmästaren, om inte denne vill ha det annorlunda.\nNär yxan kastas eller tappas återvänder den till\nmästarens hand som en fri handling, utan någon\nkostnad i korruption.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt",
+      "Vapen"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Lavakniv. När vapnet kastas glöder yxeggen som bergens brinnande blod och vapnet bränner lätt genom bepansring av alla slag – attacken ignorerar rustning. Handling: Aktiv. Korruption: 1T4.",
+    "Förmåga 2": "Eldregn. Brandskär slår ut mot en rad fiender i en kedje-\nattack. Yxan kastas mot en fiende och om det träffar\ndenne flyger vapnet vidare till ett ytterligare mål,\noch så vidare tills ett anfallsslag misslyckas. Då\nåtervänder vapnet till mästarens hand. Handling: Aktiv. Korruption: 1T6."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar10",
+  "namn": "Ellas trollkors",
+  "beskrivning": "Ellas trollkors\nEtt trollkors graverat på en plåt av meteoritjärn,\nsmitt av trollhaggan Ella som hjälp mot hennes\närkefiende, den styggelsefödda barbarhärskaren\nOdalbagar. Antingen hjälpte korset inte trollkonan,\neller så stupade trollet i senare strider. Oavsett\nvilket har hennes skyddstalisman vandrat vidare\ntill andra händer.\nTrollkorset är av lämplig smyckesstorlek för\nett fullvuxet ärketroll och alltså i storlek som en\nbucklare för en människa. Trollkorset går de facto\natt använda som just en bucklare, med de regler\nsom grundboken anger (sidan 150). Detta kräver\ninte heller att rollpersonen binder artefakten till\nsig. För trollkorsets övriga krafter måste artefakten\nbindas till bäraren på vanligt vis.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Reaktiv"
+      ],
+      "Förmåga 2": [
+        "Reaktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Sinnets sköld. Trollkorsets mästare kan låta Ellas ålderdomliga signerier skydda mot sinnespåverkande krafter. Bäraren får en andra chans att lyckas motstå en kraft som involverar Viljestark. Om kraften verkar över tid får trollkorsets bärare dessutom slå omslag för att bryta en pågående effekt. Detta räknas som ett användande av artefaktens kraft. Handling: Reaktiv. Korruption: 1.",
+    "Förmåga 2": "Hämnande spegel. Bäraren tar stöd i trollsmedens djupaste kunnande för att försöka vända tillbaka anfallande magi mot kastaren. Alla offensiva krafter som inkluderar trollkorsets bärare som måltavla påverkas.\nDen hämnande speglingen fungerar regeltek-\nniskt som om bäraren av trollkorset attackerade\nkastaren med kraften i fråga. Om kraften exem-\npelvis kräver ett slag mot Viljestark är det alltså\nbärarens Viljestark som används för att avgöra om\nspelgingen lyckas, modifierat av kastarens karak-\ntärsdrag om modifiering ska göras.\nSpeglingen är dock riskfylld. En misslyckad\nspegling drar ännu mer korruption till bäraren.\nHandling: Reaktiv\nKorruption: 1T4 om försöket lyckas, 1T6 om det miss\nlyckas"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 1.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar11",
+  "namn": "Haganorskinnet",
+  "beskrivning": "haganorskinnEt\nDenna regnbågsskimrande mantel av lindorms-\nskinn sägs stamma från en orm som dräptes nära\nHaganors kolonner, i den urtid då kolonnerna\nännu glänste av guld och silver. Manteln lånar\nfortfarande magisk kraft till sin bärare – förlänar\ndenne en röst som likt drakormars hypnotiska kraft\ntrollbinder lyssnarnas vilja; eller en betvingande\nstämma som med stormens tordön knäcker viljor\noch gör ståndaktiga krigare till slavar.\nManteln ger som passiv kraft ett extra skydd\ntill sin ägare (+1T4), och kan bäras ovanpå annan\nrustning utan att addera ytterligare begränsning.\nDenna skyddande effekt kräver inte heller att\nbäraren binder artefakten till sig, vilket däremot\nkrafterna som beskrivs nedan gör.\nMen Haganorskinnet för också med sig en\nnegativ effekt: om en nu levande lindorm får syn\npå manteln kommer denne att minnas de förned-\nrande tider då Symbaroums furstar jagade dess\nförfärder för nöjes skull och genast – å alla stolta\nlindormars vägnar – utse bäraren till sin personliga\ndödsfiende. I sammanhanget bör också noteras att\nalla lindormar är opåverkade av skinnets krafter.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Drakviskning. Skinnets mästare kan låta sin stämma spela på själasträngar och trollbinda alla åhörare med ett [Övertygande←Viljestark]. De närvarande fiender som trollbinds ägnar en av sina nästkommande handlingar åt att göra ingenting – under inneva- rande runda om de inte redan har agerat, annars under rundan som följer. Handling: Aktiv. Korruption: 1.",
+    "Förmåga 2": "Kommenderande stämma. Haganorskinnets bärare kan med ett lyckat [Övertygande←Viljestark] ta kontroll över en varelse. Kontrollen sitter i tills bäraren misslyckas med ett [Övertygande←Viljestark] (slås på bärarens initiativ) eller tills koncentrationen bryts [Viljestark – Skada]. Den kontrollerade varelsen har endast en handling per runda och kan inte använda aktiva förmågor eller krafter under kontrollen. Handling: Aktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar12",
+  "namn": "Hymne",
+  "beskrivning": "Hymne\nI legenderna talas det om trollkrigarkonan Oramox\noch hennes strid mot ulvahövdingen Fergos.\nDen senare ska ha fått sin intelligens i gåva av\nSpindelkonungen just för att straffa Oramox stam,\nsedan trollen allierat sig med en människobosätt-\nning. Enligt sägnen ska Oramox ha fallit offer för\nHymnes korrumperande verkan, men först efter\n\natt hon låtit den väldiga dubbelyxan sjunga sitt\nfolk till seger och klyva skallen på den listige ulven\ni två delar.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt",
+      "Vapen"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Eggande genklang: När artefaktens mästare\nspenderar en stridhandling på att upprepade\ngånger slå Hymne mot något hårt (sten, träd eller\nbergvägg) byggs en bastonig genklang upp. Under\nen runda framåt har mästarens allierade +1 på Stark\noch Viljestark.\nHandling: Aktiv\nKorruption: 1T4",
+    "Förmåga 2": "Förstärkande harmoni: Kräver att mästa-\nren behärskar Kampsång. Efter att ha byggt upp\ngenklangen enligt ovan kan den kombineras med\nhjältens egen sång och då hållas vid liv i 1T4 run-\ndor. Under denna tid har mästaren själv och dess\nallierade +2 på Kvick, Stark och Träffsäker. Dessutom\nåterfår mästaren och de allierade 1T8 Tålighet när\neffekten träder i kraft.\nHandling: Aktiv\nKorruption: 1T6"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 2
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar13",
+  "namn": "Arvalams bindel",
+  "beskrivning": "arvalams Bindel\nArvalam ska ha varit hovmystiker vid ståthållare\nGrabandos hov och en av det sena Symbaroums\nskickligaste demonologer, kapabel att både åkalla\noch tämja vidunder som andra mystiker aldrig\nskulle kunna kontrollera. Men hans skicklighet\ntillskrevs inte talang eller djuplodande skolning\nutan den ögonbindel han bar vid kontakter med\novärlden – enligt ryktet erhållen genom en pakt\nmed daemonen Lukofei.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Genomskåda daemon: När artefaktens\nmästare frammanar en daemon kan denne se\nvarelsens svaghet eller svarta böjelser och får\ndärför lättare att betvinga den: +5 på slaget mot\n[Viljestark←Viljestark], som gäller båda försöken\nom ett blodsoffer används.\nHandling: Aktiv\nKorruption: 1",
+    "Förmåga 2": "Föraning av ovärlden: Om artefaktens mästare\nbehärskar kraften Förvisning kan bindeln förläna\ndenne en föraning om vad som finns på andra\nsidan om den reva som öppnas. Det innebär dels\natt mästaren själv kan välja om det ska komma in\nen daemon genom revan eller inte, dels att offret\ntar 1T6 i skada per runda, i stället för 1T4.\nFör att dra nytta av bindelns kraft måste den\nvara dragen för ögonen vilket inverkar menligt på\nbärarens omvärldsuppfattning. Så länge artefakten\nanvänds har mästaren två chanser att misslyckas\nmed alla framgångsslag som inte är kopplade till\nmystiska krafter (oavsett handlingstyp).\nHandling: Aktiv\nKorruption: +1"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar14",
+  "namn": "Spinneldräpa",
+  "beskrivning": "spinneldräpa\nDen artefakt som Elmendra misstog för att vara den\nså kallade Häxhammaren är i själva verket ingenting\nmindre än det vapen som storhövding Maiesticar\nsvingade mot och genom Spindelkonungens hjärta.\nSedan Angatal Taars död har häxorna hållit det\ni förvar, i väntan på att nästa fientligt inställda\nspindelväsen ska dyka upp. Spinneldräpa är oavsett\nform (se nedan) ett mästartillverkat föremål med\nkvaliteterna Balanserat, Djupverkande och Precist.",
+  "kvalitet": [
+    "Balanserat",
+    "Djupverkande",
+    "Precist"
+  ],
+  "taggar": {
+    "typ": [
+      "Artefakt",
+      "Vapen"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Fri"
+      ],
+      "Förmåga 3": [
+        "Fri"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Formförändring: Artefakten kan omforma sig i\nenlighet med mästarens vilja, till någon av typerna\nKorta vapen, Enhandsvapen, Långa vapen eller\nTunga vapen. Förändringen tar en runda i anspråk\nmen håller sedan i sig tills mästaren vill något annat.\nHandling: Aktiv\nKorruption: 1",
+    "Förmåga 2": "Blodets rening: Med ett lätt jack eller stick på\nen egen, blottad kroppsdel kan artefaktens mästare\nlåta Spinneldräpa komma i kontakt med dennes\nblod och därigenom mildra effekten av gifter –\nfungerar som ett medelstarkt motgift.\nHandling: Fri\nKorruption: 1t4",
+    "Förmåga 3": "Spindelbane: Om artefaktens mästare behärs-\nkar förmågan Monsterlärd till gesällnivå (speciali-\nsering: bestar) och lyckas med ett slag mot Listig gör\nSpinneldräpa +1T8 i skada mot varelser av familjen\nSpindlar. Effekten varar hela scenen ut.\nHandling: Fri\nKorruption: 1t6"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 1
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar17",
+  "namn": "Natanas Urna",
+  "beskrivning": "Natanas Urna\nDenna underarmslånga urna av matt keramik är inte en prydnad eller ett kärl i vanlig mening. Den fungerar snarare som ett förvaringskärl för en bundet väsen, vars kroppslösa gestalt vilar instängd i dess mörka inre.\n\nNär urnan öppnas frigörs varelsen i form av en slingrande, kvinnoliknande skepnad av svart rök. För den som redan har bundit sig till urnan genom ett medvetet åtagande blir denna gestalt synlig och tillgänglig som en tjänare. Hon tar då kontakt via viskande telepati och erbjuder sina förmågor som spanare och rådgivare.\n\nVarelsen saknar möjlighet att angripa eller fysiskt skada andra levande varelser. Hennes styrka ligger istället i sin förmåga att obemärkt röra sig, betrakta och återge vad hon iakttagit. Hon förstår inga dödliga tungomål men försöker ändå återge sin tolkning av händelser och skeenden.\n\nNär hon vistas utanför urnan påverkas omgivningen på ett olycksbådande sätt. Alla inom en förflyttningshandling från hennes gestalt utsätts för en korrumperande strålning och erhåller 1T4 temporär korruption per scen eller timme. Denna försvinner med tiden som annan kortvarig korruption, men kan hinna sätta djupa spår i sinnet.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {}
+  },
+  "nivåer": {},
+  "stat": {
+    "skada": "",
+    "vikt": 1.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  },
+  "korruption": "Speciell"
+},{
+  "id": "ar18",
+  "namn": "Järnpaktens ring",
+  "beskrivning": "Artefakt: Järnpaktens ring\njärnpaktEns ringar smiddEs av alver i drakar-\nnas eld på trollens städ, som ett vapen mot den\ntilltagande korruptionen i Symbaroum. I ringarna\nband de gamla släktena de sista resterna av den\nrena magin, innan den slutligt korrumperades.\nRingarna bars av Järnpaktens härförare i slut-\nstriden mot Symbaroums mörker. Det är i alla fall\nalvernas legender om ringarna, så som de berättas\nför Järnpaktens fåtaliga mänskliga allierade.\nNu har drakarna försvunnit, trollen brutali-\nserats, och inte ens alverna sluter mangrant upp\nbakom den forna alliansen. Ringarna var aldrig\nmånga och nu är de ännu färre. De få kvarvarande\nringarnas makt är dock uppenbar för dem som svär\nJärnpaktens ed och underkastar sig ringarnas lag.\nJärnpaktens ring går endast att binda till sig med\nerfarenhet, inte genom accepterande av korruption.\nDen hindrar inte heller rollpersonen från att få\nmer korruption av fri vilja, men straffar det (se\nkraften Ringens lag).",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Fri"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ],
+      "Förmåga 3": [
+        "Automatisk"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "BalansEns sköld\nRingen skyddar bäraren mot korruption utifrån,\nså som smittan i Davokars mörka delar eller den\ngiftiga ondska som följer med vissa styggelsers bett\noch klor (det monstruösa särdraget Korrumperande\nattack). Ringen har ingen effekt på korruption som\nbäraren frivilligt accepterar som del av användande\nav artefakter eller mystiska krafter: tvärtom straf-\nfar ringen sådant (se kraften Ringens lag).\nHandling: Fri\nKorruption: Ingen",
+    "Förmåga 2": "drömsändning\nEn gång under varje nattsömn kan den som bundit\nsig till ringen sända ett drömbudskap till en annan\npaktringsbärare. De två måste inte ha mötts men\nsändaren måste känna till mottagarens existens.\nBudskapet blir i form av ett bildspel i drömmen,\niga ord kan kommunicerats. Tolkningen sker av\nmottagaren.\nHandling: Aktiv\nKorruption: Ingen",
+    "Förmåga 3": "ringEns lag\nRingen slår hårt mot edsbrytare. Den som under-\nkastat sig Järnpaktens lag drabbas av fysisk skada\nav all korruption som bäraren frivilligt drar på sig:\nvarje poäng temporär korruption ger 1t4 i skada\npå bäraren."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0.02
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+}
 
 
 ]
