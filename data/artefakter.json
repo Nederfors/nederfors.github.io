@@ -32,5 +32,50 @@
     "skilling": 0,
     "örtegar": 0
   }
+},
+{
+"id": "ar02",
+"namn": "Skymningsvatten",
+"beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet.\nNär den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar.\nDetta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret.\nDet heliga skymningsvattnet går inte att binda till sig med korruption, det krävs ett permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. Rollpersoner som binder sig till vattnet tar direkt skada, 1t4 per poäng av permanent korruption de besitter. Om rollpersonen går ner till 0 Tålighet förbränns rollpersonen till en hög med aska – här gäller inte regeln om dödsslag! Rollpersoner med permanent Korruption får slå ett slag för \[Vaksam -permanent Korruption] för att inse att vattnet kommer att döma dem hårt. Vattnet bränner också bort den permanenta Korruption rollpersonen har.\nSkymningsvatten har därtill följande egenskaper och krafter:",
+"kvalitet": \[],
+"taggar": {
+"typ": \[
+"Artefakt"
+],
+"handling": {
+"Förmåga 1": \[
+"Fri"
+],
+"Förmåga 2": \[
+"Aktiv"
+],
+"Förmåga 3": \[
+"Reaktiv"
+],
+"Förmåga 4": \[
+"Fri"
+],
+"Förmåga 5": \[
+"Automatisk"
+]
 }
+},
+"nivåer": {
+"Förmåga 1": "Solens sken. I handen på den som underkastat sig ljuset och bundit det till sig kan flaskan flamma upp med solens ljuskraft, så att omgivningen badar i ljus likt en molnfri dag med solen mitt på himlen. Handling: Fri. Korruption: Ingen.",
+"Förmåga 2": "Solens droppar. Flaskan innehåller 1t10 droppar heligt ljusvatten, vilka kan droppas på en sjuk eller skadad person och bota denne. Varje droppe gör allt nedanstående när det droppas på en varelse. När alla droppar har använts är flaskan tom och Prios ljus borta.\n◆ Helar 1t10 Tålighet\n◆ Fungerar som ett medelstarkt motgift\n◆ Renar ett poäng permanent Korruption\n◆ Ger varelsen dess Korruption i skada, om den har någon sådan.\nHandling: Aktiv. Korruption: Ingen.",
+"Förmåga 3": "Helig synergi. Den som har bundit skymningsvattnet till sig kan använda dess ljus för att förstärka teurgiska krafter. Dessa får sin effekttärning höjd ett steg. Synergin kan göras en gång per scen. Handling: Reaktiv. Korruption: Ingen.",
+"Förmåga 4": "Ljusbringarens rättarting. Den som underkastat sig skymningsvattnet kan med en tanke krossa flaskan och släppa lös dess dömande ljus. Alla närvarande varelser med minst ett (1) i Korruption tar sin Korruption i skada, medan varelser som tillhör kategorin styggelser tar 1t10 + 10 i skada. Detta drabbar såklart även bäraren själv. Handling: Fri. Korruption: Ingen.",
+"Förmåga 5": "Skinande undergång. Om den som bär och som har bundit skymningsvatten till sig någonsin blir styggelsemärkt detonerar flaskan, med samma effekt som för kraften Ljusbringarens rättarting."
+},
+"stat": {
+"skada": "",
+"vikt": 1
+},
+"grundpris": {
+"daler": 0,
+"skilling": 0,
+"örtegar": 0
+}
+}
+
 ]
