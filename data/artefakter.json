@@ -34,48 +34,192 @@
   }
 },
 {
-"id": "ar02",
-"namn": "Skymningsvatten",
-"beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet.\nNär den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar.\nDetta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret.\nDet heliga skymningsvattnet går inte att binda till sig med korruption, det krävs ett permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. Rollpersoner som binder sig till vattnet tar direkt skada, 1t4 per poäng av permanent korruption de besitter. Om rollpersonen går ner till 0 Tålighet förbränns rollpersonen till en hög med aska – här gäller inte regeln om dödsslag! Rollpersoner med permanent Korruption får slå ett slag för \[Vaksam -permanent Korruption] för att inse att vattnet kommer att döma dem hårt. Vattnet bränner också bort den permanenta Korruption rollpersonen har.\nSkymningsvatten har därtill följande egenskaper och krafter:",
-"kvalitet": \[],
-"taggar": {
-"typ": \[
-"Artefakt"
-],
-"handling": {
-"Förmåga 1": \[
-"Fri"
-],
-"Förmåga 2": \[
-"Aktiv"
-],
-"Förmåga 3": \[
-"Reaktiv"
-],
-"Förmåga 4": \[
-"Fri"
-],
-"Förmåga 5": \[
-"Automatisk"
-]
-}
+  "id": "ar02",
+  "namn": "Skymningsvatten",
+  "beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet.\nNär den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar.\nDetta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret.\nDet heliga skymningsvattnet går inte att binda till sig med korruption, det krävs ett permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. Rollpersoner som binder sig till vattnet tar direkt skada, 1t4 per poäng av permanent korruption de besitter. Om rollpersonen går ner till 0 Tålighet förbränns rollpersonen till en hög med aska – här gäller inte regeln om dödsslag! Rollpersoner med permanent Korruption får slå ett slag för [Vaksam -permanent Korruption] för att inse att vattnet kommer att döma dem hårt. Vattnet bränner också bort den permanenta Korruption rollpersonen har.\nSkymningsvatten har därtill följande egenskaper och krafter:",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Fri"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ],
+      "Förmåga 3": [
+        "Reaktiv"
+      ],
+      "Förmåga 4": [
+        "Fri"
+      ],
+      "Förmåga 5": [
+        "Automatisk"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Solens sken. I handen på den som underkastat sig ljuset och bundit det till sig kan flaskan flamma upp med solens ljuskraft, så att omgivningen badar i ljus likt en molnfri dag med solen mitt på himlen. Handling: Fri. Korruption: Ingen.",
+    "Förmåga 2": "Solens droppar. Flaskan innehåller 1t10 droppar heligt ljusvatten, vilka kan droppas på en sjuk eller skadad person och bota denne. Varje droppe gör allt nedanstående när det droppas på en varelse. När alla droppar har använts är flaskan tom och Prios ljus borta.\n◆ Helar 1t10 Tålighet\n◆ Fungerar som ett medelstarkt motgift\n◆ Renar ett poäng permanent Korruption\n◆ Ger varelsen dess Korruption i skada, om den har någon sådan.\nHandling: Aktiv. Korruption: Ingen.",
+    "Förmåga 3": "Helig synergi. Den som har bundit skymningsvattnet till sig kan använda dess ljus för att förstärka teurgiska krafter. Dessa får sin effekttärning höjd ett steg. Synergin kan göras en gång per scen. Handling: Reaktiv. Korruption: Ingen.",
+    "Förmåga 4": "Ljusbringarens rättarting. Den som underkastat sig skymningsvattnet kan med en tanke krossa flaskan och släppa lös dess dömande ljus. Alla närvarande varelser med minst ett (1) i Korruption tar sin Korruption i skada, medan varelser som tillhör kategorin styggelser tar 1t10 + 10 i skada. Detta drabbar såklart även bäraren själv. Handling: Fri. Korruption: Ingen.",
+    "Förmåga 5": "Skinande undergång. Om den som bär och som har bundit skymningsvatten till sig någonsin blir styggelsemärkt detonerar flaskan, med samma effekt som för kraften Ljusbringarens rättarting."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 1
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
 },
-"nivåer": {
-"Förmåga 1": "Solens sken. I handen på den som underkastat sig ljuset och bundit det till sig kan flaskan flamma upp med solens ljuskraft, så att omgivningen badar i ljus likt en molnfri dag med solen mitt på himlen. Handling: Fri. Korruption: Ingen.",
-"Förmåga 2": "Solens droppar. Flaskan innehåller 1t10 droppar heligt ljusvatten, vilka kan droppas på en sjuk eller skadad person och bota denne. Varje droppe gör allt nedanstående när det droppas på en varelse. När alla droppar har använts är flaskan tom och Prios ljus borta.\n◆ Helar 1t10 Tålighet\n◆ Fungerar som ett medelstarkt motgift\n◆ Renar ett poäng permanent Korruption\n◆ Ger varelsen dess Korruption i skada, om den har någon sådan.\nHandling: Aktiv. Korruption: Ingen.",
-"Förmåga 3": "Helig synergi. Den som har bundit skymningsvattnet till sig kan använda dess ljus för att förstärka teurgiska krafter. Dessa får sin effekttärning höjd ett steg. Synergin kan göras en gång per scen. Handling: Reaktiv. Korruption: Ingen.",
-"Förmåga 4": "Ljusbringarens rättarting. Den som underkastat sig skymningsvattnet kan med en tanke krossa flaskan och släppa lös dess dömande ljus. Alla närvarande varelser med minst ett (1) i Korruption tar sin Korruption i skada, medan varelser som tillhör kategorin styggelser tar 1t10 + 10 i skada. Detta drabbar såklart även bäraren själv. Handling: Fri. Korruption: Ingen.",
-"Förmåga 5": "Skinande undergång. Om den som bär och som har bundit skymningsvatten till sig någonsin blir styggelsemärkt detonerar flaskan, med samma effekt som för kraften Ljusbringarens rättarting."
+{
+  "id": "ar03",
+  "namn": "Eldstenen",
+  "beskrivning": "Forntida ordensmagiker har bundit en yster eldsjäl i stenen. Vanligen glöder den endast med ett svagt ljus och genererar en svag värme (nog för att värma den som bär den en kall vinterdag). Den som binder stenen till sig kan väcka eldens ande och få den att göra mer dramatiska saker.\nFöljande saker kan göras med eldstenen:",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Fri"
+      ],
+      "Förmåga 3": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Slå med eld. Eldstenens herre kan med ett lyckat Viljestark få eldstenens hjälp att sätta eld på något brännbart inom synhåll – inklusive plagg på en fiende. Elden brinner 1t4 rundor och gör 1t4 i skada per runda. Rustning skyddar som vanligt. En brinnande varelse kan släcka elden genom att rulla runt på marken (förflyttningshandling) och lyckas med ett Kvick. Handling: Aktiv. Korruption: 1T4.",
+    "Förmåga 2": "Förstärka flamma. Om eldstenens herre behärskar krafter som pro-\nducerar eld kan denne med ett lyckat Viljestark använda eldstenens till att förstärka en av sina eldbesvärjelser. Effekttärningen ökas ett steg (ex från 1t6 till 1t8, eller med +1 om den redan är 1t12). Handling: Fri. Korruption: 1T4.",
+    "Förmåga 3": "Eldens ande. Eldstenens herre kan med ett lyckat Viljestark krossa eldstenen och släppa loss den fångade eldanden. Detta förstör också eldstenen. Eldanden manifesteras som en reslig människoskepnad av flammor och sot. Den är tacksam mot mästaren och lyder denne under resten av scenen. Anden kan ges enkla kommandon (fria handlingar) som ”vakta den här platsen”, ”anfall den där fienden” eller ”skydda mig”. Handling: Aktiv. Korruption: 1T6.\n\neldenS ande\nMotstånd Utmanande\nSärdrag Andeform (II), Naturlig vapen (III)\nDiskret 5 (+5), Kvick 13 (−3) Listig 10 (0),\nStark 11 (−1), Träffsäker 15 (−5), Vaksam 10 (0),\nViljestark 9 (+1), Övertygande 7 (+3)\nFörmågor Naturlig krigare (III)\nBeväpning Brinnande omfamning 9 (Långt), två attacker mot samma mål\nRustning Ingen (tar halv skada av attacker)\nFörsvar −3 (Undvika)\nTålighet 11 Smärtgräns 6"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
 },
-"stat": {
-"skada": "",
-"vikt": 1
+
+{
+  "id": "ar04",
+  "namn": "Eldreds fyrfat",
+  "beskrivning": "eldreds fyrfat, artefakt\nI en sällan berättad legend om den Symbariska\nstaden Dakovak figurerar mystikern och förhörs-\nledaren Eldred, eller möjligen Eloderad. Det påstås\natt denne kunde tvinga fram sanningen ur vem\nsom helst, även sanningar om sådant som upp-\ngiftslämnaren har förträngt, glömt eller tvingats\natt glömma. Den som binder sig till detta fyrfat får\ntillgång till mystikerns hemlighet.atet är av sprucken keramik med invävda järntrå-\ndar, stort som en vanlig sopptallrik. Vid användning\nmåste oljan vara antänd och mästaren själv hålla art-\nefakten i sina kupade händer, och det är även denne\nsom drabbas av korruption när krafterna aktiveras.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Hel runda"
+      ],
+      "Förmåga 2": [
+        "Hel runda"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Lögnarens dom. Mästaren kan ställa en fråga\n(öppen eller ja/nej) till en utvald person. När denne\nhar levererat sitt svar förs eller tvingas dess hand\nin i lågan. Om personen inte talade sanning bränns\ndenne svårt (1t4 i skada); annars känns elden bara\nsval och behaglig.\nHandling: Hel runda. Korruption: 1T4.",
+    "Förmåga 2": "Minnesväckare. Mästaren kan använda fyr-\nfatets eld för att väcka glömda eller förträngda\nminnen hos en annan person, som svar på en fråga\neller en uppmaning att beskriva en viss situation\neller händelse. Personen för in handen i elden och\ntar skada (1t4) men kommer sedan att minnas\nhändelsen/svaret med full klarhet.\nHandling: Hel runda. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 1
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
 },
-"grundpris": {
-"daler": 0,
-"skilling": 0,
-"örtegar": 0
+{
+  "id": "ar05",
+  "namn": "Algsar-Maras kätting",
+  "beskrivning": "algsar-maras kätting, artefakt\nAlgsar-Mara omnämns såvitt känt bara i en enda\nstrof, tillskriven Aroaleta, och då endast med hän-\nvisning till dennes bakslughet, mordiska sinnelag\noch ”bitande kätting”. Vem han eller hon var och\nvad som gör denne förtjänt av omnämnandet är ett\nlika stort mysterium som frågan om huruvida just\ndenna kätting var hans. Eller hennes.\nKättingen med sina tunna men urstarka länkar\när nära två meter lång och väger inte mer än ett\nmotsvarande rep. Den tycks vara ingjuten med en\nhungrande eller rent av svulten makt. Vid sidan\nom nedanstående krafter kan den svingas som en\nLångpiska (ledat, snärjande och djupverkande).",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt",
+      "Vapen"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Omslingra. Den som har bundit sig till kättingen\nkan med ett lyckat anfallsslag kasta artefakten\nmot en fiende som den har Övertag emot. Oavsett\nhur den kastas snärjer sig kättingen blixtsnabbt\nkring offret och hindrar dess rörelser totalt\nunder följande runda. Därefter krävs det ett slag\nmot [10←Stark] varje runda för att vidmakthålla\neffekten; misslyckas slaget sliter sig fienden fri.\nHandling: Aktiv. Korruption: 1T4.",
+    "Förmåga 2": "Krypande fälla. Artefaktens mästare kan pla-\ncera den som en levande fälla som täcker av ett\nstörre område (en palatsruin, en skogsdunge eller\nområdet kring en lägerplats). Kättingen kommer\nautomatiskt att söka sig till annalkande varelser,\nundantaget sådana som sedan tidigare har varit i\nkontakt med den, och snärja sig kring dem som ovan\n(max två inom närstridsavstånd från varandra).\nKättingens rasslande är ljudligt nog för att varsko\nmästaren även om denne sover [Vaksam].\nHandling: Aktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 1.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar06",
+  "namn": "Nidvatten",
+  "beskrivning": "niDvattnEt\nNidvatten består av ren korruption, som ett inver-\nterat Skymningsvatten (se sidan 186 i grundboken).\nDet ser ut som svart kvicksilver och ger ifrån sig\nsvarta dunster av korruption om den inte innesluts i\nett kärl. I konungagraven finns vätskan samlad i en\nliten karaff av halvgenomskinligt vulkaniskt glas.\nDet går enbart att binda artefakten till sig genom\natt acceptera ett permanent poäng i korruption.\nNidvattnet har följande egenskaper och krafter:",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Fri"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ],
+      "Förmåga 3": [
+        "Reaktiv"
+      ],
+      "Förmåga 4": [
+        "Fri"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Mörkerlykta. I handen på den som accepterat mörkret kan krukan blöda med underjordens mörker, så att omgivningen drunknar i svärta även om solen står mitt på himlen. Effekten blir att en plats (exempel- vis ett rum inomhus) läggs i mörker under resten av scenen, svart som en natt utan stjärnor eller månsken. Handling: Fri. Korruption: Ingen.",
+    "Förmåga 2": "Nattens insikt. Flaskan innehåller 10 droppar nidvatten, vilka kan droppas på levande hud. Varje droppe ger 1T12 erfarenhet som kan användas som mottagaren önskar, till priset av permanent korruption. När alla droppar har använts är karaffen tom och arte- fakten förbrukad. Handling: Aktiv. Korruption: 1 permanent korruption/droppe.",
+    "Förmåga 3": "Svart synergi. Den som bugar för mörkrets övermakt kan använda dess svärta för att förstärka svartkonster. Dessa får sin effekttärning höjd ett steg. Synergin kan göras en gång per scen. Handling: Reaktiv. Korruption: Ingen.",
+    "Förmåga 4": "Mörkrets frälsning. Den som bundit sig till mörkret kan med en tanke krossa krukan och släppa loss dess mörker. Alla närvarande varelser med minst 1 korruption (temporär eller permanent) får omedelbart 1T12 permanent korruption. Varelser som redan har permanent korruption påverkas endast om slaget överstiger deras nuvarande korruption – de drabbas då av mellanskillnaden. Om slaget är lika med eller lägre än varelsens nuvarande korruption händer ingenting. Varelser helt utan korruption påverkas inte alls. Effekten drabbar förstås även bäraren själv, om denne har korruption. Handling: Fri. Korruption: 1T12 (se dock beskrivning)."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 1
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
 }
-}
+
+
 
 ]
