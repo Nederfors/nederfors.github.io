@@ -610,7 +610,27 @@
   function clearRevealedArtifacts(store) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].revealedArtifacts = [];
+
+    const keep = new Set();
+
+    getCurrentList(store).forEach(it => {
+      const tagTyp = it.taggar?.typ || [];
+      if (tagTyp.includes('Artefakt')) keep.add(it.namn);
+    });
+
+    const collect = arr => {
+      arr.forEach(row => {
+        const entry = (getCustomEntries(store).find(e => e.namn === row.name))
+          || (global.DB || []).find(e => e.namn === row.name) || {};
+        const tagTyp = entry.taggar?.typ || [];
+        if (tagTyp.includes('Artefakt')) keep.add(entry.namn);
+        if (Array.isArray(row.contains)) collect(row.contains);
+      });
+    };
+    collect(getInventory(store));
+
+    const cur = getRevealedArtifacts(store);
+    store.data[store.current].revealedArtifacts = cur.filter(n => keep.has(n));
     save(store);
   }
 

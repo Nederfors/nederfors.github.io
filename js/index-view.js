@@ -388,7 +388,7 @@ function initIndex() {
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
         storeHelper.clearRevealedArtifacts(store);
-        revealedArtifacts.clear();
+        revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
         fillDropdowns();
         activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -901,11 +901,23 @@ function initIndex() {
           }
           invUtil.renderInventory();
         }
-          if (p.namn === 'Välutrustad') {
-            const inv = storeHelper.getInventory(store);
-            invUtil.removeWellEquippedItems(inv);
-            invUtil.saveInventory(inv); invUtil.renderInventory();
-          }
+        if (p.namn === 'Välutrustad') {
+          const inv = storeHelper.getInventory(store);
+          invUtil.removeWellEquippedItems(inv);
+          invUtil.saveInventory(inv); invUtil.renderInventory();
+        }
+        if ((p.taggar?.typ || []).includes('Artefakt')) {
+          const inv = storeHelper.getInventory(store);
+          const removeItem = arr => {
+            for (let i = arr.length - 1; i >= 0; i--) {
+              if (arr[i].name === p.namn) arr.splice(i, 1);
+              else if (Array.isArray(arr[i].contains)) removeItem(arr[i].contains);
+            }
+          };
+          removeItem(inv);
+          invUtil.saveInventory(inv); invUtil.renderInventory();
+          storeHelper.removeRevealedArtifact(store, p.namn);
+        }
       }
     }
     renderList(filtered());
