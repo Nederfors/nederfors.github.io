@@ -459,6 +459,7 @@ function initCharacter() {
         F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
+        storeHelper.clearRevealedArtifacts(store);
         activeTags(); renderSkills(filtered()); renderTraits();
         return;
       }
