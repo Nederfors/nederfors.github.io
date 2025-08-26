@@ -10,7 +10,7 @@
     'Mat',
     'Dryck',
     'L\u00e4gre Artefakt',
-    'Artefakter',
+    'Artefakt',
     'Kl\u00e4der',
     'Musikinstrument',
     'F\u00e4rdmedel',
@@ -42,6 +42,7 @@
     'Mystisk kvalitet',
     'Elixir',
     'Lägre Artefakt',
+    'Artefakt',
     'Specialverktyg',
     'Diverse',
     'Mat',
@@ -67,6 +68,7 @@
     'Mystisk kvalitet': 'Mystiska kvaliteter',
     'Elixir': 'Elixir',
     'Lägre Artefakt': 'Lägre Artefakter',
+    'Artefakt': 'Artefakter',
     'Specialverktyg': 'Specialverktyg',
     'Diverse': 'Diverse',
     'Mat': 'Mat',
@@ -89,7 +91,7 @@
     return a.localeCompare(b);
   }
 
-  function isInv(p){ return (p.taggar?.typ||[]).some(t => EQUIP.includes(t)); }
+  function isInv(p){ return !p.noInv && (p.taggar?.typ||[]).some(t => EQUIP.includes(t)); }
   function isQual(p){
     return (p.taggar?.typ||[]).some(t => ['Kvalitet','Mystisk kvalitet'].includes(t));
   }

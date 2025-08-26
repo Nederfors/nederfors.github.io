@@ -122,7 +122,7 @@
     const effects = inv.reduce((acc, row) => {
       const entry = getEntry(row.name);
       const tagTyp = entry.taggar?.typ || [];
-      if (!tagTyp.includes('Artefakter')) return acc;
+      if (!tagTyp.includes('Artefakt')) return acc;
       const eff = row.artifactEffect || entry.artifactEffect;
       if (eff === 'corruption') acc.corruption += 1;
       else if (eff === 'xp') acc.xp += 1;
@@ -246,10 +246,10 @@
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
     if (effSel) effSel.value = 'corruption';
-    if(effBox) effBox.style.display = type.value === 'Artefakter' ? '' : 'none';
+    if(effBox) effBox.style.display = type.value === 'Artefakt' ? '' : 'none';
 
     const onType = () => {
-      if (effBox) effBox.style.display = type.value === 'Artefakter' ? '' : 'none';
+      if (effBox) effBox.style.display = type.value === 'Artefakt' ? '' : 'none';
     };
     type.addEventListener('change', onType);
 
@@ -423,7 +423,7 @@
       });
       if (!row) return;
       const entry = getEntry(row.name);
-      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel']
+      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
         .some(t => entry.taggar?.typ?.includes(t));
 
       if (indiv) {
@@ -1024,7 +1024,7 @@ function openVehiclePopup(preselectId) {
       desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
     }
 
-    const isArtifact = tagTyp.includes('Artefakter');
+    const isArtifact = tagTyp.includes('Artefakt');
     const effectVal = row.artifactEffect || entry.artifactEffect || '';
     if (isArtifact && effectVal) {
       const txt = effectVal === 'corruption'
@@ -1241,11 +1241,11 @@ ${moneyRow}
           const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
           const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
 
-          const isArtifact = tagTyp.includes('Artefakter');
+          const isArtifact = tagTyp.includes('Artefakt');
 
           /* — knappar — */
-          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter', 'Färdmedel'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t));
+          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+          const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
  const btnRow = isGear
   ? `<button data-act="del" class="char-btn danger">🗑</button>`
   : `<button data-act="del" class="char-btn danger">🗑</button>
@@ -1276,8 +1276,8 @@ ${moneyRow}
                 const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
                 const cWeight = formatWeight(calcRowWeight(c));
                 const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
-                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakter'].some(t => ctagTyp.includes(t));
-                const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => ctagTyp.includes(t));
+                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
+                const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
                 const cBtnRow = cIsGear
                   ? `<button data-act="del" class="char-btn danger">🗑</button>`
                   : `<button data-act="del" class="char-btn danger">🗑</button>
@@ -1288,7 +1288,7 @@ ${moneyRow}
                 const cKey = `${c.name}|${c.trait || ''}|${cRowLevel || ''}`;
                 const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
-                const cToggleBtn = ctagTyp.includes('Artefakter') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+                const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
                 return `<li class="card${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
                   <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br>Pris: ${cPrice}<br>Vikt: ${cWeight}</div>
@@ -1510,6 +1510,15 @@ ${moneyRow}
             parentArr.splice(idx, 1);
             saveInventory(inv);
             renderInventory();
+            if (tagTyp.includes('Artefakt')) {
+              const still = flattenInventory(inv).some(r => r.name === row.name);
+              if (!still) {
+                let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === row.name && x.noInv));
+                storeHelper.setCurrentList(store, list);
+                if (window.updateXP) updateXP();
+                if (window.renderTraits) renderTraits();
+              }
+            }
           }
         }
         return;
@@ -1518,6 +1527,7 @@ ${moneyRow}
       // 3b) För + / - / 🔨 behöver vi id
       const itemName = li.dataset.name;
       const entry    = getEntry(itemName);
+      const tagTyp   = entry.taggar?.typ || [];
 
         // "+" lägger till qty eller en ny instans
         if (act === 'add') {
@@ -1526,7 +1536,7 @@ ${moneyRow}
             bundle.forEach(namn => {
               const ent = getEntry(namn);
               if (!ent.namn) return;
-              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel'].some(t => ent.taggar.typ.includes(t));
+              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t => ent.taggar.typ.includes(t));
               const existing = inv.findIndex(r => r.name === ent.namn);
               if (indivItem || existing === -1) {
                 inv.push({ name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
@@ -1545,9 +1555,16 @@ ${moneyRow}
               }
             });
           } else {
-            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakter','Färdmedel'].some(t => entry.taggar.typ.includes(t));
+            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t => entry.taggar.typ.includes(t));
+            const tagTyp = entry.taggar?.typ || [];
+            let artifactEffect = '';
+            if (tagTyp.includes('Artefakt')) {
+              const payXP = await confirmPopup('Betala 1 XP? (Avbryt = +1 permanent korruption)');
+              artifactEffect = payXP ? 'xp' : 'corruption';
+            }
             const addRow = trait => {
               const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+              if (artifactEffect) obj.artifactEffect = artifactEffect;
               if (trait) obj.trait = trait;
               let flashIdx;
               if (indiv) {
@@ -1566,6 +1583,15 @@ ${moneyRow}
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
               renderInventory();
+              if (tagTyp.includes('Artefakt')) {
+                const list = storeHelper.getCurrentList(store);
+                if (!list.some(x => x.namn === entry.namn && x.noInv)) {
+                  list.push({ ...entry, noInv: true });
+                  storeHelper.setCurrentList(store, list);
+                }
+                if (window.updateXP) updateXP();
+                if (window.renderTraits) renderTraits();
+              }
               const selector = !Number.isNaN(parentIdx)
                 ? `li[data-name="${CSS.escape(entry.namn)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
                 : `li[data-name="${CSS.escape(entry.namn)}"][data-idx="${flashIdx}"]`;
@@ -1608,6 +1634,15 @@ ${moneyRow}
           const parentIdx = Number(li.dataset.parent);
           saveInventory(inv);
           renderInventory();
+          if (tagTyp.includes('Artefakt')) {
+            const still = flattenInventory(inv).some(r => r.name === row.name);
+            if (!still) {
+              let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === row.name && x.noInv));
+              storeHelper.setCurrentList(store, list);
+              if (window.updateXP) updateXP();
+              if (window.renderTraits) renderTraits();
+            }
+          }
           const selector = !Number.isNaN(parentIdx)
             ? `li[data-name="${CSS.escape(itemName)}"][data-parent="${parentIdx}"][data-child="${idx}"]`
             : `li[data-name="${CSS.escape(itemName)}"][data-idx="${idx}"]`;
@@ -1623,7 +1658,7 @@ ${moneyRow}
       // "🔨" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakter'].some(t => tagTyp.includes(t))) return;
+        if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t))) return;
         const qualities = DB.filter(isQual);
         openQualPopup(qualities, qIdx => {
           if (row && qualities[qIdx]) {
