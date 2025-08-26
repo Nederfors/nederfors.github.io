@@ -11,13 +11,14 @@ function initIndex() {
   dom.entryViewToggle.classList.toggle('active', compact);
   let catsMinimized = false;
   let showArtifacts = false;
+  let visibleArtifacts = new Set(storeHelper.getVisibleArtifacts(store));
 
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
       .concat(storeHelper.getCustomEntries(store));
     if (showArtifacts) return base;
-    return base.filter(p => !(p.taggar?.typ || []).includes('Artefakt'));
+    return base.filter(p => !isArtifact(p) || visibleArtifacts.has(p.namn));
   };
   const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
 
@@ -352,7 +353,10 @@ function initIndex() {
 
   /* expose update function for party toggles */
   window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
-  window.indexViewRefreshFilters = () => fillDropdowns();
+  window.indexViewRefreshFilters = () => {
+    visibleArtifacts = new Set(storeHelper.getVisibleArtifacts(store));
+    fillDropdowns();
+  };
 
   /* -------- events -------- */
   dom.sIn.addEventListener('input',()=>{
@@ -379,6 +383,9 @@ function initIndex() {
         F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
+        visibleArtifacts.clear();
+        storeHelper.setVisibleArtifacts(store, []);
+        fillDropdowns();
         activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
@@ -398,6 +405,13 @@ function initIndex() {
       if (tryNilasPopup(sTemp)) {
         dom.sIn.value=''; sTemp='';
         return;
+      }
+      const norm = searchNormalize(term);
+      const art = DB.find(p => isArtifact(p) && searchNormalize((p.namn || '').toLowerCase()) === norm);
+      if (art && !visibleArtifacts.has(art.namn)) {
+        visibleArtifacts.add(art.namn);
+        storeHelper.setVisibleArtifacts(store, [...visibleArtifacts]);
+        fillDropdowns();
       }
       if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
       dom.sIn.value=''; sTemp='';

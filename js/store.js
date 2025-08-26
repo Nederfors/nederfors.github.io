@@ -89,6 +89,9 @@
           if(store.data[id].nilasPopupShown === undefined){
             store.data[id].nilasPopupShown = false;
           }
+          if(!Array.isArray(store.data[id].visibleArtifacts)){
+            store.data[id].visibleArtifacts = [];
+          }
         });
       }
       return store;
@@ -336,6 +339,20 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].custom = list;
+    save(store);
+  }
+
+  /* ---------- Sökta artefakter ---------- */
+  function getVisibleArtifacts(store) {
+    return store.current
+      ? (store.data[store.current]?.visibleArtifacts || [])
+      : [];
+  }
+
+  function setVisibleArtifacts(store, list) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].visibleArtifacts = list;
     save(store);
   }
 
@@ -1077,6 +1094,8 @@ function defaultTraits() {
     setInventory,
     getCustomEntries,
     setCustomEntries,
+    getVisibleArtifacts,
+    setVisibleArtifacts,
     getNotes,
     setNotes,
     getMoney,
