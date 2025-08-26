@@ -1,0 +1,26 @@
+[{
+  "id": "artefakt01",
+  "namn": "Opadias ormstav",
+  "beskrivning": "Den ormhövdade runstav som nyligen försvann från Ordo Magicas kapitel i Tistla Fäste sägs ha tillhört Opadia, en nu avliden stavmagiker – mäktiga magiker som enligt legenden verkade som livvakter åt den siste symbariske kejsaren. Opadia var bekant med Lasifor Nattbäcka och levde en tid i Tistla Fäste. Hon stupade i strid mot anfallande alver och staven såldes till Ordo Magica, varifrån den alltså har försvunnit.",
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "korruption": [
+      "1T4–1T6"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Reaktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Stavbett. Den som bundit staven till sig kan låta den bita giftigt vid träff i närstrid. Stavslaget måste orsaka skada för att giftet ska verka. Giftet är medelstarkt och ger 1T6 skada i 1T6 rundor. Handling: Reaktiv. Korruption: 1T4.",
+    "Förmåga 2": "Bitande fjättrar. Om bäraren har förmågan Stångverkan kan staven användas mot ett offer i närstrid som träffas automatiskt. Staven slingrar sig runt offret och biter det varje runda. Bäraren måste klara [Viljestark←Stark] varje runda för att greppet ska hållas kvar. Offret får agera men drabbas av en bettattack varje runda, 1T6 i skada. Om skadan penetrerar rustning aktiveras ett gift (1T6 skada i 1T6 rundor). Giftet verkar endast en gång, men betten fortsätter. Om offret kommer loss faller staven till marken och återgår till att vara en runstav. Handling: Aktiv. Korruption: 1T6."
+  }
+}
+]
