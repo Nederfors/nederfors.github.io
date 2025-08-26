@@ -549,5 +549,45 @@
       "skilling": 0,
       "örtegar": 0
     }
+  },
+  {
+  "id": "ar19",
+  "namn": "Zyrkrysschas Öga",
+  "beskrivning": "Artefakt: Zyrkrysschas Öga\nZyrkrysschas Öga är en medaljong  föreställande en lindorm av tunn silvertråd som slingrar sig runt ett öga i centrum – offrat av bäraren själv och inneslutet i kristallen. En mäktig häxa lär en gång ha bundit lindormen Zyrkrysschas krafter i denna amulett, och den som genom sitt uppoffrade öga har fört amuletten nära hjärtat upplever en säregen kontakt med både framtiden och det förflutna. Bäraren sägs uppfatta tidens flöde på ett sätt som inte är möjligt för andra, vilket ger en känsla av att kunna blicka framåt och påverka händelser som ännu inte ägt rum.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Reaktiv"
+      ],
+      "Förmåga 3": [
+        "Aktiv"
+      ],
+      "Förmåga 4": [
+        "Automatisk"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Aktiv förmåga 1: Uppenbarelse \nBäraren kan en gång per äventyr med ett lyckat slag mot Listig se in i framtiden och använda ritualen spådomskonst. \nKorruptionskostnad: 1t4.\nHandling: Aktiv.",
+    "Förmåga 2": "Aktiv förmåga 2: Framtidsro\nBäraren kan med ett lyckat slag mot Listig skydda sitt eget öde och undvika en attack innan den hunnit göras. Slaget mot listig görs då istället för ett slag mot försvar.\nKorruptionskostnad: 1t8 temporär korruption.\nHandling: Reaktiv.",
+    "Förmåga 3": "Aktiv förmåga 3: Ödets Nyck\nBäraren kan med ett lyckat slag mot Listig manipulera tiden och gå tillbaka till föregående scen. Enbart användaren är medveten om att tiden skiftat. Spelledaren avgör vad som är föregående scen. Bärarens kropp påverkas inte av tidsresan och eventuella skador och korruption som tillkommit finns kvar. \nKorruptionskostnad: 1t12 permanent korruption\nÖvrig kostnad: Ingreppet är att begå våld mot verkligheten i en så pass stor mån att artefakten helt går sönder i processen.\nHandling: Aktiv.",
+    "Förmåga 4": "Passiv förmåga: Sinnesutvidgning\nBäraren av Zyrkrysschas Öga får en ökad förmåga att uppfatta hot mot sig själva. De får +1 i vaksam på alla slag som avser att upptäcka fara för sitt eget liv.\nHandling: Automatisk."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0.1
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
   }
+}
 ]
