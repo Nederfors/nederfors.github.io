@@ -584,6 +584,28 @@
     save(store);
   }
 
+  function getRevealedArtifacts(store) {
+    if (!store.current) return [];
+    const data = store.data[store.current] || {};
+    return data.revealedArtifacts || [];
+  }
+
+  function addRevealedArtifact(store, name) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    const set = new Set(store.data[store.current].revealedArtifacts || []);
+    set.add(name);
+    store.data[store.current].revealedArtifacts = [...set];
+    save(store);
+  }
+
+  function clearRevealedArtifacts(store) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].revealedArtifacts = [];
+    save(store);
+  }
+
   function getNilasPopupSeen(store) {
     if (!store.current) return false;
     const data = store.data[store.current] || {};
@@ -1102,6 +1124,9 @@ function defaultTraits() {
     setCompactEntries,
     getOnlySelected,
     setOnlySelected,
+    getRevealedArtifacts,
+    addRevealedArtifact,
+    clearRevealedArtifacts,
     getNilasPopupSeen,
     setNilasPopupSeen,
     normalizeMoney,
