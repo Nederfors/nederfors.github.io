@@ -1517,6 +1517,7 @@ ${moneyRow}
                 storeHelper.setCurrentList(store, list);
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
+                storeHelper.removeRevealedArtifact(store, row.name);
               }
             }
           }
@@ -1591,6 +1592,7 @@ ${moneyRow}
                 }
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
+                storeHelper.addRevealedArtifact(store, entry.namn);
               }
               const selector = !Number.isNaN(parentIdx)
                 ? `li[data-name="${CSS.escape(entry.namn)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
@@ -1641,6 +1643,7 @@ ${moneyRow}
               storeHelper.setCurrentList(store, list);
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
+              storeHelper.removeRevealedArtifact(store, row.name);
             }
           }
           const selector = !Number.isNaN(parentIdx)

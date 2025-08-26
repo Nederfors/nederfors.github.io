@@ -558,6 +558,7 @@ function initIndex() {
               }
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
+              storeHelper.addRevealedArtifact(store, p.namn);
             }
             renderList(filtered());
             const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
@@ -817,6 +818,7 @@ function initIndex() {
             storeHelper.setCurrentList(store, list);
             if (window.updateXP) updateXP();
             if (window.renderTraits) renderTraits();
+            storeHelper.removeRevealedArtifact(store, p.namn);
           }
         }
         renderList(filtered());

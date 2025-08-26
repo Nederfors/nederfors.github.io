@@ -599,6 +599,14 @@
     save(store);
   }
 
+  function removeRevealedArtifact(store, name) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    const list = store.data[store.current].revealedArtifacts || [];
+    store.data[store.current].revealedArtifacts = list.filter(n => n !== name);
+    save(store);
+  }
+
   function clearRevealedArtifacts(store) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
@@ -1126,6 +1134,7 @@ function defaultTraits() {
     setOnlySelected,
     getRevealedArtifacts,
     addRevealedArtifact,
+    removeRevealedArtifact,
     clearRevealedArtifacts,
     getNilasPopupSeen,
     setNilasPopupSeen,
