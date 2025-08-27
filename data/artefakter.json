@@ -11,6 +11,9 @@
         "Artefakt",
         "Vapen"
       ],
+      "kvalitet": [
+        "Trubbigt"
+      ],
       "handling": {
         "Förmåga 1": [
           "Reaktiv"
@@ -150,11 +153,20 @@
     "id": "ar05",
     "namn": "Algsar-Maras kätting",
     "beskrivning": "algsar-maras kätting, artefakt Algsar-Mara omnämns såvitt känt bara i en enda strof, tillskriven Aroaleta, och då endast med hänvisning till dennes bakslughet, mordiska sinnelag och ”bitande kätting”. Vem han eller hon var och vad som gör denne förtjänt av omnämnandet är ett lika stort mysterium som frågan om huruvida just denna kätting var hans. Eller hennes. Kättingen med sina tunna men urstarka länkar är nära två meter lång och väger inte mer än ett motsvarande rep. Den tycks vara ingjuten med en hungrande eller rent av svulten makt. Vid sidan om nedanstående krafter kan den svingas som en Långpiska (ledat, snärjande och djupverkande).",
-    "kvalitet": [],
+    "kvalitet": [
+      "Ledat",
+      "Snärjande",
+      "Djupverkande"
+    ],
     "taggar": {
       "typ": [
         "Artefakt",
         "Vapen"
+      ],
+      "kvalitet": [
+        "Ledat",
+        "Snärjande",
+        "Djupverkande"
       ],
       "handling": {
         "Förmåga 1": [
@@ -464,6 +476,11 @@
         "Artefakt",
         "Vapen"
       ],
+      "kvalitet": [
+        "Balanserat",
+        "Djupverkande",
+        "Precist"
+      ],
       "handling": {
         "Förmåga 1": [
           "Aktiv"
@@ -751,6 +768,7 @@
   "kvalitet": ["Djupverkande"],
   "taggar": {
     "typ": ["Artefakt", "Vapen"],
+    "kvalitet": ["Djupverkande"],
     "handling": {
       "Förmåga 1": ["Fri"]
     }
@@ -815,7 +833,7 @@
     },
     "stat": {
       "skada": "",
-      "vikt": 0
+      "vikt": 0.02
     },
     "grundpris": {
       "daler": 0,
@@ -841,7 +859,7 @@
     },
     "stat": {
       "skada": "",
-      "vikt": 0
+      "vikt": 0.6
     },
     "grundpris": {
       "daler": 0,
@@ -853,9 +871,10 @@
   "id": "ar29",
   "namn": "Elasaths Drakdråpare",
   "beskrivning": "Under Symbaroums tidiga år, när drakar ännu jagade rikets människor och boskap, beordrade Kung Eoran-Ald Ornon sina mystiker att tillverka ett vapen värdigt hans främsta drakdödare, Elasath. Krigarfurstinnan tog tacksamt emot gåvan och skred till verket. Enligt vissa skrönor hann hon nedlägga tjugosju fullvuxna drakar innan hon föll offer för Fofar Förgörarens eld. Hur många i hennes jaktlag som fick sätta livet till är det ingen som minns eller bryr sig om. Elasaths Drakdråpare är ett spjut med kvaliteterna Balanserat, Blodsgjutande, Djupverkande och Långt samt med den mystiska kvaliteten Banevapen (reptiler). Dessutom kan följande krafter aktiveras:",
-  "kvalitet": ["Balanserat", "Blodsgjutande", "Djupverkande", "Långt", "Banevapen (reptiler)"],
+  "kvalitet": ["Balanserat", "Blodsgjutande", "Djupverkande", "Långt", "Banevapen"],
   "taggar": {
     "typ": ["Artefakt", "Vapen"],
+    "kvalitet": ["Balanserat", "Blodsgjutande", "Djupverkande", "Långt", "Banevapen"],
     "handling": {
       "Förmåga 1": ["Aktiv"],
       "Förmåga 2": ["Fri"]
@@ -867,7 +886,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.5
   },
   "grundpris": {
     "daler": 0,
@@ -875,7 +894,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar30",
   "namn": "Loravanas kastsköld",
   "beskrivning": "En av det tidiga Symbaroums mest omsjungna hjältar är krigaren Loravana, ledare för Drottning Serala-Han Urels väpnade styrkor. Under hennes befäl kunde drottningens nordliga smårike ta allt större landområden i beslag, och vissa legender utpekar henne därför som det förenade Symbaroums verkliga moder. Om det stämmer skulle det även förklara varför hennes legendariska sköld blev kvar i de symbariska härskarnas ägo.",
@@ -893,7 +912,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.5
   },
   "grundpris": {
     "daler": 0,
@@ -901,7 +920,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar31",
   "namn": "Goravadans tankering",
   "beskrivning": "Möjligen är denna ring densamma som har tillskrivits den på Symbaroums tid fruktade lönnmördaren, tillika notoriske förföraren, Goravadan – han som sades kunna locka till sig sina offer och sedan utföra sitt värv utan att den olycklige hann ge minsta ljud ifrån sig. Hur det än är med den saken kan den komma väl till pass i såväl sociala sammanhang som när mästaren befinner sig i ett trängt läge.",
@@ -919,7 +938,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.02
   },
   "grundpris": {
     "daler": 0,
@@ -927,7 +946,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar32",
   "namn": "Bargalvax stavhuvud",
   "beskrivning": "Under sina resor i norra Davokar har Kullinan av Furia samtalat med många märkvärdiga varelser. En av dessa var Bargalvax som lever i en grotta vid foten av den vulkan som Ambriska lärde kallar Eulias eldsberg. I utbyte mot ett knippe vintervita hårstrån och fyra lyckliga barndomsminnen fick mystikern lov att ställa fem frågor, men när frågorna visade sig handla om korruptionens väsen var trollkonan tvungen att ljuga – de svar hon ägde rimmade illa med hungern som glimmade i Kullinans ögon. Eftersom Bargalvax av princip aldrig tar emot gåvor utan att erbjuda en värdefull gengåva i retur avslutade hon mötet med att skänka honom ett av de många halssmycken som hon burit med sig genom sin fjärde dvala utan att riktigt veta eller bry sig om vad det var eller varifrån det kommit. När Kullinan sedermera fick tid att studera artefakten blev han mäkta imponerad av gåvan.",
@@ -943,7 +962,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.2
   },
   "grundpris": {
     "daler": 0,
@@ -951,7 +970,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar35",
   "namn": "Stålsolen",
   "beskrivning": "Den artefakt som Broder Eumenos döpte till Stålsolen hittades i packningen på en gravt styggelsemärkt och djupt störd lycksökare i närheten av ruinstaden Alkor. Dess ursprung är okänt och hett omdiskuterat, i synnerhet sedan allt fler har börjat tolka många av Davokars ”solsymboler” som egentligen varande spindelsymboler. Oavsett vilket är artefakten tydligt kopplad till solen och ett synnerligen kraftfullt vapen mot Prios fiender. Dess enda kraft beskrivs nedan men tilläggas bör att denna kraft kräver tid för återhämtning. Efter att kraften har släppts lös krävs 1t6+4 dagar av klart solljus, alternativt det dubbla under en molnig himmel, för att ”ladda upp” artefakten inför en ny aktivering.",
@@ -967,7 +986,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.5
   },
   "grundpris": {
     "daler": 0,
@@ -975,7 +994,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar36",
   "namn": "Einons kompass",
   "beskrivning": "Einons kompass är en artefakt som tillverkades av vinteralven Einon för knappt femtio år sedan, som gåva till Elori, Järnpaktens sändebud i Yndaros. Syftet med gåvan är att ge sändebudet en chans att upptäcka styggelsefödda varelser i en miljö som annars var svår att avläsa, mitt bland människornas stoj, trängsel och fallenhet att hänge sig åt mörka krafter. Föremålet består av en vit och svart nål flytande i en seg vätska som i sin tur är inkapslad i en fingertjock, cirkulär kristallplatta. Kristallen är infattad i en rund silverdosa utan ornamentering och inskriptioner.",
@@ -991,7 +1010,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.2
   },
   "grundpris": {
     "daler": 0,
@@ -999,7 +1018,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar37",
   "namn": "Basigors matsäck",
   "beskrivning": "Tillverkad av en välvuxen gwannhonas magsäck är denna motbjudande artefakt högst användbar för de som planerar att färdas länge i ogästvänlig vildmark. Den ljusskygge handlare som Agramai av Kalfas köpte föremålet från kopplade ihop det med den legendariska äventyraren Basigor, som utforskade Ravennernas dalgångar redan på Lindaros tid. Men sanningshalten i detta är förstås högst osäker. Oavsett ursprung kan den oljiga säcken matas med organiskt material, varpå den börjar arbeta – den drar ihop sig och expanderar i ett intensivt malande som krasar och pyser och så småningom gurglar och puttrar. Efter ungefär en timme pöser den avslappnat ut och tillåter sig att öppnas, varpå dess mästare kan plocka fram en gråbrun, illaluktande brödkaka, stor som en yndarisk sötlimpa. Brödkakan fyller dagsbehovet av näringsämnen för sju personer men ger också de som äter av den en poäng temporär korruption per dygn, korruption som dröjer kvar i kroppen tills respektive resenär har livnärt sig på vanlig föda under sju dygn på raken. Den som äter av brödet i tre dagar får alltså sedan dras med tre poäng temporär korruption i en vecka innan den klingar av – vilket är ungefär lika länge som magen behöver för att återhämta sig efter den oerhört fiberrika dieten.",
@@ -1011,7 +1030,7 @@
   "nivåer": {},
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.5
   },
   "grundpris": {
     "daler": 0,
@@ -1019,7 +1038,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar38",
   "namn": "Alials stenmantel",
   "beskrivning": "Det sägs att det var den paranoide Kung Alial XIII av Arval som under Symbaroums mest expansiva fas lät tillverka denna mantel, omtalad i kvädet Den storknande ynkryggens frånfälle. Agramai fick den av Hertig Sesario, via Esmerelda, inför utfärden till Symbar. Notera att den som aktiverar någon av nedanstående krafter omsluts av ett fullständigt lufttätt hölje. Syret räcker olika länge olika gånger beroende på att höljets form aldrig är densamma; räkna med att det tar 10+1t10 minuter innan mästaren somnar in, varefter eventuella allierade har ett antal rundor motsvarande mästarens värde i Stark på sig att slå sig in genom höljet.",
@@ -1037,7 +1056,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.5
   },
   "grundpris": {
     "daler": 0,
@@ -1046,7 +1065,7 @@
   }
 },
 
-{
+  {
   "id": "ar39",
   "namn": "Argond Vidfarnes karta",
   "beskrivning": "Argond Vidfarne sägs ha varit en lärd utforskare, men mycket litet är känt om honom mer än att han skapade två artefakter, en lunta av närmast oändligt – och synnerligen osorterat – kunnande samt denna stigfinnande karta. Kartan är vackert illuminerad men ger inga ledtrådar om sin skapare, inte heller specificerar den något år för sitt skapande. Gammal är den: skogen Davokar saknas. Visst finns det skogar, berg och floder men inget av det sammanhängande skogstäcke som idag möter dem som vandrar mot norr från Ambria. Ambria finns inte heller; staten Lindaros (där Yndaros står idag) är blott en större by vid Doudrams strand, och norra Alberetor ser vildvuxet och närmast folktomt ut. Karvosti finns med, liksom många av de mer prominenta byggnationer som återfunnits i södra skogshavet – flera tycks ståta i full prakt. Kartan visar världen närmast omkring betraktaren och förändras varje natt i takt med att mästaren reser. Det går alltså inte att studera norra Alberetor om man inte redan befinner sig i Titanerna, liksom det inte går att se långt norrut i Davokar om man inte redan är djupt inne i skogen. Hur stor del av världen som kartan faktiskt kan rita ut är okänt och kräver långväga expeditioner för att besvara.",
@@ -1064,7 +1083,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.1
   },
   "grundpris": {
     "daler": 0,
@@ -1072,7 +1091,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar40",
   "namn": "Ashikis tvillingdolkar",
   "beskrivning": "Ashiki var en omtalad bortbyting som växte upp i Lindaros slum och tog över ett av gängen där med en blandning av list och våld. Efter att hon förråtts av sina närmaste tog hon sig rollen som bestraffare av Lindaros kriminella, och svepte genom staden i en veritabel mordfest. Festen fick sitt slut när Ashiki gav sig på samhällets toppskick i jakten på rövare och tjuvar. Då jagades hon intensivt och fångades slutligen in och avrättades offentligt. Hennes dolkar försvann, och ingen vet var de är nu.",
@@ -1090,7 +1109,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.0
   },
   "grundpris": {
     "daler": 0,
@@ -1098,7 +1117,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar41",
   "namn": "Bunefers dödsmask",
   "beskrivning": "En krigarprinsessas dödsmask från Symbaroums sista tid. Masken sägs vara gjuten över Bunefers ansikte och har bytt ägare flera gånger i Davokar. För bäraren ger den skärpt känsla för blottor i rustning och kraftfulla krigstjut som kan lamslå fiender – utan att avslöja var den påträffades eller av vem den bars tidigare.",
@@ -1116,7 +1135,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.5
   },
   "grundpris": {
     "daler": 0,
@@ -1124,7 +1143,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar42",
   "namn": "Desdemorgos ikosaeder",
   "beskrivning": "En knytnävsstor ikosaeder i svart stål, skapad för att binda och skärma mot korruption. Särskilt användbar i skadade miljöer och mot fiender som angriper med korruptiv kraft. Beskrivningen undviker historik och fokuserar på hur spelare kan använda skyddet och lagringen av korruption i spel.",
@@ -1142,7 +1161,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.6
   },
   "grundpris": {
     "daler": 0,
@@ -1150,7 +1169,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar43",
   "namn": "Drottningmoderns banér",
   "beskrivning": "Detta omtalade banér bär släkten Kohinoors vapen, Den flammande furan. Det bars i drottningmoderns namn av Alberetors främsta hjältar i striden mot mörkermästarna och är rikligt bestänkt med deras torkade blod. Deras mod och dådkraft sägs ha smittat av sig, vilket avslöjas i banérets kraft då det planteras i marken: området runtomkring standaret fylls av en upplyftande och skyddande aura.",
@@ -1168,7 +1187,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.5
   },
   "grundpris": {
     "daler": 0,
@@ -1176,7 +1195,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar44",
   "namn": "Elis trollflöjt",
   "beskrivning": "Denna trollflöjt är namngiven efter sin nuvarande ägare, ett gatubarn vid namn Eli som vandrade och kanske ännu vandrar Tistla Fästes gator. Flickebarnet och hennes flöjt är omtalade, då hon dels kan spela de mest hänförande melodier och också tjänstgör som den mest effektiva råttfångare staden har.",
@@ -1194,7 +1213,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.06
   },
   "grundpris": {
     "daler": 0,
@@ -1202,7 +1221,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar45",
   "namn": "Evighetslegionens gastmärke",
   "beskrivning": "Ett rostigt järntecken i enkel kedja, känt från en forntida elitstyrka. Märket låter bäraren fortsätta strida när kroppen faller: en stridsande reser sig och håller fiender på avstånd tills ödet avgjorts. Enstaka exemplar cirkulerar som reliker; här fokuseras på hur märket fungerar i spel, inte på äldre krönikor.",
@@ -1218,7 +1237,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.1
   },
   "grundpris": {
     "daler": 0,
@@ -1226,7 +1245,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar46",
   "namn": "Fejdkristall",
   "beskrivning": "En facetslipad kristall som hjälper bäraren att pejla namngivna fienders närhet och fokus. Användning kan göra bäraren misstänksam och benägen att lägga till ännu en fiende på listan – en följd som i berättelser kallas Sotoreks förbannelse.",
@@ -1244,7 +1263,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.1
   },
   "grundpris": {
     "daler": 0,
@@ -1252,7 +1271,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar47",
   "namn": "Fuglomarus lögnareld",
   "beskrivning": "Enligt sägnerna sökte mystikern Fuglomaru ljuset och knöt sin kraft till en symbol med åtta strålar. Artefakten som bär hennes namn framställs som ett eldfat vars lågor prövar ord: den som talar sant skonas och kan helas, den som ljuger sveds. Föremålet väcker både begär och fruktan; här beskrivs hur det används vid spelbordet, utan platsangivelser eller historiska hemligheter.",
@@ -1270,7 +1289,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 3.0
   },
   "grundpris": {
     "daler": 0,
@@ -1278,7 +1297,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar48",
   "namn": "Girakosh cirkelstål",
   "beskrivning": "Ett runristat cirkelvapen av skarpt stål som enligt ryktet en gång bars av en hjälte uppfostrad bland troll. Föremålet florerar i norra gränstrakter och sägs vara igenkänt av trollen; en bärare kan behöva förhandla eller visa gott uppsåt. Den som binder artefakten kan även använda den i närstrid likt en dolk, annars är det ett kastvapen. Beskrivningen undviker ursprungsplatser och olycksbådande detaljer som hör till spelledarens verktyg, och fokuserar på reglerna för bruk.",
@@ -1296,7 +1315,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.0
   },
   "grundpris": {
     "daler": 0,
@@ -1304,7 +1323,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar49",
   "namn": "Hafmuuls förvandlingsplagg",
   "beskrivning": "Hafmuul Förvandlaren var en produktiv artefaktmakare med fokus på förvandlingar. De tre kända plaggen – baiagornsärken, kråkkappan och maradräkten – låter bäraren anta djurskepnader; i kombination kan de ge en urornes gestalt. Plaggen ger särskild utdelning för häxor. Upprepad användning innebär risk: förvandlingar oftare än en gång per dygn kräver slag med 1t20; vid utfall ≤ antalet förvandlingar per dygn fastnar mästaren i formen. Över tid blir sinnet mer bestlikt. En exorcism kan skilja plagg och bärare åt; sinnet återgår efter lika lång tid som fångenskapen.",
@@ -1326,7 +1345,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.2
   },
   "grundpris": {
     "daler": 0,
@@ -1334,7 +1353,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar50",
   "namn": "Hagmandaras hämndbåge",
   "beskrivning": "En båge som tänder projektiler mot korrumperade mål och används bäst av en bärare utan styggelsemärken; annars fungerar den som en vanlig pilbåge.",
@@ -1352,7 +1371,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.5
   },
   "grundpris": {
     "daler": 0,
@@ -1360,7 +1379,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar51",
   "namn": "Hogarz levande kedja",
   "beskrivning": "En trolljägares levande kedja från forntiden, berömd för att fängsla bestar och andra farliga varelser. Kedjan söker byte och kan användas som fälla eller bäras för att fånga angripare. Här fokuseras på hur den används i spel, utan platsangivelser och trofélistor.",
@@ -1378,7 +1397,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.5
   },
   "grundpris": {
     "daler": 0,
@@ -1386,7 +1405,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar52",
   "namn": "Iloonas spegelsköld",
   "beskrivning": "En speglande sköld som enligt myten smiddes av en häxa i samarbete med ett troll. Känd för att vända bort fientlig magi och för att kunna kastas i rätt händer. Sköldens nuvarande hemvist lämnas därhän; texten fokuserar på användning i spel.",
@@ -1404,7 +1423,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.5
   },
   "grundpris": {
     "daler": 0,
@@ -1412,7 +1431,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar53",
   "namn": "Kloakdrottningens mantel",
   "beskrivning": "En mytomspunnen mantel från Lindaros underjord som gjorde sin bärare mycket svår att fånga eller skada. Ursprunget och nuvarande öde är okänt, och berättelserna varierar. Här beskrivs hur manteln fungerar i spel utan platsspoilers eller dolda avslöjanden.",
@@ -1430,7 +1449,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.0
   },
   "grundpris": {
     "daler": 0,
@@ -1438,7 +1457,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar54",
   "namn": "Lapi-Eshas viskande halsband",
   "beskrivning": "Ett ormformat halsband förknippat med prinsessan Lapi-Esha, med rykte om hemligheter och inflytande. Var det finns idag är oklart. Nedan fokuserar på effekter och bruk i spel, utan att peka ut dolda platser.",
@@ -1456,7 +1475,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.05
   },
   "grundpris": {
     "daler": 0,
@@ -1464,7 +1483,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar55",
   "namn": "Malikanders saliggörande gonggong",
   "beskrivning": "En mäktig gonggong kopplad till ljus och rening, skapad i en stor ceremoni under kriget mot mörkret. Krafterna riktas mot korrumperade och kan drabba både bärare och allierade inom hörhåll. Inuti står ristat: ”Den som vill sprida ljus måste tåla att brinna”. Var den finns idag är okänt. Artefakten kan inte bindas med korruption; endast Erfarenhet duger.",
@@ -1482,7 +1501,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 6.0
   },
   "grundpris": {
     "daler": 0,
@@ -1490,7 +1509,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar56",
   "namn": "Nagmiras åskhammare",
   "beskrivning": "En dvärgmästares stridsverktyg med rykte om både förtryck och frigörelse. Hammarens ursprung och nuvarande plats lämnas öppet; runorna på skaft och huvud sägs dölja uppdrag och ed. I rätt händer kan den slå loss åska och styra blixt.",
@@ -1508,7 +1527,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 2.0
   },
   "grundpris": {
     "daler": 0,
@@ -1516,7 +1535,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar57",
   "namn": "Nemas solvarvsstatyett",
   "beskrivning": "En liten staty i ett stycke sten: en orm i dödskamp med en trollslända. Tillskriven undermakaren Nema. Praktisk resföljeslagare som väcker olika tjänare beroende på solens läge; dag ger trollslända, natt ger kanaran. Här presenteras spelnytta utan platsangivelser.",
@@ -1534,7 +1553,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.4
   },
   "grundpris": {
     "daler": 0,
@@ -1542,7 +1561,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar58",
   "namn": "Palamukks ögonsten",
   "beskrivning": "En smaragdgrön ögonsten skapad av den ökände illvätten Palamukks. Kräver att bäraren permanent ersätter ett öga (ger 1t6 skada som ignorerar bepansring). Fungerar som synorgan med mörkerseende och svagt inre sken. Nedan beskrivs spelmekanik; ursprung och efterspel lämnas öppna.",
@@ -1560,7 +1579,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.02
   },
   "grundpris": {
     "daler": 0,
@@ -1568,7 +1587,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar59",
   "namn": "Stormrytarens stridslur",
   "beskrivning": "En kolossal lur ristad med krafttecken. Den kan svingas som tvåhandsklubba men dess styrka ligger i hornstötarna – från kraftigt dån till tordön. Ursprunget är omstritt och nuvarande hemvist okänd. Texten nedan fokuserar på bruk i spel utan plats- eller maktpolitiska ledtrådar.",
@@ -1586,7 +1605,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 2.0
   },
   "grundpris": {
     "daler": 0,
@@ -1594,7 +1613,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar60",
   "namn": "Terrasmas bortomspegel",
   "beskrivning": "En sotsvart spegel av vulkanglas kopplad till Bortomvärlden. Den fungerar som sikt och verktyg för den som vågar. Historik och plats lämnas öppna; fokus ligger på risker, kostnader och effekter vid användning.",
@@ -1612,7 +1631,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.8
   },
   "grundpris": {
     "daler": 0,
@@ -1620,7 +1639,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar61",
   "namn": "Rasthuuls andekärl",
   "beskrivning": "Ett forntida kärl som kan hysa en mästares själ och därigenom skärma mot både korruption och död. Ett lyckat Vaksam tillsammans med förmågan Häxsyn avslöjar om kärlet är tomt eller bebott; i det senare fallet syns skuggan hos själen i kärlet. Kärlet kan förstöras (Bepansring 2, Tålighet 10). En skyddad ande kan också kastas ut genom att binda artefakten och lyckas med [Viljestark←Viljestark]. Andekärlet kan endast bindas genom att acceptera 1t4 permanent korruption (Ej Erfarenhet). Denna permanenta korruption hålls i schack enligt Själaskydd och blir ett problem först när anden lämnar kärlet.",
@@ -1638,7 +1657,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 1.0
   },
   "grundpris": {
     "daler": 0,
@@ -1646,7 +1665,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar62",
   "namn": "Salamandras mörkerlykta",
   "beskrivning": "En fältlykta som sväljer ljus och sprider kolmörker där bara bäraren ser klart. Används för infiltration och reträtt utan att röja position. Lyktan har vandrat mellan skickliga agenter; här beskrivs enbart bruk och risker vid spelbordet.",
@@ -1664,7 +1683,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.6
   },
   "grundpris": {
     "daler": 0,
@@ -1672,7 +1691,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar63",
   "namn": "Världsklyvaren",
   "beskrivning": "Ett tvåhandssvärd med vågigt blad vars egentliga kraft vaknar hos bärare med minst ett styggelsemärke; annars fungerar det som ett vanligt tvåhandssvärd. Effekten kan triggas även via ritualen Byta skugga om bäraren lånar en skugga med permanent korruption som ger styggelsemärke. Nedan beskrivs enbart spelpåverkan.",
@@ -1690,7 +1709,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 2.0
   },
   "grundpris": {
     "daler": 0,
@@ -1698,7 +1717,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar64",
   "namn": "Xtalas timglas",
   "beskrivning": "Ett timglas knutet till tidens flöde. Användaren kan frysa rundor till ett högt personligt pris. Här återges endast regler för bruk, utan berättelsedetaljer som pekar ut platser eller personer.",
@@ -1714,7 +1733,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 0.4
   },
   "grundpris": {
     "daler": 0,
@@ -1722,7 +1741,7 @@
     "örtegar": 0
   }
 },
-{
+  {
   "id": "ar65",
   "namn": "Återuppståndelsens sten",
   "beskrivning": "Ett grovt granitblock som i rätt händer kan byta liv mot liv. Texten nedan fokuserar på de två ritualerna och deras kostnader, utan att ange platser eller historiska aktörer.",
@@ -1740,7 +1759,7 @@
   },
   "stat": {
     "skada": "",
-    "vikt": 0
+    "vikt": 10.0
   },
   "grundpris": {
     "daler": 0,
