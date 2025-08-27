@@ -589,5 +589,1163 @@
     "skilling": 0,
     "örtegar": 0
   }
+},
+  {
+    "id": "ar20",
+    "namn": "aloénas amulett",
+    "beskrivning": "aloénas amulett\nI den stenamulett som Lasifor Nattbäcka erhållit som gåva från evighetsalven Aloéna finns en fjättrad ande med starka beskyddarinstinkter. Det faktum att han fick den gör borgmästaren både hedrad och skräckslagen – det senare eftersom han oroas över vad alven har sett som får henne att anse att han behöver beskyddas.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Reaktiv"
+        ],
+        "Förmåga 2": [
+          "Fri"
+        ],
+        "Förmåga 3": [
+          "Fri"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Andesköld: Amulettens bärare kan en gång per runda be anden att omsluta denne som ett extra lager av osynlig bepansring. Det måste göras inna nförsvarsslaget slås och om attacken träffar adderas +2 till bärarens Bepansring. Handling: Reaktiv Korruption: 1T4",
+      "Förmåga 2": "Andens flykt: Bäraren av amuletten kan en gång per scen begära att anden cirklar kring denne som en virvlande vind, vilken avstyr alla attacker med avståndsvapen under innevarande runda. Notera att inte heller bäraren kan avfyra eller kasta några avståndsvapen när förmågan är aktiv. Närstridsvapen påverkas inte av virvelvinden. Handling: Fri Korruption: 1T4",
+      "Förmåga 3": "Andens offer: Den som har bundit amuletten till sig kan avkräva anden ett slutgiltigt offer. Den skyddar bäraren helt mot alla former av vapenattacker under en runda medan bäraren kan agera som normalt. När rundan är till ända splittras amuletten och upphör att fungera. Handling: Fri Korruption: 1T8"
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 1
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar21",
+    "namn": "dolken sVartegg",
+    "beskrivning": "dolken sVartegg\nDen krökta dolken Svartegg omtalas i legenderna som tillhörande förrädaren Arbusal, en häxa som lät sig korrumperas och skapade vapnet i syfte att lönnmörda sin härskare – storhövdingen Maiesticar. Mordförsöket misslyckades och Arbusal begravdes med vapnet kört genom sitt hjärta.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt",
+        "Vapen"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Reaktiv"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Utmatta: Den som har bundit dolken till sig kan använda den för att försvaga sina motståndare. När vapnet ger skada kan bäraren aktivera en effekt som gör att offret inte får använda några av sina förmågor under innevarande och följande runda. Handling: Reaktiv Korruption: 1T4",
+      "Förmåga 2": "Paralysera: Som Utmatta men offret blir istället helt handlingsförlamat under innevarande och följande runda. Handling: Reaktiv Korruption: 1T6"
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 1
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar22",
+    "namn": "eamons pingla",
+    "beskrivning": "eamons pingla De komiska berättelserna om mästertjuven Eamon som alltid gav sig på Symbaroums rika och mäktiga har överlevt i en uppskattad serie barbarskrönor.Särskilt populär är historien om hur han stal matriarken Clorandias hela festskrud, komplett med ädelstenssmyckade underkjolar och pråliga smycken – något han åstadkom genom att med sin omtalade pinglas hjälp hålla henne orörlig medan han med andra handen klädde av henne kläderna in på bara skinnet.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Aktiv"
+        ],
+        "Förmåga 2": [
+          "Passiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Förbrylla: Den som har bundit pinglan till sig kan använda den för att försätta sitt offer i ett hypnotiskt tillstånd som varar tills offret klarar ett slag mot Viljestark (pinglans bärare slår slaget, ett slag per runda). Om offret tar skada upphör transen omedelbart. Handling: Aktiv Korruption: 1T4",
+      "Förmåga 2": "Irritera: I samband med närstrid kan pinglans ägare välja att slåss med pinglan i ena handen (omöjliggör användandet av sköld, tvåhandsvapen och två vapen). Så länge pinglan spelar får dess bärare en andra chans att lyckas med alla slag mot Försvar. Effekten varar scenen ut eller tills pinglan tystnar. Handling: Passiv Korruption: 1T4"
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 1
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar23",
+    "namn": "Okrans Ring",
+    "beskrivning": "Det hör till ovanligheterna att alver framställs som annat än skrämmande och fientliga i barbarernas legender. Ett av få undantag är styggelsejägaren Okran som enligt sägnerna ska ha räddat livet på klanernas folk vid ett flertal tillfällen, men som slutligen dräptes av en svartsjuk människokvinna vars älskade upprepade gånger förkunnat sin kärlek till alven under nattliga önskedrömmar. Vart hans legendariska ring tog vägen förtäljer inte historien …",
+    "kvalitet": [],
+    "taggar": {
+      "typ": ["Artefakt"],
+      "handling": {
+        "Förmåga 1": ["Aktiv"],
+        "Förmåga 2": ["Aktiv"]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Ljusets instinkt: Den som har bundit ringen till sig kan genast inse var en styggelse är som mest sårbar. Alla attacker i strid med den styggelsen sker därefter med +1 i skada.\nHandling: Aktiv\nKorruption: 1",
+      "Förmåga 2": "Ljusets strålar: Ringen kan på bärarens kommando ge ifrån sig en stråle av heligt ljus som skadar en enskild styggelse. Skadan är 1T8 och bepansring skyddar ej.\nHandling: Aktiv\nKorruption: 1T4"
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.02
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar24",
+    "namn": "Peatros Plunta",
+    "beskrivning": "Denna lilla och sirligt graverade plunta kan mycket väl vara den som enligt legenden bars av prästinnan Peatro. Hon omnämns i några kväden som sägs härröra från Symbaroums sista tid, som ett varnande exempel på att även godhjärtade handlingar kan få ödesdigra konsekvenser om de utförs med mystiska krafters hjälp. Pluntan rymmer två doser och har förmågan att förläna vilken vätska som helst helande egenskaper. Dock till ett pris: dels ådrar sig mystikern korruption när vätskan omvandlas, dels har elixiret en korrumperande verkan på den som dricker det.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": ["Artefakt"],
+      "handling": {
+        "Förmåga 1": ["Aktiv"],
+        "Förmåga 2": ["Aktiv"]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Mörkerkur: Den som har bundit pluntan till sig kan få vätskan i dess inre att erhålla läkande egenskaper. Elixiret är aktivt i 1T4 rundor och varje runda får den som druckit av brygden tillbaka 1T4 Tålighet, men drabbas också av temporär korruption till ett värde av halva läkningsslaget (avrundat uppåt).\nHandling: Aktiv\nKorruption: 1",
+      "Förmåga 2": "Motmörker: Den som har bundit pluntan till sig kan få vätskan i dess inre att motverka skadan från gifter. Elixiret halverar utfallet på skadetärningen vid alla typer av gifter (avrundat uppåt), men den skada som därmed undviks drabbar istället drickaren i form av temporär korruption.\nHandling: Aktiv\nKorruption: 1"
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.3
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+
+  {
+  "id": "ar25",
+  "namn": "Stridsyxan Hunger",
+  "beskrivning": "Det berättas om en barbarhärskare vid namn Yakobor som blev lurad att ingå en allians med Spindelkonungen. I utbyte mot sin trohet fick Yakobor en stridsyxa och en kista full av mynt, gjutna av rött guld. Ska man tro legenden visade det sig snart att allt som köptes för guldpenningarna förstördes – kött ruttnade, smör härsknade, järn rostade och slavar förtvinade till åldringar på ett dygn. Och yxan som skulle göra Yakobor till den störste fick istället hans själ att mörkna. Hunger är en Djupverkande stridsyxa (+1 i skada), skapad för att korrumpera såväl bärare som motståndare.",
+  "kvalitet": ["Djupverkande"],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Fri"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Nattbett: Den som har bundit yxan till sig kan få den att utstråla korruption i samband med träffar i strid. Att aktivera effekten (som varar scenen ut) ger bara 1 korruption men vid varje attack som träffar slås därtill 1T4. Bäraren drabbas av tärningens utfall i temporär korruption, offret drabbas av utfallet i både temporär korruption och extra skada.\nHandling: Fri\nKorruption: 1"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 2
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar26",
+  "namn": "Yaregos Järnnäve",
+  "beskrivning": "Det föremål som kallas Yaregos järnnäve omtalas i dussintals sägner om det tidiga Symbaroum och dess stridigheter, tillhörande olika ägare på olika platser. Artefakten är sannerligen ett under av mystisk konstfärdighet men ställer också stora krav på den som binder den till sig – dennes arm måste nämligen kapas strax under armbågen så att artefakten kan låtas växa samman med stumpen. Väl på plats duger den klumpiga tingesten just så pass till att utföra vardagliga sysslor som att greppa en matkniv, men dess grepp tillåter inte användningen av något slags vapen. Den underarmslånga Järnnäven är som namnet antyder tillverkad av järn som med tiden har drabbats av osköna rostfläckar och otaliga skåror efter parerade hugg. I strid skjuter decimeterlånga pikar ut ur knogarna samtidigt som en krage av järn fälls ut nära armbågen, att användas som parerstång. Tillsammans med sin tyngd ger detta Järnnäven permanent +1 på både försvarsslag och i skada. Därutöver har artefakten följande förmågor:",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Reaktiv"],
+      "Förmåga 3": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Omtöckna: Vid en träff som ger skada efter avdragen bepansring kan järnnäven omtöckna motståndaren. Kraften kan användas en gång per scen och kräver att bäraren slår ett slag mot [Stark←Viljestark]. Lyckas slaget förlorar motståndaren sina två nästkommande handlingar.\nHandling: Reaktiv\nKorruption: 1",
+    "Förmåga 2": "Stöt: Vid en träff som ger skada efter avdragen bepansring kan järnnäven en gång per scen ge motståndaren en extra stöt. Stöten knuffar omkull motståndaren om bäraren lyckas med ett slag mot [Stark←Stark].\nHandling: Reaktiv\nKorruption: 1T4",
+    "Förmåga 3": "Bryta: En gång varje runda kan järnnävens bärare välja att försöka attackera en motståndares vapen istället för personen i fråga. Det krävs först ett lyckat anfallsslag för att greppa tag om vapnet, därefter måste bäraren lyckas med ett slag mot Stark för vapnet ska brytas sönder. Ett vapen som räknas som magiskt (dvs. är en artefakt som kan bindas till en ägare) går inte att förstöra på detta sätt – i sådana fall blir fienden avväpnad.\nHandling: Aktiv\nKorruption: 1T4"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 2
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+
+  {
+    "id": "ar27",
+    "namn": "Alalarogs varselring",
+    "beskrivning": "I flera gamla barbarlegender, bland annat en populär vers tillskriven Aroaleta, talas det om krigaren Alalarogs osvikliga förmåga att förutse bestars och mänskliga motståndares rörelser. Enligt vissa var han en av gudarnas utvalda, sänd att skydda sitt folk från skogarnas rovlystna makter, enligt andra hänfördes förmågan till mystiska krafters inverkan i samband med hans tillblivelse, men sanningen står skriven längs rundeln på den enkla guldring han bar i höger örsnibb. Örhänget stal han och hans vänner från en grupp gravplundrare som de överföll på väg hem från ett symbariskt gravvalv. Det blev ett våldsamt bråk om dyrgripen och Alalarog var snart ensam kvar, plågad av ångest över att ha dräpt sina vänner och fast besluten att genom goda gärningar sona sitt brott.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": ["Artefakt"],
+      "handling": {
+        "Förmåga 1": ["Fri"],
+        "Förmåga 2": ["Fri"]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Föraning: I närstrid kan artefaktens mästare aktivera föraningens kraft och får då två chanser på sig att lyckas med ett försvarsslag. Aktiveringen måste ske innan försvarsslaget slås. Handling: Fri. Korruption: 1T4.",
+      "Förmåga 2": "Förutse blotta: Mästaren kan med denna kraft känna på sig var det kommer att uppstå blottor i fiendens rustning. Aktiveringen sker innan ett attackslag med ett närstrids- eller avståndsvapen, varefter attackslaget slås med en modifikation på –3. Om det lyckas träffar mästaren blottan och fiendens Bepansring ignoreras, så länge den inte är av naturlig eller mystisk art. Handling: Fri. Korruption: 1T4."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar28",
+    "namn": "Lyras lykta",
+    "beskrivning": "Den artefakt som i Lyastra var känd som Lyras lykta gavs Kalthar tillåtelse att ta med från sin kammare i Mörkermästarnas fästning. Han vet att den följde hans orden, Dakothnics prästerskap, på flykten från Lindaros, men mer än så känner han inte dess härstamning. Allt han bryr sig om är att den gav honom tröst under hemlandets förmörkelse och fall, och att den har fortsatt att göra så under fångenskapen. Lyktan avger ett varmt, behagligt och aldrig sinande sken och har därtill följande krafter:",
+    "kvalitet": [],
+    "taggar": {
+      "typ": ["Artefakt"],
+      "handling": {
+        "Förmåga 1": ["Passiv"],
+        "Förmåga 2": ["Fri"]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Helgande aura: Alla styggelsemärkta varelser känner obehag i lyktans närhet (dubbel förflyttning). De har två chanser att misslyckas med framgångsslag, och om utfallet av något slag är 20 ägnar de hela efterföljande runda åt att spy upp delar av den svärta som fyller dem (endast reaktiva handlingar möjliga). Handling: Passiv. Korruption: —.",
+      "Förmåga 2": "Fördriva andar: Den som har bundit sig till Lyras lykta kan använda dess kraft till att fördriva andar från en viss plats. Anden måste befinna sig inom en förflyttning från lyktan och om ett slag mot [Viljestark←Viljestark] lyckas tvingas anden att fly från platsen, alternativt hålla sig inaktiv i någon vrå om flykt inte är möjligt. Varje timme efter den första slås ett slag mot andens Viljestark för att se om den kan uppbåda modet att återvända. Handling: Fri. Korruption: 1T6."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+  "id": "ar29",
+  "namn": "Elasaths Drakdråpare",
+  "beskrivning": "Under Symbaroums tidiga år, när drakar ännu jagade rikets människor och boskap, beordrade Kung Eoran-Ald Ornon sina mystiker att tillverka ett vapen värdigt hans främsta drakdödare, Elasath. Krigarfurstinnan tog tacksamt emot gåvan och skred till verket. Enligt vissa skrönor hann hon nedlägga tjugosju fullvuxna drakar innan hon föll offer för Fofar Förgörarens eld. Hur många i hennes jaktlag som fick sätta livet till är det ingen som minns eller bryr sig om. Elasaths Drakdråpare är ett spjut med kvaliteterna Balanserat, Blodsgjutande, Djupverkande och Långt samt med den mystiska kvaliteten Banevapen (reptiler). Dessutom kan följande krafter aktiveras:",
+  "kvalitet": ["Balanserat", "Blodsgjutande", "Djupverkande", "Långt", "Banevapen (reptiler)"],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Fri"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Splittra pansar: Vid en attack mot en reptil kan mästaren välja att slå med spjuthuvudets flatsida och med en lyckad träff utlösa en chockvåg som fortplantar sig genom offrets fjälltäckta skinn. Attacken ger ingen skada, däremot gör den att merparten av fjällen faller till marken. Fjällen växer så småningom tillbaka men under en månads tid är varelsens naturliga Bepansring reducerad till 1. Handling: Aktiv. Korruption: 1T4.",
+    "Förmåga 2": "Bryta ormens charm: Mästaren kan som en fri handling svänga spjutet så att det ger upphov till en kraftfull skärande ton. Oljudet bryter genast den paralysering som kommer av det monstruösa särdraget Trollbinda och påverkar alla som befinner sig inom hörhåll. Ingenting hindrar dock de befriade från att trollbindas på nytt. Handling: Fri. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar30",
+  "namn": "Loravanas kastsköld",
+  "beskrivning": "En av det tidiga Symbaroums mest omsjungna hjältar är krigaren Loravana, ledare för Drottning Serala-Han Urels väpnade styrkor. Under hennes befäl kunde drottningens nordliga smårike ta allt större landområden i beslag, och vissa legender utpekar henne därför som det förenade Symbaroums verkliga moder. Om det stämmer skulle det även förklara varför hennes legendariska sköld blev kvar i de symbariska härskarnas ägo.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Sköldkast: Om den som har bundit sig till Loravanas kastsköld behärskar förmågan Stålkast kan artefakten slungas som ett kastvapen med 1t8 i skada. Skölden återvänder dessutom automatiskt till mästarens arm, redo att användas för pareringar direkt efter kastet. Handling: Aktiv. Korruption: 1.",
+    "Förmåga 2": "Kraftstöt: Om sköldens mästare behärskar förmågan Sköldkamp till minst gesällnivå kan denne lägga extra kraft bakom sina sköldstötar. En kraftstöt ökar manöverns skada till 1t8 och ger +5 på Stark i försöket att slå fienden till backen. Handling: Reaktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar31",
+  "namn": "Goravadans tankering",
+  "beskrivning": "Möjligen är denna ring densamma som har tillskrivits den på Symbaroums tid fruktade lönnmördaren, tillika notoriske förföraren, Goravadan – han som sades kunna locka till sig sina offer och sedan utföra sitt värv utan att den olycklige hann ge minsta ljud ifrån sig. Hur det än är med den saken kan den komma väl till pass i såväl sociala sammanhang som när mästaren befinner sig i ett trängt läge.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Fri"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Tankeöverföring: Ringens mästare kan överföra ett kort meddelande till någon som denne har sett och som befinner sig i närområdet – förslagsvis inom hundra meter och med max tio ord om exakthet är av betydelse. Meddelandet uppstår som en tanke i mottagarens huvud, så avsändaren kan inte identifieras med hjälp av språk, röst eller andra kännetecken. I förhandlingssituationen ger användandet av Tankeöverföring +2 på alla slag mot Övertygande. Handling: Aktiv. Korruption: 1.",
+    "Förmåga 2": "Fängsla: Om artefaktens mästare behärskar den mystiska kraften Förvirring kan kraftens energier förstärkas så att inget framgångsslag behöver slås. Effekten blir automatiskt att offret står handlingsförlamat under det antal rundor som mästaren väljer att hålla kraften igång. Handling: Fri. Korruption: 1T6 per runda."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar32",
+  "namn": "Bargalvax stavhuvud",
+  "beskrivning": "Under sina resor i norra Davokar har Kullinan av Furia samtalat med många märkvärdiga varelser. En av dessa var Bargalvax som lever i en grotta vid foten av den vulkan som Ambriska lärde kallar Eulias eldsberg. I utbyte mot ett knippe vintervita hårstrån och fyra lyckliga barndomsminnen fick mystikern lov att ställa fem frågor, men när frågorna visade sig handla om korruptionens väsen var trollkonan tvungen att ljuga – de svar hon ägde rimmade illa med hungern som glimmade i Kullinans ögon. Eftersom Bargalvax av princip aldrig tar emot gåvor utan att erbjuda en värdefull gengåva i retur avslutade hon mötet med att skänka honom ett av de många halssmycken som hon burit med sig genom sin fjärde dvala utan att riktigt veta eller bry sig om vad det var eller varifrån det kommit. När Kullinan sedermera fick tid att studera artefakten blev han mäkta imponerad av gåvan.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Fri"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Inläsning: Stavens mästare kan på förhand läsa in upp till tre mystiska krafter i stavhuvudet, genom en procedur som tar en timme per kraft att utföra. Dessa krafter kan sedan aktiveras som en fri i stället för en aktiv handling, dock maximalt en gång per runda och till en betydande kostnad i korruption. Krafterna förbrukas inte av aktiveringen utan kan användas igen nästa runda; en ny inläsning behövs inte förrän mästaren vill byta ut någon av de lagrade krafterna. Handling: Fri. Korruption: 1T6."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar35",
+  "namn": "Stålsolen",
+  "beskrivning": "Den artefakt som Broder Eumenos döpte till Stålsolen hittades i packningen på en gravt styggelsemärkt och djupt störd lycksökare i närheten av ruinstaden Alkor. Dess ursprung är okänt och hett omdiskuterat, i synnerhet sedan allt fler har börjat tolka många av Davokars ”solsymboler” som egentligen varande spindelsymboler. Oavsett vilket är artefakten tydligt kopplad till solen och ett synnerligen kraftfullt vapen mot Prios fiender. Dess enda kraft beskrivs nedan men tilläggas bör att denna kraft kräver tid för återhämtning. Efter att kraften har släppts lös krävs 1t6+4 dagar av klart solljus, alternativt det dubbla under en molnig himmel, för att ”ladda upp” artefakten inför en ny aktivering.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Solstorm: Genom att slå staven som artefakten är monterad på i marken kan dess mästare få dess blanka metallyta att skina upp i en bländande, ögonblicklig ljusblixt. Alla inom synhåll som inte förvarnas att blunda blir förblindade under 1t4 rundor. Dessutom vållar strålglansen Styggelser och Vandöda stor kroppslig smärta – 3t10 i skada som ignorerar Bepansring, vilken dock halveras för de varelser som lyckas med ett slag mot Viljestark (mästarens spelare slår slaget/slagen). Handling: Aktiv. Korruption: 1T8."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar36",
+  "namn": "Einons kompass",
+  "beskrivning": "Einons kompass är en artefakt som tillverkades av vinteralven Einon för knappt femtio år sedan, som gåva till Elori, Järnpaktens sändebud i Yndaros. Syftet med gåvan är att ge sändebudet en chans att upptäcka styggelsefödda varelser i en miljö som annars var svår att avläsa, mitt bland människornas stoj, trängsel och fallenhet att hänge sig åt mörka krafter. Föremålet består av en vit och svart nål flytande i en seg vätska som i sin tur är inkapslad i en fingertjock, cirkulär kristallplatta. Kristallen är infattad i en rund silverdosa utan ornamentering och inskriptioner.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Förnimma mörkerväsen: Den som har bundit sig till kompassen kan aktivera dess förmåga att förnimma styggelser. Den svarta delen av nålen kommer osvikligen att peka mot den mäktigaste styggelsen (spelledaren avgör) på maximalt en kilometers avstånd, dock med två begränsningar: dels kan andra mäktiga styggelser finnas på andra ställen inom området, dels börjar nålen pendla mer och mer ju närmare kompassen kommer källan, för att till slut bara snurra runt (inom 100 meter från varelsen). Effekten varar i en scen/timme men kan förstås aktiveras gång på gång, med resultatet att mästaren alltid har 1t4 temporär korruption så länge förmågan är aktiv. Handling: Aktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar37",
+  "namn": "Basigors matsäck",
+  "beskrivning": "Tillverkad av en välvuxen gwannhonas magsäck är denna motbjudande artefakt högst användbar för de som planerar att färdas länge i ogästvänlig vildmark. Den ljusskygge handlare som Agramai av Kalfas köpte föremålet från kopplade ihop det med den legendariska äventyraren Basigor, som utforskade Ravennernas dalgångar redan på Lindaros tid. Men sanningshalten i detta är förstås högst osäker. Oavsett ursprung kan den oljiga säcken matas med organiskt material, varpå den börjar arbeta – den drar ihop sig och expanderar i ett intensivt malande som krasar och pyser och så småningom gurglar och puttrar. Efter ungefär en timme pöser den avslappnat ut och tillåter sig att öppnas, varpå dess mästare kan plocka fram en gråbrun, illaluktande brödkaka, stor som en yndarisk sötlimpa. Brödkakan fyller dagsbehovet av näringsämnen för sju personer men ger också de som äter av den en poäng temporär korruption per dygn, korruption som dröjer kvar i kroppen tills respektive resenär har livnärt sig på vanlig föda under sju dygn på raken. Den som äter av brödet i tre dagar får alltså sedan dras med tre poäng temporär korruption i en vecka innan den klingar av – vilket är ungefär lika länge som magen behöver för att återhämta sig efter den oerhört fiberrika dieten.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {}
+  },
+  "nivåer": {},
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar38",
+  "namn": "Alials stenmantel",
+  "beskrivning": "Det sägs att det var den paranoide Kung Alial XIII av Arval som under Symbaroums mest expansiva fas lät tillverka denna mantel, omtalad i kvädet Den storknande ynkryggens frånfälle. Agramai fick den av Hertig Sesario, via Esmerelda, inför utfärden till Symbar. Notera att den som aktiverar någon av nedanstående krafter omsluts av ett fullständigt lufttätt hölje. Syret räcker olika länge olika gånger beroende på att höljets form aldrig är densamma; räkna med att det tar 10+1t10 minuter innan mästaren somnar in, varefter eventuella allierade har ett antal rundor motsvarande mästarens värde i Stark på sig att slå sig in genom höljet.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Stenskal: Den som har bundit sig till manteln kan svepa den omkring sig och få den att formas till ett heltäckande, tjockt gråstensskal. Effekten varar en scen eller tills mästaren väljer att avbryta den. Ytterligare ett alternativ är att krossa skalet (Tålighet 20, Brytpunkt 10, Skydd 10). Handling: Aktiv. Korruption: 1T4.",
+    "Förmåga 2": "Kamouf lage: Mästaren kan låta manteln omsluta kroppen och anta omgivningens färg och form. Endast den som säkert vet att mästaren befinner sig inom ett visst, begränsat område har möjlighet att hitta denne, och då med ett slag mot [Vaksam –5]. Effekten varar en scen eller tills mästaren väljer att avbryta den. Handling: Aktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+
+{
+  "id": "ar39",
+  "namn": "Argond Vidfarnes karta",
+  "beskrivning": "Argond Vidfarne sägs ha varit en lärd utforskare, men mycket litet är känt om honom mer än att han skapade två artefakter, en lunta av närmast oändligt – och synnerligen osorterat – kunnande samt denna stigfinnande karta. Kartan är vackert illuminerad men ger inga ledtrådar om sin skapare, inte heller specificerar den något år för sitt skapande. Gammal är den: skogen Davokar saknas. Visst finns det skogar, berg och floder men inget av det sammanhängande skogstäcke som idag möter dem som vandrar mot norr från Ambria. Ambria finns inte heller; staten Lindaros (där Yndaros står idag) är blott en större by vid Doudrams strand, och norra Alberetor ser vildvuxet och närmast folktomt ut. Karvosti finns med, liksom många av de mer prominenta byggnationer som återfunnits i södra skogshavet – flera tycks ståta i full prakt. Kartan visar världen närmast omkring betraktaren och förändras varje natt i takt med att mästaren reser. Det går alltså inte att studera norra Alberetor om man inte redan befinner sig i Titanerna, liksom det inte går att se långt norrut i Davokar om man inte redan är djupt inne i skogen. Hur stor del av världen som kartan faktiskt kan rita ut är okänt och kräver långväga expeditioner för att besvara.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Som en ritual"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Rätt väg: Den som binder kartan till sig kan peka på en plats på kartan och sedan få en uppfattning om bästa vägen dit. Kartan tar dock inte hänsyn till saker som hänt sedan den skapades för ca 900 år sedan, vilket kan leda till problem då mycket skett i davokarregionen sedan dess. Alla som binder sig till kartan kan använda den för att undvika att gå vilse. Det krävs dock en mästare med förmågan Lärd för att förstå när kartan visar ett terrängavsnitt eller en väg som är kraftigt förändrad. Den lärde slår för Listig för att läsa in en alternativ väg mot målet, och kan därmed undvika hinder som utgörs av terrängen: korrumperad natur, lindormshålor och liknande stationära eländen. Den lärdes klokskap utgör dock inget skydd mot vandrande varelser på vägen, eller farlig terräng som förflyttar sig, så som styggelsedimma. Handling: Fri. Korruption: Ingen.",
+    "Förmåga 2": "Skattkarta: I handen på någon med förmågan Lärd kan kartan användas för att hitta en orörd ruin. Kraften kräver en timmes intensivt studium av kartan samt ett lyckat Listig för att lokalisera en ruinplats. För att ta en bra väg till platsen krävs kraften Rätt väg. Vilken ruin det gäller och vad som väntar där framgår först på plats, men klart är att ruinen ännu inte har plundrats av skattletare. Handling: Som en ritual. Korruption: Ingen."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar40",
+  "namn": "Ashikis tvillingdolkar",
+  "beskrivning": "Ashiki var en omtalad bortbyting som växte upp i Lindaros slum och tog över ett av gängen där med en blandning av list och våld. Efter att hon förråtts av sina närmaste tog hon sig rollen som bestraffare av Lindaros kriminella, och svepte genom staden i en veritabel mordfest. Festen fick sitt slut när Ashiki gav sig på samhällets toppskick i jakten på rövare och tjuvar. Då jagades hon intensivt och fångades slutligen in och avrättades offentligt. Hennes dolkar försvann, och ingen vet var de är nu.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Skuggans gåva: När någon av dolkarna används tillsammans med förmågan Lönnstöt får användaren slå den extra skadetärningen två gånger och ta det bästa utfallet. Handling: Reaktiv. Korruption: 1 per användande.",
+    "Förmåga 2": "Två leka bäst: Med båda tvillingdolkarna i händerna på någon med förmågan Tvillingattack kan ett veritabelt regn av hugg utlösas, där den ena tvillingdolken hugger efter den andra, i strävan att överträffa varandra inom syskonparet. Användaren av tvillingdolkarna kan fortsätta hugga mot ett enskilt mål tills ett hugg missar eller offret dött av sina många sår. Den som lyssnar noga kan höra hur dolkarna väser av förtjusning och tävlingslusta när syskonrivaliteten pågår. Handling: Aktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar41",
+  "namn": "Bunefers dödsmask",
+  "beskrivning": "En krigarprinsessas dödsmask från Symbaroums sista tid. Masken sägs vara gjuten över Bunefers ansikte och har bytt ägare flera gånger i Davokar. För bäraren ger den skärpt känsla för blottor i rustning och kraftfulla krigstjut som kan lamslå fiender – utan att avslöja var den påträffades eller av vem den bars tidigare.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Nålens öga: Dödsmasken ger sin mästare hjälp med att hitta blottor i sina motståndares rustning. När kraften aktiveras reduceras alla fienders Bepansring med 1t4 för attacker i närstrid, för resten av striden. Detta gäller bara för maskens mästare och är inte att räkna som extra skada – oskyddade mål tar skada som vanligt. Handling: Fri. Korruption: 1T4.",
+    "Förmåga 2": "Tusen nålar: En mästare med förmågan Stångverkan kan få maskens hjälp att paralysera fiender med skärande skrik. Varje fiende som träffas av maskmästarens stångvapen måste klara ett Viljestark eller förlora sin nästa stridshandling (maskmästaren slår slaget). Handling: Reaktiv. Korruption: 1 per skrik från masken."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar42",
+  "namn": "Desdemorgos ikosaeder",
+  "beskrivning": "En knytnävsstor ikosaeder i svart stål, skapad för att binda och skärma mot korruption. Särskilt användbar i skadade miljöer och mot fiender som angriper med korruptiv kraft. Beskrivningen undviker historik och fokuserar på hur spelare kan använda skyddet och lagringen av korruption i spel.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Fri"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Korruptionsbarriär: Ikosaederns mästare får ett komplett skydd mot korruption som drabbar de som rör sig på en viss plats, såsom i korruptionssjuk natur eller i Bortomvärlden. För korruption som används som vapen (exempelvis särdraget Korrumperande attack eller den mystiska kraften Svart andedräkt) måste mästaren slå över den skadande korruptionen med 1t20, om slaget är högre drabbas mästaren inte av korruptionen; om slaget är lika med eller under så drabbar korruptionen som vanligt. Skyddet gäller inte korruptionskällor mästaren väljer att använda, som att binda eller använda artefakter eller aktivera mystiska krafter. Handling: Reaktiv. Korruption: Ingen.",
+    "Förmåga 2": "Korruptionsinsamlare: En mästare med förmågan Svartkonst kan samla korruption som används som vapen, för att senare själv vända den mot sina fiender. För att det ska fungera måste svartkonstnären först lyckas skydda sig mot attacken, se Korruptionsbarriär – då lagras korruptionen i artefakten. Svartkonstnären kan sedan spendera denna insamlade korruption för att sänka motståndet mot sina egna krafter: varje poäng som spenderas ger målet en –1 modifikation på Viljestark när det gäller försvar mot mästarens kraft. Alla poäng kan spenderas vid samma kraft, men hälften av den mängd som spenderas (avrundat uppåt) drabbar också svartkonstnären som temporär korruption. Korruption som svartkonstnären själv genererar (krafter etc.) kan inte samlas in, inte heller sådan som kommer från omgivningen mer generellt, så som i korruptionssjuk natur eller i Bortomvärlden. Handling: Fri. Korruption: Inget vid insamlandet av korruption; vid användande drabbar hälften av den använda korruptionen svartkonstnären själv."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar43",
+  "namn": "Drottningmoderns banér",
+  "beskrivning": "Detta omtalade banér bär släkten Kohinoors vapen, Den flammande furan. Det bars i drottningmoderns namn av Alberetors främsta hjältar i striden mot mörkermästarna och är rikligt bestänkt med deras torkade blod. Deras mod och dådkraft sägs ha smittat av sig, vilket avslöjas i banérets kraft då det planteras i marken: området runtomkring standaret fylls av en upplyftande och skyddande aura.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Aktiv", "Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Samla trupperna: När den som bundit sig till banéret slår det i marken ger det alla allierade inom synhåll ett omslag per scen på ett motståndsslag mot valfri effekt; detta gäller även Försvar. Allierade som lämnar synhåll för banéret tappar effekten, men allierade som kommer inom synhåll för banéret får den. Allierade som använt omslaget kan inte få ytterligare ett under samma strid, oavsett om banéret planteras om. För allierade med Ståndaktig gäller att omslag mot sådant som täcks av förmågan lyckas automatiskt istället för att slås om. Banérets mästare behöver inte stanna inom synhåll för banéret när det väl är planterat i marken, men följer också samma regler som alla andra avseende omslaget. Handling: Aktiv. Korruption: 1T4.",
+    "Förmåga 2": "Vederkvickelse: En mästare med förmågan Ledare kan förmå banéret att utstråla helande energier när det har slagits ner i marken. Alla allierade inom synhåll får 1t4 Tålighet tillbaka. Allierade med förmågan Återhämtning får sin nivå av läkning istället, om det är bättre än 1t4. Om mästaren har och använder förmågan Ledare på gesäll- eller mästarnivå kan Vederkvickelsen aktiveras som en reaktion på de handlingarna (dvs. Vederkvickelse kostar ingen egen Aktiv handling). Handling: Aktiv (eller Reaktiv, tillsammans med Ledare gesäll- eller mästarnivå). Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar44",
+  "namn": "Elis trollflöjt",
+  "beskrivning": "Denna trollflöjt är namngiven efter sin nuvarande ägare, ett gatubarn vid namn Eli som vandrade och kanske ännu vandrar Tistla Fästes gator. Flickebarnet och hennes flöjt är omtalade, då hon dels kan spela de mest hänförande melodier och också tjänstgör som den mest effektiva råttfångare staden har.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Särskild"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Ljuv musik: Flöjten är följsam och instruktiv, och även den minst kvalificerade musikant kan spela vackert på den. En skicklig musiker kan förtrolla med sina toner, och dra ned både applåder och klingande daler på sitt spel. Flöjtens mästare kan, en gång per äventyr och med ett lyckat Övertygande, hänföra en publik som då skänker 1t10 daler (väsentligen i form av skillingar och örtegar) i ersättning för upplevelsen. En mästare med fördelen Musikant slår Övertygande med bonus från fördelen, samt slår värdet på den intjänade slanten två gånger och tar det bästa utfallet. Handling: Särskild. Korruption: Inget.",
+    "Förmåga 2": "Djurens konung: Om flöjtens mästare besitter förmågan Trollsång (se Spelarens handbok, sida 77) kan denne använda sin musik till att leda och kommendera bestar. Alla bestar av ett visst släkte inom hörhåll (musikanten bestämmer vilket om det finns flera att välja på) blir neutralt inställda till musikanten och låter denna och dennes vänner passera utan inblandning. Dessutom kan en kedja [Övertygande←Viljestark] av bestar av det utvalda släktet fås att följa med och hjälpa musikanten under varaktigheten. Om mästaren också har fördelen Musikant läggs förmågans bonus till Övertygande för detta slag. Musikanten måste spela hela tiden vilket kräver två händer samt koncentration, [Viljestark –skada] bryter koncentrationen. Handling: Aktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar45",
+  "namn": "Evighetslegionens gastmärke",
+  "beskrivning": "Ett rostigt järntecken i enkel kedja, känt från en forntida elitstyrka. Märket låter bäraren fortsätta strida när kroppen faller: en stridsande reser sig och håller fiender på avstånd tills ödet avgjorts. Enstaka exemplar cirkulerar som reliker; här fokuseras på hur märket fungerar i spel, inte på äldre krönikor.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Trogen in i döden: Evighetslegionens gastmärke hyser en imiterande ande som reser sig över en medvetslös men ännu inte död mästare. Mästaren slår dödsslag som vanligt och under tiden slåss gasten vidare. Gasten måste nedkämpas innan mästaren kan attackeras, och den har samma värden som mästaren med tillägget Andeform (I). Den rör sig inte mer än ett steg från den fallna kroppen, och angriper alla inom räckhåll som inte är vän med gastmärkets mästare. Om gasten bekämpas försvinner den in i gastmärket igen, och återkommer inte förrän mästaren vaknat till och fällts på nytt. Om den fallna krigaren avlider till följd av misslyckade dödsslag upphör gasten att existera. Handling: Reaktiv. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar46",
+  "namn": "Fejdkristall",
+  "beskrivning": "En facetslipad kristall som hjälper bäraren att pejla namngivna fienders närhet och fokus. Användning kan göra bäraren misstänksam och benägen att lägga till ännu en fiende på listan – en följd som i berättelser kallas Sotoreks förbannelse.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Fiender i väggarna: Den som binder sig till fejdkristallen kan lista upp till halva sin Vaksam antal fiender (avrundat uppåt), och genom kristallen få en uppfattning om hur långt bort de befinner sig. Mästaren kan lägga till eller ta bort fiender från listan, men får inte ha fler än halva Vaksam antal individer angivna vid något tillfälle. Fienderna måste också vara kända till utseendet, och behöver förses med ett namn eller en beteckning; “den grå kvinnan” eller “det enögda trollet” räcker för ändamålet. Fejdkristallen visar betraktarens listade fiender i olika grad av fokus, beroende på hur nära de befinner sig rent fysiskt; en helt kristallklar fiende befinner sig potentiellt inom synhåll, men är dold, förklädd eller på annat sätt osynlig. Användaren får en andra chans på alla slag som syftar till att hitta en sådan nära fiende, vare sig det gäller slag för Vaksam eller för att aktivera finnande krafter eller förmågor. Den mästare som drabbas av Sotoreks förbannelse (se kraftens korruption) måste addera ytterligare en person som namngiven fiende, och tror starkt att alla på listan är lika stora hot. Denna ytterligare fiende kan vara utöver Vaksam/2 stycken. Handling: Fri. Korruption: 1T4, samt 1/20 chans att drabbas av Sotoreks förbannelse vid varje användning.",
+    "Förmåga 2": "Hämndens blick: För en mästare med förmågan Sjätte sinne kan kristallklara fiender (se Fiender i väggarna) attackeras som om de stod mitt framför mästaren, med vapen, kraft eller särdrag. Användaren måste inte hitta eller se fienden för att kunna utföra attacken, som görs och försvaras mot som vanligt. Handling: Aktiv. Korruption: 1T4, samt 1/10 chans att drabbas av Sotoreks förbannelse."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar47",
+  "namn": "Fuglomarus lögnareld",
+  "beskrivning": "Enligt sägnerna sökte mystikern Fuglomaru ljuset och knöt sin kraft till en symbol med åtta strålar. Artefakten som bär hennes namn framställs som ett eldfat vars lågor prövar ord: den som talar sant skonas och kan helas, den som ljuger sveds. Föremålet väcker både begär och fruktan; här beskrivs hur det används vid spelbordet, utan platsangivelser eller historiska hemligheter.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Sanningens kraft: Den som frivilligt stoppar in handen bland lågorna blir bränd om denne ljuger när handen är i elden: 1t6 i skada per lögn (ignorerar Bepansring). Att ljuga innebär att säga något som talaren själv inte tror på, vilket såklart kan vara en ärlig missuppfattning. Den som säger sanningen finner lågorna svalkande, rent av helande (rensar temporär korruption samt helar 1t4 Tålighet) Den som bundit artefakten till sig påverkas inte själv av kraften, och kan ljuga fritt med handen i lågorna. Handling: Aktiv Korruption: 1T4",
+    "Förmåga 2": "Rättarting: För mästare med förmågan Teurgi kan flammorna användas för att tvinga någon att tala sanning. Teurgen pekar på en person inom synhåll från eldfatet och kräver att denne talar sanning. Lågor slår sedan ut kring personen, och effekten är sedan densamma som Sanningens kraft. Handling: Aktiv Korruption: 1T6"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar48",
+  "namn": "Girakosh cirkelstål",
+  "beskrivning": "Ett runristat cirkelvapen av skarpt stål som enligt ryktet en gång bars av en hjälte uppfostrad bland troll. Föremålet florerar i norra gränstrakter och sägs vara igenkänt av trollen; en bärare kan behöva förhandla eller visa gott uppsåt. Den som binder artefakten kan även använda den i närstrid likt en dolk, annars är det ett kastvapen. Beskrivningen undviker ursprungsplatser och olycksbådande detaljer som hör till spelledarens verktyg, och fokuserar på reglerna för bruk.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Återvändo: Det kastade cirkelstålet återvänder till mästarens hand, oavsett om det träffar sitt mål eller ej. Om mästaren är kapabel att kasta flera stål per runda kan Kaststålet återvända så många gånger som det behövs. Handling: Fri Korruption: Inget",
+    "Förmåga 2": "Stålregn: En mästare med förmågan Stålkast kan släppa iväg cirkelstålet på en virvlande färd över slagfältet, sicksackande mellan allierade i jakt på fiendekött. Kraften gör attacken till en kedja av anfall (se sida 130 i Grundboken för förklaring av termen Kedja) mot de fiender som mästaren ser. Stålcirkeln återvänder till kastarens hand efter anfallet. Handling: Aktiv Korruption: 1T4"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar49",
+  "namn": "Hafmuuls förvandlingsplagg",
+  "beskrivning": "Hafmuul Förvandlaren var en produktiv artefaktmakare med fokus på förvandlingar. De tre kända plaggen – baiagornsärken, kråkkappan och maradräkten – låter bäraren anta djurskepnader; i kombination kan de ge en urornes gestalt. Plaggen ger särskild utdelning för häxor. Upprepad användning innebär risk: förvandlingar oftare än en gång per dygn kräver slag med 1t20; vid utfall ≤ antalet förvandlingar per dygn fastnar mästaren i formen. Över tid blir sinnet mer bestlikt. En exorcism kan skilja plagg och bärare åt; sinnet återgår efter lika lång tid som fångenskapen.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Reaktiv"],
+      "Förmåga 3": ["Fri"],
+      "Förmåga 4": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Kränkors flykt: Mången kränka har fått sätta livet till för att skapa denna fjädermantel, svart och glittrande i grönt. Mästaren kan förvandla sig till en flock kränkor (se Grundboken sida 225) under en scen. Mästare med förmågan Häxkonst räknar istället det monstruösa särdraget Svärm som nivå II. Handling: Fri Korruption: 1T4",
+    "Förmåga 2": "Björngång: Den som bär denna tunga baiagorn-päls kan anta en mäktig baiagorns skepnad. Mästaren blir en baiagorn under en scen (se Grundboken sida 220). En användare med förmågan Häxkonst får också särdraget Regenerera I. Förvandlingen kräver att mästaren tar minst 1 i skada av en fiende. Handling: Reaktiv, när mästaren tar minst 1 i skada av en fiende. Korruption: 1T4",
+    "Förmåga 3": "Marans stig: Den som klär sig i denna vackra martunika kan förvandla sig till en mara (se Grundboken sida 220). Förvandlingen varar under en scen. Mästare med förmågan Häxkonst får också det monstruösa särdraget Giftig till nivå II. Handling: Fri Korruption: 1T4",
+    "Förmåga 4": "Svinets väg: Den som iklär sig alla de tre förvandlingsplaggen baiagornsärken, kränkkappan och maradräkten kan förvandla sig till en fruktad urorne (se Grundboken sida 221). Förvandlingen varar under en scen. Mästare med förmågan Häxkonst får också det monstruösa särdraget Regenerera till nivå I. Handling: Aktiv Korruption: 1T4"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar50",
+  "namn": "Hagmandaras hämndbåge",
+  "beskrivning": "En båge som tänder projektiler mot korrumperade mål och används bäst av en bärare utan styggelsemärken; annars fungerar den som en vanlig pilbåge.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Gnista i mörkret: Vapnets mästare kan ingjuta sitt korruptionshat i projektilerna och sända dem brinnande mot korrumperade varelser. En varelse som träffas av pilen måste slå över sin korruption med 1t6, om slaget misslyckas tar varelsen omedelbart så mycket extra skada som tärningen visade. Rustning skyddar inte mot denna extra skada men kan såklart göra det mot pilen. Notera att den extra skadan drabbar offret även om själva pilen inte trängde genom rustning; pilens brännande ljus gör det oavsett. Handling: Reaktiv Korruption: 1 per pil",
+    "Förmåga 2": "Glödande fjättrar: I handen på en mästare med förmågan Prickskytt kan pilarna förutom att göra extra skada (se Gnista i mörkret) också binda genomkorrumperade varelser. En genomkorrumperad varelse som träffas av pilen måste klara ett Viljestark eller fångas i kedjor av eld och inte kunna röra sig eller attackera under en runda; den kan dock använda mystiska krafter och särdrag. Handling: Reaktiv Korruption: 1T4 per pil, inklusive effekten av Gnista i mörkret."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar51",
+  "namn": "Hogarz levande kedja",
+  "beskrivning": "En trolljägares levande kedja från forntiden, berömd för att fängsla bestar och andra farliga varelser. Kedjan söker byte och kan användas som fälla eller bäras för att fånga angripare. Här fokuseras på hur den används i spel, utan platsangivelser och trofélistor.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Kedjefälla: Den som bundit kedjan till sig kan lägga den på marken och sedan utlösa den som en fjättrande fälla när någon passerar över den. Kedjans mästare bestämmer om fällan utlöses, och om flera varelser passerar, vilken varelse som i så fall fångas. Offret måste klara [Kvick –8] eller fångas in. Den som fångas in kan inte röra sig och kan inte anfalla på något sätt. Anfall mot den fångade varelsen sker med Övertag. Att ta sig loss från kedjan kräver ett lyckat [Stark –8]; ett slag per runda, där varje nivå av Robust ger +2 på Stark. Kedjan täcker en cirka 3 meter bred passage och kan nå lika långt upp. I händerna på någon med förmågan Försåtsgillrare kan kedjan fånga två fiender som passerar kedjan, antingen samtidigt eller efter varandra. Handling: Reaktiv, när någon passerar kedjan Korruption: 1T4",
+    "Förmåga 2": "Närstridsfjättrar: Om kedjans mästare har förmågan Stridsgisslare kan denne välja att bära kedjan på sig och låta den fånga en fiende som anfaller mästaren i närstrid; effekten är densamma som om kedjan låg på marken. Handling: Reaktiv, när någon anfaller mästaren i närstrid Korruption: 1T4"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar52",
+  "namn": "Iloonas spegelsköld",
+  "beskrivning": "En speglande sköld som enligt myten smiddes av en häxa i samarbete med ett troll. Känd för att vända bort fientlig magi och för att kunna kastas i rätt händer. Sköldens nuvarande hemvist lämnas därhän; texten fokuserar på användning i spel.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Blockera magi: Sköldens mästare kan försvara sig mot magiska anfall med den; sköldmästarens Försvar ersätter Viljestark mot sådana angrepp. Handling: Reaktiv Korruption: 1T4",
+    "Förmåga 2": "Sköldkast: En mästare med förmågan Sköldkamp kan en gång per runda kasta skölden som en reaktion för att blockera magi riktad mot en allierad inom synhåll, se sköldens kraft Blockera magi. För en mästare med Sköldkamp på nivån gesäll eller högre kan skölden också kastas för att skada och eventuellt slå omkull en fiende inom synhåll. Detta görs som en reaktion på en egen attack mot en annan fiende som sköldbäraren angriper i närstrid (den attacken sker också, men utan efterföljande sköldstöt). Skölden återvänder alltid till kastarens hand efter kastet. Handling: Reaktiv Korruption: 1T6"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar53",
+  "namn": "Kloakdrottningens mantel",
+  "beskrivning": "En mytomspunnen mantel från Lindaros underjord som gjorde sin bärare mycket svår att fånga eller skada. Ursprunget och nuvarande öde är okänt, och berättelserna varierar. Här beskrivs hur manteln fungerar i spel utan platsspoilers eller dolda avslöjanden.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Defensiv teleportering: När mantels mästare blir attackerad kan denne välja att teleportera istället för att slå Försvar. Mästaren väljer en punkt inom synhåll, och måste klara ett Viljestark för att materialiseras där. Misslyckas slaget blir mästaren kvar på stället och träffas av attacken. Handling: Reaktiv Korruption: 1T6",
+    "Förmåga 2": "Räddande teleportering: En mästare med förmågan Livvakt kan greppa en annan varelse och teleportera tillsammans med den. Om varelsen inte vill teleportera måste mästaren klara ett [Viljestark←Viljestark] för att få med sig offret. Misslyckas försöket blir båda kvar på platsen. Handling: Reaktiv, på en attack mot antingen mästaren eller den andra varelsen som ska teleportera Korruption: 1T6"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar54",
+  "namn": "Lapi-Eshas viskande halsband",
+  "beskrivning": "Ett ormformat halsband förknippat med prinsessan Lapi-Esha, med rykte om hemligheter och inflytande. Var det finns idag är oklart. Nedan fokuserar på effekter och bruk i spel, utan att peka ut dolda platser.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Avslöjande viskning: Halsbandet viskar hemligheter om den som mästaren tittar på. Ormen ger mästaren kunskap om vilket målets lägsta karaktärsdrag är (inte dess exakta värde), samt dessutom vilka eventuella nackdelar (se Spelarens handbok, sida 56) målet har. Om mästaren lyckas med ett [Vaksam←Diskret] får mästaren också veta värdet på det lägsta karaktärsdraget, samt om målet har nackdelen Mörk hemlighet, vilken hemligheten är. Handling: Fri Korruption: 1T4",
+    "Förmåga 2": "Giftdrypare: Halsbandet kan fås att anfalla i närstrid med sitt giftiga bett. Ormen anfaller en gång per runda samtidigt som mästaren också gör det, och mot samma mål. Om mästaren träffar med en attack under rundan gör ormen detsamma. Ormen anfaller endast en gång per runda, oavsett hur många attacker mästaren gör. Slå 1t8 för att se om bettet går igenom målets skydd; bettet i sig gör ingen skada men målet drabbas av ett svagt gift, 1t4 i skada i 1t4 rundor. Om mästaren har förmågan Giftbrukare är ormens gift istället medelstarkt och gör 1t6 i skada i 1t6 rundor. Handling: Reaktiv, när mästaren anfaller i närstrid Korruption: 1T4"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar55",
+  "namn": "Malikanders saliggörande gonggong",
+  "beskrivning": "En mäktig gonggong kopplad till ljus och rening, skapad i en stor ceremoni under kriget mot mörkret. Krafterna riktas mot korrumperade och kan drabba både bärare och allierade inom hörhåll. Inuti står ristat: ”Den som vill sprida ljus måste tåla att brinna”. Var den finns idag är okänt. Artefakten kan inte bindas med korruption; endast Erfarenhet duger.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Hjärtats rytm: Artefaktens ljusa kraft skadar korrumperade varelser. Kraften kräver tre slag på gonggongen (aktiva handlingar) för att aktiveras och påverkar alla inom hörhåll. Alla med permanent korruption måste slå ett slag med 1t20 över sin permanenta korruption; om det misslyckas tar varelsen sin permanenta korruption i skada på Tålighet. Även gonggongens mästare påverkas, liksom dennes allierade. Genomkorrumperade varelser flyr istället, och kan inte återvända till platsen under den närmaste månaden. Om de inte kan fly utom hörhåll förintas de i en kaskad av ljus. Handling: 3 aktiva handlingar. Korruption: Ingen, dock risk för skada enligt kraftens beskrivning.",
+    "Förmåga 2": "Göra ogjort: I handen på en mästare med förmågan Teurgi kan gonggongens kraft förinta ett ting eller en varelse inom hörhåll. Gonggongens mästare väljer ett mål och slår sedan fem tunga slag på gonggongen. Döda ting förintas direkt, upp till portars, pelares och broars storlek; större saker än så tar skada men förintas inte. En mur rasar inte men får en bred bräsch slagen i sig. Artefakter är immuna mot kraften. Varelser måste slå över sin permanenta korruption med 1t20 eller förintas; om slaget lyckas tar de sin permanenta korruption i skada på Tålighet, om de inte väljer att fly. Då kan de inte återvända till platsen någonsin igen. Om målet är en genomkorrumperad varelse förintas den när det femte slaget faller; om den hinner fly utom hörhåll innan dess klarar den sig. Mästaren tar sin egen permanenta korruption i skada på Tålighet vid varje slag, alltså totalt fem gånger sin permanenta korruption för att aktivera kraften. Handling: 5 aktiva handlingar. Korruption: Ingen, dock möjlig skada enligt kraftens beskrivning."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar56",
+  "namn": "Nagmiras åskhammare",
+  "beskrivning": "En dvärgmästares stridsverktyg med rykte om både förtryck och frigörelse. Hammarens ursprung och nuvarande plats lämnas öppet; runorna på skaft och huvud sägs dölja uppdrag och ed. I rätt händer kan den slå loss åska och styra blixt.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Åskan går: Hammarens mästare kan slå vapnet i backen och släppa lös ett mäktigt åskdunder. Detta slår ut från hammaren och sprider sig som en cirkel åt alla håll. Fiender inom synhåll från mästaren tar 1t6 i skada, rustning skyddar som vanligt, och de måste klara ett [Stark←Stark] eller ramla omkull. Robust ger +2 på Stark per nivå för detta slag. Handling: Aktiv. Korruption: 1T4.",
+    "Förmåga 2": "Blixten slår: I händerna på en mästare med förmågan Tvåhandskraft kan blixtar slå ut från hammaren. Blixten slår ut samtidigt som mästaren träffar ett mål i närstrid. Målet för blixten kan vara detsamma som för hammarslaget, eller ett annat mål inom synhåll. Blixten gör 1t12 i skada (ignorerar Bepansring). Handling: Reaktiv, tillsammans med ett anfall med hammaren. Korruption: 1T6."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar57",
+  "namn": "Nemas solvarvsstatyett",
+  "beskrivning": "En liten staty i ett stycke sten: en orm i dödskamp med en trollslända. Tillskriven undermakaren Nema. Praktisk resföljeslagare som väcker olika tjänare beroende på solens läge; dag ger trollslända, natt ger kanaran. Här presenteras spelnytta utan platsangivelser.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Trolldans: Så länge solen är uppe över horisonten kan mästaren aktivera den övre delen av statyetten och frammana en trollslända, vilket troget tjänar mästaren under en scen (se Grundboken sida 225). Handling: Aktiv Korruption: 1T4",
+    "Förmåga 2": "Ormdans: Så länge solen är under horisonten kan mästaren aktivera den nedre delen av statyetten och frammana en kanaran, vilken troget tjänar mästaren under en scen (se Grundboken sida 223). Handling: Aktiv Korruption: 1T4"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar58",
+  "namn": "Palamukks ögonsten",
+  "beskrivning": "En smaragdgrön ögonsten skapad av den ökände illvätten Palamukks. Kräver att bäraren permanent ersätter ett öga (ger 1t6 skada som ignorerar bepansring). Fungerar som synorgan med mörkerseende och svagt inre sken. Nedan beskrivs spelmekanik; ursprung och efterspel lämnas öppna.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Reaktiv"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Förändringens vindar: En gång per runda kan ögonstenens mästare påverka ett slag för en handling som sker inom synhåll; det kan vara vilken sorts slag som helst: framgångsslag, effektslag, dödsslag eller annat så länge slumpen spelar in. Kraften ger den aktiva parten en modifikation på 1t4 på slaget, positiv eller negativ enligt mästarens önskemål. Handling: Reaktiv Korruption: 1T4",
+    "Förmåga 2": "Stundens skapelsekraft: För mästare med någon av förmågorna Alkemi, Artefaktmakande eller Smideskonst kan ögat användas för att omedelbart skapa något; det sker direkt i stunden, ur tomma luften. Vad gäller Smideskonst kan en gesäll förläna föremålet med en normal Kvalitet; en mästare kan ge det två kvaliteter, varav en mystisk. Det som skapas kan bäras, användas eller konsumeras med samma effekt som det verkligaföremålet. Det skapade existerar dock blott i en scen, sedan vittrar det till aska. Om skaparen är villig att acceptera en permanent korruption blir objektet permanent. Handlar det om en förbrukningsvara (exempelvis ett elixir) kan det då konsumeras senare men förbrukas i så fall som andra föremål av sin sort. Handling: Aktiv Korruption: 1T4 (tillfälligt objekt), eller 1T4 varav 1 permanent (permanent objekt)"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar59",
+  "namn": "Stormrytarens stridslur",
+  "beskrivning": "En kolossal lur ristad med krafttecken. Den kan svingas som tvåhandsklubba men dess styrka ligger i hornstötarna – från kraftigt dån till tordön. Ursprunget är omstritt och nuvarande hemvist okänd. Texten nedan fokuserar på bruk i spel utan plats- eller maktpolitiska ledtrådar.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Allierade till hjälp: Hornstöten dånar ut över nejden och alla allierade till hornets mästare inom en dagsmarsch avstånd blir omedelbart medvetna om att mästaren är i fara och var denne befinner sig. Spelledaren avgör ytterst vilka allierade som finns i närheten, om några, vilka de är och hur långt bort de befinner sig. Vill man basera det på tärningsslag föreslås att mästaren måste lyckas med ett slag mot Övertygande, och att de allierade då är 1t10 timmar bort – utfallet 0 innebär att mästaren slår 1t10 igen och det slaget istället avser minuter bort. De allierade som kommer till undsättning är [RP+1 stycken] med en nivå lägre motstånd än mästaren, ledda av en person med samma grad av motstånd som mästaren (för mer om motståndsnivåer, se Symbaroums Monsterkodex, sida 179). Handling: Fri. Korruption: Ingen.",
+    "Förmåga 2": "Stormskräck: I handen på någon med förmågan Dominera kan stridsluren skicka ut en så pass kraftig hornstöt att fiender kan skrämmas på flykten. Ett slag i [Övertygande←Viljestark] krävs för att påverka en fiende, och denne flyr under 1t6 rundor om slaget lyckas. Handling: Aktiv. Korruption: 1T6."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar60",
+  "namn": "Terrasmas bortomspegel",
+  "beskrivning": "En sotsvart spegel av vulkanglas kopplad till Bortomvärlden. Den fungerar som sikt och verktyg för den som vågar. Historik och plats lämnas öppna; fokus ligger på risker, kostnader och effekter vid användning.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Se bortom världen: Den som binder sig till spegeln kan använda den för att blicka in i Bortomvärlden. Informationen som där erhålls beror helt på läget i Bortomvärlden, vilka eventuella daemoner eller ruiner som där finns. Den andra sidan kan också titta tillbaka. Slå 1t20 per runda, om utfallet är samma eller lägre än antalet rundor mästaren tittat upptäcks denne av något på andra sidan; spelledaren bestämmer vad. En förskräcklig variant av denna kraft är att från Bortomvärlden speja in i den vanliga världen; det sker på samma sätt och med samma risker som att se ut ur världen. Den som kan teleportera kan ta med sig spegeln ut i Bortomvärlden, det går inte att kliva igenom spegeln och ta den med sig. Handling: Aktiv. Korruption: 1T4 för den som aktiverar spegeln, 1 korruption för eventuella andra som också tittar genom spegeln.",
+    "Förmåga 2": "Nå bortom världen: En användare med förmågan Svartkonst kan använda spegeln för att påverka Bortomvärlden. Det går att sträcka sig ut ur världen för att nå något där, samt såklart använda krafter och förmågor mot mål i Bortomvärlden. Detta är praktiskt exempelvis om man slåss mot varelser som teleporterar sig, vilket sker som förflyttningar genom Bortomvärlden. När kraften är aktiverad går det faktiskt att kliva igenom spegeln helt och hållet och träda ut ur världen. Den möjligheten gäller alla, inte bara svartkonstnären som aktiverade kraften. För att komma åter till de levandes värld måste man dras tillbaka av personer som befinner sig på rätt sida spegeln, eller använda en kraft som låter en teleportera; då kan man själv hoppa tillbaka till de levandes värld och stanna där. Detta inses av en Lärd som klarar ett slag i Listig. Den andra sidan kan också påverka den vanliga världen i retur: slå 1t20 varje runda, om utfallet är samma eller lägre än antalet rundor användaren vistats på andra sidan skapas korruptionssjuk natur på platsen där spegeln finns (se Symbaroums Monsterkodex, sida 58). En annan vedervärdig möjlighet är att från Bortomvärlden kliva in i den vanliga världen; det sker på samma sätt och med samma risker som att kliva ut ur världen. Eventuell korruptionssjuk natur som uppstår skapas då i de levandes värld. För att göra detta måste man kunna teleportera sig (exempelvis med kraften Teleportering) eller bli teleporterad (kraften Förvisning) och ta med sig spegeln ut i Bortomvärlden; det går inte att kliva igenom spegeln och samtidigt ta den med sig. Handling: Aktiv. Korruption: 1T4 för den som aktiverar kraften, samt 1T6–3 korruption för var femte runda som påbörjas i kontakt med Bortomvärlden. Det senare gäller även andra som använder kraften när den är aktiverad."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar61",
+  "namn": "Rasthuuls andekärl",
+  "beskrivning": "Ett forntida kärl som kan hysa en mästares själ och därigenom skärma mot både korruption och död. Ett lyckat Vaksam tillsammans med förmågan Häxsyn avslöjar om kärlet är tomt eller bebott; i det senare fallet syns skuggan hos själen i kärlet. Kärlet kan förstöras (Bepansring 2, Tålighet 10). En skyddad ande kan också kastas ut genom att binda artefakten och lyckas med [Viljestark←Viljestark]. Andekärlet kan endast bindas genom att acceptera 1t4 permanent korruption (Ej Erfarenhet). Denna permanenta korruption hålls i schack enligt Själaskydd och blir ett problem först när anden lämnar kärlet.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Fri"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Själaskydd: Andekärlet skyddar användarens själ mot korruption och mot den fysiska kroppens död. All korruption som mästaren ådrar sig binds i runorna som täcker urnan och når aldrig fram till mästarens ande. Detsamma gäller dödens kalla fingrar, vilka aldrig kan komma åt mästaren – Dödsslag slås som vanligt men utfall som innebär döden ignoreras. Om mästarens ande skulle hamna utanför kärlet (om det krossas eller någon annan lyckas binda det till sig) drabbas den oskyddade anden av all korruption som är bunden av urnans runor. Dessutom kommer en eventuell uppskjuten död omedelbart ikapp. Handling: Fri Korruption: Ingen",
+    "Förmåga 2": "Rasthuuls eko: Rasthuuls ande vilar i någon mån över kärlet han skapade, och artefaktens mästare kan alltid känna på sig om någon annan står i begrepp att greppa eller attackera andekärlet. Mästaren kan då aktivera denna kraft som en reaktion, innan någon har hunnit påverka kärlet på något vis. Kraften gör två saker. För det första slår en våg av hat ut från andekärlet, vilket ger alla inom synhåll 1t6 i skada (ignorerar Bepansring). Dessutom måste alla närvarande klara ett Viljestark eller ramla omkull. I tillägg till detta teleporteras kärlets ägare omedelbart till platsen för kärlet, och ägaren manifesteras inom 1t6 meter från kärlet. Handling: Reaktiv Korruption: 1T8, som dock binds i urnans runor och inte påverkar mästaren förrän mästarens ande lämnar kärlet."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar62",
+  "namn": "Salamandras mörkerlykta",
+  "beskrivning": "En fältlykta som sväljer ljus och sprider kolmörker där bara bäraren ser klart. Används för infiltration och reträtt utan att röja position. Lyktan har vandrat mellan skickliga agenter; här beskrivs enbart bruk och risker vid spelbordet.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Förflyttning"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Sprida mörker: När mörkerlyktans lucka öppnas sprider den mörker med samma radie som en vanlig lykta sprider ljus. Mörkret är kompakt men lyktans mästare kan se som vanligt i det; detsamma gäller dem med förmågan Sjätte sinne (mästare) eller särdrag som låter varelser se i totalt mörker. Styggelser och vandöda ser i mörkret utan problem, men bestar gör det inte. Mörkret följer lyktan och kraften slutar verka om mästaren släpper lyktan. I handen på någon med förmågan Lönnstöt blir lyktans mörker så djupt att endast lyktans mästare kan se igenom det. Handling: Aktiv Korruption: 1T4",
+    "Förmåga 2": "Mörkersteg: I handen på någon med förmågan Fint kan lyktan teleportera mästaren mellan områden med kolmörker. Kraven är att mästaren kan se sin nästa destination samt att Sprida mörker är aktiv. Handling: Förflyttning Korruption: 1T4"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar63",
+  "namn": "Världsklyvaren",
+  "beskrivning": "Ett tvåhandssvärd med vågigt blad vars egentliga kraft vaknar hos bärare med minst ett styggelsemärke; annars fungerar det som ett vanligt tvåhandssvärd. Effekten kan triggas även via ritualen Byta skugga om bäraren lånar en skugga med permanent korruption som ger styggelsemärke. Nedan beskrivs enbart spelpåverkan.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt", "Vapen"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"],
+      "Förmåga 2": ["Reaktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Demonfödsel: Vapnets mästare kan klyva verkligheten istället för en fiende, och föda en daemon ur såret. Daemonen lyder bäraren under en scen, och sedan sugs den tillbaka in i världssåret. Daemonen har värden som en Inkräktare (se Symbaroums Monsterkodex, sida 166). Handling: Aktiv Korruption: 1T6",
+    "Förmåga 2": "Blodig förvisning: En mästare med förmågan Tvåhandskraft kan angripa en fiende och klyva verkligheten med samma attack. En fiende som skadas av detta stygga angrepp måste slå över skadan med 1t20 eller sugas ut i Bortomvärlden. Ute i det ylande vansinnet tar offret 1t6–3 korruption per runda. Ett slag mot Viljestark får slås varje runda, om det lyckas kommer offret tillbaka till de levandes värld igen. Om offret förstyggas under sin vistelse i Bortomvärlden återkommer varelsen genast, som en dragoul under kontroll av Världsklyvarens mästare. Handling: Reaktiv Korruption: 1T6"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar64",
+  "namn": "Xtalas timglas",
+  "beskrivning": "Ett timglas knutet till tidens flöde. Användaren kan frysa rundor till ett högt personligt pris. Här återges endast regler för bruk, utan berättelsedetaljer som pekar ut platser eller personer.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Aktiv"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Tidens sand: Artefaktens mästare kan låta sand rinna igenom glaset och på så sätt stoppa tiden mätt i rundor. Under dessa rundor får användaren agera ensam, och effekten av alla handlingar sker när tiden börjar röra sig igen. Varje runda som mästaren agerar utanför tiden åldrar denne ett år. Dessutom måste mästaren slå 1t20 varje runda; om utfallet är samma eller lägre än antalet rundor som mästaren har agerat utanför tiden under den innevarande scenen faller mästaren död till marken. Det går att inte att slå om detta slag; tiden är obeveklig i sin hämnd. Handling: Aktiv Korruption: 1T4 per runda utanför tiden"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
+},
+{
+  "id": "ar65",
+  "namn": "Återuppståndelsens sten",
+  "beskrivning": "Ett grovt granitblock som i rätt händer kan byta liv mot liv. Texten nedan fokuserar på de två ritualerna och deras kostnader, utan att ange platser eller historiska aktörer.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": ["Artefakt"],
+    "handling": {
+      "Förmåga 1": ["Ritual"],
+      "Förmåga 2": ["Ritual"]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Frivilligt offer: Den som binder sig till stenen kan offra sig för att låta en annan varelse återuppstå från de döda. Den som offrar sig måste vara fri från korruption, det kravet gäller inte den som återuppstår. Däremot måste något av den dödes kropp – aska, ett fingerben eller en lock hår – läggas på stenen som sedan översköljs med offrets blod. Då återformas den uppväckte på platsen, precis som den var innan den dog. Kroppen är helt helad från skador men har samma korruption som vid dödstillfället. Handling: Ritual (cirka en timme) Korruption: Ingen",
+    "Förmåga 2": "Tvångsoffer: En mästare med förmågan Svartkonst kan offra en ovillig kulturvarelse för att låta en annan kulturvarelse återuppstå från de döda. Återuppståndelsen är annars densamma som vid ett frivilligt offer. Handling: Ritual (cirka en timme) Korruption: 1T8, varav ett permanent"
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
 }
 ]
