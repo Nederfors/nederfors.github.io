@@ -137,9 +137,15 @@
   }
 
   function explodeTags(arr){
+    const map = {
+      'H\u00e4xa': 'H\u00e4xkonst',
+      'Ordensmagiker': 'Ordensmagi',
+      'Teurg': 'Teurgi'
+    };
     return (arr || [])
       .flatMap(v => v.split(',').map(t => t.trim()))
-      .filter(Boolean);
+      .filter(Boolean)
+      .map(t => map[t] || t);
   }
 
   function splitQuals(val){
