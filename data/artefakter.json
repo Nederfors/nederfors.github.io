@@ -981,7 +981,7 @@
     },
     "nivåer": {
       "Förmåga 1": "Tankeöverföring; Handling: Aktiv\nRingens mästare kan överföra ett kort meddelande till någon som denne har sett och som befinner sig i närområdet – förslagsvis inom hundra meter och med max tio ord om exakthet är av betydelse. Meddelandet uppstår som en tanke i mottagarens huvud, så avsändaren kan inte identifieras med hjälp av språk, röst eller andra kännetecken. I förhandlingssituationen ger användandet av Tankeöverföring +2 på alla slag mot Övertygande. Korruption: 1.",
-      "Förmåga 2": "Fängsla; Handling: Speciell\nOm artefaktens mästare behärskar den mystiska kraften Förvirring kan kraftens energier förstärkas så att inget framgångsslag behöver slås. Effekten blir Passivt att offret står handlingsförlamat under det antal rundor som mästaren väljer att hålla kraften igång. Villkor: Fri handling. Korruption: 1T6 per runda."
+      "Förmåga 2": "Fängsla; Handling: Speciell\nOm artefaktens mästare behärskar den mystiska kraften Förvirring kan kraftens energier förstärkas så att inget framgångsslag behöver slås. Effekten blir automatiskt att offret står handlingsförlamat under det antal rundor som mästaren väljer att hålla kraften igång. Villkor: Fri handling. Korruption: 1T6 per runda."
     },
     "stat": {
       "skada": "",
