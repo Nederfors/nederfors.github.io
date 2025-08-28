@@ -537,7 +537,8 @@ function initIndex() {
                 )
               );
               if (!hasYrke) {
-                const msg = `Du har inte r\u00e4tt yrke; om du \u00e4nd\u00e5 vill ha ${p.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
+                const reqTxt = reqYrken.join(', ');
+                const msg = `Du har inte r\u00e4tt ark-trad (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${p.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
                 const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
                 if (!ok) return;
                 rowBase.priceMult = 10;
