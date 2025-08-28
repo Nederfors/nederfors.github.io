@@ -500,6 +500,7 @@ function initIndex() {
     if (act==='add') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
+        const list = storeHelper.getCurrentList(store);
         if (p.namn === 'Fältutrustning') {
           FALT_BUNDLE.forEach(namn => {
             const ent = invUtil.getEntry(namn);
@@ -527,6 +528,20 @@ function initIndex() {
           const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t=>p.taggar.typ.includes(t));
           const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
           const tagTyp = p.taggar?.typ || [];
+          if (tagTyp.includes('L\u00e4gre Artefakt')) {
+            const reqYrken = explodeTags(p.taggar?.ark_trad);
+            if (reqYrken.length) {
+              const hasYrke = reqYrken.some(yrke =>
+                list.some(it => isYrke(it) && it.namn === yrke)
+              );
+              if (!hasYrke) {
+                const msg = `Du har inte r\u00e4tt yrke; om du \u00e4nd\u00e5 vill ha ${p.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
+                const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
+                if (!ok) return;
+                rowBase.priceMult = 10;
+              }
+            }
+          }
           if (tagTyp.includes('Artefakt')) {
             const choice = await openDialog('Betala 1 XP eller ta +1 permanent korruption?', {
               cancel: true,
