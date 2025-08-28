@@ -3,8 +3,9 @@ function initIndex() {
   if (dom.cName) {
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
   }
-  const F = { search:[], typ:[], ark:[], test:[] };
-  let sTemp = '';
+   const F = { search:[], typ:[], ark:[], test:[] };
+   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+   let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
   let compact = storeHelper.getCompactEntries(store);
@@ -531,11 +532,19 @@ function initIndex() {
           if (tagTyp.includes('L\u00e4gre Artefakt')) {
             const reqYrken = explodeTags(p.taggar?.ark_trad);
             if (reqYrken.length) {
-              const hasYrke = reqYrken.some(req =>
+              const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+              const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
+              const artLevel = Math.max(partyArt, skillArt);
+              const lvlName = Object.keys(p.niv\u00e5er || {}).find(l=>l) || '';
+              const itemLevel = LEVEL_IDX[lvlName] || 0;
+              let hasYrke = reqYrken.some(req =>
                 list.some(it =>
                   isYrke(it) && explodeTags([it.namn]).includes(req)
                 )
               );
+              if (!hasYrke && artLevel >= itemLevel) {
+                hasYrke = true;
+              }
               if (!hasYrke) {
                 const reqTxt = reqYrken.join(', ');
                 const msg = `Du har inte r\u00e4tt yrke (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${p.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
