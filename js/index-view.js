@@ -531,8 +531,10 @@ function initIndex() {
           if (tagTyp.includes('L\u00e4gre Artefakt')) {
             const reqYrken = explodeTags(p.taggar?.ark_trad);
             if (reqYrken.length) {
-              const hasYrke = reqYrken.some(yrke =>
-                list.some(it => isYrke(it) && it.namn === yrke)
+              const hasYrke = reqYrken.some(req =>
+                list.some(it =>
+                  isYrke(it) && explodeTags([it.namn]).includes(req)
+                )
               );
               if (!hasYrke) {
                 const msg = `Du har inte r\u00e4tt yrke; om du \u00e4nd\u00e5 vill ha ${p.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;

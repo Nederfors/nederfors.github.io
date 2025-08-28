@@ -139,8 +139,12 @@
   function explodeTags(arr){
     const map = {
       'H\u00e4xa': 'H\u00e4xkonst',
+      'H\u00e4xkonst': 'H\u00e4xkonst',
+      'H\u00e4xkonster': 'H\u00e4xkonst',
       'Ordensmagiker': 'Ordensmagi',
-      'Teurg': 'Teurgi'
+      'Ordensmagi': 'Ordensmagi',
+      'Teurg': 'Teurgi',
+      'Teurgi': 'Teurgi'
     };
     return (arr || [])
       .flatMap(v => v.split(',').map(t => t.trim()))
