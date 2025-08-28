@@ -5,6 +5,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Ordensmagiker"
       ]
     },
     "nivåer": {
@@ -25,7 +28,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Novis": "En figurin, ofta en padda, som fungerar som ett larm. Användaren – som måste behärska minst en mystisk kraft – viskar ett kriterium till figurinen: kriteriet måste vara fysiskt och ske i närheten av golpaddan, så som att ”någon passerar i gläntan” eller att ”dörren öppnas utifrån”. Golpaddan avger en högljudd kväkning som väcker alla närvarande när kriteriet uppfylls."
@@ -45,7 +49,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Novis": "En sten laddas med en inbjudan till en viss person, som då instinktivt förstår var stenens ägare väntar i ögonblicket då stenen vidrörs. Endast en varelse som behärskar en mystisk kraft kan hantera en mötessten."
@@ -65,6 +70,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Ordensmagiker"
       ]
     },
     "nivåer": {
@@ -85,6 +93,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Teurg"
       ]
     },
     "nivåer": {
@@ -105,7 +116,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Novis": "En ritual nedtecknas i en kodex på ett sådant sätt att en annan ritualist kan använda den, trots att de inte behärskar ritualen. Kodexen förbrukas när ritualen används."
@@ -125,7 +137,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Novis": "En liten spindelfigurin läggs på ett öppet sår. Där spinner den snabbt in sig själv och skadan, som sedan läker snabbt, 1t12 Tålighet under ett dygn. Spindeln har ingen effekt på skada av gifter eller andra inre tillstånd. Spindeln kryper upp ur såret när dess läkning är gjord, och kan sedan användas igen på nya skador. Den sårläkande spindeln ger 1t4 temporär Korruption till den som helas."
@@ -145,6 +158,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Grönvävare"
       ]
     },
     "nivåer": {
@@ -165,6 +181,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Blodvadare"
       ]
     },
     "nivåer": {
@@ -192,6 +211,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Nekromantiker"
       ]
     },
     "nivåer": {
@@ -212,6 +234,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Ordensmagiker"
       ]
     },
     "nivåer": {
@@ -232,7 +257,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
@@ -252,7 +278,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
@@ -272,6 +299,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Pyromantiker"
       ]
     },
     "nivåer": {
@@ -292,6 +322,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Häxa"
       ]
     },
     "nivåer": {
@@ -312,6 +345,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Mentalist"
       ]
     },
     "nivåer": {
@@ -332,6 +368,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Demonolog"
       ]
     },
     "nivåer": {
@@ -352,7 +391,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Gesäll": "Ett guldmynt som har tursamma energier bundna till sig. Myntet bärs i fickan och ger +1 på ett framgångsslag, användbart en gång per scen. Den som leker med sådana krafter riskerar dock att drabbas av dess motsats; om slaget som myntet modifierar blir 20 kommer bäraren att ha otur under resten av scenen, motsvarat av att alla framgångsslag får en andra chans att misslyckas."
@@ -372,7 +412,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Gesäll": "Skinnet av en skygg marlit, en mästerligt smygjagande ödla, som genom behandling med särskilt bevarande kemikalier behållit sina kameleontlika egenskaper efter bestens död. Bäraren får +1 i Diskret när det gäller att smyga och gömma sig."
@@ -392,7 +433,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Gesäll": "Ett traditionsspecifikt objekt som ger +1 på alla framgångsslag för ritualer ur en viss mystisk tradition."
@@ -412,6 +454,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Teurg"
       ]
     },
     "nivåer": {
@@ -432,6 +477,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Stavmagiker"
       ]
     },
     "nivåer": {
@@ -452,6 +500,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Stavmagiker"
       ]
     },
     "nivåer": {
@@ -472,6 +523,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Andebesvärjare"
       ]
     },
     "nivåer": {
@@ -492,6 +546,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Illusionist"
       ]
     },
     "nivåer": {
@@ -513,7 +570,8 @@
       "typ": [
         "Lägre Artefakt",
         "Vapen"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Mästare": "Ett vapen som smids med kraften att slå, sticka eller skära på avstånd. Endast mystiker (definierat som någon som besitter en mystisk kraft) förstår hur denna kraft kan användas. Attackerna slås som i närstrid men verkar på avstånd och de kräver fritt skottfält, som andra avståndsattacker. Aktiva förmågor kan användas men på en nivå lägre än annars: en mästare kan använda en gesällförmåga genom ett fjärrvapen, en gesäll kan nyttja förmågan på novisnivå. En novis kan inte använda förmågan tillsammans med fjärrvapen."
@@ -533,6 +591,9 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Ordensmagiker"
       ]
     },
     "nivåer": {
@@ -553,7 +614,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Mästare": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
@@ -573,7 +635,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Mästare": "Ett traditionspecifikt fokus som ger +1 på slag för traditionens samtliga mystiska krafter, dock kan det endast användas en gång per scen. Däremot kan dess bonus då användas tillsammans med eventuella andra lägre artefakter som ger bonus på framgångsslag för den mystiska kraften i fråga. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
@@ -593,7 +656,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Mästare": "Artefaktmakaren binder en ritual i ett sigill, som när det bryts utlöser ritualens effekt. Skaparen av sigillet måste inte själv behärska ritualen men behöver någon med sig som kan ritualen vid skapandet av sigillet, eller ha tillgång till en ritualkodex med ritualen (kodexen förstörs då när sigillet skapas). Den som bryter sigillet drabbas av temporär korruption som vanligt."
@@ -614,6 +678,9 @@
       "typ": [
         "Lägre Artefakt",
         "Vapen"
+      ],
+      "ark_trad": [
+        "Stavmagiker"
       ],
       "kvalitet": [
         "Balanserat",
@@ -639,7 +706,8 @@
     "taggar": {
       "typ": [
         "Lägre Artefakt"
-      ]
+      ],
+      "ark_trad": []
     },
     "nivåer": {
       "Mästare": "Det föremål som krävs för utförande av ritualen med samma namn."
