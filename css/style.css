@@ -341,16 +341,15 @@ input:focus, select:focus, textarea:focus {
 /* Hide default price line in compact; use badges instead */
 .card.compact .card-price { display: none; }
 
-/* Always-visible compact meta badges (P, V, level) */
+/* Meta badges (P, V, level) */
 .meta-badges {
-  display: none;
+  display: inline-flex;
   gap: .35rem;
   align-items: center;
   margin-right: auto; /* push buttons to the right */
   flex: 1 1 auto;
   min-width: 0;
 }
-.card.compact .meta-badges { display: inline-flex; }
 .meta-badge {
   background: var(--border);
   color: var(--txt);
