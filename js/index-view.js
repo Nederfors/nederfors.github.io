@@ -120,12 +120,12 @@ function initIndex() {
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
     const onlySel = storeHelper.getOnlySelected(store);
-    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+    const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
     const nameSet = onlySel
       ? new Set(storeHelper.getCurrentList(store).map(x => x.namn))
       : null;
-    if (!showArtifacts && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1 && !sTemp) {
+    if (!showArtifacts && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1) {
       const term = terms[0];
       const art = DB.find(p => isArtifact(p) && searchNormalize((p.namn || '').toLowerCase()) === term);
       if (art) {
@@ -170,7 +170,7 @@ function initIndex() {
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
     const cats = {};
-    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+    const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
     const searchActive = terms.length > 0;
     const catNameMatch = {};
@@ -405,7 +405,6 @@ function initIndex() {
   /* -------- events -------- */
   dom.sIn.addEventListener('input',()=>{
     sTemp = dom.sIn.value.trim();
-    activeTags(); renderList(filtered());
     updateSearchDatalist();
   });
   {
@@ -414,11 +413,18 @@ function initIndex() {
       sugEl.addEventListener('click', e => {
         const it = e.target.closest('.item');
         if (!it) return;
-        const val = it.dataset.val || '';
-        dom.sIn.value = val;
-        sTemp = val.trim();
+        const val = (it.dataset.val || '').trim();
+        if (val && !F.search.includes(val)) F.search.push(val);
+        if (val && window.storeHelper?.addRecentSearch) {
+          storeHelper.addRecentSearch(store, val);
+        }
+        dom.sIn.value = '';
+        sTemp = '';
         updateSearchDatalist();
+        activeTags();
+        renderList(filtered());
         dom.sIn.focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
   }
