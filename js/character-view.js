@@ -258,7 +258,7 @@ function initCharacter() {
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
     const onlySel = storeHelper.getOnlySelected(store);
-    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+    const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
     const base = storeHelper.getCurrentList(store);
     const nameSet = onlySel ? new Set(base.map(x => x.namn)) : null;
@@ -480,9 +480,6 @@ function initCharacter() {
   /* --- filter-events */
   dom.sIn.addEventListener('input', ()=>{
     sTemp = dom.sIn.value.trim();
-    activeTags();
-    renderSkills(filtered());
-    renderTraits();
     updateSearchDatalist();
   });
   {
