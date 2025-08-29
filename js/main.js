@@ -171,6 +171,8 @@ if (dom.sIn) {
     searchFocus = true;
   });
   dom.sIn.addEventListener('blur', () => {
+    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+    if (sugEl) sugEl.hidden = true;
     if (searchFocus) {
       searchFocus = false;
       history.back();
@@ -178,6 +180,10 @@ if (dom.sIn) {
   });
   dom.sIn.addEventListener('keydown', e => {
     if (e.key === 'Enter') dom.sIn.blur();
+    else if (e.key === 'Escape' && window.matchMedia('(pointer: fine)').matches) {
+      e.preventDefault();
+      dom.sIn.blur();
+    }
   });
   dom.searchSug?.addEventListener('click', e => {
     if (e.target.closest('.item')) dom.sIn.blur();
@@ -187,6 +193,8 @@ if (dom.sIn) {
 window.addEventListener('popstate', () => {
   if (searchFocus && document.activeElement === dom.sIn) {
     searchFocus = false;
+    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+    if (sugEl) sugEl.hidden = true;
     dom.sIn.blur();
   }
 });
