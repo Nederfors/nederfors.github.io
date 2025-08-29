@@ -282,22 +282,22 @@ class SharedToolbar extends HTMLElement {
           <ul class="toggle-list">
             <li>
               <span class="toggle-desc">
-                <span class="toggle-question">Har du en smed i partyt?</span>
+                <span class="toggle-question">Smed i partyt?</span>
                 <span class="toggle-note">Halverar priset beroende på smideskonstnivå.</span>
               </span>
               <button id="partySmith" class="party-toggle">⚒️</button>
             </li>
             <li>
               <span class="toggle-desc">
-                <span class="toggle-question">Har du en alkemist i partyt?</span>
+                <span class="toggle-question">Alkemist i partyt?</span>
                 <span class="toggle-note">Halverar priset på elixir beroende på alkemistnivå.</span>
               </span>
               <button id="partyAlchemist" class="party-toggle">⚗️</button>
             </li>
             <li>
               <span class="toggle-desc">
-              <span class="toggle-question">Har du en artefaktmakare i partyt?</span>
-              <span class="toggle-note">Halverar priset på tillåter inköp av samtliga lägre artefakter till N/G/M.</span>
+              <span class="toggle-question">Artefaktmakare i partyt?</span>
+              <span class="toggle-note">Halverar priset på och tillåter inköp av samtliga lägre artefakter till N/G/M.</span>
               </span>
               <button id="partyArtefacter" class="party-toggle">🏺</button>
             </li>
@@ -639,7 +639,7 @@ class SharedToolbar extends HTMLElement {
             <strong>Lägg till / +</strong> lägger till posten.<br>
             <strong>−</strong> minskar antal eller tar bort posten.<br>
             <strong>Info</strong> visar detaljer.<br>
-            <strong>🏋🏻‍♂️</strong> "lägg till med förmågor" lägger till elityrket tillsammans med dess förmågor.<br>
+            <strong>🏋🏻‍♂️</strong> Lägger till elityrket tillsammans med dess krav på förmågor.<br>
             <strong>🔨</strong> lägger till kvalitet.<br>
             <strong>☭</strong> markerar en kostande kvalitet som gratis.<br>
             <strong>🆓</strong> gör ett föremål gratis.<br>
