@@ -338,7 +338,7 @@ input:focus, select:focus, textarea:focus {
 /* Hide default price line in compact; use badges instead */
 .card.compact .card-price { display: none; }
 
-/* Always-visible compact meta badges (Pris, Nivå, Vikt) */
+/* Always-visible compact meta badges (P, V, level) */
 .meta-badges {
   display: none;
   gap: .35rem;
