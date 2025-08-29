@@ -333,7 +333,7 @@ function initIndex() {
         if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeText}: ${priceText}</span>`);
         if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
         if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
-        const metaBadges = compact && badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
+        const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
         if (infoTagsHtml) {
           infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
         }
