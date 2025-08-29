@@ -92,6 +92,17 @@
       setTimeout(() => { isPop = false; });
     }
   });
+
+  // Close open menus/panels with Escape on desktop devices
+  window.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    // Detect desktop by fine pointer (e.g. mouse)
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (overlayStack.length > 0) {
+      e.preventDefault();
+      history.back();
+    }
+  });
 })();
 
 /* ---------- Grunddata & konstanter ---------- */
