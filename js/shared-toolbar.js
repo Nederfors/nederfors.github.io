@@ -35,6 +35,14 @@ class SharedToolbar extends HTMLElement {
       window.visualViewport.addEventListener('resize', this._vvHandler);
       window.visualViewport.addEventListener('scroll', this._vvHandler);
       this._vvHandler();
+
+      // Recalculate toolbar position after the search field loses focus.
+      // iOS sometimes keeps an extra offset after the keyboard closes,
+      // so run the handler again once the viewport has settled.
+      const searchIn = this.shadowRoot.getElementById('searchField');
+      searchIn?.addEventListener('blur', () =>
+        setTimeout(this._vvHandler, 100)
+      );
     }
 
     this.cache();
