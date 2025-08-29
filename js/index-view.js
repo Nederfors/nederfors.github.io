@@ -313,8 +313,8 @@ function initIndex() {
         const lvlShort = lvlBadgeVal === 'Mästare' ? 'M' : (lvlBadgeVal === 'Gesäll' ? 'G' : (lvlBadgeVal === 'Novis' ? 'N' : ''));
         const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
         const badgeParts = [];
-        if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">P:${priceText}</span>`);
-        if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V:${weightVal}</span>`);
+        if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">P: ${priceText}</span>`);
+        if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
         if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
         const metaBadges = compact && badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
         if (infoTagsHtml) {
