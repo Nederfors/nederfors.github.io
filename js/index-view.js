@@ -354,7 +354,7 @@ function initIndex() {
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
         const showInfo = compact || hideDetails;
         const eliteBtn = isElityrke(p)
-          ? `<button class="char-btn" data-elite-req="${p.namn}">Lägg till med förmågor</button>`
+          ? `<button class="char-btn" data-elite-req="${p.namn}">🏋🏻‍♂️</button>`
           : '';
         const allowAdd = !(isService(p) || isEmployment(p));
         let btn = '';

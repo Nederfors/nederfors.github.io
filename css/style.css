@@ -596,10 +596,6 @@ select.level {
     padding: .3rem .5rem;
     font-size: .9rem;
   }
-  .inv-controls .char-btn[data-elite-req] {
-    padding: .15rem .25rem;
-    font-size: .45rem;
-  }
   .inv-buttons { gap: .3rem; flex-wrap: wrap; }
   .inv-buttons .char-btn {
     padding: .35rem .6rem;
