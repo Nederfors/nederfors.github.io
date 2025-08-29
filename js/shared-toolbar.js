@@ -51,7 +51,11 @@ class SharedToolbar extends HTMLElement {
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
 
     /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
-    this._preventScroll = e => e.preventDefault();
+    this._preventScroll = e => {
+      if (!e.target.closest('[id$="Panel"].open, [id$="Popup"].open, .popup.open')) {
+        e.preventDefault();
+      }
+    };
     this.updateScrollLock = () => {
       const selector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open, #searchSuggest:not([hidden])';
       const docOpen = document.querySelector(selector);
