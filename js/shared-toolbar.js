@@ -20,14 +20,13 @@ class SharedToolbar extends HTMLElement {
     if (window.visualViewport) {
       this._vvHandler = () => {
         /*
-          Placera verktygsraden så långt ned som möjligt. Tidigare
-          justerades bottenpositionen efter tangentbordets höjd vilket
-          gav en extra offset även när tangentbordet inte var öppet.
-          För att alltid hålla verktygsraden dikt an mot skärmens
-          botten sätter vi botten till 0 och låter tangentbordet, om det
-          täcker verktygsraden, ligga ovanpå.
+          Lås verktygsraden precis ovanför tangentbordet. När tangent-
+          bordet inte är öppet blir offset noll och raden placeras mot
+          skärmens nederkant.
         */
-        toolbar.style.bottom = '0px';
+        const vv = window.visualViewport;
+        const offset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+        toolbar.style.bottom = offset + 'px';
       };
       window.visualViewport.addEventListener('resize', this._vvHandler);
       window.visualViewport.addEventListener('scroll', this._vvHandler);
