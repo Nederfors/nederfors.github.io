@@ -82,7 +82,13 @@ function initIndex() {
     const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
     if (!sugEl) return;
     const q = (dom.sIn?.value || '').trim();
-    if (q.length < 2) { sugEl.innerHTML = ''; sugEl.hidden = true; sugIdx = -1; return; }
+    if (q.length < 2) {
+      sugEl.innerHTML = '';
+      sugEl.hidden = true;
+      sugIdx = -1;
+      window.updateScrollLock?.();
+      return;
+    }
     const nq = searchNormalize(q.toLowerCase());
     const seen = new Set();
     const MAX = 50;
@@ -97,10 +103,17 @@ function initIndex() {
       items.push(name);
       if (items.length >= MAX) break;
     }
-    if (!items.length) { sugEl.innerHTML = ''; sugEl.hidden = true; sugIdx = -1; return; }
+    if (!items.length) {
+      sugEl.innerHTML = '';
+      sugEl.hidden = true;
+      sugIdx = -1;
+      window.updateScrollLock?.();
+      return;
+    }
     sugEl.innerHTML = items.map((v,i)=>`<div class="item" data-idx="${i}" data-val="${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}">${v}</div>`).join('');
     sugEl.hidden = false;
     sugIdx = -1;
+    window.updateScrollLock?.();
   };
   updateSearchDatalist();
 

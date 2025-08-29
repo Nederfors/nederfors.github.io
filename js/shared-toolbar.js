@@ -34,7 +34,7 @@ class SharedToolbar extends HTMLElement {
 
     /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
     this.updateScrollLock = () => {
-      const selector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open';
+      const selector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open, #searchSuggest:not([hidden])';
       const docOpen = document.querySelector(selector);
       const shadowOpen = this.shadowRoot.querySelector(selector);
       const anyOpen = docOpen || shadowOpen;
@@ -42,7 +42,7 @@ class SharedToolbar extends HTMLElement {
     };
     window.updateScrollLock = () => this.updateScrollLock();
 
-    const obsCfg = { attributes: true, attributeFilter: ['class'], subtree: true };
+    const obsCfg = { attributes: true, attributeFilter: ['class', 'hidden'], subtree: true };
     this._bodyObserver = new MutationObserver(this.updateScrollLock);
     this._bodyObserver.observe(document.body, obsCfg);
     this._shadowObserver = new MutationObserver(this.updateScrollLock);
@@ -681,6 +681,7 @@ class SharedToolbar extends HTMLElement {
       const insideSearch = path.includes(sugEl) || path.includes(sIn);
       if (!insideSearch) {
         sugEl.hidden = true;
+        this.updateScrollLock();
       }
     }
 
