@@ -19,9 +19,15 @@ class SharedToolbar extends HTMLElement {
     const toolbar = this.shadowRoot.querySelector('.toolbar');
     if (window.visualViewport) {
       this._vvHandler = () => {
-        const vv = window.visualViewport;
-        const offset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
-        toolbar.style.bottom = `${offset}px`;
+        /*
+          Placera verktygsraden så långt ned som möjligt. Tidigare
+          justerades bottenpositionen efter tangentbordets höjd vilket
+          gav en extra offset även när tangentbordet inte var öppet.
+          För att alltid hålla verktygsraden dikt an mot skärmens
+          botten sätter vi botten till 0 och låter tangentbordet, om det
+          täcker verktygsraden, ligga ovanpå.
+        */
+        toolbar.style.bottom = '0px';
       };
       window.visualViewport.addEventListener('resize', this._vvHandler);
       window.visualViewport.addEventListener('scroll', this._vvHandler);
@@ -46,6 +52,7 @@ class SharedToolbar extends HTMLElement {
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
 
     /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
+    this._preventScroll = e => e.preventDefault();
     this.updateScrollLock = () => {
       const selector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open, #searchSuggest:not([hidden])';
       const docOpen = document.querySelector(selector);
@@ -53,6 +60,13 @@ class SharedToolbar extends HTMLElement {
       const anyOpen = docOpen || shadowOpen;
       document.body.classList.toggle('menu-open', anyOpen);
       document.documentElement.classList.toggle('menu-open', anyOpen);
+      if (anyOpen) {
+        document.addEventListener('touchmove', this._preventScroll, { passive: false });
+        document.addEventListener('wheel', this._preventScroll, { passive: false });
+      } else {
+        document.removeEventListener('touchmove', this._preventScroll);
+        document.removeEventListener('wheel', this._preventScroll);
+      }
     };
     window.updateScrollLock = () => this.updateScrollLock();
 
@@ -77,6 +91,8 @@ class SharedToolbar extends HTMLElement {
     window.visualViewport?.removeEventListener('resize', this._vvHandler);
     window.visualViewport?.removeEventListener('scroll', this._vvHandler);
     document.removeEventListener('click', this._outsideHandler);
+    document.removeEventListener('touchmove', this._preventScroll);
+    document.removeEventListener('wheel', this._preventScroll);
     this._bodyObserver?.disconnect();
     this._shadowObserver?.disconnect();
   }
@@ -118,6 +134,7 @@ class SharedToolbar extends HTMLElement {
           box-shadow: 0 6px 18px rgba(0,0,0,.25);
           max-height: 40vh;
           overflow: auto;
+          overscroll-behavior: contain;
           z-index: 1200;
           padding: .25rem;
         }
