@@ -1397,6 +1397,7 @@ ${moneyRow}
           const priceText = formatMoney(
             calcRowCost(row, forgeLvl, alcLevel, artLevel)
           );
+          const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
           const weightText = formatWeight(rowWeight);
           const key = `${row.name}|${row.trait || ''}|${rowLevel || ''}`;
           let vehicleInfo = '';
@@ -1421,6 +1422,7 @@ ${moneyRow}
                 const centry = getEntry(c.name);
                 const ctagTyp = centry.taggar?.typ ?? [];
                 const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
+                const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
                 const cWeight = formatWeight(calcRowWeight(c));
                 const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
                 const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
@@ -1439,7 +1441,7 @@ ${moneyRow}
                 const cPath = `${realIdx}.${j}`;
                 return `<li class="card${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
                   <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
-                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">Pris: ${cPrice}</span><br>Vikt: ${cWeight}</div>
+                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br>Vikt: ${cWeight}</div>
                   <div class="inv-controls">
                     ${cBtnRow}
                     ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
@@ -1456,7 +1458,7 @@ ${moneyRow}
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
-                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">Pris: ${priceText}</span><br>Vikt: ${weightText}${vehicleInfo}
+                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br>Vikt: ${weightText}${vehicleInfo}
               </div>
               <div class="inv-controls">
                 ${btnRow}
