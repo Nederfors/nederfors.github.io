@@ -15,6 +15,25 @@
   // events arrive after fast clicks.
   let manualCloseCount = 0;
 
+  let scrollLocked = false;
+  let scrollY = 0;
+
+  function lockScroll() {
+    if (scrollLocked) return;
+    scrollY = window.scrollY || window.pageYOffset;
+    document.body.style.top = `-${scrollY}px`;
+    document.body.classList.add('no-scroll');
+    scrollLocked = true;
+  }
+
+  function unlockScroll() {
+    if (!scrollLocked) return;
+    document.body.classList.remove('no-scroll');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollY);
+    scrollLocked = false;
+  }
+
   function isOverlay(el) {
     if (!(el instanceof HTMLElement)) return false;
     if (el.classList.contains('popup') || el.classList.contains('offcanvas')) return true;
@@ -41,6 +60,11 @@
             history.back();
           }
         }
+      }
+      if (overlayStack.length > 0) {
+        lockScroll();
+      } else {
+        unlockScroll();
       }
     });
     obs.observe(root, { attributes: true, attributeFilter: ['class'], subtree: true });
