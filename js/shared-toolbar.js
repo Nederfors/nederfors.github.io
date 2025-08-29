@@ -297,7 +297,7 @@ class SharedToolbar extends HTMLElement {
             <li>
               <span class="toggle-desc">
               <span class="toggle-question">Har du en artefaktmakare i partyt?</span>
-              <span class="toggle-note">Halverar priset på lägre artefakter och tillåter inköp av samtliga lägre artefakter till N/G/M nivå utan prisökning.</span>
+              <span class="toggle-note">Halverar priset på tillåter inköp av samtliga lägre artefakter till N/G/M.</span>
               </span>
               <button id="partyArtefacter" class="party-toggle">🏺</button>
             </li>
