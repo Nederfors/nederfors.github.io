@@ -15,6 +15,17 @@ class SharedToolbar extends HTMLElement {
   /* ------------------------------------------------------- */
   connectedCallback() {
     this.render();
+
+    const toolbar = this.shadowRoot.querySelector('.toolbar');
+    if (window.visualViewport) {
+      this._vvHandler = () => {
+        const offset = Math.max(0, window.innerHeight - window.visualViewport.height);
+        toolbar.style.bottom = `${offset}px`;
+      };
+      window.visualViewport.addEventListener('resize', this._vvHandler);
+      this._vvHandler();
+    }
+
     this.cache();
     this.shadowRoot.addEventListener('click', e => this.handleClick(e));
     this._outsideHandler = e => this.handleOutsideClick(e);
@@ -56,6 +67,7 @@ class SharedToolbar extends HTMLElement {
   }
 
   disconnectedCallback() {
+    window.visualViewport?.removeEventListener('resize', this._vvHandler);
     document.removeEventListener('click', this._outsideHandler);
     this._bodyObserver?.disconnect();
     this._shadowObserver?.disconnect();
