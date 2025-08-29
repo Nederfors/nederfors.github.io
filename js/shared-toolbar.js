@@ -52,7 +52,10 @@ class SharedToolbar extends HTMLElement {
 
     /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
     this._preventScroll = e => {
-      if (!e.target.closest('[id$="Panel"].open, [id$="Popup"].open, .popup.open')) {
+      const openSelector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open';
+      const path = e.composedPath();
+      const insideOpen = path.some(el => el instanceof Element && el.matches(openSelector));
+      if (!insideOpen) {
         e.preventDefault();
       }
     };
@@ -61,9 +64,11 @@ class SharedToolbar extends HTMLElement {
       const docOpen = document.querySelector(selector);
       const shadowOpen = this.shadowRoot.querySelector(selector);
       const anyOpen = docOpen || shadowOpen;
-      document.body.classList.toggle('menu-open', anyOpen);
-      document.documentElement.classList.toggle('menu-open', anyOpen);
-      if (anyOpen) {
+      const role = document.body.dataset.role;
+      const lock = anyOpen && (role === 'index' || role === 'character');
+      document.body.classList.toggle('menu-open', lock);
+      document.documentElement.classList.toggle('menu-open', lock);
+      if (lock) {
         document.addEventListener('touchmove', this._preventScroll, { passive: false });
         document.addEventListener('wheel', this._preventScroll, { passive: false });
       } else {
