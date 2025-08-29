@@ -1,11 +1,10 @@
-const CACHE_NAME = 'symbaroum-pwa-v2';
+const CACHE_NAME = 'symbaroum-pwa-v4';
 const URLS_TO_CACHE = [
-  '/',
-  '/index.html',
-  '/character.html',
-  '/notes.html',
-  '/css/style.css',
-  '/icons/icon_DA'
+  'index.html',
+  'character.html',
+  'notes.html',
+  'css/style.css',
+  'icons/icon_DA'
 ];
 
 self.addEventListener('install', event => {

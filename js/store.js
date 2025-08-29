@@ -28,7 +28,8 @@
       data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{xp:0,corruption:0} } }
       filterUnion: false,
       compactEntries: false,
-      onlySelected: false
+      onlySelected: false,
+      recentSearches: []
     };
   }
 
@@ -99,6 +100,31 @@
 
   function save(store) {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+  }
+
+  /* ---------- 2b. Senaste sökningar ---------- */
+  const MAX_RECENT_SEARCHES = 10;
+
+  function getRecentSearches(store) {
+    try {
+      const arr = Array.isArray(store.recentSearches) ? store.recentSearches : [];
+      return arr.slice(0, MAX_RECENT_SEARCHES);
+    } catch {
+      return [];
+    }
+  }
+
+  function addRecentSearch(store, term) {
+    const t = String(term || '').trim();
+    if (!t) return;
+    // Ignorera interna kommandon
+    const blocked = ['webapp','lol','molly<3'];
+    if (blocked.includes(t.toLowerCase())) return;
+    const cur = Array.isArray(store.recentSearches) ? store.recentSearches : [];
+    const filtered = cur.filter(x => String(x || '').toLowerCase() !== t.toLowerCase());
+    filtered.unshift(t);
+    store.recentSearches = filtered.slice(0, MAX_RECENT_SEARCHES);
+    save(store);
   }
 
   /* ---------- 3. Förmåge­lista per karaktär ---------- */
@@ -1121,6 +1147,8 @@ function defaultTraits() {
   global.storeHelper = {
     load,
     save,
+    getRecentSearches,
+    addRecentSearch,
     getCurrentList,
     setCurrentList,
     getInventory,

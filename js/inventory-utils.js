@@ -3,7 +3,20 @@
    =========================================================== */
 
 (function(window){
-  const F = { typ: '' };
+  const F = { typ: '', invTxt: '' };
+  // Bring shared currency bases into local scope
+  const SBASE = window.SBASE;
+  const OBASE = window.OBASE;
+  // Local helper to safely access the toolbar shadow root without relying on main.js scope
+  const getToolbarRoot = () => {
+    const el = document.querySelector('shared-toolbar');
+    return el && el.shadowRoot ? el.shadowRoot : null;
+  };
+  // Local $T that queries inside the toolbar shadow root (falls back to null if unavailable)
+  const $T = (id) => {
+    const root = getToolbarRoot();
+    return root ? root.getElementById(id) : null;
+  };
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
@@ -117,6 +130,38 @@
     }, []);
   }
 
+  function getRowByPath(inv, path) {
+    let arr = inv;
+    let row = null;
+    for (let i = 0; i < path.length; i++) {
+      const idx = path[i];
+      row = arr[idx];
+      if (!row) return { row: null, parentArr: null, idx: -1 };
+      if (i < path.length - 1) arr = row.contains || [];
+    }
+    return { row, parentArr: arr, idx: path[path.length - 1] };
+  }
+
+  function parsePathStr(str) {
+    return str.split('.').map(n => Number(n)).filter(n => !Number.isNaN(n));
+  }
+
+  function sortPathsDesc(pathStrs) {
+    return [...pathStrs]
+      .map(s => ({ s, a: parsePathStr(s) }))
+      .sort((x, y) => {
+        const a = x.a, b = y.a;
+        for (let i = 0; i < Math.max(a.length, b.length); i++) {
+          const av = a[i], bv = b[i];
+          if (av === undefined) return 1;
+          if (bv === undefined) return -1;
+          if (av !== bv) return bv - av;
+        }
+        return 0;
+      })
+      .map(o => o.s);
+  }
+
   function recalcArtifactEffects() {
     const inv = flattenInventory(storeHelper.getInventory(store));
     const effects = inv.reduce((acc, row) => {
@@ -161,6 +206,17 @@
     storeHelper.save(store);
   }
 
+  function rowMatchesText(row, txt) {
+    if (!txt) return true;
+    const t = String(txt).toLowerCase();
+    const name = String(row.name || '').toLowerCase();
+    if (name.includes(t)) return true;
+    if (Array.isArray(row.contains)) {
+      return row.contains.some(ch => rowMatchesText(ch, t));
+    }
+    return false;
+  }
+
   function sortQualsForDisplay(list) {
     return list.slice().sort((a, b) => {
       const nameA = (typeof a === 'object' && a !== null) ? a.q : a;
@@ -177,9 +233,11 @@
   }
 
   function openQualPopup(list, callback) {
-    const pop  = bar.shadowRoot.getElementById('qualPopup');
-    const box  = bar.shadowRoot.getElementById('qualOptions');
-    const cls  = bar.shadowRoot.getElementById('qualCancel');
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop  = root.getElementById('qualPopup');
+    const box  = root.getElementById('qualOptions');
+    const cls  = root.getElementById('qualCancel');
 
     const nameMap = makeNameMap(storeHelper.getInventory(store));
     /* bygg knappar: stöd både namn och name */
@@ -223,18 +281,20 @@
   }
 
   function openCustomPopup(callback) {
-    const pop   = bar.shadowRoot.getElementById('customPopup');
-    const name  = bar.shadowRoot.getElementById('customName');
-    const type  = bar.shadowRoot.getElementById('customType');
-    const wIn   = bar.shadowRoot.getElementById('customWeight');
-    const effBox= bar.shadowRoot.getElementById('customArtifactEffect');
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop   = root.getElementById('customPopup');
+    const name  = root.getElementById('customName');
+    const type  = root.getElementById('customType');
+    const wIn   = root.getElementById('customWeight');
+    const effBox= root.getElementById('customArtifactEffect');
     const effSel= effBox ? effBox.querySelector('select') : null;
-    const dIn   = bar.shadowRoot.getElementById('customDaler');
-    const sIn   = bar.shadowRoot.getElementById('customSkilling');
-    const oIn   = bar.shadowRoot.getElementById('customOrtegar');
-    const desc  = bar.shadowRoot.getElementById('customDesc');
-    const add   = bar.shadowRoot.getElementById('customAdd');
-    const cancel= bar.shadowRoot.getElementById('customCancel');
+    const dIn   = root.getElementById('customDaler');
+    const sIn   = root.getElementById('customSkilling');
+    const oIn   = root.getElementById('customOrtegar');
+    const desc  = root.getElementById('customDesc');
+    const add   = root.getElementById('customAdd');
+    const cancel= root.getElementById('customCancel');
 
     const equipOptions = EQUIP
       .slice()
@@ -296,13 +356,15 @@
   }
 
   function openMoneyPopup() {
-    const pop   = bar.shadowRoot.getElementById('moneyPopup');
-    const dIn   = bar.shadowRoot.getElementById('moneyDaler');
-    const sIn   = bar.shadowRoot.getElementById('moneySkilling');
-    const oIn   = bar.shadowRoot.getElementById('moneyOrtegar');
-    const setBtn= bar.shadowRoot.getElementById('moneySetBtn');
-    const addBtn= bar.shadowRoot.getElementById('moneyAddBtn');
-    const cancel= bar.shadowRoot.getElementById('moneyCancel');
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop   = root.getElementById('moneyPopup');
+    const dIn   = root.getElementById('moneyDaler');
+    const sIn   = root.getElementById('moneySkilling');
+    const oIn   = root.getElementById('moneyOrtegar');
+    const setBtn= root.getElementById('moneySetBtn');
+    const addBtn= root.getElementById('moneyAddBtn');
+    const cancel= root.getElementById('moneyCancel');
 
     // Fälten ska börja tomma oavsett aktuell summa pengar
     dIn.value = sIn.value = oIn.value = '';
@@ -371,10 +433,12 @@
   }
 
   function openQtyPopup() {
-    const pop   = bar.shadowRoot.getElementById('qtyPopup');
-    const inEl  = bar.shadowRoot.getElementById('qtyInput');
-    const list  = bar.shadowRoot.getElementById('qtyItemList');
-    const cancel= bar.shadowRoot.getElementById('qtyCancel');
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop   = root.getElementById('qtyPopup');
+    const inEl  = root.getElementById('qtyInput');
+    const list  = root.getElementById('qtyItemList');
+    const cancel= root.getElementById('qtyCancel');
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
@@ -451,11 +515,13 @@
   }
 
   function openPricePopup() {
-    const pop    = bar.shadowRoot.getElementById('pricePopup');
-    const inEl   = bar.shadowRoot.getElementById('priceFactor');
-    const list   = bar.shadowRoot.getElementById('priceItemList');
-    const apply  = bar.shadowRoot.getElementById('priceApply');
-    const cancel = bar.shadowRoot.getElementById('priceCancel');
+    const root    = getToolbarRoot();
+    if (!root) return;
+    const pop    = root.getElementById('pricePopup');
+    const inEl   = root.getElementById('priceFactor');
+    const list   = root.getElementById('priceItemList');
+    const apply  = root.getElementById('priceApply');
+    const cancel = root.getElementById('priceCancel');
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
@@ -505,8 +571,9 @@
         if (row) row.priceMult = (row.priceMult || 1) * factor;
       });
       saveInventory(inv);
-      renderInventory();
+      // Stäng popuppen innan omrendering för snabbare feedback
       close();
+      renderInventory();
     };
     const onCancel = () => { close(); };
     const onOutside = e => {
@@ -518,12 +585,60 @@
     pop.addEventListener('click', onOutside);
   }
 
-function openVehiclePopup(preselectId) {
-    const pop    = bar.shadowRoot.getElementById('vehiclePopup');
-    const sel    = bar.shadowRoot.getElementById('vehicleSelect');
-    const list   = bar.shadowRoot.getElementById('vehicleItemList');
-    const apply  = bar.shadowRoot.getElementById('vehicleApply');
-    const cancel = bar.shadowRoot.getElementById('vehicleCancel');
+  function openRowPricePopup(row) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop    = root.getElementById('rowPricePopup');
+    const cancel = root.getElementById('rowPriceCancel');
+    const presets= root.getElementById('rowPricePresets');
+    if (!pop || !presets) return;
+
+    pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
+
+    const close = () => {
+      pop.classList.remove('open');
+      presets.removeEventListener('click', onPreset);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+    };
+    const onPreset = e => {
+      e.stopPropagation();
+      const b = e.target.closest('button[data-factor]');
+      if (!b) return;
+      const factor = parseFloat(b.dataset.factor);
+      if (Number.isNaN(factor)) return;
+      if (Math.abs(factor - 1) < 1e-9) {
+        row.priceMult = 1;
+      } else {
+        row.priceMult = (row.priceMult || 1) * factor;
+      }
+      const inv = storeHelper.getInventory(store);
+      saveInventory(inv);
+      // Stäng popuppen direkt för snabbare UI-feedback
+      close();
+      // Rendera om inventariet efter att popuppen stängts
+      renderInventory();
+    };
+    const onCancel = (e) => { if (e) e.stopPropagation(); close(); };
+    const onOutside = e => {
+      e.stopPropagation();
+      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+    };
+
+    presets.addEventListener('click', onPreset);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+  }
+
+function openVehiclePopup(preselectId, precheckedPaths) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop    = root.getElementById('vehiclePopup');
+    const sel    = root.getElementById('vehicleSelect');
+    const list   = root.getElementById('vehicleItemList');
+    const apply  = root.getElementById('vehicleApply');
+    const cancel = root.getElementById('vehicleCancel');
 
     const inv = storeHelper.getInventory(store);
     const vehicles = inv
@@ -554,6 +669,11 @@ function openVehiclePopup(preselectId) {
     list.innerHTML = outside
       .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`)
       .join('') + vehicleHtml;
+    if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
+      const set = new Set(precheckedPaths.map(String));
+      [...list.querySelectorAll('input[type="checkbox"][data-path]')]
+        .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
+    }
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
@@ -606,12 +726,14 @@ function openVehiclePopup(preselectId) {
     pop.addEventListener('click', onOutside);
 }
 
-  function openVehicleRemovePopup(preselectIdx) {
-    const pop    = bar.shadowRoot.getElementById('vehicleRemovePopup');
-    const sel    = bar.shadowRoot.getElementById('vehicleRemoveSelect');
-    const list   = bar.shadowRoot.getElementById('vehicleRemoveItemList');
-    const apply  = bar.shadowRoot.getElementById('vehicleRemoveApply');
-    const cancel = bar.shadowRoot.getElementById('vehicleRemoveCancel');
+  function openVehicleRemovePopup(preselectIdx, precheckedPaths) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop    = root.getElementById('vehicleRemovePopup');
+    const sel    = root.getElementById('vehicleRemoveSelect');
+    const list   = root.getElementById('vehicleRemoveItemList');
+    const apply  = root.getElementById('vehicleRemoveApply');
+    const cancel = root.getElementById('vehicleRemoveCancel');
 
     const inv = storeHelper.getInventory(store);
     const vehicles = inv
@@ -636,6 +758,11 @@ function openVehiclePopup(preselectId) {
       list.innerHTML = items
         .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`)
         .join('');
+      if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
+        const set = new Set(precheckedPaths.map(String));
+        [...list.querySelectorAll('input[type="checkbox"][data-path]')]
+          .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
+      }
     };
 
     fillList();
@@ -691,10 +818,12 @@ function openVehiclePopup(preselectId) {
   }
 
   function openDeleteContainerPopup(removeAll, removeOnly) {
-    const pop    = bar.shadowRoot.getElementById('deleteContainerPopup');
-    const allBtn = bar.shadowRoot.getElementById('deleteContainerAll');
-    const onlyBtn= bar.shadowRoot.getElementById('deleteContainerOnly');
-    const cancel = bar.shadowRoot.getElementById('deleteContainerCancel');
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop    = root.getElementById('deleteContainerPopup');
+    const allBtn = root.getElementById('deleteContainerAll');
+    const onlyBtn= root.getElementById('deleteContainerOnly');
+    const cancel = root.getElementById('deleteContainerCancel');
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
@@ -720,9 +849,11 @@ function openVehiclePopup(preselectId) {
   }
 
   function openAdvMoneyPopup(onConfirm) {
-    const pop    = bar.shadowRoot.getElementById('advMoneyPopup');
-    const cancel = bar.shadowRoot.getElementById('advMoneyCancel');
-    const confirm= bar.shadowRoot.getElementById('advMoneyConfirm');
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop    = root.getElementById('advMoneyPopup');
+    const cancel = root.getElementById('advMoneyCancel');
+    const confirm= root.getElementById('advMoneyConfirm');
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
@@ -745,9 +876,11 @@ function openVehiclePopup(preselectId) {
   }
 
   function openSaveFreePopup() {
-    const pop    = bar.shadowRoot.getElementById('saveFreePopup');
-    const cancel = bar.shadowRoot.getElementById('saveFreeCancel');
-    const confirm= bar.shadowRoot.getElementById('saveFreeConfirm');
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop    = root.getElementById('saveFreePopup');
+    const cancel = root.getElementById('saveFreeCancel');
+    const confirm= root.getElementById('saveFreeConfirm');
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
@@ -1086,9 +1219,12 @@ function openVehiclePopup(preselectId) {
 
     const inv = allInv
       .filter(row => {
-        if (!F.typ) return true;
-        const entry = getEntry(row.name);
-        return (entry.taggar?.typ || []).includes(F.typ);
+        if (F.typ) {
+          const entry = getEntry(row.name);
+          if (!(entry.taggar?.typ || []).includes(F.typ)) return false;
+        }
+        if (F.invTxt && !rowMatchesText(row, F.invTxt)) return false;
+        return true;
       });
 
     /* ---------- summa i pengar ---------- */
@@ -1191,6 +1327,7 @@ function openVehiclePopup(preselectId) {
     const vehicleBtns = vehicles
       .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn icon" title="Lasta i ${v.entry.namn}">${VEHICLE_EMOJI[v.entry.namn] || '🛞'}</button>`)
       .join('');
+
     const formalCard = `
       <li class="card${openKeys.has(formalKey) ? '' : ' compact'}" data-special="${formalKey}">
         <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter 🔎</span></div>
@@ -1202,7 +1339,7 @@ function openVehiclePopup(preselectId) {
             <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
             ${vehicleBtns}
             <button id="dragToggle" class="char-btn icon" title="Ändra ordning">🔀</button>
-            <button id="saveFreeBtn" class="char-btn icon" title="Spara och gör allt gratis">💾</button>
+            <button id="saveFreeBtn" class="char-btn icon" title="Spara och gör allt gratis">🔒</button>
             <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
           </div>
           <div class="formal-section">
@@ -1269,8 +1406,18 @@ ${moneyRow}
             if (remaining < 0) cardClass = ' vehicle-over';
           }
 
+          const txt = (F.invTxt || '').toLowerCase();
+          const showChildrenPairs = (() => {
+            const children = (row.contains || []).map((c,j)=>({ c, j }));
+            if (!isVehicle) return children;
+            if (!txt) return children;
+            const selfMatch = String(row.name || '').toLowerCase().includes(txt);
+            if (selfMatch) return children;
+            return children.filter(({c}) => rowMatchesText(c, txt));
+          })();
+
           const sublist = (row.contains && row.contains.length)
-            ? `<ul class="card-list vehicle-items">${row.contains.map((c,j)=>{
+            ? `<ul class="card-list vehicle-items">${showChildrenPairs.map(({c,j})=>{
                 const centry = getEntry(c.name);
                 const ctagTyp = centry.taggar?.typ ?? [];
                 const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
@@ -1289,9 +1436,10 @@ ${moneyRow}
                 const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+                const cPath = `${realIdx}.${j}`;
                 return `<li class="card${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
                   <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
-                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br>Pris: ${cPrice}<br>Vikt: ${cWeight}</div>
+                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">Pris: ${cPrice}</span><br>Vikt: ${cWeight}</div>
                   <div class="inv-controls">
                     ${cBtnRow}
                     ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
@@ -1308,7 +1456,7 @@ ${moneyRow}
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
-                ${desc}<br>Antal: ${row.qty}<br>Pris: ${priceText}<br>Vikt: ${weightText}${vehicleInfo}
+                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">Pris: ${priceText}</span><br>Vikt: ${weightText}${vehicleInfo}
               </div>
               <div class="inv-controls">
                 ${btnRow}
@@ -1350,6 +1498,14 @@ ${moneyRow}
     if (dom.invTypeSel) {
       dom.invTypeSel.onchange = () => {
         F.typ = dom.invTypeSel.value;
+        renderInventory();
+      };
+    }
+    const invSearch = $T('invSearch');
+    if (invSearch) {
+      invSearch.value = F.invTxt || '';
+      invSearch.oninput = () => {
+        F.invTxt = (invSearch.value || '').trim().toLowerCase();
         renderInventory();
       };
     }
@@ -1445,6 +1601,16 @@ ${moneyRow}
         const li = cardTitle.closest('li.card');
         li.classList.toggle('compact');
         updateCollapseBtnState();
+        return;
+      }
+
+      // 2b) Klick på Pris: öppnar snabbpris-popup för aktuell rad
+      const priceQuick = e.target.closest('[data-act="priceQuick"]');
+      if (priceQuick) {
+        const li = priceQuick.closest('li');
+        const inv = storeHelper.getInventory(store);
+        const { row } = getRowInfo(inv, li);
+        if (row) openRowPricePopup(row);
         return;
       }
 
@@ -1829,12 +1995,11 @@ ${moneyRow}
     const resetBtn  = $T('moneyResetBtn');
     const clearBtn  = $T('clearInvBtn');
     const saveFreeBtn = $T('saveFreeBtn');
-    if (!manageBtn || !multiBtn || !resetBtn || !clearBtn || !saveFreeBtn) return;
-
-    manageBtn.onclick = openMoneyPopup;
-    multiBtn.onclick  = openPricePopup;
-    saveFreeBtn.onclick = openSaveFreePopup;
-    resetBtn.onclick = () => {
+    // Bind existing buttons if present
+    if (manageBtn) manageBtn.onclick = openMoneyPopup;
+    if (multiBtn)  multiBtn.onclick  = openPricePopup;
+    if (saveFreeBtn) saveFreeBtn.onclick = openSaveFreePopup;
+    if (resetBtn) resetBtn.onclick = () => {
       const doReset = () => {
         storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
         storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
@@ -1846,12 +2011,13 @@ ${moneyRow}
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) openAdvMoneyPopup(doReset); else doReset();
     };
-    clearBtn.onclick = async () => {
+    if (clearBtn) clearBtn.onclick = async () => {
       if (await confirmPopup('Du håller på att tömma hela inventariet, är du säker?')) {
         saveInventory([]);
         renderInventory();
       }
     };
+
 
     const inv = storeHelper.getInventory(store);
     inv
@@ -1870,6 +2036,8 @@ ${moneyRow}
     saveInventory,
     sortAllInventories,
     getEntry,
+    calcRowCost,
+    calcRowWeight,
     calcEntryCost,
     makeNameMap,
     filter: F,
@@ -1881,6 +2049,7 @@ ${moneyRow}
     openPricePopup,
     openVehiclePopup,
     openVehicleRemovePopup,
+    openRowPricePopup,
     openSaveFreePopup,
     massFreeAndSave,
     recalcArtifactEffects,

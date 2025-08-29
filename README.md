@@ -35,7 +35,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 
 ## Export och import av rollpersoner
 
-Use the **Exportera** button in the filter panel to open a menu where you can download all saved characters or pick a specific one to export as a JSON file. "Alla rollpersoner" ligger alltid överst och den aktiva rollpersonen visas näst högst upp. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the files are downloaded normally. The **Importera** button lets you select one or more such files to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
+Use the **Exportera** button in the filter panel to open a menu where you can either download a specific character as a JSON file, or download all saved characters together as a single JSON file. "Alla rollpersoner" ligger alltid överst och den aktiva rollpersonen visas näst högst upp. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the files are downloaded normally. The **Importera** button lets you select one or more such files — including a single file containing multiple characters — to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
 
 ## Anteckningssidan
 
@@ -100,7 +100,7 @@ Både i index-vyn och i din karaktär visas poster som kort.
 - Monstruösa särdrag kan inte staplas.
 
 ### 9. Export och import
-Se avsnittet ovan. Exportera öppnar en meny där du kan spara alla karaktärer eller välja en enskild karaktär som JSON-fil. Importera läser in sparade filer och återställer karaktärer. Anteckningar följer med så länge minst ett fält innehåller text. All data sparas i webblagring så inget backend behövs.
+Se avsnittet ovan. Exportera öppnar en meny där du kan spara alla karaktärer som en samlad JSON-fil, eller välja en enskild karaktär som JSON-fil. Importera läser in sparade filer (även en fil med flera karaktärer) och återställer karaktärer. Anteckningar följer med så länge minst ett fält innehåller text. All data sparas i webblagring så inget backend behövs.
 
 ### 10. Tips och tricks
 - Alla dina val sparas automatiskt i webblagringen på datorn.

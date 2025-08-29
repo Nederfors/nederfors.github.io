@@ -76,6 +76,34 @@ function initIndex() {
   };
   fillDropdowns();
 
+  /* custom suggestions above search (entries only, min 2 chars) */
+  let sugIdx = -1;
+  const updateSearchDatalist = () => {
+    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+    if (!sugEl) return;
+    const q = (dom.sIn?.value || '').trim();
+    if (q.length < 2) { sugEl.innerHTML = ''; sugEl.hidden = true; sugIdx = -1; return; }
+    const nq = searchNormalize(q.toLowerCase());
+    const seen = new Set();
+    const MAX = 50;
+    const items = [];
+    for (const p of getEntries()) {
+      const name = String(p.namn || '').trim();
+      if (!name) continue;
+      const nname = searchNormalize(name.toLowerCase());
+      if (!nname.includes(nq)) continue;
+      if (seen.has(name)) continue;
+      seen.add(name);
+      items.push(name);
+      if (items.length >= MAX) break;
+    }
+    if (!items.length) { sugEl.innerHTML = ''; sugEl.hidden = true; sugIdx = -1; return; }
+    sugEl.innerHTML = items.map((v,i)=>`<div class="item" data-idx="${i}" data-val="${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}">${v}</div>`).join('');
+    sugEl.hidden = false;
+    sugIdx = -1;
+  };
+  updateSearchDatalist();
+
   /* render helpers */
   const activeTags =()=>{
     dom.active.innerHTML='';
@@ -204,6 +232,7 @@ function initIndex() {
         let desc = abilityHtml(p);
         let priceText = '';
         let weightText = '';
+        let weightVal = null;
         let priceLabel = '';
         if (isInv(p)) {
           desc += itemStatHtml(p);
@@ -225,7 +254,8 @@ function initIndex() {
           const massCnt = baseQuals.filter(q => q === 'Massivt').length;
           if (baseW || massCnt) {
             const w = baseW + massCnt;
-            weightText = `<br>Vikt: ${formatWeight(w)}`;
+            weightVal = formatWeight(w);
+            weightText = `<br>Vikt: ${weightVal}`;
           }
         } else if (isEmployment(p)) {
           if (p.grundpris) {
@@ -278,6 +308,15 @@ function initIndex() {
           .filter(Boolean)
           .join(' ');
         const xpHtml = xpVal != null ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        // Compact meta badges (Pris/Vikt/Nivå for inventory items) with labels for clarity
+        const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
+        const lvlShort = lvlBadgeVal === 'Mästare' ? 'M' : (lvlBadgeVal === 'Gesäll' ? 'G' : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
+        const badgeParts = [];
+        if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeLabel}: ${priceText}</span>`);
+        if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">Vikt: ${weightVal}</span>`);
+        if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="Nivå: ${lvlBadgeVal}">Nivå: ${lvlShort}</span>`);
+        const metaBadges = compact && badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
         if (infoTagsHtml) {
           infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
         }
@@ -308,19 +347,19 @@ function initIndex() {
               const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
               const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
               const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${eliteBtn}</div>`;
+              btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${eliteBtn}</div>`;
             }else{
               const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}${eliteBtn}</div>`;
+              btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${addBtn}${eliteBtn}</div>`;
             }
           }else{
             const mainBtn = inChar
               ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
               : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
+            btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
           }
         } else {
-          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}</div>`;
+          btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}</div>`;
         }
         const li=document.createElement('li');
         li.className='card' + (compact ? ' compact' : '');
@@ -332,7 +371,7 @@ function initIndex() {
           : '';
         const levelHtml = hideDetails ? '' : lvlSel;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
-        const priceHtml = priceText ? `<div class="card-price">${priceLabel} ${priceText}</div>` : '';
+        const priceHtml = (!compact && priceText) ? `<div class="card-price">${priceLabel} ${priceText}</div>` : '';
         li.innerHTML = `
           <div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
           ${tagsDiv}
@@ -361,17 +400,53 @@ function initIndex() {
 
   /* expose update function for party toggles */
   window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
-  window.indexViewRefreshFilters = () => fillDropdowns();
+  window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
   dom.sIn.addEventListener('input',()=>{
     sTemp = dom.sIn.value.trim();
     activeTags(); renderList(filtered());
+    updateSearchDatalist();
   });
+  {
+    const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
+    if (sugEl) {
+      sugEl.addEventListener('click', e => {
+        const it = e.target.closest('.item');
+        if (!it) return;
+        const val = it.dataset.val || '';
+        dom.sIn.value = val;
+        sTemp = val.trim();
+        updateSearchDatalist();
+        dom.sIn.focus();
+      });
+    }
+  }
   dom.sIn.addEventListener('keydown',e=>{
+    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+    const items = sugEl && !sugEl.hidden ? [...sugEl.querySelectorAll('.item')] : [];
+    if (e.key==='ArrowDown' && items.length) {
+      e.preventDefault();
+      sugIdx = Math.min(items.length - 1, sugIdx + 1);
+      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
+      return;
+    }
+    if (e.key==='ArrowUp' && items.length) {
+      e.preventDefault();
+      sugIdx = Math.max(-1, sugIdx - 1);
+      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
+      return;
+    }
     if(e.key==='Enter'){
       e.preventDefault();
       const term = sTemp.toLowerCase();
+      if (items.length && sugIdx >= 0) {
+        const chosen = items[sugIdx]?.dataset?.val || '';
+        if (chosen) {
+          dom.sIn.value = chosen; sTemp = chosen.trim();
+          updateSearchDatalist();
+        }
+      }
       if (term === 'webapp') {
         const ua = navigator.userAgent.toLowerCase();
         let anchor = 'general';
@@ -412,8 +487,12 @@ function initIndex() {
         return;
       }
       if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
+      if (sTemp) {
+        if (window.storeHelper?.addRecentSearch) storeHelper.addRecentSearch(store, sTemp);
+      }
       dom.sIn.value=''; sTemp='';
       activeTags(); renderList(filtered());
+      updateSearchDatalist();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   });

@@ -335,6 +335,29 @@ input:focus, select:focus, textarea:focus {
   font-size: .9rem;
   color: var(--subtxt);
 }
+/* Hide default price line in compact; use badges instead */
+.card.compact .card-price { display: none; }
+
+/* Always-visible compact meta badges (Pris, Nivå, Vikt) */
+.meta-badges {
+  display: none;
+  gap: .35rem;
+  align-items: center;
+  margin-right: auto; /* push buttons to the right */
+  flex: 1 1 auto;
+  min-width: 0;
+}
+.card.compact .meta-badges { display: inline-flex; }
+.meta-badge {
+  background: var(--border);
+  color: var(--txt);
+  padding: .25rem .45rem;
+  border-radius: .5rem;
+  font-size: .82rem;
+  line-height: 1.3;
+  white-space: nowrap;
+}
+.meta-badge.level-badge { color: var(--accent); background: rgba(61,124,255,.15); }
 
 /* Lista med niva-beskrivningar for formagor */
 .levels { margin-top: .6rem; }
@@ -363,11 +386,13 @@ input:focus, select:focus, textarea:focus {
 .card button.danger { background: var(--danger); }
 
 .inv-controls {
-  align-self: flex-end;
+  align-self: stretch;
   display: flex;
   gap: .4rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   justify-content: flex-end;
+  align-items: flex-end;
+  overflow: hidden;
 }
 .inv-controls button {
   align-self: initial;
@@ -1490,6 +1515,39 @@ select.level {
 }
 #exportPopup .popup-inner button { width: 100%; }
 
+/* (removed) Popup för inventarie Export/Import */
+
+/* ---------- Popup för snabb prisjustering ---------- */
+#rowPricePopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#rowPricePopup.open { display: flex; }
+#rowPricePopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  transform: scale(.8);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#rowPricePopup.open .popup-inner { transform: scale(1); }
+#rowPricePopup .popup-inner button { width: 100%; }
+
 /* ---------- Popup f\u00f6r Nilas-fr\u00e5gan ---------- */
 #nilasPopup {
   position: fixed;
@@ -1574,6 +1632,9 @@ select.level {
 }
 .popup.open { display: flex; }
 .popup-bottom { align-items: flex-end; }
+
+/* Clickable price text in inventory */
+.price-click { cursor: pointer; }
 
 /* Rad med två knappar */
 .confirm-row {
@@ -1851,4 +1912,3 @@ textarea.auto-resize {
 #onlineModal input {
   width: 100%;
 }
-

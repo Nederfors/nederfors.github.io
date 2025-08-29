@@ -9,7 +9,11 @@
   const overlayStack = [];
   const openMap = new Map();
   let isPop = false;
-  let manualClose = false;
+  // Count how many history.back() calls we have triggered manually.
+  // Using a counter (instead of a boolean) makes rapid open/close
+  // sequences robust and prevents desync when multiple popstate
+  // events arrive after fast clicks.
+  let manualCloseCount = 0;
 
   function isOverlay(el) {
     if (!(el instanceof HTMLElement)) return false;
@@ -33,7 +37,7 @@
           const idx = overlayStack.lastIndexOf(el);
           if (idx >= 0) overlayStack.splice(idx, 1);
           if (!isPop) {
-            manualClose = true;
+            manualCloseCount++;
             history.back();
           }
         }
@@ -55,7 +59,7 @@
   }
 
   window.addEventListener('popstate', () => {
-    if (manualClose) { manualClose = false; return; }
+    if (manualCloseCount > 0) { manualCloseCount--; return; }
     const el = overlayStack[overlayStack.length - 1];
     if (el) {
       isPop = true;
@@ -85,6 +89,7 @@ const dom  = {
   /* inventarie */
   invList : $T('invList'),      invBadge  : $T('invBadge'),
   wtOut   : $T('weightOut'),    slOut     : $T('slotOut'),
+  invSearch: $T('invSearch'),
   moneyD  : $T('moneyDaler'),
   moneyS  : $T('moneySkilling'),
   moneyO  : $T('moneyOrtegar'),
@@ -109,6 +114,8 @@ const dom  = {
   /* filterfält */
   catToggle: $T('catToggle'),
   sIn   : $T('searchField'),  typSel : $T('typFilter'),
+  searchList: $T('searchAutocomplete'),
+  searchSug: $T('searchSuggest'),
   arkSel: $T('arkFilter'),    tstSel : $T('testFilter'),
   filterUnion: $T('filterUnion'),
   entryViewToggle: $T('entryViewToggle'),
@@ -371,23 +378,31 @@ function bindToolbar() {
               inp.click();
             });
           }
-          let ok = false;
+          let imported = 0;
           for (const file of files) {
             try {
               const text = await file.text();
               const obj = JSON.parse(text);
-              const res = storeHelper.importCharacterJSON(store, obj);
-              if (res) {
-                ok = true;
+              if (Array.isArray(obj)) {
+                for (const item of obj) {
+                  try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
+                }
+              } else if (obj && Array.isArray(obj.characters)) {
+                for (const item of obj.characters) {
+                  try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
+                }
               } else {
-                await alertPopup('Felaktig fil.');
+                const res = storeHelper.importCharacterJSON(store, obj);
+                if (res) imported++;
               }
             } catch {
-              await alertPopup('Felaktig fil.');
+              // ignore and continue to next file
             }
           }
-          if (ok) {
+          if (imported > 0) {
             location.reload();
+          } else {
+            await alertPopup('Felaktig fil.');
           }
         } catch (err) {
           if (err && err.name !== 'AbortError') {
@@ -657,9 +672,13 @@ async function exportCharacterFile(id) {
 }
 
 async function exportAllCharacters() {
-  for (const c of store.characters) {
-    await exportCharacterFile(c.id);
-  }
+  // Export all characters into a single JSON file
+  const all = store.characters
+    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .filter(Boolean);
+  const jsonText = JSON.stringify(all, null, 2);
+  const suggested = 'rollpersoner.json';
+  await saveJsonFile(jsonText, suggested);
 }
 
 function openExportPopup(cb) {
@@ -783,23 +802,31 @@ function ensureCharacterSelected() {
       inp.addEventListener('change', async () => {
         const files = inp.files ? Array.from(inp.files) : [];
         if (!files.length) return;
-        let ok = false;
+        let imported = 0;
         for (const file of files) {
           try {
             const text = await file.text();
             const obj = JSON.parse(text);
-            const res = storeHelper.importCharacterJSON(store, obj);
-            if (res) {
-              ok = true;
+            if (Array.isArray(obj)) {
+              for (const item of obj) {
+                try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
+              }
+            } else if (obj && Array.isArray(obj.characters)) {
+              for (const item of obj.characters) {
+                try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
+              }
             } else {
-              await alertPopup('Felaktig fil.');
+              const res = storeHelper.importCharacterJSON(store, obj);
+              if (res) imported++;
             }
           } catch {
-            await alertPopup('Felaktig fil.');
+            // ignore and continue to next file
           }
         }
-        if (ok) {
+        if (imported > 0) {
           location.reload();
+        } else {
+          await alertPopup('Felaktig fil.');
         }
       });
       inp.click();

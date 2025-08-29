@@ -81,9 +81,30 @@ class SharedToolbar extends HTMLElement {
           align-items: center;
           gap: .6rem;
         }
-        .toolbar-top input {
-          flex: 1 1 110px;
-          min-width: 90px;
+        .toolbar-top .search-wrap { flex: 1 1 110px; min-width: 90px; position: relative; }
+        .toolbar-top .search-wrap input { width: 100%; }
+        .toolbar-top .suggestions {
+          position: absolute;
+          left: 0;
+          right: 0;
+          bottom: calc(100% + .35rem);
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: .55rem;
+          box-shadow: 0 6px 18px rgba(0,0,0,.25);
+          max-height: 40vh;
+          overflow: auto;
+          z-index: 1200;
+          padding: .25rem;
+        }
+        .toolbar-top .suggestions .item {
+          padding: .4rem .6rem;
+          border-radius: .4rem;
+          cursor: pointer;
+        }
+        .toolbar-top .suggestions .item:hover,
+        .toolbar-top .suggestions .item.active {
+          background: var(--border);
         }
         .button-row {
           display: flex;
@@ -144,7 +165,10 @@ class SharedToolbar extends HTMLElement {
       <footer class="toolbar">
         <div class="toolbar-top">
           <button id="catToggle" class="char-btn icon" title="Minimera alla kategorier">▼</button>
-          <input id="searchField" placeholder="Sök…">
+          <div class="search-wrap">
+            <input id="searchField" placeholder="Sök…" autocomplete="off">
+            <div id="searchSuggest" class="suggestions" hidden></div>
+          </div>
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
@@ -167,6 +191,10 @@ class SharedToolbar extends HTMLElement {
             <button class="char-btn icon" data-close="invPanel">✕</button>
           </div>
         </header>
+        <div class="filter-group">
+          <label for="invSearch">Sök i inventarie</label>
+          <input id="invSearch" type="text" placeholder="Filtrera föremål…" autocomplete="off">
+        </div>
         <div class="filter-group">
           <label for="invTypeFilter">Kategori</label>
           <select id="invTypeFilter"></select>
@@ -386,6 +414,20 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Snabb Pris ---------- -->
+      <div id="rowPricePopup" class="popup">
+        <div class="popup-inner">
+          <h3>Snabb prisjustering</h3>
+          <div id="rowPricePresets" class="char-btn-row">
+            <button class="char-btn" data-factor="0.5">×0.5</button>
+            <button class="char-btn" data-factor="1">×1.0</button>
+            <button class="char-btn" data-factor="1.5">×1.5</button>
+            <button class="char-btn" data-factor="2">×2</button>
+          </div>
+          <button id="rowPriceCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup Färdmedel ---------- -->
       <div id="vehiclePopup" class="popup popup-bottom">
         <div class="popup-inner">
@@ -488,6 +530,8 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      
+
       <!-- ---------- Nilas Popup ---------- -->
       <div id="nilasPopup" class="popup">
         <div class="popup-inner">
@@ -539,8 +583,8 @@ class SharedToolbar extends HTMLElement {
               <strong>Kopiera rollperson</strong> duplicerar den valda karaktären.<br>
               <strong>Byt namn</strong> ändrar karaktärens namn.<br>
               <strong>Ta bort rollperson</strong> raderar karaktären.<br>
-              <strong>Exportera</strong> laddar ner karaktären som JSON-fil.<br>
-              <strong>Importera</strong> läser in en karaktär från JSON-fil.<br>
+              <strong>Exportera</strong> laddar ner vald karaktär som JSON-fil eller alla som en samlad JSON.<br>
+              <strong>Importera</strong> läser in en eller flera karaktärer från JSON-fil(er).<br>
               <strong>⚒️ / ⚗️ / 🏺</strong> anger nivå på smed, alkemist och artefaktmakare.<br>
               <strong>🔭</strong> utvidgar sökningen (OR-filter).<br>
               <strong>🤏</strong> växlar kompakt listvy.<br>
@@ -557,7 +601,8 @@ class SharedToolbar extends HTMLElement {
               &nbsp;&nbsp;<em>Addera till totalen</em> lägger till beloppet.<br>
               &nbsp;&nbsp;<em>Nollställ pengar</em> sätter totalen till noll.<br>
               <strong>💸</strong> multiplicerar priset för valda föremål.<br>
-              <strong>💾</strong> sparar inventariet och markerar alla föremål som gratis.<br>
+              <strong>🔒</strong> sparar inventariet och markerar alla föremål som gratis.<br>
+              
               <strong>🧹</strong> tömmer inventariet.<br>
               <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.<br>
               <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.<br>
@@ -629,8 +674,18 @@ class SharedToolbar extends HTMLElement {
     const toggles = ['invToggle','traitsToggle','filterToggle','infoToggle'];
     if (path.some(el => toggles.includes(el.id))) return;
 
+    // Hide search suggestions when clicking outside search UI
+    const sugEl = this.shadowRoot.getElementById('searchSuggest');
+    const sIn   = this.shadowRoot.getElementById('searchField');
+    if (sugEl && !sugEl.hidden) {
+      const insideSearch = path.includes(sugEl) || path.includes(sIn);
+      if (!insideSearch) {
+        sugEl.hidden = true;
+      }
+    }
+
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
