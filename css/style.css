@@ -39,6 +39,7 @@ body {
   margin-bottom: 90px;         /* plats för toolbar */
 }
 
+html.menu-open,
 body.menu-open {
   overflow: hidden;
 }
