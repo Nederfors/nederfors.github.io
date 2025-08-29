@@ -26,7 +26,7 @@ class SharedToolbar extends HTMLElement {
         */
         const vv = window.visualViewport;
         const offset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
-        toolbar.style.bottom = offset + 'px';
+        toolbar.style.bottom = `${offset}px`;
       };
       window.visualViewport.addEventListener('resize', this._vvHandler);
       window.visualViewport.addEventListener('scroll', this._vvHandler);
