@@ -310,10 +310,14 @@ function initIndex() {
         const xpHtml = xpVal != null ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
         // Compact meta badges (P/V/level) using short labels for mobile space
         const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
-        const lvlShort = lvlBadgeVal === 'Mästare' ? 'M' : (lvlBadgeVal === 'Gesäll' ? 'G' : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const lvlShort =
+          lvlBadgeVal === 'Mästare' ? 'M'
+          : (lvlBadgeVal === 'Gesäll' ? 'G'
+          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
         const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
+        const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
         const badgeParts = [];
-        if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">P: ${priceText}</span>`);
+        if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeText}: ${priceText}</span>`);
         if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
         if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
         const metaBadges = compact && badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
