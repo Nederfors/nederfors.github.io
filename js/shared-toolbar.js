@@ -50,59 +50,17 @@ class SharedToolbar extends HTMLElement {
     window.alertPopup  = msg => this.openDialog(msg);
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
 
-    /* ----- Lås bakgrunds-scroll när panel eller popup är öppen ----- */
-    this._preventScroll = e => {
-      const openSelector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open';
-      const path = e.composedPath();
-      const insideOpen = path.some(el => el instanceof Element && el.matches(openSelector));
-      if (!insideOpen) {
-        e.preventDefault();
-      }
-    };
-    this.updateScrollLock = () => {
-      const selector = '[id$="Panel"].open, [id$="Popup"].open, .popup.open, #searchSuggest:not([hidden])';
-      const docOpen = document.querySelector(selector);
-      const shadowOpen = this.shadowRoot.querySelector(selector);
-      const anyOpen = docOpen || shadowOpen;
-      const role = document.body.dataset.role;
-      const lock = anyOpen && (role === 'index' || role === 'character');
-      document.body.classList.toggle('menu-open', lock);
-      document.documentElement.classList.toggle('menu-open', lock);
-      if (lock) {
-        document.addEventListener('touchmove', this._preventScroll, { passive: false });
-        document.addEventListener('wheel', this._preventScroll, { passive: false });
-      } else {
-        document.removeEventListener('touchmove', this._preventScroll);
-        document.removeEventListener('wheel', this._preventScroll);
-      }
-    };
-    window.updateScrollLock = () => this.updateScrollLock();
-
-    const obsCfg = { attributes: true, attributeFilter: ['class', 'hidden'], subtree: true };
-    this._bodyObserver = new MutationObserver(this.updateScrollLock);
-    this._bodyObserver.observe(document.body, obsCfg);
-    this._shadowObserver = new MutationObserver(this.updateScrollLock);
-    this._shadowObserver.observe(this.shadowRoot, obsCfg);
-
-    const sField = this.shadowRoot.getElementById('searchField');
-    sField.addEventListener('focus', this.updateScrollLock);
-    sField.addEventListener('blur', this.updateScrollLock);
+    // Allow search suggestions to scroll without affecting the page
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
     ['touchmove','wheel'].forEach(ev =>
       sugEl.addEventListener(ev, e => e.stopPropagation())
     );
-
-    this.updateScrollLock();
   }
 
   disconnectedCallback() {
     window.visualViewport?.removeEventListener('resize', this._vvHandler);
     window.visualViewport?.removeEventListener('scroll', this._vvHandler);
     document.removeEventListener('click', this._outsideHandler);
-    document.removeEventListener('touchmove', this._preventScroll);
-    document.removeEventListener('wheel', this._preventScroll);
-    this._bodyObserver?.disconnect();
-    this._shadowObserver?.disconnect();
   }
 
   /* ------------------------------------------------------- */
@@ -730,7 +688,6 @@ class SharedToolbar extends HTMLElement {
       const insideSearch = path.includes(sugEl) || path.includes(sIn);
       if (!insideSearch) {
         sugEl.hidden = true;
-        this.updateScrollLock();
       }
     }
 
@@ -741,7 +698,6 @@ class SharedToolbar extends HTMLElement {
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
     if (openPanel && !path.includes(openPanel)) {
       openPanel.classList.remove('open');
-      this.updateScrollLock();
     }
   }
 
