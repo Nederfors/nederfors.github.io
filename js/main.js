@@ -141,6 +141,12 @@ if (dom.sIn) {
       history.back();
     }
   });
+  dom.sIn.addEventListener('keydown', e => {
+    if (e.key === 'Enter') dom.sIn.blur();
+  });
+  dom.searchSug?.addEventListener('click', e => {
+    if (e.target.closest('.item')) dom.sIn.blur();
+  });
 }
 
 window.addEventListener('popstate', () => {
