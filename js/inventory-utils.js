@@ -959,6 +959,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const baseQ = baseQuals.filter(q => !removed.includes(q));
       const allQ = [...baseQ, ...(row.kvaliteter || [])];
       row.gratisKval = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+      // remove any price multiplier when everything is made free
+      delete row.priceMult;
     });
 
     saveInventory(allInv);
@@ -1296,6 +1298,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           else            price *= myst ? 10 : 5;
         }
       });
+
+      // apply any manually set price multiplier
+      price *= row.priceMult || 1;
 
       const free = Math.min(Number(row.gratis || 0), row.qty);
       const totalO = Math.max(0, price * row.qty - base * free);
