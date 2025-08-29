@@ -580,9 +580,11 @@ class SharedToolbar extends HTMLElement {
             <strong>🎒</strong> öppnar inventariepanelen.<br>
             <strong>📊</strong> öppnar egenskapspanelen.<br>
             <strong>Skriv ett ord och tryck Enter</strong> för att filtrera listan.<br>
+            <strong>↑/↓</strong> väljer ett förslag, <strong>Enter</strong> eller klick lägger till det.<br>
             <strong>Klicka på taggarna under sökfältet</strong> för att ta bort filter.<br>
             <strong>Skriv "lol"</strong> i sökfältet nollställer alla filter.<br>
-            <strong>⚙️</strong> öppnar filtermenyn.
+            <strong>⚙️</strong> öppnar filtermenyn.<br>
+            <strong>Esc</strong> eller webbläsarens <strong>tillbaka-knapp</strong> stänger senast öppnade panel eller popup.
           </p>
             <h3>Filtermenyn</h3>
             <p>
@@ -602,6 +604,7 @@ class SharedToolbar extends HTMLElement {
             </p>
             <h3>Inventariepanelen</h3>
             <p>
+              <strong>Sök i inventarie</strong> filtrerar föremål i realtid.<br>
               <strong>▶</strong> kollapsar alla kategorier.<br>
               <strong>🔀</strong> växlar dragläge för att ändra ordningen på föremål.<br>
               <strong>🆕</strong> lägger till eget föremål.<br>
@@ -609,9 +612,9 @@ class SharedToolbar extends HTMLElement {
               &nbsp;&nbsp;<em>Spara som totalen</em> ersätter summan helt.<br>
               &nbsp;&nbsp;<em>Addera till totalen</em> lägger till beloppet.<br>
               &nbsp;&nbsp;<em>Nollställ pengar</em> sätter totalen till noll.<br>
-              <strong>💸</strong> multiplicerar priset för valda föremål.<br>
+              <strong>💸</strong> multiplicerar priset på markerade föremål med angivet tal.<br>
               <strong>🔒</strong> sparar inventariet och markerar alla föremål som gratis.<br>
-              
+
               <strong>🧹</strong> tömmer inventariet.<br>
               <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.<br>
               <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.<br>
