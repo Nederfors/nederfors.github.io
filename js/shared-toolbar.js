@@ -639,6 +639,7 @@ class SharedToolbar extends HTMLElement {
             <strong>Lägg till / +</strong> lägger till posten.<br>
             <strong>−</strong> minskar antal eller tar bort posten.<br>
             <strong>Info</strong> visar detaljer.<br>
+            <strong>🏋🏻‍♂️</strong> "lägg till med förmågor" lägger till elityrket tillsammans med dess förmågor.<br>
             <strong>🔨</strong> lägger till kvalitet.<br>
             <strong>☭</strong> markerar en kostande kvalitet som gratis.<br>
             <strong>🆓</strong> gör ett föremål gratis.<br>
