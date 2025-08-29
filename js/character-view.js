@@ -485,9 +485,10 @@ function initCharacter() {
   {
     const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
     if (sugEl) {
-      sugEl.addEventListener('click', e => {
+      sugEl.addEventListener('mousedown', e => {
         const it = e.target.closest('.item');
         if (!it) return;
+        e.preventDefault();
         const val = (it.dataset.val || '').trim();
         if (val && !F.search.includes(val)) F.search.push(val);
         if (val && window.storeHelper?.addRecentSearch) {
