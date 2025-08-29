@@ -128,6 +128,28 @@ const dom  = {
   cName  : document.getElementById('charName')
 };
 
+/* ----- Hantera back-navigering för sökfältet ----- */
+let searchFocus = false;
+if (dom.sIn) {
+  dom.sIn.addEventListener('focus', () => {
+    history.pushState({ search: true }, '');
+    searchFocus = true;
+  });
+  dom.sIn.addEventListener('blur', () => {
+    if (searchFocus) {
+      searchFocus = false;
+      history.back();
+    }
+  });
+}
+
+window.addEventListener('popstate', () => {
+  if (searchFocus && document.activeElement === dom.sIn) {
+    searchFocus = false;
+    dom.sIn.blur();
+  }
+});
+
 /* ---------- Ladda databasen ---------- */
 let DB = [];
 let DBIndex = {};

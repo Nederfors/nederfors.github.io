@@ -499,7 +499,7 @@ function initCharacter() {
         activeTags();
         renderSkills(filtered());
         renderTraits();
-        dom.sIn.focus();
+        dom.sIn.blur();
         window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
@@ -521,6 +521,7 @@ function initCharacter() {
     }
     if(e.key==='Enter'){
       e.preventDefault();
+      dom.sIn.blur();
       const term = sTemp.toLowerCase();
       if (items.length && sugIdx >= 0) {
         const chosen = items[sugIdx]?.dataset?.val || '';
