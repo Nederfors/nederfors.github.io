@@ -39,6 +39,12 @@ body {
   padding-bottom: 90px;        /* plats för toolbar */
 }
 
+body.no-scroll {
+  position: fixed;
+  overflow: hidden;
+  width: 100%;
+}
+
 shared-toolbar {
   display: block;
 }
