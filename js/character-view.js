@@ -424,8 +424,48 @@ function initCharacter() {
     updateCatToggle();
   };
 
-  renderSkills(filtered()); activeTags(); updateXP(); renderTraits();
-  window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); };
+  /* custom suggestions above search (entries only, min 2 chars) */
+  let sugIdx = -1;
+  const updateSearchDatalist = () => {
+    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+    if (!sugEl) return;
+    const q = (dom.sIn?.value || '').trim();
+    if (q.length < 2) {
+      sugEl.innerHTML = '';
+      sugEl.hidden = true;
+      sugIdx = -1;
+      window.updateScrollLock?.();
+      return;
+    }
+    const nq = searchNormalize(q.toLowerCase());
+    const seen = new Set();
+    const MAX = 50;
+    const items = [];
+    for (const p of filtered()) {
+      const name = String(p.namn || '').trim();
+      if (!name) continue;
+      const nname = searchNormalize(name.toLowerCase());
+      if (!nname.includes(nq)) continue;
+      if (seen.has(name)) continue;
+      seen.add(name);
+      items.push(name);
+      if (items.length >= MAX) break;
+    }
+    if (!items.length) {
+      sugEl.innerHTML = '';
+      sugEl.hidden = true;
+      sugIdx = -1;
+      window.updateScrollLock?.();
+      return;
+    }
+    sugEl.innerHTML = items.map((v,i)=>`<div class="item" data-idx="${i}" data-val="${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}">${v}</div>`).join('');
+    sugEl.hidden = false;
+    sugIdx = -1;
+    window.updateScrollLock?.();
+  };
+
+  renderSkills(filtered()); activeTags(); updateXP(); renderTraits(); updateSearchDatalist();
+  window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); updateSearchDatalist(); };
 
   dom.catToggle.addEventListener('click', () => {
     const details = document.querySelectorAll('.cat-group > details');
@@ -438,11 +478,60 @@ function initCharacter() {
   });
 
   /* --- filter-events */
-  dom.sIn.addEventListener('input', ()=>{sTemp=dom.sIn.value.trim(); activeTags(); renderSkills(filtered()); renderTraits();});
+  dom.sIn.addEventListener('input', ()=>{
+    sTemp = dom.sIn.value.trim();
+    activeTags();
+    renderSkills(filtered());
+    renderTraits();
+    updateSearchDatalist();
+  });
+  {
+    const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
+    if (sugEl) {
+      sugEl.addEventListener('click', e => {
+        const it = e.target.closest('.item');
+        if (!it) return;
+        const val = (it.dataset.val || '').trim();
+        if (val && !F.search.includes(val)) F.search.push(val);
+        if (val && window.storeHelper?.addRecentSearch) {
+          storeHelper.addRecentSearch(store, val);
+        }
+        dom.sIn.value = '';
+        sTemp = '';
+        updateSearchDatalist();
+        activeTags();
+        renderSkills(filtered());
+        renderTraits();
+        dom.sIn.focus();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      });
+    }
+  }
   dom.sIn.addEventListener('keydown',e=>{
+    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+    const items = sugEl && !sugEl.hidden ? [...sugEl.querySelectorAll('.item')] : [];
+    if (e.key==='ArrowDown' && items.length) {
+      e.preventDefault();
+      sugIdx = Math.min(items.length - 1, sugIdx + 1);
+      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
+      return;
+    }
+    if (e.key==='ArrowUp' && items.length) {
+      e.preventDefault();
+      sugIdx = Math.max(-1, sugIdx - 1);
+      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
+      return;
+    }
     if(e.key==='Enter'){
       e.preventDefault();
       const term = sTemp.toLowerCase();
+      if (items.length && sugIdx >= 0) {
+        const chosen = items[sugIdx]?.dataset?.val || '';
+        if (chosen) {
+          dom.sIn.value = chosen; sTemp = chosen.trim();
+          updateSearchDatalist();
+        }
+      }
       if (term === 'webapp') {
         const ua = navigator.userAgent.toLowerCase();
         let anchor = 'general';
@@ -453,6 +542,7 @@ function initCharacter() {
         else if (/chrome/.test(ua)) anchor = 'chrome';
         window.open(`webapp.html#${anchor}`, '_blank');
         dom.sIn.value = ''; sTemp = '';
+        updateSearchDatalist();
         return;
       }
       if (term === 'lol') {
@@ -460,20 +550,22 @@ function initCharacter() {
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
         storeHelper.clearRevealedArtifacts(store);
-        activeTags(); renderSkills(filtered()); renderTraits();
+        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
         return;
       }
       if (tryBomb(sTemp)) {
         dom.sIn.value=''; sTemp='';
+        updateSearchDatalist();
         return;
       }
       if (tryNilasPopup(sTemp)) {
         dom.sIn.value=''; sTemp='';
+        updateSearchDatalist();
         return;
       }
       if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
       dom.sIn.value=''; sTemp='';
-      activeTags(); renderSkills(filtered()); renderTraits();
+      activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
     }
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
@@ -482,11 +574,11 @@ function initCharacter() {
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        activeTags(); renderSkills(filtered()); renderTraits();
+        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
         return;
       }
       if(v&&!F[key].includes(v)) F[key].push(v);
-      dom[sel].value=''; activeTags(); renderSkills(filtered()); renderTraits();
+      dom[sel].value=''; activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
     });
   });
   dom.active.addEventListener('click',e=>{
@@ -495,7 +587,7 @@ function initCharacter() {
     if(sec==='search'){F.search=F.search.filter(x=>x!==val);}
     else F[sec]=F[sec].filter(x=>x!==val);
     if(sec==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    activeTags(); renderSkills(filtered()); renderTraits();
+    activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
   });
 
   function formatLevels(list){
@@ -698,9 +790,10 @@ function initCharacter() {
       invUtil.renderInventory();
       storeHelper.removeRevealedArtifact(store, p.namn);
     }
-    renderSkills(filtered());
-    updateXP();
-    renderTraits();
+      renderSkills(filtered());
+      updateXP();
+      renderTraits();
+      updateSearchDatalist();
     if (actBtn.dataset.act === 'add') {
       flashAdded(name, tr);
     }
@@ -734,22 +827,22 @@ function initCharacter() {
             monsterLore.pickSpec(spec=>{
               if(!spec){ ent.nivå=old; e.target.value=old; return; }
               ent.trait=spec;
-              storeHelper.setCurrentList(store,list); updateXP();
-              renderSkills(filtered()); renderTraits();
+                storeHelper.setCurrentList(store,list); updateXP();
+                renderSkills(filtered()); renderTraits(); updateSearchDatalist();
             });
             return;
           }
         }else if(ent.trait){
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
-          renderSkills(filtered()); renderTraits();
+          renderSkills(filtered()); renderTraits(); updateSearchDatalist();
           return;
         }
       }
       storeHelper.setCurrentList(store,list); updateXP();
     }
-    renderSkills(filtered()); renderTraits();
-    flashAdded(name, tr);
+      renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      flashAdded(name, tr);
   });
 }
 
