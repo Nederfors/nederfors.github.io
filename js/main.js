@@ -186,7 +186,10 @@ if (dom.sIn) {
     }
   });
   dom.searchSug?.addEventListener('click', e => {
-    if (e.target.closest('.item')) dom.sIn.blur();
+    if (e.target.closest('.item')) {
+      // Delay blur so suggestion handlers can run first
+      setTimeout(() => dom.sIn.blur(), 0);
+    }
   });
 }
 
