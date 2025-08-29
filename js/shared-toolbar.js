@@ -613,12 +613,13 @@ class SharedToolbar extends HTMLElement {
               <strong>🆕</strong> lägger till eget föremål.<br>
               <strong>💰</strong> justerar pengar.<br>
               &nbsp;&nbsp;<em>Spara som totalen</em> ersätter summan helt.<br>
-              &nbsp;&nbsp;<em>Addera till totalen</em> lägger till beloppet.<br>
-              &nbsp;&nbsp;<em>Nollställ pengar</em> sätter totalen till noll.<br>
-              <strong>💸</strong> multiplicerar priset på markerade föremål med angivet tal.<br>
-              <strong>🔒</strong> sparar inventariet och markerar alla föremål som gratis.<br>
-
-              <strong>🧹</strong> tömmer inventariet.<br>
+                &nbsp;&nbsp;<em>Addera till totalen</em> lägger till beloppet.<br>
+                &nbsp;&nbsp;<em>Nollställ pengar</em> sätter totalen till noll.<br>
+                <strong>− / +</strong> i formalitetssektionen justerar totalsumman direkt med 1 daler.<br>
+                <strong>💸</strong> multiplicerar priset på markerade föremål med angivet tal.<br>
+                <strong>Klicka på priset</strong> öppnar en snabbmeny för att multiplicera radens pris (×0.5, ×1, ×1.5, ×2).<br>
+                <strong>🔒</strong> sparar inventariet och markerar alla föremål som gratis.<br>
+                <strong>🧹</strong> tömmer inventariet.<br>
               <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.<br>
               <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.<br>
               <strong>🛞 / 🐎</strong> lastar markerade föremål på valt färdmedel.
