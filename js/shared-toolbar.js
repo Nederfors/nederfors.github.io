@@ -73,6 +73,7 @@ class SharedToolbar extends HTMLElement {
           position: fixed;
           bottom: 0;
           left: 0;
+          right: 0;
           width: 100%;
           z-index: 900;
           background: var(--panel);
