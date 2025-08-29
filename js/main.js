@@ -171,24 +171,20 @@ if (dom.sIn) {
     searchFocus = true;
   });
   dom.sIn.addEventListener('blur', () => {
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    if (sugEl) sugEl.hidden = true;
-    if (searchFocus) {
-      searchFocus = false;
-      history.back();
-    }
+    setTimeout(() => {
+      const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+      if (sugEl) sugEl.hidden = true;
+      if (searchFocus) {
+        searchFocus = false;
+        history.back();
+      }
+    }, 0);
   });
   dom.sIn.addEventListener('keydown', e => {
     if (e.key === 'Enter') dom.sIn.blur();
     else if (e.key === 'Escape' && window.matchMedia('(pointer: fine)').matches) {
       e.preventDefault();
       dom.sIn.blur();
-    }
-  });
-  dom.searchSug?.addEventListener('click', e => {
-    if (e.target.closest('.item')) {
-      // Delay blur so suggestion handlers can run first
-      setTimeout(() => dom.sIn.blur(), 0);
     }
   });
 }
