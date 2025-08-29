@@ -331,15 +331,6 @@ input:focus, select:focus, textarea:focus {
 #valda .card.compact .inv-controls {
   display: flex;
 }
-.card-price {
-  position: absolute;
-  bottom: 0.6rem;
-  left: 1.3rem;
-  font-size: .9rem;
-  color: var(--subtxt);
-}
-/* Hide default price line in compact; use badges instead */
-.card.compact .card-price { display: none; }
 
 /* Meta badges (P, V, level) */
 .meta-badges {

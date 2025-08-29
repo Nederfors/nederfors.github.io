@@ -388,13 +388,11 @@ function initIndex() {
           : '';
         const levelHtml = hideDetails ? '' : lvlSel;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
-        const priceHtml = (!compact && priceText) ? `<div class="card-price">${priceLabel} ${priceText}</div>` : '';
         li.innerHTML = `
           <div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}
-          ${priceHtml}
           ${btn}`;
         listEl.appendChild(li);
       });
