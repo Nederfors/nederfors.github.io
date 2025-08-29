@@ -163,7 +163,11 @@
     const d = m.d ?? m.daler ?? 0;
     const s = m.s ?? m.skilling ?? 0;
     const o = m.o ?? m['\u00f6rtegar'] ?? 0;
-    return `${d}D ${s}S ${o}\u00d6`;
+    const parts = [];
+    if (d) parts.push(`${d}D`);
+    if (s) parts.push(`${s}S`);
+    if (o) parts.push(`${o}\u00d6`);
+    return parts.join(' ') || '0';
   }
 
   // Returnera HTML med skada/skydd-stats för vapen och rustningar
