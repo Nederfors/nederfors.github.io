@@ -46,7 +46,8 @@
     'Specialverktyg',
     'Diverse',
     'Mat',
-    'Dryck'
+    'Dryck',
+    'Tabell'
   ];
 
   const CAT_DISPLAY = {
@@ -75,7 +76,8 @@
     'Dryck': 'Drycker',
     'Byggnad': 'Byggnader',
     'Förvaring': 'Förvaringsföremål',
-    'Fälla': 'Fällor'
+    'Fälla': 'Fällor',
+    'Tabell': 'Tabeller'
   };
 
   function catName(cat){
