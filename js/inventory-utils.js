@@ -1133,7 +1133,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       desc += `<div class="tags">${tagList.join(' ')}</div>`;
     }
     desc += itemStatHtml(entry, row);
-    if (row.trait) {
+    if (row.trait && row.name !== 'Djurmask') {
       desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
     }
 
@@ -1458,7 +1458,7 @@ ${moneyRow}
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
                 const cPath = `${realIdx}.${j}`;
                 return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
-                  <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
+                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.name === 'Djurmask' && c.trait) ? `${c.name}: ${c.trait}` : c.name}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
                     ${cBtnRow}
@@ -1474,7 +1474,7 @@ ${moneyRow}
             <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title"><span><span class="collapse-btn"></span>${nameMap.get(row)}${badge}</span></div>
+              <div class="card-title"><span><span class="collapse-btn"></span>${(row.name === 'Djurmask' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
                 ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
               </div>

@@ -105,6 +105,16 @@
   });
 })();
 
+// Ensure we are at top after a Hoppsan reset reload
+try {
+  if (sessionStorage.getItem('hoppsanReset')) {
+    sessionStorage.removeItem('hoppsanReset');
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // Scroll on next tick to win over any pending layout
+    setTimeout(() => window.scrollTo(0, 0), 0);
+  }
+} catch {}
+
 /* ---------- Grunddata & konstanter ---------- */
 const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
 let   store  = storeHelper.load();                   // Lokal lagring
@@ -412,8 +422,12 @@ function bindToolbar() {
     if (id === 'exportChar') {
       if (!store.characters.length) { await alertPopup('Inga rollpersoner att exportera.'); return; }
       openExportPopup(async choice => {
-        if (choice === 'all') {
+        if (choice === 'all-one') {
           await exportAllCharacters();
+        } else if (choice === 'all-separate') {
+          const mode = await chooseSeparateExportMode();
+          if (mode === 'zip') await exportAllCharactersZipped();
+          else if (mode === 'separate') await exportAllCharactersSeparate();
         } else if (choice) {
           await exportCharacterFile(choice);
         }
@@ -491,6 +505,19 @@ function bindToolbar() {
       const idToDel = store.current;
       storeHelper.deleteCharacter(store, idToDel);
       location.reload();
+    }
+
+    /* Återställ basegenskaper till 10 ---------------------- */
+    if (id === 'resetTraits') {
+      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      const ok = await confirmPopup('Detta nollställer alla karaktärsdrag till 10. Karaktärsdrag från förmågor och inventarier påverkas inte. Åtgärden kan inte ångras. Vill du fortsätta?');
+      if (!ok) return;
+      const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+      const t = storeHelper.getTraits(store);
+      const next = { ...t };
+      KEYS.forEach(k => { next[k] = 10; });
+      storeHelper.setTraits(store, next);
+      if (window.renderTraits) renderTraits();
     }
   });
 
@@ -733,11 +760,32 @@ async function saveJsonFile(jsonText, suggested) {
   }
 }
 
+function sanitizeFilename(name) {
+  try {
+    let s = String(name || '').normalize('NFC');
+    // Replace invalid characters for Windows/macOS/Linux
+    s = s.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+    // Collapse whitespace
+    s = s.replace(/\s+/g, ' ').trim();
+    // Remove trailing dots and spaces (Windows)
+    s = s.replace(/[\.\s]+$/g, '');
+    // Avoid reserved device names on Windows
+    const reserved = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+    if (reserved.test(s)) s = '_' + s;
+    if (!s) s = 'fil';
+    // Guard length
+    if (s.length > 150) s = s.slice(0, 150);
+    return s;
+  } catch {
+    return 'fil';
+  }
+}
+
 async function exportCharacterFile(id) {
   const data = storeHelper.exportCharacterJSON(store, id);
   if (!data) return;
   const jsonText = JSON.stringify(data, null, 2);
-  const suggested = `${data.name || 'rollperson'}.json`;
+  const suggested = `${sanitizeFilename(data.name || 'rollperson')}.json`;
   await saveJsonFile(jsonText, suggested);
 }
 
@@ -747,8 +795,98 @@ async function exportAllCharacters() {
     .map(c => storeHelper.exportCharacterJSON(store, c.id))
     .filter(Boolean);
   const jsonText = JSON.stringify(all, null, 2);
-  const suggested = 'rollpersoner.json';
+  const suggested = 'Rollpersoner.json';
   await saveJsonFile(jsonText, suggested);
+}
+
+async function exportAllCharactersSeparate() {
+  const all = store.characters
+    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .filter(Boolean);
+  if (!all.length) return;
+
+  // Prefer directory picker when available for a nicer UX
+  if (window.showDirectoryPicker) {
+    try {
+      const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      for (const data of all) {
+        const name = (data && data.name) ? data.name : 'rollperson';
+        const fileName = `${sanitizeFilename(name)}.json`;
+        try {
+          const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(JSON.stringify(data, null, 2));
+          await writable.close();
+        } catch (err) {
+          // Skip file on error (e.g., permission denied for overwrite)
+        }
+      }
+      return;
+    } catch (err) {
+      // If user cancels or API fails, fall back to download approach
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+
+  // Fallback: trigger one download per character
+  for (const data of all) {
+    const name = (data && data.name) ? data.name : 'rollperson';
+    const jsonText = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonText], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${sanitizeFilename(name)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+async function exportAllCharactersZipped() {
+  const all = store.characters
+    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .filter(Boolean);
+  if (!all.length) return;
+
+  if (!window.JSZip) {
+    // Fallback to separate if JSZip not loaded
+    await exportAllCharactersSeparate();
+    return;
+  }
+
+  const zip = new JSZip();
+  for (const data of all) {
+    const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+    zip.file(`${name}.json`, JSON.stringify(data, null, 2));
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  await saveBlobFile(blob, 'Rollpersoner.zip');
+}
+
+async function saveBlobFile(blob, suggested) {
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = suggested;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
 
 function openExportPopup(cb) {
@@ -778,7 +916,8 @@ function openExportPopup(cb) {
     b.addEventListener('click', () => { close(); cb(value); });
     opts.appendChild(b);
   };
-  addBtn('Alla rollpersoner', 'all');
+  addBtn('Alla (en fil)', 'all-one');
+  addBtn('Alla (separat)', 'all-separate');
   const currentId = store.current;
   if (currentId) {
     const curChar = store.characters.find(c => c.id === currentId);
@@ -790,6 +929,18 @@ function openExportPopup(cb) {
   }
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
+}
+
+async function chooseSeparateExportMode() {
+  const res = await openDialog('Välj exportformat', {
+    cancel: true,
+    okText: 'Separat',
+    extraText: 'Zippade',
+    cancelText: 'Avbryt'
+  });
+  if (res === 'extra') return 'zip';
+  if (res === true) return 'separate';
+  return null;
 }
 
 function openNilasPopup(cb) {

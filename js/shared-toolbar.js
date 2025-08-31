@@ -218,7 +218,10 @@ class SharedToolbar extends HTMLElement {
       <aside id="traitsPanel" class="offcanvas">
         <header class="inv-header">
           <h2>Egenskaper</h2>
-          <button class="char-btn icon" data-close="traitsPanel">✕</button>
+          <div class="inv-actions">
+            <button id="resetTraits" class="char-btn icon danger" title="Återställ basegenskaper">🧹</button>
+            <button class="char-btn icon" data-close="traitsPanel">✕</button>
+          </div>
         </header>
 
         <!-- Erfarenhetspoäng -->
@@ -595,7 +598,6 @@ class SharedToolbar extends HTMLElement {
           <h3>Kortkommandon</h3>
           <ul>
             <li>Enter: Bekräfta sökförslag eller lägg till skriven term.</li>
-            <li>↑/↓: Navigera bland sökförslag.</li>
             <li>Esc: Stäng öppna paneler/popup (desktop).</li>
           </ul>
 
@@ -658,7 +660,9 @@ class SharedToolbar extends HTMLElement {
 
           <h3>Tips</h3>
           <ul>
-            <li>Snabb nollställning: Skriv "lol" i sökfältet för att rensa alla filter.</li>
+           <li> Knappen "Börja om" i kategorin "Hoppsan"rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
+            <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck enter för att rensa alla filter.</li>
+            <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck enter för att radera samtliga karaktärer på.</li>
             <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
             <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
           </ul>

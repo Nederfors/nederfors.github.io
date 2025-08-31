@@ -511,6 +511,10 @@ input:focus, select:focus, textarea:focus {
 
 .inv-header { display: flex; justify-content: space-between; align-items: center; }
 .inv-actions { display: flex; align-items: baseline; gap: .4rem; }
+/* Lite extra luft under rubriken i Egenskaper-panelen */
+#traitsPanel .inv-header { margin-bottom: 1rem; }
+/* Lite större mellanrum mellan knapparna i Egenskaper-panelen */
+#traitsPanel .inv-actions { gap: .6rem; }
 
 /* Knappar i inventariepanelen */
 .inv-buttons {
@@ -825,7 +829,7 @@ select.level {
   width: 100%;
   height: 100%;
   display: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   background: rgba(0,0,0,.6);
   z-index: 3000;
@@ -834,19 +838,19 @@ select.level {
 #traitPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
-  border-radius: 1.2rem 1.2rem 0 0;
+  border-radius: 1.2rem;
   box-shadow: var(--shadow);
   padding: 1.5rem 1.4rem 2rem;
-  width: 100%;
+  width: 90%;
   max-width: 420px;
   text-align: center;
-  transform: translateY(100%);
+  transform: scale(.8);
   transition: transform .25s ease;
   display: flex;
   flex-direction: column;
   gap: .8rem;
 }
-#traitPopup.open .popup-inner { transform: translateY(0); }
+#traitPopup.open .popup-inner { transform: scale(1); }
 #traitPopup #traitOpts {
   display: flex;
   flex-direction: column;
@@ -861,7 +865,7 @@ select.level {
   width: 100%;
   height: 100%;
   display: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   background: rgba(0,0,0,.6);
   z-index: 3000;
@@ -870,19 +874,19 @@ select.level {
 #maskPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
-  border-radius: 1.2rem 1.2rem 0 0;
+  border-radius: 1.2rem;
   box-shadow: var(--shadow);
   padding: 1.5rem 1.4rem 2rem;
-  width: 100%;
+  width: 90%;
   max-width: 420px;
   text-align: center;
-  transform: translateY(100%);
+  transform: scale(.8);
   transition: transform .25s ease;
   display: flex;
   flex-direction: column;
   gap: .8rem;
 }
-#maskPopup.open .popup-inner { transform: translateY(0); }
+#maskPopup.open .popup-inner { transform: scale(1); }
 #maskPopup #maskOpts {
   display: flex;
   flex-direction: column;
@@ -896,7 +900,7 @@ select.level {
   width: 100%;
   height: 100%;
   display: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   background: rgba(0,0,0,.6);
   z-index: 3000;
@@ -905,19 +909,19 @@ select.level {
 #beastPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
-  border-radius: 1.2rem 1.2rem 0 0;
+  border-radius: 1.2rem;
   box-shadow: var(--shadow);
   padding: 1.5rem 1.4rem 2rem;
-  width: 100%;
+  width: 90%;
   max-width: 420px;
   text-align: center;
-  transform: translateY(100%);
+  transform: scale(.8);
   transition: transform .25s ease;
   display: flex;
   flex-direction: column;
   gap: .8rem;
 }
-#beastPopup.open .popup-inner { transform: translateY(0); }
+#beastPopup.open .popup-inner { transform: scale(1); }
 #beastPopup #beastOpts {
   display: flex;
   flex-direction: column;
@@ -933,7 +937,7 @@ select.level {
   width: 100%;
   height: 100%;
   display: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   background: rgba(0,0,0,.6);
   z-index: 3000;
@@ -942,19 +946,19 @@ select.level {
 #bloodPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
-  border-radius: 1.2rem 1.2rem 0 0;
+  border-radius: 1.2rem;
   box-shadow: var(--shadow);
   padding: 1.5rem 1.4rem 2rem;
-  width: 100%;
+  width: 90%;
   max-width: 420px;
   text-align: center;
-  transform: translateY(100%);
+  transform: scale(.8);
   transition: transform .25s ease;
   display: flex;
   flex-direction: column;
   gap: .8rem;
 }
-#bloodPopup.open .popup-inner { transform: translateY(0); }
+#bloodPopup.open .popup-inner { transform: scale(1); }
 #bloodPopup #bloodOpts {
   display: flex;
   flex-direction: column;
@@ -969,7 +973,7 @@ select.level {
   width: 100%;
   height: 100%;
   display: none;
-  align-items: flex-end;
+  align-items: center;
   justify-content: center;
   background: rgba(0,0,0,.6);
   z-index: 3000;
@@ -978,19 +982,19 @@ select.level {
 #monsterPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
-  border-radius: 1.2rem 1.2rem 0 0;
+  border-radius: 1.2rem;
   box-shadow: var(--shadow);
   padding: 1.5rem 1.4rem 2rem;
-  width: 100%;
+  width: 90%;
   max-width: 420px;
   text-align: center;
-  transform: translateY(100%);
+  transform: scale(.8);
   transition: transform .25s ease;
   display: flex;
   flex-direction: column;
   gap: .8rem;
 }
-#monsterPopup.open .popup-inner { transform: translateY(0); }
+#monsterPopup.open .popup-inner { transform: scale(1); }
 #monsterPopup #monsterOpts {
   display: flex;
   flex-direction: column;
@@ -1639,7 +1643,15 @@ select.level {
   z-index: 3000;
 }
 .popup.open { display: flex; }
-.popup-bottom { align-items: flex-end; }
+/* Restyle all "bottom" sheets to centered popups */
+.popup-bottom { align-items: center !important; }
+.popup-bottom .popup-inner {
+  border-radius: 1.2rem !important;
+  width: 90% !important;
+  transform: scale(.8) !important;
+  transition: transform .25s ease !important;
+}
+.popup-bottom.open .popup-inner { transform: scale(1) !important; }
 
 /* Clickable price text in inventory */
 .price-click { cursor: pointer; }

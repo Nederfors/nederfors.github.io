@@ -24,6 +24,26 @@ function initCharacter() {
   const summaryClose = document.getElementById('summaryClose');
   const summaryContent = document.getElementById('summaryContent');
 
+  // Rensa allt utom inventariet (suddgummi)
+  const clearBtn = document.getElementById('clearNonInv');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', async () => {
+      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      const ok = await confirmPopup('Detta tar bort Ras, Yrken, Elityrken, Förmågor, Mystisk kraft, Ritualer, Fördelar, Nackdelar, Särdrag och Monstruösa särdrag från karaktären. Inventariet lämnas orört. Vill du fortsätta?');
+      if (!ok) return;
+      const before = storeHelper.getCurrentList(store);
+      const keep = before.filter(p => isInv(p));
+      storeHelper.setCurrentList(store, keep);
+      if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+        invUtil.renderInventory();
+      }
+      renderSkills(filtered());
+      updateXP();
+      renderTraits();
+      updateSearchDatalist();
+    });
+  }
+
   const conflictPanel = document.getElementById('conflictPanel');
   const conflictClose = document.getElementById('conflictClose');
   const conflictList = document.getElementById('conflictList');
@@ -450,8 +470,10 @@ function initCharacter() {
             : `<br><strong>Karaktärsdrag:</strong> ${p.trait}`;
           infoHtml += traitInfo;
         }
-        const xpVal = storeHelper.calcEntryXP(p, storeHelper.getCurrentList(store));
-        const xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
+        const curList = storeHelper.getCurrentList(store);
+        const xpVal = storeHelper.calcEntryXP(p, curList);
+        let xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
+        if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
         const infoTagsHtml = [xpTag]
           .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))

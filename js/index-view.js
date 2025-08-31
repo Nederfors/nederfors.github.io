@@ -15,6 +15,8 @@ function initIndex() {
   let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
   // Open matching categories once after certain actions (search/type select)
   let openCatsOnce = new Set();
+  // Track transition of "any other categories open" to coordinate Hoppsan behavior
+  let prevAnyOtherOpen = null;
 
   const getEntries = () => {
     const base = DB
@@ -250,7 +252,7 @@ function initIndex() {
         .map(d => d.dataset.cat)
     );
     dom.lista.innerHTML = '';
-    if(!arr.length){ dom.lista.innerHTML = '<li class="card">Inga träffar.</li>'; return; }
+    // Always render list; a fallback "Hoppsan" category is appended last.
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
@@ -383,8 +385,9 @@ function initIndex() {
         const charEntry = charList.find(c => c.namn === p.namn);
         const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
         const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
-        const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
-        const xpTag = xpVal != null ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
+        let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
+        if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
+        const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
         const infoTagsHtml = [xpTag]
           .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
           .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
@@ -397,7 +400,7 @@ function initIndex() {
           .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
           .filter(Boolean)
           .join(' ');
-        const xpHtml = xpVal != null ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
         // Compact meta badges (P/V/level) using short labels for mobile space
         const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
         const lvlShort =
@@ -481,14 +484,50 @@ function initIndex() {
       });
       dom.lista.appendChild(catLi);
     });
+    // Append special "Hoppsan" category with a clear-filters action
+    {
+      const hopLi = document.createElement('li');
+      hopLi.className = 'cat-group';
+      const anyOtherOpen = [...dom.lista.querySelectorAll('.cat-group > details')]
+        .some(d => d.dataset.cat !== 'Hoppsan' && d.open);
+      hopLi.innerHTML = `
+        <details data-cat="Hoppsan"${anyOtherOpen ? ' open' : ''}>
+          <summary>Hoppsan</summary>
+          <ul class="card-list"></ul>
+        </details>`;
+      const listEl = hopLi.querySelector('ul');
+      const li = document.createElement('li');
+      li.className = 'card compact hoppsan-card';
+      li.dataset.name = 'Hoppsan';
+      li.innerHTML = `
+<div class="card-title"><span>Hoppsan, här tog det slut.</span></div>
+        <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;      
+        listEl.appendChild(li);
+      const detailsEl = hopLi.querySelector('details');
+      detailsEl.addEventListener('toggle', updateCatToggle);
+      dom.lista.appendChild(hopLi);
+    }
     updateCatToggle();
     // Only auto-open once per triggering action
     openCatsOnce.clear();
   };
 
   const updateCatToggle = () => {
-    catsMinimized = [...document.querySelectorAll('.cat-group > details')]
-      .every(d => !d.open);
+    const allDetails = [...document.querySelectorAll('.cat-group > details')];
+    const hop = allDetails.find(d => d.dataset.cat === 'Hoppsan');
+    const others = allDetails.filter(d => d !== hop);
+    const anyOtherOpen = others.some(d => d.open);
+    // Only force Hoppsan open/closed on transitions of other categories
+    if (prevAnyOtherOpen === null) {
+      prevAnyOtherOpen = anyOtherOpen;
+    } else if (anyOtherOpen !== prevAnyOtherOpen) {
+      if (hop) {
+        if (anyOtherOpen) hop.open = true;      // first other opened → open Hoppsan
+        else hop.open = false;                  // last other closed → close Hoppsan
+      }
+      prevAnyOtherOpen = anyOtherOpen;
+    }
+    catsMinimized = others.length ? others.every(d => !d.open) : true;
     dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
     dom.catToggle.title = catsMinimized
       ? 'Öppna alla kategorier'
@@ -657,6 +696,19 @@ function initIndex() {
 
   /* lista-knappar */
   dom.lista.addEventListener('click', async e=>{
+    // Special clear-filters action inside the Hoppsan category
+    const clearBtn = e.target.closest('button[data-clear-filters]');
+    if (clearBtn) {
+      // Reset all filters and state
+      storeHelper.setOnlySelected(store, false);
+      storeHelper.clearRevealedArtifacts(store);
+      // Ensure we land at top after reload
+      try { sessionStorage.setItem('hoppsanReset', '1'); } catch {}
+      // Scroll to top immediately, then refresh the page to restore default state
+      window.scrollTo(0, 0);
+      location.reload();
+      return;
+    }
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       let html=decodeURIComponent(infoBtn.dataset.info||'');

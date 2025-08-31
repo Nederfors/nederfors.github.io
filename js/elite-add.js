@@ -4,8 +4,7 @@
     const div=document.createElement('div');
     div.id='masterPopup';
     div.className='popup popup-bottom';
-    div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">V\u00e4lj niv\u00e5</h3><div id="masterOpts"></div><div id="masterBtns"><button id="masterAdd" class="char-btn">L\u00e4gg till</button><button id="masterCancel" class="char-btn danger">Avbryt</button></div></div>`;
-    document.body.appendChild(div);
+div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elityrke med f\u00f6rm\u00e5gor; minst en m\u00e5ste vara p\u00e5 m\u00e4starniv\u00e5</h3><div id="masterOpts"></div><div id="masterBtns"><button id="masterAdd" class="char-btn">L\u00e4gg till</button><button id="masterCancel" class="char-btn danger">Avbryt</button></div></div>`;    document.body.appendChild(div);
   }
 
   function openPopup(groups, cb){
@@ -17,17 +16,23 @@
     box.innerHTML = groups.map((g, i) => {
       const optsNormal = `<option value="Novis">Novis</option><option value="Ges\u00e4ll">Ges\u00e4ll</option><option value="M\u00e4stare">M\u00e4stare</option>`;
       const optsOr = `<option value="skip">Skippa</option>` + optsNormal;
-      const optsRit = `<option value="Novis">V\u00e4lj</option><option value="skip">Skippa</option>`;
+      const optsRitOr = `<option value="Novis">V\u00e4lj</option><option value="skip">Skippa</option>`;
+      const optsRitSingle = `<option value="Novis">V\u00e4lj</option>`;
 
       if(g.anyMystic || g.anyRitual){
         const list = (g.anyMystic ? allMystic() : allRitual()).map(e => e.namn).sort();
-        const optsName = `<option value="skip">Skippa</option>` + list.map(n => `<option>${n}</option>`).join('');
         const label = g.anyMystic ? 'Mystisk kraft' : 'Ritual';
+        if (g.anyRitual) {
+          // Valfri ritual: endast namnlista, ingen nivå och ingen Skippa
+          const optsName = list.map(n => `<option>${n}</option>`).join('');
+          return `<label>${label} <select data-ability data-group="${i}">${optsName}</select></label>`;
+        }
+        const optsName = `<option value="skip">Skippa</option>` + list.map(n => `<option>${n}</option>`).join('');
         return `<label>${label} <select data-ability data-group="${i}">${optsName}</select> <select data-name="" data-group="${i}" class="level">${optsNormal}</select></label>`;
       }
 
       const html = g.names.map((nm, j) => {
-        const opts = g.allRitual ? optsRit : (g.names.length > 1 ? optsOr : optsNormal);
+        const opts = g.allRitual ? (g.names.length > 1 ? optsRitOr : optsRitSingle) : (g.names.length > 1 ? optsOr : optsNormal);
         const sep = j > 0 ? '<div class="or-sep">eller</div>' : '';
         return sep + `<label>${nm}<select data-name="${nm}" data-group="${i}" class="level">${opts}</select></label>`;
       }).join('');
@@ -38,10 +43,64 @@
     const nameSels = box.querySelectorAll('select[data-ability]');
     const levelSels = box.querySelectorAll('select[data-name]');
 
+    // Förval: anpassa nivåer efter vad rollpersonen redan har valt
+    try {
+      const list = storeHelper.getCurrentList(store);
+      const LVL_IDX = { '':0, 'Novis':1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+
+      // 1) Generiska grupper: anyMystic/anyRitual – välj bästa match i listan
+      groups.forEach((g, i) => {
+        if (!(g.anyMystic || g.anyRitual)) return;
+        const nameSel = box.querySelector(`select[data-ability][data-group="${i}"]`);
+        const lvlSel  = box.querySelector(`select[data-name][data-group="${i}"]`);
+        if (!nameSel) return;
+        const isMyst = !!g.anyMystic;
+        // plocka kandidater ur karaktärslistan
+        const candidates = list
+          .filter(it => (it.taggar?.typ || []).includes(isMyst ? 'Mystisk kraft' : 'Ritual'))
+          .filter(it => !isEliteSkill(it));
+        if (!candidates.length) return;
+        // välj bästa (högst nivå för mystik, godtycklig för ritual)
+        let best = candidates[0];
+        if (isMyst) {
+          candidates.forEach(it => {
+            const a = LVL_IDX[it.nivå || ''] || 0;
+            const b = LVL_IDX[best.nivå || ''] || 0;
+            if (a > b) best = it;
+          });
+        }
+        // förvälj
+        if ([...nameSel.options].some(o => o.value === best.namn || o.textContent === best.namn)) {
+          nameSel.value = best.namn;
+          if (isMyst && lvlSel) {
+            lvlSel.dataset.name = best.namn;
+            lvlSel.value = best.nivå || 'Novis';
+          }
+        }
+      });
+
+      // 2) Namngivna grupper – sätt nivå per namn om den redan finns
+      groups.forEach((g, i) => {
+        if (!g.names || !g.names.length) return;
+        g.names.forEach(nm => {
+          const sel = box.querySelectorAll(`select[data-group="${i}"][data-name]`);
+          const s = Array.from(sel).find(x => (x.dataset.name || '') === nm);
+          if (!s) return;
+          const cur = list.find(it => it.namn === nm);
+          if (!cur) return;
+          if (isRitual(nm)) {
+            s.value = 'Novis'; // markerar att ritualen uppfylls
+          } else {
+            s.value = cur.nivå || 'Novis';
+          }
+        });
+      });
+    } catch {}
+
     nameSels.forEach(sel => {
-      const lvl = box.querySelector(`select[data-name][data-group="${sel.dataset.group}"]`);
       sel.addEventListener('change', () => {
-        lvl.dataset.name = sel.value !== 'skip' ? sel.value : '';
+        const lvl = box.querySelector(`select[data-name][data-group="${sel.dataset.group}"]`);
+        if (lvl) lvl.dataset.name = sel.value !== 'skip' ? sel.value : '';
         check();
       });
     });
@@ -62,6 +121,15 @@
         if(!s.dataset.name || s.value==='skip') return;
         levels[s.dataset.name]=s.value;
       });
+      // Val från valfri ritual-grupp (ingen nivå)
+      const ablSels = box.querySelectorAll('select[data-ability]');
+      ablSels.forEach(sel => {
+        const grp = groups[Number(sel.dataset.group)];
+        if (grp && grp.anyRitual) {
+          const nm = sel.value;
+          if (nm && nm !== 'skip') levels[nm] = 'Novis';
+        }
+      });
       close();
       cb(levels);
     }
@@ -73,6 +141,7 @@
       }
     }
     function check(){
+      // 1) Varje grupp måste vara vald (ej "skippa")
       for(let i=0;i<groups.length;i++){
         const nameSel=box.querySelector(`select[data-ability][data-group="${i}"]`);
         if(nameSel){
@@ -81,6 +150,12 @@
         }
         const sgs=box.querySelectorAll(`select[data-group="${i}"][data-name]`);
         if(sgs.length && Array.from(sgs).every(x=>x.value==='skip')){ add.disabled=true; return; }
+      }
+      // 2) Minst en vald nivå måste vara Mästare, om nivåval finns
+      const levelSelsAll = box.querySelectorAll('select[data-name]');
+      if(levelSelsAll.length){
+        const hasMaster = Array.from(levelSelsAll).some(s=>s.value==='M\u00e4stare');
+        if(!hasMaster){ add.disabled=true; return; }
       }
       add.disabled=false;
     }
@@ -231,12 +306,15 @@
     storeHelper.setCurrentList(store,list);
   }
 
-  async function addElite(entry){
+  async function addElite(entry, opts = {}){
     if(!store.current){ await alertPopup('Ingen rollperson vald.'); return; }
     const list = storeHelper.getCurrentList(store);
     if(list.some(x=>x.namn===entry.namn)) return;
-      if(list.some(isElityrke)){
-      if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
+    const skipDup = !!opts.skipDuplicateConfirm;
+    if(list.some(isElityrke)){
+      if(!skipDup){
+        if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
+      }
     }
     const res = eliteReq.check(entry, list);
       if(!res.ok){
@@ -254,14 +332,20 @@
     const name=btn.dataset.eliteReq;
     const entry=DB.find(x=>x.namn===name);
     if(!entry) return;
+    if(!store.current){ await alertPopup('Ingen rollperson vald.'); return; }
+    const listPre = storeHelper.getCurrentList(store);
+    if(listPre.some(x=>x.namn===entry.namn)) return;
+    if(listPre.some(isElityrke)){
+      if(!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
+    }
     const groups=parseGroupRequirements(entry.krav_formagor||'');
     if(!groups.length){
-      await addReq(entry); await addElite(entry); updateXP(); location.reload(); return;
+      await addReq(entry); await addElite(entry, { skipDuplicateConfirm: true }); updateXP(); location.reload(); return;
     }
     openPopup(groups, levels=>{
       if(!levels) return;
       addReq(entry, levels);
-      addElite(entry);
+      addElite(entry, { skipDuplicateConfirm: true });
       updateXP();
       location.reload();
     });
