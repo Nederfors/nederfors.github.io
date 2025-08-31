@@ -278,7 +278,8 @@
       "ljusa davokar": "50 km",
       "mörka davokar": "20 km"
     }
-  ]
+  ],
+   "extra": "*Forcerad förflyttning innebär regeltekniskt att en natts sömn inte räcker för att vila ut. Rollpersonerna läker inte naturligt och får -1 på alla karaktärsdrag dagen efter en forcerad förflyttning, denna modifikation ökar kumulativt per dag i rad med forcerad förflyttning. Modifikationen försvinner efter en hel dags vila.\n\n*Dödsförflyttning innebär, utöver reglerna för forcerad förflyttning, risk för liv och lem under förflyttningen. Alla som genomför förflyttningen måste slå Stark för att inte ta 1T12 Tålighet i skada. Ett slag på 20 innebär att varelsen skadats dödligt i en olycka och omedelbart slår ett dödsslag, innan ett försök till undsättning sker."
 },
 {
   "id": "ta6",

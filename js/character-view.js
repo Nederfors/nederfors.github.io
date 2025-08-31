@@ -29,6 +29,71 @@ function initCharacter() {
   const conflictList = document.getElementById('conflictList');
   const conflictTitle = document.getElementById('conflictTitle');
 
+  // Inline highlight for Info content (same normalization as index-view)
+  const buildNormMap = (str) => {
+    const low = String(str || '').toLowerCase();
+    let norm = '';
+    const map = [];
+    for (let i = 0; i < low.length; i++) {
+      const n = searchNormalize(low[i]);
+      norm += n;
+      for (let k = 0; k < n.length; k++) map.push(i);
+    }
+    return { norm, map };
+  };
+  const highlightTextNode = (node, termsNorm) => {
+    const text = node.nodeValue;
+    if (!text || !text.trim()) return;
+    const { norm, map } = buildNormMap(text);
+    const ranges = [];
+    for (const term of termsNorm) {
+      if (!term) continue;
+      let start = 0;
+      while (true) {
+        const idx = norm.indexOf(term, start);
+        if (idx === -1) break;
+        const s = map[idx];
+        const e = map[idx + term.length - 1] + 1;
+        if (s != null && e != null && e > s) ranges.push([s,e]);
+        start = idx + Math.max(1, term.length);
+      }
+    }
+    if (!ranges.length) return;
+    ranges.sort((a,b)=>a[0]-b[0] || a[1]-b[1]);
+    const merged = [];
+    for (const r of ranges) {
+      const last = merged[merged.length - 1];
+      if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+      else merged.push(r.slice());
+    }
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    for (const [s,e] of merged) {
+      if (pos < s) frag.appendChild(document.createTextNode(text.slice(pos, s)));
+      const mark = document.createElement('mark');
+      mark.textContent = text.slice(s, e);
+      frag.appendChild(mark);
+      pos = e;
+    }
+    if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+    node.parentNode.replaceChild(frag, node);
+  };
+  const highlightInElement = (el, termsNorm) => {
+    if (!el || !termsNorm || !termsNorm.length) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        const p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        const tag = (p.nodeName || '').toLowerCase();
+        if (tag === 'script' || tag === 'style' || tag === 'mark') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => highlightTextNode(n, termsNorm));
+  };
+
   const flashAdded = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
     const items = dom.valda?.querySelectorAll(selector);
@@ -66,9 +131,30 @@ function initCharacter() {
   }
 
   function renderConflicts(list){
-    conflictList.innerHTML = list.length
-      ? list.map(conflictEntryHtml).join('')
-      : '<li class="card">Inga konflikter.</li>';
+    if(!list.length){
+      conflictList.innerHTML = '<li class="card">Inga konflikter.</li>';
+      return;
+    }
+
+    const cats = {};
+    list.forEach(p=>{
+      const cat = p.taggar?.typ?.[0] || 'Övrigt';
+      (cats[cat] ||= []).push(p);
+    });
+
+    const catKeys = Object.keys(cats).sort(catComparator);
+    const html = catKeys.map(cat => {
+      const items = cats[cat].map(conflictEntryHtml).join('');
+      return `
+        <li class="cat-group">
+          <details open>
+            <summary>${catName(cat)}</summary>
+            <ul class="card-list">${items}</ul>
+          </details>
+        </li>`;
+    }).join('');
+
+    conflictList.innerHTML = html;
   }
 
   function renderSummary(){
@@ -618,12 +704,28 @@ function initCharacter() {
     }
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
-      const html=decodeURIComponent(infoBtn.dataset.info||'');
+      let html=decodeURIComponent(infoBtn.dataset.info||'');
       const liEl = infoBtn.closest('li');
       const title = liEl?.querySelector('.card-title > span')?.textContent || '';
       if(infoBtn.dataset.tabell!=null){
+        const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
+        if (terms.length) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          highlightInElement(tmp, terms);
+          html = tmp.innerHTML;
+        }
         tabellPopup.open(html, title);
         return;
+      }
+      {
+        const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
+        if (terms.length) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          highlightInElement(tmp, terms);
+          html = tmp.innerHTML;
+        }
       }
       yrkePanel.open(title, html);
       return;

@@ -570,88 +570,109 @@ class SharedToolbar extends HTMLElement {
       <!-- ---------- Hj\u00e4lp ---------- -->
       <aside id="infoPanel" class="offcanvas">
         <header class="inv-header">
-          <h2>Hj\u00e4lp</h2>
+          <h2>Hjälp</h2>
           <button class="char-btn icon" data-close="infoPanel">✕</button>
         </header>
         <div class="help-content">
+          <h3>Kom igång</h3>
+          <ul>
+            <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
+            <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
+            <li>Öppna panelerna längst ned: 📊 Egenskaper, 🎒 Inventarie, ⚙️ Filter.</li>
+          </ul>
+
           <h3>Verktygsrad</h3>
-          <p>
-            <strong>▼</strong> minimerar eller expanderar alla kategorier.<br>
-            <strong>🧝 / 📇</strong> växlar mellan index och rollperson (ikonen ändras beroende på sida).<br>
-            <strong>📜</strong> öppnar anteckningssidan (i rollpersonens sidhuvud).<br>
-            <strong>📇 / 🧝</strong> på anteckningssidan går till index respektive rollperson.<br>
-            <strong>🎒</strong> öppnar inventariepanelen.<br>
-            <strong>📊</strong> öppnar egenskapspanelen.<br>
-            <strong>Skriv ett ord och tryck Enter</strong> för att filtrera listan.<br>
-            <strong>↑/↓</strong> väljer ett förslag, <strong>Enter</strong> eller klick lägger till det.<br>
-            <strong>Klicka på taggarna under sökfältet</strong> för att ta bort filter.<br>
-            <strong>Skriv "lol"</strong> i sökfältet nollställer alla filter.<br>
-            <strong>⚙️</strong> öppnar filtermenyn.<br>
-            <strong>Esc</strong> eller webbläsarens <strong>tillbaka-knapp</strong> stänger senast öppnade panel eller popup.
-          </p>
-            <h3>Filtermenyn</h3>
-            <p>
-              <strong>Välj rollperson</strong> byter aktiv rollperson.<br>
-              <strong>Typ</strong>, <strong>Arketyp</strong> och <strong>Test</strong> filtrerar listor.<br>
-              <strong>Ny rollperson</strong> skapar en ny karaktär.<br>
-              <strong>Kopiera rollperson</strong> duplicerar den valda karaktären.<br>
-              <strong>Byt namn</strong> ändrar karaktärens namn.<br>
-              <strong>Ta bort rollperson</strong> raderar karaktären.<br>
-              <strong>Exportera</strong> laddar ner vald karaktär som JSON-fil eller alla som en samlad JSON.<br>
-              <strong>Importera</strong> läser in en eller flera karaktärer från JSON-fil(er).<br>
-              <strong>⚒️ / ⚗️ / 🏺</strong> anger nivå på smed, alkemist och artefaktmakare.<br>
-              <strong>🔭</strong> utvidgar sökningen (OR-filter).<br>
-              <strong>🤏</strong> växlar kompakt listvy.<br>
-              <strong>🏃</strong> låter dig välja försvarskaraktärsdrag manuellt.<br>
-              <strong>ℹ️</strong> visar denna hjälpmeny.
-            </p>
-            <h3>Inventariepanelen</h3>
-            <p>
-              <strong>Sök i inventarie</strong> filtrerar föremål i realtid.<br>
-              <strong>▶</strong> kollapsar alla kategorier.<br>
-              <strong>🔀</strong> växlar dragläge för att ändra ordningen på föremål.<br>
-              <strong>🆕</strong> lägger till eget föremål.<br>
-              <strong>💰</strong> justerar pengar.<br>
-              &nbsp;&nbsp;<em>Spara som totalen</em> ersätter summan helt.<br>
-                &nbsp;&nbsp;<em>Addera till totalen</em> lägger till beloppet.<br>
-                &nbsp;&nbsp;<em>Nollställ pengar</em> sätter totalen till noll.<br>
-                <strong>− / +</strong> i formalitetssektionen justerar totalsumman direkt med 1 daler.<br>
-                <strong>💸</strong> multiplicerar priset på markerade föremål med angivet tal.<br>
-                <strong>Klicka på priset</strong> öppnar en snabbmeny för att multiplicera radens pris (×0.5, ×1, ×1.5, ×2).<br>
-                <strong>🔒</strong> sparar inventariet och markerar alla föremål som gratis.<br>
-                <strong>🧹</strong> tömmer inventariet.<br>
-              <strong>x²</strong> lägger till flera av samma föremål. Föremål som inte kan staplas får nya fält.<br>
-              <strong>Kategori</strong> filtrerar inventariet efter föremålstyp.<br>
-              <strong>🛞 / 🐎</strong> lastar markerade föremål på valt färdmedel.
-            </p>
-          <h3>Egenskapspanelen</h3>
-          <p>Ange total XP och få en summering av valda förmågor. Knapparna <strong>−</strong> och <strong>+</strong> minskar respektive ökar totala erfarenhetspoäng. Knappen "Förmågor: X" filtrerar listan och aktiverar filtret "Endast valda". Ta bort filtret genom att klicka på taggen "Endast valda".</p>
-          <h3>Rollpersonspanelen</h3>
-          <p><strong>📋</strong> visar en sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</p>
-          <h3>Anteckningssidan</h3>
-          <p>
-            <strong>✏️ Redigera</strong> växlar mellan läs- och redigeringsläge.<br>
-            <strong>Sudda</strong> rensar alla fält.<br>
-            <strong>Spara</strong> sparar anteckningarna.
-          </p>
-          <h3>Listor och inventarie</h3>
-          <p>
-            <strong>Lägg till / +</strong> lägger till posten.<br>
-            <strong>−</strong> minskar antal eller tar bort posten.<br>
-            <strong>Info</strong> visar detaljer.<br>
-            <strong>🏋🏻‍♂️</strong> Lägger till elityrket tillsammans med dess krav på förmågor.<br>
-            <strong>🔨</strong> lägger till kvalitet.<br>
-            <strong>☭</strong> markerar en kostande kvalitet som gratis.<br>
-            <strong>🆓</strong> gör ett föremål gratis.<br>
-            <strong>💔</strong> visar konflikter.<br>
-            <strong>↔</strong> växlar artefaktens kostnad mellan XP och permanent korruption.<br>
-            <strong>⬇️</strong> lastar föremålet på valt färdmedel.<br>
-            <strong>⬆️</strong> flyttar föremålet från färdmedlet tillbaka till inventariet.<br>
-            <strong>🗑</strong> tar bort posten helt.
-          </p>
+          <ul>
+            <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
+            <li>🧝 / 📇: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
+            <li>📜: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
+            <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
+            <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
+            <li>Förslag: Använd ↑/↓ för att välja, Enter eller klick för att lägga till.</li>
+            <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
+          </ul>
+
+          <h3>Kortkommandon</h3>
+          <ul>
+            <li>Enter: Bekräfta sökförslag eller lägg till skriven term.</li>
+            <li>↑/↓: Navigera bland sökförslag.</li>
+            <li>Esc: Stäng öppna paneler/popup (desktop).</li>
+          </ul>
+
+          <h3>Filtermeny</h3>
+          <ul>
+            <li>Välj rollperson: Byter aktiv rollperson.</li>
+            <li>Typ, Arketyp, Test: Filtrerar listor.</li>
+            <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
+            <li>Exportera/Importera: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
+            <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
+            <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
+            <li>🤏 Kompakt vy: Växla kortare listvy.</li>
+            <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
+            <li>ℹ️ Hjälp: Visar denna panel.</li>
+          </ul>
+
+          <h3>Inventarie</h3>
+          <ul>
+            <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
+            <li>▶ Kollapsa alla kategorier.</li>
+            <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
+            <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; −/+ justerar 1 daler).</li>
+            <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
+            <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. 🧹 Töm inventariet.</li>
+            <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
+            <li>Kategori: Filtrera på föremålstyp.</li>
+            <li>🛞/🐎 Lastning: Lägg på/ta av föremål från valt färdmedel.</li>
+          </ul>
+
+          <h3>Egenskaper</h3>
+          <ul>
+            <li>Ange total XP via −/+ eller genom att skriva värdet.</li>
+            <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
+            <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
+          </ul>
+
+          <h3>Rollperson</h3>
+          <ul>
+            <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
+          </ul>
+
+          <h3>Anteckningar</h3>
+          <ul>
+            <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
+            <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
+            <li>📇/🧝 i sidhuvudet: Till index respektive rollperson.</li>
+          </ul>
+
+          <h3>Listor och rader</h3>
+          <ul>
+            <li>Lägg till / +: Lägg till posten. −: Minska antal eller ta bort.</li>
+            <li>Info: Visa detaljer.</li>
+            <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
+            <li>🔨 Lägg till kvalitet. ☭ Markera kostsam kvalitet som gratis.</li>
+            <li>🆓 Gör föremål gratis. 💔 Visa konflikter.</li>
+            <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
+            <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
+            <li>🗑 Ta bort posten helt.</li>
+          </ul>
+
+          <h3>Tips</h3>
+          <ul>
+            <li>Snabb nollställning: Skriv "lol" i sökfältet för att rensa alla filter.</li>
+            <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
+            <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
+          </ul>
+
+          <h3>Data & lagring</h3>
+          <ul>
+            <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
+            <li>Använd Exportera/Importera under Filter för säkerhetskopior och flytt mellan enheter.</li>
+            <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
+          </ul>
+
           <h3>Installera som webapp</h3>
           <p>
-            Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.<br>
+            Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
             Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
           </p>
         </div>

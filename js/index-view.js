@@ -13,6 +13,8 @@ function initIndex() {
   let catsMinimized = false;
   let showArtifacts = false;
   let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
+  // Open matching categories once after certain actions (search/type select)
+  let openCatsOnce = new Set();
 
   const getEntries = () => {
     const base = DB
@@ -53,7 +55,77 @@ function initIndex() {
     const body = p.rader
       .map(r => `<tr>${p.kolumner.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`)
       .join('');
-    return `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    const tableHtml = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
+    const extraHtml = p.extra ? `<div class="table-notes">${formatText(p.extra)}</div>` : '';
+    return `${tableHtml}${extraHtml}`;
+  };
+
+  // Inline highlight (wrap <mark>) for current search terms
+  const buildNormMap = (str) => {
+    const low = String(str || '').toLowerCase();
+    let norm = '';
+    const map = [];
+    for (let i = 0; i < low.length; i++) {
+      const ch = low[i];
+      const n = searchNormalize(ch);
+      norm += n;
+      for (let k = 0; k < n.length; k++) map.push(i);
+    }
+    return { norm, map };
+  };
+
+  const highlightTextNode = (node, termsNorm) => {
+    const text = node.nodeValue;
+    if (!text || !text.trim()) return;
+    const { norm, map } = buildNormMap(text);
+    const ranges = [];
+    for (const term of termsNorm) {
+      if (!term) continue;
+      let start = 0;
+      while (true) {
+        const idx = norm.indexOf(term, start);
+        if (idx === -1) break;
+        const s = map[idx];
+        const e = map[idx + term.length - 1] + 1; // exclusive
+        if (s != null && e != null && e > s) ranges.push([s, e]);
+        start = idx + Math.max(1, term.length);
+      }
+    }
+    if (!ranges.length) return;
+    ranges.sort((a,b)=>a[0]-b[0] || a[1]-b[1]);
+    const merged = [];
+    for (const r of ranges) {
+      const last = merged[merged.length - 1];
+      if (last && r[0] <= last[1]) last[1] = Math.max(last[1], r[1]);
+      else merged.push(r.slice());
+    }
+    const frag = document.createDocumentFragment();
+    let pos = 0;
+    for (const [s,e] of merged) {
+      if (pos < s) frag.appendChild(document.createTextNode(text.slice(pos, s)));
+      const mark = document.createElement('mark');
+      mark.textContent = text.slice(s, e);
+      frag.appendChild(mark);
+      pos = e;
+    }
+    if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
+    node.parentNode.replaceChild(frag, node);
+  };
+
+  const highlightInElement = (el, termsNorm) => {
+    if (!el || !termsNorm || !termsNorm.length) return;
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
+      acceptNode: (n) => {
+        const p = n.parentNode;
+        if (!p) return NodeFilter.FILTER_REJECT;
+        const tag = (p.nodeName || '').toLowerCase();
+        if (tag === 'script' || tag === 'style' || tag === 'mark') return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    const nodes = [];
+    while (walker.nextNode()) nodes.push(walker.currentNode);
+    nodes.forEach(n => highlightTextNode(n, termsNorm));
   };
 
   /* fyll dropdowns */
@@ -209,7 +281,8 @@ function initIndex() {
     catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details data-cat="${cat}"${openCats.has(cat) ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      const shouldOpen = openCats.has(cat) || openCatsOnce.has(cat);
+      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=catLi.querySelector('ul');
       detailsEl.addEventListener('toggle', updateCatToggle);
@@ -229,6 +302,10 @@ function initIndex() {
             ${tagsDiv}
             <div class="inv-controls">${infoBtn}</div>`;
         listEl.appendChild(li);
+        if (searchActive && terms.length) {
+          const titleSpan = li.querySelector('.card-title > span');
+          if (titleSpan) highlightInElement(titleSpan, terms);
+        }
         return;
         }
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
@@ -395,10 +472,18 @@ function initIndex() {
           ${descHtml}
           ${btn}`;
         listEl.appendChild(li);
+        if (searchActive && terms.length) {
+          const titleSpan = li.querySelector('.card-title > span');
+          if (titleSpan) highlightInElement(titleSpan, terms);
+          const descEl = li.querySelector('.card-desc');
+          if (descEl) highlightInElement(descEl, terms);
+        }
       });
       dom.lista.appendChild(catLi);
     });
     updateCatToggle();
+    // Only auto-open once per triggering action
+    openCatsOnce.clear();
   };
 
   const updateCatToggle = () => {
@@ -431,6 +516,13 @@ function initIndex() {
         e.preventDefault();
         const val = (it.dataset.val || '').trim();
         if (val && !F.search.includes(val)) F.search.push(val);
+        // If exact name match, open that category once
+        if (val) {
+          const nval = searchNormalize(val.toLowerCase());
+          const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
+          const cat = match?.taggar?.typ?.[0];
+          if (cat) openCatsOnce.add(cat);
+        }
         if (val && window.storeHelper?.addRecentSearch) {
           storeHelper.addRecentSearch(store, val);
         }
@@ -510,6 +602,13 @@ function initIndex() {
         return;
       }
       if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
+      // If exact name match, open that category once
+      if (sTemp) {
+        const nval = searchNormalize(sTemp.toLowerCase());
+        const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
+        const cat = match?.taggar?.typ?.[0];
+        if (cat) openCatsOnce.add(cat);
+      }
       if (sTemp) {
         if (window.storeHelper?.addRecentSearch) storeHelper.addRecentSearch(store, sTemp);
       }
@@ -539,6 +638,10 @@ function initIndex() {
         return;
       }
       if(v && !F[key].includes(v)) F[key].push(v);
+      // If selecting a type filter, open that category once
+      if (sel === 'typSel' && v) {
+        openCatsOnce.add(v);
+      }
       dom[sel].value=''; activeTags(); renderList(filtered());
     });
   });
@@ -556,12 +659,28 @@ function initIndex() {
   dom.lista.addEventListener('click', async e=>{
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
-      const html=decodeURIComponent(infoBtn.dataset.info||'');
+      let html=decodeURIComponent(infoBtn.dataset.info||'');
       const liEl = infoBtn.closest('li');
       const title=liEl?.querySelector('.card-title > span')?.textContent||'';
       if(infoBtn.dataset.tabell!=null){
+        const terms = F.search.map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
+        if (terms.length) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          highlightInElement(tmp, terms);
+          html = tmp.innerHTML;
+        }
         tabellPopup.open(html, title);
         return;
+      }
+      {
+        const terms = F.search.map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
+        if (terms.length) {
+          const tmp = document.createElement('div');
+          tmp.innerHTML = html;
+          highlightInElement(tmp, terms);
+          html = tmp.innerHTML;
+        }
       }
       yrkePanel.open(title, html);
       return;

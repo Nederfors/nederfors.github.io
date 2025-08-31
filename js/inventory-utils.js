@@ -1198,6 +1198,17 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const maxCapacity = baseCap;
     const remainingCap = maxCapacity - usedWeight;
 
+    // Capacity color helper: based on used/max ratio
+    const capClassOf = (used, max) => {
+      if (!max || max <= 0) return '';
+      const ratio = used / max;
+      if (ratio >= 1.0) return 'cap-neg';   // överlast
+      if (ratio >= 0.95) return 'cap-crit'; // nära max
+      if (ratio >= 0.80) return 'cap-warn'; // närmar sig
+      return '';
+    };
+    const charCapClass = capClassOf(usedWeight, maxCapacity);
+
     const vehicles = allInv
       .map((row,i)=>({ row, entry:getEntry(row.name), idx:i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
@@ -1358,7 +1369,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
 ${moneyRow}
           </div>
-          <div class="formal-section ${remainingCap < 0 ? 'cap-neg' : ''}">
+          <div class="formal-section ${charCapClass}">
             <div class="formal-title">Bärkapacitet</div>
             <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
             <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
@@ -1408,7 +1419,8 @@ ${moneyRow}
           let vehicleInfo = '';
           let cardClass = '';
           if (isVehicle) {
-            vehicleInfo = `<br>B\u00e4rkapacitet: ${formatWeight(capacity)}<br>\u00c5terst\u00e5ende: ${formatWeight(remaining)}`;
+            const vClass = capClassOf(loadWeight, capacity);
+            vehicleInfo = `<br><span class="${vClass}">B\u00e4rkapacitet: ${formatWeight(capacity)}<br>\u00c5terst\u00e5ende: ${formatWeight(remaining)}</span>`;
             if (remaining < 0) cardClass = ' vehicle-over';
           }
 
@@ -1429,6 +1441,7 @@ ${moneyRow}
                 const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
                 const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
                 const cWeight = formatWeight(calcRowWeight(c));
+                const vClass = capClassOf(loadWeight, capacity);
                 const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
                 const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
                 const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
@@ -1444,9 +1457,9 @@ ${moneyRow}
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
                 const cPath = `${realIdx}.${j}`;
-                return `<li class="card${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
+                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
                   <div class="card-title"><span><span class="collapse-btn"></span>${c.name}${cBadge}</span></div>
-                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br>Vikt: ${cWeight}</div>
+                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
                     ${cBtnRow}
                     ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
@@ -1463,7 +1476,7 @@ ${moneyRow}
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
-                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br>Vikt: ${weightText}${vehicleInfo}
+                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
               </div>
               <div class="inv-controls">
                 ${btnRow}

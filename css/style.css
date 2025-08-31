@@ -32,6 +32,24 @@ html, body {
   font-family: system-ui, sans-serif;
   line-height: 1.5;
 }
+
+/* Subtle highlight for search matches */
+mark {
+  /* Soft, slightly more visible yellow highlight */
+  background: rgba(255, 229, 138, .24);
+  color: inherit;
+  padding: 0 .08em;
+  border-radius: .25rem;
+  box-shadow: inset 0 0 0 1px rgba(255, 229, 138, .36);
+}
+/* Keep it cohesive in key surfaces */
+.card mark,
+#yrkePanel mark,
+#infoPanel mark,
+#tabellPopup mark {
+  background: rgba(255, 229, 138, .24);
+  box-shadow: inset 0 0 0 1px rgba(255, 229, 138, .36);
+}
 body {
   display: flex;
   flex-direction: column;
@@ -1787,7 +1805,9 @@ textarea.auto-resize {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
-.cap-neg { color: var(--danger); }
+.cap-neg  { color: var(--danger); }
+.cap-warn { color: #f0b429; }
+.cap-crit { color: #ff884d; }
 
 .formal-section { margin-bottom: .8rem; }
 .formal-section:last-child { margin-bottom: 0; }
