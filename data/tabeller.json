@@ -1457,7 +1457,7 @@
     {
       "1T20": "2",
       "Effekt": "Blind aggression",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag som gäller anfall."
+      "Beskrivning": "Rollpersonens försvar blottas när hen försöker göra ett motanfall och hen drar därmed på sig ett frislag.."
     },
     {
       "1T20": "3",
@@ -1512,7 +1512,7 @@
     {
       "1T20": "13",
       "Effekt": "Dubbelseende",
-      "Beskrivning": "Rollpersonen slår en T20 vid varje anfall, 1–10 träffar rätt, 11–19 träffar luften och 20 träffar en allierad inom räckvidd (om möjligt)."
+      "Beskrivning": "I 1T4 rundor får rollpersonen slå en T20 vid varje anfall, 1–10 träffar rätt, 11–19 träffar luften och 20 träffar en allierad inom räckvidd (om möjligt)."
     },
     {
       "1T20": "14",
@@ -1547,7 +1547,7 @@
     {
       "1T20": "20",
       "Effekt": "Kritiskt skadad",
-      "Beskrivning": "Rollpersonen skadas så illa att den permanent får –1 på ett karaktärsdrag; slå 1T8 och räkna karaktärsdrag från vänster för att avgöra vilket."
+      "Beskrivning": "Rollpersonen skadas så illa att den permanent får –1 tålighet; När tåligheten permanent når 0 är karaktären bortom all räddning."
     }
   ]
 }
