@@ -2087,33 +2087,37 @@
     }
   },
   {
-    "id": "form69",
-    "namn": "Tvåhandsfiness",
-    "beskrivning": "Många som slåss med tvåhandsvapen förlitar sig på redskapets tyngd men det finns också de som övar upp förmågan att manövrera väldiga tvåhandssvärd med verklig finess. Den som behärskar denna förmåga tillhör den kategorin och kan nyttja vapnets längd för att bättre bekämpa alla sorters motståndare.",
-    "taggar": {
-      "typ": [
-        "Förmåga"
+  "id": "form69",
+  "namn": "Tvåhandsfiness",
+  "beskrivning": "Många som slåss med tvåhandsvapen förlitar sig på redskapets tyngd men det finns också de som övar upp förmågan att manövrera väldiga tvåhandssvärd med verklig finess. Den som behärskar denna förmåga tillhör den kategorin och kan nyttja vapnets längd för att bättre bekämpa alla sorters motståndare.",
+  "taggar": {
+    "typ": [
+      "Förmåga"
+    ],
+    "ark_trad": [
+      "Krigare"
+    ],
+    "test": [
+      "Stark"
+    ],
+    "handling": {
+      "Novis": [
+        "Passiv"
       ],
-      "ark_trad": [
-        "Krigare"
+      "Gesäll": [
+        "Reaktiv"
       ],
-      "test": [
-        "Stark"
-      ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ]
-      }
-    },
-    "nivåer": {
-      "Novis": "Handling: Passiv. Tvåhandssvärd får kvaliteten Långt i novisens händer, och kan därmed användas tillsammans med förmågan Stångverkan.",
-      "Gesäll": "Handling: Reaktiv. Efter ett lyckat Försvar per runda, slå [Stark←Stark] för att med svärdet trycka bort fienden ur närstrid. Fienden tar 1T6 i skada, pressas ett par meter bakåt och måste återigen möta kvaliteten Långt."
+      "Mästare": [
+        "Aktiv"
+      ]
     }
   },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Tvåhandssvärd får kvaliteten Långt i novisens händer, och kan därmed användas tillsammans med förmågan Stångverkan.",
+    "Gesäll": "Handling: Reaktiv. Efter ett lyckat Försvar per runda, slå [Stark←Stark] för att med svärdet trycka bort fienden ur närstrid. Fienden tar 1T6 i skada, pressas ett par meter bakåt och måste återigen möta kvaliteten Långt.",
+    "Mästare": "Handling: Aktiv. Mästarens flödande hugg räknas som en kedja av attacker mot fiender på närstridsavstånd – om en fiende träffas görs en attack mot nästa, och så vidare tills en attack misslyckas."
+  }
+},
   {
     "id": "form70",
     "namn": "Pansarbrottning",
