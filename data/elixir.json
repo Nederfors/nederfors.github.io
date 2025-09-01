@@ -648,7 +648,7 @@
       ]
     },
     "nivåer": {
-      "Mästare": "Livselixiret ger regenererande krafter, 1t6 Tålighet per runda i 1t6 rundor, men också 1 temporär korruption per verksam runda. Livselixiret läker dessutom kritiska skador som uppkommit på grund av överskriden smärtgräns."
+      "Mästare": "När Livselixiret dricks aktiveras kraftfulla regenererande krafter. Under 1T6 rundor återfår rollpersonen 1T6 Tålighet per runda, men drabbas samtidigt av 1 temporär Korruption varje gång elixiret verkar. Istället för att återställa Tålighet under en runda kan rollpersonen välja att låta elixiret läka en kritisk skada som orsakats av överskriden smärtgräns."
     },
     "grundpris": {
       "daler": 16,
