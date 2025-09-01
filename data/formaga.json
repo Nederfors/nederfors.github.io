@@ -464,8 +464,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Rollpersonen är en habil fältskär och kan med ett lyckat slag i Listig ge 1T6 Tålighet tillbaka till patienten, eller 1T8 Tålighet om en örtkur används. Vidare kan omvårdnad av rollpersonen även läka kritiska skador som uppkommit på grund av överskriden smärtgräns. Förmågan kan endast användas två gånger per patient och dag.",
-      "Gesäll": "Handling: Aktiv. Rollpersonen är en erkänd medicus. Ett lyckat slag i Listig g 1T8 Tålighet tillbaka till patienten, eller 1T10 Tålighet om en örtkur används. Dessutom ger ett misslyckande från gesällen också Tålighet tillbaka till patienten, 1T6 med enbart Medicus, eller 1T8 om en örtkur används. Vidare kan omvårdnad av rollpersonen även läka kritiska skador som uppkommit på grund av överskriden smärtgräns. Kan endast användas tre gånger per patient och dag.",
+      "Novis": "Handling: Aktiv. Rollpersonen är en habil fältskär och kan med ett lyckat slag i Listig ge 1T4 Tålighet tillbaka till patienten, eller 1T6 Tålighet om en örtkur används. Vidare kan omvårdnad av rollpersonen även läka kritiska skador som uppkommit på grund av överskriden smärtgräns. Förmågan kan endast användas lyckat två gånger per patient och dag.",
+      "Gesäll": "Handling: Aktiv. Rollpersonen är en erkänd medicus. Ett lyckat slag i Listig ger 1T6 Tålighet tillbaka till patienten, eller 1T8 Tålighet om en örtkur används. Dessutom ger ett misslyckande från gesällen också Tålighet tillbaka till patienten, 1T4 med enbart Medicus, eller 1T6 om en örtkur används. Vidare kan omvårdnad av rollpersonen även läka kritiska skador som uppkommit på grund av överskriden smärtgräns. Kan endast användas lyckat tre gånger per patient och dag.",
       "Mästare": "Handling: Speciell. En mästare inom läkekonsten kan använda förmågan obegränsat på sina patienter, dessutom får patienter som omvårdas av mästaren slå sina dödsslag baserat på Mästarens Listig istället för de vanliga dödsslagen."
     }
   },
