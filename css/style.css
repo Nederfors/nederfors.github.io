@@ -1859,6 +1859,9 @@ textarea.auto-resize {
   overflow: auto;
   position: relative;
 }
+#tabellPopup .popup-inner.wide {
+  max-width: min(92vw, 1000px);
+}
 #tabellPopup .popup-header {
   display: flex;
   align-items: center;
@@ -1866,6 +1869,11 @@ textarea.auto-resize {
   margin-bottom: 1rem;
   /* Reserve space so title doesn’t overlap the close button */
   padding-right: 3rem;
+}
+#tabellPopup .popup-header #tabellActions {
+  margin-left: auto;
+  display: flex;
+  gap: .4rem;
 }
 #tabellPopup #tabellClose {
   position: absolute;
@@ -1890,6 +1898,49 @@ textarea.auto-resize {
 }
 #tabellPopup th { background: var(--card); }
 
+/* No-wrap mode: prevent all wrapping and breaking */
+#tabellPopup .popup-inner.nowrap th,
+#tabellPopup .popup-inner.nowrap td {
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+  hyphens: none;
+}
+
+/* Improve readability and navigation */
+#tabellPopup .table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  position: relative;
+}
+#tabellPopup .table-wrap::after {
+  content: '';
+  position: absolute;
+  top: 0; right: 0;
+  height: 100%; width: 20px;
+  pointer-events: none;
+  background: linear-gradient(to left, rgba(0,0,0,.18), transparent);
+}
+#tabellPopup thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--card);
+}
+#tabellPopup tbody tr:nth-child(odd) td {
+  background: rgba(255,255,255,.02);
+}
+#tabellPopup th.num,
+#tabellPopup td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+#tabellPopup .table-notes {
+  margin-top: .8rem;
+  color: var(--subtxt);
+  font-size: .95rem;
+}
+
 @media (max-width: 600px) {
   #tabellPopup .popup-inner {
     width: 100%;
@@ -1897,16 +1948,75 @@ textarea.auto-resize {
     border-radius: 0;
   }
 
-  #tabellPopup table {
+  /* Mobile stack layout for better readability */
+  #tabellPopup table.stack-mobile {
+    border: 0;
+  }
+  #tabellPopup table.stack-mobile thead {
+    display: none;
+  }
+  #tabellPopup table.stack-mobile,
+  #tabellPopup table.stack-mobile tbody,
+  #tabellPopup table.stack-mobile tr,
+  #tabellPopup table.stack-mobile td {
     display: block;
-    overflow-x: auto;
-    white-space: nowrap;
+    width: 100%;
+  }
+  #tabellPopup table.stack-mobile tr {
+    border: 1px solid var(--card-border);
+    border-radius: .6rem;
+    overflow: hidden;
+    margin-bottom: .6rem;
+    background: transparent;
+  }
+  #tabellPopup table.stack-mobile td {
+    border: 0;
+    border-bottom: 1px solid var(--card-border);
+    display: grid;
+    grid-template-columns: 40% 1fr;
+    gap: .6rem;
+    padding: .5rem .6rem;
+  }
+  #tabellPopup table.stack-mobile td:last-child {
+    border-bottom: 0;
+  }
+  #tabellPopup table.stack-mobile td::before {
+    content: attr(data-label);
+    color: var(--subtxt);
+    font-weight: 600;
   }
 
   #tabellPopup th,
   #tabellPopup td {
     line-height: 1.4;
     font-size: 1rem;
+  }
+
+  /* In no-wrap mode, disable stacked mobile layout and restore table semantics */
+  #tabellPopup .popup-inner.nowrap table.stack-mobile thead {
+    display: table-header-group;
+  }
+  #tabellPopup .popup-inner.nowrap table.stack-mobile,
+  #tabellPopup .popup-inner.nowrap table.stack-mobile tbody {
+    display: table;
+    width: 100%;
+  }
+  #tabellPopup .popup-inner.nowrap table.stack-mobile tr {
+    display: table-row;
+    border: none;
+    border-radius: 0;
+    margin-bottom: 0;
+    background: transparent;
+  }
+  #tabellPopup .popup-inner.nowrap table.stack-mobile td {
+    display: table-cell;
+    border: 1px solid var(--card-border);
+    padding: .3rem .6rem;
+    grid-template-columns: none;
+    gap: 0;
+  }
+  #tabellPopup .popup-inner.nowrap table.stack-mobile td::before {
+    content: none;
   }
 }
 

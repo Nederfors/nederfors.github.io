@@ -658,6 +658,12 @@ class SharedToolbar extends HTMLElement {
             <li>🗑 Ta bort posten helt.</li>
           </ul>
 
+          <h3>Tabeller</h3>
+          <ul>
+            <li>↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad. Inaktiverar mobilens staplade vy och möjliggör horisontell scroll. Knappen är röd när funktionen är avstängd.</li>
+            <li>⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller. Knappen är röd när bred vy är avstängd.</li>
+          </ul>
+
           <h3>Tips</h3>
           <ul>
            <li> Knappen "Börja om" i kategorin "Hoppsan"rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>

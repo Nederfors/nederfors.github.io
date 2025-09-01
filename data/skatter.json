@@ -83,7 +83,7 @@
     "id": "sk11",
     "namn": "Järndjurhuvuden (bola)",
     "beskrivning": "Tre vackert gjutna djurhuvuden i järn, stora som knytnävar och helt utan rost – varg, björn och vildsvin. Öglor på undersidan gör att de kan bindas samma till en bola vilken då ger +3 på framgångsslaget om den kastas mot varelser ur kategorin Bestar.",
-    "taggar": { "typ": ["skatt", "Vapen"] },
+    "taggar": { "typ": ["Skatt", "Vapen"] },
     "stat": {
       "skada": "1T10",
       "vikt": 2.0
@@ -198,7 +198,7 @@
   {
     "id": "sk25",
     "namn": "Skattkarta som visar behov",
-    "beskrivning": "En skattkarta som leder ägaren till det den behöver, snarare än till vad denne vill ha",
+    "beskrivning": "En Skattkarta som leder ägaren till det den behöver, snarare än till vad denne vill ha",
     "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.05 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
@@ -263,7 +263,7 @@
     "id": "sk33",
     "namn": "Pansarnäve till svart helrustning",
     "beskrivning": "En pansarnäve till en svart helrustning som ger bäraren +2 på Stark vid framgångsslag där armkraft är avgörande, dock ej i strid.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.7 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -271,7 +271,7 @@
     "id": "sk34",
     "namn": "Sorgflor mot korruption",
     "beskrivning": "Ett sorgflor som gör bäraren immun mot 1T10+5 temporär Korruption; när floret absorberat den mängden korruption flammar det upp i kall och vit låga.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.05 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -279,7 +279,7 @@
     "id": "sk35",
     "namn": "Berlock med stirrande öga",
     "beskrivning": "En berlock med ett stirrande öga i. När berlocken är öppen får bäraren en andra chans på slag för Vaksam i syfte att upptäcka faror men samtidigt en andra chans att misslyckas med alla andra slag för Vaksam.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.05 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -287,7 +287,7 @@
     "id": "sk36",
     "namn": "Bronsurna med luftande",
     "beskrivning": "En bronsurna innehållande en luftande, som virvlar kring urnans bärare; detta gör att alla projektiler som avfyras mot bäraren får en andra chans att misslyckas; detsamma gäller projektiler som bäraren själv försöker skjuta. Virvlarna piskar upp damm och löv vilket också ger bäraren en andra chans att misslyckas med slag för Vaksam. Anden orkar bara rusa runt under en scen per dag, sedan vilar den i sin urna.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 2.0 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -295,7 +295,7 @@
     "id": "sk37",
     "namn": "Mandalamatta",
     "beskrivning": "En mandala broderad på en matta, den som sitter på mattan får en andra chans att lyckas med alla slag relaterade till att använda ritualer. Om man slår 20 vid ett sådant slag materialiseras en aggressiv daemon.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 3.0 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -303,7 +303,7 @@
     "id": "sk38",
     "namn": "Grön stenelefant",
     "beskrivning": "En liten elefant i grön sten, kan förvandlas till en riktig elefant en gång per dag. Den är lynnig och måste ges kommandon med Övertygande för att alls lyda. Elefanten blir åter en staty efter att tre kommandon misslyckats.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.4 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -311,7 +311,7 @@
     "id": "sk39",
     "namn": "Osynligt bläck i glasflaska",
     "beskrivning": "Osynligt bläck i liten glasflaska, syns bara för den som skribenten tänker på när meddelandet skrivs ner.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.1 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -319,7 +319,7 @@
     "id": "sk40",
     "namn": "Bestiarium om monster och daemoner",
     "beskrivning": "Ett bestiarium om världens monster och ovärldens daemoner. Om läsaren lyckas med ett Viljestark får denne 5 Erfarenhet att använda på förmågan Monsterlärd, om läsaren misslyckas tvingas denne i stället ingå en pakt med en makt som spelaren och spelledaren kommer överens om. Bestiariet förbrukas efter en användning.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 1.2 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -327,7 +327,7 @@
     "id": "sk41",
     "namn": "Stjärnsilvermantel",
     "beskrivning": "Tunn kåpa vävd i blekt stjärntråd. I mörker får fienders Vaksam en andra chans att misslyckas med att upptäcka bäraren och bäraren får en andra chans per scen att undgå upptäckt.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.6 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -335,7 +335,7 @@
     "id": "sk42",
     "namn": "Gryningsampull",
     "beskrivning": "Liten flaska med fångat gryningsljus. När den öppnas ger den +3 på att motstå skräck och kan användas som fackla under en scen.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.05 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -343,7 +343,7 @@
     "id": "sk43",
     "namn": "Stillvattenspegel",
     "beskrivning": "Handstor spegelskål av svart glas. En gång per dag kan spelledaren slå mot Viljestark för att visa en sanningsenlig ledtråd om en plats; vid misslyckande tar användaren 1T4 temporär Korruption och ser en vilseledande vision.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.3 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -351,7 +351,7 @@
     "id": "sk44",
     "namn": "Kungsörtknippa",
     "beskrivning": "Doftande örter buntade i lintråd. Som när det röks en dos av rensar bort 1T4 temporär Korruption från individen. Knippan innehåller 1T4 doser.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.05 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -359,7 +359,7 @@
     "id": "sk45",
     "namn": "Bladkaka",
     "beskrivning": "Tunt bröd inslaget i blad. Ett litet bett mättar i en hel dag men ger 1 temporär Korruption för resten av dagen, brödet blir aldrig gammalt och hittas som 1T4 +2 portioner..",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.01 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -367,7 +367,7 @@
     "id": "sk46",
     "namn": "Grårep som lyder",
     "beskrivning": "Silkeslent rep som knyter sig på kommando vid klättring eller räddning och ger en andra chans att lyckas; kan även knyta upp sig självt på kommando.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.8 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -375,7 +375,7 @@
     "id": "sk47",
     "namn": "Eklövsbrosch",
     "beskrivning": "Nål formad som ett ekblad. Lyser svagt grönt när styggelser befinner sig inom cirka 100 meter.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.02 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -383,7 +383,7 @@
     "id": "sk48",
     "namn": "Fjärrsynsten",
     "beskrivning": "Slät, dimmig sten i järnram. Möjliggör envägskommunikation med en varelse som bäraren känner väl; varje skickat eller mottaget meddelande ger 1 temporär Korruption till båda parter.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 1.5 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -391,7 +391,7 @@
     "id": "sk49",
     "namn": "Signalhorn av ek och silver",
     "beskrivning": "Djuptonigt lur med silverinlägg. När det ljuder hör vänligt sinnade allierade inom cirka 1 km kallet och känner riktningen.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.6 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -399,7 +399,7 @@
     "id": "sk50",
     "namn": "Tidshjul av brons",
     "beskrivning": "Ett litet, tungt hjul i brons som snurrar stilla i handflatan. En gång per dag kan bäraren kalla väven tillbaka och slå om ett eget misslyckat slag. Men väven begär jämvikt: inom snar tid kräver hjulet att ett tidigare lyckat slag slås om, och bäraren måste då välja det sämre utfallet.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.1 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -407,7 +407,7 @@
     "id": "sk51",
     "namn": "Väktarband i stål och läder",
     "beskrivning": "Ett sobert armband där stål och läder flätats samman. När armbandet används väljer användaren en bundsförvant att vaka över. Så länge bärare och bundsförvant är inom 10 meter ifrån varandra får bundsförvanten +1 på Försvar och bäraren får tillgång till förmågan Livvakt på novisnivå, enbart riktat mot den bundne. Bäraren känner dessutom, oavsett distans, riktning till bundsförvanten och dennes grova hälsostatus (skadad/oskadad). Om armbandet tas av eller någon av väktare och bundsförvant svimmar eller dör slår bandet tillbaka mot bägge med 1T4 temporär Korruption på båda.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.2 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -415,7 +415,7 @@
     "id": "sk52",
     "namn": "Glasbit med spiral i kärnan",
     "beskrivning": "En klar glasbit där en tunn spiral vilar innesluten. Den ger +1 på slag för att utföra alla ritualer. Vid utfallet 20 på ett sådant slag löses glasbiten upp till fint stoft och användaren tar 1 permanent Korruption.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.1 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -423,7 +423,7 @@
     "id": "sk53",
     "namn": "Flöjt i polerat trä",
     "beskrivning": "En lätt flöjt med diskreta tenninlägg. När toner fyller rummet blir lyssnare lätta att leda; bäraren med fördelen Musikant räknar den som en nivå högre än normalt, upp till högst +4 i bonus.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.2 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -431,7 +431,7 @@
     "id": "sk54",
     "namn": "Ökenflor av fint tyg",
     "beskrivning": "Ett tunt flor som dras över ansikte och hals. När det bärs uppdraget blir bäraren omöjlig att känna igen – även rösten tycks någon annans. Duken skapar desorientering runtomkring, en förvirring som ofta triggar hårda ord och hastigt våld.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.05 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -439,7 +439,7 @@
     "id": "sk55",
     "namn": "Stormnål för sjöresor",
     "beskrivning": "En liten kompassros i pärlemor som känns sval mot huden. På öppet vatten ger den +3 på Orientering och +1 på Listig för att läsa vind och ström. En gång per dag kan bäraren påverka dagens vädertecken: lägg till eller ta bort ±3 på ett slag som avgör vädret.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.05 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -447,7 +447,7 @@
     "id": "sk56",
     "namn": "Vargtands amulett",
     "beskrivning": "En tung tand i slitstarkt snöre. Bäraren kan lära sig Naturligt vapen upp till gesällnivå som om det vore en vanlig förmåga, utan att drabbas av nackdelen Bestialisk.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.02 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   },
@@ -455,7 +455,7 @@
     "id": "sk57",
     "namn": "Vimpel med draksymbol",
     "beskrivning": "En röd vimpel med sydd symbol som kan fästas på vapen med kvaliteten Långt. När vimpeln bärs i strid ger den bäraren en andra chans att lyckas med förmågan Ledare på gesäll- och mästarnivå.",
-    "taggar": { "typ": ["skatt"] },
+    "taggar": { "typ": ["Skatt"] },
     "stat": { "vikt": 0.2 },
     "grundpris": { "daler": 0, "skilling": 0, "örtegar": 0 }
   }

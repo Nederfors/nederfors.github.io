@@ -40,6 +40,8 @@ const URLS_TO_CACHE = [
   'data/dryck.json',
   'data/elityrke.json',
   'data/elixir.json',
+  'data/kuriositeter.json',
+  'data/skatter.json',
   'data/fallor.json',
   'data/fardmedel.json',
   'data/fordel.json',

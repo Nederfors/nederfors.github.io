@@ -893,17 +893,661 @@
     {
       "ljusa vilda": "6–15",
       "mörka": "5–13",
-      "kategori": "Kuriositet, Tabell 7"
+      "kategori": "Kuriositet."
     },
     {
       "ljusa vilda": "16–19",
       "mörka": "14–18",
-      "kategori": "Mystisk skatt, Tabell 8"
+      "kategori": "Mystisk skatt."
     },
     {
       "ljusa vilda": "20",
       "mörka": "19–20",
-      "kategori": "Artefakt, Tabell 9"
+      "kategori": "Artefakt."
+    }
+  ]
+},
+{
+  "id": "ta17",
+  "namn": "Höstväder",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "Säsong",
+    "T20",
+    "Väderbild",
+    "Effekter"
+  ],
+  "rader": [
+    {
+      "Säsong": "Höst",
+      "T20": "1",
+      "Väderbild": "Nattfrost",
+      "Effekter": "Dagens första Kvick slås på två slag, sämsta utfallet gäller."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "2",
+      "Väderbild": "Tjock höstdimma",
+      "Effekter": "Sikten är kraftigt begränsad, varje slag på vaksam för sikt slås två gånger, sämsta utfallet gäller"
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "3",
+      "Väderbild": "Kallfront med regn",
+      "Effekter": "Slutet av dagen kräver lyckat Stark, annars tas 1T4 alternativ skada på Stark, kan enbart läkas naturligt."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "4",
+      "Väderbild": "Blåsigt & lövregn",
+      "Effekter": "Träffsäker –1 på avstånd; för att starta Eld krävs lyckat Listig."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "5",
+      "Väderbild": "Klar luft, låg sol",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "6",
+      "Väderbild": "Spridda skurar",
+      "Effekter": "Om någonting händer på dagen, slå 1T20 där 11-20 innebär att det regnar och få -1 på alla slag för fysisk aktivitet under scenen."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "7",
+      "Väderbild": "Dämpat och vindstilla",
+      "Effekter": "Vaksam +1; I mörka Davokar: +1 temp. Korruption vid mystik."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "8",
+      "Väderbild": "Kylig bris, uppehåll",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "9",
+      "Väderbild": "Floder går höga",
+      "Effekter": "Vadställen kräver Stark; miss → tappad utrustning och -1 Tålighet per runda tills Stark lyckas."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "10",
+      "Väderbild": "Kraftig blåst",
+      "Effekter": "Distansvapen Träffsäker –1; flygande varelser halverad fart."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "11",
+      "Väderbild": "Låga moln, dugg",
+      "Effekter": "Spårning +1;"
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "12",
+      "Väderbild": "Nattlig storm",
+      "Effekter": "Alla slag under dagen görs med en modifikation på -1."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "13",
+      "Väderbild": "Klar & krispig",
+      "Effekter": "Dubbel så lång färdsträcka under dagen."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "14",
+      "Väderbild": "Kylig dim-/rökdoft",
+      "Effekter": "Viljestark –1 under dagen."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "15",
+      "Väderbild": "Utdraget regn",
+      "Effekter": "Måste lyckas med Stark för att vila under natten, om det misslyckas får rollpersonen -1 dagen efter."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "16",
+      "Väderbild": "Blöt mark och lera",
+      "Effekter": "Hälften så lång färdsträcka under dagen."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "17",
+      "Väderbild": "Torrt men mulet",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "18",
+      "Väderbild": "Gryning med rödfärgad himmel",
+      "Effekter": "Viljestark +1 under dagen."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "19",
+      "Väderbild": "Iskall vind från Titanerna",
+      "Effekter": "Träffsäker –1; oavsett karaktärsdrag."
+    },
+    {
+      "Säsong": "Höst",
+      "T20": "20",
+      "Väderbild": "Plötsligt hagel",
+      "Effekter": "Alla bestar måste hanteras med ett lyckat \"Övertygande\" eller \"Stark\" för att inte slita sig och skena."
+    }
+  ]
+},
+{
+  "id": "ta18",
+  "namn": "Sommarväder",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "Säsong",
+    "T20",
+    "Väderbild",
+    "Effekter"
+  ],
+  "rader": [
+    {
+      "Säsong": "Sommar",
+      "T20": "1",
+      "Väderbild": "Högsommarhetta",
+      "Effekter": "Hälften så lång färdsträcka under dagen."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "2",
+      "Väderbild": "Klibbig värme, stilla",
+      "Effekter": "Kvick –1; Vaksam +1"
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "3",
+      "Väderbild": "Åskfront",
+      "Effekter": "Alla bestar måste hanteras med ett lyckat \"Övertygande\" eller \"Stark\" för att inte slita sig och skena."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "4",
+      "Väderbild": "Skvättregn, snabbt över",
+      "Effekter": "Spårning +1."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "5",
+      "Väderbild": "Het, torr vind",
+      "Effekter": "Träffsäker –1 över medelräckvidd."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "6",
+      "Väderbild": "Dammstorm över Ravennerna",
+      "Effekter": "Kvick –1; Vaksam -1"
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "7",
+      "Väderbild": "Ljum bris, klart",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "8",
+      "Väderbild": "Tryckande moln",
+      "Effekter": "Listig -1."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "9",
+      "Väderbild": "Halvklart",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "10",
+      "Väderbild": "Lätt sommarhagel",
+      "Effekter": "Alla bestar måste hanteras med ett lyckat \"Övertygande +5\" eller \"Stark+5\" för att inte slita sig och skena."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "11",
+      "Väderbild": "Monotont varm dugg",
+      "Effekter": "Lyckat Viljestark för att sova, annars -1 dagen efter."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "12",
+      "Väderbild": "Stekande sol, bländning",
+      "Effekter": "Stark -1."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "13",
+      "Väderbild": "Störtskur",
+      "Effekter": "En andra chans att misslyckas med alla slag mot vaksam, hälften så lång färdsträcka under dagen."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "14",
+      "Väderbild": "Mygg-svärmar",
+      "Effekter": "Måste klara slag mot Diskret eller få -1 på alla handlingar under dagen."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "15",
+      "Väderbild": "Frodigt, daggigt",
+      "Effekter": "En andra chans att lyckas med Vildmarksvana i syfte att skaffa mat."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "16",
+      "Väderbild": "Lätt sommarbris",
+      "Effekter": "En andra chans att lyckas med Vildmarksvana i syfte att skaffa mat."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "17",
+      "Väderbild": "Vindstilla och molnigt.",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "18",
+      "Väderbild": "Kvällsåska i fjärran",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "19",
+      "Väderbild": "Klar natt, stjärnor",
+      "Effekter": "Nattvakter får en andra chans att klara ett slag mot vaksam."
+    },
+    {
+      "Säsong": "Sommar",
+      "T20": "20",
+      "Väderbild": "Solsveda & värmeslag",
+      "Effekter": "De som bär en medeltung/tung rustning måste slå ett lyckat Stark, annars tas 1T4 alternativ skada på Stark, kan enbart läkas naturligt."
+    }
+  ]
+},
+{
+  "id": "ta19",
+  "namn": "Vinterväder",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "Säsong",
+    "T20",
+    "Väderbild",
+    "Effekter"
+  ],
+  "rader": [
+    {
+      "Säsong": "Vinter",
+      "T20": "1",
+      "Väderbild": "Sträng kyla",
+      "Effekter": "Varannan timme slå mot Stark; misslyckat förlorar 1 Stark; kan enbart läkas naturligt."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "2",
+      "Väderbild": "Snödrev",
+      "Effekter": "En andra chans att misslyckas med Stark; färdsträcka halverad under dagen."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "3",
+      "Väderbild": "Tö och tjällossning",
+      "Effekter": "Lera & smältvatten: färdsträcka halverad under dagen."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "4",
+      "Väderbild": "Torrt och knarrkallt",
+      "Effekter": "Ljud bär långt: spaning Vaksam +1; Diskret –1."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "5",
+      "Väderbild": "Blötsnö",
+      "Effekter": "Oskyddade lågor dör; halka: alla hastiga förflyttningar kräver lyckat Kvick."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "6",
+      "Väderbild": "Tung snö",
+      "Effekter": "En andra chans att misslyckas med alla slag som avser att hitta lämplig lägerplats."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "7",
+      "Väderbild": "Klar dag, låg sol",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "8",
+      "Väderbild": "Rimfrost & isiga grenar",
+      "Effekter": "Färdsträcka halverad under dagen; Vaksam +1; Diskret –1."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "9",
+      "Väderbild": "Snöstorm",
+      "Effekter": "Förflyttning livsfarlig, för varje timme som färdas slås ett dödsslag som om rollpersonerna vore döende, slagen nollställs dagen efter."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "10",
+      "Väderbild": "Iskall vind",
+      "Effekter": "Färdsträcka halverad under dagen; En andra chans att misslyckas med alla slag mot Stark."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "11",
+      "Väderbild": "Töregn och isgata",
+      "Effekter": "Alla hastiga förflyttningar kräver ett lyckat slag mot Listig."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "12",
+      "Väderbild": "Snöglopp",
+      "Effekter": "En andra chans att misslyckas med alla slag som avser att hitta lämplig lägerplats."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "13",
+      "Väderbild": "Klar stjärnnatt",
+      "Effekter": "En andra chans att lyckas med Vaksam vid nattvakt."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "14",
+      "Väderbild": "Isdimma",
+      "Effekter": "Viljestark -1, en andra chans att lyckas på alla slag mot Diskret. I mörka Davokar; mystiker tar 1 extra korruption."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "15",
+      "Väderbild": "Hårt fruset",
+      "Effekter": "Färdsträcka normal på väg; terräng halverad;"
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "16",
+      "Väderbild": "Lätt snöfall",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "17",
+      "Väderbild": "Sprickis på vattendrag",
+      "Effekter": "Allt vatten är fruset, vid upprepade tillfällen måste sällskapet stanna för att smälta vatten, färdväg under dagen blir en fjärdedel."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "18",
+      "Väderbild": "Svart snöfall",
+      "Effekter": "1T4 temporär korruption i vilda/mörka Davokar hela dagen; nattvakter måste lyckas med Viljestark för att hålla sig vakna."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "19",
+      "Väderbild": "Solglitter, vindstilla",
+      "Effekter": "Moralen stiger och varje karaktär får slå om ett misslyckat slag den här dagen."
+    },
+    {
+      "Säsong": "Vinter",
+      "T20": "20",
+      "Väderbild": "Fimbulblåst",
+      "Effekter": "Exponerade: Stark varannan timme; miss → 1T4 skada på Stark som enbart kan läkas Naturligt. Flygande varelser kan inte hålla sig uppe."
+    }
+  ]
+},
+{
+  "id": "ta20",
+  "namn": "Vårväder",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "Säsong",
+    "T20",
+    "Väderbild",
+    "Effekter"
+  ],
+  "rader": [
+    {
+      "Säsong": "Vår",
+      "T20": "1",
+      "Väderbild": "Iskorn & sista frost",
+      "Effekter": "Färd utan skydd: Stark var 4:e timme; miss → 1 skada på Stark"
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "2",
+      "Väderbild": "Kall dimma över myrar",
+      "Effekter": "Vaksam –1; I vilda/mörka Davokar: +1 temp. Korruption vid mystik."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "3",
+      "Väderbild": "Jämnt duggregn",
+      "Effekter": "Krävs lyckat Listig för att göra upp eld under dagen."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "4",
+      "Väderbild": "Klar morgon, kylig bris",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "5",
+      "Väderbild": "Skurar & solglimtar",
+      "Effekter": "Om någonting händer på dagen, slå 1T20 där 11-20 innebär att det regnar och få -1 på alla slag för fysisk aktivitet under scenen."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "6",
+      "Väderbild": "Tjock älvdimma",
+      "Effekter": "En andra chans att misslyckas med Vaksam; I vilda/mörka Davokar: 1T4 temp. Korruption över dagen."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "7",
+      "Väderbild": "Ljumt & mulet",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "8",
+      "Väderbild": "Stilla lugn.",
+      "Effekter": "En andra chans att lyckas med Vaksam vid nattvakt."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "9",
+      "Väderbild": "Stabilt vårregn",
+      "Effekter": "Lång färd: Stark i slutet av dagen; miss → 1T4 skada på Stark"
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "10",
+      "Väderbild": "Vind från Titanerna",
+      "Effekter": "Kyla biter; finmotorik –1 (lås, kirurgi, liknande)."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "11",
+      "Väderbild": "Åskskurar efter lunch",
+      "Effekter": "En andra chans att misslyckas med alla slag som avser att hitta lämplig lägerplats."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "12",
+      "Väderbild": "Björkpollen, stickig luft",
+      "Effekter": "Diskret -1; Vaksam +1"
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "13",
+      "Väderbild": "Varmfront, fuktigt",
+      "Effekter": "Spårning +1."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "14",
+      "Väderbild": "Hård vind",
+      "Effekter": "Krävs lyckat Listig +3 för att göra upp eld under dagen."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "15",
+      "Väderbild": "Klar kväll & frostnatt",
+      "Effekter": "En andra chans att lyckas med Vaksam vid nattvakt; Måste klara Viljestark för att inte somna."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "16",
+      "Väderbild": "Susande vind",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "17",
+      "Väderbild": "Lervälling",
+      "Effekter": "Färdsträcka halverad under dagen; Diskret –1."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "18",
+      "Väderbild": "Soligt, lätt blåst",
+      "Effekter": "Ingen effekt."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "19",
+      "Väderbild": "Gyllene gryning",
+      "Effekter": "Viljestark +1 vid användandet av mystiska krafter, men +1 temp. Korruption i Mörka Davokar."
+    },
+    {
+      "Säsong": "Vår",
+      "T20": "20",
+      "Väderbild": "Knoppsprickning & svärm",
+      "Effekter": "Insektsmoln: Träffsäker -1 under dagen; måste klara lyckat Viljestark för att sova under natten."
+    }
+  ]
+},
+{
+  "id": "ta21",
+  "namn": "Kritisk skada",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "1T20",
+    "Effekt",
+    "Beskrivning"
+  ],
+  "rader": [
+    {
+      "1T20": "1",
+      "Effekt": "Ingen",
+      "Beskrivning": "Skadan kändes i ett ögonblick värre än den var."
+    },
+    {
+      "1T20": "2",
+      "Effekt": "Blind aggression",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag som gäller anfall."
+    },
+    {
+      "1T20": "3",
+      "Effekt": "Blödning",
+      "Beskrivning": "Rollpersonen blöder och tar 1T4 skada varje runda fram tills behandlad av Medicus, Livselixir, Örtkur eller Helbrägdagörelse."
+    },
+    {
+      "1T20": "4",
+      "Effekt": "Chocktillstånd",
+      "Beskrivning": "Rollpersonen får svårt att reagera på händelser och får en andra chans att misslyckas med alla försök till försvar."
+    },
+    {
+      "1T20": "5",
+      "Effekt": "Kraftig huvudvärk",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Viljestark."
+    },
+    {
+      "1T20": "6",
+      "Effekt": "Yrsel",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Kvick."
+    },
+    {
+      "1T20": "7",
+      "Effekt": "Synförlust",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Träffsäker."
+    },
+    {
+      "1T20": "8",
+      "Effekt": "Tunnelseende",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Vaksam."
+    },
+    {
+      "1T20": "9",
+      "Effekt": "Kramper",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Stark."
+    },
+    {
+      "1T20": "10",
+      "Effekt": "Andningssvårigheter",
+      "Beskrivning": "Rollpersonen får en andra chans att lyckas med alla slag mot Övertygande."
+    },
+    {
+      "1T20": "11",
+      "Effekt": "Hjärnskakning",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Listig."
+    },
+    {
+      "1T20": "12",
+      "Effekt": "Smärtsam kramp",
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Diskret."
+    },
+    {
+      "1T20": "13",
+      "Effekt": "Dubbelseende",
+      "Beskrivning": "Rollpersonen slår en T20 vid varje anfall, 1–10 träffar rätt, 11–19 träffar luften och 20 träffar en allierad inom räckvidd (om möjligt)."
+    },
+    {
+      "1T20": "14",
+      "Effekt": "Förlamande smärta",
+      "Beskrivning": "Rollpersonen kan inte agera förrän den klarar ett slag mot Stark."
+    },
+    {
+      "1T20": "15",
+      "Effekt": "Förlamande rädsla",
+      "Beskrivning": "Rollpersonen kan inte agera förrän den klarar ett slag mot Viljestark."
+    },
+    {
+      "1T20": "16",
+      "Effekt": "Skadade ben",
+      "Beskrivning": "Rollpersonen måste klara ett slag mot Kvick för att lyckas utföra en förflyttning."
+    },
+    {
+      "1T20": "17",
+      "Effekt": "Tappat vapen",
+      "Beskrivning": "Rollpersonen tappar sitt vapen vilket glider en halv förflyttning bort (avrundat nedåt); slå 1T8 för att avgöra riktning."
+    },
+    {
+      "1T20": "18",
+      "Effekt": "Initiativtrög",
+      "Beskrivning": "Rollpersonen hamnar längst ned i initiativordningen och det går inte att skjuta upp sitt initiativ till efter rollpersonen."
+    },
+    {
+      "1T20": "19",
+      "Effekt": "Reflextrög",
+      "Beskrivning": "Rollpersonen får –1 på alla slag mot försvar och anfall."
+    },
+    {
+      "1T20": "20",
+      "Effekt": "Kritiskt skadad",
+      "Beskrivning": "Rollpersonen skadas så illa att den permanent får –1 på ett karaktärsdrag; slå 1T8 och räkna karaktärsdrag från vänster för att avgöra vilket."
     }
   ]
 }

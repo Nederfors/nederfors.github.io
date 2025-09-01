@@ -1097,8 +1097,47 @@ function updateXP() {
   if (dom.xpSum)   dom.xpSum.classList.toggle('under', free < 0);
 }
 /* -----------------------------------------------------------
-   Synk när annan flik ändrar localStorage
------------------------------------------------------------ */
-window.addEventListener('storage', ()=>{
-  store=storeHelper.load(); location.reload();
+   Synk mellan flikar – endast när AKTUELLA rollpersonen ändras
+   Detta låter två flikar ha olika rollpersoner öppna samtidigt
+   utan att tvinga varandra att reloada.
+------------------------------------------------------------ */
+window.addEventListener('storage', (e)=>{
+  try {
+    if (e && e.key && e.key !== 'rpall') return; // vi bryr oss bara om vår store
+
+    // Om ingen rollperson är vald i denna flik – följ med på ändringar
+    if (!store || !store.current) {
+      store = storeHelper.load();
+      location.reload();
+      return;
+    }
+
+    // Jämför bara data för den rollperson som är aktiv i denna flik
+    const incoming = e && typeof e.newValue === 'string' ? JSON.parse(e.newValue) : storeHelper.load();
+    const curId = store.current;
+
+    const curDataOld = (store.data && store.data[curId]) || null;
+    const curDataNew = (incoming && incoming.data && incoming.data[curId]) || null;
+
+    // Ändrat namn på aktuell rollperson?
+    const findName = (s) => {
+      try { return (s.characters || []).find(c => c.id === curId)?.name || null; } catch { return null; }
+    };
+    const nameOld = findName(store);
+    const nameNew = findName(incoming);
+
+    const changedCurrent = (
+      JSON.stringify(curDataOld ?? null) !== JSON.stringify(curDataNew ?? null)
+    ) || (nameOld !== nameNew);
+
+    if (changedCurrent) {
+      store = storeHelper.load();
+      location.reload();
+    }
+    // I övriga fall (t.ex. annan flik byter current, eller ändrar annan rollperson)
+    // gör vi inget – denna flik fortsätter ostört.
+  } catch {
+    // Vid minsta fel, falla tillbaka till tidigare beteende för säkerhet
+    try { store = storeHelper.load(); location.reload(); } catch {}
+  }
 });

@@ -639,17 +639,24 @@
 
     const keep = new Set();
 
+    const isHiddenTags = (tagTyp) => {
+      const arr = Array.isArray(tagTyp) ? tagTyp : [];
+      return arr.some(t => ['Artefakt', 'Kuriositet', 'Skatt'].includes(String(t)));
+    };
+
+    // Keep any currently selected entries that are hidden types
     getCurrentList(store).forEach(it => {
       const tagTyp = it.taggar?.typ || [];
-      if (tagTyp.includes('Artefakt')) keep.add(it.namn);
+      if (isHiddenTags(tagTyp)) keep.add(it.namn);
     });
 
+    // Keep any hidden items that still exist in the inventory (recursively)
     const collect = arr => {
       arr.forEach(row => {
         const entry = (getCustomEntries(store).find(e => e.namn === row.name))
           || (global.DB || []).find(e => e.namn === row.name) || {};
         const tagTyp = entry.taggar?.typ || [];
-        if (tagTyp.includes('Artefakt')) keep.add(entry.namn);
+        if (isHiddenTags(tagTyp)) keep.add(entry.namn);
         if (Array.isArray(row.contains)) collect(row.contains);
       });
     };

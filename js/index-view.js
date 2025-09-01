@@ -15,8 +15,7 @@ function initIndex() {
   let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
   // Open matching categories once after certain actions (search/type select)
   let openCatsOnce = new Set();
-  // Track transition of "any other categories open" to coordinate Hoppsan behavior
-  let prevAnyOtherOpen = null;
+  // (Removed) Hoppsan no longer auto-syncs with other categories
   // If set, override filtered list with these entries (from Random:N)
   let fixedRandomEntries = null;
 
@@ -56,12 +55,31 @@ function initIndex() {
 
   const tabellInfoHtml = p => {
     const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-    const head = `<tr>${p.kolumner.map(c => `<th>${cap(c)}</th>`).join('')}</tr>`;
-    const body = p.rader
-      .map(r => `<tr>${p.kolumner.map(c => `<td>${r[c] ?? ''}</td>`).join('')}</tr>`)
+    const cols = p.kolumner || [];
+    const rows = p.rader || [];
+
+    // Heuristik: markera kolumn som numerisk om majoriteten av rader börjar med siffra
+    const isNumCol = cols.map((_, idx) => {
+      let numish = 0, tot = 0;
+      for (const r of rows) {
+        const v = String(r[cols[idx]] ?? '').trim();
+        if (!v) continue;
+        tot++;
+        if (/^[0-9]/.test(v)) numish++;
+      }
+      return tot > 0 && numish / tot >= 0.6;
+    });
+
+    const head = `<tr>${cols.map((c, i) => `<th${isNumCol[i] ? ' class=\"num\"' : ''}>${cap(c)}</th>`).join('')}</tr>`;
+    const body = rows
+      .map(r => `<tr>${cols.map((c, i) => {
+        const v = r[c] ?? '';
+        const dl = cap(c);
+        return `<td data-label=\"${dl}\"${isNumCol[i] ? ' class=\"num\"' : ''}>${v}</td>`;
+      }).join('')}</tr>`)
       .join('');
-    const tableHtml = `<table><thead>${head}</thead><tbody>${body}</tbody></table>`;
-    const extraHtml = p.extra ? `<div class="table-notes">${formatText(p.extra)}</div>` : '';
+    const tableHtml = `<div class=\"table-wrap\"><table class=\"stack-mobile\"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
+    const extraHtml = p.extra ? `<div class=\"table-notes\">${formatText(p.extra)}</div>` : '';
     return `${tableHtml}${extraHtml}`;
   };
 
@@ -537,10 +555,10 @@ function initIndex() {
     {
       const hopLi = document.createElement('li');
       hopLi.className = 'cat-group';
-      const anyOtherOpen = [...dom.lista.querySelectorAll('.cat-group > details')]
-        .some(d => d.dataset.cat !== 'Hoppsan' && d.open);
+      // Preserve Hoppsan's own previous open state only
+      const hopOpen = openCats.has('Hoppsan');
       hopLi.innerHTML = `
-        <details data-cat="Hoppsan"${anyOtherOpen ? ' open' : ''}>
+        <details data-cat="Hoppsan"${hopOpen ? ' open' : ''}>
           <summary>Hoppsan</summary>
           <ul class="card-list"></ul>
         </details>`;
@@ -565,17 +583,6 @@ function initIndex() {
     const allDetails = [...document.querySelectorAll('.cat-group > details')];
     const hop = allDetails.find(d => d.dataset.cat === 'Hoppsan');
     const others = allDetails.filter(d => d !== hop);
-    const anyOtherOpen = others.some(d => d.open);
-    // Only force Hoppsan open/closed on transitions of other categories
-    if (prevAnyOtherOpen === null) {
-      prevAnyOtherOpen = anyOtherOpen;
-    } else if (anyOtherOpen !== prevAnyOtherOpen) {
-      if (hop) {
-        if (anyOtherOpen) hop.open = true;      // first other opened → open Hoppsan
-        else hop.open = false;                  // last other closed → close Hoppsan
-      }
-      prevAnyOtherOpen = anyOtherOpen;
-    }
     catsMinimized = others.length ? others.every(d => !d.open) : true;
     dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
     dom.catToggle.title = catsMinimized
