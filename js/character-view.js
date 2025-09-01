@@ -371,7 +371,8 @@ function initCharacter() {
     return base
       .filter(p => !isInv(p))
       .filter(p => {
-        const text = searchNormalize(`${p.namn} ${(p.beskrivning || '')}`.toLowerCase());
+        const levelText = Object.values(p.nivåer || {}).join(' ');
+        const text = searchNormalize(`${p.namn} ${(p.beskrivning || '')} ${levelText}`.toLowerCase());
         const hasTerms = terms.length > 0;
         const txt = hasTerms && terms.every(q => text.includes(q));
         const tags = p.taggar || {};
