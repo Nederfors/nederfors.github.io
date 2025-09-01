@@ -880,30 +880,35 @@
   "namn": "Fyndtabell",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
-    "ljusa vilda",
-    "mörka",
-    "kategori"
+    "Ljusa",
+    "Vilda",
+    "Mörka",
+    "Kategori"
   ],
   "rader": [
     {
-      "ljusa vilda": "1–5",
-      "mörka": "1–4",
-      "kategori": "Bråte"
+      "Ljusa": "1–5",
+      "Vilda": "1–4",
+      "Mörka": "1–2",
+      "Kategori": "Bråte"
     },
     {
-      "ljusa vilda": "6–15",
-      "mörka": "5–13",
-      "kategori": "Kuriositet."
+      "Ljusa": "6–15",
+      "Vilda": "5–13",
+      "Mörka": "3–11",
+      "Kategori": "Kuriositet"
     },
     {
-      "ljusa vilda": "16–19",
-      "mörka": "14–18",
-      "kategori": "Mystisk skatt."
+      "Ljusa": "16–19",
+      "Vilda": "14–18",
+      "Mörka": "13–18",
+      "Kategori": "Mystisk skatt"
     },
     {
-      "ljusa vilda": "20",
-      "mörka": "19–20",
-      "kategori": "Artefakt."
+      "Ljusa": "20",
+      "Vilda": "19–20",
+      "Mörka": "19–20",
+      "Kategori": "Artefakt"
     }
   ]
 },
@@ -1457,7 +1462,7 @@
     {
       "1T20": "2",
       "Effekt": "Blind aggression",
-      "Beskrivning": "Rollpersonens försvar blottas när hen försöker göra ett motanfall och hen drar därmed på sig ett frislag.."
+      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag som gäller anfall."
     },
     {
       "1T20": "3",
@@ -1512,7 +1517,7 @@
     {
       "1T20": "13",
       "Effekt": "Dubbelseende",
-      "Beskrivning": "I 1T4 rundor får rollpersonen slå en T20 vid varje anfall, 1–10 träffar rätt, 11–19 träffar luften och 20 träffar en allierad inom räckvidd (om möjligt)."
+      "Beskrivning": "Rollpersonen slår en T20 vid varje anfall, 1–10 träffar rätt, 11–19 träffar luften och 20 träffar en allierad inom räckvidd (om möjligt)."
     },
     {
       "1T20": "14",
@@ -1547,7 +1552,7 @@
     {
       "1T20": "20",
       "Effekt": "Kritiskt skadad",
-      "Beskrivning": "Rollpersonen skadas så illa att den permanent får –1 tålighet; När tåligheten permanent når 0 är karaktären bortom all räddning."
+      "Beskrivning": "Rollpersonen skadas så illa att den permanent får –1 på ett karaktärsdrag; slå 1T8 och räkna karaktärsdrag från vänster för att avgöra vilket."
     }
   ]
 }
