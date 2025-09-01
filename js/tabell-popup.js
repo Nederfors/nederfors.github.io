@@ -18,18 +18,26 @@
     `;
     document.body.appendChild(wrap);
     wrap.querySelector('#tabellClose').addEventListener('click', close);
-    wrap.querySelector('#tabellWidth').addEventListener('click', (e) => {
-      const inner = wrap.querySelector('.popup-inner');
-      inner.classList.toggle('wide');
-      // Red when OFF
-      e.currentTarget.classList.toggle('danger', !inner.classList.contains('wide'));
-    });
-    wrap.querySelector('#tabellNoWrap').addEventListener('click', (e) => {
-      const inner = wrap.querySelector('.popup-inner');
-      inner.classList.toggle('nowrap');
-      // Red when OFF
-      e.currentTarget.classList.toggle('danger', !inner.classList.contains('nowrap'));
-    });
+
+    const actions = wrap.querySelector('#tabellActions');
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+
+    if (isMobile) {
+      actions.remove();
+    } else {
+      wrap.querySelector('#tabellWidth').addEventListener('click', (e) => {
+        const inner = wrap.querySelector('.popup-inner');
+        inner.classList.toggle('wide');
+        // Red when OFF
+        e.currentTarget.classList.toggle('danger', !inner.classList.contains('wide'));
+      });
+      wrap.querySelector('#tabellNoWrap').addEventListener('click', (e) => {
+        const inner = wrap.querySelector('.popup-inner');
+        inner.classList.toggle('nowrap');
+        // Red when OFF
+        e.currentTarget.classList.toggle('danger', !inner.classList.contains('nowrap'));
+      });
+    }
     wrap.addEventListener('click', e => {
       if (e.target === wrap) close();
     });

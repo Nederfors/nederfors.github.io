@@ -1942,6 +1942,9 @@ textarea.auto-resize {
 }
 
 @media (max-width: 600px) {
+  #tabellPopup .popup-header #tabellActions {
+    display: none;
+  }
   #tabellPopup .popup-inner {
     width: 100%;
     height: 100%;
