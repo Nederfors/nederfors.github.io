@@ -58,24 +58,12 @@ function initIndex() {
     const cols = p.kolumner || [];
     const rows = p.rader || [];
 
-    // Heuristik: markera kolumn som numerisk om majoriteten av rader börjar med siffra
-    const isNumCol = cols.map((_, idx) => {
-      let numish = 0, tot = 0;
-      for (const r of rows) {
-        const v = String(r[cols[idx]] ?? '').trim();
-        if (!v) continue;
-        tot++;
-        if (/^[0-9]/.test(v)) numish++;
-      }
-      return tot > 0 && numish / tot >= 0.6;
-    });
-
-    const head = `<tr>${cols.map((c, i) => `<th${isNumCol[i] ? ' class=\"num\"' : ''}>${cap(c)}</th>`).join('')}</tr>`;
+    const head = `<tr>${cols.map(c => `<th>${cap(c)}</th>`).join('')}</tr>`;
     const body = rows
-      .map(r => `<tr>${cols.map((c, i) => {
+      .map(r => `<tr>${cols.map(c => {
         const v = r[c] ?? '';
         const dl = cap(c);
-        return `<td data-label=\"${dl}\"${isNumCol[i] ? ' class=\"num\"' : ''}>${v}</td>`;
+        return `<td data-label=\"${dl}\">${v}</td>`;
       }).join('')}</tr>`)
       .join('');
     const tableHtml = `<div class=\"table-wrap\"><table class=\"stack-mobile\"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
