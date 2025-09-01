@@ -49,12 +49,19 @@
     document.getElementById('tabellTitle').textContent = title || '';
     const pop = document.getElementById('tabellPopup');
     const inner = pop.querySelector('.popup-inner');
-    // Default modes on open: wide + no-wrap
-    inner.classList.add('wide', 'nowrap');
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    // Default modes on open: wide + no-wrap on desktop only
+    inner.classList.toggle('wide', !isMobile);
+    inner.classList.toggle('nowrap', !isMobile);
     const noWrapBtn = pop.querySelector('#tabellNoWrap');
     const wideBtn   = pop.querySelector('#tabellWidth');
     if (noWrapBtn) noWrapBtn.classList.remove('danger');
     if (wideBtn)   wideBtn.classList.remove('danger');
+    if (isMobile) {
+      // Ensure no toggle actions remain in mobile view
+      const actions = pop.querySelector('#tabellActions');
+      actions?.remove();
+    }
     pop.classList.add('open');
     inner.scrollTop = 0;
     window.updateScrollLock?.();
