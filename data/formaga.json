@@ -464,11 +464,12 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Rollpersonen är en habil fältskär och kan med ett lyckat slag i Listig ge 1T4 Tålighet tillbaka till patienten, eller 1T6 Tålighet om en örtkur används. Vidare kan omvårdnad av rollpersonen även läka kritiska skador som uppkommit på grund av överskriden smärtgräns. Förmågan kan endast användas lyckat två gånger per patient och dag.",
-      "Gesäll": "Handling: Aktiv. Rollpersonen är en erkänd medicus. Ett lyckat slag i Listig ger 1T6 Tålighet tillbaka till patienten, eller 1T8 Tålighet om en örtkur används. Dessutom ger ett misslyckande från gesällen också Tålighet tillbaka till patienten, 1T4 med enbart Medicus, eller 1T6 om en örtkur används. Vidare kan omvårdnad av rollpersonen även läka kritiska skador som uppkommit på grund av överskriden smärtgräns. Kan endast användas lyckat tre gånger per patient och dag.",
-      "Mästare": "Handling: Speciell. En mästare inom läkekonsten kan använda förmågan obegränsat på sina patienter, dessutom får patienter som omvårdas av mästaren slå sina dödsslag baserat på Mästarens Listig istället för de vanliga dödsslagen."
-    }
-  },
+  "Novis": "Handling: Aktiv. Rollpersonen är en skicklig fältskär. Ett lyckat slag i Listig återställer 1T4 Tålighet hos patienten. Vid användning av en örtkur lyckas slaget automatiskt och återställer istället 1T6. Omvårdnad kan dessutom stoppa blödningar eller läka kritiska skador som uppstått genom överskriden smärtgräns. Förmågan kan användas med lyckat resultat högst två gånger per patient och dag.",
+  "Gesäll": "Handling: Aktiv. Som Novis, men slaget återställer 1T6 istället för 1T4. Med örtkur läks 1T8 istället för 1T6. Ett misslyckat slag på Listig återställer 1T4 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat högst tre gånger per patient och dag.",
+  "Mästare": "Handling: Speciell. En mästare i läkekonst kan använda förmågan utan begränsning. Patienter som vårdas av mästaren får dessutom använda mästarens värde i Listig när de slår sina dödsslag istället för sina egna."
+}
+
+    },
   {
     "id": "form16",
     "namn": "Monsterlärd",
