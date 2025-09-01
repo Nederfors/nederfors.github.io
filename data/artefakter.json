@@ -2773,5 +2773,219 @@
       "skilling": 0,
       "örtegar": 0
     }
+  },
+  {
+    "id": "ar86",
+    "namn": "Olians rökelsekar",
+    "beskrivning": "Det berättas om spiritisten Olian som under Symbaroums blomstring ska ha bistått folk i rikets västra delar med hjälp att hantera illvilliga andeväsen. Enligt legenderna låg stora delar av hans kraft i det rökelsekar han bar, och vars ursprung han vägrade avslöja. Den som råkar återfinna artefakten, tillverkad av finmaskiga guldtrådar och stor som en knuten näve, kan fylla den med olja och erhålla följande förmågor (efter att ha bundit den till sig):",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Aktiv"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ],
+        "Förmåga 3": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Materialisering; Handling: Aktiv\nArtefaktens mästare kan blåsa röken från det tända karet mot en andevarelse inom två förflyttningars avstånd (cirka 20 meter). Om mästaren lyckas med ett slag mot [Viljestark←Viljestark] tvingas anden ta gestalt under en runda, och fungerar då som en fysisk varelse avseende skada och förflyttning (dock utan Smärtgräns). Korruption: 1T4.",
+      "Förmåga 2": "Rökridå; Handling: Aktiv\nMästaren kan låta röken från artefakten omsluta sig själv och ett antal andra, med effekten att de blir osynliga för andevarelser så länge de endast förflyttar sig. Effekten är automatisk under 1t4 rundor och kan därefter upprätthållas så länge som mästaren lyckas med ett slag mot [Diskret←Vaksam] per andeväsen och runda. Korruption: 1T4+1 per dold person utöver mästaren.",
+      "Förmåga 3": "Andens fasa; Handling: Reaktiv\nOm artefaktens mästare behärskar ritualen Exorcism kan rökelsekaret användas för att förstärka dess fördrivande verkan – denne får då två chanser att lyckas med vart och ett av de tre försöken att fördriva anden. Korruption: +1T4."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.3
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar87",
+    "namn": "Lekarens Pipa",
+    "beskrivning": "Denna böjda altflöjt av mörklaserat trä kan kanske ha tillhört den namnlöse speleman som omnämns i ett antal hjältesagor från östra Symbaroum, alltid i sammanhang där hjältarna ser ut att ha segrat men plötsligt stöter på en komplicerande faktor. Och nog är det sant att den som binder sig till flöjten erhåller förmågan att sätta dråpliga käppar i fiendens hjul.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Aktiv"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Enervera; Handling: Aktiv\nGenom att spela en dissonant melodi med skärande toner kan artefaktens mästare distrahera en kedja av kulturvarelser – slå [Listig←Viljestark] mot första målet, och om det lyckas fortsätt med nästa mål och så vidare, tills ett slag misslyckas. De enerverade drabbas av en modifikation på –3 på alla framgångsslag tills musiken tystnar. Mästaren kan själv välja att avbryta, annars tystnar musiken automatiskt om denne förlorar koncentrationen [Viljestark –Skada]. Korruption: 1 temporär korruption per runda.",
+      "Förmåga 2": "Hänföra; Handling: Aktiv\nOm mästaren har fördelen Musikant kan denne få en kedja av kulturvarelser (se Enervera) att upphöra med allt annat och bara lyssna till musiken. Effekten sitter i så länge musiken spelas, alternativt tills de drabbade blir attackerade eller på annat sätt påtagligt påverkade av omgivningen – då försvarar de sig som vanligt och hänförelsen är bruten. Mästaren kan själv välja att avbryta, annars tystnar musiken automatiskt om denne förlorar koncentrationen [Viljestark –Skada]. Korruption: 1 temporär korruption per runda."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.06
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar88",
+    "namn": "Växtviskarens trädstav",
+    "beskrivning": "Hon kallas Ur, den första häxan, och hon beskrivs inte sällan som bärande en drygt halvmeterlång, levande trästav – krokig och böjd, klädd av bark, följande naturens rytm med späda skott om våren, sedan klargröna blad som efter sommaren skiftar i ljusgult och brunt innan vintern får dem att falla av. Växtviskarens trädstav kan inte användas som vapen, men den som har bundit sig till den får +1 på alla framgångsslag för krafter och ritualer relaterade till Häxkonstens gröna stig (Grönvävare). Därtill kan följande effekter aktiveras.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Reaktion"
+        ],
+        "Förmåga 2": [
+          "Reaktion"
+        ],
+        "Förmåga 3": [
+          "Hel runda"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Krokben; Handling: Reaktion\nNär stavens mästare befinner sig på jordig mark (inte en berghäll eller liknande) kan denne en gång per runda få växter och rötters hjälp att fälla en fiende som förflyttar sig till marken. Handlingen utförs på målets initiativ och kräver ett slag mot [Viljestark←Kvick]; lyckas det avbryts förflyttningen, målet faller omkull och förlorar rundans kvarvarande handling (om någon). Korruption: 1.",
+      "Förmåga 2": "Rapp; Handling: Reaktion\nSå länge det finns buskar, träd eller annan grövre växtlighet i närheten, kan mästaren en gång per runda få grenar eller rötter att störa en fiende inom synhåll. Handlingen utförs på fiendens initiativ, när denne ska utföra en mystisk kraft eller avståndsattack, och ger denne två chanser att misslyckas med handlingen, alternativt dess måltavla två chanser att försvara sig mot kraften/attacken. Korruption: 1.",
+      "Förmåga 3": "Växthölje; Handling: Hel runda\nEn gång per scen (och givet förutsättningar som ovan) kan stavens mästare kalla naturen till sitt försvar. Mästaren slår staven i marken och upp kring den reser sig rötter och samlas växtlighet, så att det formas ett tjockt, självreparerande pansar. Mästaren kan inte själv utföra några handlingar förrän den väljer att låta höljet falla samman (max ett dygn), men å andra sidan är denne under tiden omöjlig att påverka med fysiska attacker och mystiska krafter. Korruption: 1T4."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.5
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar89",
+    "namn": "Långyxan Blotklyve",
+    "beskrivning": "Blotklyve är inte omtalad i några populära sagor, men kanske är den ett syskon till långyxan Blothugg som förekommer i legenden om Klockan och draken. Den senare satt länge på väggen i Kastors stadshus stora sal, innan den stals av monsterdyrkaren Kagliostro, och är enligt sägnen ett trollsmide skapat av runsmeden Xansha. Den som finner Blotklyve och som behärskar Lärd (gesäll) kan utläsa att även den bär Xanshas runa. Artefakten är ett Bastardvapen och kan användas med en hand tillsammans med sköld, men tappar då sina positiva kvaliteter. Svingat i två händer har den kvaliteterna Långt och Massivt. Oavsett grepp har den kvaliteten Långsamt. Yxans slagkraft blir ännu större för den som bundit sig till vapnet; då kan följande krafter användas:",
+    "kvalitet": [
+      "Bastardvapen",
+      "Långsamt",
+      "Långt",
+      "Massivt"
+    ],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Fri"
+        ],
+        "Förmåga 2": [
+          "Fri"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Blodigt dagsverke; Handling: Fri\nNär yxan svingas av mästaren utför den villigt mäktiga klyvarhugg som fyller bäraren med livskraft. Effekten varar en hel scen och ger bäraren Tålighet tillbaka motsvarande hälften av den skada som utdelas till fiender. Korruption: 1T4.",
+      "Förmåga 2": "Vevklyv; Handling: Fri\nYxan kan svingas i vida rörelser och hjälper då mästaren att träffa de fiender som omringar denne. Varje attack som görs under rundan fungerar som en kedja mot de fiender som finns inom närstridsavstånd – om attacken träffar får en attack göras mot en annan fiende, och så vidare tills ett framgångsslag misslyckas. Bäraren kan använda sina förmågor som vanligt, och deras effekter gäller för alla anfallen i kedjan. Korruption: 1T6."
+    },
+    "stat": {
+      "skada": "1t10",
+      "vikt": 2.0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar90",
+    "namn": "Progos lans",
+    "beskrivning": "De lärde tvistar om huruvida detta legendariska spjut någonsin har existerat, men enligt legenderna smiddes den av alver och gavs som gåva till den mänsklige riddaren Progo under Symbaroums ödestimmar. Andra sagor berättar hur Progo senare dog i strid mot Titanernas sista stenjättar, varefter hans vapen försvann i historiens strömmar. Progos lans kan användas som både kast- och närstridsspjut, med skada 1t6 respektive 1t8 och med kvaliteterna Blodsgjutande, Långt och Precist. Därtill kan följande egenskaper aktiveras:",
+    "kvalitet": [
+      "Blodsgjutande",
+      "Långt",
+      "Precist"
+    ],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Fri"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Återvändo; Handling: Fri\nOm artefaktens mästare behärskar förmågan Stålkast, kan vapnet förmås att automatiskt återvända till dennes hand efter att det har kastats. Korruption: 1.",
+      "Förmåga 2": "Återattack; Handling: Reaktiv\nGivet att mästaren har Stålkast kan vapnet göra en andra attack när det kallas tillbaka till handen. Ett nytt framgångsslag slås; om det träffar drabbas målet av vapnets egen skada, utan tillägg av mästarens förmågor. Korruption: +1T4."
+    },
+    "stat": {
+      "skada": "1T8, 1T6",
+      "vikt": 1.5
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+  "id": "ar91",
+  "namn": "Jolianas handskar",
+  "beskrivning": "Om Joliana vet legenderna inte mycket att berätta, men hon ska ha varit en svårslagen stormästare i brottning, möjligen medlem av folket Lindarerna som på Symbaroums tid härskade över ett område söder om Karvosti. Om hon fick sina omsjungna handskar som belöning för sin mångåriga segersvit, eller om de snarare är en förklaring till att hon kunde besegra så många karska utmanare, finns det olika uppgifter om. Handskarna består av finmaskiga, gråbruna rötter, så tätt flätade att de ser ut att vara tillverkade av läder. När någon binder sig till dem, anpassas de så att de sitter perfekt på dennes händer. Dessutom tillåter de mästaren att aktivera följande krafter.",
+  "kvalitet": [
+  ],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Reaktiv"
+      ],
+      "Förmåga 2": [
+        "Fri"
+      ],
+      "Förmåga 3": [
+        "Fri"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Kraftgrepp; Handling: Reaktiv\nMästaren kan få de levande växtfibrernas hjälp att hålla fast en fiende. Kan användas med förmågan Brottning (novis) eller Stryparkonst (novis), och ger då en bonus på +5 på relevant karaktärsdrag när det gäller slag för att etablera eller behålla ett grepp. Korruption: 1.",
+    "Förmåga 2": "Törnebett; Handling: Fri\nI samband med fasthållning kan mästaren låta handskarna utveckla små, sylvassa taggar som sedan ger 1t4 i skada under varje runda som greppet är aktivt (ignorerar Bepansring). Korruption: 1T4.",
+    "Förmåga 3": "Törnetrådar; Handling: Fri\nMästaren kan låta handskarna skicka in tunna rottrådar i den fasthållnes kött för att suga åt sig av dess livskraft. Effekten varar en runda under vilken offret drabbas av 1t6 skada (ignorerar Bepansring) som överförs till mästaren i form av läkt Tålighet. Om offret redan lider av ett pågående Törnebett ersätts dess effekt av Törnetrådar under en runda, varefter bettet återupptas automatiskt. Korruption: 1T4."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 0.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
   }
+}
 ]

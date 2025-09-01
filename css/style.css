@@ -1864,8 +1864,14 @@ textarea.auto-resize {
   align-items: center;
   gap: .6rem;
   margin-bottom: 1rem;
+  /* Reserve space so title doesn’t overlap the close button */
+  padding-right: 3rem;
 }
-#tabellPopup #tabellClose { flex-shrink: 0; }
+#tabellPopup #tabellClose {
+  position: absolute;
+  top: .8rem;
+  right: .8rem;
+}
 #tabellPopup #tabellTitle {
   margin: 0;
   font-size: 1.2rem;

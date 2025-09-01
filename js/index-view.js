@@ -17,15 +17,18 @@ function initIndex() {
   let openCatsOnce = new Set();
   // Track transition of "any other categories open" to coordinate Hoppsan behavior
   let prevAnyOtherOpen = null;
+  // If set, override filtered list with these entries (from Random:N)
+  let fixedRandomEntries = null;
 
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
       .concat(storeHelper.getCustomEntries(store));
     if (showArtifacts) return base;
-    return base.filter(p => !(p.taggar?.typ || []).includes('Artefakt') || revealedArtifacts.has(p.namn));
+    return base.filter(p => !isHidden(p) || revealedArtifacts.has(p.namn));
   };
   const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
+  const isHidden = p => (p.taggar?.typ || []).some(t => ['artefakt','kuriositet','skatt'].includes(String(t).toLowerCase()));
 
   const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
 
@@ -164,6 +167,40 @@ function initIndex() {
       return;
     }
     const nq = searchNormalize(q.toLowerCase());
+    // Special suggestions for "[N] random: <kategori>" or "[N] slump: <kategori>"
+    {
+      const m = q.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.*)$/i);
+      if (m) {
+        const num = (m[1] || '').trim();
+        const prefix = m[2];
+        const part = searchNormalize((m[3] || '').toLowerCase());
+        const seenCat = new Set();
+        const cats = [];
+        for (const p of getEntries()) {
+          for (const t of (p.taggar?.typ || [])) {
+            const key = searchNormalize(String(t).toLowerCase());
+            if (part && !key.includes(part)) continue;
+            if (seenCat.has(t)) continue;
+            seenCat.add(t);
+            cats.push(t);
+          }
+        }
+        cats.sort((a,b)=>String(a).localeCompare(String(b)));
+        if (cats.length) {
+          const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
+          sugEl.innerHTML = cats.map((cat,i)=>{
+            const base = prefix.charAt(0).toUpperCase()+prefix.slice(1).toLowerCase();
+            const text = `${num ? (num + ' ') : ''}${base}: ${cat}`;
+            return `<div class="item" data-idx="${i}" data-val="${esc(text)}" data-cat="${esc(cat)}" data-count="${esc(num || '1')}" data-cmd="random">${text}</div>`;
+          }).join('');
+          sugEl.hidden = false;
+          sugIdx = -1;
+          window.updateScrollLock?.();
+          return;
+        }
+        // Fall back to default behavior if no categories matched
+      }
+    }
     const seen = new Set();
     const MAX = 50;
     const items = [];
@@ -198,6 +235,13 @@ function initIndex() {
     if (storeHelper.getOnlySelected(store)) {
       push('<span class="tag removable" data-type="onlySel">Endast valda ✕</span>');
     }
+    if (fixedRandomEntries && fixedRandomEntries.length) {
+      const cnt = fixedRandomEntries.length;
+      const cat = (window.catName ? (fixedRandomInfo?.cat || '') : (fixedRandomInfo?.cat || ''));
+      const labelCat = cat ? (window.catName ? catName(cat) : cat) : 'Urval';
+      const label = `Random: ${labelCat} ×${cnt}`;
+      push(`<span class="tag removable" data-type="random" data-cat="${fixedRandomInfo?.cat || ''}" data-count="${cnt}">${label} ✕</span>`);
+    }
     F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
     F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
@@ -209,22 +253,27 @@ function initIndex() {
     const onlySel = storeHelper.getOnlySelected(store);
     const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
+    let baseEntries = getEntries();
+    if (fixedRandomEntries && fixedRandomEntries.length) {
+      const allowed = new Set(fixedRandomEntries.map(e => e.namn));
+      baseEntries = baseEntries.filter(p => allowed.has(p.namn));
+    }
     const nameSet = onlySel
       ? new Set(storeHelper.getCurrentList(store).map(x => x.namn))
       : null;
-    if (!showArtifacts && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1) {
+    if (!fixedRandomEntries && !showArtifacts && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1) {
       const term = terms[0];
-      const art = DB.find(p => isArtifact(p) && searchNormalize((p.namn || '').toLowerCase()) === term);
-      if (art) {
-        if (!revealedArtifacts.has(art.namn)) {
-          revealedArtifacts.add(art.namn);
-          storeHelper.addRevealedArtifact(store, art.namn);
+      const hid = DB.find(p => isHidden(p) && searchNormalize((p.namn || '').toLowerCase()) === term);
+      if (hid) {
+        if (!revealedArtifacts.has(hid.namn)) {
+          revealedArtifacts.add(hid.namn);
+          storeHelper.addRevealedArtifact(store, hid.namn);
           fillDropdowns();
         }
-        return [art];
+        return [hid];
       }
     }
-    return getEntries().filter(p=>{
+    return baseEntries.filter(p=>{
       const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')}`.toLowerCase());
       const hasTerms = terms.length > 0;
       const txt = hasTerms && terms.every(q => text.includes(q));
@@ -553,25 +602,52 @@ function initIndex() {
         const it = e.target.closest('.item');
         if (!it) return;
         e.preventDefault();
-        const val = (it.dataset.val || '').trim();
-        if (val && !F.search.includes(val)) F.search.push(val);
-        // If exact name match, open that category once
-        if (val) {
-          const nval = searchNormalize(val.toLowerCase());
-          const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-          const cat = match?.taggar?.typ?.[0];
-          if (cat) openCatsOnce.add(cat);
+        if (it.dataset.cmd === 'random') {
+          const cat = it.dataset.cat || '';
+          const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
+          const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
+          if (!pool.length) {
+            if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
+          } else {
+            const n = Math.min(cnt, pool.length);
+            const picks = [];
+            const idxs = pool.map((_,i)=>i);
+            for (let i = 0; i < n; i++) {
+              const k = Math.floor(Math.random() * idxs.length);
+              const [idx] = idxs.splice(k, 1);
+              picks.push(pool[idx]);
+            }
+            fixedRandomEntries = picks;
+            fixedRandomInfo = { cat, count: picks.length };
+            const c = cat || picks[0]?.taggar?.typ?.[0];
+            if (c) openCatsOnce.add(c);
+          }
+          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+          activeTags(); renderList(filtered());
+          dom.sIn.blur();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        } else {
+          const val = (it.dataset.val || '').trim();
+          if (val && !F.search.includes(val)) F.search.push(val);
+          // If exact name match, open that category once
+          if (val) {
+            const nval = searchNormalize(val.toLowerCase());
+            const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
+            const cat = match?.taggar?.typ?.[0];
+            if (cat) openCatsOnce.add(cat);
+          }
+          if (val && window.storeHelper?.addRecentSearch) {
+            storeHelper.addRecentSearch(store, val);
+          }
+          dom.sIn.value = '';
+          sTemp = '';
+          updateSearchDatalist();
+          activeTags();
+          renderList(filtered());
+          dom.sIn.blur();
+          window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-        if (val && window.storeHelper?.addRecentSearch) {
-          storeHelper.addRecentSearch(store, val);
-        }
-        dom.sIn.value = '';
-        sTemp = '';
-        updateSearchDatalist();
-        activeTags();
-        renderList(filtered());
-        dom.sIn.blur();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
       });
     }
   }
@@ -594,6 +670,86 @@ function initIndex() {
       e.preventDefault();
       dom.sIn.blur();
       const term = sTemp.toLowerCase();
+      // Enter on active suggestion that is random command
+      if (items.length && sugIdx >= 0) {
+        const it = items[sugIdx];
+        if (it?.dataset?.cmd === 'random') {
+          const cat = it.dataset.cat || '';
+          const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
+          const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
+          if (!pool.length) {
+            if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
+            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+            return;
+          }
+          const n = Math.min(cnt, pool.length);
+          const picks = [];
+          const idxs = pool.map((_,i)=>i);
+          for (let i = 0; i < n; i++) {
+            const k = Math.floor(Math.random() * idxs.length);
+            const [idx] = idxs.splice(k, 1);
+            picks.push(pool[idx]);
+          }
+          fixedRandomEntries = picks;
+          fixedRandomInfo = { cat, count: picks.length };
+          const c = cat || picks[0]?.taggar?.typ?.[0];
+          if (c) openCatsOnce.add(c);
+          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+          activeTags(); renderList(filtered());
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      }
+      // Command: [N] random: <kategori> — pick N random entries in category
+      {
+        const m = sTemp.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
+        if (m) {
+          const cnt = Math.max(1, parseInt((m[1] || '1'), 10) || 1);
+          const catInput = (m[3] || '').trim();
+          if (catInput) {
+            const ncat = searchNormalize(catInput.toLowerCase());
+            // Build normalized -> canonical category map from current entries
+            const catMap = new Map();
+            for (const p of getEntries()) {
+              for (const t of (p.taggar?.typ || [])) {
+                const nt = searchNormalize(String(t).toLowerCase());
+                if (!catMap.has(nt)) catMap.set(nt, t);
+              }
+            }
+            const canonical = catMap.get(ncat);
+            if (!canonical) {
+              if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
+              dom.sIn.value = ''; sTemp = '';
+              updateSearchDatalist();
+              return;
+            }
+            const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
+            if (!pool.length) {
+              if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
+              dom.sIn.value = ''; sTemp = '';
+              updateSearchDatalist();
+              return;
+            }
+            const n = Math.min(cnt, pool.length);
+            const picks = [];
+            const idxs = pool.map((_,i)=>i);
+            for (let i = 0; i < n; i++) {
+              const k = Math.floor(Math.random() * idxs.length);
+              const [idx] = idxs.splice(k, 1);
+              picks.push(pool[idx]);
+            }
+            fixedRandomEntries = picks;
+            fixedRandomInfo = { cat: canonical, count: picks.length };
+            const cat = canonical || picks[0]?.taggar?.typ?.[0];
+            if (cat) openCatsOnce.add(cat);
+            dom.sIn.value=''; sTemp='';
+            updateSearchDatalist();
+            activeTags(); renderList(filtered());
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          }
+        }
+      }
       if (items.length && sugIdx >= 0) {
         const chosen = items[sugIdx]?.dataset?.val || '';
         if (chosen) {
@@ -614,7 +770,7 @@ function initIndex() {
         return;
       }
       if (term === 'lol') {
-        F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp='';
+        F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp=''; fixedRandomEntries = null; fixedRandomInfo = null;
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
         storeHelper.clearRevealedArtifacts(store);
@@ -687,9 +843,10 @@ function initIndex() {
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
+    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); renderList(filtered()); return; }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
-    else F[section] = F[section].filter(x=>x!==val);
+    else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
     activeTags(); renderList(filtered());
   });
@@ -861,9 +1018,9 @@ function initIndex() {
               }
             }
             invUtil.saveInventory(inv); invUtil.renderInventory();
-            if (tagTyp.includes('Artefakt')) {
+            if (isHidden(p)) {
               const list = storeHelper.getCurrentList(store);
-              if (!list.some(x => x.namn === p.namn && x.noInv)) {
+              if ((p.taggar?.typ || []).includes('Artefakt') && !list.some(x => x.namn === p.namn && x.noInv)) {
                 list.push({ ...p, noInv: true });
                 storeHelper.setCurrentList(store, list);
               }
@@ -1122,7 +1279,7 @@ function initIndex() {
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
-        if ((p.taggar?.typ || []).includes('Artefakt')) {
+        if (isHidden(p)) {
           const still = inv.some(r => r.name === p.namn);
           if (!still) {
             let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === p.namn && x.noInv));
@@ -1217,7 +1374,7 @@ function initIndex() {
           invUtil.removeWellEquippedItems(inv);
           invUtil.saveInventory(inv); invUtil.renderInventory();
         }
-        if ((p.taggar?.typ || []).includes('Artefakt')) {
+        if (isHidden(p)) {
           const inv = storeHelper.getInventory(store);
           const removeItem = arr => {
             for (let i = arr.length - 1; i >= 0; i--) {

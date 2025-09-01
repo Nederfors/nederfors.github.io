@@ -47,6 +47,11 @@
     return own || DB.find(x => x.namn === name) || {};
   }
 
+  function isHiddenType(tagTyp) {
+    const arr = Array.isArray(tagTyp) ? tagTyp : [];
+    return arr.some(t => ['artefakt','kuriositet','skatt'].includes(String(t).toLowerCase()));
+  }
+
   function sortInvEntry(a, b) {
     const entA = getEntry(a.name);
     const entB = getEntry(b.name);
@@ -1696,7 +1701,7 @@ ${moneyRow}
             parentArr.splice(idx, 1);
             saveInventory(inv);
             renderInventory();
-            if (tagTyp.includes('Artefakt')) {
+            if (isHiddenType(tagTyp)) {
               const still = flattenInventory(inv).some(r => r.name === row.name);
               if (!still) {
                 let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === row.name && x.noInv));
@@ -1781,11 +1786,13 @@ ${moneyRow}
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
               renderInventory();
-              if (tagTyp.includes('Artefakt')) {
+              if (isHiddenType(tagTyp)) {
                 const list = storeHelper.getCurrentList(store);
-                if (!list.some(x => x.namn === entry.namn && x.noInv)) {
-                  list.push({ ...entry, noInv: true });
-                  storeHelper.setCurrentList(store, list);
+                if ((entry.taggar?.typ || []).includes('Artefakt')) {
+                  if (!list.some(x => x.namn === entry.namn && x.noInv)) {
+                    list.push({ ...entry, noInv: true });
+                    storeHelper.setCurrentList(store, list);
+                  }
                 }
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
@@ -1833,7 +1840,7 @@ ${moneyRow}
           const parentIdx = Number(li.dataset.parent);
           saveInventory(inv);
           renderInventory();
-          if (tagTyp.includes('Artefakt')) {
+          if (isHiddenType(tagTyp)) {
             const still = flattenInventory(inv).some(r => r.name === row.name);
             if (!still) {
               let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === row.name && x.noInv));

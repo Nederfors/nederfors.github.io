@@ -5,6 +5,8 @@
     'Sköld',
     'Pil/Lod',
     'Rustning',
+    'Kuriositet',
+    'Skatt',
     'Diverse',
     'Elixir',
     'Mat',
@@ -43,11 +45,12 @@
     'Elixir',
     'Lägre Artefakt',
     'Artefakt',
+    'Skatt',
+    'Kuriositet',
     'Specialverktyg',
     'Diverse',
     'Mat',
-    'Dryck',
-    'Tabell'
+    'Dryck'
   ];
 
   const CAT_DISPLAY = {
@@ -65,19 +68,23 @@
     'Vapen': 'Vapen',
     'Pil/Lod': 'Pilar/Lod',
     'Sköld': 'Sköldar',
+    'Tabell': 'Tabeller',
     'Kvalitet': 'Kvaliteter',
     'Mystisk kvalitet': 'Mystiska kvaliteter',
     'Elixir': 'Elixir',
     'Lägre Artefakt': 'Lägre Artefakter',
     'Artefakt': 'Artefakter',
+    'Skatt': 'Skatter',
+    'Kuriositet': 'Kuriositeter',
+    'skatt': 'Skatter',
+    'kuriositet': 'Kuriositeter',
     'Specialverktyg': 'Specialverktyg',
     'Diverse': 'Diverse',
     'Mat': 'Mat',
     'Dryck': 'Drycker',
     'Byggnad': 'Byggnader',
     'Förvaring': 'Förvaringsföremål',
-    'Fälla': 'Fällor',
-    'Tabell': 'Tabeller'
+    'Fälla': 'Fällor'
   };
 
   function catName(cat){
@@ -93,7 +100,10 @@
     return a.localeCompare(b);
   }
 
-  function isInv(p){ return !p.noInv && (p.taggar?.typ||[]).some(t => EQUIP.includes(t)); }
+  const EQUIP_LC_SET = new Set(EQUIP.map(t => String(t).toLowerCase()));
+  function isInv(p){
+    return !p.noInv && (p.taggar?.typ||[]).some(t => EQUIP_LC_SET.has(String(t).toLowerCase()));
+  }
   function isQual(p){
     return (p.taggar?.typ||[]).some(t => ['Kvalitet','Mystisk kvalitet'].includes(t));
   }

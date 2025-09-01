@@ -215,6 +215,8 @@ window.DB = DB;
 window.DBIndex = DBIndex;
 const DATA_FILES = [
   'diverse.json',
+  'kuriositeter.json',
+  'skatter.json',
   'elixir.json',
   'fordel.json',
   'formaga.json',

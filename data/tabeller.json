@@ -874,6 +874,38 @@
       "ägarskap": "—"
     }
   ]
+},
+{
+  "id": "ta16",
+  "namn": "Fyndtabell",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "ljusa vilda",
+    "mörka",
+    "kategori"
+  ],
+  "rader": [
+    {
+      "ljusa vilda": "1–5",
+      "mörka": "1–4",
+      "kategori": "Bråte"
+    },
+    {
+      "ljusa vilda": "6–15",
+      "mörka": "5–13",
+      "kategori": "Kuriositet, Tabell 7"
+    },
+    {
+      "ljusa vilda": "16–19",
+      "mörka": "14–18",
+      "kategori": "Mystisk skatt, Tabell 8"
+    },
+    {
+      "ljusa vilda": "20",
+      "mörka": "19–20",
+      "kategori": "Artefakt, Tabell 9"
+    }
+  ]
 }
 
 ]
