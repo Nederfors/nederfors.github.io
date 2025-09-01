@@ -1933,7 +1933,7 @@ textarea.auto-resize {
 }
 #tabellPopup th.num,
 #tabellPopup td.num {
-  text-align: right;
+  text-align: left;
   font-variant-numeric: tabular-nums;
 }
 #tabellPopup .table-notes {
