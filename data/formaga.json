@@ -459,14 +459,14 @@
           "Aktiv"
         ],
         "Mästare": [
-          "Speciell"
+          "Aktiv"
         ]
       }
     },
     "nivåer": {
   "Novis": "Handling: Aktiv. Rollpersonen är en skicklig fältskär. Ett lyckat slag i Listig återställer 1T4 Tålighet hos patienten. Vid användning av en örtkur lyckas slaget automatiskt och återställer istället 1T6. Omvårdnad kan dessutom stoppa blödningar eller läka kritiska skador som uppstått genom överskriden smärtgräns. Förmågan kan användas med lyckat resultat högst två gånger per patient och dag.",
   "Gesäll": "Handling: Aktiv. Som Novis, men slaget återställer 1T6 istället för 1T4. Med örtkur läks 1T8 istället för 1T6. Ett misslyckat slag på Listig återställer 1T4 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat högst tre gånger per patient och dag.",
-  "Mästare": "Handling: Speciell. En mästare i läkekonst kan använda förmågan utan begränsning. Patienter som vårdas av mästaren får dessutom använda mästarens värde i Listig när de slår sina dödsslag istället för sina egna."
+  "Mästare": "Handling: Aktiv. Gesäll, men slaget återställer 1T8 istället för 1T6. Med örtkur läks 1T10 istället för 1T8. Ett misslyckat slag på Listig återställer 1T6 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat helt obegränsat. Vidare så får patienter som vårdas av mästaren dessutom använda mästarens värde i Listig när de slår sina dödsslag."
 }
 
     },
