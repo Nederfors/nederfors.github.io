@@ -381,6 +381,9 @@ function initIndex() {
         let priceText = '';
         let weightText = '';
         let weightVal = null;
+        let capacityVal = null;
+        let capacityText = '';
+        const isVehicle = (p.taggar?.typ || []).includes('Färdmedel');
         let priceLabel = '';
         if (isInv(p)) {
           desc += itemStatHtml(p);
@@ -405,6 +408,13 @@ function initIndex() {
             weightVal = formatWeight(w);
             weightText = `<br>Vikt: ${weightVal}`;
           }
+          if (isVehicle) {
+            const cap = p.stat?.bärkapacitet ?? null;
+            if (cap != null) {
+              capacityVal = cap;
+              capacityText = ` BK: ${cap}`;
+            }
+          }
         } else if (isEmployment(p)) {
           if (p.grundpris) {
             priceText = formatMoney(p.grundpris);
@@ -416,7 +426,7 @@ function initIndex() {
             priceLabel = 'Pris:';
           }
         }
-        let infoHtml = priceText ? `${desc}<br>${priceLabel} ${priceText}${weightText}` : `${desc}${weightText}`;
+        let infoHtml = priceText ? `${desc}<br>${priceLabel} ${priceText}${capacityText}${weightText}` : `${desc}${weightText}`;
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
           if (extra) infoHtml += `<br>${extra}`;
@@ -467,6 +477,7 @@ function initIndex() {
         const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
         const badgeParts = [];
         if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeText}: ${priceText}</span>`);
+        if (capacityVal != null) badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${capacityVal}</span>`);
         if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
         if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
         const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
