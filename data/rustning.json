@@ -6,7 +6,8 @@
     "kvalitet": "Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -27,7 +28,8 @@
     "kvalitet": "Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -48,7 +50,8 @@
     "kvalitet": "Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -69,7 +72,8 @@
     "kvalitet": "Otymplig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -90,7 +94,8 @@
     "kvalitet": "Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -110,7 +115,8 @@
     "beskrivning": "Ett slitstarkt pansar av tjockt, oljat läder som hettats upp och pressats för att bli styvare. Det ger grundläggande skydd utan att lägga märkbar tyngd på bäraren.",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -130,7 +136,8 @@
     "beskrivning": "Tjocka läderplattor förstärkta med nitar täcker bröst och rygg; skyddet väger lite mer än härdat läder men är billigare än metallrustning.",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -151,7 +158,8 @@
     "kvalitet": "Otymplig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Medeltung Rustning"
       ]
     },
     "stat": {
@@ -172,7 +180,8 @@
     "kvalitet": "Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Medeltung Rustning"
       ]
     },
     "stat": {
@@ -192,7 +201,8 @@
     "beskrivning": "Tusentals sammanlänkade järnringar fördelar slagkraften över en större yta. Modellen är vanlig bland ambriernas stadsvakter och erbjuder hyggligt skydd till överkomlig kostnad.",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Medeltung Rustning"
       ]
     },
     "stat": {
@@ -212,7 +222,8 @@
     "beskrivning": "Överlappande metallfjäll nitade på ett läderspänne bildar ett flexibelt skydd som fångar och sprider slagenergi. Pansaret bärs ofta av vandringskrigare som vill kombinera rörlighet och säkerhet.",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Medeltung Rustning"
       ]
     },
     "stat": {
@@ -233,7 +244,8 @@
     "kvalitet": "Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Tung Rustning"
       ]
     },
     "stat": {
@@ -254,7 +266,8 @@
     "kvalitet": "Förstärkt, Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Medeltung Rustning"
       ]
     },
     "stat": {
@@ -275,7 +288,8 @@
     "kvalitet": "Förstärkt",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Tung Rustning"
       ]
     },
     "stat": {
@@ -296,7 +310,8 @@
     "kvalitet": "Förstärkt",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Medeltung Rustning"
       ]
     },
     "stat": {
@@ -317,7 +332,8 @@
     "kvalitet": "Förstärkt, Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Tung Rustning"
       ]
     },
     "stat": {
@@ -338,7 +354,8 @@
     "kvalitet": "Förstärkt, Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -359,7 +376,8 @@
     "kvalitet": "Helig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Tung Rustning"
       ]
     },
     "stat": {
@@ -380,7 +398,8 @@
     "kvalitet": "Dold, Smidig",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Lätt Rustning"
       ]
     },
     "stat": {
@@ -401,7 +420,8 @@
     "kvalitet": "Vedergällande",
     "taggar": {
       "typ": [
-        "Rustning"
+        "Rustning",
+        "Tung Rustning"
       ]
     },
     "stat": {
