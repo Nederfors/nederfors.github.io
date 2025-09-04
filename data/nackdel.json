@@ -570,7 +570,7 @@
   },
   {
     "id": "na53",
-    "namn": "Mystiskt fokus",
+    "namn": "Mystiskt fokustvång",
     "beskrivning": "Rollpersonens mystik är knuten till ett särskilt fokus; vad som krävs anges i beskrivningen för den aktuella mystiska förmågan. Saknas detta fokus när förmågan eller en ritual används får rollpersonen −1 på slaget.",
     "taggar": {
       "typ": ["Nackdel"],
