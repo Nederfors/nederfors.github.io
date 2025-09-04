@@ -2,7 +2,7 @@
   {
     "id": "y1",
     "namn": "Bärsärkare",
-    "beskrivning": "*Håll dig på avstånd! Jag vill ogärna skada dig.*\n\nVredgade andar följer dig och fyller dig med rasande kraft i strid. Vid sidan om slagfältet är du av ett eftertänksamt och tålmodigt kynne, en kontrast som gör dig såväl uppskattad som fruktad. Mest omtalade bland barbarerna är de särskilt utvalda bärsärkakrigare som samlas kring Storhövdingen i Slumrande vredens garde – kanske drömmer du om att bli en av dem, eller om att besegra någon av dem som hämnd för att denne tog ”din plats”?",
+    "beskrivning": "*Håll dig på avstånd! Jag vill ogärna skada dig.*\n\nVredgade andar följer dig och fyller dig med rasande kraft i strid. Vid sidan om slagfältet är du av ett eftertänksamt och tålmodigt kynne, en kontrast som gör dig såväl uppskattad som fruktad.\n\nMest omtalade bland barbarerna är de särskilt utvalda bärsärkakrigare som samlas kring Storhövdingen i Slumrande vredens garde – kanske drömmer du om att bli en av dem, eller om att besegra någon av dem som hämnd för att denne tog ”din plats”?",
     "taggar": {
       "typ": [
         "Yrke"
@@ -44,7 +44,7 @@
   {
     "id": "y3",
     "namn": "Kapten",
-    "beskrivning": "*Gör som jag sagt så ordnar det sig!*\n\nDu är en född ledare och har byggt din militära karriär på det. Vapenkonst är för dig endast ett sätt att hålla dig vid liv och kanske var det också en gång ett krav för att få dina underlydandes respekt. Numera är det du som tar fram det bästa hos dina allierade på slagfältet, som guidar och skyddar dem medan ni uppnår era militära mål. Så vinner du deras förtroende.",
+    "beskrivning": "*Gör som jag sagt så ordnar det sig!*\n\nDu är en född ledare och har byggt din militära karriär på det. Vapenkonst är för dig endast ett sätt att hålla dig vid liv och kanske var det också en gång ett krav för att få dina underlydandes respekt.\n\nNumera är det du som tar fram det bästa hos dina allierade på slagfältet, som guidar och skyddar dem medan ni uppnår era militära mål. Så vinner du deras förtroende.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -62,7 +62,7 @@
   {
     "id": "y4",
     "namn": "Säljsvärd",
-    "beskrivning": "*Mitt svärd och mitt blod, i utbyte mot ditt guld.*\n\nDu har slagits som ett sätt att leva, för en inkomst. Ambrias furstar hyr regelbundet stridskraft för kampanjer mot Davokars barbarer och Davokars klanledare gör detsamma i retur. Handelshus behöver vakter, pilgrimer likaså. För vem eller hur du har stridit kan ha varierat, men skickligheten med vapen och en instinkt för vilka strider som kan vinnas har varit avgörande för din överlevnad.",
+    "beskrivning": "*Mitt svärd och mitt blod, i utbyte mot ditt guld.*\n\nDu har slagits som ett sätt att leva, för en inkomst. Ambrias furstar hyr regelbundet stridskraft för kampanjer mot Davokars barbarer och Davokars klanledare gör detsamma i retur.\n\nHandelshus behöver vakter, pilgrimer likaså. För vem eller hur du har stridit kan ha varierat, men skickligheten med vapen och en instinkt för vilka strider som kan vinnas har varit avgörande för din överlevnad.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -80,7 +80,7 @@
   {
     "id": "y5",
     "namn": "Riddare",
-    "beskrivning": "*Du kan ta livet ifrån mig, inte min heder.*\n\nDu är en riddare som slåss för att bryta fiendens linjer eller hålla den egna härens. Tungt rustad utanpå och med en djup pliktkänsla inuti strider du för din furstes gunst, dina allierades liv och din egen ära. Kanske drömmer du om att bli en av de pansárer som utgör stommen i Drottningens eget livgarde, eller en av de templárer som slåss i Prios namn.",
+    "beskrivning": "*Du kan ta livet ifrån mig, inte min heder.*\n\nDu är en riddare som slåss för att bryta fiendens linjer eller hålla den egna härens. Tungt rustad utanpå och med en djup pliktkänsla inuti strider du för din furstes gunst, dina allierades liv och din egen ära.\n\nKanske drömmer du om att bli en av de pansárer som utgör stommen i Drottningens eget livgarde, eller en av de templárer som slåss i Prios namn.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -98,7 +98,7 @@
   {
     "id": "y6",
     "namn": "Häxa",
-    "beskrivning": "*Din önskan är underordnad naturens vilja, acceptera det! Eller dö.*\n\nDen vilda naturen är ditt hem; att balansera dina egna behov mot naturens är ditt värv. Som häxa är du nära knuten till landet självt och kan lägga dess urkraft till din egen inre styrka. Du förhandlar med naturens väsen, förstår landets flöden och önskningar, och dina krafter härrör från livets och dödens kretslopp.",
+    "beskrivning": "*Din önskan är underordnad naturens vilja, acceptera det! Eller dö.*\n\nDen vilda naturen är ditt hem; att balansera dina egna behov mot naturens är ditt värv. Som häxa är du nära knuten till landet självt och kan lägga dess urkraft till din egen inre styrka.\n\nDu förhandlar med naturens väsen, förstår landets flöden och önskningar, och dina krafter härrör från livets och dödens kretslopp.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -119,7 +119,7 @@
   {
     "id": "y7",
     "namn": "Svartkonstnär",
-    "beskrivning": "*Det finns en annan väg; en enklare väg.*\n\nDu har av desperation eller makthunger drivits in på svartkonstens väg och snart funnit dig både anfrätt av korruption och jagad av fanatiska häxjägare. Kanske ser du din utsatthet som ett bevis på att du behöver ännu mer makt? Eller så är du uppriktigt ångerfull och söker en väg tillbaka till förlåtelse och räddning.",
+    "beskrivning": "*Det finns en annan väg; en enklare väg.*\n\nDu har av desperation eller makthunger drivits in på svartkonstens väg och snart funnit dig både anfrätt av korruption och jagad av fanatiska häxjägare. Kanske ser du din utsatthet som ett bevis på att du behöver ännu mer makt?\n\nEller så är du uppriktigt ångerfull och söker en väg tillbaka till förlåtelse och räddning.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -137,7 +137,7 @@
   {
     "id": "y8",
     "namn": "Teurg",
-    "beskrivning": "*Prios ser dig, kättare!*\n\nDu är teurg, en prästmagiker. Din tro på Laggivaren är orubbligt djup: Prios är solen och själens ljus, människans räddare ur de gamla gudarnas slaveri, världens skapare och allt livs beskyddare. Ur denna rena källa springer en sällsam kraft. Den mystiska kunskap du besitter vore tom och farlig utan tron som kompass och fundament, vilket ofta visas när gudlösa mystiker utövar sina krafter.",
+    "beskrivning": "*Prios ser dig, kättare!*\n\nDu är teurg, en prästmagiker. Din tro på Laggivaren är orubbligt djup: Prios är solen och själens ljus, människans räddare ur de gamla gudarnas slaveri, världens skapare och allt livs beskyddare.\n\nUr denna rena källa springer en sällsam kraft. Den mystiska kunskap du besitter vore tom och farlig utan tron som kompass och fundament, vilket ofta visas när gudlösa mystiker utövar sina krafter.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -173,7 +173,7 @@
   {
     "id": "y10",
     "namn": "Självlärd besvärjare",
-    "beskrivning": "*De sa att jag inte tog krafterna på allvar; jag ska visa dem hur fel de hade.*\n\nDu är en självlärd mystiker, utkastad ur en tradition, aldrig insläppt eller ointresserad av traditionernas trånga värld. Friheten kommer till ett pris: korruptionen lurar bakom hörnet. Och häxjägare ser dig som lovligt byte. Vare sig du vandrar från by till by eller har gömt dig i stadens myller tjänar du ditt levebröd på att erbjuda dina tjänster som finnare av förlorade ting eller som ockult kunskapare.",
+    "beskrivning": "*De sa att jag inte tog krafterna på allvar; jag ska visa dem hur fel de hade.*\n\nDu är en självlärd mystiker, utkastad ur en tradition, aldrig insläppt eller ointresserad av traditionernas trånga värld. Friheten kommer till ett pris: korruptionen lurar bakom hörnet.\n\nOch häxjägare ser dig som lovligt byte. Vare sig du vandrar från by till by eller har gömt dig i stadens myller tjänar du ditt levebröd på att erbjuda dina tjänster som finnare av förlorade ting eller som ockult kunskapare.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -214,7 +214,7 @@
   {
     "id": "y12",
     "namn": "Häxjägare",
-    "beskrivning": "*Hellre en oskyldig under jord än en styggelse på dess yta.*\n\nDu har vigt ditt liv åt att bekämpa styggelser, kanske som en följd av att ditt eget liv en gång slagits i spillror av det växande och smittsamma mörkret: en nedbränd gård, din familjs grav, en väns vidriga förvandling – någonting påminner dig för alltid om vad som händer när styggelsens kraft inte knäcks i tid. Du skyr inga medel i kampen; du slåss med stål, eld och kanske även ritualer som du har kommit över från nedkämpade svartkonstnärer. Du inser möjligen att bruket av magi driver dig mot förstyggelsen, men du blundar för detta faktum och strider blint vidare med fanatikerns glöd.",
+    "beskrivning": "*Hellre en oskyldig under jord än en styggelse på dess yta.*\n\nDu har vigt ditt liv åt att bekämpa styggelser, kanske som en följd av att ditt eget liv en gång slagits i spillror av det växande och smittsamma mörkret: en nedbränd gård, din familjs grav, en väns vidriga förvandling – någonting påminner dig för alltid om vad som händer när styggelsens kraft inte knäcks i tid.\n\nDu skyr inga medel i kampen; du slåss med stål, eld och kanske även ritualer som du har kommit över från nedkämpade svartkonstnärer. Du inser möjligen att bruket av magi driver dig mot förstyggelsen, men du blundar för detta faktum och strider blint vidare med fanatikerns glöd.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -232,7 +232,7 @@
   {
     "id": "y13",
     "namn": "Ligist",
-    "beskrivning": "*Dina pengar eller ditt blod, du väljer.*\n\nYndaros östliga kvarter är en vildmark lika farlig som Davokar, och lika lukrativ för de som vet hur att skörda dess frukter. Du har vuxit upp i gränderna och skolats av gäng och ligor i konsten att bärga frukten av andras arbete, och dessutom att göra det utan att stadsvakten kommer på dig. Vissa ligister kommer upp sig i smöret då de tar anställning som fogdens män. Då kan de på baroners och grevars mandat agera råskinn och indrivare utan att störas av stadsvakter.",
+    "beskrivning": "*Dina pengar eller ditt blod, du väljer.*\n\nYndaros östliga kvarter är en vildmark lika farlig som Davokar, och lika lukrativ för de som vet hur att skörda dess frukter. Du har vuxit upp i gränderna och skolats av gäng och ligor i konsten att bärga frukten av andras arbete, och dessutom att göra det utan att stadsvakten kommer på dig.\n\nVissa ligister kommer upp sig i smöret då de tar anställning som fogdens män. Då kan de på baroners och grevars mandat agera råskinn och indrivare utan att störas av stadsvakter.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -254,7 +254,7 @@
   {
     "id": "y14",
     "namn": "Skattletare",
-    "beskrivning": "*Det där altaret... undrar om man inte kan skjuta det åt sidan.*\n\nDavokars djup rymmer skatter; att lokalisera, bärga och återföra dem till civilisationen är ditt levebröd. Du drömmer om överväxta ruiner och fantiserar om sjunkna tempel, och i motsats till många andra har du visat dig beredd att satsa ditt liv på att lyckas. För att klara dig har du utvecklat en rad färdigheter och det är få situationer i Davokars dunkel som du inte har en strategi för.",
+    "beskrivning": "*Det där altaret... undrar om man inte kan skjuta det åt sidan.*\n\nDavokars djup rymmer skatter; att lokalisera, bärga och återföra dem till civilisationen är ditt levebröd. Du drömmer om överväxta ruiner och fantiserar om sjunkna tempel, och i motsats till många andra har du visat dig beredd att satsa ditt liv på att lyckas.\n\nFör att klara dig har du utvecklat en rad färdigheter och det är få situationer i Davokars dunkel som du inte har en strategi för.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -297,7 +297,7 @@
   {
     "id": "y16",
     "namn": "Jägare",
-    "beskrivning": "Det kan knappast ifrågasättas att Jägaren är en arketypisk karaktär av stor betydelse för både Ambria och skogarnas klaner. I gemene ambriers ögon är de kanske inte mycket mer värda än tjuvar, men för många (särskilt bland de som bor i Davokars närhet) är de att likställa med hjältar. Smutsiga av vildmarkslort och med framtidens ljus i blick är jägarna en förutsättning för det stora projektet att kultivera Davokar och utvinna dess rikedomar. Jägare finns bland både ambrier och barbarer och utmärks ofta av sin skicklighet med projektilvapen och därmed relaterade taktiker. Exakt hur de slåss beror främst på om de har specialiserat sig på att jaga brottslingar, monster eller svartkonstnärer.\n\nJägarens olika måltavlor till trots, det som förenar dem är en högt utvecklad känsla för vart bytet går, hur det rör sig och vart det ska ta vägen härnäst; allt en förståelse som med dödlig precision sammanfattas i den arketypiska förmågan Jaktinstinkt.",
+    "beskrivning": "Det kan knappast ifrågasättas att Jägaren är en arketypisk karaktär av stor betydelse för både Ambria och skogarnas klaner. I gemene ambriers ögon är de kanske inte mycket mer värda än tjuvar, men för många (särskilt bland de som bor i Davokars närhet) är de att likställa med hjältar.\n\nSmutsiga av vildmarkslort och med framtidens ljus i blick är jägarna en förutsättning för det stora projektet att kultivera Davokar och utvinna dess rikedomar. Jägare finns bland både ambrier och barbarer och utmärks ofta av sin skicklighet med projektilvapen och därmed relaterade taktiker.\n\nExakt hur de slåss beror främst på om de har specialiserat sig på att jaga brottslingar, monster eller svartkonstnärer.\n\nJägarens olika måltavlor till trots, det som förenar dem är en högt utvecklad känsla för vart bytet går, hur det rör sig och vart det ska ta vägen härnäst; allt en förståelse som med dödlig precision sammanfattas i den arketypiska förmågan Jaktinstinkt.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -348,7 +348,7 @@
   {
     "id": "y17",
     "namn": "Prisjägare",
-    "beskrivning": "*”Avskum, jag? Förvisso, men avskum du behöver låter det som.”*\n\nRedan under Det stora kriget förekom desertörer; tvivlet på möjligheten att besegra Mörkermästarna var vida spritt. För att stävja problemet satte kung Ynedar, drottning Korinthias far, ett stående pris på fanflyktingars huvuden, och därmed upprät­tades indirekt prisjägarnas skrå. Traditionen att betala för efterlystas infångande lever vidare och prisjägare tvingas nu inte bara jaga i rikets utmarker och städer utan också i Davokar, dit de mest desperata – och för prisjägaren ofta mest värdefulla – målen flyr.",
+    "beskrivning": "*”Avskum, jag? Förvisso, men avskum du behöver låter det som.”*\n\nRedan under Det stora kriget förekom desertörer; tvivlet på möjligheten att besegra Mörkermästarna var vida spritt. För att stävja problemet satte kung Ynedar, drottning Korinthias far, ett stående pris på fanflyktingars huvuden, och därmed upprät­tades indirekt prisjägarnas skrå.\n\nTraditionen att betala för efterlystas infångande lever vidare och prisjägare tvingas nu inte bara jaga i rikets utmarker och städer utan också i Davokar, dit de mest desperata – och för prisjägaren ofta mest värdefulla – målen flyr.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -406,7 +406,7 @@
   {
     "id": "y19",
     "namn": "Krigare",
-    "beskrivning": "vem som helst kan lyfta ett vapen mot överheten, mot dem som har mer eller för att lojalt tjäna sin furste. Krigets konstant har lett till framväxten av militära ordnar och grupper som på olika sätt förvaltar en stridskunskap och en livsstil som speglar deras syn på världen. Spelarens handbok introducerar ett antal nya krigaryrken, yrken som alla på sina vis är unika uttryck för hur krigets ständiga närvaro lett till utveckling av kunskap, gemenskaper och institutioner i såväl Ambria som Davokar. De priostrogna templárerna utgör det kanske yttersta uttrycket för att underkastelse ger sällsam kraft. Vredesgardisterna på Karvosti tjänar förvisso sin storhövding men frågan är om de inte egentligen dör för varandra, för sina blodssystrar och bröder snarare än någon högre princip. Från östra Davokar kommer runristade krigare, vars hud är ett pergament som sammanfattar symbolisternas krigskunskap, utan krav på hur den används. Bland såväl troll som alver finns också starka krigartraditioner – trollens runsmeder svingar sina hammare lika hemtamt i smedja som på slagfält, medan alvtagna människor ofta dansar en spjutdans lika gammal som den är dödlig. Krigarnas mest uttalade särdrag är något de alla har gemensamt: det faktum att de alla ska vara som starkast när bördan är som störst.\n\nDenna strävan fångas i den arketypiska förmågan *Kraftprov*.",
+    "beskrivning": "vem som helst kan lyfta ett vapen mot överheten, mot dem som har mer eller för att lojalt tjäna sin furste. Krigets konstant har lett till framväxten av militära ordnar och grupper som på olika sätt förvaltar en stridskunskap och en livsstil som speglar deras syn på världen.\n\nSpelarens handbok introducerar ett antal nya krigaryrken, yrken som alla på sina vis är unika uttryck för hur krigets ständiga närvaro lett till utveckling av kunskap, gemenskaper och institutioner i såväl Ambria som Davokar. De priostrogna templárerna utgör det kanske yttersta uttrycket för att underkastelse ger sällsam kraft.\n\nVredesgardisterna på Karvosti tjänar förvisso sin storhövding men frågan är om de inte egentligen dör för varandra, för sina blodssystrar och bröder snarare än någon högre princip. Från östra Davokar kommer runristade krigare, vars hud är ett pergament som sammanfattar symbolisternas krigskunskap, utan krav på hur den används.\n\nBland såväl troll som alver finns också starka krigartraditioner – trollens runsmeder svingar sina hammare lika hemtamt i smedja som på slagfält, medan alvtagna människor ofta dansar en spjutdans lika gammal som den är dödlig.\n\nKrigarnas mest uttalade särdrag är något de alla har gemensamt: det faktum att de alla ska vara som starkast när bördan är som störst.\n\nDenna strävan fångas i den arketypiska förmågan *Kraftprov*.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -504,7 +504,7 @@
   {
     "id": "y22",
     "namn": "Vapenmästare",
-    "beskrivning": "*”Du vill överleva, jag vill dö på ett sätt som alla minns med vördnad”*\n\nInom krigarkasten i Ambria och Davokar återfinns individer som helt och hållet gått in för att bemästra sitt vapen och dess stridsteknik. Dessa vapenmästare har med enveten träning kommit att uppnå särskild skicklighet med vapnet, inte sällan knutet till en uttalad filosofi om kampen, livet och döden. I Ambria är de kända som Svärdshelgon, eftersom de ägnar sitt liv åt att nå perfektion. Bland Davokars barbarer är de kända som Yxkonstnärer, och inte sällan använder de en yxa i varje hand – en tradition som också har plockats upp av vissa svartalfsstammar i Davokar. Alvernas andliga motsvarighet till vapenmästare kallas Spjutdansare, en konst som inte sällan utövas av alvtagna människor. Hos trollen anses kättingvapnen särskilt ädla då de både är extra krävande och effektiva i rätt händer. Sådana Stridsgisslare återfinns faktiskt också – oberoende av trollens förkärlek för länkade vapen – på Ambrias arenor, inte sällan i resars händer.",
+    "beskrivning": "*”Du vill överleva, jag vill dö på ett sätt som alla minns med vördnad”*\n\nInom krigarkasten i Ambria och Davokar återfinns individer som helt och hållet gått in för att bemästra sitt vapen och dess stridsteknik. Dessa vapenmästare har med enveten träning kommit att uppnå särskild skicklighet med vapnet, inte sällan knutet till en uttalad filosofi om kampen, livet och döden.\n\nI Ambria är de kända som Svärdshelgon, eftersom de ägnar sitt liv åt att nå perfektion. Bland Davokars barbarer är de kända som Yxkonstnärer, och inte sällan använder de en yxa i varje hand – en tradition som också har plockats upp av vissa svartalfsstammar i Davokar.\n\nAlvernas andliga motsvarighet till vapenmästare kallas Spjutdansare, en konst som inte sällan utövas av alvtagna människor. Hos trollen anses kättingvapnen särskilt ädla då de både är extra krävande och effektiva i rätt händer.\n\nSådana Stridsgisslare återfinns faktiskt också – oberoende av trollens förkärlek för länkade vapen – på Ambrias arenor, inte sällan i resars händer.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -580,7 +580,7 @@
   {
     "id": "y24",
     "namn": "Symbolist",
-    "beskrivning": "*”Jag målar och världen lyder”*\n\nAtt symboler och tecken har kraft är välkänt och utnyttjat i de flesta mystiska traditioner, åtminstone i ritualer. Den renodlade symbolismen är en mystisk tradition som nästan uteslutande bygger sin makt på tecken och symboler. Symbolismen kom till Davokar via mystiker från öster, vilka efter flykten över Ravennerna funnit fristad i flodriket som senare blev klanen Vajvods land. Symbolismen – främmande, kraftfull och dekadent – antas av ambriska lärde vara en viktig faktor i varför östra Davokars barbarer är avståndstagande till Karvosti och den av Huldran styrde Storhövdingen där; både som en förklaring till att man av filosofiska och kulturella skäl tar avstånd från häxornas ledare, och till att klan Vajvod faktiskt är mer öppen för omvärlden än andra klaner i Davokar, möjligen Odaiova undantaget. Vajvods storhövding Zoltar den Gamle har inte heller en häxa vid sin sida utan en symbolist, tränad vid Azurtemplet, symbolisternas samlingsplats i hjärtat av Vajvods älvslandskap.",
+    "beskrivning": "*”Jag målar och världen lyder”*\n\nAtt symboler och tecken har kraft är välkänt och utnyttjat i de flesta mystiska traditioner, åtminstone i ritualer. Den renodlade symbolismen är en mystisk tradition som nästan uteslutande bygger sin makt på tecken och symboler.\n\nSymbolismen kom till Davokar via mystiker från öster, vilka efter flykten över Ravennerna funnit fristad i flodriket som senare blev klanen Vajvods land.\n\nSymbolismen – främmande, kraftfull och dekadent – antas av ambriska lärde vara en viktig faktor i varför östra Davokars barbarer är avståndstagande till Karvosti och den av Huldran styrde Storhövdingen där; både som en förklaring till att man av filosofiska och kulturella skäl tar avstånd från häxornas ledare, och till att klan Vajvod faktiskt är mer öppen för omvärlden än andra klaner i Davokar, möjligen Odaiova undantaget.\n\nVajvods storhövding Zoltar den Gamle har inte heller en häxa vid sin sida utan en symbolist, tränad vid Azurtemplet, symbolisternas samlingsplats i hjärtat av Vajvods älvslandskap.",
     "taggar": {
       "typ": [
         "Yrke"
@@ -608,7 +608,7 @@
   {
     "id": "y25",
     "namn": "Trollsångare",
-    "beskrivning": "*”Skapelsens sång ekar i min röst”*\n\nSången som kraftkälla får sitt mest tydliga uttryck bland de trollsjungande skalderna, vars röster väcker mysterier och vinner strider. Skaldekonsten finns i alla kulturer men dess mest kraftfulla varianter återfinns hos alver, dvärgar och troll – ibland hörs också trollsång ljuda från resars mäktiga strupar. Hos alla dessa kombineras trollsången inte sällan med fysiska attribut och skalderna är många gånger krigarpoeter vilka med kraft i både stämma och vapenarm leder sina allierade mot seger.",
+    "beskrivning": "*”Skapelsens sång ekar i min röst”*\n\nSången som kraftkälla får sitt mest tydliga uttryck bland de trollsjungande skalderna, vars röster väcker mysterier och vinner strider. Skaldekonsten finns i alla kulturer men dess mest kraftfulla varianter återfinns hos alver, dvärgar och troll – ibland hörs också trollsång ljuda från resars mäktiga strupar.\n\nHos alla dessa kombineras trollsången inte sällan med fysiska attribut och skalderna är många gånger krigarpoeter vilka med kraft i både stämma och vapenarm leder sina allierade mot seger.",
     "taggar": {
       "typ": [
         "Yrke"
