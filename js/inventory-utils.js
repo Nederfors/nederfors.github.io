@@ -173,7 +173,7 @@
       const entry = getEntry(row.name);
       const tagTyp = entry.taggar?.typ || [];
       if (!tagTyp.includes('Artefakt')) return acc;
-      const eff = row.artifactEffect || entry.artifactEffect;
+      const eff = row.artifactEffect;
       if (eff === 'corruption') acc.corruption += 1;
       else if (eff === 'xp') acc.xp += 1;
       return acc;
@@ -1165,7 +1165,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     }
 
     const isArtifact = tagTyp.includes('Artefakt');
-    const effectVal = row.artifactEffect || entry.artifactEffect || '';
+    const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
     if (isArtifact && effectVal) {
       const txt = effectVal === 'corruption'
         ? '+1 permanent korruption'
@@ -1927,8 +1927,9 @@ ${moneyRow}
 
       // "toggleEffect" växlar artefaktens effekt
       if (act === 'toggleEffect') {
-        const eff = row.artifactEffect || entry.artifactEffect || 'corruption';
-        row.artifactEffect = eff === 'corruption' ? 'xp' : 'corruption';
+        const val = await selectArtifactPayment(row.artifactEffect);
+        if (val === null) return;
+        row.artifactEffect = val;
         saveInventory(inv);
         renderInventory();
         return;

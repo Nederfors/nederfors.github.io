@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v6';
+const CACHE_NAME = 'symbaroum-pwa-v7';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -11,6 +11,7 @@ const URLS_TO_CACHE = [
   'icons/icon_DA',
   // JavaScript
   'js/auto-resize.js',
+  'js/artifact-payment.js',
   'js/beastform.js',
   'js/bloodbond.js',
   'js/character-view.js',
