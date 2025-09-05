@@ -1300,7 +1300,15 @@ async function requireCharacter() {
       btnNew.removeEventListener('click', onNew);
       btnCancel.removeEventListener('click', onCancel);
       select.removeEventListener('change', onSelect);
+      pop.removeEventListener('click', onClickOut);
+      document.removeEventListener('keydown', onKey);
       resolve(res);
+    }
+    function onClickOut(e) {
+      if (e.target === pop) close(false);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(false);
     }
     function onChoose() {
       wrap.style.display = '';
@@ -1341,6 +1349,8 @@ async function requireCharacter() {
     btnNew.addEventListener('click', onNew);
     btnCancel.addEventListener('click', onCancel);
     select.addEventListener('change', onSelect);
+    pop.addEventListener('click', onClickOut);
+    document.addEventListener('keydown', onKey);
   });
 }
 
