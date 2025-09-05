@@ -20,17 +20,17 @@
       pop.querySelector('.popup-inner').scrollTop = 0;
       function close(){
         pop.classList.remove('open');
-        box.removeEventListener('change',onChange);
+        box.removeEventListener('click',onSelect);
         pop.removeEventListener('click',onOutside);
       }
-      function onChange(e){
+      function onSelect(e){
         const inp=e.target.closest('input[name="artifactPay"]');
         if(!inp) return;
         close();
         resolve(inp.value==='cancel'?null:inp.value);
       }
       function onOutside(e){ if(!pop.querySelector('.popup-inner').contains(e.target)){ close(); resolve(null); } }
-      box.addEventListener('change',onChange);
+      box.addEventListener('click',onSelect);
       pop.addEventListener('click',onOutside);
     });
   }
