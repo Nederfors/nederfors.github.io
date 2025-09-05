@@ -1002,19 +1002,9 @@ function initIndex() {
             }
           }
           if (tagTyp.includes('Artefakt')) {
-            const choice = await openDialog('Betala 1 XP eller ta +1 permanent korruption?', {
-              cancel: true,
-              cancelText: 'Avbryt',
-              okText: '-1 erf',
-              extraText: '+1 korruption'
-            });
-            if (choice === true) {
-              rowBase.artifactEffect = 'xp';
-            } else if (choice === 'extra') {
-              rowBase.artifactEffect = 'corruption';
-            } else {
-              return;
-            }
+            const val = await selectArtifactPayment();
+            if (val === null) return;
+            if (val) rowBase.artifactEffect = val;
           } else if (p.artifactEffect) {
             rowBase.artifactEffect = p.artifactEffect;
           }
