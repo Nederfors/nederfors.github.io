@@ -10,6 +10,8 @@ class SharedToolbar extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
+    // One-time flag: ensure Formaliteter in Filter is collapsed on first open after refresh
+    this._filterFirstOpenHandled = false;
   }
 
   /* ------------------------------------------------------- */
@@ -203,6 +205,8 @@ class SharedToolbar extends HTMLElement {
             <button class="char-btn icon" data-close="invPanel">✕</button>
           </div>
         </header>
+        <!-- Formaliteter överst -->
+        <ul id="invFormal" class="card-list"></ul>
         <div class="filter-group">
           <label for="invSearch">Sök i inventarie</label>
           <input id="invSearch" type="text" placeholder="Filtrera föremål…" autocomplete="off">
@@ -254,26 +258,88 @@ class SharedToolbar extends HTMLElement {
           <button class="char-btn icon" data-close="filterPanel">✕</button>
         </header>
 
-        <div class="char-btn-row three-col">
-          <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
-          <button id="renameChar" class="char-btn">Byt namn</button>
-          <button id="newCharBtn" class="char-btn">Ny rollperson</button>
-        </div>
-        <div class="char-btn-row four-col">
-          <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
-          <button id="manageFolders" class="char-btn">Mappar</button>
-          <button id="importChar" class="char-btn">Import</button>
-          <button id="exportChar" class="char-btn">Export</button>
-        </div>
+        <ul class="card-list">
+          <li class="card" data-special="__formal__" id="filterFormalCard">
+            <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter 🔎</span></div>
+            <div class="card-desc">
+              <!-- Rad 1: Ny rollperson (fullbredd) -->
+              <div class="char-btn-row">
+                <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+              </div>
+              <!-- Rad 2: Radera rollperson (fullbredd) -->
+              <div class="char-btn-row">
+                <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
+              </div>
+              <!-- Rad 3+4 sammanslagen: Kopiera, Byt namn, Mappar, Export, Import -->
+              <div class="char-btn-row five-col">
+                <button id="duplicateChar" class="char-btn icon" title="Kopiera rollperson" aria-label="Kopiera rollperson">👥</button>
+                <button id="renameChar" class="char-btn icon" title="Byt namn" aria-label="Byt namn">🪪</button>
+                <button id="manageFolders" class="char-btn icon" title="Mappar" aria-label="Mappar">📁</button>
+                <button id="exportChar" class="char-btn icon" title="Export" aria-label="Export">💾</button>
+                <button id="importChar" class="char-btn icon" title="Import" aria-label="Import">📲</button>
+              </div>
 
-        <div class="filter-group">
-          <label for="charSelect">Välj rollperson</label>
-          <select id="charSelect"></select>
-        </div>
-        <div class="filter-group">
-          <label for="folderFilter">Aktiv mapp</label>
-          <select id="folderFilter"></select>
-        </div>
+              <!-- Välj rollperson och Aktiv mapp -->
+              <div class="filter-group">
+                <label for="charSelect">Välj rollperson</label>
+                <select id="charSelect"></select>
+              </div>
+              <div class="filter-group">
+                <label for="folderFilter">Aktiv mapp</label>
+                <select id="folderFilter"></select>
+              </div>
+
+              <!-- Grupp med partymedlemmar och vy-knappar -->
+              <div class="filter-group party-toggles">
+                <ul class="toggle-list">
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Smed i partyt?</span>
+                      <span class="toggle-note">Halverar priset beroende på smideskonstnivå.</span>
+                    </span>
+                    <button id="partySmith" class="party-toggle">⚒️</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Alkemist i partyt?</span>
+                      <span class="toggle-note">Halverar priset på elixir beroende på alkemistnivå.</span>
+                    </span>
+                    <button id="partyAlchemist" class="party-toggle">⚗️</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                    <span class="toggle-question">Artefaktmakare i partyt?</span>
+                    <span class="toggle-note">Halverar priset på och tillåter inköp av samtliga lägre artefakter till N/G/M.</span>
+                    </span>
+                    <button id="partyArtefacter" class="party-toggle">🏺</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Utvidga sökningen?</span>
+                      <span class="toggle-note">Bara ett av de markerade filtren behöver matcha.</span>
+                    </span>
+                    <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Expandera vy?</span>
+                      <span class="toggle-note">Alla kort med entries förutom för ras, yrken och elityrken visas direkt.</span>
+                    </span>
+                    <button id="entryViewToggle" class="party-toggle" title="Expandera vy">↕️</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Tvinga försvarskaraktärsdrag?</span>
+                      <span class="toggle-note">Välj karaktärsdrag via meny.</span>
+                    </span>
+                    <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
+                  </li>
+                  
+                </ul>
+              </div>
+            </div>
+          </li>
+        </ul>
         <div class="filter-group">
           <label for="typFilter">Typ</label>
           <select id="typFilter"></select>
@@ -286,50 +352,9 @@ class SharedToolbar extends HTMLElement {
           <label for="testFilter">Test</label>
           <select id="testFilter"></select>
         </div>
+        <!-- Hjälp ska ligga under Test-menyn -->
         <div class="filter-group party-toggles">
           <ul class="toggle-list">
-            <li>
-              <span class="toggle-desc">
-                <span class="toggle-question">Smed i partyt?</span>
-                <span class="toggle-note">Halverar priset beroende på smideskonstnivå.</span>
-              </span>
-              <button id="partySmith" class="party-toggle">⚒️</button>
-            </li>
-            <li>
-              <span class="toggle-desc">
-                <span class="toggle-question">Alkemist i partyt?</span>
-                <span class="toggle-note">Halverar priset på elixir beroende på alkemistnivå.</span>
-              </span>
-              <button id="partyAlchemist" class="party-toggle">⚗️</button>
-            </li>
-            <li>
-              <span class="toggle-desc">
-              <span class="toggle-question">Artefaktmakare i partyt?</span>
-              <span class="toggle-note">Halverar priset på och tillåter inköp av samtliga lägre artefakter till N/G/M.</span>
-              </span>
-              <button id="partyArtefacter" class="party-toggle">🏺</button>
-            </li>
-            <li>
-              <span class="toggle-desc">
-                <span class="toggle-question">Utvidga sökningen?</span>
-                <span class="toggle-note">Bara ett av de markerade filtren behöver matcha.</span>
-              </span>
-              <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
-            </li>
-            <li>
-              <span class="toggle-desc">
-                <span class="toggle-question">Visa kompakt vy?</span>
-                <span class="toggle-note">Slår av eller på kortare listvy.</span>
-              </span>
-              <button id="entryViewToggle" class="party-toggle" title="Växla kompakt vy">🤏</button>
-            </li>
-            <li>
-              <span class="toggle-desc">
-                <span class="toggle-question">Tvinga försvarskaraktärsdrag?</span>
-                <span class="toggle-note">Välj karaktärsdrag via meny.</span>
-              </span>
-              <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
-            </li>
             <li>
               <span class="toggle-desc">
                 <span class="toggle-question">Behöver du hjälp?</span>
@@ -661,7 +686,7 @@ class SharedToolbar extends HTMLElement {
             <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
             <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
             <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
-            <li>🤏 Kompakt vy: Växla kortare listvy.</li>
+            <li>↕️ Expandera vy: Alla kort med entries förutom för ras, yrken och elityrken visas direkt.</li>
             <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
             <li>ℹ️ Hjälp: Visar denna panel.</li>
           </ul>
@@ -758,7 +783,15 @@ class SharedToolbar extends HTMLElement {
   /* ------------------------------------------------------- */
   handleClick(e) {
     const btn = e.target.closest('button, a');
-    if (!btn) return;
+    if (!btn) {
+      // Support toggling the Formaliteter card in Filter via title click
+      const title = e.target.closest('#filterFormalCard .card-title');
+      if (title) {
+        const card = this.shadowRoot.getElementById('filterFormalCard');
+        card?.classList.toggle('compact');
+      }
+      return;
+    }
 
     /* öppna/stäng (toggle) */
     if (btn.id === 'invToggle')    return this.toggle('invPanel');
@@ -767,6 +800,12 @@ class SharedToolbar extends HTMLElement {
     if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
+
+    // Collapse/expand formalitetskortet i filterpanelen
+    if (btn.closest('#filterFormalCard') && btn.classList.contains('collapse-btn')) {
+      const card = this.shadowRoot.getElementById('filterFormalCard');
+      card?.classList.toggle('compact');
+    }
   }
 
   handleOutsideClick(e) {
@@ -800,6 +839,12 @@ class SharedToolbar extends HTMLElement {
     const isOpen = panel.classList.contains('open');
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
     if (!isOpen) {
+      // On first open of Filter panel after refresh, collapse "Formaliteter"
+      if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
+        const formalCard = this.shadowRoot.getElementById('filterFormalCard');
+        if (formalCard && !formalCard.classList.contains('compact')) formalCard.classList.add('compact');
+        this._filterFirstOpenHandled = true;
+      }
       panel.classList.add('open');
       panel.scrollTop = 0;
     }
@@ -808,6 +853,12 @@ class SharedToolbar extends HTMLElement {
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
     const panel = this.panels[id];
     if (panel) {
+      // On first open of Filter panel after refresh, collapse "Formaliteter"
+      if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
+        const formalCard = this.shadowRoot.getElementById('filterFormalCard');
+        if (formalCard && !formalCard.classList.contains('compact')) formalCard.classList.add('compact');
+        this._filterFirstOpenHandled = true;
+      }
       panel.classList.add('open');
       panel.scrollTop = 0;
     }

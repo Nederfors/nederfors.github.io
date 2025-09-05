@@ -7,7 +7,7 @@ function initCharacter() {
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
   let compact = storeHelper.getCompactEntries(store);
-  dom.entryViewToggle.classList.toggle('active', compact);
+  dom.entryViewToggle.classList.toggle('active', !compact);
 
   let catsMinimized = false;
   const updateCatToggle = () => {

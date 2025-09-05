@@ -132,7 +132,7 @@ const dom  = {
   xpTotal : $T('xpTotal'),      xpUsed : $T('xpUsed'),       xpFree : $T('xpFree'),
 
   /* inventarie */
-  invList : $T('invList'),      invBadge  : $T('invBadge'),
+  invFormal: $T('invFormal'),   invList : $T('invList'),      invBadge  : $T('invBadge'),
   wtOut   : $T('weightOut'),    slOut     : $T('slotOut'),
   invSearch: $T('invSearch'),
   moneyD  : $T('moneyDaler'),
@@ -438,7 +438,7 @@ function bindToolbar() {
       const name = prompt('Namn på ny rollperson?');
       if (!name) return;
       const baseXP = 0;  // nystartade rollpersoner har alltid 0 XP
-      const charId = 'rp' + Date.now();
+      const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
 
       // Lägg ny rollperson i systemmappen "Standard"
       const std = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
@@ -479,9 +479,15 @@ function bindToolbar() {
         if (choice === 'all-one') {
           await exportAllCharacters();
         } else if (choice === 'all-separate') {
-          const mode = await chooseSeparateExportMode();
-          if (mode === 'zip') await exportAllCharactersZipped();
-          else if (mode === 'separate') await exportAllCharactersSeparate();
+          await exportAllCharactersSeparate();
+        } else if (choice === 'all-zip') {
+          await exportAllCharactersZipped();
+        } else if (choice === 'folder-active') {
+          await exportActiveFolder();
+        } else if (choice === 'folder-separate') {
+          await exportActiveFolderSeparate();
+        } else if (choice === 'folder-zip') {
+          await exportActiveFolderZipped();
         } else if (choice) {
           await exportCharacterFile(choice);
         }
@@ -701,10 +707,11 @@ function bindToolbar() {
     });
   }
   if (dom.entryViewToggle) {
-    if (storeHelper.getCompactEntries(store)) dom.entryViewToggle.classList.add('active');
+    if (!storeHelper.getCompactEntries(store)) dom.entryViewToggle.classList.add('active');
     dom.entryViewToggle.addEventListener('click', () => {
       const val = dom.entryViewToggle.classList.toggle('active');
-      storeHelper.setCompactEntries(store, val);
+      // "active" betyder nu expanderad/vanlig vy; compact = !active
+      storeHelper.setCompactEntries(store, !val);
       if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }
@@ -859,10 +866,14 @@ function openFolderManagerPopup() {
     const ids = [...charList.querySelectorAll('input[type="checkbox"][data-charid]:checked')]
       .map(ch => ch.dataset.charid);
     if (!ids.length) { close(); return; }
-    ids.forEach(id => storeHelper.setCharacterFolder(store, id, dest || ''));
+    if (storeHelper.setCharactersFolderBulk) {
+      storeHelper.setCharactersFolderBulk(store, ids, dest || '');
+    } else {
+      ids.forEach(id => storeHelper.setCharacterFolder(store, id, dest || ''));
+    }
     refreshCharSelect();
     render();
-    close();
+    // Keep popup open after moving characters
   }
 
   render();
@@ -1157,6 +1168,128 @@ async function saveBlobFile(blob, suggested) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
+
+async function exportActiveFolder() {
+  try {
+    const activeId = storeHelper.getActiveFolder(store);
+    if (!activeId || activeId === 'ALL') {
+      await alertPopup('Ingen aktiv mapp vald.');
+      return;
+    }
+    const folders = storeHelper.getFolders(store) || [];
+    const folder = folders.find(f => f.id === activeId);
+    if (!folder) {
+      await alertPopup('Kunde inte hitta aktiv mapp.');
+      return;
+    }
+    const chars = (store.characters || [])
+      .filter(c => (c.folderId || '') === activeId)
+      .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    if (!chars.length) {
+      await alertPopup('Mappen är tom.');
+      return;
+    }
+    const exported = chars
+      .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
+      .filter(Boolean);
+    const payload = {
+      folders: [
+        { folder: folder.name || 'Mapp', characters: exported }
+      ]
+    };
+    const jsonText = JSON.stringify(payload, null, 2);
+    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.json`;
+    await saveJsonFile(jsonText, suggested);
+  } catch (err) {
+    await alertPopup('Export av mapp misslyckades.');
+  }
+}
+
+async function exportActiveFolderSeparate() {
+  try {
+    const activeId = storeHelper.getActiveFolder(store);
+    if (!activeId || activeId === 'ALL') { await alertPopup('Ingen aktiv mapp vald.'); return; }
+    const folders = storeHelper.getFolders(store) || [];
+    const folder = folders.find(f => f.id === activeId);
+    if (!folder) { await alertPopup('Kunde inte hitta aktiv mapp.'); return; }
+
+    const chars = (store.characters || [])
+      .filter(c => (c.folderId || '') === activeId)
+      .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
+
+    const all = chars
+      .map(c => storeHelper.exportCharacterJSON(store, c.id, true))
+      .filter(Boolean);
+
+    // Prefer directory picker
+    if (window.showDirectoryPicker) {
+      try {
+        const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        for (const data of all) {
+          const name = (data && data.name) ? data.name : 'rollperson';
+          const fileName = `${sanitizeFilename(name)}.json`;
+          try {
+            const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(JSON.stringify(data, null, 2));
+            await writable.close();
+          } catch {}
+        }
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+
+    // Fallback: one download per character
+    for (const data of all) {
+      const name = (data && data.name) ? data.name : 'rollperson';
+      const jsonText = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${sanitizeFilename(name)}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      await new Promise(r => setTimeout(r, 100));
+    }
+  } catch {
+    await alertPopup('Export av mapp misslyckades.');
+  }
+}
+
+async function exportActiveFolderZipped() {
+  try {
+    const activeId = storeHelper.getActiveFolder(store);
+    if (!activeId || activeId === 'ALL') { await alertPopup('Ingen aktiv mapp vald.'); return; }
+    const folders = storeHelper.getFolders(store) || [];
+    const folder = folders.find(f => f.id === activeId);
+    if (!folder) { await alertPopup('Kunde inte hitta aktiv mapp.'); return; }
+
+    const chars = (store.characters || [])
+      .filter(c => (c.folderId || '') === activeId)
+      .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
+
+    if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
+
+    const zip = new JSZip();
+    for (const c of chars) {
+      const data = storeHelper.exportCharacterJSON(store, c.id, true);
+      if (!data) continue;
+      const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+      zip.file(`${name}.json`, JSON.stringify(data, null, 2));
+    }
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.zip`;
+    await saveBlobFile(blob, suggested);
+  } catch {
+    await alertPopup('Export av mapp misslyckades.');
+  }
+}
 function openChoicePopup(build, cb) {
   const pop  = bar.shadowRoot.getElementById('exportPopup');
   const opts = bar.shadowRoot.getElementById('exportOptions');
@@ -1185,24 +1318,165 @@ function openChoicePopup(build, cb) {
 
 function openExportPopup(cb) {
   openChoicePopup((opts, select) => {
-    const addBtn = (label, value) => {
-      const b = document.createElement('button');
-      b.className = 'char-btn';
-      b.textContent = label;
-      b.addEventListener('click', () => select(value));
-      opts.appendChild(b);
+    const make = (tag, cls, text) => {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (text != null) el.textContent = text;
+      return el;
     };
-    addBtn('Alla (en fil)', 'all-one');
-    addBtn('Alla (separat)', 'all-separate');
+
+    // Wrapper for sections
+    const wrap = make('div', 'export-sections');
+
+    // Section: Backups (All / Active folder)
+    const backupsCard = make('div', 'card export-card');
+    backupsCard.appendChild(make('div', 'card-title', 'Säkerhetskopior'));
+    const backups = make('div', 'export-section');
+
+    const addRow = (label, scope, enabled = true) => {
+      const row = make('div', 'export-row');
+      row.appendChild(make('div', 'row-title', label));
+      const actions = make('div', 'row-actions');
+      const addMini = (txt, value) => {
+        const b = make('button', 'char-btn mini', txt);
+        if (enabled) {
+          b.addEventListener('click', () => select(value));
+        } else {
+          b.disabled = true;
+          b.title = 'Välj aktiv mapp i Filter-menyn först';
+        }
+        actions.appendChild(b);
+      };
+      if (scope === 'all') {
+        addMini('En fil', 'all-one');
+        addMini('Separat', 'all-separate');
+        addMini('Zip', 'all-zip');
+      } else if (scope === 'folder') {
+        addMini('En fil', 'folder-active');
+        addMini('Separat', 'folder-separate');
+        addMini('Zip', 'folder-zip');
+      }
+      row.appendChild(actions);
+      backups.appendChild(row);
+    };
+    addRow('Alla rollpersoner', 'all', true);
+
+    // Active folder actions (if any)
+    try {
+      const activeId = storeHelper.getActiveFolder(store);
+      if (activeId && activeId !== 'ALL') {
+        const folders = storeHelper.getFolders(store) || [];
+        const folder = folders.find(f => f.id === activeId);
+        if (folder) {
+          addRow(`Aktiv mapp: ${folder.name}`, 'folder', true);
+        }
+      }
+      // If no active folder is selected, do not render the row
+    } catch {}
+
+    backupsCard.appendChild(backups);
+    wrap.appendChild(backupsCard);
+
+    // Section: Single character export
+    const singlesCard = make('div', 'card export-card');
+    singlesCard.appendChild(make('div', 'card-title', 'Enskild rollperson'));
+    const singles = make('div', 'export-section');
+
+    // Current character shortcut
     const currentId = store.current;
     if (currentId) {
       const curChar = store.characters.find(c => c.id === currentId);
-      if (curChar) addBtn(curChar.name || 'Namnlös', curChar.id);
+      if (curChar) {
+        const btn = make('button', 'char-btn primary', `Aktuell: ${curChar.name || 'Namnlös'}`);
+        btn.addEventListener('click', () => select(curChar.id));
+        singles.appendChild(btn);
+      }
     }
-    for (const c of store.characters) {
-      if (c.id === currentId) continue;
-      addBtn(c.name || 'Namnlös', c.id);
+
+    // Search field
+    const searchWrap = make('div', 'export-search');
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.placeholder = 'Filtrera namn…';
+    search.autocomplete = 'off';
+    searchWrap.appendChild(search);
+    singles.appendChild(searchWrap);
+
+    // Character list grouped by folder
+    const listWrap = make('div', 'export-list');
+
+    const folders = (storeHelper.getFolders(store) || []).slice()
+      .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    const map = new Map();
+    for (const c of (store.characters || [])) {
+      const fid = c.folderId || '';
+      if (!map.has(fid)) map.set(fid, []);
+      map.get(fid).push(c);
     }
+
+    const groupEls = [];
+    const seen = new Set();
+    for (const f of folders) {
+      const arr = (map.get(f.id) || []).slice()
+        .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      if (!arr.length) continue;
+      const grp = make('div', 'export-group');
+      grp.appendChild(make('div', 'group-title', f.name || 'Mapp'));
+      const gl = make('div', 'group-list');
+      for (const c of arr) {
+        const b = make('button', 'char-btn small', c.name || 'Namnlös');
+        b.dataset.value = c.id;
+        b.addEventListener('click', () => select(c.id));
+        gl.appendChild(b);
+      }
+      grp.appendChild(gl);
+      listWrap.appendChild(grp);
+      groupEls.push(grp);
+      seen.add(f.id);
+    }
+
+    // Any characters in unknown/no folder
+    const rest = [];
+    for (const [fid, arr] of map.entries()) {
+      if (seen.has(fid)) continue;
+      rest.push(...arr);
+    }
+    if (rest.length) {
+      const arr = rest.slice().sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const grp = make('div', 'export-group');
+      grp.appendChild(make('div', 'group-title', 'Övrigt'));
+      const gl = make('div', 'group-list');
+      for (const c of arr) {
+        const b = make('button', 'char-btn small', c.name || 'Namnlös');
+        b.dataset.value = c.id;
+        b.addEventListener('click', () => select(c.id));
+        gl.appendChild(b);
+      }
+      grp.appendChild(gl);
+      listWrap.appendChild(grp);
+      groupEls.push(grp);
+    }
+
+    singles.appendChild(listWrap);
+    singlesCard.appendChild(singles);
+    wrap.appendChild(singlesCard);
+    opts.appendChild(wrap);
+
+    // Filtering
+    const normalize = s => String(s || '').toLocaleLowerCase('sv');
+    search.addEventListener('input', () => {
+      const q = normalize(search.value);
+      for (const grp of groupEls) {
+        let visibleCount = 0;
+        const buttons = grp.querySelectorAll('.group-list .char-btn');
+        buttons.forEach(b => {
+          const show = !q || normalize(b.textContent).includes(q);
+          b.style.display = show ? '' : 'none';
+          if (show) visibleCount++;
+        });
+        grp.style.display = visibleCount ? '' : 'none';
+      }
+    });
   }, cb);
 }
 
@@ -1348,7 +1622,7 @@ async function requireCharacter() {
     async function onNew() {
       const name = prompt('Namn på ny rollperson?');
       if (!name) return;
-      const charId = 'rp' + Date.now();
+      const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
       const active = storeHelper.getActiveFolder(store);
       let folderId;
       if (active && active !== 'ALL') {

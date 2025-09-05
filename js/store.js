@@ -29,7 +29,7 @@
       folders: [],          // [{ id, name, order }]
       activeFolder: 'ALL',  // 'ALL' | folderId ("Utan mapp" ej tillåtet)
       filterUnion: false,
-      compactEntries: false,
+      compactEntries: true,
       onlySelected: false,
       recentSearches: []
     };
@@ -512,7 +512,7 @@
     if (!sourceId) return null;
     const char = store.characters.find(c => c.id === sourceId);
     if (!char) return null;
-    const newId = 'rp' + Date.now();
+    const newId = makeCharId(store);
     store.characters.push({ id: newId, name: `${char.name} (kopia)`, folderId: char.folderId || '' });
     const data = store.data[sourceId] ? JSON.parse(JSON.stringify(store.data[sourceId])) : {};
     store.data[newId] = data;
@@ -1175,7 +1175,7 @@ function defaultTraits() {
 
   function importCharacterJSON(store, obj) {
     try {
-      const id = 'rp' + Date.now();
+      const id = makeCharId(store);
       // Mapp: skapa eller återanvänd efter namn om finns
       let folderId = '';
       try {
@@ -1222,10 +1222,32 @@ function defaultTraits() {
     }
   }
 
+  // Skapa unikt ID för nya karaktärer utan kollisioner.
+  function makeCharId(store) {
+    try {
+      const used = new Set((store.characters || []).map(c => c && c.id).filter(Boolean));
+      // För att undvika krockar vid snabba loopar (t.ex. import) lägg till slump-suffix
+      // och loopa tills ett oanvänt ID hittas.
+      let attempt = 0;
+      while (attempt < 1000) {
+        const base = Date.now().toString(36);
+        const rand = Math.floor(Math.random() * 1e9).toString(36).slice(0, 5);
+        const id = `rp${base}-${rand}`;
+        if (!used.has(id)) return id;
+        attempt++;
+      }
+      // Extremt osannolikt – men fall tillbaka på ett enklare slump-ID
+      return 'rp-' + Math.random().toString(36).slice(2, 12);
+    } catch {
+      return 'rp-' + Math.random().toString(36).slice(2, 12);
+    }
+  }
+
   /* ---------- 7. Export ---------- */
   global.storeHelper = {
     load,
     save,
+    makeCharId,
     // Aktiv mapp
     getActiveFolder: (store) => {
       try {
@@ -1302,6 +1324,25 @@ function defaultTraits() {
       }
       c.folderId = dest;
       save(store);
+    },
+    // Flytta flera karaktärer på en gång (sparar endast en gång)
+    setCharactersFolderBulk: (store, charIds, folderId) => {
+      try {
+        const ids = Array.isArray(charIds) ? charIds.filter(Boolean) : [];
+        if (!ids.length) return;
+        // Mappar tom destination till systemmappen "Standard"
+        let dest = folderId || '';
+        if (!dest) {
+          const folders = Array.isArray(store.folders) ? store.folders : [];
+          const standard = folders.find(f => f.system) || folders.find(f => f.name === 'Standard');
+          if (standard) dest = standard.id;
+        }
+        const idSet = new Set(ids);
+        (store.characters || []).forEach(c => {
+          if (c && idSet.has(c.id)) c.folderId = dest;
+        });
+        save(store);
+      } catch {}
     },
     getRecentSearches,
     addRecentSearch,

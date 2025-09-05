@@ -1181,6 +1181,11 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       [...dom.invList.querySelectorAll('li.card:not(.compact)')]
         .map(li => li.dataset.special || `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
     );
+    // Preserve open state for Formaliteter even when rendered outside invList
+    if (dom.invFormal) {
+      const formalOpen = dom.invFormal.querySelector('li.card:not(.compact)');
+      if (formalOpen) openKeys.add('__formal__');
+    }
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
     const nameMap = makeNameMap(allInv);
@@ -1497,7 +1502,8 @@ ${moneyRow}
     : '<li class="card">Inga föremål.</li>';
 
     /* ---------- skriv ut ---------- */
-    dom.invList.innerHTML       = formalCard + itemCards;
+    if (dom.invFormal) dom.invFormal.innerHTML = formalCard;
+    dom.invList.innerHTML       = itemCards;
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
     dom.invBadge.textContent    = flatInv.reduce((s, r) => s + r.qty, 0);
@@ -1942,6 +1948,37 @@ ${moneyRow}
         return;
       }
     };
+
+    // Bind clicks within the Formaliteter card when it is outside invList
+    if (dom.invFormal) {
+      dom.invFormal.onclick = async e => {
+        // Toggle expand/collapse on title
+        const cardTitle = e.target.closest('.card-title');
+        if (cardTitle) {
+          const li = cardTitle.closest('li.card');
+          li.classList.toggle('compact');
+          updateCollapseBtnState();
+          return;
+        }
+
+        // Handle money +/- inside formal card
+        const btn = e.target.closest('button[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        if (act === 'moneyPlus' || act === 'moneyMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneyPlus' ? 1 : -1;
+          const newD = (cur.daler || 0) + delta;
+          if (newD < 0) {
+            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, daler: newD });
+          }
+          renderInventory();
+          return;
+        }
+      };
+    }
 
     if (dom.invList) {
       dom.invList.removeEventListener('pointerdown', handlePointerDown);

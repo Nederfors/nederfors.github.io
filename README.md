@@ -66,7 +66,7 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 - **Import** återställer en eller flera karaktärer från sparade filer.
 - **⚒️**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
 - **🔭** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
-- **🤏** växlar mellan vanlig och kompakt listvy.
+- **↕️ Expandera vy** växlar till vanliga vyn.
 - **ℹ️** visar en snabböversikt av alla knappar.
 
 ### 5. Inventariepanelen

@@ -139,22 +139,27 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 /* Rad för knappar i filterpanelen */
 .char-btn-row {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
-  gap: .4rem;
-  margin-bottom: .6rem;
+  /* Responsiv standardlayout: flera knappar per rad när utrymme finns */
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: .6rem;
+  margin-bottom: .8rem;
+  align-items: stretch;
 }
-.char-btn-row.three-col {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-.char-btn-row.four-col {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-.char-btn-row.three-col + .char-btn-row.three-col {
-  margin-top: 0;
-}
-.char-btn-row .char-btn {
-  width: 100%;
-  height: 100%;
+/* Fasta kolumnuppdelningar för konsekvent layout i Formaliteter */
+.char-btn-row.two-col   { grid-template-columns: repeat(2, 1fr); }
+.char-btn-row.three-col { grid-template-columns: repeat(3, 1fr); }
+.char-btn-row.five-col  { grid-template-columns: repeat(5, 1fr); }
+.char-btn-row.three-col + .char-btn-row.three-col { margin-top: 0; }
+.char-btn-row .char-btn { width: 100%; height: 100%; }
+
+/* Säkerställ att knapparna i Formaliteter alltid linjerar och inte överflödar */
+#filterFormalCard .card-desc { overflow-x: hidden; }
+#filterFormalCard .char-btn-row { justify-items: stretch; align-items: stretch; }
+#filterFormalCard .char-btn-row .char-btn {
+  min-width: 0;          /* tillåt krympning i gridcellen */
+  max-width: 100%;
+  overflow-wrap: anywhere; /* bryt långa ord/frases vid behov */
+  word-break: break-word;
 }
 
 /* Grupp för partytillhörighet */
@@ -311,6 +316,9 @@ input:focus, select:focus, textarea:focus {
   font-weight: 600;
 }
 #invList .card-title {
+  cursor: pointer;
+}
+#invFormal .card-title {
   cursor: pointer;
 }
 .card-title .title-actions {
@@ -1519,6 +1527,8 @@ select.level {
   width: 90%;
   max-width: 420px;
   text-align: center;
+  max-height: 85vh;
+  overflow: auto;
   display: flex;
   flex-direction: column;
   gap: .8rem;
@@ -1529,6 +1539,45 @@ select.level {
   gap: .6rem;
 }
 #exportPopup .popup-inner button { width: 100%; }
+#exportPopup .char-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+/* Grouped layout for Export */
+#exportPopup .export-card { padding: 1rem 1.1rem; }
+#exportPopup .export-card + .export-card { margin-top: .4rem; }
+#exportPopup .section-title { font-weight: 700; text-align: left; font-size: 1rem; }
+#exportPopup .export-section { display: flex; flex-direction: column; gap: .6rem; }
+#exportPopup .export-row { display: grid; grid-template-columns: 1fr; gap: .4rem; padding: .4rem; border: 1px solid var(--border); border-radius: .6rem; }
+@media (min-width: 420px) {
+  #exportPopup .export-row { grid-template-columns: 1fr 1fr; align-items: center; }
+}
+#exportPopup .row-title { text-align: left; font-weight: 600; }
+#exportPopup .row-actions {
+  display: grid;
+  /* Responsive grid: wraps to 2/1 columns on small screens */
+  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  gap: .4rem;
+  align-items: stretch;
+}
+#exportPopup .row-actions .char-btn {
+  padding: .45rem .6rem;
+  font-size: .9rem;
+  /* Uniform height and prevent label wrapping from stretching rows unevenly */
+  min-height: 2.4rem;
+  white-space: nowrap;
+}
+
+#exportPopup .export-search input { width: 100%; }
+#exportPopup .export-search { margin-top: .2rem; }
+
+#exportPopup .export-list { display: flex; flex-direction: column; gap: .4rem; }
+#exportPopup .export-group { display: flex; flex-direction: column; gap: .3rem; }
+#exportPopup .group-title { text-align: left; font-size: .9rem; font-weight: 600; opacity: .8; margin-top: .2rem; }
+#exportPopup .group-list { display: grid; grid-template-columns: 1fr; gap: .4rem; }
+@media (min-width: 420px) {
+  #exportPopup .group-list { grid-template-columns: 1fr 1fr; }
+}
+#exportPopup .group-list .char-btn.small { padding: .45rem .7rem; font-size: .95rem; }
+#exportPopup .char-btn.primary { background: var(--accent); }
 
 /* (removed) Popup för inventarie Export/Import */
 
