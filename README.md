@@ -35,7 +35,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 
 ## Export och import av rollpersoner
 
-Use the **Exportera** button in the filter panel to open a menu where you can either download a specific character as a JSON file, or download all saved characters together as a single JSON file. "Alla rollpersoner" ligger alltid överst och den aktiva rollpersonen visas näst högst upp. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the files are downloaded normally. The **Importera** button lets you select one or more such files — including a single file containing multiple characters — to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
+Use the **Exportera** button in the filter panel to open a menu where you can download a specific character as a JSON file, download all saved characters together as a single JSON file, or export the currently active folder. Folder export lets you save the folder as one combined file or as separate files (optionally zipped). "Alla rollpersoner" ligger alltid överst och den aktiva rollpersonen visas näst högst upp. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the files are downloaded normally. The **Importera** button lets you select one or more such files — including a single file containing multiple characters — to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
 
 ## Anteckningssidan
 
@@ -63,7 +63,7 @@ Verktygsraden innehåller:
 I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 - **Ny rollperson** skapar en tom karaktär och gör den aktiv.
 - **Ta bort rollperson** raderar den aktuella karaktären.
-- **Exportera** öppnar en meny där du kan ladda ner alla rollpersoner eller välja en specifik att exportera som JSON-fil.
+- **Exportera** öppnar en meny där du kan ladda ner alla rollpersoner, exportera den aktiva mappen eller välja en specifik att exportera som JSON-fil.
 - **Importera** återställer en eller flera karaktärer från sparade filer.
 - **⚒️**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
 - **🔭** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
