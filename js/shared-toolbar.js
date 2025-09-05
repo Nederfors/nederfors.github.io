@@ -265,9 +265,19 @@ class SharedToolbar extends HTMLElement {
           <button id="exportChar" class="char-btn">Exportera</button>
         </div>
 
+        <div class="char-btn-row three-col">
+          <button id="moveToFolder" class="char-btn">Flytta till mapp</button>
+          <button id="manageFolders" class="char-btn">Mappar …</button>
+          <button class="char-btn" disabled style="visibility:hidden"></button>
+        </div>
+
         <div class="filter-group">
           <label for="charSelect">Välj rollperson</label>
           <select id="charSelect"></select>
+        </div>
+        <div class="filter-group">
+          <label for="folderFilter">Aktiv mapp</label>
+          <select id="folderFilter"></select>
         </div>
         <div class="filter-group">
           <label for="typFilter">Typ</label>
@@ -558,6 +568,65 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Flytta till mapp ---------- -->
+      <div id="moveFolderPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Flytta till mapp</h3>
+          <select id="moveFolderSelect"></select>
+          <div class="button-row" style="margin-top:.6rem;">
+            <button id="moveFolderApply" class="char-btn">Verkställ</button>
+            <button id="moveFolderCancel" class="char-btn danger">Avbryt</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Mapphanterare ---------- -->
+      <div id="folderManagerPopup" class="popup popup-bottom">
+        <div class="popup-inner folder-ui">
+          <header class="popup-header">
+            <h3>Mappar</h3>
+            <button id="folderManagerCloseX" class="char-btn icon" title="Stäng">✕</button>
+          </header>
+
+          <!-- Flytta -->
+          <section class="folder-section">
+            <h4>Flytta rollpersoner:</h4>
+            <div class="inline-row">
+              <div id="folderCharList" class="readonly-field"></div>
+            </div>
+            <div id="folderMoveGroup" class="inline-row">
+              <label for="folderMoveSelect">Till mapp:</label>
+              <div class="inline-controls">
+                <select id="folderMoveSelect"></select>
+                <button id="folderMoveApply" class="char-btn">Flytta</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Skapa ny mapp -->
+          <section class="folder-section">
+            <h4>Mappar</h4>
+            <div class="inline-row">
+              <label for="newFolderName">+ Ny mapp:</label>
+              <div class="inline-controls">
+                <input id="newFolderName" placeholder="Mappnamn">
+                <button id="addFolderBtn" class="char-btn">Lägg till</button>
+              </div>
+            </div>
+          </section>
+
+          <!-- Lista -->
+          <section class="folder-section">
+            <h4>Lista</h4>
+            <div id="folderList" class="folder-list"></div>
+          </section>
+
+          <div class="popup-footer">
+            <button id="folderManagerDone" class="char-btn">Klar</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Dialog Popup ---------- -->
       <div id="dialogPopup" class="popup">
         <div class="popup-inner">
@@ -604,6 +673,7 @@ class SharedToolbar extends HTMLElement {
           <h3>Filtermeny</h3>
           <ul>
             <li>Välj rollperson: Byter aktiv rollperson.</li>
+            <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
             <li>Typ, Arketyp, Test: Filtrerar listor.</li>
             <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
             <li>Exportera/Importera: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
@@ -733,7 +803,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup','moveFolderPopup','folderManagerPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

@@ -26,6 +26,8 @@
       current: '',          // id för vald karaktär
       characters: [],       // [{ id, name }]
       data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{xp:0,corruption:0} } }
+      folders: [],          // [{ id, name, order }]
+      activeFolder: 'ALL',  // 'ALL' | folderId ("Utan mapp" ej tillåtet)
       filterUnion: false,
       compactEntries: false,
       onlySelected: false,
@@ -39,6 +41,12 @@
       const raw = localStorage.getItem(STORAGE_KEY);
       const parsed = raw ? JSON.parse(raw) : emptyStore();
       const store = { ...emptyStore(), ...parsed };
+      // Säkerställ att folders alltid finns
+      if (!Array.isArray(store.folders)) store.folders = [];
+      // Säkerställ systemmapp "Standard" och migrera ev. karaktärer
+      ensureSystemFolderAndMigrate(store);
+      // default aktiv mapp
+      if (!store.activeFolder || store.activeFolder === '') store.activeFolder = 'ALL';
       if (store.data && typeof store.data === 'object') {
         Object.keys(store.data).forEach(id => {
           const cur = store.data[id] || {};
@@ -96,6 +104,39 @@
     } catch {
       return emptyStore();
     }
+  }
+
+  // Skapa/finn systemmappen "Standard" och migrera karaktärer utan giltig mapp
+  function ensureSystemFolderAndMigrate(store){
+    try {
+      store.folders = Array.isArray(store.folders) ? store.folders : [];
+      // Hitta befintlig systemmapp eller mapp med namnet "Standard"
+      let standard = store.folders.find(f => f && (f.system === true));
+      if (!standard) {
+        standard = store.folders.find(f => (f?.name === 'Standard'));
+      }
+      if (!standard) {
+        // Skapa ny systemmapp
+        const id = 'fd-standard-' + Math.floor(Math.random()*1000000);
+        standard = { id, name: 'Standard', order: 0, system: true };
+        store.folders.unshift(standard);
+      } else {
+        // Markera som systemmapp om den inte redan är det
+        standard.system = true;
+        if (standard.order === undefined) standard.order = 0;
+      }
+      // Migrera karaktärer som saknar giltig mapp till Standard
+      const folderIds = new Set(store.folders.map(f => f.id));
+      store.characters = (store.characters || []).map(c => {
+        const fid = c?.folderId || '';
+        if (!fid || !folderIds.has(fid)) {
+          return { ...c, folderId: standard.id };
+        }
+        return c;
+      });
+      // Spara direkt så att UI ser korrekta data
+      save(store);
+    } catch {}
   }
 
   function save(store) {
@@ -472,7 +513,7 @@
     const char = store.characters.find(c => c.id === sourceId);
     if (!char) return null;
     const newId = 'rp' + Date.now();
-    store.characters.push({ id: newId, name: `${char.name} (kopia)` });
+    store.characters.push({ id: newId, name: `${char.name} (kopia)`, folderId: char.folderId || '' });
     const data = store.data[sourceId] ? JSON.parse(JSON.stringify(store.data[sourceId])) : {};
     store.data[newId] = data;
     save(store);
@@ -1111,8 +1152,18 @@ function defaultTraits() {
     const char = store.characters.find(c => c.id === charId);
     if (!char) return null;
     const data = store.data[charId] || {};
+    // Hitta mappnamn om karaktären ligger i mapp
+    let folderName;
+    try {
+      const fid = char.folderId || '';
+      if (fid) {
+        const f = (store.folders || []).find(x => x.id === fid);
+        folderName = f ? f.name : undefined;
+      }
+    } catch {}
     return {
       name: char.name,
+      ...(folderName ? { folder: folderName } : {}),
       data: stripDefaults({
         ...data,
         list: compressList(data.list),
@@ -1125,7 +1176,28 @@ function defaultTraits() {
   function importCharacterJSON(store, obj) {
     try {
       const id = 'rp' + Date.now();
-      store.characters.push({ id, name: obj.name || 'Ny rollperson' });
+      // Mapp: skapa eller återanvänd efter namn om finns
+      let folderId = '';
+      try {
+        const folderName = String(obj.folder || '').trim();
+        if (folderName) {
+          const existing = (store.folders || []).find(f => f.name === folderName);
+          if (existing) {
+            folderId = existing.id;
+          } else {
+            // skapa ny mapp med sekvensordning sist
+            const order = Array.isArray(store.folders) ? store.folders.length : 0;
+            const newId = 'fd' + Date.now();
+            (store.folders ||= []).push({ id: newId, name: folderName, order });
+            folderId = newId;
+          }
+        } else {
+          // Ingen mapp i filen: lägg i systemmappen "Standard"
+          const standard = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
+          if (standard) folderId = standard.id;
+        }
+      } catch {}
+      store.characters.push({ id, name: obj.name || 'Ny rollperson', folderId });
       const data = obj.data || {};
       data.list = expandList(data.list);
       data.inventory = expandInventory(data.inventory);
@@ -1154,6 +1226,83 @@ function defaultTraits() {
   global.storeHelper = {
     load,
     save,
+    // Aktiv mapp
+    getActiveFolder: (store) => {
+      try {
+        const val = store && store.activeFolder ? String(store.activeFolder) : 'ALL';
+        if (val === 'ALL') return 'ALL';
+        if (val === '') return 'ALL';
+        const folders = Array.isArray(store.folders) ? store.folders : [];
+        const exists = folders.some(f => f.id === val);
+        return exists ? val : 'ALL';
+      } catch { return 'ALL'; }
+    },
+    setActiveFolder: (store, folderId) => {
+      try {
+        const val = (folderId === '' || folderId === 'ALL') ? folderId : String(folderId || 'ALL');
+        store.activeFolder = val;
+        save(store);
+      } catch {}
+    },
+    // Mapphantering
+    getFolders: (store) => Array.isArray(store.folders) ? store.folders : [],
+    addFolder: (store, name) => {
+      const nm = String(name || '').trim();
+      if (!nm) return null;
+      store.folders = Array.isArray(store.folders) ? store.folders : [];
+      // tillåt dubbletter i namn – identitet via id
+      const order = store.folders.length;
+      const id = 'fd' + Date.now() + '-' + Math.floor(Math.random()*10000);
+      store.folders.push({ id, name: nm, order });
+      save(store);
+      return id;
+    },
+    renameFolder: (store, id, name) => {
+      if (!id) return;
+      const nm = String(name || '').trim();
+      if (!nm) return;
+      const f = (store.folders || []).find(x => x.id === id);
+      if (!f) return;
+      f.name = nm;
+      save(store);
+    },
+    deleteFolder: (store, id) => {
+      if (!id) return;
+      const folders = Array.isArray(store.folders) ? store.folders : [];
+      const exists = folders.some(f => f.id === id);
+      if (!exists) return;
+      // Tillåt inte borttagning av systemmapp
+      const target = folders.find(f => f.id === id);
+      if (target && target.system) return;
+      // Hitta systemmapp för att flytta karaktärer
+      const standard = folders.find(f => f.system) || folders.find(f => f.name === 'Standard');
+      store.folders = folders.filter(f => f.id !== id);
+      // flytta karaktärer till systemmappen "Standard"
+      const destId = standard ? standard.id : '';
+      store.characters = (store.characters || []).map(c => (
+        c && c.folderId === id ? { ...c, folderId: destId } : c
+      ));
+      save(store);
+    },
+    getCharacterFolder: (store, charId) => {
+      if (!charId) return '';
+      const c = (store.characters || []).find(x => x.id === charId);
+      return c && c.folderId ? c.folderId : '';
+    },
+    setCharacterFolder: (store, charId, folderId) => {
+      if (!charId) return;
+      const c = (store.characters || []).find(x => x.id === charId);
+      if (!c) return;
+      // Förhindra placering i "Utan mapp": mappa tomt till systemmappen
+      let dest = folderId || '';
+      if (!dest) {
+        const folders = Array.isArray(store.folders) ? store.folders : [];
+        const standard = folders.find(f => f.system) || folders.find(f => f.name === 'Standard');
+        if (standard) dest = standard.id;
+      }
+      c.folderId = dest;
+      save(store);
+    },
     getRecentSearches,
     addRecentSearch,
     getCurrentList,

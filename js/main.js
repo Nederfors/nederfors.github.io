@@ -162,6 +162,7 @@ const dom  = {
   searchList: $T('searchAutocomplete'),
   searchSug: $T('searchSuggest'),
   arkSel: $T('arkFilter'),    tstSel : $T('testFilter'),
+  folderSel: $T('folderFilter'),
   filterUnion: $T('filterUnion'),
   entryViewToggle: $T('entryViewToggle'),
   infoToggle: $T('infoToggle'),
@@ -356,12 +357,52 @@ function boot() {
    TOOLBAR-LOGIK
    =========================================================== */
 function refreshCharSelect() {
-  dom.charSel.innerHTML =
-    '<option value="">Välj rollperson …</option>' +
-    store.characters.map(c =>
-      `<option value="${c.id}"${c.id===store.current?' selected':''}>${c.name}</option>`
-    ).join('');
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  const map = new Map(); // folderId -> chars
+  const none = [];
+  for (const c of (store.characters || [])) {
+    const fid = c.folderId || '';
+    if (!fid || !folders.some(f=>f.id===fid)) none.push(c);
+    else {
+      if (!map.has(fid)) map.set(fid, []);
+      map.get(fid).push(c);
+    }
+  }
+  const renderOpts = (arr) => (arr||[])
+    .slice()
+    .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'))
+    .map(c => `<option value="${c.id}"${c.id===store.current?' selected':''}>${c.name}</option>`)
+    .join('');
+  const active = storeHelper.getActiveFolder(store);
+  let html = '<option value="">Välj rollperson …</option>';
+  if (active === 'ALL') {
+    for (const f of folders) {
+      const arr = map.get(f.id) || [];
+      if (!arr.length) continue; // hoppa över tomma mappar
+      html += `<optgroup label="${(f.name||'Mapp')}">${renderOpts(arr)}</optgroup>`;
+    }
+  } else {
+    const f = folders.find(x => x.id === active);
+    const arr = map.get(active) || [];
+    if (f && arr.length) {
+      html += `<optgroup label="${(f.name||'Mapp')}">${renderOpts(arr)}</optgroup>`;
+    }
+  }
+  dom.charSel.innerHTML = html;
   updateXP();
+  refreshFolderFilter();
+}
+
+function refreshFolderFilter() {
+  if (!dom.folderSel) return;
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  const active = storeHelper.getActiveFolder(store);
+  let html = '';
+  html += `<option value="ALL"${active==='ALL'?' selected':''}>Alla</option>`;
+  html += folders.map(f => `<option value="${f.id}"${active===f.id?' selected':''}>${f.name}</option>`).join('');
+  dom.folderSel.innerHTML = html;
 }
 
 /* -----------------------------------------------------------
@@ -378,6 +419,16 @@ function bindToolbar() {
     location.reload();
   });
 
+  /* Aktiv mapp (folderFilter) */
+  if (dom.folderSel) {
+    dom.folderSel.addEventListener('change', () => {
+      const val = dom.folderSel.value;
+      storeHelper.setActiveFolder(store, val);
+      refreshCharSelect();
+      if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+    });
+  }
+
   /* one–time delegation för alla knappar i toolbar + paneler */
   bar.shadowRoot.addEventListener('click', async e => {
     const id = e.target.closest('button, a')?.id;
@@ -390,7 +441,9 @@ function bindToolbar() {
       const baseXP = 0;  // nystartade rollpersoner har alltid 0 XP
       const charId = 'rp' + Date.now();
 
-      store.characters.push({ id: charId, name });
+      // Lägg ny rollperson i systemmappen "Standard"
+      const std = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
+      store.characters.push({ id: charId, name, folderId: std ? std.id : '' });
       store.data[charId] = { baseXp: baseXP, custom: [] };
       store.current = charId;
 
@@ -434,6 +487,18 @@ function bindToolbar() {
           await exportCharacterFile(choice);
         }
       });
+    }
+
+    /* Flytta till mapp ------------------------------------ */
+    if (id === 'moveToFolder') {
+      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      // Öppna Mappar-UI och använd inbyggda flytta-sektionen för enhetligt UI
+      openFolderManagerPopup();
+    }
+
+    /* Mapphanterare --------------------------------------- */
+    if (id === 'manageFolders') {
+      openFolderManagerPopup();
     }
 
     /* Importera rollperson -------------------------------- */
@@ -608,6 +673,210 @@ function bindToolbar() {
       if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }
+}
+
+// ---------- Popup: Flytta rollperson till mapp ----------
+function openMoveToFolderPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('moveFolderPopup');
+  const sel  = bar.shadowRoot.getElementById('moveFolderSelect');
+  const ok   = bar.shadowRoot.getElementById('moveFolderApply');
+  const cls  = bar.shadowRoot.getElementById('moveFolderCancel');
+  // fyll val
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  const currentId = store.current;
+  const curFolder = currentId ? storeHelper.getCharacterFolder(store, currentId) : '';
+  sel.innerHTML = folders.map(f=>`<option value="${f.id}"${f.id===curFolder?' selected':''}>${f.name}</option>`).join('');
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    ok.removeEventListener('click', onOk);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onOk() {
+    const val = sel.value || '';
+    close();
+    cb(val);
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  ok.addEventListener('click', onOk);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+// ---------- Popup: Mapphanterare ----------
+function openFolderManagerPopup() {
+  const pop  = bar.shadowRoot.getElementById('folderManagerPopup');
+  const list = bar.shadowRoot.getElementById('folderList');
+  const closeBtn = bar.shadowRoot.getElementById('folderManagerDone');
+  const closeX   = bar.shadowRoot.getElementById('folderManagerCloseX');
+  const addBtn = bar.shadowRoot.getElementById('addFolderBtn');
+  const nameIn = bar.shadowRoot.getElementById('newFolderName');
+  const moveGroup = bar.shadowRoot.getElementById('folderMoveGroup');
+  const moveSel   = bar.shadowRoot.getElementById('folderMoveSelect');
+  const moveApply = bar.shadowRoot.getElementById('folderMoveApply');
+  const charList  = bar.shadowRoot.getElementById('folderCharList');
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"]/g, m => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;'
+    }[m]));
+  }
+
+  function render() {
+    const folders = (storeHelper.getFolders(store) || []).slice()
+      .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    // build character count per folder
+    const charMap = new Map(); // folderId -> count
+    for (const c of (store.characters || [])) {
+      const fid = c.folderId || '';
+      if (!fid) continue;
+      charMap.set(fid, (charMap.get(fid) || 0) + 1);
+    }
+    // Character multi-select list
+    const chars = (store.characters || []).slice()
+      .sort((a,b)=>{
+        const fa = (store.folders || []).find(f=>f.id===(a.folderId||''))?.name || '';
+        const fb = (store.folders || []).find(f=>f.id===(b.folderId||''))?.name || '';
+        return fa.localeCompare(fb,'sv') || String(a.name||'').localeCompare(String(b.name||''),'sv');
+      });
+    if (charList) {
+      charList.innerHTML = chars.map(c => {
+        const fid = c.folderId || '';
+        const fname = fid ? ((store.folders||[]).find(f=>f.id===fid)?.name || '') : '';
+        const suffix = fname ? ` <span class="sub">(${escapeHtml(fname)})</span>` : '';
+        // Ingen karaktär ska vara förvald i Mappar-menyn
+        return `<label class="price-item"><span>${escapeHtml(c.name)}${suffix}</span><input type="checkbox" data-charid="${c.id}"></label>`;
+      }).join('');
+    }
+    // Destination folder select
+    if (moveSel) {
+      const curFolder = store.current ? (storeHelper.getCharacterFolder(store, store.current) || '') : '';
+      moveSel.innerHTML = folders.map(f=>`<option value="${f.id}"${f.id===curFolder?' selected':''}>${f.name}</option>`).join('');
+    }
+    if (!folders.length) {
+      list.innerHTML = '<p>Inga mappar ännu.</p>';
+      return;
+    }
+    list.innerHTML = folders.map(f => {
+      const cnt = charMap.get(f.id) || 0;
+      const esc = s => String(s || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+      const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort">🗑</button>`;
+      return (
+        `<div class="folder-row" data-id="${f.id}">
+          <div class="folder-name">${esc(f.name)} <span class="count-badge">${cnt}</span></div>
+          <div class="folder-actions">
+            <button class="mini-btn" data-action="open" title="Öppna">⬆️</button>
+            <button class="mini-btn" data-action="rename" title="Byt namn">✏️</button>
+            ${delBtn}
+          </div>
+        </div>`
+      );
+    }).join('');
+  }
+
+  async function onListClick(e) {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const row = e.target.closest('[data-id]');
+    if (!row) return;
+    const id = row.getAttribute('data-id');
+    const action = el.getAttribute('data-action');
+    if (action === 'rename') {
+      const folders = storeHelper.getFolders(store) || [];
+      const f = folders.find(x=>x.id===id);
+      const nm = prompt('Nytt mappnamn?', f ? f.name : '');
+      if (!nm) return;
+      storeHelper.renameFolder(store, id, nm);
+      render();
+      refreshCharSelect();
+    } else if (action === 'open') {
+      // Open first character in this folder (alphabetically). If none, inform user.
+      const chars = (store.characters || [])
+        .filter(c => (c.folderId || '') === id)
+        .slice()
+        .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      if (!chars.length) {
+        await alertPopup('Mappen är tom.');
+        return;
+      }
+      // Set active folder to this folder
+      storeHelper.setActiveFolder(store, id);
+      const target = chars[0];
+      store.current = target.id;
+      storeHelper.save(store);
+      // Ensure character view
+      if (document.body?.dataset?.role !== 'character') {
+        location.href = 'character.html';
+      } else {
+        location.reload();
+      }
+    } else if (action === 'delete') {
+      const folders = storeHelper.getFolders(store) || [];
+      const f = folders.find(x=>x.id===id);
+      if (f && f.system) { await alertPopup('Systemmappen “Standard” kan inte tas bort.'); return; }
+      if (!(await confirmPopup('Ta bort mapp? Karaktärer flyttas till “Standard”.'))) return;
+      storeHelper.deleteFolder(store, id);
+      render();
+      refreshCharSelect();
+    }
+  }
+
+  function onAdd() {
+    const nm = String(nameIn.value || '').trim();
+    if (!nm) return;
+    storeHelper.addFolder(store, nm);
+    nameIn.value = '';
+    render();
+    refreshCharSelect();
+  }
+
+  function close() {
+    pop.classList.remove('open');
+    list.removeEventListener('click', onListClick);
+    closeBtn?.removeEventListener('click', onClose);
+    closeX?.removeEventListener('click', onClose);
+    addBtn.removeEventListener('click', onAdd);
+    moveApply?.removeEventListener('click', onMoveApply);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onClose() { close(); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+  }
+  function onMoveApply() {
+    const dest = (moveSel && moveSel.value) || '';
+    if (!charList) { close(); return; }
+    const ids = [...charList.querySelectorAll('input[type="checkbox"][data-charid]:checked')]
+      .map(ch => ch.dataset.charid);
+    if (!ids.length) { close(); return; }
+    ids.forEach(id => storeHelper.setCharacterFolder(store, id, dest || ''));
+    refreshCharSelect();
+    render();
+    close();
+  }
+
+  render();
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  list.addEventListener('click', onListClick);
+  closeBtn?.addEventListener('click', onClose);
+  closeX?.addEventListener('click', onClose);
+  addBtn.addEventListener('click', onAdd);
+  moveApply?.addEventListener('click', onMoveApply);
+  pop.addEventListener('click', onOutside);
 }
 
 function openAlchemistPopup(cb) {

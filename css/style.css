@@ -1624,6 +1624,223 @@ select.level {
   gap: .8rem;
 }
 
+/* ---------- Popup för Flytta till mapp ---------- */
+#moveFolderPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#moveFolderPopup.open { display: flex; }
+#moveFolderPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  max-width: 420px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#moveFolderPopup .popup-inner button { width: 100%; }
+
+/* ---------- Popup för Mapphanterare ---------- */
+#folderManagerPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#folderManagerPopup.open { display: flex; }
+#folderManagerPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  max-width: 480px;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#folderManagerPopup .popup-inner button { width: 100%; }
+
+/* Folder manager refined layout */
+#folderManagerPopup .popup-inner.folder-ui { gap: 1rem; }
+#folderManagerPopup .popup-inner.folder-ui .char-btn { width: auto; }
+#folderManagerPopup .popup-inner.folder-ui .mini-btn { width: auto; }
+#folderManagerPopup .popup-inner.folder-ui .char-btn.icon { padding: .4rem .6rem; }
+#folderManagerPopup .popup-inner.folder-ui .char-btn.neutral { background: var(--border); color: var(--txt); }
+
+#folderManagerPopup .popup-inner.folder-ui .popup-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+}
+#folderManagerPopup .popup-inner.folder-ui .popup-header h3 { margin: 0; }
+
+#folderManagerPopup .popup-inner.folder-ui .folder-section h4 {
+  margin: 0 0 .2rem;
+  color: var(--subtxt);
+  font-weight: 600;
+}
+
+#folderManagerPopup .popup-inner.folder-ui .inline-row {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: .6rem .8rem;
+}
+#folderManagerPopup .popup-inner.folder-ui .inline-row + .inline-row { margin-top: .4rem; }
+
+#folderManagerPopup .popup-inner.folder-ui .inline-controls {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+}
+
+#folderManagerPopup .popup-inner.folder-ui .readonly-field {
+  background: var(--card);
+  border: 1px solid var(--card-border);
+  border-radius: .55rem;
+  padding: .45rem .6rem;
+  min-height: 2.4rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Character multi-select list in folder manager */
+#folderManagerPopup #folderCharList {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: .4rem;
+  padding: .2rem;
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: .55rem;
+  /* Make the list span full width of the popup */
+  grid-column: 1 / -1;
+  width: 100%;
+}
+#folderManagerPopup #folderCharList .price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .4rem .6rem;
+}
+#folderManagerPopup #folderCharList .price-item span { flex: 1; }
+#folderManagerPopup #folderCharList .price-item span .sub { color: var(--subtxt); font-size: .9em; }
+#folderManagerPopup #folderCharList .price-item input[type="checkbox"] {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--card-border);
+  border-radius: .25rem;
+  background: var(--bg);
+  cursor: pointer;
+}
+#folderManagerPopup #folderCharList .price-item input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+#folderManagerPopup .popup-inner.folder-ui .folder-list {
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .2rem .2rem;
+}
+#folderManagerPopup .popup-inner.folder-ui .folder-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: .6rem;
+  padding: .45rem .6rem;
+}
+#folderManagerPopup .popup-inner.folder-ui .folder-row + .folder-row {
+  border-top: 1px solid var(--card-border);
+}
+#folderManagerPopup .popup-inner.folder-ui .folder-name {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+}
+#folderManagerPopup .popup-inner.folder-ui .folder-actions {
+  display: flex;
+  align-items: center;
+  gap: .3rem;
+}
+#folderManagerPopup .popup-inner.folder-ui .menu-btn {
+  background: transparent;
+  border: 1px solid var(--card-border);
+  color: var(--txt);
+  border-radius: .45rem;
+  padding: .2rem .5rem;
+  cursor: pointer;
+}
+#folderManagerPopup .popup-inner.folder-ui .menu-btn:hover { background: rgba(255,255,255,.06); }
+
+/* Inline small action buttons replacing "…" menu */
+#folderManagerPopup .popup-inner.folder-ui .mini-btn {
+  background: var(--accent);
+  border: none;
+  color: #fff;
+  border-radius: .45rem;
+  padding: .25rem .5rem;
+  cursor: pointer;
+  transition: transform .1s ease, opacity .1s ease;
+}
+#folderManagerPopup .popup-inner.folder-ui .mini-btn:hover  { opacity: .85; }
+#folderManagerPopup .popup-inner.folder-ui .mini-btn:active { transform: scale(.95); opacity: .7; }
+#folderManagerPopup .popup-inner.folder-ui .mini-btn.danger {
+  background: var(--danger);
+  color: #fff;
+}
+
+#folderManagerPopup .popup-inner.folder-ui .folder-menu {
+  position: absolute;
+  right: .6rem;
+  top: calc(100% - .2rem);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: .55rem;
+  box-shadow: var(--shadow);
+  padding: .35rem;
+  display: none;
+  z-index: 10;
+  min-width: 160px;
+}
+#folderManagerPopup .popup-inner.folder-ui .folder-menu.open { display: block; }
+#folderManagerPopup .popup-inner.folder-ui .folder-menu .char-btn {
+  width: 100%;
+  padding: .45rem .6rem;
+}
+#folderManagerPopup .popup-inner.folder-ui .folder-menu .char-btn.danger { background: var(--danger); }
+#folderManagerPopup .popup-inner.folder-ui .folder-menu .char-btn.neutral { background: var(--border); color: var(--txt); }
+
+#folderManagerPopup .popup-inner.folder-ui .popup-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
 /* Gör samtliga popups scrollbara om innehållet blir för högt */
 .popup-inner {
   max-height: 100%;
