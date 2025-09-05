@@ -1409,12 +1409,12 @@ function openExportPopup(cb) {
         actions.appendChild(b);
       };
       if (scope === 'all') {
-        addMini('En', 'all-one');
-        addMini('Flera', 'all-separate');
+        addMini('En fil', 'all-one');
+        addMini('Isär', 'all-separate');
         addMini('Zip', 'all-zip');
       } else if (scope === 'folder') {
-        addMini('En', 'folder-active');
-        addMini('Flera', 'folder-separate');
+        addMini('En fil', 'folder-active');
+        addMini('Isär', 'folder-separate');
         addMini('Zip', 'folder-zip');
       }
       row.appendChild(actions);
