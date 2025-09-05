@@ -2987,5 +2987,45 @@
     "skilling": 0,
     "örtegar": 0
   }
-}
+},
+  {
+    "id": "ar86",
+    "namn": "N.E.P.T.R., Evighetspajkastaren",
+    "beskrivning": "NEPTR är en hemmabyggd pajkastar-automat som fick liv av ett blixtnedslag och därefter full-laddades i en ismagikers palats. Laddningen gav både extra kraft och en bugg: en tendens att ”samla prinsessor”. Han kallar sin skapare ”Skapare” och ismagikern ”Papi”. NEPTR fungerar bäst som följeslagande verktygsgnister: han skjuter kladdiga pajer, hjälper till med spratt och kan improvisera enkla skydd eller verktyg av skrot.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Aktiv"
+        ],
+        "Förmåga 2": [
+          "Speciell"
+        ],
+        "Förmåga 3": [
+          "Aktiv"
+        ],
+        "Förmåga 4": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Pajsalva; Handling: Aktiv\nNEPTR avfyrar en seg, klibbig paj mot ett mål inom nära–långt. Slå Träffsäker. På träff: 1T6 i skada; målet får −2 på Diskret och Träffsäker till slutet av nästa runda då kladdet stör sikt och rörelse. Rustning skyddar som vanligt. Korruption: Ingen.",
+      "Förmåga 2": "Sprattprotokoll; Handling: Speciell\nNär mästaren iscensätter ett spratt, förhandlingstrick eller en fälla assisterar NEPTR. Mästaren får en andra chans på ett misslyckat slag i Diskret eller Övertygande kopplat till sprattet; om omslaget lyckas får mästaren Övertag på nästa handling mot samma mål denna scen. Villkor: Fri handling. Korruption: Ingen.",
+      "Förmåga 3": "Blixtladdning; Handling: Aktiv\nNEPTR laddas av åska eller annan kraftkälla. Under 1T4 rundor höjs pajsalvans skadetärning till 1T8 och attackerna får kedjeeffekt mot ytterligare ett mål inom nära från första målet om det första träffar. Efter aktivering: slå 1T20; vid utfall ≤ 5 aktiveras ”Prinsess-subrutiner” – NEPTR vägrar offensiva handlingar mot kungliga/prinsessor denna scen. Korruption: 1T4.",
+      "Förmåga 4": "Skrotmästarens improvisation; Handling: Aktiv\nNEPTR bygger snabbt ett provisoriskt hjälpmedel – värmeskyddsdräkt, verktyg eller barriär. Slå Listig. På lyckat: ge en allierad inom närstrid en situationsbonus under scenen: antingen +1T4 Bepansring mot eld/värme, eller +2 på ett valt karaktärsdragstest kopplat till den byggda prylen (SL godkänner). Föremålet faller sönder efter scenen. Korruption: 1."
+    },
+    "stat": {
+      "skada": "1T6 (paj)",
+      "vikt": 20.0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  }
 ]
