@@ -903,10 +903,7 @@ function initIndex() {
     }
     const btn=e.target.closest('button[data-act]');
     if (!btn) return;
-    if (!store.current) {
-      await alertPopup('Ingen rollperson vald.');
-      return;
-    }
+    if (!store.current && !(await requireCharacter())) return;
     const name = btn.dataset.name;
     const tr = btn.closest('li').dataset.trait || null;
     const p  = getEntries().find(x=>x.namn===name);

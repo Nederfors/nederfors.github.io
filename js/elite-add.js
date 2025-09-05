@@ -284,7 +284,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
   }
 
   async function addReq(entry, levels){
-    if(!store.current){ await alertPopup('Ingen rollperson vald.'); return; }
+    if(!store.current && !(await requireCharacter())) return;
     const names=parseNames(entry.krav_formagor||'');
     const listNames = new Set(names);
     if(levels && typeof levels==='object'){
@@ -307,7 +307,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
   }
 
   async function addElite(entry, opts = {}){
-    if(!store.current){ await alertPopup('Ingen rollperson vald.'); return; }
+    if(!store.current && !(await requireCharacter())) return;
     const list = storeHelper.getCurrentList(store);
     if(list.some(x=>x.namn===entry.namn)) return;
     const skipDup = !!opts.skipDuplicateConfirm;
@@ -332,7 +332,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
     const name=btn.dataset.eliteReq;
     const entry=DB.find(x=>x.namn===name);
     if(!entry) return;
-    if(!store.current){ await alertPopup('Ingen rollperson vald.'); return; }
+    if(!store.current && !(await requireCharacter())) return;
     const listPre = storeHelper.getCurrentList(store);
     if(listPre.some(x=>x.namn===entry.namn)) return;
     if(listPre.some(isElityrke)){

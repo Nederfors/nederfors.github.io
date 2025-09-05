@@ -28,7 +28,7 @@ function initCharacter() {
   const clearBtn = document.getElementById('clearNonInv');
   if (clearBtn) {
     clearBtn.addEventListener('click', async () => {
-      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      if (!store.current && !(await requireCharacter())) return;
       const ok = await confirmPopup('Detta tar bort Ras, Yrken, Elityrken, Förmågor, Mystisk kraft, Ritualer, Fördelar, Nackdelar, Särdrag och Monstruösa särdrag från karaktären. Inventariet lämnas orört. Vill du fortsätta?');
       if (!ok) return;
       const before = storeHelper.getCurrentList(store);

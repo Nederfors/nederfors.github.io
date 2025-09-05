@@ -350,7 +350,6 @@ function boot() {
   if (ROLE === 'index')     initIndex();
   if (ROLE === 'character') initCharacter();
   if (ROLE === 'notes')     initNotes();
-  ensureCharacterSelected();
 }
 
 /* ===========================================================
@@ -453,7 +452,7 @@ function bindToolbar() {
 
     /* Kopiera rollperson ----------------------------------- */
     if (id === 'duplicateChar') {
-      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      if (!store.current && !(await requireCharacter())) return;
       const newId = storeHelper.duplicateCharacter(store, store.current);
       if (newId) {
         store.current = newId;
@@ -464,7 +463,7 @@ function bindToolbar() {
 
     /* Byt namn på rollperson -------------------------------- */
     if (id === 'renameChar') {
-      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      if (!store.current && !(await requireCharacter())) return;
       const char = store.characters.find(c => c.id === store.current);
       const newName = prompt('Nytt namn?', char ? char.name : '');
       if (!newName) return;
@@ -491,7 +490,7 @@ function bindToolbar() {
 
     /* Flytta till mapp ------------------------------------ */
     if (id === 'moveToFolder') {
-      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      if (!store.current && !(await requireCharacter())) return;
       // Öppna Mappar-UI och använd inbyggda flytta-sektionen för enhetligt UI
       openFolderManagerPopup();
     }
@@ -565,7 +564,7 @@ function bindToolbar() {
 
     /* Ta bort rollperson ----------------------------------- */
     if (id === 'deleteChar') {
-      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      if (!store.current && !(await requireCharacter())) return;
       const char = store.characters.find(c => c.id === store.current);
       if (!(await confirmPopup(`Ta bort “${char.name}”?`))) return;
 
@@ -576,7 +575,7 @@ function bindToolbar() {
 
     /* Återställ basegenskaper till 10 ---------------------- */
     if (id === 'resetTraits') {
-      if (!store.current) { await alertPopup('Ingen rollperson vald.'); return; }
+      if (!store.current && !(await requireCharacter())) return;
       const ok = await confirmPopup('Detta nollställer alla karaktärsdrag till 10. Karaktärsdrag från förmågor och inventarier påverkas inte. Åtgärden kan inte ångras. Vill du fortsätta?');
       if (!ok) return;
       const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
@@ -1260,91 +1259,112 @@ function tryBomb(term) {
   return true;
 }
 
-function ensureCharacterSelected() {
-  if (store.current) return;
-  const pop = document.createElement('div');
-  pop.id = 'charPopup';
-  pop.innerHTML = '<div class="popup-inner"><p id="charPopupMsg"></p><div id="charPopupContent"></div></div>';
-  document.body.appendChild(pop);
-  const msg = pop.querySelector('#charPopupMsg');
-  const content = pop.querySelector('#charPopupContent');
-  if (store.characters.length) {
-    msg.textContent = 'Oj då, denna hemsida är bajs utan någon karaktär så det är bäst att du väljer en!';
-    const sel = document.createElement('select');
-    sel.innerHTML = '<option value="">Välj rollperson…</option>' +
-      store.characters.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
-    sel.addEventListener('change', () => {
-      if (!sel.value) return;
-      store.current = sel.value;
+async function requireCharacter() {
+  if (store.current) return true;
+  let pop = document.getElementById('charPopup');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'charPopup';
+    pop.className = 'popup';
+    pop.innerHTML = `
+      <div class="popup-inner">
+        <p>Handlingen kräver att du har en aktiv karaktär</p>
+        <div class="button-row">
+          <button id="charReqCancel" class="char-btn danger">Avbryt</button>
+          <button id="charReqChoose" class="char-btn">Välj karaktär</button>
+          <button id="charReqNew" class="char-btn">Skapa karaktär?</button>
+        </div>
+        <div id="charPopupContent" style="display:none;">
+          <select id="charReqSelect"></select>
+        </div>
+      </div>`;
+    document.body.appendChild(pop);
+  }
+
+  const wrap   = pop.querySelector('#charPopupContent');
+  const select = pop.querySelector('#charReqSelect');
+  const btnChoose = pop.querySelector('#charReqChoose');
+  const btnNew    = pop.querySelector('#charReqNew');
+  const btnCancel = pop.querySelector('#charReqCancel');
+
+  renderCharOptions(select);
+  wrap.style.display = 'none';
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      btnChoose.removeEventListener('click', onChoose);
+      btnNew.removeEventListener('click', onNew);
+      btnCancel.removeEventListener('click', onCancel);
+      select.removeEventListener('change', onSelect);
+      resolve(res);
+    }
+    function onChoose() {
+      wrap.style.display = '';
+      select.focus();
+    }
+    function onSelect() {
+      const val = select.value;
+      if (!val) return;
+      store.current = val;
       storeHelper.save(store);
-      location.reload();
-    });
-    content.appendChild(sel);
-  } else {
-    msg.textContent = 'Oj då, denna hemsida är bajs utan någon karaktär så det är bäst att du skapar eller importerar en!';
-
-    const importBtn = document.createElement('button');
-    importBtn.className = 'char-btn';
-    importBtn.textContent = 'Importera rollperson';
-    importBtn.addEventListener('click', () => {
-      const inp = document.createElement('input');
-      inp.type = 'file';
-      inp.accept = 'application/json';
-      inp.multiple = true;
-      inp.addEventListener('change', async () => {
-        const files = inp.files ? Array.from(inp.files) : [];
-        if (!files.length) return;
-        let imported = 0;
-        for (const file of files) {
-          try {
-            const text = await file.text();
-            const obj = JSON.parse(text);
-            if (Array.isArray(obj)) {
-              for (const item of obj) {
-                try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
-              }
-            } else if (obj && Array.isArray(obj.characters)) {
-              for (const item of obj.characters) {
-                try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
-              }
-            } else {
-              const res = storeHelper.importCharacterJSON(store, obj);
-              if (res) imported++;
-            }
-          } catch {
-            // ignore and continue to next file
-          }
-        }
-        if (imported > 0) {
-          location.reload();
-        } else {
-          await alertPopup('Felaktig fil.');
-        }
-      });
-      inp.click();
-    });
-
-    const btnNew = document.createElement('button');
-    btnNew.className = 'char-btn';
-    btnNew.textContent = 'Ny rollperson';
-    btnNew.addEventListener('click', () => {
-      const name = prompt('Namn p\u00e5 ny rollperson?');
+      refreshCharSelect();
+      if (dom.cName) dom.cName.textContent = store.characters.find(c=>c.id===val)?.name||'';
+      close(true);
+    }
+    async function onNew() {
+      const name = prompt('Namn på ny rollperson?');
       if (!name) return;
-      const baseXP = 0;
       const charId = 'rp' + Date.now();
-      store.characters.push({ id: charId, name });
-      store.data[charId] = { baseXp: baseXP, custom: [] };
+      const active = storeHelper.getActiveFolder(store);
+      let folderId;
+      if (active && active !== 'ALL') {
+        folderId = active;
+      } else {
+        const std = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
+        folderId = std ? std.id : '';
+      }
+      store.characters.push({ id: charId, name, folderId });
+      store.data[charId] = { baseXp: 0, custom: [] };
       store.current = charId;
       storeHelper.save(store);
-      location.reload();
-    });
+      refreshCharSelect();
+      if (dom.cName) dom.cName.textContent = name;
+      close(true);
+    }
+    function onCancel() { close(false); }
 
-    content.append(importBtn, btnNew);
+    btnChoose.addEventListener('click', onChoose);
+    btnNew.addEventListener('click', onNew);
+    btnCancel.addEventListener('click', onCancel);
+    select.addEventListener('change', onSelect);
+  });
+}
+
+function renderCharOptions(sel) {
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  const map = new Map();
+  for (const c of (store.characters || [])) {
+    const fid = c.folderId || '';
+    if (!map.has(fid)) map.set(fid, []);
+    map.get(fid).push(c);
   }
-  setTimeout(() => {
-    pop.classList.add('open');
-    (pop.querySelector('.popup-inner') || pop).scrollTop = 0;
-  }, 0);
+  const renderOpts = arr => (arr||[])
+    .slice()
+    .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'))
+    .map(c => `<option value="${c.id}">${c.name}</option>`)
+    .join('');
+  let html = '<option value="">Välj rollperson …</option>';
+  for (const f of folders) {
+    const arr = map.get(f.id) || [];
+    if (!arr.length) continue;
+    html += `<optgroup label="${f.name}">${renderOpts(arr)}</optgroup>`;
+  }
+  sel.innerHTML = html;
 }
 
 
