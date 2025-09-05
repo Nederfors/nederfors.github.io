@@ -422,7 +422,29 @@ function bindToolbar() {
   if (dom.folderSel) {
     dom.folderSel.addEventListener('change', () => {
       const val = dom.folderSel.value;
+      // Sätt aktiv mapp i lagringen
       storeHelper.setActiveFolder(store, val);
+
+      // Om en specifik mapp valts (ej "Alla"), välj första karaktären i den mappen
+      if (val && val !== 'ALL') {
+        const firstInFolder = (store.characters || [])
+          .filter(c => (c.folderId || '') === val)
+          .slice()
+          .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'))[0];
+        if (firstInFolder && store.current !== firstInFolder.id) {
+          store.current = firstInFolder.id;
+          storeHelper.save(store);
+          // Uppdatera visat namn om det finns i denna vy
+          if (dom.cName) dom.cName.textContent = firstInFolder.name || '';
+          // I karaktärs-/anteckningsvyn behöver sidan laddas om
+          if (ROLE === 'character' || ROLE === 'notes') {
+            location.reload();
+            return; // avbryt vidare uppdateringar – reload tar över
+          }
+        }
+      }
+
+      // Uppdatera menyer och index-vy utan omladdning
       refreshCharSelect();
       if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
     });
@@ -435,26 +457,48 @@ function bindToolbar() {
 
     /* Ny rollperson ---------------------------------------- */
     if (id === 'newCharBtn') {
-      const name = prompt('Namn på ny rollperson?');
-      if (!name) return;
+      const active = storeHelper.getActiveFolder(store);
       const baseXP = 0;  // nystartade rollpersoner har alltid 0 XP
       const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
 
-      // Lägg ny rollperson i systemmappen "Standard"
-      const std = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
-      store.characters.push({ id: charId, name, folderId: std ? std.id : '' });
+      // Visa alltid popupen; förvalt val = aktiv mapp (eller Standard om Alla)
+      const res = await openNewCharPopupWithFolder(active);
+      if (!res) return; // avbrutet
+      const { name, folderId } = res;
+      if (!name) return;
+      store.characters.push({ id: charId, name, folderId: folderId || '' });
       store.data[charId] = { baseXp: baseXP, custom: [] };
       store.current = charId;
-
-      storeHelper.save(store);      // sparas nu korrekt
+      // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
+      const prevActive = storeHelper.getActiveFolder(store);
+      if (folderId && prevActive !== folderId) {
+        storeHelper.setActiveFolder(store, folderId);
+      }
+      storeHelper.save(store);
       location.reload();
     }
 
     /* Kopiera rollperson ----------------------------------- */
     if (id === 'duplicateChar') {
       if (!store.current && !(await requireCharacter())) return;
+      const src = (store.characters || []).find(c => c.id === store.current);
+      if (!src) return;
+      const defaultName = `${src.name} (kopia)`;
+      const defaultFolder = storeHelper.getCharacterFolder(store, store.current);
+      const res = await openDuplicateCharPopupWithFolder(defaultFolder, defaultName);
+      if (!res) return; // avbrutet
+      const { name, folderId } = res;
+      if (!name) return;
       const newId = storeHelper.duplicateCharacter(store, store.current);
       if (newId) {
+        // Sätt namn och mapp enligt användarens val
+        try { storeHelper.renameCharacter(store, newId, name); } catch {}
+        try { if (folderId) storeHelper.setCharacterFolder(store, newId, folderId); } catch {}
+        // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
+        const prevActive = storeHelper.getActiveFolder(store);
+        if (folderId && prevActive !== folderId) {
+          storeHelper.setActiveFolder(store, folderId);
+        }
         store.current = newId;
         storeHelper.save(store);
         location.reload();
@@ -465,11 +509,28 @@ function bindToolbar() {
     if (id === 'renameChar') {
       if (!store.current && !(await requireCharacter())) return;
       const char = store.characters.find(c => c.id === store.current);
-      const newName = prompt('Nytt namn?', char ? char.name : '');
-      if (!newName) return;
-      storeHelper.renameCharacter(store, store.current, newName);
-      refreshCharSelect();
-      if (dom.cName) dom.cName.textContent = newName;
+      if (!char) return;
+      const curFolder = storeHelper.getCharacterFolder(store, store.current);
+      const res = await openRenameCharPopupWithFolder(curFolder, char.name || '');
+      if (!res) return;
+      const { name, folderId } = res;
+      if (!name) return;
+      const oldFolder = curFolder || '';
+      storeHelper.renameCharacter(store, store.current, name);
+      if (folderId && folderId !== oldFolder) {
+        storeHelper.setCharacterFolder(store, store.current, folderId);
+        // Växla aktiv mapp till den nya
+        const prevActive = storeHelper.getActiveFolder(store);
+        if (prevActive !== folderId) storeHelper.setActiveFolder(store, folderId);
+        storeHelper.save(store);
+        location.reload();
+      } else {
+        // Endast namn ändrat – uppdatera UI utan reload
+        storeHelper.save(store);
+        refreshCharSelect();
+        if (dom.cName) dom.cName.textContent = name;
+        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+      }
     }
 
     /* Export rollperson --------------------------------- */
@@ -1348,12 +1409,12 @@ function openExportPopup(cb) {
         actions.appendChild(b);
       };
       if (scope === 'all') {
-        addMini('En fil', 'all-one');
-        addMini('Separat', 'all-separate');
+        addMini('En', 'all-one');
+        addMini('Flera', 'all-separate');
         addMini('Zip', 'all-zip');
       } else if (scope === 'folder') {
-        addMini('En fil', 'folder-active');
-        addMini('Separat', 'folder-separate');
+        addMini('En', 'folder-active');
+        addMini('Flera', 'folder-separate');
         addMini('Zip', 'folder-zip');
       }
       row.appendChild(actions);
@@ -1555,6 +1616,185 @@ function tryBomb(term) {
   return true;
 }
 
+// Popup: Ny rollperson med mappval
+// preferredFolderId: välj denna som default om giltig; om 'ALL' → Standard
+async function openNewCharPopupWithFolder(preferredFolderId) {
+  const pop = bar?.shadowRoot?.getElementById('newCharPopup');
+  if (!pop) return null;
+  const nameIn   = bar.shadowRoot.getElementById('newCharName');
+  const folderEl = bar.shadowRoot.getElementById('newCharFolder');
+  const create   = bar.shadowRoot.getElementById('newCharCreate');
+  const cancel   = bar.shadowRoot.getElementById('newCharCancel');
+
+  // Fyll mapp-listan
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  let html = '';
+  for (const f of folders) html += `<option value="${f.id}">${f.name}</option>`;
+  folderEl.innerHTML = html;
+  // Förvald mapp: aktuell aktiv om satt och giltig; annars system (Standard)
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = '';
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      create.removeEventListener('click', onCreate);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onCreate() {
+      const name = String(nameIn.value||'').trim();
+      if (!name) { nameIn.focus(); return; }
+      const folderId = folderEl.value || '';
+      close({ name, folderId });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onCreate();
+    }
+    create.addEventListener('click', onCreate);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// Popup: Byt namn med mappval
+// preferredFolderId: välj denna som default om giltig; om 'ALL' → Standard
+// defaultName: förifyllt namn
+async function openRenameCharPopupWithFolder(preferredFolderId, defaultName) {
+  const pop = bar?.shadowRoot?.getElementById('renameCharPopup');
+  if (!pop) return null;
+  const nameIn   = bar.shadowRoot.getElementById('renameCharName');
+  const folderEl = bar.shadowRoot.getElementById('renameCharFolder');
+  const applyBtn = bar.shadowRoot.getElementById('renameCharApply');
+  const cancel   = bar.shadowRoot.getElementById('renameCharCancel');
+
+  // Fyll mapp-listan
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  let html = '';
+  for (const f of folders) html += `<option value="${f.id}">${f.name}</option>`;
+  folderEl.innerHTML = html;
+  // Förvald mapp
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = String(defaultName || '').trim();
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      applyBtn.removeEventListener('click', onApply);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onApply() {
+      const name = String(nameIn.value||'').trim();
+      if (!name) { nameIn.focus(); return; }
+      const folderId = folderEl.value || '';
+      close({ name, folderId });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onApply();
+    }
+    applyBtn.addEventListener('click', onApply);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// Popup: Kopiera rollperson med mappval
+// preferredFolderId: välj denna som default om giltig; om 'ALL' → Standard
+// defaultName: förifyllt namn (t.ex. "<namn> (kopia)")
+async function openDuplicateCharPopupWithFolder(preferredFolderId, defaultName) {
+  const pop = bar?.shadowRoot?.getElementById('dupCharPopup');
+  if (!pop) return null;
+  const nameIn   = bar.shadowRoot.getElementById('dupCharName');
+  const folderEl = bar.shadowRoot.getElementById('dupCharFolder');
+  const create   = bar.shadowRoot.getElementById('dupCharCreate');
+  const cancel   = bar.shadowRoot.getElementById('dupCharCancel');
+
+  // Fyll mapp-listan
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  let html = '';
+  for (const f of folders) html += `<option value="${f.id}">${f.name}</option>`;
+  folderEl.innerHTML = html;
+  // Förvald mapp
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = String(defaultName || '').trim();
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      create.removeEventListener('click', onCreate);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onCreate() {
+      const name = String(nameIn.value||'').trim();
+      if (!name) { nameIn.focus(); return; }
+      const folderId = folderEl.value || '';
+      close({ name, folderId });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onCreate();
+    }
+    create.addEventListener('click', onCreate);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
 async function requireCharacter() {
   if (store.current) return true;
   let pop = document.getElementById('charPopup');
@@ -1620,20 +1860,20 @@ async function requireCharacter() {
       close(true);
     }
     async function onNew() {
-      const name = prompt('Namn på ny rollperson?');
+      const active = storeHelper.getActiveFolder(store);
+      const res = await openNewCharPopupWithFolder(active);
+      if (!res) return;
+      const { name, folderId } = res;
       if (!name) return;
       const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
-      const active = storeHelper.getActiveFolder(store);
-      let folderId;
-      if (active && active !== 'ALL') {
-        folderId = active;
-      } else {
-        const std = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
-        folderId = std ? std.id : '';
-      }
-      store.characters.push({ id: charId, name, folderId });
+      store.characters.push({ id: charId, name, folderId: folderId || '' });
       store.data[charId] = { baseXp: 0, custom: [] };
       store.current = charId;
+      // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
+      const prevActive = storeHelper.getActiveFolder(store);
+      if (folderId && prevActive !== folderId) {
+        storeHelper.setActiveFolder(store, folderId);
+      }
       storeHelper.save(store);
       refreshCharSelect();
       if (dom.cName) dom.cName.textContent = name;

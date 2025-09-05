@@ -201,19 +201,25 @@ class SharedToolbar extends HTMLElement {
           <h2>Inventarie</h2>
 
           <div class="inv-actions">
-            <button id="collapseAllInv" class="char-btn icon" title="Kollapsa alla">▶</button>
+            <button id="collapseAllInv" class="char-btn icon" title="Öppna alla">▶</button>
             <button class="char-btn icon" data-close="invPanel">✕</button>
           </div>
         </header>
         <!-- Formaliteter överst -->
         <ul id="invFormal" class="card-list"></ul>
-        <div class="filter-group">
-          <label for="invSearch">Sök i inventarie</label>
-          <input id="invSearch" type="text" placeholder="Filtrera föremål…" autocomplete="off">
-        </div>
-        <div class="filter-group">
-          <label for="invTypeFilter">Kategori</label>
-          <select id="invTypeFilter"></select>
+        <!-- Sökfilter-kort i inventariepanelen -->
+        <div class="card" id="invSearchFilters">
+          <div class="card-title">Sökfilter</div>
+          <div class="card-desc">
+            <div class="filter-group">
+              <label for="invSearch">Sök i inventarie</label>
+              <input id="invSearch" type="text" placeholder="Filtrera föremål…" autocomplete="off">
+            </div>
+            <div class="filter-group">
+              <label for="invTypeFilter">Kategori</label>
+              <select id="invTypeFilter"></select>
+            </div>
+          </div>
         </div>
         <ul id="invList" class="card-list"></ul>
       </aside>
@@ -260,7 +266,7 @@ class SharedToolbar extends HTMLElement {
 
         <ul class="card-list">
           <li class="card" data-special="__formal__" id="filterFormalCard">
-            <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter 🔎</span></div>
+            <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
               <div class="card-desc">
                 <!-- Välj rollperson och Aktiv mapp -->
                 <div class="filter-group">
@@ -340,29 +346,39 @@ class SharedToolbar extends HTMLElement {
             </div>
           </li>
         </ul>
-        <div class="filter-group">
-          <label for="typFilter">Typ</label>
-          <select id="typFilter"></select>
-        </div>
-        <div class="filter-group">
-          <label for="arkFilter">Arketyp</label>
-          <select id="arkFilter"></select>
-        </div>
-        <div class="filter-group">
-          <label for="testFilter">Test</label>
-          <select id="testFilter"></select>
+        <!-- Sökfilter-kort som samlar relaterade dropdowns -->
+        <div class="card" id="searchFiltersCard">
+          <div class="card-title">Sökfilter</div>
+          <div class="card-desc">
+            <div class="filter-group">
+              <label for="typFilter">Typ</label>
+              <select id="typFilter"></select>
+            </div>
+            <div class="filter-group">
+              <label for="arkFilter">Arketyp</label>
+              <select id="arkFilter"></select>
+            </div>
+            <div class="filter-group">
+              <label for="testFilter">Test</label>
+              <select id="testFilter"></select>
+            </div>
+          </div>
         </div>
         <!-- Hjälp ska ligga under Test-menyn -->
-        <div class="filter-group party-toggles">
-          <ul class="toggle-list">
-            <li>
-              <span class="toggle-desc">
-                <span class="toggle-question">Behöver du hjälp?</span>
-                <span class="toggle-note">Öppnar en översikt av alla knappar.</span>
-              </span>
-              <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
-            </li>
-          </ul>
+        <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
+        <div class="card help-card">
+          <div class="card-desc">
+            <div class="filter-group party-toggles">
+              <ul class="toggle-list">
+                <li>
+                  <span class="toggle-desc">
+                    <span class="toggle-question">Behöver du hjälp?</span>
+                  </span>
+                  <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
+                </li>
+              </ul>
+            </div>
+          </div>
         </div>
       </aside>
 
@@ -634,6 +650,63 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Ny rollperson (med mappval) ---------- -->
+      <div id="newCharPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Ny rollperson</h3>
+          <div class="filter-group">
+            <label for="newCharName">Namn</label>
+            <input id="newCharName" type="text" placeholder="Namn på rollperson" autocomplete="off">
+          </div>
+          <div class="filter-group">
+            <label for="newCharFolder">Mapp</label>
+            <select id="newCharFolder"></select>
+          </div>
+          <div class="confirm-row">
+            <button id="newCharCancel" class="char-btn danger">Avbryt</button>
+            <button id="newCharCreate" class="char-btn">Skapa</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Kopiera rollperson (med mappval) ---------- -->
+      <div id="dupCharPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Kopiera rollperson</h3>
+          <div class="filter-group">
+            <label for="dupCharName">Namn</label>
+            <input id="dupCharName" type="text" placeholder="Namn på kopia" autocomplete="off">
+          </div>
+          <div class="filter-group">
+            <label for="dupCharFolder">Mapp</label>
+            <select id="dupCharFolder"></select>
+          </div>
+          <div class="confirm-row">
+            <button id="dupCharCancel" class="char-btn danger">Avbryt</button>
+            <button id="dupCharCreate" class="char-btn">Kopiera</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Byt namn (med mappval) ---------- -->
+      <div id="renameCharPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Byt namn</h3>
+          <div class="filter-group">
+            <label for="renameCharName">Namn</label>
+            <input id="renameCharName" type="text" placeholder="Nytt namn" autocomplete="off">
+          </div>
+          <div class="filter-group">
+            <label for="renameCharFolder">Mapp</label>
+            <select id="renameCharFolder"></select>
+          </div>
+          <div class="confirm-row">
+            <button id="renameCharCancel" class="char-btn danger">Avbryt</button>
+            <button id="renameCharApply" class="char-btn">Spara</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Dialog Popup ---------- -->
       <div id="dialogPopup" class="popup">
         <div class="popup-inner">
@@ -666,6 +739,7 @@ class SharedToolbar extends HTMLElement {
             <li>🧝 / 📇: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
             <li>📜: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
             <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
+            <li>XP: Visar dina totala erfarenhetspoäng.</li>
             <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
             <li>Förslag: Använd ↑/↓ för att välja, Enter eller klick för att lägga till.</li>
             <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
@@ -683,10 +757,11 @@ class SharedToolbar extends HTMLElement {
             <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
             <li>Typ, Arketyp, Test: Filtrerar listor.</li>
             <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
+            <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
             <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
             <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
             <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
-            <li>↕️ Expandera vy: Alla kort med entries förutom för ras, yrken och elityrken visas direkt.</li>
+            <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
             <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
             <li>ℹ️ Hjälp: Visar denna panel.</li>
           </ul>
@@ -694,14 +769,14 @@ class SharedToolbar extends HTMLElement {
           <h3>Inventarie</h3>
           <ul>
             <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
-            <li>▶ Kollapsa alla kategorier.</li>
+            <li>▶/▼ Öppna eller kollapsa alla.</li>
             <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
             <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; −/+ justerar 1 daler).</li>
             <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
             <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. 🧹 Töm inventariet.</li>
             <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
             <li>Kategori: Filtrera på föremålstyp.</li>
-            <li>🛞/🐎 Lastning: Lägg på/ta av föremål från valt färdmedel.</li>
+            <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
           </ul>
 
           <h3>Egenskaper</h3>
@@ -709,6 +784,7 @@ class SharedToolbar extends HTMLElement {
             <li>Ange total XP via −/+ eller genom att skriva värdet.</li>
             <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
             <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
+            <li>🧹 Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
           </ul>
 
           <h3>Rollperson</h3>
@@ -720,6 +796,7 @@ class SharedToolbar extends HTMLElement {
           <ul>
             <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
             <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
+            <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
             <li>📇/🧝 i sidhuvudet: Till index respektive rollperson.</li>
           </ul>
 
@@ -743,9 +820,9 @@ class SharedToolbar extends HTMLElement {
 
           <h3>Tips</h3>
           <ul>
-           <li> Knappen "Börja om" i kategorin "Hoppsan"rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
-            <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck enter för att rensa alla filter.</li>
-            <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck enter för att radera samtliga karaktärer på.</li>
+            <li>Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
+            <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.</li>
+            <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.</li>
             <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
             <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
           </ul>
@@ -824,7 +901,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

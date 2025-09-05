@@ -1181,10 +1181,13 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       [...dom.invList.querySelectorAll('li.card:not(.compact)')]
         .map(li => li.dataset.special || `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
     );
-    // Preserve open state for Formaliteter even when rendered outside invList
+    // Preserve open state for Formaliteter cards (now split into tools/info)
     if (dom.invFormal) {
-      const formalOpen = dom.invFormal.querySelector('li.card:not(.compact)');
-      if (formalOpen) openKeys.add('__formal__');
+      [...dom.invFormal.querySelectorAll('li.card')].forEach(li => {
+        if (!li.classList.contains('compact') && li.dataset.special) {
+          openKeys.add(li.dataset.special);
+        }
+      });
     }
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
@@ -1348,26 +1351,34 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       ? `            <div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
       : '';
 
-    /* ---------- kort för formaliteter (pengar & bärkapacitet) ---------- */
-    const formalKey = '__formal__';
+    /* ---------- kort för formaliteter (uppdelat: verktyg & information) ---------- */
+    const toolsKey = '__tools__';
+    const infoKey  = '__info__';
     const vehicleBtns = vehicles
-      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn icon" title="Lasta i ${v.entry.namn}">${VEHICLE_EMOJI[v.entry.namn] || '🛞'}</button>`)
+      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`)
       .join('');
 
-    const formalCard = `
-      <li class="card${openKeys.has(formalKey) ? '' : ' compact'}" data-special="${formalKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter 🔎</span></div>
+    const toolsCard = `
+      <li class="card${openKeys.has(toolsKey) ? '' : ' compact'}" data-special="${toolsKey}">
+        <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
         <div class="card-desc">
           <div class="inv-buttons">
-            <button id="addCustomBtn" class="char-btn icon" title="Nytt föremål">🆕</button>
-            <button id="manageMoneyBtn" class="char-btn icon" title="Hantera pengar">💰</button>
-            <button id="multiPriceBtn" class="char-btn icon" title="Multiplicera pris">💸</button>
-            <button id="squareBtn" class="char-btn icon" title="x²">x²</button>
+            <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
+            <button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>
+            <button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>
+            <button id="squareBtn" class="char-btn">Lägg till antal</button>
             ${vehicleBtns}
-            <button id="dragToggle" class="char-btn icon" title="Ändra ordning">🔀</button>
-            <button id="saveFreeBtn" class="char-btn icon" title="Spara och gör allt gratis">🔒</button>
-            <button id="clearInvBtn" class="char-btn icon danger" title="Rensa inventarie">🧹</button>
+            <button id="dragToggle" class="char-btn">Dra & Släpp</button>
+            <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
+            <button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>
           </div>
+        </div>
+      </li>`;
+
+    const infoCard = `
+      <li class="card${openKeys.has(infoKey) ? '' : ' compact'}" data-special="${infoKey}">
+        <div class="card-title"><span><span class="collapse-btn"></span>Information 🔎</span></div>
+        <div class="card-desc">
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
@@ -1502,7 +1513,7 @@ ${moneyRow}
     : '<li class="card">Inga föremål.</li>';
 
     /* ---------- skriv ut ---------- */
-    if (dom.invFormal) dom.invFormal.innerHTML = formalCard;
+    if (dom.invFormal) dom.invFormal.innerHTML = toolsCard + infoCard;
     dom.invList.innerHTML       = itemCards;
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
@@ -1520,9 +1531,10 @@ ${moneyRow}
   function updateCollapseBtnState() {
     if (!dom.collapseAllBtn || !dom.invList) return;
     const cards = [...dom.invList.querySelectorAll('li.card')];
-    const anyOpen = cards.some(li => !li.classList.contains('compact'));
-    dom.collapseAllBtn.textContent = anyOpen ? '▶' : '▼';
-    dom.collapseAllBtn.title = anyOpen ? 'Kollapsa alla' : 'Öppna alla';
+    // Follow same pattern as taskbar: ▶ when all collapsed, ▼ when any open
+    const allCollapsed = cards.every(li => li.classList.contains('compact'));
+    dom.collapseAllBtn.textContent = allCollapsed ? '▶' : '▼';
+    dom.collapseAllBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
   }
 
   function bindInv() {

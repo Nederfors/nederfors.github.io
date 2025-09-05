@@ -195,6 +195,10 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 .toggle-question {
   font-weight: 600;
 }
+
+/* Hjälp-rutan: större rubrik och mellanrum mot Sökfilter */
+.help-card { margin-top: 1rem; }
+.help-card .toggle-question { font-size: 1.2rem; }
 .party-toggle {
   padding: .45rem .6rem;
   border-radius: .6rem;
@@ -309,8 +313,10 @@ input:focus, select:focus, textarea:focus {
   outline-offset: 2px;
 }
 
-/* särställ "Formaliteter"-kortet med blå kant */
-.card[data-special="__formal__"] {
+/* särställ "Formaliteter"-kort (inkl. uppdelade) med blå kant */
+.card[data-special="__formal__"],
+.card[data-special="__tools__"],
+.card[data-special="__info__"] {
   border: 2px solid var(--accent);
 }
 .card-title {
@@ -535,10 +541,11 @@ input:focus, select:focus, textarea:focus {
 /* Knappar i inventariepanelen */
 .inv-buttons {
   display: flex;
-  flex-wrap: wrap;
-  gap: .4rem;
+  flex-direction: column;
+  gap: .8rem;
   margin-bottom: 1rem;
 }
+.inv-buttons .char-btn { width: 100%; }
 
 /* ---------- Pengahantering ---------- */
 .money-form {
@@ -634,11 +641,7 @@ select.level {
     padding: .3rem .5rem;
     font-size: .9rem;
   }
-  .inv-buttons { gap: .3rem; flex-wrap: wrap; }
-  .inv-buttons .char-btn {
-    padding: .35rem .6rem;
-    font-size: .9rem;
-  }
+  .inv-buttons { gap: .6rem; }
   .header-actions {
     gap: .4rem;
   }
@@ -1543,7 +1546,9 @@ select.level {
   flex-direction: column;
   gap: .6rem;
 }
-#exportPopup .popup-inner button { width: 100%; }
+#exportPopup .row-actions .char-btn { width: 100%; }
+#exportPopup #exportCancel { width: 100%; }
+#exportPopup .char-btn.primary { width: 100%; }
 #exportPopup .char-btn:disabled { opacity: .5; cursor: not-allowed; }
 
 /* Grouped layout for Export */
@@ -1552,14 +1557,15 @@ select.level {
 #exportPopup .section-title { font-weight: 700; text-align: left; font-size: 1rem; }
 #exportPopup .export-section { display: flex; flex-direction: column; gap: .6rem; }
 #exportPopup .export-row { display: grid; grid-template-columns: 1fr; gap: .4rem; padding: .4rem; border: 1px solid var(--border); border-radius: .6rem; }
+/* Keep title above buttons on all screen sizes */
 @media (min-width: 420px) {
-  #exportPopup .export-row { grid-template-columns: 1fr 1fr; align-items: center; }
+  #exportPopup .export-row { grid-template-columns: 1fr; }
 }
 #exportPopup .row-title { text-align: left; font-weight: 600; }
 #exportPopup .row-actions {
   display: grid;
-  /* Responsive grid: wraps to 2/1 columns on small screens */
-  grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
+  /* Always show three actions (En, Flera, Zip) on one row */
+  grid-template-columns: repeat(3, 1fr);
   gap: .4rem;
   align-items: stretch;
 }
@@ -1577,11 +1583,11 @@ select.level {
 #exportPopup .export-list { display: flex; flex-direction: column; gap: .4rem; }
 #exportPopup .export-group { display: flex; flex-direction: column; gap: .3rem; }
 #exportPopup .group-title { text-align: left; font-size: .9rem; font-weight: 600; opacity: .8; margin-top: .2rem; }
-#exportPopup .group-list { display: grid; grid-template-columns: 1fr; gap: .4rem; }
+#exportPopup .group-list { display: grid; grid-template-columns: 1fr; gap: .4rem; align-items: stretch; }
 @media (min-width: 420px) {
   #exportPopup .group-list { grid-template-columns: 1fr 1fr; }
 }
-#exportPopup .group-list .char-btn.small { padding: .45rem .7rem; font-size: .95rem; }
+#exportPopup .group-list .char-btn.small { padding: .45rem .7rem; font-size: .95rem; height: 100%; }
 #exportPopup .char-btn.primary { background: var(--accent); }
 
 /* (removed) Popup för inventarie Export/Import */
@@ -1937,6 +1943,28 @@ select.level {
 }
 #dialogPopup.open .popup-inner { transform: scale(1); }
 #dialogPopup .popup-inner button { width: 100%; }
+
+/* Ny/kopia/byt-namn rollperson – matcha standard-popup stil */
+#newCharPopup .popup-inner,
+#dupCharPopup .popup-inner,
+#renameCharPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  transform: scale(.8);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#newCharPopup.open .popup-inner,
+#dupCharPopup.open .popup-inner,
+#renameCharPopup.open .popup-inner { transform: scale(1); }
 
 /* ---------- Form-grid för anteckningar på karaktärsbladet ---------- */
 .field-row {
