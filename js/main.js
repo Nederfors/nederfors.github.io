@@ -488,13 +488,6 @@ function bindToolbar() {
       });
     }
 
-    /* Flytta till mapp ------------------------------------ */
-    if (id === 'moveToFolder') {
-      if (!store.current && !(await requireCharacter())) return;
-      // Öppna Mappar-UI och använd inbyggda flytta-sektionen för enhetligt UI
-      openFolderManagerPopup();
-    }
-
     /* Mapphanterare --------------------------------------- */
     if (id === 'manageFolders') {
       openFolderManagerPopup();
@@ -672,44 +665,6 @@ function bindToolbar() {
       if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }
-}
-
-// ---------- Popup: Flytta rollperson till mapp ----------
-function openMoveToFolderPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('moveFolderPopup');
-  const sel  = bar.shadowRoot.getElementById('moveFolderSelect');
-  const ok   = bar.shadowRoot.getElementById('moveFolderApply');
-  const cls  = bar.shadowRoot.getElementById('moveFolderCancel');
-  // fyll val
-  const folders = (storeHelper.getFolders(store) || []).slice()
-    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-  const currentId = store.current;
-  const curFolder = currentId ? storeHelper.getCharacterFolder(store, currentId) : '';
-  sel.innerHTML = folders.map(f=>`<option value="${f.id}"${f.id===curFolder?' selected':''}>${f.name}</option>`).join('');
-
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
-    ok.removeEventListener('click', onOk);
-    cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
-  }
-  function onOk() {
-    const val = sel.value || '';
-    close();
-    cb(val);
-  }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
-      close();
-      cb(null);
-    }
-  }
-  ok.addEventListener('click', onOk);
-  cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
 }
 
 // ---------- Popup: Mapphanterare ----------
