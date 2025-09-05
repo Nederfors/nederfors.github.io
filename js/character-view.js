@@ -599,9 +599,13 @@ function initCharacter() {
         if (!it) return;
         e.preventDefault();
         const val = (it.dataset.val || '').trim();
-        if (val && !F.search.includes(val)) F.search.push(val);
-        if (val && window.storeHelper?.addRecentSearch) {
-          storeHelper.addRecentSearch(store, val);
+        if (val) {
+          F.search = [val];
+          if (window.storeHelper?.addRecentSearch) {
+            storeHelper.addRecentSearch(store, val);
+          }
+        } else {
+          F.search = [];
         }
         dom.sIn.value = '';
         sTemp = '';
@@ -671,7 +675,7 @@ function initCharacter() {
         updateSearchDatalist();
         return;
       }
-      if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
+      F.search = sTemp ? [sTemp] : [];
       dom.sIn.value=''; sTemp='';
       activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
     }

@@ -636,7 +636,11 @@ function initIndex() {
           return;
         } else {
           const val = (it.dataset.val || '').trim();
-          if (val && !F.search.includes(val)) F.search.push(val);
+          if (val) {
+            F.search = [val];
+          } else {
+            F.search = [];
+          }
           // If exact name match, open that category once
           if (val) {
             const nval = searchNormalize(val.toLowerCase());
@@ -803,16 +807,16 @@ function initIndex() {
         dom.sIn.value=''; sTemp='';
         return;
       }
-      if(sTemp && !F.search.includes(sTemp)) F.search.push(sTemp);
-      // If exact name match, open that category once
       if (sTemp) {
+        F.search = [sTemp];
+        // If exact name match, open that category once
         const nval = searchNormalize(sTemp.toLowerCase());
         const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
         const cat = match?.taggar?.typ?.[0];
         if (cat) openCatsOnce.add(cat);
-      }
-      if (sTemp) {
         if (window.storeHelper?.addRecentSearch) storeHelper.addRecentSearch(store, sTemp);
+      } else {
+        F.search = [];
       }
       dom.sIn.value=''; sTemp='';
       activeTags(); renderList(filtered());
