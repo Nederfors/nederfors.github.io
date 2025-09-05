@@ -4,7 +4,7 @@
     const div=document.createElement('div');
     div.id='artifactPaymentPopup';
     div.className='popup';
-    div.innerHTML=`<div class="popup-inner"><h3>V\u00e4lj betalning</h3><div id="artifactPaymentOpts" class="radio-list"><label class="radio-row"><input type="radio" name="artifactPay" value="cancel">Avbryt</label><label class="radio-row"><input type="radio" name="artifactPay" value="">Obunden</label><label class="radio-row"><input type="radio" name="artifactPay" value="xp">\u20131 erf</label><label class="radio-row"><input type="radio" name="artifactPay" value="corruption">+1 permanent korruption</label></div></div>`;
+    div.innerHTML=`<div class="popup-inner"><p>V\u00e4lj betalning</p><div id="artifactPaymentOpts" class="button-list"><button data-val="" class="char-btn">Obunden</button><button data-val="xp" class="char-btn">\u20131 erf</button><button data-val="corruption" class="char-btn">+1 permanent korruption</button><button data-val="cancel" class="char-btn danger">Avbryt</button></div></div>`;
     document.body.appendChild(div);
   }
 
@@ -13,24 +13,30 @@
       createPopup();
       const pop=document.getElementById('artifactPaymentPopup');
       const box=pop.querySelector('#artifactPaymentOpts');
-      const radios=[...box.querySelectorAll('input[name="artifactPay"]')];
       const init=current||'';
-      radios.forEach(r=>{ r.checked=r.value===init; });
+      [...box.querySelectorAll('button')].forEach(btn=>{
+        btn.dataset.val===init ? btn.classList.add('active') : btn.classList.remove('active');
+      });
       pop.classList.add('open');
       pop.querySelector('.popup-inner').scrollTop = 0;
       function close(){
         pop.classList.remove('open');
-        box.removeEventListener('change',onChange);
+        box.removeEventListener('click',onClick);
         pop.removeEventListener('click',onOutside);
       }
-      function onChange(e){
-        const inp=e.target.closest('input[name="artifactPay"]');
-        if(!inp) return;
+      function onClick(e){
+        const btn=e.target.closest('button[data-val]');
+        if(!btn) return;
         close();
-        resolve(inp.value==='cancel'?null:inp.value);
+        resolve(btn.dataset.val==='cancel'?null:btn.dataset.val);
       }
-      function onOutside(e){ if(!pop.querySelector('.popup-inner').contains(e.target)){ close(); resolve(null); } }
-      box.addEventListener('change',onChange);
+      function onOutside(e){
+        if(!pop.querySelector('.popup-inner').contains(e.target)){
+          close();
+          resolve(null);
+        }
+      }
+      box.addEventListener('click',onClick);
       pop.addEventListener('click',onOutside);
     });
   }
