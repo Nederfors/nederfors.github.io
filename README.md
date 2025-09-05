@@ -34,7 +34,6 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 - `css/` – stilmallar.
 
 ## Export och import av rollpersoner
-
 Use the **Export** button in the filter panel to open a menu where you can either download a specific character as a JSON file, or download all saved characters together as a single JSON file. "Alla rollpersoner" ligger alltid överst och den aktiva rollpersonen visas näst högst upp. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the files are downloaded normally. The **Import** button lets you select one or more such files — including a single file containing multiple characters — to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
 
 ## Anteckningssidan

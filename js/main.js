@@ -482,6 +482,15 @@ function bindToolbar() {
           const mode = await chooseSeparateExportMode();
           if (mode === 'zip') await exportAllCharactersZipped();
           else if (mode === 'separate') await exportAllCharactersSeparate();
+        } else if (choice === 'folder') {
+          const fid = storeHelper.getActiveFolder(store);
+          if (!fid || fid === 'ALL') { await alertPopup('Välj en mapp först.'); return; }
+          const chars = store.characters.filter(c => (c.folderId || '') === fid);
+          if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
+          const mode = await new Promise(res => openFolderExportPopup(res));
+          if (mode === 'all') await exportFolderAll(fid);
+          else if (mode === 'separate') await exportFolderSeparate(fid);
+          else if (mode === 'zip') await exportFolderZipped(fid);
         } else if (choice) {
           await exportCharacterFile(choice);
         }
@@ -1090,6 +1099,87 @@ async function exportAllCharactersZipped() {
   await saveBlobFile(blob, 'Rollpersoner.zip');
 }
 
+async function exportFolderAll(folderId) {
+  const chars = store.characters.filter(c => (c.folderId || '') === folderId);
+  const all = chars
+    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .filter(Boolean);
+  if (!all.length) return;
+  const folderName = (store.folders || []).find(f => f.id === folderId)?.name || 'mapp';
+  const jsonText = JSON.stringify(all, null, 2);
+  const suggested = `${sanitizeFilename(folderName)}.json`;
+  await saveJsonFile(jsonText, suggested);
+}
+
+async function exportFolderSeparate(folderId) {
+  const chars = store.characters.filter(c => (c.folderId || '') === folderId);
+  const all = chars
+    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .filter(Boolean);
+  if (!all.length) return;
+
+  if (window.showDirectoryPicker) {
+    try {
+      const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      const folderName = sanitizeFilename((store.folders || []).find(f => f.id === folderId)?.name || 'mapp');
+      let baseDir = dirHandle;
+      try { baseDir = await dirHandle.getDirectoryHandle(folderName, { create: true }); } catch {}
+      for (const data of all) {
+        const name = (data && data.name) ? data.name : 'rollperson';
+        const fileName = `${sanitizeFilename(name)}.json`;
+        try {
+          const fileHandle = await baseDir.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(JSON.stringify(data, null, 2));
+          await writable.close();
+        } catch (err) {
+          // Skip file on error
+        }
+      }
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+
+  for (const data of all) {
+    const name = (data && data.name) ? data.name : 'rollperson';
+    const jsonText = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonText], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${sanitizeFilename(name)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+async function exportFolderZipped(folderId) {
+  const chars = store.characters.filter(c => (c.folderId || '') === folderId);
+  const all = chars
+    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .filter(Boolean);
+  if (!all.length) return;
+
+  if (!window.JSZip) {
+    await exportFolderSeparate(folderId);
+    return;
+  }
+
+  const folderName = sanitizeFilename((store.folders || []).find(f => f.id === folderId)?.name || 'mapp');
+  const zip = new JSZip();
+  const zf = zip.folder(folderName);
+  for (const data of all) {
+    const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+    zf.file(`${name}.json`, JSON.stringify(data, null, 2));
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  await saveBlobFile(blob, `${folderName}.zip`);
+}
+
 async function saveBlobFile(blob, suggested) {
   if (window.showSaveFilePicker) {
     try {
@@ -1143,6 +1233,7 @@ function openExportPopup(cb) {
   };
   addBtn('Alla (en fil)', 'all-one');
   addBtn('Alla (separat)', 'all-separate');
+  addBtn('Exportera mapp', 'folder');
   const currentId = store.current;
   if (currentId) {
     const curChar = store.characters.find(c => c.id === currentId);
@@ -1152,6 +1243,40 @@ function openExportPopup(cb) {
     if (c.id === currentId) continue;
     addBtn(c.name || 'Namnlös', c.id);
   }
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openFolderExportPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('exportPopup');
+  const opts = bar.shadowRoot.getElementById('exportOptions');
+  const cls  = bar.shadowRoot.getElementById('exportCancel');
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+    opts.innerHTML = '';
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  opts.innerHTML = '';
+  const addBtn = (label, value) => {
+    const b = document.createElement('button');
+    b.className = 'char-btn';
+    b.textContent = label;
+    b.addEventListener('click', () => { close(); cb(value); });
+    opts.appendChild(b);
+  };
+  addBtn('Exportera som hel mapp', 'all');
+  addBtn('Exportera separat (en fil)', 'separate');
+  addBtn('Exportera separat (zip)', 'zip');
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
 }
