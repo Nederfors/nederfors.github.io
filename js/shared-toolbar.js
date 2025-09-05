@@ -213,7 +213,7 @@ class SharedToolbar extends HTMLElement {
           <div class="card-desc">
             <div class="filter-group">
               <label for="invSearch">Sök i inventarie</label>
-              <input id="invSearch" type="text" placeholder="Filtrera föremål…" autocomplete="off">
+              <input id="invSearch" type="text" placeholder="T.ex 'Pajkastare'" autocomplete="off">
             </div>
             <div class="filter-group">
               <label for="invTypeFilter">Kategori</label>
