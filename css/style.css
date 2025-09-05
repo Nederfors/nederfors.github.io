@@ -148,7 +148,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 /* Fasta kolumnuppdelningar för konsekvent layout i Formaliteter */
 .char-btn-row.two-col   { grid-template-columns: repeat(2, 1fr); }
 .char-btn-row.three-col { grid-template-columns: repeat(3, 1fr); }
-.char-btn-row.five-col  { grid-template-columns: repeat(5, 1fr); }
+/* Fem kolumner på breda skärmar men bryt till flera rader på mobiler */
+.char-btn-row.five-col  { grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); }
 .char-btn-row.three-col + .char-btn-row.three-col { margin-top: 0; }
 .char-btn-row .char-btn { width: 100%; height: 100%; }
 
