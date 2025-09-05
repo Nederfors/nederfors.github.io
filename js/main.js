@@ -472,7 +472,7 @@ function bindToolbar() {
       if (dom.cName) dom.cName.textContent = newName;
     }
 
-    /* Exportera rollperson --------------------------------- */
+    /* Export rollperson --------------------------------- */
     if (id === 'exportChar') {
       if (!store.characters.length) { await alertPopup('Inga rollpersoner att exportera.'); return; }
       openExportPopup(async choice => {
@@ -502,7 +502,7 @@ function bindToolbar() {
       openFolderManagerPopup();
     }
 
-    /* Importera rollperson -------------------------------- */
+    /* Import rollperson -------------------------------- */
     if (id === 'importChar') {
       (async () => {
         try {
