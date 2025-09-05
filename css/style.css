@@ -1617,7 +1617,13 @@ select.level {
   gap: .8rem;
 }
 #charPopup.open .popup-inner { transform: scale(1); }
-#charPopup .popup-inner button { width: 100%; }
+#charPopup .button-row {
+  display: flex;
+  gap: .6rem;
+}
+#charPopup .button-row button {
+  flex: 1;
+}
 #charPopupContent {
   display: flex;
   flex-direction: column;
