@@ -3,6 +3,7 @@
     if(document.getElementById('artifactPaymentPopup')) return;
     const div=document.createElement('div');
     div.id='artifactPaymentPopup';
+    div.className='popup';
     div.innerHTML=`<div class="popup-inner"><h3>V\u00e4lj betalning</h3><div id="artifactPaymentOpts" class="radio-list"><label class="radio-row"><input type="radio" name="artifactPay" value="cancel">Avbryt</label><label class="radio-row"><input type="radio" name="artifactPay" value="">Obunden</label><label class="radio-row"><input type="radio" name="artifactPay" value="xp">\u20131 erf</label><label class="radio-row"><input type="radio" name="artifactPay" value="corruption">+1 permanent korruption</label></div></div>`;
     document.body.appendChild(div);
   }
