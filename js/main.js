@@ -483,7 +483,7 @@ function bindToolbar() {
           if (mode === 'zip') await exportAllCharactersZipped();
           else if (mode === 'separate') await exportAllCharactersSeparate();
         } else if (choice === 'all-folders') {
-          const mode = await new Promise(res => openAllFoldersPopup(res));
+          const mode = await chooseAllFoldersExportMode();
           if (mode === 'all') await exportAllFoldersAll();
           else if (mode === 'zip') await exportAllFoldersZipped();
           else if (mode === 'separate') await exportAllFoldersSeparate();
@@ -1452,9 +1452,13 @@ function openAllFoldersPopup(cb) {
   };
   addBtn('Separat', 'separate');
   addBtn('Zippade', 'zip');
-  addBtn('En fil', 'all');
+  addBtn('En Fil', 'all');
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
+}
+
+async function chooseAllFoldersExportMode() {
+  return await new Promise(res => openAllFoldersPopup(res));
 }
 
 async function chooseSeparateExportMode() {
