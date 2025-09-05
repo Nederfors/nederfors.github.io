@@ -545,7 +545,6 @@ function bindToolbar() {
             inp.type = 'file';
             inp.accept = 'application/json';
             inp.multiple = true;
-            inp.webkitdirectory = true;
             files = await new Promise((resolve, reject) => {
               inp.addEventListener('change', () => {
                 const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
