@@ -488,14 +488,14 @@ function bindToolbar() {
           else if (mode === 'zip') await exportAllFoldersZipped();
           else if (mode === 'separate') await exportAllFoldersSeparate();
         } else if (choice === 'folder') {
-          const fid = storeHelper.getActiveFolder(store);
-          if (!fid || fid === 'ALL') { await alertPopup('Välj en mapp först.'); return; }
+          const res = await new Promise(r => openFolderExportPopup(r));
+          if (!res) return;
+          const fid = res.folderId;
           const chars = store.characters.filter(c => (c.folderId || '') === fid);
           if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
-          const mode = await new Promise(res => openFolderExportPopup(res));
-          if (mode === 'all') await exportFolderAll(fid);
-          else if (mode === 'separate') await exportFolderSeparate(fid);
-          else if (mode === 'zip') await exportFolderZipped(fid);
+          if (res.mode === 'all') await exportFolderAll(fid);
+          else if (res.mode === 'separate') await exportFolderSeparate(fid);
+          else if (res.mode === 'zip') await exportFolderZipped(fid);
         } else if (choice) {
           await exportCharacterFile(choice);
         }
@@ -1409,16 +1409,35 @@ function openFolderExportPopup(cb) {
     }
   }
   opts.innerHTML = '';
+
+  const sel = document.createElement('select');
+  sel.style.width = '100%';
+  sel.style.marginBottom = '0.5em';
+  const folders = storeHelper.getFolders(store) || [];
+  const active = storeHelper.getActiveFolder(store);
+  for (const f of folders) {
+    const opt = document.createElement('option');
+    opt.value = f.id;
+    opt.textContent = f.name;
+    if (f.id === active) opt.selected = true;
+    sel.appendChild(opt);
+  }
+  opts.appendChild(sel);
+
   const addBtn = (label, value) => {
     const b = document.createElement('button');
     b.className = 'char-btn';
     b.textContent = label;
-    b.addEventListener('click', () => { close(); cb(value); });
+    b.addEventListener('click', () => {
+      const fid = sel.value;
+      close();
+      cb({ folderId: fid, mode: value });
+    });
     opts.appendChild(b);
   };
-  addBtn('Exportera som hel mapp', 'all');
-  addBtn('Exportera separat (en fil)', 'separate');
-  addBtn('Exportera separat (zip)', 'zip');
+  addBtn('Exportera karaktärer i zip', 'zip');
+  addBtn('Exportera karaktärer separat', 'separate');
+  addBtn('Exportera karaktärer som mapp', 'all');
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
 }
