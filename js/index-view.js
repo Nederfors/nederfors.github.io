@@ -274,7 +274,11 @@ function initIndex() {
       const specialId = SECRET_SEARCH[term];
       if (specialId) {
         const hid = DB.find(p => p.id === specialId);
-        if (hid) return [hid];
+        if (hid) {
+          const cat = hid.taggar?.typ?.[0];
+          if (cat) openCatsOnce.add(cat);
+          return [hid];
+        }
       }
       if (!showArtifacts) {
         const hid = DB.find(p => isHidden(p) && !SECRET_IDS.has(p.id) && searchNormalize((p.namn || '').toLowerCase()) === term);
@@ -284,6 +288,8 @@ function initIndex() {
             storeHelper.addRevealedArtifact(store, hid.namn);
             fillDropdowns();
           }
+          const cat = hid.taggar?.typ?.[0];
+          if (cat) openCatsOnce.add(cat);
           return [hid];
         }
       }
@@ -919,7 +925,9 @@ function initIndex() {
     if (!store.current && !(await requireCharacter())) return;
     const name = btn.dataset.name;
     const tr = btn.closest('li').dataset.trait || null;
-    const p  = getEntries().find(x=>x.namn===name);
+    let p  = getEntries().find(x=>x.namn===name);
+    if (!p) p = DB.find(x => x.namn === name);
+    if (!p) return;
     const act = btn.dataset.act;
     const lvlSel = btn.closest('li').querySelector('select.level');
     let   lvl = lvlSel ? lvlSel.value : null;
