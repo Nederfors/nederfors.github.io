@@ -557,6 +557,7 @@ function bindToolbar() {
           }
           let imported = 0;
           for (const file of files) {
+            if (!file.name.toLowerCase().endsWith('.json')) continue;
             try {
               const text = await file.text();
               const obj = JSON.parse(text);
