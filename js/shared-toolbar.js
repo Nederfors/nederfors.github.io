@@ -266,8 +266,8 @@ class SharedToolbar extends HTMLElement {
         </div>
 
         <div class="char-btn-row three-col">
-          <button id="moveToFolder" class="char-btn">Flytta till mapp</button>
           <button id="manageFolders" class="char-btn">Mappar …</button>
+          <button class="char-btn" disabled style="visibility:hidden"></button>
           <button class="char-btn" disabled style="visibility:hidden"></button>
         </div>
 
@@ -567,19 +567,6 @@ class SharedToolbar extends HTMLElement {
           </div>
         </div>
       </div>
-
-      <!-- ---------- Popup Flytta till mapp ---------- -->
-      <div id="moveFolderPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Flytta till mapp</h3>
-          <select id="moveFolderSelect"></select>
-          <div class="button-row" style="margin-top:.6rem;">
-            <button id="moveFolderApply" class="char-btn">Verkställ</button>
-            <button id="moveFolderCancel" class="char-btn danger">Avbryt</button>
-          </div>
-        </div>
-      </div>
-
       <!-- ---------- Popup Mapphanterare ---------- -->
       <div id="folderManagerPopup" class="popup popup-bottom">
         <div class="popup-inner folder-ui">
@@ -803,7 +790,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup','moveFolderPopup','folderManagerPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
