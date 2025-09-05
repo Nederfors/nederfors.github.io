@@ -4,7 +4,7 @@
     const div=document.createElement('div');
     div.id='artifactPaymentPopup';
     div.className='popup';
-    div.innerHTML=`<div class="popup-inner"><p>V\u00e4lj betalning</p><div id="artifactPaymentOpts" class="button-list"><button data-val="" class="char-btn">Obunden</button><button data-val="xp" class="char-btn">\u20131 erf</button><button data-val="corruption" class="char-btn">+1 permanent korruption</button><button data-val="cancel" class="char-btn danger">Avbryt</button></div></div>`;
+    div.innerHTML=`<div class="popup-inner"><p>V\u00e4lj betalning</p><div id="artifactPaymentOpts" class="button-list"><button data-val="" class="char-btn">Obunden</button><button data-val="corruption" class="char-btn">+1 Permanent korruption</button><button data-val="xp" class="char-btn">\u20131 Erfarenhetspo\u00e4ng</button><button data-val="cancel" class="char-btn danger">Avbryt</button></div></div>`;
     document.body.appendChild(div);
   }
 
