@@ -261,7 +261,7 @@ class SharedToolbar extends HTMLElement {
         </div>
         <div class="char-btn-row four-col">
           <button id="deleteChar" class="char-btn danger">Ta bort rollperson</button>
-          <button id="manageFolders" class="char-btn">Folders …</button>
+          <button id="manageFolders" class="char-btn">Mappar</button>
           <button id="importChar" class="char-btn">Import</button>
           <button id="exportChar" class="char-btn">Export</button>
         </div>
