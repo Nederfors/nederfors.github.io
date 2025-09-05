@@ -1344,8 +1344,7 @@ async function saveBlobFile(blob, suggested) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
 }
-
-function openExportPopup(cb) {
+function openChoicePopup(build, cb) {
   const pop  = bar.shadowRoot.getElementById('exportPopup');
   const opts = bar.shadowRoot.getElementById('exportOptions');
   const cls  = bar.shadowRoot.getElementById('exportCancel');
@@ -1359,121 +1358,85 @@ function openExportPopup(cb) {
   }
   function onCancel() { close(); cb(null); }
   function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
+    if (!pop.querySelector('.popup-inner').contains(e.target)) {
       close();
       cb(null);
     }
   }
   opts.innerHTML = '';
-  const addBtn = (label, value) => {
-    const b = document.createElement('button');
-    b.className = 'char-btn';
-    b.textContent = label;
-    b.addEventListener('click', () => { close(); cb(value); });
-    opts.appendChild(b);
-  };
-  addBtn('Alla (en fil)', 'all-one');
-  addBtn('Alla (separat)', 'all-separate');
-  addBtn('Alla (i mappar)', 'all-folders');
-  addBtn('Exportera mapp', 'folder');
-  const currentId = store.current;
-  if (currentId) {
-    const curChar = store.characters.find(c => c.id === currentId);
-    if (curChar) addBtn(curChar.name || 'Namnlös', curChar.id);
-  }
-  for (const c of store.characters) {
-    if (c.id === currentId) continue;
-    addBtn(c.name || 'Namnlös', c.id);
-  }
+  const select = value => { close(); cb(value); };
+  build(opts, select);
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
+}
+
+function openExportPopup(cb) {
+  openChoicePopup((opts, select) => {
+    const addBtn = (label, value) => {
+      const b = document.createElement('button');
+      b.className = 'char-btn';
+      b.textContent = label;
+      b.addEventListener('click', () => select(value));
+      opts.appendChild(b);
+    };
+    addBtn('Alla (en fil)', 'all-one');
+    addBtn('Alla (separat)', 'all-separate');
+    addBtn('Alla (i mappar)', 'all-folders');
+    addBtn('Exportera mapp', 'folder');
+    const currentId = store.current;
+    if (currentId) {
+      const curChar = store.characters.find(c => c.id === currentId);
+      if (curChar) addBtn(curChar.name || 'Namnlös', curChar.id);
+    }
+    for (const c of store.characters) {
+      if (c.id === currentId) continue;
+      addBtn(c.name || 'Namnlös', c.id);
+    }
+  }, cb);
 }
 
 function openFolderExportPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('exportPopup');
-  const opts = bar.shadowRoot.getElementById('exportOptions');
-  const cls  = bar.shadowRoot.getElementById('exportCancel');
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
-    cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
-    opts.innerHTML = '';
-  }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
-      close();
-      cb(null);
+  openChoicePopup((opts, select) => {
+    const sel = document.createElement('select');
+    sel.style.width = '100%';
+    sel.style.marginBottom = '0.5em';
+    const folders = storeHelper.getFolders(store) || [];
+    const active = storeHelper.getActiveFolder(store);
+    for (const f of folders) {
+      const opt = document.createElement('option');
+      opt.value = f.id;
+      opt.textContent = f.name;
+      if (f.id === active) opt.selected = true;
+      sel.appendChild(opt);
     }
-  }
-  opts.innerHTML = '';
+    opts.appendChild(sel);
 
-  const sel = document.createElement('select');
-  sel.style.width = '100%';
-  sel.style.marginBottom = '0.5em';
-  const folders = storeHelper.getFolders(store) || [];
-  const active = storeHelper.getActiveFolder(store);
-  for (const f of folders) {
-    const opt = document.createElement('option');
-    opt.value = f.id;
-    opt.textContent = f.name;
-    if (f.id === active) opt.selected = true;
-    sel.appendChild(opt);
-  }
-  opts.appendChild(sel);
-
-  const addBtn = (label, value) => {
-    const b = document.createElement('button');
-    b.className = 'char-btn';
-    b.textContent = label;
-    b.addEventListener('click', () => {
-      const fid = sel.value;
-      close();
-      cb({ folderId: fid, mode: value });
-    });
-    opts.appendChild(b);
-  };
-  addBtn('Exportera karaktärer i zip', 'zip');
-  addBtn('Exportera karaktärer separat', 'separate');
-  addBtn('Exportera karaktärer som mapp', 'all');
-  cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
+    const addBtn = (label, value) => {
+      const b = document.createElement('button');
+      b.className = 'char-btn';
+      b.textContent = label;
+      b.addEventListener('click', () => select({ folderId: sel.value, mode: value }));
+      opts.appendChild(b);
+    };
+    addBtn('Exportera karaktärer i zip', 'zip');
+    addBtn('Exportera karaktärer separat', 'separate');
+    addBtn('Exportera karaktärer i en fil', 'all');
+  }, cb);
 }
 
 function openAllFoldersPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('exportPopup');
-  const opts = bar.shadowRoot.getElementById('exportOptions');
-  const cls  = bar.shadowRoot.getElementById('exportCancel');
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
-    cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
-    opts.innerHTML = '';
-  }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
-      close();
-      cb(null);
-    }
-  }
-  opts.innerHTML = '';
-  const addBtn = (label, value) => {
-    const b = document.createElement('button');
-    b.className = 'char-btn';
-    b.textContent = label;
-    b.addEventListener('click', () => { close(); cb(value); });
-    opts.appendChild(b);
-  };
-  addBtn('Separat', 'separate');
-  addBtn('Zippade', 'zip');
-  addBtn('En Fil', 'all');
-  cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
+  openChoicePopup((opts, select) => {
+    const addBtn = (label, value) => {
+      const b = document.createElement('button');
+      b.className = 'char-btn';
+      b.textContent = label;
+      b.addEventListener('click', () => select(value));
+      opts.appendChild(b);
+    };
+    addBtn('Separat', 'separate');
+    addBtn('Zippade', 'zip');
+    addBtn('En Fil', 'all');
+  }, cb);
 }
 
 async function chooseAllFoldersExportMode() {
