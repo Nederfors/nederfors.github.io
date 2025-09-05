@@ -2352,8 +2352,22 @@ textarea.auto-resize {
 }
 #artifactPaymentPopup.open .popup-inner { transform: scale(1); }
 #artifactPaymentPopup .popup-inner button { width: 100%; }
+#artifactPaymentPopup .popup-inner .radio-list {
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
 #artifactPaymentPopup .popup-inner .radio-row {
   display: flex;
   align-items: center;
   gap: .6rem;
+  padding: .55rem 1.1rem;
+  border: 1.5px solid var(--border);
+  border-radius: .6rem;
+  background: var(--card);
+  cursor: pointer;
+}
+#artifactPaymentPopup .popup-inner .radio-row input[type="radio"] {
+  accent-color: var(--accent);
+  margin: 0;
 }
