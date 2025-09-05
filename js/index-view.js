@@ -13,6 +13,8 @@ function initIndex() {
   let catsMinimized = false;
   let showArtifacts = false;
   let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
+  const SECRET_SEARCH = { 'pajkastare': 'ar86' };
+  const SECRET_IDS = new Set(Object.values(SECRET_SEARCH));
   // Open matching categories once after certain actions (search/type select)
   let openCatsOnce = new Set();
   // (Removed) Hoppsan no longer auto-syncs with other categories
@@ -23,8 +25,8 @@ function initIndex() {
     const base = DB
       .concat(window.TABELLER || [])
       .concat(storeHelper.getCustomEntries(store));
-    if (showArtifacts) return base;
-    return base.filter(p => !isHidden(p) || revealedArtifacts.has(p.namn));
+    if (showArtifacts) return base.filter(p => !SECRET_IDS.has(p.id));
+    return base.filter(p => (!isHidden(p) || revealedArtifacts.has(p.namn)) && !SECRET_IDS.has(p.id));
   };
   const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
   const isHidden = p => (p.taggar?.typ || []).some(t => ['artefakt','kuriositet','skatt'].includes(String(t).toLowerCase()));
@@ -267,16 +269,23 @@ function initIndex() {
     const nameSet = onlySel
       ? new Set(storeHelper.getCurrentList(store).map(x => x.namn))
       : null;
-    if (!fixedRandomEntries && !showArtifacts && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1) {
+    if (!fixedRandomEntries && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1) {
       const term = terms[0];
-      const hid = DB.find(p => isHidden(p) && searchNormalize((p.namn || '').toLowerCase()) === term);
-      if (hid) {
-        if (!revealedArtifacts.has(hid.namn)) {
-          revealedArtifacts.add(hid.namn);
-          storeHelper.addRevealedArtifact(store, hid.namn);
-          fillDropdowns();
+      const specialId = SECRET_SEARCH[term];
+      if (specialId) {
+        const hid = DB.find(p => p.id === specialId);
+        if (hid) return [hid];
+      }
+      if (!showArtifacts) {
+        const hid = DB.find(p => isHidden(p) && !SECRET_IDS.has(p.id) && searchNormalize((p.namn || '').toLowerCase()) === term);
+        if (hid) {
+          if (!revealedArtifacts.has(hid.namn)) {
+            revealedArtifacts.add(hid.namn);
+            storeHelper.addRevealedArtifact(store, hid.namn);
+            fillDropdowns();
+          }
+          return [hid];
         }
-        return [hid];
       }
     }
     return baseEntries.filter(p=>{
