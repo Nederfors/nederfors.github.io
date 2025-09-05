@@ -401,6 +401,7 @@ class SharedToolbar extends HTMLElement {
           <div id="customArtifactEffect" class="filter-group" style="display:none">
             <label for="artifactEffect">Effekt</label>
             <select id="artifactEffect">
+              <option value="">Obunden</option>
               <option value="corruption">+1 permanent korruption</option>
               <option value="xp">\u20131 erfarenhet</option>
             </select>

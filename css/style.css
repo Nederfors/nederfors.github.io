@@ -2335,3 +2335,25 @@ textarea.auto-resize {
 #onlineModal input {
   width: 100%;
 }
+#artifactPaymentPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: left;
+  transform: scale(.8);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#artifactPaymentPopup.open .popup-inner { transform: scale(1); }
+#artifactPaymentPopup .popup-inner button { width: 100%; }
+#artifactPaymentPopup .popup-inner .radio-row {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}

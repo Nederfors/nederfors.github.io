@@ -1105,7 +1105,7 @@ function defaultTraits() {
       if (row.kvaliteter && row.kvaliteter.length) res.k = row.kvaliteter;
       if (row.gratisKval && row.gratisKval.length) res.gk = row.gratisKval;
       if (row.removedKval && row.removedKval.length) res.rk = row.removedKval;
-      if (row.artifactEffect) res.e = row.artifactEffect;
+      if (row.artifactEffect === 'xp' || row.artifactEffect === 'corruption') res.e = row.artifactEffect;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
       return res;
@@ -1123,7 +1123,7 @@ function defaultTraits() {
           kvaliteter: row.k || [],
           gratisKval: row.gk || [],
           removedKval: row.rk || [],
-          artifactEffect: row.e || '',
+          artifactEffect: row.e === 'xp' || row.e === 'corruption' ? row.e : '',
           nivå: row.l,
           trait: row.t
         };
@@ -1136,7 +1136,7 @@ function defaultTraits() {
           kvaliteter: row.k || [],
           gratisKval: row.gk || [],
           removedKval: row.rk || [],
-          artifactEffect: row.e || '',
+          artifactEffect: row.e === 'xp' || row.e === 'corruption' ? row.e : '',
           nivå: row.l,
           trait: row.t
         };
