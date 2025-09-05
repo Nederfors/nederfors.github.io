@@ -295,42 +295,36 @@ class SharedToolbar extends HTMLElement {
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
-                      <span class="toggle-note">Halverar priset beroende på smideskonstnivå.</span>
                     </span>
                     <button id="partySmith" class="party-toggle">⚒️</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Alkemist i partyt?</span>
-                      <span class="toggle-note">Halverar priset på elixir beroende på alkemistnivå.</span>
                     </span>
                     <button id="partyAlchemist" class="party-toggle">⚗️</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                     <span class="toggle-question">Artefaktmakare i partyt?</span>
-                    <span class="toggle-note">Halverar priset på och tillåter inköp av samtliga lägre artefakter till N/G/M.</span>
                     </span>
                     <button id="partyArtefacter" class="party-toggle">🏺</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
-                      <span class="toggle-question">Utvidga sökningen?</span>
-                      <span class="toggle-note">Bara ett av de markerade filtren behöver matcha.</span>
+                      <span class="toggle-question">Utvidgad sökning?</span>
                     </span>
                     <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Expandera vy?</span>
-                      <span class="toggle-note">Alla kort med entries förutom för ras, yrken och elityrken visas direkt.</span>
                     </span>
                     <button id="entryViewToggle" class="party-toggle" title="Expandera vy">↕️</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
-                      <span class="toggle-question">Tvinga försvarskaraktärsdrag?</span>
-                      <span class="toggle-note">Välj karaktärsdrag via meny.</span>
+                      <span class="toggle-question">Tvinga försvar?</span>
                     </span>
                     <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
                   </li>
