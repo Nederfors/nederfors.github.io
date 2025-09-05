@@ -1222,7 +1222,7 @@ function defaultTraits() {
     }
   }
 
-  /* ---------- 7. Exportera ---------- */
+  /* ---------- 7. Export ---------- */
   global.storeHelper = {
     load,
     save,

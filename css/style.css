@@ -146,6 +146,9 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 .char-btn-row.three-col {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
+.char-btn-row.four-col {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
 .char-btn-row.three-col + .char-btn-row.three-col {
   margin-top: 0;
 }
