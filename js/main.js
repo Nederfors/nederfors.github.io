@@ -482,20 +482,6 @@ function bindToolbar() {
           const mode = await chooseSeparateExportMode();
           if (mode === 'zip') await exportAllCharactersZipped();
           else if (mode === 'separate') await exportAllCharactersSeparate();
-        } else if (choice === 'all-folders') {
-          const mode = await chooseAllFoldersExportMode();
-          if (mode === 'all') await exportAllFoldersAll();
-          else if (mode === 'zip') await exportAllFoldersZipped();
-          else if (mode === 'separate') await exportAllFoldersSeparate();
-        } else if (choice === 'folder') {
-          const res = await new Promise(r => openFolderExportPopup(r));
-          if (!res) return;
-          const fid = res.folderId;
-          const chars = store.characters.filter(c => (c.folderId || '') === fid);
-          if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
-          if (res.mode === 'all') await exportFolderAll(fid);
-          else if (res.mode === 'separate') await exportFolderSeparate(fid);
-          else if (res.mode === 'zip') await exportFolderZipped(fid);
         } else if (choice) {
           await exportCharacterFile(choice);
         }
@@ -1147,179 +1133,6 @@ async function exportAllCharactersZipped() {
   await saveBlobFile(blob, 'Rollpersoner.zip');
 }
 
-function groupCharactersByFolder() {
-  const map = new Map();
-  for (const c of store.characters) {
-    const fid = c.folderId || '';
-    const name = (store.folders || []).find(f => f.id === fid)?.name || '';
-    const data = storeHelper.exportCharacterJSON(store, c.id, false);
-    if (!data) continue;
-    if (!map.has(name)) map.set(name, []);
-    map.get(name).push(data);
-  }
-  return map;
-}
-
-async function exportAllFoldersAll() {
-  const groups = groupCharactersByFolder();
-  if (!groups.size) return;
-  const folders = [];
-  for (const [name, chars] of groups) {
-    folders.push({ folder: name || null, characters: chars });
-  }
-  const jsonText = JSON.stringify({ folders }, null, 2);
-  await saveJsonFile(jsonText, 'Rollpersoner-mappar.json');
-}
-
-async function exportAllFoldersSeparate() {
-  const groups = groupCharactersByFolder();
-  if (!groups.size) return;
-
-  if (window.showDirectoryPicker) {
-    try {
-      const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      for (const [name, chars] of groups) {
-        let baseDir = dirHandle;
-        if (name) {
-          try { baseDir = await dirHandle.getDirectoryHandle(sanitizeFilename(name), { create: true }); } catch {}
-        }
-        for (const data of chars) {
-          const fname = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
-          try {
-            const fileHandle = await baseDir.getFileHandle(`${fname}.json`, { create: true });
-            const writable = await fileHandle.createWritable();
-            await writable.write(JSON.stringify(data, null, 2));
-            await writable.close();
-          } catch (err) {
-            // Skip file on error
-          }
-        }
-      }
-      return;
-    } catch (err) {
-      if (err && err.name === 'AbortError') return;
-    }
-  }
-
-  for (const [name, chars] of groups) {
-    const prefix = name ? `${sanitizeFilename(name)} - ` : '';
-    for (const data of chars) {
-      const fname = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
-      const jsonText = JSON.stringify(data, null, 2);
-      const blob = new Blob([jsonText], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${prefix}${fname}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-      await new Promise(r => setTimeout(r, 100));
-    }
-  }
-}
-
-async function exportAllFoldersZipped() {
-  const groups = groupCharactersByFolder();
-  if (!groups.size) return;
-
-  if (!window.JSZip) {
-    await exportAllFoldersSeparate();
-    return;
-  }
-
-  const zip = new JSZip();
-  for (const [name, chars] of groups) {
-    const zf = name ? zip.folder(sanitizeFilename(name)) : zip;
-    for (const data of chars) {
-      const fname = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
-      zf.file(`${fname}.json`, JSON.stringify(data, null, 2));
-    }
-  }
-  const blob = await zip.generateAsync({ type: 'blob' });
-  await saveBlobFile(blob, 'Rollpersoner-mappar.zip');
-}
-
-async function exportFolderAll(folderId) {
-  const chars = store.characters.filter(c => (c.folderId || '') === folderId);
-  const all = chars
-    .map(c => storeHelper.exportCharacterJSON(store, c.id))
-    .filter(Boolean);
-  if (!all.length) return;
-  const folderName = (store.folders || []).find(f => f.id === folderId)?.name || 'mapp';
-  const jsonText = JSON.stringify(all, null, 2);
-  const suggested = `${sanitizeFilename(folderName)}.json`;
-  await saveJsonFile(jsonText, suggested);
-}
-
-async function exportFolderSeparate(folderId) {
-  const chars = store.characters.filter(c => (c.folderId || '') === folderId);
-  const all = chars
-    .map(c => storeHelper.exportCharacterJSON(store, c.id))
-    .filter(Boolean);
-  if (!all.length) return;
-
-  if (window.showDirectoryPicker) {
-    try {
-      const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
-      const folderName = sanitizeFilename((store.folders || []).find(f => f.id === folderId)?.name || 'mapp');
-      let baseDir = dirHandle;
-      try { baseDir = await dirHandle.getDirectoryHandle(folderName, { create: true }); } catch {}
-      for (const data of all) {
-        const name = (data && data.name) ? data.name : 'rollperson';
-        const fileName = `${sanitizeFilename(name)}.json`;
-        try {
-          const fileHandle = await baseDir.getFileHandle(fileName, { create: true });
-          const writable = await fileHandle.createWritable();
-          await writable.write(JSON.stringify(data, null, 2));
-          await writable.close();
-        } catch (err) {
-          // Skip file on error
-        }
-      }
-      return;
-    } catch (err) {
-      if (err && err.name === 'AbortError') return;
-    }
-  }
-
-  for (const data of all) {
-    const name = (data && data.name) ? data.name : 'rollperson';
-    const jsonText = JSON.stringify(data, null, 2);
-    const blob = new Blob([jsonText], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${sanitizeFilename(name)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-    await new Promise(r => setTimeout(r, 100));
-  }
-}
-
-async function exportFolderZipped(folderId) {
-  const chars = store.characters.filter(c => (c.folderId || '') === folderId);
-  const all = chars
-    .map(c => storeHelper.exportCharacterJSON(store, c.id))
-    .filter(Boolean);
-  if (!all.length) return;
-
-  if (!window.JSZip) {
-    await exportFolderSeparate(folderId);
-    return;
-  }
-
-  const folderName = sanitizeFilename((store.folders || []).find(f => f.id === folderId)?.name || 'mapp');
-  const zip = new JSZip();
-  const zf = zip.folder(folderName);
-  for (const data of all) {
-    const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
-    zf.file(`${name}.json`, JSON.stringify(data, null, 2));
-  }
-  const blob = await zip.generateAsync({ type: 'blob' });
-  await saveBlobFile(blob, `${folderName}.zip`);
-}
 
 async function saveBlobFile(blob, suggested) {
   if (window.showSaveFilePicker) {
@@ -1381,8 +1194,6 @@ function openExportPopup(cb) {
     };
     addBtn('Alla (en fil)', 'all-one');
     addBtn('Alla (separat)', 'all-separate');
-    addBtn('Alla (i mappar)', 'all-folders');
-    addBtn('Exportera mapp', 'folder');
     const currentId = store.current;
     if (currentId) {
       const curChar = store.characters.find(c => c.id === currentId);
@@ -1393,54 +1204,6 @@ function openExportPopup(cb) {
       addBtn(c.name || 'Namnlös', c.id);
     }
   }, cb);
-}
-
-function openFolderExportPopup(cb) {
-  openChoicePopup((opts, select) => {
-    const sel = document.createElement('select');
-    sel.style.width = '100%';
-    sel.style.marginBottom = '0.5em';
-    const folders = storeHelper.getFolders(store) || [];
-    const active = storeHelper.getActiveFolder(store);
-    for (const f of folders) {
-      const opt = document.createElement('option');
-      opt.value = f.id;
-      opt.textContent = f.name;
-      if (f.id === active) opt.selected = true;
-      sel.appendChild(opt);
-    }
-    opts.appendChild(sel);
-
-    const addBtn = (label, value) => {
-      const b = document.createElement('button');
-      b.className = 'char-btn';
-      b.textContent = label;
-      b.addEventListener('click', () => select({ folderId: sel.value, mode: value }));
-      opts.appendChild(b);
-    };
-    addBtn('Exportera karaktärer i zip', 'zip');
-    addBtn('Exportera karaktärer separat', 'separate');
-    addBtn('Exportera karaktärer i en fil', 'all');
-  }, cb);
-}
-
-function openAllFoldersPopup(cb) {
-  openChoicePopup((opts, select) => {
-    const addBtn = (label, value) => {
-      const b = document.createElement('button');
-      b.className = 'char-btn';
-      b.textContent = label;
-      b.addEventListener('click', () => select(value));
-      opts.appendChild(b);
-    };
-    addBtn('Separat', 'separate');
-    addBtn('Zippade', 'zip');
-    addBtn('En Fil', 'all');
-  }, cb);
-}
-
-async function chooseAllFoldersExportMode() {
-  return await new Promise(res => openAllFoldersPopup(res));
 }
 
 async function chooseSeparateExportMode() {
