@@ -259,16 +259,11 @@ class SharedToolbar extends HTMLElement {
           <button id="renameChar" class="char-btn">Byt namn</button>
           <button id="newCharBtn" class="char-btn">Ny rollperson</button>
         </div>
-        <div class="char-btn-row three-col">
+        <div class="char-btn-row four-col">
           <button id="deleteChar" class="char-btn danger">Ta bort rollperson</button>
-          <button id="importChar" class="char-btn">Importera</button>
-          <button id="exportChar" class="char-btn">Exportera</button>
-        </div>
-
-        <div class="char-btn-row three-col">
-          <button id="manageFolders" class="char-btn">Mappar …</button>
-          <button class="char-btn" disabled style="visibility:hidden"></button>
-          <button class="char-btn" disabled style="visibility:hidden"></button>
+          <button id="manageFolders" class="char-btn">Folders …</button>
+          <button id="importChar" class="char-btn">Import</button>
+          <button id="exportChar" class="char-btn">Export</button>
         </div>
 
         <div class="filter-group">
@@ -549,7 +544,7 @@ class SharedToolbar extends HTMLElement {
       <!-- ---------- Popup Export ---------- -->
       <div id="exportPopup" class="popup">
         <div class="popup-inner">
-          <h3>Exportera</h3>
+          <h3>Export</h3>
           <div id="exportOptions"></div>
           <button id="exportCancel" class="char-btn danger">Avbryt</button>
         </div>
@@ -663,7 +658,7 @@ class SharedToolbar extends HTMLElement {
             <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
             <li>Typ, Arketyp, Test: Filtrerar listor.</li>
             <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
-            <li>Exportera/Importera: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
+            <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
             <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
             <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
             <li>🤏 Kompakt vy: Växla kortare listvy.</li>
@@ -733,7 +728,7 @@ class SharedToolbar extends HTMLElement {
           <h3>Data & lagring</h3>
           <ul>
             <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
-            <li>Använd Exportera/Importera under Filter för säkerhetskopior och flytt mellan enheter.</li>
+            <li>Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.</li>
             <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
           </ul>
 
