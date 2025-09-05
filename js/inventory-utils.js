@@ -1166,11 +1166,17 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     const isArtifact = tagTyp.includes('Artefakt');
     const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
-    if (isArtifact && effectVal) {
-      const txt = effectVal === 'corruption'
-        ? '+1 permanent korruption'
-        : '\u20131 erfarenhet';
-      desc += `<br><span class="tag">${txt}</span>`;
+    if (isArtifact) {
+      let txt, cls = 'tag';
+      if (effectVal === 'corruption') {
+        txt = '+1 Permanent korruption';
+      } else if (effectVal === 'xp') {
+        txt = '\u20131 Erfarenhetspo\u00e4ng';
+      } else {
+        txt = 'Obunden';
+        cls += ' unbound';
+      }
+      desc += `<br><span class="${cls}">${txt}</span>`;
     }
     return { desc, rowLevel, freeCnt };
   }

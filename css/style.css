@@ -88,6 +88,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 .tag.mystic    { border: 1.5px solid var(--mystic); }
 .tag.neutral   { border: 1.5px solid var(--neutral); }
 .tag.negative  { border: 1.5px solid var(--negative); }
+.tag.unbound   { border: 1.5px solid #e68181; }
 
 .char-btn,
 .toolbar button,
