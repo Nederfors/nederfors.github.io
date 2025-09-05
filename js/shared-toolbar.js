@@ -261,33 +261,39 @@ class SharedToolbar extends HTMLElement {
         <ul class="card-list">
           <li class="card" data-special="__formal__" id="filterFormalCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Formaliteter 🔎</span></div>
-            <div class="card-desc">
-              <!-- Rad 1: Ny rollperson (fullbredd) -->
-              <div class="char-btn-row">
-                <button id="newCharBtn" class="char-btn">Ny rollperson</button>
-              </div>
-              <!-- Rad 2: Radera rollperson (fullbredd) -->
-              <div class="char-btn-row">
-                <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
-              </div>
-              <!-- Rad 3+4 sammanslagen: Kopiera, Byt namn, Mappar, Export, Import -->
-              <div class="char-btn-row five-col">
-                <button id="duplicateChar" class="char-btn icon" title="Kopiera rollperson" aria-label="Kopiera rollperson">👥</button>
-                <button id="renameChar" class="char-btn icon" title="Byt namn" aria-label="Byt namn">🪪</button>
-                <button id="manageFolders" class="char-btn icon" title="Mappar" aria-label="Mappar">📁</button>
-                <button id="exportChar" class="char-btn icon" title="Export" aria-label="Export">💾</button>
-                <button id="importChar" class="char-btn icon" title="Import" aria-label="Import">📲</button>
-              </div>
+              <div class="card-desc">
+                <!-- Välj rollperson och Aktiv mapp -->
+                <div class="filter-group">
+                  <label for="charSelect">Välj rollperson</label>
+                  <select id="charSelect"></select>
+                </div>
+                <div class="filter-group">
+                  <label for="folderFilter">Aktiv mapp</label>
+                  <select id="folderFilter"></select>
+                </div>
 
-              <!-- Välj rollperson och Aktiv mapp -->
-              <div class="filter-group">
-                <label for="charSelect">Välj rollperson</label>
-                <select id="charSelect"></select>
-              </div>
-              <div class="filter-group">
-                <label for="folderFilter">Aktiv mapp</label>
-                <select id="folderFilter"></select>
-              </div>
+                <!-- Helradsknappar -->
+                <div class="char-btn-row">
+                  <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+                </div>
+                <div class="char-btn-row">
+                  <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
+                </div>
+                <div class="char-btn-row">
+                  <button id="renameChar" class="char-btn">Byt namn</button>
+                </div>
+                <div class="char-btn-row">
+                  <button id="manageFolders" class="char-btn">Mappar</button>
+                </div>
+                <div class="char-btn-row">
+                  <button id="exportChar" class="char-btn">Export</button>
+                </div>
+                <div class="char-btn-row">
+                  <button id="importChar" class="char-btn">Import</button>
+                </div>
+                <div class="char-btn-row">
+                  <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
+                </div>
 
               <!-- Grupp med partymedlemmar och vy-knappar -->
               <div class="filter-group party-toggles">
