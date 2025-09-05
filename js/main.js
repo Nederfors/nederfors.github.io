@@ -482,6 +482,11 @@ function bindToolbar() {
           const mode = await chooseSeparateExportMode();
           if (mode === 'zip') await exportAllCharactersZipped();
           else if (mode === 'separate') await exportAllCharactersSeparate();
+        } else if (choice === 'all-folders') {
+          const mode = await new Promise(res => openAllFoldersPopup(res));
+          if (mode === 'all') await exportAllFoldersAll();
+          else if (mode === 'zip') await exportAllFoldersZipped();
+          else if (mode === 'separate') await exportAllFoldersSeparate();
         } else if (choice === 'folder') {
           const fid = storeHelper.getActiveFolder(store);
           if (!fid || fid === 'ALL') { await alertPopup('Välj en mapp först.'); return; }
@@ -507,20 +512,54 @@ function bindToolbar() {
       (async () => {
         try {
           let files;
-          if (window.showOpenFilePicker) {
-            const handles = await window.showOpenFilePicker({
-              multiple: true,
-              types: [{
-                description: 'JSON',
-                accept: { 'application/json': ['.json'] }
-              }]
+          if (window.showDirectoryPicker) {
+            const pick = await openDialog('Vad vill du importera?', {
+              cancel: true,
+              okText: 'Filer',
+              extraText: 'Mapp',
+              cancelText: 'Avbryt'
             });
-            files = await Promise.all(handles.map(h => h.getFile()));
+            if (pick === 'extra') {
+              try {
+                const dir = await window.showDirectoryPicker({ mode: 'read' });
+                files = await getFilesFromDirectory(dir);
+              } catch (err) {
+                if (err && err.name === 'AbortError') return;
+                throw err;
+              }
+            } else if (pick === true) {
+              if (window.showOpenFilePicker) {
+                const handles = await window.showOpenFilePicker({
+                  multiple: true,
+                  types: [{
+                    description: 'JSON',
+                    accept: { 'application/json': ['.json'] }
+                  }]
+                });
+                files = await Promise.all(handles.map(h => h.getFile()));
+              } else {
+                const inp = document.createElement('input');
+                inp.type = 'file';
+                inp.accept = 'application/json';
+                inp.multiple = true;
+                files = await new Promise((resolve, reject) => {
+                  inp.addEventListener('change', () => {
+                    const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
+                    if (!list) return reject(new Error('Ingen fil vald'));
+                    resolve(list);
+                  });
+                  inp.click();
+                });
+              }
+            } else {
+              return;
+            }
           } else {
             const inp = document.createElement('input');
             inp.type = 'file';
             inp.accept = 'application/json';
             inp.multiple = true;
+            inp.webkitdirectory = true;
             files = await new Promise((resolve, reject) => {
               inp.addEventListener('change', () => {
                 const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
@@ -538,6 +577,15 @@ function bindToolbar() {
               if (Array.isArray(obj)) {
                 for (const item of obj) {
                   try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
+                }
+              } else if (obj && Array.isArray(obj.folders)) {
+                for (const folder of obj.folders) {
+                  const fname = folder.folder || folder.name || '';
+                  if (Array.isArray(folder.characters)) {
+                    for (const item of folder.characters) {
+                      try { if (storeHelper.importCharacterJSON(store, { ...item, folder: fname })) imported++; } catch {}
+                    }
+                  }
                 }
               } else if (obj && Array.isArray(obj.characters)) {
                 for (const item of obj.characters) {
@@ -1026,7 +1074,7 @@ async function exportCharacterFile(id) {
 async function exportAllCharacters() {
   // Export all characters into a single JSON file
   const all = store.characters
-    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
     .filter(Boolean);
   const jsonText = JSON.stringify(all, null, 2);
   const suggested = 'Rollpersoner.json';
@@ -1080,7 +1128,7 @@ async function exportAllCharactersSeparate() {
 
 async function exportAllCharactersZipped() {
   const all = store.characters
-    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
     .filter(Boolean);
   if (!all.length) return;
 
@@ -1097,6 +1145,99 @@ async function exportAllCharactersZipped() {
   }
   const blob = await zip.generateAsync({ type: 'blob' });
   await saveBlobFile(blob, 'Rollpersoner.zip');
+}
+
+function groupCharactersByFolder() {
+  const map = new Map();
+  for (const c of store.characters) {
+    const fid = c.folderId || '';
+    const name = (store.folders || []).find(f => f.id === fid)?.name || '';
+    const data = storeHelper.exportCharacterJSON(store, c.id, false);
+    if (!data) continue;
+    if (!map.has(name)) map.set(name, []);
+    map.get(name).push(data);
+  }
+  return map;
+}
+
+async function exportAllFoldersAll() {
+  const groups = groupCharactersByFolder();
+  if (!groups.size) return;
+  const folders = [];
+  for (const [name, chars] of groups) {
+    folders.push({ folder: name || null, characters: chars });
+  }
+  const jsonText = JSON.stringify({ folders }, null, 2);
+  await saveJsonFile(jsonText, 'Rollpersoner-mappar.json');
+}
+
+async function exportAllFoldersSeparate() {
+  const groups = groupCharactersByFolder();
+  if (!groups.size) return;
+
+  if (window.showDirectoryPicker) {
+    try {
+      const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      for (const [name, chars] of groups) {
+        let baseDir = dirHandle;
+        if (name) {
+          try { baseDir = await dirHandle.getDirectoryHandle(sanitizeFilename(name), { create: true }); } catch {}
+        }
+        for (const data of chars) {
+          const fname = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+          try {
+            const fileHandle = await baseDir.getFileHandle(`${fname}.json`, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(JSON.stringify(data, null, 2));
+            await writable.close();
+          } catch (err) {
+            // Skip file on error
+          }
+        }
+      }
+      return;
+    } catch (err) {
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+
+  for (const [name, chars] of groups) {
+    const prefix = name ? `${sanitizeFilename(name)} - ` : '';
+    for (const data of chars) {
+      const fname = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+      const jsonText = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `${prefix}${fname}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      await new Promise(r => setTimeout(r, 100));
+    }
+  }
+}
+
+async function exportAllFoldersZipped() {
+  const groups = groupCharactersByFolder();
+  if (!groups.size) return;
+
+  if (!window.JSZip) {
+    await exportAllFoldersSeparate();
+    return;
+  }
+
+  const zip = new JSZip();
+  for (const [name, chars] of groups) {
+    const zf = name ? zip.folder(sanitizeFilename(name)) : zip;
+    for (const data of chars) {
+      const fname = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+      zf.file(`${fname}.json`, JSON.stringify(data, null, 2));
+    }
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  await saveBlobFile(blob, 'Rollpersoner-mappar.zip');
 }
 
 async function exportFolderAll(folderId) {
@@ -1233,6 +1374,7 @@ function openExportPopup(cb) {
   };
   addBtn('Alla (en fil)', 'all-one');
   addBtn('Alla (separat)', 'all-separate');
+  addBtn('Alla (i mappar)', 'all-folders');
   addBtn('Exportera mapp', 'folder');
   const currentId = store.current;
   if (currentId) {
@@ -1281,6 +1423,40 @@ function openFolderExportPopup(cb) {
   pop.addEventListener('click', onOutside);
 }
 
+function openAllFoldersPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('exportPopup');
+  const opts = bar.shadowRoot.getElementById('exportOptions');
+  const cls  = bar.shadowRoot.getElementById('exportCancel');
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+    opts.innerHTML = '';
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  opts.innerHTML = '';
+  const addBtn = (label, value) => {
+    const b = document.createElement('button');
+    b.className = 'char-btn';
+    b.textContent = label;
+    b.addEventListener('click', () => { close(); cb(value); });
+    opts.appendChild(b);
+  };
+  addBtn('Separat', 'separate');
+  addBtn('Zippade', 'zip');
+  addBtn('En fil', 'all');
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
 async function chooseSeparateExportMode() {
   const res = await openDialog('Välj exportformat', {
     cancel: true,
@@ -1291,6 +1467,23 @@ async function chooseSeparateExportMode() {
   if (res === 'extra') return 'zip';
   if (res === true) return 'separate';
   return null;
+}
+
+async function getFilesFromDirectory(dirHandle) {
+  const files = [];
+  for await (const [name, handle] of dirHandle.entries()) {
+    if (handle.kind === 'file') {
+      if (name.toLowerCase().endsWith('.json')) {
+        try { files.push(await handle.getFile()); } catch {}
+      }
+    } else if (handle.kind === 'directory') {
+      try {
+        const nested = await getFilesFromDirectory(handle);
+        files.push(...nested);
+      } catch {}
+    }
+  }
+  return files;
 }
 
 function openNilasPopup(cb) {

@@ -1146,7 +1146,7 @@ function defaultTraits() {
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */
-  function exportCharacterJSON(store, id) {
+  function exportCharacterJSON(store, id, includeFolder = true) {
     const charId = id || store.current;
     if (!charId) return null;
     const char = store.characters.find(c => c.id === charId);
@@ -1163,7 +1163,7 @@ function defaultTraits() {
     } catch {}
     return {
       name: char.name,
-      ...(folderName ? { folder: folderName } : {}),
+      ...(includeFolder && folderName ? { folder: folderName } : {}),
       data: stripDefaults({
         ...data,
         list: compressList(data.list),
