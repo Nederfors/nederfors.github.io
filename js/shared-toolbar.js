@@ -264,43 +264,65 @@ class SharedToolbar extends HTMLElement {
           <button class="char-btn icon" data-close="filterPanel">✕</button>
         </header>
 
+        <!-- Sökfilter-kort som samlar relaterade dropdowns -->
+        <div class="card" id="searchFiltersCard">
+          <div class="card-title">Sökfilter</div>
+          <div class="card-desc">
+            <div class="filter-group">
+              <label for="typFilter">Typ</label>
+              <select id="typFilter"></select>
+            </div>
+            <div class="filter-group">
+              <label for="arkFilter">Arketyp</label>
+              <select id="arkFilter"></select>
+            </div>
+            <div class="filter-group">
+              <label for="testFilter">Test</label>
+              <select id="testFilter"></select>
+            </div>
+          </div>
+        </div>
         <ul class="card-list">
           <li class="card" data-special="__formal__" id="filterFormalCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
-              <div class="card-desc">
-                <!-- Välj rollperson och Aktiv mapp -->
-                <div class="filter-group">
-                  <label for="charSelect">Välj rollperson</label>
-                  <select id="charSelect"></select>
-                </div>
-                <div class="filter-group">
-                  <label for="folderFilter">Aktiv mapp</label>
-                  <select id="folderFilter"></select>
-                </div>
+            <div class="card-desc">
+              <!-- Välj rollperson och Aktiv mapp -->
+              <div class="filter-group">
+                <label for="charSelect">Välj rollperson</label>
+                <select id="charSelect"></select>
+              </div>
+              <div class="filter-group">
+                <label for="folderFilter">Aktiv mapp</label>
+                <select id="folderFilter"></select>
+              </div>
 
-                <!-- Helradsknappar -->
-                <div class="char-btn-row">
-                  <button id="newCharBtn" class="char-btn">Ny rollperson</button>
-                </div>
-                <div class="char-btn-row">
-                  <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
-                </div>
-                <div class="char-btn-row">
-                  <button id="renameChar" class="char-btn">Byt namn</button>
-                </div>
-                <div class="char-btn-row">
-                  <button id="manageFolders" class="char-btn">Mapphantering</button>
-                </div>
-                <div class="char-btn-row">
-                  <button id="exportChar" class="char-btn">Exportera</button>
-                </div>
-                <div class="char-btn-row">
-                  <button id="importChar" class="char-btn">Importera</button>
-                </div>
-                <div class="char-btn-row">
-                  <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
-                </div>
-
+              <!-- Helradsknappar -->
+              <div class="char-btn-row">
+                <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="renameChar" class="char-btn">Byt namn</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="manageFolders" class="char-btn">Mapphantering</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="exportChar" class="char-btn">Exportera</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="importChar" class="char-btn">Importera</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
+              </div>
+            </div>
+          </li>
+          <li class="card" data-special="__formal__" id="filterSettingsCard">
+            <div class="card-title"><span><span class="collapse-btn"></span>Inställningar 💡</span></div>
+            <div class="card-desc">
               <!-- Grupp med partymedlemmar och vy-knappar -->
               <div class="filter-group party-toggles">
                 <ul class="toggle-list">
@@ -318,7 +340,7 @@ class SharedToolbar extends HTMLElement {
                   </li>
                   <li>
                     <span class="toggle-desc">
-                    <span class="toggle-question">Artefaktmakare i partyt?</span>
+                      <span class="toggle-question">Artefaktmakare i partyt?</span>
                     </span>
                     <button id="partyArtefacter" class="party-toggle">🏺</button>
                   </li>
@@ -340,31 +362,11 @@ class SharedToolbar extends HTMLElement {
                     </span>
                     <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
                   </li>
-                  
                 </ul>
               </div>
             </div>
           </li>
         </ul>
-        <!-- Sökfilter-kort som samlar relaterade dropdowns -->
-        <div class="card" id="searchFiltersCard">
-          <div class="card-title">Sökfilter</div>
-          <div class="card-desc">
-            <div class="filter-group">
-              <label for="typFilter">Typ</label>
-              <select id="typFilter"></select>
-            </div>
-            <div class="filter-group">
-              <label for="arkFilter">Arketyp</label>
-              <select id="arkFilter"></select>
-            </div>
-            <div class="filter-group">
-              <label for="testFilter">Test</label>
-              <select id="testFilter"></select>
-            </div>
-          </div>
-        </div>
-        <!-- Hjälp ska ligga under Test-menyn -->
         <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
         <div class="card help-card">
           <div class="card-desc">
@@ -862,10 +864,10 @@ class SharedToolbar extends HTMLElement {
   handleClick(e) {
     const btn = e.target.closest('button, a');
     if (!btn) {
-      // Support toggling the Formaliteter card in Filter via title click
-      const title = e.target.closest('#filterFormalCard .card-title');
+      // Support toggling special cards in Filter via title click
+      const title = e.target.closest('#filterFormalCard .card-title, #filterSettingsCard .card-title');
       if (title) {
-        const card = this.shadowRoot.getElementById('filterFormalCard');
+        const card = title.closest('.card');
         card?.classList.toggle('compact');
       }
       return;
@@ -879,9 +881,9 @@ class SharedToolbar extends HTMLElement {
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
 
-    // Collapse/expand formalitetskortet i filterpanelen
-    if (btn.closest('#filterFormalCard') && btn.classList.contains('collapse-btn')) {
-      const card = this.shadowRoot.getElementById('filterFormalCard');
+    // Collapse/expand specialkorten i filterpanelen
+    if (btn.classList.contains('collapse-btn')) {
+      const card = btn.closest('#filterFormalCard, #filterSettingsCard');
       card?.classList.toggle('compact');
     }
   }
@@ -919,8 +921,10 @@ class SharedToolbar extends HTMLElement {
     if (!isOpen) {
       // On first open of Filter panel after refresh, collapse "Formaliteter"
       if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        const formalCard = this.shadowRoot.getElementById('filterFormalCard');
-        if (formalCard && !formalCard.classList.contains('compact')) formalCard.classList.add('compact');
+        const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
+        if (toolsCard && !toolsCard.classList.contains('compact')) toolsCard.classList.add('compact');
+        const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
+        if (settingsCard && !settingsCard.classList.contains('compact')) settingsCard.classList.add('compact');
         this._filterFirstOpenHandled = true;
       }
       panel.classList.add('open');
@@ -933,8 +937,10 @@ class SharedToolbar extends HTMLElement {
     if (panel) {
       // On first open of Filter panel after refresh, collapse "Formaliteter"
       if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        const formalCard = this.shadowRoot.getElementById('filterFormalCard');
-        if (formalCard && !formalCard.classList.contains('compact')) formalCard.classList.add('compact');
+        const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
+        if (toolsCard && !toolsCard.classList.contains('compact')) toolsCard.classList.add('compact');
+        const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
+        if (settingsCard && !settingsCard.classList.contains('compact')) settingsCard.classList.add('compact');
         this._filterFirstOpenHandled = true;
       }
       panel.classList.add('open');
