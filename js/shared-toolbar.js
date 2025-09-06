@@ -5,12 +5,14 @@
      • Off-canvas-paneler: Inventarie, Egenskaper, Filter
      • Popup för kvaliteter
    =========================================================== */
+const FILTER_TOOLS_KEY = 'filterToolsOpen';
+const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
 
 class SharedToolbar extends HTMLElement {
   constructor() {
     super();
     this.attachShadow({ mode: 'open' });
-    // One-time flag: ensure Formaliteter in Filter is collapsed on first open after refresh
+    // One-time flag: ensure filter cards restore state on first open
     this._filterFirstOpenHandled = false;
   }
 
@@ -860,6 +862,19 @@ class SharedToolbar extends HTMLElement {
     this.entryViewToggle = $('entryViewToggle');
   }
 
+  restoreFilterCollapse() {
+    const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
+    const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
+    const toolsVal = localStorage.getItem(FILTER_TOOLS_KEY);
+    const settingsVal = localStorage.getItem(FILTER_SETTINGS_KEY);
+    const toolsOpen = toolsVal === '1';
+    const settingsOpen = settingsVal === '1';
+    if (toolsCard) toolsCard.classList.toggle('compact', !toolsOpen);
+    if (settingsCard) settingsCard.classList.toggle('compact', !settingsOpen);
+    if (toolsVal === null) localStorage.setItem(FILTER_TOOLS_KEY, toolsOpen ? '1' : '0');
+    if (settingsVal === null) localStorage.setItem(FILTER_SETTINGS_KEY, settingsOpen ? '1' : '0');
+  }
+
   /* ------------------------------------------------------- */
   handleClick(e) {
     const btn = e.target.closest('button, a');
@@ -868,7 +883,11 @@ class SharedToolbar extends HTMLElement {
       const title = e.target.closest('#filterFormalCard .card-title, #filterSettingsCard .card-title');
       if (title) {
         const card = title.closest('.card');
-        card?.classList.toggle('compact');
+        if (card) {
+          const isCompact = card.classList.toggle('compact');
+          const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
+          localStorage.setItem(key, isCompact ? '0' : '1');
+        }
       }
       return;
     }
@@ -884,7 +903,11 @@ class SharedToolbar extends HTMLElement {
     // Collapse/expand specialkorten i filterpanelen
     if (btn.classList.contains('collapse-btn')) {
       const card = btn.closest('#filterFormalCard, #filterSettingsCard');
-      card?.classList.toggle('compact');
+      if (card) {
+        const isCompact = card.classList.toggle('compact');
+        const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
+        localStorage.setItem(key, isCompact ? '0' : '1');
+      }
     }
   }
 
@@ -919,12 +942,8 @@ class SharedToolbar extends HTMLElement {
     const isOpen = panel.classList.contains('open');
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
     if (!isOpen) {
-      // On first open of Filter panel after refresh, collapse "Formaliteter"
       if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
-        if (toolsCard && !toolsCard.classList.contains('compact')) toolsCard.classList.add('compact');
-        const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
-        if (settingsCard && !settingsCard.classList.contains('compact')) settingsCard.classList.add('compact');
+        this.restoreFilterCollapse();
         this._filterFirstOpenHandled = true;
       }
       panel.classList.add('open');
@@ -935,12 +954,8 @@ class SharedToolbar extends HTMLElement {
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
     const panel = this.panels[id];
     if (panel) {
-      // On first open of Filter panel after refresh, collapse "Formaliteter"
       if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
-        if (toolsCard && !toolsCard.classList.contains('compact')) toolsCard.classList.add('compact');
-        const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
-        if (settingsCard && !settingsCard.classList.contains('compact')) settingsCard.classList.add('compact');
+        this.restoreFilterCollapse();
         this._filterFirstOpenHandled = true;
       }
       panel.classList.add('open');

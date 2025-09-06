@@ -7,6 +7,8 @@
   // Bring shared currency bases into local scope
   const SBASE = window.SBASE;
   const OBASE = window.OBASE;
+  const INV_TOOLS_KEY = 'invToolsOpen';
+  const INV_INFO_KEY  = 'invInfoOpen';
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -1360,6 +1362,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     /* ---------- kort för formaliteter (uppdelat: verktyg & information) ---------- */
     const toolsKey = '__tools__';
     const infoKey  = '__info__';
+    const toolsLS = localStorage.getItem(INV_TOOLS_KEY) === '1';
+    const infoLS  = localStorage.getItem(INV_INFO_KEY) === '1';
+    if (toolsLS) openKeys.add(toolsKey); else openKeys.delete(toolsKey);
+    if (infoLS)  openKeys.add(infoKey);  else openKeys.delete(infoKey);
     const vehicleBtns = vehicles
       .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`)
       .join('');
@@ -1519,7 +1525,11 @@ ${moneyRow}
     : '<li class="card">Inga föremål.</li>';
 
     /* ---------- skriv ut ---------- */
-    if (dom.invFormal) dom.invFormal.innerHTML = toolsCard + infoCard;
+    if (dom.invFormal) {
+      dom.invFormal.innerHTML = toolsCard + infoCard;
+      localStorage.setItem(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
+      localStorage.setItem(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
+    }
     dom.invList.innerHTML       = itemCards;
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
@@ -1965,8 +1975,12 @@ ${moneyRow}
         const cardTitle = e.target.closest('.card-title');
         if (cardTitle) {
           const li = cardTitle.closest('li.card');
-          li.classList.toggle('compact');
-          updateCollapseBtnState();
+          if (li) {
+            const isCompact = li.classList.toggle('compact');
+            updateCollapseBtnState();
+            const key = li.dataset.special === '__tools__' ? INV_TOOLS_KEY : INV_INFO_KEY;
+            localStorage.setItem(key, isCompact ? '0' : '1');
+          }
           return;
         }
 
