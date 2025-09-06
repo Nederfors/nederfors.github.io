@@ -675,11 +675,11 @@ class SharedToolbar extends HTMLElement {
         <div class="popup-inner">
           <h3>Kopiera rollperson</h3>
           <div class="filter-group">
-            <label for="dupCharName">Namn</label>
-            <input id="dupCharName" type="text" placeholder="Namn på kopia" autocomplete="off">
+            <label for="dupCharName">Namn på klonen:</label>
+            <input id="dupCharName" type="text" placeholder="Boba Fett" autocomplete="off">
           </div>
           <div class="filter-group">
-            <label for="dupCharFolder">Mapp</label>
+            <label for="dupCharFolder">Klona till mappen:</label>
             <select id="dupCharFolder"></select>
           </div>
           <div class="confirm-row">
@@ -694,11 +694,11 @@ class SharedToolbar extends HTMLElement {
         <div class="popup-inner">
           <h3>Byt namn</h3>
           <div class="filter-group">
-            <label for="renameCharName">Namn</label>
-            <input id="renameCharName" type="text" placeholder="Nytt namn" autocomplete="off">
+            <label for="renameCharName">Nytt namn:</label>
+            <input id="renameCharName" type="text" placeholder="Prutt Pruttsson" autocomplete="off">
           </div>
           <div class="filter-group">
-            <label for="renameCharFolder">Mapp</label>
+            <label for="renameCharFolder">Flytta också till mappen:</label>
             <select id="renameCharFolder"></select>
           </div>
           <div class="confirm-row">
