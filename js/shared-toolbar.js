@@ -264,24 +264,6 @@ class SharedToolbar extends HTMLElement {
           <button class="char-btn icon" data-close="filterPanel">✕</button>
         </header>
 
-        <!-- Sökfilter-kort som samlar relaterade dropdowns -->
-        <div class="card" id="searchFiltersCard">
-          <div class="card-title">Sökfilter</div>
-          <div class="card-desc">
-            <div class="filter-group">
-              <label for="typFilter">Typ</label>
-              <select id="typFilter"></select>
-            </div>
-            <div class="filter-group">
-              <label for="arkFilter">Arketyp</label>
-              <select id="arkFilter"></select>
-            </div>
-            <div class="filter-group">
-              <label for="testFilter">Test</label>
-              <select id="testFilter"></select>
-            </div>
-          </div>
-        </div>
         <ul class="card-list">
           <li class="card" data-special="__formal__" id="filterFormalCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
@@ -367,6 +349,24 @@ class SharedToolbar extends HTMLElement {
             </div>
           </li>
         </ul>
+        <!-- Sökfilter-kort som samlar relaterade dropdowns -->
+        <div class="card" id="searchFiltersCard">
+          <div class="card-title">Sökfilter</div>
+          <div class="card-desc">
+            <div class="filter-group">
+              <label for="typFilter">Typ</label>
+              <select id="typFilter"></select>
+            </div>
+            <div class="filter-group">
+              <label for="arkFilter">Arketyp</label>
+              <select id="arkFilter"></select>
+            </div>
+            <div class="filter-group">
+              <label for="testFilter">Test</label>
+              <select id="testFilter"></select>
+            </div>
+          </div>
+        </div>
         <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
         <div class="card help-card">
           <div class="card-desc">
