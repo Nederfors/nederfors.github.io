@@ -9,6 +9,27 @@ function initCharacter() {
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', !compact);
 
+  const charId = store.current || 'default';
+  const STATE_KEY = `charViewState:${charId}`;
+  let catState = {};
+  const loadState = () => {
+    try { return JSON.parse(localStorage.getItem(STATE_KEY)) || {}; }
+    catch { return {}; }
+  };
+  const saveState = () => {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify({ filters: F, cats: catState })); }
+    catch {}
+  };
+  {
+    const saved = loadState();
+    if (saved.filters) {
+      ['search','typ','ark','test'].forEach(k => {
+        if (Array.isArray(saved.filters[k])) F[k] = saved.filters[k];
+      });
+    }
+    catState = saved.cats || {};
+  }
+
   let catsMinimized = false;
   const updateCatToggle = () => {
     catsMinimized = [...document.querySelectorAll('.cat-group > details')]
@@ -447,10 +468,15 @@ function initCharacter() {
     catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      catLi.innerHTML=`<details data-cat="${cat}"${openCats.has(cat) ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      const shouldOpen = catState[cat] !== undefined ? catState[cat] : openCats.has(cat);
+      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
-      detailsEl.addEventListener('toggle', updateCatToggle);
       const listEl=detailsEl.querySelector('ul');
+      detailsEl.addEventListener('toggle', () => {
+        updateCatToggle();
+        catState[cat] = detailsEl.open;
+        saveState();
+      });
       cats[cat].forEach(g=>{
         const p = g.entry;
         const availLvls = LVL.filter(l=>p.nivåer?.[l]);
@@ -538,6 +564,7 @@ function initCharacter() {
       dom.valda.appendChild(catLi);
     });
     updateCatToggle();
+    saveState();
   };
 
   /* custom suggestions above search (entries only, min 2 chars) */
