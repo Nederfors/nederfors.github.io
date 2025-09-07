@@ -340,14 +340,14 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
     }
     const groups=parseGroupRequirements(entry.krav_formagor||'');
     if(!groups.length){
-      await addReq(entry); await addElite(entry, { skipDuplicateConfirm: true }); updateXP(); location.reload(); return;
+      await addReq(entry); await addElite(entry, { skipDuplicateConfirm: true }); updateXP(); if (window.applyCharacterChange) applyCharacterChange(); return;
     }
     openPopup(groups, levels=>{
       if(!levels) return;
       addReq(entry, levels);
       addElite(entry, { skipDuplicateConfirm: true });
       updateXP();
-      location.reload();
+      if (window.applyCharacterChange) applyCharacterChange();
     });
   }
 

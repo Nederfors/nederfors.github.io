@@ -122,5 +122,27 @@
   }
 
   window.initNotes=initNotes;
+  // Allow external refresh when current character changes without reloading
+  window.notesUpdate = function notesUpdate() {
+    try {
+      if (dom && dom.cName) {
+        dom.cName.textContent = (store.characters || []).find(c => c.id === store.current)?.name || '';
+      }
+      if (form) {
+        // Respect current edit mode: if editing, keep editing values; otherwise show saved values
+        if (isEditing) {
+          // Update inputs with store values but keep editing enabled
+          const notes = storeHelper.getNotes(store);
+          fields.forEach(id=>{
+            const el=form.querySelector('#'+id);
+            if (!el) return;
+            el.value = notes[id] || '';
+            if (typeof autoResize === 'function') autoResize(el);
+          });
+        } else {
+          showView();
+        }
+      }
+    } catch {}
+  };
 })(window);
-

@@ -332,7 +332,7 @@ function initCharacter() {
   });
 
   /* Dropdowns baserat på karaktärslista */
-  (()=>{
+  function refreshCharacterFilters(){
     const lst = storeHelper.getCurrentList(store).filter(p=>!isInv(p));
     const sets = { typ:new Set(), ark:new Set(), test:new Set() };
     lst.forEach(p=>{
@@ -344,13 +344,14 @@ function initCharacter() {
         .filter(Boolean)
         .forEach(v=>sets.test.add(v));
     });
-    const fill=(sel,set,lbl)=>sel.innerHTML =
+    const fill=(sel,set,lbl)=>{ if(!sel) return; sel.innerHTML =
       `<option value="">${lbl} (alla)</option>` +
-      [...set].sort().map(v=>`<option>${v}</option>`).join('');
+      [...set].sort().map(v=>`<option>${v}</option>`).join(''); };
     fill(dom.typSel,sets.typ ,'Typ');
     fill(dom.arkSel,sets.ark ,'Arketyp');
     fill(dom.tstSel,sets.test,'Test');
-  })();
+  }
+  refreshCharacterFilters();
 
   const activeTags = ()=>{
     dom.active.innerHTML='';
@@ -374,7 +375,10 @@ function initCharacter() {
         const levelText = Object.values(p.nivåer || {}).join(' ');
         const text = searchNormalize(`${p.namn} ${(p.beskrivning || '')} ${levelText}`.toLowerCase());
         const hasTerms = terms.length > 0;
-        const txt = hasTerms && terms.every(q => text.includes(q));
+        const txt = hasTerms && (
+          union ? terms.some(q => text.includes(q))
+                : terms.every(q => text.includes(q))
+        );
         const tags = p.taggar || {};
         const selTags = [...F.typ, ...F.ark, ...F.test];
         const hasTags = selTags.length > 0;
@@ -423,7 +427,10 @@ function initCharacter() {
       (cats[cat] ||= []).push(g);
       if (searchActive) {
         const name = searchNormalize((g.entry.namn || '').toLowerCase());
-        if (terms.every(q => name.includes(q))) {
+        const union = storeHelper.getFilterUnion(store);
+        const nameOk = union ? terms.some(q => name.includes(q))
+                             : terms.every(q => name.includes(q));
+        if (nameOk) {
           catNameMatch[cat] = true;
         }
       }
@@ -575,6 +582,8 @@ function initCharacter() {
 
   renderSkills(filtered()); activeTags(); updateXP(); renderTraits(); updateSearchDatalist();
   window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); updateSearchDatalist(); };
+  // expose for main.js to refresh dropdowns when switching character
+  window.indexViewRefreshFilters = () => { refreshCharacterFilters(); updateSearchDatalist(); };
 
   dom.catToggle.addEventListener('click', () => {
     const details = document.querySelectorAll('.cat-group > details');
@@ -600,7 +609,12 @@ function initCharacter() {
         e.preventDefault();
         const val = (it.dataset.val || '').trim();
         if (val) {
-          F.search = [val];
+          const union = storeHelper.getFilterUnion(store);
+          if (union) {
+            if (!F.search.includes(val)) F.search.push(val);
+          } else {
+            F.search = [val];
+          }
           if (window.storeHelper?.addRecentSearch) {
             storeHelper.addRecentSearch(store, val);
           }
@@ -675,7 +689,16 @@ function initCharacter() {
         updateSearchDatalist();
         return;
       }
-      F.search = sTemp ? [sTemp] : [];
+      if (sTemp) {
+        const union = storeHelper.getFilterUnion(store);
+        if (union) {
+          if (!F.search.includes(sTemp)) F.search.push(sTemp);
+        } else {
+          F.search = [sTemp];
+        }
+      } else {
+        F.search = [];
+      }
       dom.sIn.value=''; sTemp='';
       activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
     }

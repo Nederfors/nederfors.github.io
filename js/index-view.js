@@ -298,7 +298,10 @@ function initIndex() {
       const levelText = Object.values(p.nivåer || {}).join(' ');
       const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')} ${levelText}`.toLowerCase());
       const hasTerms = terms.length > 0;
-      const txt = hasTerms && terms.every(q => text.includes(q));
+      const txt = hasTerms && (
+        union ? terms.some(q => text.includes(q))
+              : terms.every(q => text.includes(q))
+      );
       const tags = p.taggar || {};
       const selTags = [...F.typ, ...F.ark, ...F.test];
       const hasTags = selTags.length > 0;
@@ -337,7 +340,10 @@ function initIndex() {
       (cats[cat] ||= []).push(p);
       if (searchActive) {
         const name = searchNormalize((p.namn || '').toLowerCase());
-        if (terms.every(q => name.includes(q))) {
+        const union = storeHelper.getFilterUnion(store);
+        const nameOk = union ? terms.some(q => name.includes(q))
+                             : terms.every(q => name.includes(q));
+        if (nameOk) {
           catNameMatch[cat] = true;
         }
       }
@@ -652,7 +658,12 @@ function initIndex() {
         } else {
           const val = (it.dataset.val || '').trim();
           if (val) {
-            F.search = [val];
+            const union = storeHelper.getFilterUnion(store);
+            if (union) {
+              if (!F.search.includes(val)) F.search.push(val);
+            } else {
+              F.search = [val];
+            }
           } else {
             F.search = [];
           }
@@ -823,7 +834,12 @@ function initIndex() {
         return;
       }
       if (sTemp) {
-        F.search = [sTemp];
+        const union = storeHelper.getFilterUnion(store);
+        if (union) {
+          if (!F.search.includes(sTemp)) F.search.push(sTemp);
+        } else {
+          F.search = [sTemp];
+        }
         // If exact name match, open that category once
         const nval = searchNormalize(sTemp.toLowerCase());
         const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
@@ -1377,7 +1393,17 @@ function initIndex() {
             const id = store.current;
             await alertPopup('Karaktären raderas på grund av misstänkt fusk.');
             storeHelper.deleteCharacter(store, id);
-            location.reload();
+            // Soft refresh after deletion: pick next sensible current and re-render
+            try {
+              const active = storeHelper.getActiveFolder(store);
+              const remaining = (store.characters || [])
+                .filter(c => !active || active === 'ALL' || (c.folderId || '') === active)
+                .slice()
+                .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+              store.current = remaining[0]?.id || '';
+              storeHelper.save(store);
+            } catch {}
+            if (window.applyCharacterChange) { applyCharacterChange(); }
             return;
           } else if (cnt === 2) {
             await alertPopup('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');

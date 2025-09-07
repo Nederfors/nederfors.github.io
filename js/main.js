@@ -355,6 +355,54 @@ function boot() {
 /* ===========================================================
    TOOLBAR-LOGIK
    =========================================================== */
+/*
+  Central helper to re-sync all character-bound UI without a full reload.
+  - Keeps current filters/search UI state intact
+  - Re-renders inventory, traits, XP counters, lists, and toolbar widgets
+*/
+function applyCharacterChange() {
+  try {
+    // Make sure global store is the latest (in case caller updated localStorage elsewhere)
+    try { store = storeHelper.load(); } catch {}
+
+    // Refresh select menus and folder filter + XP counters
+    refreshCharSelect();
+
+    // Update visible character name (character and notes views)
+    if (dom.cName) {
+      const nm = (store.characters || []).find(c => c.id === store.current)?.name || '';
+      dom.cName.textContent = nm;
+    }
+
+    // Update toolbar toggles visual state based on current character
+    if (dom.forgeBtn) dom.forgeBtn.classList.toggle('active', Boolean(storeHelper.getPartySmith(store)));
+    if (dom.alcBtn)   dom.alcBtn.classList.toggle('active',   Boolean(storeHelper.getPartyAlchemist(store)));
+    if (dom.artBtn)   dom.artBtn.classList.toggle('active',   Boolean(storeHelper.getPartyArtefacter(store)));
+    if (dom.defBtn)   dom.defBtn.classList.toggle('active',   Boolean(storeHelper.getDefenseTrait(store)));
+
+    // Re-render inventory (includes recalculating traits/XP side-effects)
+    if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+      invUtil.renderInventory();
+    }
+
+    // Update XP counters explicitly (safe no-op if already handled above)
+    if (typeof window.updateXP === 'function') updateXP();
+
+    // Ensure traits panel reflects the new character regardless of inventory path
+    if (typeof window.renderTraits === 'function') renderTraits();
+
+    // Re-render main content depending on view
+    if (typeof window.indexViewRefreshFilters === 'function') window.indexViewRefreshFilters();
+    if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+    if (typeof window.notesUpdate === 'function') window.notesUpdate();
+  } catch (err) {
+    // As a last resort, fall back to reload to avoid a broken UI
+    try { location.reload(); } catch {}
+  }
+}
+// Expose for other modules that want to trigger a full UI sync
+window.applyCharacterChange = applyCharacterChange;
+
 function refreshCharSelect() {
   const folders = (storeHelper.getFolders(store) || []).slice()
     .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
@@ -415,7 +463,7 @@ function bindToolbar() {
   dom.charSel.addEventListener('change', () => {
     store.current = dom.charSel.value;
     storeHelper.save(store);
-    location.reload();
+    applyCharacterChange();
   });
 
   /* Aktiv mapp (folderFilter) */
@@ -436,10 +484,10 @@ function bindToolbar() {
           storeHelper.save(store);
           // Uppdatera visat namn om det finns i denna vy
           if (dom.cName) dom.cName.textContent = firstInFolder.name || '';
-          // I karaktärs-/anteckningsvyn behöver sidan laddas om
+          // Uppdatera vyer utan omladdning
           if (ROLE === 'character' || ROLE === 'notes') {
-            location.reload();
-            return; // avbryt vidare uppdateringar – reload tar över
+            applyCharacterChange();
+            return;
           }
         }
       }
@@ -475,7 +523,7 @@ function bindToolbar() {
         storeHelper.setActiveFolder(store, folderId);
       }
       storeHelper.save(store);
-      location.reload();
+      applyCharacterChange();
     }
 
     /* Kopiera rollperson ----------------------------------- */
@@ -501,7 +549,7 @@ function bindToolbar() {
         }
         store.current = newId;
         storeHelper.save(store);
-        location.reload();
+        applyCharacterChange();
       }
     }
 
@@ -523,7 +571,7 @@ function bindToolbar() {
         const prevActive = storeHelper.getActiveFolder(store);
         if (prevActive !== folderId) storeHelper.setActiveFolder(store, folderId);
         storeHelper.save(store);
-        location.reload();
+        applyCharacterChange();
       } else {
         // Endast namn ändrat – uppdatera UI utan reload
         storeHelper.save(store);
@@ -653,7 +701,7 @@ function bindToolbar() {
             }
           }
           if (imported > 0) {
-            location.reload();
+            applyCharacterChange();
           } else {
             await alertPopup('Felaktig fil.');
           }
@@ -673,7 +721,17 @@ function bindToolbar() {
 
       const idToDel = store.current;
       storeHelper.deleteCharacter(store, idToDel);
-      location.reload();
+      // Pick a sensible next current character (first in active folder), or none
+      try {
+        const active = storeHelper.getActiveFolder(store);
+        const remaining = (store.characters || [])
+          .filter(c => !active || active === 'ALL' || (c.folderId || '') === active)
+          .slice()
+          .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+        store.current = remaining[0]?.id || '';
+        storeHelper.save(store);
+      } catch {}
+      applyCharacterChange();
     }
 
     /* Återställ basegenskaper till 10 ---------------------- */
@@ -886,7 +944,7 @@ function openFolderManagerPopup() {
       if (document.body?.dataset?.role !== 'character') {
         location.href = 'character.html';
       } else {
-        location.reload();
+        applyCharacterChange();
       }
     } else if (action === 'delete') {
       const folders = storeHelper.getFolders(store) || [];
@@ -1858,6 +1916,7 @@ async function requireCharacter() {
       refreshCharSelect();
       if (dom.cName) dom.cName.textContent = store.characters.find(c=>c.id===val)?.name||'';
       close(true);
+      applyCharacterChange();
     }
     async function onNew() {
       const active = storeHelper.getActiveFolder(store);
@@ -1878,6 +1937,7 @@ async function requireCharacter() {
       refreshCharSelect();
       if (dom.cName) dom.cName.textContent = name;
       close(true);
+      applyCharacterChange();
     }
     function onCancel() { close(false); }
 
@@ -1943,7 +2003,7 @@ window.addEventListener('storage', (e)=>{
     // Om ingen rollperson är vald i denna flik – följ med på ändringar
     if (!store || !store.current) {
       store = storeHelper.load();
-      location.reload();
+      applyCharacterChange();
       return;
     }
 
@@ -1961,18 +2021,18 @@ window.addEventListener('storage', (e)=>{
     const nameOld = findName(store);
     const nameNew = findName(incoming);
 
-    const changedCurrent = (
+  const changedCurrent = (
       JSON.stringify(curDataOld ?? null) !== JSON.stringify(curDataNew ?? null)
     ) || (nameOld !== nameNew);
 
     if (changedCurrent) {
       store = storeHelper.load();
-      location.reload();
+      applyCharacterChange();
     }
     // I övriga fall (t.ex. annan flik byter current, eller ändrar annan rollperson)
     // gör vi inget – denna flik fortsätter ostört.
   } catch {
     // Vid minsta fel, falla tillbaka till tidigare beteende för säkerhet
-    try { store = storeHelper.load(); location.reload(); } catch {}
+    try { store = storeHelper.load(); applyCharacterChange(); } catch {}
   }
 });
