@@ -3,6 +3,22 @@
   let form, editBtn, clearBtn, charLink, isEditing=false;
   let catsMinimized = false;
 
+  const charId = store.current || 'default';
+  const STATE_KEY = `notesViewState:${charId}`;
+  let catState = {};
+  const loadState = () => {
+    try { return JSON.parse(localStorage.getItem(STATE_KEY)) || {}; }
+    catch { return {}; }
+  };
+  const saveState = () => {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify({ cats: catState })); }
+    catch {}
+  };
+  {
+    const saved = loadState();
+    catState = saved.cats || {};
+  }
+
   function showView(){
     const notes = storeHelper.getNotes(store);
     fields.forEach(id=>{
@@ -77,10 +93,17 @@
       }
     };
 
-    updateCatToggle();
-    document.querySelectorAll('.note-field').forEach(d => {
-      d.addEventListener('toggle', updateCatToggle);
+    const detailEls = document.querySelectorAll('.note-field');
+    detailEls.forEach(d => {
+      const key = d.querySelector('textarea')?.id || '';
+      if (key && catState[key] === false) d.open = false;
+      d.addEventListener('toggle', () => {
+        if (key) catState[key] = d.open;
+        saveState();
+        updateCatToggle();
+      });
     });
+    updateCatToggle();
 
     if (dom.catToggle) dom.catToggle.addEventListener('click', () => {
       const details = document.querySelectorAll('.note-field');

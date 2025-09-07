@@ -21,6 +21,26 @@ function initIndex() {
   // If set, override filtered list with these entries (from Random:N)
   let fixedRandomEntries = null;
 
+  const STATE_KEY = 'indexViewState';
+  let catState = {};
+  const loadState = () => {
+    try { return JSON.parse(localStorage.getItem(STATE_KEY)) || {}; }
+    catch { return {}; }
+  };
+  const saveState = () => {
+    try { localStorage.setItem(STATE_KEY, JSON.stringify({ filters: F, cats: catState })); }
+    catch {}
+  };
+  {
+    const saved = loadState();
+    if (saved.filters) {
+      ['search','typ','ark','test'].forEach(k => {
+        if (Array.isArray(saved.filters[k])) F[k] = saved.filters[k];
+      });
+    }
+    catState = saved.cats || {};
+  }
+
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
@@ -360,11 +380,15 @@ function initIndex() {
     catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      const shouldOpen = openCats.has(cat) || openCatsOnce.has(cat);
+      const shouldOpen = catState[cat] !== undefined ? catState[cat] : (openCats.has(cat) || openCatsOnce.has(cat));
       catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=catLi.querySelector('ul');
-      detailsEl.addEventListener('toggle', updateCatToggle);
+      detailsEl.addEventListener('toggle', () => {
+        updateCatToggle();
+        catState[cat] = detailsEl.open;
+        saveState();
+      });
       cats[cat].forEach(p=>{
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
@@ -576,8 +600,7 @@ function initIndex() {
     {
       const hopLi = document.createElement('li');
       hopLi.className = 'cat-group';
-      // Preserve Hoppsan's own previous open state only
-      const hopOpen = openCats.has('Hoppsan');
+      const hopOpen = catState['Hoppsan'] !== undefined ? catState['Hoppsan'] : openCats.has('Hoppsan');
       hopLi.innerHTML = `
         <details data-cat="Hoppsan"${hopOpen ? ' open' : ''}>
           <summary>Hoppsan</summary>
@@ -589,15 +612,20 @@ function initIndex() {
       li.dataset.name = 'Hoppsan';
       li.innerHTML = `
 <div class="card-title"><span>Hoppsan, här tog det slut.</span></div>
-        <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;      
-        listEl.appendChild(li);
+        <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;
+      listEl.appendChild(li);
       const detailsEl = hopLi.querySelector('details');
-      detailsEl.addEventListener('toggle', updateCatToggle);
+      detailsEl.addEventListener('toggle', () => {
+        updateCatToggle();
+        catState['Hoppsan'] = detailsEl.open;
+        saveState();
+      });
       dom.lista.appendChild(hopLi);
     }
     updateCatToggle();
     // Only auto-open once per triggering action
     openCatsOnce.clear();
+    saveState();
   };
 
   const updateCatToggle = () => {
@@ -901,8 +929,7 @@ function initIndex() {
       // Reset all filters and state
       storeHelper.setOnlySelected(store, false);
       storeHelper.clearRevealedArtifacts(store);
-      // Ensure we land at top after reload
-      try { sessionStorage.setItem('hoppsanReset', '1'); } catch {}
+      try { localStorage.removeItem(STATE_KEY); sessionStorage.setItem('hoppsanReset', '1'); } catch {}
       // Scroll to top immediately, then refresh the page to restore default state
       window.scrollTo(0, 0);
       location.reload();
