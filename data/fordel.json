@@ -1018,7 +1018,7 @@
   {
     "id": "ford73",
     "namn": "Skuggskärmad",
-    "beskrivning": "Mörkret letar vägar in men möts av ett tunt, tåligt hinnskydd kring själen. Varje gång tillfällig korruption tilldelas tar rollpersonen alltid 1 mindre än tärningsutfallet visar, men aldrig mindre än 1. Denna fördel går bara att ha så länge karaktären inte har någon permanent korruption. Om korruptionströskeln överskrids omvandlas denna fördel till nackdelen 'Korruptionsmagnet'",
+    "beskrivning": "Mörkret letar vägar in men möts av ett tunt, tåligt hinnskydd kring själen. Varje gång tillfällig korruption tilldelas tar rollpersonen alltid 1 mindre än tärningsutfallet visar, men aldrig mindre än 1. Denna fördel går bara att ha så länge karaktären inte har någon permanent korruption. Om karaktären skulle drabbas av permanent korruption så omvandlas denna fördel till nackdelen 'Korruptionsmagnet'",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Fördel"],
@@ -1072,8 +1072,8 @@
   },
   {
     "id": "ford78",
-    "namn": "Giftkännare",
-    "beskrivning": "Rollpersonen har hållit på med gift sedan barnsben, varje nyans i smaken viftar med varningsflaggor och det obehagliga illamåendet verkar som en bekännelse. Rollpersonen som lärt kroppen och näsan vad brygder gör kan namnge dem på lukt och reaktion. Fördelen kan bara väljas av rollpersoner med förmågan Giftbrukare och låter rollpersonen slå mot Listig för att identifiera gifter; om ämnet identifieras korrekt får rollpersonen en andra chans att lyckas med Stark mot dess verkan.",
+    "namn": "Elixirkännare",
+    "beskrivning": "Rollpersonen har hållit på med elixir sedan barnsben, varje nyans i smaken viftar med varningsflaggor och de behagliga dofterna verkar som bekännelser. Rollpersonen som lärt kroppen och näsan vad brygder gör kan namnge dem på lukt och reaktion. Fördelen kan bara väljas av rollpersoner med förmågan Giftbrukare, Medicus eller Alkemist och låter rollpersonen identifiera gifter, elixir och symptom av dessa utan att behöva slå mot Listig för att lyckas.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": ["Fördel"],
