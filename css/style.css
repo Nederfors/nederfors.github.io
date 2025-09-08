@@ -1913,6 +1913,24 @@ select.level {
 }
 .popup-bottom.open .popup-inner { transform: scale(1) !important; }
 
+/* Toast notification */
+.toast {
+  position: fixed;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--panel);
+  color: var(--txt);
+  padding: .6rem 1.2rem;
+  border-radius: .6rem;
+  box-shadow: 0 4px 10px rgba(0,0,0,.3);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .3s ease;
+  z-index: 4000;
+}
+.toast.show { opacity: 1; }
+
 /* Clickable price text in inventory */
 .price-click { cursor: pointer; }
 
