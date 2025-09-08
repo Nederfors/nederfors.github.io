@@ -13,7 +13,7 @@
 
     {
     "id": "neg2",
-    "namn": "Otympligt",
+    "namn": "Otymplig",
     "beskrivning": "Rustningen är svår att röra sig i och dess begränsning är ett poäng högre än annars; en otymplig lätt rustning har begränsning (−3), en medeltung (−4) och en tung (−5).",
     "taggar": {
       "typ": ["Kvalitet"]
