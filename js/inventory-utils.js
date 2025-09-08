@@ -1544,9 +1544,16 @@ ${moneyRow}
     bindMoney();
   }
 
+  function getInvCards() {
+    const formalCards = dom.invFormal ? [...dom.invFormal.querySelectorAll('li.card')] : [];
+    const listCards   = dom.invList   ? [...dom.invList.querySelectorAll('li.card')]   : [];
+    return [...formalCards, ...listCards];
+  }
+
   function updateCollapseBtnState() {
-    if (!dom.collapseAllBtn || !dom.invList) return;
-    const cards = [...dom.invList.querySelectorAll('li.card')];
+    if (!dom.collapseAllBtn) return;
+    const cards = getInvCards();
+    if (!cards.length) return;
     // Follow same pattern as taskbar: ▶ when all collapsed, ▼ when any open
     const allCollapsed = cards.every(li => li.classList.contains('compact'));
     dom.collapseAllBtn.textContent = allCollapsed ? '▶' : '▼';
@@ -1587,9 +1594,16 @@ ${moneyRow}
     };
     if (dom.collapseAllBtn) {
       dom.collapseAllBtn.onclick = () => {
-        const cards = [...dom.invList.querySelectorAll('li.card')];
+        const cards = getInvCards();
         const anyOpen = cards.some(li => !li.classList.contains('compact'));
-        cards.forEach(li => li.classList.toggle('compact', anyOpen));
+        cards.forEach(li => {
+          li.classList.toggle('compact', anyOpen);
+          if (li.dataset.special === '__tools__') {
+            localStorage.setItem(INV_TOOLS_KEY, anyOpen ? '0' : '1');
+          } else if (li.dataset.special === '__info__') {
+            localStorage.setItem(INV_INFO_KEY, anyOpen ? '0' : '1');
+          }
+        });
         updateCollapseBtnState();
       };
     }
