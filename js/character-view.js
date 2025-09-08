@@ -8,6 +8,8 @@ function initCharacter() {
   dom.filterUnion.classList.toggle('active', union);
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', !compact);
+  // Open matching categories once after certain actions (search)
+  let openCatsOnce = new Set();
 
   const charId = store.current || 'default';
   const STATE_KEY = `charViewState:${charId}`;
@@ -494,7 +496,7 @@ function initCharacter() {
     catKeys.forEach(cat=>{
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      const shouldOpen = catState[cat] !== undefined ? catState[cat] : openCats.has(cat);
+      const shouldOpen = catState[cat] !== undefined ? catState[cat] : (openCats.has(cat) || openCatsOnce.has(cat));
       catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=detailsEl.querySelector('ul');
@@ -591,6 +593,7 @@ function initCharacter() {
       dom.valda.appendChild(catLi);
     });
     updateCatToggle();
+    openCatsOnce.clear();
     saveState();
   };
 
@@ -669,6 +672,10 @@ function initCharacter() {
           } else {
             F.search = [val];
           }
+          const nval = searchNormalize(val.toLowerCase());
+          const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
+          const cat = match?.taggar?.typ?.[0];
+          if (cat) openCatsOnce.add(cat);
           if (window.storeHelper?.addRecentSearch) {
             storeHelper.addRecentSearch(store, val);
           }
@@ -750,6 +757,10 @@ function initCharacter() {
         } else {
           F.search = [sTemp];
         }
+        const nval = searchNormalize(sTemp.toLowerCase());
+        const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
+        const cat = match?.taggar?.typ?.[0];
+        if (cat) openCatsOnce.add(cat);
       } else {
         F.search = [];
       }
