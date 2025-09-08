@@ -1126,8 +1126,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         : null
     );
     let desc = '';
-    if (entry.beskrivning && (!isArtifact || isLArtifact)) {
-      desc += formatText(entry.beskrivning);
+    if (!isArtifact || isLArtifact) {
+      desc += abilityHtml(entry, rowLevel);
     }
     const tagList = (tagger.typ || [])
       .concat(explodeTags(tagger.ark_trad), tagger.test || [])
