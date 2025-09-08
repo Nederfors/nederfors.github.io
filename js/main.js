@@ -677,24 +677,45 @@ function bindToolbar() {
               const obj = JSON.parse(text);
               if (Array.isArray(obj)) {
                 for (const item of obj) {
-                  try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
+                  try {
+                    const id = storeHelper.importCharacterJSON(store, item);
+                    if (id) {
+                      imported++;
+                      toast(`${item.name || 'Ny rollperson'} är importerad`);
+                    }
+                  } catch {}
                 }
               } else if (obj && Array.isArray(obj.folders)) {
                 for (const folder of obj.folders) {
                   const fname = folder.folder || folder.name || '';
                   if (Array.isArray(folder.characters)) {
                     for (const item of folder.characters) {
-                      try { if (storeHelper.importCharacterJSON(store, { ...item, folder: fname })) imported++; } catch {}
+                      try {
+                        const id = storeHelper.importCharacterJSON(store, { ...item, folder: fname });
+                        if (id) {
+                          imported++;
+                          toast(`${item.name || 'Ny rollperson'} är importerad`);
+                        }
+                      } catch {}
                     }
                   }
                 }
               } else if (obj && Array.isArray(obj.characters)) {
                 for (const item of obj.characters) {
-                  try { if (storeHelper.importCharacterJSON(store, item)) imported++; } catch {}
+                  try {
+                    const id = storeHelper.importCharacterJSON(store, item);
+                    if (id) {
+                      imported++;
+                      toast(`${item.name || 'Ny rollperson'} är importerad`);
+                    }
+                  } catch {}
                 }
               } else {
                 const res = storeHelper.importCharacterJSON(store, obj);
-                if (res) imported++;
+                if (res) {
+                  imported++;
+                  toast(`${obj.name || 'Ny rollperson'} är importerad`);
+                }
               }
             } catch {
               // ignore and continue to next file
@@ -720,8 +741,10 @@ function bindToolbar() {
       if (!(await confirmPopup(`Ta bort “${char.name}”?`))) return;
 
       const idToDel = store.current;
+      const deletedName = char.name;
       storeHelper.deleteCharacter(store, idToDel);
       // Pick a sensible next current character (first in active folder), or none
+      let newActiveName = '';
       try {
         const active = storeHelper.getActiveFolder(store);
         const remaining = (store.characters || [])
@@ -729,8 +752,10 @@ function bindToolbar() {
           .slice()
           .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
         store.current = remaining[0]?.id || '';
+        newActiveName = remaining[0]?.name || '';
         storeHelper.save(store);
       } catch {}
+      toast(newActiveName ? `${deletedName} är raderad. ${newActiveName} är aktiv` : `${deletedName} är raderad`);
       applyCharacterChange();
     }
 

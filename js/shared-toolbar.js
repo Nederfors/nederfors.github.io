@@ -57,6 +57,20 @@ class SharedToolbar extends HTMLElement {
     window.openDialog  = (msg, opts) => this.openDialog(msg, opts);
     window.alertPopup  = msg => this.openDialog(msg);
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
+    let toastTimer;
+    window.toast = msg => {
+      let el = document.getElementById('toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'toast';
+        el.className = 'toast';
+        document.body.appendChild(el);
+      }
+      el.textContent = msg;
+      el.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    };
 
     // Allow search suggestions to scroll without affecting the page
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
