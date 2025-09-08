@@ -118,6 +118,7 @@ try {
 /* ---------- Grunddata & konstanter ---------- */
 const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
 let   store  = storeHelper.load();                   // Lokal lagring
+let   lastActiveChar = store.current || '';
 
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
@@ -367,11 +368,16 @@ function applyCharacterChange() {
 
     // Refresh select menus and folder filter + XP counters
     refreshCharSelect();
+    const nm = (store.characters || []).find(c => c.id === store.current)?.name || '';
 
     // Update visible character name (character and notes views)
     if (dom.cName) {
-      const nm = (store.characters || []).find(c => c.id === store.current)?.name || '';
       dom.cName.textContent = nm;
+    }
+
+    if (store.current && store.current !== lastActiveChar) {
+      if (nm) toast(`${nm} är aktiv`);
+      lastActiveChar = store.current;
     }
 
     // Update toolbar toggles visual state based on current character
@@ -755,6 +761,7 @@ function bindToolbar() {
         newActiveName = remaining[0]?.name || '';
         storeHelper.save(store);
       } catch {}
+      lastActiveChar = store.current;
       toast(newActiveName ? `${deletedName} är raderad. ${newActiveName} är aktiv` : `${deletedName} är raderad`);
       applyCharacterChange();
     }
