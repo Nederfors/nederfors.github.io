@@ -41,14 +41,6 @@ function initIndex() {
     catState = saved.cats || {};
   }
 
-  const clearFilters = () => {
-    F.search = [];
-    F.typ = [];
-    F.ark = [];
-    F.test = [];
-    saveState();
-  };
-
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
@@ -655,14 +647,8 @@ function initIndex() {
   window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
-  dom.sIn.addEventListener('input',()=>{
-    const prev = sTemp;
+  dom.sIn.addEventListener('input', () => {
     sTemp = dom.sIn.value.trim();
-    if (!prev && sTemp) {
-      clearFilters();
-      activeTags();
-      renderList(filtered());
-    }
     updateSearchDatalist();
   });
   {
