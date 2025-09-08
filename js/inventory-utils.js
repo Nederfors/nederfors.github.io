@@ -1117,6 +1117,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
   function buildRowDesc(entry, row) {
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
+    const isArtifact = tagTyp.includes('Artefakt');
+    const isLArtifact = tagTyp.includes('L\u00e4gre Artefakt');
     const freeCnt = Number(row.gratis || 0);
     const rowLevel = row.nivå || (
       ['Elixir','L\u00e4gre Artefakt','F\u00e4lla'].some(t => tagTyp.includes(t))
@@ -1124,6 +1126,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         : null
     );
     let desc = '';
+    if (entry.beskrivning && (!isArtifact || isLArtifact)) {
+      desc += formatText(entry.beskrivning);
+    }
     const tagList = (tagger.typ || [])
       .concat(explodeTags(tagger.ark_trad), tagger.test || [])
       .map(t => `<span class="tag">${t}</span>`);
@@ -1166,7 +1171,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
     }
 
-    const isArtifact = tagTyp.includes('Artefakt');
     const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
     if (isArtifact) {
       let txt, cls = 'tag';
