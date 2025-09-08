@@ -384,8 +384,9 @@ function initIndex() {
       catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=catLi.querySelector('ul');
-      detailsEl.addEventListener('toggle', () => {
+      detailsEl.addEventListener('toggle', (ev) => {
         updateCatToggle();
+        if (!ev.isTrusted) return;
         catState[cat] = detailsEl.open;
         saveState();
       });
@@ -615,8 +616,9 @@ function initIndex() {
         <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;
       listEl.appendChild(li);
       const detailsEl = hopLi.querySelector('details');
-      detailsEl.addEventListener('toggle', () => {
+      detailsEl.addEventListener('toggle', (ev) => {
         updateCatToggle();
+        if (!ev.isTrusted) return;
         catState['Hoppsan'] = detailsEl.open;
         saveState();
       });
