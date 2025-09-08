@@ -2802,7 +2802,7 @@
     },
     "stat": {
       "skada": "1T6 (paj)",
-      "vikt": 20000
+      "vikt": 50
     },
     "grundpris": {
       "daler": 0,
@@ -3023,5 +3023,45 @@
       "skilling": 0,
       "örtegar": 0
     }
+  },
+{
+  "id": "ar93",
+  "namn": "Titanernas Fot",
+  "kvalitet": [
+    "Massiv",
+    "Banevapen"
+  ],
+  "taggar": {
+    "typ": [
+      "Artefakt",
+      "Vapen"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Reaktiv"
+      ],
+      "Förmåga 2": [
+        "Reaktiv"
+      ],
+      "Förmåga 3": [
+        "Aktiv"
+      ]
+    }
+  },
+  "beskrivning": "Tvåhandshammaren Titanernas Fot var en gång i tiden ägd av en ensam rese som levde högt uppe bland Titanernas toppar. Han använde hammaren för att spränga klippor, forma gångar och resa skyddande murar åt sig själv och de djur han vårdade. Hans slag kunde höras vida omkring, som om själva bergen svarade på hans rytm.\nEn dag vandrade resen bort över kammen för att söka nya betesmarker åt sina flockar. När han återvände fann han sin hall raserad och djuren döda. Rasande över förlusten greppade han hammaren och gick till anfall mot de människor som tagit sig in i hans bergshem. Det sägs att murar, portar och palissader krossades som om de vore av lera under hans framfart, och att marken skälvde under hans steg.\nTill slut försvann resen åter, men hammaren blev kvar bland stenmassorna. Titanernas Fot framstår som en simpel slägga, med ett sprucket skaft och en fattning lindad i tjära. Själva huvudet är kantstött, gjutet i mörk järnsten, och på dess sida syns en enkel blomform ingraverad i ärgad koppar på vardera sida.\n\nKvaliteten “Banevapen” avser gruppen “Människor” och den ärgade blomman lyser upp svagt i närheten av dessa varelser.",
+  "nivåer": {
+    "Förmåga 1": "Titanbrytare; Handling: Reaktiv\nNär användaren svingar Titanernas Fot mot döda ting såsom dörrar, murar, portar eller byggnader, kan hen aktivera Titanbrytare, varpå slaget räknas som ett belägringsslag. Attacken ignorerar strukturens skydd och ger dessutom +1T8 extra skada.\nKorruption: 1.",
+    "Förmåga 2": "Titantakt; Handling: Reaktiv\nBärs hammaren av en karaktär som behärskar Hammarrytm på gesällnivå kan användaren, när denne lyckas pressa en fiende, utlösa en kedja av frislag. Varje frislag kräver först ett lyckat slag Stark mot Stark och därefter ett vanligt slag mot Träffsäker. Så länge båda slagen lyckas fortsätter kedjan, men den bryts om något misslyckas.\nKorruption: 1T4 per frislag.",
+    "Förmåga 3": "Titanmakt; Handling: Aktiv\nGenom att drämma hammaren i marken och lyckas med ett slag mot Stark frigör användaren en jordbävningsliknande kraft som spräcker både fogar och stolpar. Alla byggnader och varelser, även allierade, inom en förflyttning får slå ett slag ett slag på Stark mot Stark, om de misslyckas tar de 1T12 skada. Samtliga fiender i det drabbade området som misslyckas faller dessutom omkull. Robust ger +2 per nivå på slaget, både för användare och offer. Varelser med särdraget Väldig påverkas inte och står orubbat kvar. Titanmakt kan användas i kombination med Titanbrytare, och kraften medför en korruption på 1T6."
+  },
+  "stat": {
+    "skada": "1T10",
+    "vikt": 2.0
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
   }
+}
 ]
