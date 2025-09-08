@@ -401,7 +401,7 @@ class SharedToolbar extends HTMLElement {
           <h3>Nytt föremål</h3>
           <input id="customName" placeholder="Namn">
           <select id="customType"></select>
-          <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt (kg)">
+          <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt">
           <div id="customArtifactEffect" class="filter-group" style="display:none">
             <label for="artifactEffect">Effekt</label>
             <select id="artifactEffect">
