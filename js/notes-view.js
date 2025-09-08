@@ -3,8 +3,8 @@
   let form, editBtn, clearBtn, charLink, isEditing=false;
   let catsMinimized = false;
 
-  const charId = store.current || 'default';
-  const STATE_KEY = `notesViewState:${charId}`;
+  // State for collapsed/expanded note fields, keyed by character id
+  let STATE_KEY = 'notesViewState:default';
   let catState = {};
   const loadState = () => {
     try { return JSON.parse(localStorage.getItem(STATE_KEY)) || {}; }
@@ -14,10 +14,6 @@
     try { localStorage.setItem(STATE_KEY, JSON.stringify({ cats: catState })); }
     catch {}
   };
-  {
-    const saved = loadState();
-    catState = saved.cats || {};
-  }
 
   function showView(){
     const notes = storeHelper.getNotes(store);
@@ -75,6 +71,11 @@
     editBtn = document.getElementById('editBtn');
     clearBtn = document.getElementById('clearBtn');
     charLink = document.getElementById('charLink');
+
+    const charId = (window.store && window.store.current) ? window.store.current : 'default';
+    STATE_KEY = `notesViewState:${charId}`;
+    const saved = loadState();
+    catState = saved.cats || {};
 
     if (dom.cName) {
       dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
