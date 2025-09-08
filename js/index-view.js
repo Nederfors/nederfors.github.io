@@ -1005,7 +1005,6 @@ function initIndex() {
         const qn = p.namn;
         if (!elig[iIdx].kvaliteter.includes(qn)) elig[iIdx].kvaliteter.push(qn);
         invUtil.saveInventory(inv); invUtil.renderInventory();
-        clearFilters();
         activeTags();
         renderList(filtered());
       });
@@ -1472,7 +1471,6 @@ function initIndex() {
         }
       }
     }
-    clearFilters();
     activeTags();
     renderList(filtered());
     renderTraits();
