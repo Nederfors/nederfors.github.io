@@ -277,7 +277,10 @@ class SharedToolbar extends HTMLElement {
       <aside id="filterPanel" class="offcanvas">
         <header class="inv-header">
           <h2>Filter</h2>
-          <button class="char-btn icon" data-close="filterPanel">✕</button>
+          <div class="inv-actions">
+            <button id="collapseAllFilters" class="char-btn icon" title="Öppna alla">▶</button>
+            <button class="char-btn icon" data-close="filterPanel">✕</button>
+          </div>
         </header>
 
         <ul class="card-list">
@@ -874,6 +877,7 @@ class SharedToolbar extends HTMLElement {
       infoPanel  : $('infoPanel')
     };
     this.entryViewToggle = $('entryViewToggle');
+    this.filterCollapseBtn = $('collapseAllFilters');
   }
 
   restoreFilterCollapse() {
@@ -889,6 +893,14 @@ class SharedToolbar extends HTMLElement {
     if (settingsVal === null) localStorage.setItem(FILTER_SETTINGS_KEY, settingsOpen ? '1' : '0');
   }
 
+  updateFilterCollapseBtn() {
+    if (!this.filterCollapseBtn) return;
+    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card')];
+    const allCollapsed = cards.every(c => c.classList.contains('compact'));
+    this.filterCollapseBtn.textContent = allCollapsed ? '▶' : '▼';
+    this.filterCollapseBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
+  }
+
   /* ------------------------------------------------------- */
   handleClick(e) {
     const btn = e.target.closest('button, a');
@@ -901,6 +913,7 @@ class SharedToolbar extends HTMLElement {
           const isCompact = card.classList.toggle('compact');
           const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
           localStorage.setItem(key, isCompact ? '0' : '1');
+          this.updateFilterCollapseBtn();
         }
       }
       return;
@@ -914,6 +927,21 @@ class SharedToolbar extends HTMLElement {
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
 
+    if (btn.id === 'collapseAllFilters') {
+      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card')];
+      const anyOpen = cards.some(c => !c.classList.contains('compact'));
+      cards.forEach(c => {
+        c.classList.toggle('compact', anyOpen);
+        if (c.id === 'filterFormalCard') {
+          localStorage.setItem(FILTER_TOOLS_KEY, c.classList.contains('compact') ? '0' : '1');
+        } else if (c.id === 'filterSettingsCard') {
+          localStorage.setItem(FILTER_SETTINGS_KEY, c.classList.contains('compact') ? '0' : '1');
+        }
+      });
+      this.updateFilterCollapseBtn();
+      return;
+    }
+
     // Collapse/expand specialkorten i filterpanelen
     if (btn.classList.contains('collapse-btn')) {
       const card = btn.closest('#filterFormalCard, #filterSettingsCard');
@@ -921,6 +949,7 @@ class SharedToolbar extends HTMLElement {
         const isCompact = card.classList.toggle('compact');
         const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
         localStorage.setItem(key, isCompact ? '0' : '1');
+        this.updateFilterCollapseBtn();
       }
     }
   }
@@ -960,6 +989,7 @@ class SharedToolbar extends HTMLElement {
         this.restoreFilterCollapse();
         this._filterFirstOpenHandled = true;
       }
+      if (id === 'filterPanel') this.updateFilterCollapseBtn();
       panel.classList.add('open');
       panel.scrollTop = 0;
     }
@@ -972,6 +1002,7 @@ class SharedToolbar extends HTMLElement {
         this.restoreFilterCollapse();
         this._filterFirstOpenHandled = true;
       }
+      if (id === 'filterPanel') this.updateFilterCollapseBtn();
       panel.classList.add('open');
       panel.scrollTop = 0;
     }
