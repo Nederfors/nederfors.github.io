@@ -895,7 +895,7 @@ class SharedToolbar extends HTMLElement {
 
   updateFilterCollapseBtn() {
     if (!this.filterCollapseBtn) return;
-    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card')];
+    const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
     const allCollapsed = cards.every(c => c.classList.contains('compact'));
     this.filterCollapseBtn.textContent = allCollapsed ? '▶' : '▼';
     this.filterCollapseBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
@@ -928,7 +928,7 @@ class SharedToolbar extends HTMLElement {
     if (btn.dataset.close) return this.close(btn.dataset.close);
 
     if (btn.id === 'collapseAllFilters') {
-      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card')];
+      const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
@@ -938,6 +938,9 @@ class SharedToolbar extends HTMLElement {
           localStorage.setItem(FILTER_SETTINGS_KEY, c.classList.contains('compact') ? '0' : '1');
         }
       });
+      // Ensure non-collapsible cards remain open
+      const alwaysOpen = this.shadowRoot.querySelectorAll('#searchFiltersCard, .help-card');
+      alwaysOpen.forEach(c => c.classList.remove('compact'));
       this.updateFilterCollapseBtn();
       return;
     }
