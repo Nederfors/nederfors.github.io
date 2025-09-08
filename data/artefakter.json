@@ -2155,7 +2155,7 @@
     "namn": "Tarragons Grymhet",
     "beskrivning": "En massiv tvåhandshammare av sällsam metall som glöder svagt. Huvudet är täckt av piggtandade taggar och skaftet bär fjäll för säkert grepp. Enligt sägen bands en drakorms döende eld i vapnet av en häxa som miste livet.",
     "kvalitet": [
-      "Massiv",
+      "Massivt",
       "Bräckande"
     ],
     "taggar": {
@@ -2615,7 +2615,7 @@
     "namn": "Frostfällaren",
     "beskrivning": "Frostfällaren är ett mäktigt tvåhandssvärd smitt av iskalla stålhantverkare i de frusna dalar i Ravennerna där ingen annan än iskonungens folk kunde överleva. Svärdet är täckt av frusna runor som lyser svagt i skenet av månens bleka ljus. Dess blad är isigt, lätt blåskimrande och skinande. Dess handtag är gjort av iskristaller som aldrig smälter.\n\nEn gång i forntiden var Frostfällaren en del av den legendariska rustningen som bars av Iskonungen, en mäktig härskare som härskade över de frostiga riken långt bortom skogens dunkel. Iskonungen störtades i en episk strid mot mäktiga mystiker och hjältar, och hans rustning splittrades i bitar. Frostfällaren var det enda av hans arv som överlevde och gömdes sedan djupt i isen, där den sov tills den återigen blev väckt av en modig äventyrare. Det finns dock dom som tror att en del av Iskonungen lever kvar i svärdet och kyligt väntar på att ta över kontrollen när någon olycklig äventyrare av värdig styrka använder sig av svärdet.",
     "kvalitet": [
-      "Massiv",
+      "Massivt",
       "Djupverkande"
     ],
     "taggar": {
@@ -3028,7 +3028,7 @@
   "id": "ar93",
   "namn": "Titanernas Fot",
   "kvalitet": [
-    "Massiv",
+    "Massivt",
     "Banevapen"
   ],
   "taggar": {
