@@ -152,23 +152,49 @@ function initCharacter() {
     }
   };
 
+  function getActiveHandlingKeys(p){
+    return Object.entries(p?.taggar?.handling || {})
+      .filter(([,v]) => Array.isArray(v) && v.includes('Aktiv'))
+      .map(([k]) => k);
+  }
+
+  function handlingName(p, key){
+    if (!LVL.includes(key)) {
+      const txt = p?.nivåer?.[key];
+      if (typeof txt === 'string') {
+        const idx = txt.indexOf(';');
+        return idx >= 0 ? txt.slice(0, idx) : txt;
+      }
+    }
+    return key;
+  }
+
   function conflictEntryHtml(p){
     const compact = storeHelper.getCompactEntries(store);
-    const maxIdx = LVL.indexOf(p.nivå || LVL[0]);
-    const lvlTags = LVL.filter((l, i) => i <= maxIdx && p.taggar?.handling?.[l]?.includes('Aktiv'));
-    const lvlHtml = LVL.filter((_, i) => i <= maxIdx)
-      .map(l => p.taggar?.handling?.[l]?.includes('Aktiv')
-        ? `<dt>${l}</dt><dd>${formatText(p.nivåer?.[l] || '')}</dd>`
-        : '')
+    const activeKeys = getActiveHandlingKeys(p);
+    const activeNames = activeKeys.map(k => handlingName(p, k));
+    const lvlHtml = activeKeys
+      .map(k => {
+        const name = handlingName(p, k);
+        let desc = p.nivåer?.[k] || '';
+        if (!LVL.includes(k) && typeof desc === 'string') {
+          const idx = desc.indexOf(';');
+          desc = idx >= 0 ? desc.slice(idx + 1) : '';
+        }
+        return desc ? `<dt>${name}</dt><dd>${formatText(desc)}</dd>` : '';
+      })
       .filter(Boolean)
       .join('');
-    const tagHtml = compact && lvlTags.length
-      ? `<div class="tags">${lvlTags.map(l=>`<span class="tag">${l}</span>`).join('')}</div>`
+    const tagHtml = compact && activeNames.length
+      ? `<div class="tags">${activeNames.map(n=>`<span class="tag">${n}</span>`).join('')}</div>`
       : '';
     const desc = (!compact && lvlHtml)
       ? `<div class="card-desc"><dl class="levels">${lvlHtml}</dl></div>`
       : '';
-    return `<li class="card${compact ? ' compact' : ''}"><div class="card-title"><span>${p.namn}</span></div>${tagHtml}${desc}</li>`;
+    const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
+      ? `${p.namn}: ${handlingName(p, p.nivå)}`
+      : p.namn;
+    return `<li class="card${compact ? ' compact' : ''}"><div class="card-title"><span>${titleName}</span></div>${tagHtml}${desc}</li>`;
   }
 
   function renderConflicts(list){
@@ -535,9 +561,10 @@ function initCharacter() {
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
         const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-        const activeLvls = LVL.filter((l, i) => i <= LVL.indexOf(p.nivå || LVL[0]) && p.taggar?.handling?.[l]?.includes('Aktiv'));
-        const conflictBtn = activeLvls.length
-          ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeLvls.join(', ')}">💔</button>`
+        const activeKeys = getActiveHandlingKeys(p);
+        const activeNames = activeKeys.map(k => handlingName(p, k));
+        const conflictBtn = activeKeys.length
+          ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeNames.join(', ')}">💔</button>`
           : '';
         const showInfo = compact || hideDetails;
         let btn = '';
@@ -762,23 +789,29 @@ function initCharacter() {
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click', async e=>{
     const conflictBtn = e.target.closest('.conflict-btn');
-    if(conflictBtn){
-      const currentName = conflictBtn.dataset.name;
-      const current = storeHelper.getCurrentList(store).find(x=>x.namn===currentName);
-      const idx = LVL.indexOf(current?.nivå || LVL[0]);
-      const curLvls = LVL.filter((l, i) => i <= idx && current?.taggar?.handling?.[l]?.includes('Aktiv'));
-      const lvlWord = curLvls.length === 1 ? 'nivån' : 'nivåerna';
-      const levelsText = curLvls.length ? ` på ${lvlWord} ${formatLevels(curLvls)}` : '';
-      conflictTitle.textContent = `${currentName}${levelsText} kan ej användas samtidigt som:`;
-      const others = storeHelper.getCurrentList(store)
-        .filter(x => x.namn !== currentName && LVL.some((l, i) =>
-          i <= LVL.indexOf(x.nivå || LVL[0]) && x.taggar?.handling?.[l]?.includes('Aktiv')
-        ));
-      renderConflicts(others);
-      conflictPanel.classList.add('open');
-      conflictPanel.scrollTop = 0;
-      return;
-    }
+      if(conflictBtn){
+        const currentName = conflictBtn.dataset.name;
+        const current = storeHelper.getCurrentList(store).find(x=>x.namn===currentName);
+        const curKeys = getActiveHandlingKeys(current || {});
+        const curNames = curKeys.map(k => handlingName(current || {}, k));
+        let baseName = currentName;
+        let levelsText = '';
+        if (curKeys.length) {
+          if (curKeys.every(k => !LVL.includes(k))) {
+            baseName = `${currentName}: ${curNames.join(', ')}`;
+          } else {
+            const lvlWord = curNames.length === 1 ? 'nivån' : 'nivåerna';
+            levelsText = ` på ${lvlWord} ${formatLevels(curNames)}`;
+          }
+        }
+        conflictTitle.textContent = `${baseName}${levelsText} kan ej användas samtidigt som:`;
+        const others = storeHelper.getCurrentList(store)
+          .filter(x => x.namn !== currentName && getActiveHandlingKeys(x).length);
+        renderConflicts(others);
+        conflictPanel.classList.add('open');
+        conflictPanel.scrollTop = 0;
+        return;
+      }
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       let html=decodeURIComponent(infoBtn.dataset.info||'');
