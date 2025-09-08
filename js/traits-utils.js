@@ -113,6 +113,9 @@
       }
     }
 
+    res.forEach(r => { r.value = Math.max(1, r.value); });
+    hamRes.forEach(r => { r.value = Math.max(1, r.value); });
+
     return res.concat(hamRes);
   }
 
