@@ -41,6 +41,14 @@ function initIndex() {
     catState = saved.cats || {};
   }
 
+  const clearFilters = () => {
+    F.search = [];
+    F.typ = [];
+    F.ark = [];
+    F.test = [];
+    saveState();
+  };
+
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
@@ -648,7 +656,13 @@ function initIndex() {
 
   /* -------- events -------- */
   dom.sIn.addEventListener('input',()=>{
+    const prev = sTemp;
     sTemp = dom.sIn.value.trim();
+    if (!prev && sTemp) {
+      clearFilters();
+      activeTags();
+      renderList(filtered());
+    }
     updateSearchDatalist();
   });
   {
@@ -991,6 +1005,8 @@ function initIndex() {
         const qn = p.namn;
         if (!elig[iIdx].kvaliteter.includes(qn)) elig[iIdx].kvaliteter.push(qn);
         invUtil.saveInventory(inv); invUtil.renderInventory();
+        clearFilters();
+        activeTags();
         renderList(filtered());
       });
       return;
@@ -1456,6 +1472,8 @@ function initIndex() {
         }
       }
     }
+    clearFilters();
+    activeTags();
     renderList(filtered());
     renderTraits();
     if (act==='add') {
