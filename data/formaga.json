@@ -734,7 +734,7 @@
           "Reaktiv"
         ],
         "Gesäll": [
-          "Reaktiv"
+          "Aktiv"
         ],
         "Mästare": [
           "Reaktiv"
@@ -743,7 +743,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen kan dra en pil och hugga med den i närstrid som en reaktion på en närstridsattack mot rollpersonen. Rollpersonen måste lyckas med en vanlig närstridsattack mot anfallaren. Attacken gör 1T6 i skada och pilens kvaliteter (om några) räknas in i attacken.",
-      "Gesäll": "Handling: Reaktiv. Som novis, men 1T8 i skada.",
+      "Gesäll": "Handling: Aktiv. Som novis, men 1T8 i skada. Rollpersonen kan dessutom anfalla med sitt distansvapen i närstrid.",
       "Mästare": "Handling: Reaktiv. Som gesäll, men mästaren får dessutom ett frislag med bågen mot målet, förutsatt att sticket med pilen först träffar. Mästaren sticker först med pilen och (om den träffar) laddar bågen för att skjuta en vanlig pilattack mot målet. Med armborst kräver detta antingen ett laddat armborst från början och att första hugget görs då med ett annat lod, eller så krävs ett repeterarmborst."
     }
   },

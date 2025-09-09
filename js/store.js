@@ -177,11 +177,11 @@
 
   function applyDarkBloodEffects(list) {
     const hasDark = list.some(x => x.namn === 'Mörkt blod');
-    const idxBest = list.findIndex(x => x.namn === 'Bestialisk');
+    const idxBest = list.findIndex(x => x.namn === 'Mörkt förflutet');
 
     if (hasDark) {
       if (idxBest < 0) {
-        const entry = DB.find(x => x.namn === 'Bestialisk');
+        const entry = DB.find(x => x.namn === 'Mörkt förflutet');
         if (entry) list.push({ ...entry });
       }
     }
@@ -210,10 +210,8 @@
   }
 
   function enforceEarthbound(list) {
-    if (list.some(x => x.namn === 'Jordnära')) {
-      const idx = list.findIndex(x => x.namn === 'Mörkt förflutet');
-      if (idx >= 0) list.splice(idx, 1);
-    }
+    // Tidigare blockerades "Mörkt förflutet" av "Jordnära".
+    // Ny regel: tillåtet – ingen borttagning här.
   }
 
   function enforceDwarf(list) {
@@ -302,7 +300,7 @@
     if (name === 'M\u00f6rkt blod') {
       list.forEach(it => {
         const base = HAMNSKIFTE_BASE[it.namn] || it.namn;
-        if (it.namn === 'Bestialisk' || DARK_BLOOD_TRAITS.includes(base)) {
+        if (it.namn === 'Mörkt förflutet' || DARK_BLOOD_TRAITS.includes(base)) {
           if (it.namn !== name) out.push(it.namn);
         }
       });
@@ -941,7 +939,7 @@ function defaultTraits() {
         .map(t => t.toLowerCase())
         .includes('nackdel');
       if (!isDis) return false;
-      if (hasDark && item.namn === 'Bestialisk') return false;
+      if (hasDark && item.namn === 'Mörkt förflutet') return false;
       return true;
     });
   }
@@ -958,7 +956,7 @@ function defaultTraits() {
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) {
       const hasDark = (list || []).some(x => x.namn === 'Mörkt blod');
-      if (entry.namn === 'Bestialisk' && hasDark) return 0;
+      if (entry.namn === 'Mörkt förflutet' && hasDark) return 0;
       const disXp = disadvantagesWithXP(list || []);
       if ((list || []).includes(entry)) {
         return disXp.includes(entry) ? -5 : 0;
@@ -1010,6 +1008,11 @@ function defaultTraits() {
     const perm = calcPermanentCorruption(list, extra);
     if (list.some(e => e.namn === 'Jordnära')) {
       pain -= Math.floor(perm / 2);
+    }
+    // Ny regel: Jordnära + Mörkt förflutet ger ytterligare - (smärtgräns / 6)
+    if (list.some(e => e.namn === 'Jordnära') && list.some(e => e.namn === 'Mörkt förflutet')) {
+      const extraPenalty = Math.floor(pain / 6);
+      pain -= extraPenalty;
     }
     return pain;
   }

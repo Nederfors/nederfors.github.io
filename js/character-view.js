@@ -571,9 +571,22 @@ function initCharacter() {
         const showInfo = compact || hideDetails;
         let btn = '';
         if(multi){
-          const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
-          const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${remBtn}${conflictBtn}${addBtn}</div>`;
+          const isDisadv = (p.taggar?.typ || []).includes('Nackdel');
+          if (isDisadv) {
+            if (total > 0) {
+              const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
+              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
+              const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
+              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${conflictBtn}</div>`;
+            } else {
+              const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
+              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}${conflictBtn}</div>`;
+            }
+          } else {
+            const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
+            const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
+            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${remBtn}${conflictBtn}${addBtn}</div>`;
+          }
         }else{
           btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}<button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
         }
@@ -911,10 +924,7 @@ function initCharacter() {
               return;
           }
         }
-        if(name==='Mörkt förflutet' && before.some(x=>x.namn==='Jordnära')){
-          await alertPopup('Jordnära karaktärer kan inte ta Mörkt förflutet.');
-          return;
-        }
+        // Tidigare blockerades Mörkt förflutet om Jordnära fanns – inte längre.
         if(name==='Packåsna' && before.some(x=>x.namn==='Hafspackare')){
           await alertPopup('Karaktärer med Hafspackare kan inte ta Packåsna.');
           return;
@@ -928,9 +938,10 @@ function initCharacter() {
         if (disAfter === 5 && disBefore < 5) {
           await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
         }
-    }else if(actBtn.dataset.act==='rem'){
-      if(name==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
-        if(!(await confirmPopup('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?')))
+    }else if(actBtn.dataset.act==='sub' || actBtn.dataset.act==='del' || actBtn.dataset.act==='rem'){
+      const act = actBtn.dataset.act;
+      if(name==='Mörkt förflutet' && before.some(x=>x.namn==='Mörkt blod')){
+        if(!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
           return;
       }
       const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
@@ -938,7 +949,8 @@ function initCharacter() {
         if(!(await confirmPopup(name+' hänger ihop med Mörkt blod. Ta bort ändå?')))
           return;
       }
-      if(multi){
+      if (act === 'sub') {
+        // Remove a single instance
         let removed=false;
         list=[];
         for(const it of before){
@@ -947,8 +959,21 @@ function initCharacter() {
           }
           list.push(it);
         }
-      }else{
+      } else if (act === 'del' || (!multi && act === 'rem')) {
+        // Remove all instances (or single non-multi)
         list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
+      } else if (act === 'rem') {
+        // Backward compat: for multi, old 'rem' removed one
+        let removed=false;
+        list=[];
+        for(const it of before){
+          if(!removed && it.namn===name && !it.trait){
+            removed=true; continue;
+          }
+          list.push(it);
+        }
+      } else {
+        return;
       }
       const removed = before.find(it => it.namn===name && (tr?it.trait===tr:!it.trait));
       const remDeps = storeHelper.getDependents(before, removed);

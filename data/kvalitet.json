@@ -4,7 +4,11 @@
     "namn": "Balanserat",
     "beskrivning": "Föremålet är så pass balanserat att det är extra effektivt att parera med. Föremålet ger +1 i Försvar.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet",
+        "Sköldkvalitet"
+      ]
     }
   },
   {
@@ -12,16 +16,21 @@
     "namn": "Djupverkande",
     "beskrivning": "Vapnet har kvaliteter som gör det mer skadande. Antingen går dess spets enklare genom rustning eller så är vapnet massivt och får därför extra krossande egenskaper. Oavsett vilket gör vapnet +1 i skada.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
-
   {
     "id": "kv3",
     "namn": "Ledat",
     "beskrivning": "Vapnet är ledat, vapenhuvudet slår runt parerande vapen och sköldkanter och är därmed svårparerat. Kättingens längd gör också attacker svåra att undvika. Även vid ett lyckat försvar träffar fienden om Försvaret sker på ett udda utfall på tärningen; då träffar vapnet ändå, med 1t6 i skada. Inga förmågor påverkar denna sekundära skada, den är 1t6 oavsett anfallarens övriga förmågor.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -29,7 +38,10 @@
     "namn": "Precist",
     "beskrivning": "Vapnet är designat för att vara extra lätt att träffa med och ger +1 vid anfallsslag.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -37,16 +49,22 @@
     "namn": "Smidigt",
     "beskrivning": "Rustningen är ovanligt smidig och dess begränsning är lägre. En smidig lätt rustning har ingen begränsning, medan en smidig medeltung rustning får (−1) och en tung rustning har begränsning −2. En sköld som är smidig kan bäras på armen, redo att parera med, samtidigt som båda händerna används till annat, exempelvis ett långt eller tungt vapen. Även avståndsvapen kan användas utan problem tillsammans med en smidig sköld.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Sköldkvalitet",
+        "Rustningskvalitet"
+      ]
     }
   },
-  
   {
     "id": "kv6",
     "namn": "Blodsgjutande",
     "beskrivning": "Vapnet orsakar skador, öppna eller interna, som blöder med takten av 1 Tålighet per runda. Blödningen uppträder rundan efter en skadande träff. Effekten är kumulativ,; ytterligare skadande träffar ger mer skada till följd av blodförlust. Blodflödet hejdas med Första hjälpen eller motsvarande.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -54,7 +72,11 @@
     "namn": "Dold",
     "beskrivning": "Vapnet eller rustningen uppfattas normalt inte alls, eller tolkas som ett vardagligt objekt och inte som ett skydd eller vapen. Endast om någon aktivt genomsöker bäraren slås ett [Diskret←Vaksam], annars går objektet onoterat betraktaren förbi. Normalt får de man möter slå för att se dolda vapen redan vid första anblicken.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet",
+        "Rustningskvalitet"
+      ]
     }
   },
   {
@@ -62,7 +84,10 @@
     "namn": "Förstärkt",
     "beskrivning": "Rustningen är förstärkt relativt andra rustningar i samma kategori (lätt, medeltungt, tungt) vilket gör att bäraren får lägga +1 till dess tärningsslag.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Rustningskvalitet"
+      ]
     }
   },
   {
@@ -70,7 +95,10 @@
     "namn": "Massivt",
     "beskrivning": "Vapnet är så massivt att andra tunga vapen ser beskedliga ut i jämförelse. Skada med vapnet får en andra chans att lyckas, det vill säga skadetärningen för vapnet slås två gånger och det bästa värdet väljs. Detta gäller endast vapnets egen skadetärning, inte andra tilläggstärningar från förmågor, krafter, andra kvaliteter eller elixir med mera.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -78,7 +106,10 @@
     "namn": "Raserande",
     "beskrivning": "Vapnet har sin huvudsakliga effekt på byggnationer snarare än levande varelser; dess precision är inte sådan att det lämpar sig för verkan mot trupp utan riktas mot fortifikationer eller platser på ett slagfält. Verkan mot fortifikationer är avsevärd och upprepade träffar raserar strukturen – ett torn faller samman, en mur rämnar, en port krossas och en anfallare får en öppen väg in i byggnaden. Varelser som befinner sig där ett raserande vapen träffar tar omedelbart skada, rustning skyddar ej men offret tar hälften i skada vid ett lyckat Försvar. En varelse som befinner sig i eller på en struktur som rasar samman dör eller blir döende om inte ett lyckat slag slås i Försvar; då tar varelsen istället skada, rustning skyddar ej. Varelsen begravs dessutom i rasmassor och det tar resten av scenen för varelsen att gräva sig ut.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -86,7 +117,10 @@
     "namn": "Snärjande",
     "beskrivning": "Vapnet kan användas för att fånga en fiende, vilket görs med ett lyckat [Träffsäker←Kvick]. En snärjd fiende kan inte förflytta sig och får en andra chans att misslyckas med alla framgångsslag. Varje försök att komma loss är en stridshandling och kräver att anfallaren återigen lyckas med [Träffsäker←Kvick] för att behålla sitt grepp om offret. Snärjande närstridsvapen kan användas för att försöka fälla en motståndare, vilket är en ytterligare stridshandling och kräver ett lyckat [Stark←Stark]. En fälld fiende kan inte ställa sig upp innan denne kommit loss. Ett vapen med kvaliteten Snärjande kan dessutom användas på mer avancerade sätt med förmågan Snärjande strid (se sidan 69).",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -94,7 +128,10 @@
     "namn": "Täckande",
     "beskrivning": "Skölden är så pass stor att den helt täcker skottfältet i en riktning; skyttar måste förflytta sig i sidled för att få skottvinkel på bäraren. En andra person som går tätt bakom den täckande sköldens bärare får samma skydd som bäraren, dvs. skottfältet täcks i sköldens riktning för bäraren och ytterligare en person i direkt närhet till sköldbäraren.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Sköldkvalitet"
+      ]
     }
   },
   {
@@ -102,7 +139,10 @@
     "namn": "Ytverkande (radie)",
     "beskrivning": "Vapnets effekt sprider sig ut från en punkt och skadar alla som befinner sig inom en cirkulär verkansområde. Ett slag slås för varje varelse inom området; de som träffas tar full skada, de som lyckas med Försvar tar halv skada. Pågående följdeffekter som eld eller syra påverkar endast de som tar full skada av den initiala effekten. Ytverkande (radie) förekommer i två varianter: Närstridsradie (1–2 meter), vilket innefattar en varelse och de närmaste angränsande; och Kort radie (10 meter), vilket innefattar alla inom en förflyttnings avstånd från den centrala punkten.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -110,7 +150,10 @@
     "namn": "Ytverkande (kon)",
     "beskrivning": "Vapnets effekt breder ut sig i en konformad area framför användaren och påverkar alla inom detta område. Ett slag slås för varje varelse i konen; de som träffas tar full skada, de som lyckas med Försvar tar halv skada. Följdeffekter som eld eller syra påverkar endast de som tar full skada av den initiala effekten. Om konen används på ett rutnät är den lika bred som dess längd. Vid närstrid är konen 1–2 meter bred, på kort håll cirka 10 meter, och på medellångt håll cirka 20 meter.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -118,7 +161,10 @@
     "namn": "Återvändande",
     "beskrivning": "Vapnet har egenskaper som gör att det i en skicklig kastares hand kan fås att återvända till kastaren om kastet missar målet (kräver ett lyckat Träffsäker, fri handling).",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     }
   },
   {
@@ -126,27 +172,43 @@
     "namn": "Speciell",
     "beskrivning": "Kvalitetens effekt förklaras i utrustningens beskrivning",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Allmän kvalitet"
+      ]
     }
   },
-
   {
     "id": "kv17",
     "namn": "Genomträngande",
     "beskrivning": "Vapnet ignorerar 1 i Bepansring vid träff, gäller bara mot rustningar.",
-    "taggar": { "typ": ["Kvalitet"] }
+    "taggar": {
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
+    }
   },
   {
     "id": "kv18",
     "namn": "Skottfast",
     "beskrivning": "Rustningen ger +1t4 i Bepansring mot avståndsattacker.",
-    "taggar": { "typ": ["Kvalitet"] }
+    "taggar": {
+      "typ": [
+        "Kvalitet",
+        "Rustningskvalitet"
+      ]
+    }
   },
   {
     "id": "kv19",
     "namn": "Snabbhölster",
     "beskrivning": "Att dra eller byta till detta vapen är en fri handling.",
-    "taggar": { "typ": ["Kvalitet"] }
+    "taggar": {
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
+    }
   }
-
 ]

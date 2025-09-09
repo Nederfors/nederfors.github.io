@@ -318,7 +318,7 @@ function initIndex() {
       const levelText = Object.values(p.nivåer || {}).join(' ');
       const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')} ${levelText}`.toLowerCase());
       const hasTerms = terms.length > 0;
-      const txt = hasTerms && (
+      const txtHit = hasTerms && (
         union ? terms.some(q => text.includes(q))
               : terms.every(q => text.includes(q))
       );
@@ -330,13 +330,19 @@ function initIndex() {
         ...explodeTags(tags.ark_trad),
         ...(tags.test     ?? [])
       ];
-      const tagOk = !hasTags || (
+      const tagHit = hasTags && (
         union ? selTags.some(t => itmTags.includes(t))
               : selTags.every(t => itmTags.includes(t))
       );
-      const txtOk  = !hasTerms || txt;
+      const tagOk = !hasTags || tagHit;
+      const txtOk  = !hasTerms || txtHit;
       const selOk = !onlySel || nameSet.has(p.namn);
-      return tagOk && txtOk && selOk;
+      // In utvidgad (union) läge: tillåt träff om texten ELLER taggarna matchar
+      // även om de andra filtret pekar på annan kategori.
+      const combinedOk = union
+        ? ((hasTags || hasTerms) ? (tagHit || txtHit) : true)
+        : (tagOk && txtOk);
+      return combinedOk && selOk;
     }).sort(createSearchSorter(terms));
   };
 
@@ -1201,10 +1207,7 @@ function initIndex() {
             if (!(await confirmPopup('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?'))) return;
           }
         }
-        if (p.namn === 'Mörkt förflutet' && list.some(x => x.namn === 'Jordnära')) {
-          await alertPopup('Jordnära karaktärer kan inte ta Mörkt förflutet.');
-          return;
-        }
+        // Tidigare blockerades Mörkt förflutet om Jordnära fanns – inte längre.
         if (isSardrag(p) && (p.taggar.ras || []).length && !(isMonstrousTrait(p) && monsterOk)) {
           const races = [];
           const base = list.find(isRas)?.namn;
@@ -1355,8 +1358,8 @@ function initIndex() {
       } else {
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
-        if(p.namn==='Bestialisk' && before.some(x=>x.namn==='Mörkt blod')){
-          if(!(await confirmPopup('Bestialisk hänger ihop med Mörkt blod. Ta bort ändå?')))
+        if(p.namn==='Mörkt förflutet' && before.some(x=>x.namn==='Mörkt blod')){
+          if(!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
             return;
         }
         const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;

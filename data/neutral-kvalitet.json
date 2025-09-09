@@ -4,27 +4,35 @@
     "namn": "Kort",
     "beskrivning": "Vapnet är litet och kan dras som en fri handling, samt kan användas med förmågan Fint.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     },
     "neutral": true
   },
-
-   {
+  {
     "id": "neu2",
     "namn": "Långt",
     "beskrivning": "Vapnet har en längdfördel och ger en gång per runda ett frislag mot en nyanländ närstridsmotståndare som inte bär ett långt vapen (se sid 159).",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     },
     "neutral": true
   },
-
   {
     "id": "neu3",
     "namn": "Bastardvapen",
     "beskrivning": "Vapnet kan användas i både en och två händer, även om vapnet främst kommer till sin rätt när det används med båda händerna. Bastardvapnet tappar sina kvaliteter om det används med en hand, men då kan användaren också använda sköld vilket i vissa lägen är att föredra. En annan fördel är att vapnet kan användas till häst, hållet i en hand tills ryttaren sitter av och då kan nyttja dess fulla tvåhandskraft.",
     "taggar": {
-      "typ": ["Kvalitet"]
+      "typ": [
+        "Kvalitet",
+        "Vapenkvalitet"
+      ]
     },
     "neutral": true
-  }]
+  }
+]

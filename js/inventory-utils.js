@@ -303,7 +303,42 @@
     const add   = root.getElementById('customAdd');
     const cancel= root.getElementById('customCancel');
 
-    const equipOptions = EQUIP
+    // Hämta vapentyper och rustningssubtyper från DB (fallback till hårdkodade)
+    const deriveSubtypes = () => {
+      try {
+        const db = window.DB || [];
+        const wSet = new Set();
+        const rSet = new Set();
+        for (const e of db) {
+          const typs = (e.taggar?.typ) || [];
+          if (typs.includes('Vapen')) {
+            for (const t of typs) if (t !== 'Vapen' && t !== 'Sköld') wSet.add(t);
+          }
+          if (typs.includes('Rustning')) {
+            for (const t of typs) if (t !== 'Rustning') rSet.add(t);
+          }
+        }
+        return {
+          weapon: Array.from(wSet),
+          armor : Array.from(rSet)
+        };
+      } catch {
+        return {
+          weapon: ['Enhandsvapen','Korta vapen','Långa vapen','Tunga vapen','Obeväpnad attack','Projektilvapen','Belägringsvapen'],
+          armor : ['Lätt Rustning','Medeltung Rustning','Tung Rustning']
+        };
+      }
+    };
+    const SUB = deriveSubtypes();
+
+    // Alla valbara typer för custom: basutrustning + vapen- och rustningssubtyper
+    const allTypes = Array.from(new Set([
+      ...EQUIP,
+      ...SUB.weapon,
+      ...SUB.armor
+    ]));
+
+    const equipOptions = allTypes
       .slice()
       .sort((a, b) => catName(a).localeCompare(catName(b)))
       .map(t => `<option value="${t}">${catName(t)}</option>`)
@@ -334,9 +369,17 @@
       type.removeEventListener('change', onType);
     };
     const onAdd = () => {
+      // Om användaren väljer en specifik vapentyp eller rustningssubtyp,
+      // lägg automatiskt till primärtagn "Vapen" respektive "Rustning".
+      const tVal = (type.value || '').trim();
+      const isWeaponSub = SUB.weapon.includes(tVal);
+      const isArmorSub  = SUB.armor.includes(tVal);
+      const typTags = isWeaponSub ? ['Vapen', tVal]
+                    : isArmorSub  ? ['Rustning', tVal]
+                    : [tVal];
       const entry = {
         namn: name.value.trim(),
-        taggar: { typ: [type.value] },
+        taggar: { typ: typTags },
         vikt: Number(wIn.value)||0,
         grundpris: {
           daler: Math.max(0, Number(dIn.value)||0),
@@ -1908,7 +1951,11 @@ ${moneyRow}
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
         if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t))) return;
-        const qualities = DB.filter(isQual);
+        const qualities = DB.filter(isQual).filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true);
+        if (!qualities.length) {
+          if (window.alertPopup) await alertPopup('Inga passande kvaliteter för detta föremål.');
+          return;
+        }
         openQualPopup(qualities, qIdx => {
           if (row && qualities[qIdx]) {
             row.kvaliteter = row.kvaliteter || [];

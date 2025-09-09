@@ -328,7 +328,7 @@
   {
     "id": "ford23",
     "namn": "Mörkt blod",
-    "beskrivning": "Rollpersonen har mörkt blod i ådrorna, nedärvt från någon paktmakande förfäder eller som en effekt av en förbannelse; kanske är det kort och gott en följd av att ha fötts på fel plats i Davokar vid fel tid. Det mörka blodets arv åtföljs alltid av någon form av fysiskt stigma på bäraren, representerat av nackdelen Bestialisk. Rollpersonen kan skaffa följande monstruösa särdrag som om de var vanliga förmågor: Naturligt vapen, Pansar, Robust, Regeneration, Vingar.",
+    "beskrivning": "Rollpersonen har mörkt blod i ådrorna, nedärvt från någon paktmakande förfäder eller som en effekt av en förbannelse; kanske är det kort och gott en följd av att ha fötts på fel plats i Davokar vid fel tid. Det mörka blodets arv åtföljs alltid av en befläckad skugga, representerat av nackdelen Mörkt förflutet. Rollpersonen kan skaffa följande monstruösa särdrag som om de var vanliga förmågor: Naturligt vapen, Pansar, Robust, Regeneration, Vingar.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [

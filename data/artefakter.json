@@ -3063,5 +3063,34 @@
     "skilling": 0,
     "örtegar": 0
   }
+},
+{
+  "id": "ar94",
+  "namn": "Den evige jägarens spjut",
+  "beskrivning": "Detta uråldriga spjut sitter inhugget i sidan på besten Gylta. Skaftet är brutet cirka en meter från spetsen, vilket gör att vapnet saknar kvaliteten Långt, men det är fortfarande fullt brukbart i strid. Spjutet kan endast hamna i rollpersonernas ägo om Gylta besegras i strid eller om en pakt sluts med henne, där rollpersonerna svär en blodsed på att använda vapnet mot Den eviga jägaren – antingen i strid eller i förhandling. Att ersätta det brutna skaftet kräver gott virke och hantverksskicklighet. Om ingen rollperson har kunskapen kan arbetet köpas i prospektörernas läger för en daler och en dags arbete.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt",
+      "Vapen"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Fri"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Nådastöt; Handling: Fri\nBäraren kan åkalla dödens makter och avsluta jakten med en mäktig stöt. Förmågan kan användas mot en fiende som har hälften eller mindre av sin Tålighet kvar. Mot en sådan fiende får spjutbäraren omedelbart en extra stridshandling. Kraften kan endast användas en gång per fiende och strid.\nKorruption: 1T4."
+  },
+  "stat": {
+    "skada": "1T8",
+    "vikt": 1.5
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
 }
 ]

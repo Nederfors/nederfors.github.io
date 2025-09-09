@@ -107,6 +107,38 @@
   function isQual(p){
     return (p.taggar?.typ||[]).some(t => ['Kvalitet','Mystisk kvalitet'].includes(t));
   }
+  // Kontrollera om en viss kvalitet kan läggas på ett specifikt föremål
+  // Stödjer nya taggar: Vapenkvalitet, Sköldkvalitet, Rustningskvalitet, Allmän kvalitet
+  function canApplyQuality(itemOrName, qualOrName) {
+    const item = (typeof itemOrName === 'string')
+      ? (window.DB?.find(x => x.namn === itemOrName) || {})
+      : (itemOrName || {});
+    const qual = (typeof qualOrName === 'string')
+      ? (window.DB?.find(x => x.namn === qualOrName) || {})
+      : (qualOrName || {});
+    const itTypes = Array.isArray(item.taggar?.typ) ? item.taggar.typ : [];
+    const qTypes  = Array.isArray(qual.taggar?.typ) ? qual.taggar.typ : [];
+
+    // Ny typindelning för kvaliteter
+    const isGeneral = qTypes.includes('Allmän kvalitet');
+    const toWeapon  = qTypes.includes('Vapenkvalitet');
+    const toShield  = qTypes.includes('Sköldkvalitet');
+    const toArmor   = qTypes.includes('Rustningskvalitet');
+
+    // Allmän kvalitet: inga begränsningar
+    if (isGeneral) return true;
+
+    // Om inga nya typer finns på kvaliteten: falla tillbaka till gamla beteendet
+    // (kvaliteter gällde generellt för vapen/sköld/rustning)
+    if (!toWeapon && !toShield && !toArmor) {
+      return ['Vapen','Sköld','Rustning'].some(t => itTypes.includes(t));
+    }
+
+    if (toWeapon && itTypes.includes('Vapen')) return true;
+    if (toShield && itTypes.includes('Sköld')) return true;
+    if (toArmor  && itTypes.includes('Rustning')) return true;
+    return false;
+  }
   function isYrke(p){ return (p.taggar?.typ||[]).includes('Yrke'); }
   function isRas(p){ return (p.taggar?.typ||[]).includes('Ras'); }
   function isElityrke(p){ return (p.taggar?.typ||[]).includes('Elityrke'); }
@@ -278,6 +310,7 @@
   window.OBASE = OBASE;
   window.isInv = isInv;
   window.isQual = isQual;
+  window.canApplyQuality = canApplyQuality;
   window.isYrke = isYrke;
   window.isRas = isRas;
   window.isElityrke = isElityrke;
