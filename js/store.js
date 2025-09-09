@@ -159,12 +159,22 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
   }
 
+  function genId() {
+    try {
+      if (typeof crypto !== 'undefined' && crypto.randomUUID) {
+        return crypto.randomUUID();
+      }
+    } catch {}
+    return 'id-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2);
+  }
+
   function migrateInventoryIds(store) {
     try {
       if (!store.data || typeof store.data !== 'object') return;
       let changed = false;
       Object.values(store.data).forEach(data => {
         const custom = data.custom || [];
+        custom.forEach(c => { if (!c.id) { c.id = genId(); changed = true; } });
         const migrateRow = row => {
           if (!row || typeof row !== 'object') return;
           const entry = custom.find(e => e.id === row.id || e.namn === row.name)
@@ -706,7 +716,7 @@
   }
 
   function addRevealedArtifact(store, id) {
-    if (!store.current) return;
+    if (!store.current || !id) return;
     store.data[store.current] = store.data[store.current] || {};
     const set = new Set(store.data[store.current].revealedArtifacts || []);
     set.add(id);
@@ -736,19 +746,19 @@
     // Keep any currently selected entries that are hidden types
     getCurrentList(store).forEach(it => {
       const tagTyp = it.taggar?.typ || [];
-      if (isHiddenTags(tagTyp)) keep.add(it.id || it.namn);
+      if (isHiddenTags(tagTyp) && it.id) keep.add(it.id);
     });
 
     // Keep any hidden items that still exist in the inventory (recursively)
     const collect = arr => {
-      arr.forEach(row => {
-        const entry = (getCustomEntries(store).find(e => e.id === row.id || e.namn === row.name))
-          || (global.DB || []).find(e => e.id === row.id || e.namn === row.name) || {};
-        const tagTyp = entry.taggar?.typ || [];
-        if (isHiddenTags(tagTyp)) keep.add(entry.id || entry.namn);
-        if (Array.isArray(row.contains)) collect(row.contains);
-      });
-    };
+        arr.forEach(row => {
+          const entry = (getCustomEntries(store).find(e => e.id === row.id || e.namn === row.name))
+            || (global.DB || []).find(e => e.id === row.id || e.namn === row.name) || {};
+          const tagTyp = entry.taggar?.typ || [];
+          if (isHiddenTags(tagTyp) && entry.id) keep.add(entry.id);
+          if (Array.isArray(row.contains)) collect(row.contains);
+        });
+      };
     collect(getInventory(store));
 
     const cur = getRevealedArtifacts(store);
@@ -1442,6 +1452,7 @@ function defaultTraits() {
     removeRevealedArtifact,
     clearRevealedArtifacts,
     migrateInventoryIds,
+    genId,
     getNilasPopupSeen,
     setNilasPopupSeen,
     normalizeMoney,
