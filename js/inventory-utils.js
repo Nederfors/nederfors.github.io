@@ -233,7 +233,24 @@
   }
 
   function sortQualsForDisplay(list) {
-    return list.slice();
+    const arr = list.slice();
+    const getName = obj => {
+      if (obj.q) return obj.q;
+      if (obj.namn) return obj.namn;
+      if (obj.name) return obj.name;
+      if (obj.item) return getName(obj.item);
+      return obj;
+    };
+    const rank = n => isNegativeQual(n) ? 2 : isNeutralQual(n) ? 1 : 0;
+    arr.sort((a, b) => {
+      const na = getName(a);
+      const nb = getName(b);
+      const ra = rank(na);
+      const rb = rank(nb);
+      if (ra !== rb) return ra - rb;
+      return String(na).localeCompare(String(nb));
+    });
+    return arr;
   }
 
   function countPositiveQuals(list) {
@@ -248,13 +265,24 @@
     const cls  = root.getElementById('qualCancel');
 
     const nameMap = makeNameMap(storeHelper.getInventory(store));
+    const qualMode = list.every(it => isQual(it));
+    const items = qualMode
+      ? sortQualsForDisplay(list.map((item, idx) => ({ item, idx })))
+      : list.map((item, idx) => ({ item, idx }));
     /* bygg knappar: stöd både namn och name */
-    box.innerHTML = list.map((item,i)=>{
-      const base = item.namn || item.name;
+    box.innerHTML = items.map(({item, idx}) => {
+      const base  = item.namn || item.name;
       const label = nameMap.get(item) || base;
       const gCnt  = Number(item.gratis || 0);
       const mark  = gCnt ? ` 🆓${gCnt>1?`×${gCnt}`:''}` : '';
-      return `<button data-i="${i}" class="char-btn">${label}${mark}</button>`;
+      let cls = 'char-btn';
+      if (qualMode) {
+        cls += ' quality';
+        if (isNegativeQual(base)) cls += ' negative';
+        else if (isNeutralQual(base)) cls += ' neutral';
+        if (isMysticQual(base)) cls += ' mystic';
+      }
+      return `<button data-i="${idx}" class="${cls}">${label}${mark}</button>`;
     }).join('');
 
     /* öppna */
@@ -1229,7 +1257,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     if (all.length) {
       const qhtml = all.map(obj => {
         const q = obj.q;
-        const cls = `tag removable${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
+        const cls = `tag removable quality${isMysticQual(q)?' mystic':''}${isNegativeQual(q)?' negative':''}${isNeutralQual(q)?' neutral':''}${freeQ.includes(q)?' free':''}`;
         const baseAttr = obj.base ? ' data-base="1"' : '';
         return `<span class="${cls}" data-qual="${q}"${baseAttr}>${q} ✕</span>`;
       }).join('');
