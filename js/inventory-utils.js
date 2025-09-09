@@ -7,6 +7,8 @@
   // Bring shared currency bases into local scope
   const SBASE = window.SBASE;
   const OBASE = window.OBASE;
+  const moneyToO = window.moneyToO;
+  const oToMoney = window.oToMoney;
   const INV_TOOLS_KEY = 'invToolsOpen';
   const INV_INFO_KEY  = 'invInfoOpen';
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
@@ -32,16 +34,9 @@
     'Galär': '⛵',
     'Flodbåt': '🛥️'
   };
-  const moneyToO = m => (m.daler||0)*SBASE*OBASE + (m.skilling||0)*OBASE + (m['örtegar']||0);
   let dragIdx = null;
   let dragEl = null;
   let dragEnabled = false;
-
-  const oToMoney = o => {
-    const d = Math.floor(o / (SBASE * OBASE)); o %= SBASE * OBASE;
-    const s = Math.floor(o / OBASE);           const ø = o % OBASE;
-    return { d, s, o: ø };              // <–– returnera d/s/o
-  };
 
   const dividePrice = (amt, divisor) => {
     const o = typeof amt === 'number' ? amt : moneyToO(amt || {});

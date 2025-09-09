@@ -24,6 +24,24 @@
   ];
   const SBASE = 10, OBASE = 10;
 
+  // Konvertera ett penningobjekt till totalt antal örtegar
+  function moneyToO(m) {
+    m = m || {};
+    return (m.daler || m.d || 0) * SBASE * OBASE +
+           (m.skilling || m.s || 0) * OBASE +
+           (m['örtegar'] || m.o || 0);
+  }
+
+  // Konvertera örtegar till ett objekt med daler/skilling/örtegar
+  function oToMoney(o) {
+    let rem = Math.max(0, Math.floor(o));
+    const d = Math.floor(rem / (SBASE * OBASE));
+    rem %= SBASE * OBASE;
+    const s = Math.floor(rem / OBASE);
+    const ø = rem % OBASE;
+    return { daler: d, skilling: s, 'örtegar': ø, d, s, o: ø };
+  }
+
   const TYPE_PRIORITIES = { Ras: 0, Yrke: 1, Elityrke: 2 };
 
   const CAT_ORDER = [
@@ -318,6 +336,8 @@
   window.EQUIP = EQUIP;
   window.SBASE = SBASE;
   window.OBASE = OBASE;
+  window.moneyToO = moneyToO;
+  window.oToMoney = oToMoney;
   window.isInv = isInv;
   window.isQual = isQual;
   window.canApplyQuality = canApplyQuality;
