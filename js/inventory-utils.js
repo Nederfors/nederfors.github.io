@@ -236,7 +236,11 @@
       if (obj.item) return getName(obj.item);
       return obj;
     };
-    const rank = n => isNegativeQual(n) ? 2 : isNeutralQual(n) ? 1 : 0;
+    const rank = n =>
+      isNegativeQual(n) ? 3 :
+      isMysticQual(n)   ? 2 :
+      isNeutralQual(n)  ? 1 :
+      0;
     arr.sort((a, b) => {
       const na = getName(a);
       const nb = getName(b);
