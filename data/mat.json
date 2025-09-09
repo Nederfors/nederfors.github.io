@@ -1024,6 +1024,114 @@
     "skilling": 0,
     "örtegar": 3
   }
-}
+},
+  {
+    "id": "ma57",
+    "namn": "Grön curry",
+    "beskrivning": "Grön curry med bambuskott, söt basilika, thaibasilika, paprika, thailändsk äggplanta, limeblad och kokosmjölk. Serveras med ris och Tofu. Chilins bett bränner till och dröjer kvar.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "stat": {
+      "vikt": 0.9
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 12,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ma58",
+    "namn": "Vegetariska vårrullar",
+    "beskrivning": "Små vegetariska vårrullar. Serveras med ris, sötsur sås och Tofu. Kryddningen är mild och vänlig, nästan utan hetta.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "stat": {
+      "vikt": 0.6
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 6,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ma59",
+    "namn": "Stekta breda nudlar",
+    "beskrivning": "Wokade breda risnudlar med ägg, broccoli, vitkål, morot och jordnötter i sojasås. Serveras med Tofu. Smaken är rund och mjuk, ingen tydlig chilihetta.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "stat": {
+      "vikt": 0.8
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 10,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ma60",
+    "namn": "Stekta äggnudlar",
+    "beskrivning": "Wokade äggnudlar med broccoli, vitkål, morot och jordnötter i sojasås. Serveras med Tofu. Kryddningen håller sig mild, utan brännande stick.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "stat": {
+      "vikt": 0.8
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 10,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ma61",
+    "namn": "Röd curry med ananas",
+    "beskrivning": "Röd curry med ananas, paprika, limeblad, lök och kokosmjölk. Serveras med ris och Tofu. Chilins värme känns tydligt men rundas av av fruktig sötma.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "stat": {
+      "vikt": 0.9
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 12,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ma62",
+    "namn": "Panangcurry",
+    "beskrivning": "Panangcurry med paprika, limeblad och kokosmjölk. Serveras med ris och Tofu. Kryddig värme som håller sig lagom och behaglig.",
+    "taggar": {
+      "typ": [
+        "Mat"
+      ]
+    },
+    "stat": {
+      "vikt": 0.9
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 12,
+      "örtegar": 0
+    }
+  }
 
 ]
