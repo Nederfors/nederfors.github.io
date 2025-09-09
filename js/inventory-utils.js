@@ -1270,7 +1270,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const capClassOf = (used, max) => {
       if (!max || max <= 0) return '';
       const ratio = used / max;
-      if (ratio >= 1.0) return 'cap-neg';   // överlast
+      if (ratio > 1.0) return 'cap-neg';    // överlast: över maxkapacitet
       if (ratio >= 0.95) return 'cap-crit'; // nära max
       if (ratio >= 0.80) return 'cap-warn'; // närmar sig
       return '';
