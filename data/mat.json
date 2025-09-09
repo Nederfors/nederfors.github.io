@@ -1006,5 +1006,24 @@
       "skilling": 0,
       "örtegar": 1
     }
+  },
+{
+  "id": "ma57",
+  "namn": "Dagens gryta",
+  "beskrivning": "Ständigt sjudande gryta som fylls på dagligen; smaken ändras med kökets tillgångar.",
+  "taggar": {
+    "typ": [
+      "Mat"
+    ]
+  },
+  "stat": {
+    "vikt": 0.7
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 3
   }
+}
+
 ]
