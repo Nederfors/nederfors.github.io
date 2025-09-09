@@ -46,12 +46,12 @@ function initIndex() {
       .concat(window.TABELLER || [])
       .concat(storeHelper.getCustomEntries(store));
     if (showArtifacts) return base.filter(p => !SECRET_IDS.has(p.id));
-    return base.filter(p => (!isHidden(p) || revealedArtifacts.has(p.namn)) && !SECRET_IDS.has(p.id));
+    return base.filter(p => (!isHidden(p) || revealedArtifacts.has(p.id)) && !SECRET_IDS.has(p.id));
   };
   const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
   const isHidden = p => (p.taggar?.typ || []).some(t => ['artefakt','kuriositet','skatt'].includes(String(t).toLowerCase()));
 
-  const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
+  const FALT_BUNDLE = ['di10','di11','di12','di13','di14','di15'];
 
   const QUAL_TYPE_MAP = {
     'Vapenkvalitet': 'Vapen',
@@ -311,9 +311,9 @@ function initIndex() {
       if (!showArtifacts) {
         const hid = DB.find(p => isHidden(p) && !SECRET_IDS.has(p.id) && searchNormalize((p.namn || '').toLowerCase()) === term);
         if (hid) {
-          if (!revealedArtifacts.has(hid.namn)) {
-            revealedArtifacts.add(hid.namn);
-            storeHelper.addRevealedArtifact(store, hid.namn);
+          if (!revealedArtifacts.has(hid.id)) {
+            revealedArtifacts.add(hid.id);
+            storeHelper.addRevealedArtifact(store, hid.id);
             fillDropdowns();
           }
           const cat = hid.taggar?.typ?.[0];
@@ -556,14 +556,14 @@ function initIndex() {
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         let count;
         if (isInv(p)) {
-          if (p.namn === 'Fältutrustning') {
-            const qtys = FALT_BUNDLE.map(n => invList.find(c => c.name === n)?.qty || 0);
+          if (p.id === 'di79') {
+            const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
             count = Math.min(...qtys);
           } else {
-            count = invList.filter(c => c.name===p.namn).reduce((sum,c)=>sum+(c.qty||1),0);
+            count = invList.filter(c => c.id === p.id).reduce((sum,c)=>sum+(c.qty||1),0);
           }
         } else {
-          count = charList.filter(c => c.namn===p.namn && !c.trait).length;
+          count = charList.filter(c => c.id === p.id && !c.trait).length;
         }
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
@@ -1006,7 +1006,7 @@ function initIndex() {
       const inv = storeHelper.getInventory(store);
       if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
       const elig = inv.filter(it => {
-        const tag = (invUtil.getEntry(it.name)?.taggar?.typ) || [];
+        const tag = (invUtil.getEntry(it.id || it.name)?.taggar?.typ) || [];
         return ['Vapen','Sköld','Rustning'].some(t => tag.includes(t));
       });
  if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
@@ -1025,24 +1025,25 @@ function initIndex() {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
         const list = storeHelper.getCurrentList(store);
-        if (p.namn === 'Fältutrustning') {
-          FALT_BUNDLE.forEach(namn => {
-            const ent = invUtil.getEntry(namn);
+        if (p.id === 'di79') {
+          FALT_BUNDLE.forEach(id => {
+            const ent = invUtil.getEntry(id);
             if (!ent.namn) return;
             const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
               .some(t=>ent.taggar.typ.includes(t));
-            const existing = inv.find(r => r.name === ent.namn);
+            const existing = inv.find(r => r.id === ent.id);
             if (indivItem || !existing) {
-              inv.push({ name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+              inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
             } else {
               existing.qty++;
             }
           });
           invUtil.saveInventory(inv); invUtil.renderInventory();
           renderList(filtered());
-          FALT_BUNDLE.forEach(namn => {
-            const i = inv.findIndex(r => r.name === namn);
-            const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(namn)}"][data-idx="${i}"]`);
+          FALT_BUNDLE.forEach(id => {
+            const ent = invUtil.getEntry(id);
+            const i = inv.findIndex(r => r.id === id);
+            const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(ent.namn)}"][data-idx="${i}"]`);
             if (li) {
               li.classList.add('inv-flash');
               setTimeout(() => li.classList.remove('inv-flash'), 1000);
@@ -1050,7 +1051,7 @@ function initIndex() {
           });
         } else {
           const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t=>p.taggar.typ.includes(t));
-          const rowBase = { name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+          const rowBase = { id:p.id, name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
           const tagTyp = p.taggar?.typ || [];
           if (tagTyp.includes('L\u00e4gre Artefakt')) {
             const reqYrken = explodeTags(p.taggar?.ark_trad);
@@ -1091,7 +1092,7 @@ function initIndex() {
               inv.push(rowBase);
               flashIdx = inv.length - 1;
             } else {
-              const match = inv.find(x => x.name===p.namn && (!trait || x.trait===trait));
+              const match = inv.find(x => x.id===p.id && (!trait || x.trait===trait));
               if (match) {
                 match.qty++;
                 flashIdx = inv.indexOf(match);
@@ -1103,13 +1104,13 @@ function initIndex() {
             invUtil.saveInventory(inv); invUtil.renderInventory();
             if (isHidden(p)) {
               const list = storeHelper.getCurrentList(store);
-              if ((p.taggar?.typ || []).includes('Artefakt') && !list.some(x => x.namn === p.namn && x.noInv)) {
+              if ((p.taggar?.typ || []).includes('Artefakt') && !list.some(x => x.id === p.id && x.noInv)) {
                 list.push({ ...p, noInv: true });
                 storeHelper.setCurrentList(store, list);
               }
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
-              storeHelper.addRevealedArtifact(store, p.namn);
+              storeHelper.addRevealedArtifact(store, p.id);
             }
             renderList(filtered());
             const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
@@ -1119,7 +1120,7 @@ function initIndex() {
             }
           };
           if (p.traits && window.maskSkill) {
-            const used = inv.filter(it => it.name===p.namn).map(it=>it.trait).filter(Boolean);
+            const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
             maskSkill.pickTrait(used, async trait => {
               if(!trait) return;
               if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
@@ -1334,13 +1335,13 @@ function initIndex() {
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        if (p.namn === 'Fältutrustning') {
+        if (p.id === 'di79') {
           const removeCnt = (act === 'del' || act === 'rem')
-            ? Math.min(...FALT_BUNDLE.map(n => inv.find(r => r.name === n)?.qty || 0))
+            ? Math.min(...FALT_BUNDLE.map(id => inv.find(r => r.id === id)?.qty || 0))
             : 1;
           if (removeCnt > 0) {
-            FALT_BUNDLE.forEach(n => {
-              const idxRow = inv.findIndex(r => r.name === n);
+            FALT_BUNDLE.forEach(id => {
+              const idxRow = inv.findIndex(r => r.id === id);
               if (idxRow >= 0) {
                 inv[idxRow].qty -= removeCnt;
                 if (inv[idxRow].qty < 1) inv.splice(idxRow,1);
@@ -1348,7 +1349,7 @@ function initIndex() {
             });
           }
         } else {
-          const idxInv = inv.findIndex(x => x.name===p.namn);
+          const idxInv = inv.findIndex(x => x.id===p.id);
           if (idxInv >= 0) {
             if (act === 'del' || act === 'rem') {
               inv.splice(idxInv,1);
@@ -1360,13 +1361,13 @@ function initIndex() {
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
         if (isHidden(p)) {
-          const still = inv.some(r => r.name === p.namn);
+          const still = inv.some(r => r.id === p.id);
           if (!still) {
-            let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === p.namn && x.noInv));
+            let list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
             storeHelper.setCurrentList(store, list);
             if (window.updateXP) updateXP();
             if (window.renderTraits) renderTraits();
-            storeHelper.removeRevealedArtifact(store, p.namn);
+            storeHelper.removeRevealedArtifact(store, p.id);
           }
         }
         renderList(filtered());
@@ -1468,13 +1469,13 @@ function initIndex() {
           const inv = storeHelper.getInventory(store);
           const removeItem = arr => {
             for (let i = arr.length - 1; i >= 0; i--) {
-              if (arr[i].name === p.namn) arr.splice(i, 1);
+              if (arr[i].id === p.id) arr.splice(i, 1);
               else if (Array.isArray(arr[i].contains)) removeItem(arr[i].contains);
             }
           };
           removeItem(inv);
           invUtil.saveInventory(inv); invUtil.renderInventory();
-          storeHelper.removeRevealedArtifact(store, p.namn);
+          storeHelper.removeRevealedArtifact(store, p.id);
         }
       }
     }

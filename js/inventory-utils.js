@@ -43,10 +43,10 @@
     return { d, s, o: ø };              // <–– returnera d/s/o
   };
 
-  function getEntry(name) {
+  function getEntry(ref) {
     const custom = storeHelper.getCustomEntries(store);
-    const own = custom.find(x => x.namn === name);
-    return own || DB.find(x => x.namn === name) || {};
+    const own = custom.find(x => x.id === ref || x.namn === ref);
+    return own || DB[ref] || DB.find(x => x.namn === ref) || {};
   }
 
   function isHiddenType(tagTyp) {
@@ -55,8 +55,8 @@
   }
 
   function sortInvEntry(a, b) {
-    const entA = getEntry(a.name);
-    const entB = getEntry(b.name);
+    const entA = getEntry(a.id || a.name);
+    const entB = getEntry(b.id || b.name);
     const isVehA = (entA.taggar?.typ || []).includes('F\u00e4rdmedel');
     const isVehB = (entB.taggar?.typ || []).includes('F\u00e4rdmedel');
     if (isVehA && !isVehB) return 1;
@@ -68,7 +68,7 @@
     const nonVeh = [];
     const veh = [];
     inv.forEach(row => {
-      const entry = getEntry(row.name);
+      const entry = getEntry(row.id || row.name);
       if ((entry.taggar?.typ || []).includes('F\u00e4rdmedel')) veh.push(row);
       else nonVeh.push(row);
     });
@@ -81,23 +81,26 @@
 
   function addWellEquippedItems(inv) {
     const freebies = [
-      { name: 'Rep, 10 meter', qty: 3 },
-      { name: 'Papper', qty: 1 },
-      { name: 'Kritor', qty: 1 },
-      { name: 'Fackla', qty: 3 },
-      { name: 'Signalhorn', qty: 1 },
-      { name: 'Långfärdsbröd', qty: 3 },
-      { name: 'Örtkur', qty: 3 }
+      { id: 'di12', name: 'Rep, 10 meter', qty: 3 },
+      { id: 'di23', name: 'Papper', qty: 1 },
+      { id: 'di18', name: 'Kritor', qty: 1 },
+      { id: 'di5',  name: 'Fackla', qty: 3 },
+      { id: 'i11',  name: 'Signalhorn', qty: 1 },
+      { id: 'elix34', name: 'Långfärdsbröd', qty: 3 },
+      { id: 'elix43', name: 'Örtkur', qty: 3 }
     ];
     freebies.forEach(it => {
-      const row = inv.find(r => r.name === it.name);
+      const row = inv.find(r => r.id === it.id || r.name === it.name);
+      const entry = getEntry(it.id || it.name);
       if (row) {
+        row.id = entry.id;
+        row.name = entry.namn;
         row.qty += it.qty;
         row.gratis = (row.gratis || 0) + it.qty;
         row.perkGratis = (row.perkGratis || 0) + it.qty;
         if (!row.perk) row.perk = 'Välutrustad';
       } else {
-        inv.push({ name: it.name, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
+        inv.push({ id: entry.id, name: entry.namn, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
       }
     });
   }
@@ -172,7 +175,7 @@
   function recalcArtifactEffects() {
     const inv = flattenInventory(storeHelper.getInventory(store));
     const effects = inv.reduce((acc, row) => {
-      const entry = getEntry(row.name);
+      const entry = getEntry(row.id || row.name);
       const tagTyp = entry.taggar?.typ || [];
       if (!tagTyp.includes('Artefakt')) return acc;
       const eff = row.artifactEffect;
@@ -495,7 +498,7 @@
     const flat = flattenInventoryWithPath(inv);
     const nameMap = makeNameMap(flat.map(f => f.row));
     const vehicles = inv
-      .map((row,i)=>({ row, entry:getEntry(row.name), idx:i }))
+      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     const vehIdx = vehicles.map(v => v.idx);
     const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
@@ -536,7 +539,7 @@
         if (i < path.length - 1) parentArr = row.contains || [];
       });
       if (!row) return;
-      const entry = getEntry(row.name);
+      const entry = getEntry(row.id || row.name);
       const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
         .some(t => entry.taggar?.typ?.includes(t));
 
@@ -578,7 +581,7 @@
     const flat = flattenInventoryWithPath(inv);
     const nameMap = makeNameMap(flat.map(f => f.row));
     const vehicles = inv
-      .map((row,i)=>({ row, entry:getEntry(row.name), idx:i }))
+      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     const vehIdx = vehicles.map(v => v.idx);
     const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
@@ -692,7 +695,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     const inv = storeHelper.getInventory(store);
     const vehicles = inv
-      .map((row,i)=>({row, entry:getEntry(row.name), idx:i}))
+      .map((row,i)=>({row, entry:getEntry(row.id || row.name), idx:i}))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     if (!vehicles.length) return;
 
@@ -787,7 +790,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     const inv = storeHelper.getInventory(store);
     const vehicles = inv
-      .map((row,i)=>({row, entry:getEntry(row.name), idx:i}))
+      .map((row,i)=>({row, entry:getEntry(row.id || row.name), idx:i}))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     if (!vehicles.length) return;
 
@@ -1000,7 +1003,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     flat.forEach(row => {
       row.gratis = row.qty;
-      const entry = getEntry(row.name);
+      const entry = getEntry(row.id || row.name);
       const removed = row.removedKval ?? [];
       const baseQuals = [
         ...(entry.taggar?.kvalitet ?? []),
@@ -1018,7 +1021,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
   }
 
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
-    const entry  = getEntry(row.name);
+    const entry  = getEntry(row.id || row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
     let base = moneyToO(entry.grundpris || {});
@@ -1073,7 +1076,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
   }
 
   function calcRowWeight(row) {
-    const entry  = getEntry(row.name);
+    const entry  = getEntry(row.id || row.name);
     const base   = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
     const removed = row.removedKval ?? [];
     const baseQuals = [
@@ -1188,7 +1191,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       desc += `<div class="tags">${tagList.join(' ')}</div>`;
     }
     desc += itemStatHtml(entry, row);
-    if (row.trait && row.name !== 'Djurmask') {
+    if (row.trait && row.id !== 'l9') {
       desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
     }
 
@@ -1278,13 +1281,13 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const charCapClass = capClassOf(usedWeight, maxCapacity);
 
     const vehicles = allInv
-      .map((row,i)=>({ row, entry:getEntry(row.name), idx:i }))
+      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
 
     if (dom.invTypeSel) {
       const types = new Set();
       allInv.forEach(row => {
-        const entry = getEntry(row.name);
+        const entry = getEntry(row.id || row.name);
         (entry.taggar?.typ || [])
           .filter(Boolean)
           .forEach(t => types.add(t));
@@ -1301,7 +1304,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const inv = allInv
       .filter(row => {
         if (F.typ) {
-          const entry = getEntry(row.name);
+          const entry = getEntry(row.id || row.name);
           if (!(entry.taggar?.typ || []).includes(F.typ)) return false;
         }
         if (F.invTxt && !rowMatchesText(row, F.invTxt)) return false;
@@ -1323,7 +1326,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const artLevel = Math.max(partyArt, skillArt);
 
     const tot = flatInv.reduce((t, row) => {
-      const entry = getEntry(row.name);
+      const entry = getEntry(row.id || row.name);
       const basePrice = moneyToO(entry.grundpris || {});
       let base  = basePrice;
       const tagTyp = entry.taggar?.typ || [];
@@ -1397,7 +1400,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     const foodCount = flatInv
       .filter(row => {
-        const entry = getEntry(row.name);
+        const entry = getEntry(row.id || row.name);
         return (entry.taggar?.typ || []).some(t => t.toLowerCase() === 'mat');
       })
       .reduce((sum, row) => sum + (row.qty || 0), 0);
@@ -1462,7 +1465,7 @@ ${moneyRow}
     const itemCards = inv.length
       ? inv.map((row) => {
           const realIdx = allInv.indexOf(row);
-          const entry   = getEntry(row.name);
+          const entry   = getEntry(row.id || row.name);
           const tagTyp  = entry.taggar?.typ ?? [];
           const isVehicle = tagTyp.includes('F\u00e4rdmedel');
           const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
@@ -1495,7 +1498,7 @@ ${moneyRow}
           );
           const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
           const weightText = formatWeight(rowWeight);
-          const key = `${row.name}|${row.trait || ''}|${rowLevel || ''}`;
+          const key = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
           let vehicleInfo = '';
           let cardClass = '';
           if (isVehicle) {
@@ -1538,7 +1541,7 @@ ${moneyRow}
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
                 const cPath = `${realIdx}.${j}`;
                 return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
-                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.name === 'Djurmask' && c.trait) ? `${c.name}: ${c.trait}` : c.name}${cBadge}</span></div>
+                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${c.name}: ${c.trait}` : c.name}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
                     ${cBtnRow}
@@ -1554,7 +1557,7 @@ ${moneyRow}
             <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title"><span><span class="collapse-btn"></span>${(row.name === 'Djurmask' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
+              <div class="card-title"><span><span class="collapse-btn"></span>${(row.id === 'l9' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
                 ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
               </div>
@@ -1632,7 +1635,7 @@ ${moneyRow}
         list.push(entry);
         storeHelper.setCustomEntries(store, list);
         const inv = storeHelper.getInventory(store);
-        inv.push({ name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
+        inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
         saveInventory(inv);
         renderInventory();
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
@@ -1743,7 +1746,7 @@ ${moneyRow}
       const inv = storeHelper.getInventory(store);
       const { row, parentArr, idx } = getRowInfo(inv, li);
       if (act === 'vehicleLoad') {
-        const entry = getEntry(row.name);
+        const entry = getEntry(row.id || row.name);
         if (entry?.id) openVehiclePopup(entry.id);
         return;
       }
@@ -1773,7 +1776,7 @@ ${moneyRow}
           if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
             if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
           }
-          const entry  = getEntry(row.name);
+          const entry  = getEntry(row.id || row.name);
           const tagTyp = entry.taggar?.typ || [];
           const isVeh  = tagTyp.includes('F\u00e4rdmedel');
           const hasStuff = Array.isArray(row.contains) && row.contains.length > 0;
@@ -1797,13 +1800,13 @@ ${moneyRow}
             saveInventory(inv);
             renderInventory();
             if (isHiddenType(tagTyp)) {
-              const still = flattenInventory(inv).some(r => r.name === row.name);
+              const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
               if (!still) {
-                let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === row.name && x.noInv));
+                let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
                 storeHelper.setCurrentList(store, list);
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                storeHelper.removeRevealedArtifact(store, row.name);
+                storeHelper.removeRevealedArtifact(store, row.id || row.name);
               }
             }
           }
@@ -1818,24 +1821,25 @@ ${moneyRow}
 
         // "+" lägger till qty eller en ny instans
         if (act === 'add') {
-          if (entry.namn === 'Fältutrustning') {
-            const bundle = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
-            bundle.forEach(namn => {
-              const ent = getEntry(namn);
+          if (entry.id === 'di79') {
+            const bundle = ['di10','di11','di12','di13','di14','di15'];
+            bundle.forEach(id => {
+              const ent = getEntry(id);
               if (!ent.namn) return;
               const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t => ent.taggar.typ.includes(t));
-              const existing = inv.findIndex(r => r.name === ent.namn);
+              const existing = inv.findIndex(r => r.id === ent.id);
               if (indivItem || existing === -1) {
-                inv.push({ name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+                inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
               } else {
                 inv[existing].qty++;
               }
             });
             saveInventory(inv);
             renderInventory();
-            bundle.forEach(namn => {
-              const i = inv.findIndex(r => r.name === namn);
-              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(namn)}"][data-idx="${i}"]`);
+            bundle.forEach(id => {
+              const ent = getEntry(id);
+              const i = inv.findIndex(r => r.id === id);
+              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(ent.namn)}"][data-idx="${i}"]`);
               if (li) {
                 li.classList.add('inv-flash');
                 setTimeout(() => li.classList.remove('inv-flash'), 600);
@@ -1851,7 +1855,7 @@ ${moneyRow}
               artifactEffect = val;
             }
             const addRow = trait => {
-              const obj = { name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+              const obj = { id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
               if (artifactEffect) obj.artifactEffect = artifactEffect;
               if (trait) obj.trait = trait;
               let flashIdx;
@@ -1874,14 +1878,14 @@ ${moneyRow}
               if (isHiddenType(tagTyp)) {
                 const list = storeHelper.getCurrentList(store);
                 if ((entry.taggar?.typ || []).includes('Artefakt')) {
-                  if (!list.some(x => x.namn === entry.namn && x.noInv)) {
+                  if (!list.some(x => x.id === entry.id && x.noInv)) {
                     list.push({ ...entry, noInv: true });
                     storeHelper.setCurrentList(store, list);
                   }
                 }
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                storeHelper.addRevealedArtifact(store, entry.namn);
+                storeHelper.addRevealedArtifact(store, entry.id || entry.namn);
               }
               const selector = !Number.isNaN(parentIdx)
                 ? `li[data-name="${CSS.escape(entry.namn)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
@@ -1893,7 +1897,7 @@ ${moneyRow}
               }
             };
             if (entry.traits && window.maskSkill) {
-              const used = inv.filter(it => it.name===entry.namn).map(it=>it.trait).filter(Boolean);
+              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
               maskSkill.pickTrait(used, async trait => {
                 if(!trait) return;
                 if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
@@ -1926,13 +1930,13 @@ ${moneyRow}
           saveInventory(inv);
           renderInventory();
           if (isHiddenType(tagTyp)) {
-            const still = flattenInventory(inv).some(r => r.name === row.name);
+            const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
             if (!still) {
-              let list = storeHelper.getCurrentList(store).filter(x => !(x.namn === row.name && x.noInv));
+              let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
               storeHelper.setCurrentList(store, list);
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
-              storeHelper.removeRevealedArtifact(store, row.name);
+              storeHelper.removeRevealedArtifact(store, row.id || row.name);
             }
           }
           const selector = !Number.isNaN(parentIdx)
@@ -2173,7 +2177,7 @@ ${moneyRow}
 
     const inv = storeHelper.getInventory(store);
     inv
-      .map(row => ({row, entry:getEntry(row.name)}))
+      .map(row => ({row, entry:getEntry(row.id || row.name)}))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'))
       .forEach(v => {
         const b = $T(`vehicleBtn-${v.entry.id}`);

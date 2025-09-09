@@ -278,6 +278,10 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
     DBIndex = {};
     DB.forEach(ent => { DBIndex[ent.namn] = ent; });
     window.DBIndex = DBIndex;
+    if (storeHelper.migrateInventoryIds) {
+      storeHelper.migrateInventoryIds(store);
+      store = storeHelper.load();
+    }
     boot();
   });
 

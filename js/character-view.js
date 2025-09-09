@@ -1030,14 +1030,14 @@ function initCharacter() {
       const inv = storeHelper.getInventory(store);
       const removeItem = arr => {
         for (let i = arr.length - 1; i >= 0; i--) {
-          if (arr[i].name === p.namn) arr.splice(i, 1);
+          if (arr[i].id === p.id) arr.splice(i, 1);
           else if (Array.isArray(arr[i].contains)) removeItem(arr[i].contains);
         }
       };
       removeItem(inv);
       invUtil.saveInventory(inv);
       invUtil.renderInventory();
-      storeHelper.removeRevealedArtifact(store, p.namn);
+      storeHelper.removeRevealedArtifact(store, p.id);
     }
       renderSkills(filtered());
       updateXP();
