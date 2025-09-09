@@ -77,6 +77,7 @@
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
     if (window.renderTraits) renderTraits();
+    if (window.indexViewUpdate) window.indexViewUpdate();
   }
 
   function addWellEquippedItems(inv) {
