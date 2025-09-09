@@ -905,6 +905,12 @@ function defaultTraits() {
     return cor;
   }
 
+  function calcDarkPastTemporaryCorruption(list, thresh) {
+    if (!Array.isArray(list)) return 0;
+    if (!list.some(e => e.namn === 'Mörkt förflutet')) return 0;
+    return Math.ceil((Number(thresh) || 0) / 4);
+  }
+
   function calcUsedXP(list, extra) {
     let xp = 0;
 
@@ -1009,9 +1015,9 @@ function defaultTraits() {
     if (list.some(e => e.namn === 'Jordnära')) {
       pain -= Math.floor(perm / 2);
     }
-    // Ny regel: Jordnära + Mörkt förflutet ger ytterligare - (smärtgräns / 6)
+    // Ny regel: Jordnära + Mörkt förflutet ger ytterligare - (smärtgräns / 4)
     if (list.some(e => e.namn === 'Jordnära') && list.some(e => e.namn === 'Mörkt förflutet')) {
-      const extraPenalty = Math.floor(pain / 6);
+      const extraPenalty = Math.floor(pain / 4);
       pain -= extraPenalty;
     }
     return pain;
@@ -1396,6 +1402,7 @@ function defaultTraits() {
     calcTotalXP,
     countDisadvantages,
     calcPermanentCorruption,
+    calcDarkPastTemporaryCorruption,
     calcCarryCapacity,
     calcPainThreshold,
     abilityLevel,

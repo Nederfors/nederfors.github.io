@@ -251,7 +251,6 @@ function initCharacter() {
     const hasSjalastark = list.some(p=>p.namn==='Själastark');
     const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
     const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
-    const hasDarkPast = list.some(p=>p.namn==='Mörkt förflutet');
     const permBase = storeHelper.calcPermanentCorruption(list, effects);
     const hasEarth = list.some(p=>p.namn==='Jordnära');
     const baseMax = strongGift ? valWill * 2 : valWill;
@@ -259,7 +258,7 @@ function initCharacter() {
     const maxCor = baseMax + (hasSjalastark ? 1 : 0);
     let thresh = threshBase + resistCount - sensCount;
     let perm = hasEarth ? (permBase % 2) : permBase;
-    if(hasDarkPast) perm += Math.ceil(thresh / 3);
+    const temp = storeHelper.calcDarkPastTemporaryCorruption(list, thresh);
 
     const defTrait = getDefenseTraitName(list);
     const kvickForDef = vals[defTrait];
@@ -338,6 +337,7 @@ function initCharacter() {
         <ul>
           <li>Maximal korruption: ${maxCor}</li>
           <li>Permanent korruption: ${perm}</li>
+          <li>Temporär korruption: ${temp}</li>
           <li>Korruptionströskel: ${thresh}</li>
         </ul>
       </section>

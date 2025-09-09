@@ -171,7 +171,6 @@
 
     const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
     const sensCount   = list.filter(p => p.namn === 'Korruptionskänslig').length;
-    const hasDarkPast = list.some(p => p.namn === 'Mörkt förflutet');
 
     const defTrait = getDefenseTraitName(list);
     const defs = calcDefense(vals[defTrait]);
@@ -198,8 +197,8 @@
         const maxCor = baseMax + (hasSjalastark ? 1 : 0);
         let   thresh = threshBase + resistCount - sensCount;
         let perm = hasEarth ? (permBase % 2) : permBase;
-        if (hasDarkPast) perm += Math.ceil(thresh / 3);
-        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
+        const temp = storeHelper.calcDarkPastTemporaryCorruption(list, thresh);
+        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Temporär korruption: ${temp}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
       }
       if (k === 'Diskret') {
         if (storeHelper.abilityLevel(list, 'Fint') >= 1) {
