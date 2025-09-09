@@ -333,7 +333,7 @@
   {
     "id": "na28",
     "namn": "Mörkt förflutet",
-    "beskrivning": "Genom tidigare äventyrs bistra konsekvenser har karaktären fått känna på vad för mörker som ligger runt davokars djup. När nackdelen tas drabbas karaktären av temporär korruption motsvarande en fjärdedel av sin korruptionströskel, avrundat uppåt. En karaktär med tröskel 14 får alltså 4 korruption. Har karaktären särdraget Jordnära minskar istället smärtgränsen med en fjärdedel. Detta gäller även karaktärer som höjt sin korruptionströskel med förmågor och fördelar.",
+    "beskrivning": "Genom tidigare äventyrs bistra konsekvenser har karaktären fått känna på vad för mörker som ligger runt davokars djup. När nackdelen tas drabbas karaktären av permanent korruption motsvarande en fjärdedel av sin korruptionströskel, avrundat uppåt. En karaktär med tröskel 14 får alltså 4 korruption. Har karaktären särdraget Jordnära minskar istället smärtgränsen med en fjärdedel. Detta gäller även karaktärer som höjt sin korruptionströskel med förmågor och fördelar.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
