@@ -343,7 +343,7 @@
   {
     "id": "ford24",
     "namn": "Packåsna",
-      "beskrivning": "Rollpersonen är van att bära mycket, tungt och långt. Beräkningen av rollpersonens bärförmåga görs med dennes Stark ×1,5 + 3. Se regeln för Bärförmåga på sidan 100 i Spelarens handbok.",
+      "beskrivning": "Rollpersonen är van att bära mycket, tungt och långt. Beräkningen av rollpersonens bärförmåga görs med dennes Stark ×1,5 + 3. Se regeln för Bärkapacitet på sidan 100 i Spelarens handbok.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
