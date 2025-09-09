@@ -1084,7 +1084,11 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     // Build price chain and track before/after for each quality
     let price = base;
     const steps = [];
-    allQuals.forEach(q => {
+    const orderedQuals = [
+      ...allQuals.filter(q => !isNegativeQual(q)),
+      ...allQuals.filter(q => isNegativeQual(q))
+    ];
+    orderedQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = Boolean(qEntry.negativ);
@@ -1201,8 +1205,11 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (artLevel >= req) price = dividePrice(price, 2);
     }
 
-    
-    baseQuals.forEach(q => {
+    const orderedBaseQuals = [
+      ...baseQuals.filter(q => !isNegativeQual(q)),
+      ...baseQuals.filter(q => isNegativeQual(q))
+    ];
+    orderedBaseQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = Boolean(qEntry.negativ);
