@@ -407,6 +407,7 @@
                     : isArmorSub  ? ['Rustning', tVal]
                     : [tVal];
       const entry = {
+        id: storeHelper.genId ? storeHelper.genId() : Date.now().toString(36) + Math.random().toString(36).slice(2),
         namn: name.value.trim(),
         taggar: { typ: typTags },
         vikt: Number(wIn.value)||0,
@@ -1896,14 +1897,23 @@ ${moneyRow}
               if (isHiddenType(tagTyp)) {
                 const list = storeHelper.getCurrentList(store);
                 if ((entry.taggar?.typ || []).includes('Artefakt')) {
-                  if (!list.some(x => x.id === entry.id && x.noInv)) {
+                  if (!entry.id && storeHelper.genId) {
+                    entry.id = storeHelper.genId();
+                    const customs = storeHelper.getCustomEntries(store);
+                    const cIdx = customs.findIndex(c => c.namn === entry.namn && !c.id);
+                    if (cIdx >= 0) {
+                      customs[cIdx].id = entry.id;
+                      storeHelper.setCustomEntries(store, customs);
+                    }
+                  }
+                  if (entry.id && !list.some(x => x.id === entry.id && x.noInv)) {
                     list.push({ ...entry, noInv: true });
                     storeHelper.setCurrentList(store, list);
                   }
                 }
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                storeHelper.addRevealedArtifact(store, entry.id || entry.namn);
+                if (entry.id) storeHelper.addRevealedArtifact(store, entry.id);
               }
               const selector = !Number.isNaN(parentIdx)
                 ? `li[data-name="${CSS.escape(entry.namn)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
