@@ -20,6 +20,9 @@
 
   const DARK_BLOOD_TRAITS = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
 
+  const moneyToO = global.moneyToO;
+  const oToMoney = global.oToMoney;
+
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
     return {
@@ -755,11 +758,7 @@
 
   function normalizeMoney(m) {
     const res = { ...defaultMoney(), ...(m || {}) };
-    res.skilling += Math.floor(res["örtegar"] / 10);
-    res["örtegar"] %= 10;
-    res.daler += Math.floor(res.skilling / 10);
-    res.skilling %= 10;
-    return res;
+    return oToMoney(moneyToO(res));
   }
 
   /* ---------- 6a. Karaktärsdrag ---------- */
