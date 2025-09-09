@@ -1237,7 +1237,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     if (!dom.invList) return;                        // index-sidan saknar listan
     const openKeys = new Set(
       [...dom.invList.querySelectorAll('li.card:not(.compact)')]
-        .map(li => li.dataset.special || `${li.dataset.name || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+        .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
     );
     // Preserve open state for Formaliteter cards (now split into tools/info)
     if (dom.invFormal) {
@@ -1544,12 +1544,12 @@ ${moneyRow}
                      <button data-act="add" class="char-btn">+</button>`;
                 const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
                 const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
-                const cKey = `${c.name}|${c.trait || ''}|${cRowLevel || ''}`;
+                const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;
                 const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
                 const cPath = `${realIdx}.${j}`;
-                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-name="${c.name}"${cDataLevel}>
+                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${cDataLevel}>
                   <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${c.name}: ${c.trait}` : c.name}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
@@ -1565,6 +1565,7 @@ ${moneyRow}
           return `
             <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
+                data-id="${row.id || row.name}"
                 data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
               <div class="card-title"><span><span class="collapse-btn"></span>${(row.id === 'l9' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
