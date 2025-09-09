@@ -1340,9 +1340,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         ...baseQuals.filter(q => !removedQ.includes(q)),
         ...(row.kvaliteter || [])
       ];
+      const posCnt = countPositiveQuals(allQualsRow);
+      const mystCnt = allQualsRow.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
+      row.posQualCnt = posCnt;
       if (forgeLvl && forgeable) {
-        const posCnt = countPositiveQuals(allQualsRow);
-        const mystCnt = allQualsRow.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
         if (
           (forgeLvl === 1 && posCnt === 0) ||
           (forgeLvl === 2 && mystCnt === 0 && posCnt <= 1) ||
@@ -1367,17 +1368,25 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
       const allQuals = allQualsRow;
 
-      // varje icke-gratis kvalitet justerar priset
+      // varje kvalitet justerar priset
       allQuals.forEach((q) => {
         const qEntry = DB.find(x => x.namn === q) || {};
         const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
         const negat = Boolean(qEntry.negativ);
         const neut  = Boolean(qEntry.neutral);
-        const markedFree = (row.gratisKval || []).includes(q);
-        if (!markedFree || negat || neut) {
-          if (negat)      price /= 5;
-          else if (neut)  price *= 1;
-          else            price *= myst ? 10 : 5;
+        if (negat)      price /= 5;
+        else if (neut)  price *= 1;
+        else            price *= myst ? 10 : 5;
+      });
+
+      // återställ kostnaden för gratis positiva kvaliteter
+      (row.gratisKval || []).forEach((q) => {
+        const qEntry = DB.find(x => x.namn === q) || {};
+        const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
+        const negat = Boolean(qEntry.negativ);
+        const neut  = Boolean(qEntry.neutral);
+        if (!negat && !neut) {
+          price /= myst ? 10 : 5;
         }
       });
 
