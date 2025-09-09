@@ -237,14 +237,7 @@ function initCharacter() {
     const vals = {};
     KEYS.forEach(k=>{ vals[k] = (traits[k]||0) + (bonus[k]||0) + (maskBonus[k]||0); });
 
-    const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
-    const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
     const valStark = vals['Stark'];
-    const capacity = storeHelper.calcCarryCapacity(valStark, list);
-    const hardy = hasHardnackad ? 1 : 0;
-    const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
-    const tal = talBase + hardy;
-    const pain = storeHelper.calcPainThreshold(valStark, list, effects);
 
     const valWill = vals['Viljestark'];
     const strongGift = list.some(p=>p.namn==='Stark gåva' && ['Gesäll','Mästare'].includes(p.nivå||''));
@@ -257,8 +250,18 @@ function initCharacter() {
     const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
     const maxCor = baseMax + (hasSjalastark ? 1 : 0);
     let thresh = threshBase + resistCount - sensCount;
+    const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
     let perm = hasEarth ? (permBase % 2) : permBase;
-    const temp = storeHelper.calcDarkPastTemporaryCorruption(list, thresh);
+    perm += darkPerm;
+    const effectsWithDark = { ...effects, corruption: (effects.corruption || 0) + darkPerm };
+
+    const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
+    const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
+    const capacity = storeHelper.calcCarryCapacity(valStark, list);
+    const hardy = hasHardnackad ? 1 : 0;
+    const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
+    const tal = talBase + hardy;
+    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark);
 
     const defTrait = getDefenseTraitName(list);
     const kvickForDef = vals[defTrait];
@@ -337,7 +340,6 @@ function initCharacter() {
         <ul>
           <li>Maximal korruption: ${maxCor}</li>
           <li>Permanent korruption: ${perm}</li>
-          <li>Temporär korruption: ${temp}</li>
           <li>Korruptionströskel: ${thresh}</li>
         </ul>
       </section>

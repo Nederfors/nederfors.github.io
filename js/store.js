@@ -905,7 +905,7 @@ function defaultTraits() {
     return cor;
   }
 
-  function calcDarkPastTemporaryCorruption(list, thresh) {
+  function calcDarkPastPermanentCorruption(list, thresh) {
     if (!Array.isArray(list)) return 0;
     if (!list.some(e => e.namn === 'Mörkt förflutet')) return 0;
     return Math.ceil((Number(thresh) || 0) / 4);
@@ -1402,7 +1402,7 @@ function defaultTraits() {
     calcTotalXP,
     countDisadvantages,
     calcPermanentCorruption,
-    calcDarkPastTemporaryCorruption,
+    calcDarkPastPermanentCorruption,
     calcCarryCapacity,
     calcPainThreshold,
     abilityLevel,

@@ -172,6 +172,14 @@
     const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
     const sensCount   = list.filter(p => p.namn === 'Korruptionskänslig').length;
 
+    const valWill = vals['Viljestark'];
+    const baseMax   = strongGift ? valWill * 2 : valWill;
+    const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
+    const maxCor = baseMax + (hasSjalastark ? 1 : 0);
+    let   thresh = threshBase + resistCount - sensCount;
+    const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
+    const effectsWithDark = { ...effects, corruption: (effects.corruption || 0) + darkPerm };
+
     const defTrait = getDefenseTraitName(list);
     const defs = calcDefense(vals[defTrait]);
 
@@ -187,18 +195,14 @@
       if (k === 'Stark') {
         const base = storeHelper.calcCarryCapacity(val, list);
         tal  += hardy;
-        pain = storeHelper.calcPainThreshold(val, list, effects);
+        pain = storeHelper.calcPainThreshold(val, list, effectsWithDark);
         beforeExtra = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>` + `<div class="trait-extra">Bärkapacitet: ${formatWeight(base)}</div>`;
         afterExtra = '';
         extra = `<div class="trait-extra">Tålighet: ${tal} • Smärtgräns: ${pain}</div>`;
       } else if (k === 'Viljestark') {
-        const baseMax   = strongGift ? val * 2 : val;
-        const threshBase = strongGift ? val : Math.ceil(val / 2);
-        const maxCor = baseMax + (hasSjalastark ? 1 : 0);
-        let   thresh = threshBase + resistCount - sensCount;
         let perm = hasEarth ? (permBase % 2) : permBase;
-        const temp = storeHelper.calcDarkPastTemporaryCorruption(list, thresh);
-        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Temporär korruption: ${temp}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
+        perm += darkPerm;
+        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
       }
       if (k === 'Diskret') {
         if (storeHelper.abilityLevel(list, 'Fint') >= 1) {
