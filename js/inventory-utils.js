@@ -43,6 +43,9 @@
     return { d, s, o: ø };              // <–– returnera d/s/o
   };
 
+  // Divide a price expressed in the smallest unit to preserve value
+  const dividePrice = (o, div) => Math.floor(o / div);
+
   function getEntry(ref) {
     const custom = storeHelper.getCustomEntries(store);
     const own = custom.find(x => x.id === ref || x.namn === ref);
@@ -228,18 +231,23 @@
   }
 
   function sortQualsForDisplay(list) {
-    return list.slice().sort((a, b) => {
-      const nameA = (typeof a === 'object' && a !== null) ? a.q : a;
-      const nameB = (typeof b === 'object' && b !== null) ? b.q : b;
-      const prio = q => (isNegativeQual(q) || isNeutralQual(q)) ? 0 : 1;
-      const pa = prio(nameA); const pb = prio(nameB);
-      if (pa !== pb) return pa - pb;
-      return String(nameA).localeCompare(String(nameB));
-    });
+    return list.slice();
   }
 
   function countPositiveQuals(list) {
     return list.filter(q => !isNegativeQual(q) && !isNeutralQual(q)).length;
+  }
+
+  function ensureCheapestFree(row, entry) {
+    const removed = row.removedKval ?? [];
+    const baseQuals = [
+      ...(entry.taggar?.kvalitet ?? []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const baseQ = baseQuals.filter(q => !removed.includes(q));
+    const allQ = [...baseQ, ...(row.kvaliteter || [])];
+    const cheapest = allQ.find(q => !isNegativeQual(q) && !isNeutralQual(q));
+    row.gratisKval = cheapest ? [cheapest] : [];
   }
 
   function openQualPopup(list, callback) {
@@ -1064,7 +1072,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
       const before = price;
-      if (negat)      price = Math.floor(price / 5);
+      if (negat)      price = dividePrice(price, 5);
       else if (neut)  price *= 1;
       else            price *= myst ? 10 : 5;
       const after = price;
@@ -1173,7 +1181,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
-      if (negat)      price = Math.floor(price / 5);
+      if (negat)      price = dividePrice(price, 5);
       else if (neut)  price *= 1;
       else            price *= myst ? 10 : 5;
     });
@@ -1397,7 +1405,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const negat = Boolean(qEntry.negativ);
         const neut  = Boolean(qEntry.neutral);
         const before = price;
-        if (negat)      price = Math.floor(price / 5);
+        if (negat)      price = dividePrice(price, 5);
         else if (neut)  price *= 1;
         else            price *= myst ? 10 : 5;
         const after = price;
@@ -1731,6 +1739,7 @@ ${moneyRow}
         const inv  = storeHelper.getInventory(store);
         const { row } = getRowInfo(inv, li);
         if (!row) return;
+        const entry = getEntry(row.id || row.name);
         if (removeTagBtn.dataset.free) {
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
@@ -1744,6 +1753,21 @@ ${moneyRow}
           const q    = removeTagBtn.dataset.qual;
           if (removeTagBtn.classList.contains('free')) {
             row.gratisKval = (row.gratisKval || []).filter(x => x !== q);
+            const removed = row.removedKval ?? [];
+            const baseQuals = [
+              ...(entry.taggar?.kvalitet ?? []),
+              ...splitQuals(entry.kvalitet)
+            ];
+            const baseQ = baseQuals.filter(x => !removed.includes(x));
+            if (baseQ.includes(q)) {
+              row.removedKval = removed;
+              if (!removed.includes(q)) removed.push(q);
+              row.kvaliteter = row.kvaliteter || [];
+              row.kvaliteter.push(q);
+            } else if (row.kvaliteter) {
+              row.kvaliteter = row.kvaliteter.filter(x => x !== q);
+              row.kvaliteter.push(q);
+            }
           } else {
             const isBase = removeTagBtn.dataset.base === '1';
             if (isBase) {
@@ -1759,6 +1783,7 @@ ${moneyRow}
         } else if (removeTagBtn.dataset.mult) {
           delete row.priceMult;
         }
+        ensureCheapestFree(row, entry);
         saveInventory(inv);
         renderInventory();
         return;
@@ -2019,6 +2044,7 @@ ${moneyRow}
             const existing = [...baseQ, ...row.kvaliteter];
             if (!existing.includes(qn)) {
               row.kvaliteter.push(qn);
+              ensureCheapestFree(row, entry);
               saveInventory(inv);
               renderInventory();
             }
@@ -2029,18 +2055,7 @@ ${moneyRow}
 
       // "freeQual" markerar äldsta icke-gratis kvalitet som gratis
       if (act === 'freeQual') {
-        const removed = row.removedKval ?? [];
-        const baseQuals = [
-          ...(entry.taggar?.kvalitet ?? []),
-          ...splitQuals(entry.kvalitet)
-        ];
-        const baseQ = baseQuals.filter(q => !removed.includes(q));
-        const allQ = [...baseQ, ...(row.kvaliteter ?? [])];
-        if (!allQ.length) return;
-        row.gratisKval = (row.gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-        const qName = allQ.find(q => !row.gratisKval.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
-        if (!qName) return;
-        row.gratisKval.push(qName);
+        ensureCheapestFree(row, entry);
         saveInventory(inv);
         renderInventory();
         return;
