@@ -1279,7 +1279,7 @@
   },
   {
     "id": "di72",
-    "namn": "Tuggtobak, en ask",
+    "namn": "Tuggtobak, en portion",
     "beskrivning": "Kraftigt tuggbar tobak – för sjömän, gruvarbetare och andra som behöver något att bita i.",
     "taggar": {
       "typ": [
@@ -1287,17 +1287,17 @@
       ]
     },
     "stat": {
-      "vikt": 0.1
+      "vikt": 0.01
     },
     "grundpris": {
       "daler": 0,
       "skilling": 0,
-      "örtegar": 6
+      "örtegar": 1
     }
   },
   {
     "id": "di73",
-    "namn": "Örttobak, en ask",
+    "namn": "Örttobak, en portion",
     "beskrivning": "Mild tobak blandad med torkade örter för mjukare smak.",
     "taggar": {
       "typ": [
@@ -1305,12 +1305,12 @@
       ]
     },
     "stat": {
-      "vikt": 0.1
+      "vikt": 0.01
     },
     "grundpris": {
       "daler": 0,
-      "skilling": 2,
-      "örtegar": 0
+      "skilling": ,
+      "örtegar": 1
     }
   },
   {
