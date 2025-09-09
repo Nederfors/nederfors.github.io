@@ -1078,42 +1078,36 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (artLevel >= req) base = dividePrice(base, 2);
     }
     let price = base;
-    const steps = [];
+    const factors = [];
     allQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
-      const before = price;
       if (negat)      price = dividePrice(price, 5);
       else if (neut)  price *= 1;
       else            price *= myst ? 10 : 5;
-      const after = price;
-      steps.push({ name: q, before, after, negat, neut });
+      const factor = negat ? 5 : neut ? 1 : (myst ? 10 : 5);
+      factors.push({ name: q, factor, negat, neut });
     });
 
     const mult = row.priceMult || 1;
-    const fullPrice = price * mult;
+    price *= mult;
 
-    let adjustment = 0;
     const freeBase = Math.min(Number(row.gratis || 0), row.qty);
-    adjustment += base * freeBase;
+    const paidQty = row.qty - freeBase;
 
-    const freeQuals = (row.gratisKval || []).filter(q => {
+    const freeSet = new Set((row.gratisKval || []).filter(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       return !qEntry.negativ && !qEntry.neutral;
-    });
-    const usedIdx = new Set();
-    freeQuals.forEach(fq => {
-      const idx = steps.findIndex((s,i) => !usedIdx.has(i) && s.name === fq && !s.negat && !s.neut);
-      if (idx >= 0) {
-        const diff = (steps[idx].after - steps[idx].before) * mult * row.qty;
-        adjustment += diff;
-        usedIdx.add(idx);
+    }));
+    factors.forEach(f => {
+      if (freeSet.has(f.name) && !f.negat && !f.neut) {
+        price = dividePrice(price, f.factor);
       }
     });
 
-    const totalO = Math.max(0, fullPrice * row.qty - adjustment);
+    const totalO = Math.max(0, price * paidQty);
     return oToMoney(totalO);
   }
 
@@ -1245,10 +1239,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const baseQ = baseQuals.filter(q => !removedQ.includes(q));
     const addQ  = row.kvaliteter ?? [];
     const freeQ = (row.gratisKval ?? []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-    const all = sortQualsForDisplay([
-      ...baseQ.map(q => ({q, base:true})),
-      ...addQ.map(q => ({q, base:false}))
-    ]);
+    const all = [
+      ...baseQ.map(q => ({ q, base: true })),
+      ...addQ.map(q => ({ q, base: false }))
+    ];
     if (all.length) {
       const qhtml = all.map(obj => {
         const q = obj.q;
@@ -1369,10 +1363,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     const tot = flatInv.reduce((t, row) => {
       const entry = getEntry(row.id || row.name);
-      const basePrice = moneyToO(entry.grundpris || {});
-      let base  = basePrice;
-      const tagTyp = entry.taggar?.typ || [];
-      const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
       const baseQuals = [
         ...(entry.taggar?.kvalitet ?? []),
         ...splitQuals(entry.kvalitet)
@@ -1382,77 +1372,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         ...baseQuals.filter(q => !removedQ.includes(q)),
         ...(row.kvaliteter || [])
       ];
-      const posCnt = countPositiveQuals(allQualsRow);
-      const mystCnt = allQualsRow.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
-      row.posQualCnt = posCnt;
-      if (forgeLvl && forgeable) {
-        if (
-          (forgeLvl === 1 && posCnt === 0) ||
-          (forgeLvl === 2 && mystCnt === 0 && posCnt <= 1) ||
-          (forgeLvl >= 3 && posCnt <= 2)
-        ) {
-          base = dividePrice(base, 2);
-        }
-      }
-      const isElixir = (entry.taggar?.typ || []).includes('Elixir');
-      if (isElixir) {
-        const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
-        const req = LEVEL_IDX[lvlName] || 0;
-        if (alcLevel >= req) base = dividePrice(base, 2);
-      }
-      const isLArtifact = (entry.taggar?.typ || []).includes('L\u00e4gre Artefakt');
-      if (isLArtifact) {
-        const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
-        const req = LEVEL_IDX[lvlName] || 0;
-        if (artLevel >= req) base = dividePrice(base, 2);
-      }
-      let   price = base;                    // startvärde för kvaliteter
-
-      const steps = [];
-      const allQuals = allQualsRow;
-
-      // varje kvalitet justerar priset i ordning
-      allQuals.forEach((q) => {
-        const qEntry = DB.find(x => x.namn === q) || {};
-        const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-        const negat = Boolean(qEntry.negativ);
-        const neut  = Boolean(qEntry.neutral);
-        const before = price;
-        if (negat)      price = dividePrice(price, 5);
-        else if (neut)  price *= 1;
-        else            price *= myst ? 10 : 5;
-        const after = price;
-        steps.push({ name: q, before, after, negat, neut });
-      });
-
-      // pris efter alla kvaliteter
-      let fullPrice = price;
-
-      // apply any manually set price multiplier
-      const mult = row.priceMult || 1;
-      fullPrice *= mult;
-
-      // justeringar för gratis grundpris och kvaliteter
-      let adjustment = 0;
-      const freeBase = Math.min(Number(row.gratis || 0), row.qty);
-      adjustment += base * freeBase;
-
-      const freeQuals = (row.gratisKval || []).filter(q => {
-        const qEntry = DB.find(x => x.namn === q) || {};
-        return !qEntry.negativ && !qEntry.neutral;
-      });
-      const usedIdx = new Set();
-      freeQuals.forEach((fq) => {
-        const idx = steps.findIndex((s, i) => !usedIdx.has(i) && s.name === fq && !s.negat && !s.neut);
-        if (idx >= 0) {
-          const diff = (steps[idx].after - steps[idx].before) * mult * row.qty;
-          adjustment += diff;
-          usedIdx.add(idx);
-        }
-      });
-
-      const totalO = Math.max(0, fullPrice * row.qty - adjustment);
-      const m = oToMoney(totalO);
+      row.posQualCnt = countPositiveQuals(allQualsRow);
+      const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
       t.d += m.d; t.s += m.s; t.o += m.o;
       return t;
     }, { d: 0, s: 0, o: 0 });
@@ -2056,7 +1977,7 @@ ${moneyRow}
         return;
       }
 
-      // "freeQual" markerar äldsta icke-gratis kvalitet som gratis
+      // "freeQual" markerar billigaste icke-gratis kvalitet som gratis
       if (act === 'freeQual') {
         const removed = row.removedKval ?? [];
         const baseQuals = [
@@ -2066,10 +1987,40 @@ ${moneyRow}
         const baseQ = baseQuals.filter(q => !removed.includes(q));
         const allQ = [...baseQ, ...(row.kvaliteter ?? [])];
         if (!allQ.length) return;
+
         row.gratisKval = (row.gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-        const qName = allQ.find(q => !row.gratisKval.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
-        if (!qName) return;
-        row.gratisKval.push(qName);
+        const existing = new Set(row.gratisKval);
+        const candidates = allQ.filter(q => !existing.has(q) && !isNegativeQual(q) && !isNeutralQual(q));
+        if (!candidates.length) return;
+
+        const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+        const skillForge = storeHelper.abilityLevel(
+          storeHelper.getCurrentList(store), 'Smideskonst');
+        const forgeLvl = Math.max(partyForge, skillForge);
+        const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+        const skillAlc = storeHelper.abilityLevel(
+          storeHelper.getCurrentList(store), 'Alkemist');
+        const alcLevel = Math.max(partyAlc, skillAlc);
+        const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+        const skillArt = storeHelper.abilityLevel(
+          storeHelper.getCurrentList(store), 'Artefaktmakande');
+        const artLevel = Math.max(partyArt, skillArt);
+
+        const baseCost = moneyToO(calcRowCost(row, forgeLvl, alcLevel, artLevel));
+        let cheapest = candidates[0];
+        let cheapestDiff = Infinity;
+        candidates.forEach(q => {
+          const testRow = JSON.parse(JSON.stringify(row));
+          testRow.gratisKval = [...(row.gratisKval || []), q];
+          const testCost = moneyToO(calcRowCost(testRow, forgeLvl, alcLevel, artLevel));
+          const diff = baseCost - testCost;
+          if (diff < cheapestDiff) {
+            cheapestDiff = diff;
+            cheapest = q;
+          }
+        });
+
+        row.gratisKval.push(cheapest);
         saveInventory(inv);
         renderInventory();
         return;
