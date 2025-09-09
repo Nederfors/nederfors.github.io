@@ -1057,21 +1057,42 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (artLevel >= req) base = Math.floor(base / 2);
     }
     let price = base;
+    const steps = [];
     allQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
-      const markedFree = (row.gratisKval || []).includes(q);
-      if (!markedFree || negat || neut) {
-        if (negat)      price /= 5;
-        else if (neut)  price *= 1;
-        else            price *= myst ? 10 : 5;
+      const before = price;
+      if (negat)      price = Math.floor(price / 5);
+      else if (neut)  price *= 1;
+      else            price *= myst ? 10 : 5;
+      const after = price;
+      steps.push({ name: q, before, after, negat, neut });
+    });
+
+    const mult = row.priceMult || 1;
+    const fullPrice = price * mult;
+
+    let adjustment = 0;
+    const freeBase = Math.min(Number(row.gratis || 0), row.qty);
+    adjustment += base * freeBase;
+
+    const freeQuals = (row.gratisKval || []).filter(q => {
+      const qEntry = DB.find(x => x.namn === q) || {};
+      return !qEntry.negativ && !qEntry.neutral;
+    });
+    const usedIdx = new Set();
+    freeQuals.forEach(fq => {
+      const idx = steps.findIndex((s,i) => !usedIdx.has(i) && s.name === fq && !s.negat && !s.neut);
+      if (idx >= 0) {
+        const diff = (steps[idx].after - steps[idx].before) * mult * row.qty;
+        adjustment += diff;
+        usedIdx.add(idx);
       }
     });
-    price *= row.priceMult || 1;
-    const free = Math.min(Number(row.gratis || 0), row.qty);
-    const totalO = Math.max(0, price * row.qty - base * free);
+
+    const totalO = Math.max(0, fullPrice * row.qty - adjustment);
     return oToMoney(totalO);
   }
 
@@ -1152,7 +1173,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
-      if (negat)      price /= 5;
+      if (negat)      price = Math.floor(price / 5);
       else if (neut)  price *= 1;
       else            price *= myst ? 10 : 5;
     });
@@ -1366,35 +1387,50 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       }
       let   price = base;                    // startvärde för kvaliteter
 
+      const steps = [];
       const allQuals = allQualsRow;
 
-      // varje kvalitet justerar priset
+      // varje kvalitet justerar priset i ordning
       allQuals.forEach((q) => {
         const qEntry = DB.find(x => x.namn === q) || {};
         const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
         const negat = Boolean(qEntry.negativ);
         const neut  = Boolean(qEntry.neutral);
-        if (negat)      price /= 5;
+        const before = price;
+        if (negat)      price = Math.floor(price / 5);
         else if (neut)  price *= 1;
         else            price *= myst ? 10 : 5;
+        const after = price;
+        steps.push({ name: q, before, after, negat, neut });
       });
 
-      // återställ kostnaden för gratis positiva kvaliteter
-      (row.gratisKval || []).forEach((q) => {
+      // pris efter alla kvaliteter
+      let fullPrice = price;
+
+      // apply any manually set price multiplier
+      const mult = row.priceMult || 1;
+      fullPrice *= mult;
+
+      // justeringar för gratis grundpris och kvaliteter
+      let adjustment = 0;
+      const freeBase = Math.min(Number(row.gratis || 0), row.qty);
+      adjustment += base * freeBase;
+
+      const freeQuals = (row.gratisKval || []).filter(q => {
         const qEntry = DB.find(x => x.namn === q) || {};
-        const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-        const negat = Boolean(qEntry.negativ);
-        const neut  = Boolean(qEntry.neutral);
-        if (!negat && !neut) {
-          price /= myst ? 10 : 5;
+        return !qEntry.negativ && !qEntry.neutral;
+      });
+      const usedIdx = new Set();
+      freeQuals.forEach((fq) => {
+        const idx = steps.findIndex((s, i) => !usedIdx.has(i) && s.name === fq && !s.negat && !s.neut);
+        if (idx >= 0) {
+          const diff = (steps[idx].after - steps[idx].before) * mult * row.qty;
+          adjustment += diff;
+          usedIdx.add(idx);
         }
       });
 
-      // apply any manually set price multiplier
-      price *= row.priceMult || 1;
-
-      const free = Math.min(Number(row.gratis || 0), row.qty);
-      const totalO = Math.max(0, price * row.qty - base * free);
+      const totalO = Math.max(0, fullPrice * row.qty - adjustment);
       const m = oToMoney(totalO);
       t.d += m.d; t.s += m.s; t.o += m.o;
       return t;
