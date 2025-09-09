@@ -43,6 +43,11 @@
     return { d, s, o: ø };              // <–– returnera d/s/o
   };
 
+  const dividePrice = (amt, divisor) => {
+    const o = typeof amt === 'number' ? amt : moneyToO(amt || {});
+    return Math.floor(o / divisor);
+  };
+
   function getEntry(ref) {
     const custom = storeHelper.getCustomEntries(store);
     const own = custom.find(x => x.id === ref || x.namn === ref);
@@ -228,14 +233,7 @@
   }
 
   function sortQualsForDisplay(list) {
-    return list.slice().sort((a, b) => {
-      const nameA = (typeof a === 'object' && a !== null) ? a.q : a;
-      const nameB = (typeof b === 'object' && b !== null) ? b.q : b;
-      const prio = q => (isNegativeQual(q) || isNeutralQual(q)) ? 0 : 1;
-      const pa = prio(nameA); const pb = prio(nameB);
-      if (pa !== pb) return pa - pb;
-      return String(nameA).localeCompare(String(nameB));
-    });
+    return list.slice();
   }
 
   function countPositiveQuals(list) {
@@ -1043,18 +1041,18 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         (forgeLvl === 2 && mystCnt === 0 && posCnt <= 1) ||
         (forgeLvl >= 3 && posCnt <= 2)
       ) {
-        base = Math.floor(base / 2);
+        base = dividePrice(base, 2);
       }
     }
     if (tagTyp.includes('Elixir')) {
       const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) base = Math.floor(base / 2);
+      if (alcLevel >= req) base = dividePrice(base, 2);
     }
     if (tagTyp.includes('L\u00e4gre Artefakt')) {
       const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) base = Math.floor(base / 2);
+      if (artLevel >= req) base = dividePrice(base, 2);
     }
     let price = base;
     const steps = [];
@@ -1064,7 +1062,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
       const before = price;
-      if (negat)      price = Math.floor(price / 5);
+      if (negat)      price = dividePrice(price, 5);
       else if (neut)  price *= 1;
       else            price *= myst ? 10 : 5;
       const after = price;
@@ -1153,18 +1151,18 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         (forgeLevel === 2 && mystCnt === 0 && posCnt <= 1) ||
         (forgeLevel >= 3 && posCnt <= 2)
       ) {
-        price = Math.floor(price / 2);
+        price = dividePrice(price, 2);
       }
     }
     if (tagTyp.includes('Elixir')) {
       const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) price = Math.floor(price / 2);
+      if (alcLevel >= req) price = dividePrice(price, 2);
     }
     if (tagTyp.includes('L\u00e4gre Artefakt')) {
       const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) price = Math.floor(price / 2);
+      if (artLevel >= req) price = dividePrice(price, 2);
     }
 
     
@@ -1173,7 +1171,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
-      if (negat)      price = Math.floor(price / 5);
+      if (negat)      price = dividePrice(price, 5);
       else if (neut)  price *= 1;
       else            price *= myst ? 10 : 5;
     });
@@ -1370,20 +1368,20 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           (forgeLvl === 2 && mystCnt === 0 && posCnt <= 1) ||
           (forgeLvl >= 3 && posCnt <= 2)
         ) {
-          base = Math.floor(base / 2);
+          base = dividePrice(base, 2);
         }
       }
       const isElixir = (entry.taggar?.typ || []).includes('Elixir');
       if (isElixir) {
         const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
         const req = LEVEL_IDX[lvlName] || 0;
-        if (alcLevel >= req) base = Math.floor(base / 2);
+        if (alcLevel >= req) base = dividePrice(base, 2);
       }
       const isLArtifact = (entry.taggar?.typ || []).includes('L\u00e4gre Artefakt');
       if (isLArtifact) {
         const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
         const req = LEVEL_IDX[lvlName] || 0;
-        if (artLevel >= req) base = Math.floor(base / 2);
+        if (artLevel >= req) base = dividePrice(base, 2);
       }
       let   price = base;                    // startvärde för kvaliteter
 
@@ -1397,7 +1395,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const negat = Boolean(qEntry.negativ);
         const neut  = Boolean(qEntry.neutral);
         const before = price;
-        if (negat)      price = Math.floor(price / 5);
+        if (negat)      price = dividePrice(price, 5);
         else if (neut)  price *= 1;
         else            price *= myst ? 10 : 5;
         const after = price;
@@ -1742,10 +1740,18 @@ ${moneyRow}
           if (pg > 0) row.perkGratis = 0;
         } else if (removeTagBtn.dataset.qual) {
           const q    = removeTagBtn.dataset.qual;
+          const isBase = removeTagBtn.dataset.base === '1';
           if (removeTagBtn.classList.contains('free')) {
             row.gratisKval = (row.gratisKval || []).filter(x => x !== q);
+            row.kvaliteter = row.kvaliteter || [];
+            if (isBase) {
+              row.removedKval = row.removedKval || [];
+              if (!row.removedKval.includes(q)) row.removedKval.push(q);
+            } else {
+              row.kvaliteter = row.kvaliteter.filter(x => x !== q);
+            }
+            row.kvaliteter.push(q);
           } else {
-            const isBase = removeTagBtn.dataset.base === '1';
             if (isBase) {
               row.removedKval = row.removedKval || [];
               if (!row.removedKval.includes(q)) row.removedKval.push(q);
