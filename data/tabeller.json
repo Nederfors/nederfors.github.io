@@ -915,7 +915,7 @@
 },
 {
   "id": "ta17",
-  "namn": "Höstväder",
+  "namn": "Väder: Höst",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
     "Säsong",
@@ -1048,7 +1048,7 @@
 },
 {
   "id": "ta18",
-  "namn": "Sommarväder",
+  "namn": "Väder: Sommar",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
     "Säsong",
@@ -1181,7 +1181,7 @@
 },
 {
   "id": "ta19",
-  "namn": "Vinterväder",
+  "namn": "Väder: Vinter",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
     "Säsong",
@@ -1314,7 +1314,7 @@
 },
 {
   "id": "ta20",
-  "namn": "Vårväder",
+  "namn": "Väder: Vår",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
     "Säsong",
