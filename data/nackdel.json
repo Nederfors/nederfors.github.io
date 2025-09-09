@@ -186,8 +186,8 @@
   {
     "id": "na18",
     "namn": "Prios Förtappad",
-    "beskrivning": "Karaktären har en gång burit Prios välsignelse, men har vänt sig bort från tron eller på annat sätt brutit med prios läror. Karaktären har förlorat sin välsignelse. Karaktären har -1 i försvar mot attacker och effekter från genomkorrumperade varelser. Nackdelen kan skaffas upp till tre gånger för en kumulativ effekt.",
-    "kan_införskaffas_flera_gånger": true,
+    "beskrivning": "Karaktären har en gång burit Prios välsignelse, men har vänt sig bort från tron eller på annat sätt brutit med prios läror. Karaktären har förlorat sin välsignelse. Karaktären har -1 i försvar mot attacker och effekter från genomkorrumperade varelser.",
+    "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Nackdel"
@@ -290,8 +290,8 @@
   {
     "id": "na25",
     "namn": "Klumpeduns",
-    "beskrivning": "Karaktären har svårt att röra sig smidigt och är ofta otajmad eller fumlig i sina rörelser. Det kan handla om snubblande steg, vältande muggar eller en förmåga att alltid dra blickarna till sig vid fel tillfälle. När karaktären försöker vara diskret, smyga eller undvika att märkas får karaktären -1 på alla tärningsutslag. Denna nackdel går att införskaffa upp till tre gånger.",
-    "kan_införskaffas_flera_gånger": true,
+    "beskrivning": "Karaktären har svårt att röra sig smidigt och är ofta otajmad eller fumlig i sina rörelser. Det kan handla om snubblande steg, vältande muggar eller en förmåga att alltid dra blickarna till sig vid fel tillfälle. När karaktären försöker vara diskret, smyga eller undvika att märkas får karaktären -1 på alla tärningsutslag.",
+    "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Nackdel"
