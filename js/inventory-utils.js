@@ -1084,19 +1084,16 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     // Build price chain and track before/after for each quality
     let price = base;
     const steps = [];
-    const orderedQuals = [
-      ...allQuals.filter(q => !isNegativeQual(q)),
-      ...allQuals.filter(q => isNegativeQual(q))
-    ];
-    orderedQuals.forEach(q => {
+    const posQuals = allQuals.filter(q => !isNegativeQual(q));
+    const negQuals = allQuals.filter(q => isNegativeQual(q));
+    posQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-      const negat = Boolean(qEntry.negativ);
+      const negat = false;
       const neut  = Boolean(qEntry.neutral);
       const before = price;
-      if (negat)      price = dividePrice(price, 5);
-      else if (neut)  price *= 1;
-      else            price *= myst ? 10 : 5;
+      if (neut)  price *= 1;
+      else       price *= myst ? 10 : 5;
       const after = price;
       steps.push({ name: q, before, after, negat, neut });
     });
@@ -1120,15 +1117,16 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const remaining = [...freeNames];
     let qualAdjust = 0;
     steps.forEach(s => {
-      if (!s.negat && !s.neut) {
-        const idx = remaining.indexOf(s.name);
-        if (idx !== -1) {
-          qualAdjust += (s.after - s.before);
-          remaining.splice(idx, 1); // consume to enforce left-to-right
-        }
+      const idx = remaining.indexOf(s.name);
+      if (idx !== -1) {
+        qualAdjust += (s.after - s.before);
+        remaining.splice(idx, 1); // consume to enforce left-to-right
       }
     });
     total -= qualAdjust * mult * qty;
+
+    // Apply negative quality discount after all other adjustments
+    total = dividePrice(total, Math.pow(5, negQuals.length));
 
     const totalO = Math.max(0, total);
     return oToMoney(totalO);
@@ -1205,19 +1203,16 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (artLevel >= req) price = dividePrice(price, 2);
     }
 
-    const orderedBaseQuals = [
-      ...baseQuals.filter(q => !isNegativeQual(q)),
-      ...baseQuals.filter(q => isNegativeQual(q))
-    ];
-    orderedBaseQuals.forEach(q => {
+    const posBaseQuals = baseQuals.filter(q => !isNegativeQual(q));
+    const negBaseQuals = baseQuals.filter(q => isNegativeQual(q));
+    posBaseQuals.forEach(q => {
       const qEntry = DB.find(x => x.namn === q) || {};
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-      const negat = Boolean(qEntry.negativ);
       const neut  = Boolean(qEntry.neutral);
-      if (negat)      price = dividePrice(price, 5);
-      else if (neut)  price *= 1;
-      else            price *= myst ? 10 : 5;
+      if (neut) price *= 1;
+      else      price *= myst ? 10 : 5;
     });
+    price = dividePrice(price, Math.pow(5, negBaseQuals.length));
     price = Math.max(0, price);
     return oToMoney(price);
   }
