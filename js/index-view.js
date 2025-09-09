@@ -53,6 +53,14 @@ function initIndex() {
 
   const FALT_BUNDLE = ['Flinta och stål','Kokkärl','Rep, 10 meter','Sovfäll','Tändved','Vattenskinn'];
 
+  const QUAL_TYPE_MAP = {
+    'Vapenkvalitet': 'Vapen',
+    'Rustningskvalitet': 'Rustning',
+    'Sköldkvalitet': 'Sköld',
+    'Allmän kvalitet': 'Allmänt'
+  };
+  const QUAL_TYPE_KEYS = Object.keys(QUAL_TYPE_MAP);
+
   const flashAdded = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
     const root = dom.lista || document;
@@ -507,14 +515,15 @@ function initIndex() {
         let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
         const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
+        const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag">${QUAL_TYPE_MAP[t] || t}</span>`);
         const infoTagsHtml = [xpTag]
-          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(typeTags)
           .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
           .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
           .filter(Boolean)
           .join(' ');
         const tagsHtml = []
-          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(typeTags)
           .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
           .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
           .filter(Boolean)
@@ -529,6 +538,12 @@ function initIndex() {
         const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
         const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
         const badgeParts = [];
+        if (isQual(p)) {
+          (p.taggar?.typ || [])
+            .filter(t => QUAL_TYPE_KEYS.includes(t))
+            .map(t => QUAL_TYPE_MAP[t])
+            .forEach(lbl => badgeParts.push(`<span class="meta-badge">${lbl}</span>`));
+        }
         if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeText}: ${priceText}</span>`);
         if (capacityVal != null) badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${capacityVal}</span>`);
         if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
