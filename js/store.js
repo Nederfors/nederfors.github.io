@@ -20,8 +20,21 @@
 
   const DARK_BLOOD_TRAITS = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
 
-  const moneyToO = global.moneyToO;
-  const oToMoney = global.oToMoney;
+  function moneyToO(...args) {
+    const fn = global.moneyToO;
+    if (typeof fn !== 'function') {
+      throw new Error('moneyToO is not available');
+    }
+    return fn(...args);
+  }
+
+  function oToMoney(...args) {
+    const fn = global.oToMoney;
+    if (typeof fn !== 'function') {
+      throw new Error('oToMoney is not available');
+    }
+    return fn(...args);
+  }
 
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
