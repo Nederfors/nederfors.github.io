@@ -1,6 +1,6 @@
 [
   {
-    "namn": "Vin (landet)",
+    "namn": "Vin (Landet)",
     "beskrivning": "Husets bordsvin, lätt och fruktigt från lokala vingårdar.",
     "taggar": {
       "typ": [
@@ -18,7 +18,7 @@
     "id": "dr1"
   },
   {
-    "namn": "Vin (stad)",
+    "namn": "Vin (Stad)",
     "beskrivning": "Förnämare stadsvin, lagrat och serverat i glas från hyllad vinkällare.",
     "taggar": {
       "typ": [
@@ -36,7 +36,7 @@
     "id": "dr2"
   },
   {
-    "namn": "Öl (landet)",
+    "namn": "Öl (Landet)",
     "beskrivning": "Rustikt bondöl bryggt med korn från närområdet.",
     "taggar": {
       "typ": [
@@ -54,7 +54,7 @@
     "id": "dr3"
   },
   {
-    "namn": "Öl (stad)",
+    "namn": "Öl (Stad)",
     "beskrivning": "Finstämt stadsöl från bryggeri med flera humlesorter.",
     "taggar": {
       "typ": [
