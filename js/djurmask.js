@@ -51,7 +51,7 @@
     const cur=inv||storeHelper.getInventory(storeHelper.load());
     const res={};
     cur.forEach(it=>{
-      if(it.name==='Djurmask' && it.trait){
+      if(it.id==='l9' && it.trait){
         res[it.trait]=(res[it.trait]||0)+1;
       }
     });

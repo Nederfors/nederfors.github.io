@@ -20,7 +20,7 @@
     let hasShield = false;
     let weaponCount = 0;
     inv.forEach(row => {
-      const entry = invUtil.getEntry(row.name);
+      const entry = invUtil.getEntry(row.id || row.name);
       if (!entry) return;
       const types = entry.taggar?.typ || [];
       if (!types.includes('Vapen') && !types.includes('Sköld')) return;
@@ -51,7 +51,7 @@
     });
 
     let res = inv.reduce((out,row)=>{
-      const entry = invUtil.getEntry(row.name);
+      const entry = invUtil.getEntry(row.id || row.name);
       if(!entry || !((entry.taggar?.typ||[]).includes('Rustning'))) return out;
       const tagger = entry.taggar || {};
       const baseQ = [
@@ -269,7 +269,7 @@
     });
     const inv = storeHelper.getInventory(store);
     inv.forEach(row => {
-      if (row.name === 'Djurmask' && row.trait) maxTot += 1;
+      if (row.id === 'l9' && row.trait) maxTot += 1;
     });
     if (dom.traitsTot) dom.traitsTot.textContent = total;
     if (dom.traitsMax) dom.traitsMax.textContent = maxTot;

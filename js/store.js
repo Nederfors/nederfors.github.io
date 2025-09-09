@@ -143,6 +143,40 @@
     localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
   }
 
+  function migrateInventoryIds(store) {
+    try {
+      if (!store.data || typeof store.data !== 'object') return;
+      let changed = false;
+      Object.values(store.data).forEach(data => {
+        const custom = data.custom || [];
+        const migrateRow = row => {
+          if (!row || typeof row !== 'object') return;
+          const entry = custom.find(e => e.id === row.id || e.namn === row.name)
+            || (global.DB || []).find(e => e.id === row.id || e.namn === row.name);
+          if (entry) {
+            if (row.id !== entry.id) { row.id = entry.id; changed = true; }
+            if (row.name !== entry.namn) { row.name = entry.namn; changed = true; }
+          }
+          if (Array.isArray(row.contains)) row.contains.forEach(migrateRow);
+        };
+        (data.inventory || []).forEach(migrateRow);
+        if (Array.isArray(data.revealedArtifacts)) {
+          const updated = data.revealedArtifacts.map(n => {
+            const ent = custom.find(e => e.id === n || e.namn === n)
+              || (global.DBIndex && global.DBIndex[n])
+              || (global.DB && global.DB[n]);
+            return ent?.id || n;
+          });
+          if (JSON.stringify(updated) !== JSON.stringify(data.revealedArtifacts)) {
+            data.revealedArtifacts = [...new Set(updated)];
+            changed = true;
+          }
+        }
+      });
+      if (changed) save(store);
+    } catch {}
+  }
+
   /* ---------- 2b. Senaste sökningar ---------- */
   const MAX_RECENT_SEARCHES = 10;
 
@@ -655,20 +689,20 @@
     return data.revealedArtifacts || [];
   }
 
-  function addRevealedArtifact(store, name) {
+  function addRevealedArtifact(store, id) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     const set = new Set(store.data[store.current].revealedArtifacts || []);
-    set.add(name);
+    set.add(id);
     store.data[store.current].revealedArtifacts = [...set];
     save(store);
   }
 
-  function removeRevealedArtifact(store, name) {
+  function removeRevealedArtifact(store, id) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     const list = store.data[store.current].revealedArtifacts || [];
-    store.data[store.current].revealedArtifacts = list.filter(n => n !== name);
+    store.data[store.current].revealedArtifacts = list.filter(n => n !== id);
     save(store);
   }
 
@@ -686,16 +720,16 @@
     // Keep any currently selected entries that are hidden types
     getCurrentList(store).forEach(it => {
       const tagTyp = it.taggar?.typ || [];
-      if (isHiddenTags(tagTyp)) keep.add(it.namn);
+      if (isHiddenTags(tagTyp)) keep.add(it.id || it.namn);
     });
 
     // Keep any hidden items that still exist in the inventory (recursively)
     const collect = arr => {
       arr.forEach(row => {
-        const entry = (getCustomEntries(store).find(e => e.namn === row.name))
-          || (global.DB || []).find(e => e.namn === row.name) || {};
+        const entry = (getCustomEntries(store).find(e => e.id === row.id || e.namn === row.name))
+          || (global.DB || []).find(e => e.id === row.id || e.namn === row.name) || {};
         const tagTyp = entry.taggar?.typ || [];
-        if (isHiddenTags(tagTyp)) keep.add(entry.namn);
+        if (isHiddenTags(tagTyp)) keep.add(entry.id || entry.namn);
         if (Array.isArray(row.contains)) collect(row.contains);
       });
     };
@@ -1103,7 +1137,9 @@ function defaultTraits() {
     return (inv || []).map(row => {
       if (!row || typeof row !== 'object') return row;
       let res;
-      if (row.name && window.DBIndex && window.DBIndex[row.name]) {
+      if (row.id !== undefined) {
+        res = { i: row.id };
+      } else if (row.name && window.DBIndex && window.DBIndex[row.name]) {
         const entry = window.DBIndex[row.name];
         res = entry.id !== undefined ? { i: entry.id } : { n: row.name };
       } else {
@@ -1126,6 +1162,7 @@ function defaultTraits() {
       if (row && row.i !== undefined && window.DB && window.DB[row.i]) {
         const name = window.DB[row.i].namn;
         return {
+          id: row.i,
           name,
           qty: row.q || 1,
           gratis: row.g || 0,
@@ -1138,8 +1175,10 @@ function defaultTraits() {
         };
       }
       if (row && row.n) {
+        const ent = window.DBIndex && window.DBIndex[row.n];
         return {
-          name: row.n,
+          id: ent?.id,
+          name: ent?.namn || row.n,
           qty: row.q || 1,
           gratis: row.g || 0,
           kvaliteter: row.k || [],
@@ -1390,6 +1429,7 @@ function defaultTraits() {
     addRevealedArtifact,
     removeRevealedArtifact,
     clearRevealedArtifacts,
+    migrateInventoryIds,
     getNilasPopupSeen,
     setNilasPopupSeen,
     normalizeMoney,
