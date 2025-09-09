@@ -173,6 +173,16 @@
       const bi = LVL.indexOf(bLvl);
       if(ai !== bi) return ai - bi;
     }
+    if (['Kvalitet','Mystisk kvalitet'].includes(ta) && ['Kvalitet','Mystisk kvalitet'].includes(tb)) {
+      const order = ['Allm\u00e4n kvalitet','Vapenkvalitet','Rustningskvalitet','Sk\u00f6ldkvalitet'];
+      const aSub = taList[taList.indexOf(ta)+1];
+      const bSub = tbList[tbList.indexOf(tb)+1];
+      const ai = order.indexOf(aSub);
+      const bi = order.indexOf(bSub);
+      const ia = ai === -1 ? 0 : ai;
+      const ib = bi === -1 ? 0 : bi;
+      if (ia !== ib) return ia - ib;
+    }
     const at = taList.join(',');
     const bt = tbList.join(',');
     if(at < bt) return -1;
