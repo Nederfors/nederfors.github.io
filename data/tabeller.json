@@ -1447,7 +1447,7 @@
 },
 {
   "id": "ta21",
-  "namn": "Smärtgräns",
+  "namn": "Effekt vid överskriden Smärtgräns",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
     "1T20",
