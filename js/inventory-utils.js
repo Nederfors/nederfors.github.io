@@ -1442,6 +1442,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             ${vehicleBtns}
             <button id="dragToggle" class="char-btn">Dra & Släpp</button>
             <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
+            <button id="pdfLibraryBtn" class="char-btn">PDF-bank</button>
             <button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>
           </div>
         </div>
