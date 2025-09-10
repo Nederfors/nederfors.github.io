@@ -317,6 +317,9 @@ class SharedToolbar extends HTMLElement {
                 <button id="importChar" class="char-btn">Importera</button>
               </div>
               <div class="char-btn-row">
+                <button id="pdfLibraryBtn" class="char-btn">PDF-bank</button>
+              </div>
+              <div class="char-btn-row">
                 <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
               </div>
             </div>
