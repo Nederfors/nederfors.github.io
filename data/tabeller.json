@@ -1447,7 +1447,7 @@
 },
 {
   "id": "ta21",
-  "namn": "Kritisk skada",
+  "namn": "Smärtgräns",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
     "1T20",
@@ -1553,7 +1553,7 @@
     {
       "1T20": "20",
       "Effekt": "Kritiskt skadad",
-      "Beskrivning": "Rollpersonen skadas så illa att den permanent får –1 på ett karaktärsdrag; slå 1T8 och räkna karaktärsdrag från vänster för att avgöra vilket."
+      "Beskrivning": "Rollpersonen skadas så illa att den faller till marken och dessutom permanent får –1 på sin Tålighet."
     }
   ]
 }
