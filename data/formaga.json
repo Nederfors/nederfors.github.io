@@ -28,7 +28,7 @@
     "nivåer": {
       "Novis": "Handling: Förflyttning. Rollpersonen får slå mot Kvick för att undvika att dra på sig frislag från fiender i närstrid. Slaget måste slås för varje fiende som rollpersonen passerar. Det gäller både vid passage av fiender eller för att dra sig ur en närstrid med en fiende. Om slaget misslyckas kan spelaren välja att antingen bli kvar eller att förflytta sig i alla fall, och då ådra sig ett frislag på vanligt vis.",
       "Gesäll": "Handling: Fri. Rollpersonen studsar spänstigt upp på fötter med ett lyckat Kvick direkt den har fällts eller ramlat omkull, detta som en fri handling. Om slaget misslyckas måste rollpersonen spendera en förflyttning på att ställa sig upp.",
-      "Mästare": "Handling: Reaktiv. Rollpersonen kan utnyttja sina fiender som sköldar. I strid mot fler än en fiende kan rollpersonen en gång per runda använda en fiende som sköld och låta denne ta en träff istället för rollpersonen. Fienden i fråga får inte försvara sig mot sin allierades attack, men mästeraktobaten måste lyckas med ett Kvick för att fienden ska överta träffen."
+      "Mästare": "Handling: Reaktiv. Rollpersonen kan utnyttja sina fiender som sköldar. I strid mot fler än en fiende kan rollpersonen en gång per runda använda en fiende som sköld och låta denne ta en träff istället för rollpersonen. Fienden i fråga får inte försvara sig mot sin allierades attack, men mästerakrobaten måste lyckas med ett Kvick för att fienden ska överta träffen."
     }
   },
   {
@@ -88,7 +88,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen kan som en fri handling gå in helt för att skada och gör då +1T6 i extra skada med sina närstridsattacker. Nackdelen är att rollpersonen försvarar sig illa. Det karaktärsdrag som Försvar baseras på räknas som 5 avseende Försvar.",
-      "Gesäll": "Handling: Reaktion. Vreden är starkare än rädslan för döden hos rollpersonen, som under sitt bärsärkarus fortsätter slå dödsslag som vanligt, men kan fortsätta agera som om den vore oskadd.",
+      "Gesäll": "Handling: Reaktiv. Vreden är starkare än rädslan för döden hos rollpersonen, som under sitt bärsärkarus fortsätter slå dödsslag som vanligt, men kan fortsätta agera som om den vore oskadd.",
       "Mästare": "Handling: Fri. Rollpersonens vrede har kallnat utan att förlora något av sin styrka. Rollpersonen kan rida på vredens våg och på så sätt behålla kraften att ge och ignorera extra skada samtidigt som hjälten får försvara sig som vanligt"
     }
   },
@@ -1269,7 +1269,7 @@
   },
   {
     "id": "form42",
-    "namn": "BliXtsnabba refleXer",
+    "namn": "Blixtsnabba reflexer",
     "beskrivning": "Tjuvar har inte mycket gemensamt mer än att de alla är rädda om sina skinn – antingen för att de gillar det som det är eller för att de med dårens envishet vill fortsätta mot sina mål. Denna vilja att leva vidare har resulterat i utvecklandet av olika sätt att undgå skada.",
     "taggar": {
       "typ": [
@@ -2178,7 +2178,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Karaktären är van vid att lugna sig, sikta och andas rätt. Genom att avstå från sin förflyttningshandling får hen en andra chans att träffa med sitt anfall under samma runda om hen anfaller med Träffsäker.",
-      "Gesäll": "Handling: Speciell. Karaktären har ett vältränat öga och träffsäkerhet. Således kan hen lätt sikta in sig på svagheter hos sin motståndare. Alla anfall som görs med karaktärsdraget “Träffsäker” gör 1t4 extra i skada.",
+      "Gesäll": "Handling: Speciell. Karaktären har ett vältränat öga och träffsäkerhet. Således kan hen lätt sikta in sig på svagheter hos sin motståndare. Alla anfall som görs med karaktärsdraget “Träffsäker” gör 1T4 extra i skada.",
       "Mästare": "Handling: Aktiv. Karaktären behärskar konsten att sikta på särskilda kroppsdelar och deras svagheter. Genom att offra en förflyttning får karaktären sikta på specifika kroppsdelar utan minusmodifikation på sitt slag. En väl siktad attack ignorerar bepansring och om slaget överstiger smärtgräns tillämpas en effekt enligt träfftabellen på sidan 108 i Spelarens Handbok."
     }
   },
