@@ -1555,7 +1555,9 @@
       "Effekt": "Kritiskt skadad",
       "Beskrivning": "Rollpersonen skadas så illa att den faller till marken och dessutom permanent får –1 på sin Tålighet."
     }
-  ]
+    
+    ],
+   "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T20 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
 }
 
 ]
