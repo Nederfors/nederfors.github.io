@@ -1372,29 +1372,29 @@
     "id": "mo54"
   },
   {
-    "namn": "Väldig",
-    "beskrivning": "Det finns varelser som växer sig så väldiga att deras rena storlek ger dem fördelar gentemot normalstora varelser, om än till priset av viss långsamhet i rörelsemönster och reflexer. Att komma levande ur en strid mot sådana vidunder kräver minst lika mycket tur som skicklighet, och när det gäller de väldigaste bjässarna även stridsredskap utöver det vanliga. Väldig kräver att varelsen har nivå Mästare i särdraget Robust.",
-    "taggar": {
-      "typ": [
-        "Monstruöst särdrag"
+  "namn": "Väldig",
+  "beskrivning": "Varelser som blir så stora att ren massa ger dem övertag mot normalstora motståndare, på bekostnad av rörelse- och reaktionshastighet. Att överleva en sammandrabbning med sådana bestar kräver både skicklighet och tur, och mot de största även ovanliga stridsredskap. Förkrav: Mästare i Robust. Vidare gäller att  1) Närstridsattacker träffar ytterligare 1 varelse per nivå i Väldig (utöver huvudmålet). 2) Radien som räknas som närstrid ökar med 3 meter per nivå i Väldig. 3) Alla anfall får kvaliteten \"väldigt lång\", som trumfar kvaliteten \"lång\" vid frislag.",
+  "taggar": {
+    "typ": [
+      "Monstruöst särdrag"
+    ],
+    "handling": {
+      "Novis": [
+        "Passiv"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
-      }
-    },
-    "nivåer": {
-      "Novis": "Handling: Passiv. Varelsens båda handlingar går åt när den attackerar; den kan alltså inte förflytta sig och attackera under samma runda. I gengäld träffar dess attacker med en kraft som vanlig rustning har svårt att skydda mot – målet slår för Bepansring två gånger och det lägsta utfallet gäller.",
-      "Gesäll": "Handling: Passiv. Som Novis, men varelsens väldiga kroppshydda gör den oförmögen att utföra reaktiva handlingar (exempelvis Försvar) i samband med förflyttning. Å andra sidan är varelsens räckvidd och storlek nu sådan att fienden har svårt att parera eller hinna undvika attackerna – målet har två chanser att misslyckas med sitt Försvar.",
-      "Mästare": "Handling: Passiv. Som Gesäll, med tillägget att varelsens massiva kropp inte längre kan skadas av vanliga vapen och projektiler. Varelsen tar bara skada av magiska vapen och mystiska krafter."
-    },
+      "Gesäll": [
+        "Passiv"
+      ],
+      "Mästare": [
+        "Passiv"
+      ]
+    }
+  },
+  "nivåer": {
+    "Novis": "Handling: Passiv. Varelsens båda handlingar går åt när den attackerar; den kan inte förflytta sig och attackera under samma runda. Rustning pressas: målet slår för Bepansring två gånger och det lägsta utfallet gäller. Närstridsattacker kan träffa upp till 2 mål (1 extra) inom 3 m radie; alla anfall har kvaliteten \"väldigt lång\" (trumfar \"lång\" vid frislag).",
+    "Gesäll": "Handling: Passiv. Som Novis, men varelsens kroppshydda gör den oförmögen att utföra reaktiva handlingar (t.ex. Försvar) i samband med förflyttning. Försvar mot dess attacker försvåras: målet slår två Försvar och det sämsta resultatet gäller. Närstridsattacker kan träffa upp till 3 mål (2 extra) inom 6 m radie; alla anfall har kvaliteten \"väldigt lång\".",
+    "Mästare": "Handling: Passiv. Som Gesäll, med tillägget att varelsen endast tar skada av magiska vapen och mystiska krafter. Närstridsattacker kan träffa upp till 4 mål (3 extra) inom 9 m radie; alla anfall har kvaliteten \"väldigt lång\"."
+  },
     "id": "mo55"
   },
   {
