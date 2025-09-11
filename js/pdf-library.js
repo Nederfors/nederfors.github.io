@@ -10,7 +10,14 @@ pdfBtn?.addEventListener('click', async () => {
   const box = document.getElementById('pdfOptions');
   const cls = document.getElementById('pdfCancel');
   box.innerHTML = pdfs
-    .map(p => `<button data-href="${encodeURI(p.file)}" class="char-btn">${p.title}</button>`)
+    .map(cat => `
+      <div class="pdf-category">
+        <h3>${cat.category}</h3>
+        ${cat.items
+          .map(p => `<button data-href="${encodeURI(p.file)}" class="char-btn">${p.title}</button>`)
+          .join('')}
+      </div>
+    `)
     .join('');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
