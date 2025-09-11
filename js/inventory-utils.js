@@ -1251,7 +1251,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     }
     desc += itemStatHtml(entry, row);
     if (row.trait && row.id !== 'l9') {
-      desc += `<br><strong>Karakt\u00e4rsdrag:</strong> ${row.trait}`;
+      const ent = getEntry(row.id || row.name);
+      const label = ent.boundLabel || 'Karakt\u00e4rsdrag';
+      desc += `<br><strong>${label}:</strong> ${row.trait}`;
     }
 
     const removedQ = row.removedKval ?? [];
@@ -1930,6 +1932,20 @@ ${moneyRow}
                 if(!trait) return;
                 if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(trait);
+              });
+            } else if (entry.bound === 'kraft' && window.powerPicker) {
+              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
+              powerPicker.pickKraft(used, async val => {
+                if(!val) return;
+                if (used.includes(val) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                addRow(val);
+              });
+            } else if (entry.bound === 'ritual' && window.powerPicker) {
+              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
+              powerPicker.pickRitual(used, async val => {
+                if(!val) return;
+                if (used.includes(val) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                addRow(val);
               });
             } else {
               addRow();

@@ -1126,6 +1126,20 @@ function initIndex() {
               if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
               addRow(trait);
             });
+          } else if (p.bound === 'kraft' && window.powerPicker) {
+            const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
+            powerPicker.pickKraft(used, async val => {
+              if(!val) return;
+              if (used.includes(val) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+              addRow(val);
+            });
+          } else if (p.bound === 'ritual' && window.powerPicker) {
+            const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
+            powerPicker.pickRitual(used, async val => {
+              if(!val) return;
+              if (used.includes(val) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+              addRow(val);
+            });
           } else {
             addRow();
           }

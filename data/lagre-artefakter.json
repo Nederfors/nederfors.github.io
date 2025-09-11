@@ -11,8 +11,10 @@
       ]
     },
     "nivåer": {
-      "Novis": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå (beroende på nivå i pergamentet), som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till samma nivå som kraften på pergamentet eller högre, alternativt besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+      "Novis": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novisnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst novisnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
     },
+    "bound": "kraft",
+    "boundLabel": "Formel",
     "grundpris": {
       "daler": 2,
       "skilling": 0,
@@ -122,6 +124,8 @@
     "nivåer": {
       "Novis": "En ritual nedtecknas i en kodex på ett sådant sätt att en annan ritualist kan använda den, trots att de inte behärskar ritualen. Kodexen förbrukas när ritualen används."
     },
+    "bound": "ritual",
+    "boundLabel": "Ritual",
     "grundpris": {
       "daler": 4,
       "skilling": 0,
@@ -240,8 +244,10 @@
       ]
     },
     "nivåer": {
-      "Gesäll": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå (beroende på nivå i pergamentet), som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till samma nivå som kraften på pergamentet eller högre, alternativt besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+      "Gesäll": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på gesällnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst gesällnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
     },
+    "bound": "kraft",
+    "boundLabel": "Formel",
     "grundpris": {
       "daler": 4,
       "skilling": 0,
@@ -261,8 +267,10 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+      "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på gesällnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
     },
+    "bound": "kraft",
+    "boundLabel": "Formel",
     "grundpris": {
       "daler": 8,
       "skilling": 0,
@@ -282,8 +290,10 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+      "Novis": "Artefaktmakaren har bundit en mystisk kraft på novisnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
     },
+    "bound": "kraft",
+    "boundLabel": "Formel",
     "grundpris": {
       "daler": 8,
       "skilling": 0,
@@ -597,8 +607,10 @@
       ]
     },
     "nivåer": {
-      "Mästare": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå (beroende på nivå i pergamentet), som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till samma nivå som kraften på pergamentet eller högre, alternativt besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
+      "Mästare": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på mästarnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst mästarnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
     },
+    "bound": "kraft",
+    "boundLabel": "Formel",
     "grundpris": {
       "daler": 6,
       "skilling": 0,
@@ -618,8 +630,10 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Mästare": "Artefaktmakaren har bundit en mystisk kraft på novis-, gesäll- eller mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
+      "Mästare": "Artefaktmakaren har bundit en mystisk kraft på mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
     },
+    "bound": "kraft",
+    "boundLabel": "Formel",
     "grundpris": {
       "daler": 12,
       "skilling": 0,
@@ -662,6 +676,8 @@
     "nivåer": {
       "Mästare": "Artefaktmakaren binder en ritual i ett sigill, som när det bryts utlöser ritualens effekt. Skaparen av sigillet måste inte själv behärska ritualen men behöver någon med sig som kan ritualen vid skapandet av sigillet, eller ha tillgång till en ritualkodex med ritualen (kodexen förstörs då när sigillet skapas). Den som bryter sigillet drabbas av temporär korruption som vanligt."
     },
+    "bound": "ritual",
+    "boundLabel": "Ritual",
     "grundpris": {
       "daler": 12,
       "skilling": 0,
