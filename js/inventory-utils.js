@@ -579,7 +579,9 @@
       if (!row) return;
       const entry = getEntry(row.id || row.name);
       const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-        .some(t => entry.taggar?.typ?.includes(t)) && !STACKABLE_IDS.includes(entry.id);
+        .some(t => entry.taggar?.typ?.includes(t)) &&
+        !STACKABLE_IDS.includes(entry.id) &&
+        !['kraft','ritual'].includes(entry.bound);
 
       if (indiv) {
         for (let i = 0; i < qty; i++) {
@@ -1504,11 +1506,12 @@ ${moneyRow}
           /* — knappar — */
           const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
           const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
- const btnRow = isGear
-  ? `<button data-act="del" class="char-btn danger">🗑</button>`
-  : `<button data-act="del" class="char-btn danger">🗑</button>
-      <button data-act="sub" class="char-btn">–</button>
-      <button data-act="add" class="char-btn">+</button>`;
+          const canStack = ['kraft','ritual'].includes(entry.bound);
+          const btnRow = (isGear && !canStack)
+            ? `<button data-act="del" class="char-btn danger">🗑</button>`
+            : `<button data-act="del" class="char-btn danger">🗑</button>
+               <button data-act="sub" class="char-btn">–</button>
+               <button data-act="add" class="char-btn">+</button>`;
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
@@ -1550,7 +1553,8 @@ ${moneyRow}
                 const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
                 const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
                 const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
-                const cBtnRow = cIsGear
+                const cCanStack = ['kraft','ritual'].includes(centry.bound);
+                const cBtnRow = (cIsGear && !cCanStack)
                   ? `<button data-act="del" class="char-btn danger">🗑</button>`
                   : `<button data-act="del" class="char-btn danger">🗑</button>
                      <button data-act="sub" class="char-btn">–</button>
@@ -1859,7 +1863,9 @@ ${moneyRow}
               const ent = getEntry(id);
               if (!ent.namn) return;
               const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-                .some(t => ent.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(ent.id);
+                .some(t => ent.taggar.typ.includes(t)) &&
+                !STACKABLE_IDS.includes(ent.id) &&
+                !['kraft','ritual'].includes(ent.bound);
               const existing = inv.findIndex(r => r.id === ent.id);
               if (indivItem || existing === -1) {
                 inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
@@ -1880,7 +1886,9 @@ ${moneyRow}
             });
           } else {
             const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-              .some(t => entry.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(entry.id);
+              .some(t => entry.taggar.typ.includes(t)) &&
+              !STACKABLE_IDS.includes(entry.id) &&
+              !['kraft','ritual'].includes(entry.bound);
             const tagTyp = entry.taggar?.typ || [];
             let artifactEffect = '';
             if (tagTyp.includes('Artefakt')) {
@@ -1939,7 +1947,9 @@ ${moneyRow}
                 setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
               }
             };
-            if (entry.traits && window.maskSkill) {
+            if (['kraft','ritual'].includes(entry.bound) && row?.trait) {
+              addRow(row.trait);
+            } else if (entry.traits && window.maskSkill) {
               const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
               maskSkill.pickTrait(used, async trait => {
                 if(!trait) return;
