@@ -14,9 +14,11 @@
     const search=pop.querySelector('#powerSearch');
     const cls=pop.querySelector('#powerCancel');
     pop.querySelector('#powerTitle').textContent=title;
+    let current=list;
     function render(f=''){
       const fl=f.trim().toLowerCase();
-      box.innerHTML=list.filter(n=>n.toLowerCase().includes(fl)).map((n,i)=>`<button data-i="${i}" class="char-btn">${n}</button>`).join('');
+      current=list.filter(n=>n.toLowerCase().includes(fl));
+      box.innerHTML=current.map((n,i)=>`<button data-i="${i}" class="char-btn">${n}</button>`).join('');
     }
     render();
     pop.classList.add('open');
@@ -35,7 +37,7 @@
       if(!b) return;
       const idx=Number(b.dataset.i);
       close();
-      cb(list[idx]);
+      cb(current[idx]);
     }
     function onCancel(){ close(); cb(null); }
     function onOutside(e){ if(!pop.querySelector('.popup-inner').contains(e.target)){ close(); cb(null); } }

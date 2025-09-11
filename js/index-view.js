@@ -52,6 +52,7 @@ function initIndex() {
   const isHidden = p => (p.taggar?.typ || []).some(t => ['artefakt','kuriositet','skatt'].includes(String(t).toLowerCase()));
 
   const FALT_BUNDLE = ['di10','di11','di12','di13','di14','di15'];
+  const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
 
   const QUAL_TYPE_MAP = {
     'Vapenkvalitet': 'Vapen',
@@ -1030,7 +1031,7 @@ function initIndex() {
             const ent = invUtil.getEntry(id);
             if (!ent.namn) return;
             const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-              .some(t=>ent.taggar.typ.includes(t));
+              .some(t=>ent.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(ent.id);
             const existing = inv.find(r => r.id === ent.id);
             if (indivItem || !existing) {
               inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
@@ -1050,7 +1051,8 @@ function initIndex() {
             }
           });
         } else {
-          const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t=>p.taggar.typ.includes(t));
+          const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+            .some(t=>p.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(p.id);
           const rowBase = { id:p.id, name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
           const tagTyp = p.taggar?.typ || [];
           if (tagTyp.includes('L\u00e4gre Artefakt')) {
@@ -1130,14 +1132,14 @@ function initIndex() {
             const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
             powerPicker.pickKraft(used, async val => {
               if(!val) return;
-              if (used.includes(val) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+              if (used.includes(val) && !STACKABLE_IDS.includes(p.id) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
               addRow(val);
             });
           } else if (p.bound === 'ritual' && window.powerPicker) {
             const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
             powerPicker.pickRitual(used, async val => {
               if(!val) return;
-              if (used.includes(val) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+              if (used.includes(val) && !STACKABLE_IDS.includes(p.id) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
               addRow(val);
             });
           } else {
