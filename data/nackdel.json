@@ -571,7 +571,7 @@
   {
     "id": "na53",
     "namn": "Mystiskt fokustvång",
-    "beskrivning": "Rollpersonens mystik är knuten till ett särskilt fokus; vad som krävs anges oftast i beskrivningen för den aktuella mystiska förmågan. Saknas detta fokus när förmågan eller en ritual används får rollpersonen −1 på slaget. Varje mystiskt fokus har en vikt på 0.2.",
+    "beskrivning": "Rollpersonens mystik är knuten till särskilda fokus; vad som krävs anges oftast i beskrivningen för de mystiska förmågorna. Saknas dessa fokus när förmågor eller ritualer används får rollpersonen slå två slag och välja det sämsta. Varje mystiskt fokus har en vikt på 0.5.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": []
