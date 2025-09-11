@@ -11,6 +11,7 @@
   const oToMoney = window.oToMoney;
   const INV_TOOLS_KEY = 'invToolsOpen';
   const INV_INFO_KEY  = 'invInfoOpen';
+  const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -578,7 +579,7 @@
       if (!row) return;
       const entry = getEntry(row.id || row.name);
       const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-        .some(t => entry.taggar?.typ?.includes(t));
+        .some(t => entry.taggar?.typ?.includes(t)) && !STACKABLE_IDS.includes(entry.id);
 
       if (indiv) {
         for (let i = 0; i < qty; i++) {
@@ -1857,7 +1858,8 @@ ${moneyRow}
             bundle.forEach(id => {
               const ent = getEntry(id);
               if (!ent.namn) return;
-              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t => ent.taggar.typ.includes(t));
+              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+                .some(t => ent.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(ent.id);
               const existing = inv.findIndex(r => r.id === ent.id);
               if (indivItem || existing === -1) {
                 inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
@@ -1877,7 +1879,8 @@ ${moneyRow}
               }
             });
           } else {
-            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'].some(t => entry.taggar.typ.includes(t));
+            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+              .some(t => entry.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(entry.id);
             const tagTyp = entry.taggar?.typ || [];
             let artifactEffect = '';
             if (tagTyp.includes('Artefakt')) {
@@ -1947,14 +1950,14 @@ ${moneyRow}
               const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
               powerPicker.pickKraft(used, async val => {
                 if(!val) return;
-                if (used.includes(val) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                if (used.includes(val) && !STACKABLE_IDS.includes(entry.id) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(val);
               });
             } else if (entry.bound === 'ritual' && window.powerPicker) {
               const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
               powerPicker.pickRitual(used, async val => {
                 if(!val) return;
-                if (used.includes(val) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                if (used.includes(val) && !STACKABLE_IDS.includes(entry.id) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(val);
               });
             } else {
