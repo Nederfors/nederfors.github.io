@@ -15,6 +15,7 @@
     "items": [
       { "title": "Spelv\u00e4rld", "file": "data/Spelva\u0308rld.pdf" },
       { "title": "Davokar", "file": "data/Davokar.pdf" },
+      { "title": "Karta", "file": "data/karta.pdf" },
       { "title": "Mystiska Traditioner", "file": "data/Mystiska Traditioner.pdf" }
     ]
   },
