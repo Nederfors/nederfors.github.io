@@ -484,7 +484,7 @@
   {
     "id": "na42",
     "namn": "Blodskygg",
-    "beskrivning": "Synen av eget blod gör kroppen att darra och sinnet att förvänta sig värre än det är. Varje gång rollpersonen tar blodsgjutande skada krävs ett slag mot Viljestark; misslyckas slaget behandlas skadan som om smärtgränsen passerats och dess följder tillämpas.",
+    "beskrivning": "Synen av eget blod gör kroppen att darra och sinnet att förvänta sig värre än det är. Varje gång rollpersonen tar blodsgjutande skada krävs ett slag mot Viljestark; misslyckas slaget behandlas skadan som om smärtgränsen passerats och utfallet blir att rollpersonen faller till marken eller drar på sig ett frislag.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Viljestark"]
