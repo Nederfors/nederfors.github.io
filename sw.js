@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v7';
+const CACHE_NAME = 'symbaroum-pwa-v8';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -75,9 +75,15 @@ const URLS_TO_CACHE = [
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then(cache => cache.addAll(URLS_TO_CACHE))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(URLS_TO_CACHE);
+      const response = await cache.match('data/pdf-list.json');
+      if (response) {
+        const pdfs = await response.json();
+        await cache.addAll(pdfs.map(p => p.file));
+      }
+    })()
   );
 });
 
