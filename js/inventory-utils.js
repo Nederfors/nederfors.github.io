@@ -189,11 +189,20 @@
 
   function makeNameMap(inv) {
     const counts = {};
-    inv.forEach(r => { counts[r.name] = (counts[r.name] || 0) + 1; });
+    const baseNames = new Map();
+    inv.forEach(r => {
+      const entry = getEntry(r.id || r.name);
+      let n = r.name;
+      if (r.trait && (entry.bound || r.id === 'l9')) {
+        n += `: ${r.trait}`;
+      }
+      baseNames.set(r, n);
+      counts[n] = (counts[n] || 0) + 1;
+    });
     const idx = {};
     const map = new Map();
     inv.forEach(r => {
-      const n = r.name;
+      const n = baseNames.get(r);
       if (counts[n] > 1) {
         idx[n] = (idx[n] || 0) + 1;
         map.set(r, `${n} ${idx[n]}`);
@@ -222,6 +231,7 @@
     const t = String(txt).toLowerCase();
     const name = String(row.name || '').toLowerCase();
     if (name.includes(t)) return true;
+    if (row.trait && String(row.trait).toLowerCase().includes(t)) return true;
     if (Array.isArray(row.contains)) {
       return row.contains.some(ch => rowMatchesText(ch, t));
     }
@@ -1250,9 +1260,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       desc += `<div class="tags">${tagList.join(' ')}</div>`;
     }
     desc += itemStatHtml(entry, row);
-    if (row.trait && row.id !== 'l9') {
-      const ent = getEntry(row.id || row.name);
-      const label = ent.boundLabel || 'Karakt\u00e4rsdrag';
+    if (row.trait && !entry.bound && row.id !== 'l9') {
+      const label = entry.boundLabel || 'Karakt\u00e4rsdrag';
       desc += `<br><strong>${label}:</strong> ${row.trait}`;
     }
 
@@ -1552,8 +1561,9 @@ ${moneyRow}
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
                 const cPath = `${realIdx}.${j}`;
-                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${cDataLevel}>
-                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${c.name}: ${c.trait}` : c.name}${cBadge}</span></div>
+                const cTitle = nameMap.get(c) || c.name;
+                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait?` data-trait="${c.trait}"`:''}${cDataLevel}>
+                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${cTitle}: ${c.trait}` : cTitle}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
                     ${cBtnRow}
