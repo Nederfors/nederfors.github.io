@@ -653,10 +653,10 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Mästare": "Ett traditionspecifikt fokus som ger +1 på slag för traditionens samtliga mystiska krafter, dock kan det endast användas en gång per scen. Däremot kan dess bonus då användas tillsammans med eventuella andra lägre artefakter som ger bonus på framgångsslag för den mystiska kraften i fråga. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
+      "Mästare": "Ett traditionspecifikt fokus som ger ett garanterat lyckat slag vid ett användande av någon av traditionens mystiska krafter, dock kan det endast användas en gång per dag. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
     },
     "grundpris": {
-      "daler": 12,
+      "daler": 20,
       "skilling": 0,
       "örtegar": 0
     },
