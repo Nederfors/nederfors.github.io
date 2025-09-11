@@ -547,8 +547,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern kan med ett lyckat Viljestark sända ut en aura av heliga energier som skadar styggelser och odöda. Skada är 1T6, Bepansring skyddar ej. Effekten påverkar varelser inom synavstånd från mystikern och pågår tills denne misslyckas med Viljestark eller tappar koncentrationen. Mystikern kan undanta allierade styggelser eller vandöda från effekten.",
-      "Gesäll": "Handling: Aktiv. Auran gör 1T8 i skada på styggelser och vandöda medan levande varelser läker 1T4 Tålighet.",
-      "Mästare": "Handling: Aktiv. Som gesäll, men effekten ökar till 1T10 och de heliga energierna helar dessutom allierade levande varelser med 1T6 Tålighet."
+      "Gesäll": "Handling: Aktiv. Auran gör 1T8 i skada på styggelser och vandöda medan levande varelser inom närstridsräckvid läker 1T4 Tålighet.",
+      "Mästare": "Handling: Aktiv. Som gesäll, men effekten ökar till 1T10 och de heliga energierna helar dessutom allierade levande varelser inom närstridsräckvid med 1T6 Tålighet."
     },
     "id": "mystiskkr17"
   },
