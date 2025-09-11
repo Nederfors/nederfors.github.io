@@ -516,16 +516,15 @@ function bindToolbar() {
     /* Ny rollperson ---------------------------------------- */
     if (id === 'newCharBtn') {
       const active = storeHelper.getActiveFolder(store);
-      const baseXP = 0;  // nystartade rollpersoner har alltid 0 XP
       const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
 
       // Visa alltid popupen; förvalt val = aktiv mapp (eller Standard om Alla)
       const res = await openNewCharPopupWithFolder(active);
       if (!res) return; // avbrutet
-      const { name, folderId } = res;
+      const { name, folderId, xp } = res;
       if (!name) return;
       store.characters.push({ id: charId, name, folderId: folderId || '' });
-      store.data[charId] = { baseXp: baseXP, custom: [] };
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [] };
       store.current = charId;
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);
@@ -1717,6 +1716,7 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
   if (!pop) return null;
   const nameIn   = bar.shadowRoot.getElementById('newCharName');
   const folderEl = bar.shadowRoot.getElementById('newCharFolder');
+  const xpIn     = bar.shadowRoot.getElementById('newCharXp');
   const create   = bar.shadowRoot.getElementById('newCharCreate');
   const cancel   = bar.shadowRoot.getElementById('newCharCancel');
 
@@ -1734,6 +1734,7 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
   else if (folders[0]) folderEl.value = folders[0].id;
 
   nameIn.value = '';
+  if (xpIn) xpIn.value = 0;
 
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
@@ -1752,7 +1753,8 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
       const name = String(nameIn.value||'').trim();
       if (!name) { nameIn.focus(); return; }
       const folderId = folderEl.value || '';
-      close({ name, folderId });
+      const xp = Number(xpIn?.value || 0) || 0;
+      close({ name, folderId, xp });
     }
     function onCancel() { close(null); }
     function onOutside(e) {
@@ -1958,11 +1960,11 @@ async function requireCharacter() {
       const active = storeHelper.getActiveFolder(store);
       const res = await openNewCharPopupWithFolder(active);
       if (!res) return;
-      const { name, folderId } = res;
+      const { name, folderId, xp } = res;
       if (!name) return;
       const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
       store.characters.push({ id: charId, name, folderId: folderId || '' });
-      store.data[charId] = { baseXp: 0, custom: [] };
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [] };
       store.current = charId;
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);

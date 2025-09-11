@@ -696,6 +696,12 @@ class SharedToolbar extends HTMLElement {
             <label for="newCharFolder">Mapp</label>
             <select id="newCharFolder"></select>
           </div>
+          <div class="filter-group">
+            <label for="newCharXp">Erfarenhetspoäng</label>
+            <div class="xp-control">
+              <input id="newCharXp" type="number" min="0" value="0" aria-label="Erfarenhetspoäng">
+            </div>
+          </div>
           <div class="confirm-row">
             <button id="newCharCancel" class="char-btn danger">Avbryt</button>
             <button id="newCharCreate" class="char-btn">Skapa</button>
