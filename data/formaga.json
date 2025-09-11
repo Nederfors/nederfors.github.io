@@ -28,7 +28,7 @@
     "nivåer": {
       "Novis": "Handling: Förflyttning. Rollpersonen får slå mot Kvick för att undvika att dra på sig frislag från fiender i närstrid. Slaget måste slås för varje fiende som rollpersonen passerar. Det gäller både vid passage av fiender eller för att dra sig ur en närstrid med en fiende. Om slaget misslyckas kan spelaren välja att antingen bli kvar eller att förflytta sig i alla fall, och då ådra sig ett frislag på vanligt vis.",
       "Gesäll": "Handling: Fri. Rollpersonen studsar spänstigt upp på fötter med ett lyckat Kvick direkt den har fällts eller ramlat omkull, detta som en fri handling. Om slaget misslyckas måste rollpersonen spendera en förflyttning på att ställa sig upp.",
-      "Mästare": "Handling: Reaktiv. Rollpersonen kan utnyttja sina fiender som sköldar. I strid mot fler än en fiende kan rollpersonen en gång per runda använda en fiende som sköld och låta denne ta en träff istället för rollpersonen. Fienden i fråga får inte försvara sig mot sin allierades attack, men mästeraktobaten måste lyckas med ett Kvick för att fienden ska överta träffen."
+      "Mästare": "Handling: Reaktiv. Rollpersonen kan utnyttja sina fiender som sköldar. I strid mot fler än en fiende kan rollpersonen en gång per runda använda en fiende som sköld och låta denne ta en träff istället för rollpersonen. Fienden i fråga får inte försvara sig mot sin allierades attack, men mästerakrobaten måste lyckas med ett Kvick för att fienden ska överta träffen."
     }
   },
   {
@@ -88,7 +88,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen kan som en fri handling gå in helt för att skada och gör då +1T6 i extra skada med sina närstridsattacker. Nackdelen är att rollpersonen försvarar sig illa. Det karaktärsdrag som Försvar baseras på räknas som 5 avseende Försvar.",
-      "Gesäll": "Handling: Reaktion. Vreden är starkare än rädslan för döden hos rollpersonen, som under sitt bärsärkarus fortsätter slå dödsslag som vanligt, men kan fortsätta agera som om den vore oskadd.",
+      "Gesäll": "Handling: Reaktiv. Vreden är starkare än rädslan för döden hos rollpersonen, som under sitt bärsärkarus fortsätter slå dödsslag som vanligt, men kan fortsätta agera som om den vore oskadd.",
       "Mästare": "Handling: Fri. Rollpersonens vrede har kallnat utan att förlora något av sin styrka. Rollpersonen kan rida på vredens våg och på så sätt behålla kraften att ge och ignorera extra skada samtidigt som hjälten får försvara sig som vanligt"
     }
   },
@@ -213,7 +213,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen kan som en fri handling applicera en dos gift eller annat alkemiskt elixir på ett vapen. En dos räcker till en träff med vapnet, sedan måste mer av elixiret appliceras. Ett slag mot [Listig←Stark] behövs för att giftet ska ha effekt; om det lyckas börjar offret ta skada. Hur mycket skada ett gift gör per runda och hur länge det verkar beror på giftets styrka (se sidan 153).",
-      "Gesäll": "Handling: Fri. Som novis men rollpersonen vet även hur att få en dos gift att räcka under en hel strid. Alla attacker under striden efter att giftet har applicerats räknas som förgiftade.",
+      "Gesäll": "Handling: Fri. Som novis men rollpersonen vet även hur man får en dos gift att räcka under en hel strid. Alla attacker under striden efter att giftet har applicerats räknas som förgiftade.",
       "Mästare": "Handling: Fri. Som novis men rollpersonen behärskar den eftertraktade mästarkonsten att få ut det mesta av ett gift. Gift som appliceras på vapen räknas som en nivå högre än vanligt om rollpersonen lyckas med ett slag i Listig. Svagt gift blir medelstarkt, medelstarkt blir starkt. Starkt gift gör inte mer skada men ger rollpersonen en andra chans att lyckas med slag mot [Listig←Stark]."
     }
   },
@@ -241,8 +241,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Speciell. Häxan har lärt sig grunderna i häxkonsten och vet hur att skydda sig mot de mörkare inslagen i läran. Häxan får ingen permanent korruption av att lära sig häxkonstens krafter till novisnivå, och inte heller av att lära sig häxkonstens ritualer. Däremot har novisen inget skydd mot den temporära korruption som följer av att använda krafter och ritualer.",
-      "Gesäll": "Handling: Speciell. Häxan får ingen korruption av att lära sig häxkonstens krafter till gesällnivå. Gesällen har också lärt sig att grunda häxkonstens krafter och ritualer i jord, blod och ande så att de endast ger en (1) temporär korruption då de kastas.",
+      "Novis": "Handling: Speciell. Häxan har lärt sig grunderna i häxkonsten och vet hur man skyddar sig mot de mörkare inslagen i läran. Häxan får ingen permanent korruption av att lära sig häxkonstens krafter till novisnivå, och inte heller av att lära sig häxkonstens ritualer. Däremot har novisen inget skydd mot den temporära korruption som följer av att använda krafter och ritualer.",
+      "Gesäll": "Handling: Speciell. Häxan får ingen korruption av att lära sig häxkonstens krafter till gesällnivå. Gesällen har också lärt sig att grunda häxkonstens krafter och ritualer i jord, blod och ande så att de endast ger en (1) temporär Korruption då de kastas.",
       "Mästare": "Handling: Speciell. Häxan får ingen permanent korruption av att lära sig häxkonstens krafter till mästarnivå. En gång per runda, när en Häxkonst-kraft kräver slag för att upprätthållas får häxan vid misslyckat Viljestark genast slå om slaget; om det lyckas fortsätter effekten."
     }
   },
@@ -273,7 +273,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Fri. Rollpersonen får som en fri handling slå [Vaksam←Diskret] för att försöka se en varelses, plats eller ett föremåls tydligaste skugga. Varje försök sker till en kostnad av 1 temporär Korruption.",
+      "Novis": "Handling: Fri. Rollpersonen får som en fri handling slå [Vaksam←Diskret] för att försöka se en varelses, en plats eller ett föremåls tydligaste skugga. Varje försök sker till en kostnad av 1 temporär Korruption.",
       "Gesäll": "Handling: Fri. Rollpersonen har uppnått gesällens större insikt i auror och mystiska fenomen. Häxsyn avslöjar nu målets samtliga skuggor men inte deras inbördes styrkeförhållande. Varje försök sker till en kostnad av 1T4 i temporär Korruption.",
       "Mästare": "Handling: Fri. Rollpersonen har fått mästarens blick och ser klart både skuggor och deras inbördes styrka. Varje försök sker till en kostnad av 1T6 i temporär Korruption."
     }
@@ -306,7 +306,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen kan utnyttja sin styrka till fullo och använda Stark istället för Träffsäker när den anfaller i närstrid.",
-      "Gesäll": "Handling: Passiv. Rollpersonens närstridsattacker som görs med stark åsamkar +1T4 i skada.",
+      "Gesäll": "Handling: Passiv. Rollpersonens närstridsattacker som görs med Stark åsamkar +1T4 i skada.",
       "Mästare": "Handling: Aktiv. Rollpersonen kan lägga hela sin tyngd bakom en attack per runda vilken ger +1T8 i skada (i stället för +1T4)."
     }
   },
@@ -441,7 +441,7 @@
   {
     "id": "form15",
     "namn": "Medicus",
-    "beskrivning": "Rollpersonen är skolad i läkandets konst och är som sådan en eftertraktad resurs i sitt samhälle, vare sig det gäller att hantera sjukdomsspridning, vårda sårade krigare eller omhulda om den styrande eliten. Läkekonsten har utvecklats parallellt med alkemin och mången medicus är också alkemiskt skolad, framför allt de som verkar långt från civilisationen där det inte finns örtkurer att köpa hos välsorterade droghandlare. En medicus kan diagnostisera och bota sjukdomar samt sätta namn på gifter utifrån symtom. Medicus ger dessutom rollpersonen rättsläkarens blick, vilket kan vara extra nyttigt vid brottsplatsundersökningar och likbesiktningar.",
+    "beskrivning": "Rollpersonen är skolad i läkandets konst och är som sådan en eftertraktad resurs i sitt samhälle, vare sig det gäller att hantera sjukdomsspridning, vårda sårade krigare eller omhulda den styrande eliten. Läkekonsten har utvecklats parallellt med alkemin och mången medicus är också alkemiskt skolad, framför allt de som verkar långt från civilisationen där det inte finns örtkurer att köpa hos välsorterade droghandlare. En medicus kan diagnostisera och bota sjukdomar samt sätta namn på gifter utifrån symtom. Medicus ger dessutom rollpersonen rättsläkarens blick, vilket kan vara extra nyttigt vid brottsplatsundersökningar och likbesiktningar.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -499,7 +499,7 @@
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen har studerat monster och kan med ett lyckat slag i Listig känna igen och dra sig till minnes styrkor och svagheter för ett monster per runda. Spelledaren berättar för spelaren om varelsens beskrivning och värden.",
       "Gesäll": "Handling: Fri. Rollpersonen är en erkänd monsterkännare som noga studerat en viss undergrupp av monster (välj en av Bestar, Kulturvarelser, Odöda eller Styggelser). Rollpersonen gör +1T4 extra skada mot monster ur den valda kategorin. Bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bäst bekämpar varelsen.",
-      "Mästare": "Handling: Fri. Rollpersonen gör +1T6 extra skada mot varelser ur den kategori han eller hon har specialiserat sig på. Den bonusen gäller också rollpersonens allierade, om dessa instrueras i hur att bekämpa varelsen."
+      "Mästare": "Handling: Fri. Rollpersonen gör +1T6 extra skada mot varelser ur den kategori han eller hon har specialiserat sig på. Den bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bekämpar varelsen."
     }
   },
   {
@@ -648,7 +648,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. Rollpersonen är van att rida och strida uppsutten på ett riddjur. Rollpersonen vet hur att utnyttja riddjurets tyngd i en kavallerichock och får +1T6 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken.",
+      "Novis": "Handling: Reaktiv. Rollpersonen är van att rida och strida uppsutten på ett riddjur. Rollpersonen vet hur man utnyttjar riddjurets tyngd i en kavallerichock och får +1T6 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken.",
       "Gesäll": "Handling: Aktiv. Samklang mellan riddjur och ryttare öppnar för att ekipaget kan göra svepande attacker, det vill säga utnyttja en del av sin förflyttning innan en attack och resten efter. På så sätt fastnar ekipaget inte i närstrid men kan ändå utföra en närstridsattack. Fienden kan endast slå tillbaka med reaktioner, alternativt spendera förflyttning på att hinna ikapp ekipaget.",
       "Mästare": "Handling: Reaktiv. Mästerryttaren kan utnyttja kavallerichock ännu bättre och får +1T10 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken."
     }
@@ -688,7 +688,7 @@
   {
     "id": "form23",
     "namn": "Sköldkamp",
-    "beskrivning": "Rollpersonen är tränad i att utnyttja sin sköld på bästa sätt, och även i att slåss med en sköld på ett aktivt sätt. Bakom sköldens skydd kan rollpersonen generera stor kraft till sina hugg och med skölden kan anfall göras. Kombinationen är effektiv och en av anledningarna till att det är så vanligt med just denna beväpning bland både barbarer och ambriska krigare. Den så kallade bucklaren, den lätta sköld som vanligen nyttjas av bågskyttar, är för lätt för att kunna användas tillsammans med förmågan Sköldkamp. För sköldkampen måste krigaren bära rejäl sköld i trä eller stål, med vilken erfoderlig kraft kan genereras.",
+    "beskrivning": "Rollpersonen är tränad i att utnyttja sin sköld på bästa sätt, och även i att slåss med en sköld på ett aktivt sätt. Bakom sköldens skydd kan rollpersonen generera stor kraft till sina hugg och med skölden kan anfall göras. Kombinationen är effektiv och en av anledningarna till att det är så vanligt med just denna beväpning bland både barbarer och ambriska krigare. Den så kallade bucklaren, den lätta sköld som vanligen nyttjas av bågskyttar, är för lätt för att kunna användas tillsammans med förmågan Sköldkamp. För sköldkampen måste krigaren bära rejäl sköld i trä eller stål, med vilken erforderlig kraft kan genereras.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -998,7 +998,7 @@
   {
     "id": "form33",
     "namn": "Svartkonst",
-    "beskrivning": "Rollpersonen är en av de övermodiga eller desperata mystiker som tyr sig till mörkret. Medan andra mystiska traditioner gör allt de kan för att undvika korruptionens själsfrätande kraft gör svartkonstnären det motsatta. Svartkonstens krafter och ritualer förlitar sig på korruptionens kraft och förstyggelsens möjligheter. Svartkonstnären måste ständigt balansera mellan att greppa den svarta makt som finns inom nära räckhåll och att behålla sitt oberoende mot mörkret. De flesta svartkonstnärer inser att deras väg endast har ett slut, och de mest förtappade bland dem har redan förlikat sig med ödet och ser sin slutliga förslavelse som en sorts frälsning.",
+    "beskrivning": "Rollpersonen är en av de övermodiga eller desperata mystiker som tyr sig till mörkret. Medans andra mystiska traditioner gör allt de kan för att undvika korruptionens själsfrätande kraft gör svartkonstnären det motsatta. Svartkonstens krafter och ritualer förlitar sig på korruptionens kraft och förstyggelsens möjligheter. Svartkonstnären måste ständigt balansera mellan att greppa den svarta makt som finns inom nära räckhåll och att behålla sitt oberoende mot mörkret. De flesta svartkonstnärer inser att deras väg endast har ett slut, och de mest förtappade bland dem har redan förlikat sig med ödet och ser sin slutliga förslavelse som en sorts frälsning.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -1181,7 +1181,7 @@
   {
     "id": "form39",
     "namn": "Artefaktmakande",
-    "beskrivning": "Endast tillgänglig för Artefaktmakare. Artefaktmakandets storhetstid tycks passerad och de gamla runsmedernas mäktigaste hemligheter är förlorade. De skapande konsterna lever dock än, om än i en blygsammare skala i skuggan av världens tilltagande korruption. Rollpersonen är skolad inom artefaktmakandets konstart och kan skapa lägre artefakter. Högre artefakter återfinns numera endast i Symbaroums ruiner men trots det är artefaktmakandet en tradition som håller huvudet högt också i denna skymningstid. Rollpersonen är också inläst på legendariska artefakter och kan förstå sig på hur artefakter fungerar. Artefaktmakande motsvarar förmågan Lärd när det gäller att analysera artefakter, men påverkar inte bruket av dem. Artefakterna beskrivs närmare i avsnittet Utrustning på sidan 124-127. Vidare tar varje artefakt en hel dag att tillverka om rollpersonen har tillgång till ordentliga arbetsverktyg och förhållanden och två heldagar att göra i fält, oavsett om slaget lyckas eller inte. Material för tillverkning kostar halva artefaktens värde efter att makandet är klart och kan inte införskaffas i fält, förutom under specifika omständigheter som avgörs av spelledaren,",
+    "beskrivning": "Endast tillgänglig för Artefaktmakare. Artefaktmakandets storhetstid tycks passerad och de gamla runsmedernas mäktigaste hemligheter är förlorade. De skapande konsterna lever dock än, om än i en blygsammare skala i skuggan av världens tilltagande korruption. Rollpersonen är skolad inom artefaktmakandets konstart och kan skapa lägre artefakter. Högre artefakter återfinns numera endast i Symbaroums ruiner men trots det är artefaktmakandet en tradition som håller huvudet högt också i denna skymningstid. Rollpersonen är också inläst på legendariska artefakter och kan förstå sig på hur artefakter fungerar. Artefaktmakande motsvarar förmågan Lärd när det gäller att analysera artefakter, men påverkar inte bruket av dem. Artefakterna beskrivs närmare i avsnittet Utrustning på sidan 124-127. Vidare tar varje artefakt en hel dag att tillverka om rollpersonen har tillgång till ordentliga arbetsverktyg och förhållanden och två heldagar i fält, oavsett om slaget lyckas eller inte. Material för tillverkning kostar halva artefaktens värde efter att makandet är klart och kan inte införskaffas i fält, förutom under specifika omständigheter som avgörs av spelledaren.",
     "taggar": {
       "typ": [
         "Förmåga",
@@ -1232,9 +1232,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Rollpersonen är tränad i att använda en ballista och att på plats konstruera belägringstorn. Rollpersonen kan hantera alkemiska granater och riskerar inte att de detonerar av misstag vilket en otränad användare måste oroa sig för.",
-      "Gesäll": "Speciell. Rollpersonen kan leda arbetet med att bygga och därefter effektivt använda mer avancerade belägringsmaskiner som katapulter och dess större kusin, trebuchetten. På plats vid en belägring kan rollpersonen planera och leda grävandet av skyddande löpgravar och underminerande tunnlar. Rollpersonen behärskar belägringskonstens djupaste hemligheter – alkemiska dimspridare som skyler anfallande trupper från fientliga bågskyttar, samt bruket av den alkemiska bräschkrukan som spränger hål i fiendens murar och det alkemiska eldröret, som spyr eld och död mot allt som rör sig framför den. Även den bärbara varianten av det alkemiska eldröret kan hanteras med säkerhet under stress, utan risk för katastrofala missöden.",
-      "Mästare": "Speciell. Rollpersonens förståelse för alkemiska vapen är enastående, och de får alla kvaliteten Massiv om de inte redan har den."
+      "Novis": "Handling: Speciell. Rollpersonen är tränad i att använda en ballista och att på plats konstruera belägringstorn. Rollpersonen kan hantera alkemiska granater och riskerar inte att de detonerar av misstag vilket en otränad användare måste oroa sig för.",
+      "Gesäll": "Handling: Speciell. Rollpersonen kan leda arbetet med att bygga och därefter effektivt använda mer avancerade belägringsmaskiner som katapulter och dess större kusin, trebuchetten. På plats vid en belägring kan rollpersonen planera och leda grävandet av skyddande löpgravar och underminerande tunnlar. Rollpersonen behärskar belägringskonstens djupaste hemligheter – alkemiska dimspridare som skyler anfallande trupper från fientliga bågskyttar, samt bruket av den alkemiska bräschkrukan som spränger hål i fiendens murar och det alkemiska eldröret, som spyr eld och död mot allt som rör sig framför den. Även den bärbara varianten av det alkemiska eldröret kan hanteras med säkerhet under stress, utan risk för katastrofala missöden.",
+      "Mästare": "Handling: Speciell. Rollpersonens förståelse för alkemiska vapen är enastående, och de får alla kvaliteten Massiv om de inte redan har den."
     }
   },
   {
@@ -1264,7 +1264,7 @@
     "nivåer": {
       "Novis": "Passiv. Rollpersonens mystiska krafter påverkas inte av att bära medeltung rustning. Rustningen begränsar Försvar som vanligt.",
       "Gesäll": "Passiv. Rollpersonens krafter påverkas inte av att bära tung rustning. Rustningen begränsar Försvar som vanligt.",
-      "Mästare": "Passiv. Den bepansrade mystikern har transcenderat rustningens begräsning och ser den som en tillgång. Rustningens skydd ökas med 1T4 när den bärs av mystikern, eftersom mystiska krafter strömmar härdande genom stålet."
+      "Mästare": "Passiv. Den bepansrade mystikern har transcenderat rustningens begränsning och ser den som en tillgång. Rustningens skydd ökas med 1T4 när den bärs av mystikern, eftersom mystiska krafter strömmar härdande genom stålet."
     }
   },
   {
@@ -1386,7 +1386,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Reaktiv. Rollpersonen kan med hammarens hjälp krossa fiendens sköld. Vid ett misslyckat angrepp mot en fiende som försvarar sig med sköld (dvs fienden parerar rollpersonens attack) får rollpersonen slå mot [Stark←Kvick]. Lyckas det krossas skölden om den är i trä; om den är i metall slits spännremmarna av och stålskölden slås ut fiendens grepp. Dessutom tar sköldbäraren 1T6 i skada av slagets tyngd.",
+      "Novis": "Reaktiv. Rollpersonen kan med hammarens hjälp krossa fiendens sköld. Vid ett misslyckat angrepp mot en fiende som försvarar sig med sköld (dvs fienden parerar rollpersonens attack) får rollpersonen slå mot [Stark←Kvick]. Lyckas det krossas skölden om den är i trä; om den är i metall slits spännremmarna av och stålskölden slås ur fiendens grepp. Dessutom tar sköldbäraren 1T6 i skada av slagets tyngd.",
       "Gesäll": "Reaktiv. När fienden framgångsrikt försvarar sig mot en hammarattack kan den tränade krigaren som en reaktion greppa hammarens skaft med båda händer och utnyttja den som en ramm mot fienden. Ett lyckat [Stark←Stark] driver fienden ett steg bakåt och i utrymmet som då skapas får hammargesällen ett frislag mot fienden.",
       "Mästare": "Aktiv. Rollpersonen gör två hammarattacker mot samma mål, som en stridshandling. Om fienden framgångsrikt försvarar sig mot endera attacken gör mästaren en hammar-ramm som beskrivs på gesällnivån. Endast en ramm görs per runda, även om fienden försvarar sig mot båda attackerna."
     }
@@ -1481,7 +1481,7 @@
     "nivåer": {
       "Novis": "Passiv. Rollpersonen kan välja att anfalla med Kvick istället för med Träffsäker för angrepp gjorda med kniv.",
       "Gesäll": "Passiv. Rollpersonen gör två separata knivattacker mot samma mål per stridshandling. Om rollpersonen också har Tvillingattack får dubbelattacken endast göras med en av knivarna (alltså totalt tre attacker, två med huvudhanden och en med andra handen).",
-      "Mästare": "Reaktiv. Rollpersonen kan slåss effektivt med kniv på mycket kort håll från en fiende: när rollpersonen skadar med en knivattack under en runda antas rollpersonen vara så nära fienden att denne får svårt att använda ordinära vapen effektivt (får två chanser att misslyckas med attacker), och inte alls kan anfalla med långa vapen. För att återta ett lämpligare attackavstånd måste fienden … … vinna initiativet nästa runda (se Snabbslående under Bragder eller Gripa initiativet under Manövrer) och kan då anfalla som vanligt tills knivkämpen träffar igen … eller göra en förflyttningshandling ut ur närstrid, och dra då på sig ett frislag från knivkämpen. Om frislaget ger skada fångas fienden in på obekvämt kort avstånd igen (förflyttningen avbryts)."
+      "Mästare": "Reaktiv. Rollpersonen kan slåss effektivt med kniv på mycket kort håll från en fiende: när rollpersonen skadar med en knivattack under en runda antas rollpersonen vara så nära fienden att denne får svårt att använda ordinära vapen effektivt (får två chanser att misslyckas med attacker), och inte alls kan anfalla med långa vapen. För att återta ett lämpligare attackavstånd måste fienden vinna initiativet nästa runda (se Snabbslående under Bragder eller Gripa initiativet under Manövrer) och kan då anfalla som vanligt tills knivkämpen träffar igen eller göra en förflyttningshandling ut ur närstrid, och dra då på sig ett frislag från knivkämpen. Om frislaget ger skada fångas fienden in på obekvämt kort avstånd igen (förflyttningen avbryts)."
     }
   },
   {
@@ -1570,7 +1570,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Reaktiv. Runtatueringen ger 1T4 i extra bepansring mot en träffande attack – närhelst runkrigaren så önskar. Rustningseffekten ger nämligen en temporär Korruption per användande. Runkrigaren måste bestämma sig för att aktivera tatueringen samtidigt som eventuellt annat skydd slås. Dessutom skyddar tecknen bäraren mot väder och vind som om de var rejäla kläder.",
+      "Novis": "Reaktiv. Runtatueringen ger 1T4 i extra Bepansring mot en träffande attack – närhelst runkrigaren så önskar. Rustningseffekten ger nämligen en temporär Korruption per användande. Runkrigaren måste bestämma sig för att aktivera tatueringen samtidigt som eventuellt annat skydd slås. Dessutom skyddar tecknen bäraren mot väder och vind som om de var rejäla kläder.",
       "Gesäll": "Reaktiv. Runtatueringen dras till skador på bäraren kropp och glöder läkande kring såren. Regenereringen läker ett Tålighet varje runda; varje läkt Tålighet genom tatueringen ger också en temporär Korruption. Den tatuerade krigaren kan avbryta regenereringen närhelst denne så önskar.",
       "Mästare": "Reaktiv. Runtatueringen ger krigarens attacker extra kraft. När krigaren träffar en fiende och så önskar flyter tatueringen glödande ut över vapnet och ger offret 1T4 extra i skada, för samma mängd temporär Korruption till den tatuerade krigaren."
     }
@@ -1631,7 +1631,7 @@
     "nivåer": {
       "Novis": "Handling: Speciell. Rollpersonen kan med ett lyckat Listig göra ett novissmide. Rollpersonen kan också med ett lyckat Listig laga en skadad rustning eller anpassa en rustning för större och mindre varelser. Novissmiden omfattar alla vanliga vapen och rustningar, inklusive dem med kvaliteterna Kort och Långt. Inga andra kvaliteter kan smidas av novissmeden.",
       "Gesäll": "Handling: Speciell. Rollpersonen kan med ett lyckat Listig göra ett gesällsmide. Gesällsmiden omfattar en kvalitet i tillägg till Kort eller Långt. Samtliga vapen och rustningar som listas i grundboken och Spelarens handbok är inom gesällens förmåga, dock ej vapen och rustningar med mystiska kvaliteter eller sådana med fler än en kvalitet utöver Kort eller Långt. Gesällen kan inte heller smida bort negativa kvaliteter.",
-      "Mästare": "Handling: Speciell. Rollpersonen kan med ett Listig göra ett mästersmide. Mästersmeder äger förmågan att addera flera kvaliteter till vapen och rustningar, alternativt att avlägsna negativa kvaliteter. Mästersmeder kan också smida in mystiska kvaliteter i vapen och rustningar.."
+      "Mästare": "Handling: Speciell. Rollpersonen kan med ett slag i Listig göra ett mästersmide. Mästersmeder äger förmågan att addera flera kvaliteter till vapen och rustningar, alternativt att avlägsna negativa kvaliteter. Mästersmeder kan också smida in mystiska kvaliteter i vapen och rustningar."
     }
   },
   {
@@ -1716,7 +1716,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften kostar enbart en temporär Korruption att använda. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där; en gåva knuten till Ritualist (alltså då samtliga ritualer) eller till Häxsyn gör att dessa istället kostar en temporär Korruption att använda. Även särdrag som Eonernas visdom eller Spökvandring kan väljas. Signaturkraften påverkar inte eventuell kostnad i permanent Korruption för att lära sig en kraft utanför en mystisk tradition, enbart mängden temporär korruption som ges vid dess användande.",
+      "Novis": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften kostar enbart en temporär Korruption att använda. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där; en gåva knuten till Ritualist (alltså då samtliga ritualer) eller till Häxsyn gör att dessa istället kostar en temporär Korruption att använda. Även särdrag som Eonernas visdom eller Spökvandring kan väljas. Signaturkraften påverkar inte eventuell kostnad i permanent Korruption för att lära sig en kraft utanför en mystisk tradition, enbart mängden temporär Korruption som ges vid dess användande.",
       "Gesäll": "Aktiv. Den som har odlat sin starka gåva till gesällnivå använder hela sin Viljestark som Korruptionströskel, istället för halva som annars är brukligt. Total förstyggelse infaller i så fall inte förrän den totala korruptionen uppgår till Viljestark ×2",
       "Mästare": "Speciell. Mästarens starka gåva låter rollpersonen använda valfri mystisk kraft, dock enbart på novisnivå. Framgångsslagen har en andra chans att misslyckas och användandet ger 1T8 temporär Korruption. Alla mystiska krafter kan användas, oavsett vilken tradition de tillhör."
     }
@@ -1748,7 +1748,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Reaktiv. Rollpersonen parerar skickligt inkommande attacker och får +1 på Försvar; med den enkla trästaven eller en runstav – snabbare och mer balanserade än de andra vapnen i kategorin – blir bonusen +2 på Försvar.",
+      "Novis": "Reaktiv. Rollpersonen parerar skickligt inkommande attacker och får +1 i Försvar; med den enkla trästaven eller en runstav – snabbare och mer balanserade än de andra vapnen i kategorin – blir bonusen +2 på Försvar.",
       "Gesäll": "Reaktiv. Rollpersonen kan utnyttja det långa vapnets baksida och får ett frislag med bakänden om fienden parerar en attack; bakändens attack slås separat. Skadan är densamma som för trästav. Beväpnad med trästav (alltså inte med spjut eller hillebard, men däremot med runstav) får detta dessutom göras efter varje attack som pareras med staven (vid varje lyckat Försvar i närstrid); då får stavkämpen direkt göra en ripost med staven.",
       "Mästare": "Aktiv. Rollpersonen har lärt sig att svepa mot fiendens ben och stöta med sitt vapen mot en fallen fiende – i en och samma rörelse. Den initiala attacken fäller motståndaren om anfallaren lyckas med [Träffsäker←Kvick] och den uppföljande attacken görs som ett frislag med övertag mot den liggande fienden."
     }
@@ -1756,7 +1756,7 @@
   {
     "id": "form58",
     "namn": "Stavmagi",
-    "beskrivning": "Endast tillgänglig för Stavmagiker. Stavmagikerna var en gång den symbariske kejsarens livvakter, vilka efter den siste kejsarens död retirerade till sin ordensborg djupt inne i Davokar för att där reformera sin försvagade orden: hög modiga med sin makt kom de att ägna sig åt titulatur, hovkonster och ytlig fokusering på prål och status. Kejsardömets fall var i deras ögon en naturlig följd av detta. Omdaningen såg orden återfödas som den asketiska orden man möter idag; enkelt klädda och fåordiga mystiker vars slagkraft får krigare att häpna. Rollpersonen är en av stavmagins utvalda, given en runstav och uppdraget att återupprätta sin ordens forna storhet genom att krossa mörkret och sätta kejsarlinjens rättmätiga arvtagare på törnetronen i Symbar. Stavmagikerna är en elitorden som ställer stora krav på sina mystiska krigare redan från start; endast de mest lovande bland mystiker bör göra sig besväret att försöka bli upptagna i deras orden.",
+    "beskrivning": "Endast tillgänglig för Stavmagiker. Stavmagikerna var en gång den symbariske kejsarens livvakter, vilka efter den siste kejsarens död retirerade till sin ordensborg djupt inne i Davokar för att där reformera sin försvagade orden: högmodiga med sin makt kom de att ägna sig åt titulatur, hovkonster och ytlig fokusering på prål och status. Kejsardömets fall var i deras ögon en naturlig följd av detta. Omdaningen såg orden återfödas som den asketiska orden man möter idag; enkelt klädda och fåordiga mystiker vars slagkraft får krigare att häpna. Rollpersonen är en av stavmagins utvalda, given en runstav och uppdraget att återupprätta sin ordens forna storhet genom att krossa mörkret och sätta kejsarlinjens rättmätiga arvtagare på törnetronen i Symbar. Stavmagikerna är en elitorden som ställer stora krav på sina mystiska krigare redan från start; endast de mest lovande bland mystiker bör göra sig besväret att försöka bli upptagna i deras orden.",
     "taggar": {
       "typ": [
         "Förmåga",
@@ -1778,9 +1778,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Stavmagikern binder sin själ i en stav, ristad med elementens fyra runor. Staven binder all korruption som stavmagikern skulle ha fått genom att lära sig stavmagiska krafter. Om stavmagikern redan har permanent korruption när staven binds till mystikern så sänks den permanenta korruptionen med 1T6. Detta kan bara göras en gång, om staven skulle försvinna och måste ersättas sker ingen ytterligare sänkning. Dessutom kan stavmagikern som en fri handling aktivera en elementarruna och göra 1T4 extra skada med staven, vare sig den används tillsammans med stavmagiska krafter eller brukas som närstridsvapen. Stavmagikern väljer mellan eld, blixt, köld eller syra. Att aktivera en elementarruna ger ingen korruption.",
-      "Gesäll": "Speciell. Staven binder all korruption som stavmagikern skulle ha fått genom att lära sig stavmagiska krafter till gesällnivå. Staven binder också temporär korruption så pass väl att stavmagikern får en andra chans vid slag för temporär korruption för alla krafter som ingår i stavmagin; stavmagikern drabbas av det lägsta av de två utfallen.",
-      "Mästare": "Staven binder korruption som stavmagikern skulle ha fått genom att lära sig stavmagiska krafter till mästarnivå. Staven binder också temporär korruption så pass effektivt att stavmagikern inte längre drabbas av temporär korruption vid användandet av stavmagins krafter."
+      "Novis": "Handling: Speciell. Stavmagikern binder sin själ i en stav, ristad med elementens fyra runor. Staven binder all korruption som stavmagikern skulle ha fått genom att lära sig stavmagiska krafter. Om stavmagikern redan har permanent korruption när staven binds till mystikern så sänks den permanenta korruptionen med 1T6. Detta kan bara göras en gång, om staven skulle försvinna och måste ersättas sker ingen ytterligare sänkning. Dessutom kan stavmagikern som en fri handling aktivera en elementarruna och göra 1T4 extra skada med staven, vare sig den används tillsammans med stavmagiska krafter eller brukas som närstridsvapen. Stavmagikern väljer mellan eld, blixt, köld eller syra. Att aktivera en elementarruna ger ingen korruption.",
+      "Gesäll": "Handling: Speciell. Staven binder all korruption som stavmagikern skulle ha fått genom att lära sig stavmagiska krafter till gesällnivå. Staven binder också temporär Korruption så pass väl att stavmagikern får en andra chans vid slag för temporär Korruption för alla krafter som ingår i stavmagin; stavmagikern drabbas av det lägsta av de två utfallen.",
+      "Mästare": "Handling: Passiv. Staven binder korruption som stavmagikern skulle ha fått genom att lära sig stavmagiska krafter till mästarnivå. Staven binder också temporär Korruption så pass effektivt att stavmagikern inte längre drabbas av temporär Korruption vid användandet av stavmagins krafter."
     }
   },
   {
@@ -1865,7 +1865,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Symbolisten har precis börjat förstå runornas makt. Krafttecknen måste ges fysisk form – ristade, målade, broderare, tatuerade – vilket tar lång tid. Novisens krafter tar lika mycket tid som ritualer att färdigställa; en timme. De kan däremot aktiveras som en stridshandling; aktiveringen består av att symbolisten yttrar ett antal utlösande kraftord. Symbolisten måste se symbolen eller vara i dess direkta närhet (närstridsavstånd) för att kunna aktivera den. Symbolisten kan ha maximalt en symbol av varje mystisk kraft förberedd på detta sätt. När en förberedd symbol utlösts måste den laddas igen, som om den gjordes på nytt.",
+      "Novis": "Speciell. Symbolisten har precis börjat förstå runornas makt. Krafttecknen måste ges fysisk form – ristade, målade, broderade, tatuerade – vilket tar lång tid. Novisens krafter tar lika mycket tid som ritualer att färdigställa; en timme. De kan däremot aktiveras som en stridshandling; aktiveringen består av att symbolisten yttrar ett antal utlösande kraftord. Symbolisten måste se symbolen eller vara i dess direkta närhet (närstridsavstånd) för att kunna aktivera den. Symbolisten kan ha maximalt en symbol av varje mystisk kraft förberedd på detta sätt. När en förberedd symbol utlösts måste den laddas igen, som om den gjordes på nytt.",
       "Gesäll": "Speciell. Symbolisten kan snabbt måla en symbol i en bok eller dra upp den i markens lera eller damm, vilket tar en stridshandling i anspråk. Dessa temporära symboler går utöver begränsningen att symbolisten endast kan ha en förberedd symbol per kraft. Att aktivera symboler – vare sig de är förberedda på ett mer beständigt sätt (se novis) eller skapade mer temporärt – är nu en fri handling, aktiverandet kräver bara ett kraftfullt ord från mystikern. Dock kan endast en symbol aktiveras per runda av symbolisten. Symbolisten kan nu också välja att aktivera sina symboler med ett fysiskt kriterium istället för med ett kraftord. Kriteriet bestäms av magikern vid skapandet av symbolen. Ett sådant kriterium kan vara att en levande varelse träder in i rummet, att någon kliver på symbolen, att ett vapen dras i rummet och så vidare. Symbolisten själv utlöser inte sina symboler genom sina handlingar, om mystikern inte vill det. Symbolistens allierade är inte undantagna: om de uppfyller villkoret utlöses symbolen. Symbolisten kan sudda en av sina egna symboler med en enkel handrörelse (fri handling), vilket dock kräver att symbolisten nuddar symbolen i fråga.",
       "Mästare": "Aktiv. Symbolisten kan rita brinnande kraftrunor i luften som en stridshandling och aktivera dem som del av handlingen att rita dem. Symbolerna fungerar då med andra ord som andra krafter. Korruptionen är dock fortfarande bara en poäng per aktiverad kraft. Dessa direkt kastade symboler går utöver begränsningen att mystikern endast kan ha en förberedd symbol per kraft."
     }
@@ -1899,7 +1899,7 @@
     "nivåer": {
       "Novis": "Aktiv. Tjuvknep som ”rännstenskyss” (skallning) eller ”svartalfskram” (skrevspark) kommer naturligt till rollpersonen i pressade lägen. Ett sådant tjuvknep gör 1T6 i skada och om fienden tar skada får rollpersonen också ett frislag mot målet.",
       "Gesäll": "Reaktiv. Rollpersonen gör en vanlig närstridsattack och om den gör skada slänger rollpersonen in ett krokben eller en tackling. Manövern fäller motståndaren till marken om rollpersonen lyckas med ett [Listig←Kvick].",
-      "Mästare": "Reaktiv. Varje motståndare som angriper i närstrid utsätts direkt efter av en blodig retur, ett skamgrepp som gör 1T6 i skada om det träffar. Skamgreppet drabbar en svag punkt där bepansring inte skyddar."
+      "Mästare": "Reaktiv. Varje motståndare som angriper i närstrid utsätts direkt efter av en blodig retur, ett skamgrepp som gör 1T6 i skada om det träffar. Skamgreppet drabbar en svag punkt där Bepansring inte skyddar."
     }
   },
   {
@@ -1959,7 +1959,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till novisnivå men har inget skydd mot temporär korruption när den använder sina krafter. Dessutom får trollsångaren en andra chans att lyckas med ett slag per scen för att påverka ett sinne (alltså där motståndaren försvarar sig med Viljestark). Omslaget kan inte användas för att skapa eller upprätthålla en kedja av förtrollningar.",
+      "Novis": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till novisnivå men har inget skydd mot temporär Korruption när den använder sina krafter. Dessutom får trollsångaren en andra chans att lyckas med ett slag per scen för att påverka ett sinne (alltså där motståndaren försvarar sig med Viljestark). Omslaget kan inte användas för att skapa eller upprätthålla en kedja av förtrollningar.",
       "Gesäll": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till gesällnivå. Trollsångargesällen får slå om ett slag vid ett försök att skapa eller upprätthålla en kedja av förtrollningar där motståndaren försvarar sig med Viljestark.",
       "Mästare": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till mästarnivå. Trollsångarmästaren får en andra chans att lyckas med alla de slag som slås för att skapa och upprätthålla en kedja av förtrollningar där motståndaren försvarar sig med Viljestark."
     }
@@ -2023,15 +2023,15 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Stark bli av med 1T4 temporär korruption. Upprepade försök får göras, men endast ett lyckat försök per scen räknas.",
-      "Gesäll": "Handling: Aktiv. Som Novis men rensningen tar bort 1T6 temporär korruption.",
-      "Mästare": "Handling: Aktiv. Som Gesäll men rollpersonens rensning tar bort 1T8 temporär korruption."
+      "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Stark bli av med 1T4 temporär Korruption. Upprepade försök får göras, men endast ett lyckat försök per scen räknas.",
+      "Gesäll": "Handling: Aktiv. Som Novis men rensningen tar bort 1T6 temporär Korruption.",
+      "Mästare": "Handling: Aktiv. Som Gesäll men rollpersonens rensning tar bort 1T8 temporär Korruption."
     }
   },
   {
     "id": "form67",
     "namn": "Resonanskraft",
-    "beskrivning": "Denna mystiker har lärt sig att lyssna till världens dolda strömningar och väva magins trådar med ovanlig precision och riskmedvetenhet. Genom att kanalisera kraftens djupare resonanser, kan rollpersonen påverka effekterna av mystiska krafter genom att tillfälligt tillåta korruption. Färdigheten ger möjlighet att förbättra, slå om eller förstärka resultatet av mystiska krafter genom att ta emot temporär korruption.",
+    "beskrivning": "Denna mystiker har lärt sig att lyssna till världens dolda strömningar och väva magins trådar med ovanlig precision och riskmedvetenhet. Genom att kanalisera kraftens djupare resonanser, kan rollpersonen påverka effekterna av mystiska krafter genom att tillfälligt tillåta korruption. Färdigheten ger möjlighet att förbättra, slå om eller förstärka resultatet av mystiska krafter genom att ta emot temporär Korruption.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -2052,9 +2052,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. När effekten av en mystisk kraft har bestämts, får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär korruption), kan rollpersonen slå om effekttärningarna och välja det mest gynnsamma resultatet.",
-      "Gesäll": "Handling: Reaktiv. Efter ett misslyckat försök att aktivera en mystisk kraft, kan rollpersonen ta emot 1T4 temporär korruption och genast försöka på nytt.",
-      "Mästare": "Handling: Reaktiv. Efter att en mystisk kraft har aktiverats kan rollpersonen välja att öka effekten bortom det vanliga genom att släppa in mer av världens råa, fördärvade kraft. Rollpersonen kan dra på sig 1T4 temporär korruption för 1T4 extra effekt, 1T6 för 1T6 extra, och så vidare – styrka och fördärv i balans, men med ödet alltid i vågskålen."
+      "Novis": "Handling: Reaktiv. När effekten av en mystisk kraft har bestämts, får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om effekttärningarna och välja det mest gynnsamma resultatet.",
+      "Gesäll": "Handling: Reaktiv. Efter ett misslyckat försök att aktivera en mystisk kraft, kan rollpersonen ta emot 1T4 temporär Korruption och genast försöka på nytt.",
+      "Mästare": "Handling: Reaktiv. Efter att en mystisk kraft har aktiverats kan rollpersonen välja att öka effekten bortom det vanliga genom att släppa in mer av världens råa, fördärvade kraft. Rollpersonen kan dra på sig 1T4 temporär Korruption för 1T4 extra effekt, 1T6 för 1T6 extra, och så vidare – styrka och fördärv i balans, men med ödet alltid i vågskålen."
     }
   },
   {
@@ -2178,8 +2178,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Karaktären är van vid att lugna sig, sikta och andas rätt. Genom att avstå från sin förflyttningshandling får hen en andra chans att träffa med sitt anfall under samma runda om hen anfaller med Träffsäker.",
-      "Gesäll": "Handling: Speciell. Karaktären har ett vältränat öga och träffsäkerhet. Således kan hen lätt sikta in sig på svagheter hos sin motståndare. Alla anfall som görs med karaktärsdraget “Träffsäker” gör 1t4 extra i skada.",
-      "Mästare": "Handling: Aktiv. Karaktären behärskar konsten att sikta på särskilda kroppsdelar och deras svagheter. Genom att offra en förflyttning får karaktären sikta på specifika kroppsdelar utan minusmodifikation på sitt slag. En väl siktad attack ignorerar bepansring och om slaget överstiger smärtgräns tillämpas en effekt enligt träfftabellen på sidan 108 i Spelarens Handbok."
+      "Gesäll": "Handling: Speciell. Karaktären har ett vältränat öga och träffsäkerhet. Således kan hen lätt sikta in sig på svagheter hos sin motståndare. Alla anfall som görs med karaktärsdraget “Träffsäker” gör 1T4 extra i skada.",
+      "Mästare": "Handling: Aktiv. Karaktären behärskar konsten att sikta på särskilda kroppsdelar och deras svagheter. Genom att offra en förflyttning får karaktären sikta på specifika kroppsdelar utan minusmodifikation på sitt slag. En väl siktad attack ignorerar Bepansring och om slaget överstiger smärtgräns tillämpas en effekt enligt träfftabellen på sidan 108 i Spelarens Handbok."
     }
   },
   {
@@ -2211,14 +2211,14 @@
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Karaktären kan med precision träffa och avleda inkommande attacker i närstrid. Karaktären får använda Träffsäker som grund för Försvar i strid, så länge de håller ett närstridsvapen eller har förmågan Naturlig krigare.",
-      "Gesäll": "Handling: Reaktiv. Karaktären följer upp sin parering med en vridande rörelse, avsedd att slå vapnet ur motståndarens händer. Efter ett lyckat Försvar i närstrid kan karaktären slå [Träffsäker<-Stark] för att avväpna motståndaren (ingen effekt på obeväpnade fiender).",
+      "Gesäll": "Handling: Reaktiv. Karaktären följer upp sin parering med en vridande rörelse, avsedd att slå vapnet ur motståndarens händer. Efter ett lyckat Försvar i närstrid kan karaktären slå [Träffsäker←Stark] för att avväpna motståndaren (ingen effekt på obeväpnade fiender).",
       "Mästare": "Handling: Reaktiv. Karaktären är så skicklig med sitt vapen att varje lyckad parering i närstrid automatiskt öppnar upp för en omedelbar motattack. Vid ett lyckat Försvar i närstrid får karaktären omedelbart slå ett frislag med Träffsäker mot samma motståndare. Denna motattack räknas inte mot karaktärens vanliga antal handlingar."
     }
   },
   {
     "id": "form73",
     "namn": "Målmärkning",
-    "beskrivning": "Målmärkning låter rollpersonen öppna en liten lucka i motståndarens gard med precisionshugg eller styrande skott. Märket fungerar som en ledstjärna för nästa anfall och gör att rätt vinkel, rätt rytm och rätt djup hittas med kylig målmedetenhet.",
+    "beskrivning": "Målmärkning låter rollpersonen öppna en liten lucka i motståndarens gard med precisionshugg eller styrande skott. Märket fungerar som en ledstjärna för nästa anfall och gör att rätt vinkel, rätt rytm och rätt djup hittas med kylig målmedvetenhet.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -2243,9 +2243,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv När rollpersonen skadar en måltavla får hen med ett lyckat slag mot “Träffsäker” också placera ett “Målmärke” på offret. Offret räknas som målmärkt till slutet av rollpersonens nästa runda. Varje lyckad attack mot målet ger +1 skada. Endast ett mål kan vara målmärkt åt gången av rollpersonen och målmärkningen tappas om det går en hel runda utan lyckade anfall från rollpersonen.",
+      "Novis": "Handling: Reaktiv. När rollpersonen skadar en måltavla får hen med ett lyckat slag mot “Träffsäker” också placera ett “Målmärke” på offret. Offret räknas som målmärkt till slutet av rollpersonens nästa runda. Varje lyckad attack mot målet ger +1 skada. Endast ett mål kan vara målmärkt åt gången av rollpersonen och målmärkningen tappas om det går en hel runda utan lyckade anfall från rollpersonen.",
       "Gesäll": "Handling: Reaktiv. En attack per runda mot ett målmärkt offer av rollpersonen räknas som ett övertag, oavsett positionering.",
-      "Mästare": "Handling: Speciell. Rollpersonens målmärkning är så effektiv att effekterna för novis och gesällnivå gäller även för dess allierade, novisnivån ökar då i skada med varje karaktär som lyckats med en attack mot målet medans målmärket är aktivt."
+      "Mästare": "Handling: Speciell. Rollpersonens målmärkning är så effektiv att effekterna för novis och gesällnivå gäller även för dess allierade, novisnivåns bonusskada ökar med varje allierad som lyckas som lyckats med en attack mot målet medans målmärket är aktivt."
     }
   },
 {
@@ -2275,9 +2275,9 @@
     }
   },
   "nivåer": {
-    "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande <- Försvar göra ett anfall som dirigerar handlingar mot ett samlingsmål. När två andra allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
+    "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande ← Försvar göra ett anfall som dirigerar handlingar mot ett samlingsmål. När två andra allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
     "Gesäll": "Handling: Reaktiv. Om den andra aktiva handlingen av en allierad denna runda lyckas mot samlingsmålet får du utse en allierad inom räckvidd som får göra ett frislag mot samma mål (närstrid om inom närstridsavstånd, annars avståndsvapen om laddat).",
-    "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets bepansring."
+    "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets Bepansring."
   }
 },
 {
@@ -2295,9 +2295,9 @@
     }
   },
   "nivåer": {
-    "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
+    "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
     "Gesäll": "Handling: Reaktiv. När en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
-    "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets bepansring."
+    "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
   }
 },
   {
@@ -2329,8 +2329,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen låter intellektet styra över driften av mystik och parerar sinnespåverkan med kylig rationalitet. Rollpersonen får alltså använda Listig i stället för Viljestark, exempelvis vid användandet av mystiska krafter, koncentrationsslag och motstånd mot sinnes- och viljepåverkan; dock inte som grund för korruptionströskel.",
-      "Gesäll": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett Listig-slag under en scen får hen en kumulativ +1 på kommande Listig-slag riktade mot just den effekten. Bonusen varar till scenens slut.",
-      "Mästare": "Handling: Reaktiv. Den kalla rationaliteten biter i själen och skärper fokuset till perfektion; men ibland kan det vara nödvändigt att växla en liten dos korruption mot ett ännu skarpare fokus. Varje gång rollpersonen slår ett slag mot Listig får hen samtidigt slå 1T4 och subtrahera utfallet från framgångsslaget. Tärningsutfallet kan ökas genom att rollpersonen frivilligt tar lika mycket temporär korruption. Denna effekt kan dock inte användas för att hindra kritiskt misslyckande."
+      "Gesäll": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett slag i Listig-slag under en scen får hen en kumulativ +1 på kommande Listig-slag riktade mot just den effekten. Bonusen varar till scenens slut.",
+      "Mästare": "Handling: Reaktiv. Den kalla rationaliteten biter i själen och skärper fokuset till perfektion; men ibland kan det vara nödvändigt att växla en liten dos korruption mot ett ännu skarpare fokus. Varje gång rollpersonen slår ett slag mot Listig får hen samtidigt slå 1T4 och subtrahera utfallet från framgångsslaget. Tärningsutfallet kan ökas genom att rollpersonen frivilligt tar lika mycket temporär Korruption. Denna effekt kan dock inte användas för att hindra kritiskt misslyckande."
     }
   }
 
