@@ -6,8 +6,33 @@
 const pdfBtn = document.getElementById('pdfLibraryBtn');
 pdfBtn?.addEventListener('click', async () => {
   const pdfs = await fetch('data/pdf-list.json').then(r => r.json());
-  const html = pdfs
-    .map(p => `<div><a href="${encodeURI(p.file)}" target="_blank" rel="noopener">${p.title}</a></div>`)
+  const pop = document.getElementById('pdfPopup');
+  const box = document.getElementById('pdfOptions');
+  const cls = document.getElementById('pdfCancel');
+  box.innerHTML = pdfs
+    .map(p => `<button data-href="${encodeURI(p.file)}" class="char-btn">${p.title}</button>`)
     .join('');
-  tabellPopup.open(html, 'PDF-bank');
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    box.removeEventListener('click', onBtn);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onBtn(e) {
+    const b = e.target.closest('button[data-href]');
+    if (!b) return;
+    window.open(b.dataset.href, '_blank', 'noopener');
+    close();
+  }
+  function onCancel() { close(); }
+  function onOutside(e) {
+    if (!pop.querySelector('.popup-inner').contains(e.target)) {
+      close();
+    }
+  }
+  box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
 });

@@ -607,6 +607,15 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup PDF-bank ---------- -->
+      <div id="pdfPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>PDF-bank</h3>
+          <div id="pdfOptions"></div>
+          <button id="pdfCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup Export ---------- -->
       <div id="exportPopup" class="popup">
         <div class="popup-inner">
@@ -976,7 +985,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
