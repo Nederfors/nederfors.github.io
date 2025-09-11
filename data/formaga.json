@@ -621,7 +621,7 @@
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen kan utnyttja sin rustning maximalt vilket gör att en högre tärningsnivå används för att slå rustningens skydd: lätt rustning skyddar 1T6, medeltung rustning skyddar 1T8 och tung rustning skyddar 1T10.",
       "Gesäll": "Handling: Passiv. Rollpersonen är van att bära rustning och kan anpassa sitt agerande till rustningens begränsningar. Rustning ger inget avdrag på Kvick och förmågor som baseras på Kvick (inklusive Försvar). Rustningens begränsningar påverkar fortfarande mystiska krafter negativt.",
-      "Mästare": "Handling: Reaktiv. Rustmästaren får slå mot Kvick för att motverka effekter från förmågor och utrustning som gör att motståndarens attacker ignorerar eller reducerar Bepansring; om slaget lyckas skyddar rustningen som vanligt. Mystiska krafter som ignorerar Bepansring kan inte blockeras på detta sätt."
+      "Mästare": "Handling: Reaktiv. Rustmästaren får slå mot Kvick för att motverka effekter från förmågor och utrustning som gör att motståndarens attacker ignorerar eller reducerar Bepansring, även mot mystiska och elementära effekter; om slaget lyckas skyddar rustningen som vanligt. Mystiska krafter som ignorerar Bepansring kan inte blockeras på detta sätt."
     }
   },
   {
