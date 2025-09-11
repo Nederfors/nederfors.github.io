@@ -88,8 +88,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen kan som en fri handling gå in helt för att skada och gör då +1T6 i extra skada med sina närstridsattacker. Nackdelen är att rollpersonen försvarar sig illa. Det karaktärsdrag som Försvar baseras på räknas som 5 avseende Försvar.",
-      "Gesäll": "Handling: Reaktiv. Vreden är starkare än rädslan för döden hos rollpersonen, som under sitt bärsärkarus fortsätter slå dödsslag som vanligt, men kan fortsätta agera som om den vore oskadd.",
-      "Mästare": "Handling: Fri. Rollpersonens vrede har kallnat utan att förlora något av sin styrka. Rollpersonen kan rida på vredens våg och på så sätt behålla kraften att ge och ignorera extra skada samtidigt som hjälten får försvara sig som vanligt"
+      "Gesäll": "Handling: Reaktiv. Vreden är starkare än rädslan för döden hos rollpersonen, som under sitt bärsärkarrus fortsätter slå dödsslag som vanligt, men kan fortsätta agera som om hen vore oskadd.",
+      "Mästare": "Handling: Fri. Rollpersonens vrede har kallnat utan att förlora något av sin styrka. Rollpersonen kan rida på vredens våg och på så sätt behålla kraften att ge och ignorera extra skada samtidigt som hjälten får försvara sig som vanligt."
     }
   },
   {
@@ -499,7 +499,7 @@
     "nivåer": {
       "Novis": "Handling: Fri. Rollpersonen har studerat monster och kan med ett lyckat slag i Listig känna igen och dra sig till minnes styrkor och svagheter för ett monster per runda. Spelledaren berättar för spelaren om varelsens beskrivning och värden.",
       "Gesäll": "Handling: Fri. Rollpersonen är en erkänd monsterkännare som noga studerat en viss undergrupp av monster (välj en av Bestar, Kulturvarelser, Odöda eller Styggelser). Rollpersonen gör +1T4 extra skada mot monster ur den valda kategorin. Bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bäst bekämpar varelsen.",
-      "Mästare": "Handling: Fri. Rollpersonen gör +1T6 extra skada mot varelser ur den kategori han eller hon har specialiserat sig på. Den bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bekämpar varelsen."
+      "Mästare": "Handling: Fri. Rollpersonen gör +1T6 extra skada mot varelser ur den kategori hen har specialiserat sig på. Den bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bekämpar varelsen."
     }
   },
   {
