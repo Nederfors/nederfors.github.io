@@ -1558,6 +1558,53 @@
     
     ],
    "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T20 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
+},
+{
+"id": "ta22",
+"namn": "Bepansring och skydd",
+"taggar": { "typ": ["Tabell"] },
+"kolumner": [
+"Bepansringstyp",
+"Yttre fysisk",
+"Inre fysisk",
+"Elementär",
+"Mystisk",
+"Gift"
+],
+"rader": [
+{
+"Bepansringstyp": "Bepansring – rustningar",
+"Yttre fysisk": "Skyddar",
+"Inre fysisk": "Skyddar inte",
+"Elementär": "Skyddar inte",
+"Mystisk": "Skyddar inte",
+"Gift": "Skyddar inte"
+},
+{
+"Bepansringstyp": "Naturligt pansar",
+"Yttre fysisk": "Skyddar",
+"Inre fysisk": "Skyddar inte",
+"Elementär": "Skyddar",
+"Mystisk": "Skyddar inte",
+"Gift": "Skyddar inte"
+},
+{
+"Bepansringstyp": "Mystisk bepansring",
+"Yttre fysisk": "Skyddar",
+"Inre fysisk": "Skyddar inte",
+"Elementär": "Skyddar",
+"Mystisk": "Skyddar",
+"Gift": "Skyddar inte"
+},
+{
+"Bepansringstyp": "Robust/Överlevnadsinstinkt",
+"Yttre fysisk": "Skyddar",
+"Inre fysisk": "Skyddar inte",
+"Elementär": "Skyddar",
+"Mystisk": "Skyddar inte",
+"Gift": "Skyddar inte"
+}
+]
 }
 
 ]
