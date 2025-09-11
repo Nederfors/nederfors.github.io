@@ -522,7 +522,7 @@
   },
   {
     "namn": "Helig aura",
-    "beskrivning": "Material: Helig symbol  \nMystikern kan sända ut en helig och livsbejakande aura som skadar styggelser och vandöda. I förlängningen kan auran också hela levande varelser.",
+    "beskrivning": "Material: Helig symbol \n Mystikern frigör en ström av helig kraft som breder ut sig som en varm, pulserande aura. För styggelser och vandöda är den ett brännande ljus som sliter i deras förvridna väsen, men för de levande skänker den lindring. Stridens sår mildras och den som står på gränsen till döden kan hållas kvar, men auran förmår varken resa någon från dödsbädden eller hela kritiska skador. Den kan läka en karaktär som fallit under 0 Tålighet, men aldrig höja dem över 0, och de skador som uppstår när smärtgränsen bryts förblir oberörda.",
     "taggar": {
       "typ": [
         "Mystisk kraft"
