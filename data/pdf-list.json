@@ -1,70 +1,39 @@
 [
   {
-    "title": "Allianser inom Kampanjen",
-    "file": "data/Allianser inom Kampanjen.pdf"
+    "category": "Regler",
+    "items": [
+      { "title": "Spelarens Grundbok", "file": "data/Spelarens Grundbok.pdf" },
+      { "title": "Spelarregler", "file": "data/Spelarregler.pdf" },
+      { "title": "SL regler", "file": "data/SL regler.pdf" },
+      { "title": "Regelalternativ", "file": "data/Regelalternativ.pdf" },
+      { "title": "Litet rollformul\u00e4r", "file": "data/Litet rollformula\u0308r.pdf" },
+      { "title": "Stort rollformul\u00e4r", "file": "data/Stort rollformula\u0308r.pdf" }
+    ]
   },
   {
-    "title": "Davokar",
-    "file": "data/Davokar.pdf"
+    "category": "V\u00e4rlds\u00f6versikt",
+    "items": [
+      { "title": "Spelv\u00e4rld", "file": "data/Spelva\u0308rld.pdf" },
+      { "title": "Davokar", "file": "data/Davokar.pdf" },
+      { "title": "Mystiska Traditioner", "file": "data/Mystiska Traditioner.pdf" }
+    ]
   },
   {
-    "title": "Fraktioner",
-    "file": "data/Fraktioner.pdf"
+    "category": "Platser",
+    "items": [
+      { "title": "Yndaros, Grund", "file": "data/Yndaros, Grund.pdf" },
+      { "title": "Yndaros, Detalj", "file": "data/Yndaros.pdf" },
+      { "title": "Tistla F\u00e4ste, Grund", "file": "data/Tistla F\u00e4ste, grund.pdf" },
+      { "title": "Tistla F\u00e4ste, Detalj", "file": "data/Tistla F\u00e4ste.pdf" },
+      { "title": "Karvosti, Grund", "file": "data/Karvosti, Grund.pdf" },
+      { "title": "Karvosti, Detalj", "file": "data/Karvosti.pdf" }
+    ]
   },
   {
-    "title": "Karvosti, Grund",
-    "file": "data/Karvosti, Grund.pdf"
-  },
-  {
-    "title": "Karvosti",
-    "file": "data/Karvosti.pdf"
-  },
-  {
-    "title": "Litet rollformulär",
-    "file": "data/Litet rollformulär.pdf"
-  },
-  {
-    "title": "Mystiska Traditioner",
-    "file": "data/Mystiska Traditioner.pdf"
-  },
-  {
-    "title": "Regelalternativ",
-    "file": "data/Regelalternativ.pdf"
-  },
-  {
-    "title": "SL regler",
-    "file": "data/SL regler.pdf"
-  },
-  {
-    "title": "Spelarens Grundbok",
-    "file": "data/Spelarens Grundbok.pdf"
-  },
-  {
-    "title": "Spelarregler",
-    "file": "data/Spelarregler.pdf"
-  },
-  {
-    "title": "Spelvärld",
-    "file": "data/Spelvärld.pdf"
-  },
-  {
-    "title": "Stort rollformulär",
-    "file": "data/Stort rollformulär.pdf"
-  },
-  {
-    "title": "Tistla Fäste, grund",
-    "file": "data/Tistla Fäste, grund.pdf"
-  },
-  {
-    "title": "Tistla Fäste",
-    "file": "data/Tistla Fäste.pdf"
-  },
-  {
-    "title": "Yndaros, Grund",
-    "file": "data/Yndaros, Grund.pdf"
-  },
-  {
-    "title": "Yndaros",
-    "file": "data/Yndaros.pdf"
+    "category": "Akt\u00f6rer och krafter",
+    "items": [
+      { "title": "Fraktioner", "file": "data/Fraktioner.pdf" },
+      { "title": "Allianser inom Kampanjen", "file": "data/Allianser inom Kampanjen.pdf" }
+    ]
   }
 ]

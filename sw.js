@@ -81,7 +81,8 @@ self.addEventListener('install', event => {
       const response = await cache.match('data/pdf-list.json');
       if (response) {
         const pdfs = await response.json();
-        await cache.addAll(pdfs.map(p => p.file));
+        const files = pdfs.flatMap(c => c.items.map(p => p.file));
+        await cache.addAll(files);
       }
     })()
   );

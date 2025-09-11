@@ -1568,6 +1568,19 @@ select.level {
 }
 #pdfPopup .popup-inner button { width: 100%; }
 
+#pdfPopup .pdf-category {
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .4rem .6rem .6rem;
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+#pdfPopup .pdf-category h3 {
+  margin: 0 0 .2rem;
+  font-size: 1rem;
+}
+
 /* ---------- Popup för export ---------- */
 #exportPopup {
   position: fixed;
