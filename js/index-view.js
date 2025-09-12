@@ -204,6 +204,7 @@ function initIndex() {
       return;
     }
     const nq = searchNormalize(q.toLowerCase());
+    const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
     // Special suggestions for "[N] random: <kategori>" or "[N] slump: <kategori>"
     {
       const m = q.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.*)$/i);
@@ -224,11 +225,11 @@ function initIndex() {
         }
         cats.sort((a,b)=>String(a).localeCompare(String(b)));
         if (cats.length) {
-          const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
           sugEl.innerHTML = cats.map((cat,i)=>{
             const base = prefix.charAt(0).toUpperCase()+prefix.slice(1).toLowerCase();
             const text = `${num ? (num + ' ') : ''}${base}: ${cat}`;
-            return `<div class="item" data-idx="${i}" data-val="${esc(text)}" data-cat="${esc(cat)}" data-count="${esc(num || '1')}" data-cmd="random">${text}</div>`;
+            const disp = text.charAt(0).toUpperCase() + text.slice(1);
+            return `<div class="item" data-idx="${i}" data-val="${esc(text)}" data-cat="${esc(cat)}" data-count="${esc(num || '1')}" data-cmd="random">${disp}</div>`;
           }).join('');
           sugEl.hidden = false;
           sugIdx = -1;
@@ -242,7 +243,11 @@ function initIndex() {
       c.norm?.some(n => n.includes(nq))
     );
     if (cmdMatches.length) {
-      sugEl.innerHTML = cmdMatches.map((c,i)=>`<div class="item" data-idx="${i}" data-cmd="${c.id}">${c.terms[0]}</div>`).join('');
+      sugEl.innerHTML = cmdMatches.map((c,i)=>{
+        const term = c.terms[0];
+        const disp = term.charAt(0).toUpperCase() + term.slice(1);
+        return `<div class="item" data-idx="${i}" data-cmd="${c.id}">${disp}</div>`;
+      }).join('');
       sugEl.hidden = false;
       sugIdx = -1;
       window.updateScrollLock?.();
@@ -268,7 +273,10 @@ function initIndex() {
       window.updateScrollLock?.();
       return;
     }
-    sugEl.innerHTML = items.map((v,i)=>`<div class="item" data-idx="${i}" data-val="${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}">${v}</div>`).join('');
+    sugEl.innerHTML = items.map((v,i)=>{
+      const disp = v.charAt(0).toUpperCase() + v.slice(1);
+      return `<div class="item" data-idx="${i}" data-val="${esc(v)}">${disp}</div>`;
+    }).join('');
     sugEl.hidden = false;
     sugIdx = -1;
     window.updateScrollLock?.();

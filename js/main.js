@@ -176,12 +176,26 @@ const dom  = {
 };
 
 function highlightButton(panelId, btnId) {
-  if (bar && typeof bar.open === 'function') bar.open(panelId);
-  const btn = bar?.shadowRoot?.getElementById(btnId);
-  if (!btn) return;
-  btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
-  btn.classList.add('focus-highlight');
-  setTimeout(() => btn.classList.remove('focus-highlight'), 600);
+  if (!bar) return;
+  if (typeof bar.open === 'function') bar.open(panelId);
+  setTimeout(() => {
+    const btn = bar.shadowRoot?.getElementById(btnId);
+    if (!btn) return;
+    const card = btn.closest('.card');
+    if (card?.classList.contains('compact')) {
+      card.classList.remove('compact');
+      if (panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
+        bar.updateFilterCollapseBtn();
+      }
+    }
+    btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+    const color = getComputedStyle(btn).backgroundColor;
+    btn.animate([
+      { boxShadow: `0 0 0 0 ${color}` },
+      { boxShadow: `0 0 0 4px ${color}` },
+      { boxShadow: `0 0 0 0 ${color}` }
+    ], { duration: 600, iterations: 3 });
+  }, 0);
 }
 
 const COMMANDS = [
