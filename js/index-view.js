@@ -238,6 +238,16 @@ function initIndex() {
         // Fall back to default behavior if no categories matched
       }
     }
+    const cmdMatches = (window.COMMANDS || []).filter(c =>
+      c.norm?.some(n => n.includes(nq))
+    );
+    if (cmdMatches.length) {
+      sugEl.innerHTML = cmdMatches.map((c,i)=>`<div class="item" data-idx="${i}" data-cmd="${c.id}">${c.terms[0]}</div>`).join('');
+      sugEl.hidden = false;
+      sugIdx = -1;
+      window.updateScrollLock?.();
+      return;
+    }
     const seen = new Set();
     const MAX = 50;
     const items = [];
@@ -708,6 +718,12 @@ function initIndex() {
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
+        } else if (it.dataset.cmd) {
+          const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
+          cmd?.run();
+          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+          dom.sIn.blur();
+          return;
         } else {
           const val = (it.dataset.val || '').trim();
           if (val) {
@@ -760,39 +776,44 @@ function initIndex() {
       e.preventDefault();
       dom.sIn.blur();
       const term = sTemp.toLowerCase();
-      // Enter on active suggestion that is random command
-      if (items.length && sugIdx >= 0) {
-        const it = items[sugIdx];
-        if (it?.dataset?.cmd === 'random') {
-          const cat = it.dataset.cat || '';
-          const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
-          const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
-          if (!pool.length) {
-            if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
+        // Enter on active suggestion that may be command
+        if (items.length && sugIdx >= 0) {
+          const it = items[sugIdx];
+          if (it?.dataset?.cmd === 'random') {
+            const cat = it.dataset.cat || '';
+            const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
+            const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
+            if (!pool.length) {
+              if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
+              dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+              return;
+            }
+            const n = Math.min(cnt, pool.length);
+            const picks = [];
+            const idxs = pool.map((_,i)=>i);
+            for (let i = 0; i < n; i++) {
+              const k = Math.floor(Math.random() * idxs.length);
+              const [idx] = idxs.splice(k, 1);
+              picks.push(pool[idx]);
+            }
+            fixedRandomEntries = picks;
+            fixedRandomInfo = { cat, count: picks.length };
+            const c = cat || picks[0]?.taggar?.typ?.[0];
+            if (c) openCatsOnce.add(c);
+            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+            activeTags(); renderList(filtered());
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          } else if (it?.dataset?.cmd) {
+            const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
+            cmd?.run();
             dom.sIn.value=''; sTemp=''; updateSearchDatalist();
             return;
           }
-          const n = Math.min(cnt, pool.length);
-          const picks = [];
-          const idxs = pool.map((_,i)=>i);
-          for (let i = 0; i < n; i++) {
-            const k = Math.floor(Math.random() * idxs.length);
-            const [idx] = idxs.splice(k, 1);
-            picks.push(pool[idx]);
-          }
-          fixedRandomEntries = picks;
-          fixedRandomInfo = { cat, count: picks.length };
-          const c = cat || picks[0]?.taggar?.typ?.[0];
-          if (c) openCatsOnce.add(c);
-          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          activeTags(); renderList(filtered());
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          return;
         }
-      }
-      // Command: [N] random: <kategori> — pick N random entries in category
-      {
-        const m = sTemp.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
+        // Command: [N] random: <kategori> — pick N random entries in category
+        {
+          const m = sTemp.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
         if (m) {
           const cnt = Math.max(1, parseInt((m[1] || '1'), 10) || 1);
           const catInput = (m[3] || '').trim();

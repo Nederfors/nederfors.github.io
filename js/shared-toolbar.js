@@ -188,6 +188,11 @@ class SharedToolbar extends HTMLElement {
         .char-btn.icon   { font-size: 1.1rem; }
         .char-btn:hover  { opacity: .85; }
         .char-btn:active { transform: scale(.95); opacity: .7; }
+        .focus-highlight { animation: focusBlink .8s ease; }
+        @keyframes focusBlink {
+          0%,100% { box-shadow: none; }
+          50% { box-shadow: 0 0 0 4px var(--accent); }
+        }
       </style>
       <link rel="stylesheet" href="css/style.css">
 
