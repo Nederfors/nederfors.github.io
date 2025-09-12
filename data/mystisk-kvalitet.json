@@ -186,5 +186,16 @@
         "Rustningskvalitet"
       ]
     }
+  },
+{
+    "id": "mystiskkv17",
+    "namn": "Skuggsköld",
+    "beskrivning": "När skyddsformeln väcks med en fri handling pulserar en dov kraft genom rustningen, men priset blir genast 1T4 temporär korruption. Så länge bäraren undgår att träffas av fysiska attacker växer energin stilla för varje runda, och rustningens pansar tjocknar stegvis, ett skyddslager i taget. När en fysisk attack till slut träffar frigörs all samlad styrka i samma ögonblick, och bonusen förbrukas i slaget. Därefter faller rustningen tillbaka till sitt ursprungliga tillstånd, och skyddsformeln måste aktiveras på nytt om dess kraft åter ska samlas.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Rustningskvalitet"
+      ]
+    }
   }
 ]
