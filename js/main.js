@@ -175,57 +175,6 @@ const dom  = {
   cName  : document.getElementById('charName')
 };
 
-function highlightButton(panelId, btnId) {
-  if (!bar) return;
-  if (typeof bar.open === 'function') bar.open(panelId);
-  setTimeout(() => {
-    const btn = bar.shadowRoot?.getElementById(btnId);
-    if (!btn) return;
-    const card = btn.closest('.card');
-    if (card?.classList.contains('compact')) {
-      card.classList.remove('compact');
-      if (panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
-        bar.updateFilterCollapseBtn();
-      }
-    }
-    btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
-    const color = getComputedStyle(btn).backgroundColor;
-    btn.animate([
-      { boxShadow: `0 0 0 0 ${color}` },
-      { boxShadow: `0 0 0 4px ${color}` },
-      { boxShadow: `0 0 0 0 ${color}` }
-    ], { duration: 600, iterations: 3 });
-  }, 0);
-}
-
-const COMMANDS = [
-  { id: 'newCharBtn',       terms: ['ny karaktär', 'ny rollperson'],          run: () => highlightButton('filterPanel','newCharBtn') },
-  { id: 'duplicateChar',    terms: ['kopiera rollperson', 'kopiera'],         run: () => highlightButton('filterPanel','duplicateChar') },
-  { id: 'renameChar',       terms: ['byt namn', 'byta namn'],                 run: () => highlightButton('filterPanel','renameChar') },
-  { id: 'manageFolders',    terms: ['mapphantering', 'hantera mappar'],       run: () => highlightButton('filterPanel','manageFolders') },
-  { id: 'exportChar',       terms: ['exportera', 'export'],                   run: () => highlightButton('filterPanel','exportChar') },
-  { id: 'importChar',       terms: ['importera', 'import'],                   run: () => highlightButton('filterPanel','importChar') },
-  { id: 'pdfLibraryBtn',    terms: ['pdf bank', 'pdf-bank'],                  run: () => highlightButton('filterPanel','pdfLibraryBtn') },
-  { id: 'deleteChar',       terms: ['radera rollperson', 'radera'],           run: () => highlightButton('filterPanel','deleteChar') },
-  { id: 'partySmith',       terms: ['smed i partyt', 'smed'],                  run: () => highlightButton('filterPanel','partySmith') },
-  { id: 'partyAlchemist',   terms: ['alkemist i partyt', 'alkemist'],         run: () => highlightButton('filterPanel','partyAlchemist') },
-  { id: 'partyArtefacter',  terms: ['artefaktmakare i partyt', 'artefaktmakare'], run: () => highlightButton('filterPanel','partyArtefacter') },
-  { id: 'forceDefense',     terms: ['tvinga försvar', 'försvar'],             run: () => highlightButton('filterPanel','forceDefense') },
-  { id: 'filterUnion',      terms: ['utvidgad sökning', 'utvidgad'],          run: () => highlightButton('filterPanel','filterUnion') },
-  { id: 'entryViewToggle',  terms: ['expanderad vy', 'expandera vy'],         run: () => highlightButton('filterPanel','entryViewToggle') },
-  { id: 'infoToggle',       terms: ['visa hjälp', 'hjälp'],                   run: () => highlightButton('filterPanel','infoToggle') },
-  { id: 'addCustomBtn',     terms: ['nytt föremål', 'skapa föremål'],         run: () => highlightButton('invPanel','addCustomBtn') },
-  { id: 'manageMoneyBtn',   terms: ['hantera pengar', 'pengar'],              run: () => highlightButton('invPanel','manageMoneyBtn') },
-  { id: 'multiPriceBtn',    terms: ['multiplicera pris', 'prisjustering'],    run: () => highlightButton('invPanel','multiPriceBtn') },
-  { id: 'squareBtn',        terms: ['lägg till antal', 'antal'],              run: () => highlightButton('invPanel','squareBtn') },
-  { id: 'dragToggle',       terms: ['dra och släpp', 'drag and drop'],        run: () => highlightButton('invPanel','dragToggle') },
-  { id: 'saveFreeBtn',      terms: ['spara och gratismarkera', 'gratismarkera'], run: () => highlightButton('invPanel','saveFreeBtn') },
-  { id: 'clearInvBtn',      terms: ['rensa inventarie', 'töm inventarie'],    run: () => highlightButton('invPanel','clearInvBtn') },
-];
-
-COMMANDS.forEach(c => c.norm = c.terms.map(t => searchNormalize(t.toLowerCase())));
-window.COMMANDS = COMMANDS;
-
 /* ----- Hantera back-navigering för sökfältet ----- */
 let searchFocus = false;
 if (dom.sIn) {
