@@ -626,11 +626,16 @@ function initCharacter() {
       return;
     }
     const nq = searchNormalize(q.toLowerCase());
+    const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
     const cmdMatches = (window.COMMANDS || []).filter(c =>
       c.norm?.some(n => n.includes(nq))
     );
     if (cmdMatches.length) {
-      sugEl.innerHTML = cmdMatches.map((c,i)=>`<div class="item" data-idx="${i}" data-cmd="${c.id}">${c.terms[0]}</div>`).join('');
+      sugEl.innerHTML = cmdMatches.map((c,i)=>{
+        const term = c.terms[0];
+        const disp = term.charAt(0).toUpperCase() + term.slice(1);
+        return `<div class="item" data-idx="${i}" data-cmd="${c.id}">${disp}</div>`;
+      }).join('');
       sugEl.hidden = false;
       sugIdx = -1;
       window.updateScrollLock?.();
@@ -656,7 +661,10 @@ function initCharacter() {
       window.updateScrollLock?.();
       return;
     }
-    sugEl.innerHTML = items.map((v,i)=>`<div class="item" data-idx="${i}" data-val="${v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;')}">${v}</div>`).join('');
+    sugEl.innerHTML = items.map((v,i)=>{
+      const disp = v.charAt(0).toUpperCase() + v.slice(1);
+      return `<div class="item" data-idx="${i}" data-val="${esc(v)}">${disp}</div>`;
+    }).join('');
     sugEl.hidden = false;
     sugIdx = -1;
     window.updateScrollLock?.();
