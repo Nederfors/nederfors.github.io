@@ -520,17 +520,19 @@ function initIndex() {
         let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
         const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
-        const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag">${QUAL_TYPE_MAP[t] || t}</span>`);
+        const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${QUAL_TYPE_MAP[t] || t}</span>`);
+        const arkTags = explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
+        const testTags = (p.taggar?.test || []).map(t => `<span class="tag filter-tag" data-section="test" data-val="${t}">${t}</span>`);
         const infoTagsHtml = [xpTag]
           .concat(typeTags)
-          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
-          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(arkTags)
+          .concat(testTags)
           .filter(Boolean)
           .join(' ');
         const tagsHtml = []
           .concat(typeTags)
-          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
-          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(arkTags)
+          .concat(testTags)
           .filter(Boolean)
           .join(' ');
         const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
@@ -952,6 +954,15 @@ function initIndex() {
 
   /* lista-knappar */
   dom.lista.addEventListener('click', async e=>{
+    const tag = e.target.closest('.filter-tag');
+    if (tag) {
+      const section = tag.dataset.section;
+      const val = tag.dataset.val;
+      if (!F[section].includes(val)) F[section].push(val);
+      if (section === 'typ') openCatsOnce.add(val);
+      activeTags(); renderList(filtered());
+      return;
+    }
     // Special clear-filters action inside the Hoppsan category
     const clearBtn = e.target.closest('button[data-clear-filters]');
     if (clearBtn) {

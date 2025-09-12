@@ -539,16 +539,19 @@ function initCharacter() {
         let xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
+        const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${t}</span>`);
+        const arkTags = explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
+        const testTags = (p.taggar?.test || []).map(t => `<span class="tag filter-tag" data-section="test" data-val="${t}">${t}</span>`);
         const infoTagsHtml = [xpTag]
-          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
-          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
-          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(typeTags)
+          .concat(arkTags)
+          .concat(testTags)
           .filter(Boolean)
           .join(' ');
         const tagsHtml = []
-          .concat((p.taggar?.typ || []).map(t => `<span class="tag">${t}</span>`))
-          .concat(explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag">${t}</span>`))
-          .concat((p.taggar?.test || []).map(t => `<span class="tag">${t}</span>`))
+          .concat(typeTags)
+          .concat(arkTags)
+          .concat(testTags)
           .filter(Boolean)
           .join(' ');
         const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
@@ -820,6 +823,15 @@ function initCharacter() {
 
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click', async e=>{
+    const tag = e.target.closest('.filter-tag');
+    if (tag) {
+      const section = tag.dataset.section;
+      const val = tag.dataset.val;
+      if (!F[section].includes(val)) F[section].push(val);
+      if (section === 'typ') openCatsOnce.add(val);
+      activeTags(); renderSkills(filtered()); renderTraits();
+      return;
+    }
     const conflictBtn = e.target.closest('.conflict-btn');
       if(conflictBtn){
         const currentName = conflictBtn.dataset.name;
