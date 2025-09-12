@@ -626,6 +626,16 @@ function initCharacter() {
       return;
     }
     const nq = searchNormalize(q.toLowerCase());
+    const cmdMatches = (window.COMMANDS || []).filter(c =>
+      c.norm?.some(n => n.includes(nq))
+    );
+    if (cmdMatches.length) {
+      sugEl.innerHTML = cmdMatches.map((c,i)=>`<div class="item" data-idx="${i}" data-cmd="${c.id}">${c.terms[0]}</div>`).join('');
+      sugEl.hidden = false;
+      sugIdx = -1;
+      window.updateScrollLock?.();
+      return;
+    }
     const seen = new Set();
     const MAX = 50;
     const items = [];
@@ -673,34 +683,41 @@ function initCharacter() {
     updateSearchDatalist();
   });
   {
-    const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
-    if (sugEl) {
-      sugEl.addEventListener('mousedown', e => {
-        const it = e.target.closest('.item');
-        if (!it) return;
-        e.preventDefault();
-        const val = (it.dataset.val || '').trim();
-        if (val) {
-          const union = storeHelper.getFilterUnion(store);
-          if (union) {
-            if (!F.search.includes(val)) F.search.push(val);
-          } else {
-            F.search = [val];
+      const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
+      if (sugEl) {
+        sugEl.addEventListener('mousedown', e => {
+          const it = e.target.closest('.item');
+          if (!it) return;
+          e.preventDefault();
+          if (it.dataset.cmd) {
+            const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
+            cmd?.run();
+            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+            dom.sIn.blur();
+            return;
           }
-          const nval = searchNormalize(val.toLowerCase());
-          const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-          const cat = match?.taggar?.typ?.[0];
-          if (cat) openCatsOnce.add(cat);
-          if (window.storeHelper?.addRecentSearch) {
-            storeHelper.addRecentSearch(store, val);
-          }
-        } else {
-          F.search = [];
-        }
-        dom.sIn.value = '';
-        sTemp = '';
-        updateSearchDatalist();
-        activeTags();
+            const val = (it.dataset.val || '').trim();
+            if (val) {
+              const union = storeHelper.getFilterUnion(store);
+              if (union) {
+                if (!F.search.includes(val)) F.search.push(val);
+              } else {
+                F.search = [val];
+              }
+              const nval = searchNormalize(val.toLowerCase());
+              const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
+              const cat = match?.taggar?.typ?.[0];
+              if (cat) openCatsOnce.add(cat);
+              if (window.storeHelper?.addRecentSearch) {
+                storeHelper.addRecentSearch(store, val);
+              }
+            } else {
+              F.search = [];
+            }
+          dom.sIn.value = '';
+          sTemp = '';
+          updateSearchDatalist();
+          activeTags();
         renderSkills(filtered());
         renderTraits();
         dom.sIn.blur();
@@ -727,13 +744,20 @@ function initCharacter() {
       e.preventDefault();
       dom.sIn.blur();
       const term = sTemp.toLowerCase();
-      if (items.length && sugIdx >= 0) {
-        const chosen = items[sugIdx]?.dataset?.val || '';
-        if (chosen) {
-          dom.sIn.value = chosen; sTemp = chosen.trim();
-          updateSearchDatalist();
+        if (items.length && sugIdx >= 0) {
+          const it = items[sugIdx];
+          if (it?.dataset?.cmd) {
+            const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
+            cmd?.run();
+            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+            return;
+          }
+          const chosen = it?.dataset?.val || '';
+          if (chosen) {
+            dom.sIn.value = chosen; sTemp = chosen.trim();
+            updateSearchDatalist();
+          }
         }
-      }
       if (term === 'webapp') {
         const ua = navigator.userAgent.toLowerCase();
         let anchor = 'general';

@@ -1468,8 +1468,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
-                <button data-act="moneyMinus" class="char-btn icon">&minus;</button>
-                <button data-act="moneyPlus" class="char-btn icon">+</button>
+                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon">&minus;</button>
+                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon">+</button>
               </div>
             </div>
             <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
