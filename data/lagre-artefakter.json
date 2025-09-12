@@ -653,7 +653,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Mästare": "Ett traditionspecifikt fokus som ger ett garanterat lyckat slag vid ett användande av någon av traditionens mystiska krafter, dock kan det endast användas en gång per dag. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
+      "Mästare": "Ett traditionspecifikt fokus för traditionens mästare som ger ett garanterat lyckat slag vid ett användande av någon av traditionens mystiska krafter, dock kan det endast användas en gång per dag. Ett mystiskt fokus binds till användaren som andra artefakter, genom spenderande av en erfarenhet eller genom att acceptera ett permanent korruption."
     },
     "grundpris": {
       "daler": 20,
@@ -735,6 +735,375 @@
     },
     "stat": {
       "vikt": 1.0
+    }
+  },
+{
+    "id": "l33",
+    "namn": "Blodskärva",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Svartkonst"
+      ]
+    },
+    "nivåer": {
+      "Gesäll": "Små, blodröda fragment som påträffats i Davokars randzoner och smusslats genom Tistla Fäste trots påbud. Skärvan pulserar svagt när bäraren blöder.När bäraren tar skada kan skärvan ”matas” av såret: ta 1T4 temporär Korruption för att återfå lika mycket Tålighet. Effekten kan användas varje gång bäraren tar skada. "
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l34",
+    "namn": "Tidsvriden Amulett",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Mentalist"
+      ]
+    },
+    "nivåer": {
+      "Gesäll": "Ett flätat smycke med ett sprucket glasöga som sägs ha fångat en rubbad sekund. Mentalister använder den för att tvinga ögonblicket att upprepa sig, med risk för stel tid. En gång per scen får bäraren slå om ett helt misslyckat slag. Om det nya resultatet blir över 15 förlorar rollpersonen sin nästa handling då tiden hakar upp sig."
+    },
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l35",
+    "namn": "Stavornament",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Stavmagiker"
+      ]
+    },
+    "nivåer": {
+      "Gesäll": "Ett pryttligt band i meteoritjärn eller ben som fästs runt stavens övre halva, laddat för att kortvarigt förtäta kraftflödet i en runstav. Ornamentet används av stavmagiker som söker ett snabbt dubbelslag av samma kraft. En gång per scen kan en mystisk kraft aktiveras två gånger i följd. Den andra aktiveringen kostar 1T4 extra temporär Korruption."
+    },
+    "grundpris": {
+      "daler": 14,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l36",
+    "namn": "Eldstensfragment",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Pyromantiker"
+      ]
+    },
+    "nivåer": {
+      "Gesäll": "En fjällig, sotglänsande bit av stelnad låga. Fragmentet dricker av brinnande offer och lämnar bärarens nästa angrepp hetare än förut. Varje fiende som dör av en eldeffekt från bärarens mystiska krafter laddar fragmentet. För varje sådant offer får bäraren +1 på nästa anfall med eld under samma strid."
+    },
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l37",
+    "namn": "Fördärvat Ormöga",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "Ett infattat, mjölkigt öga från en Kanaran. Bäraren ser ”för tydligt” när ödet slår över åt något håll och slår perfekt lyckat på resultaten 1–2, men även fatalt misslyckat på 19–20 (eller 18-20 om karaktären även har nackdelen otursförföljd)."
+    },
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l38",
+    "namn": "Runskiva",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "En tung, kantstött runskiva som bärs nära kroppen. När runorna berörs känns marken ge med sig och stegen pressas fram, som om stigen dömts fri. En gång per scen får bäraren ta en extra förflyttningshandling. Aktiveringen kostar 1T4 temporär Korruption. "
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l39",
+    "namn": "Rökelsebrännare",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Teurg"
+      ]
+    },
+    "nivåer": {
+      "Gesäll": "Rökelsebrännare fyllda med heliga örter placeras ofta i lägereldar inför strid. Den väldoftande röken anses rena sinnet och stärka kroppen. Alla allierade inom en förflyttning från elden får +1 i bepansring varje runda de slåss i dess sken."
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l40",
+    "namn": "Orikalkumband",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "Ett tungt band av orikalkum bärs kring armen och laddas med varje slag mot bärarens bepansring. För varje runda i följd som bäraren tar skada ökar skyddet med ytterligare +1. Effekten bryts om bäraren inte tar skada en runda och bandet måste då börja samla kraft på nytt."
+    },
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
+    }
+  },
+  {
+    "id": "l41",
+    "namn": "Kopparsandglas",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": [
+        "Ordensmagiker"
+      ]
+    },
+    "nivåer": {
+      "Gesäll": "Ett uråldrigt timglas fyllt med slipat kopparpulver som aldrig tycks ta slut. När glaset vänds som en aktiv handling frigörs gnistrande stoft som angriper en fiende i närheten. Stoftet såsamkar alla fiender inom närstridsområdet 3 elementarskada."
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l42",
+    "namn": "Fågelurna",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "Små urnor dekorerade med färgade fjädrar bärs av resande mystiker som skydd. Urnans kraft frigör en strimma av livskraft när en mystisk kraft lyckas. En gång per runda när bäraren lyckas med en mystisk kraft återfår denne 1 Tålighet."
+    },
+    "grundpris": {
+      "daler": 9,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
+    }
+  },
+  {
+    "id": "l43",
+    "namn": "Tungstensspira",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "Denna spira är gjuten av ett ovanligt tungt, mörkt mineral. Den skänker bäraren motstånd mot naturens råa krafter. Varje gång bäraren tar elementarskada reduceras skadan med 1, men skadan kan aldrig bli mindre än 1."
+    },
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
+    }
+  },
+  {
+    "id": "l44",
+    "namn": "Pilflätade skosnören",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "Ett par skosnören flätade av mjuk pilbark, tillverkade av kringvandrande häxor. De som lär sig nyttja deras kraft kan samla sina steg och frigöra dem som en plötslig språngmarsch. Om bäraren avstår från förflyttning under en runda kan denne under nästa runda förflytta sig tre meter extra vid en förflyttningshandling."
+    },
+    "grundpris": {
+      "daler": 6,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
+    }
+  },
+  {
+    "id": "l45",
+    "namn": "Evighetslanterna",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "En lantärna vars flamma aldrig falnar, oavsett vind eller regn. Den ger tryggt ljus för resande, men dess ständiga sken gör det svårt att hålla sig undan fiendens blickar. Den fungerar som en fackla som brinner utan slut, men bäraren får –1 på Diskret när det gäller att smyga och gömma sig."
+    },
+    "grundpris": {
+      "daler": 7,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    }
+  },
+  {
+    "id": "l46",
+    "namn": "Mumifierad hartass",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "En torkad hartass insvept i bandage och sigill som påskyndar magins långsamma verk. Ritualer som normalt tar en timme att utföra tar 30 minuter."
+    },
+    "grundpris": {
+      "daler": 8,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
+    }
+  },
+  {
+    "id": "l47",
+    "namn": "Blått vaxljus",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "Ett ljus av mörkblått vax vars låga flämtar när korruptionen närmar sig. En gång per dygn kan bäraren välja att förlora Tålighet istället för att ta temporär Korruption."
+    },
+    "grundpris": {
+      "daler": 7,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
+    }
+  },
+  {
+    "id": "l48",
+    "namn": "Åskskärva",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "En gnistrande kristall som sprakar av instängd åska. Bäraren får +1 i Träffsäker."
+    },
+    "grundpris": {
+      "daler": 9,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
+    }
+  },
+  {
+    "id": "l49",
+    "namn": "Bärnstens insekt",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Gesäll": "Ett uråldrigt fly, fångat i gyllene bärnsten, vibrerar svagt i närheten av fördärv. Bäraren gör +1 skada med alla angrepp mot genomkorrumperade varelser."
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1
     }
   }
 ]
