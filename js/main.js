@@ -318,6 +318,14 @@ const dom  = {
 
   // Exponera globalt så vyerna kan använda detta
   window.getUICommandSuggestions = function(q){
+    const nq = norm(q || '');
+    // Special case: typing "Funktioner" should list all available UI buttons
+    if (nq === 'funktioner') {
+      return UI_CMDS
+        .slice()
+        .sort((a,b)=> String(a.label||'').localeCompare(String(b.label||''), 'sv'))
+        .map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '' }));
+    }
     return searchUICommands(q).map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '' }));
   };
   window.executeUICommand = executeUICommand;
