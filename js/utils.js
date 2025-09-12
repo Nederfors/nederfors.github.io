@@ -145,20 +145,30 @@
 
     const QUAL_ITEM_TYPES = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'];
 
+    const isArtifact = itTypes.includes('Artefakt') || itTypes.includes('Lägre Artefakt');
+    const isWeapon   = itTypes.includes('Vapen');
+    const isShield   = itTypes.includes('Sköld');
+    const isArmor    = itTypes.includes('Rustning');
+    const isAmmo     = itTypes.includes('Pil/Lod');
+    const artifactOnly = isArtifact && !isWeapon && !isShield && !isArmor && !isAmmo;
+
     // Allmän kvalitet: endast för föremål som kan ha kvaliteter
     if (isGeneral) {
       return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
     }
 
+    // Artefakter utan andra typer får inga andra kvaliteter
+    if (artifactOnly) return false;
+
     // Om inga nya typer finns på kvaliteten: falla tillbaka till gamla beteendet
     // (kvaliteter gällde generellt för vapen/sköld/rustning)
     if (!toWeapon && !toShield && !toArmor) {
-      return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
+      return isWeapon || isShield || isArmor || isAmmo;
     }
 
-    if (toWeapon && itTypes.includes('Vapen')) return true;
-    if (toShield && itTypes.includes('Sköld')) return true;
-    if (toArmor  && itTypes.includes('Rustning')) return true;
+    if (toWeapon && isWeapon) return true;
+    if (toShield && isShield) return true;
+    if (toArmor  && isArmor) return true;
     return false;
   }
   function isYrke(p){ return (p.taggar?.typ||[]).includes('Yrke'); }
