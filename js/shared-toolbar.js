@@ -42,11 +42,14 @@ window.SEARCH_ACTIONS = SEARCH_ACTIONS;
 window.runSearchCommand = function(termOrId, byId = false) {
   const toolbar = document.querySelector('shared-toolbar');
   if (!toolbar) return false;
+
   let action = null;
   if (byId) {
     action = SEARCH_ACTIONS.find(a => a.id === termOrId);
   } else {
-    const nterm = searchNormalize(String(termOrId || '').toLowerCase());
+    const term = String(termOrId || '').trim();
+    if (!term) return false;
+    const nterm = searchNormalize(term.toLowerCase());
     action = SEARCH_ACTIONS.find(a =>
       a.terms.some(t => {
         const nt = searchNormalize(t.toLowerCase());
@@ -55,7 +58,7 @@ window.runSearchCommand = function(termOrId, byId = false) {
     );
   }
   if (!action) return false;
-  if (action.panel) toolbar.open(action.panel);
+  if (action.panel && typeof toolbar.open === 'function') toolbar.open(action.panel);
   const btn = toolbar.shadowRoot.getElementById(action.id);
   if (btn) {
     btn.click();
