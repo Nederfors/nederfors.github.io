@@ -1078,11 +1078,11 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     if (forgeLvl && forgeable) {
       const posCnt = countPositiveQuals(allQuals);
       const mystCnt = allQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
-      if (
-        (forgeLvl === 1 && posCnt === 0) ||
-        (forgeLvl === 2 && mystCnt === 0 && posCnt <= 1) ||
-        (forgeLvl >= 3 && posCnt <= 2)
-      ) {
+      const qualifies =
+        (forgeLvl >= 1 && posCnt === 0) ||
+        (forgeLvl >= 2 && posCnt === 1 && mystCnt === 0) ||
+        (forgeLvl >= 3 && posCnt === 2 && mystCnt <= 1);
+      if (qualifies) {
         base = dividePrice(base, 2);
       }
     }

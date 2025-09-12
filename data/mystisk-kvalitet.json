@@ -197,5 +197,106 @@
         "Rustningskvalitet"
       ]
     }
+  },
+  {
+    "id": "mystiskkv18",
+    "namn": "Ekoinskrift",
+    "beskrivning": "Runorna på vapnet är ristade för att fånga upp den första skadans efterklang och få den att slå istället för det ordinarie slaget. När bäraren träffar med ett anfall vibrerar inskriften dovt och kan spegla resultatet i ett nytt kast. En gång per strid får bäraren välja att slå om samtliga skadetärningar för en lyckad attack och välja det bästa resultatet.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Vapenkvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv19",
+    "namn": "Barrikadrunor",
+    "beskrivning": "I rustningen har ristats tecken som låser fast skyddet och vägrar släppa taget. När pansaret håller stånd dröjer sig kraften kvar, och delar av förra rundans bepansring står bäraren bi i nästa. Upp till 4 poäng av den bepansring som inte genombryts förs vidare som bonus. Bonusen varar endast en runda och förfaller därefter, men kan åter byggas på så länge runorna får näring av varje träff som inte bryter igenom.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Rustningskvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv20",
+    "namn": "Vredesband",
+    "beskrivning": "Bandet kring vapnets skaft är spänt av obändig kraft och bryter i samma stund som det frigörs. När bäraren släpper lös dess vrede flammar styrkan till, men skyddet faller undan. Den runda det aktiveras får bärarens anfall +1t6 skada. Samma runda kan bäraren inte göra försvarsslag om hen blir attackerad, då vredens hetta driver bort allt fokus från att värja sig.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+         "Vapenkvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv21",
+    "namn": "Minnesstål",
+    "beskrivning": "Vapnet tycks minnas var det tidigare huggit, och varje gång vapnet finner samma kött skär den djupare. För varje träff på samma mål höjs vapnets basskada med +1, upp till ett tak på +5. När striden upphör, eller om bäraren byter mål, försvinner vapnets mönster av minne och bonusen faller åter till noll.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Vapenkvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv22",
+    "namn": "Giftkatalysator",
+    "beskrivning": "I klingan vilar en katalys som väcker gifter till liv på nytt. När den träffar ett redan förgiftat mål rycker det till som om toxinet flammar upp en gång till. Giftet triggas omedelbart en extra gång på en nivå svagare: svagt ger 1 skada, medelstarkt 1t4, starkt 1t6. Denna effekt ignorerar rustning och pulserar direkt i köttet.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Vapenkvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv23",
+    "namn": "Mörk Resonans",
+    "beskrivning": "Föremålet andas i takt med korruptionen och svarar med stigande styrka. Varje gång bäraren får temporär korruption laddas föremålet och dess effekttärning höjs ett steg nästa gång det används (t4 → t6 → t8 → t10 → t12). Bonusen gäller för en enda användning, därefter stillnar resonansen och återgår till sin grundnivå, i väntan på nästa skugga att besvara.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Rustningskvalitet",
+        "Vapenkvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv24",
+    "namn": "Dödshungrigt",
+    "beskrivning": "När ett vapen smids med denna kvalitet väcks en hunger som närs av strid. Varje gång ett anfall fäller en motståndare slukar vapnet segern och matar sin bärare med segeryra. Denna glöd ger omedelbart en extra aktiv handling under samma runda. Handlingen måste användas på plats – kraften falnar om den inte tas i bruk direkt.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv25",
+    "namn": "Stenpansar",
+    "beskrivning": "Rustningen är vävd med stens hårdhet och tyngd, en kraft som skyddar till priset av smidighet. När den bärs blir rörelserna klumpiga och långsamma, och en ytterligare begränsning på −4 läggs till, en nackdel som inte kan minskas av förmågan rustmästare. I gengäld härdas pansaret och ger +1t6 i bepansring. För att rustningen ska kunna bära denna tyngd krävs minst medeltung grundrustning.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Rustningskvalitet",
+        "Vapenkvalitet"
+      ]
+    }
+  },
+  {
+    "id": "mystiskkv26",
+    "namn": "Lindormsfjäll",
+    "beskrivning": "När korruption söker att fläcka själen väcks Lindormens urkraft i rustningen. Förbannelsen vrids bort från anden och förvandlas till en brännande börda för kroppen. Bäraren kan, innan tärningsutfallet slås, välja att ta hela korruptionsnivån som skada istället. Skadan motsvarar den fulla mängden korruption och bränner inifrån tills den är helt förtärd. Endast sömn och naturlig återhämtning kan läka skadan.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Rustningskvalitet"
+      ]
+    }
   }
+
 ]

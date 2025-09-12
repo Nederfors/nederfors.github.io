@@ -207,8 +207,6 @@ const COMMANDS = [
   { id: 'dragToggle',       terms: ['dra och släpp', 'drag and drop'],        run: () => highlightButton('invPanel','dragToggle') },
   { id: 'saveFreeBtn',      terms: ['spara och gratismarkera', 'gratismarkera'], run: () => highlightButton('invPanel','saveFreeBtn') },
   { id: 'clearInvBtn',      terms: ['rensa inventarie', 'töm inventarie'],    run: () => highlightButton('invPanel','clearInvBtn') },
-  { id: 'moneyMinusBtn',    terms: ['ta bort pengar', 'minus pengar'],        run: () => highlightButton('invPanel','moneyMinusBtn') },
-  { id: 'moneyPlusBtn',     terms: ['lägg till pengar', 'plus pengar'],       run: () => highlightButton('invPanel','moneyPlusBtn') }
 ];
 
 COMMANDS.forEach(c => c.norm = c.terms.map(t => searchNormalize(t.toLowerCase())));
