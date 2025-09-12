@@ -8,6 +8,62 @@
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
 
+// Sökbara kommandon kopplade till knappar i verktygs- och inställningspanelerna
+const SEARCH_ACTIONS = [
+  // Inventarie: Verktyg
+  { id: 'addCustomBtn',   panel: 'invPanel',    label: 'Nytt föremål',          terms: ['nytt föremål','lägg till föremål','skapa föremål'] },
+  { id: 'manageMoneyBtn', panel: 'invPanel',    label: 'Hantera pengar',        terms: ['hantera pengar','pengar','pengahantering'] },
+  { id: 'multiPriceBtn',  panel: 'invPanel',    label: 'Multiplicera pris',     terms: ['multiplicera pris','prisfaktor','prisjustering'] },
+  { id: 'squareBtn',      panel: 'invPanel',    label: 'Lägg till antal',       terms: ['lägg till antal','antal','x²','x2'] },
+  { id: 'dragToggle',     panel: 'invPanel',    label: 'Dra & Släpp',           terms: ['dra & släpp','dra och släpp','drag and drop','dra och slapp'] },
+  { id: 'saveFreeBtn',    panel: 'invPanel',    label: 'Spara & gratismarkera', terms: ['spara & gratismarkera','gratismarkera','spara gratis'] },
+  { id: 'clearInvBtn',    panel: 'invPanel',    label: 'Rensa inventarie',      terms: ['rensa inventarie','töm inventarie','radera inventarie'] },
+
+  // Filterpanel: Verktyg
+  { id: 'newCharBtn',     panel: 'filterPanel', label: 'Ny rollperson',         terms: ['ny rollperson','ny karaktär','skapa rollperson'] },
+  { id: 'duplicateChar',  panel: 'filterPanel', label: 'Kopiera rollperson',    terms: ['kopiera rollperson','kopiera karaktär','duplicera rollperson'] },
+  { id: 'renameChar',     panel: 'filterPanel', label: 'Byt namn',              terms: ['byt namn','byta namn','rename'] },
+  { id: 'manageFolders',  panel: 'filterPanel', label: 'Mapphantering',         terms: ['mapphantering','hantera mappar','mappar'] },
+  { id: 'exportChar',     panel: 'filterPanel', label: 'Exportera',             terms: ['exportera','exportera rollperson','export'] },
+  { id: 'importChar',     panel: 'filterPanel', label: 'Importera',             terms: ['importera','importera rollperson','import'] },
+  { id: 'pdfLibraryBtn',  panel: 'filterPanel', label: 'PDF-bank',              terms: ['pdf-bank','pdf bank','pdf'] },
+  { id: 'deleteChar',     panel: 'filterPanel', label: 'Radera rollperson',     terms: ['radera rollperson','ta bort rollperson','radera karaktär'] },
+
+  // Filterpanel: Inställningar
+  { id: 'partySmith',     panel: 'filterPanel', label: 'Smed i partyt',         terms: ['smed i partyt','smed','party smed'] },
+  { id: 'partyAlchemist', panel: 'filterPanel', label: 'Alkemist i partyt',     terms: ['alkemist i partyt','alkemist','party alkemist'] },
+  { id: 'partyArtefacter',panel: 'filterPanel', label: 'Artefaktmakare i partyt', terms: ['artefaktmakare i partyt','artefaktmakare','party artefakt'] },
+  { id: 'filterUnion',    panel: 'filterPanel', label: 'Utvidgad sökning',      terms: ['utvidgad sökning','utvidgad','or-sökning'] },
+  { id: 'entryViewToggle',panel: 'filterPanel', label: 'Expandera vy',          terms: ['expandera vy','expandera','kompakt vy'] },
+  { id: 'forceDefense',   panel: 'filterPanel', label: 'Tvinga försvar',        terms: ['tvinga försvar','försvar','force defense'] }
+];
+
+window.SEARCH_ACTIONS = SEARCH_ACTIONS;
+window.runSearchCommand = function(termOrId, byId = false) {
+  const toolbar = document.querySelector('shared-toolbar');
+  if (!toolbar) return false;
+  let action = null;
+  if (byId) {
+    action = SEARCH_ACTIONS.find(a => a.id === termOrId);
+  } else {
+    const nterm = searchNormalize(String(termOrId || '').toLowerCase());
+    action = SEARCH_ACTIONS.find(a =>
+      a.terms.some(t => {
+        const nt = searchNormalize(t.toLowerCase());
+        return nt === nterm || nt.startsWith(nterm) || nterm.startsWith(nt);
+      })
+    );
+  }
+  if (!action) return false;
+  if (action.panel) toolbar.open(action.panel);
+  const btn = toolbar.shadowRoot.getElementById(action.id);
+  if (btn) {
+    btn.click();
+    return true;
+  }
+  return false;
+};
+
 class SharedToolbar extends HTMLElement {
   constructor() {
     super();
