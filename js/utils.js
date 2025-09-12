@@ -260,11 +260,14 @@
           ];
           const baseQ = baseQuals.filter(q => !removed.includes(q));
           const allQ = [...baseQ, ...(row.kvaliteter || [])];
+          let stonePen = 0;
           if (allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
           if (allQ.includes('Otymplig') || allQ.includes('Otympligt')) limit -= 1;
+          if (allQ.includes('Stenpansar')) stonePen -= 4;
           const list = storeHelper.getCurrentList(store);
           const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
           if (rustLvl >= 2) limit = 0;
+          limit += stonePen;
         }
         parts.push(`Begr\u00e4nsning: ${limit}`);
       }

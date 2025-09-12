@@ -64,9 +64,12 @@
         ...(row.kvaliteter || [])
       ];
       let limit = entry.stat?.['begränsning'] || 0;
+      let stonePen = 0;
       if(allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
       if(allQ.includes('Otymplig') || allQ.includes('Otympligt')) limit -= 1;
+      if(allQ.includes('Stenpansar')) stonePen -= 4;
       if(rustLvl >= 2) limit = 0;
+      limit += stonePen;
       out.push({ name: nameMap.get(row), value: kvick + limit });
       return out;
     }, []);
