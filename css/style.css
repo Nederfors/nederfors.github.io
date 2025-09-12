@@ -84,6 +84,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
                padding: .15rem .7rem; border-radius: .55rem;
                font-size: .85rem; white-space: nowrap; }
 .tag.removable { cursor: pointer; }
+.filter-tag { cursor: pointer; }
 .tag.free,
 .tag.price-mult { background: var(--accent); color:#fff; }
 .tag.quality   { border: 1.5px solid var(--quality); }
