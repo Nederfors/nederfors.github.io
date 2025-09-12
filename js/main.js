@@ -175,6 +175,31 @@ const dom  = {
   cName  : document.getElementById('charName')
 };
 
+function highlightButton(panelId, btnId) {
+  if (bar && typeof bar.open === 'function') bar.open(panelId);
+  const btn = bar?.shadowRoot?.getElementById(btnId);
+  if (!btn) return;
+  btn.scrollIntoView({ block: 'center', behavior: 'smooth' });
+  btn.classList.add('focus-highlight');
+  setTimeout(() => btn.classList.remove('focus-highlight'), 600);
+}
+
+const COMMANDS = [
+  { id: 'newCharBtn',       terms: ['ny karaktär', 'ny rollperson'],          run: () => highlightButton('filterPanel','newCharBtn') },
+  { id: 'exportChar',       terms: ['exportera', 'export'],                    run: () => highlightButton('filterPanel','exportChar') },
+  { id: 'pdfLibraryBtn',    terms: ['pdf bank', 'pdf-bank'],                   run: () => highlightButton('filterPanel','pdfLibraryBtn') },
+  { id: 'partySmith',       terms: ['smed i partyt', 'smed'],                  run: () => highlightButton('filterPanel','partySmith') },
+  { id: 'partyAlchemist',   terms: ['alkemist i partyt', 'alkemist'],          run: () => highlightButton('filterPanel','partyAlchemist') },
+  { id: 'partyArtefacter',  terms: ['artefaktmakare i partyt', 'artefaktmakare'], run: () => highlightButton('filterPanel','partyArtefacter') },
+  { id: 'forceDefense',     terms: ['tvinga försvar', 'försvar'],              run: () => highlightButton('filterPanel','forceDefense') },
+  { id: 'filterUnion',      terms: ['utvidgad sökning', 'utvidgad'],           run: () => highlightButton('filterPanel','filterUnion') },
+  { id: 'entryViewToggle',  terms: ['expanderad vy', 'expandera vy'],          run: () => highlightButton('filterPanel','entryViewToggle') },
+  { id: 'infoToggle',       terms: ['visa hjälp', 'hjälp'],                    run: () => highlightButton('filterPanel','infoToggle') }
+];
+
+COMMANDS.forEach(c => c.norm = c.terms.map(t => searchNormalize(t.toLowerCase())));
+window.COMMANDS = COMMANDS;
+
 /* ----- Hantera back-navigering för sökfältet ----- */
 let searchFocus = false;
 if (dom.sIn) {
