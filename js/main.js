@@ -194,7 +194,12 @@ const dom  = {
       if (!el && panelId === 'invPanel' && sel === '[id^="vehicleBtn-"]') {
         el = bar.shadowRoot.querySelector('#invPanel [id^="vehicleBtn-"]');
       }
+      // Fallback: allow selecting elements in the main document (outside the toolbar)
+      if (!el) {
+        el = document.querySelector(sel);
+      }
       // Collapse all cards except the one containing the target element (within its panel)
+      const isInToolbar = !!(el && bar.shadowRoot && bar.shadowRoot.contains(el));
       if (panelId && el) {
         const panel = bar.shadowRoot.getElementById(panelId);
         const card = el.closest('.card');
@@ -222,6 +227,7 @@ const dom  = {
       // Force reflow to restart animation
       void el.offsetWidth;
       el.classList.add('focus-highlight');
+      // Global CSS now styles .focus-highlight consistently across toolbar and page
       try { el.focus?.(); } catch {}
       try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
       return true;
@@ -237,6 +243,11 @@ const dom  = {
       syn: ['egenskaper','traits','drag','karaktärsdrag','karaktarsdrag'] },
     { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '⚙️',
       syn: ['filter','verktyg'] },
+    // Huvudvyns knappar utanför toolbaren (rollpersonssidan)
+    { id: 'open-notes',      label: 'Anteckningar', sel: '#notesLink',    panel: null,          emoji: '📜',
+      syn: ['anteckningar','anteckning','notes','noteringar'] },
+    { id: 'open-summary',    label: 'Översikt',     sel: '#summaryToggle', panel: null,         emoji: '📋',
+      syn: ['översikt','oversikt','sammanfattning','visa översikt','visa oversikt'] },
 
     // Inställningar 💡 (Filter → Inställningar)
     { id: 'settings-smith',   label: 'Smed i partyt',        sel: '#partySmith',      panel: 'filterPanel', emoji: '⚒️', syn: ['smed','smed i partyt','smed nivå'] },
@@ -245,7 +256,8 @@ const dom  = {
     { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', syn: ['utvidga sökning','or-sökning','union','OR'] },
     { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', syn: ['expandera vy','vy','detaljer','expand'] },
     { id: 'settings-defense', label: 'Tvinga försvar',       sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', syn: ['försvar','tvinga försvar','försvarskaraktärsdrag'] },
-    { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️', syn: ['hjälp','info','information'] },
+    { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
+      syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
     // Inventarie → Verktyg 🧰
     { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: 'invPanel', emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
@@ -301,6 +313,12 @@ const dom  = {
   function executeUICommand(id){
     const cmd = UI_CMDS.find(c => c.id === id);
     if (!cmd) return false;
+    // If this command belongs to character view but we are elsewhere, navigate
+    if ((cmd.id === 'open-summary' || cmd.id === 'open-notes') && ROLE !== 'character') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'character.html'; } catch {}
+      return true;
+    }
     return highlightToolbarEl(cmd.sel, cmd.panel);
   }
 
@@ -330,6 +348,16 @@ const dom  = {
   };
   window.executeUICommand = executeUICommand;
   window.tryUICommand = tryUICommand;
+
+  // If we were redirected here to run a command, execute once on load
+  try {
+    const pending = sessionStorage.getItem('__pendingUICommand');
+    if (pending) {
+      sessionStorage.removeItem('__pendingUICommand');
+      // Run after a short delay to allow layout to settle
+      setTimeout(() => { try { executeUICommand(pending); } catch {} }, 50);
+    }
+  } catch {}
 
   // Liten quality-of-life: i Notes-vyn finns ingen egen söklogik,
   // så låt Enter köra UI-kommandon globalt där.
