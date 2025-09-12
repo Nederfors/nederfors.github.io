@@ -627,20 +627,6 @@ function initCharacter() {
     }
     const nq = searchNormalize(q.toLowerCase());
     const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-    const cmdMatches = (window.COMMANDS || []).filter(c =>
-      c.norm?.some(n => n.includes(nq))
-    );
-    if (cmdMatches.length) {
-      sugEl.innerHTML = cmdMatches.map((c,i)=>{
-        const term = c.terms[0];
-        const disp = term.charAt(0).toUpperCase() + term.slice(1);
-        return `<div class="item" data-idx="${i}" data-cmd="${c.id}">${disp}</div>`;
-      }).join('');
-      sugEl.hidden = false;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
     const seen = new Set();
     const MAX = 50;
     const items = [];
@@ -692,18 +678,11 @@ function initCharacter() {
   });
   {
       const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
-      if (sugEl) {
-        sugEl.addEventListener('mousedown', e => {
-          const it = e.target.closest('.item');
-          if (!it) return;
-          e.preventDefault();
-          if (it.dataset.cmd) {
-            const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
-            cmd?.run();
-            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-            dom.sIn.blur();
-            return;
-          }
+        if (sugEl) {
+          sugEl.addEventListener('mousedown', e => {
+            const it = e.target.closest('.item');
+            if (!it) return;
+            e.preventDefault();
             const val = (it.dataset.val || '').trim();
             if (val) {
               const union = storeHelper.getFilterUnion(store);
@@ -722,16 +701,17 @@ function initCharacter() {
             } else {
               F.search = [];
             }
-          dom.sIn.value = '';
-          sTemp = '';
-          updateSearchDatalist();
-          activeTags();
-        renderSkills(filtered());
-        renderTraits();
-        dom.sIn.blur();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
-    }
+            dom.sIn.value = '';
+            sTemp = '';
+            updateSearchDatalist();
+            activeTags();
+            renderSkills(filtered());
+            renderTraits();
+            dom.sIn.blur();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            return;
+          });
+        }
   }
   dom.sIn.addEventListener('keydown',e=>{
     const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
@@ -754,12 +734,6 @@ function initCharacter() {
       const term = sTemp.toLowerCase();
         if (items.length && sugIdx >= 0) {
           const it = items[sugIdx];
-          if (it?.dataset?.cmd) {
-            const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
-            cmd?.run();
-            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-            return;
-          }
           const chosen = it?.dataset?.val || '';
           if (chosen) {
             dom.sIn.value = chosen; sTemp = chosen.trim();

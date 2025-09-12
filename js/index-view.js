@@ -239,20 +239,6 @@ function initIndex() {
         // Fall back to default behavior if no categories matched
       }
     }
-    const cmdMatches = (window.COMMANDS || []).filter(c =>
-      c.norm?.some(n => n.includes(nq))
-    );
-    if (cmdMatches.length) {
-      sugEl.innerHTML = cmdMatches.map((c,i)=>{
-        const term = c.terms[0];
-        const disp = term.charAt(0).toUpperCase() + term.slice(1);
-        return `<div class="item" data-idx="${i}" data-cmd="${c.id}">${disp}</div>`;
-      }).join('');
-      sugEl.hidden = false;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
     const seen = new Set();
     const MAX = 50;
     const items = [];
@@ -726,12 +712,6 @@ function initIndex() {
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
-        } else if (it.dataset.cmd) {
-          const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
-          cmd?.run();
-          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          dom.sIn.blur();
-          return;
         } else {
           const val = (it.dataset.val || '').trim();
           if (val) {
@@ -811,11 +791,6 @@ function initIndex() {
             dom.sIn.value=''; sTemp=''; updateSearchDatalist();
             activeTags(); renderList(filtered());
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          } else if (it?.dataset?.cmd) {
-            const cmd = (window.COMMANDS || []).find(c => c.id === it.dataset.cmd);
-            cmd?.run();
-            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
             return;
           }
         }
