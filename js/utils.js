@@ -143,13 +143,17 @@
     const toShield  = qTypes.includes('Sköldkvalitet');
     const toArmor   = qTypes.includes('Rustningskvalitet');
 
-    // Allmän kvalitet: inga begränsningar
-    if (isGeneral) return true;
+    const QUAL_ITEM_TYPES = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'];
+
+    // Allmän kvalitet: endast för föremål som kan ha kvaliteter
+    if (isGeneral) {
+      return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
+    }
 
     // Om inga nya typer finns på kvaliteten: falla tillbaka till gamla beteendet
     // (kvaliteter gällde generellt för vapen/sköld/rustning)
     if (!toWeapon && !toShield && !toArmor) {
-      return ['Vapen','Sköld','Rustning'].some(t => itTypes.includes(t));
+      return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
     }
 
     if (toWeapon && itTypes.includes('Vapen')) return true;
