@@ -114,6 +114,22 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 .char-btn:hover  { opacity: .85; }
 .char-btn:active { transform: scale(.95); opacity: .7; }
 
+/* Visual cue for programmatic focus/highlight on buttons/links */
+.focus-highlight {
+  position: relative;
+  animation: focusGreenHold 3s cubic-bezier(.25,.8,.25,1) 1;
+  outline: 2px solid transparent; /* avoid layout shift */
+  animation-fill-mode: both;
+}
+@keyframes focusGreenHold {
+  0%   { background-color: var(--neutral); transform: none; }
+  20%  { background-color: var(--neutral); transform: scale(1.0035); }
+  40%  { background-color: var(--neutral); transform: none; }
+  60%  { background-color: var(--neutral); transform: scale(1.0035); }
+  86%  { background-color: var(--neutral); transform: none; }
+  100% { background-color: var(--accent);  transform: none; }
+}
+
 .hidden { display: none; }
 
 /* Knapp för översiktsmeny */
