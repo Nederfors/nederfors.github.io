@@ -179,7 +179,7 @@
   {
     "id": "mystiskkv17",
     "namn": "Översköld",
-    "beskrivning": "I rustningens väv slumrar en gammal skyddsformel som växer sig starkare i stillhet. Så länge bäraren undgår fiendens slag fylls dess aura av kraft. Varje lyckat Försvar i strid då bäraren inte träffas av en fysisk attack laddas skyddet och förstärker rustningens bepansring med +1. Vid nästa fysiska träff frigörs kraften, varpå auran åter börjar samla styrka från 0. Rustningen kan som mest ansamla +5 i bepansring."",
+    "beskrivning": "I rustningens väv slumrar en gammal skyddsformel som växer sig starkare i stillhet. Så länge bäraren undgår fiendens slag fylls dess aura av kraft. Varje lyckat Försvar i strid då bäraren inte träffas av en fysisk attack laddas skyddet och förstärker rustningens bepansring med +1. Vid nästa fysiska träff frigörs kraften, varpå auran åter börjar samla styrka från 0. Rustningen kan som mest ansamla +5 i bepansring.",
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
