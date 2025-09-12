@@ -627,9 +627,9 @@ function initCharacter() {
     }
     const nq = searchNormalize(q.toLowerCase());
     const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-    const seen = new Set();
     const MAX = 50;
-    const items = [];
+    const seen = new Set();
+    const entryItems = [];
     for (const p of filtered()) {
       const name = String(p.namn || '').trim();
       if (!name) continue;
@@ -637,19 +637,32 @@ function initCharacter() {
       if (!nname.includes(nq)) continue;
       if (seen.has(name)) continue;
       seen.add(name);
-      items.push(name);
-      if (items.length >= MAX) break;
+      entryItems.push(name);
+      if (entryItems.length >= MAX) break;
     }
-    if (!items.length) {
+    const cmdMatches = (window.SEARCH_ACTIONS || []).filter(cmd =>
+      cmd.terms.some(t => {
+        const nt = searchNormalize(t.toLowerCase());
+        return nt.includes(nq) || nq.includes(nt);
+      })
+    );
+    const allItems = [
+      ...cmdMatches.map(c => ({ type: 'action', id: c.id, label: c.label })),
+      ...entryItems.map(v => ({ type: 'entry', val: v }))
+    ];
+    if (!allItems.length) {
       sugEl.innerHTML = '';
       sugEl.hidden = true;
       sugIdx = -1;
       window.updateScrollLock?.();
       return;
     }
-    sugEl.innerHTML = items.map((v,i)=>{
-      const disp = v.charAt(0).toUpperCase() + v.slice(1);
-      return `<div class="item" data-idx="${i}" data-val="${esc(v)}">${disp}</div>`;
+    sugEl.innerHTML = allItems.map((obj,i)=>{
+      const disp = (obj.label || obj.val).charAt(0).toUpperCase() + (obj.label || obj.val).slice(1);
+      if (obj.type === 'action') {
+        return `<div class=\"item\" data-idx=\"${i}\" data-cmd=\"action\" data-action=\"${esc(obj.id)}\">${disp}</div>`;
+      }
+      return `<div class=\"item\" data-idx=\"${i}\" data-val=\"${esc(obj.val)}\">${disp}</div>`;
     }).join('');
     sugEl.hidden = false;
     sugIdx = -1;
@@ -683,6 +696,12 @@ function initCharacter() {
             const it = e.target.closest('.item');
             if (!it) return;
             e.preventDefault();
+            if (it.dataset.cmd === 'action') {
+              if (window.runSearchCommand) runSearchCommand(it.dataset.action, true);
+              dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+              dom.sIn.blur();
+              return;
+            }
             const val = (it.dataset.val || '').trim();
             if (val) {
               const union = storeHelper.getFilterUnion(store);
@@ -734,6 +753,11 @@ function initCharacter() {
       const term = sTemp.toLowerCase();
         if (items.length && sugIdx >= 0) {
           const it = items[sugIdx];
+          if (it?.dataset?.cmd === 'action') {
+            if (window.runSearchCommand) runSearchCommand(it.dataset.action, true);
+            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+            return;
+          }
           const chosen = it?.dataset?.val || '';
           if (chosen) {
             dom.sIn.value = chosen; sTemp = chosen.trim();
@@ -767,6 +791,11 @@ function initCharacter() {
         return;
       }
       if (tryNilasPopup(sTemp)) {
+        dom.sIn.value=''; sTemp='';
+        updateSearchDatalist();
+        return;
+      }
+      if (window.runSearchCommand && runSearchCommand(sTemp)) {
         dom.sIn.value=''; sTemp='';
         updateSearchDatalist();
         return;
