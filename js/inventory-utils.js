@@ -284,8 +284,6 @@
     box.innerHTML = items.map(({item, idx}) => {
       const base  = item.namn || item.name;
       const label = nameMap.get(item) || base;
-      const gCnt  = Number(item.gratis || 0);
-      const mark  = gCnt ? ` 🆓${gCnt>1?`×${gCnt}`:''}` : '';
       let cls = 'char-btn';
       if (qualMode) {
         cls += ' quality';
@@ -293,7 +291,8 @@
         else if (isNeutralQual(base)) cls += ' neutral';
         if (isMysticQual(base)) cls += ' mystic';
       }
-      return `<button data-i="${idx}" class="${cls}">${label}${mark}</button>`;
+      // Don't show free marker in quality selection
+      return `<button data-i="${idx}" class="${cls}">${label}</button>`;
     }).join('');
 
     /* öppna */
