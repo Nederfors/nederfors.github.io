@@ -1024,29 +1024,43 @@ function initIndex() {
 
 
     /* Lägg till kvalitet direkt */
-    if (isQual(p)) {
-      const inv = storeHelper.getInventory(store);
-      if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
-      const elig = inv.filter(it => {
-        const entry = invUtil.getEntry(it.id || it.name);
-        if (window.canApplyQuality) return canApplyQuality(entry, p);
-        const tag = (entry?.taggar?.typ) || [];
-        return ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'].some(t => tag.includes(t));
-      });
-      if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
-      invUtil.openQualPopup(elig, iIdx => {
-        const row   = elig[iIdx];
-        const entry = invUtil.getEntry(row.id || row.name);
-        if (window.canApplyQuality && !canApplyQuality(entry, p)) return;
-        row.kvaliteter = row.kvaliteter || [];
-        const qn = p.namn;
-        if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
-        invUtil.saveInventory(inv); invUtil.renderInventory();
-        activeTags();
-        renderList(filtered());
-      });
-      return;
-    }
+      if (isQual(p)) {
+        const inv = storeHelper.getInventory(store);
+        if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
+        const qTypes = p.taggar?.typ || [];
+        const TYPE_MAP = {
+          'Vapenkvalitet': 'Vapen',
+          'Rustningskvalitet': 'Rustning',
+          'Sköldkvalitet': 'Sköld',
+          'Allmän kvalitet': ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt']
+        };
+        const allowed = new Set();
+        qTypes.forEach(t => {
+          const mapped = TYPE_MAP[t];
+          if (Array.isArray(mapped)) mapped.forEach(x => allowed.add(x));
+          else if (mapped) allowed.add(mapped);
+        });
+        if (!allowed.size) ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'].forEach(x => allowed.add(x));
+        const elig = inv.filter(it => {
+          const entry = invUtil.getEntry(it.id || it.name);
+          if (window.canApplyQuality) return canApplyQuality(entry, p);
+          const types = entry?.taggar?.typ || [];
+          return types.some(t => allowed.has(t));
+        });
+        if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
+        invUtil.openQualPopup(elig, iIdx => {
+          const row   = elig[iIdx];
+          const entry = invUtil.getEntry(row.id || row.name);
+          if (window.canApplyQuality && !canApplyQuality(entry, p)) return;
+          row.kvaliteter = row.kvaliteter || [];
+          const qn = p.namn;
+          if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
+          invUtil.saveInventory(inv); invUtil.renderInventory();
+          activeTags();
+          renderList(filtered());
+        });
+        return;
+      }
 
     if (act==='add') {
       if (isInv(p)) {
