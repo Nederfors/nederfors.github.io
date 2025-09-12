@@ -1028,14 +1028,19 @@ function initIndex() {
       const inv = storeHelper.getInventory(store);
       if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
       const elig = inv.filter(it => {
-        const tag = (invUtil.getEntry(it.id || it.name)?.taggar?.typ) || [];
-        return ['Vapen','Sköld','Rustning'].some(t => tag.includes(t));
+        const entry = invUtil.getEntry(it.id || it.name);
+        if (window.canApplyQuality) return canApplyQuality(entry, p);
+        const tag = (entry?.taggar?.typ) || [];
+        return ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'].some(t => tag.includes(t));
       });
- if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
- invUtil.openQualPopup(elig, iIdx => {
-        elig[iIdx].kvaliteter = elig[iIdx].kvaliteter||[];
+      if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
+      invUtil.openQualPopup(elig, iIdx => {
+        const row   = elig[iIdx];
+        const entry = invUtil.getEntry(row.id || row.name);
+        if (window.canApplyQuality && !canApplyQuality(entry, p)) return;
+        row.kvaliteter = row.kvaliteter || [];
         const qn = p.namn;
-        if (!elig[iIdx].kvaliteter.includes(qn)) elig[iIdx].kvaliteter.push(qn);
+        if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
         invUtil.saveInventory(inv); invUtil.renderInventory();
         activeTags();
         renderList(filtered());
