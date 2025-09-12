@@ -952,19 +952,22 @@ function initIndex() {
     activeTags(); renderList(filtered());
   });
 
+  // Treat clicks on tags anywhere as filter selections
+  document.addEventListener('click', e => {
+    const tag = e.target.closest('.filter-tag');
+    if (!tag) return;
+    const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
+    const section = sectionMap[tag.dataset.section];
+    if (!section) return;
+    const val = tag.dataset.val;
+    if (!F[section].includes(val)) F[section].push(val);
+    if (section === 'typ') openCatsOnce.add(val);
+    activeTags(); renderList(filtered());
+  });
+
   /* lista-knappar */
   dom.lista.addEventListener('click', async e=>{
-    const tag = e.target.closest('.filter-tag');
-    if (tag) {
-      const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
-      const section = sectionMap[tag.dataset.section];
-      if (!section) return;
-      const val = tag.dataset.val;
-      if (!F[section].includes(val)) F[section].push(val);
-      if (section === 'typ') openCatsOnce.add(val);
-      activeTags(); renderList(filtered());
-      return;
-    }
+    if (e.target.closest('.filter-tag')) return;
     // Special clear-filters action inside the Hoppsan category
     const clearBtn = e.target.closest('button[data-clear-filters]');
     if (clearBtn) {

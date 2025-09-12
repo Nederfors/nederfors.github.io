@@ -808,10 +808,23 @@ function initCharacter() {
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const sec=t.dataset.type,val=t.dataset.val;
-    if(sec==='search'){F.search=F.search.filter(x=>x!==val);}
+    if(sec==='search'){F.search=F.search.filter(x=>x!==val);} 
     else F[sec]=F[sec].filter(x=>x!==val);
     if(sec==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
     activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+  });
+
+  // Treat clicks on tags anywhere as filter selections
+  document.addEventListener('click', e => {
+    const tag = e.target.closest('.filter-tag');
+    if (!tag) return;
+    const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
+    const section = sectionMap[tag.dataset.section];
+    if (!section) return;
+    const val = tag.dataset.val;
+    if (!F[section].includes(val)) F[section].push(val);
+    if (section === 'typ') openCatsOnce.add(val);
+    activeTags(); renderSkills(filtered()); renderTraits();
   });
 
   function formatLevels(list){
@@ -823,17 +836,7 @@ function initCharacter() {
 
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click', async e=>{
-    const tag = e.target.closest('.filter-tag');
-    if (tag) {
-      const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
-      const section = sectionMap[tag.dataset.section];
-      if (!section) return;
-      const val = tag.dataset.val;
-      if (!F[section].includes(val)) F[section].push(val);
-      if (section === 'typ') openCatsOnce.add(val);
-      activeTags(); renderSkills(filtered()); renderTraits();
-      return;
-    }
+    if (e.target.closest('.filter-tag')) return;
     const conflictBtn = e.target.closest('.conflict-btn');
       if(conflictBtn){
         const currentName = conflictBtn.dataset.name;
