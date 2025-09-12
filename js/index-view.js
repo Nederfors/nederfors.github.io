@@ -956,7 +956,9 @@ function initIndex() {
   dom.lista.addEventListener('click', async e=>{
     const tag = e.target.closest('.filter-tag');
     if (tag) {
-      const section = tag.dataset.section;
+      const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
+      const section = sectionMap[tag.dataset.section];
+      if (!section) return;
       const val = tag.dataset.val;
       if (!F[section].includes(val)) F[section].push(val);
       if (section === 'typ') openCatsOnce.add(val);
