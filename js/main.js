@@ -82,7 +82,7 @@
     initObservers();
   }
 
-  window.addEventListener('popstate', () => {
+  window.addEventListener('popstate', (ev) => {
     if (manualCloseCount > 0) { manualCloseCount--; return; }
     const el = overlayStack[overlayStack.length - 1];
     if (el) {
@@ -175,8 +175,177 @@ const dom  = {
   cName  : document.getElementById('charName')
 };
 
+/* ===========================================================
+   UI-KOMMANDON (sök efter menyknappar och lyft fram dem)
+   =========================================================== */
+// Bygg upp en liten kommandokatalog för knappar i toolbar/paneler
+// så att sökfältet kan hitta dem oavsett vy.
+(function initUICommandSearch(){
+  // Normalisera för sökning (gemensam helper finns i utils.js)
+  const norm = s => searchNormalize(String(s||'').toLowerCase());
+
+  // Hjälpare för att highlighta ett element i toolbarens shadow DOM
+  function highlightToolbarEl(sel, panelId){
+    try {
+      if (!bar || !bar.shadowRoot) return false;
+      if (panelId && typeof bar.open === 'function') bar.open(panelId);
+      let el = bar.shadowRoot.querySelector(sel);
+      // For dynamic inventory vehicle buttons, fall back to first matching
+      if (!el && panelId === 'invPanel' && sel === '[id^="vehicleBtn-"]') {
+        el = bar.shadowRoot.querySelector('#invPanel [id^="vehicleBtn-"]');
+      }
+      // Collapse all cards except the one containing the target element (within its panel)
+      if (panelId && el) {
+        const panel = bar.shadowRoot.getElementById(panelId);
+        const card = el.closest('.card');
+        if (panel && card) {
+          const allCards = panel.querySelectorAll('.card');
+          allCards.forEach(c => {
+            const cid = c.id || '';
+            const isAlwaysOpen = cid === 'searchFiltersCard' || cid === 'invSearchFilters' || c.classList.contains('help-card');
+            if (isAlwaysOpen || c === card) c.classList.remove('compact');
+            else c.classList.add('compact');
+          });
+          // Special handling for inventory entries: also collapse all item cards
+          if (panelId === 'invPanel') {
+            const invCards = panel.querySelectorAll('#invList .card');
+            invCards.forEach(c => { if (c !== card) c.classList.add('compact'); });
+          }
+          if (panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
+            bar.updateFilterCollapseBtn();
+          }
+        }
+      }
+      if (!el) return false;
+      // Blink-animera, fokusera och scrolla in elementet
+      el.classList.remove('focus-highlight');
+      // Force reflow to restart animation
+      void el.offsetWidth;
+      el.classList.add('focus-highlight');
+      try { el.focus?.(); } catch {}
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+      return true;
+    } catch { return false; }
+  }
+
+  // Katalog med UI-kommandon: id, visningsnamn, panel och CSS-selector
+  const UI_CMDS = [
+    // Toppknappar
+    { id: 'open-inventory',  label: 'Inventarie',   sel: '#invToggle',    panel: 'invPanel',    emoji: '🎒',
+      syn: ['inventarie','inventory','ryggsäck','ryggsack','rygga','inv'] },
+    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsToggle', panel: 'traitsPanel', emoji: '📊',
+      syn: ['egenskaper','traits','drag','karaktärsdrag','karaktarsdrag'] },
+    { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '⚙️',
+      syn: ['filter','verktyg'] },
+
+    // Inställningar 💡 (Filter → Inställningar)
+    { id: 'settings-smith',   label: 'Smed i partyt',        sel: '#partySmith',      panel: 'filterPanel', emoji: '⚒️', syn: ['smed','smed i partyt','smed nivå'] },
+    { id: 'settings-alch',    label: 'Alkemist i partyt',    sel: '#partyAlchemist',  panel: 'filterPanel', emoji: '⚗️', syn: ['alkemist','alkemist i partyt'] },
+    { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', syn: ['artefaktmakare','artefaktare'] },
+    { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', syn: ['utvidga sökning','or-sökning','union','OR'] },
+    { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', syn: ['expandera vy','vy','detaljer','expand'] },
+    { id: 'settings-defense', label: 'Tvinga försvar',       sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', syn: ['försvar','tvinga försvar','försvarskaraktärsdrag'] },
+    { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️', syn: ['hjälp','info','information'] },
+
+    // Inventarie → Verktyg 🧰
+    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: 'invPanel', emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
+    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: 'invPanel', emoji: '💰', syn: ['pengar','hantera pengar','money'] },
+    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: 'invPanel', emoji: '💸', syn: ['multiplicera pris','pris'] },
+    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: 'invPanel', emoji: 'x²', syn: ['antal','lägg till antal'] },
+    { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: 'invPanel', emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
+    { id: 'inv-drag',    label: 'Dra & Släpp',          sel: '#dragToggle',     panel: 'invPanel', emoji: '🔀', syn: ['dra och släpp','drag','drag & drop'] },
+    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: 'invPanel', emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
+    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: 'invPanel', emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
+
+    // Verktyg inne i Filter → Verktyg
+    { id: 'new-character',   label: 'Ny rollperson',       sel: '#newCharBtn',      panel: 'filterPanel', emoji: '➕',
+      syn: ['ny rollperson','skapa rollperson','ny','skapa'] },
+    { id: 'duplicate-char',  label: 'Kopiera rollperson',  sel: '#duplicateChar',   panel: 'filterPanel', emoji: '🧬',
+      syn: ['kopiera rollperson','kopiera','duplicera','dup'] },
+    { id: 'rename-char',     label: 'Byt namn',            sel: '#renameChar',      panel: 'filterPanel', emoji: '✏️',
+      syn: ['byt namn','byta namn','rename','namn'] },
+    { id: 'manage-folders',  label: 'Mapphantering',       sel: '#manageFolders',   panel: 'filterPanel', emoji: '🗂️',
+      syn: ['mapphantering','mappar','mapp','hantera mappar','mapphanterare','folder'] },
+    { id: 'export-char',     label: 'Exportera',           sel: '#exportChar',      panel: 'filterPanel', emoji: '⬇️',
+      syn: ['export','exportera'] },
+    { id: 'import-char',     label: 'Importera',           sel: '#importChar',      panel: 'filterPanel', emoji: '⬆️',
+      syn: ['import','importera'] },
+    { id: 'pdf-library',     label: 'PDF-bank',            sel: '#pdfLibraryBtn',   panel: 'filterPanel', emoji: '📄',
+      syn: ['pdf-bank','pdf bank','pdf'] },
+    { id: 'delete-char',     label: 'Radera rollperson',   sel: '#deleteChar',      panel: 'filterPanel', emoji: '🗑️',
+      syn: ['radera','ta bort','delete','radera rollperson'] },
+  ];
+
+  const PHRASE_MAP = new Map(); // norm(str) -> cmd
+  for (const c of UI_CMDS) {
+    const all = [c.label, ...(c.syn || [])];
+    for (const s of all) {
+      const n = norm(s);
+      if (!PHRASE_MAP.has(n)) PHRASE_MAP.set(n, c);
+    }
+  }
+
+  function searchUICommands(q){
+    const nq = norm(q);
+    if (!nq) return [];
+    const out = [];
+    for (const c of UI_CMDS) {
+      const hay = [c.label, ...(c.syn || [])].map(norm).join('\n');
+      if (hay.includes(nq)) out.push(c);
+    }
+    // Sort by label length then label for stable, compact hits
+    out.sort((a,b)=> a.label.length - b.label.length || a.label.localeCompare(b.label, 'sv'));
+    return out.slice(0, 15);
+  }
+
+  function executeUICommand(id){
+    const cmd = UI_CMDS.find(c => c.id === id);
+    if (!cmd) return false;
+    return highlightToolbarEl(cmd.sel, cmd.panel);
+  }
+
+  function tryUICommand(term){
+    const t = norm(term);
+    if (!t) return false;
+    // Exact phrase match first
+    const exact = PHRASE_MAP.get(t);
+    if (exact) return executeUICommand(exact.id);
+    // Otherwise, if only one fuzzy match, execute
+    const hits = searchUICommands(t);
+    if (hits.length === 1) return executeUICommand(hits[0].id);
+    return false;
+  }
+
+  // Exponera globalt så vyerna kan använda detta
+  window.getUICommandSuggestions = function(q){
+    return searchUICommands(q).map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '' }));
+  };
+  window.executeUICommand = executeUICommand;
+  window.tryUICommand = tryUICommand;
+
+  // Liten quality-of-life: i Notes-vyn finns ingen egen söklogik,
+  // så låt Enter köra UI-kommandon globalt där.
+  if (ROLE === 'notes' && dom.sIn) {
+    dom.sIn.addEventListener('keydown', e => {
+      if (e.key !== 'Enter') return;
+      const term = (dom.sIn.value || '').trim();
+      if (!term) return;
+      if (tryUICommand(term)) {
+        e.preventDefault();
+        const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
+        if (sugEl) { sugEl.innerHTML = ''; sugEl.hidden = true; }
+        window.__searchBlurGuard = true;
+        dom.sIn.value = '';
+        dom.sIn.blur();
+      }
+    });
+  }
+})();
+
 /* ----- Hantera back-navigering för sökfältet ----- */
 let searchFocus = false;
+// Guard to prevent blur() from triggering history.back() when a UI command is running
+window.__searchBlurGuard = false;
 if (dom.sIn) {
   dom.sIn.addEventListener('focus', () => {
     history.pushState({ search: true }, '');
@@ -188,6 +357,11 @@ if (dom.sIn) {
       if (sugEl) sugEl.hidden = true;
       if (searchFocus) {
         searchFocus = false;
+        // Skip history.back when a UI command triggered this blur
+        if (window.__searchBlurGuard) {
+          window.__searchBlurGuard = false;
+          return;
+        }
         history.back();
       }
     }, 0);

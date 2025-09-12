@@ -1087,7 +1087,7 @@
   },
   {
     "id": "l49",
-    "namn": "Bärnstens insekt",
+    "namn": "Bärnstensinsekt",
     "taggar": {
       "typ": [
         "Lägre Artefakt"
@@ -1095,7 +1095,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "Ett uråldrigt fly, fångat i gyllene bärnsten, vibrerar svagt i närheten av fördärv. Bäraren gör +1 skada med alla angrepp mot genomkorrumperade varelser."
+      "Gesäll": "Ett uråldrigt fly, fångat i gyllene bärnsten, vibrerar svagt i närheten av fördärv i en frekvens som tycks störa styggelserna. Bäraren gör +1 skada med alla angrepp mot genomkorrumperade varelser."
     },
     "grundpris": {
       "daler": 10,

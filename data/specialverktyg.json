@@ -291,6 +291,37 @@
   },
   "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
   "stat": { "vikt": 1.0 }
+},
+{
+  "id": "sp19",
+  "namn": "Förberedelsesäck",
+  "beskrivning": "Ett lätt packsystem med färdiga satser för alla möjliga händelser, rollpersonen är helt enkelt kittad för vad som helst. När en ny scen börjar får bäraren +1 på sitt första framgångsslag under den.",
+  "taggar": { "typ": ["Specialverktyg"] },
+  "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+  "stat": { "vikt": 1.0 }
+},
+{
+  "id": "sp20",
+  "namn": "Gråglödslykta",
+  "beskrivning": "Rökfri lyktampa med inbyggd reflektor och skuggskärm som ger stabilt arbetsljus utan att avslöja positionen i onödan. Rollpersonen kan använda denna istället för en vanlig lykta och således kunna smyga i mörka och olysta utrymmen med enbart en modifikation på -3 och ändå kunna se vad hen sysslar med.",
+  "taggar": { "typ": ["Specialverktyg"] },
+  "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+  "stat": { "vikt": 1.0 }
+},
+{
+  "id": "sp21",
+  "namn": "Orakelkortlek",
+  "beskrivning": "Ledfrågekort, minnestekniker och rituella kasttecken som styr samtal och efterforskning. Vid ryktessök och användandet av informationssökande ritualer ger kortleken +1 på Listig, Viljestark eller Övertygande.",
+  "taggar": { "typ": ["Specialverktyg"] },
+  "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+  "stat": { "vikt": 1.0 }
+},
+{
+  "id": "sp22",
+  "namn": "Ingefärskok i reseflaska",
+  "beskrivning": "Koncentrerat avkok som lugnar mage och värmer kropp. En scen per användning får användaren ignorerar effekten av den rådande väderleken, men avkoket förbrukas när den används.",
+  "taggar": { "typ": ["Specialverktyg"] },
+  "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+  "stat": { "vikt": 1.0 }
 }
-
 ]
