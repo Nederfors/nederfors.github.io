@@ -79,7 +79,13 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 .tags        { display: flex; flex-wrap: wrap; gap: .4rem; }
-#activeFilters { margin-bottom: 1rem; }
+#activeFilters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+  width: 100%;
+  margin-bottom: 1rem;
+}
 .tag         { background: var(--border); color: var(--subtxt);
                padding: .15rem .7rem; border-radius: .55rem;
                font-size: .85rem; white-space: nowrap; }
