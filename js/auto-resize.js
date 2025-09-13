@@ -4,13 +4,11 @@
     el.style.height = 'auto';
     el.style.height = el.scrollHeight + 'px';
   }
-  window.addEventListener('input', e=>{
-    if(e.target.classList && e.target.classList.contains('auto-resize')){
-      autoResize(e.target);
-    }
-  });
   window.addEventListener('DOMContentLoaded', ()=>{
-    document.querySelectorAll('.auto-resize').forEach(autoResize);
+    document.querySelectorAll('.auto-resize').forEach(el => {
+      el.addEventListener('input', () => autoResize(el));
+      autoResize(el);
+    });
   });
   window.autoResize = autoResize;
 })(window);
