@@ -319,7 +319,7 @@
 {
   "id": "sp22",
   "namn": "Ingefärskok i reseflaska",
-  "beskrivning": "Koncentrerat avkok som lugnar mage och värmer kropp. En scen per användning får användaren ignorerar effekten av den rådande väderleken, men avkoket förbrukas när den används.",
+  "beskrivning": "Koncentrerat avkok som lugnar mage och värmer kropp. En scen per användning får användaren ignorera effekten av den rådande väderleken, men avkoket förbrukas när det används.",
   "taggar": { "typ": ["Specialverktyg"] },
   "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
   "stat": { "vikt": 1.0 }
