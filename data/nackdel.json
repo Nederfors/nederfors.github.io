@@ -57,7 +57,7 @@
   {
     "id": "na6",
     "namn": "Fallandesjuk",
-    "beskrivning": "Rollpersonen är drabbad av ett mycket känsligt sinnelag vilket innebär att denne i upphetsat tillstånd kan utsättas för kramper i hela kroppen. Om rollpersonen råkar slå 20 på ett framgångsslag inträffar detta, varpå rollpersonen är utslagen under 1t4 rundor.",
+    "beskrivning": "Rollpersonen är drabbad av ett mycket känsligt sinnelag vilket innebär att denne i upphetsat tillstånd kan utsättas för kramper i hela kroppen. Om rollpersonen råkar slå ett kritiskt misslyckande på ett framgångsslag inträffar detta, varpå rollpersonen är utslagen under 1t4 rundor.",
     "taggar": {
       "typ": [
         "Nackdel"
