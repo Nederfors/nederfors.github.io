@@ -323,5 +323,37 @@
   "taggar": { "typ": ["Specialverktyg"] },
   "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
   "stat": { "vikt": 1.0 }
+},
+{
+"id": "sp23",
+"namn": "Polyglottikon",
+"beskrivning": "Fällbar parallellordlista med språkstammar och rotmönster. Ger +1 på framgångsslag i Listig vid läsning och skrivning av främmande språk.",
+"taggar": { "typ": ["Specialverktyg"] },
+"grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1.0 }
+},
+{
+"id": "sp24",
+"namn": "Resefrasbok",
+"beskrivning": "Kortfattade fraser per ämne: hälsning, handel, färd, härbärge. Ger +1 på framgångsslag i Listig när tal behövs för enkel kommunikation.",
+"taggar": { "typ": ["Specialverktyg"] },
+"grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1.0 }
+},
+{
+"id": "sp25",
+"namn": "Avkodarfjäder",
+"beskrivning": "Fjäderpenna med ritskala för frekvensanalys och chifferhjul. Ger +1 på framgångsslag i Listig vid chiffer och substitutionsskrift.",
+"taggar": { "typ": ["Specialverktyg"] },
+"grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1.0 }
+},
+{
+"id": "sp26",
+"namn": "Teckenkodex",
+"beskrivning": "Handbok för gester, siffror, mått och handels­signaler. Ger +1 på framgångsslag i Listig vid tyst kommunikation utan gemensamt språk.",
+"taggar": { "typ": ["Specialverktyg"] },
+"grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1.0 }
 }
 ]
