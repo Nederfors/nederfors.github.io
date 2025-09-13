@@ -342,7 +342,7 @@
 },
 {
 "id": "sp25",
-"namn": "Avkodarfjäder",
+"namn": "Avkodarfjäder & Chifferhjul",
 "beskrivning": "Fjäderpenna med ritskala för frekvensanalys och chifferhjul. Ger +1 på framgångsslag i Listig vid chiffer och substitutionsskrift.",
 "taggar": { "typ": ["Specialverktyg"] },
 "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
