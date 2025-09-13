@@ -117,7 +117,7 @@
   {
     "id": "ar04",
     "namn": "Eldreds Fyrfat",
-    "beskrivning": "eldreds fyrfat, artefakt I en sällan berättad legend om den Symbariska staden Dakovak figurerar mystikern och förhörsledaren Eldred, eller möjligen Eloderad. Det påstås att denne kunde tvinga fram sanningen ur vem som helst, även sanningar om sådant som uppgiftslämnaren har förträngt, glömt eller tvingats att glömma. Den som binder sig till detta fyrfat får tillgång till mystikerns hemlighet.atet är av sprucken keramik med invävda järntrådar, stort som en vanlig sopptallrik. Vid användning måste oljan vara antänd och mästaren själv hålla artefakten i sina kupade händer, och det är även denne som drabbas av korruption när krafterna aktiveras.",
+    "beskrivning": "Eldreds Fyrfat, artefakt I en sällan berättad legend om den Symbariska staden Dakovak figurerar mystikern och förhörsledaren Eldred, eller möjligen Eloderad. Det påstås att denne kunde tvinga fram sanningen ur vem som helst, även sanningar om sådant som uppgiftslämnaren har förträngt, glömt eller tvingats att glömma. Den som binder sig till detta fyrfat får tillgång till mystikerns hemlighet.atet är av sprucken keramik med invävda järntrådar, stort som en vanlig sopptallrik. Vid användning måste oljan vara antänd och mästaren själv hålla artefakten i sina kupade händer, och det är även denne som drabbas av korruption när krafterna aktiveras.",
     "kvalitet": [],
     "taggar": {
       "typ": [
@@ -186,7 +186,7 @@
   {
     "id": "ar06",
     "namn": "Nidvatten",
-    "beskrivning": "niDvattnEt Nidvatten består av ren korruption, som ett inverterat Skymningsvatten (se sidan 186 i grundboken). Det ser ut som svart kvicksilver och ger ifrån sig svarta dunster av korruption om den inte innesluts i ett kärl. I konungagraven finns vätskan samlad i en liten karaff av halvgenomskinligt vulkaniskt glas. Det går enbart att binda artefakten till sig genom att acceptera ett permanent poäng i korruption. Nidvattnet har följande egenskaper och krafter:",
+    "beskrivning": "Nidvatten består av ren korruption, som ett inverterat Skymningsvatten (se sidan 186 i grundboken). Det ser ut som svart kvicksilver och ger ifrån sig svarta dunster av korruption om den inte innesluts i ett kärl. I konungagraven finns vätskan samlad i en liten karaff av halvgenomskinligt vulkaniskt glas. Det går enbart att binda artefakten till sig genom att acceptera ett permanent poäng i korruption. Nidvattnet har följande egenskaper och krafter:",
     "kvalitet": [],
     "taggar": {
       "typ": [
@@ -633,7 +633,7 @@
   {
     "id": "ar21",
     "namn": "Dolken Svartegg",
-    "beskrivning": "Dolken Svrtegg\nDen krökta dolken Svartegg omtalas i legenderna som tillhörande förrädaren Arbusal, en häxa som lät sig korrumperas och skapade vapnet i syfte att lönnmörda sin härskare – storhövdingen Maiesticar. Mordförsöket misslyckades och Arbusal begravdes med vapnet kört genom sitt hjärta.",
+    "beskrivning": "Dolken Svartegg\nDen krökta dolken Svartegg omtalas i legenderna som tillhörande förrädaren Arbusal, en häxa som lät sig korrumperas och skapade vapnet i syfte att lönnmörda sin härskare – storhövdingen Maiesticar. Mordförsöket misslyckades och Arbusal begravdes med vapnet kört genom sitt hjärta.",
     "kvalitet": [],
     "taggar": {
       "typ": [
@@ -2702,7 +2702,7 @@
   {
     "id": "ar84",
     "namn": "Solkross",
-    "beskrivning": "En kort dagsstjärna av blek stål; skaftet är svept i tunn solförgylld runväv som flammar guld när vapnet höjs.\n\nBland ruinerna av det sista fäste där riddarebeskyddarna från Soltemplet drev tillbaka mörkrets arméer hittades Solkross, en kort stålstav inlindad i förgyllda runband. Legenden säger att vapensmeden Savalon Quire smälte ned slagg från Prios första altare och grundade vapnet för att ge de nyinvigda teurgerna mod nog att stå axel mot axel med svärdsbröder. Solkross bars av martyrprästen Efora; hennes sista slag bröt en abominations pansar innan hon föll. Runorna bränner ännu med hennes tro.\n\nEn kort morgonstjärna av blekt stål; skaftet är svept i tunn solförgylld runväv som flammar guld när vapnet höjs.\nBland ruinerna av det sista fäste där riddarebeskyddarna från det ursprungliga Soltemplet drev tillbaka mörkrets arméer hittades Solkross, en kort stålstav inlindad i förgyllda runband. Legenden säger att de smälte ned slagg från Prios första altare och grundade vapnet för att ge de nyinvigda teurgerna mod nog att stå axel mot axel med svärdsbröder. Solkross bars av martyrprästen Efora; hennes sista slag bröt en styggelses pansar innan hon föll. Runorna bränner ännu med hennes tro.",
+    "beskrivning": "En kort dagsstjärna av blek stål; skaftet är svept i tunn solförgylld runväv som flammar guld när vapnet höjs.\n\nBland ruinerna av det sista fäste där riddarebeskyddarna från Soltemplet drev tillbaka mörkrets arméer hittades Solkross, en kort stålstav inlindad i förgyllda runband. Legenden säger att vapensmeden Savalon Quire smälte ned slagg från Prios första altare och grundade vapnet för att ge de nyinvigda teurgerna mod nog att stå axel mot axel med svärdsbröder. Solkross bars av martyrprästen Efora; hennes sista slag bröt en abominations pansar innan hon föll. Runorna bränner ännu med hennes tro.",
     "kvalitet": [
       "Djupverkande"
     ],
@@ -3092,5 +3092,41 @@
     "skilling": 0,
     "örtegar": 0
   }
+},
+{
+"id": "ar95",
+"namn": "Stormankaret",
+"beskrivning": "En liten spiral av alvförsilvrad koppar kring en rund skiva av svart glas. Spännet bärs som brosch vid kåpa eller hals; samma spiral kan byggas in i spira, dolt halsbleck eller handledsring. När trycket i luften stiger sprakar metallen, ozon sticker i näsan och tunna koronor kryper mellan glas och hud. Spolen jordar bäraren och leder bort laddning så att luften kring kroppen knastrar som inför slagregn.",
+"kvalitet": [],
+"taggar": {
+"typ": [
+"Artefakt"
+],
+"handling": {
+"Förmåga 1": [
+"Reaktiv"
+],
+"Förmåga 2": [
+"Reaktiv"
+],
+"Förmåga 3": [
+"Aktiv"
+]
+}
+},
+"nivåer": {
+"Förmåga 1": "Åskkontrapunkt; Handling: Reaktiv\nDu laddar spännet och hakar i fiendens nästa kraft. Bärarens Anatema fylls av stötar: kopparspiralen drar till sig fältet och skjuter en blixt rakt in i besvärjelsens kraftmönster i samma ögonblick som det vecklas ut. Bäraren av Stormankaret som har förmågan Anatema kan använda den reaktivt i strid och kan således skingra alla inkommande mystiska krafter samtidigt som de uppstår. Korruption: 1T4.",
+"Förmåga 2": "Jordning; Handling: Reaktiv · Test: Viljestark – Skada (innan avrundning)\nNär en mystisk kraft träffar bäraren av Stormankaret kan hen vända strömmen genom spännet ner i marken. Lyckas slaget halveras den mystiska kraftens skada (avrundat uppåt). Begränsning: En gång per runda. Korruption: 1.",
+"Förmåga 3": "Blixtsteg; Handling: Aktiv\n Kroppen dras ut till ett vitblått streck; hud, hår och tyg blir stråltrådar i ett ögonblick. Ozon sticker i näsan, ett torrt knäpp klipper av ljudet – och rollpersonen transporteras omedelbart upp till två förflyttningshandlingar bort, utan att dra på sig frislag. Den elektriska gestalten kan färdas genom smala springor där vanligtvis bara luft ryms; en spalt stor som ditt finger räcker för passage, ett nyckelhål fräser men stoppar inte ljuset. När formen samlar sig igen laddar spännet ur med en högljudd åskknall och alla fiender som passerats igenom drabbas av 1T6 elementarskada. Korruption: 1T6."
+},
+"stat": {
+"skada": "",
+"vikt": 0.01
+},
+"grundpris": {
+"daler": 0,
+"skilling": 0,
+"örtegar": 0
+}
 }
 ]
