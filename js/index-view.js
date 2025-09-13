@@ -49,7 +49,11 @@ function initIndex() {
     return base.filter(p => (!isHidden(p) || revealedArtifacts.has(p.id)) && !SECRET_IDS.has(p.id));
   };
   const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
-  const isHidden = p => (p.taggar?.typ || []).some(t => ['artefakt','kuriositet','skatt'].includes(String(t).toLowerCase()));
+  const isHidden = p => {
+    const types = p.taggar?.typ || [];
+    const primary = types[0] ? String(types[0]).toLowerCase() : '';
+    return ['artefakt','kuriositet','skatt'].includes(primary);
+  };
 
   const FALT_BUNDLE = ['di10','di11','di12','di13','di14','di15'];
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
