@@ -1749,6 +1749,38 @@
     "Mästare": "Handling: Aktiv. Med ett lyckat slag mot Viljestark förskjuter mystikern ett litet föremål inuti ett mål. Målet tar omedelbart 1T6 skada (Bepansring skyddar ej) och tar därefter 1T6 genomträngande skada varje runda då det utför en grov kroppsrörelse (de flesta Aktiva, Förflyttnings- och Reaktiva handlingar; spelledaren avgör). Förblir målet stilla eller utför en passiv handling, uteblir fortsatt skada. Effekten kvarstår tills föremålet avlägsnas: antingen genom Medicus på Gesällnivå eller högre, eller genom improviserad kirurgi som omedelbart orsakar 2T6 skada (Bepansring skyddar ej)."
   },
   "id": "mystiskkr55"
+},
+{
+"namn": "Blixtfrämjande",
+"beskrivning": "Material: En järnstav.\n Rädsla leder fruktan, fruktan leder till makt. Att tämja naturens element är en av Ordo magikas många olika grenar. Åskans makt har studerats länge i åsktornet i yndaros. En natt när stormen härjade och blixtarna dunkdrade kom äntligen genombrottet. En fantastisk och tragisk händelse då stormästare Seldonio grillade sina två lärjungar levande. Men som med all utveckling är kostnaden stor. Sen stormästarens bortgång går även Blixtfrämjare under namnet Seldoniörer internt bland Ordo magika.",
+"taggar": {
+"typ": [
+"Mystisk kraft"
+],
+"ark_trad": [
+"Ordensmagi"
+],
+"test": [
+"Viljestark"
+],
+"handling": {
+"Novis": [
+"Aktiv"
+],
+"Gesäll": [
+"Aktiv"
+],
+"Mästare": [
+"Aktiv"
+]
+}
+},
+"nivåer": {
+"Novis": "Aktiv. Rollpersonen kan med ett lyckat Viljestark skicka iväg en blixt från klar himmel mot en motståndare. Fienden tar 1T10 i elementarskada. Blixtfrämjaren kan också kalla på en blixt som förgrenar sig i en radie av 6 meter och gör 1T8 i elementarskada på alla fiender som står inom den radien.",
+"Gesäll": "Aktiv. Som novis men skadan ökar till 1T12 alternativt 1T10 vid förgrening.",
+"Mästare": "Aktiv. Blixtens kraft följs av en dundrande åskknall. Slå 1t20 för varje motståndare som träffas; vid resultat 1–10 drabbas de av en så stark ström att de förlorar förmågan att använda aktiva handlingar under nästa runda."
+},
+"id": "mystiskkr56"
 }
 
 ]
