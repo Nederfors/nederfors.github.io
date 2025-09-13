@@ -1373,7 +1373,7 @@
   },
   {
   "namn": "Väldig",
-  "beskrivning": "Varelser som blir så stora att ren massa ger dem övertag mot normalstora motståndare, på bekostnad av rörelse- och reaktionshastighet. Att överleva en sammandrabbning med sådana bestar kräver både skicklighet och tur, och mot de största även ovanliga stridsredskap. Förkrav: Mästare i Robust. Vidare gäller att  1) Närstridsattacker träffar ytterligare 1 varelse per nivå i Väldig (utöver huvudmålet). 2) Radien som räknas som närstrid ökar med 3 meter per nivå i Väldig. 3) Alla anfall får kvaliteten \"väldigt lång\", som trumfar kvaliteten \"lång\" vid frislag.",
+  "beskrivning": "Varelser vars storlek och massa ger dem övertag mot normalstora motståndare, på bekostnad av rörelse- och reaktionshastighet. Förkrav: Mästare i Robust.\n\nBasregler (gäller alla nivåer i Väldig):\n- Vinner alltid slag där den Väldiges Stark testas mot valfritt karaktärsdrag hos en icke-Väldig.\n- Kan inte fällas, fasthållas, knuffas, bäras, sparkas omkull eller tryckas bort av en icke-Väldig i närstrid.\n- Kan inte dras, ryckas eller släpas av en icke-Väldig, oavsett rep, krok, piska eller annan lätt utrustning.\n- Påverkas inte av lätta snärjningar (bola, nät, kedja i mansstyrka); sådan infångning hindrar varken förflyttning eller fria handlingar.\n- Kan inte avväpnas genom teknikgrepp eller vridningar från en icke-Väldig; vapnet lämnar inte handen.\n- Kan inte strypas mekaniskt av en icke-Väldig (snara, armlås kring hals, mantelsvep).\n- Sköldstöt, tackling eller kroppslig ramm i mansstyrka ger endast skada; ingen knuff och ingen fällning.\n- Kan inte flyttas ur närstrid via vapenlängd eller hävstång från icke-Väldig.\n- Hindras inte i sin förflyttning av träffeffekter som kräver att målet förlorar ett styrkeprov.\n- Lätta fällor som bygger på mänsklig dragkraft eller viktbrytning flyttar inte en Väldig och lägger den inte på rygg. \n-Alla anfall har kvaliteten \"väldigt lång\" som trumfar kvaliteten \"lång\" vid frislag.\n- Begränsning: Dessa restriktioner gäller inte mot andra med Väldig, samverkande gruppgrepp, tunga hjälpmedel (stora kedjor, harpunlinor, vinsch/fordon), belägringsvapen eller magiska/mystiska/heliga effekter.",
   "taggar": {
     "typ": [
       "Monstruöst särdrag"
@@ -1391,12 +1391,12 @@
     }
   },
   "nivåer": {
-    "Novis": "Handling: Passiv. Varelsens båda handlingar går åt när den attackerar; den kan inte förflytta sig och attackera under samma runda. Rustning pressas: målet slår för Bepansring två gånger och det lägsta utfallet gäller. Närstridsattacker kan träffa upp till 2 mål (1 extra) inom 3 m radie; alla anfall har kvaliteten \"väldigt lång\" (trumfar \"lång\" vid frislag).",
-    "Gesäll": "Handling: Passiv. Som Novis, men varelsens kroppshydda gör den oförmögen att utföra reaktiva handlingar (t.ex. Försvar) i samband med förflyttning. Försvar mot dess attacker försvåras: målet slår två Försvar och det sämsta resultatet gäller. Närstridsattacker kan träffa upp till 3 mål (2 extra) inom 6 m radie; alla anfall har kvaliteten \"väldigt lång\".",
-    "Mästare": "Handling: Passiv. Som Gesäll, med tillägget att varelsen endast tar skada av magiska vapen och mystiska krafter. Närstridsattacker kan träffa upp till 4 mål (3 extra) inom 9 m radie; alla anfall har kvaliteten \"väldigt lång\"."
+    "Novis": "Handling: Passiv. Varelsens båda handlingar går åt när den attackerar; den kan alltså inte förflytta sig och attackera under samma runda. I gengäld träffar dess attacker med en kraft som vanlig rustning har svårt att skydda mot – målet slår för Bepansring två gånger och det lägsta utfallet gäller. Närstridsattacker kan träffa upp till 2 mål inom 3 m radie.",
+    "Gesäll": "Handling: Passiv. Som Novis, men varelsens väldiga kroppshydda gör den oförmögen att utföra reaktiva handlingar (exempelvis Försvar) i samband med förflyttning eller aktiv handling. Å andra sidan är varelsens räckvidd och storlek nu sådan att fienden har svårt att parera eller hinna undvika attackerna – målet har två chanser att misslyckas med sitt Försvar. Närstridsattacker kan träffa upp till 3 mål inom 6 m radie.",
+    "Mästare": "Handling: Passiv. Som Gesäll, med tillägget att varelsens massiva kropp inte längre kan skadas av vanliga vapen och projektiler. Varelsen tar bara skada av magiska vapen och mystiska krafter. Närstridsattacker kan träffa upp till 4 mål inom 9 m radie."
   },
-    "id": "mo55"
-  },
+  "id": "mo55"
+},
   {
     "namn": "Hoppförmåga",
     "beskrivning": "Varelsen har kraftfulla och explosiva benmuskler som låter den hoppa flera gånger sin egen kroppslängd på både höjden och längden.",
