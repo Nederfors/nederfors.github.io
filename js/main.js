@@ -1121,7 +1121,8 @@ function openFolderManagerPopup() {
         return fa.localeCompare(fb,'sv') || String(a.name||'').localeCompare(String(b.name||''),'sv');
       });
     if (charList) {
-      charList.innerHTML = chars.map(c => {
+      const selectAll = '<label class="price-item"><span>Välj alla</span><input type="checkbox" data-action="select-all"></label>';
+      charList.innerHTML = selectAll + chars.map(c => {
         const fid = c.folderId || '';
         const fname = fid ? ((store.folders||[]).find(f=>f.id===fid)?.name || '') : '';
         const suffix = fname ? ` <span class="sub">(${escapeHtml(fname)})</span>` : '';
@@ -1218,6 +1219,7 @@ function openFolderManagerPopup() {
     closeX?.removeEventListener('click', onClose);
     addBtn.removeEventListener('click', onAdd);
     moveApply?.removeEventListener('click', onMoveApply);
+    charList?.removeEventListener('change', onCharListChange);
     pop.removeEventListener('click', onOutside);
   }
   function onClose() { close(); }
@@ -1240,6 +1242,25 @@ function openFolderManagerPopup() {
     // Keep popup open after moving characters
   }
 
+  function onCharListChange(e) {
+    const el = e.target;
+    if (el.matches('input[type="checkbox"][data-action="select-all"]')) {
+      const checked = el.checked;
+      charList.querySelectorAll('input[type="checkbox"][data-charid]').forEach(cb => {
+        cb.checked = checked;
+      });
+    } else if (el.matches('input[type="checkbox"][data-charid]')) {
+      const allBox = charList.querySelector('input[type="checkbox"][data-action="select-all"]');
+      if (!allBox) return;
+      if (!el.checked) {
+        allBox.checked = false;
+      } else {
+        const allChecked = [...charList.querySelectorAll('input[type="checkbox"][data-charid]')].every(cb => cb.checked);
+        allBox.checked = allChecked;
+      }
+    }
+  }
+
   render();
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
@@ -1248,6 +1269,7 @@ function openFolderManagerPopup() {
   closeX?.addEventListener('click', onClose);
   addBtn.addEventListener('click', onAdd);
   moveApply?.addEventListener('click', onMoveApply);
+  charList?.addEventListener('change', onCharListChange);
   pop.addEventListener('click', onOutside);
 }
 
