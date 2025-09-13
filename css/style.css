@@ -83,6 +83,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   display: flex;
   flex-wrap: wrap;
   gap: .4rem;
+  justify-content: center;
   width: 100%;
   max-width: 520px;
   margin: 0 auto 1rem;
