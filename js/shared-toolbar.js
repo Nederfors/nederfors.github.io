@@ -667,21 +667,6 @@ class SharedToolbar extends HTMLElement {
             <button id="folderManagerCloseX" class="char-btn icon" title="Stäng">✕</button>
           </header>
 
-          <!-- Flytta -->
-          <section class="folder-section">
-            <h4>Flytta rollpersoner:</h4>
-            <div class="inline-row">
-              <div id="folderCharList" class="readonly-field"></div>
-            </div>
-            <div id="folderMoveGroup" class="inline-row">
-              <label for="folderMoveSelect">Till mapp:</label>
-              <div class="inline-controls">
-                <select id="folderMoveSelect"></select>
-                <button id="folderMoveApply" class="char-btn">Flytta</button>
-              </div>
-            </div>
-          </section>
-
           <!-- Skapa ny mapp -->
           <section class="folder-section">
             <h4>Mappar</h4>
@@ -698,6 +683,21 @@ class SharedToolbar extends HTMLElement {
           <section class="folder-section">
             <h4>Lista</h4>
             <div id="folderList" class="folder-list"></div>
+          </section>
+
+          <!-- Flytta -->
+          <section class="folder-section">
+            <h4>Flytta rollpersoner:</h4>
+            <div class="inline-row">
+              <div id="folderCharList" class="readonly-field"></div>
+            </div>
+            <div id="folderMoveGroup" class="inline-row">
+              <label for="folderMoveSelect">Till mapp:</label>
+              <div class="inline-controls">
+                <select id="folderMoveSelect"></select>
+                <button id="folderMoveApply" class="char-btn">Flytta</button>
+              </div>
+            </div>
           </section>
 
           <div class="popup-footer">
