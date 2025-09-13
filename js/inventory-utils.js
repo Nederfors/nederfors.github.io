@@ -52,7 +52,8 @@
 
   function isHiddenType(tagTyp) {
     const arr = Array.isArray(tagTyp) ? tagTyp : [];
-    return arr.some(t => ['artefakt','kuriositet','skatt'].includes(String(t).toLowerCase()));
+    const primary = arr[0] ? String(arr[0]).toLowerCase() : '';
+    return ['artefakt','kuriositet','skatt'].includes(primary);
   }
 
   function sortInvEntry(a, b) {
