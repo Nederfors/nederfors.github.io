@@ -358,15 +358,15 @@
 },
 {
     "id": "sp27",
-    "namn": "Kastkrok med linpaket",
-    "beskrivning": "Ett fältprövat set med stålkrok försedd med mothak, lätt men stark hampa­lina på kastspole, läderhandske och sele för snabb säkring. Kroken biter i bjälkar, kreneleringar och fönsterkarmar, linan löper mjukt och när den väl spänts bär den både människa och last med dova knarr snarare än klonk. Om rollpersonen försöker klättra med denna utrustning får en annan rollperson som säkrar hen slå mot Stark för att försöka rädda rollpersonen om den faller under klättringen.",
+    "namn": "Säkringsutrustning",
+    "beskrivning": "Ett fältprövat set med stålkrok försedd med mothake, lätt men stark hampa­lina på kastspole, läderhandske och sele för snabb säkring. Kroken biter i bjälkar, kreneleringar och fönsterkarmar, linan löper mjukt och när den väl spänts bär den både människa och last med dova knarr snarare än klonk. Om rollpersonen försöker klättra med denna utrustning får en annan rollperson som säkrar hen slå mot Stark för att försöka rädda rollpersonen om den faller under klättringen.",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
     "stat": { "vikt": 1.0 }
   },
   {
     "id": "sp28",
-    "namn": "Tystningskit för rörliga delar",
+    "namn": "Dämpningskit",
     "beskrivning": "Finolja, vax, filtrem­sremsor, träkilar, mjukläder och tunna snören samlade i en diskret rulle. Gångjärn, kedjor, spännen, luckor, vinschar och hjul får dämpning där metall möter metall, resonans i brädor tas upp och de små avslöjande ljuden kvävs innan de sprider sig genom väggar och golv. När last flyttas, en dörr smygs upp eller ett block och talja börjar arbeta, får rollpersonen +1 på framgångsslag i Diskret när ljud från rörliga föremål riskerar att röja vägen.",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
@@ -374,7 +374,7 @@
   },
   {
     "id": "sp29",
-    "namn": "Kamouflagenät och jordpigment",
+    "namn": "Kamouflagenkit",
     "beskrivning": "Matt vävt nät med fästöglor och insydda flikar, burkar med jordpigment och pinnar för att bryta konturer. På några minuter förvandlar rollpersonen packning, ställning eller till och med en liten vagn till ett oroligt mönster av skugga och jordtoner som blicken glider över. Stillastående föremål upp till vagnsstorlek kan döljas så väl att den som saknar tydlig målbild måste slå mot Vaksam med en andra chans att misslyckas för att upptäcka gömstället, medan den som vet vad som söks slår som vanligt.",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
@@ -382,7 +382,7 @@
   },
   {
     "id": "sp30",
-    "namn": "Luktmaskeringssats för jakt",
+    "namn": "Luktmaskeringssats",
     "beskrivning": "Ett kompakt kit med alkaliskt tvättsoda, ört­salva och kolduk som binder och neutraliserar mänsklig doft. Med omsorgsfull behandling, rätt vind och tålamod suddas närvaron ut för nosar som annars vädrar fara långt innan ögat gör det. Vid smygande mot djur och bestar ger satsen +1 på framgångsslag i Diskret.",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
@@ -390,15 +390,15 @@
   },
   {
     "id": "sp31",
-    "namn": "Bår och evakuerings-slunga",
-    "beskrivning": "Hopfällbar bår med kryssram, två lyftremmar, nackstöd och snabbspännen för axel och höft. Den skadade fixeras, vikt fördelas och varje steg blir mer förutsägbart även i trånga passager och under press. När två bärare samspelar med remmarna lyfter de som en kropp och räknar då bådas Stark som +5 vid lyft- och bärmoment så länge evakuerings-slunga och bår är korrekt riggade.",
+    "namn": "Fältbår",
+    "beskrivning": "Hopfällbar bår med kryssram, två lyftremmar, nackstöd och snabbspännen för axel och höft. Den skadade fixeras, vikt fördelas och varje steg blir mer förutsägbart även i trånga passager och under press. När två bärare samspelar med remmarna lyfter de som en kropp och räknar då bådas Stark som +5 vid lyft- och bärmoment så länge båda aktivt kan bära.",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
     "stat": { "vikt": 1.0 }
   },
   {
     "id": "sp32",
-    "namn": "Hävklo och kilset",
+    "namn": "Hävklo",
     "beskrivning": "Smal, fjädrande hävstång med fasad klo, ett kit av trä- och bly­kilar samt mjuk skyddsduk som skonar karm och tröskel. Rollpersonen får grepp där fingrar inte ryms, matar in kilarna och låter kraften gå in i materialet i stället för att skaka huset. En kontrollerad rörelse och låsningen ger med sig, vilket ger +1 på slag som avser att forcera dörrar och luckor öppna samtidigt som arbetsljudet hålls nere med rätt kilning och underlag.",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
@@ -406,7 +406,7 @@
   },
   {
     "id": "sp33",
-    "namn": "Larmsnören och kläppklockor",
+    "namn": "Larmklockor",
     "beskrivning": "Tunn tvinnad tråd, små klockor med dov kläpp, lätta krokar och krita för markering ger ett flyttbart perimeterskydd kring läger, fyndplats eller bakhåll. Trådarna dras lågt där fotleder passerar eller högt där mantelfållar sveper, och när vinden stillnar hörs ett knappt ljud som räcker för den uppmärksamme. När systemet är uppsatt måste smygande motståndare lyckas med ett slag mot Vaksam för att undvika att bli upptäckta vid intrång över linjen.",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
@@ -414,8 +414,8 @@
   },
   {
     "id": "sp34",
-    "namn": "Res-press för växtprov",
-    "beskrivning": "Fickpress i trä med skruv, pergamentark, namnlappar och liten kniv gör att blad och blommor kan tas, pressas och jämföras direkt vid stigkanten. Rollpersonen bygger ett vandrande herbarium och lär fingertopparna känna skillnaden mellan läkedom, gift och föda redan innan lägerelden falnat, vilket ger +1 på framgångsslag i Örtkunskap när växter ska identifieras i fält.",
+    "namn": "Växtpress",
+    "beskrivning": "Fickpress i trä med skruv, pergamentark, namnlappar och liten kniv gör att blad och blommor kan tas, pressas och jämföras direkt vid stigkanten. Rollpersonen bygger ett vandrande herbarium och lär fingertopparna känna skillnaden mellan läkedom, gift och föda redan innan lägerelden falnat, vilket ger +1 på framgångsslag i syfte att växter ska identifieras",
     "taggar": { "typ": ["Specialverktyg"] },
     "grundpris": { "daler": 10, "skilling": 0, "örtegar": 0 },
     "stat": { "vikt": 1.0 }
