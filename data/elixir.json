@@ -481,14 +481,14 @@
   },
   {
     "id": "elix25",
-    "namn": "Vildtugg",
+    "namn": "Mumstugg",
     "taggar": {
       "typ": [
         "Elixir"
       ]
     },
     "nivåer": {
-      "Novis": "Den rödaktiga tuggkåda som kallas Vildtugg är ett starkt stimulantia och gör tuggaren piggare, oförsiktigare och aggressivare. En dos Vildtugg flyttar 2 poäng från Diskret, Listig och Viljestark till Kvick, Stark och Träffsäker. Effekten varar under resten av scenen. Scenen efter är användaren tom och svag, –2 på alla karaktärsdrag. Över tid är Vildtugg mycket beroendeframkallande och ger svåra abstinenssymtom om inte en dos per vecka konsumeras, med stor risk för permanent vansinne och död. Inga kända droger motverkar detta."
+      "Novis": "Den rödaktiga tuggkåda som kallas Mumstugg är ett starkt stimulantia och gör tuggaren piggare, oförsiktigare och aggressivare. En dos Mumstugg flyttar 2 poäng från Diskret, Listig och Viljestark till Kvick, Stark och Träffsäker. Effekten varar under resten av scenen. Scenen efter är användaren tom och svag, –2 på alla karaktärsdrag. Över tid är Mumstugg mycket beroendeframkallande och ger svåra abstinenssymtom om inte en dos per vecka konsumeras, med stor risk för permanent vansinne och död. Inga kända droger motverkar detta."
     },
     "grundpris": {
       "daler": 2,
