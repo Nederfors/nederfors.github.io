@@ -927,7 +927,7 @@
       ]
     },
     "nivåer": {
-      "Gesäll": "Ett uråldrigt timglas fyllt med slipat kopparpulver som aldrig tycks ta slut. När glaset vänds som en aktiv handling frigörs gnistrande stoft som angriper en fiende i närheten. Stoftet såsamkar alla fiender inom närstridsområdet 3 elementarskada."
+      "Gesäll": "Ett uråldrigt timglas fyllt med slipat kopparpulver som aldrig tycks ta slut. När glaset vänds som en aktiv handling frigörs gnistrande stoft som angriper en fiende i närheten. Stoftet åsamkar alla fiender inom närstridsområdet 3 elementarskada."
     },
     "grundpris": {
       "daler": 10,
