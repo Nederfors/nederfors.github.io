@@ -3128,5 +3128,41 @@
 "skilling": 0,
 "örtegar": 0
 }
+},
+{
+  "id": "ar96",
+  "namn": "Svartblodsdegeln",
+  "beskrivning": "Svartblodsdegeln är ett av de redskap från tidens början, när de första människorna trängde in i Davokar och bröt sig ner i ruiner där solens ljus aldrig nådde. Legenderna talar om hur den smiddes av blodet från en urtida varelse, blandat med en metall som inte hör hemma i världen. Degeln är kall vid beröring men ger av en svag värme när den väcks, som om den andas genom användarens hud.",
+  "kvalitet": [],
+  "taggar": {
+    "typ": [
+      "Artefakt"
+    ],
+    "handling": {
+      "Förmåga 1": [
+        "Aktiv"
+      ],
+      "Förmåga 2": [
+        "Aktiv"
+      ],
+      "Förmåga 3": [
+        "Speciell"
+      ]
+    }
+  },
+  "nivåer": {
+    "Förmåga 1": "Snabbkokning; Handling: Aktiv\nEn alkemist kan, med ett slag mot Listig, låta degeln kalla fram preparat ur intet: elixir, salvor, toxiner, rökmix eller enkla redskap. Alkemisten kan endast framkalla preparat som motsvarar hens kunskapsnivå (novis, gesäll eller mästare). Korruption: 1T4.",
+    "Förmåga 2": "Delad dos; Handling: Aktiv\nSvartblodsdegeln kan driva fram en brygds essens ur själva brygden och tvinga den att ta sig till en allierad inom synhåll. Med ett lyckat slag mot Listig kan användaren applicera ett elixir på en allierad. Korruption: 1.",
+    "Förmåga 3": "Överdestillera; Handling: Speciell\nIstället för att skapa nya preparat kan alkemisten låta degeln sluka redan färdiga elixir och ur dem pressa fram en större mängd. Med ett lyckat slag mot Listig kan användaren utöka doser av ett elixir istället för att koka nya: noviselixir ger 1T8 doser, gesällelixir 1T6, och mästarelixir 1T4. Den som överdestillerar genom degeln hör ofta ett eko som liknar hjärtslag eller skrik inifrån metallens ådror. Korruption: 1T8."
+  },
+  "stat": {
+    "skada": "",
+    "vikt": 1.2
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 0,
+    "örtegar": 0
+  }
 }
 ]
