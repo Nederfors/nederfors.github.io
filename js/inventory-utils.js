@@ -1246,8 +1246,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     if (!isArtifact || isLArtifact) {
       desc += abilityHtml(entry, rowLevel);
     }
+    const arkTags = explodeTags(tagger.ark_trad);
     const tagList = (tagger.typ || [])
-      .concat(explodeTags(tagger.ark_trad), tagger.test || [])
+      .concat(arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : []), tagger.test || [])
       .map(t => `<span class="tag">${t}</span>`);
     if (rowLevel) tagList.push(`<span class="tag level">${rowLevel}</span>`);
     if (freeCnt) tagList.push(`<span class="tag free removable" data-free="1">Gratis${freeCnt>1?`×${freeCnt}`:''} ✕</span>`);

@@ -390,7 +390,12 @@ function initCharacter() {
       (p.taggar.typ||[])
         .filter(Boolean)
         .forEach(v=>sets.typ.add(v));
-      explodeTags(p.taggar.ark_trad).forEach(v=>sets.ark.add(v));
+      const arkTags = explodeTags(p.taggar.ark_trad);
+      if (arkTags.length) {
+        arkTags.forEach(v => sets.ark.add(v));
+      } else if (Array.isArray(p.taggar?.ark_trad)) {
+        sets.ark.add('Traditionslös');
+      }
       (p.taggar.test||[])
         .filter(Boolean)
         .forEach(v=>sets.test.add(v));
@@ -433,10 +438,11 @@ function initCharacter() {
         const tags = p.taggar || {};
         const selTags = [...F.typ, ...F.ark, ...F.test];
         const hasTags = selTags.length > 0;
+        const arkTags = explodeTags(tags.ark_trad);
         const itmTags = [
-          ...(tags.typ      ?? []),
-          ...explodeTags(tags.ark_trad),
-          ...(tags.test     ?? [])
+          ...(tags.typ ?? []),
+          ...(arkTags.length ? arkTags : (Array.isArray(tags.ark_trad) ? ['Traditionslös'] : [])),
+          ...(tags.test ?? [])
         ];
         const tagOk = !hasTags || (
           union ? selTags.some(t => itmTags.includes(t))
@@ -540,7 +546,9 @@ function initCharacter() {
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
         const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${t}</span>`);
-        const arkTags = explodeTags(p.taggar?.ark_trad).map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
+        const trTags = explodeTags(p.taggar?.ark_trad);
+        const arkTags = (trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []))
+          .map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
         const testTags = (p.taggar?.test || []).map(t => `<span class="tag filter-tag" data-section="test" data-val="${t}">${t}</span>`);
         const infoTagsHtml = [xpTag]
           .concat(typeTags)
