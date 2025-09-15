@@ -2,7 +2,7 @@
   {
     "id": "ri1",
     "namn": "Andebesvärjelse",
-    "beskrivning": "Tradition: Häxkonst\nMystikern får ställa ett antal frågor till en död person, antingen vid dess lik (det räcker med kra- niet) eller dess grav. Varje fråga kräver ett lyckat Viljestark, och den döde svarar ja eller nej i form av knackningar, en knackning för nej och två för ja. Mystikern kan vid ett misslyckande forcera fram ett svar på en fråga men med varje sådant tvång riskerar mystikern att bli besatt av den dödes ande, slå [Viljestark←Viljestark]. Besattheten leder till att mystikern tvingas utföra den dödes sista vilja, vilken inte sällan är av hämndlysten art.",
+    "beskrivning": "Tradition: Häxkonst\nMystikern får ställa ett antal frågor till en död person, antingen vid dess lik (det räcker med kraniet) eller dess grav. Varje fråga kräver ett lyckat Viljestark, och den döde svarar ja eller nej i form av knackningar, en knackning för nej och två för ja. Mystikern kan vid ett misslyckande forcera fram ett svar på en fråga men med varje sådant tvång riskerar mystikern att bli besatt av den dödes ande, slå [Viljestark←Viljestark]. Besattheten leder till att mystikern tvingas utföra den dödes sista vilja, vilken inte sällan är av hämndlysten art.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Häxkonst"],
@@ -42,7 +42,7 @@
   {
     "id": "ri5",
     "namn": "Blodsbest",
-    "beskrivning": "Tradition: Häxkonst\nMagins korrumperande verkan är inte okänd för mystiker. Ibland är korruption ett nödvändigt pris att betala för att lyckas med det mystikern har före- satt sig, och på liknande sätt kan korrumperandet av mystikerns bjära vara ett offer nödvändigt för att mystikern ska kunna fortsätta att tjäna sitt folk eller följa sitt kall.\nMystikern kan med hjälp av blodsbandet dela korruption med sin bjära. Varje genomförande av Blodsband kräver ett lyckat Viljestark från mysti- kern. En lyckad ritual gör att mystikern gör sig av med 1t4 i permanent korruption vilket ger bjäran 1t6 i permanent korruption. Bjäran får alla de vanliga tecknen på korruption. Om den förstyggas tappar mystikern kontrollen över bjäran, vilken då direkt går till attack mot sin tidigare vän.\nRitualen kostar en (1) Erfarenhet att utföra oavsett om den lyckas eller ej. Mystikern kan inte göra ritualen för någon annans räkning.",
+    "beskrivning": "Tradition: Häxkonst\nMagins korrumperande verkan är inte okänd för mystiker. Ibland är korruption ett nödvändigt pris att betala för att lyckas med det mystikern har föresatt sig, och på liknande sätt kan korrumperandet av mystikerns bjära vara ett offer nödvändigt för att mystikern ska kunna fortsätta att tjäna sitt folk eller följa sitt kall.\nMystikern kan med hjälp av blodsbandet dela korruption med sin bjära. Varje genomförande av Blodsband kräver ett lyckat Viljestark från mystikern. En lyckad ritual gör att mystikern gör sig av med 1t4 i permanent korruption vilket ger bjäran 1t6 i permanent korruption. Bjäran får alla de vanliga tecknen på korruption. Om den förstyggas tappar mystikern kontrollen över bjäran, vilken då direkt går till attack mot sin tidigare vän.\nRitualen kostar en (1) Erfarenhet att utföra oavsett om den lyckas eller ej. Mystikern kan inte göra ritualen för någon annans räkning.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Häxkonst"],
@@ -62,7 +62,7 @@
   {
     "id": "ri7",
     "namn": "Byta skugga",
-    "beskrivning": "Tradition: Svartkonst\nMystikern kan med ett lyckat [Viljestark←Viljestark] byta skugga med en annan kulturvarelse: mysti- kerns skugga ser ut som offrets och offrets ser ut som mystikerns. Ritualen verkar i ett dygn. Det krävs en mystisk länk till offret för att alls få för- söka byta skugga: en tova hår, en blodpöl eller ett föremål som är viktigt för offret.\nOffret märker inte skuggbytet men andra som kan se skuggor kan såklart uppfatta det (eller luras av det). Byta skugga kan avbrytas med Bryta länk eller Exorcism.",
+    "beskrivning": "Tradition: Svartkonst\nMystikern kan med ett lyckat [Viljestark←Viljestark] byta skugga med en annan kulturvarelse: mystikerns skugga ser ut som offrets och offrets ser ut som mystikerns. Ritualen verkar i ett dygn. Det krävs en mystisk länk till offret för att alls få försöka byta skugga: en tova hår, en blodpöl eller ett föremål som är viktigt för offret.\nOffret märker inte skuggbytet men andra som kan se skuggor kan såklart uppfatta det (eller luras av det). Byta skugga kan avbrytas med Bryta länk eller Exorcism.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Svartkonst"],
@@ -122,7 +122,7 @@
   {
     "id": "ri13",
     "namn": "Helgande rit",
-    "beskrivning": "Tradition: Teurgi\nMystikern helgar en plats vilket skyddar och sky- ler den från mystisk påverkan utifrån. En helgad plats blockerar ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande, men om ritualen spårar eller spanar på en person så återupptas effekten så snart denne lämnar det helgade området.\nStyggelser (varelser som ingår i monsterkate- gorin Styggelse) mår illa av att närma sig ett helgat område och tar 1t4 i skada, Bepansring skyddar ej, för varje runda de vistas på helgad mark. Också varelser som smittats med vederstygglighet men inte ännu utvecklats till styggelser känner starkt obehag av helgade platser och föremål.\nHelgande rit kan också göras på ett vapen, vilket är ett krav för att använda förmågan Häxhammare.",
+    "beskrivning": "Tradition: Teurgi\nMystikern helgar en plats vilket skyddar och skyler den från mystisk påverkan utifrån. En helgad plats blockerar ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande, men om ritualen spårar eller spanar på en person så återupptas effekten så snart denne lämnar det helgade området.\nStyggelser (varelser som ingår i monsterkategorin Styggelse) mår illa av att närma sig ett helgat område och tar 1t4 i skada, Bepansring skyddar ej, för varje runda de vistas på helgad mark. Också varelser som smittats med vederstygglighet men inte ännu utvecklats till styggelser känner starkt obehag av helgade platser och föremål.\nHelgande rit kan också göras på ett vapen, vilket är ett krav för att använda förmågan Häxhammare.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Teurgi"],
@@ -142,7 +142,7 @@
   {
     "id": "ri15",
     "namn": "Klärvoajans",
-    "beskrivning": "Tradition: Ordensmagi\nMystikern kan fjärrskåda och lyssna på en plats långt bort, förutsatt att magikern själv har besökt platsen tidigare. Personer med förmågan Häxsyn som befinner sig på platsen inser att de är betrak- tade om de lyckas med ett [Viljestark←Diskret]. Klärvoajans blockeras av ritualerna Sanktum, Helgade rit och Häxcirkel.",
+    "beskrivning": "Tradition: Ordensmagi\nMystikern kan fjärrskåda och lyssna på en plats långt bort, förutsatt att magikern själv har besökt platsen tidigare. Personer med förmågan Häxsyn som befinner sig på platsen inser att de är betraktade om de lyckas med ett [Viljestark←Diskret]. Klärvoajans blockeras av ritualerna Sanktum, Helgade rit och Häxcirkel.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Ordensmagi"],
@@ -152,7 +152,7 @@
   {
     "id": "ri16",
     "namn": "Kättarens spår",
-    "beskrivning": "Tradition: Teurgi\nMystikern kan med ett lyckat Viljestark spåra en styggelse – eller styggelsesmittad varelse – denne mött personligen. Spårningen är ofelbar tills styg- gelsen korsar vatten på något sätt; i så fall måste ritualen vävas igen på andra sidan vattnet. Om mystikern misslyckas får han inte försöka igen under samma dygn. I tät bebyggelse eller inne i Davokar är det svårare att spåra styggelsen, mys- tikern får då en andra chans att misslyckas.",
+    "beskrivning": "Tradition: Teurgi\nMystikern kan med ett lyckat Viljestark spåra en styggelse – eller styggelsesmittad varelse – denne mött personligen. Spårningen är ofelbar tills styggelsen korsar vatten på något sätt; i så fall måste ritualen vävas igen på andra sidan vattnet. Om mystikern misslyckas får han inte försöka igen under samma dygn. I tät bebyggelse eller inne i Davokar är det svårare att spåra styggelsen, mystikern får då en andra chans att misslyckas.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Teurgi"],
@@ -162,7 +162,7 @@
   {
     "id": "ri17",
     "namn": "Låna best",
-    "beskrivning": "Tradition: Häxkonst\nMystikern kan genom en ritual ta över en liten bests kropp och styra den helt under lång tid. Mystikerns egen kropp sitter i trans under tiden. Om den lånade besten skadas kastas mystikerns sinne tillbaka till sin egen kropp, detsamma händer om mystikerns kropp skadas eller utsätts för en kraftig störning (knuffas, hamnar i vatten eller utsätts för hetta och brandrök etcetera).\nEn mystiker klarar av att befinna sig i trans i cirka ett dygn, sedan återvänder sinnet till krop- pen. Då kan Låna best inte användas igen på lika lång tid som förra transen varade.\nEn mystiker som använder Låna best och låter sin kropp vila i sin Häxcirkel har ingen begränsning i tid på Låna best, då kroppen får all sin näring från marken i häxcirkeln.",
+    "beskrivning": "Tradition: Häxkonst\nMystikern kan genom en ritual ta över en liten bests kropp och styra den helt under lång tid. Mystikerns egen kropp sitter i trans under tiden. Om den lånade besten skadas kastas mystikerns sinne tillbaka till sin egen kropp, detsamma händer om mystikerns kropp skadas eller utsätts för en kraftig störning (knuffas, hamnar i vatten eller utsätts för hetta och brandrök etcetera).\nEn mystiker klarar av att befinna sig i trans i cirka ett dygn, sedan återvänder sinnet till kroppen. Då kan Låna best inte användas igen på lika lång tid som förra transen varade.\nEn mystiker som använder Låna best och låter sin kropp vila i sin Häxcirkel har ingen begränsning i tid på Låna best, då kroppen får all sin näring från marken i häxcirkeln.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Häxkonst"],
@@ -182,7 +182,7 @@
   {
     "id": "ri19",
     "namn": "Offerrök",
-    "beskrivning": "Tradition: Teurgi\nMystikern kan med ett lyckat Listig avslöja när- varande styggelser med hjälp av rökelse. Röken sprider sig bland de närvarande och samlas kring ting och varelser i relation till hur korrumperade de är; tätare ansamling av rök anger en mer allvarligt smittad varelse. Spelledaren anger konkret om ting och varelser på platsen är styggelsesmittade, styggelsemärkta eller rena styggelser.\nOfferrök kan motverkas med hjälp av ritualen Byta skugga.",
+    "beskrivning": "Tradition: Teurgi\nMystikern kan med ett lyckat Listig avslöja närvarande styggelser med hjälp av rökelse. Röken sprider sig bland de närvarande och samlas kring ting och varelser i relation till hur korrumperade de är; tätare ansamling av rök anger en mer allvarligt smittad varelse. Spelledaren anger konkret om ting och varelser på platsen är styggelsesmittade, styggelsemärkta eller rena styggelser.\nOfferrök kan motverkas med hjälp av ritualen Byta skugga.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Teurgi"],
@@ -212,7 +212,7 @@
   {
     "id": "ri22",
     "namn": "Sanktum",
-    "beskrivning": "Tradition: Ordensmagi\nMystikern kan magiskt beslöja en plats (ett större eller ett par små rum) så att den inte går att spana på eller störa utifrån på mystisk väg. Sanktum blocke- rar ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande, men om ritualen spårar eller spanar på en person så återupptas effekten så snart denne lämnar området under Sanktum.\nOm en Magisk cirkel befinner sig i ett Sanktum (oavsett vilken som var där först) kan ingen annan än den mystiker som har lagt Sanktum använda cirkeln för kommunikation eller i syfte att utföra ett Sjumilasteg.",
+    "beskrivning": "Tradition: Ordensmagi\nMystikern kan magiskt beslöja en plats (ett större eller ett par små rum) så att den inte går att spana på eller störa utifrån på mystisk väg. Sanktum blockerar ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande, men om ritualen spårar eller spanar på en person så återupptas effekten så snart denne lämnar området under Sanktum.\nOm en Magisk cirkel befinner sig i ett Sanktum (oavsett vilken som var där först) kan ingen annan än den mystiker som har lagt Sanktum använda cirkeln för kommunikation eller i syfte att utföra ett Sjumilasteg.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Ordensmagi"],
@@ -232,7 +232,7 @@
   {
     "id": "ri24",
     "namn": "Själssten",
-    "beskrivning": "Tradition: Ordensmagi\nKorruption var egentligen aldrig ett problem för ordensmagiker innan Det stora kriget, då deras robusta praktiker fram tills dess hade skyddat dem från själens försvartnande. Under Krigets desperata ögonblick tog Ordo Magicas krigsmagiker allt större risker i nödvändighetens namn och ådrog sig därmed korruption. För att bota det onda – eller i varje fall skjuta upp det – dammade man av en urgammal och illa ansedd ritual, vilken fångar en döende varelses själ i en särskilt preparerad kristall. Det visade sig att ritualen också fungerade relativt väl för att suga korruption ur en ordens- magiker och binda den i själastenen.\nRitualen binder mystikern till kristallen, som sedan verkar som en förlängning av ordensma- gikerns själ. Ritualen låter mystikern flytta 1t4 korruption till själsstenen med ett lyckat Viljestark. Stenen rymmer hälften av mystikerns Viljestark i korruption; den mörknar i takt med att den fylls på och detonerar när den inte längre mäktar härbär- gera mer svärta. Då sköljer all samlad korruption tillbaka över mystikern, vanligen med ytterst styggt resultat. Om mystikern mot förmodan överlever korruptionsvågen kan denne knyta en ny själssten till sig, och börja på nytt.\nRitualen kostar en (1) Erfarenhet att utföra oav- sett om den lyckas eller ej. En ordensmagiker som lär sig ritualen erhåller i samband med det en själssten från sitt ordenskapitel; andra mystiker måste betala för sig. Att köpa en själssten kostar 100 daler.",
+    "beskrivning": "Tradition: Ordensmagi\nKorruption var egentligen aldrig ett problem för ordensmagiker innan Det stora kriget, då deras robusta praktiker fram tills dess hade skyddat dem från själens försvartnande. Under Krigets desperata ögonblick tog Ordo Magicas krigsmagiker allt större risker i nödvändighetens namn och ådrog sig därmed korruption. För att bota det onda – eller i varje fall skjuta upp det – dammade man av en urgammal och illa ansedd ritual, vilken fångar en döende varelses själ i en särskilt preparerad kristall. Det visade sig att ritualen också fungerade relativt väl för att suga korruption ur en ordensmagiker och binda den i själastenen.\nRitualen binder mystikern till kristallen, som sedan verkar som en förlängning av ordensmagikerns själ. Ritualen låter mystikern flytta 1t4 korruption till själsstenen med ett lyckat Viljestark. Stenen rymmer hälften av mystikerns Viljestark i korruption; den mörknar i takt med att den fylls på och detonerar när den inte längre mäktar härbärgera mer svärta. Då sköljer all samlad korruption tillbaka över mystikern, vanligen med ytterst styggt resultat. Om mystikern mot förmodan överlever korruptionsvågen kan denne knyta en ny själssten till sig, och börja på nytt.\nRitualen kostar en (1) Erfarenhet att utföra oavsett om den lyckas eller ej. En ordensmagiker som lär sig ritualen erhåller i samband med det en själssten från sitt ordenskapitel; andra mystiker måste betala för sig. Att köpa en själssten kostar 100 daler.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Ordensmagi"],
@@ -252,7 +252,7 @@
   {
     "id": "ri26",
     "namn": "Skyddshelgon",
-    "beskrivning": "Tradition: Teurgi\nMystikern åtföljs av en skyddsande, själen efter en fallen tempelriddare som av Prios givits det hedervärda uppdraget att ännu en tid tjäna en av solens utvalda. Den beskyddande martyren mani- festeras som en krigare av ljus som i normalfallet är osynlig men som vid fara skiner upp och försvarar sin skyddsling in i en andra död. En mystiker kan endast ha ett skyddshelgon bundet till sig åt gången, och om skyddshelgonet på något sätt bekämpas måste ett nytt åkallas.\nEtt skyddshelgon hanteras av spelaren som en andra rollperson. Det får Erfarenhet som en rollperson och förlorar den om det dör, precis som en rollperson.",
+    "beskrivning": "Tradition: Teurgi\nMystikern åtföljs av en skyddsande, själen efter en fallen tempelriddare som av Prios givits det hedervärda uppdraget att ännu en tid tjäna en av solens utvalda. Den beskyddande martyren manifesteras som en krigare av ljus som i normalfallet är osynlig men som vid fara skiner upp och försvarar sin skyddsling in i en andra död. En mystiker kan endast ha ett skyddshelgon bundet till sig åt gången, och om skyddshelgonet på något sätt bekämpas måste ett nytt åkallas.\nEtt skyddshelgon hanteras av spelaren som en andra rollperson. Det får Erfarenhet som en rollperson och förlorar den om det dör, precis som en rollperson.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Teurgi"],
@@ -272,7 +272,7 @@
   {
     "id": "ri28",
     "namn": "Spådomskonst",
-    "beskrivning": "Tradition: Häxkonst\nMystikern kan med ett lyckat slag i Viljestark få ställa en ja/nej-fråga om äventyret. Spådom får göras en gång per äventyr, ytterligare försök är endast möjliga när något stort har hänt så att fram- tiden har ändrats (spelledaren avgör om så skett).",
+    "beskrivning": "Tradition: Häxkonst\nMystikern kan med ett lyckat slag i Viljestark få ställa en ja/nej-fråga om äventyret. Spådom får göras en gång per äventyr, ytterligare försök är endast möjliga när något stort har hänt så att framtiden har ändrats (spelledaren avgör om så skett).",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Häxkonst"],
@@ -282,7 +282,7 @@
   {
     "id": "ri29",
     "namn": "Syndabekännelse",
-    "beskrivning": "Tradition: Teurgi\nRitualen tvingar offret att svara sanningsenligt på ett antal ja/nej-frågor som ställs av mystikern. Varje fråga kräver ett lyckat [Viljestark←Viljestark], vid första misslyckandet avbryts ritualen och mys- tikern får inte fortsätta sin utfrågning av offret, i alla fall inte med ritualens hjälp.",
+    "beskrivning": "Tradition: Teurgi\nRitualen tvingar offret att svara sanningsenligt på ett antal ja/nej-frågor som ställs av mystikern. Varje fråga kräver ett lyckat [Viljestark←Viljestark], vid första misslyckandet avbryts ritualen och mystikern får inte fortsätta sin utfrågning av offret, i alla fall inte med ritualens hjälp.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Teurgi"],
@@ -292,7 +292,7 @@
   {
     "id": "ri30",
     "namn": "Telepatiskt förhör",
-    "beskrivning": "Tradition: Ordensmagi\nMystikern kan sträcka ut sitt sinne och läsa tan- kar. Med varje lyckat [Viljestark←Viljestark] får rollpersonen svaret på en ja/nej-fråga av offrets undermedvetna, vid första misslyckande avbryts telepatin och inga fler försök får göras mot den varelsen under äventyret. Rollpersonen måste röra vid offret, och offret uppfattar tankeläsningen om rollpersonen misslyckas med [Diskret←Vaksam]. Ett hjälplöst bundet offer kan förstås inte göra något åt saken, men andra offer kommer att reagera. Sovande offer vaknar om slaget misslyckas.",
+    "beskrivning": "Tradition: Ordensmagi\nMystikern kan sträcka ut sitt sinne och läsa tankar. Med varje lyckat [Viljestark←Viljestark] får rollpersonen svaret på en ja/nej-fråga av offrets undermedvetna, vid första misslyckande avbryts telepatin och inga fler försök får göras mot den varelsen under äventyret. Rollpersonen måste röra vid offret, och offret uppfattar tankeläsningen om rollpersonen misslyckas med [Diskret←Vaksam]. Ett hjälplöst bundet offer kan förstås inte göra något åt saken, men andra offer kommer att reagera. Sovande offer vaknar om slaget misslyckas.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Ordensmagi"],
@@ -302,7 +302,7 @@
   {
     "id": "ri31",
     "namn": "Vanhelgande rit",
-    "beskrivning": "Tradition: Svartkonst\nMystikern vanhelgar en plats vilket besudlar den och straffar dem som försöker påverka platsen utifrån. En vanhelgad plats korrumperar dem\nsom använder ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande. Vanhelgandet ger 1t6 temporär korruption till dem som utför sagda ritualer, och om de framhärdar att få information av ritualen så tar de ytterligare 1t6 korruption – permanent.\nStyggelser (varelser som tillhör monsterkate- gorin Styggelse) dras till vanhelgade områden och helas 1t4 för varje timme de vistas på vanhelgad mark. Även varelser som har smittats med veder- stygglighet men som ännu inte har utvecklats till styggelser känner en stark lockelse till vanhelgade platser och föremål.\nVanhelgande rit kan också göras på ett vapen, vilket är ett krav för att använda förmågan Vandråp.",
+    "beskrivning": "Tradition: Svartkonst\nMystikern vanhelgar en plats vilket besudlar den och straffar dem som försöker påverka platsen utifrån. En vanhelgad plats korrumperar dem\nsom använder ritualer som Klärvoajans, Åkallan, Kättarens spår och liknande. Vanhelgandet ger 1t6 temporär korruption till dem som utför sagda ritualer, och om de framhärdar att få information av ritualen så tar de ytterligare 1t6 korruption – permanent.\nStyggelser (varelser som tillhör monsterkategorin Styggelse) dras till vanhelgade områden och helas 1t4 för varje timme de vistas på vanhelgad mark. Även varelser som har smittats med vederstygglighet men som ännu inte har utvecklats till styggelser känner en stark lockelse till vanhelgade platser och föremål.\nVanhelgande rit kan också göras på ett vapen, vilket är ett krav för att använda förmågan Vandråp.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Svartkonst"],
@@ -332,7 +332,7 @@
   {
     "id": "ri34",
     "namn": "Åkallan",
-    "beskrivning": "Tradition: Häxkonst\nMystikern åkallar med ett lyckat Viljestark en varelse och varelsen måste söka sig till platsen för åkallelsen. Mystikern måste besitta något som binder henne till den åkallade, antingen ett föremål som den åkallade sätter värde på, eller en faktisk lämning av varelsen, så som ett glas blod eller en tova hår. En droppe blod eller ett hårstrå räcker inte.\nDen åkallade kommer enligt bästa förmåga att ta sig till platsen men vet inte nödvändigt- vis varför den vill dit, annat än att den följer en oemotståndlig lockelse. Det enda sättet att skydda en åkallad varelse är att lura eller locka den att träda in i en mystiskt avskärmad plats (ritualerna Helgande rit, Häxcirkel eller Sanktum) eller använda ritualen Bryta länk.",
+    "beskrivning": "Tradition: Häxkonst\nMystikern åkallar med ett lyckat Viljestark en varelse och varelsen måste söka sig till platsen för åkallelsen. Mystikern måste besitta något som binder henne till den åkallade, antingen ett föremål som den åkallade sätter värde på, eller en faktisk lämning av varelsen, så som ett glas blod eller en tova hår. En droppe blod eller ett hårstrå räcker inte.\nDen åkallade kommer enligt bästa förmåga att ta sig till platsen men vet inte nödvändigtvis varför den vill dit, annat än att den följer en oemotståndlig lockelse. Det enda sättet att skydda en åkallad varelse är att lura eller locka den att träda in i en mystiskt avskärmad plats (ritualerna Helgande rit, Häxcirkel eller Sanktum) eller använda ritualen Bryta länk.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Häxkonst"],
@@ -485,7 +485,7 @@
 {
     "id": "ri49",
   "namn": "Levande fästning",
-  "beskrivning": "Tradition: Endast tillgänglig för Grönvävare\nDen högre nivån av ritualen Snabbväxt låter mystikern skapa en fästning av levande träd och taggiga snår. Fortet räknas som ett träfort (se Skada på byggnader, sidan 106) och försvarar sig mot dem som försöker ta sig igenom eller över levande murar – på både in- och utvägen. De som försöker passera måste klara tre [Kvick ← Viljestark] eller ta 1t12 i skada per misslyckande av ettriga törnens stick och tunga grenars slag, rustning skyddar ej.\nMystikern som skapade fortet kan släppa in eller ut vem den vill, och kan även lära sina allierade hemliga ord som låter dem passera obehindrat genom den farliga grönskan.\nFästningen lever en årstid (dvs. tre månader), sedan måste ritualen kastas igen för att inte fästningen ska förtvina. Det kostar en Erfarenhet att använda ritualen.",
+  "beskrivning": "Tradition: Endast tillgänglig för Grönvävare\nDen högre nivån av ritualen Snabbväxt låter mystikern skapa en fästning av levande träd och taggiga snår. Fortet räknas som ett träfort (se Skada på byggnader, sidan 106) och försvarar sig mot dem som försöker ta sig igenom eller över levande murar – på både inoch utvägen. De som försöker passera måste klara tre [Kvick ← Viljestark] eller ta 1t12 i skada per misslyckande av ettriga törnens stick och tunga grenars slag, rustning skyddar ej.\nMystikern som skapade fortet kan släppa in eller ut vem den vill, och kan även lära sina allierade hemliga ord som låter dem passera obehindrat genom den farliga grönskan.\nFästningen lever en årstid (dvs. tre månader), sedan måste ritualen kastas igen för att inte fästningen ska förtvina. Det kostar en Erfarenhet att använda ritualen.",
   "taggar": {
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Grönvävare"],
