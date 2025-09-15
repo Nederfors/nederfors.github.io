@@ -683,6 +683,8 @@
     const pop    = root.getElementById('rowPricePopup');
     const cancel = root.getElementById('rowPriceCancel');
     const presets= root.getElementById('rowPricePresets');
+    const inEl   = root.getElementById('rowPriceFactor');
+    const apply  = root.getElementById('rowPriceApply');
     if (!pop || !presets) return;
 
     pop.classList.add('open');
@@ -691,8 +693,15 @@
     const close = () => {
       pop.classList.remove('open');
       presets.removeEventListener('click', onPreset);
+      apply?.removeEventListener('click', onApply);
+      inEl?.removeEventListener('keydown', onKey);
+      setBtn?.removeEventListener('click', onSet);
+      dEl?.removeEventListener('keydown', onBaseKey);
+      sEl?.removeEventListener('keydown', onBaseKey);
+      oEl?.removeEventListener('keydown', onBaseKey);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
+      if (inEl) inEl.value = '';
     };
     const onPreset = e => {
       e.stopPropagation();
@@ -712,13 +721,73 @@
       // Rendera om inventariet efter att popuppen stängts
       renderInventory();
     };
+    const onApply = e => {
+      e?.stopPropagation();
+      const factor = parseFloat(inEl?.value ?? '');
+      if (Number.isNaN(factor)) return;
+      if (Math.abs(factor - 1) < 1e-9) {
+        row.priceMult = 1;
+      } else {
+        row.priceMult = (row.priceMult || 1) * factor;
+      }
+      const inv = storeHelper.getInventory(store);
+      saveInventory(inv);
+      close();
+      renderInventory();
+    };
+    const onKey = e => {
+      if (e.key === 'Enter') onApply(e);
+      e.stopPropagation();
+    };
+    const dEl    = root.getElementById('rowBaseDaler');
+    const sEl    = root.getElementById('rowBaseSkilling');
+    const oEl    = root.getElementById('rowBaseOrtegar');
+    const setBtn = root.getElementById('rowBaseApply');
+
+    // Förifyll om grundpris finns
+    if (row.basePrice) {
+      dEl && (dEl.value = String(row.basePrice.daler ?? row.basePrice.d ?? 0));
+      sEl && (sEl.value = String(row.basePrice.skilling ?? row.basePrice.s ?? 0));
+      oEl && (oEl.value = String(row.basePrice['örtegar'] ?? row.basePrice.o ?? 0));
+    } else {
+      if (dEl) dEl.value = '';
+      if (sEl) sEl.value = '';
+      if (oEl) oEl.value = '';
+    }
+
     const onCancel = (e) => { if (e) e.stopPropagation(); close(); };
     const onOutside = e => {
       e.stopPropagation();
       if(!pop.querySelector('.popup-inner').contains(e.target)) close();
     };
 
+    const onSet = e => {
+      e?.stopPropagation();
+      const d = parseInt(dEl?.value || '0', 10) || 0;
+      const s = parseInt(sEl?.value || '0', 10) || 0;
+      const o = parseInt(oEl?.value || '0', 10) || 0;
+      if (d === 0 && s === 0 && o === 0) {
+        delete row.basePrice;
+      } else {
+        row.basePrice = { daler: d, skilling: s, 'örtegar': o };
+      }
+      const inv = storeHelper.getInventory(store);
+      saveInventory(inv);
+      close();
+      renderInventory();
+    };
+    const onBaseKey = e => {
+      if (e.key === 'Enter') onSet(e);
+      e.stopPropagation();
+    };
+
     presets.addEventListener('click', onPreset);
+    apply?.addEventListener('click', onApply);
+    inEl?.addEventListener('keydown', onKey);
+    setBtn?.addEventListener('click', onSet);
+    dEl?.addEventListener('keydown', onBaseKey);
+    sEl?.addEventListener('keydown', onBaseKey);
+    oEl?.addEventListener('keydown', onBaseKey);
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
   }
@@ -1063,7 +1132,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const entry  = getEntry(row.id || row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
-    let base = moneyToO(entry.grundpris || {});
+    let base = moneyToO(row.basePrice || entry.grundpris || {});
     const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
@@ -1258,6 +1327,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         ? priceMult
         : priceMult.toFixed(2).replace(/\.?0+$/, '');
       tagList.push(`<span class="tag price-mult removable" data-mult="1">×${mTxt} ✕</span>`);
+    }
+    if (row.basePrice) {
+      const t = formatMoney(row.basePrice);
+      tagList.push(`<span class="tag price-base removable" data-price="1">Grundpris: ${t} ✕</span>`);
     }
     if (tagList.length) {
       desc += `<div class="tags">${tagList.join(' ')}</div>`;
@@ -1748,6 +1821,8 @@ ${moneyRow}
           }
         } else if (removeTagBtn.dataset.mult) {
           delete row.priceMult;
+        } else if (removeTagBtn.dataset.price) {
+          delete row.basePrice;
         }
         saveInventory(inv);
         renderInventory();

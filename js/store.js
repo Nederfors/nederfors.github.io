@@ -622,6 +622,26 @@
     save(store);
   }
 
+  // Radera alla karaktärer i en specifik mapp
+  function deleteCharactersInFolder(store, folderId) {
+    try {
+      const fid = String(folderId || '');
+      const toDelete = (store.characters || [])
+        .filter(c => (c && (c.folderId || '')) === fid)
+        .map(c => c.id);
+      if (!toDelete.length) return 0;
+      const idSet = new Set(toDelete);
+      // Ta bort poster från listan och datat
+      store.characters = (store.characters || []).filter(c => c && !idSet.has(c.id));
+      toDelete.forEach(id => { try { delete store.data[id]; } catch {} });
+      if (store.current && idSet.has(store.current)) store.current = '';
+      save(store);
+      return toDelete.length;
+    } catch {
+      return 0;
+    }
+  }
+
   function getTotalMoney(store) {
     const base = getMoney(store);
     const bonus = getBonusMoney(store);
@@ -1506,6 +1526,7 @@ function defaultTraits() {
     duplicateCharacter,
     renameCharacter,
     deleteCharacter,
+    deleteCharactersInFolder,
     deleteAllCharacters,
     getDependents,
     HAMNSKIFTE_NAMES,

@@ -1216,6 +1216,7 @@ function openFolderManagerPopup() {
           <div class="folder-actions">
             <button class="mini-btn" data-action="open" title="Öppna">⬆️</button>
             <button class="mini-btn" data-action="rename" title="Byt namn">✏️</button>
+            <button class="mini-btn danger" data-action="clear" title="Töm mapp">🧹</button>
             ${delBtn}
           </div>
         </div>`
@@ -1259,6 +1260,23 @@ function openFolderManagerPopup() {
       } else {
         applyCharacterChange();
       }
+    } else if (action === 'clear') {
+      const folders = storeHelper.getFolders(store) || [];
+      const f = folders.find(x=>x.id===id);
+      const cnt = (store.characters || []).filter(c => (c.folderId || '') === id).length;
+      if (!cnt) { await alertPopup('Mappen är tom.'); return; }
+      const name = f ? (f.name || 'Mapp') : 'Mapp';
+      const ok = await confirmPopup(`Töm mapp “${name}”? Detta raderar ${cnt} karaktärer permanent.`);
+      if (!ok) return;
+      if (storeHelper.deleteCharactersInFolder) {
+        storeHelper.deleteCharactersInFolder(store, id);
+      } else {
+        const ids = (store.characters || []).filter(c => (c.folderId || '') === id).map(c => c.id);
+        ids.forEach(cid => storeHelper.deleteCharacter(store, cid));
+      }
+      refreshCharSelect();
+      render();
+      applyCharacterChange();
     } else if (action === 'delete') {
       const folders = storeHelper.getFolders(store) || [];
       const f = folders.find(x=>x.id===id);

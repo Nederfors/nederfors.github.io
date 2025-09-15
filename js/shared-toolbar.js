@@ -526,11 +526,35 @@ class SharedToolbar extends HTMLElement {
       <div id="rowPricePopup" class="popup">
         <div class="popup-inner">
           <h3>Snabb prisjustering</h3>
-          <div id="rowPricePresets" class="char-btn-row">
-            <button class="char-btn" data-factor="0.5">×0.5</button>
-            <button class="char-btn" data-factor="1">×1.0</button>
-            <button class="char-btn" data-factor="1.5">×1.5</button>
-            <button class="char-btn" data-factor="2">×2</button>
+          <div class="export-sections">
+            <div class="card export-card">
+              <div class="card-title">Multiplicera pris</div>
+              <div class="card-desc">
+                <div class="price-custom-row">
+                  <input id="rowPriceFactor" type="number" min="0" step="0.1" placeholder="Faktor">
+                  <button id="rowPriceApply" class="char-btn">Multiplicera</button>
+                </div>
+                <div id="rowPricePresets" class="char-btn-row three-col">
+                  <button class="char-btn" data-factor="0.5">×0.5</button>
+                  <button class="char-btn" data-factor="1.5">×1.5</button>
+                  <button class="char-btn" data-factor="2">×2</button>
+                </div>
+              </div>
+            </div>
+            <div class="card export-card">
+              <div class="card-title">Sätt nytt grundpris</div>
+              <div class="card-desc">
+                <label for="rowBaseDaler">Pris</label>
+                <div class="inline-controls">
+                  <div class="money-row">
+                    <input id="rowBaseDaler" type="number" min="0" placeholder="Daler">
+                    <input id="rowBaseSkilling" type="number" min="0" placeholder="Skilling">
+                    <input id="rowBaseOrtegar" type="number" min="0" placeholder="Örtegar">
+                  </div>
+                </div>
+                <button id="rowBaseApply" class="char-btn">Sätt pris</button>
+              </div>
+            </div>
           </div>
           <button id="rowPriceCancel" class="char-btn danger">Avbryt</button>
         </div>
