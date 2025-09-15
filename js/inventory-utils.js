@@ -1399,14 +1399,53 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+    const list = storeHelper.getCurrentList(store);
 
-    const moneyWeight = calcMoneyWeight(cash);
+    /* ---------- summa i pengar ---------- */
+    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+    const skillForge = storeHelper.abilityLevel(
+      list, 'Smideskonst');
+    const forgeLvl = Math.max(partyForge, skillForge);
+    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+    const skillAlc = storeHelper.abilityLevel(
+      list, 'Alkemist');
+    const alcLevel = Math.max(partyAlc, skillAlc);
+    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+    const skillArt = storeHelper.abilityLevel(
+      list, 'Artefaktmakande');
+    const artLevel = Math.max(partyArt, skillArt);
+
+    const tot = flatInv.reduce((t, row) => {
+      const entry = getEntry(row.id || row.name);
+      const baseQuals = [
+        ...(entry.taggar?.kvalitet ?? []),
+        ...splitQuals(entry.kvalitet)
+      ];
+      const removedQ = row.removedKval ?? [];
+      const allQualsRow = [
+        ...baseQuals.filter(q => !removedQ.includes(q)),
+        ...(row.kvaliteter || [])
+      ];
+      row.posQualCnt = countPositiveQuals(allQualsRow);
+      const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
+      t.d += m.d; t.s += m.s; t.o += m.o;
+      return t;
+    }, { d: 0, s: 0, o: 0 });
+
+    tot.s += Math.floor(tot.o / OBASE); tot.o %= OBASE;
+    tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
+
+    const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
+    const diff  = oToMoney(Math.abs(diffO));
+    const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
+    const unusedMoney = oToMoney(Math.max(0, diffO));
+    const moneyWeight = calcMoneyWeight(unusedMoney);
+
     const usedWeight = allInv.reduce((s, r) => {
       const entry = getEntry(r.name);
       const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
       return s + (isVeh ? 0 : calcRowWeight(r));
     }, 0) + moneyWeight;
-    const list = storeHelper.getCurrentList(store);
     const traits = storeHelper.getTraits(store);
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
@@ -1456,44 +1495,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         if (F.invTxt && !rowMatchesText(row, F.invTxt)) return false;
         return true;
       });
-
-    /* ---------- summa i pengar ---------- */
-    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
-    const skillForge = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Smideskonst');
-    const forgeLvl = Math.max(partyForge, skillForge);
-    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
-    const skillAlc = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Alkemist');
-    const alcLevel = Math.max(partyAlc, skillAlc);
-    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-    const skillArt = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Artefaktmakande');
-    const artLevel = Math.max(partyArt, skillArt);
-
-    const tot = flatInv.reduce((t, row) => {
-      const entry = getEntry(row.id || row.name);
-      const baseQuals = [
-        ...(entry.taggar?.kvalitet ?? []),
-        ...splitQuals(entry.kvalitet)
-      ];
-      const removedQ = row.removedKval ?? [];
-      const allQualsRow = [
-        ...baseQuals.filter(q => !removedQ.includes(q)),
-        ...(row.kvaliteter || [])
-      ];
-      row.posQualCnt = countPositiveQuals(allQualsRow);
-      const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
-      t.d += m.d; t.s += m.s; t.o += m.o;
-      return t;
-    }, { d: 0, s: 0, o: 0 });
-
-    tot.s += Math.floor(tot.o / OBASE); tot.o %= OBASE;
-    tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
-
-    const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
-    const diff  = oToMoney(Math.abs(diffO));
-    const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
 
     const foodCount = flatInv
       .filter(row => {
