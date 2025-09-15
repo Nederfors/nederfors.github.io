@@ -516,7 +516,7 @@ function yrkeInfoHtml(p) {
   }
   if (isElityrke(p)) {
     const req = p.krav_formagor
-      ? `<strong>Krav på förmågor:</strong> ${p.krav_formagor}`
+      ? `<strong>Krav på förmågor (varav minst en på mästarnivå):</strong> ${p.krav_formagor}`
       : '';
     const abil = (p.Elityrkesförmågor || []).length
       ? `<strong>Elityrkesförmågor:</strong> ${p.Elityrkesförmågor.join(', ')}`
