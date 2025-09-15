@@ -105,6 +105,9 @@
           if(!Array.isArray(store.data[id].hamnskifteRemoved)){
             store.data[id].hamnskifteRemoved = [];
           }
+          if(store.data[id].darkPastSuppressed === undefined){
+            store.data[id].darkPastSuppressed = false;
+          }
           if(!store.data[id].notes){
             store.data[id].notes = defaultNotes();
           }
@@ -235,12 +238,14 @@
     return list.map(x => ({ ...x }));
   }
 
-  function applyDarkBloodEffects(list) {
+  function applyDarkBloodEffects(store, list) {
     const hasDark = list.some(x => x.namn === 'Mörkt blod');
     const idxBest = list.findIndex(x => x.namn === 'Mörkt förflutet');
+    const data = store.data[store.current] || {};
+    const suppressed = !!data.darkPastSuppressed;
 
     if (hasDark) {
-      if (idxBest < 0) {
+      if (idxBest < 0 && !suppressed) {
         const entry = DB.find(x => x.namn === 'Mörkt förflutet');
         if (entry) list.push({ ...entry });
       }
@@ -400,13 +405,29 @@
 
   function setCurrentList(store, list) {
     if (!store.current) return;
-    applyDarkBloodEffects(list);
+    const prev = store.data[store.current]?.list || [];
+    // Hantera undertryckning av Mörkt förflutet när Mörkt blod finns kvar
+    try {
+      const hadDark = prev.some(x => x.namn === 'Mörkt blod');
+      const hasDark = list.some(x => x.namn === 'Mörkt blod');
+      const hadPast = prev.some(x => x.namn === 'Mörkt förflutet');
+      const hasPast = list.some(x => x.namn === 'Mörkt förflutet');
+      store.data[store.current] = store.data[store.current] || {};
+      if (!hasDark) {
+        // Om Mörkt blod tagits bort: återställ suppression så att förflutet kan auto-läggas igen vid nytt val
+        store.data[store.current].darkPastSuppressed = false;
+      } else if (hadDark && hadPast && !hasPast) {
+        // Om användaren tog bort Mörkt förflutet medan Mörkt blod är kvar: undertryck auto-återläggning
+        store.data[store.current].darkPastSuppressed = true;
+      }
+    } catch {}
+
+    applyDarkBloodEffects(store, list);
     applyRaceTraits(list);
     enforceEarthbound(list);
     enforceDwarf(list);
     enforcePackAnimal(list);
     applyHamnskifteTraits(store, list);
-    const prev = store.data[store.current]?.list || [];
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].list = list;
     const hadPriv = prev.some(x => x.namn === 'Privilegierad');
@@ -1099,6 +1120,7 @@ function defaultTraits() {
       if (obj[k] === '') delete obj[k];
     });
     if (obj.nilasPopupShown === false) delete obj.nilasPopupShown;
+    if (obj.darkPastSuppressed === false) delete obj.darkPastSuppressed;
     if (obj.baseXp === 0) delete obj.baseXp;
     if (obj.notes) {
       const def = defaultNotes();

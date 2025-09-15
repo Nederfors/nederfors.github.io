@@ -393,7 +393,7 @@
   {
     "id": "na32",
     "namn": "Labbar",
-    "beskrivning": "Varelsen har illa utvecklade händer, och har därmed svårt att utföra finmotoriska handlingar så som att dyrka ett lås eller liknande. Så snart en utmaning kräver fingerfärdighet får varelsen en andra chans att misslyckas.",
+    "beskrivning": "Varelsen har bristfälligt utvecklade händer, vilket gör att alla handlingar som bygger på finmotorik blir ovanligt svåra. När en situation kräver fingerfärdighet eller normal användning av händer och fingrar måste karaktären först slå mot Kvick för att alls få försöka. Ett misslyckat slag innebär att handlingen omedelbart misslyckas, medan ett lyckat slag ger möjlighet att fortsätta som vanligt. Till exempel kan en karaktär som försöker dyrka upp ett lås först behöva klara slaget mot Kvick innan själva dyrkningsförsöket görs. På samma sätt måste ett slag mot Kvick lyckas för att kunna ladda ett armborst mitt i strid; misslyckas slaget fumlar karaktären och laddningen misslyckas.",
     "taggar": {
       "typ": [
         "Nackdel"
@@ -535,7 +535,7 @@
   {
     "id": "na49",
     "namn": "Artefaktsjuka",
-    "beskrivning": "Rollpersonen dras till föremål med uråldig kraft; greppet hårdnar när runorna blänker. Om ett föremål som rollpersonen hittat visar sig vara en artefakt måste hen klara ett slag mot Viljestark för att inte reflexmässigt binda sig till den. Vid misslyckande binds rollpersonen och kan inte frivilligt lämna ifrån sig artefakten under scenen, samt prioriterar att skydda eller återta den om den hotas. När habegäret har lugnat ner sig så är det fullt möjligt att bryta kopplingen till artefakten med Ritualen 'Bryta Länk', men kostnaden som har betalats för den finns kvar för alltid. Den här nackdelen kan enbart införskaffas om rollpersonen i sig även har förmåga att själv identifiera artefakter.",
+    "beskrivning": "Rollpersonen dras till föremål med uråldig kraft; greppet hårdnar när runorna blänker. Om ett föremål som rollpersonen hittat misstänks vara en artefakt måste hen klara ett slag mot Viljestark för att inte reflexmässigt försöka binda sig till den. Vid misslyckande binds rollpersonen till den misstänkta artefakten och kan inte frivilligt lämna ifrån sig den under scenen, samt prioriterar att skydda eller återta den om den hotas. När habegäret har lugnat ner sig så är det fullt möjligt att bryta kopplingen till artefakten med hjälp av Ritualen 'Bryta Länk', men kostnaden som har betalats för den finns kvar för alltid.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Viljestark"]
@@ -761,7 +761,7 @@
   {
     "id": "na74",
     "namn": "Overklighetskänslor",
-    "beskrivning": "Efter att ha stått vid dödens tröskel och slagit dödsslag, men återvänt, skaver världen som en dröm. Rollpersonen måste lyckas med ett slag mot Vaksam −5 eller spendera 1 Erfarenhet för att orientera sig och kunna fortsätta agera; tills dess förblir rollpersonen desorienterad och tar inga aktiva handlingar.",
+    "beskrivning": "Efter att ha stått vid dödens tröskel och slagit dödsslag, men återvänt, skaver världen som en dröm. Rollpersonen måste lyckas med ett slag mot Vaksam −5 eller spendera 1 Erfarenhet för att orientera sig och kunna fortsätta agera, ett slag får göras per runda; tills hen lyckas förblir rollpersonen desorienterad och tar inga aktiva handlingar.",
     "taggar": {
       "typ": ["Nackdel"],
       "test": ["Vaksam"]

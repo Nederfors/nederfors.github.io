@@ -791,54 +791,9 @@ function initIndex() {
       e.preventDefault();
       window.__searchBlurGuard = true;
       dom.sIn.blur();
-      // Kör UI-kommando vid exakt/unik match direkt på Enter
       const termTry = (sTemp || '').trim();
-      if (termTry && window.tryUICommand && window.tryUICommand(termTry)) {
-        const sugHide = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
-        if (sugHide) { sugHide.innerHTML=''; sugHide.hidden=true; }
-        dom.sIn.value=''; sTemp='';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
       const term = sTemp.toLowerCase();
-        // Enter on active suggestion that may be command
-        if (items.length && sugIdx >= 0) {
-          const it = items[sugIdx];
-          if (it?.dataset?.ui && window.executeUICommand) {
-            window.__searchBlurGuard = true;
-            dom.sIn.blur();
-            window.executeUICommand(it.dataset.ui);
-            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-          if (it?.dataset?.cmd === 'random') {
-            const cat = it.dataset.cat || '';
-            const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
-            const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
-            if (!pool.length) {
-              if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
-              dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-              return;
-            }
-            const n = Math.min(cnt, pool.length);
-            const picks = [];
-            const idxs = pool.map((_,i)=>i);
-            for (let i = 0; i < n; i++) {
-              const k = Math.floor(Math.random() * idxs.length);
-              const [idx] = idxs.splice(k, 1);
-              picks.push(pool[idx]);
-            }
-            fixedRandomEntries = picks;
-            fixedRandomInfo = { cat, count: picks.length };
-            const c = cat || picks[0]?.taggar?.typ?.[0];
-            if (c) openCatsOnce.add(c);
-            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-            activeTags(); renderList(filtered());
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-        }
+        // Ignorera sökförslag på Enter; hantera bara skriven text
         // Command: [N] random: <kategori> — pick N random entries in category
         {
           const m = sTemp.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
@@ -889,13 +844,7 @@ function initIndex() {
           }
         }
       }
-      if (items.length && sugIdx >= 0) {
-        const chosen = items[sugIdx]?.dataset?.val || '';
-        if (chosen) {
-          dom.sIn.value = chosen; sTemp = chosen.trim();
-          updateSearchDatalist();
-        }
-      }
+      // Ignorera aktivt förslag på Enter – välj endast via klick
       if (term === 'webapp') {
         const ua = navigator.userAgent.toLowerCase();
         let anchor = 'general';

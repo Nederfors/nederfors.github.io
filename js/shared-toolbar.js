@@ -647,6 +647,50 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Import ---------- -->
+      <div id="importPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Importera</h3>
+          <div class="export-sections">
+            <div class="card export-card">
+              <div class="card-title">Aktiv mapp</div>
+              <div class="card-desc">
+                <p>Importera till din aktiva mapp: <strong id="importActiveNameInline"></strong></p>
+                <button id="importBtnActive" class="char-btn">Importera</button>
+              </div>
+            </div>
+            <div class="card export-card">
+              <div class="card-title">Vald mapp</div>
+              <div class="card-desc">
+                <label for="importFolderSelect">Mapp</label>
+                <div class="inline-controls">
+                  <select id="importFolderSelect"></select>
+                </div>
+                <button id="importBtnChoose" class="char-btn">Importera</button>
+                <label class="price-item import-check">
+                  <input type="checkbox" id="importMakeActiveChoose">
+                  <span>Gör målmappen aktiv efter import</span>
+                </label>
+              </div>
+            </div>
+            <div class="card export-card">
+              <div class="card-title">Mappar i fil</div>
+              <div class="card-desc">
+                <p>Importera en hel mapp</p>
+                <button id="importBtnFromFile" class="char-btn">Importera</button>
+                <label class="price-item import-check">
+                  <input type="checkbox" id="importMakeActiveFromDir">
+                  <span>Gör målmappen aktiv efter import</span>
+                </label>
+              </div>
+            </div>
+          </div>
+          <div class="confirm-row">
+            <button id="importCancel" class="char-btn danger">Avbryt</button>
+          </div>
+        </div>
+      </div>
+
       
 
       <!-- ---------- Nilas Popup ---------- -->
@@ -803,13 +847,13 @@ class SharedToolbar extends HTMLElement {
             <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
             <li>XP: Visar dina totala erfarenhetspoäng.</li>
             <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
-            <li>Förslag: Använd ↑/↓ för att välja, Enter eller klick för att lägga till.</li>
+            <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
             <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
           </ul>
 
           <h3>Kortkommandon</h3>
           <ul>
-            <li>Enter: Bekräfta sökförslag eller lägg till skriven term.</li>
+            <li>Enter: Lägg till skriven term.</li>
             <li>Esc: Stäng öppna paneler/popup (desktop).</li>
           </ul>
 
@@ -1013,7 +1057,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

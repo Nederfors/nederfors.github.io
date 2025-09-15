@@ -756,30 +756,8 @@ function initCharacter() {
       window.__searchBlurGuard = true;
       dom.sIn.blur();
       const termTry = (sTemp || '').trim();
-      if (termTry && window.tryUICommand && window.tryUICommand(termTry)) {
-        const sugHide = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
-        if (sugHide) { sugHide.innerHTML=''; sugHide.hidden=true; }
-        dom.sIn.value=''; sTemp='';
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
       const term = sTemp.toLowerCase();
-        if (items.length && sugIdx >= 0) {
-          const it = items[sugIdx];
-          if (it?.dataset?.ui && window.executeUICommand) {
-            window.__searchBlurGuard = true;
-            dom.sIn.blur();
-            window.executeUICommand(it.dataset.ui);
-            dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-          const chosen = it?.dataset?.val || '';
-          if (chosen) {
-            dom.sIn.value = chosen; sTemp = chosen.trim();
-            updateSearchDatalist();
-          }
-        }
+        // Ignorera sökförslag på Enter; hantera bara skriven text
       if (term === 'webapp') {
         const ua = navigator.userAgent.toLowerCase();
         let anchor = 'general';

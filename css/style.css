@@ -1715,6 +1715,16 @@ select.level {
 
 /* (removed) Popup för inventarie Export/Import */
 
+/* ---------- Import-popup layout matchar export ---------- */
+#importPopup .export-sections { display: flex; flex-direction: column; gap: .5rem; }
+#importPopup .export-card { padding: .8rem 1rem; }
+#importPopup .export-card + .export-card { margin-top: .4rem; }
+#importPopup .export-card .card-desc { display: flex; flex-direction: column; gap: .45rem; text-align: left; }
+#importPopup .popup-actions { display: flex; justify-content: flex-end; margin-bottom: .4rem; }
+#importPopup .export-card .card-desc p { margin: 0 0 .25rem; }
+#importPopup .inline-controls { margin-top: .2rem; }
+#importPopup .char-btn { padding: .5rem 1rem; }
+
 /* ---------- Popup för snabb prisjustering ---------- */
 #rowPricePopup {
   position: fixed;
@@ -2123,6 +2133,48 @@ select.level {
 #newCharPopup.open .popup-inner,
 #dupCharPopup.open .popup-inner,
 #renameCharPopup.open .popup-inner { transform: scale(1); }
+
+/* Import-popup – tydlig layout i samma stil */
+#importPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 90%;
+  max-width: 420px;
+  text-align: center;
+  transform: scale(.8);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .6rem;
+}
+#importPopup.open .popup-inner { transform: scale(1); }
+#importPopup .popup-inner button { width: 100%; }
+#importPopup .import-check {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: .6rem;
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .4rem .6rem;
+}
+#importPopup .import-check input[type="checkbox"] {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--card-border);
+  border-radius: .25rem;
+  background: var(--bg);
+  cursor: pointer;
+}
+#importPopup .import-check input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
 
 /* ---------- Form-grid för anteckningar på karaktärsbladet ---------- */
 .field-row {

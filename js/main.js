@@ -831,6 +831,11 @@ function bindToolbar() {
     if (id === 'importChar') {
       (async () => {
         try {
+          // Steg 1: Välj importmål
+          const settings = await openImportPopup();
+          if (!settings) return;
+
+          // Steg 2: Välj filer eller mapp
           let files;
           if (window.showDirectoryPicker) {
             const pick = await openDialog('Vad vill du importera?', {
@@ -888,7 +893,32 @@ function bindToolbar() {
               inp.click();
             });
           }
+          // Mappningslogik för mål
+          const override = settings.mode !== 'fromFile';
+          let targetFolderId = '';
+          let targetFolderName = '';
+          if (override) {
+            try {
+              const folders = (storeHelper.getFolders(store) || []);
+              if (settings.mode === 'active') {
+                let active = storeHelper.getActiveFolder(store);
+                if (!active || active === 'ALL') {
+                  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+                  if (std) active = std.id;
+                }
+                targetFolderId = active || '';
+                const f = folders.find(x => x.id === targetFolderId);
+                targetFolderName = f ? (f.name || '') : '';
+              } else if (settings.mode === 'choose') {
+                targetFolderId = settings.folderId || '';
+                const f = folders.find(x => x.id === targetFolderId);
+                targetFolderName = f ? (f.name || '') : '';
+              }
+            } catch {}
+          }
+
           let imported = 0;
+          const usedFolderIds = new Set();
           for (const file of files) {
             if (!file.name.toLowerCase().endsWith('.json')) continue;
             try {
@@ -897,22 +927,33 @@ function bindToolbar() {
               if (Array.isArray(obj)) {
                 for (const item of obj) {
                   try {
-                    const id = storeHelper.importCharacterJSON(store, item);
+                    const id = storeHelper.importCharacterJSON(
+                      store,
+                      override ? { ...item, folder: targetFolderName } : item
+                    );
                     if (id) {
                       imported++;
+                      try {
+                        const rec = (store.characters || []).find(c => c && c.id === id);
+                        if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                      } catch {}
                       toast(`${item.name || 'Ny rollperson'} är importerad`);
                     }
                   } catch {}
                 }
               } else if (obj && Array.isArray(obj.folders)) {
                 for (const folder of obj.folders) {
-                  const fname = folder.folder || folder.name || '';
+                  const fname = override ? targetFolderName : (folder.folder || folder.name || '');
                   if (Array.isArray(folder.characters)) {
                     for (const item of folder.characters) {
                       try {
                         const id = storeHelper.importCharacterJSON(store, { ...item, folder: fname });
                         if (id) {
                           imported++;
+                          try {
+                            const rec = (store.characters || []).find(c => c && c.id === id);
+                            if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                          } catch {}
                           toast(`${item.name || 'Ny rollperson'} är importerad`);
                         }
                       } catch {}
@@ -922,17 +963,31 @@ function bindToolbar() {
               } else if (obj && Array.isArray(obj.characters)) {
                 for (const item of obj.characters) {
                   try {
-                    const id = storeHelper.importCharacterJSON(store, item);
+                    const id = storeHelper.importCharacterJSON(
+                      store,
+                      override ? { ...item, folder: targetFolderName } : item
+                    );
                     if (id) {
                       imported++;
+                      try {
+                        const rec = (store.characters || []).find(c => c && c.id === id);
+                        if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                      } catch {}
                       toast(`${item.name || 'Ny rollperson'} är importerad`);
                     }
                   } catch {}
                 }
               } else {
-                const res = storeHelper.importCharacterJSON(store, obj);
+                const res = storeHelper.importCharacterJSON(
+                  store,
+                  override ? { ...obj, folder: targetFolderName } : obj
+                );
                 if (res) {
                   imported++;
+                  try {
+                    const rec = (store.characters || []).find(c => c && c.id === res);
+                    if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                  } catch {}
                   toast(`${obj.name || 'Ny rollperson'} är importerad`);
                 }
               }
@@ -941,6 +996,18 @@ function bindToolbar() {
             }
           }
           if (imported > 0) {
+            // Växla aktiv mapp om användaren önskat och ett tydligt mål finns
+            if (override && settings.makeActive && targetFolderId) {
+              try { storeHelper.setActiveFolder(store, targetFolderId); } catch {}
+            } else if (!override && settings.makeActive) {
+              // Endast för Mappar i fil: välj aktiv mapp om exakt en mapp använts
+              try {
+                const arr = Array.from(usedFolderIds);
+                if (arr.length === 1 && arr[0]) {
+                  storeHelper.setActiveFolder(store, arr[0]);
+                }
+              } catch {}
+            }
             applyCharacterChange();
           } else {
             await alertPopup('Felaktig fil.');
@@ -1864,6 +1931,87 @@ function openExportPopup(cb) {
       }
     });
   }, cb);
+}
+
+// Popup: Importera – välj mål för import via tre knappar
+// Returnerar { mode: 'active'|'choose'|'fromFile', folderId?: string, makeActive: boolean }
+async function openImportPopup() {
+  const pop = bar?.shadowRoot?.getElementById('importPopup');
+  if (!pop) return null;
+
+  const btnActive= bar.shadowRoot.getElementById('importBtnActive');
+  const btnChoose= bar.shadowRoot.getElementById('importBtnChoose');
+  const btnFrom  = bar.shadowRoot.getElementById('importBtnFromFile');
+  const folderEl = bar.shadowRoot.getElementById('importFolderSelect');
+  const makeActChoose = bar.shadowRoot.getElementById('importMakeActiveChoose');
+  const makeActFrom   = bar.shadowRoot.getElementById('importMakeActiveFromDir');
+  const cancel   = bar.shadowRoot.getElementById('importCancel');
+
+  // Fyll mapp-listan
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  folderEl.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+
+  // Aktiv mapp – sätt knapptext och tillgänglighet
+  let activeId = 'ALL';
+  try { activeId = storeHelper.getActiveFolder(store); } catch {}
+  const activeFolder = folders.find(f => f.id === activeId);
+  const activeName = activeFolder ? (activeFolder.name || '') : 'Alla';
+  const activeNameInline = bar.shadowRoot.getElementById('importActiveNameInline');
+  if (activeNameInline) activeNameInline.textContent = activeName || '';
+  const hasActive = !!(activeFolder && activeId && activeId !== 'ALL');
+  btnActive.disabled = !hasActive;
+  if (!hasActive) btnActive.title = 'Välj aktiv mapp i Filter-menyn först';
+
+  // Förvälj Standard eller första mappen i dropdown
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard') || folders[0];
+  if (std) folderEl.value = std.id;
+
+  // Återställ kryssrutor (standard: av)
+  if (makeActChoose) makeActChoose.checked = false;
+  if (makeActFrom)   makeActFrom.checked = false;
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      cancel.removeEventListener('click', onCancel);
+      btnActive.removeEventListener('click', onActive);
+      btnChoose.removeEventListener('click', onChoose);
+      btnFrom.removeEventListener('click', onFrom);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+    }
+    function onActive() {
+      if (btnActive.disabled) return;
+      const folderId = activeFolder?.id || '';
+      close({ mode: 'active', folderId, makeActive: false });
+    }
+    function onChoose() {
+      const folderId = folderEl.value || '';
+      if (!folderId) return;
+      close({ mode: 'choose', folderId, makeActive: !!makeActChoose?.checked });
+    }
+    function onFrom() {
+      close({ mode: 'fromFile', makeActive: !!makeActFrom?.checked });
+    }
+    cancel.addEventListener('click', onCancel);
+    btnActive.addEventListener('click', onActive);
+    btnChoose.addEventListener('click', onChoose);
+    btnFrom.addEventListener('click', onFrom);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
 }
 
 async function chooseSeparateExportMode() {
