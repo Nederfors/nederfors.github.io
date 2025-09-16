@@ -1495,7 +1495,7 @@
 "namn": "Gravskänk",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "Gravskänk är en kolsvart tinktur som känns tyngre än sitt eget glas. Dess innehåll kan väcka den döde till liv, men endast om kroppen inte förmultnat under längre tid än tre dygn. När vätskan används avgörs ödet med ett slag 1T20: vid resultat 1–15 reser sig den döde åter, men drabbas genast 1T6 + 4 permanent korruption som en brännmärkning från det mörka djup som slitit honom tillbaka. Vid resultat 16–20 sker i stället en snabb och grotesk förvridning av köttet, en förstyggelse som lämnar inget kvar av den människa som en gång var. Den som för flaskan till användning slipper inte undan dess förbannelse, utan drabbas själv av 1T4 permanent korruption."
+"Mästare": "Gravskänk är en kolsvart tinktur som känns tyngre än sitt eget glas. Dess innehåll kan väcka den döde till liv, men endast om kroppen inte förmultnat under längre tid än tre dygn. När vätskan används avgörs ödet med ett slag 1T20: vid resultat 1–15 reser sig den döde åter, men drabbas genast 1T6 + 4 permanent korruption som en brännmärkning från det mörka djup som slitit hen tillbaka. Vid resultat 16–20 sker i stället en snabb och grotesk förvridning av köttet, en förstyggelse som lämnar inget kvar av den människa som en gång var. Den som för flaskan till användning slipper inte undan dess förbannelse, utan drabbas själv av 1T4 permanent korruption."
 },
 "grundpris": { "daler": 24, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
