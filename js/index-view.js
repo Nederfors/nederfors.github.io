@@ -1104,7 +1104,7 @@ function initIndex() {
               const itemLevel = LEVEL_IDX[lvlName] || 0;
               let hasYrke = reqYrken.some(req =>
                 list.some(it =>
-                  isYrke(it) && explodeTags([it.namn]).includes(req)
+                  (isYrke(it) || isElityrke(it)) && explodeTags([it.namn]).includes(req)
                 )
               );
               if (!hasYrke && artLevel >= itemLevel) {
