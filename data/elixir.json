@@ -1179,5 +1179,345 @@
     "stat": {
       "vikt": 1
     }
-  }
+  },
+  {
+"id": "elix60",
+"namn": "Läderlappsbrygd",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En tunn, klar brygd som doftar av fuktig sten. När den dricks skärps hörseln bortom det naturliga och rollpersonen kan uppfatta samtal och ljud från en känd eller okänd plats inom trettio meter som om hen stod där. Effekten varar i 1T6 + 3 rundor."
+},
+"grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix61",
+"namn": "Örnsynstinktur",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "Ett mörktonat destillat i svart glas, använt av spejare och fältskådare. Efter intag kan rollpersonen se detaljer upp till hundra meter bort som om hen stod på platsen. Effekten varar i 1T6 + 3 rundor."
+},
+"grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix62",
+"namn": "Häxblocka",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "Detta gift sprids ofta i hemlighet tillsammans med böcker och ritualredskap. När det tränger in i en mystikers blod genom ett vapenangrepp eller liknande, och misslyckas med [Stark mot Listig], fungerar det som ett anfallsgift. Offret drabbas då av en olycklig försegling: nästa försök att kalla på en ritual eller mystisk kraft slår automatiskt fel."
+},
+"grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix63",
+"namn": "Gryningsblod",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En rödskimrande dryck som sprider värme genom kroppen. Under 1T6 rundor får bäraren +1 till ett valt karaktärsdrag och kan trotsa trötthet utan bieffekter. När drycken dricks får rollpersonen omedelbart temporär korruption motsvarande antalet rundor effekten varar +1."
+},
+"grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix64",
+"namn": "Gryningsblod",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "Den kraftfullare varianten Gryningsblod sprakar på tungan och fyller kropp eller sinne med styrka. Under 1T6 rundor får bäraren +2 till ett valt karaktärsdrag. När drycken dricks får rollpersonen omedelbart temporär korruption motsvarande antalet rundor effekten varar +1."
+},
+"grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix65",
+"namn": "Gryningsblod",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "En djupt rubinröd essens som skänker makt till ett högt pris. Under 1T6 rundor får bäraren +3 till ett valt karaktärsdrag. När drycken dricks får rollpersonen omedelbart temporär korruption motsvarande antalet rundor effekten varar +3."
+},
+"grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix66",
+"namn": "Essensdrapa",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En elementbunden brygd som bär doft av aska, salt, jord eller ozon beroende på valet vid bryggningen. Den ger skydd mot det valda elementet och mot elementarskada ger den 1T4 i Skydd mot valt element till scenens slut; elementet väljs vid brygd."
+},
+"grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix67",
+"namn": "Essensdrapa",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En mer koncentrerad variant som biter i gommen. Den skänker skydd mot det valda elementet och mot elementarskada ger den 1T6 i Skydd mot elementet till scenens slut; elementet väljs vid brygd."
+},
+"grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix68",
+"namn": "Dimhölje",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "En kall, pärlemorskimrande brygd som sprider en tunn dimma från huden. Den som dricker får Andeform (Novis) i 1T4 rundor och kan glida genom hinder och väggar, men varje dos kostar 1T6 temporär korruption."
+},
+"grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix69",
+"namn": "Virvelbrygd",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En pepprig vätska som får blodet att rusa. Nästa gång rollpersonen tar en förflyttningshandling fördubblas sträckan som tillryggaläggs."
+},
+"grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix70",
+"namn": "Soldroppar",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "Klara, honungsgula droppar som sprider värme från magen. När de intas läker de 1T6 Tålighet och stillar pulsen nog för att fortsätta striden."
+},
+"grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix71",
+"namn": "Stridsmod",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En kryddig brygd som skärper sinnen och grepp. Under hela scenen får rollpersonen +1 på Försvar och anfall, men priset kommer efteråt: resten av dagen drabbas hen av utmattning med –1 på alla attribut."
+},
+"grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix72",
+"namn": "Reningstinktur",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En helgande tinktur som luktar rökelse och järn. Den botar sjukdom och vansinne och bryter pågående mental påverkan av mystiska krafter, även sådana som härrör från ritualer."
+},
+"grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix73",
+"namn": "Viljesnara",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "En färglös dryck som lämnar nästan ingen smak. Den som dricker blir ovetande och medgörlig på ett sätt som hen annars inte hade varit; personen kan inte förmås skada sig själv eller andra, men kommer svara sanningsenligt på 1T6 frågor eller utföra 1T6 aktiva handlingar. Efteråt är personen förvirrad men anar inte att hen blivit förgiftad."
+},
+"grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix74",
+"namn": "Pysslingblod",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En prilligt söt brygd som får världen att växa. Drickaren krymper till halv storlek under en scen, får +5 Diskret och +5 Kvick, men –5 Stark vilket även påverkar Tålighet. Förvandlingen river i själen och ger 1T4 temporär korruption."
+},
+"grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix75",
+"namn": "Urdoras Vingtinktur",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En svartviolett tinktur där små gnistor dansar. Rollpersonen leviterar upp till tio meters höjd i 1T6 rundor och kan förflytta sig långsamt horisontellt som en handling, men priset är 1T4 temporär korruption."
+},
+"grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix76",
+"namn": "Skuggslöja",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En sval, nästan smaklös vätska som dämpar ljuset omkring bäraren. Drickaren blir osynlig i 1T6 + 3 rundor; att upptäcka hen kräver [Vaksam] –8. Effekten bryts när bäraren utför en annan handling än en förflyttning."
+},
+"grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix77",
+"namn": "Hastbrygd",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "Ett kvicksilverlikt elixir som bultar under tungan. Drickaren får en extra aktiv handling var och en av de kommande två rundorna och rör sig som om tiden själv sackade efter."
+},
+"grundpris": { "daler": 16, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix78",
+"namn": "Reningsdroppar",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "Klara droppar som blandas i vatten och får orenheter att falla som slagg. De renar och försötar upp till en mindre cistern eller brunn – ungefär tiotusen liter – och det kan ta upp till en timme innan effekten är fullbordad."
+},
+"grundpris": { "daler": 1, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix79",
+"namn": "Ungdomsvatten",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En mild brygd som återger blicken lyster. Den låter rollpersonen ignorera nackdelen 'Åldrad' under en hel dag, som om tiden vände blicken bort för en stund."
+},
+"grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix80",
+"namn": "Villodryck",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En förrädiskt behaglig dryck som alltid verkar göra gott – i alla fall känns det så. Användaren tror och känner att effekten är mild och positiv, enligt alkemistens utsago, men i verkligheten drabbas hen av –1 Vaksam och –1 Listig till scenens slut."
+},
+"grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix81",
+"namn": "Gälvångs Destillat",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "Ett saltstarkt destillat som fyller lungorna med svalka. Drickaren kan andas under vatten i en timme per dos och röra sig som en född dykare. Varje dos ger även 1T4 korruption."
+},
+"grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix82",
+"namn": "Vindsjäl",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En karg, klar brygd som bränner som frost i bröstet. Den låter drickaren ignorera sömn, mat och törst i upp till sju dagar; när tiden är över måste all utebliven vila, dryck och näring tas igen, och det illa kvickt, annars dör personen omedelbart."
+},
+"grundpris": { "daler": 8, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix83",
+"namn": "Bergslem",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "En grå, seg massa som smakar sten. Den ger rollpersonen det monstruösa särdraget Väldig på novisnivå i 1T6 rundor; utrustningen växer med kroppen men själen knakar, vilket ger 1T8 temporär korruption."
+},
+"grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix84",
+"namn": "Grönsåpa",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En hal olja i lerkärl som luktar tall och mandel. Föremål som smörjs kan inte greppas eller omfamnas; rollpersoner kan glida ur rep, kedjor och nät, och mark som bestrukits tvingar varelser att klara Kvick –5 för att inte ramla till marken. Effekten varar i åtta timmar och en dos räcker till ungefär en kvadratmeter yta."
+},
+"grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix85",
+"namn": "Sekelolja",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "En sällsynt konserva som återställer tidens tand. På organiskt men icke-levande material som papper, läder, trä och död vävnad vrids tiden tillbaka en vecka per dos, dock aldrig till levande skick igen."
+},
+"grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix86",
+"namn": "Väderolja",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "En klar, kornig olja som doftar som efter en storm. Den ger total immunitet mot vädrets effekter i en dag: hetta, kyla, stormvindar och piskande regn blir som en mild bris."
+},
+"grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix87",
+"namn": "Likångor",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "En dödsstinkande parfym som endast kan förvaras i skört vulkanglas. När ångorna släpps lös påverkas alla varelser inom två förflyttningar som kan känna lukten. De måste genast slå [Stark mot Listig]. Den som misslyckas tvingas slå dödsslag varje runda tills helbrägdagörelse eller ett starkt motgift bryter effekten. Den som lyckas undviker den direkta faran, men så länge ångorna finns kvar måste ett nytt slag göras varje runda.\n\nÅngorna är lika farliga för alkemisten och dennes följe som för fiender. Att kasta vialen är möjligt men riskabelt – misslyckas kastet spricker flaskan i handen och stanken fastnar på alkemisten själv.\n\nLukten stannar kvar på platsen där den frigörs i en hel vecka och påverkar alla som vistas inom två förflyttningar, tills området renas med ett livselixir."
+},
+"grundpris": { "daler": 24, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix88",
+"namn": "Insektsvärn",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "En örtig, frisk parfym som sticker i nosen. Insektoida varelser, både naturliga och monstruösa, kan inte närma sig närmare än trettio meter så länge doften hänger kvar."
+},
+"grundpris": { "daler": 2, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix89",
+"namn": "Arkanstoft",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "Ett fint, skimrande pulver som fäster i sprickor och ornament. En nypa som förs mot ett föremål gnistrar i färger om det är magiskt (har mystiska kvaliteter) och kan till och med avslöja en artefakts funktioner."
+},
+"grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix90",
+"namn": "Töckengång",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Gesäll": "Ett kallt pulver som läggs på huden och aktiveras av svett. Rollpersonens kropp börjar osa en dimma som bara hen kan se igenom; avståndsanfall mot hen får en andra chans att misslyckas med Träffsäker. Effekten varar i 1T8 rundor."
+},
+"grundpris": { "daler": 6, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.75 }
+},
+{
+"id": "elix91",
+"namn": "Gravskänk",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Mästare": "Gravskänk är en kolsvart tinktur som känns tyngre än sitt eget glas. Dess innehåll kan väcka den döde till liv, men endast om kroppen inte förmultnat under längre tid än tre dygn. När vätskan används avgörs ödet med ett slag 1T20: vid resultat 1–15 reser sig den döde åter, men drabbas genast 1T6 + 4 permanent korruption som en brännmärkning från det mörka djup som slitit honom tillbaka. Vid resultat 16–20 sker i stället en snabb och grotesk förvridning av köttet, en förstyggelse som lämnar inget kvar av den människa som en gång var. Den som för flaskan till användning slipper inte undan dess förbannelse, utan drabbas själv av 1T4 permanent korruption."
+},
+"grundpris": { "daler": 24, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 1 }
+},
+{
+"id": "elix92",
+"namn": "Nattdroppar",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "Små, mörka ögondroppar som kyler till tårar. De ger rollpersonen total mörkersyn i 1T12 rundor, som om natten bar dagsljusets konturer."
+},
+"grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+},
+{
+"id": "elix93",
+"namn": "Varselljus",
+"taggar": { "typ": ["Elixir"] },
+"nivåer": {
+"Novis": "Ett vaxljus med blågrön låga som avger en svag kyla medan det brinner. Dess sken gör osynliga ting synliga i rummet under scenen."
+},
+"grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
+"stat": { "vikt": 0.5 }
+}
 ]
