@@ -54,6 +54,8 @@ function initIndex() {
     const primary = types[0] ? String(types[0]).toLowerCase() : '';
     return ['artefakt','kuriositet','skatt'].includes(primary);
   };
+  const hasArtifactTag = p => (p.taggar?.typ || [])
+    .some(t => String(t || '').trim().toLowerCase() === 'artefakt');
 
   const FALT_BUNDLE = ['di10','di11','di12','di13','di14','di15'];
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
@@ -1182,15 +1184,23 @@ function initIndex() {
               }
             }
             invUtil.saveInventory(inv); invUtil.renderInventory();
-            if (isHidden(p)) {
+            const hidden = isHidden(p);
+            const artifactTagged = hasArtifactTag(p);
+            let addedToList = false;
+            if (hidden || artifactTagged) {
               const list = storeHelper.getCurrentList(store);
-              if ((p.taggar?.typ || []).includes('Artefakt') && !list.some(x => x.id === p.id && x.noInv)) {
+              if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
                 list.push({ ...p, noInv: true });
                 storeHelper.setCurrentList(store, list);
+                addedToList = true;
               }
-              if (window.updateXP) updateXP();
-              if (window.renderTraits) renderTraits();
-              storeHelper.addRevealedArtifact(store, p.id);
+              if (addedToList || hidden) {
+                if (window.updateXP) updateXP();
+                if (window.renderTraits) renderTraits();
+              }
+              if (hidden && p.id) {
+                storeHelper.addRevealedArtifact(store, p.id);
+              }
             }
             renderList(filtered());
             const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
@@ -1454,14 +1464,16 @@ function initIndex() {
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
-        if (isHidden(p)) {
+        const hidden = isHidden(p);
+        const artifactTagged = hasArtifactTag(p);
+        if (hidden || artifactTagged) {
           const still = inv.some(r => r.id === p.id);
           if (!still) {
             let list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
             storeHelper.setCurrentList(store, list);
             if (window.updateXP) updateXP();
             if (window.renderTraits) renderTraits();
-            storeHelper.removeRevealedArtifact(store, p.id);
+            if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
           }
         }
         renderList(filtered());
@@ -1559,7 +1571,9 @@ function initIndex() {
           invUtil.removeWellEquippedItems(inv);
           invUtil.saveInventory(inv); invUtil.renderInventory();
         }
-        if (isHidden(p)) {
+        const hidden = isHidden(p);
+        const artifactTagged = hasArtifactTag(p);
+        if (hidden || artifactTagged) {
           const inv = storeHelper.getInventory(store);
           const removeItem = arr => {
             for (let i = arr.length - 1; i >= 0; i--) {
@@ -1569,7 +1583,7 @@ function initIndex() {
           };
           removeItem(inv);
           invUtil.saveInventory(inv); invUtil.renderInventory();
-          storeHelper.removeRevealedArtifact(store, p.id);
+          if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
         }
       }
     }

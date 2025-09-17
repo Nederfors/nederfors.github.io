@@ -200,12 +200,14 @@ function initCharacter() {
   }
 
   const charCategory = (entry, { allowFallback = true } = {}) => {
-    const types = Array.isArray(entry?.taggar?.typ)
+    const rawTypes = Array.isArray(entry?.taggar?.typ)
       ? entry.taggar.typ
       : [];
-    const hasArtifact = types.some(t => String(t).trim().toLowerCase() === 'artefakt');
-    if (hasArtifact) return 'Artefakt';
-    if (types.length) return types[0];
+    const normalized = rawTypes
+      .map(t => typeof t === 'string' ? t.trim() : '')
+      .filter(Boolean);
+    const primary = normalized.find(t => t.toLowerCase() !== 'hemmagjort') || normalized[0];
+    if (primary) return primary;
     return allowFallback ? 'Övrigt' : undefined;
   };
 

@@ -56,6 +56,15 @@
     return ['artefakt','kuriositet','skatt'].includes(primary);
   }
 
+  function hasArtifactTag(tagTyp) {
+    return (Array.isArray(tagTyp) ? tagTyp : [])
+      .some(t => String(t || '').trim().toLowerCase() === 'artefakt');
+  }
+
+  function needsArtifactListSync(tagTyp) {
+    return isHiddenType(tagTyp) || hasArtifactTag(tagTyp);
+  }
+
   function sortInvEntry(a, b) {
     const entA = getEntry(a.id || a.name);
     const entB = getEntry(b.id || b.name);
@@ -379,13 +388,24 @@
         const db = window.DB || [];
         const wSet = new Set();
         const rSet = new Set();
+        const skip = new Set(['artefakt','lägre artefakt','kuriositet','skatt','hemmagjort']);
         for (const e of db) {
           const typs = (e.taggar?.typ) || [];
           if (typs.includes('Vapen')) {
-            for (const t of typs) if (t !== 'Vapen' && t !== 'Sköld') wSet.add(t);
+            for (const t of typs) {
+              if (t === 'Vapen' || t === 'Sköld') continue;
+              const key = typeof t === 'string' ? t.trim().toLowerCase() : '';
+              if (!key || skip.has(key)) continue;
+              wSet.add(t);
+            }
           }
           if (typs.includes('Rustning')) {
-            for (const t of typs) if (t !== 'Rustning') rSet.add(t);
+            for (const t of typs) {
+              if (t === 'Rustning') continue;
+              const key = typeof t === 'string' ? t.trim().toLowerCase() : '';
+              if (!key || skip.has(key)) continue;
+              rSet.add(t);
+            }
           }
         }
         return {
@@ -2328,14 +2348,15 @@ ${moneyRow}
             parentArr.splice(idx, 1);
             saveInventory(inv);
             renderInventory();
-            if (isHiddenType(tagTyp)) {
+            const hidden = isHiddenType(tagTyp);
+            if (needsArtifactListSync(tagTyp)) {
               const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
               if (!still) {
                 let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
                 storeHelper.setCurrentList(store, list);
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                storeHelper.removeRevealedArtifact(store, row.id || row.name);
+                if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
               }
             }
           }
@@ -2410,7 +2431,9 @@ ${moneyRow}
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
               renderInventory();
-              if (isHiddenType(tagTyp)) {
+              const hidden = isHiddenType(tagTyp);
+              let addedToList = false;
+              if (needsArtifactListSync(tagTyp)) {
                 const list = storeHelper.getCurrentList(store);
                 if ((entry.taggar?.typ || []).includes('Artefakt')) {
                   if (!entry.id && storeHelper.genId) {
@@ -2434,11 +2457,16 @@ ${moneyRow}
                   if (entry.id && !list.some(x => x.id === entry.id && x.noInv)) {
                     list.push({ ...entry, noInv: true });
                     storeHelper.setCurrentList(store, list);
+                    addedToList = true;
                   }
                 }
+              }
+              if ((addedToList || hidden)) {
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                if (entry.id) storeHelper.addRevealedArtifact(store, entry.id);
+              }
+              if (hidden && entry.id) {
+                storeHelper.addRevealedArtifact(store, entry.id);
               }
               const selector = !Number.isNaN(parentIdx)
                 ? `li[data-name="${CSS.escape(entry.namn)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
@@ -2498,14 +2526,15 @@ ${moneyRow}
           const parentIdx = Number(li.dataset.parent);
           saveInventory(inv);
           renderInventory();
-          if (isHiddenType(tagTyp)) {
+          const hidden = isHiddenType(tagTyp);
+          if (needsArtifactListSync(tagTyp)) {
             const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
             if (!still) {
               let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
               storeHelper.setCurrentList(store, list);
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
-              storeHelper.removeRevealedArtifact(store, row.id || row.name);
+              if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
             }
           }
           const selector = !Number.isNaN(parentIdx)
