@@ -296,8 +296,10 @@
     }).join('');
 
     /* öppna */
+    const popInner = pop.querySelector('.popup-inner');
+
     pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    if (popInner) popInner.scrollTop = 0;
 
     /* local helpers */
     const close = () => {
@@ -326,21 +328,50 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function openCustomPopup(callback) {
+  function openCustomPopup(arg1, arg2) {
+    let existing = null;
+    let callback = typeof arg1 === 'function' ? arg1 : arg2;
+    if (typeof arg1 === 'object' && arg1) {
+      existing = arg1;
+    }
+    if (typeof callback !== 'function') callback = () => {};
+
     const root = getToolbarRoot();
     if (!root) return;
-    const pop   = root.getElementById('customPopup');
-    const name  = root.getElementById('customName');
-    const type  = root.getElementById('customType');
-    const wIn   = root.getElementById('customWeight');
-    const effBox= root.getElementById('customArtifactEffect');
-    const effSel= effBox ? effBox.querySelector('select') : null;
-    const dIn   = root.getElementById('customDaler');
-    const sIn   = root.getElementById('customSkilling');
-    const oIn   = root.getElementById('customOrtegar');
-    const desc  = root.getElementById('customDesc');
-    const add   = root.getElementById('customAdd');
-    const cancel= root.getElementById('customCancel');
+    const pop    = root.getElementById('customPopup');
+    const popInner = pop ? pop.querySelector('.popup-inner') : null;
+    const title  = root.getElementById('customTitle');
+    const name   = root.getElementById('customName');
+    const typeSel= root.getElementById('customType');
+    const typeAdd= root.getElementById('customTypeAdd');
+    const typeTags = root.getElementById('customTypeTags');
+    const wIn    = root.getElementById('customWeight');
+    const effBox = root.getElementById('customArtifactEffect');
+    const effSel = effBox ? effBox.querySelector('select') : null;
+    const weaponBox = root.getElementById('customWeaponFields');
+    const vehicleBox = root.getElementById('customVehicleFields');
+    const armorBox  = root.getElementById('customArmorFields');
+    const levelBox = root.getElementById('customLevelFields');
+    const lvlNovis = root.getElementById('customLevelNovis');
+    const lvlGes   = root.getElementById('customLevelGesall');
+    const lvlMas   = root.getElementById('customLevelMastare');
+    const lvlMode  = root.getElementById('customLevelMode');
+    const powerBox = root.getElementById('customPowerFields');
+    const powerList = root.getElementById('customPowerList');
+    const powerAdd  = root.getElementById('customPowerAdd');
+    const boundBox  = root.getElementById('customBoundFields');
+    const boundSel  = root.getElementById('customBoundType');
+    const boundLbl  = root.getElementById('customBoundLabel');
+    const dmgIn  = root.getElementById('customDamage');
+    const capIn  = root.getElementById('customCapacity');
+    const protIn = root.getElementById('customProtection');
+    const restIn = root.getElementById('customRestriction');
+    const dIn    = root.getElementById('customDaler');
+    const sIn    = root.getElementById('customSkilling');
+    const oIn    = root.getElementById('customOrtegar');
+    const desc   = root.getElementById('customDesc');
+    const add    = root.getElementById('customAdd');
+    const cancel = root.getElementById('customCancel');
 
     // Hämta vapentyper och rustningssubtyper från DB (fallback till hårdkodade)
     const deriveSubtypes = () => {
@@ -370,79 +401,367 @@
     };
     const SUB = deriveSubtypes();
 
-    // Alla valbara typer för custom: basutrustning + vapen- och rustningssubtyper
     const allTypes = Array.from(new Set([
+      'Hemmagjort',
       ...EQUIP,
       ...SUB.weapon,
       ...SUB.armor
     ]));
-
     const equipOptions = allTypes
       .slice()
       .sort((a, b) => catName(a).localeCompare(catName(b)))
       .map(t => `<option value="${t}">${catName(t)}</option>`)
       .join('');
-    type.innerHTML = equipOptions;
+    typeSel.innerHTML = equipOptions;
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-    if (effSel) effSel.value = 'corruption';
-    if(effBox) effBox.style.display = type.value === 'Artefakt' ? '' : 'none';
+    const selectedTypes = new Set(['Hemmagjort']);
 
-    const onType = () => {
-      if (effBox) effBox.style.display = type.value === 'Artefakt' ? '' : 'none';
+    const ensureBaseTypes = (val) => {
+      if (SUB.weapon.includes(val)) selectedTypes.add('Vapen');
+      if (SUB.armor.includes(val)) selectedTypes.add('Rustning');
     };
-    type.addEventListener('change', onType);
 
-    const close = () => {
+    const addType = (raw) => {
+      const val = String(raw || '').trim();
+      if (!val) return;
+      if (val === 'Hemmagjort') {
+        selectedTypes.add('Hemmagjort');
+        return;
+      }
+      ensureBaseTypes(val);
+      selectedTypes.add(val);
+    };
+
+    const removeType = (raw) => {
+      const val = String(raw || '').trim();
+      if (!val || val === 'Hemmagjort') return;
+      selectedTypes.delete(val);
+    };
+
+    const orderedTypes = () => {
+      const arr = Array.from(selectedTypes).filter(Boolean);
+      if (!arr.includes('Hemmagjort')) arr.unshift('Hemmagjort');
+      const rest = arr.filter(t => t !== 'Hemmagjort');
+      return ['Hemmagjort', ...rest];
+    };
+
+    const renderTypeTags = () => {
+      if (!typeTags) return;
+      const tags = orderedTypes().map(t => {
+        const label = catName(t);
+        if (t === 'Hemmagjort') {
+          return `<span class="tag">${label}</span>`;
+        }
+        return `<span class="tag removable" data-type="${t}">${label} ✕</span>`;
+      }).join('');
+      typeTags.innerHTML = tags;
+    };
+
+    const hasType = t => orderedTypes().includes(t);
+    const getLevelMode = () => {
+      const val = lvlMode?.value || 'novis';
+      return ['novis', 'gesall', 'mastare', 'triple'].includes(val) ? val : 'novis';
+    };
+
+    const toggleLevelField = (el, show) => {
+      if (!el) return;
+      el.style.display = show ? '' : 'none';
+    };
+
+    const applyLevelMode = () => {
+      const mode = getLevelMode();
+      const showNovis = mode === 'novis' || mode === 'triple';
+      const showGes   = mode === 'gesall' || mode === 'triple';
+      const showMas   = mode === 'mastare' || mode === 'triple';
+      toggleLevelField(lvlNovis, showNovis);
+      toggleLevelField(lvlGes, showGes);
+      toggleLevelField(lvlMas, showMas);
+    };
+
+    const updateTypeFields = () => {
+      const selected = orderedTypes();
+      const hasArtifact = selected.includes('Artefakt');
+      const hasWeapon = selected.includes('Vapen') || selected.includes('Sköld') || selected.includes('Pil/Lod') || selected.some(t => SUB.weapon.includes(t));
+      const hasArmor = selected.includes('Rustning') || selected.some(t => SUB.armor.includes(t));
+      const hasVehicle = selected.includes('F\u00e4rdmedel');
+      const hasLevels = selected.includes('Elixir') || selected.includes('L\u00e4gre Artefakt') || selected.includes('F\u00e4lla');
+      const hasPowers = selected.includes('Artefakt');
+      const hasBound = selected.includes('L\u00e4gre Artefakt');
+      if (effBox) effBox.style.display = hasArtifact ? '' : 'none';
+      if (weaponBox) weaponBox.style.display = hasWeapon ? '' : 'none';
+      if (vehicleBox) vehicleBox.style.display = hasVehicle ? '' : 'none';
+      if (armorBox) armorBox.style.display = hasArmor ? '' : 'none';
+      if (levelBox) {
+        levelBox.style.display = hasLevels ? '' : 'none';
+        if (hasLevels) applyLevelMode();
+      }
+      if (powerBox) powerBox.style.display = hasPowers ? '' : 'none';
+      if (boundBox) {
+        boundBox.style.display = hasBound ? '' : 'none';
+        if (!hasBound) {
+          if (boundSel) boundSel.value = '';
+          if (boundLbl) boundLbl.value = '';
+        }
+      }
+      renderTypeTags();
+    };
+
+    const resetFields = () => {
+      name.value = '';
+      wIn.value = '';
+      if (wIn) {
+        wIn.readOnly = false;
+        wIn.title = '';
+      }
+      dIn.value = sIn.value = oIn.value = '';
+      desc.value = '';
+      if (effSel) effSel.value = '';
+      if (dmgIn) dmgIn.value = '';
+      if (lvlNovis) lvlNovis.value = '';
+      if (lvlGes)   lvlGes.value = '';
+      if (lvlMas)   lvlMas.value = '';
+      if (lvlMode) lvlMode.value = 'novis';
+      if (powerList) powerList.innerHTML = '';
+      if (capIn) capIn.value = '';
+      if (protIn) protIn.value = '';
+      if (restIn) restIn.value = '';
+      if (boundSel) boundSel.value = '';
+      if (boundLbl) boundLbl.value = '';
+      selectedTypes.clear();
+      selectedTypes.add('Hemmagjort');
+      updateTypeFields();
+      applyLevelMode();
+    };
+
+    resetFields();
+
+    if (existing) {
+      if (title) title.textContent = 'Redigera föremål';
+      add.textContent = 'Uppdatera';
+      name.value = existing.namn || '';
+      const price = existing.grundpris || {};
+      dIn.value = price.daler ?? '';
+      sIn.value = price.skilling ?? '';
+      oIn.value = price['örtegar'] ?? '';
+      wIn.value = existing.vikt ?? '';
+      desc.value = existing.beskrivning || '';
+      if (effSel) effSel.value = existing.artifactEffect || '';
+      if (Array.isArray(existing.taggar?.typ)) {
+        existing.taggar.typ.forEach(t => addType(t));
+      }
+      if (existing.niv\u00e5er) {
+        const keys = Object.keys(existing.niv\u00e5er || {});
+        const std = ['Novis','Ges\u00e4ll','M\u00e4stare'];
+        const recognized = keys.filter(k => std.includes(k));
+        if (recognized.length) {
+          if (lvlNovis) lvlNovis.value = existing.niv\u00e5er['Novis'] || '';
+          if (lvlGes)   lvlGes.value   = existing.niv\u00e5er['Ges\u00e4ll'] || '';
+          if (lvlMas)   lvlMas.value   = existing.niv\u00e5er['M\u00e4stare'] || '';
+          if (lvlMode) {
+            if (recognized.length === 1) {
+              const key = recognized[0];
+              if (key === 'Novis') lvlMode.value = 'novis';
+              else if (key === 'Ges\u00e4ll') lvlMode.value = 'gesall';
+              else if (key === 'M\u00e4stare') lvlMode.value = 'mastare';
+            } else {
+              lvlMode.value = 'triple';
+            }
+          }
+          if (levelBox) levelBox.style.display = '';
+          applyLevelMode();
+        } else if (powerBox && powerList) {
+          powerList.innerHTML = '';
+          keys.forEach(k => {
+            const row = document.createElement('div');
+            row.className = 'power-row';
+            row.innerHTML = `
+              <input class=\"power-name\" placeholder=\"Förmågans namn\" value=\"${k.replace(/\"/g,'&quot;')}\">\n              <textarea class=\"power-desc\" placeholder=\"Beskrivning\">${existing.niv\u00e5er[k] ? String(existing.niv\u00e5er[k]) : ''}</textarea>\n              <button class=\"char-btn danger power-del\" type=\"button\">✕</button>
+            `;
+            powerList.appendChild(row);
+          row.querySelector('.power-del').addEventListener('click', ev => {
+            ev.preventDefault();
+            ev.stopPropagation();
+            row.remove();
+          });
+        });
+        powerBox.style.display = '';
+      }
+      }
+      if (existing.stat) {
+        if (dmgIn && existing.stat.skada !== undefined) dmgIn.value = existing.stat.skada;
+        if (capIn && existing.stat['b\u00e4rkapacitet'] !== undefined) capIn.value = existing.stat['b\u00e4rkapacitet'];
+        if (protIn && existing.stat.skydd !== undefined) protIn.value = existing.stat.skydd;
+        if (restIn && existing.stat['begränsning'] !== undefined) {
+          restIn.value = existing.stat['begränsning'];
+        }
+      }
+      if (boundSel) boundSel.value = (existing.bound === 'kraft' || existing.bound === 'ritual') ? existing.bound : '';
+      if (boundLbl) boundLbl.value = existing.boundLabel || '';
+    } else {
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
+      if (effSel) effSel.value = 'corruption';
+    }
+
+    updateTypeFields();
+    if (lvlMode) lvlMode.addEventListener('change', applyLevelMode);
+
+    const onAddType = e => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      addType(typeSel.value);
+      updateTypeFields();
+    };
+
+    const onTagsClick = e => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const tag = e.target.closest('.tag.removable');
+      if (!tag) return;
+      const t = tag.dataset.type;
+      removeType(t);
+      updateTypeFields();
+    };
+
+    const onAdd = () => {
+      const nameVal = name.value.trim();
+      const types = orderedTypes();
+      const hasWeapon = types.includes('Vapen') || types.includes('Sköld') || types.includes('Pil/Lod') || types.some(t => SUB.weapon.includes(t));
+      const hasArmor = types.includes('Rustning') || types.some(t => SUB.armor.includes(t));
+      const hasVehicle = types.includes('F\u00e4rdmedel');
+      const hasBound = types.includes('L\u00e4gre Artefakt');
+      const entry = {
+        id: existing?.id || (storeHelper.genId ? storeHelper.genId() : Date.now().toString(36) + Math.random().toString(36).slice(2)),
+        namn: nameVal,
+        taggar: { typ: types },
+        grundpris: {
+          daler: Math.max(0, Number(dIn.value) || 0),
+          skilling: Math.max(0, Number(sIn.value) || 0),
+          'örtegar': Math.max(0, Number(oIn.value) || 0)
+        },
+        beskrivning: desc.value.trim(),
+        artifactEffect: (effSel && types.includes('Artefakt')) ? effSel.value : ''
+      };
+      entry.vikt = Math.max(0, Number(wIn.value) || 0);
+      const stat = {};
+      if (hasWeapon && dmgIn) {
+        const dmgVal = dmgIn.value.trim();
+        if (dmgVal) stat.skada = dmgVal;
+      }
+      if (hasVehicle && capIn) {
+        const capVal = Number(capIn.value);
+        if (Number.isFinite(capVal) && capVal > 0) stat['b\u00e4rkapacitet'] = Math.floor(capVal);
+      }
+      if (hasArmor && protIn) {
+        const protVal = protIn.value.trim();
+        if (protVal) stat.skydd = protVal;
+      }
+      if (restIn && restIn.value !== '') {
+        const restVal = Number(restIn.value);
+        if (Number.isFinite(restVal)) stat['begränsning'] = restVal;
+      }
+      if (Object.keys(stat).length) entry.stat = stat;
+
+      // Spara nivåer om angivna
+      const niv = {};
+      if (levelBox && levelBox.style.display !== 'none') {
+        const mode = getLevelMode();
+        const novisTxt = (lvlNovis?.value || '').trim();
+        const gesTxt   = (lvlGes?.value   || '').trim();
+        const masTxt   = (lvlMas?.value   || '').trim();
+        if (mode === 'triple') {
+          if (novisTxt) niv['Novis'] = novisTxt;
+          if (gesTxt)   niv['Ges\u00e4ll'] = gesTxt;
+          if (masTxt)   niv['M\u00e4stare'] = masTxt;
+        } else if (mode === 'novis') {
+          if (novisTxt) niv['Novis'] = novisTxt;
+        } else if (mode === 'gesall') {
+          if (gesTxt) niv['Ges\u00e4ll'] = gesTxt;
+        } else if (mode === 'mastare') {
+          if (masTxt) niv['M\u00e4stare'] = masTxt;
+        }
+      }
+      if (powerBox && powerBox.style.display !== 'none' && powerList) {
+        [...powerList.querySelectorAll('.power-row')].forEach(r => {
+          const nm = r.querySelector('.power-name')?.value?.trim();
+          const ds = r.querySelector('.power-desc')?.value?.trim();
+          if (nm && ds) niv[nm] = ds;
+        });
+      }
+      if (Object.keys(niv).length) entry.nivåer = niv; else delete entry.nivåer;
+
+      if (hasBound && boundSel) {
+        const boundType = boundSel.value === 'kraft' || boundSel.value === 'ritual' ? boundSel.value : '';
+        if (boundType) {
+          entry.bound = boundType;
+          const rawLabel = (boundLbl?.value || '').trim();
+          entry.boundLabel = rawLabel || (boundType === 'kraft' ? 'Formel' : 'Ritual');
+        }
+      }
+
+      close();
+      callback(entry);
+    };
+
+    const onCancel = () => {
+      close();
+      callback(null);
+    };
+
+    const onOutside = e => {
+      if (!popInner) return;
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : e.path;
+      if (Array.isArray(path) && path.includes(popInner)) return;
+      if (popInner.contains(e.target)) return;
+      close();
+      callback(null);
+    };
+
+    function close() {
       pop.classList.remove('open');
       add.removeEventListener('click', onAdd);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
-      name.value = '';
-      dIn.value = sIn.value = oIn.value = '';
-      wIn.value = '';
-      desc.value = '';
-      if (effSel) effSel.value = 'corruption';
+      if (typeAdd) typeAdd.removeEventListener('click', onAddType);
+      if (typeTags) typeTags.removeEventListener('click', onTagsClick);
+      if (powerAdd) powerAdd.removeEventListener('click', onAddPower);
+      if (lvlMode) lvlMode.removeEventListener('change', applyLevelMode);
+      resetFields();
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
       if (effBox) effBox.style.display = 'none';
-      type.removeEventListener('change', onType);
-    };
-    const onAdd = () => {
-      // Om användaren väljer en specifik vapentyp eller rustningssubtyp,
-      // lägg automatiskt till primärtagn "Vapen" respektive "Rustning".
-      const tVal = (type.value || '').trim();
-      const isWeaponSub = SUB.weapon.includes(tVal);
-      const isArmorSub  = SUB.armor.includes(tVal);
-      const typTags = isWeaponSub ? ['Vapen', tVal]
-                    : isArmorSub  ? ['Rustning', tVal]
-                    : [tVal];
-      const entry = {
-        id: storeHelper.genId ? storeHelper.genId() : Date.now().toString(36) + Math.random().toString(36).slice(2),
-        namn: name.value.trim(),
-        taggar: { typ: typTags },
-        vikt: Number(wIn.value)||0,
-        grundpris: {
-          daler: Math.max(0, Number(dIn.value)||0),
-          skilling: Math.max(0, Number(sIn.value)||0),
-          'örtegar': Math.max(0, Number(oIn.value)||0)
-        },
-        beskrivning: desc.value.trim(),
-        artifactEffect: effSel ? effSel.value : ''
-      };
-      close();
-      callback(entry);
-    };
-    const onCancel = () => { close(); callback(null); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)){
-        close();
-        callback(null);
-      }
-    };
+      if (weaponBox) weaponBox.style.display = 'none';
+      if (armorBox) armorBox.style.display = 'none';
+    }
 
+    pop.classList.add('open');
+    if (popInner) popInner.scrollTop = 0;
+    if (typeAdd) typeAdd.addEventListener('click', onAddType);
+    if (typeTags) typeTags.addEventListener('click', onTagsClick);
     add.addEventListener('click', onAdd);
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
+    const onAddPower = e => {
+      e?.preventDefault();
+      const row = document.createElement('div');
+      row.className = 'power-row';
+      row.innerHTML = `
+        <input class="power-name" placeholder="Förmågans namn">
+        <textarea class="power-desc" placeholder="Beskrivning"></textarea>
+        <button class="char-btn danger power-del" type="button">✕</button>
+      `;
+      powerList.appendChild(row);
+      row.querySelector('.power-del').addEventListener('click', ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        row.remove();
+      });
+    };
+    if (powerAdd) powerAdd.addEventListener('click', onAddPower);
   }
 
   function openMoneyPopup() {
@@ -1306,11 +1625,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const isArtifact = tagTyp.includes('Artefakt');
     const isLArtifact = tagTyp.includes('L\u00e4gre Artefakt');
     const freeCnt = Number(row.gratis || 0);
-    const rowLevel = row.nivå || (
-      ['Elixir','L\u00e4gre Artefakt','F\u00e4lla'].some(t => tagTyp.includes(t))
-        ? Object.keys(entry.nivåer || {}).find(l => l) || null
-        : null
-    );
+    const levelKeys = Object.keys(entry.nivåer || {});
+    const rowLevel = row.nivå || (levelKeys.length ? levelKeys[0] : null);
     let desc = '';
     if (!isArtifact || isLArtifact) {
       desc += abilityHtml(entry, rowLevel);
@@ -1576,6 +1892,7 @@ ${moneyRow}
           const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
 
           const isArtifact = tagTyp.includes('Artefakt');
+          const isCustom = tagTyp.includes('Hemmagjort');
 
           /* — knappar — */
           const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
@@ -1587,6 +1904,7 @@ ${moneyRow}
                <button data-act="sub" class="char-btn">–</button>
                <button data-act="add" class="char-btn">+</button>`;
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
+          const editBtn = isCustom ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
           const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
@@ -1639,6 +1957,7 @@ ${moneyRow}
                 const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+                const cEditBtn = ctagTyp.includes('Hemmagjort') ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
                 const cPath = `${realIdx}.${j}`;
                 const cTitle = nameMap.get(c) || c.name;
                 return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait?` data-trait="${c.trait}"`:''}${cDataLevel}>
@@ -1646,6 +1965,7 @@ ${moneyRow}
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
                     ${cBtnRow}
+                    ${cEditBtn}
                     ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
                     ${cFreeQBtn}
                     ${cToggleBtn}
@@ -1665,6 +1985,7 @@ ${moneyRow}
               </div>
               <div class="inv-controls">
                 ${btnRow}
+                ${editBtn}
                 ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
                 ${freeQBtn}
                 ${toggleBtn}
@@ -1735,7 +2056,18 @@ ${moneyRow}
         if (!entry) return;
         const list = storeHelper.getCustomEntries(store);
         list.push(entry);
-        storeHelper.setCustomEntries(store, list);
+        const result = storeHelper.setCustomEntries(store, list);
+        if (result && result.idMap) {
+          const mappedId = result.idMap.get(entry.id);
+          if (mappedId) entry.id = mappedId;
+        }
+        if (result && Array.isArray(result.entries)) {
+          const persisted = result.entries.find(e => e.id === entry.id);
+          if (persisted) {
+            entry.namn = persisted.namn;
+            entry.artifactEffect = persisted.artifactEffect;
+          }
+        }
         const inv = storeHelper.getInventory(store);
         inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
         saveInventory(inv);
@@ -1849,6 +2181,25 @@ ${moneyRow}
         return;
       }
 
+      // 2c) Klick på nivåtaggen: cykla mellan tillgängliga nivåer
+      const lvlTag = e.target.closest('.tag.level');
+      if (lvlTag) {
+        const li = lvlTag.closest('li');
+        const inv = storeHelper.getInventory(store);
+        const { row } = getRowInfo(inv, li);
+        if (!row) return;
+        const entry = getEntry(row.id || row.name);
+        const levels = Object.keys(entry.nivåer || {});
+        if (!levels.length) return;
+        const cur = row.nivå || '';
+        const idx = levels.indexOf(cur);
+        const next = idx === -1 ? levels[0] : (idx < levels.length - 1 ? levels[idx+1] : levels[0]);
+        row.nivå = next;
+        saveInventory(inv);
+        renderInventory();
+        return;
+      }
+
       // 3) Klick på knapp i inventarielistan
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
@@ -1857,6 +2208,28 @@ ${moneyRow}
       const li  = btn.closest('li');
       const inv = storeHelper.getInventory(store);
       const { row, parentArr, idx } = getRowInfo(inv, li);
+      if (act === 'editCustom') {
+        if (!row) return;
+        const entry = getEntry(row.id || row.name);
+        if (!entry || !(entry.taggar?.typ || []).includes('Hemmagjort')) return;
+        const customs = storeHelper.getCustomEntries(store);
+        const original = customs.find(c => c.id === entry.id)
+          || customs.find(c => c.namn === entry.namn);
+        if (!original) return;
+        openCustomPopup({ ...original }, updated => {
+          if (!updated) return;
+          const list = storeHelper.getCustomEntries(store);
+          const cIdx = list.findIndex(c => c.id === original.id);
+          if (cIdx < 0) return;
+          updated.id = updated.id || list[cIdx].id;
+          list[cIdx] = { ...list[cIdx], ...updated };
+          storeHelper.setCustomEntries(store, list);
+          renderInventory();
+          if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+          if (window.indexViewUpdate) window.indexViewUpdate();
+        });
+        return;
+      }
       if (act === 'vehicleLoad') {
         const entry = getEntry(row.id || row.name);
         if (entry?.id) openVehiclePopup(entry.id);
@@ -1997,12 +2370,21 @@ ${moneyRow}
                 const list = storeHelper.getCurrentList(store);
                 if ((entry.taggar?.typ || []).includes('Artefakt')) {
                   if (!entry.id && storeHelper.genId) {
-                    entry.id = storeHelper.genId();
+                    const provisionalId = storeHelper.genId();
+                    entry.id = provisionalId;
                     const customs = storeHelper.getCustomEntries(store);
                     const cIdx = customs.findIndex(c => c.namn === entry.namn && !c.id);
                     if (cIdx >= 0) {
-                      customs[cIdx].id = entry.id;
-                      storeHelper.setCustomEntries(store, customs);
+                      customs[cIdx].id = provisionalId;
+                      const result = storeHelper.setCustomEntries(store, customs);
+                      if (result && result.idMap) {
+                        const mapped = result.idMap.get(provisionalId);
+                        if (mapped) entry.id = mapped;
+                      }
+                      if (result && Array.isArray(result.entries)) {
+                        const persisted = result.entries.find(e => e.id === entry.id);
+                        if (persisted) entry.namn = persisted.namn;
+                      }
                     }
                   }
                   if (entry.id && !list.some(x => x.id === entry.id && x.noInv)) {

@@ -287,6 +287,18 @@ input, select, textarea {
   color: var(--txt);
   font-size: 1rem;
 }
+select option {
+  color: var(--bg);
+  background: #f4f4f4;
+}
+input[type=number] {
+  -moz-appearance: textfield;
+}
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
 input:focus, select:focus, textarea:focus {
   outline: none;
   border-color: var(--accent);
@@ -403,11 +415,11 @@ input:focus, select:focus, textarea:focus {
 /* Meta badges (P, V, level) */
 .meta-badges {
   display: inline-flex;
-  gap: .35rem;
+  gap: .3rem;
   align-items: center;
-  margin-right: auto; /* push buttons to the right */
-  flex: 1 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
+  align-self: flex-end;
 }
 .meta-badge {
   background: var(--border);
@@ -449,16 +461,64 @@ input:focus, select:focus, textarea:focus {
 .inv-controls {
   align-self: stretch;
   display: flex;
-  gap: .4rem;
-  flex-wrap: nowrap;
-  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: .35rem .45rem;
   align-items: flex-end;
   overflow: hidden;
 }
-.inv-controls button {
+.inv-controls-left {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .3rem;
+  align-items: flex-end;
+  align-content: flex-end;
+  min-width: 0;
+  flex: 1 1 260px;
+}
+.inv-controls-left:empty {
+  display: none;
+}
+.control-buttons {
+  display: flex;
+  gap: .35rem;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  margin-left: auto;
+}
+.inv-controls button,
+.control-buttons button {
   align-self: initial;
   flex: 0 0 auto;
   padding: .45rem .6rem;
+}
+.inv-controls .char-btn.add-btn,
+.control-buttons .char-btn.add-btn {
+  padding: .45rem .75rem;
+  white-space: nowrap;
+}
+
+.entry-tags {
+  --entry-tag-row: 1.35rem;
+  display: flex;
+  flex-flow: column wrap;
+  align-content: flex-start;
+  gap: .25rem .35rem;
+  max-height: calc(var(--entry-tag-row) * 2 + .25rem);
+  min-height: 0;
+}
+.entry-tags .tag,
+.card .tags .tag {
+  font-size: .78rem;
+  padding: .12rem .5rem;
+  border-radius: .5rem;
+  line-height: 1.25;
+}
+.entry-tags .tag {
+  white-space: nowrap;
+}
+.card .tags {
+  gap: .35rem;
 }
 
 .count-badge {
@@ -595,12 +655,12 @@ input:focus, select:focus, textarea:focus {
 select.level {
   align-self: flex-start;
   margin-top: .2rem;
-  padding: .3rem .6rem;
-  border-radius: .5rem;
+  padding: .55rem 1rem;
+  border-radius: .6rem;
   border: 1px solid var(--border);
   background: var(--bg);
   color: var(--txt);
-  font-size: .9rem;
+  font-size: 1rem;
 }
 
 /* ---------- Karaktärsdrag ---------- */
@@ -664,10 +724,18 @@ select.level {
   .trait       { padding: .55rem .45rem; }
   .trait-btn   { padding: .1rem .5rem; }
   .trait-value { font-size: 1.15rem; }
-  .inv-controls { gap: .25rem; flex-wrap: nowrap; }
+  .inv-controls { gap: .25rem; }
+  .inv-controls-left { gap: .25rem; }
+  .control-buttons { gap: .3rem; }
+  .control-buttons .char-btn,
   .inv-controls .char-btn {
     padding: .3rem .5rem;
     font-size: .9rem;
+  }
+  .entry-tags {
+    --entry-tag-row: 1.25rem;
+    gap: .2rem .28rem;
+    max-height: calc(var(--entry-tag-row) * 2 + .2rem);
   }
   .inv-buttons { gap: .6rem; }
   .header-actions {
@@ -1124,7 +1192,55 @@ select.level {
   gap: .8rem;
 }
 #customPopup.open .popup-inner { transform: translateY(0); }
-#customPopup .popup-inner button { width: 100%; }
+#customPopup .popup-inner > button { width: 100%; }
+#customPopup .popup-inner input,
+#customPopup .popup-inner select,
+#customPopup .popup-inner textarea {
+  width: 100%;
+}
+#customPopup .popup-inner .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: .5rem;
+  text-align: left;
+}
+#customPopup .popup-inner .custom-type-row,
+#customPopup .popup-inner .money-row {
+  display: flex;
+  gap: .6rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+#customPopup .popup-inner .custom-type-row select {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+#customPopup .popup-inner .money-row input {
+  flex: 1;
+  min-width: 0;
+}
+#customPopup .popup-inner .filter-group .char-btn {
+  align-self: flex-start;
+}
+#customPopup .popup-inner .custom-type-row .char-btn {
+  width: auto;
+  flex: 0 0 auto;
+  padding-top: .65rem;
+  padding-bottom: .65rem;
+  padding-left: 1rem;
+  padding-right: 1rem;
+  border: 1.5px solid transparent; /* match select height incl. border */
+  border-radius: .6rem;             /* match control rounding */
+}
+#customPopup .popup-inner #customTypeTags {
+  justify-content: flex-start;
+}
+#customPopup .popup-inner #customPowerList {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+  text-align: left;
+}
 
 /* ---------- Popup för pengar ---------- */
 #moneyPopup {
@@ -1991,6 +2107,8 @@ select.level {
   display: flex;
   align-items: center;
   gap: .3rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 #folderManagerPopup .popup-inner.folder-ui .menu-btn {
   background: transparent;
@@ -2017,6 +2135,13 @@ select.level {
 #folderManagerPopup .popup-inner.folder-ui .mini-btn.danger {
   background: var(--danger);
   color: #fff;
+}
+#folderManagerPopup .popup-inner.folder-ui .mini-btn[disabled],
+#folderManagerPopup .popup-inner.folder-ui .mini-btn:disabled {
+  opacity: .4;
+  cursor: default;
+  pointer-events: none;
+  transform: none;
 }
 
 #folderManagerPopup .popup-inner.folder-ui .folder-menu {

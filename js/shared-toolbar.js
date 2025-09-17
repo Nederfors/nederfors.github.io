@@ -440,10 +440,16 @@ class SharedToolbar extends HTMLElement {
       <!-- ---------- Popup Custom ---------- -->
       <div id="customPopup" class="popup popup-bottom">
         <div class="popup-inner">
-          <h3>Nytt föremål</h3>
+          <h3 id="customTitle">Nytt föremål</h3>
           <input id="customName" placeholder="Namn">
-          <select id="customType"></select>
-          <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt">
+          <div id="customTypeGroup" class="filter-group">
+            <label for="customType">Typ</label>
+            <div class="custom-type-row">
+              <select id="customType"></select>
+              <button id="customTypeAdd" class="char-btn" type="button">Lägg till typ</button>
+            </div>
+            <div id="customTypeTags" class="tags"></div>
+          </div>
           <div id="customArtifactEffect" class="filter-group" style="display:none">
             <label for="artifactEffect">Effekt</label>
             <select id="artifactEffect">
@@ -452,14 +458,58 @@ class SharedToolbar extends HTMLElement {
               <option value="corruption">+1 permanent korruption</option>
             </select>
           </div>
+          <div id="customWeaponFields" class="filter-group" style="display:none">
+            <label for="customDamage">Skada</label>
+            <input id="customDamage" placeholder="Skada">
+          </div>
+          <div id="customVehicleFields" class="filter-group" style="display:none">
+            <label for="customCapacity">Bärkapacitet</label>
+            <input id="customCapacity" type="number" min="0" step="1" placeholder="Bärkapacitet">
+          </div>
+          <div id="customLevelFields" class="filter-group" style="display:none">
+            <label for="customLevelMode">Nivåtyp</label>
+            <select id="customLevelMode">
+              <option value="novis">Novis</option>
+              <option value="gesall">Gesäll</option>
+              <option value="mastare">Mästare</option>
+              <option value="triple">Novis/Gesäll/Mästare</option>
+            </select>
+            <textarea id="customLevelNovis" placeholder="Novis"></textarea>
+            <textarea id="customLevelGesall" placeholder="Gesäll"></textarea>
+            <textarea id="customLevelMastare" placeholder="Mästare"></textarea>
+          </div>
+          <div id="customPowerFields" class="filter-group" style="display:none">
+            <label>Förmågor</label>
+            <div id="customPowerList"></div>
+            <button id="customPowerAdd" class="char-btn" type="button">Lägg till förmåga</button>
+          </div>
+          <div id="customBoundFields" class="filter-group" style="display:none">
+            <label for="customBoundType">Bundet till</label>
+            <select id="customBoundType">
+              <option value="">Obundet</option>
+              <option value="kraft">Mystisk kraft</option>
+              <option value="ritual">Ritual</option>
+            </select>
+            <input id="customBoundLabel" placeholder="Etikett (t.ex. Formel)">
+          </div>
+          <div id="customArmorFields" class="filter-group" style="display:none">
+            <label for="customProtection">Skydd</label>
+            <input id="customProtection" placeholder="Skydd">
+            <label for="customRestriction">Begränsning</label>
+            <input id="customRestriction" type="number" step="1" placeholder="Begränsning">
+          </div>
+          <div class="filter-group">
+            <label for="customWeight">Vikt</label>
+            <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt">
+          </div>
           <div class="money-row">
             <input id="customDaler" type="number" min="0" placeholder="Daler">
             <input id="customSkilling" type="number" min="0" placeholder="Skilling">
             <input id="customOrtegar" type="number" min="0" placeholder="Örtegar">
           </div>
           <textarea id="customDesc" placeholder="Beskrivning"></textarea>
-          <button id="customAdd" class="char-btn">Spara</button>
-          <button id="customCancel" class="char-btn danger">Avbryt</button>
+          <button id="customAdd" class="char-btn" type="button">Spara</button>
+          <button id="customCancel" class="char-btn danger" type="button">Avbryt</button>
         </div>
       </div>
 
@@ -677,13 +727,6 @@ class SharedToolbar extends HTMLElement {
           <h3>Importera</h3>
           <div class="export-sections">
             <div class="card export-card">
-              <div class="card-title">Aktiv mapp</div>
-              <div class="card-desc">
-                <p>Importera till din aktiva mapp: <strong id="importActiveNameInline"></strong></p>
-                <button id="importBtnActive" class="char-btn">Importera</button>
-              </div>
-            </div>
-            <div class="card export-card">
               <div class="card-title">Vald mapp</div>
               <div class="card-desc">
                 <label for="importFolderSelect">Mapp</label>
@@ -770,6 +813,21 @@ class SharedToolbar extends HTMLElement {
 
           <div class="popup-footer">
             <button id="folderManagerDone" class="char-btn">Klar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Byt namn på mapp ---------- -->
+      <div id="renameFolderPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Byt namn på mapp</h3>
+          <div class="filter-group">
+            <label for="renameFolderName">Nytt namn:</label>
+            <input id="renameFolderName" type="text" placeholder="Ny mapp" autocomplete="off">
+          </div>
+          <div class="confirm-row">
+            <button id="renameFolderCancel" class="char-btn danger">Avbryt</button>
+            <button id="renameFolderApply" class="char-btn">Spara</button>
           </div>
         </div>
       </div>

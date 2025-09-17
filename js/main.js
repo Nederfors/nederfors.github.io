@@ -894,26 +894,25 @@ function bindToolbar() {
             });
           }
           // Mappningslogik för mål
-          const override = settings.mode !== 'fromFile';
+          const override = settings.mode === 'choose';
           let targetFolderId = '';
           let targetFolderName = '';
           if (override) {
             try {
               const folders = (storeHelper.getFolders(store) || []);
-              if (settings.mode === 'active') {
-                let active = storeHelper.getActiveFolder(store);
-                if (!active || active === 'ALL') {
-                  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
-                  if (std) active = std.id;
+              targetFolderId = settings.folderId || '';
+              let folderRec = folders.find(x => x.id === targetFolderId);
+              if (!folderRec) {
+                let fallback = '';
+                try { fallback = storeHelper.getActiveFolder(store); } catch {}
+                if (!fallback || fallback === 'ALL') {
+                  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard') || folders[0];
+                  if (std) fallback = std.id;
                 }
-                targetFolderId = active || '';
-                const f = folders.find(x => x.id === targetFolderId);
-                targetFolderName = f ? (f.name || '') : '';
-              } else if (settings.mode === 'choose') {
-                targetFolderId = settings.folderId || '';
-                const f = folders.find(x => x.id === targetFolderId);
-                targetFolderName = f ? (f.name || '') : '';
+                targetFolderId = fallback || '';
+                folderRec = folders.find(x => x.id === targetFolderId);
               }
+              targetFolderName = folderRec ? (folderRec.name || '') : '';
             } catch {}
           }
 
@@ -1160,6 +1159,13 @@ function openFolderManagerPopup() {
   const moveSel   = bar.shadowRoot.getElementById('folderMoveSelect');
   const moveApply = bar.shadowRoot.getElementById('folderMoveApply');
   const charList  = bar.shadowRoot.getElementById('folderCharList');
+  const renamePop    = bar.shadowRoot.getElementById('renameFolderPopup');
+  const renameInput  = bar.shadowRoot.getElementById('renameFolderName');
+  const renameCancel = bar.shadowRoot.getElementById('renameFolderCancel');
+  const renameApply  = bar.shadowRoot.getElementById('renameFolderApply');
+  const inner        = pop.querySelector('.popup-inner');
+  let cancelRename = null;
+  let innerClickStop = null;
 
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"]/g, m => ({
@@ -1206,15 +1212,18 @@ function openFolderManagerPopup() {
       list.innerHTML = '<p>Inga mappar ännu.</p>';
       return;
     }
-    list.innerHTML = folders.map(f => {
+    list.innerHTML = folders.map((f, idx) => {
       const cnt = charMap.get(f.id) || 0;
       const esc = s => String(s || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
       const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort">🗑</button>`;
+      const upDisabled = idx === 0 ? ' disabled' : '';
+      const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
       return (
         `<div class="folder-row" data-id="${f.id}">
           <div class="folder-name">${esc(f.name)} <span class="count-badge">${cnt}</span></div>
           <div class="folder-actions">
-            <button class="mini-btn" data-action="open" title="Öppna">⬆️</button>
+            <button class="mini-btn" data-action="move-up" title="Flytta upp"${upDisabled}>▲</button>
+            <button class="mini-btn" data-action="move-down" title="Flytta ned"${downDisabled}>▼</button>
             <button class="mini-btn" data-action="rename" title="Byt namn">✏️</button>
             <button class="mini-btn danger" data-action="clear" title="Töm mapp">🧹</button>
             ${delBtn}
@@ -1224,42 +1233,72 @@ function openFolderManagerPopup() {
     }).join('');
   }
 
+  async function showRenamePopup(currentName) {
+    if (!renamePop || !renameInput || !renameApply || !renameCancel) {
+      const fallback = prompt('Nytt mappnamn?', currentName || '');
+      const trimmed = String(fallback || '').trim();
+      return trimmed || null;
+    }
+    renameInput.value = String(currentName || '').trim();
+    renamePop.classList.add('open');
+    renamePop.querySelector('.popup-inner').scrollTop = 0;
+    setTimeout(() => renameInput.focus(), 0);
+
+    return await new Promise(resolve => {
+      let done = false;
+      const renameInner = renamePop.querySelector('.popup-inner');
+      const stopBubble = e => e.stopPropagation();
+      renameInner?.addEventListener('click', stopBubble);
+      function finish(result) {
+        if (done) return;
+        done = true;
+        renamePop.classList.remove('open');
+        renameApply.removeEventListener('click', onApply);
+        renameCancel.removeEventListener('click', onCancel);
+        renamePop.removeEventListener('click', onOutside);
+        document.removeEventListener('keydown', onKey);
+        renameInner?.removeEventListener('click', stopBubble);
+        cancelRename = null;
+        resolve(result);
+      }
+      function onApply() {
+        const val = String(renameInput.value || '').trim();
+        if (!val) { renameInput.focus(); return; }
+        finish(val);
+      }
+      function onCancel() { finish(null); }
+      function onOutside(e) {
+        if (!renamePop.querySelector('.popup-inner').contains(e.target)) finish(null);
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') finish(null);
+        else if (e.key === 'Enter') onApply();
+      }
+      renameApply.addEventListener('click', onApply);
+      renameCancel.addEventListener('click', onCancel);
+      renamePop.addEventListener('click', onOutside);
+      document.addEventListener('keydown', onKey);
+      cancelRename = () => finish(null);
+    });
+  }
+
   async function onListClick(e) {
     const el = e.target.closest('[data-action]');
     if (!el) return;
     const row = e.target.closest('[data-id]');
     if (!row) return;
+    if (el.disabled || el.matches('[disabled]')) return;
+    e.stopPropagation();
     const id = row.getAttribute('data-id');
     const action = el.getAttribute('data-action');
     if (action === 'rename') {
       const folders = storeHelper.getFolders(store) || [];
       const f = folders.find(x=>x.id===id);
-      const nm = prompt('Nytt mappnamn?', f ? f.name : '');
+      const nm = await showRenamePopup(f ? f.name : '');
       if (!nm) return;
       storeHelper.renameFolder(store, id, nm);
       render();
       refreshCharSelect();
-    } else if (action === 'open') {
-      // Open first character in this folder (alphabetically). If none, inform user.
-      const chars = (store.characters || [])
-        .filter(c => (c.folderId || '') === id)
-        .slice()
-        .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-      if (!chars.length) {
-        await alertPopup('Mappen är tom.');
-        return;
-      }
-      // Set active folder to this folder
-      storeHelper.setActiveFolder(store, id);
-      const target = chars[0];
-      store.current = target.id;
-      storeHelper.save(store);
-      // Ensure character view
-      if (document.body?.dataset?.role !== 'character') {
-        location.href = 'character.html';
-      } else {
-        applyCharacterChange();
-      }
     } else if (action === 'clear') {
       const folders = storeHelper.getFolders(store) || [];
       const f = folders.find(x=>x.id===id);
@@ -1285,6 +1324,11 @@ function openFolderManagerPopup() {
       storeHelper.deleteFolder(store, id);
       render();
       refreshCharSelect();
+    } else if (action === 'move-up' || action === 'move-down') {
+      const offset = action === 'move-up' ? -1 : 1;
+      storeHelper.moveFolder(store, id, offset);
+      render();
+      refreshCharSelect();
     }
   }
 
@@ -1305,18 +1349,27 @@ function openFolderManagerPopup() {
     addBtn.removeEventListener('click', onAdd);
     moveApply?.removeEventListener('click', onMoveApply);
     charList?.removeEventListener('change', onCharListChange);
+    cancelRename?.();
     pop.removeEventListener('click', onOutside);
+    if (inner && innerClickStop) inner.removeEventListener('click', innerClickStop);
+    innerClickStop = null;
   }
   function onClose() { close(); }
   function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+    const inner = pop.querySelector('.popup-inner');
+    if (inner?.contains(e.target)) return;
+    if (renamePop?.classList.contains('open')) {
+      const renameInner = renamePop.querySelector('.popup-inner');
+      if (renameInner?.contains(e.target)) return;
+    }
+    close();
   }
   function onMoveApply() {
     const dest = (moveSel && moveSel.value) || '';
-    if (!charList) { close(); return; }
+    if (!charList) return;
     const ids = [...charList.querySelectorAll('input[type="checkbox"][data-charid]:checked')]
       .map(ch => ch.dataset.charid);
-    if (!ids.length) { close(); return; }
+    if (!ids.length) return;
     if (storeHelper.setCharactersFolderBulk) {
       storeHelper.setCharactersFolderBulk(store, ids, dest || '');
     } else {
@@ -1356,6 +1409,10 @@ function openFolderManagerPopup() {
   moveApply?.addEventListener('click', onMoveApply);
   charList?.addEventListener('change', onCharListChange);
   pop.addEventListener('click', onOutside);
+  if (inner) {
+    innerClickStop = e => e.stopPropagation();
+    inner.addEventListener('click', innerClickStop);
+  }
 }
 
 function openAlchemistPopup(cb) {
@@ -1951,13 +2008,12 @@ function openExportPopup(cb) {
   }, cb);
 }
 
-// Popup: Importera – välj mål för import via tre knappar
-// Returnerar { mode: 'active'|'choose'|'fromFile', folderId?: string, makeActive: boolean }
+// Popup: Importera – välj mål för import via två knappar
+// Returnerar { mode: 'choose'|'fromFile', folderId?: string, makeActive: boolean }
 async function openImportPopup() {
   const pop = bar?.shadowRoot?.getElementById('importPopup');
   if (!pop) return null;
 
-  const btnActive= bar.shadowRoot.getElementById('importBtnActive');
   const btnChoose= bar.shadowRoot.getElementById('importBtnChoose');
   const btnFrom  = bar.shadowRoot.getElementById('importBtnFromFile');
   const folderEl = bar.shadowRoot.getElementById('importFolderSelect');
@@ -1965,25 +2021,25 @@ async function openImportPopup() {
   const makeActFrom   = bar.shadowRoot.getElementById('importMakeActiveFromDir');
   const cancel   = bar.shadowRoot.getElementById('importCancel');
 
+  if (!btnChoose || !btnFrom || !folderEl || !cancel) return null;
+
   // Fyll mapp-listan
   const folders = (storeHelper.getFolders(store) || []).slice()
     .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
   folderEl.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
 
-  // Aktiv mapp – sätt knapptext och tillgänglighet
+  // Aktiv mapp – sätt förval i dropdown
   let activeId = 'ALL';
   try { activeId = storeHelper.getActiveFolder(store); } catch {}
   const activeFolder = folders.find(f => f.id === activeId);
-  const activeName = activeFolder ? (activeFolder.name || '') : 'Alla';
-  const activeNameInline = bar.shadowRoot.getElementById('importActiveNameInline');
-  if (activeNameInline) activeNameInline.textContent = activeName || '';
-  const hasActive = !!(activeFolder && activeId && activeId !== 'ALL');
-  btnActive.disabled = !hasActive;
-  if (!hasActive) btnActive.title = 'Välj aktiv mapp i Filter-menyn först';
-
-  // Förvälj Standard eller första mappen i dropdown
-  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard') || folders[0];
-  if (std) folderEl.value = std.id;
+  let defaultFolderId = '';
+  if (activeFolder && activeId && activeId !== 'ALL') {
+    defaultFolderId = activeFolder.id;
+  } else {
+    const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard') || folders[0];
+    if (std) defaultFolderId = std.id;
+  }
+  if (defaultFolderId && folderEl) folderEl.value = defaultFolderId;
 
   // Återställ kryssrutor (standard: av)
   if (makeActChoose) makeActChoose.checked = false;
@@ -1996,9 +2052,8 @@ async function openImportPopup() {
     function close(res) {
       pop.classList.remove('open');
       cancel.removeEventListener('click', onCancel);
-      btnActive.removeEventListener('click', onActive);
-      btnChoose.removeEventListener('click', onChoose);
-      btnFrom.removeEventListener('click', onFrom);
+      btnChoose?.removeEventListener('click', onChoose);
+      btnFrom?.removeEventListener('click', onFrom);
       pop.removeEventListener('click', onOutside);
       document.removeEventListener('keydown', onKey);
       resolve(res);
@@ -2010,11 +2065,6 @@ async function openImportPopup() {
     function onKey(e) {
       if (e.key === 'Escape') close(null);
     }
-    function onActive() {
-      if (btnActive.disabled) return;
-      const folderId = activeFolder?.id || '';
-      close({ mode: 'active', folderId, makeActive: false });
-    }
     function onChoose() {
       const folderId = folderEl.value || '';
       if (!folderId) return;
@@ -2024,9 +2074,8 @@ async function openImportPopup() {
       close({ mode: 'fromFile', makeActive: !!makeActFrom?.checked });
     }
     cancel.addEventListener('click', onCancel);
-    btnActive.addEventListener('click', onActive);
-    btnChoose.addEventListener('click', onChoose);
-    btnFrom.addEventListener('click', onFrom);
+    btnChoose?.addEventListener('click', onChoose);
+    btnFrom?.addEventListener('click', onFrom);
     pop.addEventListener('click', onOutside);
     document.addEventListener('keydown', onKey);
   });

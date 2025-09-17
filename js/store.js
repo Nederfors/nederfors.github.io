@@ -36,6 +36,169 @@
     return fn(...args);
   }
 
+  function toNumber(value, fallback = 0) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  }
+
+  function sanitizeMoneyStruct(obj) {
+    const src = (obj && typeof obj === 'object') ? obj : {};
+    const base = defaultMoney();
+    return {
+      daler: Math.max(0, Math.floor(toNumber(src.daler, base.daler))),
+      skilling: Math.max(0, Math.floor(toNumber(src.skilling, base.skilling))),
+      'örtegar': Math.max(0, Math.floor(toNumber(src['örtegar'], base['örtegar'])))
+    };
+  }
+
+  function makeCustomIdPrefix(name, fallback = '') {
+    const primary = typeof name === 'string' ? name.trim() : '';
+    const fallbackStr = String(fallback || '').trim();
+    const cleaned = (primary || fallbackStr || 'Custom')
+      .replace(/\s+/g, '');
+    return `Custom${cleaned || 'Unnamed'}`;
+  }
+
+  const FALLBACK_WEAPON_TYPES = ['Enhandsvapen','Korta vapen','Långa vapen','Tunga vapen','Obeväpnad attack','Projektilvapen','Belägringsvapen'];
+  const FALLBACK_ARMOR_TYPES  = ['Lätt Rustning','Medeltung Rustning','Tung Rustning'];
+
+  function getSubtypeSets() {
+    const weapon = new Set();
+    const armor  = new Set();
+    try {
+      const db = global.DB || [];
+      db.forEach(e => {
+        const typs = e?.taggar?.typ || [];
+        if (typs.includes('Vapen')) {
+          typs.forEach(t => {
+            if (t !== 'Vapen' && t !== 'Sköld') weapon.add(String(t));
+          });
+        }
+        if (typs.includes('Rustning')) {
+          typs.forEach(t => {
+            if (t !== 'Rustning') armor.add(String(t));
+          });
+        }
+      });
+    } catch {}
+    if (!weapon.size) FALLBACK_WEAPON_TYPES.forEach(t => weapon.add(t));
+    if (!armor.size) FALLBACK_ARMOR_TYPES.forEach(t => armor.add(t));
+    return { weapon, armor };
+  }
+
+  function sanitizeCustomEntries(list, options = {}) {
+    const arr = Array.isArray(list) ? list : [];
+    const { usedIds, prefix } = options || {};
+    const basePrefix = typeof prefix === 'string' && prefix.trim() ? prefix.trim() : 'Custom';
+    const globalIds = usedIds instanceof Set ? usedIds : null;
+    const localIds = new Set();
+    const idMap = new Map();
+    const { weapon: weaponSubs, armor: armorSubs } = getSubtypeSets();
+    let counter = 1;
+
+    const isTaken = (id) => localIds.has(id) || (globalIds && globalIds.has(id));
+    const nextId = () => {
+      let id;
+      do { id = `${basePrefix}${counter++}`; } while (isTaken(id));
+      return id;
+    };
+
+    const sanitized = arr.map(raw => {
+      const entry = (raw && typeof raw === 'object') ? { ...raw } : {};
+
+      // Preserve stable, unique IDs; only generate when missing/colliding
+      const originalId = typeof entry.id === 'string' && entry.id.trim() ? entry.id.trim() : undefined;
+      let finalId = originalId;
+      if (!finalId || isTaken(finalId)) {
+        finalId = nextId();
+        if (originalId && originalId !== finalId) idMap.set(originalId, finalId);
+      }
+      entry.id = finalId;
+      localIds.add(finalId);
+      if (globalIds) globalIds.add(finalId);
+
+      // Core fields
+      entry.namn = typeof entry.namn === 'string' ? entry.namn.trim() : '';
+      const weight = toNumber(entry.vikt, 0);
+      entry.vikt = Number.isFinite(weight) && weight >= 0 ? weight : 0;
+      entry.grundpris = sanitizeMoneyStruct(entry.grundpris);
+
+      // Tags: ensure Hemmagjort baseline; inject base types for subtypes; treat Sköld as weapon
+      const taggar = (entry.taggar && typeof entry.taggar === 'object') ? { ...entry.taggar } : {};
+      const normalizeTypes = (vals) => {
+        const extras = new Set((vals || []).map(v => String(v).trim()).filter(Boolean));
+        extras.delete('Hemmagjort');
+        const hasWeapon = extras.has('Vapen') || extras.has('Sköld') || [...extras].some(t => weaponSubs.has(t));
+        const hasArmor  = extras.has('Rustning') || [...extras].some(t => armorSubs.has(t));
+        if (hasWeapon) extras.add('Vapen');
+        if (hasArmor) extras.add('Rustning');
+        const ordered = ['Hemmagjort'];
+        if (extras.has('Vapen')) ordered.push('Vapen');
+        if (extras.has('Rustning')) ordered.push('Rustning');
+        extras.forEach(t => { if (t !== 'Vapen' && t !== 'Rustning') ordered.push(t); });
+        return ordered;
+      };
+      if (Array.isArray(taggar.typ)) {
+        taggar.typ = normalizeTypes(taggar.typ);
+      } else if (typeof taggar.typ === 'string' && taggar.typ.trim()) {
+        taggar.typ = normalizeTypes([taggar.typ.trim()]);
+      } else {
+        taggar.typ = ['Hemmagjort'];
+      }
+      entry.taggar = taggar;
+
+      entry.beskrivning = typeof entry.beskrivning === 'string' ? entry.beskrivning.trim() : '';
+      entry.artifactEffect = entry.artifactEffect === 'xp' || entry.artifactEffect === 'corruption' ? entry.artifactEffect : '';
+
+      if (entry.bound === 'kraft' || entry.bound === 'ritual') {
+        const rawLabel = typeof entry.boundLabel === 'string' ? entry.boundLabel.trim() : '';
+        entry.boundLabel = rawLabel || (entry.bound === 'kraft' ? 'Formel' : 'Ritual');
+      } else {
+        delete entry.bound;
+        delete entry.boundLabel;
+      }
+
+      // Stats
+      const rawStat = entry.stat && typeof entry.stat === 'object' ? entry.stat : {};
+      const stat = {};
+      if (rawStat.skada !== undefined) {
+        const val = String(rawStat.skada).trim();
+        if (val) stat.skada = val;
+      }
+      if (rawStat['b\u00e4rkapacitet'] !== undefined) {
+        const num = Number(rawStat['b\u00e4rkapacitet']);
+        if (Number.isFinite(num) && num >= 0) stat['b\u00e4rkapacitet'] = Math.floor(num);
+      }
+      if (rawStat.skydd !== undefined) {
+        const val = String(rawStat.skydd).trim();
+        if (val) stat.skydd = val;
+      }
+      const rawRestr = rawStat['begränsning'] ?? rawStat.begränsning;
+      if (rawRestr !== undefined && rawRestr !== null && rawRestr !== '') {
+        const num = Number(rawRestr);
+        if (Number.isFinite(num)) stat['begränsning'] = num;
+      }
+      if (Object.keys(stat).length) entry.stat = stat; else delete entry.stat;
+
+      return entry;
+    });
+
+    return { entries: sanitized, idMap };
+  }
+
+  function collectUsedCustomIds(store, excludeId) {
+    const set = new Set();
+    if (!store || !store.data || typeof store.data !== 'object') return set;
+    Object.keys(store.data).forEach(id => {
+      if (excludeId && id === excludeId) return;
+      const customs = store.data[id]?.custom || [];
+      customs.forEach(ent => {
+        if (ent && typeof ent.id === 'string') set.add(ent.id);
+      });
+    });
+    return set;
+  }
+
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
     return {
@@ -64,6 +227,9 @@
       // default aktiv mapp
       if (!store.activeFolder || store.activeFolder === '') store.activeFolder = 'ALL';
       if (store.data && typeof store.data === 'object') {
+        let mutated = false;
+        const usedCustomIds = new Set();
+        const chars = Array.isArray(store.characters) ? store.characters : [];
         Object.keys(store.data).forEach(id => {
           const cur = store.data[id] || {};
           if (typeof cur.partyAlchemist === 'boolean') {
@@ -75,7 +241,7 @@
           if (typeof cur.partyArtefacter === 'boolean') {
             cur.partyArtefacter = cur.partyArtefacter ? 'Mästare' : '';
           }
-          store.data[id] = {
+          const data = {
             custom: [],
             artifactEffects: { xp:0, corruption:0 },
             bonusMoney: defaultMoney(),
@@ -87,37 +253,58 @@
             notes: defaultNotes(),
             ...cur
           };
-          if(!store.data[id].artifactEffects){
-            store.data[id].artifactEffects = { xp:0, corruption:0 };
+          if(!data.artifactEffects){
+            data.artifactEffects = { xp:0, corruption:0 };
           }
-          if(!store.data[id].bonusMoney){
-            store.data[id].bonusMoney = defaultMoney();
+          if(!data.bonusMoney){
+            data.bonusMoney = defaultMoney();
           }
-          if(!store.data[id].privMoney){
-            store.data[id].privMoney = defaultMoney();
+          if(!data.privMoney){
+            data.privMoney = defaultMoney();
           }
-          if(!store.data[id].possessionMoney){
-            store.data[id].possessionMoney = defaultMoney();
+          if(!data.possessionMoney){
+            data.possessionMoney = defaultMoney();
           }
-          if(!store.data[id].possessionRemoved){
-            store.data[id].possessionRemoved = 0;
+          if(!data.possessionRemoved){
+            data.possessionRemoved = 0;
           }
-          if(!Array.isArray(store.data[id].hamnskifteRemoved)){
-            store.data[id].hamnskifteRemoved = [];
+          if(!Array.isArray(data.hamnskifteRemoved)){
+            data.hamnskifteRemoved = [];
           }
-          if(store.data[id].darkPastSuppressed === undefined){
-            store.data[id].darkPastSuppressed = false;
+          if(data.darkPastSuppressed === undefined){
+            data.darkPastSuppressed = false;
           }
-          if(!store.data[id].notes){
-            store.data[id].notes = defaultNotes();
+          if(!data.notes){
+            data.notes = defaultNotes();
           }
-          if(store.data[id].forcedDefense === undefined){
-            store.data[id].forcedDefense = '';
+          if(data.forcedDefense === undefined){
+            data.forcedDefense = '';
           }
-          if(store.data[id].nilasPopupShown === undefined){
-            store.data[id].nilasPopupShown = false;
+          if(data.nilasPopupShown === undefined){
+            data.nilasPopupShown = false;
           }
+          const charMeta = chars.find(c => c && c.id === id);
+          const prefix = makeCustomIdPrefix(charMeta?.name, id);
+          const { entries: sanitizedCustom, idMap } = sanitizeCustomEntries(data.custom, { usedIds: usedCustomIds, prefix });
+          if (JSON.stringify(sanitizedCustom) !== JSON.stringify(data.custom || [])) {
+            mutated = true;
+          }
+          data.custom = sanitizedCustom;
+          const expandedInventory = expandInventory(data.inventory, data.custom, idMap);
+          if (JSON.stringify(expandedInventory) !== JSON.stringify(data.inventory || [])) {
+            mutated = true;
+          }
+          data.inventory = expandedInventory;
+          if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+            const updatedArtifacts = data.revealedArtifacts.map(n => idMap.get(n) || n);
+            if (JSON.stringify(updatedArtifacts) !== JSON.stringify(data.revealedArtifacts)) {
+              data.revealedArtifacts = [...new Set(updatedArtifacts)];
+              mutated = true;
+            }
+          }
+          store.data[id] = data;
         });
+        if (mutated) save(store);
       }
       return store;
     } catch {
@@ -481,8 +668,23 @@
   function setCustomEntries(store, list) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].custom = list;
+    const usedIds = collectUsedCustomIds(store, store.current);
+    const char = (store.characters || []).find(c => c.id === store.current);
+    const prefix = makeCustomIdPrefix(char?.name, store.current);
+    const { entries: sanitized, idMap } = sanitizeCustomEntries(list, { usedIds, prefix });
+    store.data[store.current].custom = sanitized;
+    store.data[store.current].inventory = expandInventory(
+      store.data[store.current].inventory,
+      sanitized,
+      idMap
+    );
+    if (idMap.size && Array.isArray(store.data[store.current].revealedArtifacts)) {
+      store.data[store.current].revealedArtifacts = [...new Set(
+        store.data[store.current].revealedArtifacts.map(n => idMap.get(n) || n)
+      )];
+    }
     save(store);
+    return { entries: sanitized, idMap };
   }
 
   /* ---------- 5. Pengahantering ---------- */
@@ -592,8 +794,17 @@
     const char = store.characters.find(c => c.id === sourceId);
     if (!char) return null;
     const newId = makeCharId(store);
-    store.characters.push({ id: newId, name: `${char.name} (kopia)`, folderId: char.folderId || '' });
+    const newName = `${char.name} (kopia)`;
+    store.characters.push({ id: newId, name: newName, folderId: char.folderId || '' });
     const data = store.data[sourceId] ? JSON.parse(JSON.stringify(store.data[sourceId])) : {};
+    const usedIds = collectUsedCustomIds(store, newId);
+    const prefix = makeCustomIdPrefix(newName, newId);
+    const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
+    data.custom = custom;
+    data.inventory = expandInventory(data.inventory, custom, idMap);
+    if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+      data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
+    }
     store.data[newId] = data;
     save(store);
     return newId;
@@ -604,6 +815,17 @@
     const char = store.characters.find(c => c.id === charId);
     if (!char) return;
     char.name = newName;
+    const data = store.data?.[charId];
+    if (data) {
+      const usedIds = collectUsedCustomIds(store, charId);
+      const prefix = makeCustomIdPrefix(newName, charId);
+      const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
+      data.custom = custom;
+      data.inventory = expandInventory(data.inventory, custom, idMap);
+      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+        data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
+      }
+    }
     save(store);
   }
 
@@ -1198,17 +1420,13 @@ function defaultTraits() {
   }
 
   function compressInventory(inv) {
-    return (inv || []).map(row => {
+    if (!Array.isArray(inv)) return [];
+    return inv.map(row => {
       if (!row || typeof row !== 'object') return row;
-      let res;
-      if (row.id !== undefined) {
-        res = { i: row.id };
-      } else if (row.name && window.DBIndex && window.DBIndex[row.name]) {
-        const entry = window.DBIndex[row.name];
-        res = entry.id !== undefined ? { i: entry.id } : { n: row.name };
-      } else {
-        res = { n: row.name };
-      }
+      const res = {};
+      if (row.id !== undefined) res.i = row.id;
+      const entryName = row.name || (row.id !== undefined && window.DB && window.DB[row.id]?.namn) || '';
+      if (entryName) res.n = entryName;
       if (row.qty && row.qty !== 1) res.q = row.qty;
       if (row.gratis) res.g = row.gratis;
       if (row.kvaliteter && row.kvaliteter.length) res.k = row.kvaliteter;
@@ -1217,44 +1435,127 @@ function defaultTraits() {
       if (row.artifactEffect === 'xp' || row.artifactEffect === 'corruption') res.e = row.artifactEffect;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
+      if (row.perk) res.pk = row.perk;
+      if (row.perkGratis) res.pg = row.perkGratis;
+      if (row.vikt !== undefined) {
+        const weight = Number(row.vikt);
+        if (Number.isFinite(weight)) res.w = weight;
+      }
+      if (row.basePrice && typeof row.basePrice === 'object') {
+        const src = {
+          daler: row.basePrice.daler ?? row.basePrice.d,
+          skilling: row.basePrice.skilling ?? row.basePrice.s,
+          'örtegar': row.basePrice['örtegar'] ?? row.basePrice.o
+        };
+        if (['daler','skilling','örtegar','d','s','o'].some(k => row.basePrice[k] !== undefined)) {
+          res.bp = sanitizeMoneyStruct(src);
+        }
+      }
+      if (row.priceMult !== undefined) {
+        const mult = Number(row.priceMult);
+        if (Number.isFinite(mult) && mult !== 1) res.pm = mult;
+      }
+      if (Array.isArray(row.contains) && row.contains.length) {
+        res.c = compressInventory(row.contains);
+      }
       return res;
     });
   }
 
-  function expandInventory(inv) {
-    return (inv || []).map(row => {
-      if (row && row.i !== undefined && window.DB && window.DB[row.i]) {
-        const name = window.DB[row.i].namn;
-        return {
-          id: row.i,
-          name,
-          qty: row.q || 1,
-          gratis: row.g || 0,
-          kvaliteter: row.k || [],
-          gratisKval: row.gk || [],
-          removedKval: row.rk || [],
-          artifactEffect: row.e === 'xp' || row.e === 'corruption' ? row.e : '',
-          nivå: row.l,
-          trait: row.t
-        };
-      }
-      if (row && row.n) {
-        const ent = window.DBIndex && window.DBIndex[row.n];
-        return {
-          id: ent?.id,
-          name: ent?.namn || row.n,
-          qty: row.q || 1,
-          gratis: row.g || 0,
-          kvaliteter: row.k || [],
-          gratisKval: row.gk || [],
-          removedKval: row.rk || [],
-          artifactEffect: row.e === 'xp' || row.e === 'corruption' ? row.e : '',
-          nivå: row.l,
-          trait: row.t
-        };
-      }
-      return row;
+  function expandInventory(inv, customEntries = [], idMap = null) {
+    const customs = Array.isArray(customEntries) ? customEntries : [];
+    const customById = new Map();
+    const customByName = new Map();
+    customs.forEach(ent => {
+      if (!ent || typeof ent !== 'object') return;
+      if (ent.id) customById.set(ent.id, ent);
+      if (ent.namn) customByName.set(ent.namn, ent);
     });
+    const sanitizeCount = (value, fallback) => {
+      const num = Math.floor(Number(value));
+      if (!Number.isFinite(num)) return fallback;
+      if (fallback === 1) return num > 0 ? num : 1;
+      return num >= 0 ? num : fallback;
+    };
+    const expandRows = rows => {
+      if (!Array.isArray(rows)) return [];
+      return rows.map(row => {
+        if (!row || typeof row !== 'object') {
+          return { id: undefined, name: '', qty: 1, gratis: 0, kvaliteter: [], gratisKval: [], removedKval: [] };
+        }
+        // Determine matching entry from DB or custom definitions
+        const rawId = row.id !== undefined ? row.id : row.i;
+        const mappedId = (idMap && rawId !== undefined) ? idMap.get(rawId) : undefined;
+        const effectiveId = mappedId !== undefined ? mappedId : rawId;
+        const rawName = row.name || row.n || '';
+        const entry = (effectiveId !== undefined && ((window.DB && window.DB[effectiveId]) || customById.get(effectiveId)))
+          || (rawName ? ((window.DBIndex && window.DBIndex[rawName]) || customByName.get(rawName)) : undefined);
+        const resolvedId = entry?.id !== undefined ? entry.id : (effectiveId !== undefined ? effectiveId : undefined);
+        const resolvedName = entry?.namn || rawName || '';
+        const qty = sanitizeCount(row.qty ?? row.q, 1);
+        const gratis = sanitizeCount(row.gratis ?? row.g, 0);
+        const kvaliteter = Array.isArray(row.kvaliteter ?? row.k)
+          ? [...(row.kvaliteter ?? row.k)]
+          : [];
+        const gratisKval = Array.isArray(row.gratisKval ?? row.gk)
+          ? [...(row.gratisKval ?? row.gk)]
+          : [];
+        const removedKval = Array.isArray(row.removedKval ?? row.rk)
+          ? [...(row.removedKval ?? row.rk)]
+          : [];
+        const artifactEffectRaw = row.artifactEffect ?? row.e ?? entry?.artifactEffect ?? '';
+        const artifactEffect = artifactEffectRaw === 'xp' || artifactEffectRaw === 'corruption'
+          ? artifactEffectRaw
+          : '';
+        const expanded = {
+          id: resolvedId,
+          name: resolvedName,
+          qty,
+          gratis,
+          kvaliteter,
+          gratisKval,
+          removedKval,
+          artifactEffect
+        };
+        const nivå = row.nivå ?? row.l;
+        if (nivå !== undefined) expanded.nivå = nivå;
+        const trait = row.trait ?? row.t;
+        if (trait !== undefined) expanded.trait = trait;
+        const perk = row.perk ?? row.pk;
+        if (perk) expanded.perk = perk;
+        const perkGratis = sanitizeCount(row.perkGratis ?? row.pg, 0);
+        if (perkGratis) expanded.perkGratis = perkGratis;
+        const weightRaw = row.vikt ?? row.w;
+        if (weightRaw !== undefined) {
+          const weightNum = Number(weightRaw);
+          if (Number.isFinite(weightNum)) expanded.vikt = weightNum;
+        }
+        const basePriceRaw = row.basePrice ?? row.bp;
+        if (basePriceRaw && typeof basePriceRaw === 'object') {
+          const src = {
+            daler: basePriceRaw.daler ?? basePriceRaw.d,
+            skilling: basePriceRaw.skilling ?? basePriceRaw.s,
+            'örtegar': basePriceRaw['örtegar'] ?? basePriceRaw.o
+          };
+          if (['daler','skilling','örtegar','d','s','o'].some(k => basePriceRaw[k] !== undefined)) {
+            expanded.basePrice = sanitizeMoneyStruct(src);
+          }
+        }
+        const priceMultRaw = row.priceMult ?? row.pm;
+        if (priceMultRaw !== undefined) {
+          const mult = Number(priceMultRaw);
+          if (Number.isFinite(mult) && mult !== 1) {
+            expanded.priceMult = mult;
+          }
+        }
+        const contains = row.contains ?? row.c;
+        if (Array.isArray(contains) && contains.length) {
+          expanded.contains = expandRows(contains);
+        }
+        return expanded;
+      });
+    };
+    return expandRows(inv);
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */
@@ -1311,8 +1612,14 @@ function defaultTraits() {
       } catch {}
       store.characters.push({ id, name: obj.name || 'Ny rollperson', folderId });
       const data = obj.data || {};
+      const usedIds = collectUsedCustomIds(store);
+      const prefix = makeCustomIdPrefix(obj.name || '', id);
+      const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
       data.list = expandList(data.list);
-      data.inventory = expandInventory(data.inventory);
+      data.inventory = expandInventory(data.inventory, custom, idMap);
+      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+        data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
+      }
       store.data[id] = {
         custom: [],
         artifactEffects: defaultArtifactEffects(),
@@ -1321,7 +1628,9 @@ function defaultTraits() {
         possessionMoney: defaultMoney(),
         possessionRemoved: 0,
         notes: defaultNotes(),
-        ...data
+        ...data,
+        custom,
+        inventory: data.inventory
       };
       if (!store.data[id].notes) {
         store.data[id].notes = defaultNotes();
@@ -1353,6 +1662,11 @@ function defaultTraits() {
     } catch {
       return 'rp-' + Math.random().toString(36).slice(2, 12);
     }
+  }
+
+  function sortFoldersForOrder(folders) {
+    return (Array.isArray(folders) ? folders.slice() : [])
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
   }
 
   /* ---------- 7. Export ---------- */
@@ -1410,13 +1724,35 @@ function defaultTraits() {
       if (target && target.system) return;
       // Hitta systemmapp för att flytta karaktärer
       const standard = folders.find(f => f.system) || folders.find(f => f.name === 'Standard');
-      store.folders = folders.filter(f => f.id !== id);
+      const remaining = folders.filter(f => f.id !== id);
+      const normalized = sortFoldersForOrder(remaining);
+      normalized.forEach((f, idx) => { f.order = idx; });
+      store.folders = normalized;
       // flytta karaktärer till systemmappen "Standard"
       const destId = standard ? standard.id : '';
       store.characters = (store.characters || []).map(c => (
         c && c.folderId === id ? { ...c, folderId: destId } : c
       ));
       save(store);
+    },
+    moveFolder: (store, id, offset) => {
+      try {
+        if (!id) return;
+        const step = Number(offset) || 0;
+        if (!step) return;
+        const folders = Array.isArray(store.folders) ? store.folders : [];
+        if (!folders.length) return;
+        const ordered = sortFoldersForOrder(folders);
+        const index = ordered.findIndex(f => f.id === id);
+        if (index < 0) return;
+        const targetIndex = index + step;
+        if (targetIndex < 0 || targetIndex >= ordered.length) return;
+        const [item] = ordered.splice(index, 1);
+        ordered.splice(targetIndex, 0, item);
+        ordered.forEach((f, idx) => { f.order = idx; });
+        store.folders = ordered;
+        save(store);
+      } catch {}
     },
     getCharacterFolder: (store, charId) => {
       if (!charId) return '';

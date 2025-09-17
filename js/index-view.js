@@ -65,6 +65,7 @@ function initIndex() {
     'Allmän kvalitet': 'Allmänt'
   };
   const QUAL_TYPE_KEYS = Object.keys(QUAL_TYPE_MAP);
+  const DOCK_TAG_TYPES = new Set(['Fördel','Nackdel','Särdrag','Monstruöst särdrag','Ritual','Mystisk kraft','Förmåga']);
 
   const flashAdded = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
@@ -542,23 +543,28 @@ function initIndex() {
         let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
         const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
-        const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${QUAL_TYPE_MAP[t] || t}</span>`);
+        const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
+        const filterTagData = [];
+        (p.taggar?.typ || [])
+          .filter(Boolean)
+          .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 }));
         const trTags = explodeTags(p.taggar?.ark_trad);
-        const arkTags = (trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []))
-          .map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
-        const testTags = (p.taggar?.test || []).map(t => `<span class="tag filter-tag" data-section="test" data-val="${t}">${t}</span>`);
-        const infoTagsHtml = [xpTag]
-          .concat(typeTags)
-          .concat(arkTags)
-          .concat(testTags)
+        const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
+        arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
+        (p.taggar?.test || [])
           .filter(Boolean)
-          .join(' ');
-        const tagsHtml = []
-          .concat(typeTags)
-          .concat(arkTags)
-          .concat(testTags)
-          .filter(Boolean)
-          .join(' ');
+          .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
+        const visibleTagData = filterTagData.filter(tag => !tag.hidden);
+        const filterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
+        const tagsHtml = filterTagHtml.join(' ');
+        const infoTagsHtml = [xpTag].concat(filterTagHtml).filter(Boolean).join(' ');
+        const dockPrimary = (p.taggar?.typ || [])[0] || '';
+        const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
+        const renderDockedTags = (tags) => {
+          if (!tags.length) return '';
+          return `<div class="entry-tags">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+        };
+        const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
         const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
         // Compact meta badges (P/V/level) using short labels for mobile space
         const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
@@ -603,33 +609,39 @@ function initIndex() {
           ? `<button class="char-btn" data-elite-req="${p.namn}">🏋🏻‍♂️</button>`
           : '';
         const allowAdd = !(isService(p) || isEmployment(p));
-        let btn = '';
+        const buttonGroupParts = [];
+        if (showInfo) buttonGroupParts.push(infoBtn);
         if (allowAdd) {
-          if(multi){
-            if(count>0){
-              const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
-              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
-              const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-              btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${eliteBtn}</div>`;
-            }else{
-              const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-              btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${addBtn}${eliteBtn}</div>`;
+          if (multi) {
+            if (count > 0) {
+              buttonGroupParts.push(`<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`);
+              buttonGroupParts.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`);
+              if (count < limit) buttonGroupParts.push(`<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>`);
+            } else {
+              buttonGroupParts.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}">Lägg till</button>`);
             }
-          }else{
+          } else {
             const mainBtn = inChar
               ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-              : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-            btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
+              : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}">Lägg till</button>`;
+            buttonGroupParts.push(mainBtn);
           }
-        } else {
-          btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}</div>`;
         }
+        if (eliteBtn) buttonGroupParts.push(eliteBtn);
+        const leftParts = [];
+        if (metaBadges) leftParts.push(metaBadges);
+        if (shouldDockTags && dockedTagsHtml) leftParts.push(dockedTagsHtml);
+        const leftHtml = leftParts.length ? `<div class="inv-controls-left">${leftParts.join('')}</div>` : '';
+        const buttonsHtml = buttonGroupParts.length ? `<div class="control-buttons">${buttonGroupParts.join('')}</div>` : '';
+        const controlsHtml = (leftHtml || buttonsHtml)
+          ? `<div class="inv-controls">${leftHtml || ''}${buttonsHtml || ''}</div>`
+          : '';
         const li=document.createElement('li');
         li.className='card' + (compact ? ' compact' : '');
         li.dataset.name = p.namn;
         if (spec) li.dataset.trait = spec;
         if (xpVal != null) li.dataset.xp = xpVal;
-        const tagsDiv = (!compact && tagsHtml)
+        const tagsDiv = (!compact && !shouldDockTags && tagsHtml)
           ? `<div class="tags">${tagsHtml}</div>`
           : '';
         const levelHtml = hideDetails ? '' : lvlSel;
@@ -639,7 +651,7 @@ function initIndex() {
           ${tagsDiv}
           ${levelHtml}
           ${descHtml}
-          ${btn}`;
+          ${controlsHtml}`;
         listEl.appendChild(li);
         if (searchActive && terms.length) {
           const titleSpan = li.querySelector('.card-title > span');
@@ -1104,7 +1116,7 @@ function initIndex() {
               const itemLevel = LEVEL_IDX[lvlName] || 0;
               let hasYrke = reqYrken.some(req =>
                 list.some(it =>
-                  (isYrke(it) || isElityrke(it)) && explodeTags([it.namn]).includes(req)
+                (isYrke(it) || isElityrke(it)) && explodeTags([it.namn]).includes(req)
                 )
               );
               if (!hasYrke && artLevel >= itemLevel) {
