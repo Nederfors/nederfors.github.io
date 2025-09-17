@@ -199,6 +199,13 @@ function initCharacter() {
     return `<li class="card${compact ? ' compact' : ''}"><div class="card-title"><span>${titleName}</span></div>${tagHtml}${desc}</li>`;
   }
 
+  const charCategory = (entry, { allowFallback = true } = {}) => {
+    const types = entry?.taggar?.typ || [];
+    if (types.includes('Artefakt')) return 'Artefakt';
+    if (types.length) return types[0];
+    return allowFallback ? 'Övrigt' : undefined;
+  };
+
   function renderConflicts(list){
     if(!list.length){
       conflictList.innerHTML = '<li class="card">Inga konflikter.</li>';
@@ -207,7 +214,7 @@ function initCharacter() {
 
     const cats = {};
     list.forEach(p=>{
-      const cat = p.taggar?.typ?.[0] || 'Övrigt';
+      const cat = charCategory(p);
       (cats[cat] ||= []).push(p);
     });
 
@@ -480,7 +487,7 @@ function initCharacter() {
     const searchActive = terms.length > 0;
     const catNameMatch = {};
     groups.forEach(g=>{
-      const cat = g.entry.taggar?.typ?.[0] || 'Övrigt';
+      const cat = charCategory(g.entry);
       (cats[cat] ||= []).push(g);
       if (searchActive) {
         const name = searchNormalize((g.entry.namn || '').toLowerCase());
@@ -724,7 +731,7 @@ function initCharacter() {
               }
               const nval = searchNormalize(val.toLowerCase());
               const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-              const cat = match?.taggar?.typ?.[0];
+              const cat = charCategory(match, { allowFallback: false });
               if (cat) openCatsOnce.add(cat);
               if (window.storeHelper?.addRecentSearch) {
                 storeHelper.addRecentSearch(store, val);
@@ -806,7 +813,7 @@ function initCharacter() {
         }
         const nval = searchNormalize(sTemp.toLowerCase());
         const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-        const cat = match?.taggar?.typ?.[0];
+        const cat = charCategory(match, { allowFallback: false });
         if (cat) openCatsOnce.add(cat);
       } else {
         F.search = [];
