@@ -841,6 +841,28 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function editCustomEntry(entry, onSave) {
+    if (!entry || !(entry.taggar?.typ || []).includes('Hemmagjort')) return false;
+    if (!getToolbarRoot()) return false;
+    const customs = storeHelper.getCustomEntries(store);
+    const original = (entry.id && customs.find(c => c.id === entry.id))
+      || customs.find(c => c.namn === entry.namn);
+    if (!original) return false;
+    const originalId = original.id;
+    openCustomPopup({ ...original }, updated => {
+      if (!updated) return;
+      const list = storeHelper.getCustomEntries(store);
+      const idx = list.findIndex(c => c.id === originalId);
+      if (idx < 0) return;
+      const merged = { ...list[idx], ...updated };
+      merged.id = merged.id || list[idx].id;
+      list[idx] = merged;
+      storeHelper.setCustomEntries(store, list);
+      if (typeof onSave === 'function') onSave();
+    });
+    return true;
+  }
+
   function openQtyPopup() {
     const root = getToolbarRoot();
     if (!root) return;
@@ -2211,19 +2233,8 @@ ${moneyRow}
       if (act === 'editCustom') {
         if (!row) return;
         const entry = getEntry(row.id || row.name);
-        if (!entry || !(entry.taggar?.typ || []).includes('Hemmagjort')) return;
-        const customs = storeHelper.getCustomEntries(store);
-        const original = customs.find(c => c.id === entry.id)
-          || customs.find(c => c.namn === entry.namn);
-        if (!original) return;
-        openCustomPopup({ ...original }, updated => {
-          if (!updated) return;
-          const list = storeHelper.getCustomEntries(store);
-          const cIdx = list.findIndex(c => c.id === original.id);
-          if (cIdx < 0) return;
-          updated.id = updated.id || list[cIdx].id;
-          list[cIdx] = { ...list[cIdx], ...updated };
-          storeHelper.setCustomEntries(store, list);
+        if (!entry) return;
+        editCustomEntry(entry, () => {
           renderInventory();
           if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
           if (window.indexViewUpdate) window.indexViewUpdate();
@@ -2729,6 +2740,7 @@ ${moneyRow}
     sortQualsForDisplay,
     openQualPopup,
     openCustomPopup,
+    editCustomEntry,
     openMoneyPopup,
     openQtyPopup,
     openPricePopup,

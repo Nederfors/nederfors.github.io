@@ -444,6 +444,7 @@ function initIndex() {
         const li = document.createElement('li');
         li.className = 'card';
         li.dataset.name = p.namn;
+        if (p.id) li.dataset.id = p.id;
         li.innerHTML = `
             <div class="card-title"><span>${p.namn}</span></div>
             ${tagsDiv}
@@ -606,12 +607,18 @@ function initIndex() {
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
         const showInfo = compact || hideDetails;
+        const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
+        const idAttr = p.id ? ` data-id="${p.id}"` : '';
+        const editBtn = canEdit
+          ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+          : '';
         const eliteBtn = isElityrke(p)
           ? `<button class="char-btn" data-elite-req="${p.namn}">🏋🏻‍♂️</button>`
           : '';
         const allowAdd = !(isService(p) || isEmployment(p));
         const buttonGroupParts = [];
         if (showInfo) buttonGroupParts.push(infoBtn);
+        if (editBtn) buttonGroupParts.push(editBtn);
         if (allowAdd) {
           if (multi) {
             if (count > 0) {
@@ -642,6 +649,7 @@ function initIndex() {
         li.dataset.name = p.namn;
         if (spec) li.dataset.trait = spec;
         if (xpVal != null) li.dataset.xp = xpVal;
+        if (p.id) li.dataset.id = p.id;
         const tagsDiv = (!compact && !shouldDockTags && tagsHtml)
           ? `<div class="tags">${tagsHtml}</div>`
           : '';
@@ -1021,16 +1029,34 @@ function initIndex() {
       yrkePanel.open(title, html);
       return;
     }
-    const btn=e.target.closest('button[data-act]');
+    const btn = e.target.closest('button[data-act]');
     if (!btn) return;
     if (!store.current && !(await requireCharacter())) return;
-    const name = btn.dataset.name;
-    const tr = btn.closest('li').dataset.trait || null;
-    let p  = getEntries().find(x=>x.namn===name);
+    const act = btn.dataset.act;
+    const li = btn.closest('li');
+    if (!li) return;
+    const name = btn.dataset.name || li.dataset.name;
+    const tr = li.dataset.trait || null;
+    const idAttr = btn.dataset.id || li.dataset.id || null;
+    const entries = getEntries();
+    let p = idAttr ? entries.find(x => x.id === idAttr) : null;
+    if (!p) p = entries.find(x => x.namn === name);
+    if (!p && idAttr) p = DB.find(x => x.id === idAttr);
     if (!p) p = DB.find(x => x.namn === name);
     if (!p) return;
-    const act = btn.dataset.act;
-    const lvlSel = btn.closest('li').querySelector('select.level');
+    if (act === 'editCustom') {
+      if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
+      window.invUtil.editCustomEntry(p, () => {
+        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
+          window.invUtil.renderInventory();
+        }
+        if (window.updateXP) updateXP();
+      });
+      return;
+    }
+    const lvlSel = li.querySelector('select.level');
     let   lvl = lvlSel ? lvlSel.value : null;
     if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || null;
 
