@@ -200,8 +200,11 @@ function initCharacter() {
   }
 
   const charCategory = (entry, { allowFallback = true } = {}) => {
-    const types = entry?.taggar?.typ || [];
-    if (types.includes('Artefakt')) return 'Artefakt';
+    const types = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ
+      : [];
+    const hasArtifact = types.some(t => String(t).trim().toLowerCase() === 'artefakt');
+    if (hasArtifact) return 'Artefakt';
     if (types.length) return types[0];
     return allowFallback ? 'Övrigt' : undefined;
   };
