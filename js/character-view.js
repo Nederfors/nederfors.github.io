@@ -397,16 +397,20 @@ function initCharacter() {
     const lst = storeHelper.getCurrentList(store).filter(p=>!isInv(p));
     const sets = { typ:new Set(), ark:new Set(), test:new Set() };
     lst.forEach(p=>{
-      (p.taggar.typ||[])
+      const taggar = p && typeof p === 'object' ? (p.taggar || {}) : {};
+      const typTags = Array.isArray(taggar.typ) ? taggar.typ : [];
+      typTags
         .filter(Boolean)
         .forEach(v=>sets.typ.add(v));
-      const arkTags = explodeTags(p.taggar.ark_trad);
+      const arkSource = taggar.ark_trad;
+      const arkTags = explodeTags(arkSource);
       if (arkTags.length) {
         arkTags.forEach(v => sets.ark.add(v));
-      } else if (Array.isArray(p.taggar?.ark_trad)) {
+      } else if (Array.isArray(arkSource)) {
         sets.ark.add('Traditionslös');
       }
-      (p.taggar.test||[])
+      const testTags = Array.isArray(taggar.test) ? taggar.test : [];
+      testTags
         .filter(Boolean)
         .forEach(v=>sets.test.add(v));
     });
@@ -468,7 +472,8 @@ function initCharacter() {
   const renderSkills = arr=>{
     const groups = [];
     arr.forEach(p=>{
-        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+        const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
+        const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
         if(multi){
           const g = groups.find(x=>x.entry.namn===p.namn);
           if(g) { g.count++; return; }
@@ -555,7 +560,8 @@ function initCharacter() {
         let xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
-        const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${t}</span>`);
+        const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
+        const typeTags = typesList.map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${t}</span>`);
         const trTags = explodeTags(p.taggar?.ark_trad);
         const arkTags = (trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []))
           .map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
@@ -582,7 +588,7 @@ function initCharacter() {
         li.className='card' + (compact ? ' compact' : '');
         li.dataset.name=p.namn;
         if(p.trait) li.dataset.trait=p.trait;
-        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+        const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
         const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
@@ -592,32 +598,34 @@ function initCharacter() {
           ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeNames.join(', ')}">💔</button>`
           : '';
         const showInfo = compact || hideDetails;
-        const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
+        const hasCustomEdit = typesList.includes('Hemmagjort');
+        const hasArtifactType = typesList.some(t => String(t).trim().toLowerCase() === 'artefakt');
+        const editAction = hasCustomEdit ? 'editCustom' : (hasArtifactType ? 'editArtifact' : '');
         const idAttr = p.id ? ` data-id="${p.id}"` : '';
-        const editBtn = canEdit
-          ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+        const editBtn = editAction
+          ? `<button data-act="${editAction}" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
           : '';
-        const infoHtml = showInfo ? infoBtn : '';
+        const infoBtnHtml = showInfo ? infoBtn : '';
         let btn = '';
         if(multi){
-          const isDisadv = (p.taggar?.typ || []).includes('Nackdel');
+          const isDisadv = typesList.includes('Nackdel');
           if (isDisadv) {
             if (total > 0) {
               const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
               const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
               const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-              btn = `<div class="inv-controls">${infoHtml}${editBtn}${delBtn}${subBtn}${addBtn}${conflictBtn}</div>`;
+              btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}${delBtn}${subBtn}${addBtn}${conflictBtn}</div>`;
             } else {
               const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-              btn = `<div class="inv-controls">${infoHtml}${editBtn}${addBtn}${conflictBtn}</div>`;
+              btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}${addBtn}${conflictBtn}</div>`;
             }
           } else {
             const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
             const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-            btn = `<div class="inv-controls">${infoHtml}${editBtn}${remBtn}${conflictBtn}${addBtn}</div>`;
+            btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}${remBtn}${conflictBtn}${addBtn}</div>`;
           }
         }else{
-          btn = `<div class="inv-controls">${infoHtml}${editBtn}<button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
+          btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}<button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
         }
         li.dataset.xp = xpVal;
         if (p.id) li.dataset.id = p.id;
@@ -942,26 +950,39 @@ function initCharacter() {
     let p = idAttr ? (before.find(x => x.id === idAttr) || DB.find(x => x.id === idAttr)) : null;
     if(!p) p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
     if(!p) return;
+    const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
+    const handleEntryEdited = () => {
+      refreshCharacterFilters();
+      activeTags();
+      renderSkills(filtered());
+      renderTraits();
+      updateSearchDatalist();
+      if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+      if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
+        window.invUtil.renderInventory();
+      }
+      updateXP();
+    };
     if (act === 'editCustom') {
       if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
-      window.invUtil.editCustomEntry(p, () => {
-        refreshCharacterFilters();
-        activeTags();
-        renderSkills(filtered());
-        renderTraits();
-        updateSearchDatalist();
-        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
-        if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
-          window.invUtil.renderInventory();
-        }
-        updateXP();
-      });
+      window.invUtil.editCustomEntry(p, handleEntryEdited);
       return;
     }
-    const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
+    if (act === 'editArtifact') {
+      if (!window.invUtil || typeof window.invUtil.editArtifactEntry !== 'function') {
+        if (typeof alertPopup === 'function') await alertPopup('Kan inte redigera artefakten just nu.');
+        return;
+      }
+      const success = await window.invUtil.editArtifactEntry(p, { trait: tr }, handleEntryEdited);
+      if (!success) {
+        if (typeof alertPopup === 'function') await alertPopup('Föremålet hittades inte i inventariet.');
+      }
+      return;
+    }
+    const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
     let list;
-        if(act==='add'){
+    if(act==='add'){
           if(name==='Korruptionskänslig' && before.some(x=>x.namn==='Dvärg')){
             await alertPopup('Dvärgar kan inte ta Korruptionskänslig.');
             return;
@@ -984,7 +1005,7 @@ function initCharacter() {
           const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
           const hamLvl = storeHelper.abilityLevel(before, 'Hamnskifte');
           const bloodRaces = before.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
-          let monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
+          let monsterOk = typesList.includes('Elityrkesförmåga') ||
             (before.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
             (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||

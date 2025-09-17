@@ -863,6 +863,39 @@
     return true;
   }
 
+  async function editArtifactEntry(entry, opts, onSave) {
+    if (!entry || typeof selectArtifactPayment !== 'function') return false;
+    const options = opts && typeof opts === 'object' ? opts : {};
+    const trait = options.trait ?? null;
+    const inv = storeHelper.getInventory(store);
+    const flat = flattenInventoryWithPath(inv);
+    const entryId = entry.id;
+    const entryName = entry.namn || entry.name || '';
+    const matches = flat.filter(({ row }) => {
+      if (!row) return false;
+      const idMatch = entryId !== undefined && entryId !== null
+        ? row.id === entryId
+        : row.name === entryName;
+      if (!idMatch) return false;
+      if (trait != null) return row.trait === trait;
+      return true;
+    });
+    if (!matches.length) return false;
+    let target = matches[0];
+    if (trait == null && matches.length > 1) {
+      const withoutTrait = matches.find(({ row }) => row && !row.trait);
+      if (withoutTrait) target = withoutTrait;
+    }
+    const current = target.row.artifactEffect || '';
+    const chosen = await selectArtifactPayment(current);
+    if (chosen === null) return true;
+    target.row.artifactEffect = chosen;
+    saveInventory(inv);
+    renderInventory();
+    if (typeof onSave === 'function') onSave();
+    return true;
+  }
+
   function openQtyPopup() {
     const root = getToolbarRoot();
     if (!root) return;
@@ -2741,6 +2774,7 @@ ${moneyRow}
     openQualPopup,
     openCustomPopup,
     editCustomEntry,
+    editArtifactEntry,
     openMoneyPopup,
     openQtyPopup,
     openPricePopup,
