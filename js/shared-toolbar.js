@@ -509,6 +509,7 @@ class SharedToolbar extends HTMLElement {
           </div>
           <textarea id="customDesc" placeholder="Beskrivning"></textarea>
           <button id="customAdd" class="char-btn" type="button">Spara</button>
+          <button id="customDelete" class="char-btn danger" type="button" style="display:none">Radera</button>
           <button id="customCancel" class="char-btn danger" type="button">Avbryt</button>
         </div>
       </div>
