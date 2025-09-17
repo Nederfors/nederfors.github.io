@@ -65,18 +65,29 @@
   function getSubtypeSets() {
     const weapon = new Set();
     const armor  = new Set();
+    const skip = new Set(['artefakt','lägre artefakt','kuriositet','skatt','hemmagjort']);
+    const normalize = (value) => {
+      if (typeof value !== 'string') return '';
+      return value.trim().toLowerCase();
+    };
     try {
       const db = global.DB || [];
       db.forEach(e => {
         const typs = e?.taggar?.typ || [];
         if (typs.includes('Vapen')) {
           typs.forEach(t => {
-            if (t !== 'Vapen' && t !== 'Sköld') weapon.add(String(t));
+            const key = normalize(t);
+            if (!key || key === 'vapen' || key === 'sköld' || skip.has(key)) return;
+            const label = String(t).trim();
+            if (label) weapon.add(label);
           });
         }
         if (typs.includes('Rustning')) {
           typs.forEach(t => {
-            if (t !== 'Rustning') armor.add(String(t));
+            const key = normalize(t);
+            if (!key || key === 'rustning' || skip.has(key)) return;
+            const label = String(t).trim();
+            if (label) armor.add(label);
           });
         }
       });
@@ -1566,17 +1577,26 @@ function defaultTraits() {
     if (!char) return null;
     const data = store.data[charId] || {};
     // Hitta mappnamn om karaktären ligger i mapp
-    let folderName;
+    let folderMeta;
     try {
       const fid = char.folderId || '';
       if (fid) {
         const f = (store.folders || []).find(x => x.id === fid);
-        folderName = f ? f.name : undefined;
+        if (f) {
+          folderMeta = { id: f.id, name: f.name };
+        }
       }
     } catch {}
+    const folderPayload = {};
+    if (folderMeta) {
+      folderPayload.folderId = folderMeta.id;
+      if (includeFolder && folderMeta.name) {
+        folderPayload.folder = folderMeta.name;
+      }
+    }
     return {
       name: char.name,
-      ...(includeFolder && folderName ? { folder: folderName } : {}),
+      ...folderPayload,
       data: stripDefaults({
         ...data,
         list: compressList(data.list),
@@ -1592,21 +1612,32 @@ function defaultTraits() {
       // Mapp: skapa eller återanvänd efter namn om finns
       let folderId = '';
       try {
+        const folders = Array.isArray(store.folders) ? store.folders : (store.folders = []);
+        const folderHintId = typeof obj.folderId === 'string' ? obj.folderId.trim() : '';
         const folderName = String(obj.folder || '').trim();
-        if (folderName) {
-          const existing = (store.folders || []).find(f => f.name === folderName);
-          if (existing) {
-            folderId = existing.id;
+
+        if (folderHintId) {
+          const byId = folders.find(f => f.id === folderHintId);
+          if (byId) folderId = byId.id;
+        }
+
+        if (!folderId && folderName) {
+          const byName = folders.find(f => f.name === folderName);
+          if (byName) {
+            folderId = byName.id;
           } else {
-            // skapa ny mapp med sekvensordning sist
-            const order = Array.isArray(store.folders) ? store.folders.length : 0;
-            const newId = 'fd' + Date.now();
-            (store.folders ||= []).push({ id: newId, name: folderName, order });
-            folderId = newId;
+            const order = folders.length;
+            const generatedId = folderHintId && !folders.some(f => f.id === folderHintId)
+              ? folderHintId
+              : 'fd' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+            folders.push({ id: generatedId, name: folderName, order });
+            folderId = generatedId;
           }
-        } else {
+        }
+
+        if (!folderId) {
           // Ingen mapp i filen: lägg i systemmappen "Standard"
-          const standard = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
+          const standard = folders.find(f => f.system) || folders.find(f => f.name === 'Standard');
           if (standard) folderId = standard.id;
         }
       } catch {}
