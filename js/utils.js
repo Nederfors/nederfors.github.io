@@ -109,6 +109,15 @@
     return CAT_DISPLAY[cat] || cat;
   }
 
+  function entryCategory(entry) {
+    const types = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ.map(t => String(t).trim()).filter(Boolean)
+      : [];
+    const hasArtefakt = types.some(t => t.toLowerCase() === 'artefakt');
+    if (hasArtefakt) return 'Artefakt';
+    return types[0] || 'Övrigt';
+  }
+
   function catComparator(a, b){
     const ai = CAT_ORDER.indexOf(a);
     const bi = CAT_ORDER.indexOf(b);
@@ -370,4 +379,5 @@
   window.copyToClipboard = copyToClipboard;
   window.catComparator = catComparator;
   window.catName = catName;
+  window.entryCategory = entryCategory;
 })(window);
