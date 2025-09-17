@@ -380,6 +380,7 @@
     const oIn    = root.getElementById('customOrtegar');
     const desc   = root.getElementById('customDesc');
     const add    = root.getElementById('customAdd');
+    const del    = root.getElementById('customDelete');
     const cancel = root.getElementById('customCancel');
 
     // Hämta vapentyper och rustningssubtyper från DB (fallback till hårdkodade)
@@ -551,11 +552,18 @@
       selectedTypes.add('Hemmagjort');
       updateTypeFields();
       applyLevelMode();
+      if (del) {
+        del.style.display = 'none';
+        del.disabled = true;
+      }
     };
 
     resetFields();
 
+    let isEditing = false;
+
     if (existing) {
+      isEditing = true;
       if (title) title.textContent = 'Redigera föremål';
       add.textContent = 'Uppdatera';
       name.value = existing.namn || '';
@@ -732,6 +740,21 @@
       callback(null);
     };
 
+    const onDelete = () => {
+      if (!isEditing) {
+        close();
+        callback(null);
+        return;
+      }
+      const payload = {
+        __delete: true,
+        id: existing?.id || '',
+        namn: existing?.namn || ''
+      };
+      close();
+      callback(payload);
+    };
+
     const onOutside = e => {
       if (!popInner) return;
       const path = typeof e.composedPath === 'function' ? e.composedPath() : e.path;
@@ -744,6 +767,7 @@
     function close() {
       pop.classList.remove('open');
       add.removeEventListener('click', onAdd);
+      if (del) del.removeEventListener('click', onDelete);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
       if (typeAdd) typeAdd.removeEventListener('click', onAddType);
@@ -763,6 +787,16 @@
     if (typeAdd) typeAdd.addEventListener('click', onAddType);
     if (typeTags) typeTags.addEventListener('click', onTagsClick);
     add.addEventListener('click', onAdd);
+    if (del) {
+      if (isEditing) {
+        del.style.display = '';
+        del.disabled = false;
+        del.addEventListener('click', onDelete);
+      } else {
+        del.style.display = 'none';
+        del.disabled = true;
+      }
+    }
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
     const onAddPower = e => {
@@ -861,6 +895,30 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function removeCustomEntryFromInventory(arr, targetId, targetName) {
+    if (!Array.isArray(arr)) return false;
+    let changed = false;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      const row = arr[i];
+      if (!row || typeof row !== 'object') continue;
+      const nestedChanged = removeCustomEntryFromInventory(row.contains, targetId, targetName);
+      if (nestedChanged && Array.isArray(row.contains) && !row.contains.length) {
+        delete row.contains;
+      }
+      const rowId = row.id ?? row.i;
+      const rowName = row.name ?? row.n ?? row.namn;
+      const idMatch = targetId != null && rowId === targetId;
+      const nameMatch = targetName ? rowName === targetName : false;
+      if (idMatch || nameMatch) {
+        arr.splice(i, 1);
+        changed = true;
+        continue;
+      }
+      if (nestedChanged) changed = true;
+    }
+    return changed;
+  }
+
   function editCustomEntry(entry, onSave) {
     if (!entry || !(entry.taggar?.typ || []).includes('Hemmagjort')) return false;
     if (!getToolbarRoot()) return false;
@@ -872,8 +930,21 @@
     openCustomPopup({ ...original }, updated => {
       if (!updated) return;
       const list = storeHelper.getCustomEntries(store);
-      const idx = list.findIndex(c => c.id === originalId);
+      const idx = list.findIndex(c => c.id === originalId || (!originalId && c.namn === original.namn));
       if (idx < 0) return;
+      if (updated.__delete) {
+        list.splice(idx, 1);
+        storeHelper.setCustomEntries(store, list);
+        const inv = storeHelper.getInventory(store);
+        const removed = removeCustomEntryFromInventory(inv, originalId, original.namn);
+        if (removed) {
+          saveInventory(inv);
+        } else {
+          renderInventory();
+        }
+        if (typeof onSave === 'function') onSave();
+        return;
+      }
       const merged = { ...list[idx], ...updated };
       merged.id = merged.id || list[idx].id;
       list[idx] = merged;
