@@ -592,6 +592,12 @@ function initCharacter() {
           ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeNames.join(', ')}">💔</button>`
           : '';
         const showInfo = compact || hideDetails;
+        const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
+        const idAttr = p.id ? ` data-id="${p.id}"` : '';
+        const editBtn = canEdit
+          ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+          : '';
+        const infoHtml = showInfo ? infoBtn : '';
         let btn = '';
         if(multi){
           const isDisadv = (p.taggar?.typ || []).includes('Nackdel');
@@ -600,20 +606,21 @@ function initCharacter() {
               const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
               const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
               const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${conflictBtn}</div>`;
+              btn = `<div class="inv-controls">${infoHtml}${editBtn}${delBtn}${subBtn}${addBtn}${conflictBtn}</div>`;
             } else {
               const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-              btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${addBtn}${conflictBtn}</div>`;
+              btn = `<div class="inv-controls">${infoHtml}${editBtn}${addBtn}${conflictBtn}</div>`;
             }
           } else {
             const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
             const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-            btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}${remBtn}${conflictBtn}${addBtn}</div>`;
+            btn = `<div class="inv-controls">${infoHtml}${editBtn}${remBtn}${conflictBtn}${addBtn}</div>`;
           }
         }else{
-          btn = `<div class="inv-controls">${showInfo ? infoBtn : ''}<button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
+          btn = `<div class="inv-controls">${infoHtml}${editBtn}<button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
         }
         li.dataset.xp = xpVal;
+        if (p.id) li.dataset.id = p.id;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
         const tagsDiv = (!compact && tagsHtml)
           ? `<div class="tags">${tagsHtml}</div>`
@@ -924,16 +931,37 @@ function initCharacter() {
     }
     const actBtn=e.target.closest('button[data-act]');
     if(!actBtn) return;
+    const act = actBtn.dataset.act;
     const liEl = actBtn.closest('li');
-    const name = liEl.dataset.name;
+    if (!liEl) return;
+    const name = actBtn.dataset.name || liEl.dataset.name;
+    const idAttr = actBtn.dataset.id || liEl.dataset.id || null;
     const tr = liEl.dataset.trait || null;
     const before = storeHelper.getCurrentList(store);
     const disBefore = storeHelper.countDisadvantages(before);
-    const p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
+    let p = idAttr ? (before.find(x => x.id === idAttr) || DB.find(x => x.id === idAttr)) : null;
+    if(!p) p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
     if(!p) return;
+    if (act === 'editCustom') {
+      if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
+      window.invUtil.editCustomEntry(p, () => {
+        refreshCharacterFilters();
+        activeTags();
+        renderSkills(filtered());
+        renderTraits();
+        updateSearchDatalist();
+        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
+          window.invUtil.renderInventory();
+        }
+        updateXP();
+      });
+      return;
+    }
     const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) && !tr;
     let list;
-        if(actBtn.dataset.act==='add'){
+        if(act==='add'){
           if(name==='Korruptionskänslig' && before.some(x=>x.namn==='Dvärg')){
             await alertPopup('Dvärgar kan inte ta Korruptionskänslig.');
             return;
@@ -996,8 +1024,7 @@ function initCharacter() {
         if (disAfter === 5 && disBefore < 5) {
           await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
         }
-    }else if(actBtn.dataset.act==='sub' || actBtn.dataset.act==='del' || actBtn.dataset.act==='rem'){
-      const act = actBtn.dataset.act;
+    }else if(act==='sub' || act==='del' || act==='rem'){
       if(name==='Mörkt förflutet' && before.some(x=>x.namn==='Mörkt blod')){
         if(!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
           return;
@@ -1063,7 +1090,7 @@ function initCharacter() {
       invUtil.renderInventory();
     }
     if (p.namn === 'Besittning') {
-      if (actBtn.dataset.act === 'add') {
+      if (act === 'add') {
         const amount = Math.floor(Math.random() * 10) + 11;
         storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
         await alertPopup(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
@@ -1074,7 +1101,7 @@ function initCharacter() {
     }
     if (p.namn === 'Välutrustad') {
       const inv = storeHelper.getInventory(store);
-      if (actBtn.dataset.act === 'add') {
+      if (act === 'add') {
         invUtil.addWellEquippedItems(inv);
       } else {
         invUtil.removeWellEquippedItems(inv);
@@ -1099,7 +1126,7 @@ function initCharacter() {
       updateXP();
       renderTraits();
       updateSearchDatalist();
-    if (actBtn.dataset.act === 'add') {
+    if (act === 'add') {
       flashAdded(name, tr);
     }
 
