@@ -175,6 +175,41 @@ const dom  = {
   cName  : document.getElementById('charName')
 };
 
+// Safari/WebKit exposes showOpenFilePicker but only allows selecting a single file.
+// Detect such browsers so we can fall back to the <input type="file" multiple> path.
+const shouldBypassShowOpenFilePickerMulti = (() => {
+  let cached;
+  return () => {
+    if (cached !== undefined) return cached;
+    let bypass = false;
+    try {
+      if (typeof navigator !== 'undefined') {
+        const nav = navigator;
+        if (nav.userAgentData && Array.isArray(nav.userAgentData.brands)) {
+          const safariBrand = nav.userAgentData.brands.some(entry => {
+            const brand = String((entry && entry.brand) || '').toLowerCase();
+            if (!brand) return false;
+            const hasSafari = brand.includes('safari');
+            const hasChrome = brand.includes('chrome') || brand.includes('chromium');
+            return hasSafari && !hasChrome;
+          });
+          if (safariBrand) bypass = true;
+        }
+        if (!bypass) {
+          const ua = String(nav.userAgent || '');
+          const vendor = String(nav.vendor || '');
+          const isAppleVendor = /apple/i.test(vendor);
+          const hasSafari = /\bSafari\//.test(ua);
+          const hasExclude = /\b(Chrome|Chromium|CriOS|FxiOS|OPR|OPiOS|Edg|EdgiOS)\//.test(ua);
+          if (isAppleVendor && hasSafari && !hasExclude) bypass = true;
+        }
+      }
+    } catch {}
+    cached = bypass;
+    return bypass;
+  };
+})();
+
 /* ===========================================================
    UI-KOMMANDON (sök efter menyknappar och lyft fram dem)
    =========================================================== */
@@ -836,6 +871,20 @@ function bindToolbar() {
           if (!settings) return;
 
           // Steg 2: Välj filer eller mapp
+          const pickJsonFilesWithInput = () => {
+            const inp = document.createElement('input');
+            inp.type = 'file';
+            inp.accept = 'application/json';
+            inp.multiple = true;
+            return new Promise((resolve, reject) => {
+              inp.addEventListener('change', () => {
+                const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
+                if (!list) return reject(new Error('Ingen fil vald'));
+                resolve(list);
+              });
+              inp.click();
+            });
+          };
           let files;
           if (window.showDirectoryPicker) {
             const pick = await openDialog('Vad vill du importera?', {
@@ -853,7 +902,8 @@ function bindToolbar() {
                 throw err;
               }
             } else if (pick === true) {
-              if (window.showOpenFilePicker) {
+              const canUseNativePicker = !!(window.showOpenFilePicker && !shouldBypassShowOpenFilePickerMulti());
+              if (canUseNativePicker) {
                 const handles = await window.showOpenFilePicker({
                   multiple: true,
                   types: [{
@@ -863,35 +913,13 @@ function bindToolbar() {
                 });
                 files = await Promise.all(handles.map(h => h.getFile()));
               } else {
-                const inp = document.createElement('input');
-                inp.type = 'file';
-                inp.accept = 'application/json';
-                inp.multiple = true;
-                files = await new Promise((resolve, reject) => {
-                  inp.addEventListener('change', () => {
-                    const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
-                    if (!list) return reject(new Error('Ingen fil vald'));
-                    resolve(list);
-                  });
-                  inp.click();
-                });
+                files = await pickJsonFilesWithInput();
               }
             } else {
               return;
             }
           } else {
-            const inp = document.createElement('input');
-            inp.type = 'file';
-            inp.accept = 'application/json';
-            inp.multiple = true;
-            files = await new Promise((resolve, reject) => {
-              inp.addEventListener('change', () => {
-                const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
-                if (!list) return reject(new Error('Ingen fil vald'));
-                resolve(list);
-              });
-              inp.click();
-            });
+            files = await pickJsonFilesWithInput();
           }
           // Mappningslogik för mål
           const override = settings.mode === 'choose';
