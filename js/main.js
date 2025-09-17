@@ -954,10 +954,10 @@ function bindToolbar() {
               if (Array.isArray(obj)) {
                 for (const item of obj) {
                   try {
-                    const id = storeHelper.importCharacterJSON(
-                      store,
-                      override ? { ...item, folder: targetFolderName } : item
-                    );
+                    const payload = override
+                      ? { ...item, folder: targetFolderName, folderId: targetFolderId }
+                      : item;
+                    const id = storeHelper.importCharacterJSON(store, payload);
                     if (id) {
                       imported++;
                       try {
@@ -971,10 +971,18 @@ function bindToolbar() {
               } else if (obj && Array.isArray(obj.folders)) {
                 for (const folder of obj.folders) {
                   const fname = override ? targetFolderName : (folder.folder || folder.name || '');
+                  const fid = override ? targetFolderId : (folder.id || folder.folderId || '');
                   if (Array.isArray(folder.characters)) {
                     for (const item of folder.characters) {
                       try {
-                        const id = storeHelper.importCharacterJSON(store, { ...item, folder: fname });
+                        let payload;
+                        if (override) {
+                          payload = { ...item, folder: targetFolderName, folderId: targetFolderId };
+                        } else {
+                          payload = { ...item, folder: fname };
+                          if (fid) payload.folderId = fid;
+                        }
+                        const id = storeHelper.importCharacterJSON(store, payload);
                         if (id) {
                           imported++;
                           try {
@@ -990,10 +998,10 @@ function bindToolbar() {
               } else if (obj && Array.isArray(obj.characters)) {
                 for (const item of obj.characters) {
                   try {
-                    const id = storeHelper.importCharacterJSON(
-                      store,
-                      override ? { ...item, folder: targetFolderName } : item
-                    );
+                    const payload = override
+                      ? { ...item, folder: targetFolderName, folderId: targetFolderId }
+                      : item;
+                    const id = storeHelper.importCharacterJSON(store, payload);
                     if (id) {
                       imported++;
                       try {
@@ -1005,10 +1013,10 @@ function bindToolbar() {
                   } catch {}
                 }
               } else {
-                const res = storeHelper.importCharacterJSON(
-                  store,
-                  override ? { ...obj, folder: targetFolderName } : obj
-                );
+                const payload = override
+                  ? { ...obj, folder: targetFolderName, folderId: targetFolderId }
+                  : obj;
+                const res = storeHelper.importCharacterJSON(store, payload);
                 if (res) {
                   imported++;
                   try {
@@ -1750,7 +1758,12 @@ async function exportActiveFolder() {
       .filter(Boolean);
     const payload = {
       folders: [
-        { folder: folder.name || 'Mapp', characters: exported }
+        {
+          folder: folder.name || 'Mapp',
+          folderId: folder.id,
+          id: folder.id,
+          characters: exported
+        }
       ]
     };
     const jsonText = JSON.stringify(payload, null, 2);
