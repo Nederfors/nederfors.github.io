@@ -556,8 +556,9 @@ function initIndex() {
           .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
         const filterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
+        const infoFilterTagHtml = filterTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
-        const infoTagsHtml = [xpTag].concat(filterTagHtml).filter(Boolean).join(' ');
+        const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
         const renderDockedTags = (tags) => {
