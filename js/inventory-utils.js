@@ -2019,7 +2019,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
             <button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>
             <button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>
-            <button id="squareBtn" class="char-btn">Lägg till antal</button>
+            <button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">➕</button>
             ${vehicleBtns}
             <button id="dragToggle" class="char-btn">Dra & Släpp</button>
             <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
@@ -2035,8 +2035,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
-                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon">&minus;</button>
-                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon">+</button>
+                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon" aria-label="Minska mynt" title="Minska mynt">➖</button>
+                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon" aria-label="Öka mynt" title="Öka mynt">➕</button>
               </div>
             </div>
             <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
@@ -2076,10 +2076,10 @@ ${moneyRow}
           const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
           const canStack = ['kraft','ritual'].includes(entry.bound);
           const btnRow = (isGear && !canStack)
-            ? `<button data-act="del" class="char-btn danger">🗑</button>`
-            : `<button data-act="del" class="char-btn danger">🗑</button>
-               <button data-act="sub" class="char-btn">–</button>
-               <button data-act="add" class="char-btn">+</button>`;
+            ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
+            : `<button data-act="del" class="char-btn danger icon">🗑</button>
+               <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
+               <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const editBtn = isCustom ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
@@ -2124,10 +2124,10 @@ ${moneyRow}
                 const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
                 const cCanStack = ['kraft','ritual'].includes(centry.bound);
                 const cBtnRow = (cIsGear && !cCanStack)
-                  ? `<button data-act="del" class="char-btn danger">🗑</button>`
-                  : `<button data-act="del" class="char-btn danger">🗑</button>
-                     <button data-act="sub" class="char-btn">–</button>
-                     <button data-act="add" class="char-btn">+</button>`;
+                  ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
+                  : `<button data-act="del" class="char-btn danger icon">🗑</button>
+                     <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
+                     <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
                 const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
                 const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
                 const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;

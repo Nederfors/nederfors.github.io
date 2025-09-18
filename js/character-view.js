@@ -3,6 +3,8 @@ function initCharacter() {
   dom.cName.textContent = store.characters.find(c=>c.id===store.current)?.name||'';
 
   const F = { search:[], typ:[], ark:[], test:[] };
+  const ONLY_SELECTED_VALUE = '__onlySelected';
+  const ONLY_SELECTED_LABEL = 'Endast valda';
   let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
@@ -125,6 +127,16 @@ function initCharacter() {
     'Negativa kvaliteter',
     'Övrigt'
   ];
+
+  const DOCK_TAG_TYPES = new Set(['Fördel','Nackdel','Särdrag','Monstruöst särdrag','Ritual','Mystisk kraft','Förmåga']);
+
+  const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
+
+  const renderDockedTags = (tags, extraClass = '') => {
+    if (!Array.isArray(tags) || !tags.length) return '';
+    const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
+    return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+  };
 
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, m => ({
     '&': '&amp;',
@@ -379,7 +391,8 @@ function initCharacter() {
           const textHtml = escapeHtml(effect.text).replace(/\n/g, '<br>');
           return `<div class="effect-line">${srcHtml}<span class="effect-text">${textHtml}</span></div>`;
         }).join('');
-        return `<li><strong>${escapeHtml(entry.label)}${countTxt}</strong>${lines ? `<div class="effect-lines">${lines}</div>` : ''}</li>`;
+        const title = `<strong class="effect-label">${escapeHtml(entry.label)}${countTxt}</strong>`;
+        return `<li class="effect-entry">${title}${lines ? `<div class="effect-lines">${lines}</div>` : ''}</li>`;
       }).join('');
       return `<section class="summary-section"><h3>${escapeHtml(section.label)}</h3><ul>${rows}</ul></section>`;
     }).join('');
@@ -788,7 +801,7 @@ function initCharacter() {
     const summarySections = [];
 
     const profileRows = [];
-    if (charName) profileRows.push({ label: 'Namn', value: charName });
+    if (charName) profileRows.push({ label: 'Namn', value: charName, layout: 'stack' });
     const raceRow = createListRow('Ras', gatherEntries('Ras'), { max: 3, showCount: false });
     if (raceRow) profileRows.push(raceRow);
     const jobRow = createListRow('Yrken', gatherEntries('Yrke'), { max: 3 });
@@ -914,7 +927,10 @@ function initCharacter() {
             return `<span class="${classNames.join(' ')}">${escapeHtml(row.value ?? '')}</span>`;
           };
 
-          return `<li><span class="summary-key">${escapeHtml(row.label)}</span>${buildValue()}</li>`;
+          const liClasses = [];
+          if (row.layout) liClasses.push(`layout-${row.layout}`);
+          const liClassAttr = liClasses.length ? ` class="${liClasses.join(' ')}"` : '';
+          return `<li${liClassAttr}><span class="summary-key">${escapeHtml(row.label)}</span>${buildValue()}</li>`;
         }).join('');
         return `<section class="summary-section"><h3>${escapeHtml(section.title)}</h3><ul class="${listClasses.join(' ')}">${items}</ul></section>`;
       }).join('');
@@ -983,10 +999,19 @@ function initCharacter() {
         .filter(Boolean)
         .forEach(v=>sets.test.add(v));
     });
-    const fill=(sel,set,lbl)=>{ if(!sel) return; sel.innerHTML =
-      `<option value="">${lbl} (alla)</option>` +
-      [...set].sort().map(v=>`<option>${v}</option>`).join(''); };
-    fill(dom.typSel,sets.typ ,'Typ');
+    const fill = (sel, set, label, extra = []) => {
+      if (!sel) return;
+      const opts = [`<option value="">${label} (alla)</option>`];
+      extra.forEach(opt => {
+        const text = String(opt?.label || '').trim();
+        if (!text) return;
+        const value = String(opt?.value ?? '');
+        opts.push(`<option value="${value}">${text}</option>`);
+      });
+      opts.push(...[...set].sort().map(v => `<option>${v}</option>`));
+      sel.innerHTML = opts.join('');
+    };
+    fill(dom.typSel,sets.typ ,'Typ', [{ value: ONLY_SELECTED_VALUE, label: ONLY_SELECTED_LABEL }]);
     fill(dom.arkSel,sets.ark ,'Arketyp');
     fill(dom.tstSel,sets.test,'Test');
   }
@@ -995,6 +1020,9 @@ function initCharacter() {
   const activeTags = ()=>{
     dom.active.innerHTML='';
     const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
+    if (storeHelper.getOnlySelected(store)) {
+      push('<span class="tag removable" data-type="onlySel">Endast valda ✕</span>');
+    }
     F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
     F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
@@ -1130,28 +1158,29 @@ function initCharacter() {
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
         const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
-        const typeTags = typesList.map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${t}</span>`);
-        const trTags = explodeTags(p.taggar?.ark_trad);
-        const arkTags = (trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []))
-          .map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
-        const testTags = (p.taggar?.test || []).map(t => `<span class="tag filter-tag" data-section="test" data-val="${t}">${t}</span>`);
-        const infoTagsHtml = [xpTag]
-          .concat(typeTags)
-          .concat(arkTags)
-          .concat(testTags)
+        const filterTagData = [];
+        typesList
           .filter(Boolean)
-          .join(' ');
-        const tagsHtml = []
-          .concat(typeTags)
-          .concat(arkTags)
-          .concat(testTags)
+          .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: t, hidden: idx === 0 }));
+        const trTags = explodeTags(p.taggar?.ark_trad);
+        const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
+        arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
+        (p.taggar?.test || [])
+          .filter(Boolean)
+          .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
+        const visibleTagData = filterTagData.filter(tag => !tag.hidden);
+        const tagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
+        const infoTagHtmlParts = filterTagData.map(tag => renderFilterTag(tag));
+        const tagsHtml = tagHtmlParts.join(' ');
+        const infoTagsHtml = [xpTag]
+          .concat(infoTagHtmlParts)
           .filter(Boolean)
           .join(' ');
         const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
         if (infoTagsHtml) {
           infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
         }
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" aria-label="Visa info">ℹ️</button>`;
 
         const li=document.createElement('li');
         li.className='card' + (compact ? ' compact' : '');
@@ -1175,38 +1204,66 @@ function initCharacter() {
           ? `<button data-act="${editAction}" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
           : '';
         const infoBtnHtml = showInfo ? infoBtn : '';
-        let btn = '';
-        if(multi){
+        const buttonParts = [];
+        if (infoBtnHtml) buttonParts.push(infoBtnHtml);
+        if (editBtn) buttonParts.push(editBtn);
+        if (multi) {
           const isDisadv = typesList.includes('Nackdel');
           if (isDisadv) {
             if (total > 0) {
-              const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
-              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
-              const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-              btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}${delBtn}${subBtn}${addBtn}${conflictBtn}</div>`;
+              const delBtn = `<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`;
+              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`;
+              const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>` : '';
+              buttonParts.push(delBtn, subBtn);
+              if (addBtn) buttonParts.push(addBtn);
             } else {
-              const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-              btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}${addBtn}${conflictBtn}</div>`;
+              const addBtn = `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
+              buttonParts.push(addBtn);
             }
+            if (conflictBtn) buttonParts.push(conflictBtn);
           } else {
-            const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>` : '';
-            const remBtn = total>0 ? `<button data-act="rem" class="char-btn danger${addBtn ? '' : ' icon'}" data-name="${p.namn}">🗑</button>` : '';
-            btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}${remBtn}${conflictBtn}${addBtn}</div>`;
+            const remBtn = total > 0
+              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+              : '';
+            const addBtn = total < limit
+              ? `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`
+              : '';
+            if (remBtn) buttonParts.push(remBtn);
+            if (conflictBtn) buttonParts.push(conflictBtn);
+            if (addBtn) buttonParts.push(addBtn);
           }
-        }else{
-          btn = `<div class="inv-controls">${infoBtnHtml}${editBtn}<button class="char-btn danger icon" data-act="rem">🗑</button>${conflictBtn}</div>`;
+        } else {
+          buttonParts.push(`<button class="char-btn danger icon" data-act="rem">🗑</button>`);
+          if (conflictBtn) buttonParts.push(conflictBtn);
         }
+        const buttonHtmlParts = buttonParts.filter(Boolean);
+        const controlButtonsHtml = buttonHtmlParts.length
+          ? `<div class="control-buttons">${buttonHtmlParts.join('')}</div>`
+          : '';
+        const dockPrimary = (p.taggar?.typ || [])[0] || '';
+        const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
+        const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
+        const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
+          ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
+          : '';
+        const leftParts = [];
+        if (shouldDockTags && dockedTagsHtml) leftParts.push(dockedTagsHtml);
+        else if (mobileTagsHtml) leftParts.push(mobileTagsHtml);
+        const leftHtml = leftParts.length ? `<div class="inv-controls-left">${leftParts.join('')}</div>` : '';
+        const controlsHtml = (leftHtml || controlButtonsHtml)
+          ? `<div class="inv-controls">${leftHtml || ''}${controlButtonsHtml || ''}</div>`
+          : '';
         li.dataset.xp = xpVal;
         if (p.id) li.dataset.id = p.id;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-        const tagsDiv = (!compact && tagsHtml)
-          ? `<div class="tags">${tagsHtml}</div>`
+        const tagsDiv = (!compact && !shouldDockTags && tagsHtml)
+          ? `<div class="tags entry-tags-block">${tagsHtml}</div>`
           : '';
         li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
         ${tagsDiv}
         ${lvlSel}
         ${descHtml}
-        ${btn}`;
+        ${controlsHtml}`;
 
       listEl.appendChild(li);
       });
@@ -1420,6 +1477,12 @@ function initCharacter() {
         activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
         return;
       }
+      if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
+        storeHelper.setOnlySelected(store, true);
+        dom[sel].value = '';
+        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+        return;
+      }
       if(v&&!F[key].includes(v)) F[key].push(v);
       dom[sel].value=''; activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
     });
@@ -1428,6 +1491,7 @@ function initCharacter() {
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const sec=t.dataset.type,val=t.dataset.val;
     if(sec==='search'){F.search=F.search.filter(x=>x!==val);} 
+    else if(sec==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[sec]=F[sec].filter(x=>x!==val);
     if(sec==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
     activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();

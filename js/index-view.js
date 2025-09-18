@@ -15,6 +15,8 @@ function initIndex() {
   let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
   const SECRET_SEARCH = { 'pajkastare': 'ar86' };
   const SECRET_IDS = new Set(Object.values(SECRET_SEARCH));
+  const ONLY_SELECTED_VALUE = '__onlySelected';
+  const ONLY_SELECTED_LABEL = 'Endast valda';
   // Open matching categories once after certain actions (search/type select)
   let openCatsOnce = new Set();
   // (Removed) Hoppsan no longer auto-syncs with other categories
@@ -211,9 +213,19 @@ function initIndex() {
         .filter(Boolean)
         .forEach(v=>set.test.add(v));
     });
-    const fill=(sel,s,l)=>sel.innerHTML =
-      `<option value="">${l} (alla)</option>` + [...s].sort().map(v=>`<option>${v}</option>`).join('');
-    fill(dom.typSel , set.typ ,'Typ');
+    const fill = (sel, s, label, extra = []) => {
+      if (!sel) return;
+      const opts = [`<option value="">${label} (alla)</option>`];
+      extra.forEach(opt => {
+        const text = String(opt?.label || '').trim();
+        if (!text) return;
+        const value = String(opt?.value ?? '');
+        opts.push(`<option value="${value}">${text}</option>`);
+      });
+      opts.push(...[...s].sort().map(v => `<option>${v}</option>`));
+      sel.innerHTML = opts.join('');
+    };
+    fill(dom.typSel , set.typ ,'Typ', [{ value: ONLY_SELECTED_VALUE, label: ONLY_SELECTED_LABEL }]);
     fill(dom.arkSel , set.ark ,'Arketyp');
     fill(dom.tstSel , set.test,'Test');
   };
@@ -457,11 +469,12 @@ function initIndex() {
       cats[cat].forEach(p=>{
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
-          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1">Info</button>`;
+          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
           const tagsHtml = (p.taggar?.typ || [])
             .map(t => `<span class="tag">${t}</span>`)
             .join(' ');
-          const tagsDiv = tagsHtml ? `<div class="tags">${tagsHtml}</div>` : '';
+          const tagsDiv = tagsHtml ? `<div class="tags entry-tags-block">${tagsHtml}</div>` : '';
+          const tagsMobile = tagsHtml ? `<div class="entry-tags entry-tags-mobile">${tagsHtml}</div>` : '';
         const li = document.createElement('li');
         li.className = 'card';
         li.dataset.name = p.namn;
@@ -469,7 +482,7 @@ function initIndex() {
         li.innerHTML = `
             <div class="card-title"><span>${p.namn}</span></div>
             ${tagsDiv}
-            <div class="inv-controls">${infoBtn}</div>`;
+            <div class="inv-controls">${tagsMobile}${infoBtn}</div>`;
         listEl.appendChild(li);
         if (searchActive && terms.length) {
           const titleSpan = li.querySelector('.card-title > span');
@@ -583,11 +596,15 @@ function initIndex() {
         const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
-        const renderDockedTags = (tags) => {
+        const renderDockedTags = (tags, extraClass = '') => {
           if (!tags.length) return '';
-          return `<div class="entry-tags">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+          const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
+          return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
         };
         const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
+        const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
+          ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
+          : '';
         const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
         // Compact meta badges (P/V/level) using short labels for mobile space
         const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
@@ -612,7 +629,7 @@ function initIndex() {
         if (infoTagsHtml) {
           infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
         }
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" aria-label="Visa info">ℹ️</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         let count;
         if (isInv(p)) {
@@ -643,16 +660,16 @@ function initIndex() {
         if (allowAdd) {
           if (multi) {
             if (count > 0) {
-              buttonGroupParts.push(`<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`);
-              buttonGroupParts.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`);
-              if (count < limit) buttonGroupParts.push(`<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>`);
+              buttonGroupParts.push(`<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`);
+              buttonGroupParts.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`);
+              if (count < limit) buttonGroupParts.push(`<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
             } else {
-              buttonGroupParts.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}">Lägg till</button>`);
+              buttonGroupParts.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
             }
           } else {
             const mainBtn = inChar
               ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-              : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}">Lägg till</button>`;
+              : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
             buttonGroupParts.push(mainBtn);
           }
         }
@@ -660,6 +677,7 @@ function initIndex() {
         const leftParts = [];
         if (metaBadges) leftParts.push(metaBadges);
         if (shouldDockTags && dockedTagsHtml) leftParts.push(dockedTagsHtml);
+        else if (mobileTagsHtml) leftParts.push(mobileTagsHtml);
         const leftHtml = leftParts.length ? `<div class="inv-controls-left">${leftParts.join('')}</div>` : '';
         const buttonsHtml = buttonGroupParts.length ? `<div class="control-buttons">${buttonGroupParts.join('')}</div>` : '';
         const controlsHtml = (leftHtml || buttonsHtml)
@@ -672,7 +690,7 @@ function initIndex() {
         if (xpVal != null) li.dataset.xp = xpVal;
         if (p.id) li.dataset.id = p.id;
         const tagsDiv = (!compact && !shouldDockTags && tagsHtml)
-          ? `<div class="tags">${tagsHtml}</div>`
+          ? `<div class="tags entry-tags-block">${tagsHtml}</div>`
           : '';
         const levelHtml = hideDetails ? '' : lvlSel;
         const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
@@ -975,6 +993,12 @@ function initIndex() {
         activeTags(); renderList(filtered());
         return;
       }
+      if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
+        storeHelper.setOnlySelected(store, true);
+        dom[sel].value = '';
+        activeTags(); renderList(filtered());
+        return;
+      }
       if(v && !F[key].includes(v)) F[key].push(v);
       // If selecting a type filter, open that category once
       if (sel === 'typSel' && v) {
@@ -1266,8 +1290,7 @@ function initIndex() {
           return;
         }
         if (isRas(p) && list.some(isRas)) {
-          await alertPopup('Du kan bara välja en ras.');
-          return;
+          if (!(await confirmPopup('Du kan bara välja en ras. Lägga till ändå?'))) return;
         }
         if (p.namn === 'Dvärg') {
           const hasKorrupt = list.some(x => x.namn === 'Korruptionskänslig');

@@ -1139,6 +1139,21 @@ function defaultTraits() {
 
   const RITUAL_COST = 10;
 
+  const ELITE_TO_BASE_MAGIC = {
+    'Templár': 'Teurgi',
+    'Stavmagiker': 'Ordensmagi',
+    'Andebesvärjare': 'Häxkonst',
+    'Blodvadare': 'Häxkonst',
+    'Demonolog': 'Svartkonst',
+    'Grönvävare': 'Häxkonst',
+    'Illusionist': 'Ordensmagi',
+    'Inkvisitor': 'Teurgi',
+    'Mentalist': 'Ordensmagi',
+    'Nekromantiker': 'Svartkonst',
+    'Pyromantiker': 'Ordensmagi',
+    'Själasörjare': 'Teurgi'
+  };
+
   const TRAD_TO_SKILL = {
     'Häxkonst': 'Häxkonster',
     'Ordensmagi': 'Ordensmagi',
@@ -1229,8 +1244,11 @@ function defaultTraits() {
       const trads = explodeTags(it.taggar?.ark_trad);
       let lvl = 0;
       trads.forEach(tr => {
-        const a = TRAD_TO_SKILL[tr];
-        if (a) lvl = Math.max(lvl, abilityLevel(list, a));
+        const baseTrad = ELITE_TO_BASE_MAGIC[tr] || tr;
+        const abilityName = TRAD_TO_SKILL[baseTrad] || TRAD_TO_SKILL[tr];
+        if (abilityName) {
+          lvl = Math.max(lvl, abilityLevel(list, abilityName));
+        }
       });
       if (types.includes('Mystisk kraft')) {
         const plvl = LEVEL_IDX[it.nivå || 'Novis'] || 1;

@@ -275,9 +275,9 @@ class SharedToolbar extends HTMLElement {
         <!-- Erfarenhetspoäng -->
         <div class="filter-group">
           <div class="xp-control">
-            <button id="xpMinus" class="char-btn icon" type="button">&minus;</button>
+            <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">➖</button>
             <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-            <button id="xpPlus" class="char-btn icon" type="button">+</button>
+            <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">➕</button>
           </div>
           <div id="xpSummary" class="card exp-counter">
             <div class="card-title">Erfarenhetspoäng</div>
@@ -446,7 +446,7 @@ class SharedToolbar extends HTMLElement {
             <label for="customType">Typ</label>
             <div class="custom-type-row">
               <select id="customType"></select>
-              <button id="customTypeAdd" class="char-btn" type="button">Lägg till typ</button>
+              <button id="customTypeAdd" class="char-btn" type="button" aria-label="Lägg till typ" title="Lägg till typ">➕</button>
             </div>
             <div id="customTypeTags" class="tags"></div>
           </div>
@@ -481,7 +481,7 @@ class SharedToolbar extends HTMLElement {
           <div id="customPowerFields" class="filter-group" style="display:none">
             <label>Förmågor</label>
             <div id="customPowerList"></div>
-            <button id="customPowerAdd" class="char-btn" type="button">Lägg till förmåga</button>
+            <button id="customPowerAdd" class="char-btn" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">➕</button>
           </div>
           <div id="customBoundFields" class="filter-group" style="display:none">
             <label for="customBoundType">Bundet till</label>
@@ -786,7 +786,7 @@ class SharedToolbar extends HTMLElement {
               <label for="newFolderName">+ Ny mapp:</label>
               <div class="inline-controls">
                 <input id="newFolderName" placeholder="Mappnamn">
-                <button id="addFolderBtn" class="char-btn">Lägg till</button>
+                <button id="addFolderBtn" class="char-btn" aria-label="Lägg till mapp" title="Lägg till mapp">➕</button>
               </div>
             </div>
           </section>
