@@ -222,7 +222,7 @@
         "Vapenkvalitet"
       ]
     },
-    "effekt": "Laddar +1 Bepansring per obruten träff (max +5); förbrukas vid nästa träff."
+    "effekt": "Laddar +1 Bepansring per lyckat slag mot försvar i rad (max +5); förbrukas vid nästa träff."
   },
   {
     "id": "mystiskkv18",

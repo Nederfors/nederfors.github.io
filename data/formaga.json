@@ -1713,7 +1713,7 @@
           "Speciell"
         ],
         "Gesäll": [
-          "Aktiv"
+          "Speciell"
         ],
         "Mästare": [
           "Speciell"
@@ -1721,8 +1721,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften kostar enbart en temporär Korruption att använda. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där; en gåva knuten till Ritualist (alltså då samtliga ritualer) eller till Häxsyn gör att dessa istället kostar en temporär Korruption att använda. Även särdrag som Eonernas visdom eller Spökvandring kan väljas. Signaturkraften påverkar inte eventuell kostnad i permanent Korruption för att lära sig en kraft utanför en mystisk tradition, enbart mängden temporär Korruption som ges vid dess användande.",
-      "Gesäll": "Aktiv. Den som har odlat sin starka gåva till gesällnivå använder hela sin Viljestark som Korruptionströskel, istället för halva som annars är brukligt. Total förstyggelse infaller i så fall inte förrän den totala korruptionen uppgår till Viljestark ×2",
+      "Novis": "Speciell. Redan på novisnivå låter den starka gåvan rollpersonen använda hela sin Viljestark som korruptionströskel i stället för halva. Total förstyggelse infaller först när den totala korruptionen uppgår till Viljestark +5",
+      "Gesäll": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften kostar 1T4 extra temporär Korruption att använda, men får också sin effekttärning höjd med 1T6. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där; en gåva kan bli knuten till Ritualist (alltså då samtliga ritualer) eller till Häxsyn. Även särdrag som Eonernas visdom eller Spökvandring kan väljas.",
       "Mästare": "Speciell. Mästarens starka gåva låter rollpersonen använda valfri mystisk kraft, dock enbart på novisnivå. Framgångsslagen har en andra chans att misslyckas och användandet ger 1T8 temporär Korruption. Alla mystiska krafter kan användas, oavsett vilken tradition de tillhör."
     }
   },

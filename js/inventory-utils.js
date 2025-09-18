@@ -44,10 +44,41 @@
     return Math.floor(o / divisor);
   };
 
+  function parseRef(ref) {
+    if (ref && typeof ref === 'object') {
+      const id = ref.id !== undefined && ref.id !== null ? String(ref.id).trim() : undefined;
+      const name = typeof ref.namn === 'string' && ref.namn.trim()
+        ? ref.namn.trim()
+        : (typeof ref.name === 'string' && ref.name.trim() ? ref.name.trim() : undefined);
+      return { id: id || undefined, name };
+    }
+    if (ref === undefined || ref === null) return { id: undefined, name: undefined };
+    if (typeof ref === 'string') {
+      const trimmed = ref.trim();
+      if (!trimmed) return { id: undefined, name: undefined };
+      return { id: trimmed, name: trimmed };
+    }
+    if (typeof ref === 'number') {
+      return { id: String(ref), name: undefined };
+    }
+    return { id: undefined, name: undefined };
+  }
+
   function getEntry(ref) {
+    const { id, name } = parseRef(ref);
     const custom = storeHelper.getCustomEntries(store);
-    const own = custom.find(x => x.id === ref || x.namn === ref);
-    return own || DB[ref] || DB.find(x => x.namn === ref) || {};
+    const own = custom.find(x => (id && x.id === id) || (name && x.namn === name));
+    if (own) return own;
+    if (typeof window.lookupEntry === 'function') {
+      const hit = window.lookupEntry({ id, name }, { explicitName: name });
+      if (hit) return hit;
+    }
+    if (id !== undefined && DB && DB[id]) return DB[id];
+    if (Array.isArray(DB) && id !== undefined) {
+      const byId = DB.find(ent => String(ent?.id ?? '') === id);
+      if (byId) return byId;
+    }
+    return {};
   }
 
   function isHiddenType(tagTyp) {
@@ -1635,7 +1666,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const posQuals = allQuals.filter(q => !isNegativeQual(q));
     const negQuals = allQuals.filter(q => isNegativeQual(q));
     posQuals.forEach(q => {
-      const qEntry = DB.find(x => x.namn === q) || {};
+      const qEntry = getEntry(q);
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = false;
       const neut  = Boolean(qEntry.neutral);
@@ -1659,7 +1690,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     // Adjustment for free qualities (left to right)
     const freeNames = (row.gratisKval || []).filter(q => {
-      const qEntry = DB.find(x => x.namn === q) || {};
+      const qEntry = getEntry(q);
       return !qEntry.negativ && !qEntry.neutral;
     });
     const remaining = [...freeNames];
@@ -1754,7 +1785,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const posBaseQuals = baseQuals.filter(q => !isNegativeQual(q));
     const negBaseQuals = baseQuals.filter(q => isNegativeQual(q));
     posBaseQuals.forEach(q => {
-      const qEntry = DB.find(x => x.namn === q) || {};
+      const qEntry = getEntry(q);
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const neut  = Boolean(qEntry.neutral);
       if (neut) price *= 1;

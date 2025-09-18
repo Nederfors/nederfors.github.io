@@ -57,6 +57,23 @@ function initIndex() {
   const hasArtifactTag = p => (p.taggar?.typ || [])
     .some(t => String(t || '').trim().toLowerCase() === 'artefakt');
 
+  let hiddenNameIndex = null;
+  const getHiddenNameIndex = () => {
+    const dbArr = Array.isArray(DB) ? DB : [];
+    if (hiddenNameIndex && hiddenNameIndex.size === dbArr.length) {
+      return hiddenNameIndex.map;
+    }
+    const map = new Map();
+    dbArr.forEach(ent => {
+      if (!isHidden(ent) || SECRET_IDS.has(ent.id)) return;
+      const key = searchNormalize(String(ent.namn || '').toLowerCase());
+      if (!key) return;
+      if (!map.has(key)) map.set(key, ent.id);
+    });
+    hiddenNameIndex = { map, size: dbArr.length };
+    return map;
+  };
+
   const FALT_BUNDLE = ['di10','di11','di12','di13','di14','di15'];
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
 
@@ -330,7 +347,7 @@ function initIndex() {
       const term = terms[0];
       const specialId = SECRET_SEARCH[term];
       if (specialId) {
-        const hid = DB.find(p => p.id === specialId);
+        const hid = lookupEntry({ id: specialId });
         if (hid) {
           const cat = hid.taggar?.typ?.[0];
           if (cat) openCatsOnce.add(cat);
@@ -338,7 +355,9 @@ function initIndex() {
         }
       }
       if (!showArtifacts) {
-        const hid = DB.find(p => isHidden(p) && !SECRET_IDS.has(p.id) && searchNormalize((p.namn || '').toLowerCase()) === term);
+        const hiddenIndex = getHiddenNameIndex();
+        const hiddenId = hiddenIndex.get(term);
+        const hid = hiddenId !== undefined ? lookupEntry({ id: hiddenId }) : null;
         if (hid) {
           if (!revealedArtifacts.has(hid.id)) {
             revealedArtifacts.add(hid.id);
@@ -1040,11 +1059,11 @@ function initIndex() {
     const name = btn.dataset.name || li.dataset.name;
     const tr = li.dataset.trait || null;
     const idAttr = btn.dataset.id || li.dataset.id || null;
+    const ref = { id: idAttr || undefined, name };
     const entries = getEntries();
-    let p = idAttr ? entries.find(x => x.id === idAttr) : null;
-    if (!p) p = entries.find(x => x.namn === name);
-    if (!p && idAttr) p = DB.find(x => x.id === idAttr);
-    if (!p) p = DB.find(x => x.namn === name);
+    let p = idAttr ? entries.find(x => String(x.id) === String(idAttr)) : null;
+    if (!p && name) p = entries.find(x => x.namn === name);
+    if (!p) p = lookupEntry(ref);
     if (!p) return;
     if (act === 'editCustom') {
       if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
@@ -1665,7 +1684,7 @@ function initIndex() {
         toAdd.forEach(n=>{
           const hamName=storeHelper.HAMNSKIFTE_NAMES[n];
           if(!list.some(x=>x.namn===hamName) && !rem.includes(n)){
-            const entry=window.DBIndex?.[n];
+            const entry=lookupEntry({ id: n, name: n });
             if(entry) list.push({ ...entry, namn:hamName, form:'beast' });
           }
           rem=rem.filter(x=>x!==n);

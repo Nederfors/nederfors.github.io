@@ -379,7 +379,9 @@
         const migrateRow = row => {
           if (!row || typeof row !== 'object') return;
           const entry = custom.find(e => e.id === row.id || e.namn === row.name)
-            || (global.DB || []).find(e => e.id === row.id || e.namn === row.name);
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: row.id, name: row.name })
+              : null);
           if (entry) {
             if (row.id !== entry.id) { row.id = entry.id; changed = true; }
             if (row.name !== entry.namn) { row.name = entry.namn; changed = true; }
@@ -390,8 +392,9 @@
         if (Array.isArray(data.revealedArtifacts)) {
           const updated = data.revealedArtifacts.map(n => {
             const ent = custom.find(e => e.id === n || e.namn === n)
-              || (global.DBIndex && global.DBIndex[n])
-              || (global.DB && global.DB[n]);
+              || (typeof global.lookupEntry === 'function'
+                ? global.lookupEntry({ id: n, name: n })
+                : null);
             return ent?.id || n;
           });
           if (JSON.stringify(updated) !== JSON.stringify(data.revealedArtifacts)) {
@@ -444,7 +447,7 @@
 
     if (hasDark) {
       if (idxBest < 0 && !suppressed) {
-        const entry = DB.find(x => x.namn === 'Mörkt förflutet');
+        const entry = lookupEntry({ name: 'Mörkt förflutet' });
         if (entry) list.push({ ...entry });
       }
     }
@@ -530,7 +533,7 @@
     needed.forEach(base => {
       const hamName = hamNames[base];
       if (!customs.some(c => c.namn === hamName)) {
-        const entry = DB.find(e => e.namn === base);
+        const entry = lookupEntry({ id: base, name: base });
         if (entry) customs.push({ ...entry, namn: hamName, form: 'beast' });
       }
       const idx = list.findIndex(it => it.namn === hamName);
@@ -548,7 +551,7 @@
     if (!entry) return [];
     let name = entry.namn || entry;
     name = HAMNSKIFTE_BASE[name] || name;
-    const ent = typeof entry === 'string' ? DB.find(x => x.namn === name) : entry;
+    const ent = typeof entry === 'string' ? lookupEntry({ id: entry, name }) : entry;
     if (!ent) return [];
     const out = [];
 
@@ -1027,7 +1030,10 @@
     const collect = arr => {
         arr.forEach(row => {
           const entry = (getCustomEntries(store).find(e => e.id === row.id || e.namn === row.name))
-            || (global.DB || []).find(e => e.id === row.id || e.namn === row.name) || {};
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: row.id, name: row.name })
+              : {})
+            || {};
           const tagTyp = entry.taggar?.typ || [];
           if (isHiddenTags(tagTyp) && entry.id) keep.add(entry.id);
           if (Array.isArray(row.contains)) collect(row.contains);
@@ -1206,7 +1212,9 @@ function defaultTraits() {
 
   function monsterStackLimit(list, name) {
     const base = HAMNSKIFTE_BASE[name] || name;
-    const entry = window.DBIndex?.[base];
+    const entry = typeof global.lookupEntry === 'function'
+      ? global.lookupEntry({ id: base, name: base })
+      : null;
     if (!entry || !isMonstrousTrait(entry)) return 3;
     return 1;
   }
@@ -1395,14 +1403,18 @@ function defaultTraits() {
 
   function compressList(list) {
     return (list || []).map(it => {
-      if (it && it.namn && window.DBIndex && window.DBIndex[it.namn]) {
-        const entry = window.DBIndex[it.namn];
-        const row = entry.id !== undefined ? { i: entry.id } : { n: it.namn };
-        if (it.nivå) row.l = it.nivå;
-        if (it.trait) row.t = it.trait;
-        if (it.race) row.r = it.race;
-        if (it.form) row.f = it.form;
-        return row;
+      if (it && (it.id !== undefined || it.namn)) {
+        const entry = typeof global.lookupEntry === 'function'
+          ? global.lookupEntry({ id: it.id, name: it.namn })
+          : null;
+        if (entry) {
+          const row = entry.id !== undefined ? { i: entry.id } : { n: entry.namn };
+          if (it.nivå) row.l = it.nivå;
+          if (it.trait) row.t = it.trait;
+          if (it.race) row.r = it.race;
+          if (it.form) row.f = it.form;
+          return row;
+        }
       }
       return it;
     });
@@ -1410,21 +1422,31 @@ function defaultTraits() {
 
   function expandList(list) {
     return (list || []).map(it => {
-      if (it && it.i !== undefined && window.DB && window.DB[it.i]) {
-        const base = { ...window.DB[it.i] };
-        if (it.l) base.nivå = it.l;
-        if (it.t) base.trait = it.t;
-        if (it.r) base.race = it.r;
-        if (it.f) base.form = it.f;
-        return base;
+      if (it && it.i !== undefined) {
+        const hitById = typeof global.lookupEntry === 'function'
+          ? global.lookupEntry({ id: it.i })
+          : null;
+        if (hitById) {
+          const base = { ...hitById };
+          if (it.l) base.nivå = it.l;
+          if (it.t) base.trait = it.t;
+          if (it.r) base.race = it.r;
+          if (it.f) base.form = it.f;
+          return base;
+        }
       }
-      if (it && it.n && window.DBIndex && window.DBIndex[it.n]) {
-        const base = { ...window.DBIndex[it.n] };
-        if (it.l) base.nivå = it.l;
-        if (it.t) base.trait = it.t;
-        if (it.r) base.race = it.r;
-        if (it.f) base.form = it.f;
-        return base;
+      if (it && it.n !== undefined) {
+        const hitByName = typeof global.lookupEntry === 'function'
+          ? global.lookupEntry({ id: it.n, name: it.n })
+          : null;
+        if (hitByName) {
+          const base = { ...hitByName };
+          if (it.l) base.nivå = it.l;
+          if (it.t) base.trait = it.t;
+          if (it.r) base.race = it.r;
+          if (it.f) base.form = it.f;
+          return base;
+        }
       }
       return it;
     });
@@ -1436,7 +1458,10 @@ function defaultTraits() {
       if (!row || typeof row !== 'object') return row;
       const res = {};
       if (row.id !== undefined) res.i = row.id;
-      const entryName = row.name || (row.id !== undefined && window.DB && window.DB[row.id]?.namn) || '';
+      const canonical = row.id !== undefined && typeof global.lookupEntry === 'function'
+        ? global.lookupEntry({ id: row.id })
+        : null;
+      const entryName = row.name || canonical?.namn || '';
       if (entryName) res.n = entryName;
       if (row.qty && row.qty !== 1) res.q = row.qty;
       if (row.gratis) res.g = row.gratis;
@@ -1499,8 +1524,19 @@ function defaultTraits() {
         const mappedId = (idMap && rawId !== undefined) ? idMap.get(rawId) : undefined;
         const effectiveId = mappedId !== undefined ? mappedId : rawId;
         const rawName = row.name || row.n || '';
-        const entry = (effectiveId !== undefined && ((window.DB && window.DB[effectiveId]) || customById.get(effectiveId)))
-          || (rawName ? ((window.DBIndex && window.DBIndex[rawName]) || customByName.get(rawName)) : undefined);
+        let entry = null;
+        if (effectiveId !== undefined) {
+          entry = customById.get(effectiveId)
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: effectiveId })
+              : null);
+        }
+        if (!entry && rawName) {
+          entry = customByName.get(rawName)
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: rawName, name: rawName })
+              : null);
+        }
         const resolvedId = entry?.id !== undefined ? entry.id : (effectiveId !== undefined ? effectiveId : undefined);
         const resolvedName = entry?.namn || rawName || '';
         const qty = sanitizeCount(row.qty ?? row.q, 1);

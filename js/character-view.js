@@ -134,6 +134,34 @@ function initCharacter() {
     "'": '&#39;'
   }[m]));
 
+  const resolveDbEntry = (entry) => {
+    if (!entry) return null;
+    const hit = typeof lookupEntry === 'function' ? lookupEntry(entry) : null;
+    return hit || null;
+  };
+
+  const mergeEffectGroups = (baseName, groups) => {
+    const seen = new Set();
+    const safeBase = baseName || '';
+    const out = [];
+    (Array.isArray(groups) ? groups : []).forEach(group => {
+      if (!group) return;
+      const label = String(group.label || safeBase || '').trim();
+      const texts = Array.isArray(group.texts)
+        ? group.texts
+        : effectTextsFrom(group.texts || {});
+      texts.forEach(raw => {
+        const text = String(raw || '').trim();
+        if (!text) return;
+        const key = `${label.toLowerCase()}||${text.toLowerCase()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push({ source: label || safeBase, text });
+      });
+    });
+    return out;
+  };
+
   const effectTextsFrom = (source) => {
     if (!source || typeof source !== 'object') return [];
     const raw = source.effekt ?? source.Effekt ?? source.effect ?? source.effects;
@@ -199,15 +227,14 @@ function initCharacter() {
   };
 
   const extractInventoryEffects = (row, entry) => {
-    const effects = [];
     const baseName = entry?.namn || row?.name || 'Föremål';
-    const addTexts = (sourceName, list) => {
-      list.forEach(txt => {
-        effects.push({ source: sourceName, text: txt });
-      });
+    const groups = [];
+    const pushGroup = (label, texts) => {
+      if (!texts || !texts.length) return;
+      groups.push({ label: label || baseName, texts });
     };
-    addTexts(baseName, effectTextsFrom(entry));
-    addTexts(baseName, effectTextsFrom(row));
+    pushGroup(baseName, effectTextsFrom(entry));
+    pushGroup(row?.name || baseName, effectTextsFrom(row));
 
     const removed = Array.isArray(row?.removedKval) ? row.removedKval : [];
     const splitFn = typeof window.splitQuals === 'function' ? window.splitQuals : (() => []);
@@ -222,12 +249,12 @@ function initCharacter() {
       const clean = String(name || '').trim();
       if (!clean || seenQuals.has(clean)) return;
       seenQuals.add(clean);
-      const qEntry = (window.DBIndex && window.DBIndex[clean])
-        || (Array.isArray(window.DB) ? window.DB.find(x => x?.namn === clean) : null);
-      addTexts(clean, effectTextsFrom(qEntry || {}));
+      const qEntry = lookupEntry({ id: clean, name: clean });
+      const texts = effectTextsFrom(qEntry || {});
+      pushGroup(clean, texts);
     });
 
-    return effects;
+    return mergeEffectGroups(baseName, groups);
   };
 
   const collectEffectsData = () => {
@@ -242,18 +269,33 @@ function initCharacter() {
     storeHelper.getCurrentList(store).
       filter(entry => !isInv(entry)).
       forEach(entry => {
-        const effects = effectTextsFrom(entry);
+        const baseEntry = resolveDbEntry(entry);
+        const baseName = baseEntry?.namn || entry?.namn || 'Post';
+        const sectionFromEntry = getSectionLabel(entry?.taggar?.typ, null);
+        const section = sectionFromEntry && sectionFromEntry !== 'Övrigt'
+          ? sectionFromEntry
+          : getSectionLabel(baseEntry?.taggar?.typ, 'Förmågor');
+        const effects = mergeEffectGroups(baseName, [
+          { label: baseEntry?.namn || baseName, texts: effectTextsFrom(baseEntry) },
+          { label: entry?.namn || baseName, texts: effectTextsFrom(entry) }
+        ]);
         if (!effects.length) return;
-        const section = getSectionLabel(entry?.taggar?.typ, 'Förmågor');
-        const key = `${entry?.id ?? entry?.namn ?? ''}|${entry?.trait ?? ''}|${entry?.nivå ?? ''}`;
+        const keyParts = [];
+        if (baseEntry?.id !== undefined) keyParts.push(`id:${baseEntry.id}`);
+        else if (entry?.id !== undefined) keyParts.push(`id:${entry.id}`);
+        else if (entry?.namn) keyParts.push(`name:${entry.namn}`);
+        if (entry?.trait) keyParts.push(`trait:${entry.trait}`);
+        if (entry?.nivå) keyParts.push(`lvl:${entry.nivå}`);
+        if (!keyParts.length) keyParts.push(`name:${baseName}`);
+        const key = keyParts.join('|');
         let bucket = abilityMap.get(key);
         if (!bucket) {
           bucket = {
             section,
             label: abilityDisplayName(entry),
-            baseName: entry?.namn || '',
+            baseName,
             count: 0,
-            effects: effects.map(txt => ({ source: entry?.namn || '', text: txt }))
+            effects
           };
           abilityMap.set(key, bucket);
         }
@@ -275,9 +317,7 @@ function initCharacter() {
     invRows.forEach(row => {
       const entry = (window.invUtil && typeof window.invUtil.getEntry === 'function')
         ? window.invUtil.getEntry(row?.id || row?.name)
-        : ((row?.id !== undefined && window.DB && window.DB[row.id])
-          || (window.DBIndex && row?.name ? window.DBIndex[row.name] : null)
-          || {});
+        : (lookupEntry({ id: row?.id, name: row?.name }) || {});
       const effects = extractInventoryEffects(row, entry || {});
       if (!effects.length) return;
       const section = getSectionLabel(entry?.taggar?.typ, 'Inventarie');
@@ -572,13 +612,14 @@ function initCharacter() {
     const valStark = vals['Stark'];
 
     const valWill = vals['Viljestark'];
-    const strongGift = list.some(p=>p.namn==='Stark gåva' && ['Gesäll','Mästare'].includes(p.nivå||''));
+    const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
+    const strongGift = strongGiftLevel >= 1;
     const hasSjalastark = list.some(p=>p.namn==='Själastark');
     const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
     const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
     const permBase = storeHelper.calcPermanentCorruption(list, effects);
     const hasEarth = list.some(p=>p.namn==='Jordnära');
-    const baseMax = strongGift ? valWill * 2 : valWill;
+    const baseMax = strongGift ? valWill + 5 : valWill;
     const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
     const maxCor = baseMax + (hasSjalastark ? 1 : 0);
     let thresh = threshBase + resistCount - sensCount;
@@ -598,7 +639,6 @@ function initCharacter() {
     const defTrait = getDefenseTraitName(list);
     const kvickForDef = vals[defTrait];
     const defenseList = calcDefense(kvickForDef);
-    const defenseHtml = defenseList.map(d=>`<li>Försvar${d.name ? ' ('+d.name+')' : ''}: ${d.value}</li>`).join('');
 
     const cond = [];
     if(storeHelper.abilityLevel(list,'Fint') >= 1){
@@ -635,62 +675,251 @@ function initCharacter() {
     const totalXP = storeHelper.calcTotalXP(baseXP, list);
     const freeXP = totalXP - usedXP;
 
-    const data = store.data[store.current] || {};
-    const bonusMoney = storeHelper.normalizeMoney(data.bonusMoney);
-    const privMoney = storeHelper.normalizeMoney(data.privMoney);
-    const posMoney = storeHelper.normalizeMoney(data.possessionMoney);
-    const totalMoney = storeHelper.normalizeMoney({
-      daler: bonusMoney.daler + privMoney.daler + posMoney.daler,
-      skilling: bonusMoney.skilling + privMoney.skilling + posMoney.skilling,
-      'örtegar': bonusMoney['örtegar'] + privMoney['örtegar'] + posMoney['örtegar']
-    });
+    const totalMoney = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+    const moneyToOFn = typeof window.moneyToO === 'function' ? window.moneyToO : null;
+    const oToMoneyFn = typeof window.oToMoney === 'function' ? window.oToMoney : null;
+    const invUtil = window.invUtil || {};
+    let unusedText = `${totalMoney.daler}D ${totalMoney.skilling}S ${totalMoney['örtegar']}Ö`;
 
-    summaryContent.innerHTML = `
-      <section class="summary-section">
-        <h3>XP</h3>
-        <ul>
-          <li>Total XP: ${totalXP}</li>
-          <li>Använt XP: ${usedXP}</li>
-          <li>XP kvar: ${freeXP}</li>
-        </ul>
-      </section>
-      <section class="summary-section">
-        <h3>Ekonomi</h3>
-        <ul>
-          <li>Bonus: ${formatMoney(bonusMoney)}</li>
-          <li>Privat: ${formatMoney(privMoney)}</li>
-          <li>Egendom: ${formatMoney(posMoney)}</li>
-          <li>Totalt: ${formatMoney(totalMoney)}</li>
-        </ul>
-      </section>
-      <section class="summary-section">
-        <h3>Försvar</h3>
-        <ul>${defenseHtml}</ul>
-      </section>
-      <section class="summary-section">
-        <h3>Korruption</h3>
-        <ul>
-          <li>Maximal korruption: ${maxCor}</li>
-          <li>Permanent korruption: ${perm}</li>
-          <li>Korruptionströskel: ${thresh}</li>
-        </ul>
-      </section>
-      <section class="summary-section">
-        <h3>Bärkapacitet</h3>
-        <ul><li>${formatWeight(capacity)}</li></ul>
-      </section>
-      <section class="summary-section">
-        <h3>Hälsa</h3>
-        <ul>
-          <li>Tålighet: ${tal}</li>
-          <li>Smärtgräns: ${pain}</li>
-        </ul>
-      </section>
-      <section class="summary-section">
-        <h3>Träffsäkerhet</h3>
-        <ul>${cond.map(c=>`<li>${c}</li>`).join('')}</ul>
-      </section>
-    `;
+    if (moneyToOFn && oToMoneyFn && typeof invUtil.calcRowCost === 'function') {
+      const LEVEL_IDX = { '': 0, Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
+      const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+      const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
+      const forgeLevel = Math.max(partyForge, skillForge);
+      const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+      const skillAlc = storeHelper.abilityLevel(list, 'Alkemist');
+      const alcLevel = Math.max(partyAlc, skillAlc);
+      const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+      const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
+      const artLevel = Math.max(partyArt, skillArt);
+
+      const calcSpentO = (rows) => {
+        let sum = 0;
+        (Array.isArray(rows) ? rows : []).forEach(row => {
+          if (!row || typeof row !== 'object') return;
+          const rowCost = invUtil.calcRowCost(row, forgeLevel, alcLevel, artLevel);
+          sum += moneyToOFn(rowCost || {});
+          if (Array.isArray(row.contains) && row.contains.length) {
+            sum += calcSpentO(row.contains);
+          }
+        });
+        return sum;
+      };
+
+      const totalCashO = moneyToOFn(totalMoney);
+      const spentO = calcSpentO(inv);
+      const diffO = totalCashO - spentO;
+      const diff = oToMoneyFn(Math.abs(diffO));
+      unusedText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
+    }
+
+    const currentChar = (Array.isArray(store.characters) ? store.characters : [])
+      .find(c => c && c.id === store.current);
+    const charName = currentChar?.name ? String(currentChar.name).trim() : '';
+
+    const dedupeList = (items) => {
+      const seen = new Map();
+      (Array.isArray(items) ? items : []).forEach(item => {
+        let text = '';
+        let count = 1;
+        if (typeof item === 'string') {
+          text = item;
+        } else if (item && typeof item === 'object') {
+          if (item.label !== undefined) text = item.label;
+          else if (item.text !== undefined) text = item.text;
+          else if (item.display !== undefined) text = item.display;
+          else if (item.value !== undefined) text = item.value;
+          const parsed = Number(item.count ?? item.total ?? 1);
+          if (Number.isFinite(parsed) && parsed > 0) count = parsed;
+        }
+        text = String(text || '').trim();
+        if (!text) return;
+        const key = text.toLocaleLowerCase('sv');
+        if (seen.has(key)) {
+          const existing = seen.get(key);
+          existing.count += count;
+        } else {
+          seen.set(key, { text, count });
+        }
+      });
+      return Array.from(seen.values());
+    };
+
+    const createListRow = (label, entries, options = {}) => {
+      const { max = 5, showCount = true, countMode = 'unique' } = options;
+      const clean = dedupeList(entries);
+      if (!clean.length) return null;
+      const totalCount = clean.reduce((sum, item) => sum + (item.count || 1), 0);
+      const headerCount = countMode === 'total' ? totalCount : clean.length;
+      const header = showCount && headerCount > 1 ? `${label} (${headerCount})` : label;
+      const slice = clean.slice(0, max);
+      const values = slice.map(item => item.text);
+      const extra = Math.max(0, clean.length - slice.length);
+      return { label: header, values, extra };
+    };
+
+    const gatherEntries = (types, options = {}) => {
+      const wanted = Array.isArray(types) ? types : [types];
+      const { annotateMultiples = false, multipleThreshold = 2 } = options;
+      const counts = new Map();
+      list.forEach(entry => {
+        const entryTypes = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+        if (!wanted.some(type => entryTypes.includes(type))) return;
+        const display = abilityDisplayName(entry);
+        if (!display) return;
+        const key = display.toLocaleLowerCase('sv');
+        const item = counts.get(key);
+        if (item) {
+          item.count += 1;
+        } else {
+          counts.set(key, { label: display, count: 1 });
+        }
+      });
+      const entries = Array.from(counts.values());
+      entries.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
+      return entries.map(entry => {
+        const display = (annotateMultiples && entry.count >= multipleThreshold)
+          ? `${entry.label} ×${entry.count}`
+          : entry.label;
+        return { label: display, count: entry.count };
+      });
+    };
+
+    const summarySections = [];
+
+    const profileRows = [];
+    if (charName) profileRows.push({ label: 'Namn', value: charName });
+    const raceRow = createListRow('Ras', gatherEntries('Ras'), { max: 3, showCount: false });
+    if (raceRow) profileRows.push(raceRow);
+    const jobRow = createListRow('Yrken', gatherEntries('Yrke'), { max: 3 });
+    if (jobRow) profileRows.push(jobRow);
+    const eliteRow = createListRow('Elityrken', gatherEntries('Elityrke'), { max: 3 });
+    if (eliteRow) profileRows.push(eliteRow);
+    if (profileRows.length) {
+      summarySections.push({ title: 'Profil', rows: profileRows, listClass: 'summary-pairs' });
+    }
+
+    const focusRows = [];
+    const pushListRows = (label, values, options = {}) => {
+      const row = createListRow(label, values, { max: 999, ...options });
+      if (!row) return;
+      focusRows.push({
+        label: row.label,
+        values: row.values,
+        extra: row.extra
+      });
+    };
+
+    pushListRows('Förmågor', gatherEntries('Förmåga'));
+    pushListRows('Mystiska krafter', gatherEntries('Mystisk kraft'));
+    pushListRows('Ritualer', gatherEntries('Ritual'));
+    pushListRows('Fördelar', gatherEntries('Fördel', {
+      annotateMultiples: true,
+      multipleThreshold: 3
+    }), { countMode: 'total' });
+    pushListRows('Nackdelar', gatherEntries('Nackdel', {
+      annotateMultiples: true,
+      multipleThreshold: 3
+    }), { countMode: 'total' });
+    pushListRows('Särdrag', gatherEntries('Särdrag'));
+    pushListRows('Monstruösa särdrag', gatherEntries('Monstruöst särdrag'));
+
+    if (focusRows.length) {
+      summarySections.push({ title: 'Nyckelval', rows: focusRows, listClass: 'summary-titles' });
+    }
+
+    const traitRows = KEYS.map(k => ({
+      label: k,
+      value: String(vals[k] ?? 0)
+    }));
+    if (traitRows.length) {
+      summarySections.push({ title: 'Karaktärsdrag', rows: traitRows, listClass: 'summary-grid tight' });
+    }
+
+    const xpRows = [
+      { label: 'Total XP', value: String(totalXP), align: 'right' },
+      { label: 'Använt XP', value: String(usedXP), align: 'right' },
+      { label: 'XP kvar', value: String(freeXP), align: 'right', valueClass: freeXP < 0 ? 'neg' : '' }
+    ];
+    summarySections.push({ title: 'Erfarenhet', rows: xpRows, listClass: 'summary-pairs' });
+
+    const economyRows = [{ text: `Oanvänt: ${unusedText}` }];
+    summarySections.push({ title: 'Ekonomi', rows: economyRows, listClass: 'summary-text' });
+
+    const defenseRows = defenseList.map(d => ({
+      label: d.name ? `Försvar (${d.name})` : 'Försvar',
+      value: String(d.value),
+      align: 'right'
+    }));
+    if (defenseRows.length) {
+      summarySections.push({ title: 'Försvar', rows: defenseRows, listClass: 'summary-pairs' });
+    }
+
+    const healthRows = [
+      { label: 'Tålighet', value: String(tal), align: 'right' },
+      { label: 'Smärtgräns', value: String(pain), align: 'right' },
+      { label: 'Bärkapacitet', value: formatWeight(capacity), align: 'right' }
+    ];
+    summarySections.push({ title: 'Hälsa', rows: healthRows, listClass: 'summary-pairs' });
+
+    const corruptionRows = [
+      { label: 'Maximal korruption', value: String(maxCor), align: 'right' },
+      { label: 'Permanent korruption', value: String(perm), align: 'right' },
+      { label: 'Korruptionströskel', value: String(thresh), align: 'right' }
+    ];
+    summarySections.push({ title: 'Korruption', rows: corruptionRows, listClass: 'summary-pairs' });
+
+    const accuracyRows = cond.map(text => ({ text }));
+    summarySections.push({ title: 'Träffsäkerhet', rows: accuracyRows, listClass: 'summary-text' });
+
+    const sectionHtml = summarySections
+      .filter(section => Array.isArray(section.rows) && section.rows.length)
+      .map(section => {
+        const listClasses = ['summary-list'];
+        if (section.listClass) listClasses.push(section.listClass);
+        const items = section.rows.map(row => {
+          if (section.listClass === 'summary-titles') {
+            const normalized = Array.isArray(row.values)
+              ? row.values.map(val => val?.text ?? val ?? '')
+              : [];
+            const listItems = normalized
+              .map(val => `<li class="summary-subitem">${escapeHtml(val)}</li>`)
+              .join('');
+            const extraItem = row.extra > 0
+              ? `<li class="summary-subitem">+${row.extra} fler</li>`
+              : '';
+            return `<li class="summary-title-item"><div class="summary-sublist"><div class="summary-chip summary-chip-title">${escapeHtml(row.label)}</div><ul>${listItems}${extraItem}</ul></div></li>`;
+          }
+
+          if (row.text) {
+            return `<li>${escapeHtml(row.text)}</li>`;
+          }
+
+          const buildValue = () => {
+            if (Array.isArray(row.values)) {
+              const normalized = row.values.map(val => val?.text ?? val ?? '');
+              const chips = normalized
+                .map(val => `<span class="summary-chip">${escapeHtml(val)}</span>`)
+                .join('');
+              const extraChip = row.extra > 0
+                ? `<span class="summary-chip summary-chip-more">+${row.extra} fler</span>`
+                : '';
+              return `<span class="summary-values">${chips}${extraChip}</span>`;
+            }
+            const classNames = ['summary-value'];
+            if (row.align === 'right') classNames.push('align-right');
+            if (row.valueClass) {
+              row.valueClass.split(/\s+/).filter(Boolean).forEach(cls => classNames.push(cls));
+            }
+            return `<span class="${classNames.join(' ')}">${escapeHtml(row.value ?? '')}</span>`;
+          };
+
+          return `<li><span class="summary-key">${escapeHtml(row.label)}</span>${buildValue()}</li>`;
+        }).join('');
+        return `<section class="summary-section"><h3>${escapeHtml(section.title)}</h3><ul class="${listClasses.join(' ')}">${items}</ul></section>`;
+      }).join('');
+
+    summaryContent.innerHTML = sectionHtml;
   }
 
   if (summaryBtn && summaryPanel) {
@@ -1286,11 +1515,13 @@ function initCharacter() {
     if (!liEl) return;
     const name = actBtn.dataset.name || liEl.dataset.name;
     const idAttr = actBtn.dataset.id || liEl.dataset.id || null;
+    const ref = { id: idAttr || undefined, name };
     const tr = liEl.dataset.trait || null;
     const before = storeHelper.getCurrentList(store);
     const disBefore = storeHelper.countDisadvantages(before);
-    let p = idAttr ? (before.find(x => x.id === idAttr) || DB.find(x => x.id === idAttr)) : null;
-    if(!p) p = DB.find(x=>x.namn===name) || before.find(x=>x.namn===name);
+    let p = idAttr ? before.find(x => String(x.id) === String(idAttr)) : null;
+    if(!p && name) p = before.find(x=>x.namn===name);
+    if(!p) p = lookupEntry(ref);
     if(!p) return;
     const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
     const handleEntryEdited = () => {

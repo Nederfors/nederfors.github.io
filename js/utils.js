@@ -125,15 +125,60 @@
   function isQual(p){
     return (p.taggar?.typ||[]).some(t => ['Kvalitet','Mystisk kvalitet'].includes(t));
   }
+  function normalizeRef(ref) {
+    if (ref && typeof ref === 'object') {
+      const { id, namn, name } = ref;
+      return {
+        id: id !== undefined && id !== null && String(id).trim() !== '' ? String(id).trim() : undefined,
+        name: typeof namn === 'string' && namn.trim() ? namn.trim()
+          : (typeof name === 'string' && name.trim() ? name.trim() : undefined)
+      };
+    }
+    if (ref === undefined || ref === null) return { id: undefined, name: undefined };
+    if (typeof ref === 'string') {
+      const trimmed = ref.trim();
+      if (!trimmed) return { id: undefined, name: undefined };
+      return { id: trimmed, name: trimmed };
+    }
+    if (typeof ref === 'number') {
+      return { id: String(ref), name: undefined };
+    }
+    return { id: undefined, name: undefined };
+  }
+
+  function lookupEntry(ref, options = {}) {
+    const { allowNameFallback = true, explicitName } = options || {};
+    const db = window.DB;
+    const dbIndex = window.DBIndex;
+    const { id, name } = normalizeRef(ref);
+    const fallbackName = explicitName || name;
+
+    if (id !== undefined) {
+      if (db && db[id]) return db[id];
+      if (Array.isArray(db)) {
+        const hitById = db.find(ent => String(ent?.id ?? '') === id);
+        if (hitById) return hitById;
+      }
+    }
+
+    if (!allowNameFallback) return undefined;
+
+    const key = typeof fallbackName === 'string' ? fallbackName : undefined;
+    if (key) {
+      if (dbIndex && dbIndex[key]) return dbIndex[key];
+      if (Array.isArray(db)) {
+        const hitByName = db.find(ent => ent?.namn === key);
+        if (hitByName) return hitByName;
+      }
+    }
+
+    return undefined;
+  }
   // Kontrollera om en viss kvalitet kan läggas på ett specifikt föremål
   // Stödjer nya taggar: Vapenkvalitet, Sköldkvalitet, Rustningskvalitet, Allmän kvalitet
   function canApplyQuality(itemOrName, qualOrName) {
-    const item = (typeof itemOrName === 'string')
-      ? (window.DB?.find(x => x.namn === itemOrName) || {})
-      : (itemOrName || {});
-    const qual = (typeof qualOrName === 'string')
-      ? (window.DB?.find(x => x.namn === qualOrName) || {})
-      : (qualOrName || {});
+    const item = lookupEntry(itemOrName) || (typeof itemOrName === 'object' && itemOrName ? itemOrName : {});
+    const qual = lookupEntry(qualOrName) || (typeof qualOrName === 'object' && qualOrName ? qualOrName : {});
     const itTypes = Array.isArray(item.taggar?.typ) ? item.taggar.typ : [];
     const qTypes  = Array.isArray(qual.taggar?.typ) ? qual.taggar.typ : [];
 
@@ -170,13 +215,16 @@
   function isEmployment(p){ return (p.taggar?.typ||[]).includes('Anställning'); }
   function isService(p){ return (p.taggar?.typ||[]).includes('Tjänster'); }
   function isMysticQual(name){
-    return (window.DB?.find(x => x.namn === name)?.taggar?.typ || []).includes('Mystisk kvalitet');
+    const entry = lookupEntry(name);
+    return (entry?.taggar?.typ || []).includes('Mystisk kvalitet');
   }
   function isNegativeQual(name){
-    return Boolean(window.DB?.find(x => x.namn === name)?.negativ);
+    const entry = lookupEntry(name);
+    return Boolean(entry?.negativ);
   }
   function isNeutralQual(name){
-    return Boolean(window.DB?.find(x => x.namn === name)?.neutral);
+    const entry = lookupEntry(name);
+    return Boolean(entry?.neutral);
   }
   function sortByType(a, b){
     const ta = (a.taggar?.typ || [''])[0] || '';
@@ -370,4 +418,5 @@
   window.copyToClipboard = copyToClipboard;
   window.catComparator = catComparator;
   window.catName = catName;
+  window.lookupEntry = lookupEntry;
 })(window);

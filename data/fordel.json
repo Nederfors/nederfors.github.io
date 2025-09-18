@@ -129,7 +129,7 @@
   {
     "id": "ford9",
     "namn": "Bländverk",
-    "beskrivning": "Rollpersonen har en mindre mystisk gåva och kan väva momentära bländverk ur tomma luften – eldsflammor som inte bränner kan hoppa mellan dennes händer, små figurer av ljus kan dansa i luften där rollpersonen dragit sin hand, rollpersonen tycks omgiven av hotfulla skuggor och liknande. Dessutom kan rollpersonen väva falska bilder över grus och till synes förvandla dem till skinande mynt. Bländverket lurar ingen över tid då effekten tynar bort efter scenens slut. Med Bländverk kan rollpersonen slå ett Övertygande för att lura någon att acceptera en falsk vara eller betalning med illusoriska mynt, till ett maximalt ”värde” av hundra daler. Dessutom ger Bländverk +1 på Övertygande när rollpersonen hotar eller försöker imponera på någon med sin ”mäktiga magi”.",
+    "beskrivning": "Rollpersonen har en mindre mystisk gåva och kan väva momentära bländverk ur tomma luften – eldsflammor som inte bränner kan hoppa mellan dennes händer, små figurer av ljus kan dansa i luften där rollpersonen dragit sin hand, rollpersonen tycks omgiven av hotfulla skuggor och liknande. Dessutom kan rollpersonen väva falska bilder över grus och till synes förvandla dem till skinande mynt. Bländverket lurar ingen över tid då effekten tynar bort efter scenens slut. Med Bländverk kan rollpersonen slå ett Övertygande för att lura någon att acceptera en falsk vara eller betalning med illusoriska mynt, till ett maximalt ”värde” av tio daler. Dessutom ger Bländverk +1 på Övertygande när rollpersonen hotar eller försöker imponera på någon med sin ”mäktiga magi”.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
@@ -142,7 +142,7 @@
         "Övertygande"
       ]
     },
-    "effekt": "Skapar kortlivade illusioner; kan via Övertygande lura med illusoriska mynt (max 100 daler) och ger +1 Övertygande vid hot/imponera."
+    "effekt": "Skapar kortlivade illusioner; kan via Övertygande lura med illusoriska mynt (max 10 daler) och ger +1 Övertygande vid hot/imponera."
   },
   {
     "id": "ford10",

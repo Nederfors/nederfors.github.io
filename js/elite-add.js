@@ -279,7 +279,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
   }
 
   function isRitual(name){
-    const entry=DB.find(x=>x.namn===name);
+    const entry=lookupEntry({ id: name, name });
     return (entry?.taggar?.typ||[]).includes('Ritual');
   }
 
@@ -297,7 +297,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
       if(isMap && !(nm in levels)) return;
       const lvl = isMap ? levels[nm] : (nm===levels ? 'Mästare' : 'Novis');
       if(!lvl || lvl==='skip') return;
-      const item=DB.find(x=>x.namn===nm);
+      const item=lookupEntry({ id: nm, name: nm });
       if(!item) return;
       const cur=list.find(x=>x.namn===nm);
       if(cur){ cur.nivå=lvl; }
@@ -330,7 +330,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
 
   async function handle(btn){
     const name=btn.dataset.eliteReq;
-    const entry=DB.find(x=>x.namn===name);
+    const entry=lookupEntry({ id: name, name });
     if(!entry) return;
     if(!store.current && !(await requireCharacter())) return;
     const listPre = storeHelper.getCurrentList(store);

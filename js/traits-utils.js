@@ -166,17 +166,14 @@
     const hasHardnackad = list.some(p => p.namn === 'Hårdnackad');
     const hasSjalastark = list.some(p => p.namn === 'Själastark');
 
-    const strongGift = list.some(
-      p =>
-        p.namn === 'Stark gåva' &&
-        ['Gesäll', 'Mästare'].includes(p.nivå || '')
-    );
+    const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
+    const strongGift = strongGiftLevel >= 1;
 
     const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
     const sensCount   = list.filter(p => p.namn === 'Korruptionskänslig').length;
 
     const valWill = vals['Viljestark'];
-    const baseMax   = strongGift ? valWill * 2 : valWill;
+    const baseMax   = strongGift ? valWill + 5 : valWill;
     const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
     const maxCor = baseMax + (hasSjalastark ? 1 : 0);
     let   thresh = threshBase + resistCount - sensCount;
