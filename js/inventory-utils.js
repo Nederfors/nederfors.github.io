@@ -2161,6 +2161,9 @@ ${moneyRow}
     if (dom.collapseAllBtn) updateCollapseBtnState();
     bindInv();
     bindMoney();
+    if (typeof window.refreshEffectsPanel === 'function') {
+      window.refreshEffectsPanel();
+    }
   }
 
   function getInvCards() {

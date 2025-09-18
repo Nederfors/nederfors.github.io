@@ -44,6 +44,7 @@
       <div class="header-actions">
         <button id="clearNonInv" class="char-btn icon danger" title="Rensa allt utom inventariet">🧹</button>
         <a href="notes.html" id="notesLink" class="char-btn icon" title="Anteckningar">📜</a>
+        <button id="effectsToggle" class="char-btn icon" title="Visa effekter">📚</button>
         <button id="summaryToggle" class="char-btn icon summary-btn" title="Visa översikt">📋</button>
       </div>
     </div>
@@ -57,6 +58,15 @@
       <button class="char-btn icon" id="summaryClose">✕</button>
     </header>
     <div id="summaryContent" class="summary-content"></div>
+  </aside>
+
+  <!-- Slide-in effektpanel -->
+  <aside id="effectsPanel">
+    <header class="inv-header">
+      <h2>Effekter</h2>
+      <button class="char-btn icon" id="effectsClose">✕</button>
+    </header>
+    <div id="effectsContent" class="summary-content"></div>
   </aside>
 
   <!-- Konfliktpanel för aktiva handlingar -->

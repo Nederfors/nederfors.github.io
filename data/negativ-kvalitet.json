@@ -9,7 +9,8 @@
         "Vapenkvalitet"
       ]
     },
-    "negativ": true
+    "negativ": true,
+    "effekt": "Effekttärningen sänks en nivå."
   },
   {
     "id": "neg2",
@@ -18,10 +19,12 @@
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Vapenkvalitet"
       ]
     },
-    "negativ": true
+    "negativ": true,
+    "effekt": "Begränsning höjs med 1 (lätt −3, medeltung −4, tung −5)."
   },
   {
     "id": "neg3",
@@ -33,7 +36,8 @@
         "Vapenkvalitet"
       ]
     },
-    "negativ": true
+    "negativ": true,
+    "effekt": "Anfall tar hela rundan; ingen förflyttning samma runda som anfallet inleds."
   },
   {
     "id": "neg4",
@@ -45,7 +49,8 @@
         "Vapenkvalitet"
       ]
     },
-    "negativ": true
+    "negativ": true,
+    "effekt": "−1 i Försvar."
   },
   {
     "id": "neg5",
@@ -54,10 +59,12 @@
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Allmän kvalitet"
+        "Allmän kvalitet",
+        "Vapenkvalitet"
       ]
     },
-    "negativ": true
+    "negativ": true,
+    "effekt": "Kritiskt misslyckande gör föremålet obrukbart tills lagat."
   },
   {
     "id": "neg6",
@@ -69,7 +76,8 @@
         "Vapenkvalitet"
       ]
     },
-    "negativ": true
+    "negativ": true,
+    "effekt": "−1 på Träffsäker med vapnet."
   },
   {
     "id": "neg7",
@@ -78,9 +86,11 @@
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Vapenkvalitet"
       ]
     },
-    "negativ": true
+    "negativ": true,
+    "effekt": "Bepansring sänks en tärningsnivå mot vassa anfall."
   }
 ]

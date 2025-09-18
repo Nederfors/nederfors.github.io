@@ -9,7 +9,8 @@
         "Vapenkvalitet"
       ]
     },
-    "neutral": true
+    "neutral": true,
+    "effekt": "Dras som fri handling; fungerar med Fint."
   },
   {
     "id": "neu2",
@@ -21,7 +22,8 @@
         "Vapenkvalitet"
       ]
     },
-    "neutral": true
+    "neutral": true,
+    "effekt": "1 frislag per runda mot ny närstridsmotståndare utan långt vapen."
   },
   {
     "id": "neu3",
@@ -33,6 +35,7 @@
         "Vapenkvalitet"
       ]
     },
-    "neutral": true
+    "neutral": true,
+    "effekt": "Kan brukas en- eller tvåhandat; enhandat tappar kvaliteter men tillåter sköld och ridbruk."
   }
 ]

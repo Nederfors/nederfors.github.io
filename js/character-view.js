@@ -46,6 +46,311 @@ function initCharacter() {
   const summaryPanel = document.getElementById('summaryPanel');
   const summaryClose = document.getElementById('summaryClose');
   const summaryContent = document.getElementById('summaryContent');
+  const effectsBtn = document.getElementById('effectsToggle');
+  const effectsPanel = document.getElementById('effectsPanel');
+  const effectsClose = document.getElementById('effectsClose');
+  const effectsContent = document.getElementById('effectsContent');
+
+  const EFFECT_SECTION_LABELS = new Map([
+    ['Fördel', 'Fördelar'],
+    ['Nackdel', 'Nackdelar'],
+    ['Förmåga', 'Förmågor'],
+    ['Mystisk kraft', 'Mystiska krafter'],
+    ['Ritual', 'Ritualer'],
+    ['Särdrag', 'Särdrag'],
+    ['Monstruöst särdrag', 'Monstruösa särdrag'],
+    ['Yrke', 'Yrken'],
+    ['Elityrke', 'Elityrken'],
+    ['Ras', 'Raser'],
+    ['Artefakt', 'Artefakter'],
+    ['L\u00e4gre Artefakt', 'L\u00e4gre artefakter'],
+    ['Vapen', 'Vapen'],
+    ['Rustning', 'Rustningar'],
+    ['Sköld', 'Sköldar'],
+    ['Elixir', 'Elixir'],
+    ['Specialverktyg', 'Specialverktyg'],
+    ['Förvaring', 'Förvaring'],
+    ['Instrument', 'Instrument'],
+    ['F\u00e4rdmedel', 'F\u00e4rdmedel'],
+    ['G\u00e5rdsdjur', 'G\u00e5rdsdjur'],
+    ['Byggnad', 'Byggnader'],
+    ['Anst\u00e4llning', 'Anst\u00e4llningar'],
+    ['Tj\u00e4nst', 'Tj\u00e4nster'],
+    ['Mat', 'Mat'],
+    ['Dryck', 'Dryck'],
+    ['Kuriositet', 'Kuriositeter'],
+    ['Skatt', 'Skatter'],
+    ['Diverse', 'Diverse'],
+    ['F\u00e4lla', 'F\u00e4llor'],
+    ['Kvalitet', 'Kvaliteter'],
+    ['Mystisk kvalitet', 'Mystiska kvaliteter'],
+    ['Neutral kvalitet', 'Neutrala kvaliteter'],
+    ['Negativ kvalitet', 'Negativa kvaliteter']
+  ]);
+
+  const EFFECT_SECTION_ORDER = [
+    'Fördelar',
+    'Nackdelar',
+    'Förmågor',
+    'Mystiska krafter',
+    'Ritualer',
+    'Särdrag',
+    'Monstruösa särdrag',
+    'Yrken',
+    'Elityrken',
+    'Raser',
+    'Vapen',
+    'Rustningar',
+    'Sköldar',
+    'Artefakter',
+    'L\u00e4gre artefakter',
+    'Elixir',
+    'Specialverktyg',
+    'Förvaring',
+    'Instrument',
+    'F\u00e4rdmedel',
+    'G\u00e5rdsdjur',
+    'Byggnader',
+    'Anst\u00e4llningar',
+    'Tj\u00e4nster',
+    'Mat',
+    'Dryck',
+    'Kuriositeter',
+    'Skatter',
+    'Diverse',
+    'F\u00e4llor',
+    'Kvaliteter',
+    'Mystiska kvaliteter',
+    'Neutrala kvaliteter',
+    'Negativa kvaliteter',
+    'Övrigt'
+  ];
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[m]));
+
+  const effectTextsFrom = (source) => {
+    if (!source || typeof source !== 'object') return [];
+    const raw = source.effekt ?? source.Effekt ?? source.effect ?? source.effects;
+    if (!raw) return [];
+    if (Array.isArray(raw)) {
+      return raw
+        .map(v => String(v || '').trim())
+        .filter(Boolean);
+    }
+    if (typeof raw === 'string') {
+      const txt = raw.trim();
+      return txt ? [txt] : [];
+    }
+    return [];
+  };
+
+  const sectionIndex = (label) => {
+    const idx = EFFECT_SECTION_ORDER.indexOf(label);
+    return idx === -1 ? EFFECT_SECTION_ORDER.length : idx;
+  };
+
+  const getSectionLabel = (types, fallback) => {
+    const arr = Array.isArray(types) ? types : [];
+    for (const raw of arr) {
+      const key = String(raw || '').trim();
+      if (!key) continue;
+      const label = EFFECT_SECTION_LABELS.get(key);
+      if (label) return label;
+    }
+    return fallback || 'Övrigt';
+  };
+
+  const abilityDisplayName = (entry) => {
+    const base = entry?.namn ? String(entry.namn).trim() : 'Okänd post';
+    const parts = [];
+    if (entry?.trait) parts.push(String(entry.trait).trim());
+    const lvl = entry?.nivå || '';
+    if (lvl && LVL.includes(lvl)) parts.push(lvl);
+    if (!parts.length) return base;
+    return `${base} (${parts.join(', ')})`;
+  };
+
+  const inventoryDisplayName = (row, entry) => {
+    const base = entry?.namn || row?.name || 'Okänt föremål';
+    const extras = [];
+    if (row?.trait) extras.push(String(row.trait).trim());
+    const lvl = row?.nivå || '';
+    if (lvl) extras.push(String(lvl).trim());
+    const detail = extras.length ? ` (${extras.join(', ')})` : '';
+    return `${base}${detail}`;
+  };
+
+  const flattenInventoryRows = (rows) => {
+    const out = [];
+    const walk = (list) => {
+      (Array.isArray(list) ? list : []).forEach(row => {
+        out.push(row);
+        if (Array.isArray(row?.contains) && row.contains.length) walk(row.contains);
+      });
+    };
+    walk(rows);
+    return out;
+  };
+
+  const extractInventoryEffects = (row, entry) => {
+    const effects = [];
+    const baseName = entry?.namn || row?.name || 'Föremål';
+    const addTexts = (sourceName, list) => {
+      list.forEach(txt => {
+        effects.push({ source: sourceName, text: txt });
+      });
+    };
+    addTexts(baseName, effectTextsFrom(entry));
+    addTexts(baseName, effectTextsFrom(row));
+
+    const removed = Array.isArray(row?.removedKval) ? row.removedKval : [];
+    const splitFn = typeof window.splitQuals === 'function' ? window.splitQuals : (() => []);
+    const baseQuals = [
+      ...((entry?.taggar?.kvalitet ?? []).filter(Boolean)),
+      ...splitFn(entry?.kvalitet).filter(Boolean)
+    ].filter(q => !removed.includes(q));
+    const extraQuals = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
+    const allQuals = [...baseQuals, ...extraQuals];
+    const seenQuals = new Set();
+    allQuals.forEach(name => {
+      const clean = String(name || '').trim();
+      if (!clean || seenQuals.has(clean)) return;
+      seenQuals.add(clean);
+      const qEntry = (window.DBIndex && window.DBIndex[clean])
+        || (Array.isArray(window.DB) ? window.DB.find(x => x?.namn === clean) : null);
+      addTexts(clean, effectTextsFrom(qEntry || {}));
+    });
+
+    return effects;
+  };
+
+  const collectEffectsData = () => {
+    const sections = new Map();
+    const ensureSection = (label) => {
+      const key = label || 'Övrigt';
+      if (!sections.has(key)) sections.set(key, { label: key, entries: [] });
+      return sections.get(key);
+    };
+
+    const abilityMap = new Map();
+    storeHelper.getCurrentList(store).
+      filter(entry => !isInv(entry)).
+      forEach(entry => {
+        const effects = effectTextsFrom(entry);
+        if (!effects.length) return;
+        const section = getSectionLabel(entry?.taggar?.typ, 'Förmågor');
+        const key = `${entry?.id ?? entry?.namn ?? ''}|${entry?.trait ?? ''}|${entry?.nivå ?? ''}`;
+        let bucket = abilityMap.get(key);
+        if (!bucket) {
+          bucket = {
+            section,
+            label: abilityDisplayName(entry),
+            baseName: entry?.namn || '',
+            count: 0,
+            effects: effects.map(txt => ({ source: entry?.namn || '', text: txt }))
+          };
+          abilityMap.set(key, bucket);
+        }
+        bucket.count += 1;
+      });
+
+    abilityMap.forEach(bucket => {
+      const section = ensureSection(bucket.section);
+      section.entries.push({
+        label: bucket.label,
+        count: bucket.count,
+        baseName: bucket.baseName,
+        effects: bucket.effects
+      });
+    });
+
+    const invRows = flattenInventoryRows(storeHelper.getInventory(store));
+    const itemMap = new Map();
+    invRows.forEach(row => {
+      const entry = (window.invUtil && typeof window.invUtil.getEntry === 'function')
+        ? window.invUtil.getEntry(row?.id || row?.name)
+        : ((row?.id !== undefined && window.DB && window.DB[row.id])
+          || (window.DBIndex && row?.name ? window.DBIndex[row.name] : null)
+          || {});
+      const effects = extractInventoryEffects(row, entry || {});
+      if (!effects.length) return;
+      const section = getSectionLabel(entry?.taggar?.typ, 'Inventarie');
+      const qty = Math.max(1, Number(row?.qty) || 1);
+      const keyParts = [
+        entry?.id !== undefined ? `id:${entry.id}` : `name:${entry?.namn || row?.name || ''}`,
+        `trait:${row?.trait || ''}`,
+        `lvl:${row?.nivå || ''}`,
+        `effects:${effects.map(e => `${e.source}|${e.text}`).sort().join('||')}`
+      ];
+      const key = keyParts.join('|');
+      let bucket = itemMap.get(key);
+      if (!bucket) {
+        bucket = {
+          section,
+          label: inventoryDisplayName(row, entry),
+          baseName: entry?.namn || row?.name || '',
+          count: 0,
+          effects
+        };
+        itemMap.set(key, bucket);
+      }
+      bucket.count += qty;
+    });
+
+    itemMap.forEach(bucket => {
+      const section = ensureSection(bucket.section);
+      section.entries.push({
+        label: bucket.label,
+        count: bucket.count,
+        baseName: bucket.baseName,
+        effects: bucket.effects
+      });
+    });
+
+    const result = [...sections.values()];
+    result.sort((a, b) => sectionIndex(a.label) - sectionIndex(b.label) || a.label.localeCompare(b.label, 'sv'));
+    result.forEach(section => {
+      section.entries.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
+    });
+    return result.filter(section => section.entries.length);
+  };
+
+  const renderEffects = () => {
+    if (!effectsContent) return;
+    const sections = collectEffectsData();
+    if (!sections.length) {
+      effectsContent.innerHTML = '<p>Inga effekter att visa för den här rollpersonen.</p>';
+      return;
+    }
+    const html = sections.map(section => {
+      const rows = section.entries.map(entry => {
+        const countTxt = entry.count > 1 ? ` <span class="count-badge">×${entry.count}</span>` : '';
+        const base = entry.baseName || '';
+        const lines = entry.effects.map(effect => {
+          const source = String(effect.source || '').trim();
+          const needsLabel = source && source !== base;
+          const srcHtml = needsLabel ? `<span class="effect-source">${escapeHtml(source)}:</span> ` : '';
+          const textHtml = escapeHtml(effect.text).replace(/\n/g, '<br>');
+          return `<div class="effect-line">${srcHtml}<span class="effect-text">${textHtml}</span></div>`;
+        }).join('');
+        return `<li><strong>${escapeHtml(entry.label)}${countTxt}</strong>${lines ? `<div class="effect-lines">${lines}</div>` : ''}</li>`;
+      }).join('');
+      return `<section class="summary-section"><h3>${escapeHtml(section.label)}</h3><ul>${rows}</ul></section>`;
+    }).join('');
+    effectsContent.innerHTML = html;
+  };
+
+  const refreshEffectsPanel = () => {
+    if (effectsPanel?.classList.contains('open')) {
+      renderEffects();
+    }
+  };
 
   // Rensa allt utom inventariet (suddgummi)
   const clearBtn = document.getElementById('clearNonInv');
@@ -206,8 +511,23 @@ function initCharacter() {
     const normalized = rawTypes
       .map(t => typeof t === 'string' ? t.trim() : '')
       .filter(Boolean);
-    const primary = normalized.find(t => t.toLowerCase() !== 'hemmagjort') || normalized[0];
-    if (primary) return primary;
+    if (!normalized.length) {
+      return allowFallback ? 'Övrigt' : undefined;
+    }
+
+    const primaryType = normalized[0];
+    const firstNonCustomIdx = normalized.findIndex(t => t.toLowerCase() !== 'hemmagjort');
+    const artifactIdx = normalized.findIndex(t => t.toLowerCase() === 'artefakt');
+
+    if (artifactIdx > 0 && artifactIdx === firstNonCustomIdx && primaryType) {
+      return primaryType;
+    }
+
+    if (firstNonCustomIdx >= 0) {
+      return normalized[firstNonCustomIdx];
+    }
+
+    if (primaryType) return primaryType;
     return allowFallback ? 'Övrigt' : undefined;
   };
 
@@ -373,15 +693,33 @@ function initCharacter() {
     `;
   }
 
-  summaryBtn.addEventListener('click',()=>{
-    renderSummary();
-    const isOpen = summaryPanel.classList.toggle('open');
-    if (isOpen) summaryPanel.scrollTop = 0;
-  });
-  summaryClose.addEventListener('click',()=>summaryPanel.classList.remove('open'));
+  if (summaryBtn && summaryPanel) {
+    summaryBtn.addEventListener('click',()=>{
+      renderSummary();
+      const isOpen = summaryPanel.classList.toggle('open');
+      if (isOpen) summaryPanel.scrollTop = 0;
+    });
+  }
+  summaryClose?.addEventListener('click',()=>summaryPanel.classList.remove('open'));
   document.addEventListener('click',e=>{
-    if(!summaryPanel.contains(e.target) && e.target!==summaryBtn){
+    if (summaryPanel && summaryPanel.classList.contains('open') &&
+        !summaryPanel.contains(e.target) && e.target!==summaryBtn) {
       summaryPanel.classList.remove('open');
+    }
+  });
+
+  if (effectsBtn && effectsPanel) {
+    effectsBtn.addEventListener('click',()=>{
+      renderEffects();
+      const isOpen = effectsPanel.classList.toggle('open');
+      if (isOpen) effectsPanel.scrollTop = 0;
+    });
+  }
+  effectsClose?.addEventListener('click',()=>effectsPanel.classList.remove('open'));
+  document.addEventListener('click',e=>{
+    if (effectsPanel && effectsPanel.classList.contains('open') &&
+        !effectsPanel.contains(e.target) && e.target!==effectsBtn) {
+      effectsPanel.classList.remove('open');
     }
   });
 
@@ -641,13 +979,14 @@ function initCharacter() {
         ${descHtml}
         ${btn}`;
 
-        listEl.appendChild(li);
+      listEl.appendChild(li);
       });
       dom.valda.appendChild(catLi);
     });
     updateCatToggle();
     openCatsOnce.clear();
     saveState();
+    refreshEffectsPanel();
   };
 
   /* custom suggestions above search (entries + UI-kommandon, min 2 chars) */
@@ -710,6 +1049,7 @@ function initCharacter() {
   window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); updateSearchDatalist(); };
   // expose for main.js to refresh dropdowns when switching character
   window.indexViewRefreshFilters = () => { refreshCharacterFilters(); updateSearchDatalist(); };
+  window.refreshEffectsPanel = refreshEffectsPanel;
 
   dom.catToggle.addEventListener('click', () => {
     const details = document.querySelectorAll('.cat-group > details');

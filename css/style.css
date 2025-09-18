@@ -164,6 +164,28 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   gap: .3rem;
 }
 
+#effectsPanel .summary-section li {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+#effectsPanel .effect-lines {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+}
+
+#effectsPanel .effect-line {
+  color: var(--subtxt);
+  font-size: .95rem;
+}
+
+#effectsPanel .effect-source {
+  color: var(--txt);
+  font-weight: 600;
+}
+
 /* Rad för knappar i filterpanelen */
 .char-btn-row {
   display: grid;
@@ -618,6 +640,7 @@ input:focus, select:focus, textarea:focus {
 #filterPanel { max-width: 360px; }
 #traitsPanel { max-width: 360px; }
 #summaryPanel{ max-width: 360px; }
+#effectsPanel{ max-width: 360px; }
 
 .inv-header { display: flex; justify-content: space-between; align-items: center; }
 .inv-actions { display: flex; align-items: baseline; gap: .4rem; }
@@ -753,6 +776,7 @@ select.level {
 #yrkePanel,
 #infoPanel,
 #summaryPanel,
+#effectsPanel,
 #conflictPanel {
   position: fixed;
   top: 0;
@@ -777,6 +801,7 @@ select.level {
 #filterPanel { max-width: 360px; }
 #traitsPanel { max-width: 360px; }
 #summaryPanel{ max-width: 360px; }
+#effectsPanel{ max-width: 360px; }
 #conflictPanel { max-width: 360px; }
 #yrkePanel   { max-width: 360px; font-size: 1.2rem; line-height: 1.6; }
 #infoPanel   { max-width: 360px; font-size: 1.1rem; line-height: 1.5; }
@@ -804,6 +829,7 @@ select.level {
 #yrkePanel.open,
 #infoPanel.open,
 #summaryPanel.open,
+#effectsPanel.open,
 #conflictPanel.open {
   right: 0;
 }
@@ -813,6 +839,7 @@ select.level {
   #filterPanel { max-width: 460px; }
   #traitsPanel { max-width: 460px; }
   #summaryPanel{ max-width: 460px; }
+  #effectsPanel{ max-width: 460px; }
   #conflictPanel{ max-width: 460px; }
   #yrkePanel   { max-width: 520px; }
   #infoPanel   { max-width: 520px; }

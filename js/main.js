@@ -283,6 +283,8 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       syn: ['anteckningar','anteckning','notes','noteringar'] },
     { id: 'open-summary',    label: 'Översikt',     sel: '#summaryToggle', panel: null,         emoji: '📋',
       syn: ['översikt','oversikt','sammanfattning','visa översikt','visa oversikt'] },
+    { id: 'open-effects',    label: 'Effekter',     sel: '#effectsToggle', panel: null,         emoji: '📚',
+      syn: ['effekter','visa effekter','sammanställning effekter','sammanstallning effekter'] },
 
     // Inställningar 💡 (Filter → Inställningar)
     { id: 'settings-smith',   label: 'Smed i partyt',        sel: '#partySmith',      panel: 'filterPanel', emoji: '⚒️', syn: ['smed','smed i partyt','smed nivå'] },
@@ -349,7 +351,7 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     const cmd = UI_CMDS.find(c => c.id === id);
     if (!cmd) return false;
     // If this command belongs to character view but we are elsewhere, navigate
-    if ((cmd.id === 'open-summary' || cmd.id === 'open-notes') && ROLE !== 'character') {
+    if ((cmd.id === 'open-summary' || cmd.id === 'open-notes' || cmd.id === 'open-effects') && ROLE !== 'character') {
       try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
       try { window.location.href = 'character.html'; } catch {}
       return true;
