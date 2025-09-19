@@ -1778,9 +1778,9 @@
 "nivåer": {
 "Novis": "Aktiv. Rollpersonen kan med ett lyckat Viljestark skicka iväg en blixt från klar himmel mot en motståndare. Fienden tar 1T10 i elementarskada. Blixtfrämjaren kan också kalla på en blixt som förgrenar sig i en radie av 6 meter och gör 1T8 i elementarskada på alla fiender som står inom den radien.",
 "Gesäll": "Aktiv. Som novis men skadan ökar till 1T12 alternativt 1T10 vid förgrening.",
-"Mästare": "Aktiv. "Novis": "Aktiv. Rollpersonen kan med ett lyckat Viljestark skicka iväg en blixt från klar himmel mot en motståndare. Fienden tar 1T10 i elementarskada. Blixtfrämjaren kan också kalla på en blixt som förgrenar sig i en radie av 6 meter och gör 1T8 i elementarskada på alla fiender som står inom den radien.",
+"Mästare": "Aktiv. Novis: Aktiv. Rollpersonen kan med ett lyckat Viljestark skicka iväg en blixt från klar himmel mot en motståndare. Fienden tar 1T10 i elementarskada. Blixtfrämjaren kan också kalla på en blixt som förgrenar sig i en radie av 6 meter och gör 1T8 i elementarskada på alla fiender som står inom den radien.",
 "Gesäll": "Aktiv. Som novis men skadan ökar till 1T12 alternativt 1T10 vid förgrening och förgreningen sträcker sig 9 meter.",
-"Mästare": Som gesäll, men efter nedslaget gör Blixtfrämjaren ett motståndsslag, Viljestark mot målets Stark. Lyckas slaget tar tar målet dessutom 1T6 alternativ skada på Viljestark; vid förgrening tar i stället varje träffat mål 1T4 alternativ skada på Viljestark."
+"Mästare": "Som gesäll, men efter nedslaget gör Blixtfrämjaren ett motståndsslag, Viljestark mot målets Stark. Lyckas slaget tar tar målet dessutom 1T6 alternativ skada på Viljestark; vid förgrening tar i stället varje träffat mål 1T4 alternativ skada på Viljestark."
 },
 "id": "mystiskkr56"
 }
