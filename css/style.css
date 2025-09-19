@@ -30,7 +30,8 @@
 
 @media (max-width: 640px) {
   :root {
-    --ctrl-btn-size: 44px;
+    --ctrl-btn-size: 30px;
+    --ctrl-btn-font-size: 1.1rem;
   }
 }
 
@@ -1214,34 +1215,45 @@ select.level {
   }
   .inv-controls {
     gap: .2rem .3rem;
-    align-items: center;
+    align-items: flex-start;
+  }
+  #lista .inv-controls {
+    flex-wrap: wrap;
   }
   .inv-controls-left {
-    align-items: center;
-    flex: 1 1 160px;
+    align-items: flex-start;
+    align-content: flex-start;
+    flex: 1 1 100%;
+    min-width: 0;
     gap: .2rem .3rem;
   }
   .entry-tags-block {
-    display: none;
+    display: flex;
   }
   .entry-tags-mobile {
-    display: flex;
-    flex-flow: row wrap;
-    align-content: center;
-    max-height: none;
-    gap: .2rem .28rem;
+    display: none;
   }
   .entry-tags-mobile .tag {
     white-space: nowrap;
   }
   .inv-controls-left .entry-tags {
-    flex-flow: row wrap;
-    max-height: none;
+    flex-flow: column wrap;
+    max-height: calc(var(--entry-tag-row) * 2 + .2rem);
+    width: 100%;
+    min-width: 0;
   }
   .entry-tags {
     --entry-tag-row: 1.25rem;
     gap: .2rem .28rem;
     max-height: calc(var(--entry-tag-row) * 2 + .2rem);
+  }
+  .xp-cost {
+    font-size: .78rem;
+    padding: .18rem .6rem;
+  }
+  .tag.xp-cost {
+    font-size: .72rem;
+    padding: .16rem .5rem;
   }
   .inv-buttons { gap: .6rem; }
   .header-actions {
