@@ -539,46 +539,38 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
 
 function yrkeInfoHtml(p) {
   const extra = p.extra ? formatText(p.extra) : '';
+  const wrapBlocks = (parts) => parts
+    .map(part => String(part || '').trim())
+    .filter(Boolean)
+    .map(part => `<div class="info-block info-block-extra">${part}</div>`)
+    .join('');
   if (isRas(p)) {
-    const trait = p.särdrag
-      ? `<strong>Särdrag:</strong> ${p.särdrag}`
-      : '';
-    const male = (p.namn_man || []).length
-      ? `<strong>Mansnamn:</strong> ${p.namn_man.join(', ')}`
-      : '';
-    const female = (p.namn_kvinna || []).length
-      ? `<strong>Kvinnonamn:</strong> ${p.namn_kvinna.join(', ')}`
-      : '';
-    return [extra, trait, male, female].filter(Boolean).join('<br>');
+    const parts = [];
+    if (extra) parts.push(extra);
+    if (p.särdrag) parts.push(`<p><strong>Särdrag:</strong> ${p.särdrag}</p>`);
+    if ((p.namn_man || []).length) parts.push(`<p><strong>Mansnamn:</strong> ${p.namn_man.join(', ')}</p>`);
+    if ((p.namn_kvinna || []).length) parts.push(`<p><strong>Kvinnonamn:</strong> ${p.namn_kvinna.join(', ')}</p>`);
+    return wrapBlocks(parts);
   }
   if (isElityrke(p)) {
-    const req = p.krav_formagor
-      ? `<strong>Krav på förmågor (varav minst en på mästarnivå):</strong> ${p.krav_formagor}`
-      : '';
-    const abil = (p.Elityrkesförmågor || []).length
-      ? `<strong>Elityrkesförmågor:</strong> ${p.Elityrkesförmågor.join(', ')}`
-      : '';
-    const perks = (p.mojliga_fordelar || []).length
-      ? `<strong>Möjliga fördelar:</strong> ${p.mojliga_fordelar.join(', ')}`
-      : '';
-    const cons = (p.tankbara_nackdelar || []).length
-      ? `<strong>Tänkbara nackdelar:</strong> ${p.tankbara_nackdelar.join(', ')}`
-      : '';
-    const attr = p.viktiga_karaktarsdrag
-      ? `<strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}`
-      : '';
-    return [extra, req, abil, perks, cons, attr].filter(Boolean).join('<br>');
+    const parts = [];
+    if (extra) parts.push(extra);
+    if (p.krav_formagor) parts.push(`<p><strong>Krav på förmågor (varav minst en på mästarnivå):</strong> ${p.krav_formagor}</p>`);
+    if ((p.Elityrkesförmågor || []).length) parts.push(`<p><strong>Elityrkesförmågor:</strong> ${p.Elityrkesförmågor.join(', ')}</p>`);
+    if ((p.mojliga_fordelar || []).length) parts.push(`<p><strong>Möjliga fördelar:</strong> ${p.mojliga_fordelar.join(', ')}</p>`);
+    if ((p.tankbara_nackdelar || []).length) parts.push(`<p><strong>Tänkbara nackdelar:</strong> ${p.tankbara_nackdelar.join(', ')}</p>`);
+    if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
+    return wrapBlocks(parts);
   }
-  const v = p.viktiga_karaktarsdrag
-    ? `<strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}`
-    : '';
-  const s = p.forslag_pa_slakte
-    ? `<strong>Förslag på släkte:</strong> ${Array.isArray(p.forslag_pa_slakte) ? p.forslag_pa_slakte.join(', ') : p.forslag_pa_slakte}`
-    : '';
-  const f = p.lampliga_formagor
-    ? `<strong>Lämpliga förmågor:</strong> ${(p.lampliga_formagor || []).join(', ')}`
-    : '';
-  return [extra, v, s, f].filter(Boolean).join('<br>');
+  const parts = [];
+  if (extra) parts.push(extra);
+  if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
+  if (p.forslag_pa_slakte) {
+    const val = Array.isArray(p.forslag_pa_slakte) ? p.forslag_pa_slakte.join(', ') : p.forslag_pa_slakte;
+    parts.push(`<p><strong>Förslag på släkte:</strong> ${val}</p>`);
+  }
+  if ((p.lampliga_formagor || []).length) parts.push(`<p><strong>Lämpliga förmågor:</strong> ${(p.lampliga_formagor || []).join(', ')}</p>`);
+  return wrapBlocks(parts);
 }
 
 /* ---------- Popup för kvaliteter ---------- */

@@ -914,120 +914,146 @@ class SharedToolbar extends HTMLElement {
           <h2>Hjälp</h2>
           <button class="char-btn icon" data-close="infoPanel">✕</button>
         </header>
-        <div class="help-content">
-          <h3>Kom igång</h3>
-          <ul>
-            <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
-            <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-            <li>Öppna panelerna längst ned: 📊 Egenskaper, 🎒 Inventarie, ⚙️ Filter.</li>
-          </ul>
+        <div class="help-content summary-content">
+          <section class="summary-section">
+            <h3>Kom igång</h3>
+            <ul class="summary-list">
+              <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
+              <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
+              <li>Öppna panelerna längst ned: 📊 Egenskaper, 🎒 Inventarie, ⚙️ Filter.</li>
+            </ul>
+          </section>
 
-          <h3>Verktygsrad</h3>
-          <ul>
-            <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
-            <li>🧝 / 📇: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
-            <li>📜: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-            <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
-            <li>XP: Visar dina totala erfarenhetspoäng.</li>
-            <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
-            <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
-            <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Verktygsrad</h3>
+            <ul class="summary-list">
+              <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
+              <li>🧝 / 📇: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
+              <li>📜: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
+              <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
+              <li>XP: Visar dina totala erfarenhetspoäng.</li>
+              <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
+              <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
+              <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
+            </ul>
+          </section>
 
-          <h3>Kortkommandon</h3>
-          <ul>
-            <li>Enter: Lägg till skriven term.</li>
-            <li>Esc: Stäng öppna paneler/popup (desktop).</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Kortkommandon</h3>
+            <ul class="summary-list">
+              <li>Enter: Lägg till skriven term.</li>
+              <li>Esc: Stäng öppna paneler/popup (desktop).</li>
+            </ul>
+          </section>
 
-          <h3>Filtermeny</h3>
-          <ul>
-            <li>Välj rollperson: Byter aktiv rollperson.</li>
-            <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
-            <li>Typ, Arketyp, Test: Filtrerar listor.</li>
-            <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
-            <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
-            <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-            <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
-            <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
-            <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
-            <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-            <li>ℹ️ Hjälp: Visar denna panel.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Filtermeny</h3>
+            <ul class="summary-list">
+              <li>Välj rollperson: Byter aktiv rollperson.</li>
+              <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
+              <li>Typ, Arketyp, Test: Filtrerar listor.</li>
+              <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
+              <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
+              <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
+              <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
+              <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
+              <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
+              <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
+              <li>ℹ️ Hjälp: Visar denna panel.</li>
+            </ul>
+          </section>
 
-          <h3>Inventarie</h3>
-          <ul>
-            <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
-            <li>▶/▼ Öppna eller kollapsa alla.</li>
-            <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
-            <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; −/+ justerar 1 daler).</li>
-            <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
-            <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. 🧹 Töm inventariet.</li>
-            <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
-            <li>Kategori: Filtrera på föremålstyp.</li>
-            <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Inventarie</h3>
+            <ul class="summary-list">
+              <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
+              <li>▶/▼ Öppna eller kollapsa alla.</li>
+              <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
+              <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; −/+ justerar 1 daler).</li>
+              <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
+              <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. 🧹 Töm inventariet.</li>
+              <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
+              <li>Kategori: Filtrera på föremålstyp.</li>
+              <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
+            </ul>
+          </section>
 
-          <h3>Egenskaper</h3>
-          <ul>
-            <li>Ange total XP via −/+ eller genom att skriva värdet.</li>
-            <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
-            <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
-            <li>🧹 Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Egenskaper</h3>
+            <ul class="summary-list">
+              <li>Ange total XP via −/+ eller genom att skriva värdet.</li>
+              <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
+              <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
+              <li>🧹 Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
+            </ul>
+          </section>
 
-          <h3>Rollperson</h3>
-          <ul>
-            <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Rollperson</h3>
+            <ul class="summary-list">
+              <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
+            </ul>
+          </section>
 
-          <h3>Anteckningar</h3>
-          <ul>
-            <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
-            <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
-            <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
-            <li>📇/🧝 i sidhuvudet: Till index respektive rollperson.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Anteckningar</h3>
+            <ul class="summary-list">
+              <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
+              <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
+              <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
+              <li>📇/🧝 i sidhuvudet: Till index respektive rollperson.</li>
+            </ul>
+          </section>
 
-          <h3>Listor och rader</h3>
-          <ul>
-            <li>Lägg till / +: Lägg till posten. −: Minska antal eller ta bort.</li>
-            <li>Info: Visa detaljer.</li>
-            <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
-            <li>🔨 Lägg till kvalitet. ☭ Markera kostsam kvalitet som gratis.</li>
-            <li>🆓 Gör föremål gratis. 💔 Visa konflikter.</li>
-            <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
-            <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
-            <li>🗑 Ta bort posten helt.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Listor och rader</h3>
+            <ul class="summary-list">
+              <li>Lägg till / +: Lägg till posten. −: Minska antal eller ta bort.</li>
+              <li>Info: Visa detaljer.</li>
+              <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
+              <li>🔨 Lägg till kvalitet. ☭ Markera kostsam kvalitet som gratis.</li>
+              <li>🆓 Gör föremål gratis. 💔 Visa konflikter.</li>
+              <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
+              <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
+              <li>🗑 Ta bort posten helt.</li>
+            </ul>
+          </section>
 
-          <h3>Tabeller</h3>
-          <ul>
-            <li>↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad. Inaktiverar mobilens staplade vy och möjliggör horisontell scroll. Knappen är röd när funktionen är avstängd.</li>
-            <li>⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller. Knappen är röd när bred vy är avstängd.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Tabeller</h3>
+            <ul class="summary-list">
+              <li>↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad. Inaktiverar mobilens staplade vy och möjliggör horisontell scroll. Knappen är röd när funktionen är avstängd.</li>
+              <li>⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller. Knappen är röd när bred vy är avstängd.</li>
+            </ul>
+          </section>
 
-          <h3>Tips</h3>
-          <ul>
-            <li>Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
-            <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.</li>
-            <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.</li>
-            <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
-            <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Tips</h3>
+            <ul class="summary-list">
+              <li>Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
+              <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.</li>
+              <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.</li>
+              <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
+              <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
+            </ul>
+          </section>
 
-          <h3>Data & lagring</h3>
-          <ul>
-            <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
-            <li>Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.</li>
-            <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Data & lagring</h3>
+            <ul class="summary-list">
+              <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
+              <li>Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.</li>
+              <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
+            </ul>
+          </section>
 
-          <h3>Installera som webapp</h3>
-          <p>
-            Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
-            Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
-          </p>
+          <section class="summary-section">
+            <h3>Installera som webapp</h3>
+            <p>
+              Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
+              Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
+            </p>
+          </section>
         </div>
       </aside>
 

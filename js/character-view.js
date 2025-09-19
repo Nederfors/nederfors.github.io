@@ -1135,22 +1135,18 @@ function initCharacter() {
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
         let desc = abilityHtml(p, p.nivå);
-        let infoHtml = desc;
+        let infoBodyHtml = desc;
+        const infoMeta = [];
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
-          if (extra) infoHtml += `<br>${extra}`;
+          if (extra) infoBodyHtml += extra;
         }
-        let raceInfo = '';
         if (p.namn === 'Blodsband' && p.race) {
-          raceInfo = `<br><strong>Ras:</strong> ${p.race}`;
-          infoHtml += raceInfo;
+          infoMeta.push({ label: 'Ras', value: p.race });
         }
-        let traitInfo = '';
         if (p.trait) {
-          traitInfo = p.namn === 'Monsterlärd'
-            ? `<br><strong>Specialisering:</strong> ${p.trait}`
-            : `<br><strong>Karaktärsdrag:</strong> ${p.trait}`;
-          infoHtml += traitInfo;
+          const label = p.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
+          infoMeta.push({ label, value: p.trait });
         }
         const curList = storeHelper.getCurrentList(store);
         const xpVal = storeHelper.calcEntryXP(p, curList);
@@ -1177,10 +1173,12 @@ function initCharacter() {
           .filter(Boolean)
           .join(' ');
         const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
-        if (infoTagsHtml) {
-          infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
-        }
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" aria-label="Visa info">ℹ️</button>`;
+        const infoPanelHtml = buildInfoPanelHtml({
+          tagsHtml: infoTagsHtml,
+          bodyHtml: infoBodyHtml,
+          meta: infoMeta
+        });
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
 
         const li=document.createElement('li');
         li.className='card' + (compact ? ' compact' : '');

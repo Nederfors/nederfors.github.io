@@ -56,8 +56,86 @@
     }
 
     const lvlHtml = lvls.length ? `<dl class="levels">${lvls.join('')}</dl>` : '';
-    return base ? `${base}${lvlHtml}` : lvlHtml;
+    const segments = [];
+    if (base) segments.push(`<div class="info-block info-block-desc">${base}</div>`);
+    if (lvlHtml) segments.push(`<div class="info-block info-block-levels">${lvlHtml}</div>`);
+    return segments.join('');
+  }
+  function buildInfoPanelHtml(options = {}) {
+    const {
+      tagsHtml = '',
+      bodyHtml = '',
+      meta = [],
+      sections = []
+    } = options || {};
+
+    const parts = [];
+
+    const trimmedTags = String(tagsHtml || '').trim();
+    if (trimmedTags) {
+      parts.push(`
+        <section class="summary-section info-panel-section info-panel-tags">
+          <h3>Nyckelinfo</h3>
+          <div class="info-panel-tagswrap">
+            <div class="tags">${trimmedTags}</div>
+          </div>
+        </section>
+      `);
+    }
+
+    const metaItems = Array.isArray(meta) ? meta.filter(item => item && (item.value || item.value === 0)) : [];
+    if (metaItems.length) {
+      const metaRows = metaItems.map(item => {
+        const label = String(item.label || '').trim();
+        const value = item.value === 0 ? '0' : (item.value ?? '');
+        const valueHtml = typeof value === 'string' ? value : String(value);
+        return `
+          <li>
+            <span class="summary-key">${label}</span>
+            <span class="summary-value">${valueHtml}</span>
+          </li>
+        `;
+      }).join('');
+      parts.push(`
+        <section class="summary-section info-panel-section info-panel-meta">
+          <h3>Fakta</h3>
+          <ul class="summary-list summary-pairs">
+            ${metaRows}
+          </ul>
+        </section>
+      `);
+    }
+
+    const trimmedBody = String(bodyHtml || '').trim();
+    if (trimmedBody) {
+      parts.push(`
+        <section class="summary-section info-panel-section info-panel-body">
+          <h3>Beskrivning</h3>
+          <div class="info-panel-body">${trimmedBody}</div>
+        </section>
+      `);
+    }
+
+    const extraSections = Array.isArray(sections) ? sections : [];
+    extraSections.forEach(sec => {
+      if (!sec) return;
+      const title = String(sec.title || '').trim();
+      const content = String(sec.content || '').trim();
+      if (!content) return;
+      const extraClass = sec.className ? ` ${sec.className}` : '';
+      const headingHtml = title ? `<h3>${title}</h3>` : '';
+      parts.push(`
+        <section class="summary-section info-panel-section${extraClass}">
+          ${headingHtml}
+          <div class="info-panel-extra">${content}</div>
+        </section>
+      `);
+    });
+
+    const inner = parts.join('');
+    return `<div class="info-panel-content summary-content">${inner}</div>`;
   }
   window.formatText = formatText;
   window.abilityHtml = abilityHtml;
+  window.buildInfoPanelHtml = buildInfoPanelHtml;
 })(window);

@@ -171,7 +171,9 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 #summaryPanel .summary-section,
-#effectsPanel .summary-section {
+#effectsPanel .summary-section,
+#infoPanel .summary-section,
+#yrkePanel .summary-section {
   background: rgba(255, 255, 255, .04);
   border: 1px solid var(--border);
   border-radius: .85rem;
@@ -179,12 +181,16 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 #summaryPanel .summary-section:not(:last-child),
-#effectsPanel .summary-section:not(:last-child) {
+#effectsPanel .summary-section:not(:last-child),
+#infoPanel .summary-section:not(:last-child),
+#yrkePanel .summary-section:not(:last-child) {
   margin-bottom: .6rem;
 }
 
 #summaryPanel .summary-section h3,
-#effectsPanel .summary-section h3 {
+#effectsPanel .summary-section h3,
+#infoPanel .summary-section h3,
+#yrkePanel .summary-section h3 {
   text-transform: uppercase;
   letter-spacing: .04em;
   font-size: .95rem;
@@ -220,13 +226,15 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   justify-self: start;
 }
 
-#summaryPanel .summary-pairs li {
+#summaryPanel .summary-pairs li,
+#yrkePanel .summary-pairs li {
   background: rgba(31, 34, 40, .78);
   border: 1px solid rgba(255, 255, 255, .06);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
 }
 
-#summaryPanel .summary-pairs li::before {
+#summaryPanel .summary-pairs li::before,
+#yrkePanel .summary-pairs li::before {
   content: '';
   position: absolute;
   top: .55rem;
@@ -323,16 +331,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
 }
 
-#summaryPanel .summary-titles .summary-title-item::before {
-  content: '';
-  position: absolute;
-  top: .55rem;
-  bottom: .55rem;
-  left: .65rem;
-  width: .24rem;
-  border-radius: 1rem;
-  background: linear-gradient(90deg, rgba(227, 186, 106, .92), rgba(227, 186, 106, .55));
-}
+
 
 .summary-sublist {
   display: flex;
@@ -438,7 +437,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   line-height: 1.35;
 }
 
-#summaryPanel .summary-text li {
+#summaryPanel .summary-text li,
+#yrkePanel .summary-text li {
   padding: .6rem .95rem .6rem 1.35rem;
 }
 
@@ -453,15 +453,55 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   padding-top: .6rem;
 }
 
-#summaryPanel .summary-text li::before {
-  content: '';
-  position: absolute;
-  top: .55rem;
-  bottom: .55rem;
-  left: .65rem;
-  width: .2rem;
-  border-radius: 1rem;
-  background: linear-gradient(90deg, rgba(227, 186, 106, .92), rgba(227, 186, 106, .55));
+#yrkePanel .info-panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+#yrkePanel .info-panel-tagswrap {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+#yrkePanel .info-panel-body,
+#yrkePanel .info-panel-extra {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+}
+
+#yrkePanel .info-panel-body > .info-block,
+#yrkePanel .info-panel-extra > .info-block {
+  margin: 0;
+  position: relative;
+  padding: .75rem .95rem .75rem 1.35rem;
+  border-radius: .85rem;
+  border: 1px solid rgba(255, 255, 255, .05);
+  background: rgba(31, 34, 40, .72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
+}
+
+#yrkePanel .info-block p {
+  margin: 0;
+}
+
+#yrkePanel .info-block p + p {
+  margin-top: .6rem;
+}
+
+#yrkePanel .info-panel-body .levels {
+  margin: .4rem 0 0;
+}
+
+#yrkePanel .info-panel-body .levels dt {
+  margin-top: .35rem;
+}
+
+#yrkePanel .info-panel-body p,
+#yrkePanel .info-panel-extra p {
+  margin: 0;
 }
 
 @media (max-width: 420px) {
@@ -1187,7 +1227,7 @@ select.level {
 #effectsPanel{ max-width: 360px; }
 #conflictPanel { max-width: 360px; }
 #yrkePanel   { max-width: 360px; font-size: 1.2rem; line-height: 1.6; }
-#infoPanel   { max-width: 360px; font-size: 1.1rem; line-height: 1.5; }
+#infoPanel   { max-width: 360px; font-size: 1rem; line-height: 1.5; }
 #yrkePanel p { margin: 0 0 1rem; }
 #yrkePanel table {
   width: 100%;
@@ -1203,7 +1243,7 @@ select.level {
 #yrkePanel th {
   background: var(--card);
 }
-#infoPanel p { margin: 0 0 1rem; }
+#infoPanel p { margin: 0; }
 
 /* När klassen .open läggs på – låt panelen glida in */
 #invPanel.open,

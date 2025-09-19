@@ -502,15 +502,17 @@ function initIndex() {
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
         let desc = abilityHtml(p);
+        let cardDesc = desc;
+        const infoMeta = [];
         let priceText = '';
-        let weightText = '';
         let weightVal = null;
         let capacityVal = null;
-        let capacityText = '';
         const isVehicle = (p.taggar?.typ || []).includes('Färdmedel');
         let priceLabel = '';
         if (isInv(p)) {
-          desc += itemStatHtml(p);
+          const statsHtml = itemStatHtml(p);
+          desc += statsHtml;
+          cardDesc += statsHtml;
           const baseQuals = [
             ...(p.taggar?.kvalitet ?? []),
             ...splitQuals(p.kvalitet)
@@ -519,7 +521,9 @@ function initIndex() {
             const qhtml = baseQuals
               .map(q => `<span class="tag">${q}</span>`)
               .join(' ');
-            desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+            const qualBlock = `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+            desc += qualBlock;
+            cardDesc += qualBlock;
           }
           if (p.grundpris) {
             priceText = formatMoney(invUtil.calcEntryCost(p));
@@ -530,13 +534,11 @@ function initIndex() {
           if (baseW || massCnt) {
             const w = baseW + massCnt;
             weightVal = formatWeight(w);
-            weightText = `<br>Vikt: ${weightVal}`;
           }
           if (isVehicle) {
             const cap = p.stat?.bärkapacitet ?? null;
             if (cap != null) {
               capacityVal = cap;
-              capacityText = ` BK: ${cap}`;
             }
           }
         } else if (isEmployment(p)) {
@@ -550,28 +552,40 @@ function initIndex() {
             priceLabel = 'Pris:';
           }
         }
-        let infoHtml = priceText ? `${desc}<br>${priceLabel} ${priceText}${capacityText}${weightText}` : `${desc}${weightText}`;
+        if (priceText) {
+          infoMeta.push({ label: priceLabel.replace(/:$/, ''), value: priceText });
+        }
+        if (capacityVal != null) {
+          infoMeta.push({ label: 'Bärkapacitet', value: capacityVal });
+        }
+        if (weightVal != null) {
+          infoMeta.push({ label: 'Vikt', value: weightVal });
+        }
+        const infoBodyExtras = [];
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
-          if (extra) infoHtml += `<br>${extra}`;
+          if (extra) infoBodyExtras.push(extra);
         }
         if (p.namn === 'Blodsband') {
           const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
           if (races.length) {
             const str = races.join(', ');
-            desc += `<br><strong>Raser:</strong> ${str}`;
-            infoHtml += `<br><strong>Raser:</strong> ${str}`;
+            const block = `<p><strong>Raser:</strong> ${str}</p>`;
+            cardDesc += block;
+            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
           }
         }
         let spec = null;
         if (p.namn === 'Monsterlärd') {
           spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
           if (spec) {
-            const t = `<br><strong>Specialisering:</strong> ${spec}`;
-            desc += t;
-            infoHtml += t;
+            const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
+            cardDesc += block;
+            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
           }
         }
+        let infoBodyHtml = desc;
+        if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
         const charEntry = charList.find(c => c.namn === p.namn);
         const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
         const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
@@ -626,10 +640,12 @@ function initIndex() {
         if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
         if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
         const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
-        if (infoTagsHtml) {
-          infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
-        }
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" aria-label="Visa info">ℹ️</button>`;
+        const infoPanelHtml = buildInfoPanelHtml({
+          tagsHtml: infoTagsHtml,
+          bodyHtml: infoBodyHtml,
+          meta: infoMeta
+        });
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         let count;
         if (isInv(p)) {
@@ -693,7 +709,7 @@ function initIndex() {
           ? `<div class="tags entry-tags-block">${tagsHtml}</div>`
           : '';
         const levelHtml = hideDetails ? '' : lvlSel;
-        const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
+        const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '';
         li.innerHTML = `
           <div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
           ${tagsDiv}
