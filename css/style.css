@@ -975,6 +975,17 @@ input:focus, select:focus, textarea:focus {
   align-content: flex-start;
 }
 
+#valda .inv-controls-left {
+  flex-direction: column;
+  align-items: flex-start;
+  align-content: flex-start;
+  gap: .3rem;
+}
+#valda .inv-controls-left .entry-tags {
+  align-items: flex-start;
+  align-content: flex-start;
+}
+
 .entry-tags {
   --entry-tag-row: 1.35rem;
   display: flex;
