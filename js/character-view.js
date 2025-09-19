@@ -1,5 +1,6 @@
 (function(window){
 function initCharacter() {
+  const createEntryCard = window.entryCardFactory.create;
   dom.cName.textContent = store.characters.find(c=>c.id===store.current)?.name||'';
 
   const F = { search:[], typ:[], ark:[], test:[] };
@@ -1180,10 +1181,6 @@ function initCharacter() {
         });
         const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
 
-        const li=document.createElement('li');
-        li.className='card' + (compact ? ' compact' : '');
-        li.dataset.name=p.namn;
-        if(p.trait) li.dataset.trait=p.trait;
         const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
@@ -1234,36 +1231,32 @@ function initCharacter() {
           buttonParts.push(`<button class="char-btn danger icon" data-act="rem">🗑</button>`);
           if (conflictBtn) buttonParts.push(conflictBtn);
         }
-        const buttonHtmlParts = buttonParts.filter(Boolean);
-        const controlButtonsHtml = buttonHtmlParts.length
-          ? `<div class="control-buttons">${buttonHtmlParts.join('')}</div>`
-          : '';
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
         const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
         const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
           ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
           : '';
-        const leftParts = [];
-        if (shouldDockTags && dockedTagsHtml) leftParts.push(dockedTagsHtml);
-        else if (mobileTagsHtml) leftParts.push(mobileTagsHtml);
-        const leftHtml = leftParts.length ? `<div class="inv-controls-left">${leftParts.join('')}</div>` : '';
-        const controlsHtml = (leftHtml || controlButtonsHtml)
-          ? `<div class="inv-controls">${leftHtml || ''}${controlButtonsHtml || ''}</div>`
-          : '';
-        li.dataset.xp = xpVal;
-        if (p.id) li.dataset.id = p.id;
-        const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
-        const tagsDiv = (!compact && !shouldDockTags && tagsHtml)
-          ? `<div class="tags entry-tags-block">${tagsHtml}</div>`
-          : '';
-        li.innerHTML = `<div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
-        ${tagsDiv}
-        ${lvlSel}
-        ${descHtml}
-        ${controlsHtml}`;
+        const leftSections = [];
+        if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
+        else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
+        const dataset = { name: p.namn };
+        if (p.trait) dataset.trait = p.trait;
+        dataset.xp = xpVal;
+        if (p.id) dataset.id = p.id;
+        const li = createEntryCard({
+          compact,
+          dataset,
+          nameHtml: `${p.namn}${badge}`,
+          xpHtml,
+          tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
+          levelHtml: hideDetails ? '' : lvlSel,
+          descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
+          leftSections,
+          buttonSections: buttonParts
+        });
 
-      listEl.appendChild(li);
+        listEl.appendChild(li);
       });
       dom.valda.appendChild(catLi);
     });

@@ -14,9 +14,12 @@
   --txt:         #e6e6e6;
   --subtxt:      #a0a0a0;
   --accent:      #3d7cff;
-  --xp-pill-bg:  linear-gradient(135deg, #2b386d, #1c244a);
-  --xp-pill-border: #3f4e8f;
-  --xp-pill-text: #e0e5ff;
+  --tag-interactive-bg:    linear-gradient(135deg, #2b386d, #1c244a);
+  --tag-interactive-border:#3f4e8f;
+  --tag-interactive-text:  #e0e5ff;
+  --xp-pill-bg:            linear-gradient(135deg, #3f454f, #2a2d33);
+  --xp-pill-border:        #555b66;
+  --xp-pill-text:          #f8f8f8;
   --mystic:      #a64cff;
   --quality:     #5e9cff;
   --neutral:     #6ac28c;
@@ -105,6 +108,16 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
                font-size: .85rem; white-space: nowrap; }
 .tag.removable { cursor: pointer; }
 .filter-tag { cursor: pointer; }
+.tag.filter-tag {
+  background: var(--tag-interactive-bg);
+  color: var(--tag-interactive-text);
+  border: 1px solid var(--tag-interactive-border);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04), 0 1px 2px rgba(0, 0, 0, .35);
+  text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
+}
+.tag.filter-tag:hover {
+  opacity: .9;
+}
 .tag.free,
 .tag.price-mult { background: var(--accent); color:#fff; }
 .tag.quality   { border: 1.5px solid var(--quality); }

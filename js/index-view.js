@@ -1,5 +1,6 @@
 (function(window){
 function initIndex() {
+  const createEntryCard = window.entryCardFactory.create;
   if (dom.cName) {
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
   }
@@ -690,32 +691,25 @@ function initIndex() {
           }
         }
         if (eliteBtn) buttonGroupParts.push(eliteBtn);
-        const leftParts = [];
-        if (metaBadges) leftParts.push(metaBadges);
-        if (shouldDockTags && dockedTagsHtml) leftParts.push(dockedTagsHtml);
-        else if (mobileTagsHtml) leftParts.push(mobileTagsHtml);
-        const leftHtml = leftParts.length ? `<div class="inv-controls-left">${leftParts.join('')}</div>` : '';
-        const buttonsHtml = buttonGroupParts.length ? `<div class="control-buttons">${buttonGroupParts.join('')}</div>` : '';
-        const controlsHtml = (leftHtml || buttonsHtml)
-          ? `<div class="inv-controls">${leftHtml || ''}${buttonsHtml || ''}</div>`
-          : '';
-        const li=document.createElement('li');
-        li.className='card' + (compact ? ' compact' : '');
-        li.dataset.name = p.namn;
-        if (spec) li.dataset.trait = spec;
-        if (xpVal != null) li.dataset.xp = xpVal;
-        if (p.id) li.dataset.id = p.id;
-        const tagsDiv = (!compact && !shouldDockTags && tagsHtml)
-          ? `<div class="tags entry-tags-block">${tagsHtml}</div>`
-          : '';
-        const levelHtml = hideDetails ? '' : lvlSel;
-        const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '';
-        li.innerHTML = `
-          <div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
-          ${tagsDiv}
-          ${levelHtml}
-          ${descHtml}
-          ${controlsHtml}`;
+        const leftSections = [];
+        if (metaBadges) leftSections.push(metaBadges);
+        if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
+        else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
+        const dataset = { name: p.namn };
+        if (spec) dataset.trait = spec;
+        if (xpVal != null) dataset.xp = xpVal;
+        if (p.id) dataset.id = p.id;
+        const li = createEntryCard({
+          compact,
+          dataset,
+          nameHtml: `${p.namn}${badge}`,
+          xpHtml,
+          tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
+          levelHtml: hideDetails ? '' : lvlSel,
+          descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',
+          leftSections,
+          buttonSections: buttonGroupParts
+        });
         listEl.appendChild(li);
         if (searchActive && terms.length) {
           const titleSpan = li.querySelector('.card-title > span');
