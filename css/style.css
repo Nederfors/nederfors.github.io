@@ -7,30 +7,50 @@
 /* ---------- Färgpalett ---------- */
 
 :root {
-  --bg:          #121416;
-  --panel:       #1a1d22;
-  --border:      #2d3138;
-  --card:        #1f2228;
-  --card-border: #353a42;
-  --txt:         #e6e6e6;
-  --subtxt:      #a0a0a0;
-  --accent:      linear-gradient(135deg, #6e99f5, #556eed);
-  --tag-interactive-bg:    linear-gradient(135deg, #2b386d, #1c244a);
-  --tag-interactive-border:#3f4e8f;
-  --tag-interactive-text:  #e0e5ff;
-  --xp-pill-bg:            linear-gradient(135deg, #3f454f, #2a2d33);
-  --xp-pill-border:        #555b66;
-  --xp-pill-text:          #f8f8f8;
-  --mystic:      #a64cff;
-  --quality:     #5e9cff;
-  --neutral:     #6ac28c;
-  --negative:    #8b4513;
-  --danger:       linear-gradient(135deg, #f06b5c, #ee4141);
-  --danger-bg:   #3c1a1a;
+  /* Bas */
+  --bg:          #2D2C21;
+  --panel:       #26211D;
+  --border:      #3A312A;
+  --card:        #231E1A;
+  --card-border: #3E342E;
+
+  /* Typografi */
+  --txt:         #E0D2C0;  /* text / ikoner */
+  --subtxt:      #BCAE9E;
+
+  /* Acent / highlights */
+  --accent:      linear-gradient(135deg, #B97A52, #6A443B);
+
+  /* Taggar, chips, småkontroller */
+  --tag-interactive-bg:     linear-gradient(135deg, #4A3A2F, #352920);
+  --tag-interactive-border: #6A443B;
+  --tag-interactive-text:   #EBDDC8;
+
+  /* XP / status-piller */
+  --xp-pill-bg:             linear-gradient(135deg, #3A3029, #2A241F);
+  --xp-pill-border:         #5A4A40;
+  --xp-pill-text:           #F3E8D8;
+
+  /* Semantiska färger i samma tonvärld */
+  --mystic:      #A88FCC;   /* nedtonad lila, passar brun bas */
+  --quality:     #C2A36A;   /* varm guldbetonad status */
+  --neutral:     #9CB69A;   /* mild grön för neutralt/ok */
+  --negative:    #8B4513;   /* bränd sienna */
+
+  /* Fara / CTA */
+  --danger:      linear-gradient(135deg, #ee6b61, #f64141);
+  --danger-bg:   #3B1C1C;
+
+  /* Skugga och kontroller */
   --shadow:      0 4px 16px #0007;
   --ctrl-btn-size:       40px;
   --ctrl-btn-font-size:  1.35rem;
-  --toolborder:      #3d7cff;
+
+  /* Verktygskanter och knappar enligt kitet */
+  --toolborder:        #6A443B;
+  --button-standard:   #6A443B;
+  --button-cta:        #8B0000;
+  --text-icons:        #E0D2C0;
 }
 
 @media (max-width: 640px) {
