@@ -5,6 +5,7 @@
    =========================================================== */
 
 /* ---------- Färgpalett ---------- */
+
 :root {
   --bg:          #121416;
   --panel:       #1a1d22;
@@ -29,6 +30,7 @@
   --shadow:      0 4px 16px #0007;
   --ctrl-btn-size:       40px;
   --ctrl-btn-font-size:  1.35rem;
+  --toolborder:      #3d7cff;
 }
 
 @media (max-width: 640px) {
@@ -792,7 +794,7 @@ input:focus, select:focus, textarea:focus {
 .card[data-special="__formal__"],
 .card[data-special="__tools__"],
 .card[data-special="__info__"] {
-  border: 2px solid var(--accent);
+  border: 2px solid var(--toolborder);
 }
 .card-title {
   display: flex;
