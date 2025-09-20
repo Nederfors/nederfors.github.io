@@ -89,23 +89,63 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-  if (
-    event.request.method !== 'GET' ||
-    !event.request.url.startsWith(self.location.origin)
-  ) {
-    event.respondWith(fetch(event.request));
+  const { request } = event;
+
+  if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      (async () => {
+        try {
+          const networkResponse = await fetch(request);
+          const cache = await caches.open(CACHE_NAME);
+          await cache.put(request, networkResponse.clone());
+          return networkResponse;
+        } catch (error) {
+          const cachedResponse = await caches.match(request);
+          if (cachedResponse) {
+            return cachedResponse;
+          }
+
+          const fallbackResponse = await caches.match('index.html');
+          if (fallbackResponse) {
+            return fallbackResponse;
+          }
+
+          return Response.error();
+        }
+      })()
+    );
     return;
   }
 
   event.respondWith(
-    fetch(event.request)
-      .then(fetchResponse =>
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
-        })
-      )
-      .catch(() => caches.match(event.request))
+    (async () => {
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        event.waitUntil(
+          (async () => {
+            try {
+              const networkResponse = await fetch(request);
+              const cache = await caches.open(CACHE_NAME);
+              await cache.put(request, networkResponse.clone());
+            } catch (error) {
+              // Ignore network errors when attempting a background refresh.
+            }
+          })()
+        );
+
+        return cachedResponse;
+      }
+
+      const networkResponse = await fetch(request);
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, networkResponse.clone());
+      return networkResponse;
+    })()
   );
 });
 
