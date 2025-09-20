@@ -55,7 +55,7 @@
 
 @media (max-width: 640px) {
   :root {
-    --ctrl-btn-size: 34px;
+    --ctrl-btn-size: 36px;
     --ctrl-btn-font-size: 1.1rem;
   }
 }
