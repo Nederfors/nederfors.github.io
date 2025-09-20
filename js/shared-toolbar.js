@@ -7,6 +7,7 @@
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
+const iconHtml = window.iconHtml || (() => '');
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -201,6 +202,29 @@ class SharedToolbar extends HTMLElement {
         .char-btn.icon   { font-size: 1.1rem; }
         .char-btn:hover  { opacity: .85; }
         .char-btn:active { transform: scale(.95); opacity: .7; }
+
+        .btn-icon {
+          width: 1.45rem;
+          height: 1.45rem;
+          max-width: 100%;
+          max-height: 100%;
+          object-fit: contain;
+          display: block;
+          pointer-events: none;
+          user-select: none;
+          flex-shrink: 0;
+        }
+        .char-btn .btn-icon,
+        .party-toggle .btn-icon {
+          width: 1.45rem;
+          height: 1.45rem;
+        }
+        .btn-icon.inline-icon {
+          width: 1.1rem;
+          height: 1.1rem;
+          display: inline-block;
+          vertical-align: middle;
+        }
         /* Hold solid green, tiny pulses, then smooth fade to blue */
         .focus-highlight {
           position: relative;
@@ -295,9 +319,9 @@ class SharedToolbar extends HTMLElement {
         <!-- Erfarenhetspoäng -->
         <div class="filter-group">
           <div class="xp-control">
-            <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">➖</button>
+            <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">${iconHtml('minus')}</button>
             <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-            <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">➕</button>
+            <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">${iconHtml('plus')}</button>
           </div>
           <div id="xpSummary" class="card exp-counter">
             <div class="card-title">Erfarenhetspoäng</div>
@@ -376,7 +400,7 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
                     </span>
-                    <button id="partySmith" class="party-toggle">⚒️</button>
+                    <button id="partySmith" class="party-toggle" aria-label="Smed i partyt" title="Smed i partyt">${iconHtml('smithing')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
@@ -440,7 +464,7 @@ class SharedToolbar extends HTMLElement {
                   <span class="toggle-desc">
                     <span class="toggle-question">Behöver du hjälp?</span>
                   </span>
-                  <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
+                  <button id="infoToggle" class="party-toggle" title="Visa hjälp" aria-label="Visa hjälp">${iconHtml('info')}</button>
                 </li>
               </ul>
             </div>
@@ -466,7 +490,7 @@ class SharedToolbar extends HTMLElement {
             <label for="customType">Typ</label>
             <div class="custom-type-row">
               <select id="customType"></select>
-              <button id="customTypeAdd" class="char-btn" type="button" aria-label="Lägg till typ" title="Lägg till typ">➕</button>
+              <button id="customTypeAdd" class="char-btn" type="button" aria-label="Lägg till typ" title="Lägg till typ">${iconHtml('plus')}</button>
             </div>
             <div id="customTypeTags" class="tags"></div>
           </div>
@@ -501,7 +525,7 @@ class SharedToolbar extends HTMLElement {
           <div id="customPowerFields" class="filter-group" style="display:none">
             <label>Förmågor</label>
             <div id="customPowerList"></div>
-            <button id="customPowerAdd" class="char-btn" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">➕</button>
+            <button id="customPowerAdd" class="char-btn" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">${iconHtml('plus')}</button>
           </div>
           <div id="customBoundFields" class="filter-group" style="display:none">
             <label for="customBoundType">Bundet till</label>
@@ -806,7 +830,7 @@ class SharedToolbar extends HTMLElement {
               <label for="newFolderName">+ Ny mapp:</label>
               <div class="inline-controls">
                 <input id="newFolderName" placeholder="Mappnamn">
-                <button id="addFolderBtn" class="char-btn" aria-label="Lägg till mapp" title="Lägg till mapp">➕</button>
+                <button id="addFolderBtn" class="char-btn" aria-label="Lägg till mapp" title="Lägg till mapp">${iconHtml('plus')}</button>
               </div>
             </div>
           </section>
@@ -975,11 +999,11 @@ class SharedToolbar extends HTMLElement {
               <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
               <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
               <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-              <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
+              <li>${iconHtml('smithing', { className: 'inline-icon' })}/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
               <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
               <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
               <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-              <li>ℹ️ Hjälp: Visar denna panel.</li>
+              <li>${iconHtml('info', { className: 'inline-icon' })} Hjälp: Visar denna panel.</li>
             </ul>
           </section>
 
@@ -1035,7 +1059,7 @@ class SharedToolbar extends HTMLElement {
               <li>🆓 Gör föremål gratis. 💔 Visa konflikter.</li>
               <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
               <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
-              <li>🗑 Ta bort posten helt.</li>
+              <li>${iconHtml('remove', { className: 'inline-icon' })} Ta bort posten helt.</li>
             </ul>
           </section>
 
