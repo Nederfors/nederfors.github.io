@@ -143,37 +143,9 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   transition: transform .1s ease, opacity .1s ease;
 }
 .char-btn.danger { background: var(--danger); }
-.char-btn.icon   { font-size: 1.1rem; gap: .35rem; }
+.char-btn.icon   { font-size: 1.1rem; }
 .char-btn:hover  { opacity: .85; }
 .char-btn:active { transform: scale(.95); opacity: .7; }
-
-.btn-icon {
-  width: 1.45rem;
-  height: 1.45rem;
-  background-repeat: no-repeat;
-  background-position: center;
-  background-size: contain;
-  display: inline-block;
-  flex-shrink: 0;
-}
-
-.card .inv-controls .char-btn .btn-icon {
-  width: calc(var(--ctrl-btn-size) * .58);
-  height: calc(var(--ctrl-btn-size) * .58);
-}
-
-.char-btn.traits-btn { background: #2a3c36; }
-.char-btn.inv-btn    { background: #2c3028; }
-.char-btn.filter-btn { background: #314438; }
-.char-btn.info-btn,
-.party-toggle.info-btn { background: #2d433b; }
-.char-btn.character-btn { background: #3a4c38; }
-
-.icon-egenskaper { background-image: url('../icons/egenskaper.png'); }
-.icon-inventarie { background-image: url('../icons/inventarie.png'); }
-.icon-filter     { background-image: url('../icons/filter.png'); }
-.icon-info       { background-image: url('../icons/info.png'); }
-.icon-character  { background-image: url('../icons/character.png'); }
 
 /* Kvadratiska kortkontroller (exkl. "Börja om?") */
 .card .inv-controls .char-btn:not([data-clear-filters]) {
@@ -1118,7 +1090,7 @@ input:focus, select:focus, textarea:focus {
 
 /* Badge för inventarie­knapp */
 #invBadge { background: var(--danger); border-radius: 50%;
-            padding: 0 .45rem; font-size: .75rem; margin-left: 0; }
+            padding: 0 .45rem; font-size: .75rem; margin-left: .25rem; }
 
 /* animation when inventory items change */
 .inv-flash { animation: invFlash .6s ease-out; }

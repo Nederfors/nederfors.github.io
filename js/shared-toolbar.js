@@ -150,7 +150,7 @@ class SharedToolbar extends HTMLElement {
           border-radius: 50%;
           padding: 0 .45rem;
           font-size: .75rem;
-          margin-left: 0;
+          margin-left: .25rem;
         }
         .toolbar .exp-counter {
           display: flex;
@@ -224,17 +224,12 @@ class SharedToolbar extends HTMLElement {
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <button id="traitsToggle" class="char-btn icon traits-btn" title="Egenskaper" aria-label="Egenskaper">
-            <span class="btn-icon icon-egenskaper" aria-hidden="true"></span>
+          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
+          <button  id="invToggle"    class="char-btn icon" title="Inventarie">
+            🎒 <span id="invBadge">0</span>
           </button>
-          <button id="invToggle" class="char-btn icon inv-btn" title="Inventarie" aria-label="Inventarie">
-            <span class="btn-icon icon-inventarie" aria-hidden="true"></span>
-            <span id="invBadge">0</span>
-          </button>
-          <a id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
-          <button id="filterToggle" class="char-btn icon filter-btn" title="Filter" aria-label="Filter">
-            <span class="btn-icon icon-filter" aria-hidden="true"></span>
-          </button>
+          <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
+          <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
         </div>
       </footer>
 
@@ -425,9 +420,7 @@ class SharedToolbar extends HTMLElement {
                   <span class="toggle-desc">
                     <span class="toggle-question">Behöver du hjälp?</span>
                   </span>
-                  <button id="infoToggle" class="party-toggle info-btn" title="Visa hjälp" aria-label="Visa hjälp">
-                    <span class="btn-icon icon-info" aria-hidden="true"></span>
-                  </button>
+                  <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
                 </li>
               </ul>
             </div>
@@ -927,7 +920,7 @@ class SharedToolbar extends HTMLElement {
             <ul class="summary-list">
               <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
               <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-              <li>Öppna panelerna längst ned via knapparna för Egenskaper, Inventarie och Filter.</li>
+              <li>Öppna panelerna längst ned: 📊 Egenskaper, 🎒 Inventarie, ⚙️ Filter.</li>
             </ul>
           </section>
 
@@ -937,7 +930,7 @@ class SharedToolbar extends HTMLElement {
               <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
               <li>🧝 / 📇: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
               <li>📜: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-              <li>Knapparna för Egenskaper, Inventarie och Filter öppnar respektive panel.</li>
+              <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
               <li>XP: Visar dina totala erfarenhetspoäng.</li>
               <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
               <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
@@ -966,7 +959,7 @@ class SharedToolbar extends HTMLElement {
               <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
               <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
               <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-              <li>Hjälpknappen visar denna panel.</li>
+              <li>ℹ️ Hjälp: Visar denna panel.</li>
             </ul>
           </section>
 
