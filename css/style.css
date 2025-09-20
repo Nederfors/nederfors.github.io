@@ -13,7 +13,7 @@
   --card-border: #353a42;
   --txt:         #e6e6e6;
   --subtxt:      #a0a0a0;
-  --accent:      linear-gradient(135deg, #5a73da, #4457b7);
+  --accent:      linear-gradient(135deg, #6e99f5, #556eed);
   --tag-interactive-bg:    linear-gradient(135deg, #2b386d, #1c244a);
   --tag-interactive-border:#3f4e8f;
   --tag-interactive-text:  #e0e5ff;
@@ -24,7 +24,7 @@
   --quality:     #5e9cff;
   --neutral:     #6ac28c;
   --negative:    #8b4513;
-  --danger:       linear-gradient(135deg, #a8493f, #bb3131);
+  --danger:       linear-gradient(135deg, #f06b5c, #ee4141);
   --danger-bg:   #3c1a1a;
   --shadow:      0 4px 16px #0007;
   --ctrl-btn-size:       40px;
