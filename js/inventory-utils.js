@@ -9,6 +9,7 @@
   const OBASE = window.OBASE;
   const moneyToO = window.moneyToO;
   const oToMoney = window.oToMoney;
+  const iconHtml = window.iconHtml;
   const INV_TOOLS_KEY = 'invToolsOpen';
   const INV_INFO_KEY  = 'invInfoOpen';
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
@@ -2035,8 +2036,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
-                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon" aria-label="Minska mynt" title="Minska mynt">➖</button>
-                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon" aria-label="Öka mynt" title="Öka mynt">➕</button>
+                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon" aria-label="Minska mynt" title="Minska mynt">${iconHtml('minus')}</button>
+                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon" aria-label="Öka mynt" title="Öka mynt">${iconHtml('plus')}</button>
               </div>
             </div>
             <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
@@ -2076,10 +2077,10 @@ ${moneyRow}
           const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
           const canStack = ['kraft','ritual'].includes(entry.bound);
           const btnRow = (isGear && !canStack)
-            ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
-            : `<button data-act="del" class="char-btn danger icon">🗑</button>
-               <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
-               <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
+            ? `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>`
+            : `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>
+               <button data-act="sub" class="char-btn" aria-label="Minska">${iconHtml('minus')}</button>
+               <button data-act="add" class="char-btn" aria-label="Lägg till">${iconHtml('plus')}</button>`;
           const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
           const editBtn = isCustom ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
           const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
@@ -2124,10 +2125,10 @@ ${moneyRow}
                 const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
                 const cCanStack = ['kraft','ritual'].includes(centry.bound);
                 const cBtnRow = (cIsGear && !cCanStack)
-                  ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
-                  : `<button data-act="del" class="char-btn danger icon">🗑</button>
-                     <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
-                     <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
+                  ? `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>`
+                  : `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>
+                     <button data-act="sub" class="char-btn" aria-label="Minska">${iconHtml('minus')}</button>
+                     <button data-act="add" class="char-btn" aria-label="Lägg till">${iconHtml('plus')}</button>`;
                 const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
                 const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
                 const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;

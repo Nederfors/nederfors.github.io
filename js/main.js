@@ -9,6 +9,7 @@
   const overlayStack = [];
   const openMap = new Map();
   let isPop = false;
+  const iconHtml = window.iconHtml;
   // Count how many history.back() calls we have triggered manually.
   // Using a counter (instead of a boolean) makes rapid open/close
   // sequences robust and prevents desync when multiple popstate
@@ -1245,7 +1246,8 @@ function openFolderManagerPopup() {
     list.innerHTML = folders.map((f, idx) => {
       const cnt = charMap.get(f.id) || 0;
       const esc = s => String(s || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-      const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort">🗑</button>`;
+      const removeIcon = iconHtml ? iconHtml('remove') : '🗑';
+      const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort" aria-label="Ta bort">${removeIcon}</button>`;
       const upDisabled = idx === 0 ? ' disabled' : '';
       const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
       return (

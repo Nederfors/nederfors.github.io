@@ -64,10 +64,10 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 - **Ta bort rollperson** raderar den aktuella karaktären.
 - **Export** öppnar en meny där du kan ladda ner alla rollpersoner eller välja en specifik att exportera som JSON-fil.
 - **Import** återställer en eller flera karaktärer från sparade filer.
-- **⚒️**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
+- **<img src="icons/smithing.png" alt="Smed" width="18">**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
 - **🔭** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
 - **↕️ Expandera vy** växlar till vanliga vyn.
-- **ℹ️** visar en snabböversikt av alla knappar.
+- **<img src="icons/info.png" alt="Info" width="16">** visar en snabböversikt av alla knappar.
 
 ### 5. Inventariepanelen
 Via `🎒` kommer du åt allt du har samlat på dig.
@@ -86,14 +86,14 @@ I listan för varje föremål finns knappar för att öka/minska antal, markera 
 
 ### 8. Arbeta med listorna
 Både i index-vyn och i din karaktär visas poster som kort.
-- **Lägg till** eller `+` lägger till posten.
-- `−` tar bort en instans av posten eller hela raden om det bara finns en.
-- **Info** visar beskrivning och eventuella regler.
+- **Lägg till** eller <img src="icons/plus.png" alt="Lägg till" width="16"> lägger till posten.
+- <img src="icons/minus.png" alt="Minska" width="16"> tar bort en instans av posten eller hela raden om det bara finns en.
+- **Info** (<img src="icons/info.png" alt="Info" width="16">) visar beskrivning och eventuella regler.
 - **🔨** låter dig välja en extra kvalitet till ett vapen, rustning eller en artefakt.
 - **☭** markerar en av kvaliteterna som gratis.
 - **🆓** gör hela föremålet gratis vid beräkning av totalkostnad.
 - **↔** finns på artefakter och växlar dess effekt mellan att ge 1 XP eller permanent korruption.
-- **🗑** tar bort posten helt.
+- **<img src="icons/remove.png" alt="Ta bort" width="16">** tar bort posten helt.
 - Monstruösa särdrag som blir gratis via Hamnskifte eller Blodvadare ger ett val mellan Humanoid eller Hamnskifte (−10 XP) när de läggs till.
 - Naturligt vapen, Pansar, Regeneration och Robust kan bara tas en gång och visas som separata poster.
 - Monstruösa särdrag kan inte staplas.
@@ -104,7 +104,7 @@ Se avsnittet ovan. Export öppnar en meny där du kan spara alla karaktärer som
 ### 10. Tips och tricks
 - Alla dina val sparas automatiskt i webblagringen på datorn.
 - Klicka på taggar i en lista för att snabbt filtrera på samma typ eller arketyp.
-- Hjälpmenyn (ℹ️) innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
+- Hjälpmenyn (<img src="icons/info.png" alt="Info" width="16">) innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
 
 ## Utveckling och bidrag
 Projektet består av statisk HTML, CSS och JavaScript utan byggsteg. Ändringar i `data/` och `js/` reflekteras direkt i webbläsaren. Förslag, felrapporter och förbättringar tas emot via pull requests.

@@ -24,6 +24,19 @@
   ];
   const SBASE = 10, OBASE = 10;
 
+  const ICON_CLASS = 'btn-icon';
+
+  function iconHtml(name, opts = {}) {
+    const key = String(name || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
+    if (!key) return '';
+    const classes = [ICON_CLASS];
+    if (opts && opts.className) {
+      classes.push(String(opts.className));
+    }
+    const classAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
+    return `<img src="icons/${key}.png"${classAttr} alt="" draggable="false">`;
+  }
+
   // Konvertera ett penningobjekt till totalt antal örtegar
   function moneyToO(m) {
     m = m || {};
@@ -391,6 +404,7 @@
   window.EQUIP = EQUIP;
   window.SBASE = SBASE;
   window.OBASE = OBASE;
+  window.iconHtml = iconHtml;
   window.moneyToO = moneyToO;
   window.oToMoney = oToMoney;
   window.isInv = isInv;
