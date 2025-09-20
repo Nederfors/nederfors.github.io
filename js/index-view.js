@@ -470,7 +470,7 @@ function initIndex() {
       cats[cat].forEach(p=>{
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
-          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
+          const infoBtn = `<button class="char-btn info-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info"><span class="btn-icon icon-info" aria-hidden="true"></span></button>`;
           const tagsHtml = (p.taggar?.typ || [])
             .map(t => `<span class="tag">${t}</span>`)
             .join(' ');
@@ -646,7 +646,7 @@ function initIndex() {
           bodyHtml: infoBodyHtml,
           meta: infoMeta
         });
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
+        const infoBtn = `<button class="char-btn info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info"><span class="btn-icon icon-info" aria-hidden="true"></span></button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         let count;
         if (isInv(p)) {

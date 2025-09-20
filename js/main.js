@@ -272,11 +272,11 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
   // Katalog med UI-kommandon: id, visningsnamn, panel och CSS-selector
   const UI_CMDS = [
     // Toppknappar
-    { id: 'open-inventory',  label: 'Inventarie',   sel: '#invToggle',    panel: 'invPanel',    emoji: '🎒',
+    { id: 'open-inventory',  label: 'Inventarie',   sel: '#invToggle',    panel: 'invPanel',    emoji: '',
       syn: ['inventarie','inventory','ryggsäck','ryggsack','rygga','inv'] },
-    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsToggle', panel: 'traitsPanel', emoji: '📊',
+    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsToggle', panel: 'traitsPanel', emoji: '',
       syn: ['egenskaper','traits','drag','karaktärsdrag','karaktarsdrag'] },
-    { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '⚙️',
+    { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '',
       syn: ['filter','verktyg'] },
     // Huvudvyns knappar utanför toolbaren (rollpersonssidan)
     { id: 'open-notes',      label: 'Anteckningar', sel: '#notesLink',    panel: null,          emoji: '📜',
@@ -293,7 +293,7 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', syn: ['utvidga sökning','or-sökning','union','OR'] },
     { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', syn: ['expandera vy','vy','detaljer','expand'] },
     { id: 'settings-defense', label: 'Tvinga försvar',       sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', syn: ['försvar','tvinga försvar','försvarskaraktärsdrag'] },
-    { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
+    { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: '',
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
     // Inventarie → Verktyg 🧰
