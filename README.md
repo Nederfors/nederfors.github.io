@@ -22,7 +22,7 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 ## Funktioner
 - Hantera flera rollpersoner med erfarenhetspoäng, inventarie och specialförmågor.
 - Filtrera listor på taggar och sökord.
-- Paneler för inventarie (`🎒`), egenskaper (`📊`) och anteckningar (`📜`).
+- Paneler för inventarie, egenskaper och anteckningar – öppnas via verktygsradens knappar.
 - Export och import av rollpersoner via JSON-filer.
 - All information lagras i webbläsarens `localStorage`, vilket gör att dina val finns kvar mellan besök.
 
@@ -52,14 +52,14 @@ Både index- och rollpersons-vyn använder samma verktygsrad. Pilen med symbolen
 Verktygsraden innehåller:
 - Ett sökfält. Skriv ett ord och tryck Enter för att lägga till det som filter.
 - `XP:` visar hur mycket erfarenhet du har använt. Detta uppdateras automatiskt.
-- `🎒` öppnar inventariet.
-- `📊` öppnar egenskapspanelen.
+- Inventarieknappen öppnar inventariet.
+- Egenskapsknappen öppnar egenskapspanelen.
 - `📜` öppnar anteckningspanelen.
 - Skriv `lol` i sökfältet och tryck Enter för att rensa alla filter.
-- `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
+- Filterknappen öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
 
 ### 4. Filtermenyn
-I panelen som öppnas med `⚙️` finns flera viktiga knappar:
+I filterpanelen finns flera viktiga knappar:
 - **Ny rollperson** skapar en tom karaktär och gör den aktiv.
 - **Ta bort rollperson** raderar den aktuella karaktären.
 - **Export** öppnar en meny där du kan ladda ner alla rollpersoner eller välja en specifik att exportera som JSON-fil.
@@ -67,16 +67,16 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 - **⚒️**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
 - **🔭** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
 - **↕️ Expandera vy** växlar till vanliga vyn.
-- **ℹ️** visar en snabböversikt av alla knappar.
+- **Hjälp** visar en snabböversikt av alla knappar.
 
 ### 5. Inventariepanelen
-Via `🎒` kommer du åt allt du har samlat på dig.
+Via inventarieknappen kommer du åt allt du har samlat på dig.
 - **Kategori** låter dig filtrera inventarielistan på typ av utrustning.
 - Under **Verktyg** hittar du knappar för **🆕**, **💰**, **🧹** och **x²** för att lägga till flera av samma föremål. Om föremålet inte kan staplas skapas nya fält.
 I listan för varje föremål finns knappar för att öka/minska antal, markera som gratis, redigera kvaliteter och mer.
 
 ### 6. Egenskapspanelen
-`📊` visar en summering av karaktärens förmågor och särdrag.
+Egenskapsknappen visar en summering av karaktärens förmågor och särdrag.
 - Här fyller du i totala erfarenhetspoäng.
 - Panelen räknar ut använd XP, kostnader från artefakter samt eventuell korruption.
 - Du kan även se en lista över uppnådda totala poäng i olika kategorier.
@@ -104,7 +104,7 @@ Se avsnittet ovan. Export öppnar en meny där du kan spara alla karaktärer som
 ### 10. Tips och tricks
 - Alla dina val sparas automatiskt i webblagringen på datorn.
 - Klicka på taggar i en lista för att snabbt filtrera på samma typ eller arketyp.
-- Hjälpmenyn (ℹ️) innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
+- Hjälpmenyn innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
 
 ## Utveckling och bidrag
 Projektet består av statisk HTML, CSS och JavaScript utan byggsteg. Ändringar i `data/` och `js/` reflekteras direkt i webbläsaren. Förslag, felrapporter och förbättringar tas emot via pull requests.
