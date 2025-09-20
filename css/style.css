@@ -1008,6 +1008,26 @@ input:focus, select:focus, textarea:focus {
   max-height: calc(var(--entry-tag-row) * 2 + .25rem);
   min-height: 0;
 }
+
+@media (max-width: 680px) {
+  .entry-tags {
+    flex-flow: row wrap;
+    max-height: none;
+    width: 100%;
+  }
+
+  .inv-controls-left .entry-tags {
+    width: 100%;
+  }
+
+  #lista .inv-controls {
+    flex-wrap: wrap;
+  }
+
+  #lista .control-buttons {
+    flex-wrap: wrap;
+  }
+}
 .entry-tags-mobile {
   display: none;
 }
@@ -1261,15 +1281,15 @@ select.level {
     white-space: nowrap;
   }
   .inv-controls-left .entry-tags {
-    flex-flow: column wrap;
-    max-height: calc(var(--entry-tag-row) * 2 + .2rem);
+    flex-flow: row wrap;
+    max-height: none;
     width: 100%;
     min-width: 0;
   }
   .entry-tags {
     --entry-tag-row: 1.25rem;
     gap: .2rem .28rem;
-    max-height: calc(var(--entry-tag-row) * 2 + .2rem);
+    max-height: none;
   }
   .xp-cost {
     font-size: .78rem;
