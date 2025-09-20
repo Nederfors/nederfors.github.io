@@ -767,6 +767,56 @@
       "ark_trad": ["Trollsång"],
       "test": ["Viljestark"]
     }
-  }
+  },
+   {
+ "id": "ri77",
+ "namn": "Ljusvapenssmide",
+ "beskrivning": "Tradition:Ordensmagi\n Genom ett långt vak bundet till en klar sjungande kristall smids ett vapen till att bära ett stilla sken och ett obrutet fokus. Under nästa scen efter avslutad ritual lyser klingan som en fackla och ger +1 på Träffsäker samt +1T4 i extra skada. Vid ett fatalt misslyckande vid användande av vapnet spricker kristallen och ritualen mister sin kraft.",
+ "taggar": {
+ "typ": ["Ritual"],
+ "ark_trad": ["Ordensmagi"],
+ "test": ["Viljestark"]
+ }
+ },
+ {
+ "id": "ri80",
+ "namn": "Blixtfånga",
+ "beskrivning": "Tradition: Ordensmagi\nEtt kopparspjut, tre järnringar och en stormladdad bägare fångar himlens vrede. Vid lyckad ritual lagras en elektrisk urladdning i ett valt metallföremål i upp till 1T6 dagar. Den första som rör vid platsen eller föremålet tar 2T12 blixtskada; rustning skyddar ej. Misslyckas ritualen urladdas kraften i mystikerns händer: slå 1T12 elektricitetsskada; rustning skyddar ej.",
+ "taggar": {
+ "typ": ["Ritual"],
+ "ark_trad": ["Ordensmagi"],
+ "test": ["Viljestark"]
+ }
+ },
+ {
+ "id": "ri81",
+ "namn": "Stensång",
+ "beskrivning": "Tradition:Trollsång, Häxkonst\nEn klangskål sätts i svängning och tonerna leds genom ett objekt i fokus. Under 1T4 timmar kan mystikern förflytta ett massivt objekt (upp till en vagnslast sten eller timmer) långsamt över marken, en förflyttningshandling per timme, utan att bryta det. Varje gång ett hinder måste överträdas (t.ex andra stora objekt som måste skjutas undan) passeras krävs ett lyckat Viljestark; misslyckande ger sprickor eller skador som minskar objektets brukbarhet tills det repareras.",
+ "taggar": {
+ "typ": ["Ritual"],
+ "ark_trad": ["Stavmagiker", "Häxkonst"],
+ "test": ["Viljestark"]
+ }
+ },
+ {
+ "id": "ri82",
+ "namn": "Helig Ed",
+ "beskrivning": "Tradition: Teurgi\nEn ed svärs över vatten och aska: att kommande dag bära vapen endast för att skydda allierade. Så länge eden hålls får mystikern en andra chans att lyckas med Försvar eller Ripposter. Edsgivaren får dessutom +5 på Övertygande när hen försöker avstyra våld. Bryts eden i vrede eller egen vinning drabbas edsbrytaren omedelbart av 1 permanent Korruption.",  
+ "taggar": {
+ "typ": ["Ritual"],
+ "ark_trad": ["Teurgi"],
+ "test": ["Viljestark"]
+ }
+ },
+ {
+ "id": "ri83",
+ "namn": "Stjärnskådning",
+ "beskrivning": "Tradition: Häxkonst, Symbolism\n Genom att sova under öppen himmel med en karta av salt kring sig söker mystikern ett vägtecken. Mystikern får en tydlig drömbild som pekar ut ett användbart vägval eller en gynnsam tidpunkt kopplad till en namngiven plats eller person och en gång under dagen efter får rollpersonen ställa en ja eller nej fråga om en plats eller person de interagerar med och spelledaren svarar med knackningar.",
+ "taggar": {
+ "typ": ["Ritual"],
+ "ark_trad": ["Häxkonst, Symbolism"],
+ "test": ["Viljestark"]
+ }
+ }
 
 ]
