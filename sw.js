@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v8';
+const CACHE_NAME = 'symbaroum-pwa-v9';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -8,7 +8,18 @@ const URLS_TO_CACHE = [
   'css/style.css',
   'manifest.json',
   // Icons
+  'icons/character.png',
+  'icons/egenskaper.png',
+  'icons/filter.png',
   'icons/icon_DA',
+  'icons/index.png',
+  'icons/info.png',
+  'icons/inventarie.png',
+  'icons/minus.png',
+  'icons/plus.png',
+  'icons/remove.png',
+  'icons/settings.png',
+  'icons/smithing.png',
   // JavaScript
   'js/auto-resize.js',
   'js/artifact-payment.js',
@@ -18,10 +29,12 @@ const URLS_TO_CACHE = [
   'js/djurmask.js',
   'js/elite-add.js',
   'js/elite-req.js',
+  'js/entry-card.js',
   'js/exceptionellt.js',
   'js/index-view.js',
   'js/jszip.min.js',
   'js/inventory-utils.js',
+  'js/kraftval.js',
   'js/main.js',
   'js/monsterlard.js',
   'js/notes-view.js',
