@@ -1778,43 +1778,29 @@
 "nivåer": {
 "Novis": "Aktiv. Rollpersonen kan med ett lyckat Viljestark skicka iväg en blixt från klar himmel mot en motståndare. Fienden tar 1T10 i elementarskada. Blixtfrämjaren kan också kalla på en blixt som förgrenar sig i en radie av 6 meter och gör 1T8 i elementarskada på alla fiender som står inom den radien.",
 "Gesäll": "Aktiv. Som novis men skadan ökar till 1T12 alternativt 1T10 vid förgrening.",
-"Mästare": "Aktiv. Novis: Aktiv. Rollpersonen kan med ett lyckat Viljestark skicka iväg en blixt från klar himmel mot en motståndare. Fienden tar 1T10 i elementarskada. Blixtfrämjaren kan också kalla på en blixt som förgrenar sig i en radie av 6 meter och gör 1T8 i elementarskada på alla fiender som står inom den radien.",
-"Gesäll": "Aktiv. Som novis men skadan ökar till 1T12 alternativt 1T10 vid förgrening och förgreningen sträcker sig 9 meter.",
-"Mästare": "Som gesäll, men efter nedslaget gör Blixtfrämjaren ett motståndsslag, Viljestark mot målets Stark. Lyckas slaget tar tar målet dessutom 1T6 alternativ skada på Viljestark; vid förgrening tar i stället varje träffat mål 1T4 alternativ skada på Viljestark."
+"Mästare": "Aktiv. Blixtens kraft följs av en dundrande åskknall. Slå 1t20 för varje motståndare som träffas; vid resultat 1–10 drabbas de av en så stark ström att de förlorar förmågan att använda aktiva handlingar under nästa runda."
 },
 "id": "mystiskkr56"
 },
 {
-"namn": "Kvävande grepp",
-"beskrivning": "En kraft ur svartkonstens tradition, bunden till en svartnad strupsena invirad i silvertråd. Mystikern samlar sin vilja och låter den sluta sig kring offrets hals på avstånd. Luften stryps bort, rösten kvävs, och den dolda maktens brutala väsen gör sig påmind.",
-"taggar": {
-"typ": [
-"Mystisk kraft"
-],
-"ark_trad": [
-"Svartkonst"
-],
-"test": [
-"Viljestark"
-],
-"handling": {
-"Novis": [
-"Aktiv"
-],
-"Gesäll": [
-"Aktiv"
-],
-"Mästare": [
-"Aktiv"
-]
-}
-},
-"nivåer": {
-"Novis": "Med ett lyckat [Viljestark←Stark] pressas målets strupe samman. Offret tar 1T4 i skada per runda (bepansring skyddar inte) och förlorar förmågan att tala eller använda handlingar som kräver röst. Effekten varar tills mystikern misslyckas med ett slag för Viljestark eller tappar koncentrationen [Viljestark – Skada]. Ett mål som tar skada får en andra chans att misslyckas med att upprätthålla koncentration under samma runda.",
-"Gesäll": "Greppet hårdnar och lyfter upp målet från marken. Offret räknas som fasthållet och kan inte förflytta sig eller utföra aktiva handlingar. Med ett lyckat [Viljestark←Stark] orsakas 1T6 i skada per runda (bepansring skyddar inte). Under effekten kan målet endast försvara sig eller göra reaktiva handlingar som inte kräver tal. Effekten bryts om mystikern misslyckas med ett Viljestark eller förlorar koncentrationen [Viljestark – Skada].",
-"Mästare": "Som på gesällnivå, men greppet krossar brosk och blodkärl. Med ett lyckat [Viljestark←Stark] tar offret 1T8 i skada per runda (bepansring skyddar inte). Om skadan når eller överstiger offrets Smärtgräns faller det medvetslöst till marken och förblir utslaget tills ny skada tillfogas eller striden tar slut."
-},
-"id": "mystiskkr57"
-}
+    "namn": "Kraftreflex",
+    "beskrivning": "Material: En fingerborg av koppar.\n Mystikern låter sin inre styrka strömma ut som en osynlig sköld, formad av vilja och rå energi. När en fiende slår till svarar kroppen inte med musklernas reflexer, utan med ett ögonblick av fokuserad kraft som böjer eller stoppar anfallet innan det träffar. För åskådaren verkar det som att angrepp fastnar i luften, pressas bort av något ogenomträngligt som ingen kan se men alla kan känna. Kraftreflexen gör att mystikern uppträder som om varje attack förutsågs och möttes med en tyst, obeveklig motvilja mot att bli sårad. Det är inte en fysisk parering, utan ett uttryck för disciplin och oföränderlig vilja som får fiendens slag att vika undan.",
+    "taggar": {
+      "typ": ["Mystisk kraft"],
+      "ark_trad": ["Ordensmagi"],
+      "test": ["Viljestark"],
+      "handling": {
+        "Novis": ["Reaktiv"],
+        "Gesäll": ["Reaktiv"],
+        "Mästare": ["Reaktiv"]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Reaktiv. Mystikern kan en gång per runda slå ett slag på [Viljestark←Träffsäker] för att parera ett anfall, oavsett vapen.",
+      "Gesäll": "Handling: Reaktiv. Mystikern kan parera två anfall per runda, men måste slå ett [Viljestark←Träffsäker] för varje.",
+      "Mästare": "Handling: Reaktiv. Mystikern kan parera alla anfall under en runda, men måste slå ett [Viljestark←Träffsäker] för varje."
+    },
+    "id": "mystiskkr57"
+  }
 
 ]
