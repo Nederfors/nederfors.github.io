@@ -145,12 +145,25 @@ class SharedToolbar extends HTMLElement {
           flex: 1;
           min-width: 0;
         }
+        .toolbar .button-row > .char-btn.icon,
+        .toolbar .button-row > a.char-btn.icon {
+          gap: .35rem;
+        }
+        .toolbar .button-row .toolbar-icon {
+          width: 1.65rem;
+          height: 1.65rem;
+          object-fit: contain;
+          display: block;
+          flex: 0 0 auto;
+          pointer-events: none;
+          user-select: none;
+        }
         #invBadge {
           background: var(--danger);
           border-radius: 50%;
           padding: 0 .45rem;
           font-size: .75rem;
-          margin-left: .25rem;
+          margin-left: 0;
         }
         .toolbar .exp-counter {
           display: flex;
@@ -224,12 +237,19 @@ class SharedToolbar extends HTMLElement {
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
-          <button  id="invToggle"    class="char-btn icon" title="Inventarie">
-            🎒 <span id="invBadge">0</span>
+          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper" aria-label="Egenskaper">
+            <img src="icons/egenskaper.png" alt="" class="toolbar-icon" aria-hidden="true">
           </button>
-          <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
-          <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
+          <button  id="invToggle"    class="char-btn icon" title="Inventarie" aria-label="Inventarie">
+            <img src="icons/inventarie.png" alt="" class="toolbar-icon" aria-hidden="true">
+            <span id="invBadge">0</span>
+          </button>
+          <a       id="switchRole" class="char-btn icon" href="character.html" title="Till rollperson" aria-label="Till rollperson">
+            <img id="switchRoleIcon" src="icons/character.png" alt="" class="toolbar-icon" aria-hidden="true">
+          </a>
+          <button  id="filterToggle" class="char-btn icon" title="Filter" aria-label="Filter">
+            <img src="icons/settings.png" alt="" class="toolbar-icon" aria-hidden="true">
+          </button>
         </div>
       </footer>
 
@@ -1254,15 +1274,24 @@ class SharedToolbar extends HTMLElement {
   updateToolbarLinks() {
     const role = document.body.dataset.role;
     const switchLink = this.shadowRoot.getElementById('switchRole');
+    const switchIcon = this.shadowRoot.getElementById('switchRoleIcon');
 
     if (role === 'character' || role === 'notes') {
       switchLink.href = 'index.html';
-      switchLink.textContent = '📇';
       switchLink.title = 'Till index';
+      switchLink.setAttribute('aria-label', 'Till index');
+      if (switchIcon) {
+        switchIcon.src = 'icons/index.png';
+        switchIcon.hidden = false;
+      }
     } else {
       switchLink.href = 'character.html';
-      switchLink.textContent = '🧝';
       switchLink.title = 'Till rollperson';
+      switchLink.setAttribute('aria-label', 'Till rollperson');
+      if (switchIcon) {
+        switchIcon.src = 'icons/character.png';
+        switchIcon.hidden = false;
+      }
     }
   }
 }

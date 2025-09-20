@@ -13,7 +13,7 @@
   --card-border: #353a42;
   --txt:         #e6e6e6;
   --subtxt:      #a0a0a0;
-  --accent:      #3d7cff;
+  --accent:      linear-gradient(135deg, #5a73da, #4457b7);
   --tag-interactive-bg:    linear-gradient(135deg, #2b386d, #1c244a);
   --tag-interactive-border:#3f4e8f;
   --tag-interactive-text:  #e0e5ff;
@@ -24,7 +24,7 @@
   --quality:     #5e9cff;
   --neutral:     #6ac28c;
   --negative:    #8b4513;
-  --danger:      #e74c3c;
+  --danger:       linear-gradient(135deg, #a8493f, #bb3131);
   --danger-bg:   #3c1a1a;
   --shadow:      0 4px 16px #0007;
   --ctrl-btn-size:       40px;
@@ -1087,10 +1087,28 @@ input:focus, select:focus, textarea:focus {
   flex: 1;
   min-width: 0;
 }
+.toolbar .button-row > .char-btn.icon,
+.toolbar .button-row > a.char-btn.icon {
+  gap: .35rem;
+}
+.toolbar .button-row .toolbar-icon {
+  width: 1.65rem;
+  height: 1.65rem;
+  object-fit: contain;
+  display: block;
+  flex: 0 0 auto;
+  pointer-events: none;
+  user-select: none;
+}
+.toolbar .button-row .toolbar-text-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+  display: block;
+}
 
 /* Badge för inventarie­knapp */
 #invBadge { background: var(--danger); border-radius: 50%;
-            padding: 0 .45rem; font-size: .75rem; margin-left: .25rem; }
+            padding: 0 .45rem; font-size: .75rem; margin-left: 0; }
 
 /* animation when inventory items change */
 .inv-flash { animation: invFlash .6s ease-out; }
