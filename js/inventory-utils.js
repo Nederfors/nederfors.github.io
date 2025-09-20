@@ -2019,7 +2019,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
             <button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>
             <button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>
-            <button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">➕</button>
+            <button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>
             ${vehicleBtns}
             <button id="dragToggle" class="char-btn">Dra & Släpp</button>
             <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
