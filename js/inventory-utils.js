@@ -1872,230 +1872,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     }
     return { desc, rowLevel, freeCnt };
   }
-  const CARD_RENDER_VERSION = '2';
-  const renderState = {
-    formalInitialized: false,
-    invBound: false,
-    moneyBound: false,
-    vehicleButtonSlot: null,
-    cashOut: null,
-    unusedOut: null,
-    moneyWeightRow: null,
-    moneyWeightOut: null,
-    capSection: null,
-    capMaxOut: null,
-    capRemainingOut: null,
-    foodOut: null,
-    toolsCard: null,
-    infoCard: null
-  };
-
-  function initFormalCards() {
-    if (renderState.formalInitialized) return;
-    if (!dom.invFormal) return;
-    const template = document.createElement('template');
-    template.innerHTML = `
-      <li class="card" data-special="__tools__">
-        <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
-        <div class="card-desc">
-          <div class="inv-buttons">
-            <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
-            <button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>
-            <button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>
-            <button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>
-            <span id="vehicleButtonSlot"></span>
-            <button id="dragToggle" class="char-btn">Dra & Släpp</button>
-            <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
-            <button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>
-          </div>
-        </div>
-      </li>
-      <li class="card" data-special="__info__">
-        <div class="card-title"><span><span class="collapse-btn"></span>Information 🔎</span></div>
-        <div class="card-desc">
-          <div class="formal-section">
-            <div class="formal-title">Pengar
-              <div class="money-control">
-                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon" aria-label="Minska mynt" title="Minska mynt">${iconHtml('minus')}</button>
-                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon" aria-label="Öka mynt" title="Öka mynt">${iconHtml('plus')}</button>
-              </div>
-            </div>
-            <div class="money-line"><span class="label">Kontant:</span><span class="value" id="cashOut">0D 0S 0Ö</span></div>
-            <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
-            <div class="cap-row" id="moneyWeightRow" style="display:none;"><span class="label">Myntvikt:</span><span class="value" id="moneyWeightOut">0</span></div>
-          </div>
-          <div class="formal-section" id="capacitySection">
-            <div class="formal-title">Bärkapacitet</div>
-            <div class="cap-row"><span class="label">Max:</span><span class="value" id="capMaxOut">0</span></div>
-            <div class="cap-row"><span class="label">Återstående:</span><span class="value" id="capRemainingOut">0</span></div>
-            <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value" id="foodOut">0</span></div>
-          </div>
-        </div>
-      </li>`;
-    const frag = template.content.cloneNode(true);
-    dom.invFormal.replaceChildren(frag);
-    renderState.formalInitialized = true;
-    renderState.vehicleButtonSlot = $T('vehicleButtonSlot');
-    renderState.cashOut = $T('cashOut');
-    renderState.unusedOut = $T('unusedOut');
-    renderState.moneyWeightRow = $T('moneyWeightRow');
-    renderState.moneyWeightOut = $T('moneyWeightOut');
-    renderState.capSection = $T('capacitySection');
-    renderState.capMaxOut = $T('capMaxOut');
-    renderState.capRemainingOut = $T('capRemainingOut');
-    renderState.foodOut = $T('foodOut');
-    renderState.toolsCard = dom.invFormal.querySelector("li[data-special='__tools__']");
-    renderState.infoCard = dom.invFormal.querySelector("li[data-special='__info__']");
-    dom.dragToggle = $T('dragToggle');
-    dom.unusedOut = renderState.unusedOut;
-  }
-
-  function createCardElement() {
-    const li = document.createElement('li');
-    li.classList.add('card');
-    const titleDiv = document.createElement('div');
-    titleDiv.className = 'card-title';
-    const titleWrap = document.createElement('span');
-    const collapseBtn = document.createElement('span');
-    collapseBtn.className = 'collapse-btn';
-    const titleText = document.createElement('span');
-    titleText.className = 'card-title-text';
-    const badge = document.createElement('span');
-    badge.className = 'count-badge';
-    badge.hidden = true;
-    titleWrap.appendChild(collapseBtn);
-    titleWrap.appendChild(titleText);
-    titleWrap.appendChild(badge);
-    titleDiv.appendChild(titleWrap);
-    const descDiv = document.createElement('div');
-    descDiv.className = 'card-desc';
-    const controlsDiv = document.createElement('div');
-    controlsDiv.className = 'inv-controls';
-    li.appendChild(titleDiv);
-    li.appendChild(descDiv);
-    li.appendChild(controlsDiv);
-    li._invParts = { titleText, badge, desc: descDiv, controls: controlsDiv, childList: null };
-    return li;
-  }
-
-  function updateCardElement(li, data, openKeys) {
-    const parts = li._invParts || {};
-    if (!li._invParts) {
-      const fresh = createCardElement();
-      li.className = fresh.className;
-      li.innerHTML = fresh.innerHTML;
-      li._invParts = fresh._invParts;
-      parts.titleText = li._invParts.titleText;
-      parts.badge = li._invParts.badge;
-      parts.desc = li._invParts.desc;
-      parts.controls = li._invParts.controls;
-      parts.childList = null;
-    }
-    li.classList.add('card');
-    if (data.isChild) {
-      delete li.dataset.idx;
-      li.dataset.parent = String(data.parentIdx);
-      li.dataset.child = String(data.childIdx);
-    } else {
-      li.dataset.idx = String(data.realIdx);
-      delete li.dataset.parent;
-      delete li.dataset.child;
-    }
-    li.dataset.id = data.dataId;
-    li.dataset.name = data.dataName;
-    if (data.trait) li.dataset.trait = data.trait; else delete li.dataset.trait;
-    if (data.level) li.dataset.level = data.level; else delete li.dataset.level;
-    li.classList.toggle('vehicle-over', Boolean(data.vehicleOver));
-    li._invParts.titleText.textContent = data.title;
-    if (data.badgeText) {
-      li._invParts.badge.textContent = data.badgeText;
-      li._invParts.badge.hidden = false;
-    } else {
-      li._invParts.badge.textContent = '';
-      li._invParts.badge.hidden = true;
-    }
-    li._invParts.desc.innerHTML = data.descHtml;
-    li._invParts.controls.innerHTML = data.controlsHtml;
-    if (data.isChild && li._invParts.childList) {
-      li._invParts.childList.replaceChildren();
-      li._invParts.childList.remove();
-      li._invParts.childList = null;
-    }
-    li.classList.toggle('compact', !openKeys.has(data.collapseKey));
-    return li._invParts;
-  }
-
-  function updateChildCards(li, children, openKeys) {
-    const parts = li._invParts;
-    if (!parts) return;
-    if (!children.length) {
-      if (parts.childList) {
-        parts.childList.replaceChildren();
-        parts.childList.remove();
-        parts.childList = null;
-      }
-      return;
-    }
-    let childList = parts.childList;
-    if (!childList) {
-      childList = document.createElement('ul');
-      childList.className = 'card-list vehicle-items';
-      parts.childList = childList;
-    }
-    const existing = new Map();
-    Array.from(childList.children).forEach(node => {
-      if (!(node instanceof HTMLElement)) return;
-      if (!node.classList.contains('card')) return;
-      if (!node._invParts) return;
-      const idx = Number(node.dataset.child);
-      if (!Number.isNaN(idx)) existing.set(idx, node);
-    });
-    const frag = document.createDocumentFragment();
-    children.forEach(data => {
-      let child = existing.get(data.childIdx);
-      if (child) existing.delete(data.childIdx);
-      else child = createCardElement();
-      updateCardElement(child, data, openKeys);
-      frag.appendChild(child);
-    });
-    childList.replaceChildren(frag);
-    if (!childList.isConnected) li.appendChild(childList);
-  }
-
-  function updateVehicleButtons(vehicles) {
-    if (!renderState.vehicleButtonSlot) return;
-    const slot = renderState.vehicleButtonSlot;
-    const existing = new Map();
-    Array.from(slot.querySelectorAll('button[data-vehicle-id]')).forEach(btn => {
-      existing.set(btn.dataset.vehicleId || '', btn);
-    });
-    const frag = document.createDocumentFragment();
-    vehicles.forEach(v => {
-      const id = String(v.entry.id || '');
-      let btn = existing.get(id);
-      if (btn) {
-        existing.delete(id);
-      } else {
-        btn = document.createElement('button');
-        btn.className = 'char-btn';
-      }
-      btn.dataset.vehicleId = id;
-      btn.id = `vehicleBtn-${id}`;
-      btn.textContent = `Lasta i ${v.entry.namn}`;
-      btn.onclick = () => openVehiclePopup(v.entry.id);
-      frag.appendChild(btn);
-    });
-    existing.forEach(btn => btn.remove());
-    slot.replaceChildren(frag);
-  }
-
-  function createEmptyCard() {
-    const li = document.createElement('li');
-    li.className = 'card';
-    li.dataset.empty = '1';
-    li.textContent = 'Inga föremål.';
-    return li;
-  }
 
   function renderInventory () {
     if (!dom.invList) return;                        // index-sidan saknar listan
@@ -2221,218 +1997,202 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       })
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
-    initFormalCards();
+    const moneyRow = moneyWeight
+      ? `            <div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
+      : '';
+
+    /* ---------- kort för formaliteter (uppdelat: verktyg & information) ---------- */
     const toolsKey = '__tools__';
     const infoKey  = '__info__';
     const toolsLS = localStorage.getItem(INV_TOOLS_KEY) === '1';
     const infoLS  = localStorage.getItem(INV_INFO_KEY) === '1';
     if (toolsLS) openKeys.add(toolsKey); else openKeys.delete(toolsKey);
-    if (infoLS) openKeys.add(infoKey); else openKeys.delete(infoKey);
+    if (infoLS)  openKeys.add(infoKey);  else openKeys.delete(infoKey);
+    const vehicleBtns = vehicles
+      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`)
+      .join('');
 
-    const toolsCard = renderState.toolsCard;
-    const infoCard = renderState.infoCard;
-    if (toolsCard) {
-      const open = openKeys.has(toolsKey);
-      toolsCard.classList.toggle('compact', !open);
-      localStorage.setItem(INV_TOOLS_KEY, open ? '1' : '0');
-    } else {
+    const toolsCard = `
+      <li class="card${openKeys.has(toolsKey) ? '' : ' compact'}" data-special="${toolsKey}">
+        <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
+        <div class="card-desc">
+          <div class="inv-buttons">
+            <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
+            <button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>
+            <button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>
+            <button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>
+            ${vehicleBtns}
+            <button id="dragToggle" class="char-btn">Dra & Släpp</button>
+            <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
+            <button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>
+          </div>
+        </div>
+      </li>`;
+
+    const infoCard = `
+      <li class="card${openKeys.has(infoKey) ? '' : ' compact'}" data-special="${infoKey}">
+        <div class="card-title"><span><span class="collapse-btn"></span>Information 🔎</span></div>
+        <div class="card-desc">
+          <div class="formal-section">
+            <div class="formal-title">Pengar
+              <div class="money-control">
+                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon" aria-label="Minska mynt" title="Minska mynt">${iconHtml('minus')}</button>
+                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon" aria-label="Öka mynt" title="Öka mynt">${iconHtml('plus')}</button>
+              </div>
+            </div>
+            <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
+            <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
+${moneyRow}
+          </div>
+          <div class="formal-section ${charCapClass}">
+            <div class="formal-title">Bärkapacitet</div>
+            <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
+            <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
+            <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
+          </div>
+        </div>
+      </li>`;
+
+    /* ---------- kort för varje föremål ---------- */
+    const itemCards = inv.length
+      ? inv.map((row) => {
+          const realIdx = allInv.indexOf(row);
+          const entry   = getEntry(row.id || row.name);
+          const tagTyp  = entry.taggar?.typ ?? [];
+          const isVehicle = tagTyp.includes('F\u00e4rdmedel');
+          const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
+          const rowWeight = calcRowWeight(row);
+          const loadWeight = rowWeight - baseWeight * row.qty;
+          const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
+          const remaining = capacity - loadWeight;
+
+          const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
+          const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
+
+          const isArtifact = tagTyp.includes('Artefakt');
+          const isCustom = tagTyp.includes('Hemmagjort');
+
+          /* — knappar — */
+          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+          const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
+          const canStack = ['kraft','ritual'].includes(entry.bound);
+          const btnRow = (isGear && !canStack)
+            ? `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>`
+            : `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>
+               <button data-act="sub" class="char-btn" aria-label="Minska">${iconHtml('minus')}</button>
+               <button data-act="add" class="char-btn" aria-label="Lägg till">${iconHtml('plus')}</button>`;
+          const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
+          const editBtn = isCustom ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
+          const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
+          const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+          const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
+
+          // rowLevel och dataLevel beräknades tidigare
+          const priceText = formatMoney(
+            calcRowCost(row, forgeLvl, alcLevel, artLevel)
+          );
+          const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
+          const weightText = formatWeight(rowWeight);
+          const key = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
+          let vehicleInfo = '';
+          let cardClass = '';
+          if (isVehicle) {
+            const vClass = capClassOf(loadWeight, capacity);
+            vehicleInfo = `<br><span class="${vClass}">B\u00e4rkapacitet: ${formatWeight(capacity)}<br>\u00c5terst\u00e5ende: ${formatWeight(remaining)}</span>`;
+            if (remaining < 0) cardClass = ' vehicle-over';
+          }
+
+          const txt = (F.invTxt || '').toLowerCase();
+          const showChildrenPairs = (() => {
+            const children = (row.contains || []).map((c,j)=>({ c, j }));
+            if (!isVehicle) return children;
+            if (!txt) return children;
+            const selfMatch = String(row.name || '').toLowerCase().includes(txt);
+            if (selfMatch) return children;
+            return children.filter(({c}) => rowMatchesText(c, txt));
+          })();
+
+          const sublist = (row.contains && row.contains.length)
+            ? `<ul class="card-list vehicle-items">${showChildrenPairs.map(({c,j})=>{
+                const centry = getEntry(c.name);
+                const ctagTyp = centry.taggar?.typ ?? [];
+                const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
+                const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
+                const cWeight = formatWeight(calcRowWeight(c));
+                const vClass = capClassOf(loadWeight, capacity);
+                const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
+                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
+                const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
+                const cCanStack = ['kraft','ritual'].includes(centry.bound);
+                const cBtnRow = (cIsGear && !cCanStack)
+                  ? `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>`
+                  : `<button data-act="del" class="char-btn danger icon" aria-label="Ta bort">${iconHtml('remove')}</button>
+                     <button data-act="sub" class="char-btn" aria-label="Minska">${iconHtml('minus')}</button>
+                     <button data-act="add" class="char-btn" aria-label="Lägg till">${iconHtml('plus')}</button>`;
+                const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
+                const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
+                const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;
+                const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
+                const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
+                const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+                const cEditBtn = ctagTyp.includes('Hemmagjort') ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
+                const cPath = `${realIdx}.${j}`;
+                const cTitle = nameMap.get(c) || c.name;
+                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait?` data-trait="${c.trait}"`:''}${cDataLevel}>
+                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${cTitle}: ${c.trait}` : cTitle}${cBadge}</span></div>
+                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
+                  <div class="inv-controls">
+                    ${cBtnRow}
+                    ${cEditBtn}
+                    ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
+                    ${cFreeQBtn}
+                    ${cToggleBtn}
+                    ${cFreeBtn}
+                  </div>
+                </li>`;}).join('')}</ul>`
+            : '';
+
+          return `
+            <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
+                data-idx="${realIdx}"
+                data-id="${row.id || row.name}"
+                data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
+              <div class="card-title"><span><span class="collapse-btn"></span>${(row.id === 'l9' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
+              <div class="card-desc">
+                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
+              </div>
+              <div class="inv-controls">
+                ${btnRow}
+                ${editBtn}
+                ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
+                ${freeQBtn}
+                ${toggleBtn}
+                ${freeBtn}
+                ${isVehicle ? `<button data-act="vehicleLoad" class="char-btn">⬇️</button><button data-act="vehicleUnload" class="char-btn">⬆️</button>` : ''}
+              </div>
+              ${sublist}
+            </li>`;
+      }).join('')
+    : '<li class="card">Inga föremål.</li>';
+
+    /* ---------- skriv ut ---------- */
+    if (dom.invFormal) {
+      dom.invFormal.innerHTML = toolsCard + infoCard;
       localStorage.setItem(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
+      localStorage.setItem(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
     }
-    if (infoCard) {
-      const open = openKeys.has(infoKey);
-      infoCard.classList.toggle('compact', !open);
-      localStorage.setItem(INV_INFO_KEY, open ? '1' : '0');
-    } else {
-      localStorage.setItem(INV_INFO_KEY, openKeys.has(infoKey) ? '1' : '0');
-    }
-
-    if (renderState.capSection) {
-      renderState.capSection.className = `formal-section ${charCapClass}`.trim();
-    }
-    if (renderState.cashOut) {
-      renderState.cashOut.textContent = `${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö`;
-    }
-    if (renderState.unusedOut) {
-      renderState.unusedOut.textContent = diffText;
-    }
-    if (renderState.moneyWeightRow) {
-      renderState.moneyWeightRow.style.display = moneyWeight ? '' : 'none';
-    }
-    if (renderState.moneyWeightOut) {
-      renderState.moneyWeightOut.textContent = formatWeight(moneyWeight);
-    }
-    if (renderState.capMaxOut) {
-      renderState.capMaxOut.textContent = formatWeight(maxCapacity);
-    }
-    if (renderState.capRemainingOut) {
-      renderState.capRemainingOut.textContent = formatWeight(remainingCap);
-    }
-    if (renderState.foodOut) {
-      renderState.foodOut.textContent = foodCount;
-    }
-
-    updateVehicleButtons(vehicles);
-
-    const searchEl = $T('invSearch');
-    if (searchEl && searchEl.value !== (F.invTxt || '')) {
-      searchEl.value = F.invTxt || '';
-    }
-
-    const existingTop = new Map();
-    let existingEmpty = null;
-    if (dom.invList.dataset.renderVersion === CARD_RENDER_VERSION) {
-      Array.from(dom.invList.children).forEach(node => {
-        if (!(node instanceof HTMLElement)) return;
-        if (!node.classList.contains('card')) return;
-        if (node.dataset.empty === '1') {
-          existingEmpty = node;
-          return;
-        }
-        const idx = Number(node.dataset.idx);
-        if (!Number.isNaN(idx) && node._invParts) {
-          existingTop.set(idx, node);
-        }
-      });
-    }
-
-    const frag = document.createDocumentFragment();
-    if (!inv.length) {
-      const emptyLi = existingEmpty || createEmptyCard();
-      frag.appendChild(emptyLi);
-    } else {
-      inv.forEach(row => {
-        const realIdx = allInv.indexOf(row);
-        let li = existingTop.get(realIdx);
-        if (li) existingTop.delete(realIdx);
-        else li = createCardElement();
-        const entry = getEntry(row.id || row.name);
-        const tagTyp = entry.taggar?.typ ?? [];
-        const isVehicle = tagTyp.includes('Färdmedel');
-        const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
-        const rowWeight = calcRowWeight(row);
-        const loadWeight = rowWeight - baseWeight * row.qty;
-        const capacity = isVehicle ? (entry.stat?.bärkapacitet || 0) : 0;
-        const remaining = capacity - loadWeight;
-        const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
-        const priceText = formatMoney(calcRowCost(row, forgeLvl, alcLevel, artLevel));
-        const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-        const weightText = formatWeight(rowWeight);
-        const key = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
-        const weightClass = isVehicle ? capClassOf(loadWeight, capacity) : charCapClass;
-        let vehicleInfo = '';
-        if (isVehicle) {
-          const vClass = capClassOf(loadWeight, capacity);
-          vehicleInfo = `<br><span class='${vClass}'>Bärkapacitet: ${formatWeight(capacity)}<br>Återstående: ${formatWeight(remaining)}</span>`;
-        }
-        const canStack = ['kraft','ritual'].includes(entry.bound);
-        const isGear = ['Vapen','Sköld','Rustning','Lägre Artefakt','Artefakt','Färdmedel'].some(t => tagTyp.includes(t));
-        const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
-        const isArtifact = tagTyp.includes('Artefakt');
-        const isCustom = tagTyp.includes('Hemmagjort');
-        const baseButtons = (isGear && !canStack)
-          ? `<button data-act='del' class='char-btn danger icon' aria-label='Ta bort'>${iconHtml('remove')}</button>`
-          : `<button data-act='del' class='char-btn danger icon' aria-label='Ta bort'>${iconHtml('remove')}</button><button data-act='sub' class='char-btn' aria-label='Minska'>${iconHtml('minus')}</button><button data-act='add' class='char-btn' aria-label='Lägg till'>${iconHtml('plus')}</button>`;
-        const controlsParts = [
-          baseButtons,
-          isCustom ? `<button data-act='editCustom' class='char-btn'>✏️</button>` : '',
-          allowQual ? `<button data-act='addQual' class='char-btn'>🔨</button>` : '',
-          allowQual ? `<button data-act='freeQual' class='char-btn'>☭</button>` : '',
-          isArtifact ? `<button data-act='toggleEffect' class='char-btn'>↔</button>` : '',
-          `<button data-act='free' class='char-btn${freeCnt ? ' danger' : ''}'>🆓</button>`,
-          isVehicle ? `<button data-act='vehicleLoad' class='char-btn'>⬇️</button><button data-act='vehicleUnload' class='char-btn'>⬆️</button>` : ''
-        ].filter(Boolean);
-        const descHtml = `${desc}<br>Antal: ${row.qty}<br><span class='price-click' data-act='priceQuick'>${priceLabel} ${priceText}</span><br><span class='${weightClass}'>Vikt: ${weightText}</span>${vehicleInfo}`;
-        const titleName = nameMap.get(row) || row.name || '';
-        const displayTitle = (row.id === 'l9' && row.trait) ? `${titleName}: ${row.trait}` : titleName;
-        const cardData = {
-          isChild: false,
-          realIdx,
-          dataId: String(row.id || row.name || ''),
-          dataName: row.name || '',
-          trait: row.trait || '',
-          level: rowLevel || '',
-          title: displayTitle,
-          badgeText: row.qty > 1 ? `×${row.qty}` : '',
-          descHtml,
-          controlsHtml: controlsParts.join(' '),
-          collapseKey: key,
-          vehicleOver: remaining < 0
-        };
-        const txt = (F.invTxt || '').toLowerCase();
-        const showChildrenPairs = (() => {
-          const children = (row.contains || []).map((c, j) => ({ c, j }));
-          if (!isVehicle) return children;
-          if (!txt) return children;
-          const selfMatch = String(row.name || '').toLowerCase().includes(txt);
-          if (selfMatch) return children;
-          return children.filter(({ c }) => rowMatchesText(c, txt));
-        })();
-        const childData = showChildrenPairs.map(({ c, j }) => {
-          const centry = getEntry(c.name);
-          const ctagTyp = centry.taggar?.typ ?? [];
-          const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
-          const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-          const cWeight = formatWeight(calcRowWeight(c));
-          const cIsGear = ['Vapen','Sköld','Rustning','Lägre Artefakt','Artefakt'].some(t => ctagTyp.includes(t));
-          const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
-          const cCanStack = ['kraft','ritual'].includes(centry.bound);
-          const cBtnRow = (cIsGear && !cCanStack)
-            ? `<button data-act='del' class='char-btn danger icon' aria-label='Ta bort'>${iconHtml('remove')}</button>`
-            : `<button data-act='del' class='char-btn danger icon' aria-label='Ta bort'>${iconHtml('remove')}</button><button data-act='sub' class='char-btn' aria-label='Minska'>${iconHtml('minus')}</button><button data-act='add' class='char-btn' aria-label='Lägg till'>${iconHtml('plus')}</button>`;
-          const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
-          const cControls = [
-            cBtnRow,
-            ctagTyp.includes('Hemmagjort') ? `<button data-act='editCustom' class='char-btn'>✏️</button>` : '',
-            cAllowQual ? `<button data-act='addQual' class='char-btn'>🔨</button>` : '',
-            cAllowQual ? `<button data-act='freeQual' class='char-btn'>☭</button>` : '',
-            ctagTyp.includes('Artefakt') ? `<button data-act='toggleEffect' class='char-btn'>↔</button>` : '',
-            `<button data-act='free' class='char-btn${cFreeCnt ? ' danger' : ''}'>🆓</button>`
-          ].filter(Boolean);
-          const childTitle = nameMap.get(c) || c.name || '';
-          const vClass = capClassOf(loadWeight, capacity);
-          return {
-            isChild: true,
-            parentIdx: realIdx,
-            childIdx: j,
-            dataId: String(c.id || c.name || ''),
-            dataName: c.name || '',
-            trait: c.trait || '',
-            level: cRowLevel || '',
-            title: (c.id === 'l9' && c.trait) ? `${childTitle}: ${c.trait}` : childTitle,
-            badgeText: c.qty > 1 ? `×${c.qty}` : '',
-            descHtml: `${cDesc}<br>Antal: ${c.qty}<br><span class='price-click' data-act='priceQuick'>${cPriceLabel} ${cPrice}</span><br><span class='${vClass}'>Vikt: ${cWeight}</span>`,
-            controlsHtml: cControls.join(' '),
-            collapseKey: `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`,
-            vehicleOver: remaining < 0
-          };
-        });
-        updateCardElement(li, cardData, openKeys);
-        updateChildCards(li, childData, openKeys);
-        frag.appendChild(li);
-      });
-    }
-    dom.invList.replaceChildren(frag);
-    dom.invList.dataset.renderVersion = CARD_RENDER_VERSION;
-
+    dom.invList.innerHTML       = itemCards;
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-    dom.invBadge.textContent = flatInv.reduce((sum, r) => sum + r.qty, 0);
+    dom.invBadge.textContent    = flatInv.reduce((s, r) => s + r.qty, 0);
     dom.invBadge.classList.add('badge-pulse');
     setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
-
-    if (dom.dragToggle) dom.dragToggle.classList.toggle('danger', dragEnabled);
-    dom.invList.classList.toggle('drag-mode', dragEnabled);
-
+    dom.unusedOut = $T('unusedOut');
+    dom.dragToggle = $T('dragToggle');
+    if (dom.unusedOut) dom.unusedOut.textContent = diffText;
     if (dom.collapseAllBtn) updateCollapseBtnState();
-
-    if (!renderState.invBound) {
-      bindInv();
-      renderState.invBound = true;
-    }
-    if (!renderState.moneyBound) {
-      bindMoney();
-      renderState.moneyBound = true;
-    }
+    bindInv();
+    bindMoney();
     if (typeof window.refreshEffectsPanel === 'function') {
       window.refreshEffectsPanel();
     }

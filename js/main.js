@@ -461,11 +461,45 @@ window.addEventListener('popstate', () => {
 /* ---------- Ladda databasen ---------- */
 let DB = [];
 let DBIndex = {};
-let DBMeta = null;
 window.DB = DB;
 window.DBIndex = DBIndex;
-window.DBMeta = DBMeta;
-const DB_FILE = 'data/db.json';
+const DATA_FILES = [
+  'diverse.json',
+  'kuriositeter.json',
+  'skatter.json',
+  'elixir.json',
+  'fordel.json',
+  'formaga.json',
+  'kvalitet.json',
+  'mystisk-kraft.json',
+  'mystisk-kvalitet.json',
+  'neutral-kvalitet.json',
+  'negativ-kvalitet.json',
+  'nackdel.json',
+  'anstallning.json',
+  'byggnader.json',
+  'yrke.json',
+  'ras.json',
+  'elityrke.json',
+  'fardmedel.json',
+  'forvaring.json',
+  'gardsdjur.json',
+  'instrument.json',
+  'klader.json',
+  'specialverktyg.json',
+  'tjanster.json',
+  'ritual.json',
+  'rustning.json',
+  'vapen.json',
+  'mat.json',
+  'dryck.json',
+  'sardrag.json',
+  'monstruost-sardrag.json',
+  'artefakter.json',
+  'lagre-artefakter.json',
+  'fallor.json'
+].map(f => `data/${f}`);
+
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
 fetch(TABELLER_FILE)
@@ -484,23 +518,9 @@ fetch(TABELLER_FILE)
     }
   });
 
-fetch(DB_FILE)
-  .then(r => {
-    if (!r.ok) throw new Error(`Failed to load ${DB_FILE}: ${r.status}`);
-    return r.json();
-  })
-  .then(payload => {
-    let entries;
-    if (Array.isArray(payload)) {
-      entries = payload;
-      DBMeta = null;
-    } else {
-      const { entries: rawEntries, ...meta } = payload || {};
-      entries = Array.isArray(rawEntries) ? rawEntries : [];
-      DBMeta = Object.keys(meta || {}).length ? meta : null;
-    }
-    window.DBMeta = DBMeta;
-    DB = entries.slice().sort(sortByType);
+Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
+  .then(arrays => {
+    DB = arrays.flat().sort(sortByType);
     DB.forEach((ent, idx) => {
       if (ent.id === undefined) ent.id = idx;
       DB[ent.id] = ent;

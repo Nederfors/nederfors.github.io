@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v9';
+const CACHE_NAME = 'symbaroum-pwa-v8';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -35,9 +35,42 @@ const URLS_TO_CACHE = [
   'js/utils.js',
   'js/yrke-panel.js',
   // Data JSON
-  'data/db.json',
+  'data/anstallning.json',
+  'data/artefakter.json',
+  'data/byggnader.json',
+  'data/diverse.json',
+  'data/dryck.json',
+  'data/elityrke.json',
+  'data/elixir.json',
+  'data/kuriositeter.json',
+  'data/skatter.json',
+  'data/fallor.json',
+  'data/fardmedel.json',
+  'data/fordel.json',
+  'data/formaga.json',
+  'data/forvaring.json',
+  'data/gardsdjur.json',
+  'data/instrument.json',
+  'data/klader.json',
+  'data/kvalitet.json',
+  'data/lagre-artefakter.json',
+  'data/mat.json',
+  'data/monstruost-sardrag.json',
+  'data/mystisk-kraft.json',
+  'data/mystisk-kvalitet.json',
+  'data/nackdel.json',
+  'data/negativ-kvalitet.json',
+  'data/neutral-kvalitet.json',
   'data/pdf-list.json',
-  'data/tabeller.json'
+  'data/ras.json',
+  'data/ritual.json',
+  'data/rustning.json',
+  'data/sardrag.json',
+  'data/specialverktyg.json',
+  'data/tabeller.json',
+  'data/tjanster.json',
+  'data/vapen.json',
+  'data/yrke.json'
 ];
 
 self.addEventListener('install', event => {

@@ -107,11 +107,4 @@ Se avsnittet ovan. Export öppnar en meny där du kan spara alla karaktärer som
 - Hjälpmenyn (<img src="icons/info.svg" alt="Info" width="16">) innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
 
 ## Utveckling och bidrag
-Projektet består av statisk HTML, CSS och JavaScript. För att korta ned laddtiden hämtar applikationen nu all databasinformation från en samlad fil (`data/db.json`).
-
-### Byggsteg för databasen
-- Kör `node scripts/build-db.js` när någon av källfilerna i `data/` uppdateras. Skriptet läser samma filer som tidigare användes i `DATA_FILES`, sammanfogar dem till en enda blob och skriver metadata (antal poster och SHA-256-summor) så att du snabbt kan dubbelkolla att inget tappats bort.
-- Committa alltid den genererade `data/db.json` tillsammans med ändringar i källdata så att produktionsbygget håller sig i fas.
-- Efter körningen kan du öppna `index.html`, `character.html` och `notes.html` för att verifiera att alla vyer laddar korrekt. Eftersom klienten bara gör en JSON-förfrågan i stället för ett trettiotal märks förbättringen direkt vid sidladdning.
-
-Förslag, felrapporter och förbättringar tas emot via pull requests.
+Projektet består av statisk HTML, CSS och JavaScript utan byggsteg. Ändringar i `data/` och `js/` reflekteras direkt i webbläsaren. Förslag, felrapporter och förbättringar tas emot via pull requests.
