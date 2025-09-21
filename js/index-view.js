@@ -422,7 +422,7 @@ function initIndex() {
       [...dom.lista.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
     );
-    dom.lista.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     // Always render list; a fallback "Hoppsan" category is appended last.
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
@@ -719,7 +719,7 @@ function initIndex() {
           if (descEl) highlightInElement(descEl, terms);
         }
       });
-      dom.lista.appendChild(catLi);
+      fragment.appendChild(catLi);
     });
     // Append special "Hoppsan" category with a clear-filters action
     {
@@ -746,8 +746,9 @@ function initIndex() {
         catState['Hoppsan'] = detailsEl.open;
         saveState();
       });
-      dom.lista.appendChild(hopLi);
+      fragment.appendChild(hopLi);
     }
+    dom.lista.replaceChildren(fragment);
     updateCatToggle();
     // Only auto-open once per triggering action
     openCatsOnce.clear();
