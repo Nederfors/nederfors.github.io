@@ -11,6 +11,8 @@
   const oToMoney = window.oToMoney;
   const INV_TOOLS_KEY = 'invToolsOpen';
   const INV_INFO_KEY  = 'invInfoOpen';
+  const FORMAL_TOOLS_KEY = '__tools__';
+  const FORMAL_INFO_KEY  = '__info__';
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
@@ -38,6 +40,7 @@
   let dragIdx = null;
   let dragEl = null;
   let dragEnabled = false;
+  let lastInventorySignature = null;
 
   const dividePrice = (amt, divisor) => {
     const o = typeof amt === 'number' ? amt : moneyToO(amt || {});
@@ -106,7 +109,17 @@
     return sortByType(entA, entB);
   }
 
-  function saveInventory(inv) {
+  function snapshotInventory(inv) {
+    try {
+      return JSON.stringify(inv);
+    } catch (err) {
+      console.error('Could not snapshot inventory', err);
+      return '';
+    }
+  }
+
+  function saveInventory(inv, opts) {
+    const options = (opts && typeof opts === 'object') ? opts : {};
     const nonVeh = [];
     const veh = [];
     inv.forEach(row => {
@@ -115,11 +128,19 @@
       else nonVeh.push(row);
     });
     inv.splice(0, inv.length, ...nonVeh, ...veh);
+    const signature = snapshotInventory(inv);
+    const changed = signature !== lastInventorySignature;
     storeHelper.setInventory(store, inv);
     recalcArtifactEffects();
-    if (window.updateXP) updateXP();
-    if (window.renderTraits) renderTraits();
-    if (window.indexViewUpdate) window.indexViewUpdate();
+    const forceAll = options.forceSignals === true;
+    const shouldUpdateXP = forceAll || options.forceXP === true || (changed && options.skipXP !== true);
+    const shouldRenderTraits = forceAll || options.forceTraits === true || (changed && options.skipTraits !== true);
+    const shouldUpdateIndex = forceAll || options.forceIndex === true || (changed && options.skipIndex !== true);
+    if (shouldUpdateXP && window.updateXP) updateXP();
+    if (shouldRenderTraits && window.renderTraits) renderTraits();
+    if (shouldUpdateIndex && window.indexViewUpdate) window.indexViewUpdate();
+    lastInventorySignature = signature;
+    return changed;
   }
 
   function addWellEquippedItems(inv) {
@@ -2006,45 +2027,58 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     }
   }
 
-  function renderInventory (opts) {
-    const options = opts || {};
-    const updateFormal = options.refreshFormal !== false;
-    const updateList = options.refreshList !== false;
-    const updateSummary = options.refreshSummary !== false;
-    const targetIdx = options.onlyIdx ? new Set(options.onlyIdx) : null;
-    if (!dom.invList) return;                        // index-sidan saknar listan
-    const openKeys = new Set(
+
+  function capClassOf(used, max) {
+    if (!max || max <= 0) return '';
+    const ratio = used / max;
+    if (ratio > 1.0) return 'cap-neg';
+    if (ratio >= 0.95) return 'cap-crit';
+    if (ratio >= 0.80) return 'cap-warn';
+    return '';
+  }
+
+  function collectOpenCardKeys() {
+    const keys = new Set();
+    if (dom.invList) {
       [...dom.invList.querySelectorAll('li.card:not(.compact)')]
-        .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
-    );
-    // Preserve open state for Formaliteter cards (now split into tools/info)
-    if (dom.invFormal) {
-      [...dom.invFormal.querySelectorAll('li.card')].forEach(li => {
-        if (!li.classList.contains('compact') && li.dataset.special) {
-          openKeys.add(li.dataset.special);
-        }
-      });
+        .forEach(li => {
+          const special = li.dataset.special;
+          if (special) {
+            keys.add(special);
+          } else {
+            const id = li.dataset.id || '';
+            const trait = li.dataset.trait || '';
+            const level = li.dataset.level || '';
+            keys.add(`${id}|${trait}|${level}`);
+          }
+        });
     }
+    if (dom.invFormal) {
+      [...dom.invFormal.querySelectorAll('li.card')]
+        .forEach(li => {
+          if (!li.classList.contains('compact') && li.dataset.special) {
+            keys.add(li.dataset.special);
+          }
+        });
+    }
+    return keys;
+  }
+
+  function buildInventoryRenderState() {
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
-    const nameMap = makeNameMap(allInv);
-    recalcArtifactEffects();
-    if (window.updateXP) updateXP();
+    const nameMap = makeNameMap(flatInv);
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
     const list = storeHelper.getCurrentList(store);
 
-    /* ---------- summa i pengar ---------- */
     const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
-    const skillForge = storeHelper.abilityLevel(
-      list, 'Smideskonst');
+    const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
     const forgeLvl = Math.max(partyForge, skillForge);
     const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
-    const skillAlc = storeHelper.abilityLevel(
-      list, 'Alkemist');
+    const skillAlc = storeHelper.abilityLevel(list, 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
     const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-    const skillArt = storeHelper.abilityLevel(
-      list, 'Artefaktmakande');
+    const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
 
     const tot = flatInv.reduce((t, row) => {
@@ -2068,40 +2102,29 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
 
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
-    const diff  = oToMoney(Math.abs(diffO));
+    const diff = oToMoney(Math.abs(diffO));
     const diffText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
     const unusedMoney = oToMoney(Math.max(0, diffO));
     const moneyWeight = calcMoneyWeight(unusedMoney);
 
     const usedWeight = allInv.reduce((s, r) => {
       const entry = getEntry(r.name);
-      const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
+      const isVeh = (entry.taggar?.typ || []).includes('Färdmedel');
       return s + (isVeh ? 0 : calcRowWeight(r));
     }, 0) + moneyWeight;
     const traits = storeHelper.getTraits(store);
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
     const valStark = (traits['Stark']||0) + (bonus['Stark']||0) + (maskBonus['Stark']||0);
-    const baseCap = storeHelper.calcCarryCapacity(valStark, list);
-    const maxCapacity = baseCap;
+    const maxCapacity = storeHelper.calcCarryCapacity(valStark, list);
     const remainingCap = maxCapacity - usedWeight;
-
-    // Capacity color helper: based on used/max ratio
-    const capClassOf = (used, max) => {
-      if (!max || max <= 0) return '';
-      const ratio = used / max;
-      if (ratio > 1.0) return 'cap-neg';    // överlast: över maxkapacitet
-      if (ratio >= 0.95) return 'cap-crit'; // nära max
-      if (ratio >= 0.80) return 'cap-warn'; // närmar sig
-      return '';
-    };
     const charCapClass = capClassOf(usedWeight, maxCapacity);
 
     const vehicles = allInv
-      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
+      .map((row, i) => ({ row, entry: getEntry(row.id || row.name), idx: i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
 
-    if (dom.invTypeSel) {
+    const typeArr = (() => {
       const types = new Set();
       allInv.forEach(row => {
         const entry = getEntry(row.id || row.name);
@@ -2109,24 +2132,17 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           .filter(Boolean)
           .forEach(t => types.add(t));
       });
-      dom.invTypeSel.innerHTML =
-        '<option value="">Kategori (alla)</option>' +
-        [...types]
-          .sort((a, b) => catName(a).localeCompare(catName(b)))
-          .map(t =>
-            `<option value="${t}"${t===F.typ?' selected':''}>${catName(t)}</option>`)
-          .join('');
-    }
+      return [...types].sort((a, b) => catName(a).localeCompare(catName(b)));
+    })();
 
-    const inv = allInv
-      .filter(row => {
-        if (F.typ) {
-          const entry = getEntry(row.id || row.name);
-          if (!(entry.taggar?.typ || []).includes(F.typ)) return false;
-        }
-        if (F.invTxt && !rowMatchesText(row, F.invTxt)) return false;
-        return true;
-      });
+    const filtered = allInv.filter(row => {
+      if (F.typ) {
+        const entry = getEntry(row.id || row.name);
+        if (!(entry.taggar?.typ || []).includes(F.typ)) return false;
+      }
+      if (F.invTxt && !rowMatchesText(row, F.invTxt)) return false;
+      return true;
+    });
 
     const foodCount = flatInv
       .filter(row => {
@@ -2135,23 +2151,77 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       })
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
-    const moneyRow = moneyWeight
-      ? `            <div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
-      : '';
+    const totalQty = flatInv.reduce((sum, row) => sum + (row.qty || 0), 0);
 
-    /* ---------- kort för formaliteter (uppdelat: verktyg & information) ---------- */
-    const toolsKey = '__tools__';
-    const infoKey  = '__info__';
+    return {
+      allInv,
+      flatInv,
+      nameMap,
+      cash,
+      forgeLvl,
+      alcLevel,
+      artLevel,
+      diffText,
+      diff,
+      diffO,
+      moneyWeight,
+      usedWeight,
+      maxCapacity,
+      remainingCap,
+      charCapClass,
+      vehicles,
+      types: typeArr,
+      filtered,
+      foodCount,
+      totalQty,
+      searchText: (F.invTxt || '').toLowerCase()
+    };
+  }
+
+  function updateInventoryFilters(state) {
+    if (!dom.invTypeSel) return;
+    const desired = [{ value: '', label: 'Kategori (alla)' }, ...state.types.map(t => ({ value: t, label: catName(t) }))];
+    const current = [...dom.invTypeSel.options];
+    let mismatch = current.length !== desired.length;
+    if (!mismatch) {
+      for (let i = 0; i < desired.length; i++) {
+        if (current[i].value !== desired[i].value || current[i].textContent !== desired[i].label) {
+          mismatch = true;
+          break;
+        }
+      }
+    }
+    if (mismatch) {
+      while (dom.invTypeSel.firstChild) dom.invTypeSel.removeChild(dom.invTypeSel.firstChild);
+      desired.forEach(opt => {
+        const optionEl = document.createElement('option');
+        optionEl.value = opt.value;
+        optionEl.textContent = opt.label;
+        dom.invTypeSel.appendChild(optionEl);
+      });
+    }
+    const desiredValue = F.typ || '';
+    if (dom.invTypeSel.value !== desiredValue) {
+      dom.invTypeSel.value = desiredValue;
+    }
+  }
+
+  function updateFormalCards(state, openKeys) {
     const toolsLS = localStorage.getItem(INV_TOOLS_KEY) === '1';
-    const infoLS  = localStorage.getItem(INV_INFO_KEY) === '1';
-    if (toolsLS) openKeys.add(toolsKey); else openKeys.delete(toolsKey);
-    if (infoLS)  openKeys.add(infoKey);  else openKeys.delete(infoKey);
-    const vehicleBtns = vehicles
+    const infoLS = localStorage.getItem(INV_INFO_KEY) === '1';
+    if (toolsLS) openKeys.add(FORMAL_TOOLS_KEY); else openKeys.delete(FORMAL_TOOLS_KEY);
+    if (infoLS) openKeys.add(FORMAL_INFO_KEY); else openKeys.delete(FORMAL_INFO_KEY);
+
+    const vehicleBtns = state.vehicles
       .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`)
       .join('');
 
+    const moneyRow = state.moneyWeight
+      ? `            <div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(state.moneyWeight)}</span></div>`
+      : '';
+
     const toolsCard = `
-      <li class="card${openKeys.has(toolsKey) ? '' : ' compact'}" data-special="${toolsKey}">
+      <li class="card${openKeys.has(FORMAL_TOOLS_KEY) ? '' : ' compact'}" data-special="${FORMAL_TOOLS_KEY}">
         <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
         <div class="card-desc">
           <div class="inv-buttons">
@@ -2168,7 +2238,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       </li>`;
 
     const infoCard = `
-      <li class="card${openKeys.has(infoKey) ? '' : ' compact'}" data-special="${infoKey}">
+      <li class="card${openKeys.has(FORMAL_INFO_KEY) ? '' : ' compact'}" data-special="${FORMAL_INFO_KEY}">
         <div class="card-title"><span><span class="collapse-btn"></span>Information 🔎</span></div>
         <div class="card-desc">
           <div class="formal-section">
@@ -2178,103 +2248,107 @@ function openVehiclePopup(preselectId, precheckedPaths) {
                 <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon" aria-label="Öka mynt" title="Öka mynt">➕</button>
               </div>
             </div>
-            <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
-            <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
-${moneyRow}
+            <div class="money-line"><span class="label">Kontant:</span><span class="value">${state.cash.daler}D ${state.cash.skilling}S ${state.cash['örtegar']}Ö</span></div>
+            <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>${moneyRow}
           </div>
-          <div class="formal-section ${charCapClass}">
+          <div class="formal-section ${state.charCapClass}">
             <div class="formal-title">Bärkapacitet</div>
-            <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
-            <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
-            <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
+            <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(state.maxCapacity)}</span></div>
+            <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(state.remainingCap)}</span></div>
+            <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${state.foodCount}</span></div>
           </div>
         </div>
       </li>`;
 
-    /* ---------- kort för varje föremål ---------- */
-    const needCards = updateList || (targetIdx && targetIdx.size);
-    const itemCards = needCards && inv.length
-      ? inv.map((row) => {
-          const realIdx = allInv.indexOf(row);
-          const entry   = getEntry(row.id || row.name);
-          const tagTyp  = entry.taggar?.typ ?? [];
-          const isVehicle = tagTyp.includes('Färdmedel');
-          const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
-          const rowWeight = calcRowWeight(row);
-          const loadWeight = rowWeight - baseWeight * row.qty;
-          const capacity = isVehicle ? (entry.stat?.bärkapacitet || 0) : 0;
-          const remaining = capacity - loadWeight;
+    ensureFormalCard(FORMAL_TOOLS_KEY, toolsCard, openKeys.has(FORMAL_TOOLS_KEY));
+    ensureFormalCard(FORMAL_INFO_KEY, infoCard, openKeys.has(FORMAL_INFO_KEY));
+    localStorage.setItem(INV_TOOLS_KEY, openKeys.has(FORMAL_TOOLS_KEY) ? '1' : '0');
+    localStorage.setItem(INV_INFO_KEY, openKeys.has(FORMAL_INFO_KEY) ? '1' : '0');
+    dom.unusedOut = $T('unusedOut');
+    dom.dragToggle = $T('dragToggle');
+  }
 
-          const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
-          const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
+  function buildItemCard(row, state, openKeys) {
+    const realIdx = state.allInv.indexOf(row);
+    const entry = getEntry(row.id || row.name);
+    const tagTyp = entry.taggar?.typ ?? [];
+    const isVehicle = tagTyp.includes('Färdmedel');
+    const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
+    const rowWeight = calcRowWeight(row);
+    const loadWeight = rowWeight - baseWeight * row.qty;
+    const capacity = isVehicle ? (entry.stat?.bärkapacitet || 0) : 0;
+    const remaining = capacity - loadWeight;
 
-          const isArtifact = tagTyp.includes('Artefakt');
-          const isCustom = tagTyp.includes('Hemmagjort');
+    const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
+    const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
 
-          const isGear = ['Vapen', 'Sköld', 'Rustning', 'Lägre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
-          const canStack = ['kraft','ritual'].includes(entry.bound);
-          const btnRow = (isGear && !canStack)
+    const isArtifact = tagTyp.includes('Artefakt');
+    const isCustom = tagTyp.includes('Hemmagjort');
+
+    const isGear = ['Vapen', 'Sköld', 'Rustning', 'Lägre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+    const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
+    const canStack = ['kraft','ritual'].includes(entry.bound);
+    const btnRow = (isGear && !canStack)
+      ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
+      : `<button data-act="del" class="char-btn danger icon">🗑</button>
+         <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
+         <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
+    const freeBtn = `<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}">🆓</button>`;
+    const editBtn = isCustom ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
+    const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
+    const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+    const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
+
+    const priceText = formatMoney(
+      calcRowCost(row, state.forgeLvl, state.alcLevel, state.artLevel)
+    );
+    const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
+    const weightText = formatWeight(rowWeight);
+    const key = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
+    let vehicleInfo = '';
+    let cardClass = '';
+    if (isVehicle) {
+      const vClass = capClassOf(loadWeight, capacity);
+      vehicleInfo = `<br><span class="${vClass}">Bärkapacitet: ${formatWeight(capacity)}<br>Återstående: ${formatWeight(remaining)}</span>`;
+      if (remaining < 0) cardClass = ' vehicle-over';
+    }
+
+    const txt = state.searchText;
+    const showChildrenPairs = (() => {
+      const children = (row.contains || []).map((c, j) => ({ c, j }));
+      if (!isVehicle) return children;
+      if (!txt) return children;
+      const selfMatch = String(row.name || '').toLowerCase().includes(txt);
+      if (selfMatch) return children;
+      return children.filter(({ c }) => rowMatchesText(c, txt));
+    })();
+
+    const sublist = (row.contains && row.contains.length)
+      ? `<ul class="card-list vehicle-items">${showChildrenPairs.map(({ c, j }) => {
+          const centry = getEntry(c.name);
+          const ctagTyp = centry.taggar?.typ ?? [];
+          const cPrice = formatMoney(calcRowCost(c, state.forgeLvl, state.alcLevel, state.artLevel));
+          const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
+          const cWeight = formatWeight(calcRowWeight(c));
+          const vClass = capClassOf(loadWeight, capacity);
+          const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
+          const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'Lägre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
+          const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
+          const cCanStack = ['kraft','ritual'].includes(centry.bound);
+          const cBtnRow = (cIsGear && !cCanStack)
             ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
             : `<button data-act="del" class="char-btn danger icon">🗑</button>
                <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
                <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
-          const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
-          const editBtn = isCustom ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
-          const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
-          const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-          const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
-
-          const priceText = formatMoney(
-            calcRowCost(row, forgeLvl, alcLevel, artLevel)
-          );
-          const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-          const weightText = formatWeight(rowWeight);
-          const key = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
-          let vehicleInfo = '';
-          let cardClass = '';
-          if (isVehicle) {
-            const vClass = capClassOf(loadWeight, capacity);
-            vehicleInfo = `<br><span class="${vClass}">Bärkapacitet: ${formatWeight(capacity)}<br>Återstående: ${formatWeight(remaining)}</span>`;
-            if (remaining < 0) cardClass = ' vehicle-over';
-          }
-
-          const txt = (F.invTxt || '').toLowerCase();
-          const showChildrenPairs = (() => {
-            const children = (row.contains || []).map((c,j)=>({ c, j }));
-            if (!isVehicle) return children;
-            if (!txt) return children;
-            const selfMatch = String(row.name || '').toLowerCase().includes(txt);
-            if (selfMatch) return children;
-            return children.filter(({c}) => rowMatchesText(c, txt));
-          })();
-
-          const sublist = (row.contains && row.contains.length)
-            ? `<ul class="card-list vehicle-items">${showChildrenPairs.map(({c,j})=>{
-                const centry = getEntry(c.name);
-                const ctagTyp = centry.taggar?.typ ?? [];
-                const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
-                const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-                const cWeight = formatWeight(calcRowWeight(c));
-                const vClass = capClassOf(loadWeight, capacity);
-                const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
-                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'Lägre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
-                const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
-                const cCanStack = ['kraft','ritual'].includes(centry.bound);
-                const cBtnRow = (cIsGear && !cCanStack)
-                  ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
-                  : `<button data-act="del" class="char-btn danger icon">🗑</button>
-                     <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
-                     <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
-                const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
-                const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
-                const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;
-                const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
-                const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
-                const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-                const cEditBtn = ctagTyp.includes('Hemmagjort') ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
-                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait?` data-trait="${c.trait}"`:''}${cDataLevel}>
-                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${nameMap.get(c) || c.name}: ${c.trait}` : (nameMap.get(c) || c.name)}${cBadge}</span></div>
+          const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
+          const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
+          const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;
+          const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}">🆓</button>`;
+          const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
+          const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
+          const cEditBtn = ctagTyp.includes('Hemmagjort') ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
+          return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait ? ` data-trait="${c.trait}"` : ''}${cDataLevel}>
+                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${state.nameMap.get(c) || c.name}: ${c.trait}` : (state.nameMap.get(c) || c.name)}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
                     ${cBtnRow}
@@ -2285,18 +2359,16 @@ ${moneyRow}
                     ${cFreeBtn}
                   </div>
                 </li>`;}).join('')}</ul>`
-            : '';
+      : '';
 
-          return {
-            idx: realIdx,
-            html: `
+    const cardHtml = `
             <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
                 data-id="${row.id || row.name}"
-                data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title"><span><span class="collapse-btn"></span>${(row.id === 'l9' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
+                data-name="${row.name}"${row.trait ? ` data-trait="${row.trait}"` : ''}${dataLevel}>
+              <div class="card-title"><span><span class="collapse-btn"></span>${(row.id === 'l9' && row.trait) ? `${state.nameMap.get(row)}: ${row.trait}` : state.nameMap.get(row)}${badge}</span></div>
               <div class="card-desc">
-                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
+                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : state.charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
               </div>
               <div class="inv-controls">
                 ${btnRow}
@@ -2308,41 +2380,61 @@ ${moneyRow}
                 ${isVehicle ? `<button data-act="vehicleLoad" class="char-btn">⬇️</button><button data-act="vehicleUnload" class="char-btn">⬆️</button>` : ''}
               </div>
               ${sublist}
-            </li>`
-          };
-      })
-      : [];
+            </li>`;
 
-    /* ---------- skriv ut ---------- */
-    if (updateFormal) {
-      ensureFormalCard(toolsKey, toolsCard, openKeys.has(toolsKey));
-      ensureFormalCard(infoKey, infoCard, openKeys.has(infoKey));
-      localStorage.setItem(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
-      localStorage.setItem(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
-      dom.unusedOut = $T('unusedOut');
-      dom.dragToggle = $T('dragToggle');
+    return { idx: realIdx, html: cardHtml };
+  }
+
+  function updateInventoryCards(state, openKeys, targetIdx) {
+    const inv = state.filtered;
+    const itemCards = inv.length ? inv.map(row => buildItemCard(row, state, openKeys)) : [];
+    const opts = targetIdx ? { onlyIdx: targetIdx } : undefined;
+    updateItemCards(inv, itemCards, state.allInv, opts);
+  }
+
+  function updateInventorySummary(state) {
+    if (dom.wtOut) dom.wtOut.textContent = formatWeight(state.usedWeight);
+    if (dom.slOut) dom.slOut.textContent = formatWeight(state.maxCapacity);
+    if (dom.invBadge) {
+      dom.invBadge.textContent = state.totalQty;
+      dom.invBadge.classList.add('badge-pulse');
+      setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
     }
+    if (!dom.unusedOut) dom.unusedOut = $T('unusedOut');
+    if (!dom.dragToggle) dom.dragToggle = $T('dragToggle');
+    if (dom.unusedOut) dom.unusedOut.textContent = state.diffText;
+    if (dom.dragToggle) dom.dragToggle.classList.toggle('danger', dragEnabled);
+    if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
+    if (dom.collapseAllBtn) updateCollapseBtnState();
+  }
+
+  function renderInventory (opts) {
+    const options = opts || {};
+    const updateFormal = options.refreshFormal !== false;
+    const updateList = options.refreshList !== false;
+    const updateSummary = options.refreshSummary !== false;
+    const updateFilters = options.refreshFilters !== false;
+    const targetIdx = options.onlyIdx ? new Set(options.onlyIdx) : null;
+    if (!dom.invList) return;                        // index-sidan saknar listan
+
+    const openKeys = collectOpenCardKeys();
+    const state = buildInventoryRenderState();
+    recalcArtifactEffects();
+    if (window.updateXP) updateXP();
+
+    if (updateFilters) updateInventoryFilters(state);
+    if (updateFormal) updateFormalCards(state, openKeys);
+
+    const needCards = updateList || (targetIdx && targetIdx.size);
     if (needCards) {
-      const opts = targetIdx ? { onlyIdx: targetIdx } : undefined;
-      updateItemCards(inv, itemCards, allInv, opts);
+      updateInventoryCards(state, openKeys, targetIdx);
     }
 
     if (updateSummary) {
-      if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
-      if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-      dom.invBadge.textContent = flatInv.reduce((s, r) => s + r.qty, 0);
-      dom.invBadge.classList.add('badge-pulse');
-      setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
-      if (!updateFormal) {
-        if (!dom.unusedOut) dom.unusedOut = $T('unusedOut');
-        if (!dom.dragToggle) dom.dragToggle = $T('dragToggle');
-      }
-      if (dom.unusedOut) dom.unusedOut.textContent = diffText;
-      if (dom.dragToggle) dom.dragToggle.classList.toggle('danger', dragEnabled);
-      if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
-      if (dom.collapseAllBtn) updateCollapseBtnState();
+      updateInventorySummary(state);
     }
-    if (updateFormal || updateList) bindInv();
+
+    if (updateFormal || needCards) bindInv();
     if (updateFormal) bindMoney();
     if (typeof window.refreshEffectsPanel === 'function') {
       window.refreshEffectsPanel();
@@ -2361,7 +2453,8 @@ ${moneyRow}
       onlyIdx: indices,
       refreshFormal: opts.refreshFormal !== undefined ? opts.refreshFormal : false,
       refreshSummary: opts.refreshSummary !== undefined ? opts.refreshSummary : true,
-      refreshList: true
+      refreshList: true,
+      refreshFilters: opts.refreshFilters !== undefined ? opts.refreshFilters : false
     };
     renderInventory(options);
   }
@@ -2391,11 +2484,11 @@ ${moneyRow}
   }
 
   function refreshInventoryMoney() {
-    renderInventory({ refreshList: false, refreshFormal: true, refreshSummary: true });
+    renderInventory({ refreshList: false, refreshFormal: true, refreshSummary: true, refreshFilters: false });
   }
 
   function refreshInventorySummary() {
-    renderInventory({ refreshList: false, refreshFormal: false, refreshSummary: true });
+    renderInventory({ refreshList: false, refreshFormal: false, refreshSummary: true, refreshFilters: false });
   }
 
   function refreshInventoryFull() {
