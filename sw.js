@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v9';
+const CACHE_NAME = 'symbaroum-pwa-v8';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -8,18 +8,7 @@ const URLS_TO_CACHE = [
   'css/style.css',
   'manifest.json',
   // Icons
-  'icons/character.png',
-  'icons/egenskaper.png',
-  'icons/filter.png',
   'icons/icon_DA',
-  'icons/index.png',
-  'icons/info.png',
-  'icons/inventarie.png',
-  'icons/minus.png',
-  'icons/plus.png',
-  'icons/remove.png',
-  'icons/settings.png',
-  'icons/smithing.png',
   // JavaScript
   'js/auto-resize.js',
   'js/artifact-payment.js',
@@ -29,12 +18,10 @@ const URLS_TO_CACHE = [
   'js/djurmask.js',
   'js/elite-add.js',
   'js/elite-req.js',
-  'js/entry-card.js',
   'js/exceptionellt.js',
   'js/index-view.js',
   'js/jszip.min.js',
   'js/inventory-utils.js',
-  'js/kraftval.js',
   'js/main.js',
   'js/monsterlard.js',
   'js/notes-view.js',
@@ -102,63 +89,23 @@ self.addEventListener('install', event => {
 });
 
 self.addEventListener('fetch', event => {
-  const { request } = event;
-
-  if (request.method !== 'GET' || !request.url.startsWith(self.location.origin)) {
-    event.respondWith(fetch(request));
-    return;
-  }
-
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      (async () => {
-        try {
-          const networkResponse = await fetch(request);
-          const cache = await caches.open(CACHE_NAME);
-          await cache.put(request, networkResponse.clone());
-          return networkResponse;
-        } catch (error) {
-          const cachedResponse = await caches.match(request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-
-          const fallbackResponse = await caches.match('index.html');
-          if (fallbackResponse) {
-            return fallbackResponse;
-          }
-
-          return Response.error();
-        }
-      })()
-    );
+  if (
+    event.request.method !== 'GET' ||
+    !event.request.url.startsWith(self.location.origin)
+  ) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
   event.respondWith(
-    (async () => {
-      const cachedResponse = await caches.match(request);
-      if (cachedResponse) {
-        event.waitUntil(
-          (async () => {
-            try {
-              const networkResponse = await fetch(request);
-              const cache = await caches.open(CACHE_NAME);
-              await cache.put(request, networkResponse.clone());
-            } catch (error) {
-              // Ignore network errors when attempting a background refresh.
-            }
-          })()
-        );
-
-        return cachedResponse;
-      }
-
-      const networkResponse = await fetch(request);
-      const cache = await caches.open(CACHE_NAME);
-      await cache.put(request, networkResponse.clone());
-      return networkResponse;
-    })()
+    fetch(event.request)
+      .then(fetchResponse =>
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, fetchResponse.clone());
+          return fetchResponse;
+        })
+      )
+      .catch(() => caches.match(event.request))
   );
 });
 

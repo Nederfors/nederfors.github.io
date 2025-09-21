@@ -262,17 +262,17 @@ class SharedToolbar extends HTMLElement {
         </div>
         <div class="button-row">
           <button  id="traitsToggle" class="char-btn icon" title="Egenskaper" aria-label="Egenskaper">
-            <img src="icons/egenskaper.png" alt="" class="toolbar-icon" aria-hidden="true">
+            <img src="icons/egenskaper.svg" alt="" class="toolbar-icon" aria-hidden="true">
           </button>
           <button  id="invToggle"    class="char-btn icon" title="Inventarie" aria-label="Inventarie">
-            <img src="icons/inventarie.png" alt="" class="toolbar-icon" aria-hidden="true">
+            <img src="icons/inventarie.svg" alt="" class="toolbar-icon" aria-hidden="true">
             <span id="invBadge">0</span>
           </button>
           <a       id="switchRole" class="char-btn icon" href="character.html" title="Till rollperson" aria-label="Till rollperson">
-            <img id="switchRoleIcon" src="icons/character.png" alt="" class="toolbar-icon" aria-hidden="true">
+            <img id="switchRoleIcon" src="icons/character.svg" alt="" class="toolbar-icon" aria-hidden="true">
           </a>
           <button  id="filterToggle" class="char-btn icon" title="Filter" aria-label="Filter">
-            <img src="icons/settings.png" alt="" class="toolbar-icon" aria-hidden="true">
+            <img src="icons/settings.svg" alt="" class="toolbar-icon" aria-hidden="true">
           </button>
         </div>
       </footer>
@@ -1305,7 +1305,7 @@ class SharedToolbar extends HTMLElement {
       switchLink.title = 'Till index';
       switchLink.setAttribute('aria-label', 'Till index');
       if (switchIcon) {
-        switchIcon.src = 'icons/index.png';
+        switchIcon.src = 'icons/index.svg';
         switchIcon.hidden = false;
       }
     } else {
@@ -1313,7 +1313,7 @@ class SharedToolbar extends HTMLElement {
       switchLink.title = 'Till rollperson';
       switchLink.setAttribute('aria-label', 'Till rollperson');
       if (switchIcon) {
-        switchIcon.src = 'icons/character.png';
+        switchIcon.src = 'icons/character.svg';
         switchIcon.hidden = false;
       }
     }

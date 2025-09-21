@@ -34,7 +34,7 @@
       classes.push(String(opts.className));
     }
     const classAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
-    return `<img src="icons/${key}.png"${classAttr} alt="" draggable="false">`;
+    return `<img src="icons/${key}.svg"${classAttr} alt="" draggable="false">`;
   }
 
   // Konvertera ett penningobjekt till totalt antal örtegar
