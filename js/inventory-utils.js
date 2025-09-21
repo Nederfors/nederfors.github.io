@@ -899,7 +899,7 @@
       const money = getInputMoney();
       maybeAdv(() => {
         storeHelper.setMoney(store, money);
-        renderInventory();
+        refreshInventoryMoney();
       });
     };
     const onAdd = () => {
@@ -912,7 +912,7 @@
       });
       maybeAdv(() => {
         storeHelper.setMoney(store, total);
-        renderInventory();
+        refreshInventoryMoney();
       });
     };
     const onCancel = () => { close(); };
@@ -970,9 +970,8 @@
         const removed = removeCustomEntryFromInventory(inv, originalId, original.namn);
         if (removed) {
           saveInventory(inv);
-        } else {
-          renderInventory();
         }
+        refreshInventoryFull();
         if (typeof onSave === 'function') onSave();
         return;
       }
@@ -1013,7 +1012,11 @@
     if (chosen === null) return true;
     target.row.artifactEffect = chosen;
     saveInventory(inv);
-    renderInventory();
+    if (Array.isArray(target.path) && target.path.length) {
+      refreshInventoryForRows([target.path[0]]);
+    } else {
+      refreshInventorySummary();
+    }
     if (typeof onSave === 'function') onSave();
     return true;
   }
@@ -1089,7 +1092,7 @@
       }
 
       saveInventory(inv);
-      renderInventory();
+      refreshInventoryForRows([path[0]]);
       close();
     };
     const onCancel = () => { close(); };
@@ -1148,6 +1151,7 @@
       const factor = parseFloat(inEl.value);
       if (Number.isNaN(factor)) return;
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')];
+      const affected = new Set();
       checks.forEach(chk => {
         const path = chk.dataset.path.split('.').map(Number);
         let arr = inv;
@@ -1156,12 +1160,15 @@
           row = arr[idx];
           if (i < path.length - 1) arr = row.contains || [];
         });
-        if (row) row.priceMult = (row.priceMult || 1) * factor;
+        if (row) {
+          row.priceMult = (row.priceMult || 1) * factor;
+          affected.add(path[0]);
+        }
       });
       saveInventory(inv);
       // Stäng popuppen innan omrendering för snabbare feedback
       close();
-      renderInventory();
+      refreshInventoryRowsByIndex(affected);
     };
     const onCancel = () => { close(); };
     const onOutside = e => {
@@ -1215,7 +1222,7 @@
       // Stäng popuppen direkt för snabbare UI-feedback
       close();
       // Rendera om inventariet efter att popuppen stängts
-      renderInventory();
+      refreshInventoryForRows([row]);
     };
     const onApply = e => {
       e?.stopPropagation();
@@ -1229,7 +1236,7 @@
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
       close();
-      renderInventory();
+      refreshInventoryForRows([row]);
     };
     const onKey = e => {
       if (e.key === 'Enter') onApply(e);
@@ -1270,7 +1277,7 @@
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
       close();
-      renderInventory();
+      refreshInventoryForRows([row]);
     };
     const onBaseKey = e => {
       if (e.key === 'Enter') onSet(e);
@@ -1348,6 +1355,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (Number.isNaN(vIdx)) return;
       const vehicle = inv[vIdx];
       vehicle.contains = vehicle.contains || [];
+      const affected = new Set([vIdx]);
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
         .sort((a,b)=>{
@@ -1367,10 +1375,11 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         }
         const item = arr.splice(path[path.length - 1], 1)[0];
         vehicle.contains.push(item);
+        affected.add(path[0]);
       });
       vehicle.contains.sort(sortInvEntry);
       saveInventory(inv);
-      renderInventory();
+      refreshInventoryRowsByIndex(affected);
       close();
     };
     const onCancel = () => { close(); };
@@ -1440,6 +1449,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
       if (!vehicle) return;
+      const affected = new Set([vIdx]);
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
         .sort((a,b)=>{
@@ -1457,10 +1467,13 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           arr = arr[path[i]].contains || [];
         }
         const item = arr.splice(path[path.length-1],1)[0];
-        if (item) inv.push(item);
+        if (item) {
+          inv.push(item);
+          affected.add(path[0]);
+        }
       });
       saveInventory(inv);
-      renderInventory();
+      refreshInventoryRowsByIndex(affected);
       close();
     };
     const onCancel = () => { close(); };
@@ -1621,7 +1634,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     });
 
     saveInventory(allInv);
-    renderInventory();
+    refreshInventoryFull();
   }
 
   function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
@@ -1872,7 +1885,133 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     return { desc, rowLevel, freeCnt };
   }
 
-  function renderInventory () {
+  const INV_EMPTY_CLASS = 'inv-empty';
+
+  function createElementFromHTML(html) {
+    if (!html) return null;
+    const tpl = document.createElement('template');
+    tpl.innerHTML = html.trim();
+    return tpl.content.firstElementChild;
+  }
+
+  function applyCardContent(target, fresh) {
+    if (!target || !fresh) return;
+    target.className = fresh.className;
+    const attrs = ['idx','id','name','trait','level','parent','child'];
+    attrs.forEach(attr => {
+      if (fresh.dataset[attr] !== undefined) {
+        target.dataset[attr] = fresh.dataset[attr];
+      } else {
+        delete target.dataset[attr];
+      }
+    });
+    const newTitle = fresh.querySelector('.card-title');
+    const newDesc  = fresh.querySelector('.card-desc');
+    const newCtrl  = fresh.querySelector('.inv-controls');
+    const curTitle = target.querySelector('.card-title');
+    const curDesc  = target.querySelector('.card-desc');
+    const curCtrl  = target.querySelector('.inv-controls');
+    if (curTitle && newTitle) curTitle.innerHTML = newTitle.innerHTML;
+    else if (!curTitle && newTitle) target.prepend(newTitle);
+    if (curDesc && newDesc) curDesc.innerHTML = newDesc.innerHTML;
+    else if (!curDesc && newDesc) target.appendChild(newDesc);
+    if (curCtrl && newCtrl) curCtrl.innerHTML = newCtrl.innerHTML;
+    else if (!curCtrl && newCtrl) target.appendChild(newCtrl);
+    const curSub = target.querySelector('ul.card-list');
+    const newSub = fresh.querySelector('ul.card-list');
+    if (curSub && newSub) curSub.replaceWith(newSub);
+    else if (curSub && !newSub) curSub.remove();
+    else if (!curSub && newSub) target.appendChild(newSub);
+  }
+
+  function ensureFormalCard(key, html, isOpen) {
+    if (!dom.invFormal) return;
+    let card = dom.invFormal.querySelector(`li.card[data-special="${key}"]`);
+    const fresh = createElementFromHTML(html);
+    if (!fresh) return;
+    if (!card) {
+      if (key === '__info__' && dom.invFormal.lastElementChild) {
+        dom.invFormal.appendChild(fresh);
+      } else {
+        dom.invFormal.appendChild(fresh);
+      }
+      card = fresh;
+    } else {
+      applyCardContent(card, fresh);
+    }
+    card.dataset.special = key;
+    card.classList.toggle('compact', !isOpen);
+  }
+
+  function ensureEmptyMessage() {
+    if (!dom.invList) return;
+    let empty = dom.invList.querySelector(`li.card.${INV_EMPTY_CLASS}`);
+    if (!empty) {
+      empty = document.createElement('li');
+      empty.className = `card ${INV_EMPTY_CLASS}`;
+      empty.textContent = 'Inga föremål.';
+      dom.invList.appendChild(empty);
+    }
+    return empty;
+  }
+
+  function updateItemCards(inv, cardList, allInv, options = {}) {
+    if (!dom.invList) return;
+    const desired = cardList.map((obj, i) => {
+      let idx = obj && typeof obj.idx === 'number' ? obj.idx : -1;
+      if (idx < 0) {
+        const row = inv[i];
+        idx = allInv.indexOf(row);
+      }
+      return { idx, html: obj.html };
+    });
+    const targetIdx = options.onlyIdx instanceof Set ? options.onlyIdx : null;
+    if (!desired.length && !targetIdx) {
+      [...dom.invList.querySelectorAll('li.card')]
+        .forEach(li => { if (!li.classList.contains(INV_EMPTY_CLASS)) li.remove(); });
+      ensureEmptyMessage();
+      return;
+    }
+    const touched = new Set();
+    const emptyMsg = dom.invList.querySelector(`li.card.${INV_EMPTY_CLASS}`);
+    if (emptyMsg && !targetIdx) emptyMsg.remove();
+    let prev = null;
+    desired.forEach(({ idx, html }) => {
+      if (idx < 0) return;
+      if (targetIdx && !targetIdx.has(idx)) return;
+      let li = dom.invList.querySelector(`li.card[data-idx="${idx}"]`);
+      const fresh = createElementFromHTML(html);
+      if (!li && !targetIdx) {
+        li = fresh;
+        if (!li) return;
+        if (prev) prev.after(li);
+        else dom.invList.prepend(li);
+      } else if (li && fresh) {
+        applyCardContent(li, fresh);
+      }
+      if (!li) return;
+      touched.add(li);
+      if (!targetIdx) {
+        if (li.previousElementSibling !== prev) {
+          dom.invList.insertBefore(li, prev ? prev.nextElementSibling : dom.invList.firstElementChild);
+        }
+        prev = li;
+      }
+    });
+    if (!targetIdx) {
+      [...dom.invList.querySelectorAll('li.card[data-idx]')]
+        .forEach(li => {
+          if (!touched.has(li)) li.remove();
+        });
+    }
+  }
+
+  function renderInventory (opts) {
+    const options = opts || {};
+    const updateFormal = options.refreshFormal !== false;
+    const updateList = options.refreshList !== false;
+    const updateSummary = options.refreshSummary !== false;
+    const targetIdx = options.onlyIdx ? new Set(options.onlyIdx) : null;
     if (!dom.invList) return;                        // index-sidan saknar listan
     const openKeys = new Set(
       [...dom.invList.querySelectorAll('li.card:not(.compact)')]
@@ -2053,16 +2192,17 @@ ${moneyRow}
       </li>`;
 
     /* ---------- kort för varje föremål ---------- */
-    const itemCards = inv.length
+    const needCards = updateList || (targetIdx && targetIdx.size);
+    const itemCards = needCards && inv.length
       ? inv.map((row) => {
           const realIdx = allInv.indexOf(row);
           const entry   = getEntry(row.id || row.name);
           const tagTyp  = entry.taggar?.typ ?? [];
-          const isVehicle = tagTyp.includes('F\u00e4rdmedel');
+          const isVehicle = tagTyp.includes('Färdmedel');
           const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
           const rowWeight = calcRowWeight(row);
           const loadWeight = rowWeight - baseWeight * row.qty;
-          const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
+          const capacity = isVehicle ? (entry.stat?.bärkapacitet || 0) : 0;
           const remaining = capacity - loadWeight;
 
           const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
@@ -2071,8 +2211,7 @@ ${moneyRow}
           const isArtifact = tagTyp.includes('Artefakt');
           const isCustom = tagTyp.includes('Hemmagjort');
 
-          /* — knappar — */
-          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+          const isGear = ['Vapen', 'Sköld', 'Rustning', 'Lägre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
           const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
           const canStack = ['kraft','ritual'].includes(entry.bound);
           const btnRow = (isGear && !canStack)
@@ -2086,7 +2225,6 @@ ${moneyRow}
           const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
           const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
 
-          // rowLevel och dataLevel beräknades tidigare
           const priceText = formatMoney(
             calcRowCost(row, forgeLvl, alcLevel, artLevel)
           );
@@ -2097,7 +2235,7 @@ ${moneyRow}
           let cardClass = '';
           if (isVehicle) {
             const vClass = capClassOf(loadWeight, capacity);
-            vehicleInfo = `<br><span class="${vClass}">B\u00e4rkapacitet: ${formatWeight(capacity)}<br>\u00c5terst\u00e5ende: ${formatWeight(remaining)}</span>`;
+            vehicleInfo = `<br><span class="${vClass}">Bärkapacitet: ${formatWeight(capacity)}<br>Återstående: ${formatWeight(remaining)}</span>`;
             if (remaining < 0) cardClass = ' vehicle-over';
           }
 
@@ -2120,7 +2258,7 @@ ${moneyRow}
                 const cWeight = formatWeight(calcRowWeight(c));
                 const vClass = capClassOf(loadWeight, capacity);
                 const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
-                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
+                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'Lägre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
                 const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
                 const cCanStack = ['kraft','ritual'].includes(centry.bound);
                 const cBtnRow = (cIsGear && !cCanStack)
@@ -2135,10 +2273,8 @@ ${moneyRow}
                 const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
                 const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
                 const cEditBtn = ctagTyp.includes('Hemmagjort') ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
-                const cPath = `${realIdx}.${j}`;
-                const cTitle = nameMap.get(c) || c.name;
                 return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait?` data-trait="${c.trait}"`:''}${cDataLevel}>
-                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${cTitle}: ${c.trait}` : cTitle}${cBadge}</span></div>
+                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${nameMap.get(c) || c.name}: ${c.trait}` : (nameMap.get(c) || c.name)}${cBadge}</span></div>
                   <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
                   <div class="inv-controls">
                     ${cBtnRow}
@@ -2151,7 +2287,9 @@ ${moneyRow}
                 </li>`;}).join('')}</ul>`
             : '';
 
-          return `
+          return {
+            idx: realIdx,
+            html: `
             <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
                 data-idx="${realIdx}"
                 data-id="${row.id || row.name}"
@@ -2170,28 +2308,42 @@ ${moneyRow}
                 ${isVehicle ? `<button data-act="vehicleLoad" class="char-btn">⬇️</button><button data-act="vehicleUnload" class="char-btn">⬆️</button>` : ''}
               </div>
               ${sublist}
-            </li>`;
-      }).join('')
-    : '<li class="card">Inga föremål.</li>';
+            </li>`
+          };
+      })
+      : [];
 
     /* ---------- skriv ut ---------- */
-    if (dom.invFormal) {
-      dom.invFormal.innerHTML = toolsCard + infoCard;
+    if (updateFormal) {
+      ensureFormalCard(toolsKey, toolsCard, openKeys.has(toolsKey));
+      ensureFormalCard(infoKey, infoCard, openKeys.has(infoKey));
       localStorage.setItem(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
       localStorage.setItem(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
+      dom.unusedOut = $T('unusedOut');
+      dom.dragToggle = $T('dragToggle');
     }
-    dom.invList.innerHTML       = itemCards;
-    if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
-    if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-    dom.invBadge.textContent    = flatInv.reduce((s, r) => s + r.qty, 0);
-    dom.invBadge.classList.add('badge-pulse');
-    setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
-    dom.unusedOut = $T('unusedOut');
-    dom.dragToggle = $T('dragToggle');
-    if (dom.unusedOut) dom.unusedOut.textContent = diffText;
-    if (dom.collapseAllBtn) updateCollapseBtnState();
-    bindInv();
-    bindMoney();
+    if (needCards) {
+      const opts = targetIdx ? { onlyIdx: targetIdx } : undefined;
+      updateItemCards(inv, itemCards, allInv, opts);
+    }
+
+    if (updateSummary) {
+      if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
+      if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
+      dom.invBadge.textContent = flatInv.reduce((s, r) => s + r.qty, 0);
+      dom.invBadge.classList.add('badge-pulse');
+      setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
+      if (!updateFormal) {
+        if (!dom.unusedOut) dom.unusedOut = $T('unusedOut');
+        if (!dom.dragToggle) dom.dragToggle = $T('dragToggle');
+      }
+      if (dom.unusedOut) dom.unusedOut.textContent = diffText;
+      if (dom.dragToggle) dom.dragToggle.classList.toggle('danger', dragEnabled);
+      if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
+      if (dom.collapseAllBtn) updateCollapseBtnState();
+    }
+    if (updateFormal || updateList) bindInv();
+    if (updateFormal) bindMoney();
     if (typeof window.refreshEffectsPanel === 'function') {
       window.refreshEffectsPanel();
     }
@@ -2201,6 +2353,53 @@ ${moneyRow}
     const formalCards = dom.invFormal ? [...dom.invFormal.querySelectorAll('li.card')] : [];
     const listCards   = dom.invList   ? [...dom.invList.querySelectorAll('li.card')]   : [];
     return [...formalCards, ...listCards];
+  }
+
+  function refreshInventoryRowsByIndex(indices, opts = {}) {
+    if (!indices || !indices.size) return;
+    const options = {
+      onlyIdx: indices,
+      refreshFormal: opts.refreshFormal !== undefined ? opts.refreshFormal : false,
+      refreshSummary: opts.refreshSummary !== undefined ? opts.refreshSummary : true,
+      refreshList: true
+    };
+    renderInventory(options);
+  }
+
+  function refreshInventoryForRows(rows, opts = {}) {
+    if (!rows || !rows.length) return;
+    const allInv = storeHelper.getInventory(store);
+    const flat = flattenInventoryWithPath(allInv);
+    const rowToTop = new Map();
+    flat.forEach(({ row, path }) => {
+      if (row && Array.isArray(path) && path.length) {
+        rowToTop.set(row, path[0]);
+      }
+    });
+    const set = new Set();
+    rows.forEach(row => {
+      if (typeof row === 'number') {
+        if (row >= 0) set.add(row);
+        return;
+      }
+      if (row && rowToTop.has(row)) {
+        set.add(rowToTop.get(row));
+      }
+    });
+    if (!set.size) return;
+    refreshInventoryRowsByIndex(set, opts);
+  }
+
+  function refreshInventoryMoney() {
+    renderInventory({ refreshList: false, refreshFormal: true, refreshSummary: true });
+  }
+
+  function refreshInventorySummary() {
+    renderInventory({ refreshList: false, refreshFormal: false, refreshSummary: true });
+  }
+
+  function refreshInventoryFull() {
+    renderInventory();
   }
 
   function updateCollapseBtnState() {
@@ -2217,7 +2416,7 @@ ${moneyRow}
     if (dom.invTypeSel) {
       dom.invTypeSel.onchange = () => {
         F.typ = dom.invTypeSel.value;
-        renderInventory();
+        refreshInventoryFull();
       };
     }
     const invSearch = $T('invSearch');
@@ -2225,7 +2424,7 @@ ${moneyRow}
       invSearch.value = F.invTxt || '';
       invSearch.oninput = () => {
         F.invTxt = (invSearch.value || '').trim().toLowerCase();
-        renderInventory();
+        refreshInventoryFull();
       };
     }
     const squareBtn = $T('squareBtn');
@@ -2251,7 +2450,7 @@ ${moneyRow}
         const inv = storeHelper.getInventory(store);
         inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
         saveInventory(inv);
-        renderInventory();
+        refreshInventoryFull();
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
         if (window.indexViewUpdate) window.indexViewUpdate();
       });
@@ -2282,14 +2481,14 @@ ${moneyRow}
     }
     const getRowInfo = (inv, li) => {
       const idx = Number(li.dataset.idx);
-      if (!Number.isNaN(idx)) return { row: inv[idx], parentArr: inv, idx };
+      if (!Number.isNaN(idx)) return { row: inv[idx], parentArr: inv, idx, topIdx: idx };
       const p = Number(li.dataset.parent);
       const c = Number(li.dataset.child);
       if (!Number.isNaN(p) && !Number.isNaN(c)) {
         const arr = inv[p].contains || [];
-        return { row: arr[c], parentArr: arr, idx: c };
+        return { row: arr[c], parentArr: arr, idx: c, topIdx: p };
       }
-      return { row: null, parentArr: inv, idx: -1 };
+      return { row: null, parentArr: inv, idx: -1, topIdx: -1 };
     };
     dom.invList.onclick = async e => {
       // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
@@ -2338,7 +2537,7 @@ ${moneyRow}
           delete row.basePrice;
         }
         saveInventory(inv);
-        renderInventory();
+        refreshInventoryForRows([row]);
         return;
       }
 
@@ -2376,7 +2575,7 @@ ${moneyRow}
         const next = idx === -1 ? levels[0] : (idx < levels.length - 1 ? levels[idx+1] : levels[0]);
         row.nivå = next;
         saveInventory(inv);
-        renderInventory();
+        refreshInventoryForRows([row]);
         return;
       }
 
@@ -2393,7 +2592,7 @@ ${moneyRow}
         const entry = getEntry(row.id || row.name);
         if (!entry) return;
         editCustomEntry(entry, () => {
-          renderInventory();
+          refreshInventoryFull();
           if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
           if (window.indexViewUpdate) window.indexViewUpdate();
         });
@@ -2417,7 +2616,7 @@ ${moneyRow}
         } else {
           storeHelper.setMoney(store, { ...cur, daler: newD });
         }
-        renderInventory();
+        refreshInventoryMoney();
         return;
       }
 
@@ -2441,18 +2640,18 @@ ${moneyRow}
               () => {
                 parentArr.splice(idx, 1);
                 saveInventory(inv);
-                renderInventory();
+                refreshInventoryFull();
               },
               () => {
                 parentArr.splice(idx, 1, ...(row.contains || []));
                 saveInventory(inv);
-                renderInventory();
+                refreshInventoryFull();
               }
             );
           } else {
             parentArr.splice(idx, 1);
             saveInventory(inv);
-            renderInventory();
+            refreshInventoryFull();
             const hidden = isHiddenType(tagTyp);
             if (needsArtifactListSync(tagTyp)) {
               const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
@@ -2493,7 +2692,7 @@ ${moneyRow}
               }
             });
             saveInventory(inv);
-            renderInventory();
+            refreshInventoryFull();
             bundle.forEach(id => {
               const ent = getEntry(id);
               const i = inv.findIndex(r => r.id === id);
@@ -2535,7 +2734,7 @@ ${moneyRow}
               }
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
-              renderInventory();
+              refreshInventoryFull();
               const hidden = isHiddenType(tagTyp);
               let addedToList = false;
               if (needsArtifactListSync(tagTyp)) {
@@ -2630,7 +2829,7 @@ ${moneyRow}
           }
           const parentIdx = Number(li.dataset.parent);
           saveInventory(inv);
-          renderInventory();
+          refreshInventoryFull();
           const hidden = isHiddenType(tagTyp);
           if (needsArtifactListSync(tagTyp)) {
             const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
@@ -2677,7 +2876,7 @@ ${moneyRow}
             if (!existing.includes(qn)) {
               row.kvaliteter.push(qn);
               saveInventory(inv);
-              renderInventory();
+              refreshInventoryForRows([row]);
             }
           }
         });
@@ -2703,7 +2902,7 @@ ${moneyRow}
 
         row.gratisKval.push(candidates[0]);
         saveInventory(inv);
-        renderInventory();
+        refreshInventoryForRows([row]);
         return;
       }
 
@@ -2713,7 +2912,7 @@ ${moneyRow}
         if (val === null) return;
         row.artifactEffect = val;
         saveInventory(inv);
-        renderInventory();
+        refreshInventoryForRows([row]);
         return;
       }
 
@@ -2738,7 +2937,7 @@ ${moneyRow}
 
           row.gratis = newGratis;
           saveInventory(inv);
-          renderInventory();
+          refreshInventoryForRows([row]);
         }
         return;
       }
@@ -2773,7 +2972,7 @@ ${moneyRow}
           } else {
             storeHelper.setMoney(store, { ...cur, daler: newD });
           }
-          renderInventory();
+          refreshInventoryMoney();
           return;
         }
       };
@@ -2837,7 +3036,7 @@ ${moneyRow}
         const [moved] = inv.splice(dragIdx, 1);
         inv.splice(dropIdx, 0, moved);
         saveInventory(inv);
-        renderInventory();
+        refreshInventoryFull();
       }
       dragIdx = null;
       dragEl = null;
@@ -2867,7 +3066,7 @@ ${moneyRow}
         storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
         storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
         storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-        renderInventory();
+        refreshInventoryMoney();
       };
       const priv = storeHelper.getPrivMoney(store);
       const pos  = storeHelper.getPossessionMoney(store);
@@ -2877,7 +3076,7 @@ ${moneyRow}
     if (clearBtn) clearBtn.onclick = async () => {
       if (await confirmPopup('Du håller på att tömma hela inventariet, är du säker?')) {
         saveInventory([]);
-        renderInventory();
+        refreshInventoryFull();
       }
     };
 
@@ -2921,6 +3120,11 @@ ${moneyRow}
     addWellEquippedItems,
     removeWellEquippedItems,
     renderInventory,
+    refreshInventoryFull,
+    refreshInventorySummary,
+    refreshInventoryMoney,
+    refreshInventoryForRows,
+    refreshInventoryRowsByIndex,
     bindInv,
     bindMoney
   };
