@@ -44,6 +44,43 @@ function initIndex() {
     catState = saved.cats || {};
   }
 
+  const now = () => (typeof performance !== 'undefined' && typeof performance.now === 'function')
+    ? performance.now()
+    : Date.now();
+
+  const renderProfiler = (() => {
+    const events = [];
+    const MAX_EVENTS = 200;
+    return {
+      push(event) {
+        if (!event || typeof event !== 'object') return;
+        const payload = { ...event };
+        payload.ts = Date.now();
+        events.push(Object.freeze(payload));
+        if (events.length > MAX_EVENTS) events.shift();
+      },
+      getEvents() {
+        return events.slice();
+      },
+      reset() {
+        events.length = 0;
+      }
+    };
+  })();
+
+  const profileFilteredCall = (payload) => {
+    renderProfiler.push({ type: 'filtered', ...payload });
+  };
+
+  const profileRenderCall = (payload) => {
+    renderProfiler.push({ type: 'render', ...payload });
+  };
+
+  window.indexViewProfiler = Object.freeze({
+    getEvents: () => renderProfiler.getEvents(),
+    reset: () => renderProfiler.reset()
+  });
+
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
@@ -416,6 +453,35 @@ function initIndex() {
     }).sort(createSearchSorter(terms));
   };
 
+  const runFiltered = (reason, extra = {}) => {
+    const label = reason || 'unknown';
+    const start = now();
+    const result = filtered();
+    const duration = Number((now() - start).toFixed(2));
+    profileFilteredCall({
+      reason: label,
+      duration,
+      resultCount: result.length,
+      filters: {
+        search: F.search.length,
+        typ: F.typ.length,
+        ark: F.ark.length,
+        test: F.test.length,
+        union: !!storeHelper.getFilterUnion(store),
+        onlySelected: !!storeHelper.getOnlySelected(store),
+        random: fixedRandomEntries ? fixedRandomEntries.length : 0
+      },
+      ...extra
+    });
+    return result;
+  };
+
+  const renderFilteredList = (reason, renderOptions = {}) => {
+    const arr = runFiltered(reason);
+    renderList(arr, { ...renderOptions, reason });
+    return arr;
+  };
+
   const entryKeyFor = (entry) => {
     if (!entry) return null;
     if (entry.entryKey) return entry.entryKey;
@@ -447,9 +513,17 @@ function initIndex() {
     return null;
   };
 
+  const initialViewState = {
+    compact,
+    partySmith: storeHelper.getPartySmith(store) || '',
+    partyAlchemist: storeHelper.getPartyAlchemist(store) || '',
+    partyArtefacter: storeHelper.getPartyArtefacter(store) || ''
+  };
   let renderState = {
     entryToCat: new Map(),
-    catOrder: []
+    catOrder: [],
+    catSignatures: new Map(),
+    viewState: initialViewState
   };
 
   const patchCardElement = (target, source) => {
@@ -848,6 +922,8 @@ function initIndex() {
 
   const renderList = (arr, options = {}) => {
     const listArr = Array.isArray(arr) ? arr : [];
+    const reason = options.reason || 'unknown';
+    const startTime = now();
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
@@ -882,6 +958,80 @@ function initIndex() {
       return catComparator(a,b);
     });
 
+    const signatureForEntries = (entries) => {
+      const counts = new Map();
+      return entries.map((entry, idx) => {
+        const base = entryKeyFor(entry) || `__idx:${idx}`;
+        const count = counts.get(base) || 0;
+        counts.set(base, count + 1);
+        return count ? `${base}#${count}` : base;
+      }).join('|');
+    };
+    const newCatSignatures = new Map();
+    catKeys.forEach(cat => {
+      newCatSignatures.set(cat, signatureForEntries(cats[cat]));
+    });
+    const prevSignatures = renderState.catSignatures || new Map();
+    const changedCats = new Set();
+    newCatSignatures.forEach((sig, cat) => {
+      if (!prevSignatures.has(cat) || prevSignatures.get(cat) !== sig) {
+        changedCats.add(cat);
+      }
+    });
+    prevSignatures.forEach((_, cat) => {
+      if (!newCatSignatures.has(cat)) changedCats.add(cat);
+    });
+
+    const viewState = {
+      compact,
+      partySmith: storeHelper.getPartySmith(store) || '',
+      partyAlchemist: storeHelper.getPartyAlchemist(store) || '',
+      partyArtefacter: storeHelper.getPartyArtefacter(store) || ''
+    };
+    const prevViewState = renderState.viewState || initialViewState;
+    const viewChanged = (
+      prevViewState.compact !== viewState.compact
+      || prevViewState.partySmith !== viewState.partySmith
+      || prevViewState.partyAlchemist !== viewState.partyAlchemist
+      || prevViewState.partyArtefacter !== viewState.partyArtefacter
+    );
+
+    const hasOnlyKeys = !!options.onlyKeys;
+    let targetCats = computeTargetCats(options, entryCatMap);
+    const forcedCats = options.forceCats ? new Set(options.forceCats) : null;
+    if (forcedCats && forcedCats.size) {
+      if (targetCats) forcedCats.forEach(cat => targetCats.add(cat));
+      else targetCats = forcedCats;
+    }
+    const forceFull = options.forceFull === true;
+    let derivedFromDiff = false;
+    if (forceFull) {
+      targetCats = null;
+    } else {
+      if (!hasOnlyKeys) {
+        if (!targetCats) {
+          if (changedCats.size) {
+            targetCats = new Set(changedCats);
+            derivedFromDiff = true;
+          } else if (viewChanged && (!forcedCats || !forcedCats.size)) {
+            targetCats = new Set(catKeys);
+          } else {
+            targetCats = new Set();
+          }
+        } else {
+          if (changedCats.size) {
+            changedCats.forEach(cat => targetCats.add(cat));
+            derivedFromDiff = true;
+          }
+          if (viewChanged && (!forcedCats || !forcedCats.size)) {
+            catKeys.forEach(cat => targetCats.add(cat));
+          }
+        }
+      } else if (!targetCats) {
+        targetCats = new Set();
+      }
+    }
+
     const prevCats = new Map();
     const prevOpenCats = new Set();
     dom.lista.querySelectorAll('.cat-group > details').forEach(details => {
@@ -894,7 +1044,6 @@ function initIndex() {
     let hopLi = prevCats.get('Hoppsan') || null;
     if (hopLi) prevCats.delete('Hoppsan');
 
-    const targetCats = computeTargetCats(options, entryCatMap);
     const context = { charList, invList, compact, terms, searchActive };
     const currentCats = new Map();
 
@@ -903,7 +1052,11 @@ function initIndex() {
       const desiredOpen = openCatsOnce.has(cat)
         ? true
         : (catState[cat] !== undefined ? catState[cat] : prevOpenCats.has(cat));
-      const shouldUpdate = (!targetCats || targetCats.has(cat) || !prevNode);
+      const shouldUpdate = (
+        targetCats === null
+        || targetCats.has(cat)
+        || !prevNode
+      );
       const openValue = (shouldUpdate || openCatsOnce.has(cat)) ? desiredOpen : null;
       const catLi = ensureCategoryElement(cat, prevNode, openValue);
       if (prevNode) prevCats.delete(cat);
@@ -927,7 +1080,9 @@ function initIndex() {
 
     renderState = {
       entryToCat: entryCatMap,
-      catOrder: catKeys.slice()
+      catOrder: catKeys.slice(),
+      catSignatures: newCatSignatures,
+      viewState
     };
 
     if (openCatsOnce.size) {
@@ -941,12 +1096,35 @@ function initIndex() {
     updateCatToggle();
     openCatsOnce.clear();
     saveState();
+
+    const duration = Number((now() - startTime).toFixed(2));
+    let mode;
+    if (forceFull || targetCats === null) mode = 'full';
+    else if (targetCats.size === 0) mode = 'skip';
+    else mode = 'partial';
+    const updatedCats = targetCats === null
+      ? 'ALL'
+      : Array.from(targetCats);
+    profileRenderCall({
+      reason,
+      mode,
+      duration,
+      entryCount: listArr.length,
+      catCount: catKeys.length,
+      updatedCats,
+      changedCats: Array.from(changedCats),
+      viewChanged,
+      derivedFromDiff,
+      forcedCats: forcedCats ? Array.from(forcedCats) : [],
+      hasOnlyKeys
+    });
   };
 
-  const refreshEntries = (entryRefs) => {
-    const arr = filtered();
+  const refreshEntries = (entryRefs, options = {}) => {
+    const reason = (options && options.reason) || 'entries:refresh';
+    const arr = runFiltered(reason, { source: 'refreshEntries' });
     if (!entryRefs || !entryRefs.length) {
-      renderList(arr);
+      renderList(arr, { reason });
       return;
     }
     const arrById = new Map();
@@ -964,10 +1142,10 @@ function initIndex() {
       if (key) keys.add(key);
     });
     if (!keys.size) {
-      renderList(arr);
+      renderList(arr, { reason });
       return;
     }
-    renderList(arr, { onlyKeys: keys });
+    renderList(arr, { reason, onlyKeys: keys });
   };
 
 
@@ -983,10 +1161,42 @@ function initIndex() {
   };
 
   /* första render */
-  renderList(filtered()); activeTags(); updateXP();
+  renderFilteredList('init'); activeTags(); updateXP();
 
   /* expose update function for party toggles */
-  window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
+  const PARTY_CATEGORY_HINTS = Object.freeze({
+    'party:smith': ['Kvalitet', 'Mystisk kvalitet'],
+    'party:alchemist': ['Elixir', 'Mystisk kraft', 'Mystisk kvalitet'],
+    'party:artefacter': ['Artefakt', 'Lägre Artefakt', 'Mystisk kraft', 'Mystisk kvalitet']
+  });
+
+  const normalizeUpdateOptions = (input) => {
+    if (input == null) return { reason: 'external', forceFull: true };
+    if (typeof input === 'string') return { reason: input };
+    const opts = { ...input };
+    if (!opts.reason) opts.reason = 'external';
+    if (opts.forceFull == null && opts.reason === 'external') opts.forceFull = true;
+    return opts;
+  };
+
+  window.indexViewUpdate = (input) => {
+    const opts = normalizeUpdateOptions(input);
+    const reason = opts.reason;
+    const renderOpts = {};
+    if (opts.forceFull === true) renderOpts.forceFull = true;
+    if (opts.onlyKeys) renderOpts.onlyKeys = opts.onlyKeys;
+    let forcedCats = null;
+    if (opts.forceCats) {
+      forcedCats = new Set(opts.forceCats);
+    } else if (PARTY_CATEGORY_HINTS[reason]) {
+      forcedCats = new Set(PARTY_CATEGORY_HINTS[reason]);
+    }
+    if (!renderOpts.forceFull && forcedCats && forcedCats.size) {
+      renderOpts.forceCats = forcedCats;
+    }
+    renderFilteredList(reason, renderOpts);
+    if (opts.updateActiveTags !== false) activeTags();
+  };
   window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
@@ -1031,7 +1241,7 @@ function initIndex() {
             if (c) openCatsOnce.add(c);
           }
           dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          activeTags(); renderList(filtered());
+          activeTags(); renderFilteredList('search:suggestion-random');
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
@@ -1061,7 +1271,7 @@ function initIndex() {
           sTemp = '';
           updateSearchDatalist();
           activeTags();
-          renderList(filtered());
+          renderFilteredList('search:suggestion-select', { forceFull: true });
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1134,7 +1344,7 @@ function initIndex() {
             if (cat) openCatsOnce.add(cat);
             dom.sIn.value=''; sTemp='';
             updateSearchDatalist();
-            activeTags(); renderList(filtered());
+            activeTags(); renderFilteredList('search:command-random');
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }
@@ -1160,7 +1370,7 @@ function initIndex() {
         storeHelper.clearRevealedArtifacts(store);
         revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
         fillDropdowns();
-        activeTags(); renderList(filtered());
+        activeTags(); renderFilteredList('search:lol-reset', { forceFull: true });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1168,7 +1378,7 @@ function initIndex() {
         showArtifacts = true;
         dom.sIn.value=''; sTemp='';
         fillDropdowns();
-        activeTags(); renderList(filtered());
+        activeTags(); renderFilteredList('search:molly', { forceFull: true });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1197,7 +1407,7 @@ function initIndex() {
         F.search = [];
       }
       dom.sIn.value=''; sTemp='';
-      activeTags(); renderList(filtered());
+      activeTags(); renderFilteredList('search:enter', { forceFull: true });
       updateSearchDatalist();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1215,16 +1425,17 @@ function initIndex() {
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
     dom[sel].addEventListener('change',()=>{
       const v = dom[sel].value;
+      const reasonBase = `filters:${key}`;
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        activeTags(); renderList(filtered());
+        activeTags(); renderFilteredList(`${reasonBase}-clear`);
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
         dom[sel].value = '';
-        activeTags(); renderList(filtered());
+        activeTags(); renderFilteredList('filters:only-selected');
         return;
       }
       if(v && !F[key].includes(v)) F[key].push(v);
@@ -1232,18 +1443,27 @@ function initIndex() {
       if (sel === 'typSel' && v) {
         openCatsOnce.add(v);
       }
-      dom[sel].value=''; activeTags(); renderList(filtered());
+      dom[sel].value='';
+      activeTags();
+      renderFilteredList(`${reasonBase}-add`);
     });
   });
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); renderList(filtered()); return; }
+    if (section==='random') {
+      fixedRandomEntries = null;
+      fixedRandomInfo = null;
+      activeTags();
+      renderFilteredList('filters:random-clear');
+      return;
+    }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    activeTags(); renderList(filtered());
+    const reason = `filters:active-remove:${section}`;
+    activeTags(); renderFilteredList(reason);
   });
 
   // Treat clicks on tags anywhere as filter selections
@@ -1256,7 +1476,8 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    activeTags(); renderList(filtered());
+    const reason = `filters:tag-click:${section}`;
+    activeTags(); renderFilteredList(reason);
   });
 
   /* lista-knappar */
@@ -1319,7 +1540,7 @@ function initIndex() {
     if (!p) return;
     const applyRefresh = (refs) => {
       if (refs === true) {
-        renderList(filtered());
+        renderFilteredList('list:update:all', { forceFull: true });
         return;
       }
       const arrRefs = Array.isArray(refs) ? refs : [refs];
@@ -1330,7 +1551,7 @@ function initIndex() {
       if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
       window.invUtil.editCustomEntry(p, () => {
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'inventory:custom-edit', forceFull: true });
         if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
           window.invUtil.renderInventory();
         }

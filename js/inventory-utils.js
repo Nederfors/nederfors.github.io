@@ -146,7 +146,7 @@
     }
     if (xpChanged && window.updateXP) updateXP();
     if (traitsChanged && window.renderTraits) renderTraits({ source: 'inventory:update' });
-    if (indexChanged && window.indexViewUpdate) window.indexViewUpdate();
+    if (indexChanged && window.indexViewUpdate) window.indexViewUpdate({ reason: 'inventory:save', forceFull: true });
     return changed;
   }
 
@@ -2568,7 +2568,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         saveInventory(inv);
         refreshInventoryFull();
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'inventory:custom-add', forceFull: true });
       });
     };
     if (dom.collapseAllBtn) {
@@ -2710,7 +2710,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         editCustomEntry(entry, () => {
           refreshInventoryFull();
           if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-          if (window.indexViewUpdate) window.indexViewUpdate();
+          if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'inventory:custom-edit', forceFull: true });
         });
         return;
       }

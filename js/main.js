@@ -507,7 +507,7 @@ fetch(TABELLER_FILE)
     TABELLER = arr;
     window.TABELLER = TABELLER;
     if (typeof window.indexViewUpdate === 'function') {
-      window.indexViewUpdate();
+      window.indexViewUpdate({ reason: 'data:tabeller', forceFull: true });
       if (typeof window.indexViewRefreshFilters === 'function') {
         window.indexViewRefreshFilters();
       }
@@ -642,7 +642,7 @@ function applyCharacterChange() {
 
     // Re-render main content depending on view
     if (typeof window.indexViewRefreshFilters === 'function') window.indexViewRefreshFilters();
-    if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+    if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate({ reason: 'character:change', forceFull: true });
     if (typeof window.notesUpdate === 'function') window.notesUpdate();
   } catch (err) {
     // As a last resort, fall back to reload to avoid a broken UI
@@ -743,7 +743,7 @@ function bindToolbar() {
 
       // Uppdatera menyer och index-vy utan omladdning
       refreshCharSelect();
-      if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+      if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate({ reason: 'folder:change', forceFull: true });
     });
   }
 
@@ -825,7 +825,7 @@ function bindToolbar() {
         storeHelper.save(store);
         refreshCharSelect();
         if (dom.cName) dom.cName.textContent = name;
-        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate({ reason: 'character:rename', forceFull: true });
       }
     }
 
@@ -1119,7 +1119,7 @@ function bindToolbar() {
         dom.forgeBtn.classList.toggle('active', Boolean(level));
         storeHelper.setPartySmith(store, level);
         invUtil.renderInventory();
-        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'party:smith' });
       });
     });
   }
@@ -1131,7 +1131,7 @@ function bindToolbar() {
         dom.alcBtn.classList.toggle('active', Boolean(level));
         storeHelper.setPartyAlchemist(store, level);
         invUtil.renderInventory();
-        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'party:alchemist' });
       });
     });
   }
@@ -1143,7 +1143,7 @@ function bindToolbar() {
         dom.artBtn.classList.toggle('active', Boolean(level));
         storeHelper.setPartyArtefacter(store, level);
         invUtil.renderInventory();
-        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'party:artefacter' });
       });
     });
   }
@@ -1163,7 +1163,7 @@ function bindToolbar() {
     dom.filterUnion.addEventListener('click', () => {
       const val = dom.filterUnion.classList.toggle('active');
       storeHelper.setFilterUnion(store, val);
-      if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'filters:union-toggle' });
     });
   }
   if (dom.entryViewToggle) {
@@ -1172,7 +1172,7 @@ function bindToolbar() {
       const val = dom.entryViewToggle.classList.toggle('active');
       // "active" betyder nu expanderad/vanlig vy; compact = !active
       storeHelper.setCompactEntries(store, !val);
-      if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'view:compact', forceFull: true });
     });
   }
 }
