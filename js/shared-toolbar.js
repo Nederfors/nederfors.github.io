@@ -208,7 +208,6 @@ class SharedToolbar extends HTMLElement {
           height: 1.45rem;
           max-width: 100%;
           max-height: 100%;
-          object-fit: contain;
           display: block;
           pointer-events: none;
           user-select: none;
