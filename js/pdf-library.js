@@ -1,10 +1,37 @@
 // PDF Library popup
 
+let pdfCacheRequested = false;
+
+function requestPdfCache() {
+  if (pdfCacheRequested || !('serviceWorker' in navigator)) {
+    return;
+  }
+
+  pdfCacheRequested = true;
+
+  if (navigator.serviceWorker.controller) {
+    navigator.serviceWorker.controller.postMessage({ type: 'CACHE_PDFS' });
+  } else {
+    navigator.serviceWorker.ready
+      .then(reg => {
+        if (reg.active) {
+          reg.active.postMessage({ type: 'CACHE_PDFS' });
+        } else {
+          pdfCacheRequested = false;
+        }
+      })
+      .catch(() => {
+        pdfCacheRequested = false;
+      });
+  }
+}
+
 // The PDF button lives inside the shared-toolbar shadow DOM which makes
 // `querySelectorAll` ineffective. `document.getElementById` is patched by
 // the toolbar to also search its shadow root, so use it instead.
 const pdfBtn = document.getElementById('pdfLibraryBtn');
 pdfBtn?.addEventListener('click', async () => {
+  requestPdfCache();
   const pdfs = await fetch('data/pdf-list.json').then(r => r.json());
   const pop = document.getElementById('pdfPopup');
   const box = document.getElementById('pdfOptions');
