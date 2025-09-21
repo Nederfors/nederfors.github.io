@@ -7,7 +7,6 @@
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
-const iconHtml = window.iconHtml || (() => '');
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -146,25 +145,12 @@ class SharedToolbar extends HTMLElement {
           flex: 1;
           min-width: 0;
         }
-        .toolbar .button-row > .char-btn.icon,
-        .toolbar .button-row > a.char-btn.icon {
-          gap: .35rem;
-        }
-        .toolbar .button-row .toolbar-icon {
-          width: 1.65rem;
-          height: 1.65rem;
-          object-fit: contain;
-          display: block;
-          flex: 0 0 auto;
-          pointer-events: none;
-          user-select: none;
-        }
         #invBadge {
           background: var(--danger);
           border-radius: 50%;
           padding: 0 .45rem;
           font-size: .75rem;
-          margin-left: 0;
+          margin-left: .25rem;
         }
         .toolbar .exp-counter {
           display: flex;
@@ -202,28 +188,6 @@ class SharedToolbar extends HTMLElement {
         .char-btn.icon   { font-size: 1.1rem; }
         .char-btn:hover  { opacity: .85; }
         .char-btn:active { transform: scale(.95); opacity: .7; }
-
-        .btn-icon {
-          width: 1.45rem;
-          height: 1.45rem;
-          max-width: 100%;
-          max-height: 100%;
-          display: block;
-          pointer-events: none;
-          user-select: none;
-          flex-shrink: 0;
-        }
-        .char-btn .btn-icon,
-        .party-toggle .btn-icon {
-          width: 1.45rem;
-          height: 1.45rem;
-        }
-        .btn-icon.inline-icon {
-          width: 1.1rem;
-          height: 1.1rem;
-          display: inline-block;
-          vertical-align: middle;
-        }
         /* Hold solid green, tiny pulses, then smooth fade to blue */
         .focus-highlight {
           position: relative;
@@ -260,19 +224,12 @@ class SharedToolbar extends HTMLElement {
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper" aria-label="Egenskaper">
-            <img src="icons/egenskaper.svg" alt="" class="toolbar-icon" aria-hidden="true">
+          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
+          <button  id="invToggle"    class="char-btn icon" title="Inventarie">
+            🎒 <span id="invBadge">0</span>
           </button>
-          <button  id="invToggle"    class="char-btn icon" title="Inventarie" aria-label="Inventarie">
-            <img src="icons/inventarie.svg" alt="" class="toolbar-icon" aria-hidden="true">
-            <span id="invBadge">0</span>
-          </button>
-          <a       id="switchRole" class="char-btn icon" href="character.html" title="Till rollperson" aria-label="Till rollperson">
-            <img id="switchRoleIcon" src="icons/character.svg" alt="" class="toolbar-icon" aria-hidden="true">
-          </a>
-          <button  id="filterToggle" class="char-btn icon" title="Filter" aria-label="Filter">
-            <img src="icons/settings.svg" alt="" class="toolbar-icon" aria-hidden="true">
-          </button>
+          <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
+          <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
         </div>
       </footer>
 
@@ -318,9 +275,9 @@ class SharedToolbar extends HTMLElement {
         <!-- Erfarenhetspoäng -->
         <div class="filter-group">
           <div class="xp-control">
-            <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">${iconHtml('minus')}</button>
+            <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">➖</button>
             <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-            <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">${iconHtml('plus')}</button>
+            <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">➕</button>
           </div>
           <div id="xpSummary" class="card exp-counter">
             <div class="card-title">Erfarenhetspoäng</div>
@@ -399,7 +356,7 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
                     </span>
-                    <button id="partySmith" class="party-toggle" aria-label="Smed i partyt" title="Smed i partyt">${iconHtml('smithing')}</button>
+                    <button id="partySmith" class="party-toggle">⚒️</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
@@ -463,7 +420,7 @@ class SharedToolbar extends HTMLElement {
                   <span class="toggle-desc">
                     <span class="toggle-question">Behöver du hjälp?</span>
                   </span>
-                  <button id="infoToggle" class="party-toggle" title="Visa hjälp" aria-label="Visa hjälp">${iconHtml('info')}</button>
+                  <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
                 </li>
               </ul>
             </div>
@@ -489,7 +446,7 @@ class SharedToolbar extends HTMLElement {
             <label for="customType">Typ</label>
             <div class="custom-type-row">
               <select id="customType"></select>
-              <button id="customTypeAdd" class="char-btn" type="button" aria-label="Lägg till typ" title="Lägg till typ">${iconHtml('plus')}</button>
+              <button id="customTypeAdd" class="char-btn" type="button" aria-label="Lägg till typ" title="Lägg till typ">➕</button>
             </div>
             <div id="customTypeTags" class="tags"></div>
           </div>
@@ -524,7 +481,7 @@ class SharedToolbar extends HTMLElement {
           <div id="customPowerFields" class="filter-group" style="display:none">
             <label>Förmågor</label>
             <div id="customPowerList"></div>
-            <button id="customPowerAdd" class="char-btn" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">${iconHtml('plus')}</button>
+            <button id="customPowerAdd" class="char-btn" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">➕</button>
           </div>
           <div id="customBoundFields" class="filter-group" style="display:none">
             <label for="customBoundType">Bundet till</label>
@@ -829,7 +786,7 @@ class SharedToolbar extends HTMLElement {
               <label for="newFolderName">+ Ny mapp:</label>
               <div class="inline-controls">
                 <input id="newFolderName" placeholder="Mappnamn">
-                <button id="addFolderBtn" class="char-btn" aria-label="Lägg till mapp" title="Lägg till mapp">${iconHtml('plus')}</button>
+                <button id="addFolderBtn" class="char-btn" aria-label="Lägg till mapp" title="Lägg till mapp">➕</button>
               </div>
             </div>
           </section>
@@ -998,11 +955,11 @@ class SharedToolbar extends HTMLElement {
               <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
               <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
               <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-              <li>${iconHtml('smithing', { className: 'inline-icon' })}/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
+              <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
               <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
               <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
               <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-              <li>${iconHtml('info', { className: 'inline-icon' })} Hjälp: Visar denna panel.</li>
+              <li>ℹ️ Hjälp: Visar denna panel.</li>
             </ul>
           </section>
 
@@ -1058,7 +1015,7 @@ class SharedToolbar extends HTMLElement {
               <li>🆓 Gör föremål gratis. 💔 Visa konflikter.</li>
               <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
               <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
-              <li>${iconHtml('remove', { className: 'inline-icon' })} Ta bort posten helt.</li>
+              <li>🗑 Ta bort posten helt.</li>
             </ul>
           </section>
 
@@ -1297,24 +1254,15 @@ class SharedToolbar extends HTMLElement {
   updateToolbarLinks() {
     const role = document.body.dataset.role;
     const switchLink = this.shadowRoot.getElementById('switchRole');
-    const switchIcon = this.shadowRoot.getElementById('switchRoleIcon');
 
     if (role === 'character' || role === 'notes') {
       switchLink.href = 'index.html';
+      switchLink.textContent = '📇';
       switchLink.title = 'Till index';
-      switchLink.setAttribute('aria-label', 'Till index');
-      if (switchIcon) {
-        switchIcon.src = 'icons/index.svg';
-        switchIcon.hidden = false;
-      }
     } else {
       switchLink.href = 'character.html';
+      switchLink.textContent = '🧝';
       switchLink.title = 'Till rollperson';
-      switchLink.setAttribute('aria-label', 'Till rollperson');
-      if (switchIcon) {
-        switchIcon.src = 'icons/character.svg';
-        switchIcon.hidden = false;
-      }
     }
   }
 }

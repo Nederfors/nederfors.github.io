@@ -9,7 +9,6 @@
   const overlayStack = [];
   const openMap = new Map();
   let isPop = false;
-  const iconHtml = window.iconHtml;
   // Count how many history.back() calls we have triggered manually.
   // Using a counter (instead of a boolean) makes rapid open/close
   // sequences robust and prevents desync when multiple popstate
@@ -506,9 +505,6 @@ fetch(TABELLER_FILE)
   .then(r => r.json())
   .then(arr => {
     TABELLER = arr;
-    if (typeof window.populateEntrySearchCache === 'function') {
-      TABELLER.forEach(window.populateEntrySearchCache);
-    }
     window.TABELLER = TABELLER;
     if (typeof window.indexViewUpdate === 'function') {
       window.indexViewUpdate();
@@ -524,9 +520,6 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
     DB.forEach((ent, idx) => {
       if (ent.id === undefined) ent.id = idx;
       DB[ent.id] = ent;
-      if (typeof window.populateEntrySearchCache === 'function') {
-        window.populateEntrySearchCache(ent);
-      }
     });
     window.DB = DB;
     DBIndex = {};
@@ -1252,8 +1245,7 @@ function openFolderManagerPopup() {
     list.innerHTML = folders.map((f, idx) => {
       const cnt = charMap.get(f.id) || 0;
       const esc = s => String(s || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-      const removeIcon = iconHtml ? iconHtml('remove') : '🗑';
-      const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort" aria-label="Ta bort">${removeIcon}</button>`;
+      const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort">🗑</button>`;
       const upDisabled = idx === 0 ? ' disabled' : '';
       const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
       return (

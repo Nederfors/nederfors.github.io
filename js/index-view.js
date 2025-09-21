@@ -1,7 +1,6 @@
 (function(window){
 function initIndex() {
   const createEntryCard = window.entryCardFactory.create;
-  const iconHtml = window.iconHtml;
   if (dom.cName) {
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
   }
@@ -25,34 +24,6 @@ function initIndex() {
   // If set, override filtered list with these entries (from Random:N)
   let fixedRandomEntries = null;
 
-  const ensureEntryCache = (entry) => {
-    if (!entry || typeof entry !== 'object') return entry;
-    if (!entry._normName && typeof window.populateEntrySearchCache === 'function') {
-      window.populateEntrySearchCache(entry);
-    }
-    return entry;
-  };
-
-  const logPerf = (label, duration) => {
-    if (typeof console === 'undefined') return;
-    const msg = `[index-view] ${label} ${duration.toFixed(1)} ms`;
-    if (typeof console.debug === 'function') console.debug(msg);
-    else if (typeof console.log === 'function') console.log(msg);
-  };
-
-  const measureInteraction = (label, fn) => {
-    if (!(window.performance && typeof performance.now === 'function')) {
-      return fn();
-    }
-    const start = performance.now();
-    try {
-      return fn();
-    } finally {
-      const end = performance.now();
-      logPerf(label, end - start);
-    }
-  };
-
   const STATE_KEY = 'indexViewState';
   let catState = {};
   const loadState = () => {
@@ -73,77 +44,12 @@ function initIndex() {
     catState = saved.cats || {};
   }
 
-  let cachedBaseEntries = [];
-  let baseCacheMeta = {
-    dbRef: null,
-    dbLen: 0,
-    tabRef: null,
-    tabLen: 0,
-    customRef: null,
-    customLen: 0,
-    version: 0
-  };
-  let visibleCache = {
-    version: -1,
-    showArtifacts: null,
-    revealKey: '',
-    arr: []
-  };
-
-  const computeBaseEntries = () => {
-    const db = Array.isArray(DB) ? DB : [];
-    const tab = Array.isArray(window.TABELLER) ? window.TABELLER : [];
-    const custom = storeHelper.getCustomEntries(store) || [];
-    const needsRebuild =
-      baseCacheMeta.dbRef !== db ||
-      baseCacheMeta.dbLen !== db.length ||
-      baseCacheMeta.tabRef !== tab ||
-      baseCacheMeta.tabLen !== tab.length ||
-      baseCacheMeta.customRef !== custom ||
-      baseCacheMeta.customLen !== custom.length;
-
-    if (needsRebuild) {
-      cachedBaseEntries = [...db, ...tab, ...custom];
-      cachedBaseEntries.forEach(ensureEntryCache);
-      baseCacheMeta = {
-        dbRef: db,
-        dbLen: db.length,
-        tabRef: tab,
-        tabLen: tab.length,
-        customRef: custom,
-        customLen: custom.length,
-        version: baseCacheMeta.version + 1
-      };
-    } else if (Array.isArray(custom)) {
-      custom.forEach(ensureEntryCache);
-    }
-    return cachedBaseEntries;
-  };
-
   const getEntries = () => {
-    const base = computeBaseEntries();
-    const showAll = showArtifacts;
-    const revealKey = showAll ? 'ALL' : Array.from(revealedArtifacts).sort().join('|');
-    const needsVisible =
-      visibleCache.version !== baseCacheMeta.version ||
-      visibleCache.showArtifacts !== showAll ||
-      visibleCache.revealKey !== revealKey;
-
-    if (needsVisible) {
-      const filteredEntries = base.filter(p => {
-        if (SECRET_IDS.has(p.id)) return false;
-        if (showAll) return true;
-        return !isHidden(p) || revealedArtifacts.has(p.id);
-      });
-      filteredEntries.forEach(ensureEntryCache);
-      visibleCache = {
-        version: baseCacheMeta.version,
-        showArtifacts: showAll,
-        revealKey,
-        arr: filteredEntries
-      };
-    }
-    return visibleCache.arr;
+    const base = DB
+      .concat(window.TABELLER || [])
+      .concat(storeHelper.getCustomEntries(store));
+    if (showArtifacts) return base.filter(p => !SECRET_IDS.has(p.id));
+    return base.filter(p => (!isHidden(p) || revealedArtifacts.has(p.id)) && !SECRET_IDS.has(p.id));
   };
   const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
   const isHidden = p => {
@@ -163,8 +69,7 @@ function initIndex() {
     const map = new Map();
     dbArr.forEach(ent => {
       if (!isHidden(ent) || SECRET_IDS.has(ent.id)) return;
-      ensureEntryCache(ent);
-      const key = ent._normName || '';
+      const key = searchNormalize(String(ent.namn || '').toLowerCase());
       if (!key) return;
       if (!map.has(key)) map.set(key, ent.id);
     });
@@ -341,7 +246,6 @@ function initIndex() {
       return;
     }
     const nq = searchNormalize(q.toLowerCase());
-    const entries = getEntries();
     const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
     // Special suggestions for "[N] random: <kategori>" or "[N] slump: <kategori>"
     {
@@ -352,7 +256,7 @@ function initIndex() {
         const part = searchNormalize((m[3] || '').toLowerCase());
         const seenCat = new Set();
         const cats = [];
-        for (const p of entries) {
+        for (const p of getEntries()) {
           for (const t of (p.taggar?.typ || [])) {
             const key = searchNormalize(String(t).toLowerCase());
             if (part && !key.includes(part)) continue;
@@ -380,12 +284,11 @@ function initIndex() {
     const seen = new Set();
     const MAX = 50;
     const items = [];
-    for (const p of entries) {
-      ensureEntryCache(p);
+    for (const p of getEntries()) {
       const name = String(p.namn || '').trim();
       if (!name) continue;
-      const normName = p._normName || '';
-      if (!normName.includes(nq)) continue;
+      const nname = searchNormalize(name.toLowerCase());
+      if (!nname.includes(nq)) continue;
       if (seen.has(name)) continue;
       seen.add(name);
       items.push(name);
@@ -440,18 +343,6 @@ function initIndex() {
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
-  const refreshListWithPerf = (label, order = 'active-first') => {
-    return measureInteraction(label, () => {
-      if (order === 'render-first') {
-        renderList(filtered());
-        activeTags();
-      } else {
-        activeTags();
-        renderList(filtered());
-      }
-    });
-  };
-
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
     const onlySel = storeHelper.getOnlySelected(store);
@@ -493,22 +384,25 @@ function initIndex() {
       }
     }
     return baseEntries.filter(p=>{
-      ensureEntryCache(p);
-      const text = p._normSearchText || '';
+      const levelText = Object.values(p.nivåer || {}).join(' ');
+      const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')} ${levelText}`.toLowerCase());
       const hasTerms = terms.length > 0;
       const txtHit = hasTerms && (
         union ? terms.some(q => text.includes(q))
               : terms.every(q => text.includes(q))
       );
+      const tags = p.taggar || {};
       const selTags = [...F.typ, ...F.ark, ...F.test];
       const hasTags = selTags.length > 0;
-      const tagInfo = p._normTags || {};
-      const itmTags = tagInfo.all || [];
-      const tagSet = (p._normTagSet instanceof Set) ? p._normTagSet : null;
+      const arkTags = explodeTags(tags.ark_trad);
+      const itmTags = [
+        ...(tags.typ ?? []),
+        ...(arkTags.length ? arkTags : (Array.isArray(tags.ark_trad) ? ['Traditionslös'] : [])),
+        ...(tags.test ?? [])
+      ];
       const tagHit = hasTags && (
-        union
-          ? selTags.some(t => tagSet ? tagSet.has(t) : itmTags.includes(t))
-          : selTags.every(t => tagSet ? tagSet.has(t) : itmTags.includes(t))
+        union ? selTags.some(t => itmTags.includes(t))
+              : selTags.every(t => itmTags.includes(t))
       );
       const tagOk = !hasTags || tagHit;
       const txtOk  = !hasTerms || txtHit;
@@ -527,7 +421,7 @@ function initIndex() {
       [...dom.lista.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
     );
-    const fragment = document.createDocumentFragment();
+    dom.lista.innerHTML = '';
     // Always render list; a fallback "Hoppsan" category is appended last.
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
@@ -541,8 +435,7 @@ function initIndex() {
       const cat = p.taggar?.typ?.[0] || 'Övrigt';
       (cats[cat] ||= []).push(p);
       if (searchActive) {
-        ensureEntryCache(p);
-        const name = p._normName || '';
+        const name = searchNormalize((p.namn || '').toLowerCase());
         const union = storeHelper.getFilterUnion(store);
         const nameOk = union ? terms.some(q => name.includes(q))
                              : terms.every(q => name.includes(q));
@@ -577,7 +470,7 @@ function initIndex() {
       cats[cat].forEach(p=>{
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
-          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">${iconHtml('info')}</button>`;
+          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
           const tagsHtml = (p.taggar?.typ || [])
             .map(t => `<span class="tag">${t}</span>`)
             .join(' ');
@@ -753,7 +646,7 @@ function initIndex() {
           bodyHtml: infoBodyHtml,
           meta: infoMeta
         });
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${iconHtml('info')}</button>`;
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
         const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         let count;
         if (isInv(p)) {
@@ -784,16 +677,16 @@ function initIndex() {
         if (allowAdd) {
           if (multi) {
             if (count > 0) {
-              buttonGroupParts.push(`<button data-act="del" class="char-btn danger icon" data-name="${p.namn}" aria-label="Ta bort">${iconHtml('remove')}</button>`);
-              buttonGroupParts.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">${iconHtml('minus')}</button>`);
-              if (count < limit) buttonGroupParts.push(`<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">${iconHtml('plus')}</button>`);
+              buttonGroupParts.push(`<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`);
+              buttonGroupParts.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`);
+              if (count < limit) buttonGroupParts.push(`<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
             } else {
-              buttonGroupParts.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">${iconHtml('plus')}</button>`);
+              buttonGroupParts.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
             }
           } else {
             const mainBtn = inChar
-              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}" aria-label="Ta bort">${iconHtml('remove')}</button>`
-              : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">${iconHtml('plus')}</button>`;
+              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+              : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
             buttonGroupParts.push(mainBtn);
           }
         }
@@ -825,7 +718,7 @@ function initIndex() {
           if (descEl) highlightInElement(descEl, terms);
         }
       });
-      fragment.appendChild(catLi);
+      dom.lista.appendChild(catLi);
     });
     // Append special "Hoppsan" category with a clear-filters action
     {
@@ -852,9 +745,8 @@ function initIndex() {
         catState['Hoppsan'] = detailsEl.open;
         saveState();
       });
-      fragment.appendChild(hopLi);
+      dom.lista.appendChild(hopLi);
     }
-    dom.lista.replaceChildren(fragment);
     updateCatToggle();
     // Only auto-open once per triggering action
     openCatsOnce.clear();
@@ -873,16 +765,16 @@ function initIndex() {
   };
 
   /* första render */
-  refreshListWithPerf('init-render', 'render-first'); updateXP();
+  renderList(filtered()); activeTags(); updateXP();
 
   /* expose update function for party toggles */
-  window.indexViewUpdate = () => { refreshListWithPerf('indexViewUpdate', 'render-first'); };
+  window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
   window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
   dom.sIn.addEventListener('input', () => {
     sTemp = dom.sIn.value.trim();
-    measureInteraction('search:input', () => { updateSearchDatalist(); });
+    updateSearchDatalist();
   });
   {
     const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
@@ -891,21 +783,19 @@ function initIndex() {
         const it = e.target.closest('.item');
         if (!it) return;
         e.preventDefault();
-        const entries = getEntries();
         // UI-kommando via förslag
         if (it.dataset.ui && window.executeUICommand) {
           window.__searchBlurGuard = true;
           dom.sIn.blur();
           window.executeUICommand(it.dataset.ui);
-          dom.sIn.value=''; sTemp='';
-          measureInteraction('search:update-suggest', () => { updateSearchDatalist(); });
+          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
         }
         if (it.dataset.cmd === 'random') {
           const cat = it.dataset.cat || '';
           const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
-          const pool = entries.filter(p => (p.taggar?.typ || []).includes(cat));
+          const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
           if (!pool.length) {
             if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
           } else {
@@ -922,9 +812,8 @@ function initIndex() {
             const c = cat || picks[0]?.taggar?.typ?.[0];
             if (c) openCatsOnce.add(c);
           }
-          dom.sIn.value=''; sTemp='';
-          measureInteraction('search:update-suggest', () => { updateSearchDatalist(); });
-          refreshListWithPerf('search:random-suggest');
+          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
+          activeTags(); renderList(filtered());
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
@@ -943,10 +832,7 @@ function initIndex() {
           // If exact name match, open that category once
           if (val) {
             const nval = searchNormalize(val.toLowerCase());
-            const match = entries.find(p => {
-              ensureEntryCache(p);
-              return (p._normName || '') === nval;
-            });
+            const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
             const cat = match?.taggar?.typ?.[0];
             if (cat) openCatsOnce.add(cat);
           }
@@ -955,8 +841,9 @@ function initIndex() {
           }
           dom.sIn.value = '';
           sTemp = '';
-          measureInteraction('search:update-suggest', () => { updateSearchDatalist(); });
-          refreshListWithPerf('search:suggestion');
+          updateSearchDatalist();
+          activeTags();
+          renderList(filtered());
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -982,6 +869,7 @@ function initIndex() {
       e.preventDefault();
       window.__searchBlurGuard = true;
       dom.sIn.blur();
+      const termTry = (sTemp || '').trim();
       const term = sTemp.toLowerCase();
         // Ignorera sökförslag på Enter; hantera bara skriven text
         // Command: [N] random: <kategori> — pick N random entries in category
@@ -994,8 +882,7 @@ function initIndex() {
             const ncat = searchNormalize(catInput.toLowerCase());
             // Build normalized -> canonical category map from current entries
             const catMap = new Map();
-            const entries = getEntries();
-            for (const p of entries) {
+            for (const p of getEntries()) {
               for (const t of (p.taggar?.typ || [])) {
                 const nt = searchNormalize(String(t).toLowerCase());
                 if (!catMap.has(nt)) catMap.set(nt, t);
@@ -1005,14 +892,14 @@ function initIndex() {
             if (!canonical) {
               if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
               dom.sIn.value = ''; sTemp = '';
-              measureInteraction('search:update-random-fail', () => { updateSearchDatalist(); });
+              updateSearchDatalist();
               return;
             }
-            const pool = entries.filter(p => (p.taggar?.typ || []).includes(canonical));
+            const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
             if (!pool.length) {
               if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
               dom.sIn.value = ''; sTemp = '';
-              measureInteraction('search:update-random-fail', () => { updateSearchDatalist(); });
+              updateSearchDatalist();
               return;
             }
             const n = Math.min(cnt, pool.length);
@@ -1028,8 +915,8 @@ function initIndex() {
             const cat = canonical || picks[0]?.taggar?.typ?.[0];
             if (cat) openCatsOnce.add(cat);
             dom.sIn.value=''; sTemp='';
-            measureInteraction('search:update-random-enter', () => { updateSearchDatalist(); });
-            refreshListWithPerf('search:random-enter');
+            updateSearchDatalist();
+            activeTags(); renderList(filtered());
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }
@@ -1055,7 +942,7 @@ function initIndex() {
         storeHelper.clearRevealedArtifacts(store);
         revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
         fillDropdowns();
-        refreshListWithPerf('search:lol-reset');
+        activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1063,7 +950,7 @@ function initIndex() {
         showArtifacts = true;
         dom.sIn.value=''; sTemp='';
         fillDropdowns();
-        refreshListWithPerf('search:show-artifacts');
+        activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1084,11 +971,7 @@ function initIndex() {
         }
         // If exact name match, open that category once
         const nval = searchNormalize(sTemp.toLowerCase());
-        const entries = getEntries();
-        const match = entries.find(p => {
-          ensureEntryCache(p);
-          return (p._normName || '') === nval;
-        });
+        const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
         const cat = match?.taggar?.typ?.[0];
         if (cat) openCatsOnce.add(cat);
         if (window.storeHelper?.addRecentSearch) storeHelper.addRecentSearch(store, sTemp);
@@ -1096,8 +979,8 @@ function initIndex() {
         F.search = [];
       }
       dom.sIn.value=''; sTemp='';
-      refreshListWithPerf('search:enter-final');
-      measureInteraction('search:update-enter', () => { updateSearchDatalist(); });
+      activeTags(); renderList(filtered());
+      updateSearchDatalist();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   });
@@ -1117,13 +1000,13 @@ function initIndex() {
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        refreshListWithPerf('filter:test-clear');
+        activeTags(); renderList(filtered());
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
         dom[sel].value = '';
-        refreshListWithPerf('filter:only-selected');
+        activeTags(); renderList(filtered());
         return;
       }
       if(v && !F[key].includes(v)) F[key].push(v);
@@ -1131,18 +1014,18 @@ function initIndex() {
       if (sel === 'typSel' && v) {
         openCatsOnce.add(v);
       }
-      dom[sel].value=''; refreshListWithPerf('filter:add');
+      dom[sel].value=''; activeTags(); renderList(filtered());
     });
   });
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; refreshListWithPerf('filter:random-clear'); return; }
+    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); renderList(filtered()); return; }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    refreshListWithPerf('filter:tag-remove');
+    activeTags(); renderList(filtered());
   });
 
   // Treat clicks on tags anywhere as filter selections
@@ -1155,7 +1038,7 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    refreshListWithPerf('filter:tag-click');
+    activeTags(); renderList(filtered());
   });
 
   /* lista-knappar */

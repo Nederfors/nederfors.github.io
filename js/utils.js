@@ -24,114 +24,6 @@
   ];
   const SBASE = 10, OBASE = 10;
 
-  const ICON_CLASS = 'btn-icon';
-  const ICON_TEMPLATE_CACHE = new Map();
-  const ICON_SYMBOL_PREFIX = 'icon-';
-  const ICON_SPRITE_ID = 'appIconSprite';
-  const ICON_SOURCE_ROOT = 'icons/';
-  const ICON_SVG_NS = 'http://www.w3.org/2000/svg';
-  const ICON_PARSER = typeof DOMParser !== 'undefined' ? new DOMParser() : null;
-  let iconSpriteContainer = null;
-
-  function ensureIconSpriteContainer(){
-    if (iconSpriteContainer || typeof document === 'undefined') return iconSpriteContainer;
-    let sprite = document.getElementById(ICON_SPRITE_ID);
-    if (!sprite) {
-      sprite = document.createElementNS(ICON_SVG_NS, 'svg');
-      sprite.setAttribute('id', ICON_SPRITE_ID);
-      sprite.setAttribute('aria-hidden', 'true');
-      sprite.setAttribute('focusable', 'false');
-      sprite.style.position = 'absolute';
-      sprite.style.width = '0';
-      sprite.style.height = '0';
-      sprite.style.overflow = 'hidden';
-      const container = document.body || document.documentElement;
-      if (container && container.firstChild) {
-        container.insertBefore(sprite, container.firstChild);
-      } else if (container) {
-        container.appendChild(sprite);
-      }
-    }
-    iconSpriteContainer = sprite;
-    return iconSpriteContainer;
-  }
-
-  function loadIconMarkupSync(url){
-    if (typeof XMLHttpRequest === 'undefined') return '';
-    try {
-      const xhr = new XMLHttpRequest();
-      xhr.open('GET', url, false);
-      xhr.overrideMimeType('image/svg+xml');
-      xhr.send();
-      if (((xhr.status >= 200 && xhr.status < 400) || xhr.status === 0) && xhr.responseText) {
-        return xhr.responseText;
-      }
-    } catch (err) {
-      if (window?.console?.warn) console.warn('Kunde inte läsa ikon', url, err);
-    }
-    return '';
-  }
-
-  function registerIconTemplate(key){
-    if (!key || ICON_TEMPLATE_CACHE.has(key)) return ICON_TEMPLATE_CACHE.get(key) || null;
-    if (!ICON_PARSER) return null;
-    const sprite = ensureIconSpriteContainer();
-    if (!sprite) return null;
-    const markup = loadIconMarkupSync(`${ICON_SOURCE_ROOT}${key}.svg`);
-    if (!markup) return null;
-    const doc = ICON_PARSER.parseFromString(markup, 'image/svg+xml');
-    if (!doc) return null;
-    const errNodes = doc.getElementsByTagName ? doc.getElementsByTagName('parsererror') : null;
-    if (errNodes && errNodes.length) return null;
-    const parsedSvg = doc.documentElement;
-    if (!parsedSvg || String(parsedSvg.nodeName).toLowerCase() !== 'svg') return null;
-
-    const symbolId = `${ICON_SYMBOL_PREFIX}${key}`;
-    let viewBox = parsedSvg.getAttribute('viewBox');
-    if (!viewBox) {
-      const width = parsedSvg.getAttribute('width');
-      const height = parsedSvg.getAttribute('height');
-      if (width && height) viewBox = `0 0 ${width} ${height}`;
-    }
-
-    let symbol = document.getElementById(symbolId);
-    if (!symbol) {
-      symbol = document.createElementNS(ICON_SVG_NS, 'symbol');
-      symbol.setAttribute('id', symbolId);
-      if (viewBox) symbol.setAttribute('viewBox', viewBox);
-      const nodes = Array.from(parsedSvg.childNodes || []);
-      for (let i = 0; i < nodes.length; i += 1) {
-        symbol.appendChild(document.importNode(nodes[i], true));
-      }
-      sprite.appendChild(symbol);
-    }
-
-    const template = document.createElement('template');
-    const attrs = [`class="${ICON_CLASS}"`, 'aria-hidden="true"', 'focusable="false"', 'draggable="false"'];
-    if (viewBox) attrs.push(`viewBox="${viewBox}"`);
-    template.innerHTML = `<svg ${attrs.join(' ')}><use href="#${symbolId}" xlink:href="#${symbolId}"></use></svg>`;
-    ICON_TEMPLATE_CACHE.set(key, template);
-    return template;
-  }
-
-  function getIconTemplate(key){
-    if (!key) return null;
-    return ICON_TEMPLATE_CACHE.get(key) || registerIconTemplate(key);
-  }
-
-  function iconHtml(name, opts = {}) {
-    const key = String(name || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
-    if (!key) return '';
-    const template = getIconTemplate(key);
-    if (!template || !template.content || !template.content.firstElementChild) return '';
-    const iconEl = template.content.firstElementChild.cloneNode(true);
-    if (opts && opts.className) {
-      const extra = String(opts.className).split(/\s+/).filter(Boolean);
-      if (extra.length) iconEl.classList.add(...extra);
-    }
-    return iconEl.outerHTML;
-  }
-
   // Konvertera ett penningobjekt till totalt antal örtegar
   function moneyToO(m) {
     m = m || {};
@@ -459,43 +351,6 @@
       .replace(/__oe__/g,'\u00f6');
   }
 
-  function populateEntrySearchCache(entry) {
-    if (!entry || typeof entry !== 'object') return entry;
-    const name = typeof entry.namn === 'string' ? entry.namn.trim() : '';
-    if (entry.namn !== name) entry.namn = name;
-    const lowerName = name.toLowerCase();
-    entry._normName = searchNormalize(lowerName);
-
-    const rawDesc = typeof entry.beskrivning === 'string' ? entry.beskrivning : '';
-    const levelText = entry.nivåer && typeof entry.nivåer === 'object'
-      ? Object.values(entry.nivåer).map(v => String(v || '')).join(' ')
-      : '';
-    const searchSource = `${name} ${rawDesc} ${levelText}`.trim();
-    entry._normSearchSource = searchSource;
-    entry._normSearchText = searchNormalize(searchSource.toLowerCase());
-
-    const taggar = (entry.taggar && typeof entry.taggar === 'object') ? entry.taggar : {};
-    const typeTags = Array.isArray(taggar.typ)
-      ? taggar.typ.map(v => String(v).trim()).filter(Boolean)
-      : [];
-    const arkTagsRaw = explodeTags(taggar.ark_trad);
-    const arkTags = arkTagsRaw.length
-      ? arkTagsRaw
-      : (Array.isArray(taggar.ark_trad) ? ['Traditionslös'] : []);
-    const testTags = Array.isArray(taggar.test)
-      ? taggar.test.map(v => String(v).trim()).filter(Boolean)
-      : [];
-    const combined = [...typeTags, ...arkTags, ...testTags];
-    entry._normTags = {
-      typ: typeTags,
-      ark: arkTags,
-      test: testTags,
-      all: combined
-    };
-    entry._normTagSet = new Set(combined);
-    return entry;
-  }
-
   // Copy text to clipboard. Uses the modern Clipboard API when available
   // and falls back to a temporary textarea element for older browsers.
   function copyToClipboard(text) {
@@ -522,10 +377,8 @@
       .map(s => searchNormalize(String(s).toLowerCase()))
       .filter(Boolean);
     return function(a,b){
-      if (a && !a._normName) populateEntrySearchCache(a);
-      if (b && !b._normName) populateEntrySearchCache(b);
-      const aName = (a && a._normName) || searchNormalize((a?.namn || '').toLowerCase());
-      const bName = (b && b._normName) || searchNormalize((b?.namn || '').toLowerCase());
+      const aName = searchNormalize((a.namn||'').toLowerCase());
+      const bName = searchNormalize((b.namn||'').toLowerCase());
       const aMatch = t.length && t.every(q=>aName.includes(q));
       const bMatch = t.length && t.every(q=>bName.includes(q));
       if(aMatch && !bMatch) return -1;
@@ -538,7 +391,6 @@
   window.EQUIP = EQUIP;
   window.SBASE = SBASE;
   window.OBASE = OBASE;
-  window.iconHtml = iconHtml;
   window.moneyToO = moneyToO;
   window.oToMoney = oToMoney;
   window.isInv = isInv;
@@ -552,7 +404,6 @@
   window.isSardrag = isSardrag;
   window.isEmployment = isEmployment;
   window.isService = isService;
-  window.populateEntrySearchCache = populateEntrySearchCache;
   window.isMysticQual = isMysticQual;
   window.isNegativeQual = isNegativeQual;
   window.isNeutralQual = isNeutralQual;

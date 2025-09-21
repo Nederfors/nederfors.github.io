@@ -1,7 +1,6 @@
 (function(window){
 function initCharacter() {
   const createEntryCard = window.entryCardFactory.create;
-  const iconHtml = window.iconHtml;
   dom.cName.textContent = store.characters.find(c=>c.id===store.current)?.name||'';
 
   const F = { search:[], typ:[], ark:[], test:[] };
@@ -1180,7 +1179,7 @@ function initCharacter() {
           bodyHtml: infoBodyHtml,
           meta: infoMeta
         });
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${iconHtml('info')}</button>`;
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
 
         const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
@@ -1207,29 +1206,29 @@ function initCharacter() {
           const isDisadv = typesList.includes('Nackdel');
           if (isDisadv) {
             if (total > 0) {
-              const delBtn = `<button data-act="del" class="char-btn danger icon" data-name="${p.namn}" aria-label="Ta bort">${iconHtml('remove')}</button>`;
-              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">${iconHtml('minus')}</button>`;
-              const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">${iconHtml('plus')}</button>` : '';
+              const delBtn = `<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`;
+              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`;
+              const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>` : '';
               buttonParts.push(delBtn, subBtn);
               if (addBtn) buttonParts.push(addBtn);
             } else {
-              const addBtn = `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">${iconHtml('plus')}</button>`;
+              const addBtn = `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
               buttonParts.push(addBtn);
             }
             if (conflictBtn) buttonParts.push(conflictBtn);
           } else {
             const remBtn = total > 0
-              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}" aria-label="Ta bort">${iconHtml('remove')}</button>`
+              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
               : '';
             const addBtn = total < limit
-              ? `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">${iconHtml('plus')}</button>`
+              ? `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`
               : '';
             if (remBtn) buttonParts.push(remBtn);
             if (conflictBtn) buttonParts.push(conflictBtn);
             if (addBtn) buttonParts.push(addBtn);
           }
         } else {
-          buttonParts.push(`<button class="char-btn danger icon" data-act="rem" aria-label="Ta bort">${iconHtml('remove')}</button>`);
+          buttonParts.push(`<button class="char-btn danger icon" data-act="rem">🗑</button>`);
           if (conflictBtn) buttonParts.push(conflictBtn);
         }
         const dockPrimary = (p.taggar?.typ || [])[0] || '';

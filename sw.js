@@ -78,39 +78,15 @@ self.addEventListener('install', event => {
     (async () => {
       const cache = await caches.open(CACHE_NAME);
       await cache.addAll(URLS_TO_CACHE);
+      const response = await cache.match('data/pdf-list.json');
+      if (response) {
+        const pdfs = await response.json();
+        const files = pdfs.flatMap(c => c.items.map(p => p.file));
+        await cache.addAll(files);
+      }
     })()
   );
 });
-
-async function cachePdfLibrary() {
-  const cache = await caches.open(CACHE_NAME);
-  let response = await cache.match('data/pdf-list.json');
-
-  if (!response) {
-    response = await fetch('data/pdf-list.json');
-    if (!response || !response.ok) {
-      throw new Error('Failed to fetch PDF list for caching');
-    }
-    await cache.put('data/pdf-list.json', response.clone());
-  }
-
-  const pdfs = await response.json();
-  const files = [...new Set(pdfs.flatMap(category => category.items.map(item => item.file)))];
-
-  await Promise.all(
-    files.map(async file => {
-      if (await cache.match(file)) {
-        return;
-      }
-
-      try {
-        await cache.add(file);
-      } catch (err) {
-        console.warn('Failed to cache PDF asset', file, err);
-      }
-    })
-  );
-}
 
 self.addEventListener('fetch', event => {
   if (
@@ -156,14 +132,5 @@ self.addEventListener('message', event => {
   if (!event.data) return;
   if (event.data === 'SKIP_WAITING' || (event.data.type && event.data.type === 'SKIP_WAITING')) {
     self.skipWaiting();
-    return;
-  }
-
-  if (event.data === 'CACHE_PDFS' || (event.data.type && event.data.type === 'CACHE_PDFS')) {
-    event.waitUntil(
-      cachePdfLibrary().catch(err => {
-        console.warn('PDF caching failed', err);
-      })
-    );
   }
 });

@@ -191,10 +191,6 @@
       }
       if (Object.keys(stat).length) entry.stat = stat; else delete entry.stat;
 
-      if (typeof global.populateEntrySearchCache === 'function') {
-        global.populateEntrySearchCache(entry);
-      }
-
       return entry;
     });
 
