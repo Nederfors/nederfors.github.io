@@ -118,7 +118,7 @@
     storeHelper.setInventory(store, inv);
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
-    if (window.renderTraits) renderTraits();
+    if (window.renderTraits) renderTraits({ source: 'inventory:update' });
     if (window.indexViewUpdate) window.indexViewUpdate();
   }
 
@@ -2659,7 +2659,7 @@ ${moneyRow}
                 let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
                 storeHelper.setCurrentList(store, list);
                 if (window.updateXP) updateXP();
-                if (window.renderTraits) renderTraits();
+                if (window.renderTraits) renderTraits({ source: 'inventory:update' });
                 if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
               }
             }
@@ -2767,7 +2767,7 @@ ${moneyRow}
               }
               if ((addedToList || hidden)) {
                 if (window.updateXP) updateXP();
-                if (window.renderTraits) renderTraits();
+                if (window.renderTraits) renderTraits({ source: 'inventory:update' });
               }
               if (hidden && entry.id) {
                 storeHelper.addRevealedArtifact(store, entry.id);
@@ -2837,7 +2837,7 @@ ${moneyRow}
               let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
               storeHelper.setCurrentList(store, list);
               if (window.updateXP) updateXP();
-              if (window.renderTraits) renderTraits();
+              if (window.renderTraits) renderTraits({ source: 'inventory:update' });
               if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
             }
           }
