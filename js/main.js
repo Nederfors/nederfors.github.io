@@ -1681,19 +1681,80 @@ async function exportAllCharactersSeparate() {
   }
 }
 
+let jsZipLoaderPromise = null;
+
+async function ensureJsZipLoaded() {
+  if (window.JSZip) return window.JSZip;
+  if (!jsZipLoaderPromise) {
+    jsZipLoaderPromise = new Promise((resolve, reject) => {
+      let script = document.querySelector('script[data-jszip-loader]');
+
+      function cleanup() {
+        if (script) {
+          script.removeEventListener('load', onLoad);
+          script.removeEventListener('error', onError);
+        }
+      }
+
+      function onLoad() {
+        cleanup();
+        if (window.JSZip) {
+          resolve(window.JSZip);
+        } else {
+          reject(new Error('JSZip kunde inte initieras.'));
+        }
+      }
+
+      function onError(event) {
+        if (script && script.parentNode) {
+          script.parentNode.removeChild(script);
+        }
+        cleanup();
+        reject(event instanceof Error ? event : new Error('Kunde inte ladda JSZip.'));
+      }
+
+      if (!script) {
+        script = document.createElement('script');
+        script.src = 'js/jszip.min.js';
+        script.async = true;
+        script.setAttribute('data-jszip-loader', 'true');
+        script.addEventListener('load', onLoad);
+        script.addEventListener('error', onError);
+        (document.head || document.body || document.documentElement).appendChild(script);
+      } else {
+        script.addEventListener('load', onLoad);
+        script.addEventListener('error', onError);
+        if (script.readyState === 'loaded' || script.readyState === 'complete') {
+          setTimeout(onLoad, 0);
+        }
+      }
+    }).catch(err => {
+      jsZipLoaderPromise = null;
+      throw err;
+    });
+  }
+  return jsZipLoaderPromise;
+}
+
 async function exportAllCharactersZipped() {
   const all = store.characters
     .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
     .filter(Boolean);
   if (!all.length) return;
 
-  if (!window.JSZip) {
-    // Fallback to separate if JSZip not loaded
+  let JSZipLib;
+  try {
+    JSZipLib = await ensureJsZipLoaded();
+  } catch {
+    await exportAllCharactersSeparate();
+    return;
+  }
+  if (!JSZipLib) {
     await exportAllCharactersSeparate();
     return;
   }
 
-  const zip = new JSZip();
+  const zip = new JSZipLib();
   for (const data of all) {
     const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
     zip.file(`${name}.json`, JSON.stringify(data, null, 2));
@@ -1837,9 +1898,16 @@ async function exportActiveFolderZipped() {
       .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
     if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
 
-    if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
+    let JSZipLib;
+    try {
+      JSZipLib = await ensureJsZipLoaded();
+    } catch {
+      await exportActiveFolderSeparate();
+      return;
+    }
+    if (!JSZipLib) { await exportActiveFolderSeparate(); return; }
 
-    const zip = new JSZip();
+    const zip = new JSZipLib();
     for (const c of chars) {
       const data = storeHelper.exportCharacterJSON(store, c.id, true);
       if (!data) continue;
