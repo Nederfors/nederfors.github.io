@@ -25,16 +25,111 @@
   const SBASE = 10, OBASE = 10;
 
   const ICON_CLASS = 'btn-icon';
+  const ICON_TEMPLATE_CACHE = new Map();
+  const ICON_SYMBOL_PREFIX = 'icon-';
+  const ICON_SPRITE_ID = 'appIconSprite';
+  const ICON_SOURCE_ROOT = 'icons/';
+  const ICON_SVG_NS = 'http://www.w3.org/2000/svg';
+  const ICON_PARSER = typeof DOMParser !== 'undefined' ? new DOMParser() : null;
+  let iconSpriteContainer = null;
+
+  function ensureIconSpriteContainer(){
+    if (iconSpriteContainer || typeof document === 'undefined') return iconSpriteContainer;
+    let sprite = document.getElementById(ICON_SPRITE_ID);
+    if (!sprite) {
+      sprite = document.createElementNS(ICON_SVG_NS, 'svg');
+      sprite.setAttribute('id', ICON_SPRITE_ID);
+      sprite.setAttribute('aria-hidden', 'true');
+      sprite.setAttribute('focusable', 'false');
+      sprite.style.position = 'absolute';
+      sprite.style.width = '0';
+      sprite.style.height = '0';
+      sprite.style.overflow = 'hidden';
+      const container = document.body || document.documentElement;
+      if (container && container.firstChild) {
+        container.insertBefore(sprite, container.firstChild);
+      } else if (container) {
+        container.appendChild(sprite);
+      }
+    }
+    iconSpriteContainer = sprite;
+    return iconSpriteContainer;
+  }
+
+  function loadIconMarkupSync(url){
+    if (typeof XMLHttpRequest === 'undefined') return '';
+    try {
+      const xhr = new XMLHttpRequest();
+      xhr.open('GET', url, false);
+      xhr.overrideMimeType('image/svg+xml');
+      xhr.send();
+      if (((xhr.status >= 200 && xhr.status < 400) || xhr.status === 0) && xhr.responseText) {
+        return xhr.responseText;
+      }
+    } catch (err) {
+      if (window?.console?.warn) console.warn('Kunde inte läsa ikon', url, err);
+    }
+    return '';
+  }
+
+  function registerIconTemplate(key){
+    if (!key || ICON_TEMPLATE_CACHE.has(key)) return ICON_TEMPLATE_CACHE.get(key) || null;
+    if (!ICON_PARSER) return null;
+    const sprite = ensureIconSpriteContainer();
+    if (!sprite) return null;
+    const markup = loadIconMarkupSync(`${ICON_SOURCE_ROOT}${key}.svg`);
+    if (!markup) return null;
+    const doc = ICON_PARSER.parseFromString(markup, 'image/svg+xml');
+    if (!doc) return null;
+    const errNodes = doc.getElementsByTagName ? doc.getElementsByTagName('parsererror') : null;
+    if (errNodes && errNodes.length) return null;
+    const parsedSvg = doc.documentElement;
+    if (!parsedSvg || String(parsedSvg.nodeName).toLowerCase() !== 'svg') return null;
+
+    const symbolId = `${ICON_SYMBOL_PREFIX}${key}`;
+    let viewBox = parsedSvg.getAttribute('viewBox');
+    if (!viewBox) {
+      const width = parsedSvg.getAttribute('width');
+      const height = parsedSvg.getAttribute('height');
+      if (width && height) viewBox = `0 0 ${width} ${height}`;
+    }
+
+    let symbol = document.getElementById(symbolId);
+    if (!symbol) {
+      symbol = document.createElementNS(ICON_SVG_NS, 'symbol');
+      symbol.setAttribute('id', symbolId);
+      if (viewBox) symbol.setAttribute('viewBox', viewBox);
+      const nodes = Array.from(parsedSvg.childNodes || []);
+      for (let i = 0; i < nodes.length; i += 1) {
+        symbol.appendChild(document.importNode(nodes[i], true));
+      }
+      sprite.appendChild(symbol);
+    }
+
+    const template = document.createElement('template');
+    const attrs = [`class="${ICON_CLASS}"`, 'aria-hidden="true"', 'focusable="false"', 'draggable="false"'];
+    if (viewBox) attrs.push(`viewBox="${viewBox}"`);
+    template.innerHTML = `<svg ${attrs.join(' ')}><use href="#${symbolId}" xlink:href="#${symbolId}"></use></svg>`;
+    ICON_TEMPLATE_CACHE.set(key, template);
+    return template;
+  }
+
+  function getIconTemplate(key){
+    if (!key) return null;
+    return ICON_TEMPLATE_CACHE.get(key) || registerIconTemplate(key);
+  }
 
   function iconHtml(name, opts = {}) {
     const key = String(name || '').toLowerCase().replace(/[^a-z0-9_-]/g, '');
     if (!key) return '';
-    const classes = [ICON_CLASS];
+    const template = getIconTemplate(key);
+    if (!template || !template.content || !template.content.firstElementChild) return '';
+    const iconEl = template.content.firstElementChild.cloneNode(true);
     if (opts && opts.className) {
-      classes.push(String(opts.className));
+      const extra = String(opts.className).split(/\s+/).filter(Boolean);
+      if (extra.length) iconEl.classList.add(...extra);
     }
-    const classAttr = classes.length ? ` class="${classes.join(' ')}"` : '';
-    return `<img src="icons/${key}.svg"${classAttr} alt="" draggable="false">`;
+    return iconEl.outerHTML;
   }
 
   // Konvertera ett penningobjekt till totalt antal örtegar
