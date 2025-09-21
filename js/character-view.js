@@ -419,7 +419,7 @@ function initCharacter() {
       if (window.invUtil && typeof invUtil.renderInventory === 'function') {
         invUtil.renderInventory();
       }
-      renderSkills(filtered());
+      skillCardActions.renderAll();
       updateXP();
       renderTraits();
       updateSearchDatalist();
@@ -1067,204 +1067,452 @@ function initCharacter() {
       .sort(createSearchSorter(terms));
   };
 
-  const renderSkills = arr=>{
-    const groups = [];
-    arr.forEach(p=>{
-        const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
-        const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-        if(multi){
-          const g = groups.find(x=>x.entry.namn===p.namn);
-          if(g) { g.count++; return; }
-          groups.push({entry:p, count:1});
-        } else {
-          groups.push({entry:p, count:1});
-        }
+
+  const skillDomState = {
+    categories: new Map(),
+    order: [],
+    entryIndex: new Map(),
+    emptyMessage: null
+  };
+
+  const ensureEmptyMessage = () => {
+    if (!skillDomState.emptyMessage) {
+      const li = document.createElement('li');
+      li.className = 'card';
+      li.textContent = 'Inga träffar.';
+      skillDomState.emptyMessage = li;
+    }
+    return skillDomState.emptyMessage;
+  };
+
+  const isMultiEntry = (entry) => {
+    const typesList = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+    return (entry?.kan_införskaffas_flera_gånger && typesList.some(t => ['Fördel','Nackdel'].includes(t))) && !entry?.trait;
+  };
+
+  const getGroupKey = (entry, { multi } = {}) => {
+    if (!entry) return '';
+    const parts = [];
+    if (multi) {
+      parts.push('multi');
+      parts.push(`name:${entry.namn || ''}`);
+    } else {
+      if (entry.id !== undefined && entry.id !== null) {
+        parts.push(`id:${entry.id}`);
+      } else {
+        parts.push(`name:${entry.namn || ''}`);
+      }
+      if (entry.trait) parts.push(`trait:${entry.trait}`);
+      if (entry.nivå) parts.push(`lvl:${entry.nivå}`);
+    }
+    return parts.join('|');
+  };
+
+  const ensureCategoryElement = (cat, shouldOpen) => {
+    let catStateObj = skillDomState.categories.get(cat);
+    if (!catStateObj) {
+      const li = document.createElement('li');
+      li.className = 'cat-group';
+      const details = document.createElement('details');
+      details.dataset.cat = cat;
+      if (shouldOpen) details.open = true;
+      const summary = document.createElement('summary');
+      summary.textContent = catName(cat);
+      const listEl = document.createElement('ul');
+      listEl.className = 'card-list';
+      details.appendChild(summary);
+      details.appendChild(listEl);
+      li.appendChild(details);
+      details.addEventListener('toggle', (ev) => {
+        updateCatToggle();
+        if (!ev.isTrusted) return;
+        catState[cat] = details.open;
+        saveState();
+      });
+      catStateObj = { li, details, summary, listEl, entries: new Map() };
+      skillDomState.categories.set(cat, catStateObj);
+    } else {
+      catStateObj.summary.textContent = catName(cat);
+      catStateObj.details.dataset.cat = cat;
+      if (shouldOpen !== undefined && catStateObj.details.open !== shouldOpen) {
+        catStateObj.details.open = shouldOpen;
+      }
+    }
+    return catStateObj;
+  };
+
+  const createCardDescriptor = (group, context) => {
+    const { entry: p, count, multi } = group;
+    const compact = !!context.compact;
+    const availLvls = LVL.filter(l => p.nivåer?.[l]);
+    const lvlSel = availLvls.length > 1
+      ? `<select class="level" data-name="${p.namn}"${p.trait ? ` data-trait="${p.trait}"` : ''}>
+              ${availLvls.map(l => `<option${l === p.nivå ? ' selected' : ''}>${l}</option>`).join('')}
+            </select>`
+      : '';
+    const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
+    let desc = abilityHtml(p, p.nivå);
+    let infoBodyHtml = desc;
+    const infoMeta = [];
+    if (isRas(p) || isYrke(p) || isElityrke(p)) {
+      const extra = yrkeInfoHtml(p);
+      if (extra) infoBodyHtml += extra;
+    }
+    if (p.namn === 'Blodsband' && p.race) {
+      infoMeta.push({ label: 'Ras', value: p.race });
+    }
+    if (p.trait) {
+      const label = p.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
+      infoMeta.push({ label, value: p.trait });
+    }
+    const curList = storeHelper.getCurrentList(store);
+    const xpVal = storeHelper.calcEntryXP(p, curList);
+    let xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
+    if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
+    const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
+    const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
+    const filterTagData = [];
+    typesList
+      .filter(Boolean)
+      .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: t, hidden: idx === 0 }));
+    const trTags = explodeTags(p.taggar?.ark_trad);
+    const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
+    arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
+    (p.taggar?.test || [])
+      .filter(Boolean)
+      .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
+    const visibleTagData = filterTagData.filter(tag => !tag.hidden);
+    const tagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
+    const infoTagHtmlParts = filterTagData.map(tag => renderFilterTag(tag));
+    const tagsHtml = tagHtmlParts.join(' ');
+    const infoTagsHtml = [xpTag]
+      .concat(infoTagHtmlParts)
+      .filter(Boolean)
+      .join(' ');
+    const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
+    const infoPanelHtml = buildInfoPanelHtml({
+      tagsHtml: infoTagsHtml,
+      bodyHtml: infoBodyHtml,
+      meta: infoMeta
     });
+    const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
+    const total = curList.filter(x => x.namn === p.namn && !x.trait).length;
+    const limit = storeHelper.monsterStackLimit(curList, p.namn);
+    const badge = count > 1 ? ` <span class="count-badge">×${count}</span>` : '';
+    const activeKeys = getActiveHandlingKeys(p);
+    const activeNames = activeKeys.map(k => handlingName(p, k));
+    const conflictBtn = activeKeys.length
+      ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeNames.join(', ')}">💔</button>`
+      : '';
+    const showInfo = compact || hideDetails;
+    const hasCustomEdit = typesList.includes('Hemmagjort');
+    const hasArtifactType = typesList.some(t => String(t).trim().toLowerCase() === 'artefakt');
+    const editAction = hasCustomEdit ? 'editCustom' : (hasArtifactType ? 'editArtifact' : '');
+    const idAttr = p.id ? ` data-id="${p.id}"` : '';
+    const editBtn = editAction
+      ? `<button data-act="${editAction}" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+      : '';
+    const infoBtnHtml = showInfo ? infoBtn : '';
+    const buttonParts = [];
+    if (infoBtnHtml) buttonParts.push(infoBtnHtml);
+    if (editBtn) buttonParts.push(editBtn);
+    if (multi) {
+      const isDisadv = typesList.includes('Nackdel');
+      if (isDisadv) {
+        if (total > 0) {
+          const delBtn = `<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`;
+          const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`;
+          const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>` : '';
+          buttonParts.push(delBtn, subBtn);
+          if (addBtn) buttonParts.push(addBtn);
+        } else {
+          const addBtn = `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
+          buttonParts.push(addBtn);
+        }
+        if (conflictBtn) buttonParts.push(conflictBtn);
+      } else {
+        const remBtn = total > 0
+          ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+          : '';
+        const addBtn = total < limit
+          ? `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`
+          : '';
+        if (remBtn) buttonParts.push(remBtn);
+        if (conflictBtn) buttonParts.push(conflictBtn);
+        if (addBtn) buttonParts.push(addBtn);
+      }
+    } else {
+      buttonParts.push(`<button class="char-btn danger icon" data-act="rem">🗑</button>`);
+      if (conflictBtn) buttonParts.push(conflictBtn);
+    }
+    const dockPrimary = (p.taggar?.typ || [])[0] || '';
+    const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
+    const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
+    const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
+      ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
+      : '';
+    const leftSections = [];
+    if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
+    else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
+    const dataset = { name: p.namn };
+    if (p.trait) dataset.trait = p.trait;
+    dataset.xp = xpVal;
+    if (p.id) dataset.id = p.id;
+    const raceInfo = '';
+    const traitInfo = '';
+    const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '';
+    const config = {
+      compact,
+      dataset,
+      nameHtml: `${p.namn}${badge}`,
+      xpHtml,
+      tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
+      levelHtml: hideDetails ? '' : lvlSel,
+      descHtml,
+      leftSections,
+      buttonSections: buttonParts
+    };
+    const signature = JSON.stringify({
+      compact,
+      dataset,
+      nameHtml: config.nameHtml,
+      xpHtml,
+      tagsHtml: config.tagsHtml,
+      levelHtml: config.levelHtml,
+      descHtml: config.descHtml,
+      leftSections,
+      buttonSections: buttonParts
+    });
+    return {
+      key: group.key,
+      config,
+      signature
+    };
+  };
+
+  const updateCategoryEntries = (catStateObj, groups, context) => {
+    const listEl = catStateObj.listEl;
+    const existingEntries = catStateObj.entries;
+    const newEntries = new Map();
+    const orderElements = [];
+
+    groups.forEach(group => {
+      const descriptor = createCardDescriptor(group, context);
+      const key = group.key;
+      let entryState = existingEntries.get(key);
+      if (entryState && entryState.signature === descriptor.signature) {
+        // reuse existing element
+      } else {
+        const li = createEntryCard(descriptor.config);
+        if (entryState) {
+          listEl.replaceChild(li, entryState.li);
+        } else {
+          listEl.appendChild(li);
+        }
+        entryState = { li, signature: descriptor.signature };
+      }
+      entryState.signature = descriptor.signature;
+      entryState.entry = group.entry;
+      entryState.count = group.count;
+      entryState.key = key;
+      entryState.multi = group.multi;
+      newEntries.set(key, entryState);
+      orderElements.push(entryState.li);
+    });
+
+    existingEntries.forEach((entryState, key) => {
+      if (!newEntries.has(key) && entryState.li?.parentNode === listEl) {
+        listEl.removeChild(entryState.li);
+      }
+    });
+
+    orderElements.forEach((li, idx) => {
+      const current = listEl.children[idx];
+      if (current !== li) {
+        listEl.insertBefore(li, current || null);
+      }
+    });
+
+    catStateObj.entries = newEntries;
+  };
+
+  const renderSkills = (arr, options = {}) => {
+    const changedKeySet = Array.isArray(options?.changedKeys)
+      ? new Set(options.changedKeys.filter(Boolean))
+      : null;
+
     const compact = storeHelper.getCompactEntries(store);
     const openCats = new Set(
       [...dom.valda.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
     );
-    dom.valda.innerHTML = '';
-    if(!groups.length){ dom.valda.innerHTML = '<li class="card">Inga träffar.</li>'; return; }
-    const cats = {};
+
+    const groups = [];
+    const multiMap = new Map();
+
+    (Array.isArray(arr) ? arr : []).forEach(entry => {
+      if (!entry || isInv(entry)) return;
+      const multi = isMultiEntry(entry);
+      if (multi) {
+        const key = entry.namn || '';
+        const existing = multiMap.get(key);
+        if (existing) {
+          existing.count += 1;
+        } else {
+          const group = { entry, count: 1, multi, key: getGroupKey(entry, { multi: true }) };
+          multiMap.set(key, group);
+          groups.push(group);
+        }
+      } else {
+        groups.push({ entry, count: 1, multi: false, key: getGroupKey(entry) });
+      }
+    });
+
+    if (!groups.length) {
+      const message = ensureEmptyMessage();
+      for (const [, catStateObj] of skillDomState.categories) {
+        if (catStateObj.li.parentNode === dom.valda) {
+          dom.valda.removeChild(catStateObj.li);
+        }
+      }
+      skillDomState.categories.clear();
+      skillDomState.entryIndex.clear();
+      skillDomState.order = [];
+      while (dom.valda.firstChild) dom.valda.removeChild(dom.valda.firstChild);
+      dom.valda.appendChild(message);
+      updateCatToggle();
+      openCatsOnce.clear();
+      saveState();
+      refreshEffectsPanel();
+      return;
+    }
+
+    if (skillDomState.emptyMessage?.parentNode === dom.valda) {
+      dom.valda.removeChild(skillDomState.emptyMessage);
+    }
+
     const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
       .map(t => searchNormalize(t.toLowerCase()));
     const searchActive = terms.length > 0;
+    const filterUnion = storeHelper.getFilterUnion(store);
     const catNameMatch = {};
-    groups.forEach(g=>{
-      const cat = charCategory(g.entry);
-      (cats[cat] ||= []).push(g);
+
+    const cats = new Map();
+    groups.forEach(group => {
+      const cat = charCategory(group.entry);
+      if (!cats.has(cat)) {
+        cats.set(cat, { cat, groups: [], changed: false });
+      }
+      const bucket = cats.get(cat);
+      bucket.groups.push(group);
       if (searchActive) {
-        const name = searchNormalize((g.entry.namn || '').toLowerCase());
-        const union = storeHelper.getFilterUnion(store);
-        const nameOk = union ? terms.some(q => name.includes(q))
-                             : terms.every(q => name.includes(q));
-        if (nameOk) {
-          catNameMatch[cat] = true;
-        }
+        const name = searchNormalize((group.entry.namn || '').toLowerCase());
+        const nameOk = filterUnion ? terms.some(q => name.includes(q)) : terms.every(q => name.includes(q));
+        if (nameOk) catNameMatch[cat] = true;
+      }
+      if (changedKeySet && changedKeySet.has(group.key)) {
+        bucket.changed = true;
       }
     });
-    const catKeys = Object.keys(cats);
-    catKeys.sort((a,b)=>{
+
+    const catKeys = [...cats.keys()];
+    catKeys.sort((a, b) => {
       if (searchActive) {
         const aMatch = catNameMatch[a] ? 1 : 0;
         const bMatch = catNameMatch[b] ? 1 : 0;
         if (aMatch !== bMatch) return bMatch - aMatch;
       }
-      return catComparator(a,b);
+      return catComparator(a, b);
     });
-    catKeys.forEach(cat=>{
-      const catLi=document.createElement('li');
-      catLi.className='cat-group';
+
+    const changedCats = new Set();
+    if (!changedKeySet) {
+      catKeys.forEach(cat => changedCats.add(cat));
+    } else {
+      catKeys.forEach(cat => {
+        const bucket = cats.get(cat);
+        if (bucket && bucket.changed) changedCats.add(cat);
+      });
+      changedKeySet.forEach(key => {
+        const prev = skillDomState.entryIndex.get(key);
+        if (prev) changedCats.add(prev.cat);
+      });
+    }
+
+    for (const [cat, catStateObj] of [...skillDomState.categories.entries()]) {
+      if (!cats.has(cat)) {
+        if (catStateObj.li.parentNode === dom.valda) {
+          dom.valda.removeChild(catStateObj.li);
+        }
+        skillDomState.categories.delete(cat);
+      }
+    }
+
+    const newEntryIndex = new Map();
+
+    catKeys.forEach((cat, index) => {
+      const bucket = cats.get(cat);
       const shouldOpen = catState[cat] !== undefined ? catState[cat] : (openCats.has(cat) || openCatsOnce.has(cat));
-      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
-      const detailsEl = catLi.querySelector('details');
-      const listEl=detailsEl.querySelector('ul');
-      detailsEl.addEventListener('toggle', () => {
-        updateCatToggle();
-        catState[cat] = detailsEl.open;
-        saveState();
+      const catStateObj = ensureCategoryElement(cat, shouldOpen);
+      const current = dom.valda.children[index];
+      if (current !== catStateObj.li) {
+        dom.valda.insertBefore(catStateObj.li, current || null);
+      }
+      const mustUpdate = !changedKeySet || changedCats.has(cat) || bucket.groups.length !== catStateObj.entries.size;
+      if (mustUpdate) {
+        updateCategoryEntries(catStateObj, bucket.groups, { compact });
+      }
+      catStateObj.entries.forEach((entryState, key) => {
+        newEntryIndex.set(key, { cat, entryState });
       });
-      cats[cat].forEach(g=>{
-        const p = g.entry;
-        const availLvls = LVL.filter(l=>p.nivåer?.[l]);
-        const lvlSel = availLvls.length>1
-          ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
-              ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
-            </select>`
-          : '';
-        const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
-        let desc = abilityHtml(p, p.nivå);
-        let infoBodyHtml = desc;
-        const infoMeta = [];
-        if (isRas(p) || isYrke(p) || isElityrke(p)) {
-          const extra = yrkeInfoHtml(p);
-          if (extra) infoBodyHtml += extra;
-        }
-        if (p.namn === 'Blodsband' && p.race) {
-          infoMeta.push({ label: 'Ras', value: p.race });
-        }
-        if (p.trait) {
-          const label = p.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
-          infoMeta.push({ label, value: p.trait });
-        }
-        const curList = storeHelper.getCurrentList(store);
-        const xpVal = storeHelper.calcEntryXP(p, curList);
-        let xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
-        if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
-        const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
-        const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
-        const filterTagData = [];
-        typesList
-          .filter(Boolean)
-          .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: t, hidden: idx === 0 }));
-        const trTags = explodeTags(p.taggar?.ark_trad);
-        const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
-        arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
-        (p.taggar?.test || [])
-          .filter(Boolean)
-          .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
-        const visibleTagData = filterTagData.filter(tag => !tag.hidden);
-        const tagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
-        const infoTagHtmlParts = filterTagData.map(tag => renderFilterTag(tag));
-        const tagsHtml = tagHtmlParts.join(' ');
-        const infoTagsHtml = [xpTag]
-          .concat(infoTagHtmlParts)
-          .filter(Boolean)
-          .join(' ');
-        const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
-        const infoPanelHtml = buildInfoPanelHtml({
-          tagsHtml: infoTagsHtml,
-          bodyHtml: infoBodyHtml,
-          meta: infoMeta
-        });
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
-
-        const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
-        const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
-        const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
-        const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
-        const activeKeys = getActiveHandlingKeys(p);
-        const activeNames = activeKeys.map(k => handlingName(p, k));
-        const conflictBtn = activeKeys.length
-          ? `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeNames.join(', ')}">💔</button>`
-          : '';
-        const showInfo = compact || hideDetails;
-        const hasCustomEdit = typesList.includes('Hemmagjort');
-        const hasArtifactType = typesList.some(t => String(t).trim().toLowerCase() === 'artefakt');
-        const editAction = hasCustomEdit ? 'editCustom' : (hasArtifactType ? 'editArtifact' : '');
-        const idAttr = p.id ? ` data-id="${p.id}"` : '';
-        const editBtn = editAction
-          ? `<button data-act="${editAction}" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
-          : '';
-        const infoBtnHtml = showInfo ? infoBtn : '';
-        const buttonParts = [];
-        if (infoBtnHtml) buttonParts.push(infoBtnHtml);
-        if (editBtn) buttonParts.push(editBtn);
-        if (multi) {
-          const isDisadv = typesList.includes('Nackdel');
-          if (isDisadv) {
-            if (total > 0) {
-              const delBtn = `<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`;
-              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`;
-              const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>` : '';
-              buttonParts.push(delBtn, subBtn);
-              if (addBtn) buttonParts.push(addBtn);
-            } else {
-              const addBtn = `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
-              buttonParts.push(addBtn);
-            }
-            if (conflictBtn) buttonParts.push(conflictBtn);
-          } else {
-            const remBtn = total > 0
-              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-              : '';
-            const addBtn = total < limit
-              ? `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`
-              : '';
-            if (remBtn) buttonParts.push(remBtn);
-            if (conflictBtn) buttonParts.push(conflictBtn);
-            if (addBtn) buttonParts.push(addBtn);
-          }
-        } else {
-          buttonParts.push(`<button class="char-btn danger icon" data-act="rem">🗑</button>`);
-          if (conflictBtn) buttonParts.push(conflictBtn);
-        }
-        const dockPrimary = (p.taggar?.typ || [])[0] || '';
-        const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
-        const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
-        const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
-          ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
-          : '';
-        const leftSections = [];
-        if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
-        else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
-        const dataset = { name: p.namn };
-        if (p.trait) dataset.trait = p.trait;
-        dataset.xp = xpVal;
-        if (p.id) dataset.id = p.id;
-        const li = createEntryCard({
-          compact,
-          dataset,
-          nameHtml: `${p.namn}${badge}`,
-          xpHtml,
-          tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
-          levelHtml: hideDetails ? '' : lvlSel,
-          descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
-          leftSections,
-          buttonSections: buttonParts
-        });
-
-        listEl.appendChild(li);
-      });
-      dom.valda.appendChild(catLi);
     });
+
+    skillDomState.order = catKeys;
+    skillDomState.entryIndex = newEntryIndex;
+
     updateCatToggle();
     openCatsOnce.clear();
     saveState();
     refreshEffectsPanel();
   };
+
+  const skillCardActions = (() => {
+    const buildKeyCounts = (list) => {
+      const map = new Map();
+      (Array.isArray(list) ? list : []).forEach(entry => {
+        if (!entry || isInv(entry)) return;
+        const key = getGroupKey(entry, { multi: isMultiEntry(entry) });
+        if (!key) return;
+        map.set(key, (map.get(key) || 0) + 1);
+      });
+      return map;
+    };
+
+    const computeChangedKeys = (beforeList, afterList) => {
+      const beforeMap = buildKeyCounts(beforeList);
+      const afterMap = buildKeyCounts(afterList);
+      const keys = new Set();
+      beforeMap.forEach((count, key) => {
+        if ((afterMap.get(key) || 0) !== count) keys.add(key);
+      });
+      afterMap.forEach((count, key) => {
+        if ((beforeMap.get(key) || 0) !== count) keys.add(key);
+      });
+      return [...keys];
+    };
+
+    const renderAll = () => renderSkills(filtered());
+
+    return {
+      renderAll,
+      syncLists(beforeList, afterList) {
+        const keys = computeChangedKeys(beforeList, afterList);
+        if (keys.length) renderSkills(filtered(), { changedKeys: keys });
+        else renderAll();
+      }
+    };
+  })();
+
 
   /* custom suggestions above search (entries + UI-kommandon, min 2 chars) */
   let sugIdx = -1;
@@ -1322,8 +1570,8 @@ function initCharacter() {
     window.updateScrollLock?.();
   };
 
-  renderSkills(filtered()); activeTags(); updateXP(); renderTraits(); updateSearchDatalist();
-  window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); updateSearchDatalist(); };
+  skillCardActions.renderAll(); activeTags(); updateXP(); renderTraits(); updateSearchDatalist();
+  window.indexViewUpdate = () => { skillCardActions.renderAll(); renderTraits(); updateSearchDatalist(); };
   // expose for main.js to refresh dropdowns when switching character
   window.indexViewRefreshFilters = () => { refreshCharacterFilters(); updateSearchDatalist(); };
   window.refreshEffectsPanel = refreshEffectsPanel;
@@ -1380,7 +1628,7 @@ function initCharacter() {
             sTemp = '';
             updateSearchDatalist();
             activeTags();
-            renderSkills(filtered());
+            skillCardActions.renderAll();
             renderTraits();
             dom.sIn.blur();
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1428,7 +1676,7 @@ function initCharacter() {
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
         storeHelper.clearRevealedArtifacts(store);
-        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+        activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
         return;
       }
       if (tryBomb(sTemp)) {
@@ -1456,7 +1704,7 @@ function initCharacter() {
         F.search = [];
       }
       dom.sIn.value=''; sTemp='';
-      activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
     }
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
@@ -1465,17 +1713,17 @@ function initCharacter() {
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+        activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
         dom[sel].value = '';
-        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+        activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
         return;
       }
       if(v&&!F[key].includes(v)) F[key].push(v);
-      dom[sel].value=''; activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      dom[sel].value=''; activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
     });
   });
   dom.active.addEventListener('click',e=>{
@@ -1485,7 +1733,7 @@ function initCharacter() {
     else if(sec==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[sec]=F[sec].filter(x=>x!==val);
     if(sec==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+    activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
   });
 
   // Treat clicks on tags anywhere as filter selections
@@ -1498,7 +1746,7 @@ function initCharacter() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    activeTags(); renderSkills(filtered()); renderTraits();
+    activeTags(); skillCardActions.renderAll(); renderTraits();
   });
 
   function formatLevels(list){
@@ -1573,6 +1821,7 @@ function initCharacter() {
     const ref = { id: idAttr || undefined, name };
     const tr = liEl.dataset.trait || null;
     const before = storeHelper.getCurrentList(store);
+    const beforeSnapshot = before.map(x => ({ ...x }));
     const disBefore = storeHelper.countDisadvantages(before);
     let p = idAttr ? before.find(x => String(x.id) === String(idAttr)) : null;
     if(!p && name) p = before.find(x=>x.namn===name);
@@ -1582,7 +1831,7 @@ function initCharacter() {
     const handleEntryEdited = () => {
       refreshCharacterFilters();
       activeTags();
-      renderSkills(filtered());
+      skillCardActions.renderAll();
       renderTraits();
       updateSearchDatalist();
       if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
@@ -1718,10 +1967,10 @@ function initCharacter() {
       } else if(remDeps.length){
         if(!(await confirmPopup(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`))) return;
       }
-      if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
+      if(eliteReq.canChange(beforeSnapshot) && !eliteReq.canChange(list)){
         const deps = before
           .filter(isElityrke)
-          .filter(el => eliteReq.check(el, before).ok && !eliteReq.check(el, list).ok)
+          .filter(el => eliteReq.check(el, beforeSnapshot).ok && !eliteReq.check(el, list).ok)
           .map(el => el.namn);
         const msg = deps.length
           ? `F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${deps.join(', ')}. Ta bort \u00e4nd\u00e5?`
@@ -1771,10 +2020,10 @@ function initCharacter() {
       invUtil.renderInventory();
       storeHelper.removeRevealedArtifact(store, p.id);
     }
-      renderSkills(filtered());
-      updateXP();
-      renderTraits();
-      updateSearchDatalist();
+    skillCardActions.syncLists(beforeSnapshot, list);
+    updateXP();
+    renderTraits();
+    updateSearchDatalist();
     if (act === 'add') {
       flashAdded(name, tr);
     }
@@ -1786,11 +2035,12 @@ function initCharacter() {
     const tr=e.target.dataset.trait || e.target.closest('li').dataset.trait || null;
     const list=storeHelper.getCurrentList(store);
     const ent=list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
+    let beforeSnapshot = null;
     if(ent){
-      const before=list.map(x=>({...x}));
+      beforeSnapshot=list.map(x=>({...x}));
       const old = ent.nivå;
       ent.nivå=e.target.value;
-      if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
+      if(eliteReq.canChange(beforeSnapshot) && !eliteReq.canChange(list)){
         await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
         ent.nivå = old;
         e.target.value = old;
@@ -1808,22 +2058,29 @@ function initCharacter() {
             monsterLore.pickSpec(spec=>{
               if(!spec){ ent.nivå=old; e.target.value=old; return; }
               ent.trait=spec;
-                storeHelper.setCurrentList(store,list); updateXP();
-                renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+              storeHelper.setCurrentList(store,list); updateXP();
+              skillCardActions.syncLists(beforeSnapshot || [], list);
+              renderTraits(); updateSearchDatalist();
             });
             return;
           }
         }else if(ent.trait){
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
-          renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+          skillCardActions.syncLists(beforeSnapshot || [], list);
+          renderTraits(); updateSearchDatalist();
           return;
         }
       }
       storeHelper.setCurrentList(store,list); updateXP();
     }
-      renderSkills(filtered()); renderTraits(); updateSearchDatalist();
-      flashAdded(name, tr);
+    if (beforeSnapshot) {
+      skillCardActions.syncLists(beforeSnapshot, list);
+    } else {
+      skillCardActions.renderAll();
+    }
+    renderTraits(); updateSearchDatalist();
+    flashAdded(name, tr);
   });
 }
 
