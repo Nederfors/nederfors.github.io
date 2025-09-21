@@ -364,6 +364,43 @@
       .replace(/__oe__/g,'\u00f6');
   }
 
+  function populateEntrySearchCache(entry) {
+    if (!entry || typeof entry !== 'object') return entry;
+    const name = typeof entry.namn === 'string' ? entry.namn.trim() : '';
+    if (entry.namn !== name) entry.namn = name;
+    const lowerName = name.toLowerCase();
+    entry._normName = searchNormalize(lowerName);
+
+    const rawDesc = typeof entry.beskrivning === 'string' ? entry.beskrivning : '';
+    const levelText = entry.nivåer && typeof entry.nivåer === 'object'
+      ? Object.values(entry.nivåer).map(v => String(v || '')).join(' ')
+      : '';
+    const searchSource = `${name} ${rawDesc} ${levelText}`.trim();
+    entry._normSearchSource = searchSource;
+    entry._normSearchText = searchNormalize(searchSource.toLowerCase());
+
+    const taggar = (entry.taggar && typeof entry.taggar === 'object') ? entry.taggar : {};
+    const typeTags = Array.isArray(taggar.typ)
+      ? taggar.typ.map(v => String(v).trim()).filter(Boolean)
+      : [];
+    const arkTagsRaw = explodeTags(taggar.ark_trad);
+    const arkTags = arkTagsRaw.length
+      ? arkTagsRaw
+      : (Array.isArray(taggar.ark_trad) ? ['Traditionslös'] : []);
+    const testTags = Array.isArray(taggar.test)
+      ? taggar.test.map(v => String(v).trim()).filter(Boolean)
+      : [];
+    const combined = [...typeTags, ...arkTags, ...testTags];
+    entry._normTags = {
+      typ: typeTags,
+      ark: arkTags,
+      test: testTags,
+      all: combined
+    };
+    entry._normTagSet = new Set(combined);
+    return entry;
+  }
+
   // Copy text to clipboard. Uses the modern Clipboard API when available
   // and falls back to a temporary textarea element for older browsers.
   function copyToClipboard(text) {
@@ -390,8 +427,10 @@
       .map(s => searchNormalize(String(s).toLowerCase()))
       .filter(Boolean);
     return function(a,b){
-      const aName = searchNormalize((a.namn||'').toLowerCase());
-      const bName = searchNormalize((b.namn||'').toLowerCase());
+      if (a && !a._normName) populateEntrySearchCache(a);
+      if (b && !b._normName) populateEntrySearchCache(b);
+      const aName = (a && a._normName) || searchNormalize((a?.namn || '').toLowerCase());
+      const bName = (b && b._normName) || searchNormalize((b?.namn || '').toLowerCase());
       const aMatch = t.length && t.every(q=>aName.includes(q));
       const bMatch = t.length && t.every(q=>bName.includes(q));
       if(aMatch && !bMatch) return -1;
@@ -418,6 +457,7 @@
   window.isSardrag = isSardrag;
   window.isEmployment = isEmployment;
   window.isService = isService;
+  window.populateEntrySearchCache = populateEntrySearchCache;
   window.isMysticQual = isMysticQual;
   window.isNegativeQual = isNegativeQual;
   window.isNeutralQual = isNeutralQual;
