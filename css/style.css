@@ -813,7 +813,7 @@ input:focus, select:focus, textarea:focus {
 .card[data-special="__formal__"],
 .card[data-special="__tools__"],
 .card[data-special="__info__"] {
-  border: 2px solid var(--accent);
+  border: 2px solid var(--toolborder);
 }
 .card-title {
   display: flex;
