@@ -506,6 +506,9 @@ fetch(TABELLER_FILE)
   .then(r => r.json())
   .then(arr => {
     TABELLER = arr;
+    if (typeof window.populateEntrySearchCache === 'function') {
+      TABELLER.forEach(window.populateEntrySearchCache);
+    }
     window.TABELLER = TABELLER;
     if (typeof window.indexViewUpdate === 'function') {
       window.indexViewUpdate();
@@ -521,6 +524,9 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
     DB.forEach((ent, idx) => {
       if (ent.id === undefined) ent.id = idx;
       DB[ent.id] = ent;
+      if (typeof window.populateEntrySearchCache === 'function') {
+        window.populateEntrySearchCache(ent);
+      }
     });
     window.DB = DB;
     DBIndex = {};
