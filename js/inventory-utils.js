@@ -106,7 +106,7 @@
     return sortByType(entA, entB);
   }
 
-  function saveInventory(inv) {
+  function saveInventory(inv, options = {}) {
     const nonVeh = [];
     const veh = [];
     inv.forEach(row => {
@@ -119,7 +119,16 @@
     recalcArtifactEffects();
     if (window.updateXP) updateXP();
     if (window.renderTraits) renderTraits();
-    if (window.indexViewUpdate) window.indexViewUpdate();
+    if (!options.skipIndexUpdate && window.indexViewUpdate) {
+      const opts = {
+        reason: options.reason || 'inventory:save',
+        skipActiveTags: options.skipActiveTags !== undefined ? options.skipActiveTags : true
+      };
+      if (options.entries) opts.entries = options.entries;
+      if (options.changedCats) opts.changedCats = options.changedCats;
+      if (options.forceFull || !opts.entries) opts.forceFull = true;
+      window.indexViewUpdate(opts);
+    }
   }
 
   function addWellEquippedItems(inv) {
@@ -2449,10 +2458,10 @@ ${moneyRow}
         }
         const inv = storeHelper.getInventory(store);
         inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
-        saveInventory(inv);
+        saveInventory(inv, { skipIndexUpdate: true });
         refreshInventoryFull();
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'inventory:custom-add', entries: [entry] });
       });
     };
     if (dom.collapseAllBtn) {
@@ -2594,7 +2603,7 @@ ${moneyRow}
         editCustomEntry(entry, () => {
           refreshInventoryFull();
           if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-          if (window.indexViewUpdate) window.indexViewUpdate();
+          if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'inventory:custom-edit', entries: [entry] });
         });
         return;
       }

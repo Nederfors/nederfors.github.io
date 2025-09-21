@@ -943,12 +943,128 @@ function initIndex() {
     saveState();
   };
 
-  const refreshEntries = (entryRefs) => {
-    const arr = filtered();
-    if (!entryRefs || !entryRefs.length) {
-      renderList(arr);
-      return;
+  const buildRenderSnapshot = (listArr) => {
+    const catEntries = new Map();
+    const entryToCat = new Map();
+    const catNameMatch = new Map();
+    const terms = F.search.map(t => searchNormalize(t.toLowerCase()));
+    const searchActive = terms.length > 0;
+    const unionMode = storeHelper.getFilterUnion(store);
+    listArr.forEach(entry => {
+      const cat = entry?.taggar?.typ?.[0] || 'Övrigt';
+      const key = entryKeyFor(entry);
+      if (!key) return;
+      if (!catEntries.has(cat)) catEntries.set(cat, []);
+      catEntries.get(cat).push(key);
+      entryToCat.set(key, cat);
+      if (!searchActive) return;
+      const name = searchNormalize(String(entry.namn || '').toLowerCase());
+      const nameOk = unionMode
+        ? terms.some(q => name.includes(q))
+        : terms.every(q => name.includes(q));
+      if (nameOk) catNameMatch.set(cat, true);
+    });
+    const catOrder = Array.from(catEntries.keys());
+    catOrder.sort((a, b) => {
+      if (searchActive) {
+        const aMatch = catNameMatch.has(a) ? 1 : 0;
+        const bMatch = catNameMatch.has(b) ? 1 : 0;
+        if (aMatch !== bMatch) return bMatch - aMatch;
+      }
+      return catComparator(a, b);
+    });
+    return { catEntries, entryToCat, catOrder };
+  };
+
+  const diffRenderSnapshots = (prev, next, hints = {}) => {
+    if (!prev) {
+      return { mode: 'full', onlyCats: null, onlyKeys: null };
     }
+    if (hints.forceFull) {
+      return { mode: 'full', onlyCats: null, onlyKeys: null };
+    }
+    const changedCats = new Set(hints.changedCats || []);
+    const changedKeys = new Set(hints.changedKeys || []);
+    const allCats = new Set([
+      ...prev.catEntries.keys(),
+      ...next.catEntries.keys()
+    ]);
+    allCats.forEach(cat => {
+      const prevKeys = prev.catEntries.get(cat) || [];
+      const nextKeys = next.catEntries.get(cat) || [];
+      if (prevKeys.length !== nextKeys.length) {
+        changedCats.add(cat);
+        prevKeys.forEach(k => changedKeys.add(k));
+        nextKeys.forEach(k => changedKeys.add(k));
+        return;
+      }
+      for (let i = 0; i < nextKeys.length; i++) {
+        if (prevKeys[i] !== nextKeys[i]) {
+          changedCats.add(cat);
+          prevKeys.forEach(k => changedKeys.add(k));
+          nextKeys.forEach(k => changedKeys.add(k));
+          break;
+        }
+      }
+    });
+    changedKeys.forEach(key => {
+      const cat = next.entryToCat.get(key) || prev.entryToCat.get(key);
+      if (cat) changedCats.add(cat);
+    });
+    const totalCats = allCats.size;
+    if (!totalCats && !changedKeys.size) {
+      return { mode: 'noop', onlyCats: null, onlyKeys: null };
+    }
+    if (!changedCats.size && !changedKeys.size) {
+      return { mode: 'noop', onlyCats: null, onlyKeys: null };
+    }
+    if (totalCats && changedCats.size === totalCats) {
+      return { mode: 'full', onlyCats: null, onlyKeys: null };
+    }
+    return { mode: 'partial', onlyCats: changedCats, onlyKeys: changedKeys };
+  };
+
+  const createRenderProfiler = () => {
+    const events = [];
+    const MAX_EVENTS = 250;
+    const record = (evt) => {
+      const entry = { ...evt, ts: Date.now() };
+      events.push(entry);
+      if (events.length > MAX_EVENTS) events.shift();
+      if (entry.mode === 'full') {
+        try {
+          console.debug('[index-view] full render', entry);
+        } catch {}
+      }
+    };
+    const snapshot = () => events.slice();
+    const summary = () => {
+      const map = {};
+      events.forEach(evt => {
+        const bucket = map[evt.reason] ||= { full: 0, partial: 0, noop: 0, filter: 0, render: 0 };
+        bucket[evt.mode] = (bucket[evt.mode] || 0) + 1;
+        bucket.filter += evt.filterDuration;
+        bucket.render += evt.renderDuration;
+      });
+      return map;
+    };
+    const expose = () => Object.freeze({
+      events: snapshot,
+      summary,
+      reset() { events.length = 0; }
+    });
+    return { record, snapshot, summary, expose };
+  };
+
+  const renderProfiler = createRenderProfiler();
+  window.indexRenderProfiler = renderProfiler.expose();
+
+  let lastRenderSnapshot = null;
+
+  const normalizeEntryRefsToKeys = (refs, arr) => {
+    const result = new Set();
+    if (!refs) return result;
+    const list = Array.isArray(refs) ? refs : [refs];
     const arrById = new Map();
     const arrByName = new Map();
     arr.forEach(entry => {
@@ -956,18 +1072,93 @@ function initIndex() {
       if (id) arrById.set(id, entry);
       if (entry.namn) arrByName.set(entry.namn, entry);
     });
-    const keys = new Set();
-    entryRefs.forEach(ref => {
+    list.forEach(ref => {
       const entry = resolveEntryRef(ref, arrById, arrByName);
-      if (!entry) return;
-      const key = entryKeyFor(entry);
-      if (key) keys.add(key);
+      const key = entryKeyFor(entry || ref);
+      if (key) result.add(key);
     });
-    if (!keys.size) {
+    return result;
+  };
+
+  const runListRender = (options = {}) => {
+    const {
+      reason = 'unknown',
+      entries = null,
+      changedKeys = null,
+      changedCats = null,
+      forceFull = false
+    } = options || {};
+    const filterStart = performance.now();
+    const arr = filtered();
+    const filterDuration = performance.now() - filterStart;
+    const snapshot = buildRenderSnapshot(arr);
+    const keyHints = normalizeEntryRefsToKeys(entries, arr);
+    if (changedKeys) {
+      (Array.isArray(changedKeys) ? changedKeys : [changedKeys]).forEach(k => {
+        if (k != null) keyHints.add(String(k));
+      });
+    }
+    const catHints = changedCats
+      ? new Set(Array.isArray(changedCats) ? changedCats : [changedCats])
+      : undefined;
+    const diff = diffRenderSnapshots(lastRenderSnapshot, snapshot, {
+      forceFull,
+      changedKeys: keyHints,
+      changedCats: catHints
+    });
+    let mode = diff.mode;
+    let renderDuration = 0;
+    if (mode === 'partial') {
+      const renderStart = performance.now();
+      renderList(arr, { onlyCats: diff.onlyCats, onlyKeys: diff.onlyKeys });
+      renderDuration = performance.now() - renderStart;
+    } else if (mode === 'full') {
+      const renderStart = performance.now();
       renderList(arr);
+      renderDuration = performance.now() - renderStart;
+    } else {
+      renderState = {
+        entryToCat: snapshot.entryToCat,
+        catOrder: snapshot.catOrder.slice()
+      };
+      updateCatToggle();
+      openCatsOnce.clear();
+      saveState();
+    }
+    lastRenderSnapshot = snapshot;
+    renderProfiler.record({
+      reason,
+      mode,
+      filterDuration,
+      renderDuration,
+      updatedCats: diff.onlyCats ? diff.onlyCats.size : 0,
+      updatedKeys: diff.onlyKeys ? diff.onlyKeys.size : 0,
+      totalEntries: arr.length
+    });
+    return { mode, totalEntries: arr.length };
+  };
+
+  const updateListView = (options = {}) => {
+    const opts = { ...options };
+    const skipTags = !!opts.skipActiveTags;
+    delete opts.skipActiveTags;
+    const result = runListRender(opts);
+    if (!skipTags) activeTags();
+    return result;
+  };
+
+  const refreshEntries = (entryRefs, meta = {}) => {
+    const refs = Array.isArray(entryRefs) ? entryRefs : (entryRefs ? [entryRefs] : []);
+    if (!refs.length) {
+      updateListView({ ...meta, reason: meta.reason || 'refresh:all', skipActiveTags: true });
       return;
     }
-    renderList(arr, { onlyKeys: keys });
+    updateListView({
+      ...meta,
+      reason: meta.reason || 'refresh:entries',
+      entries: refs,
+      skipActiveTags: true
+    });
   };
 
 
@@ -983,10 +1174,15 @@ function initIndex() {
   };
 
   /* första render */
-  renderList(filtered()); activeTags(); updateXP();
+  updateListView({ reason: 'init' });
+  updateXP();
 
   /* expose update function for party toggles */
-  window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
+  window.indexViewUpdate = (opts = {}) => {
+    const options = typeof opts === 'object' && opts !== null ? { ...opts } : {};
+    if (!options.reason) options.reason = 'external:update';
+    updateListView(options);
+  };
   window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
@@ -1031,7 +1227,7 @@ function initIndex() {
             if (c) openCatsOnce.add(c);
           }
           dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          activeTags(); renderList(filtered());
+          updateListView({ reason: 'search:random' });
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
@@ -1060,8 +1256,7 @@ function initIndex() {
           dom.sIn.value = '';
           sTemp = '';
           updateSearchDatalist();
-          activeTags();
-          renderList(filtered());
+          updateListView({ reason: 'search:suggestion' });
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1134,7 +1329,7 @@ function initIndex() {
             if (cat) openCatsOnce.add(cat);
             dom.sIn.value=''; sTemp='';
             updateSearchDatalist();
-            activeTags(); renderList(filtered());
+            updateListView({ reason: 'search:random-enter' });
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }
@@ -1160,7 +1355,7 @@ function initIndex() {
         storeHelper.clearRevealedArtifacts(store);
         revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
         fillDropdowns();
-        activeTags(); renderList(filtered());
+        updateListView({ reason: 'search:reset' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1168,7 +1363,7 @@ function initIndex() {
         showArtifacts = true;
         dom.sIn.value=''; sTemp='';
         fillDropdowns();
-        activeTags(); renderList(filtered());
+        updateListView({ reason: 'search:artifact-toggle' });
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1197,7 +1392,7 @@ function initIndex() {
         F.search = [];
       }
       dom.sIn.value=''; sTemp='';
-      activeTags(); renderList(filtered());
+      updateListView({ reason: 'search:apply' });
       updateSearchDatalist();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1218,13 +1413,13 @@ function initIndex() {
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        activeTags(); renderList(filtered());
+        updateListView({ reason: 'filter:test:clear' });
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
         dom[sel].value = '';
-        activeTags(); renderList(filtered());
+        updateListView({ reason: 'filter:only-selected' });
         return;
       }
       if(v && !F[key].includes(v)) F[key].push(v);
@@ -1232,18 +1427,19 @@ function initIndex() {
       if (sel === 'typSel' && v) {
         openCatsOnce.add(v);
       }
-      dom[sel].value=''; activeTags(); renderList(filtered());
+      dom[sel].value='';
+      updateListView({ reason: `filter:${key}:add` });
     });
   });
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); renderList(filtered()); return; }
+    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; updateListView({ reason: 'filter:random:clear' }); return; }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    activeTags(); renderList(filtered());
+    updateListView({ reason: `filter:${section}:remove` });
   });
 
   // Treat clicks on tags anywhere as filter selections
@@ -1256,7 +1452,7 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    activeTags(); renderList(filtered());
+    updateListView({ reason: `filter:${section}:tag` });
   });
 
   /* lista-knappar */
@@ -1319,18 +1515,18 @@ function initIndex() {
     if (!p) return;
     const applyRefresh = (refs) => {
       if (refs === true) {
-        renderList(filtered());
+        updateListView({ reason: 'inventory:full', skipActiveTags: true });
         return;
       }
       const arrRefs = Array.isArray(refs) ? refs : [refs];
       if (!arrRefs.length) return;
-      refreshEntries(arrRefs);
+      refreshEntries(arrRefs, { reason: 'inventory:partial' });
     };
     if (act === 'editCustom') {
       if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
       window.invUtil.editCustomEntry(p, () => {
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'custom:edit', entries: [p] });
         if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
           window.invUtil.renderInventory();
         }
@@ -1375,7 +1571,8 @@ function initIndex() {
           row.kvaliteter = row.kvaliteter || [];
           const qn = p.namn;
           if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
-          invUtil.saveInventory(inv); invUtil.renderInventory();
+          invUtil.saveInventory(inv, { skipIndexUpdate: true });
+          invUtil.renderInventory();
           activeTags();
           applyRefresh(p);
         });
@@ -1399,7 +1596,8 @@ function initIndex() {
               existing.qty++;
             }
           });
-          invUtil.saveInventory(inv); invUtil.renderInventory();
+          invUtil.saveInventory(inv, { skipIndexUpdate: true });
+          invUtil.renderInventory();
           const bundleEntries = FALT_BUNDLE
             .map(id => lookupEntry({ id }) || invUtil.getEntry(id))
             .filter(Boolean);
@@ -1467,7 +1665,8 @@ function initIndex() {
                 flashIdx = inv.length - 1;
               }
             }
-            invUtil.saveInventory(inv); invUtil.renderInventory();
+            invUtil.saveInventory(inv, { skipIndexUpdate: true });
+            invUtil.renderInventory();
             const hidden = isHidden(p);
             const artifactTagged = hasArtifactTag(p);
             let addedToList = false;
@@ -1697,7 +1896,8 @@ function initIndex() {
           if (p.namn === 'Välutrustad') {
             const inv = storeHelper.getInventory(store);
             invUtil.addWellEquippedItems(inv);
-            invUtil.saveInventory(inv); invUtil.renderInventory();
+            invUtil.saveInventory(inv, { skipIndexUpdate: true });
+            invUtil.renderInventory();
           }
           applyRefresh(p);
           renderTraits();
@@ -1751,7 +1951,8 @@ function initIndex() {
             }
           }
         }
-        invUtil.saveInventory(inv); invUtil.renderInventory();
+        invUtil.saveInventory(inv, { skipIndexUpdate: true });
+        invUtil.renderInventory();
         const hidden = isHidden(p);
         const artifactTagged = hasArtifactTag(p);
         if (hidden || artifactTagged) {
@@ -1859,7 +2060,8 @@ function initIndex() {
         if (p.namn === 'Välutrustad') {
           const inv = storeHelper.getInventory(store);
           invUtil.removeWellEquippedItems(inv);
-          invUtil.saveInventory(inv); invUtil.renderInventory();
+          invUtil.saveInventory(inv, { skipIndexUpdate: true });
+          invUtil.renderInventory();
         }
         const hidden = isHidden(p);
         const artifactTagged = hasArtifactTag(p);
@@ -1872,7 +2074,8 @@ function initIndex() {
             }
           };
           removeItem(inv);
-          invUtil.saveInventory(inv); invUtil.renderInventory();
+          invUtil.saveInventory(inv, { skipIndexUpdate: true });
+          invUtil.renderInventory();
           if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
         }
       }

@@ -301,7 +301,7 @@
           dom.tstSel.dispatchEvent(new Event('change'));
         }
         storeHelper.setOnlySelected(store, true);
-        if (typeof indexViewUpdate === 'function') indexViewUpdate();
+        if (typeof indexViewUpdate === 'function') indexViewUpdate({ reason: 'traits:filter' });
         return;
       }
       const btn = e.target.closest('.trait-btn');
