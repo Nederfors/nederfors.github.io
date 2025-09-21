@@ -1480,7 +1480,7 @@ function initIndex() {
               }
               if (addedToList || hidden) {
                 if (window.updateXP) updateXP();
-                if (window.renderTraits) renderTraits();
+                if (window.renderTraits) renderTraits({ source: 'list:update' });
               }
               if (hidden && p.id) {
                 storeHelper.addRevealedArtifact(store, p.id);
@@ -1631,7 +1631,7 @@ function initIndex() {
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             applyRefresh(p);
-            renderTraits();
+            renderTraits({ source: 'list:update' });
             flashAdded(added.namn, added.trait);
           });
           return;
@@ -1644,7 +1644,7 @@ function initIndex() {
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             applyRefresh(p);
-            renderTraits();
+            renderTraits({ source: 'list:update' });
             flashAdded(added.namn, added.trait);
           });
           return;
@@ -1665,7 +1665,7 @@ function initIndex() {
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
             applyRefresh(p);
-            renderTraits();
+            renderTraits({ source: 'list:update' });
             flashAdded(added.namn, added.trait);
           });
           return;
@@ -1700,7 +1700,7 @@ function initIndex() {
             invUtil.saveInventory(inv); invUtil.renderInventory();
           }
           applyRefresh(p);
-          renderTraits();
+          renderTraits({ source: 'list:update' });
           flashAdded(added.namn, added.trait);
         };
         if (isMonstrousTrait(p)) {
@@ -1760,7 +1760,7 @@ function initIndex() {
             let list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
             storeHelper.setCurrentList(store, list);
             if (window.updateXP) updateXP();
-            if (window.renderTraits) renderTraits();
+            if (window.renderTraits) renderTraits({ source: 'list:update' });
             if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
           }
         }
@@ -1878,7 +1878,7 @@ function initIndex() {
       }
     }
     activeTags();
-    renderTraits();
+    renderTraits({ source: 'list:update' });
     if (act==='add') {
       flashAdded(name, tr);
     } else if (act==='sub' || act==='del' || act==='rem') {
@@ -1921,7 +1921,7 @@ function initIndex() {
               ent.trait=spec;
               storeHelper.setCurrentList(store,list); updateXP();
               applyLevelRefresh(name);
-              renderTraits();
+              renderTraits({ source: 'list:update' });
             });
             return;
           }
@@ -1929,7 +1929,7 @@ function initIndex() {
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
           applyLevelRefresh(name);
-          renderTraits();
+          renderTraits({ source: 'list:update' });
           return;
         }
       }
@@ -1974,13 +1974,13 @@ function initIndex() {
         });
         storeHelper.setCurrentList(store,list); updateXP();
         applyLevelRefresh([...affected]);
-        renderTraits();
+        renderTraits({ source: 'list:update' });
         flashAdded(name, tr);
         return;
       }
       storeHelper.setCurrentList(store,list); updateXP();
       applyLevelRefresh(name);
-      renderTraits();
+      renderTraits({ source: 'list:update' });
       flashAdded(name, tr);
       return;
     }

@@ -588,7 +588,7 @@ function boot() {
   bindToolbar();
 
   if (dom.traits && typeof renderTraits === 'function') {
-    renderTraits();
+    renderTraits({ source: 'init' });
     if (typeof bindTraits === 'function') bindTraits();
   }
   if (ROLE === 'index')     initIndex();
@@ -638,7 +638,7 @@ function applyCharacterChange() {
     if (typeof window.updateXP === 'function') updateXP();
 
     // Ensure traits panel reflects the new character regardless of inventory path
-    if (typeof window.renderTraits === 'function') renderTraits();
+    if (typeof window.renderTraits === 'function') renderTraits({ source: 'character-change' });
 
     // Re-render main content depending on view
     if (typeof window.indexViewRefreshFilters === 'function') window.indexViewRefreshFilters();
@@ -1085,7 +1085,7 @@ function bindToolbar() {
       const next = { ...t };
       KEYS.forEach(k => { next[k] = 10; });
       storeHelper.setTraits(store, next);
-      if (window.renderTraits) renderTraits();
+      if (window.renderTraits) renderTraits({ source: 'traits:reset' });
     }
   });
 
@@ -1154,7 +1154,7 @@ function bindToolbar() {
         if (trait === null) return;
         dom.defBtn.classList.toggle('active', Boolean(trait));
         storeHelper.setDefenseTrait(store, trait);
-        if (window.renderTraits) renderTraits();
+        if (window.renderTraits) renderTraits({ source: 'defense:change' });
       });
     });
   }

@@ -421,7 +421,7 @@ function initCharacter() {
       }
       skillCardActions.renderAll();
       updateXP();
-      renderTraits();
+      renderTraits({ source: 'list:update' });
       updateSearchDatalist();
     });
   }
@@ -1570,8 +1570,8 @@ function initCharacter() {
     window.updateScrollLock?.();
   };
 
-  skillCardActions.renderAll(); activeTags(); updateXP(); renderTraits(); updateSearchDatalist();
-  window.indexViewUpdate = () => { skillCardActions.renderAll(); renderTraits(); updateSearchDatalist(); };
+  skillCardActions.renderAll(); activeTags(); updateXP(); renderTraits({ source: 'list:update' }); updateSearchDatalist();
+  window.indexViewUpdate = () => { skillCardActions.renderAll(); renderTraits({ source: 'list:update' }); updateSearchDatalist(); };
   // expose for main.js to refresh dropdowns when switching character
   window.indexViewRefreshFilters = () => { refreshCharacterFilters(); updateSearchDatalist(); };
   window.refreshEffectsPanel = refreshEffectsPanel;
@@ -1629,7 +1629,7 @@ function initCharacter() {
             updateSearchDatalist();
             activeTags();
             skillCardActions.renderAll();
-            renderTraits();
+            renderTraits({ source: 'list:update' });
             dom.sIn.blur();
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
@@ -1676,7 +1676,7 @@ function initCharacter() {
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
         storeHelper.clearRevealedArtifacts(store);
-        activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
+        activeTags(); skillCardActions.renderAll(); renderTraits({ source: 'list:update' }); updateSearchDatalist();
         return;
       }
       if (tryBomb(sTemp)) {
@@ -1704,7 +1704,7 @@ function initCharacter() {
         F.search = [];
       }
       dom.sIn.value=''; sTemp='';
-      activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
+      activeTags(); skillCardActions.renderAll(); renderTraits({ source: 'list:update' }); updateSearchDatalist();
     }
   });
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
@@ -1713,17 +1713,17 @@ function initCharacter() {
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
+        activeTags(); skillCardActions.renderAll(); renderTraits({ source: 'list:update' }); updateSearchDatalist();
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
         dom[sel].value = '';
-        activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
+        activeTags(); skillCardActions.renderAll(); renderTraits({ source: 'list:update' }); updateSearchDatalist();
         return;
       }
       if(v&&!F[key].includes(v)) F[key].push(v);
-      dom[sel].value=''; activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
+      dom[sel].value=''; activeTags(); skillCardActions.renderAll(); renderTraits({ source: 'list:update' }); updateSearchDatalist();
     });
   });
   dom.active.addEventListener('click',e=>{
@@ -1733,7 +1733,7 @@ function initCharacter() {
     else if(sec==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[sec]=F[sec].filter(x=>x!==val);
     if(sec==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    activeTags(); skillCardActions.renderAll(); renderTraits(); updateSearchDatalist();
+    activeTags(); skillCardActions.renderAll(); renderTraits({ source: 'list:update' }); updateSearchDatalist();
   });
 
   // Treat clicks on tags anywhere as filter selections
@@ -1746,7 +1746,7 @@ function initCharacter() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    activeTags(); skillCardActions.renderAll(); renderTraits();
+    activeTags(); skillCardActions.renderAll(); renderTraits({ source: 'list:update' });
   });
 
   function formatLevels(list){
@@ -1832,7 +1832,7 @@ function initCharacter() {
       refreshCharacterFilters();
       activeTags();
       skillCardActions.renderAll();
-      renderTraits();
+      renderTraits({ source: 'list:update' });
       updateSearchDatalist();
       if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
       if (window.indexViewUpdate) window.indexViewUpdate();
@@ -2022,7 +2022,7 @@ function initCharacter() {
     }
     skillCardActions.syncLists(beforeSnapshot, list);
     updateXP();
-    renderTraits();
+    renderTraits({ source: 'list:update' });
     updateSearchDatalist();
     if (act === 'add') {
       flashAdded(name, tr);
@@ -2060,7 +2060,7 @@ function initCharacter() {
               ent.trait=spec;
               storeHelper.setCurrentList(store,list); updateXP();
               skillCardActions.syncLists(beforeSnapshot || [], list);
-              renderTraits(); updateSearchDatalist();
+              renderTraits({ source: 'list:update' }); updateSearchDatalist();
             });
             return;
           }
@@ -2068,7 +2068,7 @@ function initCharacter() {
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
           skillCardActions.syncLists(beforeSnapshot || [], list);
-          renderTraits(); updateSearchDatalist();
+          renderTraits({ source: 'list:update' }); updateSearchDatalist();
           return;
         }
       }
@@ -2079,7 +2079,7 @@ function initCharacter() {
     } else {
       skillCardActions.renderAll();
     }
-    renderTraits(); updateSearchDatalist();
+    renderTraits({ source: 'list:update' }); updateSearchDatalist();
     flashAdded(name, tr);
   });
 }
