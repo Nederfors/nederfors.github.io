@@ -463,7 +463,7 @@
   "id": "sk58",
   "namn": "Utfällningsskål",
   "beskrivning": "En låg skål med ingraverade motrunor och en dold filtermatta. Om en misstänkt vätska hälls i skålen kan bäraren försöka rena bort farliga ämnen genom ett Listig-slag. Vid framgång sänks till exempel ett gifts styrka ett steg (starkt→medelstarkt, medelstarkt→svagt, svagt→neutraliserat), eller korrumperat vatten blir drickbart (om än illasmakande). Vid misslyckande förblir vätskan oförändrad. Skålen påverkar inte redan intagna gifter eller gaser.",
-  "taggar": { "typ": ["Lägre Artefakt"] },
+  "taggar": { "typ": ["Skatt"] },
   "stat": { "vikt": 1.0 },
   "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 }
 }
