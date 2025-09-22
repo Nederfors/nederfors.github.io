@@ -1022,6 +1022,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 .card-info-box {
+  display: flex;
+  align-items: flex-start;
   flex-wrap: wrap;
   gap: .4rem .75rem;
   width: 100%;
