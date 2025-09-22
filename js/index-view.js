@@ -491,9 +491,12 @@ function initIndex() {
         }
         return;
         }
+        const charEntry = charList.find(c => c.namn === p.namn);
+        const levelStr = typeof charEntry?.nivå === 'string' ? charEntry.nivå.trim() : '';
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
-        const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
-        const curLvl = charList.find(c=>c.namn===p.namn)?.nivå
+        const charLevel = !isEx && levelStr ? levelStr : null;
+        const inChar = isEx ? false : !!charEntry;
+        const curLvl = charLevel
           || LVL.find(l => p.nivåer?.[l]) || 'Novis';
         const availLvls = LVL.filter(l => p.nivåer?.[l]);
         const lvlSel = availLvls.length > 1
@@ -502,7 +505,7 @@ function initIndex() {
             </select>`
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
-        let desc = abilityHtml(p);
+        let desc = abilityHtml(p, charLevel || undefined);
         let cardDesc = desc;
         const infoMeta = [];
         let priceText = '';
@@ -587,7 +590,6 @@ function initIndex() {
         }
         let infoBodyHtml = desc;
         if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
-        const charEntry = charList.find(c => c.namn === p.namn);
         const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
         const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
         let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
