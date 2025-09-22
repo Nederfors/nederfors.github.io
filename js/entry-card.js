@@ -33,6 +33,7 @@
       nameHtml = '',
       xpHtml = '',
       tagsHtml = '',
+      primaryTagsHtml = '',
       levelHtml = '',
       descHtml = '',
       leftSections = [],
@@ -61,6 +62,7 @@
     });
 
     const tagSources = [];
+    if (primaryTagsHtml) tagSources.push(`<div class="tags entry-tags-block primary-tags">${primaryTagsHtml}</div>`);
     if (tagsHtml) tagSources.push(`<div class="tags entry-tags-block">${tagsHtml}</div>`);
     if (tagParts.length) tagSources.push(...tagParts);
     const tagsRow = tagSources.length ? `<div class="card-tags-row">${tagSources.join('')}</div>` : '';
