@@ -1137,7 +1137,8 @@ function initCharacter() {
       cats[cat].forEach(g=>{
         const p = g.entry;
         const availLvls = LVL.filter(l=>p.nivåer?.[l]);
-        const hasLevels = availLvls.length>0;
+        const hasSingleLevel = availLvls.length === 1;
+        const hasLevels = availLvls.length>1;
         const lvlSel = availLvls.length>1
           ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
               ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
@@ -1189,11 +1190,21 @@ function initCharacter() {
         const tagHtmlParts = dockableTagData.map(tag => renderFilterTag(tag));
         const infoTagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = tagHtmlParts.join(' ');
+        const lvlBadgeVal = availLvls.length ? p.nivå : '';
+        const lvlShort =
+          lvlBadgeVal === 'Mästare' ? 'M'
+          : (lvlBadgeVal === 'Gesäll' ? 'G'
+          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const levelTagHtml = (hasSingleLevel && lvlShort)
+          ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
+          : '';
+        const infoTagParts = infoTagHtmlParts.slice();
+        if (levelTagHtml) infoTagParts.push(levelTagHtml);
         const infoTagsHtml = [xpTag]
-          .concat(infoTagHtmlParts)
+          .concat(infoTagParts)
           .filter(Boolean)
           .join(' ');
-        const infoBoxTagParts = infoTagHtmlParts.filter(Boolean);
+        const infoBoxTagParts = infoTagParts.filter(Boolean);
         const infoBoxTagsHtml = infoBoxTagParts.length
           ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
           : '';

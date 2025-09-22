@@ -501,7 +501,8 @@ function initIndex() {
         const curLvl = charLevel
           || LVL.find(l => p.nivåer?.[l]) || 'Novis';
         const availLvls = LVL.filter(l => p.nivåer?.[l]);
-        const hasLevels = availLvls.length > 0;
+        const hasSingleLevel = availLvls.length === 1;
+        const hasLevels = availLvls.length > 1;
         const lvlSel = availLvls.length > 1
           ? `<select class="level" data-name="${p.namn}">
               ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
@@ -624,8 +625,13 @@ function initIndex() {
         const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
         const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
-        const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
-        const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
+        const levelTagHtml = (hasSingleLevel && lvlShort)
+          ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
+          : '';
+        const infoTagParts = infoFilterTagHtml.slice();
+        if (levelTagHtml) infoTagParts.push(levelTagHtml);
+        const infoTagsHtml = [xpTag].concat(infoTagParts).filter(Boolean).join(' ');
+        const infoBoxTagParts = infoTagParts.filter(Boolean);
         const infoBoxTagsHtml = infoBoxTagParts.length
           ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
           : '';
