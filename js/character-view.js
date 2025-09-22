@@ -1245,37 +1245,37 @@ function initCharacter() {
           : '';
         const infoBtnHtml = showInfo ? infoBtn : '';
         const titleActions = [];
-        const buttonParts = [];
+        const controlButtons = [];
         if (infoBtnHtml) titleActions.push(infoBtnHtml);
-        if (editBtn) buttonParts.push(editBtn);
+        if (editBtn) controlButtons.push(editBtn);
         if (multi) {
           const isDisadv = typesList.includes('Nackdel');
           if (isDisadv) {
             if (total > 0) {
-              const delBtn = `<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`;
-              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`;
-              const addBtn = total < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>` : '';
-              buttonParts.push(delBtn, subBtn);
-              if (addBtn) buttonParts.push(addBtn);
+              const delBtn = `<button data-act="del" class="char-btn danger icon header-action" data-name="${p.namn}">🗑</button>`;
+              const subBtn = `<button data-act="sub" class="char-btn header-action" data-name="${p.namn}" aria-label="Minska">➖</button>`;
+              const addBtn = total < limit ? `<button data-act="add" class="char-btn header-action" data-name="${p.namn}" aria-label="Lägg till">➕</button>` : '';
+              titleActions.push(delBtn, subBtn);
+              if (addBtn) titleActions.push(addBtn);
             } else {
-              const addBtn = `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
-              buttonParts.push(addBtn);
+              const addBtn = `<button data-act="add" class="char-btn add-btn header-action" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
+              titleActions.push(addBtn);
             }
-            if (conflictBtn) buttonParts.push(conflictBtn);
+            if (conflictBtn) controlButtons.push(conflictBtn);
           } else {
             const remBtn = total > 0
-              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+              ? `<button data-act="rem" class="char-btn danger icon header-action" data-name="${p.namn}">🗑</button>`
               : '';
             const addBtn = total < limit
-              ? `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`
+              ? `<button data-act="add" class="char-btn add-btn header-action" data-name="${p.namn}" aria-label="Lägg till">➕</button>`
               : '';
-            if (remBtn) buttonParts.push(remBtn);
-            if (conflictBtn) buttonParts.push(conflictBtn);
-            if (addBtn) buttonParts.push(addBtn);
+            if (remBtn) titleActions.push(remBtn);
+            if (conflictBtn) controlButtons.push(conflictBtn);
+            if (addBtn) titleActions.push(addBtn);
           }
         } else {
-          buttonParts.push(`<button class="char-btn danger icon" data-act="rem">🗑</button>`);
-          if (conflictBtn) buttonParts.push(conflictBtn);
+          titleActions.push(`<button class="char-btn danger icon header-action" data-act="rem">🗑</button>`);
+          if (conflictBtn) controlButtons.push(conflictBtn);
         }
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
@@ -1303,7 +1303,7 @@ function initCharacter() {
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
           leftSections,
           titleActions,
-          buttonSections: buttonParts
+          buttonSections: controlButtons
         });
 
         listEl.appendChild(li);
