@@ -8,6 +8,112 @@
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
 
+const TOOLBAR_STYLESHEET_URL = typeof document !== 'undefined'
+  ? new URL('css/style.css', document.baseURI).href
+  : null;
+let sharedToolbarSheetPromise;
+let sharedToolbarCSSText;
+
+function getSharedToolbarStylesheet() {
+  if (!TOOLBAR_STYLESHEET_URL) {
+    return Promise.resolve(null);
+  }
+  if (!sharedToolbarSheetPromise) {
+    sharedToolbarSheetPromise = new Promise(resolve => {
+      const tryResolve = () => {
+        try {
+          const match = Array.from(document.styleSheets).find(
+            sheet => sheet.href === TOOLBAR_STYLESHEET_URL
+          );
+          if (match) {
+            resolve(match);
+            return true;
+          }
+        } catch (err) {
+          console.warn('shared-toolbar: kunde inte läsa stylesheet', err);
+          resolve(null);
+          return true;
+        }
+        return false;
+      };
+
+      if (tryResolve()) {
+        return;
+      }
+
+      const link = Array.from(document.querySelectorAll('link[rel="stylesheet"]')).find(
+        el => new URL(el.href, document.baseURI).href === TOOLBAR_STYLESHEET_URL
+      );
+      if (link) {
+        link.addEventListener('load', () => {
+          if (!tryResolve()) {
+            resolve(null);
+          }
+        }, { once: true });
+        link.addEventListener('error', () => resolve(null), { once: true });
+      } else {
+        window.addEventListener('load', () => {
+          if (!tryResolve()) {
+            resolve(null);
+          }
+        }, { once: true });
+      }
+    });
+  }
+  return sharedToolbarSheetPromise;
+}
+
+function getSharedToolbarCSSText(sheet) {
+  if (sharedToolbarCSSText !== undefined) {
+    return sharedToolbarCSSText;
+  }
+  if (!sheet) {
+    sharedToolbarCSSText = null;
+    return sharedToolbarCSSText;
+  }
+  try {
+    sharedToolbarCSSText = Array.from(sheet.cssRules).map(rule => rule.cssText).join('\n');
+  } catch (err) {
+    console.warn('shared-toolbar: kunde inte extrahera CSS-regler', err);
+    sharedToolbarCSSText = null;
+  }
+  return sharedToolbarCSSText;
+}
+
+function applySharedToolbarStyles(root) {
+  if (!root) {
+    return;
+  }
+  getSharedToolbarStylesheet().then(sheet => {
+    if (!sheet) {
+      return;
+    }
+    if ('adoptedStyleSheets' in root) {
+      const existing = Array.from(root.adoptedStyleSheets || []);
+      if (!existing.includes(sheet)) {
+        root.adoptedStyleSheets = [...existing, sheet];
+      }
+      return;
+    }
+    if (root.querySelector('style[data-shared-toolbar-clone]')) {
+      return;
+    }
+    const cssText = getSharedToolbarCSSText(sheet);
+    if (!cssText) {
+      return;
+    }
+    const styleEl = document.createElement('style');
+    styleEl.setAttribute('data-shared-toolbar-clone', '');
+    styleEl.textContent = cssText;
+    const firstStyle = root.querySelector('style');
+    if (firstStyle) {
+      firstStyle.insertAdjacentElement('afterend', styleEl);
+    } else {
+      root.prepend(styleEl);
+    }
+  });
+}
+
 class SharedToolbar extends HTMLElement {
   constructor() {
     super();
@@ -211,8 +317,6 @@ class SharedToolbar extends HTMLElement {
         #searchFiltersCard.compact .card-desc { display: block !important; }
         #invSearchFilters.compact .card-desc { display: block !important; }
       </style>
-      <link rel="stylesheet" href="css/style.css">
-
       <!-- ---------- Verktygsrad ---------- -->
       <footer class="toolbar">
         <div class="toolbar-top">
@@ -1058,6 +1162,7 @@ class SharedToolbar extends HTMLElement {
       </aside>
 
     `;
+    applySharedToolbarStyles(this.shadowRoot);
   }
 
   /* ------------------------------------------------------- */
