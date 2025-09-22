@@ -7,6 +7,70 @@
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
+const escapeToolbarId = (() => {
+  if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+    return value => CSS.escape(String(value));
+  }
+  return value => {
+    const string = value == null ? '' : String(value);
+    const length = string.length;
+    if (length === 0) return '';
+    let index = -1;
+    let codeUnit;
+    let result = '';
+    const firstCodeUnit = string.charCodeAt(0);
+    while (++index < length) {
+      codeUnit = string.charCodeAt(index);
+      if (codeUnit === 0x0000) {
+        result += '�';
+        continue;
+      }
+      if (
+        (codeUnit >= 0x0001 && codeUnit <= 0x001F) ||
+        codeUnit === 0x007F ||
+        (index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+        (
+          index === 1 &&
+          codeUnit >= 0x0030 && codeUnit <= 0x0039 &&
+          firstCodeUnit === 0x002D
+        )
+      ) {
+        result += `\\${codeUnit.toString(16)} `;
+        continue;
+      }
+      if (index === 0 && codeUnit === 0x002D && length === 1) {
+        result += `\\${string.charAt(index)}`;
+        continue;
+      }
+      if (
+        codeUnit >= 0x0080 ||
+        codeUnit === 0x002D ||
+        codeUnit === 0x005F ||
+        (codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+        (codeUnit >= 0x0041 && codeUnit <= 0x005A) ||
+        (codeUnit >= 0x0061 && codeUnit <= 0x007A)
+      ) {
+        result += string.charAt(index);
+        continue;
+      }
+      result += `\\${string.charAt(index)}`;
+    }
+    return result;
+  };
+})();
+const getShadowElement = (root, id) => {
+  if (!root || id == null) return null;
+  if (typeof root.getElementById === 'function') {
+    return root.getElementById(id);
+  }
+  const escaped = escapeToolbarId(id);
+  if (!escaped) return null;
+  return root.querySelector(`#${escaped}`);
+};
+if (typeof window !== 'undefined') {
+  window.__sharedToolbarEscapeId = escapeToolbarId;
+  window.__sharedToolbarLookup = getShadowElement;
+}
 const safeStorageGet = typeof window.safeLocalStorageGet === 'function'
   ? window.safeLocalStorageGet
   : (key, fallback = null) => ({ value: fallback, found: false });
@@ -20,6 +84,10 @@ class SharedToolbar extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     // One-time flag: ensure filter cards restore state on first open
     this._filterFirstOpenHandled = false;
+  }
+
+  getToolbarElement(id) {
+    return getShadowElement(this.shadowRoot, id);
   }
 
   /* ------------------------------------------------------- */
@@ -58,7 +126,7 @@ class SharedToolbar extends HTMLElement {
 
     const nativeGetElementById = document.getElementById.bind(document);
     document.getElementById = id =>
-      nativeGetElementById(id) || this.shadowRoot.getElementById(id);
+      nativeGetElementById(id) || this.getToolbarElement(id);
 
     window.openDialog  = (msg, opts) => this.openDialog(msg, opts);
     window.alertPopup  = msg => this.openDialog(msg);
@@ -79,7 +147,7 @@ class SharedToolbar extends HTMLElement {
     };
 
     // Allow search suggestions to scroll without affecting the page
-    const sugEl = this.shadowRoot.getElementById('searchSuggest');
+    const sugEl = this.getToolbarElement('searchSuggest');
     ['touchmove','wheel'].forEach(ev =>
       sugEl.addEventListener(ev, e => e.stopPropagation())
     );
@@ -1068,7 +1136,7 @@ class SharedToolbar extends HTMLElement {
 
   /* ------------------------------------------------------- */
   cache() {
-    const $ = id => this.shadowRoot.getElementById(id);
+    const $ = id => this.getToolbarElement(id);
     this.panels = {
       invPanel   : $('invPanel'),
       traitsPanel: $('traitsPanel'),
@@ -1080,8 +1148,8 @@ class SharedToolbar extends HTMLElement {
   }
 
   restoreFilterCollapse() {
-    const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
-    const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
+    const toolsCard = this.getToolbarElement('filterFormalCard');
+    const settingsCard = this.getToolbarElement('filterSettingsCard');
     const toolsDefault = toolsCard && !toolsCard.classList.contains('compact') ? '1' : '0';
     const settingsDefault = settingsCard && !settingsCard.classList.contains('compact') ? '1' : '0';
     const { value: toolsVal, found: hasTools } = safeStorageGet(FILTER_TOOLS_KEY, toolsDefault);
@@ -1164,8 +1232,8 @@ class SharedToolbar extends HTMLElement {
     if (path.some(el => toggles.includes(el.id))) return;
 
     // Hide search suggestions when clicking outside search UI
-    const sugEl = this.shadowRoot.getElementById('searchSuggest');
-    const sIn   = this.shadowRoot.getElementById('searchField');
+    const sugEl = this.getToolbarElement('searchSuggest');
+    const sIn   = this.getToolbarElement('searchField');
     if (sugEl && !sugEl.hidden) {
       const insideSearch = path.includes(sugEl) || path.includes(sIn);
       if (!insideSearch) {
@@ -1221,11 +1289,11 @@ class SharedToolbar extends HTMLElement {
       extraText
     } = opts;
     return new Promise(resolve => {
-      const pop      = this.shadowRoot.getElementById('dialogPopup');
-      const msgEl    = this.shadowRoot.getElementById('dialogMessage');
-      const okBtn    = this.shadowRoot.getElementById('dialogOk');
-      const cancelBtn= this.shadowRoot.getElementById('dialogCancel');
-      const extraBtn = this.shadowRoot.getElementById('dialogExtra');
+      const pop      = this.getToolbarElement('dialogPopup');
+      const msgEl    = this.getToolbarElement('dialogMessage');
+      const okBtn    = this.getToolbarElement('dialogOk');
+      const cancelBtn= this.getToolbarElement('dialogCancel');
+      const extraBtn = this.getToolbarElement('dialogExtra');
       msgEl.textContent = message;
       cancelBtn.style.display = cancel ? '' : 'none';
       okBtn.textContent = okText;
@@ -1261,7 +1329,7 @@ class SharedToolbar extends HTMLElement {
 
   updateToolbarLinks() {
     const role = document.body.dataset.role;
-    const switchLink = this.shadowRoot.getElementById('switchRole');
+    const switchLink = this.getToolbarElement('switchRole');
 
     if (role === 'character' || role === 'notes') {
       switchLink.href = 'index.html';
