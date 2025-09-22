@@ -661,10 +661,7 @@ function initIndex() {
           const inlineFactsHtml = infoBoxFactParts.length
             ? `<div class="card-info-facts">${infoBoxFactParts.join('')}</div>`
             : '';
-          const arrowHtml = inlineTagsHtml && inlineFactsHtml
-            ? `<span class="card-info-arrow" aria-hidden="true">&rarr;</span>`
-            : '';
-          const inlineParts = [inlineTagsHtml, arrowHtml, inlineFactsHtml]
+          const inlineParts = [inlineTagsHtml, inlineFactsHtml]
             .filter(Boolean)
             .join('');
           infoBoxContentHtml = inlineParts
