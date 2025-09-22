@@ -1404,6 +1404,22 @@ select.level {
   #yrkePanel   { max-width: 520px; }
   #infoPanel   { max-width: 520px; }
 }
+/* Mobile: make right panels fill ~90% width and full dynamic height */
+@media (max-width: 640px) {
+  #filterPanel,
+  #traitsPanel,
+  #yrkePanel,
+  #infoPanel,
+  #summaryPanel,
+  #effectsPanel,
+  #conflictPanel {
+    width: 95vw;          /* cover ~90% of the screen width */
+    max-width: 95vw;      /* lift 360px caps on mobile */
+    height: 100dvh;       /* use dynamic viewport height (accounts for bars) */
+    padding: 1.2rem 1rem 2rem;  /* keep your spacing */
+    overscroll-behavior: contain;
+  }
+}
 
 /* ---------- Popup för kvaliteter ---------- */
 #qualPopup {
