@@ -1137,8 +1137,9 @@ function initCharacter() {
       cats[cat].forEach(g=>{
         const p = g.entry;
         const availLvls = LVL.filter(l=>p.nivåer?.[l]);
-        const hasLevels = availLvls.length>0;
-        const lvlSel = availLvls.length>1
+        const hasAnyLevel = availLvls.length > 0;
+        const hasLevelSelect = availLvls.length > 1;
+        const lvlSel = hasLevelSelect
           ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
               ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
             </select>`
@@ -1189,11 +1190,21 @@ function initCharacter() {
         const tagHtmlParts = dockableTagData.map(tag => renderFilterTag(tag));
         const infoTagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = tagHtmlParts.join(' ');
-        const infoTagsHtml = [xpTag]
+        const lvlBadgeVal = hasAnyLevel ? (p.nivå || availLvls[0] || '') : '';
+        const lvlShort =
+          lvlBadgeVal === 'Mästare' ? 'M'
+          : (lvlBadgeVal === 'Gesäll' ? 'G'
+          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
+          ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
+          : '';
+        const infoTagParts = [xpTag]
           .concat(infoTagHtmlParts)
-          .filter(Boolean)
-          .join(' ');
+          .filter(Boolean);
+        if (singleLevelTagHtml) infoTagParts.push(singleLevelTagHtml);
+        const infoTagsHtml = infoTagParts.join(' ');
         const infoBoxTagParts = infoTagHtmlParts.filter(Boolean);
+        if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
         const infoBoxFacts = infoMeta.filter(meta => {
           if (!meta) return false;
           const value = meta.value;
@@ -1239,7 +1250,7 @@ function initCharacter() {
           ? `<div class="card-info-box">${infoBoxContentHtml}</div>`
           : '';
         const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
-        const levelHtml = hideDetails ? '' : lvlSel;
+        const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
         const infoPanelHtml = buildInfoPanelHtml({
           tagsHtml: infoTagsHtml,
           bodyHtml: infoBodyHtml,
@@ -1319,7 +1330,7 @@ function initCharacter() {
           primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
           infoBox: infoBoxHtml,
-          hasLevels,
+          hasLevels: hasLevelSelect,
           levelHtml,
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
           leftSections,
