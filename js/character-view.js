@@ -542,7 +542,15 @@ function initCharacter() {
           const idx = desc.indexOf(';');
           desc = idx >= 0 ? desc.slice(idx + 1) : '';
         }
-        return desc ? `<dt>${name}</dt><dd>${formatText(desc)}</dd>` : '';
+        if (!desc) return '';
+        const body = formatText(desc);
+        if (!body) return '';
+        return `
+          <details class="level-block" open>
+            <summary>${name}</summary>
+            <div class="level-content">${body}</div>
+          </details>
+        `.trim();
       })
       .filter(Boolean)
       .join('');
@@ -550,7 +558,7 @@ function initCharacter() {
       ? `<div class="tags">${activeNames.map(n=>`<span class="tag">${n}</span>`).join('')}</div>`
       : '';
     const desc = (!compact && lvlHtml)
-      ? `<div class="card-desc"><dl class="levels">${lvlHtml}</dl></div>`
+      ? `<div class="card-desc"><div class="levels">${lvlHtml}</div></div>`
       : '';
     const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
       ? `${p.namn}: ${handlingName(p, p.nivå)}`

@@ -564,10 +564,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 
 #yrkePanel .info-panel-body .levels {
   margin: .4rem 0 0;
-}
-
-#yrkePanel .info-panel-body .levels dt {
-  margin-top: .35rem;
+  gap: .5rem;
 }
 
 #yrkePanel .info-panel-body p,
@@ -1000,14 +997,119 @@ input:focus, select:focus, textarea:focus {
 .meta-badge.level-badge { color: var(--accent); background: rgba(61,124,255,.15); }
 
 /* Lista med niva-beskrivningar for formagor */
-.levels { margin-top: .6rem; }
-.levels dt {
-  font-weight: 600;
-  background: rgba(255,255,255,0.05);
-  padding: .2rem .4rem;
-  border-radius: .4rem;
+.levels {
+  margin-top: .6rem;
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
 }
-.levels dd { margin: 0 0 .4rem 1rem; }
+
+.info-block-levels .levels {
+  margin-top: 0;
+}
+
+.level-block {
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: .85rem;
+  background: rgba(31, 34, 40, .72);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
+  overflow: hidden;
+  transition: border-color .2s ease, background .2s ease, box-shadow .2s ease;
+}
+
+.level-block summary {
+  list-style: none;
+  margin: 0;
+  padding: .7rem 1rem .7rem 1.2rem;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  gap: .75rem;
+  cursor: pointer;
+  color: var(--txt);
+  background: transparent;
+}
+
+.level-block summary::-webkit-details-marker {
+  display: none;
+}
+
+.level-block summary::after {
+  content: '';
+  width: .65rem;
+  height: .65rem;
+  border-right: 2px solid var(--subtxt);
+  border-bottom: 2px solid var(--subtxt);
+  transform: rotate(-45deg);
+  margin-left: auto;
+  transition: transform .2s ease, border-color .2s ease;
+}
+
+.level-block[open] summary::after {
+  transform: rotate(45deg);
+  border-color: var(--txt);
+}
+
+.level-block:hover,
+.level-block:focus-within {
+  border-color: rgba(255, 255, 255, .18);
+  background: rgba(42, 37, 33, .88);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .05);
+}
+
+.level-block summary:focus-visible {
+  outline: 2px solid var(--txt);
+  outline-offset: 2px;
+}
+
+.level-block .level-content {
+  padding: 0 1rem 1rem 1.2rem;
+  border-top: 1px solid rgba(255, 255, 255, .05);
+}
+
+.level-block .level-content > * {
+  margin: 0;
+}
+
+.level-block .level-content > * + * {
+  margin-top: .6rem;
+}
+
+.level-block.level-locked {
+  border-color: rgba(246, 65, 65, .45);
+  background: rgba(59, 28, 28, .55);
+  box-shadow: inset 0 0 0 1px rgba(246, 65, 65, .2);
+}
+
+.level-block.level-locked summary {
+  color: #f8c9c4;
+}
+
+.level-block.level-locked summary::after {
+  border-color: rgba(249, 170, 170, .85);
+}
+
+.level-block.level-locked .level-content {
+  border-top-color: rgba(246, 65, 65, .35);
+}
+
+.level-block.level-locked:hover,
+.level-block.level-locked:focus-within {
+  border-color: rgba(246, 65, 65, .65);
+  background: rgba(74, 31, 31, .7);
+  box-shadow: inset 0 0 0 1px rgba(246, 65, 65, .3);
+}
+
+@media (max-width: 520px) {
+  .level-block summary {
+    padding: .6rem .85rem;
+  }
+
+  .level-block .level-content {
+    padding: 0 .85rem .85rem 1rem;
+  }
+}
 
 .card button {
   align-self: flex-end;
