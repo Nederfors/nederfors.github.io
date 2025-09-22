@@ -604,14 +604,15 @@ function initIndex() {
           .forEach((t, idx) => {
             const tag = { section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 };
             filterTagData.push(tag);
-            primaryTagParts.push(renderFilterTag(tag));
+            if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
           });
         const trTags = explodeTags(p.taggar?.ark_trad);
         const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
         arkList.forEach(t => {
-          const tag = { section: 'ark', value: t, label: t };
+          const isTraditionslos = String(t || '').trim() === 'Traditionslös';
+          const tag = { section: 'ark', value: t, label: t, hidden: isTraditionslos };
           filterTagData.push(tag);
-          primaryTagParts.push(renderFilterTag(tag));
+          if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
         });
         (p.taggar?.test || [])
           .filter(Boolean)
@@ -620,7 +621,7 @@ function initIndex() {
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
         const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
         const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
-        const infoFilterTagHtml = filterTagData.map(tag => renderFilterTag(tag));
+        const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
         const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
         const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
@@ -648,9 +649,10 @@ function initIndex() {
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
         const renderDockedTags = (tags, extraClass = '') => {
-          if (!tags.length) return '';
+          const visibleTags = (Array.isArray(tags) ? tags : []).filter(tag => tag && !tag.hidden);
+          if (!visibleTags.length) return '';
           const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
-          return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+          return `<div class="${cls}">${visibleTags.map(tag => renderFilterTag(tag)).join('')}</div>`;
         };
         const dockedTagsHtml = shouldDockTags ? renderDockedTags(dockableTagData) : '';
         const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
