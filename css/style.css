@@ -1412,6 +1412,7 @@ select.level {
   #infoPanel,
   #summaryPanel,
   #effectsPanel,
+  #invPanel,
   #conflictPanel {
     width: 100vw;          /* cover ~100% of the screen width */
     max-width: 100vw;      /* lift 360px caps on mobile */
