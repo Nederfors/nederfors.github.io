@@ -169,7 +169,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 .char-btn:active { transform: scale(.95); opacity: .7; }
 
 /* Kvadratiska kortkontroller (exkl. "Börja om?") */
-.card .inv-controls .char-btn:not([data-clear-filters]) {
+.card .inv-controls .char-btn:not([data-clear-filters]),
+.card-level-row .card-level-actions .char-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
