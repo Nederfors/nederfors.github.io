@@ -70,9 +70,14 @@
     const auxRow = auxParts.length ? `<div class="card-aux-row">${auxParts.join('')}</div>` : '';
     let inlineLevelButton = '';
     if (levelHtml && buttonParts.length) {
-      const findIdx = (pattern) => buttonParts.findIndex(part => typeof part === 'string' && pattern.test(part));
-      let btnIdx = findIdx(/data-act=['"]add['"]);
-      if (btnIdx === -1) btnIdx = findIdx(/data-act=['"](rem|del)['"]);
+      const findIdx = (matcher) => buttonParts.findIndex(part => typeof part === 'string' && matcher(part));
+      let btnIdx = findIdx(part => part.includes('data-act="add"') || part.includes("data-act='add'"));
+      if (btnIdx === -1) {
+        btnIdx = findIdx(part =>
+          part.includes('data-act="rem"') || part.includes("data-act='rem'") ||
+          part.includes('data-act="del"') || part.includes("data-act='del'")
+        );
+      }
       if (btnIdx !== -1) {
         inlineLevelButton = buttonParts.splice(btnIdx, 1)[0];
       }
