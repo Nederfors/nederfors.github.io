@@ -60,7 +60,8 @@
     const normalizedMax = typeof maxLevel === 'string' ? maxLevel : '';
     const highestUnlockedIdx = normalizedMax ? orderedKeys.indexOf(normalizedMax) : -1;
     const allowLocks = normalizedMax && highestUnlockedIdx >= 0;
-    const applyLocks = allowLocks && (pageRole === 'character' || pageRole === 'index');
+    const shouldStyleLock = allowLocks && (pageRole === 'character' || pageRole === 'index');
+    const shouldCollapseLocked = allowLocks && pageRole === 'character';
 
     const levelBlocks = [];
     orderedKeys.forEach((key, idx) => {
@@ -68,11 +69,12 @@
       if (!raw) return;
       const content = formatText(typeof raw === 'string' ? raw : String(raw));
       if (!content) return;
-      const isUnlocked = !applyLocks || idx <= highestUnlockedIdx;
+      const isUnlocked = idx <= highestUnlockedIdx;
       const classes = ['level-block'];
-      if (applyLocks && idx > highestUnlockedIdx) classes.push('level-locked');
+      if (shouldStyleLock && !isUnlocked) classes.push('level-locked');
+      const isOpen = !shouldCollapseLocked || isUnlocked;
       levelBlocks.push(`
-        <details class="${classes.join(' ')}"${isUnlocked ? ' open' : ''}>
+        <details class="${classes.join(' ')}"${isOpen ? ' open' : ''}>
           <summary>${key}</summary>
           <div class="level-content">${content}</div>
         </details>
