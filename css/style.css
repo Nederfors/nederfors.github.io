@@ -1082,6 +1082,17 @@ input:focus, select:focus, textarea:focus {
   flex-wrap: nowrap;
   gap: .3rem;
 }
+#lista .control-buttons button[data-act="sub"] {
+  order: 1;
+}
+#lista .control-buttons button[data-act="add"]:not(.add-btn) {
+  order: 2;
+}
+#lista .control-buttons .char-btn.add-btn,
+#lista .control-buttons button[data-act="rem"],
+#lista .control-buttons button[data-act="del"] {
+  order: 3;
+}
 #lista .meta-badges {
   display: flex;
   flex-wrap: wrap;
