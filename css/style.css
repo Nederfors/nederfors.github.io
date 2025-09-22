@@ -791,6 +791,19 @@ input:focus, select:focus, textarea:focus {
   transition: outline .1s ease, outline-offset .1s ease, box-shadow .1s ease;
 }
 
+.card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .6rem;
+}
+
+.card-title-actions {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
 .card.vehicle-over {
   background: var(--danger-bg);
 }
@@ -868,9 +881,51 @@ input:focus, select:focus, textarea:focus {
   white-space: nowrap;
   flex: 0 0 auto;
 }
-.card-title .xp-cost {
+.card-level-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .45rem;
+}
+
+.card-level-row .card-level {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.card-level-row .card-xp {
   margin-left: auto;
-  align-self: center;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+}
+
+.card-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem .45rem;
+}
+
+.card-tags-row > .tags,
+.card-tags-row > .entry-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+}
+
+.card-tags-row .entry-tags {
+  flex-direction: row;
+  max-height: none;
+  width: auto;
+  align-content: flex-start;
+}
+
+.card-aux-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem;
 }
 .tag.xp-cost {
   font-size: .85rem;
@@ -888,6 +943,10 @@ input:focus, select:focus, textarea:focus {
 }
 .card.compact .entry-tags-block,
 .card.compact .entry-tags-mobile {
+  display: none !important;
+}
+.card.compact .card-tags-row,
+.card.compact .card-aux-row {
   display: none !important;
 }
 

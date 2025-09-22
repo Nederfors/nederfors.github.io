@@ -36,7 +36,8 @@
       levelHtml = '',
       descHtml = '',
       leftSections = [],
-      buttonSections = []
+      buttonSections = [],
+      titleActions = []
     } = options;
 
     const li = document.createElement('li');
@@ -47,13 +48,38 @@
 
     applyDataset(li, dataset);
 
-    const tagsBlock = tagsHtml ? `<div class="tags entry-tags-block">${tagsHtml}</div>` : '';
-    const controlsHtml = wrapControls(leftSections, buttonSections);
+    const leftParts = Array.isArray(leftSections) ? leftSections.filter(Boolean) : [];
+    const buttonParts = Array.isArray(buttonSections) ? buttonSections.filter(Boolean) : [];
+    const titleActionParts = Array.isArray(titleActions) ? titleActions.filter(Boolean) : [];
+
+    const tagParts = [];
+    const auxParts = [];
+    leftParts.forEach(part => {
+      const str = typeof part === 'string' ? part : '';
+      if (str.includes('entry-tags')) tagParts.push(part);
+      else auxParts.push(part);
+    });
+
+    const tagSources = [];
+    if (tagsHtml) tagSources.push(`<div class="tags entry-tags-block">${tagsHtml}</div>`);
+    if (tagParts.length) tagSources.push(...tagParts);
+    const tagsRow = tagSources.length ? `<div class="card-tags-row">${tagSources.join('')}</div>` : '';
+
+    const auxRow = auxParts.length ? `<div class="card-aux-row">${auxParts.join('')}</div>` : '';
+    const levelRow = (levelHtml || xpHtml)
+      ? `<div class="card-level-row"><div class="card-level">${levelHtml || ''}</div>${xpHtml ? `<div class="card-xp">${xpHtml}</div>` : ''}</div>`
+      : '';
+    const actionsHtml = titleActionParts.length
+      ? `<div class="card-title-actions">${titleActionParts.join('')}</div>`
+      : '';
+    const headerHtml = `<div class="card-header"><div class="card-title"><span>${nameHtml}</span></div>${actionsHtml}</div>`;
+    const controlsHtml = wrapControls([], buttonParts);
 
     li.innerHTML = `
-      <div class="card-title"><span>${nameHtml}</span>${xpHtml}</div>
-      ${tagsBlock}
-      ${levelHtml || ''}
+      ${headerHtml}
+      ${levelRow}
+      ${tagsRow}
+      ${auxRow}
       ${descHtml || ''}
       ${controlsHtml}
     `;
