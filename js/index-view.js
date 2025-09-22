@@ -471,20 +471,25 @@ function initIndex() {
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
           const infoBtn = `<button class="char-btn info-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
-          const dataset = { name: p.namn };
-          if (p.id) dataset.id = p.id;
-          const li = createEntryCard({
-            compact,
-            dataset,
-            nameHtml: p.namn,
-            titleActions: [infoBtn]
-          });
-          listEl.appendChild(li);
-          if (searchActive && terms.length) {
-            const titleSpan = li.querySelector('.card-title > span');
-            if (titleSpan) highlightInElement(titleSpan, terms);
-          }
-          return;
+          const tagsHtml = (p.taggar?.typ || [])
+            .map(t => `<span class="tag">${t}</span>`)
+            .join(' ');
+          const tagsDiv = tagsHtml ? `<div class="tags entry-tags-block">${tagsHtml}</div>` : '';
+          const tagsMobile = tagsHtml ? `<div class="entry-tags entry-tags-mobile">${tagsHtml}</div>` : '';
+        const li = document.createElement('li');
+        li.className = 'card';
+        li.dataset.name = p.namn;
+        if (p.id) li.dataset.id = p.id;
+        li.innerHTML = `
+            <div class="card-title"><span>${p.namn}</span></div>
+            ${tagsDiv}
+            <div class="inv-controls">${tagsMobile}${infoBtn}</div>`;
+        listEl.appendChild(li);
+        if (searchActive && terms.length) {
+          const titleSpan = li.querySelector('.card-title > span');
+          if (titleSpan) highlightInElement(titleSpan, terms);
+        }
+        return;
         }
         const charEntry = charList.find(c => c.namn === p.namn);
         const levelStr = typeof charEntry?.nivå === 'string' ? charEntry.nivå.trim() : '';
@@ -599,15 +604,14 @@ function initIndex() {
           .forEach((t, idx) => {
             const tag = { section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 };
             filterTagData.push(tag);
-            if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+            primaryTagParts.push(renderFilterTag(tag));
           });
         const trTags = explodeTags(p.taggar?.ark_trad);
         const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
         arkList.forEach(t => {
-          const isTraditionslos = String(t || '').trim() === 'Traditionslös';
-          const tag = { section: 'ark', value: t, label: t, hidden: isTraditionslos };
+          const tag = { section: 'ark', value: t, label: t };
           filterTagData.push(tag);
-          if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+          primaryTagParts.push(renderFilterTag(tag));
         });
         (p.taggar?.test || [])
           .filter(Boolean)
@@ -616,7 +620,7 @@ function initIndex() {
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
         const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
         const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
-        const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
+        const infoFilterTagHtml = filterTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
         const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
         const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
@@ -644,10 +648,9 @@ function initIndex() {
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
         const renderDockedTags = (tags, extraClass = '') => {
-          const visibleTags = (Array.isArray(tags) ? tags : []).filter(tag => tag && !tag.hidden);
-          if (!visibleTags.length) return '';
+          if (!tags.length) return '';
           const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
-          return `<div class="${cls}">${visibleTags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+          return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
         };
         const dockedTagsHtml = shouldDockTags ? renderDockedTags(dockableTagData) : '';
         const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)

@@ -134,10 +134,9 @@ function initCharacter() {
   const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
 
   const renderDockedTags = (tags, extraClass = '') => {
-    const visibleTags = (Array.isArray(tags) ? tags : []).filter(tag => tag && !tag.hidden);
-    if (!visibleTags.length) return '';
+    if (!Array.isArray(tags) || !tags.length) return '';
     const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
-    return `<div class="${cls}">${visibleTags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+    return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
   };
 
   const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, m => ({
@@ -1172,15 +1171,14 @@ function initCharacter() {
           .forEach((t, idx) => {
             const tag = { section: 'typ', value: t, label: t, hidden: idx === 0 };
             filterTagData.push(tag);
-            if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+            primaryTagParts.push(renderFilterTag(tag));
           });
         const trTags = explodeTags(p.taggar?.ark_trad);
         const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
         arkList.forEach(t => {
-          const isTraditionslos = String(t || '').trim() === 'Traditionslös';
-          const tag = { section: 'ark', value: t, label: t, hidden: isTraditionslos };
+          const tag = { section: 'ark', value: t, label: t };
           filterTagData.push(tag);
-          if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+          primaryTagParts.push(renderFilterTag(tag));
         });
         (p.taggar?.test || [])
           .filter(Boolean)
@@ -1189,7 +1187,7 @@ function initCharacter() {
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
         const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
         const tagHtmlParts = dockableTagData.map(tag => renderFilterTag(tag));
-        const infoTagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
+        const infoTagHtmlParts = filterTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = tagHtmlParts.join(' ');
         const infoTagsHtml = [xpTag]
           .concat(infoTagHtmlParts)
