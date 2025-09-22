@@ -1138,6 +1138,7 @@ function defaultTraits() {
   }
 
   const RITUAL_COST = 10;
+  const ADVANTAGE_STEP_COST = 5;
 
   const ELITE_TO_BASE_MAGIC = {
     'Templár': 'Teurgi',
@@ -1269,25 +1270,37 @@ function defaultTraits() {
 
   function calcUsedXP(list, extra) {
     let xp = 0;
+    const entries = Array.isArray(list) ? list : [];
+    const advantageCounts = new Map();
 
-    list.forEach(item => {
+    entries.forEach(item => {
+      if (!item || typeof item !== 'object') return;
       const types = (item.taggar?.typ || []).map(t => t.toLowerCase());
 
       if (item.nivåer && ['mystisk kraft','förmåga','särdrag','monstruöst särdrag']
           .some(t => types.includes(t))) {
-        let cost = isFreeMonsterTrait(list, item)
+        let cost = isFreeMonsterTrait(entries, item)
           ? 0
           : (XP_LADDER[item.nivå || 'Novis'] || 0);
-        cost = Math.max(0, cost - monsterTraitDiscount(list, item));
+        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
         xp += cost;
 
       } else if (types.includes('monstruöst särdrag')) {
-        let cost = isFreeMonsterTrait(list, item) ? 0 : RITUAL_COST;
-        cost = Math.max(0, cost - monsterTraitDiscount(list, item));
+        let cost = isFreeMonsterTrait(entries, item) ? 0 : RITUAL_COST;
+        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
         xp += cost;
       }
-      if (types.includes('fördel')) xp += 5;
+
+      const advKey = getAdvantageKey(item, types);
+      if (advKey) {
+        advantageCounts.set(advKey, (advantageCounts.get(advKey) || 0) + 1);
+      }
+
       if (types.includes('ritual')) xp += RITUAL_COST;
+    });
+
+    advantageCounts.forEach(count => {
+      xp += advantageTotalCost(count);
     });
 
     xp += extra?.xp || 0;
@@ -1312,6 +1325,56 @@ function defaultTraits() {
 
   function disadvantagesWithXP(list) {
     return getDisadvantages(list).slice(0,5);
+  }
+
+  function getAdvantageKey(entry, types) {
+    if (!entry || typeof entry !== 'object') return null;
+    const rawTypes = Array.isArray(types)
+      ? types
+      : (Array.isArray(entry?.taggar?.typ)
+        ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
+        : []);
+    if (!rawTypes.some(t => t === 'fördel')) return null;
+    const idStr = typeof entry.id === 'string' ? entry.id.trim() : '';
+    const nameStr = typeof entry.namn === 'string' ? entry.namn.trim() : '';
+    const id = idStr ? idStr.toLowerCase() : '';
+    const name = nameStr ? nameStr.toLowerCase() : '';
+    const extras = ['trait', 'race']
+      .map(key => {
+        const value = entry[key];
+        if (value === undefined || value === null) return '';
+        const str = String(value).trim();
+        return str ? `${key}:${str.toLowerCase()}` : '';
+      })
+      .filter(Boolean);
+    if (!id && !name && !extras.length) return null;
+    const parts = [];
+    if (id) parts.push(id);
+    if (name) parts.push(name);
+    if (extras.length) parts.push(...extras);
+    return parts.join('#');
+  }
+
+  function advantageTotalCost(count) {
+    const qty = Number(count) || 0;
+    if (qty <= 0) return 0;
+    return qty * ADVANTAGE_STEP_COST;
+  }
+
+  function resolveAdvantageCount(entry, list, types) {
+    const key = getAdvantageKey(entry, types);
+    if (!key) return null;
+    const arr = Array.isArray(list) ? list : [];
+    let count = 0;
+    let includesEntry = false;
+    arr.forEach(item => {
+      if (getAdvantageKey(item) === key) {
+        count += 1;
+        if (!includesEntry && item === entry) includesEntry = true;
+      }
+    });
+    const effectiveCount = includesEntry ? count : count + 1;
+    return { key, count, effectiveCount };
   }
 
   function calcEntryXP(entry, list) {
@@ -1340,7 +1403,14 @@ function defaultTraits() {
       cost = Math.max(0, cost - monsterTraitDiscount(list || [], entry));
       xp += cost;
     }
-    if (types.includes('fördel')) xp += 5;
+    if (types.includes('fördel')) {
+      const advantageInfo = resolveAdvantageCount(entry, list, types);
+      if (advantageInfo) {
+        xp += advantageTotalCost(advantageInfo.effectiveCount);
+      } else {
+        xp += ADVANTAGE_STEP_COST;
+      }
+    }
     if (types.includes('ritual')) xp += RITUAL_COST;
     return xp;
   }
