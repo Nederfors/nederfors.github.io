@@ -122,7 +122,78 @@ let   lastActiveChar = store.current || '';
 
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
-const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM
+const toolbarLookup = (() => {
+  if (typeof window !== 'undefined' && typeof window.__sharedToolbarLookup === 'function') {
+    return window.__sharedToolbarLookup;
+  }
+  const escapeId = (() => {
+    if (typeof window !== 'undefined' && typeof window.__sharedToolbarEscapeId === 'function') {
+      return window.__sharedToolbarEscapeId;
+    }
+    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
+      return value => CSS.escape(String(value));
+    }
+    return value => {
+      const string = value == null ? '' : String(value);
+      const length = string.length;
+      if (length === 0) return '';
+      let index = -1;
+      let codeUnit;
+      let result = '';
+      const firstCodeUnit = string.charCodeAt(0);
+      while (++index < length) {
+        codeUnit = string.charCodeAt(index);
+        if (codeUnit === 0x0000) {
+          result += '�';
+          continue;
+        }
+        if (
+          (codeUnit >= 0x0001 && codeUnit <= 0x001F) ||
+          codeUnit === 0x007F ||
+          (index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+          (
+            index === 1 &&
+            codeUnit >= 0x0030 && codeUnit <= 0x0039 &&
+            firstCodeUnit === 0x002D
+          )
+        ) {
+          result += `\\${codeUnit.toString(16)} `;
+          continue;
+        }
+        if (index === 0 && codeUnit === 0x002D && length === 1) {
+          result += `\\${string.charAt(index)}`;
+          continue;
+        }
+        if (
+          codeUnit >= 0x0080 ||
+          codeUnit === 0x002D ||
+          codeUnit === 0x005F ||
+          (codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
+          (codeUnit >= 0x0041 && codeUnit <= 0x005A) ||
+          (codeUnit >= 0x0061 && codeUnit <= 0x007A)
+        ) {
+          result += string.charAt(index);
+          continue;
+        }
+        result += `\\${string.charAt(index)}`;
+      }
+      return result;
+    };
+  })();
+  return (root, id) => {
+    if (!root || id == null) return null;
+    if (typeof root.getElementById === 'function') {
+      return root.getElementById(id);
+    }
+    const escaped = escapeId(id);
+    if (!escaped) return null;
+    return root.querySelector(`#${escaped}`);
+  };
+})();
+const $T   = id => {
+  if (!bar) return null;
+  return toolbarLookup(bar.shadowRoot, id);
+};
 const dom  = {
   /* toolbar / panel */
   charSel : $T('charSelect'),   delBtn : $T('deleteChar'),
@@ -236,7 +307,7 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       // Collapse all cards except the one containing the target element (within its panel)
       const isInToolbar = !!(el && bar.shadowRoot && bar.shadowRoot.contains(el));
       if (panelId && el) {
-        const panel = bar.shadowRoot.getElementById(panelId);
+        const panel = $T(panelId);
         const card = el.closest('.card');
         if (panel && card) {
           const allCards = panel.querySelectorAll('.card');
@@ -1286,20 +1357,20 @@ function bindToolbar() {
 
 // ---------- Popup: Mapphanterare ----------
 function openFolderManagerPopup() {
-  const pop  = bar.shadowRoot.getElementById('folderManagerPopup');
-  const list = bar.shadowRoot.getElementById('folderList');
-  const closeBtn = bar.shadowRoot.getElementById('folderManagerDone');
-  const closeX   = bar.shadowRoot.getElementById('folderManagerCloseX');
-  const addBtn = bar.shadowRoot.getElementById('addFolderBtn');
-  const nameIn = bar.shadowRoot.getElementById('newFolderName');
-  const moveGroup = bar.shadowRoot.getElementById('folderMoveGroup');
-  const moveSel   = bar.shadowRoot.getElementById('folderMoveSelect');
-  const moveApply = bar.shadowRoot.getElementById('folderMoveApply');
-  const charList  = bar.shadowRoot.getElementById('folderCharList');
-  const renamePop    = bar.shadowRoot.getElementById('renameFolderPopup');
-  const renameInput  = bar.shadowRoot.getElementById('renameFolderName');
-  const renameCancel = bar.shadowRoot.getElementById('renameFolderCancel');
-  const renameApply  = bar.shadowRoot.getElementById('renameFolderApply');
+  const pop  = $T('folderManagerPopup');
+  const list = $T('folderList');
+  const closeBtn = $T('folderManagerDone');
+  const closeX   = $T('folderManagerCloseX');
+  const addBtn = $T('addFolderBtn');
+  const nameIn = $T('newFolderName');
+  const moveGroup = $T('folderMoveGroup');
+  const moveSel   = $T('folderMoveSelect');
+  const moveApply = $T('folderMoveApply');
+  const charList  = $T('folderCharList');
+  const renamePop    = $T('renameFolderPopup');
+  const renameInput  = $T('renameFolderName');
+  const renameCancel = $T('renameFolderCancel');
+  const renameApply  = $T('renameFolderApply');
   const inner        = pop.querySelector('.popup-inner');
   let cancelRename = null;
   let innerClickStop = null;
@@ -1553,9 +1624,9 @@ function openFolderManagerPopup() {
 }
 
 function openAlchemistPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('alcPopup');
-  const box  = bar.shadowRoot.getElementById('alcOptions');
-  const cls  = bar.shadowRoot.getElementById('alcCancel');
+  const pop  = $T('alcPopup');
+  const box  = $T('alcOptions');
+  const cls  = $T('alcCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -1584,9 +1655,9 @@ function openAlchemistPopup(cb) {
 }
 
 function openSmithPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('smithPopup');
-  const box  = bar.shadowRoot.getElementById('smithOptions');
-  const cls  = bar.shadowRoot.getElementById('smithCancel');
+  const pop  = $T('smithPopup');
+  const box  = $T('smithOptions');
+  const cls  = $T('smithCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -1615,9 +1686,9 @@ function openSmithPopup(cb) {
 }
 
 function openArtefacterPopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('artPopup');
-  const box  = bar.shadowRoot.getElementById('artOptions');
-  const cls  = bar.shadowRoot.getElementById('artCancel');
+  const pop  = $T('artPopup');
+  const box  = $T('artOptions');
+  const cls  = $T('artCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -1646,9 +1717,9 @@ function openArtefacterPopup(cb) {
 }
 
 function openDefensePopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('defensePopup');
-  const box  = bar.shadowRoot.getElementById('defenseOptions');
-  const cls  = bar.shadowRoot.getElementById('defenseCancel');
+  const pop  = $T('defensePopup');
+  const box  = $T('defenseOptions');
+  const cls  = $T('defenseCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -2029,9 +2100,9 @@ async function exportActiveFolderZipped() {
   }
 }
 function openChoicePopup(build, cb) {
-  const pop  = bar.shadowRoot.getElementById('exportPopup');
-  const opts = bar.shadowRoot.getElementById('exportOptions');
-  const cls  = bar.shadowRoot.getElementById('exportCancel');
+  const pop  = $T('exportPopup');
+  const opts = $T('exportOptions');
+  const cls  = $T('exportCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -2224,12 +2295,12 @@ async function openImportPopup() {
   const pop = bar?.shadowRoot?.getElementById('importPopup');
   if (!pop) return null;
 
-  const btnChoose= bar.shadowRoot.getElementById('importBtnChoose');
-  const btnFrom  = bar.shadowRoot.getElementById('importBtnFromFile');
-  const folderEl = bar.shadowRoot.getElementById('importFolderSelect');
-  const makeActChoose = bar.shadowRoot.getElementById('importMakeActiveChoose');
-  const makeActFrom   = bar.shadowRoot.getElementById('importMakeActiveFromDir');
-  const cancel   = bar.shadowRoot.getElementById('importCancel');
+  const btnChoose= $T('importBtnChoose');
+  const btnFrom  = $T('importBtnFromFile');
+  const folderEl = $T('importFolderSelect');
+  const makeActChoose = $T('importMakeActiveChoose');
+  const makeActFrom   = $T('importMakeActiveFromDir');
+  const cancel   = $T('importCancel');
 
   if (!btnChoose || !btnFrom || !folderEl || !cancel) return null;
 
@@ -2321,9 +2392,9 @@ async function getFilesFromDirectory(dirHandle) {
 }
 
 function openNilasPopup(cb) {
-  const pop = bar.shadowRoot.getElementById('nilasPopup');
-  const yes = bar.shadowRoot.getElementById('nilasYes');
-  const no  = bar.shadowRoot.getElementById('nilasNo');
+  const pop = $T('nilasPopup');
+  const yes = $T('nilasYes');
+  const no  = $T('nilasNo');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -2371,11 +2442,11 @@ function tryBomb(term) {
 async function openNewCharPopupWithFolder(preferredFolderId) {
   const pop = bar?.shadowRoot?.getElementById('newCharPopup');
   if (!pop) return null;
-  const nameIn   = bar.shadowRoot.getElementById('newCharName');
-  const folderEl = bar.shadowRoot.getElementById('newCharFolder');
-  const xpIn     = bar.shadowRoot.getElementById('newCharXp');
-  const create   = bar.shadowRoot.getElementById('newCharCreate');
-  const cancel   = bar.shadowRoot.getElementById('newCharCancel');
+  const nameIn   = $T('newCharName');
+  const folderEl = $T('newCharFolder');
+  const xpIn     = $T('newCharXp');
+  const create   = $T('newCharCreate');
+  const cancel   = $T('newCharCancel');
 
   // Fyll mapp-listan
   const folders = (storeHelper.getFolders(store) || []).slice()
@@ -2434,10 +2505,10 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
 async function openRenameCharPopupWithFolder(preferredFolderId, defaultName) {
   const pop = bar?.shadowRoot?.getElementById('renameCharPopup');
   if (!pop) return null;
-  const nameIn   = bar.shadowRoot.getElementById('renameCharName');
-  const folderEl = bar.shadowRoot.getElementById('renameCharFolder');
-  const applyBtn = bar.shadowRoot.getElementById('renameCharApply');
-  const cancel   = bar.shadowRoot.getElementById('renameCharCancel');
+  const nameIn   = $T('renameCharName');
+  const folderEl = $T('renameCharFolder');
+  const applyBtn = $T('renameCharApply');
+  const cancel   = $T('renameCharCancel');
 
   // Fyll mapp-listan
   const folders = (storeHelper.getFolders(store) || []).slice()
@@ -2494,10 +2565,10 @@ async function openRenameCharPopupWithFolder(preferredFolderId, defaultName) {
 async function openDuplicateCharPopupWithFolder(preferredFolderId, defaultName) {
   const pop = bar?.shadowRoot?.getElementById('dupCharPopup');
   if (!pop) return null;
-  const nameIn   = bar.shadowRoot.getElementById('dupCharName');
-  const folderEl = bar.shadowRoot.getElementById('dupCharFolder');
-  const create   = bar.shadowRoot.getElementById('dupCharCreate');
-  const cancel   = bar.shadowRoot.getElementById('dupCharCancel');
+  const nameIn   = $T('dupCharName');
+  const folderEl = $T('dupCharFolder');
+  const create   = $T('dupCharCreate');
+  const cancel   = $T('dupCharCancel');
 
   // Fyll mapp-listan
   const folders = (storeHelper.getFolders(store) || []).slice()
