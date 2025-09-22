@@ -804,6 +804,21 @@ input:focus, select:focus, textarea:focus {
   gap: .35rem;
 }
 
+.card-title-actions .char-btn.info-btn {
+  background: none;
+  color: var(--txt);
+  padding: 0;
+}
+
+.card-title-actions .char-btn.info-btn:active {
+  transform: none;
+}
+
+.card-title-actions .char-btn.info-btn:focus-visible {
+  outline: 2px solid var(--txt);
+  outline-offset: 2px;
+}
+
 .card.vehicle-over {
   background: var(--danger-bg);
 }
