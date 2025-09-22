@@ -7,6 +7,12 @@
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
+const safeStorageGet = typeof window.safeLocalStorageGet === 'function'
+  ? window.safeLocalStorageGet
+  : (key, fallback = null) => ({ value: fallback, found: false });
+const safeStorageSet = typeof window.safeLocalStorageSet === 'function'
+  ? window.safeLocalStorageSet
+  : () => false;
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -1076,14 +1082,16 @@ class SharedToolbar extends HTMLElement {
   restoreFilterCollapse() {
     const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
     const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
-    const toolsVal = localStorage.getItem(FILTER_TOOLS_KEY);
-    const settingsVal = localStorage.getItem(FILTER_SETTINGS_KEY);
+    const toolsDefault = toolsCard && !toolsCard.classList.contains('compact') ? '1' : '0';
+    const settingsDefault = settingsCard && !settingsCard.classList.contains('compact') ? '1' : '0';
+    const { value: toolsVal, found: hasTools } = safeStorageGet(FILTER_TOOLS_KEY, toolsDefault);
+    const { value: settingsVal, found: hasSettings } = safeStorageGet(FILTER_SETTINGS_KEY, settingsDefault);
     const toolsOpen = toolsVal === '1';
     const settingsOpen = settingsVal === '1';
     if (toolsCard) toolsCard.classList.toggle('compact', !toolsOpen);
     if (settingsCard) settingsCard.classList.toggle('compact', !settingsOpen);
-    if (toolsVal === null) localStorage.setItem(FILTER_TOOLS_KEY, toolsOpen ? '1' : '0');
-    if (settingsVal === null) localStorage.setItem(FILTER_SETTINGS_KEY, settingsOpen ? '1' : '0');
+    if (!hasTools) safeStorageSet(FILTER_TOOLS_KEY, toolsOpen ? '1' : '0');
+    if (!hasSettings) safeStorageSet(FILTER_SETTINGS_KEY, settingsOpen ? '1' : '0');
   }
 
   updateFilterCollapseBtn() {
@@ -1105,7 +1113,7 @@ class SharedToolbar extends HTMLElement {
         if (card) {
           const isCompact = card.classList.toggle('compact');
           const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
-          localStorage.setItem(key, isCompact ? '0' : '1');
+          safeStorageSet(key, isCompact ? '0' : '1');
           this.updateFilterCollapseBtn();
         }
       }
@@ -1126,9 +1134,9 @@ class SharedToolbar extends HTMLElement {
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
         if (c.id === 'filterFormalCard') {
-          localStorage.setItem(FILTER_TOOLS_KEY, c.classList.contains('compact') ? '0' : '1');
+          safeStorageSet(FILTER_TOOLS_KEY, c.classList.contains('compact') ? '0' : '1');
         } else if (c.id === 'filterSettingsCard') {
-          localStorage.setItem(FILTER_SETTINGS_KEY, c.classList.contains('compact') ? '0' : '1');
+          safeStorageSet(FILTER_SETTINGS_KEY, c.classList.contains('compact') ? '0' : '1');
         }
       });
       // Ensure non-collapsible cards remain open
@@ -1144,7 +1152,7 @@ class SharedToolbar extends HTMLElement {
       if (card) {
         const isCompact = card.classList.toggle('compact');
         const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
-        localStorage.setItem(key, isCompact ? '0' : '1');
+        safeStorageSet(key, isCompact ? '0' : '1');
         this.updateFilterCollapseBtn();
       }
     }

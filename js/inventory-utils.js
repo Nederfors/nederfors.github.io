@@ -12,6 +12,12 @@
   const INV_TOOLS_KEY = 'invToolsOpen';
   const INV_INFO_KEY  = 'invInfoOpen';
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
+  const safeStorageGet = typeof window.safeLocalStorageGet === 'function'
+    ? window.safeLocalStorageGet
+    : (key, fallback = null) => ({ value: fallback, found: false });
+  const safeStorageSet = typeof window.safeLocalStorageSet === 'function'
+    ? window.safeLocalStorageSet
+    : () => false;
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -2194,8 +2200,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
   function buildFormalCards(openKeys, vehicles, cash, summary) {
     const toolsKey = '__tools__';
     const infoKey  = '__info__';
-    const toolsLS = localStorage.getItem(INV_TOOLS_KEY) === '1';
-    const infoLS  = localStorage.getItem(INV_INFO_KEY) === '1';
+    const defaultTools = openKeys.has(toolsKey) ? '1' : '0';
+    const defaultInfo  = openKeys.has(infoKey) ? '1' : '0';
+    const { value: toolsVal } = safeStorageGet(INV_TOOLS_KEY, defaultTools);
+    const { value: infoVal }  = safeStorageGet(INV_INFO_KEY, defaultInfo);
+    const toolsLS = toolsVal === '1';
+    const infoLS  = infoVal === '1';
     if (toolsLS) openKeys.add(toolsKey); else openKeys.delete(toolsKey);
     if (infoLS)  openKeys.add(infoKey);  else openKeys.delete(infoKey);
     const vehicleBtns = vehicles
@@ -2428,8 +2438,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const { toolsKey, infoKey, toolsCard, infoCard } = buildFormalCards(openKeys, vehicles, cash, summary);
       ensureFormalCard(toolsKey, toolsCard, openKeys.has(toolsKey));
       ensureFormalCard(infoKey, infoCard, openKeys.has(infoKey));
-      localStorage.setItem(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
-      localStorage.setItem(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
+      safeStorageSet(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
+      safeStorageSet(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
       dom.unusedOut = $T('unusedOut');
       dom.dragToggle = $T('dragToggle');
     }
@@ -2578,9 +2588,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         cards.forEach(li => {
           li.classList.toggle('compact', anyOpen);
           if (li.dataset.special === '__tools__') {
-            localStorage.setItem(INV_TOOLS_KEY, anyOpen ? '0' : '1');
+            safeStorageSet(INV_TOOLS_KEY, anyOpen ? '0' : '1');
           } else if (li.dataset.special === '__info__') {
-            localStorage.setItem(INV_INFO_KEY, anyOpen ? '0' : '1');
+            safeStorageSet(INV_INFO_KEY, anyOpen ? '0' : '1');
           }
         });
         updateCollapseBtnState();
@@ -3070,7 +3080,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             const isCompact = li.classList.toggle('compact');
             updateCollapseBtnState();
             const key = li.dataset.special === '__tools__' ? INV_TOOLS_KEY : INV_INFO_KEY;
-            localStorage.setItem(key, isCompact ? '0' : '1');
+            safeStorageSet(key, isCompact ? '0' : '1');
           }
           return;
         }
