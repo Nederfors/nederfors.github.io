@@ -24,6 +24,7 @@
   --tag-interactive-bg:     linear-gradient(135deg, #4A3A2F, #352920);
   --tag-interactive-border: #6A443B;
   --tag-interactive-text:   #EBDDC8;
+  --entry-tag-row:          1.35rem;
 
   /* XP / status-piller */
   --xp-pill-bg:             linear-gradient(135deg, #3A3029, #2A241F);
@@ -1083,22 +1084,27 @@ input:focus, select:focus, textarea:focus {
 .card-tags-row {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-start;
   gap: .35rem .45rem;
 }
 
 .card-tags-row > .tags,
-.card-tags-row > .entry-tags {
+.card-tags-row > .entry-tags,
+.card-tags-row > .entry-tags-block {
   display: flex;
-  flex-wrap: wrap;
+  flex-flow: column wrap;
+  align-content: flex-start;
+  max-height: calc(var(--entry-tag-row, 1.35rem) * 2 + .35rem);
+  min-height: 0;
+}
+
+.card-tags-row > .tags:not(.entry-tags) {
   gap: .35rem;
 }
 
-.card-tags-row .entry-tags {
-  flex-direction: row;
-  max-height: none;
+.card-tags-row > .entry-tags {
+  max-height: calc(var(--entry-tag-row, 1.35rem) * 2 + .25rem);
   width: auto;
-  align-content: flex-start;
 }
 
 .card-aux-row {
@@ -1362,19 +1368,24 @@ input:focus, select:focus, textarea:focus {
 }
 
 .entry-tags {
-  --entry-tag-row: 1.35rem;
   display: flex;
   flex-flow: column wrap;
   align-content: flex-start;
   gap: .25rem .35rem;
-  max-height: calc(var(--entry-tag-row) * 2 + .25rem);
+  max-height: calc(var(--entry-tag-row, 1.35rem) * 2 + .25rem);
   min-height: 0;
 }
 
 @media (max-width: 680px) {
+  .card-tags-row > .tags,
+  .card-tags-row > .entry-tags,
+  .card-tags-row > .entry-tags-block,
   .entry-tags {
     flex-flow: row wrap;
     max-height: none;
+  }
+
+  .entry-tags {
     width: 100%;
   }
 
