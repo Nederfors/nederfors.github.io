@@ -471,25 +471,27 @@ function initIndex() {
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
           const infoBtn = `<button class="char-btn info-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
-          const tagsHtml = (p.taggar?.typ || [])
-            .map(t => `<span class="tag">${t}</span>`)
-            .join(' ');
-          const tagsDiv = tagsHtml ? `<div class="tags entry-tags-block">${tagsHtml}</div>` : '';
-          const tagsMobile = tagsHtml ? `<div class="entry-tags entry-tags-mobile">${tagsHtml}</div>` : '';
-        const li = document.createElement('li');
-        li.className = 'card';
-        li.dataset.name = p.namn;
-        if (p.id) li.dataset.id = p.id;
-        li.innerHTML = `
-            <div class="card-title"><span>${p.namn}</span></div>
-            ${tagsDiv}
-            <div class="inv-controls">${tagsMobile}${infoBtn}</div>`;
-        listEl.appendChild(li);
-        if (searchActive && terms.length) {
-          const titleSpan = li.querySelector('.card-title > span');
-          if (titleSpan) highlightInElement(titleSpan, terms);
-        }
-        return;
+          const dataset = { name: p.namn };
+          if (p.id) dataset.id = p.id;
+          const visibleTags = (p.taggar?.typ || [])
+            .map(t => String(t || '').trim())
+            .filter(t => t && !/^tabell(er)?$/i.test(t));
+          const tagsHtml = visibleTags.length
+            ? visibleTags.map(t => `<span class="tag">${t}</span>`).join(' ')
+            : '';
+          const li = createEntryCard({
+            compact,
+            dataset,
+            nameHtml: p.namn,
+            tagsHtml,
+            titleActions: [infoBtn]
+          });
+          listEl.appendChild(li);
+          if (searchActive && terms.length) {
+            const titleSpan = li.querySelector('.card-title > span');
+            if (titleSpan) highlightInElement(titleSpan, terms);
+          }
+          return;
         }
         const charEntry = charList.find(c => c.namn === p.namn);
         const levelStr = typeof charEntry?.nivå === 'string' ? charEntry.nivå.trim() : '';
