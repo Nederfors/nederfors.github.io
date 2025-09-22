@@ -798,6 +798,19 @@ input:focus, select:focus, textarea:focus {
   gap: .6rem;
 }
 
+.card-header-right {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+  margin-left: auto;
+}
+
+.card-xp {
+  display: flex;
+  align-items: center;
+  gap: .35rem;
+}
+
 .card-title-actions {
   display: flex;
   align-items: center;
@@ -908,11 +921,12 @@ input:focus, select:focus, textarea:focus {
   min-width: 0;
 }
 
-.card-level-row .card-xp {
-  margin-left: auto;
+.card-level-row .card-level-actions {
   flex: 0 0 auto;
   display: flex;
   align-items: center;
+  gap: .35rem;
+  margin-left: auto;
 }
 
 .card-tags-row {

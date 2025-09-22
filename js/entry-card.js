@@ -49,7 +49,7 @@
     applyDataset(li, dataset);
 
     const leftParts = Array.isArray(leftSections) ? leftSections.filter(Boolean) : [];
-    const buttonParts = Array.isArray(buttonSections) ? buttonSections.filter(Boolean) : [];
+    let buttonParts = Array.isArray(buttonSections) ? buttonSections.filter(Boolean) : [];
     const titleActionParts = Array.isArray(titleActions) ? titleActions.filter(Boolean) : [];
 
     const tagParts = [];
@@ -66,13 +66,21 @@
     const tagsRow = tagSources.length ? `<div class="card-tags-row">${tagSources.join('')}</div>` : '';
 
     const auxRow = auxParts.length ? `<div class="card-aux-row">${auxParts.join('')}</div>` : '';
-    const levelRow = (levelHtml || xpHtml)
-      ? `<div class="card-level-row"><div class="card-level">${levelHtml || ''}</div>${xpHtml ? `<div class="card-xp">${xpHtml}</div>` : ''}</div>`
+    let inlineAddButton = '';
+    if (levelHtml && buttonParts.length) {
+      const addIdx = buttonParts.findIndex(part => typeof part === 'string' && /data-act=['"]add['"]/.test(part));
+      if (addIdx !== -1) {
+        inlineAddButton = buttonParts.splice(addIdx, 1)[0];
+      }
+    }
+    const levelRow = (levelHtml || inlineAddButton)
+      ? `<div class="card-level-row"><div class="card-level">${levelHtml || ''}</div>${inlineAddButton ? `<div class="card-level-actions">${inlineAddButton}</div>` : ''}</div>`
       : '';
-    const actionsHtml = titleActionParts.length
-      ? `<div class="card-title-actions">${titleActionParts.join('')}</div>`
-      : '';
-    const headerHtml = `<div class="card-header"><div class="card-title"><span>${nameHtml}</span></div>${actionsHtml}</div>`;
+    const headerExtras = [];
+    if (xpHtml) headerExtras.push(`<div class="card-xp">${xpHtml}</div>`);
+    if (titleActionParts.length) headerExtras.push(`<div class="card-title-actions">${titleActionParts.join('')}</div>`);
+    const headerRight = headerExtras.length ? `<div class="card-header-right">${headerExtras.join('')}</div>` : '';
+    const headerHtml = `<div class="card-header"><div class="card-title"><span>${nameHtml}</span></div>${headerRight}</div>`;
     const controlsHtml = wrapControls([], buttonParts);
 
     li.innerHTML = `
