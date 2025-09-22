@@ -872,8 +872,6 @@ input:focus, select:focus, textarea:focus {
   margin-top: .6rem;
 }
 .card {
-  --card-title-font-size: calc(1.34rem - 2px);
-  --card-title-action-size: calc(var(--card-title-font-size) * 1.05);
   background: var(--card);
   border: 2px solid var(--card-border);
   border-radius: 1rem;
@@ -896,8 +894,6 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   gap: .45rem;
-  flex-wrap: wrap;
-  justify-content: flex-end;
   margin-left: auto;
 }
 
@@ -905,33 +901,18 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   align-items: center;
   gap: .35rem;
-  font-size: var(--card-title-font-size);
 }
 
 .card-title-actions {
   display: flex;
   align-items: center;
   gap: .35rem;
-  font-size: var(--card-title-font-size);
-}
-
-.card-title-actions .char-btn {
-  width: var(--card-title-action-size);
-  height: var(--card-title-action-size);
-  min-width: var(--card-title-action-size);
-  min-height: var(--card-title-action-size);
-  border-radius: 50%;
-  padding: 0;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-size: var(--card-title-font-size);
-  line-height: 1;
 }
 
 .card-title-actions .char-btn.info-btn {
   background: none;
   color: var(--txt);
+  padding: 0;
 }
 
 .card-title-actions .char-btn.info-btn:active {
@@ -971,7 +952,7 @@ input:focus, select:focus, textarea:focus {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  font-size: var(--card-title-font-size);
+  font-size: calc(1.34rem - 2px);
   font-weight: 600;
 }
 #invList .card-title {
@@ -1006,20 +987,18 @@ input:focus, select:focus, textarea:focus {
 .xp-cost {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  padding: 0 .9em;
+  padding: .22rem .72rem;
   background: var(--xp-pill-bg);
   color: var(--xp-pill-text);
-  font-size: 1em;
+  font-size: .9rem;
   font-weight: 600;
-  line-height: 1;
+  line-height: 1.1;
   border-radius: 999px;
   border: 1px solid var(--xp-pill-border);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .04), 0 1px 2px rgba(0, 0, 0, .4);
   text-shadow: 0 1px 1px rgba(0, 0, 0, .35);
   letter-spacing: .01em;
   white-space: nowrap;
-  min-height: var(--card-title-action-size);
   flex: 0 0 auto;
 }
 .card-level-row {
@@ -1043,8 +1022,6 @@ input:focus, select:focus, textarea:focus {
 }
 
 .card-info-box {
-  display: flex;
-  align-items: flex-start;
   flex-wrap: wrap;
   gap: .4rem .75rem;
   width: 100%;
@@ -1710,6 +1687,10 @@ select.level {
     --entry-tag-row: 1.25rem;
     gap: .2rem .28rem;
     max-height: none;
+  }
+  .xp-cost {
+    font-size: .78rem;
+    padding: .18rem .6rem;
   }
   .tag.xp-cost {
     font-size: .72rem;

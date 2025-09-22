@@ -706,26 +706,26 @@ function initIndex() {
           : '';
         const allowAdd = !(isService(p) || isEmployment(p));
         const titleActions = [];
-        const controlButtons = [];
-        titleActions.push(infoBtn);
-        if (editBtn) controlButtons.push(editBtn);
+        const actionButtons = [];
+        if (showInfo) titleActions.push(infoBtn);
+        if (editBtn) actionButtons.push(editBtn);
         if (allowAdd) {
           if (multi) {
             if (count > 0) {
-              titleActions.push(`<button data-act="del" class="char-btn danger icon header-action" data-name="${p.namn}">🗑</button>`);
-              titleActions.push(`<button data-act="sub" class="char-btn header-action" data-name="${p.namn}" aria-label="Minska">➖</button>`);
-              if (count < limit) titleActions.push(`<button data-act="add" class="char-btn header-action" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
+              actionButtons.push(`<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`);
+              actionButtons.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`);
+              if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
             } else {
-              titleActions.push(`<button data-act="add" class="char-btn add-btn header-action" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
+              actionButtons.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
             }
           } else {
             const mainBtn = inChar
-              ? `<button data-act="rem" class="char-btn danger icon header-action" data-name="${p.namn}">🗑</button>`
-              : `<button data-act="add" class="char-btn add-btn header-action" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
-            titleActions.push(mainBtn);
+              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+              : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
+            actionButtons.push(mainBtn);
           }
         }
-        if (eliteBtn) controlButtons.push(eliteBtn);
+        if (eliteBtn) actionButtons.push(eliteBtn);
         const leftSections = [];
         if (metaBadges) leftSections.push(metaBadges);
         if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
@@ -747,7 +747,7 @@ function initIndex() {
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',
           leftSections,
           titleActions,
-          buttonSections: controlButtons
+          buttonSections: actionButtons
         });
         listEl.appendChild(li);
         if (searchActive && terms.length) {
