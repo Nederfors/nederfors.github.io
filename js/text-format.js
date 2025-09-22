@@ -56,10 +56,11 @@
       orderedKeys = rawKeys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     }
 
-    const isCharacterPage = typeof document !== 'undefined' && document.body?.dataset?.role === 'character';
+    const pageRole = typeof document !== 'undefined' ? document.body?.dataset?.role : '';
     const normalizedMax = typeof maxLevel === 'string' ? maxLevel : '';
     const highestUnlockedIdx = normalizedMax ? orderedKeys.indexOf(normalizedMax) : -1;
-    const applyLocks = isCharacterPage && normalizedMax && highestUnlockedIdx >= 0;
+    const allowLocks = normalizedMax && highestUnlockedIdx >= 0;
+    const applyLocks = allowLocks && (pageRole === 'character' || pageRole === 'index');
 
     const levelBlocks = [];
     orderedKeys.forEach((key, idx) => {
