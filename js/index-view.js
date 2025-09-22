@@ -499,6 +499,7 @@ function initIndex() {
         const curLvl = charLevel
           || LVL.find(l => p.nivåer?.[l]) || 'Novis';
         const availLvls = LVL.filter(l => p.nivåer?.[l]);
+        const hasLevels = availLvls.length > 0;
         const lvlSel = availLvls.length > 1
           ? `<select class="level" data-name="${p.namn}">
               ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
@@ -622,6 +623,28 @@ function initIndex() {
         const infoFilterTagHtml = filterTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
         const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
+        const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
+        const infoBoxTagsHtml = infoBoxTagParts.length
+          ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
+          : '';
+        const infoBoxFacts = infoMeta.filter(meta => {
+          if (!meta) return false;
+          const value = meta.value;
+          if (value === undefined || value === null || value === '') return false;
+          const label = String(meta.label || '').toLowerCase();
+          return label.includes('pris') || label.includes('dagslön') || label.includes('vikt');
+        });
+        const infoBoxFactsHtml = infoBoxFacts.length
+          ? `<div class="card-info-facts">${infoBoxFacts.map(f => {
+              const label = String(f.label ?? '').trim();
+              const value = String(f.value ?? '').trim();
+              if (!label || !value) return '';
+              return `<div class="card-info-fact"><span class="card-info-fact-label">${label}</span><span class="card-info-fact-value">${value}</span></div>`;
+            }).filter(Boolean).join('')}</div>`
+          : '';
+        const infoBoxHtml = (infoBoxTagsHtml || infoBoxFactsHtml)
+          ? `<div class="card-info-box">${infoBoxTagsHtml}${infoBoxFactsHtml}</div>`
+          : '';
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
         const renderDockedTags = (tags, extraClass = '') => {
@@ -634,6 +657,7 @@ function initIndex() {
           ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
           : '';
         const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        const levelHtml = hideDetails ? '' : lvlSel;
         // Compact meta badges (P/V/level) using short labels for mobile space
         const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
         const lvlShort =
@@ -720,7 +744,9 @@ function initIndex() {
           xpHtml,
           primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
-          levelHtml: hideDetails ? '' : lvlSel,
+          infoBox: infoBoxHtml,
+          hasLevels,
+          levelHtml,
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',
           leftSections,
           titleActions,

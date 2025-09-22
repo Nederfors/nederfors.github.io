@@ -38,13 +38,17 @@
       descHtml = '',
       leftSections = [],
       buttonSections = [],
-      titleActions = []
+      titleActions = [],
+      infoBox = '',
+      hasLevels = false
     } = options;
 
     const li = document.createElement('li');
     const classNames = ['card'];
     if (compact) classNames.push('compact');
     classNames.push(...normalizeClasses(classes));
+    if (hasLevels) classNames.push('has-levels');
+    else classNames.push('no-levels');
     li.className = classNames.join(' ');
 
     applyDataset(li, dataset);
@@ -52,6 +56,7 @@
     const leftParts = Array.isArray(leftSections) ? leftSections.filter(Boolean) : [];
     let buttonParts = Array.isArray(buttonSections) ? buttonSections.filter(Boolean) : [];
     const titleActionParts = Array.isArray(titleActions) ? titleActions.filter(Boolean) : [];
+    const infoBoxHtml = typeof infoBox === 'string' ? infoBox : '';
 
     const tagParts = [];
     const auxParts = [];
@@ -85,16 +90,23 @@
     const levelRow = (levelHtml || inlineLevelButton)
       ? `<div class="card-level-row"><div class="card-level">${levelHtml || ''}</div>${inlineLevelButton ? `<div class="card-level-actions">${inlineLevelButton}</div>` : ''}</div>`
       : '';
+    const hasLevelRow = Boolean(levelRow);
+    const levelSection = hasLevelRow
+      ? `${levelRow}${infoBoxHtml ? infoBoxHtml : ''}`
+      : '';
+    const infoBoxAboveTags = (!hasLevelRow && hasLevels && infoBoxHtml) ? infoBoxHtml : '';
+    const controlsLeftParts = (!hasLevelRow && !hasLevels && infoBoxHtml) ? [infoBoxHtml] : [];
     const headerExtras = [];
     if (xpHtml) headerExtras.push(`<div class="card-xp">${xpHtml}</div>`);
     if (titleActionParts.length) headerExtras.push(`<div class="card-title-actions">${titleActionParts.join('')}</div>`);
     const headerRight = headerExtras.length ? `<div class="card-header-right">${headerExtras.join('')}</div>` : '';
     const headerHtml = `<div class="card-header"><div class="card-title"><span>${nameHtml}</span></div>${headerRight}</div>`;
-    const controlsHtml = wrapControls([], buttonParts);
+    const controlsHtml = wrapControls(controlsLeftParts, buttonParts);
 
     li.innerHTML = `
       ${headerHtml}
-      ${levelRow}
+      ${levelSection}
+      ${infoBoxAboveTags}
       ${tagsRow}
       ${auxRow}
       ${descHtml || ''}
