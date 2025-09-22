@@ -1194,9 +1194,6 @@ function initCharacter() {
           .filter(Boolean)
           .join(' ');
         const infoBoxTagParts = infoTagHtmlParts.filter(Boolean);
-        const infoBoxTagsHtml = infoBoxTagParts.length
-          ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
-          : '';
         const infoBoxFacts = infoMeta.filter(meta => {
           if (!meta) return false;
           const value = meta.value;
@@ -1204,16 +1201,42 @@ function initCharacter() {
           const label = String(meta.label || '').toLowerCase();
           return label.includes('pris') || label.includes('dagslön') || label.includes('vikt');
         });
-        const infoBoxFactsHtml = infoBoxFacts.length
-          ? `<div class="card-info-facts">${infoBoxFacts.map(f => {
-              const label = String(f.label ?? '').trim();
-              const value = String(f.value ?? '').trim();
-              if (!label || !value) return '';
-              return `<div class="card-info-fact"><span class="card-info-fact-label">${label}</span><span class="card-info-fact-value">${value}</span></div>`;
-            }).filter(Boolean).join('')}</div>`
-          : '';
-        const infoBoxHtml = (infoBoxTagsHtml || infoBoxFactsHtml)
-          ? `<div class="card-info-box">${infoBoxTagsHtml}${infoBoxFactsHtml}</div>`
+        const infoBoxFactParts = infoBoxFacts
+          .map(f => {
+            const label = String(f.label ?? '').trim();
+            const value = String(f.value ?? '').trim();
+            if (!label || !value) return '';
+            return `<div class="card-info-fact"><span class="card-info-fact-label">${label}</span><span class="card-info-fact-value">${value}</span></div>`;
+          })
+          .filter(Boolean);
+        let infoBoxContentHtml = '';
+        if (isInv(p) && (infoBoxTagParts.length || infoBoxFactParts.length)) {
+          const inlineTagsHtml = infoBoxTagParts.length
+            ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
+            : '';
+          const inlineFactsHtml = infoBoxFactParts.length
+            ? `<div class="card-info-facts">${infoBoxFactParts.join('')}</div>`
+            : '';
+          const arrowHtml = inlineTagsHtml && inlineFactsHtml
+            ? `<span class="card-info-arrow" aria-hidden="true">&rarr;</span>`
+            : '';
+          const inlineParts = [inlineTagsHtml, arrowHtml, inlineFactsHtml]
+            .filter(Boolean)
+            .join('');
+          infoBoxContentHtml = inlineParts
+            ? `<div class="card-info-inline">${inlineParts}</div>`
+            : '';
+        } else {
+          const infoBoxTagsHtml = infoBoxTagParts.length
+            ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
+            : '';
+          const infoBoxFactsHtml = infoBoxFactParts.length
+            ? `<div class="card-info-facts">${infoBoxFactParts.join('')}</div>`
+            : '';
+          infoBoxContentHtml = `${infoBoxTagsHtml}${infoBoxFactsHtml}`;
+        }
+        const infoBoxHtml = infoBoxContentHtml
+          ? `<div class="card-info-box">${infoBoxContentHtml}</div>`
           : '';
         const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
         const levelHtml = hideDetails ? '' : lvlSel;

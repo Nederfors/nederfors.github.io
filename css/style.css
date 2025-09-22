@@ -1032,6 +1032,7 @@ input:focus, select:focus, textarea:focus {
   padding: .55rem .85rem;
   margin: .45rem 0;
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .28);
+  align-items: center;
 }
 
 .card-level-row + .card-info-box {
@@ -1044,6 +1045,7 @@ input:focus, select:focus, textarea:focus {
   gap: .35rem;
   flex: 1 1 280px;
   min-width: 0;
+  align-items: center;
 }
 
 .card-info-facts {
@@ -1053,6 +1055,31 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   justify-content: flex-start;
   flex: 0 1 auto;
+}
+
+.card-info-inline {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: .35rem .6rem;
+  width: 100%;
+}
+
+.card-info-inline .card-info-tags {
+  flex: 1 1 auto;
+}
+
+.card-info-inline .card-info-facts {
+  flex: 0 0 auto;
+  gap: .3rem .8rem;
+}
+
+.card-info-arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .85rem;
+  color: var(--subtxt);
 }
 
 .card-info-fact {
