@@ -595,17 +595,28 @@ function initIndex() {
         const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
         const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
         const filterTagData = [];
+        const primaryTagParts = [];
         (p.taggar?.typ || [])
           .filter(Boolean)
-          .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 }));
+          .forEach((t, idx) => {
+            const tag = { section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 };
+            filterTagData.push(tag);
+            primaryTagParts.push(renderFilterTag(tag));
+          });
         const trTags = explodeTags(p.taggar?.ark_trad);
         const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
-        arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
+        arkList.forEach(t => {
+          const tag = { section: 'ark', value: t, label: t };
+          filterTagData.push(tag);
+          primaryTagParts.push(renderFilterTag(tag));
+        });
         (p.taggar?.test || [])
           .filter(Boolean)
           .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
+        const primaryTagsHtml = primaryTagParts.join(' ');
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
-        const filterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
+        const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
+        const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
         const infoFilterTagHtml = filterTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
         const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
@@ -616,9 +627,9 @@ function initIndex() {
           const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
           return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
         };
-        const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
-        const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
-          ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
+        const dockedTagsHtml = shouldDockTags ? renderDockedTags(dockableTagData) : '';
+        const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
+          ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
           : '';
         const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
         // Compact meta badges (P/V/level) using short labels for mobile space
@@ -705,6 +716,7 @@ function initIndex() {
           dataset,
           nameHtml: `${p.namn}${badge}`,
           xpHtml,
+          primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
           levelHtml: hideDetails ? '' : lvlSel,
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',

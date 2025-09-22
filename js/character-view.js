@@ -1156,17 +1156,28 @@ function initCharacter() {
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
         const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
         const filterTagData = [];
+        const primaryTagParts = [];
         typesList
           .filter(Boolean)
-          .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: t, hidden: idx === 0 }));
+          .forEach((t, idx) => {
+            const tag = { section: 'typ', value: t, label: t, hidden: idx === 0 };
+            filterTagData.push(tag);
+            primaryTagParts.push(renderFilterTag(tag));
+          });
         const trTags = explodeTags(p.taggar?.ark_trad);
         const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
-        arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
+        arkList.forEach(t => {
+          const tag = { section: 'ark', value: t, label: t };
+          filterTagData.push(tag);
+          primaryTagParts.push(renderFilterTag(tag));
+        });
         (p.taggar?.test || [])
           .filter(Boolean)
           .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
+        const primaryTagsHtml = primaryTagParts.join(' ');
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
-        const tagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
+        const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
+        const tagHtmlParts = dockableTagData.map(tag => renderFilterTag(tag));
         const infoTagHtmlParts = filterTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = tagHtmlParts.join(' ');
         const infoTagsHtml = [xpTag]
@@ -1234,9 +1245,9 @@ function initCharacter() {
         }
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
-        const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
-        const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
-          ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
+        const dockedTagsHtml = shouldDockTags ? renderDockedTags(dockableTagData) : '';
+        const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
+          ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
           : '';
         const leftSections = [];
         if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
@@ -1250,6 +1261,7 @@ function initCharacter() {
           dataset,
           nameHtml: `${p.namn}${badge}`,
           xpHtml,
+          primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
           levelHtml: hideDetails ? '' : lvlSel,
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
