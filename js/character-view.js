@@ -1199,8 +1199,9 @@ function initCharacter() {
           ? `<button data-act="${editAction}" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
           : '';
         const infoBtnHtml = showInfo ? infoBtn : '';
+        const titleActions = [];
         const buttonParts = [];
-        if (infoBtnHtml) buttonParts.push(infoBtnHtml);
+        if (infoBtnHtml) titleActions.push(infoBtnHtml);
         if (editBtn) buttonParts.push(editBtn);
         if (multi) {
           const isDisadv = typesList.includes('Nackdel');
@@ -1253,6 +1254,7 @@ function initCharacter() {
           levelHtml: hideDetails ? '' : lvlSel,
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
           leftSections,
+          titleActions,
           buttonSections: buttonParts
         });
 
