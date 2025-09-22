@@ -24,46 +24,6 @@
   ];
   const SBASE = 10, OBASE = 10;
 
-  function safeLocalStorageGet(key, fallback = null) {
-    const result = { value: fallback, found: false };
-    if (!key || typeof key !== 'string') return result;
-    try {
-      const storage = window.localStorage;
-      if (!storage) return result;
-      const raw = storage.getItem(key);
-      if (raw === null || raw === undefined) return result;
-      result.value = raw;
-      result.found = true;
-      return result;
-    } catch (err) {
-      return result;
-    }
-  }
-
-  function safeLocalStorageSet(key, value) {
-    if (!key || typeof key !== 'string') return false;
-    try {
-      const storage = window.localStorage;
-      if (!storage) return false;
-      storage.setItem(key, value);
-      return true;
-    } catch (err) {
-      return false;
-    }
-  }
-
-  function safeLocalStorageRemove(key) {
-    if (!key || typeof key !== 'string') return false;
-    try {
-      const storage = window.localStorage;
-      if (!storage) return false;
-      storage.removeItem(key);
-      return true;
-    } catch (err) {
-      return false;
-    }
-  }
-
   // Konvertera ett penningobjekt till totalt antal örtegar
   function moneyToO(m) {
     m = m || {};
@@ -459,7 +419,4 @@
   window.catComparator = catComparator;
   window.catName = catName;
   window.lookupEntry = lookupEntry;
-  window.safeLocalStorageGet = safeLocalStorageGet;
-  window.safeLocalStorageSet = safeLocalStorageSet;
-  window.safeLocalStorageRemove = safeLocalStorageRemove;
 })(window);

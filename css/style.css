@@ -813,7 +813,7 @@ input:focus, select:focus, textarea:focus {
 .card[data-special="__formal__"],
 .card[data-special="__tools__"],
 .card[data-special="__info__"] {
-  border: 2px solid var(--toolborder);
+  border: 2px solid var(--accent);
 }
 .card-title {
   display: flex;
@@ -1403,22 +1403,6 @@ select.level {
   #conflictPanel{ max-width: 460px; }
   #yrkePanel   { max-width: 520px; }
   #infoPanel   { max-width: 520px; }
-}
-/* Mobile: make right panels fill ~90% width and full dynamic height */
-@media (max-width: 640px) {
-  #filterPanel,
-  #traitsPanel,
-  #yrkePanel,
-  #infoPanel,
-  #summaryPanel,
-  #effectsPanel,
-  #conflictPanel {
-    width: 100vw;          /* cover ~100% of the screen width */
-    max-width: 100vw;      /* lift 360px caps on mobile */
-    height: 100dvh;       /* use dynamic viewport height (accounts for bars) */
-    padding: 1.2rem 1rem 2rem;  /* keep your spacing */
-    overscroll-behavior: contain;
-  }
 }
 
 /* ---------- Popup för kvaliteter ---------- */

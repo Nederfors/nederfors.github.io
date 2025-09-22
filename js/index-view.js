@@ -44,43 +44,6 @@ function initIndex() {
     catState = saved.cats || {};
   }
 
-  const now = () => (typeof performance !== 'undefined' && typeof performance.now === 'function')
-    ? performance.now()
-    : Date.now();
-
-  const renderProfiler = (() => {
-    const events = [];
-    const MAX_EVENTS = 200;
-    return {
-      push(event) {
-        if (!event || typeof event !== 'object') return;
-        const payload = { ...event };
-        payload.ts = Date.now();
-        events.push(Object.freeze(payload));
-        if (events.length > MAX_EVENTS) events.shift();
-      },
-      getEvents() {
-        return events.slice();
-      },
-      reset() {
-        events.length = 0;
-      }
-    };
-  })();
-
-  const profileFilteredCall = (payload) => {
-    renderProfiler.push({ type: 'filtered', ...payload });
-  };
-
-  const profileRenderCall = (payload) => {
-    renderProfiler.push({ type: 'render', ...payload });
-  };
-
-  window.indexViewProfiler = Object.freeze({
-    getEvents: () => renderProfiler.getEvents(),
-    reset: () => renderProfiler.reset()
-  });
-
   const getEntries = () => {
     const base = DB
       .concat(window.TABELLER || [])
@@ -453,496 +416,29 @@ function initIndex() {
     }).sort(createSearchSorter(terms));
   };
 
-  const runFiltered = (reason, extra = {}) => {
-    const label = reason || 'unknown';
-    const start = now();
-    const result = filtered();
-    const duration = Number((now() - start).toFixed(2));
-    profileFilteredCall({
-      reason: label,
-      duration,
-      resultCount: result.length,
-      filters: {
-        search: F.search.length,
-        typ: F.typ.length,
-        ark: F.ark.length,
-        test: F.test.length,
-        union: !!storeHelper.getFilterUnion(store),
-        onlySelected: !!storeHelper.getOnlySelected(store),
-        random: fixedRandomEntries ? fixedRandomEntries.length : 0
-      },
-      ...extra
-    });
-    return result;
-  };
-
-  const renderFilteredList = (reason, renderOptions = {}) => {
-    const arr = runFiltered(reason);
-    renderList(arr, { ...renderOptions, reason });
-    return arr;
-  };
-
-  const entryKeyFor = (entry) => {
-    if (!entry) return null;
-    if (entry.entryKey) return entry.entryKey;
-    const id = entry.id != null && entry.id !== '' ? String(entry.id) : '';
-    if (id) return `id:${id}`;
-    const name = entry.namn || entry.name || '';
-    if (!name) return null;
-    return `name:${name}`;
-  };
-
-  const resolveEntryRef = (ref, arrById, arrByName) => {
-    if (!ref) return null;
-    if (typeof ref === 'string') {
-      const id = String(ref);
-      return arrById.get(id)
-        || arrByName.get(ref)
-        || lookupEntry({ id: ref, name: ref })
-        || null;
-    }
-    if (ref.id != null || ref.namn) {
-      const id = ref.id != null ? String(ref.id) : '';
-      if (id && arrById.has(id)) return arrById.get(id);
-      if (ref.namn && arrByName.has(ref.namn)) return arrByName.get(ref.namn);
-      return ref;
-    }
-    if (ref.name) {
-      return arrByName.get(ref.name) || lookupEntry({ name: ref.name });
-    }
-    return null;
-  };
-
-  const initialViewState = {
-    compact,
-    partySmith: storeHelper.getPartySmith(store) || '',
-    partyAlchemist: storeHelper.getPartyAlchemist(store) || '',
-    partyArtefacter: storeHelper.getPartyArtefacter(store) || ''
-  };
-  let renderState = {
-    entryToCat: new Map(),
-    catOrder: [],
-    catSignatures: new Map(),
-    viewState: initialViewState
-  };
-
-  const patchCardElement = (target, source) => {
-    if (!target || !source) return;
-    target.className = source.className;
-    const srcDataset = source.dataset || {};
-    const srcKeys = new Set(Object.keys(srcDataset));
-    Object.keys(target.dataset).forEach(key => {
-      if (!srcKeys.has(key)) delete target.dataset[key];
-    });
-    Object.entries(srcDataset).forEach(([key, value]) => {
-      if (value == null) delete target.dataset[key];
-      else target.dataset[key] = value;
-    });
-    target.innerHTML = source.innerHTML;
-  };
-
-  const ensureCategoryElement = (cat, existing, shouldOpen) => {
-    let li = existing;
-    let details;
-    if (!li) {
-      li = document.createElement('li');
-      li.className = 'cat-group';
-      li.innerHTML = `
-        <details data-cat="${cat}"${shouldOpen ? ' open' : ''}>
-          <summary>${catName(cat)}</summary>
-          <ul class="card-list"></ul>
-        </details>`;
-      details = li.querySelector('details');
-    } else {
-      li.className = 'cat-group';
-      details = li.querySelector('details');
-      if (!details) {
-        li.innerHTML = `
-          <details data-cat="${cat}"${shouldOpen ? ' open' : ''}>
-            <summary>${catName(cat)}</summary>
-            <ul class="card-list"></ul>
-          </details>`;
-        details = li.querySelector('details');
-      } else {
-        details.dataset.cat = cat;
-        const summary = details.querySelector('summary');
-        if (summary) summary.textContent = catName(cat);
-      }
-      if (!details.querySelector('ul')) {
-        const ul = document.createElement('ul');
-        ul.className = 'card-list';
-        details.appendChild(ul);
-      }
-    }
-    details.dataset.cat = cat;
-    if (shouldOpen != null && details.open !== shouldOpen) {
-      details.open = shouldOpen;
-    }
-    if (!details.__toggleHandlerBound) {
-      details.addEventListener('toggle', (ev) => {
-        updateCatToggle();
-        if (!ev.isTrusted) return;
-        catState[cat] = details.open;
-        saveState();
-      });
-      details.__toggleHandlerBound = true;
-    }
-    return li;
-  };
-
-  const ensureHoppsanCategory = (existing, shouldOpen) => {
-    const hopLi = ensureCategoryElement('Hoppsan', existing, shouldOpen);
-    const listEl = hopLi.querySelector('ul');
-    if (listEl && !listEl.querySelector('.hoppsan-card')) {
-      const li = document.createElement('li');
-      li.className = 'card compact hoppsan-card';
-      li.dataset.name = 'Hoppsan';
-      li.innerHTML = `
-        <div class="card-title"><span>Hoppsan, här tog det slut.</span></div>
-        <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;
-      listEl.appendChild(li);
-    }
-    return hopLi;
-  };
-
-  const findNextCategoryRef = (catOrder, index, prevCats, currentCats, hopLi) => {
-    for (let i = index + 1; i < catOrder.length; i++) {
-      const name = catOrder[i];
-      if (currentCats.has(name)) return currentCats.get(name);
-      if (prevCats.has(name)) return prevCats.get(name);
-    }
-    return hopLi || null;
-  };
-
-  const createEntryListItem = (p, context) => {
-    const { charList, invList, compact, terms, searchActive } = context;
-    const key = entryKeyFor(p);
-    if (!key) return null;
-    if (p.kolumner && p.rader) {
-      const infoHtml = tabellInfoHtml(p);
-      const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
-      const tagsHtml = (p.taggar?.typ || [])
-        .map(t => `<span class="tag">${t}</span>`)
-        .join(' ');
-      const tagsDiv = tagsHtml ? `<div class="tags entry-tags-block">${tagsHtml}</div>` : '';
-      const tagsMobile = tagsHtml ? `<div class="entry-tags entry-tags-mobile">${tagsHtml}</div>` : '';
-      const li = document.createElement('li');
-      li.className = 'card';
-      li.dataset.name = p.namn;
-      if (p.id) li.dataset.id = p.id;
-      li.dataset.entryKey = key;
-      li.innerHTML = `
-        <div class="card-title"><span>${p.namn}</span></div>
-        ${tagsDiv}
-        <div class="inv-controls">${tagsMobile}${infoBtn}</div>`;
-      if (searchActive && terms.length) {
-        const titleSpan = li.querySelector('.card-title > span');
-        if (titleSpan) highlightInElement(titleSpan, terms);
-      }
-      return { key, element: li };
-    }
-    const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
-    const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
-    const curLvl = charList.find(c=>c.namn===p.namn)?.nivå
-      || LVL.find(l => p.nivåer?.[l]) || 'Novis';
-    const availLvls = LVL.filter(l => p.nivåer?.[l]);
-    const lvlSel = availLvls.length > 1
-      ? `<select class="level" data-name="${p.namn}">
-          ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
-        </select>`
-      : '';
-    const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
-    let desc = abilityHtml(p);
-    let cardDesc = desc;
-    const infoMeta = [];
-    let priceText = '';
-    let weightVal = null;
-    let capacityVal = null;
-    const isVehicle = (p.taggar?.typ || []).includes('Färdmedel');
-    let priceLabel = '';
-    if (isInv(p)) {
-      const statsHtml = itemStatHtml(p);
-      desc += statsHtml;
-      cardDesc += statsHtml;
-      const baseQuals = [
-        ...(p.taggar?.kvalitet ?? []),
-        ...splitQuals(p.kvalitet)
-      ];
-      if (baseQuals.length) {
-        const qhtml = baseQuals
-          .map(q => `<span class="tag">${q}</span>`)
-          .join(' ');
-        const qualBlock = `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
-        desc += qualBlock;
-        cardDesc += qualBlock;
-      }
-      if (p.grundpris) {
-        priceText = formatMoney(invUtil.calcEntryCost(p));
-        priceLabel = 'Pris:';
-      }
-      const baseW = p.vikt ?? p.stat?.vikt ?? 0;
-      const massCnt = baseQuals.filter(q => q === 'Massivt').length;
-      if (baseW || massCnt) {
-        const w = baseW + massCnt;
-        weightVal = formatWeight(w);
-      }
-      if (isVehicle) {
-        const cap = p.stat?.bärkapacitet ?? null;
-        if (cap != null) {
-          capacityVal = cap;
-        }
-      }
-    } else if (isEmployment(p)) {
-      if (p.grundpris) {
-        priceText = formatMoney(p.grundpris);
-        priceLabel = 'Dagslön:';
-      }
-    } else if (isService(p)) {
-      if (p.grundpris) {
-        priceText = formatMoney(p.grundpris);
-        priceLabel = 'Pris:';
-      }
-    }
-    if (priceText) {
-      infoMeta.push({ label: priceLabel.replace(/:$/, ''), value: priceText });
-    }
-    if (capacityVal != null) {
-      infoMeta.push({ label: 'Bärkapacitet', value: capacityVal });
-    }
-    if (weightVal != null) {
-      infoMeta.push({ label: 'Vikt', value: weightVal });
-    }
-    const infoBodyExtras = [];
-    if (isRas(p) || isYrke(p) || isElityrke(p)) {
-      const extra = yrkeInfoHtml(p);
-      if (extra) infoBodyExtras.push(extra);
-    }
-    if (p.namn === 'Blodsband') {
-      const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
-      if (races.length) {
-        const str = races.join(', ');
-        const block = `<p><strong>Raser:</strong> ${str}</p>`;
-        cardDesc += block;
-        infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
-      }
-    }
-    let spec = null;
-    if (p.namn === 'Monsterlärd') {
-      spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
-      if (spec) {
-        const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
-        cardDesc += block;
-        infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
-      }
-    }
-    let infoBodyHtml = desc;
-    if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
-    const charEntry = charList.find(c => c.namn === p.namn);
-    const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
-    const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
-    let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
-    if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
-    const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
-    const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
-    const filterTagData = [];
-    (p.taggar?.typ || [])
-      .filter(Boolean)
-      .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 }));
-    const trTags = explodeTags(p.taggar?.ark_trad);
-    const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
-    arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
-    (p.taggar?.test || [])
-      .filter(Boolean)
-      .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
-    const visibleTagData = filterTagData.filter(tag => !tag.hidden);
-    const filterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
-    const infoFilterTagHtml = filterTagData.map(tag => renderFilterTag(tag));
-    const tagsHtml = filterTagHtml.join(' ');
-    const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
-    const dockPrimary = (p.taggar?.typ || [])[0] || '';
-    const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
-    const renderDockedTags = (tags, extraClass = '') => {
-      if (!tags.length) return '';
-      const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
-      return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
-    };
-    const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
-    const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
-      ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
-      : '';
-    const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
-    const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
-    const lvlShort =
-      lvlBadgeVal === 'Mästare' ? 'M'
-      : (lvlBadgeVal === 'Gesäll' ? 'G'
-      : (lvlBadgeVal === 'Novis' ? 'N' : ''));
-    const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
-    const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
-    const badgeParts = [];
-    if (isQual(p)) {
-      (p.taggar?.typ || [])
-        .filter(t => QUAL_TYPE_KEYS.includes(t))
-        .map(t => QUAL_TYPE_MAP[t])
-        .forEach(lbl => badgeParts.push(`<span class="meta-badge">${lbl}</span>`));
-    }
-    if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeText}: ${priceText}</span>`);
-    if (capacityVal != null) badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${capacityVal}</span>`);
-    if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
-    if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
-    const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
-    const infoPanelHtml = buildInfoPanelHtml({
-      tagsHtml: infoTagsHtml,
-      bodyHtml: infoBodyHtml,
-      meta: infoMeta
-    });
-    const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
-    const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-    let count;
-    if (isInv(p)) {
-      if (p.id === 'di79') {
-        const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
-        count = Math.min(...qtys);
-      } else {
-        count = invList.filter(c => c.id === p.id).reduce((sum,c)=>sum+(c.qty||1),0);
-      }
-    } else {
-      count = charList.filter(c => c.id === p.id && !c.trait).length;
-    }
-    const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
-    const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
-    const showInfo = compact || hideDetails;
-    const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
-    const idAttr = p.id ? ` data-id="${p.id}"` : '';
-    const editBtn = canEdit
-      ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
-      : '';
-    const eliteBtn = isElityrke(p)
-      ? `<button class="char-btn" data-elite-req="${p.namn}">🏋🏻‍♂️</button>`
-      : '';
-    const allowAdd = !(isService(p) || isEmployment(p));
-    const buttonGroupParts = [];
-    if (showInfo) buttonGroupParts.push(infoBtn);
-    if (editBtn) buttonGroupParts.push(editBtn);
-    if (allowAdd) {
-      if (multi) {
-        if (count > 0) {
-          buttonGroupParts.push(`<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`);
-          buttonGroupParts.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`);
-          if (count < limit) buttonGroupParts.push(`<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
-        } else {
-          buttonGroupParts.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
-        }
-      } else {
-        const mainBtn = inChar
-          ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-          : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
-        buttonGroupParts.push(mainBtn);
-      }
-    }
-    if (eliteBtn) buttonGroupParts.push(eliteBtn);
-    const leftSections = [];
-    if (metaBadges) leftSections.push(metaBadges);
-    if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
-    else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
-    const dataset = { name: p.namn };
-    if (spec) dataset.trait = spec;
-    if (xpVal != null) dataset.xp = xpVal;
-    if (p.id) dataset.id = p.id;
-    dataset.entryKey = key;
-    const li = createEntryCard({
-      compact,
-      dataset,
-      nameHtml: `${p.namn}${badge}`,
-      xpHtml,
-      tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
-      levelHtml: hideDetails ? '' : lvlSel,
-      descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',
-      leftSections,
-      buttonSections: buttonGroupParts
-    });
-    li.dataset.entryKey = key;
-    if (searchActive && terms.length) {
-      const titleSpan = li.querySelector('.card-title > span');
-      if (titleSpan) highlightInElement(titleSpan, terms);
-      const descEl = li.querySelector('.card-desc');
-      if (descEl) highlightInElement(descEl, terms);
-    }
-    return { key, element: li };
-  };
-
-  const updateCategoryEntries = (catLi, entries, context) => {
-    if (!catLi) return;
-    const listEl = catLi.querySelector('ul');
-    if (!listEl) return;
-    const existing = new Map();
-    [...listEl.children].forEach(node => {
-      const key = node.dataset.entryKey;
-      if (key) existing.set(key, node);
-    });
-    const desiredKeys = new Set();
-    const orderedNodes = [];
-    entries.forEach(entry => {
-      const item = createEntryListItem(entry, context);
-      if (!item) return;
-      desiredKeys.add(item.key);
-      let node = existing.get(item.key);
-      if (node) {
-        patchCardElement(node, item.element);
-      } else {
-        node = item.element;
-      }
-      node.dataset.entryKey = item.key;
-      orderedNodes.push(node);
-    });
-    existing.forEach((node, key) => {
-      if (!desiredKeys.has(key)) {
-        node.remove();
-      }
-    });
-    orderedNodes.forEach(node => {
-      if (node.parentNode === listEl) {
-        listEl.appendChild(node);
-      } else {
-        listEl.appendChild(node);
-      }
-    });
-  };
-
-  const computeTargetCats = (options, entryCatMap) => {
-    if (!options) return null;
-    const target = new Set(options.onlyCats || []);
-    if (options.onlyKeys) {
-      options.onlyKeys.forEach(key => {
-        const cat = entryCatMap.get(key) || renderState.entryToCat.get(key);
-        if (cat) target.add(cat);
-      });
-    }
-    return target.size ? target : null;
-  };
-
-  const renderList = (arr, options = {}) => {
-    const listArr = Array.isArray(arr) ? arr : [];
-    const reason = options.reason || 'unknown';
-    const startTime = now();
+  const renderList = arr=>{
+    const openCats = new Set(
+      [...dom.lista.querySelectorAll('.cat-group > details[open]')]
+        .map(d => d.dataset.cat)
+    );
+    dom.lista.innerHTML = '';
+    // Always render list; a fallback "Hoppsan" category is appended last.
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
+    const cats = {};
     const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
     const searchActive = terms.length > 0;
-    const cats = {};
     const catNameMatch = {};
-    const entryCatMap = new Map();
-    listArr.forEach(p => {
+    arr.forEach(p=>{
       const cat = p.taggar?.typ?.[0] || 'Övrigt';
       (cats[cat] ||= []).push(p);
-      const key = entryKeyFor(p);
-      if (key) entryCatMap.set(key, cat);
       if (searchActive) {
         const name = searchNormalize((p.namn || '').toLowerCase());
-        const unionMode = storeHelper.getFilterUnion(store);
-        const nameOk = unionMode ? terms.some(q => name.includes(q))
-                                 : terms.every(q => name.includes(q));
+        const union = storeHelper.getFilterUnion(store);
+        const nameOk = union ? terms.some(q => name.includes(q))
+                             : terms.every(q => name.includes(q));
         if (nameOk) {
           catNameMatch[cat] = true;
         }
@@ -957,197 +453,305 @@ function initIndex() {
       }
       return catComparator(a,b);
     });
-
-    const signatureForEntries = (entries) => {
-      const counts = new Map();
-      return entries.map((entry, idx) => {
-        const base = entryKeyFor(entry) || `__idx:${idx}`;
-        const count = counts.get(base) || 0;
-        counts.set(base, count + 1);
-        return count ? `${base}#${count}` : base;
-      }).join('|');
-    };
-    const newCatSignatures = new Map();
-    catKeys.forEach(cat => {
-      newCatSignatures.set(cat, signatureForEntries(cats[cat]));
-    });
-    const prevSignatures = renderState.catSignatures || new Map();
-    const changedCats = new Set();
-    newCatSignatures.forEach((sig, cat) => {
-      if (!prevSignatures.has(cat) || prevSignatures.get(cat) !== sig) {
-        changedCats.add(cat);
-      }
-    });
-    prevSignatures.forEach((_, cat) => {
-      if (!newCatSignatures.has(cat)) changedCats.add(cat);
-    });
-
-    const viewState = {
-      compact,
-      partySmith: storeHelper.getPartySmith(store) || '',
-      partyAlchemist: storeHelper.getPartyAlchemist(store) || '',
-      partyArtefacter: storeHelper.getPartyArtefacter(store) || ''
-    };
-    const prevViewState = renderState.viewState || initialViewState;
-    const viewChanged = (
-      prevViewState.compact !== viewState.compact
-      || prevViewState.partySmith !== viewState.partySmith
-      || prevViewState.partyAlchemist !== viewState.partyAlchemist
-      || prevViewState.partyArtefacter !== viewState.partyArtefacter
-    );
-
-    const hasOnlyKeys = !!options.onlyKeys;
-    let targetCats = computeTargetCats(options, entryCatMap);
-    const forcedCats = options.forceCats ? new Set(options.forceCats) : null;
-    if (forcedCats && forcedCats.size) {
-      if (targetCats) forcedCats.forEach(cat => targetCats.add(cat));
-      else targetCats = forcedCats;
-    }
-    const forceFull = options.forceFull === true;
-    let derivedFromDiff = false;
-    if (forceFull) {
-      targetCats = null;
-    } else {
-      if (!hasOnlyKeys) {
-        if (!targetCats) {
-          if (changedCats.size) {
-            targetCats = new Set(changedCats);
-            derivedFromDiff = true;
-          } else if (viewChanged && (!forcedCats || !forcedCats.size)) {
-            targetCats = new Set(catKeys);
-          } else {
-            targetCats = new Set();
+    catKeys.forEach(cat=>{
+      const catLi=document.createElement('li');
+      catLi.className='cat-group';
+      // Allow temporary "open once" categories to override saved state
+      const shouldOpen = openCatsOnce.has(cat) || (catState[cat] !== undefined ? catState[cat] : openCats.has(cat));
+      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      const detailsEl = catLi.querySelector('details');
+      const listEl=catLi.querySelector('ul');
+      detailsEl.addEventListener('toggle', (ev) => {
+        updateCatToggle();
+        if (!ev.isTrusted) return;
+        catState[cat] = detailsEl.open;
+        saveState();
+      });
+      cats[cat].forEach(p=>{
+        if (p.kolumner && p.rader) {
+          const infoHtml = tabellInfoHtml(p);
+          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
+          const tagsHtml = (p.taggar?.typ || [])
+            .map(t => `<span class="tag">${t}</span>`)
+            .join(' ');
+          const tagsDiv = tagsHtml ? `<div class="tags entry-tags-block">${tagsHtml}</div>` : '';
+          const tagsMobile = tagsHtml ? `<div class="entry-tags entry-tags-mobile">${tagsHtml}</div>` : '';
+        const li = document.createElement('li');
+        li.className = 'card';
+        li.dataset.name = p.namn;
+        if (p.id) li.dataset.id = p.id;
+        li.innerHTML = `
+            <div class="card-title"><span>${p.namn}</span></div>
+            ${tagsDiv}
+            <div class="inv-controls">${tagsMobile}${infoBtn}</div>`;
+        listEl.appendChild(li);
+        if (searchActive && terms.length) {
+          const titleSpan = li.querySelector('.card-title > span');
+          if (titleSpan) highlightInElement(titleSpan, terms);
+        }
+        return;
+        }
+        const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
+        const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
+        const curLvl = charList.find(c=>c.namn===p.namn)?.nivå
+          || LVL.find(l => p.nivåer?.[l]) || 'Novis';
+        const availLvls = LVL.filter(l => p.nivåer?.[l]);
+        const lvlSel = availLvls.length > 1
+          ? `<select class="level" data-name="${p.namn}">
+              ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
+            </select>`
+          : '';
+        const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
+        let desc = abilityHtml(p);
+        let cardDesc = desc;
+        const infoMeta = [];
+        let priceText = '';
+        let weightVal = null;
+        let capacityVal = null;
+        const isVehicle = (p.taggar?.typ || []).includes('Färdmedel');
+        let priceLabel = '';
+        if (isInv(p)) {
+          const statsHtml = itemStatHtml(p);
+          desc += statsHtml;
+          cardDesc += statsHtml;
+          const baseQuals = [
+            ...(p.taggar?.kvalitet ?? []),
+            ...splitQuals(p.kvalitet)
+          ];
+          if (baseQuals.length) {
+            const qhtml = baseQuals
+              .map(q => `<span class="tag">${q}</span>`)
+              .join(' ');
+            const qualBlock = `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+            desc += qualBlock;
+            cardDesc += qualBlock;
           }
-        } else {
-          if (changedCats.size) {
-            changedCats.forEach(cat => targetCats.add(cat));
-            derivedFromDiff = true;
+          if (p.grundpris) {
+            priceText = formatMoney(invUtil.calcEntryCost(p));
+            priceLabel = 'Pris:';
           }
-          if (viewChanged && (!forcedCats || !forcedCats.size)) {
-            catKeys.forEach(cat => targetCats.add(cat));
+          const baseW = p.vikt ?? p.stat?.vikt ?? 0;
+          const massCnt = baseQuals.filter(q => q === 'Massivt').length;
+          if (baseW || massCnt) {
+            const w = baseW + massCnt;
+            weightVal = formatWeight(w);
+          }
+          if (isVehicle) {
+            const cap = p.stat?.bärkapacitet ?? null;
+            if (cap != null) {
+              capacityVal = cap;
+            }
+          }
+        } else if (isEmployment(p)) {
+          if (p.grundpris) {
+            priceText = formatMoney(p.grundpris);
+            priceLabel = 'Dagslön:';
+          }
+        } else if (isService(p)) {
+          if (p.grundpris) {
+            priceText = formatMoney(p.grundpris);
+            priceLabel = 'Pris:';
           }
         }
-      } else if (!targetCats) {
-        targetCats = new Set();
-      }
-    }
-
-    const prevCats = new Map();
-    const prevOpenCats = new Set();
-    dom.lista.querySelectorAll('.cat-group > details').forEach(details => {
-      const cat = details.dataset.cat;
-      if (!cat) return;
-      const li = details.closest('li');
-      if (li) prevCats.set(cat, li);
-      if (details.open) prevOpenCats.add(cat);
-    });
-    let hopLi = prevCats.get('Hoppsan') || null;
-    if (hopLi) prevCats.delete('Hoppsan');
-
-    const context = { charList, invList, compact, terms, searchActive };
-    const currentCats = new Map();
-
-    catKeys.forEach((cat, idx) => {
-      const prevNode = prevCats.get(cat) || null;
-      const desiredOpen = openCatsOnce.has(cat)
-        ? true
-        : (catState[cat] !== undefined ? catState[cat] : prevOpenCats.has(cat));
-      const shouldUpdate = (
-        targetCats === null
-        || targetCats.has(cat)
-        || !prevNode
-      );
-      const openValue = (shouldUpdate || openCatsOnce.has(cat)) ? desiredOpen : null;
-      const catLi = ensureCategoryElement(cat, prevNode, openValue);
-      if (prevNode) prevCats.delete(cat);
-      currentCats.set(cat, catLi);
-      if (shouldUpdate) {
-        updateCategoryEntries(catLi, cats[cat], context);
-      }
-      const ref = findNextCategoryRef(catKeys, idx, prevCats, currentCats, hopLi);
-      dom.lista.insertBefore(catLi, ref);
-    });
-
-    prevCats.forEach(li => {
-      li.remove();
-    });
-
-    const hopOpen = catState['Hoppsan'] !== undefined
-      ? catState['Hoppsan']
-      : prevOpenCats.has('Hoppsan');
-    hopLi = ensureHoppsanCategory(hopLi, hopOpen);
-    dom.lista.appendChild(hopLi);
-
-    renderState = {
-      entryToCat: entryCatMap,
-      catOrder: catKeys.slice(),
-      catSignatures: newCatSignatures,
-      viewState
-    };
-
-    if (openCatsOnce.size) {
-      openCatsOnce.forEach(cat => {
-        const selector = `.cat-group > details[data-cat="${CSS.escape(cat)}"]`;
-        const details = dom.lista.querySelector(selector);
-        if (details) details.open = true;
+        if (priceText) {
+          infoMeta.push({ label: priceLabel.replace(/:$/, ''), value: priceText });
+        }
+        if (capacityVal != null) {
+          infoMeta.push({ label: 'Bärkapacitet', value: capacityVal });
+        }
+        if (weightVal != null) {
+          infoMeta.push({ label: 'Vikt', value: weightVal });
+        }
+        const infoBodyExtras = [];
+        if (isRas(p) || isYrke(p) || isElityrke(p)) {
+          const extra = yrkeInfoHtml(p);
+          if (extra) infoBodyExtras.push(extra);
+        }
+        if (p.namn === 'Blodsband') {
+          const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
+          if (races.length) {
+            const str = races.join(', ');
+            const block = `<p><strong>Raser:</strong> ${str}</p>`;
+            cardDesc += block;
+            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
+          }
+        }
+        let spec = null;
+        if (p.namn === 'Monsterlärd') {
+          spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
+          if (spec) {
+            const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
+            cardDesc += block;
+            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
+          }
+        }
+        let infoBodyHtml = desc;
+        if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
+        const charEntry = charList.find(c => c.namn === p.namn);
+        const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
+        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
+        let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
+        if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
+        const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
+        const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
+        const filterTagData = [];
+        (p.taggar?.typ || [])
+          .filter(Boolean)
+          .forEach((t, idx) => filterTagData.push({ section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 }));
+        const trTags = explodeTags(p.taggar?.ark_trad);
+        const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
+        arkList.forEach(t => filterTagData.push({ section: 'ark', value: t, label: t }));
+        (p.taggar?.test || [])
+          .filter(Boolean)
+          .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
+        const visibleTagData = filterTagData.filter(tag => !tag.hidden);
+        const filterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
+        const infoFilterTagHtml = filterTagData.map(tag => renderFilterTag(tag));
+        const tagsHtml = filterTagHtml.join(' ');
+        const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
+        const dockPrimary = (p.taggar?.typ || [])[0] || '';
+        const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
+        const renderDockedTags = (tags, extraClass = '') => {
+          if (!tags.length) return '';
+          const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
+          return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+        };
+        const dockedTagsHtml = shouldDockTags ? renderDockedTags(visibleTagData) : '';
+        const mobileTagsHtml = (!compact && !shouldDockTags && visibleTagData.length)
+          ? renderDockedTags(visibleTagData, 'entry-tags-mobile')
+          : '';
+        const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        // Compact meta badges (P/V/level) using short labels for mobile space
+        const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
+        const lvlShort =
+          lvlBadgeVal === 'Mästare' ? 'M'
+          : (lvlBadgeVal === 'Gesäll' ? 'G'
+          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
+        const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
+        const badgeParts = [];
+        if (isQual(p)) {
+          (p.taggar?.typ || [])
+            .filter(t => QUAL_TYPE_KEYS.includes(t))
+            .map(t => QUAL_TYPE_MAP[t])
+            .forEach(lbl => badgeParts.push(`<span class="meta-badge">${lbl}</span>`));
+        }
+        if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeText}: ${priceText}</span>`);
+        if (capacityVal != null) badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${capacityVal}</span>`);
+        if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
+        if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
+        const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
+        const infoPanelHtml = buildInfoPanelHtml({
+          tagsHtml: infoTagsHtml,
+          bodyHtml: infoBodyHtml,
+          meta: infoMeta
+        });
+        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
+        const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        let count;
+        if (isInv(p)) {
+          if (p.id === 'di79') {
+            const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
+            count = Math.min(...qtys);
+          } else {
+            count = invList.filter(c => c.id === p.id).reduce((sum,c)=>sum+(c.qty||1),0);
+          }
+        } else {
+          count = charList.filter(c => c.id === p.id && !c.trait).length;
+        }
+        const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
+        const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
+        const showInfo = compact || hideDetails;
+        const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
+        const idAttr = p.id ? ` data-id="${p.id}"` : '';
+        const editBtn = canEdit
+          ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+          : '';
+        const eliteBtn = isElityrke(p)
+          ? `<button class="char-btn" data-elite-req="${p.namn}">🏋🏻‍♂️</button>`
+          : '';
+        const allowAdd = !(isService(p) || isEmployment(p));
+        const buttonGroupParts = [];
+        if (showInfo) buttonGroupParts.push(infoBtn);
+        if (editBtn) buttonGroupParts.push(editBtn);
+        if (allowAdd) {
+          if (multi) {
+            if (count > 0) {
+              buttonGroupParts.push(`<button data-act="del" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`);
+              buttonGroupParts.push(`<button data-act="sub" class="char-btn" data-name="${p.namn}" aria-label="Minska">➖</button>`);
+              if (count < limit) buttonGroupParts.push(`<button data-act="add" class="char-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
+            } else {
+              buttonGroupParts.push(`<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`);
+            }
+          } else {
+            const mainBtn = inChar
+              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
+              : `<button data-act="add" class="char-btn add-btn" data-name="${p.namn}" aria-label="Lägg till">➕</button>`;
+            buttonGroupParts.push(mainBtn);
+          }
+        }
+        if (eliteBtn) buttonGroupParts.push(eliteBtn);
+        const leftSections = [];
+        if (metaBadges) leftSections.push(metaBadges);
+        if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
+        else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
+        const dataset = { name: p.namn };
+        if (spec) dataset.trait = spec;
+        if (xpVal != null) dataset.xp = xpVal;
+        if (p.id) dataset.id = p.id;
+        const li = createEntryCard({
+          compact,
+          dataset,
+          nameHtml: `${p.namn}${badge}`,
+          xpHtml,
+          tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
+          levelHtml: hideDetails ? '' : lvlSel,
+          descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',
+          leftSections,
+          buttonSections: buttonGroupParts
+        });
+        listEl.appendChild(li);
+        if (searchActive && terms.length) {
+          const titleSpan = li.querySelector('.card-title > span');
+          if (titleSpan) highlightInElement(titleSpan, terms);
+          const descEl = li.querySelector('.card-desc');
+          if (descEl) highlightInElement(descEl, terms);
+        }
       });
+      dom.lista.appendChild(catLi);
+    });
+    // Append special "Hoppsan" category with a clear-filters action
+    {
+      const hopLi = document.createElement('li');
+      hopLi.className = 'cat-group';
+      const hopOpen = catState['Hoppsan'] !== undefined ? catState['Hoppsan'] : openCats.has('Hoppsan');
+      hopLi.innerHTML = `
+        <details data-cat="Hoppsan"${hopOpen ? ' open' : ''}>
+          <summary>Hoppsan</summary>
+          <ul class="card-list"></ul>
+        </details>`;
+      const listEl = hopLi.querySelector('ul');
+      const li = document.createElement('li');
+      li.className = 'card compact hoppsan-card';
+      li.dataset.name = 'Hoppsan';
+      li.innerHTML = `
+<div class="card-title"><span>Hoppsan, här tog det slut.</span></div>
+        <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;
+      listEl.appendChild(li);
+      const detailsEl = hopLi.querySelector('details');
+      detailsEl.addEventListener('toggle', (ev) => {
+        updateCatToggle();
+        if (!ev.isTrusted) return;
+        catState['Hoppsan'] = detailsEl.open;
+        saveState();
+      });
+      dom.lista.appendChild(hopLi);
     }
-
     updateCatToggle();
+    // Only auto-open once per triggering action
     openCatsOnce.clear();
     saveState();
-
-    const duration = Number((now() - startTime).toFixed(2));
-    let mode;
-    if (forceFull || targetCats === null) mode = 'full';
-    else if (targetCats.size === 0) mode = 'skip';
-    else mode = 'partial';
-    const updatedCats = targetCats === null
-      ? 'ALL'
-      : Array.from(targetCats);
-    profileRenderCall({
-      reason,
-      mode,
-      duration,
-      entryCount: listArr.length,
-      catCount: catKeys.length,
-      updatedCats,
-      changedCats: Array.from(changedCats),
-      viewChanged,
-      derivedFromDiff,
-      forcedCats: forcedCats ? Array.from(forcedCats) : [],
-      hasOnlyKeys
-    });
   };
-
-  const refreshEntries = (entryRefs, options = {}) => {
-    const reason = (options && options.reason) || 'entries:refresh';
-    const arr = runFiltered(reason, { source: 'refreshEntries' });
-    if (!entryRefs || !entryRefs.length) {
-      renderList(arr, { reason });
-      return;
-    }
-    const arrById = new Map();
-    const arrByName = new Map();
-    arr.forEach(entry => {
-      const id = entry.id != null ? String(entry.id) : '';
-      if (id) arrById.set(id, entry);
-      if (entry.namn) arrByName.set(entry.namn, entry);
-    });
-    const keys = new Set();
-    entryRefs.forEach(ref => {
-      const entry = resolveEntryRef(ref, arrById, arrByName);
-      if (!entry) return;
-      const key = entryKeyFor(entry);
-      if (key) keys.add(key);
-    });
-    if (!keys.size) {
-      renderList(arr, { reason });
-      return;
-    }
-    renderList(arr, { reason, onlyKeys: keys });
-  };
-
 
   const updateCatToggle = () => {
     const allDetails = [...document.querySelectorAll('.cat-group > details')];
@@ -1161,42 +765,10 @@ function initIndex() {
   };
 
   /* första render */
-  renderFilteredList('init'); activeTags(); updateXP();
+  renderList(filtered()); activeTags(); updateXP();
 
   /* expose update function for party toggles */
-  const PARTY_CATEGORY_HINTS = Object.freeze({
-    'party:smith': ['Kvalitet', 'Mystisk kvalitet'],
-    'party:alchemist': ['Elixir', 'Mystisk kraft', 'Mystisk kvalitet'],
-    'party:artefacter': ['Artefakt', 'Lägre Artefakt', 'Mystisk kraft', 'Mystisk kvalitet']
-  });
-
-  const normalizeUpdateOptions = (input) => {
-    if (input == null) return { reason: 'external', forceFull: true };
-    if (typeof input === 'string') return { reason: input };
-    const opts = { ...input };
-    if (!opts.reason) opts.reason = 'external';
-    if (opts.forceFull == null && opts.reason === 'external') opts.forceFull = true;
-    return opts;
-  };
-
-  window.indexViewUpdate = (input) => {
-    const opts = normalizeUpdateOptions(input);
-    const reason = opts.reason;
-    const renderOpts = {};
-    if (opts.forceFull === true) renderOpts.forceFull = true;
-    if (opts.onlyKeys) renderOpts.onlyKeys = opts.onlyKeys;
-    let forcedCats = null;
-    if (opts.forceCats) {
-      forcedCats = new Set(opts.forceCats);
-    } else if (PARTY_CATEGORY_HINTS[reason]) {
-      forcedCats = new Set(PARTY_CATEGORY_HINTS[reason]);
-    }
-    if (!renderOpts.forceFull && forcedCats && forcedCats.size) {
-      renderOpts.forceCats = forcedCats;
-    }
-    renderFilteredList(reason, renderOpts);
-    if (opts.updateActiveTags !== false) activeTags();
-  };
+  window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
   window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
@@ -1241,7 +813,7 @@ function initIndex() {
             if (c) openCatsOnce.add(c);
           }
           dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          activeTags(); renderFilteredList('search:suggestion-random');
+          activeTags(); renderList(filtered());
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
@@ -1271,7 +843,7 @@ function initIndex() {
           sTemp = '';
           updateSearchDatalist();
           activeTags();
-          renderFilteredList('search:suggestion-select', { forceFull: true });
+          renderList(filtered());
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1344,7 +916,7 @@ function initIndex() {
             if (cat) openCatsOnce.add(cat);
             dom.sIn.value=''; sTemp='';
             updateSearchDatalist();
-            activeTags(); renderFilteredList('search:command-random');
+            activeTags(); renderList(filtered());
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }
@@ -1370,7 +942,7 @@ function initIndex() {
         storeHelper.clearRevealedArtifacts(store);
         revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
         fillDropdowns();
-        activeTags(); renderFilteredList('search:lol-reset', { forceFull: true });
+        activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1378,7 +950,7 @@ function initIndex() {
         showArtifacts = true;
         dom.sIn.value=''; sTemp='';
         fillDropdowns();
-        activeTags(); renderFilteredList('search:molly', { forceFull: true });
+        activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1407,7 +979,7 @@ function initIndex() {
         F.search = [];
       }
       dom.sIn.value=''; sTemp='';
-      activeTags(); renderFilteredList('search:enter', { forceFull: true });
+      activeTags(); renderList(filtered());
       updateSearchDatalist();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1425,17 +997,16 @@ function initIndex() {
   [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
     dom[sel].addEventListener('change',()=>{
       const v = dom[sel].value;
-      const reasonBase = `filters:${key}`;
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        activeTags(); renderFilteredList(`${reasonBase}-clear`);
+        activeTags(); renderList(filtered());
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
         dom[sel].value = '';
-        activeTags(); renderFilteredList('filters:only-selected');
+        activeTags(); renderList(filtered());
         return;
       }
       if(v && !F[key].includes(v)) F[key].push(v);
@@ -1443,27 +1014,18 @@ function initIndex() {
       if (sel === 'typSel' && v) {
         openCatsOnce.add(v);
       }
-      dom[sel].value='';
-      activeTags();
-      renderFilteredList(`${reasonBase}-add`);
+      dom[sel].value=''; activeTags(); renderList(filtered());
     });
   });
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') {
-      fixedRandomEntries = null;
-      fixedRandomInfo = null;
-      activeTags();
-      renderFilteredList('filters:random-clear');
-      return;
-    }
+    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); renderList(filtered()); return; }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    const reason = `filters:active-remove:${section}`;
-    activeTags(); renderFilteredList(reason);
+    activeTags(); renderList(filtered());
   });
 
   // Treat clicks on tags anywhere as filter selections
@@ -1476,8 +1038,7 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    const reason = `filters:tag-click:${section}`;
-    activeTags(); renderFilteredList(reason);
+    activeTags(); renderList(filtered());
   });
 
   /* lista-knappar */
@@ -1538,20 +1099,11 @@ function initIndex() {
     if (!p && name) p = entries.find(x => x.namn === name);
     if (!p) p = lookupEntry(ref);
     if (!p) return;
-    const applyRefresh = (refs) => {
-      if (refs === true) {
-        renderFilteredList('list:update:all', { forceFull: true });
-        return;
-      }
-      const arrRefs = Array.isArray(refs) ? refs : [refs];
-      if (!arrRefs.length) return;
-      refreshEntries(arrRefs);
-    };
     if (act === 'editCustom') {
       if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
       window.invUtil.editCustomEntry(p, () => {
         if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'inventory:custom-edit', forceFull: true });
+        if (window.indexViewUpdate) window.indexViewUpdate();
         if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
           window.invUtil.renderInventory();
         }
@@ -1598,7 +1150,7 @@ function initIndex() {
           if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
           invUtil.saveInventory(inv); invUtil.renderInventory();
           activeTags();
-          applyRefresh(p);
+          renderList(filtered());
         });
         return;
       }
@@ -1621,11 +1173,7 @@ function initIndex() {
             }
           });
           invUtil.saveInventory(inv); invUtil.renderInventory();
-          const bundleEntries = FALT_BUNDLE
-            .map(id => lookupEntry({ id }) || invUtil.getEntry(id))
-            .filter(Boolean);
-          bundleEntries.push(p);
-          applyRefresh(bundleEntries);
+          renderList(filtered());
           FALT_BUNDLE.forEach(id => {
             const ent = invUtil.getEntry(id);
             const i = inv.findIndex(r => r.id === id);
@@ -1701,13 +1249,13 @@ function initIndex() {
               }
               if (addedToList || hidden) {
                 if (window.updateXP) updateXP();
-                if (window.renderTraits) renderTraits({ source: 'list:update' });
+                if (window.renderTraits) renderTraits();
               }
               if (hidden && p.id) {
                 storeHelper.addRevealedArtifact(store, p.id);
               }
             }
-            applyRefresh(p);
+            renderList(filtered());
             const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
             if (li) {
               li.classList.add('inv-flash');
@@ -1851,8 +1399,8 @@ function initIndex() {
             list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            applyRefresh(p);
-            renderTraits({ source: 'list:update' });
+            renderList(filtered());
+            renderTraits();
             flashAdded(added.namn, added.trait);
           });
           return;
@@ -1864,8 +1412,8 @@ function initIndex() {
             list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            applyRefresh(p);
-            renderTraits({ source: 'list:update' });
+            renderList(filtered());
+            renderTraits();
             flashAdded(added.namn, added.trait);
           });
           return;
@@ -1885,8 +1433,8 @@ function initIndex() {
             }
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            applyRefresh(p);
-            renderTraits({ source: 'list:update' });
+            renderList(filtered());
+            renderTraits();
             flashAdded(added.namn, added.trait);
           });
           return;
@@ -1920,8 +1468,8 @@ function initIndex() {
             invUtil.addWellEquippedItems(inv);
             invUtil.saveInventory(inv); invUtil.renderInventory();
           }
-          applyRefresh(p);
-          renderTraits({ source: 'list:update' });
+          renderList(filtered());
+          renderTraits();
           flashAdded(added.namn, added.trait);
         };
         if (isMonstrousTrait(p)) {
@@ -1943,7 +1491,6 @@ function initIndex() {
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
-        let updatedEntries = [p];
         if (p.id === 'di79') {
           const removeCnt = (act === 'del' || act === 'rem')
             ? Math.min(...FALT_BUNDLE.map(id => inv.find(r => r.id === id)?.qty || 0))
@@ -1957,10 +1504,6 @@ function initIndex() {
               }
             });
           }
-          updatedEntries = FALT_BUNDLE
-            .map(id => lookupEntry({ id }) || invUtil.getEntry(id))
-            .filter(Boolean);
-          updatedEntries.push(p);
         } else {
           const idxInv = inv.findIndex(x => x.id===p.id);
           if (idxInv >= 0) {
@@ -1981,11 +1524,11 @@ function initIndex() {
             let list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
             storeHelper.setCurrentList(store, list);
             if (window.updateXP) updateXP();
-            if (window.renderTraits) renderTraits({ source: 'list:update' });
+            if (window.renderTraits) renderTraits();
             if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
           }
         }
-        applyRefresh(updatedEntries);
+        renderList(filtered());
       } else {
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
@@ -2047,9 +1590,7 @@ function initIndex() {
           if(!(await confirmPopup(msg)))
             return;
         }
-        const affectedRefs = [p, ...remDeps];
         storeHelper.setCurrentList(store,list); updateXP();
-        applyRefresh(affectedRefs);
         if (p.namn === 'Privilegierad') {
           invUtil.renderInventory();
         }
@@ -2099,7 +1640,8 @@ function initIndex() {
       }
     }
     activeTags();
-    renderTraits({ source: 'list:update' });
+    renderList(filtered());
+    renderTraits();
     if (act==='add') {
       flashAdded(name, tr);
     } else if (act==='sub' || act==='del' || act==='rem') {
@@ -2115,10 +1657,6 @@ function initIndex() {
     const list = storeHelper.getCurrentList(store);
     const ent  = list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
     if (ent){
-      const applyLevelRefresh = (refs) => {
-        const arrRefs = Array.isArray(refs) ? refs : [refs];
-        refreshEntries(arrRefs);
-      };
       const before = list.map(x => ({...x}));
       const old = ent.nivå;
       ent.nivå = e.target.value;
@@ -2141,16 +1679,14 @@ function initIndex() {
               if(!spec){ ent.nivå=old; e.target.value=old; return; }
               ent.trait=spec;
               storeHelper.setCurrentList(store,list); updateXP();
-              applyLevelRefresh(name);
-              renderTraits({ source: 'list:update' });
+              renderList(filtered()); renderTraits();
             });
             return;
           }
         }else if(ent.trait){
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
-          applyLevelRefresh(name);
-          renderTraits({ source: 'list:update' });
+          renderList(filtered()); renderTraits();
           return;
         }
       }
@@ -2178,7 +1714,6 @@ function initIndex() {
         if(newIdx>=2 && oldIdx<2) toAdd.push('Naturligt vapen','Pansar');
         if(newIdx>=3 && oldIdx<3) toAdd.push('Robust','Regeneration');
         let rem=storeHelper.getHamnskifteRemoved(store);
-        const affected = new Set([name]);
         toAdd.forEach(n=>{
           const hamName=storeHelper.HAMNSKIFTE_NAMES[n];
           if(!list.some(x=>x.namn===hamName) && !rem.includes(n)){
@@ -2186,22 +1721,11 @@ function initIndex() {
             if(entry) list.push({ ...entry, namn:hamName, form:'beast' });
           }
           rem=rem.filter(x=>x!==n);
-          if (hamName) affected.add(hamName);
         });
         storeHelper.setHamnskifteRemoved(store, rem);
-        toRemove.forEach(n => {
-          const hamName = storeHelper.HAMNSKIFTE_NAMES[n];
-          if (hamName) affected.add(hamName);
-        });
-        storeHelper.setCurrentList(store,list); updateXP();
-        applyLevelRefresh([...affected]);
-        renderTraits({ source: 'list:update' });
-        flashAdded(name, tr);
-        return;
       }
       storeHelper.setCurrentList(store,list); updateXP();
-      applyLevelRefresh(name);
-      renderTraits({ source: 'list:update' });
+      renderList(filtered()); renderTraits();
       flashAdded(name, tr);
       return;
     }

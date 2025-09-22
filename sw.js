@@ -1,6 +1,5 @@
-const CACHE_NAME = 'symbaroum-pwa-v9';
-
-const APP_SHELL = [
+const CACHE_NAME = 'symbaroum-pwa-v8';
+const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
   'character.html',
@@ -11,20 +10,18 @@ const APP_SHELL = [
   // Icons
   'icons/icon_DA',
   // JavaScript
-  'js/artifact-payment.js',
   'js/auto-resize.js',
+  'js/artifact-payment.js',
   'js/beastform.js',
   'js/bloodbond.js',
   'js/character-view.js',
   'js/djurmask.js',
   'js/elite-add.js',
   'js/elite-req.js',
-  'js/entry-card.js',
   'js/exceptionellt.js',
   'js/index-view.js',
-  'js/inventory-utils.js',
   'js/jszip.min.js',
-  'js/kraftval.js',
+  'js/inventory-utils.js',
   'js/main.js',
   'js/monsterlard.js',
   'js/notes-view.js',
@@ -36,97 +33,79 @@ const APP_SHELL = [
   'js/text-format.js',
   'js/traits-utils.js',
   'js/utils.js',
-  'js/yrke-panel.js'
-];
-
-const APP_SHELL_URLS = new Set(
-  APP_SHELL.map(path => new URL(path, self.location.origin).href)
-);
-
-const RUNTIME_CACHE_PATTERNS = [
-  /\.pdf(?:\?|$)/i,
-  /\/data\/.*\.(?:json|zip)$/i
+  'js/yrke-panel.js',
+  // Data JSON
+  'data/anstallning.json',
+  'data/artefakter.json',
+  'data/byggnader.json',
+  'data/diverse.json',
+  'data/dryck.json',
+  'data/elityrke.json',
+  'data/elixir.json',
+  'data/kuriositeter.json',
+  'data/skatter.json',
+  'data/fallor.json',
+  'data/fardmedel.json',
+  'data/fordel.json',
+  'data/formaga.json',
+  'data/forvaring.json',
+  'data/gardsdjur.json',
+  'data/instrument.json',
+  'data/klader.json',
+  'data/kvalitet.json',
+  'data/lagre-artefakter.json',
+  'data/mat.json',
+  'data/monstruost-sardrag.json',
+  'data/mystisk-kraft.json',
+  'data/mystisk-kvalitet.json',
+  'data/nackdel.json',
+  'data/negativ-kvalitet.json',
+  'data/neutral-kvalitet.json',
+  'data/pdf-list.json',
+  'data/ras.json',
+  'data/ritual.json',
+  'data/rustning.json',
+  'data/sardrag.json',
+  'data/specialverktyg.json',
+  'data/tabeller.json',
+  'data/tjanster.json',
+  'data/vapen.json',
+  'data/yrke.json'
 ];
 
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL))
+    (async () => {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.addAll(URLS_TO_CACHE);
+      const response = await cache.match('data/pdf-list.json');
+      if (response) {
+        const pdfs = await response.json();
+        const files = pdfs.flatMap(c => c.items.map(p => p.file));
+        await cache.addAll(files);
+      }
+    })()
   );
 });
 
 self.addEventListener('fetch', event => {
-  const { request } = event;
-
-  if (request.method !== 'GET') {
-    return;
-  }
-
-  const url = new URL(request.url);
-
-  if (url.origin !== self.location.origin) {
+  if (
+    event.request.method !== 'GET' ||
+    !event.request.url.startsWith(self.location.origin)
+  ) {
+    event.respondWith(fetch(event.request));
     return;
   }
 
   event.respondWith(
-    (async () => {
-      if (request.mode === 'navigate') {
-        try {
-          const networkResponse = await fetch(request);
-          const cache = await caches.open(CACHE_NAME);
-          cache.put(request, networkResponse.clone());
-          return networkResponse;
-        } catch (error) {
-          const cache = await caches.open(CACHE_NAME);
-          const cachedResponse = await cache.match(request);
-          if (cachedResponse) {
-            return cachedResponse;
-          }
-
-          const fallback = await cache.match('index.html');
-          if (fallback) {
-            return fallback;
-          }
-
-          return Response.error();
-        }
-      }
-
-      if (APP_SHELL_URLS.has(request.url)) {
-        const cachedResponse = await caches.match(request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        const networkResponse = await fetch(request);
-        const cache = await caches.open(CACHE_NAME);
-        cache.put(request, networkResponse.clone());
-        return networkResponse;
-      }
-
-      if (RUNTIME_CACHE_PATTERNS.some(pattern => pattern.test(url.pathname))) {
-        const cache = await caches.open(CACHE_NAME);
-        const cachedResponse = await cache.match(request);
-        if (cachedResponse) {
-          return cachedResponse;
-        }
-
-        try {
-          const networkResponse = await fetch(request);
-          if (networkResponse && networkResponse.ok) {
-            cache.put(request, networkResponse.clone());
-          }
-          return networkResponse;
-        } catch (error) {
-          return cache.match(request);
-        }
-      }
-
-      try {
-        return await fetch(request);
-      } catch (error) {
-        return caches.match(request);
-      }
-    })()
+    fetch(event.request)
+      .then(fetchResponse =>
+        caches.open(CACHE_NAME).then(cache => {
+          cache.put(event.request, fetchResponse.clone());
+          return fetchResponse;
+        })
+      )
+      .catch(() => caches.match(event.request))
   );
 });
 

@@ -122,78 +122,7 @@ let   lastActiveChar = store.current || '';
 
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
-const toolbarLookup = (() => {
-  if (typeof window !== 'undefined' && typeof window.__sharedToolbarLookup === 'function') {
-    return window.__sharedToolbarLookup;
-  }
-  const escapeId = (() => {
-    if (typeof window !== 'undefined' && typeof window.__sharedToolbarEscapeId === 'function') {
-      return window.__sharedToolbarEscapeId;
-    }
-    if (typeof CSS !== 'undefined' && typeof CSS.escape === 'function') {
-      return value => CSS.escape(String(value));
-    }
-    return value => {
-      const string = value == null ? '' : String(value);
-      const length = string.length;
-      if (length === 0) return '';
-      let index = -1;
-      let codeUnit;
-      let result = '';
-      const firstCodeUnit = string.charCodeAt(0);
-      while (++index < length) {
-        codeUnit = string.charCodeAt(index);
-        if (codeUnit === 0x0000) {
-          result += '�';
-          continue;
-        }
-        if (
-          (codeUnit >= 0x0001 && codeUnit <= 0x001F) ||
-          codeUnit === 0x007F ||
-          (index === 0 && codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
-          (
-            index === 1 &&
-            codeUnit >= 0x0030 && codeUnit <= 0x0039 &&
-            firstCodeUnit === 0x002D
-          )
-        ) {
-          result += `\\${codeUnit.toString(16)} `;
-          continue;
-        }
-        if (index === 0 && codeUnit === 0x002D && length === 1) {
-          result += `\\${string.charAt(index)}`;
-          continue;
-        }
-        if (
-          codeUnit >= 0x0080 ||
-          codeUnit === 0x002D ||
-          codeUnit === 0x005F ||
-          (codeUnit >= 0x0030 && codeUnit <= 0x0039) ||
-          (codeUnit >= 0x0041 && codeUnit <= 0x005A) ||
-          (codeUnit >= 0x0061 && codeUnit <= 0x007A)
-        ) {
-          result += string.charAt(index);
-          continue;
-        }
-        result += `\\${string.charAt(index)}`;
-      }
-      return result;
-    };
-  })();
-  return (root, id) => {
-    if (!root || id == null) return null;
-    if (typeof root.getElementById === 'function') {
-      return root.getElementById(id);
-    }
-    const escaped = escapeId(id);
-    if (!escaped) return null;
-    return root.querySelector(`#${escaped}`);
-  };
-})();
-const $T   = id => {
-  if (!bar) return null;
-  return toolbarLookup(bar.shadowRoot, id);
-};
+const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM
 const dom  = {
   /* toolbar / panel */
   charSel : $T('charSelect'),   delBtn : $T('deleteChar'),
@@ -307,7 +236,7 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       // Collapse all cards except the one containing the target element (within its panel)
       const isInToolbar = !!(el && bar.shadowRoot && bar.shadowRoot.contains(el));
       if (panelId && el) {
-        const panel = $T(panelId);
+        const panel = bar.shadowRoot.getElementById(panelId);
         const card = el.closest('.card');
         if (panel && card) {
           const allCards = panel.querySelectorAll('.card');
@@ -533,11 +462,6 @@ let DB = [];
 let DBIndex = {};
 window.DB = DB;
 window.DBIndex = DBIndex;
-
-const DATA_CACHE_VERSION = 1;
-const DB_CACHE_KEY = `symbapedia:db-cache:v${DATA_CACHE_VERSION}`;
-const TABELLER_CACHE_KEY = `symbapedia:tabeller-cache:v${DATA_CACHE_VERSION}`;
-
 const DATA_FILES = [
   'diverse.json',
   'kuriositeter.json',
@@ -577,138 +501,36 @@ const DATA_FILES = [
 
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
-window.TABELLER = TABELLER;
-
-function loadCachedArray(key) {
-  try {
-    const raw = localStorage.getItem(key);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : null;
-  } catch (err) {
-    console.warn('Kunde inte läsa cache', key, err);
-    return null;
-  }
-}
-
-function saveCachedArray(key, value) {
-  try {
-    localStorage.setItem(key, JSON.stringify(value));
-  } catch (err) {
-    console.warn('Kunde inte spara cache', key, err);
-  }
-}
-
-function showDataLoadError(message) {
-  try {
-    const target = dom.lista || dom.valda;
-    if (target) {
-      target.innerHTML = '';
-      const li = document.createElement('li');
-      li.className = 'card card-error';
-      li.textContent = message;
-      target.appendChild(li);
-      return;
-    }
-    const panel = document.querySelector('.panel');
-    if (panel) {
-      const div = document.createElement('div');
-      div.className = 'card card-error';
-      div.textContent = message;
-      panel.innerHTML = '';
-      panel.appendChild(div);
-    }
-  } catch (err) {
-    console.error(message);
-  }
-}
-
-async function fetchJsonStrict(url) {
-  const response = await fetch(url);
-  if (!response.ok) {
-    throw new Error(`HTTP ${response.status} när ${url} skulle hämtas`);
-  }
-  return response.json();
-}
-
-function applyTabeller(arr) {
-  TABELLER = Array.isArray(arr) ? arr : [];
-  window.TABELLER = TABELLER;
-  if (typeof window.indexViewUpdate === 'function') {
-    window.indexViewUpdate({ reason: 'data:tabeller', forceFull: true });
-    if (typeof window.indexViewRefreshFilters === 'function') {
-      window.indexViewRefreshFilters();
-    }
-  }
-}
-
-function hydrateDatabase(entries) {
-  const arr = Array.isArray(entries) ? entries.slice() : [];
-  arr.sort(sortByType);
-  arr.forEach((ent, idx) => {
-    if (!ent || typeof ent !== 'object') return;
-    if (ent.id === undefined || ent.id === null || ent.id === '') {
-      ent.id = idx;
-    }
-  });
-  DB = arr;
-  window.DB = DB;
-  DBIndex = {};
-  DB.forEach(ent => {
-    if (!ent || typeof ent !== 'object') return;
-    if (ent.namn) DBIndex[ent.namn] = ent;
-    const key = ent.id;
-    if (key !== undefined && key !== null && key !== '') {
-      DB[String(key)] = ent;
-    }
-  });
-  window.DBIndex = DBIndex;
-}
-
-function finalizeDatabaseReady() {
-  if (storeHelper.migrateInventoryIds) {
-    storeHelper.migrateInventoryIds(store);
-    store = storeHelper.load();
-  }
-  boot();
-}
-
-const cachedTabeller = loadCachedArray(TABELLER_CACHE_KEY);
-if (cachedTabeller && cachedTabeller.length) {
-  applyTabeller(cachedTabeller);
-}
-
-fetchJsonStrict(TABELLER_FILE)
+fetch(TABELLER_FILE)
+  .then(r => r.json())
   .then(arr => {
-    applyTabeller(arr);
-    saveCachedArray(TABELLER_CACHE_KEY, arr);
-  })
-  .catch(err => {
-    if (!cachedTabeller || !cachedTabeller.length) {
-      console.warn('Kunde inte ladda tabeller', err);
+    TABELLER = arr;
+    window.TABELLER = TABELLER;
+    if (typeof window.indexViewUpdate === 'function') {
+      window.indexViewUpdate();
+      if (typeof window.indexViewRefreshFilters === 'function') {
+        window.indexViewRefreshFilters();
+      }
     }
   });
 
-async function loadDatabase() {
-  try {
-    const arrays = await Promise.all(DATA_FILES.map(fetchJsonStrict));
-    const merged = arrays.flat();
-    hydrateDatabase(merged);
-    saveCachedArray(DB_CACHE_KEY, DB);
-    finalizeDatabaseReady();
-  } catch (err) {
-    console.error('Kunde inte ladda databasen', err);
-    const cached = loadCachedArray(DB_CACHE_KEY);
-    if (cached && cached.length) {
-      hydrateDatabase(cached);
-      finalizeDatabaseReady();
-    } else {
-      showDataLoadError('Kunde inte läsa databasen. Kontrollera uppkoppling och ladda om.');
+Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
+  .then(arrays => {
+    DB = arrays.flat().sort(sortByType);
+    DB.forEach((ent, idx) => {
+      if (ent.id === undefined) ent.id = idx;
+      DB[ent.id] = ent;
+    });
+    window.DB = DB;
+    DBIndex = {};
+    DB.forEach(ent => { DBIndex[ent.namn] = ent; });
+    window.DBIndex = DBIndex;
+    if (storeHelper.migrateInventoryIds) {
+      storeHelper.migrateInventoryIds(store);
+      store = storeHelper.load();
     }
-  }
-}
-
-loadDatabase();
+    boot();
+  });
 
 /* ===========================================================
    HJÄLPFUNKTIONER
@@ -766,7 +588,7 @@ function boot() {
   bindToolbar();
 
   if (dom.traits && typeof renderTraits === 'function') {
-    renderTraits({ source: 'init' });
+    renderTraits();
     if (typeof bindTraits === 'function') bindTraits();
   }
   if (ROLE === 'index')     initIndex();
@@ -816,11 +638,11 @@ function applyCharacterChange() {
     if (typeof window.updateXP === 'function') updateXP();
 
     // Ensure traits panel reflects the new character regardless of inventory path
-    if (typeof window.renderTraits === 'function') renderTraits({ source: 'character-change' });
+    if (typeof window.renderTraits === 'function') renderTraits();
 
     // Re-render main content depending on view
     if (typeof window.indexViewRefreshFilters === 'function') window.indexViewRefreshFilters();
-    if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate({ reason: 'character:change', forceFull: true });
+    if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
     if (typeof window.notesUpdate === 'function') window.notesUpdate();
   } catch (err) {
     // As a last resort, fall back to reload to avoid a broken UI
@@ -921,7 +743,7 @@ function bindToolbar() {
 
       // Uppdatera menyer och index-vy utan omladdning
       refreshCharSelect();
-      if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate({ reason: 'folder:change', forceFull: true });
+      if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
     });
   }
 
@@ -1003,7 +825,7 @@ function bindToolbar() {
         storeHelper.save(store);
         refreshCharSelect();
         if (dom.cName) dom.cName.textContent = name;
-        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate({ reason: 'character:rename', forceFull: true });
+        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
       }
     }
 
@@ -1263,7 +1085,7 @@ function bindToolbar() {
       const next = { ...t };
       KEYS.forEach(k => { next[k] = 10; });
       storeHelper.setTraits(store, next);
-      if (window.renderTraits) renderTraits({ source: 'traits:reset' });
+      if (window.renderTraits) renderTraits();
     }
   });
 
@@ -1297,7 +1119,7 @@ function bindToolbar() {
         dom.forgeBtn.classList.toggle('active', Boolean(level));
         storeHelper.setPartySmith(store, level);
         invUtil.renderInventory();
-        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'party:smith' });
+        if (window.indexViewUpdate) window.indexViewUpdate();
       });
     });
   }
@@ -1309,7 +1131,7 @@ function bindToolbar() {
         dom.alcBtn.classList.toggle('active', Boolean(level));
         storeHelper.setPartyAlchemist(store, level);
         invUtil.renderInventory();
-        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'party:alchemist' });
+        if (window.indexViewUpdate) window.indexViewUpdate();
       });
     });
   }
@@ -1321,7 +1143,7 @@ function bindToolbar() {
         dom.artBtn.classList.toggle('active', Boolean(level));
         storeHelper.setPartyArtefacter(store, level);
         invUtil.renderInventory();
-        if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'party:artefacter' });
+        if (window.indexViewUpdate) window.indexViewUpdate();
       });
     });
   }
@@ -1332,7 +1154,7 @@ function bindToolbar() {
         if (trait === null) return;
         dom.defBtn.classList.toggle('active', Boolean(trait));
         storeHelper.setDefenseTrait(store, trait);
-        if (window.renderTraits) renderTraits({ source: 'defense:change' });
+        if (window.renderTraits) renderTraits();
       });
     });
   }
@@ -1341,7 +1163,7 @@ function bindToolbar() {
     dom.filterUnion.addEventListener('click', () => {
       const val = dom.filterUnion.classList.toggle('active');
       storeHelper.setFilterUnion(store, val);
-      if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'filters:union-toggle' });
+      if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }
   if (dom.entryViewToggle) {
@@ -1350,27 +1172,27 @@ function bindToolbar() {
       const val = dom.entryViewToggle.classList.toggle('active');
       // "active" betyder nu expanderad/vanlig vy; compact = !active
       storeHelper.setCompactEntries(store, !val);
-      if (window.indexViewUpdate) window.indexViewUpdate({ reason: 'view:compact', forceFull: true });
+      if (window.indexViewUpdate) window.indexViewUpdate();
     });
   }
 }
 
 // ---------- Popup: Mapphanterare ----------
 function openFolderManagerPopup() {
-  const pop  = $T('folderManagerPopup');
-  const list = $T('folderList');
-  const closeBtn = $T('folderManagerDone');
-  const closeX   = $T('folderManagerCloseX');
-  const addBtn = $T('addFolderBtn');
-  const nameIn = $T('newFolderName');
-  const moveGroup = $T('folderMoveGroup');
-  const moveSel   = $T('folderMoveSelect');
-  const moveApply = $T('folderMoveApply');
-  const charList  = $T('folderCharList');
-  const renamePop    = $T('renameFolderPopup');
-  const renameInput  = $T('renameFolderName');
-  const renameCancel = $T('renameFolderCancel');
-  const renameApply  = $T('renameFolderApply');
+  const pop  = bar.shadowRoot.getElementById('folderManagerPopup');
+  const list = bar.shadowRoot.getElementById('folderList');
+  const closeBtn = bar.shadowRoot.getElementById('folderManagerDone');
+  const closeX   = bar.shadowRoot.getElementById('folderManagerCloseX');
+  const addBtn = bar.shadowRoot.getElementById('addFolderBtn');
+  const nameIn = bar.shadowRoot.getElementById('newFolderName');
+  const moveGroup = bar.shadowRoot.getElementById('folderMoveGroup');
+  const moveSel   = bar.shadowRoot.getElementById('folderMoveSelect');
+  const moveApply = bar.shadowRoot.getElementById('folderMoveApply');
+  const charList  = bar.shadowRoot.getElementById('folderCharList');
+  const renamePop    = bar.shadowRoot.getElementById('renameFolderPopup');
+  const renameInput  = bar.shadowRoot.getElementById('renameFolderName');
+  const renameCancel = bar.shadowRoot.getElementById('renameFolderCancel');
+  const renameApply  = bar.shadowRoot.getElementById('renameFolderApply');
   const inner        = pop.querySelector('.popup-inner');
   let cancelRename = null;
   let innerClickStop = null;
@@ -1624,9 +1446,9 @@ function openFolderManagerPopup() {
 }
 
 function openAlchemistPopup(cb) {
-  const pop  = $T('alcPopup');
-  const box  = $T('alcOptions');
-  const cls  = $T('alcCancel');
+  const pop  = bar.shadowRoot.getElementById('alcPopup');
+  const box  = bar.shadowRoot.getElementById('alcOptions');
+  const cls  = bar.shadowRoot.getElementById('alcCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -1655,9 +1477,9 @@ function openAlchemistPopup(cb) {
 }
 
 function openSmithPopup(cb) {
-  const pop  = $T('smithPopup');
-  const box  = $T('smithOptions');
-  const cls  = $T('smithCancel');
+  const pop  = bar.shadowRoot.getElementById('smithPopup');
+  const box  = bar.shadowRoot.getElementById('smithOptions');
+  const cls  = bar.shadowRoot.getElementById('smithCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -1686,9 +1508,9 @@ function openSmithPopup(cb) {
 }
 
 function openArtefacterPopup(cb) {
-  const pop  = $T('artPopup');
-  const box  = $T('artOptions');
-  const cls  = $T('artCancel');
+  const pop  = bar.shadowRoot.getElementById('artPopup');
+  const box  = bar.shadowRoot.getElementById('artOptions');
+  const cls  = bar.shadowRoot.getElementById('artCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -1717,9 +1539,9 @@ function openArtefacterPopup(cb) {
 }
 
 function openDefensePopup(cb) {
-  const pop  = $T('defensePopup');
-  const box  = $T('defenseOptions');
-  const cls  = $T('defenseCancel');
+  const pop  = bar.shadowRoot.getElementById('defensePopup');
+  const box  = bar.shadowRoot.getElementById('defenseOptions');
+  const cls  = bar.shadowRoot.getElementById('defenseCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -1859,80 +1681,19 @@ async function exportAllCharactersSeparate() {
   }
 }
 
-let jsZipLoaderPromise = null;
-
-async function ensureJsZipLoaded() {
-  if (window.JSZip) return window.JSZip;
-  if (!jsZipLoaderPromise) {
-    jsZipLoaderPromise = new Promise((resolve, reject) => {
-      let script = document.querySelector('script[data-jszip-loader]');
-
-      function cleanup() {
-        if (script) {
-          script.removeEventListener('load', onLoad);
-          script.removeEventListener('error', onError);
-        }
-      }
-
-      function onLoad() {
-        cleanup();
-        if (window.JSZip) {
-          resolve(window.JSZip);
-        } else {
-          reject(new Error('JSZip kunde inte initieras.'));
-        }
-      }
-
-      function onError(event) {
-        if (script && script.parentNode) {
-          script.parentNode.removeChild(script);
-        }
-        cleanup();
-        reject(event instanceof Error ? event : new Error('Kunde inte ladda JSZip.'));
-      }
-
-      if (!script) {
-        script = document.createElement('script');
-        script.src = 'js/jszip.min.js';
-        script.async = true;
-        script.setAttribute('data-jszip-loader', 'true');
-        script.addEventListener('load', onLoad);
-        script.addEventListener('error', onError);
-        (document.head || document.body || document.documentElement).appendChild(script);
-      } else {
-        script.addEventListener('load', onLoad);
-        script.addEventListener('error', onError);
-        if (script.readyState === 'loaded' || script.readyState === 'complete') {
-          setTimeout(onLoad, 0);
-        }
-      }
-    }).catch(err => {
-      jsZipLoaderPromise = null;
-      throw err;
-    });
-  }
-  return jsZipLoaderPromise;
-}
-
 async function exportAllCharactersZipped() {
   const all = store.characters
     .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
     .filter(Boolean);
   if (!all.length) return;
 
-  let JSZipLib;
-  try {
-    JSZipLib = await ensureJsZipLoaded();
-  } catch {
-    await exportAllCharactersSeparate();
-    return;
-  }
-  if (!JSZipLib) {
+  if (!window.JSZip) {
+    // Fallback to separate if JSZip not loaded
     await exportAllCharactersSeparate();
     return;
   }
 
-  const zip = new JSZipLib();
+  const zip = new JSZip();
   for (const data of all) {
     const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
     zip.file(`${name}.json`, JSON.stringify(data, null, 2));
@@ -2076,16 +1837,9 @@ async function exportActiveFolderZipped() {
       .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
     if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
 
-    let JSZipLib;
-    try {
-      JSZipLib = await ensureJsZipLoaded();
-    } catch {
-      await exportActiveFolderSeparate();
-      return;
-    }
-    if (!JSZipLib) { await exportActiveFolderSeparate(); return; }
+    if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
 
-    const zip = new JSZipLib();
+    const zip = new JSZip();
     for (const c of chars) {
       const data = storeHelper.exportCharacterJSON(store, c.id, true);
       if (!data) continue;
@@ -2100,9 +1854,9 @@ async function exportActiveFolderZipped() {
   }
 }
 function openChoicePopup(build, cb) {
-  const pop  = $T('exportPopup');
-  const opts = $T('exportOptions');
-  const cls  = $T('exportCancel');
+  const pop  = bar.shadowRoot.getElementById('exportPopup');
+  const opts = bar.shadowRoot.getElementById('exportOptions');
+  const cls  = bar.shadowRoot.getElementById('exportCancel');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -2295,12 +2049,12 @@ async function openImportPopup() {
   const pop = bar?.shadowRoot?.getElementById('importPopup');
   if (!pop) return null;
 
-  const btnChoose= $T('importBtnChoose');
-  const btnFrom  = $T('importBtnFromFile');
-  const folderEl = $T('importFolderSelect');
-  const makeActChoose = $T('importMakeActiveChoose');
-  const makeActFrom   = $T('importMakeActiveFromDir');
-  const cancel   = $T('importCancel');
+  const btnChoose= bar.shadowRoot.getElementById('importBtnChoose');
+  const btnFrom  = bar.shadowRoot.getElementById('importBtnFromFile');
+  const folderEl = bar.shadowRoot.getElementById('importFolderSelect');
+  const makeActChoose = bar.shadowRoot.getElementById('importMakeActiveChoose');
+  const makeActFrom   = bar.shadowRoot.getElementById('importMakeActiveFromDir');
+  const cancel   = bar.shadowRoot.getElementById('importCancel');
 
   if (!btnChoose || !btnFrom || !folderEl || !cancel) return null;
 
@@ -2392,9 +2146,9 @@ async function getFilesFromDirectory(dirHandle) {
 }
 
 function openNilasPopup(cb) {
-  const pop = $T('nilasPopup');
-  const yes = $T('nilasYes');
-  const no  = $T('nilasNo');
+  const pop = bar.shadowRoot.getElementById('nilasPopup');
+  const yes = bar.shadowRoot.getElementById('nilasYes');
+  const no  = bar.shadowRoot.getElementById('nilasNo');
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
   function close() {
@@ -2442,11 +2196,11 @@ function tryBomb(term) {
 async function openNewCharPopupWithFolder(preferredFolderId) {
   const pop = bar?.shadowRoot?.getElementById('newCharPopup');
   if (!pop) return null;
-  const nameIn   = $T('newCharName');
-  const folderEl = $T('newCharFolder');
-  const xpIn     = $T('newCharXp');
-  const create   = $T('newCharCreate');
-  const cancel   = $T('newCharCancel');
+  const nameIn   = bar.shadowRoot.getElementById('newCharName');
+  const folderEl = bar.shadowRoot.getElementById('newCharFolder');
+  const xpIn     = bar.shadowRoot.getElementById('newCharXp');
+  const create   = bar.shadowRoot.getElementById('newCharCreate');
+  const cancel   = bar.shadowRoot.getElementById('newCharCancel');
 
   // Fyll mapp-listan
   const folders = (storeHelper.getFolders(store) || []).slice()
@@ -2505,10 +2259,10 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
 async function openRenameCharPopupWithFolder(preferredFolderId, defaultName) {
   const pop = bar?.shadowRoot?.getElementById('renameCharPopup');
   if (!pop) return null;
-  const nameIn   = $T('renameCharName');
-  const folderEl = $T('renameCharFolder');
-  const applyBtn = $T('renameCharApply');
-  const cancel   = $T('renameCharCancel');
+  const nameIn   = bar.shadowRoot.getElementById('renameCharName');
+  const folderEl = bar.shadowRoot.getElementById('renameCharFolder');
+  const applyBtn = bar.shadowRoot.getElementById('renameCharApply');
+  const cancel   = bar.shadowRoot.getElementById('renameCharCancel');
 
   // Fyll mapp-listan
   const folders = (storeHelper.getFolders(store) || []).slice()
@@ -2565,10 +2319,10 @@ async function openRenameCharPopupWithFolder(preferredFolderId, defaultName) {
 async function openDuplicateCharPopupWithFolder(preferredFolderId, defaultName) {
   const pop = bar?.shadowRoot?.getElementById('dupCharPopup');
   if (!pop) return null;
-  const nameIn   = $T('dupCharName');
-  const folderEl = $T('dupCharFolder');
-  const create   = $T('dupCharCreate');
-  const cancel   = $T('dupCharCancel');
+  const nameIn   = bar.shadowRoot.getElementById('dupCharName');
+  const folderEl = bar.shadowRoot.getElementById('dupCharFolder');
+  const create   = bar.shadowRoot.getElementById('dupCharCreate');
+  const cancel   = bar.shadowRoot.getElementById('dupCharCancel');
 
   // Fyll mapp-listan
   const folders = (storeHelper.getFolders(store) || []).slice()
