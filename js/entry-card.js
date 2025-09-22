@@ -68,15 +68,17 @@
     const tagsRow = tagSources.length ? `<div class="card-tags-row">${tagSources.join('')}</div>` : '';
 
     const auxRow = auxParts.length ? `<div class="card-aux-row">${auxParts.join('')}</div>` : '';
-    let inlineAddButton = '';
+    let inlineLevelButton = '';
     if (levelHtml && buttonParts.length) {
-      const addIdx = buttonParts.findIndex(part => typeof part === 'string' && /data-act=['"]add['"]/.test(part));
-      if (addIdx !== -1) {
-        inlineAddButton = buttonParts.splice(addIdx, 1)[0];
+      const findIdx = (pattern) => buttonParts.findIndex(part => typeof part === 'string' && pattern.test(part));
+      let btnIdx = findIdx(/data-act=['"]add['"]);
+      if (btnIdx === -1) btnIdx = findIdx(/data-act=['"](rem|del)['"]);
+      if (btnIdx !== -1) {
+        inlineLevelButton = buttonParts.splice(btnIdx, 1)[0];
       }
     }
-    const levelRow = (levelHtml || inlineAddButton)
-      ? `<div class="card-level-row"><div class="card-level">${levelHtml || ''}</div>${inlineAddButton ? `<div class="card-level-actions">${inlineAddButton}</div>` : ''}</div>`
+    const levelRow = (levelHtml || inlineLevelButton)
+      ? `<div class="card-level-row"><div class="card-level">${levelHtml || ''}</div>${inlineLevelButton ? `<div class="card-level-actions">${inlineLevelButton}</div>` : ''}</div>`
       : '';
     const headerExtras = [];
     if (xpHtml) headerExtras.push(`<div class="card-xp">${xpHtml}</div>`);
