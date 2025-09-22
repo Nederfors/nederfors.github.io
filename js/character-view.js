@@ -1137,6 +1137,7 @@ function initCharacter() {
       cats[cat].forEach(g=>{
         const p = g.entry;
         const availLvls = LVL.filter(l=>p.nivåer?.[l]);
+        const hasLevels = availLvls.length>0;
         const lvlSel = availLvls.length>1
           ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
               ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
@@ -1192,7 +1193,30 @@ function initCharacter() {
           .concat(infoTagHtmlParts)
           .filter(Boolean)
           .join(' ');
+        const infoBoxTagParts = infoTagHtmlParts.filter(Boolean);
+        const infoBoxTagsHtml = infoBoxTagParts.length
+          ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
+          : '';
+        const infoBoxFacts = infoMeta.filter(meta => {
+          if (!meta) return false;
+          const value = meta.value;
+          if (value === undefined || value === null || value === '') return false;
+          const label = String(meta.label || '').toLowerCase();
+          return label.includes('pris') || label.includes('dagslön') || label.includes('vikt');
+        });
+        const infoBoxFactsHtml = infoBoxFacts.length
+          ? `<div class="card-info-facts">${infoBoxFacts.map(f => {
+              const label = String(f.label ?? '').trim();
+              const value = String(f.value ?? '').trim();
+              if (!label || !value) return '';
+              return `<div class="card-info-fact"><span class="card-info-fact-label">${label}</span><span class="card-info-fact-value">${value}</span></div>`;
+            }).filter(Boolean).join('')}</div>`
+          : '';
+        const infoBoxHtml = (infoBoxTagsHtml || infoBoxFactsHtml)
+          ? `<div class="card-info-box">${infoBoxTagsHtml}${infoBoxFactsHtml}</div>`
+          : '';
         const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
+        const levelHtml = hideDetails ? '' : lvlSel;
         const infoPanelHtml = buildInfoPanelHtml({
           tagsHtml: infoTagsHtml,
           bodyHtml: infoBodyHtml,
@@ -1271,7 +1295,9 @@ function initCharacter() {
           xpHtml,
           primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
-          levelHtml: hideDetails ? '' : lvlSel,
+          infoBox: infoBoxHtml,
+          hasLevels,
+          levelHtml,
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
           leftSections,
           titleActions,
