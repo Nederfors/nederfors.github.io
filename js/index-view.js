@@ -501,8 +501,9 @@ function initIndex() {
         const curLvl = charLevel
           || LVL.find(l => p.nivåer?.[l]) || 'Novis';
         const availLvls = LVL.filter(l => p.nivåer?.[l]);
-        const hasLevels = availLvls.length > 0;
-        const lvlSel = availLvls.length > 1
+        const hasAnyLevel = availLvls.length > 0;
+        const hasLevelSelect = availLvls.length > 1;
+        const lvlSel = hasLevelSelect
           ? `<select class="level" data-name="${p.namn}">
               ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
             </select>`
@@ -624,8 +625,19 @@ function initIndex() {
         const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
         const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
-        const infoTagsHtml = [xpTag].concat(infoFilterTagHtml).filter(Boolean).join(' ');
+        const lvlBadgeVal = hasAnyLevel ? curLvl : '';
+        const lvlShort =
+          lvlBadgeVal === 'Mästare' ? 'M'
+          : (lvlBadgeVal === 'Gesäll' ? 'G'
+          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
+          ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
+          : '';
+        const infoTagParts = [xpTag].concat(infoFilterTagHtml).filter(Boolean);
+        if (singleLevelTagHtml) infoTagParts.push(singleLevelTagHtml);
+        const infoTagsHtml = infoTagParts.join(' ');
         const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
+        if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
         const infoBoxFacts = infoMeta.filter(meta => {
           if (!meta) return false;
           const value = meta.value;
@@ -682,13 +694,8 @@ function initIndex() {
           ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
           : '';
         const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
-        const levelHtml = hideDetails ? '' : lvlSel;
+        const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
         // Compact meta badges (P/V/level) using short labels for mobile space
-        const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
-        const lvlShort =
-          lvlBadgeVal === 'Mästare' ? 'M'
-          : (lvlBadgeVal === 'Gesäll' ? 'G'
-          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
         const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
         const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
         const badgeParts = [];
@@ -770,7 +777,7 @@ function initIndex() {
           primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
           infoBox: infoBoxHtml,
-          hasLevels,
+          hasLevels: hasLevelSelect,
           levelHtml,
           descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',
           leftSections,
