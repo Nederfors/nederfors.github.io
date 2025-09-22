@@ -33,29 +33,55 @@
     }
     const base = formatText(descText, { singleAsParagraph: !!isBio });
     if(!p.nivåer) return base;
-    const lvls = [];
-    const levels = (window.LVL || ['Novis','Ges\u00e4ll','M\u00e4stare']);
 
-    // Determine if the object uses the standard Novis/Gesäll/Mästare levels
-    const keys = Object.keys(p.nivåer);
-    const usesStandard = keys.some(k => levels.includes(k));
+    const levelData = p.nivåer || {};
+    const rawKeys = Object.keys(levelData);
+    const stdLevels = (window.LVL || ['Novis','Ges\u00e4ll','M\u00e4stare']);
+    const hasStd = rawKeys.some(key => stdLevels.includes(key));
 
-    if (usesStandard) {
-      const idx = maxLevel ? levels.indexOf(maxLevel) : -1;
-      const use = idx >= 0 ? levels.slice(0, idx + 1) : levels;
-      use.forEach(l => {
-        if (p.nivåer[l]) {
-          lvls.push(`<dt>${l}</dt><dd>${formatText(p.nivåer[l])}</dd>`);
+    let orderedKeys = [];
+    if (hasStd) {
+      const seen = new Set();
+      stdLevels.forEach(level => {
+        if (levelData[level]) {
+          orderedKeys.push(level);
+          seen.add(level);
         }
       });
+      rawKeys
+        .filter(key => !seen.has(key))
+        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }))
+        .forEach(key => orderedKeys.push(key));
     } else {
-      // Generic handling for entries like artefacts with Förmåga 1/2/... keys
-      keys.forEach(k => {
-        lvls.push(`<dt>${k}</dt><dd>${formatText(p.nivåer[k])}</dd>`);
-      });
+      orderedKeys = rawKeys.sort((a, b) => a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' }));
     }
 
-    const lvlHtml = lvls.length ? `<dl class="levels">${lvls.join('')}</dl>` : '';
+    const isCharacterPage = typeof document !== 'undefined' && document.body?.dataset?.role === 'character';
+    const normalizedMax = typeof maxLevel === 'string' ? maxLevel : '';
+    const highestUnlockedIdx = normalizedMax ? orderedKeys.indexOf(normalizedMax) : -1;
+    const applyLocks = isCharacterPage && normalizedMax && highestUnlockedIdx >= 0;
+
+    const levelBlocks = [];
+    orderedKeys.forEach((key, idx) => {
+      const raw = levelData[key];
+      if (!raw) return;
+      const content = formatText(typeof raw === 'string' ? raw : String(raw));
+      if (!content) return;
+      const isUnlocked = !applyLocks || idx <= highestUnlockedIdx;
+      const classes = ['level-block'];
+      if (applyLocks && idx > highestUnlockedIdx) classes.push('level-locked');
+      levelBlocks.push(`
+        <details class="${classes.join(' ')}"${isUnlocked ? ' open' : ''}>
+          <summary>${key}</summary>
+          <div class="level-content">${content}</div>
+        </details>
+      `.trim());
+    });
+
+    const lvlHtml = levelBlocks.length
+      ? `<div class="levels">${levelBlocks.join('')}</div>`
+      : '';
+
     const segments = [];
     if (base) segments.push(`<div class="info-block info-block-desc">${base}</div>`);
     if (lvlHtml) segments.push(`<div class="info-block info-block-levels">${lvlHtml}</div>`);
