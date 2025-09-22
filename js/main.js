@@ -462,6 +462,11 @@ let DB = [];
 let DBIndex = {};
 window.DB = DB;
 window.DBIndex = DBIndex;
+
+const DATA_CACHE_VERSION = 1;
+const DB_CACHE_KEY = `symbapedia:db-cache:v${DATA_CACHE_VERSION}`;
+const TABELLER_CACHE_KEY = `symbapedia:tabeller-cache:v${DATA_CACHE_VERSION}`;
+
 const DATA_FILES = [
   'diverse.json',
   'kuriositeter.json',
@@ -501,36 +506,138 @@ const DATA_FILES = [
 
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
-fetch(TABELLER_FILE)
-  .then(r => r.json())
+window.TABELLER = TABELLER;
+
+function loadCachedArray(key) {
+  try {
+    const raw = localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : null;
+  } catch (err) {
+    console.warn('Kunde inte läsa cache', key, err);
+    return null;
+  }
+}
+
+function saveCachedArray(key, value) {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+  } catch (err) {
+    console.warn('Kunde inte spara cache', key, err);
+  }
+}
+
+function showDataLoadError(message) {
+  try {
+    const target = dom.lista || dom.valda;
+    if (target) {
+      target.innerHTML = '';
+      const li = document.createElement('li');
+      li.className = 'card card-error';
+      li.textContent = message;
+      target.appendChild(li);
+      return;
+    }
+    const panel = document.querySelector('.panel');
+    if (panel) {
+      const div = document.createElement('div');
+      div.className = 'card card-error';
+      div.textContent = message;
+      panel.innerHTML = '';
+      panel.appendChild(div);
+    }
+  } catch (err) {
+    console.error(message);
+  }
+}
+
+async function fetchJsonStrict(url) {
+  const response = await fetch(url);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status} när ${url} skulle hämtas`);
+  }
+  return response.json();
+}
+
+function applyTabeller(arr) {
+  TABELLER = Array.isArray(arr) ? arr : [];
+  window.TABELLER = TABELLER;
+  if (typeof window.indexViewUpdate === 'function') {
+    window.indexViewUpdate({ reason: 'data:tabeller', forceFull: true });
+    if (typeof window.indexViewRefreshFilters === 'function') {
+      window.indexViewRefreshFilters();
+    }
+  }
+}
+
+function hydrateDatabase(entries) {
+  const arr = Array.isArray(entries) ? entries.slice() : [];
+  arr.sort(sortByType);
+  arr.forEach((ent, idx) => {
+    if (!ent || typeof ent !== 'object') return;
+    if (ent.id === undefined || ent.id === null || ent.id === '') {
+      ent.id = idx;
+    }
+  });
+  DB = arr;
+  window.DB = DB;
+  DBIndex = {};
+  DB.forEach(ent => {
+    if (!ent || typeof ent !== 'object') return;
+    if (ent.namn) DBIndex[ent.namn] = ent;
+    const key = ent.id;
+    if (key !== undefined && key !== null && key !== '') {
+      DB[String(key)] = ent;
+    }
+  });
+  window.DBIndex = DBIndex;
+}
+
+function finalizeDatabaseReady() {
+  if (storeHelper.migrateInventoryIds) {
+    storeHelper.migrateInventoryIds(store);
+    store = storeHelper.load();
+  }
+  boot();
+}
+
+const cachedTabeller = loadCachedArray(TABELLER_CACHE_KEY);
+if (cachedTabeller && cachedTabeller.length) {
+  applyTabeller(cachedTabeller);
+}
+
+fetchJsonStrict(TABELLER_FILE)
   .then(arr => {
-    TABELLER = arr;
-    window.TABELLER = TABELLER;
-    if (typeof window.indexViewUpdate === 'function') {
-      window.indexViewUpdate({ reason: 'data:tabeller', forceFull: true });
-      if (typeof window.indexViewRefreshFilters === 'function') {
-        window.indexViewRefreshFilters();
-      }
+    applyTabeller(arr);
+    saveCachedArray(TABELLER_CACHE_KEY, arr);
+  })
+  .catch(err => {
+    if (!cachedTabeller || !cachedTabeller.length) {
+      console.warn('Kunde inte ladda tabeller', err);
     }
   });
 
-Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
-  .then(arrays => {
-    DB = arrays.flat().sort(sortByType);
-    DB.forEach((ent, idx) => {
-      if (ent.id === undefined) ent.id = idx;
-      DB[ent.id] = ent;
-    });
-    window.DB = DB;
-    DBIndex = {};
-    DB.forEach(ent => { DBIndex[ent.namn] = ent; });
-    window.DBIndex = DBIndex;
-    if (storeHelper.migrateInventoryIds) {
-      storeHelper.migrateInventoryIds(store);
-      store = storeHelper.load();
+async function loadDatabase() {
+  try {
+    const arrays = await Promise.all(DATA_FILES.map(fetchJsonStrict));
+    const merged = arrays.flat();
+    hydrateDatabase(merged);
+    saveCachedArray(DB_CACHE_KEY, DB);
+    finalizeDatabaseReady();
+  } catch (err) {
+    console.error('Kunde inte ladda databasen', err);
+    const cached = loadCachedArray(DB_CACHE_KEY);
+    if (cached && cached.length) {
+      hydrateDatabase(cached);
+      finalizeDatabaseReady();
+    } else {
+      showDataLoadError('Kunde inte läsa databasen. Kontrollera uppkoppling och ladda om.');
     }
-    boot();
-  });
+  }
+}
+
+loadDatabase();
 
 /* ===========================================================
    HJÄLPFUNKTIONER
