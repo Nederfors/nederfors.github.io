@@ -1801,6 +1801,38 @@
       "Mästare": "Handling: Reaktiv. Mystikern kan parera alla anfall under en runda, men måste slå ett [Viljestark←Träffsäker] för varje."
     },
     "id": "mystiskkr57"
-  }
+  },
+  {
+"namn": "Kvävande grepp",
+"beskrivning": "Tradition: Svartkonst\nMaterial: En svartnad strupsena invirad i silvertråd\nMystikern samlar sin vilja och låter den sluta sig kring offrets hals på avstånd. Luften stryps bort, rösten kvävs och den dolda maktens brutala väsen gör sig påmind.",
+"taggar": {
+"typ": [
+"Mystisk kraft"
+],
+"ark_trad": [
+"Svartkonst"
+],
+"test": [
+"Viljestark"
+],
+"handling": {
+"Novis": [
+"Aktiv"
+],
+"Gesäll": [
+"Aktiv"
+],
+"Mästare": [
+"Aktiv"
+]
+}
+},
+"nivåer": {
+"Novis": "Handling: Aktiv. Med ett lyckat [Viljestark←Stark] pressas målets strupe samman. Offret tar 1T4 i skada per runda (rustning skyddar ej) och kan inte tala eller använda handlingar som kräver röst. Effekten varar tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada]. Ett mål som tar skada får en andra chans att misslyckas med att upprätthålla koncentration under samma runda.",
+"Gesäll": "Handling: Aktiv. Greppet hårdnar och lyfter upp målet från marken. Offret räknas som fasthållet och kan inte förflytta sig eller utföra aktiva handlingar. Med ett lyckat [Viljestark←Stark] orsakas 1T6 i skada per runda (rustning skyddar ej). Under effekten kan målet endast försvara sig eller göra reaktiva handlingar som inte kräver tal. Effekten bryts om mystikern misslyckas med ett Viljestark eller förlorar koncentrationen [Viljestark – Skada].",
+"Mästare": "Handling: Aktiv. Som på gesällnivå, men greppet krossar brosk och blodkärl. Med ett lyckat [Viljestark←Stark] tar offret 1T8 i skada per runda (rustning skyddar ej). Om skadan når eller överstiger offrets Smärtgräns faller det medvetslöst till marken och förblir utslaget tills ny skada tillfogas eller striden tar slut."
+},
+"id": "mystiskkr58"
+}
 
 ]
