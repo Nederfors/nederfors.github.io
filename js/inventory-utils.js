@@ -2013,7 +2013,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     const toolsCard = `
       <li class="card${openKeys.has(toolsKey) ? '' : ' compact'}" data-special="${toolsKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
+        <div class="card-title"><span><span class="collapse-btn"></span>Funktioner 💰</span></div>
         <div class="card-desc">
           <div class="inv-buttons">
             <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
