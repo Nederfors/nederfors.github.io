@@ -1488,6 +1488,13 @@ function initCharacter() {
       dom.sIn.blur();
       const termTry = (sTemp || '').trim();
       const term = sTemp.toLowerCase();
+      if (termTry && window.tryUICommand && window.tryUICommand(termTry)) {
+        dom.sIn.value = '';
+        sTemp = '';
+        updateSearchDatalist();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
         // Ignorera sökförslag på Enter; hantera bara skriven text
       if (term === 'webapp') {
         const ua = navigator.userAgent.toLowerCase();
