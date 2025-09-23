@@ -1717,7 +1717,7 @@ select.level {
   max-width: none; /* vi sätter nedan individuellt */
   height: 100%;
   background: var(--panel);
-  box-shadow: -4px 0 20px #0009;
+  box-shadow: none;
   transition: right .25s ease;
   z-index: 1000;
   overflow-y: auto;
@@ -1762,6 +1762,7 @@ select.level {
 #effectsPanel.open,
 #conflictPanel.open {
   right: 0;
+  box-shadow: -4px 0 20px #0009;
 }
 
 @media (min-width: 1024px) {
