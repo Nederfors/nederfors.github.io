@@ -728,7 +728,7 @@
   {
     "id": "ford47",
     "namn": "Asketisk",
-    "beskrivning": "Karaktären och dess kropp är som ett tempel. Genom ett liv som kretsat kring överlevnad och förnödenheterna som möjliggör det, vare sig det är i stadens slum eller långt ute i skogen har karaktären lärt sig att mat är en resurs som används sparsamt. Karaktären behöver bara hälften så mycket mat i dagligt intag. Undantaget om rollpersonen är skadad eller har nedsatt förmåga på något sätt.",
+    "beskrivning": "Genom ett liv präglat av överlevnad, vare sig i stadens slum eller vildmarkens ensamhet, har rollpersonen lärt sig att betrakta kroppen som ett tempel och maten som en resurs att hushålla med. Den dagliga ransonen är hälften av vad andra behöver. Vid långa dagsmarscher eller annan hård ansträngning krävs dock samma mängd näring som för alla andra.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
