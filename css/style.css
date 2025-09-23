@@ -35,6 +35,7 @@
   --mystic:      #A88FCC;   /* nedtonad lila, passar brun bas */
   --quality:     #C2A36A;   /* varm guldbetonad status */
   --neutral:     #9CB69A;   /* mild grön för neutralt/ok */
+  --hilight:     #57ff4b75;   /* mild grön för neutralt/ok */
   --negative:    #8B4513;   /* bränd sienna */
 
   /* Fara / CTA */
@@ -203,12 +204,12 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   animation-fill-mode: both;
 }
 @keyframes focusGreenHold {
-  0%   { background-color: var(--neutral); transform: none; }
-  20%  { background-color: var(--neutral); transform: scale(1.0035); }
-  40%  { background-color: var(--neutral); transform: none; }
-  60%  { background-color: var(--neutral); transform: scale(1.0035); }
-  86%  { background-color: var(--neutral); transform: none; }
-  100% { background-color: var(--accent);  transform: none; }
+  0%   {background: var(--hilight); transform: none; }
+  20%  { background: var(--hilight); transform: scale(1.0035); }
+  40%  { background: var(--hilight); transform: none; }
+  60%  { background: var(--hilight); transform: scale(1.0035); }
+  86%  { background: var(--hilight); transform: none; }
+  100% { background: var(--accent);  transform: none; }
 }
 
 .hidden { display: none; }
