@@ -942,6 +942,13 @@ function initIndex() {
       dom.sIn.blur();
       const termTry = (sTemp || '').trim();
       const term = sTemp.toLowerCase();
+      if (termTry && window.tryUICommand && window.tryUICommand(termTry)) {
+        dom.sIn.value = '';
+        sTemp = '';
+        updateSearchDatalist();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return;
+      }
         // Ignorera sökförslag på Enter; hantera bara skriven text
         // Command: [N] random: <kategori> — pick N random entries in category
         {
