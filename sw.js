@@ -98,16 +98,38 @@ self.addEventListener('fetch', event => {
   }
 
   event.respondWith(
-    fetch(event.request)
-      .then(fetchResponse =>
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
-        })
-      )
-      .catch(() => caches.match(event.request))
+    (async () => {
+      const cachedResponse = await caches.match(event.request);
+      if (cachedResponse) {
+        event.waitUntil(refreshCache(event.request));
+        return cachedResponse;
+      }
+
+      try {
+        const networkResponse = await fetch(event.request);
+        const cache = await caches.open(CACHE_NAME);
+        if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+          await cache.put(event.request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        throw error;
+      }
+    })()
   );
 });
+
+async function refreshCache(request) {
+  try {
+    const response = await fetch(request);
+    if (response && (response.ok || response.type === 'opaque')) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+  } catch (error) {
+    // Ignore refresh errors; the cached response has already been served.
+  }
+}
 
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
