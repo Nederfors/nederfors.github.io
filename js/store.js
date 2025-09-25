@@ -1516,7 +1516,9 @@ function defaultTraits() {
   function advantageTotalCost(count) {
     const qty = Number(count) || 0;
     if (qty <= 0) return 0;
-    return qty * ADVANTAGE_STEP_COST;
+    if (qty <= 1) return ADVANTAGE_STEP_COST;
+    if (qty === 2) return ADVANTAGE_STEP_COST * 2;
+    return ADVANTAGE_STEP_COST * 3;
   }
 
   function resolveAdvantageCount(entry, list, types) {
