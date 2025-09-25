@@ -1421,7 +1421,7 @@ function openFolderManagerPopup() {
             <button class="mini-btn" data-action="move-up" title="Flytta upp"${upDisabled}>▲</button>
             <button class="mini-btn" data-action="move-down" title="Flytta ned"${downDisabled}>▼</button>
             <button class="mini-btn" data-action="rename" title="Byt namn">✏️</button>
-            <button class="mini-btn danger" data-action="clear" title="Töm mapp">🧹</button>
+            <button class="mini-btn danger icon-only" data-action="clear" title="Töm mapp">${window.iconHtml ? window.iconHtml('broom') : '🧹'}</button>
             ${delBtn}
           </div>
         </div>`
