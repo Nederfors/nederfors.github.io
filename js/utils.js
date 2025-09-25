@@ -25,21 +25,21 @@
   const SBASE = 10, OBASE = 10;
 
   const ICON_SOURCES = Object.freeze({
-    character : 'icons/character.png',
-    egenskaper: 'icons/egenskaper.png',
-    index     : 'icons/index.png',
-    info      : 'icons/info.png',
-    inventarie: 'icons/inventarie.png',
-    minus     : 'icons/minus.png',
-    plus      : 'icons/plus.png',
-    remove    : 'icons/remove.png',
-    settings  : 'icons/settings.png',
-    smithing  : 'icons/smithing.png'
+    character : 'icons/character.svg',
+    egenskaper: 'icons/egenskaper.svg',
+    index     : 'icons/index.svg',
+    info      : 'icons/info.svg',
+    inventarie: 'icons/inventarie.svg',
+    minus     : 'icons/minus.svg',
+    plus      : 'icons/plus.svg',
+    remove    : 'icons/remove.svg',
+    settings  : 'icons/settings.svg',
+    smithing  : 'icons/smithing.svg'
   });
 
   function iconHtml(name, opts = {}) {
     if (!name) return '';
-    const src = ICON_SOURCES[name] || `icons/${name}.png`;
+    const src = ICON_SOURCES[name] || `icons/${name}.svg`;
     const extraClass = opts.className ? ` ${opts.className}` : '';
     const alt = typeof opts.alt === 'string' ? opts.alt : '';
     const attrs = [];
