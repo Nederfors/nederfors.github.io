@@ -92,7 +92,17 @@
   }
 
   window.addEventListener('popstate', (ev) => {
-    if (manualCloseCount > 0) { manualCloseCount--; return; }
+    if (manualCloseCount > 0) {
+      manualCloseCount--;
+      const topOverlay = overlayStack[overlayStack.length - 1];
+      // Om popstate kommer från en historiknavigering vi själva triggat
+      // (t.ex. när en annan panel stängts manuellt) så motsvarar eventets
+      // state den nu öppna panelen. I det fallet ska vi inte stänga något
+      // ytterligare, men en användarinitierad back ska fortfarande fungera.
+      if (!topOverlay || ev?.state?.overlay === topOverlay.id) {
+        return;
+      }
+    }
     const el = overlayStack[overlayStack.length - 1];
     if (el) {
       isPop = true;
