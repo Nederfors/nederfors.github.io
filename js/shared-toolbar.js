@@ -202,24 +202,6 @@ class SharedToolbar extends HTMLElement {
         .char-btn.icon   { font-size: 1.1rem; }
         .char-btn:hover  { opacity: .85; }
         .char-btn:active { transform: scale(.95); opacity: .7; }
-        /* Hold solid green, tiny pulses, then smooth fade to blue */
-        .focus-highlight {
-          position: relative;
-          animation: focusGreenHold 3s cubic-bezier(.25,.8,.25,1) 1;
-          outline: 2px solid transparent; /* avoid layout shift */
-          animation-fill-mode: both;
-        }
-        @keyframes focusGreenHold {
-          /* Immediately switch to green and stay green */
-          0%   { background-color: var(--neutral); transform: none; }
-          20%  { background-color: var(--neutral); transform: scale(1.0035); }
-          40%  { background-color: var(--neutral); transform: none; }
-          60%  { background-color: var(--neutral); transform: scale(1.0035); }
-          /* Hold green until near the end */
-          86%  { background-color: var(--neutral); transform: none; }
-          /* Smoothly interpolate color to blue by 100% */
-          100% { background-color: var(--accent);  transform: none; }
-        }
         /* Ensure help card and search filter cards can never be collapsed */
         .help-card.compact .card-desc { display: block !important; }
         #searchFiltersCard.compact .card-desc { display: block !important; }
