@@ -7,7 +7,7 @@ const crypto = require('crypto');
 
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
-const OUTPUT_FILE = path.join(DATA_DIR, 'db.json');
+const OUTPUT_FILE = path.join(DATA_DIR, 'all.json');
 
 const DATA_FILES = [
   'diverse.json',

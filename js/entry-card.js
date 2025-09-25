@@ -26,127 +26,6 @@
 
   const joinParts = (parts) => (Array.isArray(parts) ? parts.filter(Boolean).join('') : '');
 
-  const scheduleFrame = typeof window.requestAnimationFrame === 'function'
-    ? window.requestAnimationFrame.bind(window)
-    : (fn => window.setTimeout(fn, 16));
-
-  const QUALITY_MIN_FONT_PX = 7;
-  const QUALITY_ABS_MIN_PX = 3;
-  const qualityContainers = new Set();
-  const qualityPending = new WeakSet();
-  const qualityMutationObservers = new WeakMap();
-  const qualityContainerObservers = new WeakMap();
-  const qualityResizeObserver = typeof window.ResizeObserver === 'function'
-    ? new window.ResizeObserver(entries => {
-      entries.forEach(entry => scheduleQualityFit(entry.target));
-    })
-    : null;
-  let qualityResizeListenerBound = false;
-
-  const ensureQualityResizeListener = () => {
-    if (qualityResizeListenerBound || qualityResizeObserver) return;
-    qualityResizeListenerBound = true;
-    window.addEventListener('resize', () => {
-      qualityContainers.forEach(container => scheduleQualityFit(container));
-    });
-  };
-
-  const scheduleQualityFit = (container) => {
-    if (!container || qualityPending.has(container)) return;
-    qualityPending.add(container);
-    scheduleFrame(() => {
-      qualityPending.delete(container);
-      fitQualityTags(container);
-    });
-  };
-
-  const observeQualityMutations = (tagsEl) => {
-    if (!tagsEl || qualityMutationObservers.has(tagsEl)) return;
-    if (typeof window.MutationObserver !== 'function') return;
-    const observer = new window.MutationObserver(() => {
-      const container = tagsEl.closest('.entry-action-qualities');
-      if (container) scheduleQualityFit(container);
-    });
-    observer.observe(tagsEl, { childList: true, characterData: true, subtree: true });
-    qualityMutationObservers.set(tagsEl, observer);
-  };
-
-  const fitQualityTags = (container) => {
-    if (!container) return;
-    const tagsEl = container.querySelector('.quality-tags');
-    if (!tagsEl) return;
-
-    const available = container.clientWidth;
-    if (!available) return;
-
-    tagsEl.style.fontSize = '';
-    const computed = window.getComputedStyle(tagsEl);
-    const baseFont = parseFloat(computed.fontSize) || 12;
-    const minFont = Math.max(QUALITY_MIN_FONT_PX, baseFont * 0.55);
-    const fullWidth = tagsEl.scrollWidth;
-
-    if (fullWidth <= available) {
-      tagsEl.style.fontSize = '';
-      return;
-    }
-
-    let appliedSize = baseFont * (available / fullWidth);
-    if (!Number.isFinite(appliedSize) || appliedSize <= 0) {
-      appliedSize = baseFont;
-    }
-    appliedSize = Math.max(minFont, appliedSize);
-    tagsEl.style.fontSize = `${appliedSize}px`;
-
-    let iterations = 0;
-    while (tagsEl.scrollWidth > available && iterations < 5) {
-      const ratio = available / tagsEl.scrollWidth;
-      if (!(ratio > 0 && ratio < 1)) break;
-      const nextSize = Math.max(QUALITY_ABS_MIN_PX, appliedSize * ratio);
-      if (Math.abs(nextSize - appliedSize) < 0.1) break;
-      appliedSize = nextSize;
-      tagsEl.style.fontSize = `${appliedSize}px`;
-      iterations += 1;
-    }
-
-    if (Math.abs(appliedSize - baseFont) < 0.5) {
-      tagsEl.style.fontSize = '';
-      return;
-    }
-
-    if (tagsEl.scrollWidth > available) {
-      appliedSize = Math.max(QUALITY_ABS_MIN_PX, appliedSize * (available / Math.max(tagsEl.scrollWidth, 1)));
-      tagsEl.style.fontSize = `${appliedSize}px`;
-    }
-
-    if (tagsEl.scrollWidth <= available + 0.5) {
-      tagsEl.style.fontSize = `${appliedSize}px`;
-    }
-  };
-
-  const observeQualityContainer = (container) => {
-    if (!container || qualityContainers.has(container)) return;
-    qualityContainers.add(container);
-    const tagsEl = container.querySelector('.quality-tags');
-    if (tagsEl) observeQualityMutations(tagsEl);
-    if (!qualityContainerObservers.has(container) && typeof window.MutationObserver === 'function') {
-      const observer = new window.MutationObserver(() => {
-        const currentTags = container.querySelector('.quality-tags');
-        if (currentTags) observeQualityMutations(currentTags);
-        scheduleQualityFit(container);
-      });
-      observer.observe(container, { childList: true });
-      qualityContainerObservers.set(container, observer);
-    }
-    scheduleQualityFit(container);
-    if (qualityResizeObserver) {
-      try {
-        qualityResizeObserver.observe(container);
-      } catch {}
-    } else {
-      ensureQualityResizeListener();
-    }
-  };
-
   const splitButtons = (buttonParts) => {
     const dynamic = [];
     const standardBuckets = { remove: [], minus: [], plus: [] };
@@ -355,8 +234,6 @@
         observer.observe(li, { attributes: true, attributeFilter: ['class'] });
       }
     }
-
-    li.querySelectorAll('.entry-action-qualities').forEach(observeQualityContainer);
 
     return li;
   }

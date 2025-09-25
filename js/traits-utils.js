@@ -185,76 +185,93 @@
 
     dom.traits.innerHTML = KEYS.map(k => {
       const val = vals[k];
-      const hardy = hasHardnackad && k === 'Stark' ? 1 : 0;
-      const talBase = hasKraftprov && k === 'Stark' ? val + 5 : Math.max(10, val);
-      let tal  = talBase;
-      let pain = 0;
-      let extra = '';
-      let beforeExtra = '';
-      let afterExtra = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>`;
+      const extras = [];
+      const countMarkup = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>`;
+
       if (k === 'Stark') {
+        const hardy = hasHardnackad ? 1 : 0;
         const base = storeHelper.calcCarryCapacity(val, list);
-        tal  += hardy;
-        pain = storeHelper.calcPainThreshold(val, list, effectsWithDark);
-        beforeExtra = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>` + `<div class="trait-extra">Bärkapacitet: ${formatWeight(base)}</div>`;
-        afterExtra = '';
-        extra = `<div class="trait-extra">Tålighet: ${tal} • Smärtgräns: ${pain}</div>`;
+        const talBase = hasKraftprov ? val + 5 : Math.max(10, val);
+        const tal = talBase + hardy;
+        const pain = storeHelper.calcPainThreshold(val, list, effectsWithDark);
+
+        
+        extras.push(`Tålighet: ${tal}`)
+        extras.push(` Smärtgräns: ${pain}`);
+        extras.push(`Bärkapacitet: ${formatWeight(base)}`);
       } else if (k === 'Viljestark') {
         let perm = hasEarth ? (permBase % 2) : permBase;
         perm += darkPerm;
-        extra = `<div class="trait-extra">Permanent korruption: ${perm}</div>` + `<div class="trait-extra">Maximal korruption: ${maxCor} • Korruptionströskel: ${thresh}</div>`;
+        extras.push(`Styggelsetröskel: ${maxCor}`);
+        extras.push(`Korruptionströskel: ${thresh}`);
+        extras.push(`Permanent korruption: ${perm}`);
       }
+
       if (k === 'Diskret') {
         if (storeHelper.abilityLevel(list, 'Fint') >= 1) {
-          extra += '<div class="trait-extra">Kan användas som träffsäker för attacker i närstrid med kort eller precist vapen</div>';
+          extras.push('Kan användas som träffsäker för attacker i närstrid med kort eller precist vapen');
         }
         if (storeHelper.abilityLevel(list, 'Lönnstöt') >= 1) {
-          extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med Övertag</div>';
+          extras.push('Kan användas som träffsäker för attacker med Övertag');
         }
       }
+
       if (k === 'Kvick' && storeHelper.abilityLevel(list, 'Koreograferad strid') >= 1) {
-        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker som utförs efter en förflyttning</div>';
+        extras.push('Kan användas som träffsäker för attacker som utförs efter en förflyttning');
       }
+
       if (k === 'Listig' && storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
-        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med allt utom tunga vapen</div>';
+        extras.push('Kan användas som träffsäker för attacker med allt utom tunga vapen');
       }
+
       if (k === 'Vaksam') {
         const sjatteSinneLvl = Math.max(
           storeHelper.abilityLevel(list, 'Sjätte Sinne'),
           storeHelper.abilityLevel(list, 'Sjätte sinne')
         );
         if (sjatteSinneLvl >= 3) {
-          extra += '<div class="trait-extra">Kan användas som träffsäker</div>';
+          extras.push('Kan användas som träffsäker');
         } else if (sjatteSinneLvl >= 1) {
-          extra += '<div class="trait-extra">Kan användas som träffsäker för attacker med avståndsvapen</div>';
+          extras.push('Kan användas som träffsäker för attacker med avståndsvapen');
         }
       }
+
       if (k === 'Stark' && storeHelper.abilityLevel(list, 'Järnnäve') >= 1) {
-        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker i närstrid</div>';
+        extras.push('Kan användas som träffsäker för attacker i närstrid');
       }
+
       if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Dominera') >= 1) {
-        extra += '<div class="trait-extra">Kan användas som träffsäker för attacker i närstrid</div>';
+        extras.push('Kan användas som träffsäker för attacker i närstrid');
       }
+
       if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Ledare') >= 1) {
-        extra += '<div class="trait-extra">Kan användas istället för Viljestark vid användandet av mystiska förmågor och ritualer</div>';
+        extras.push('Kan användas istället för Viljestark vid användandet av mystiska förmågor och ritualer');
       }
+
       if (k === defTrait) {
-        const defHtml = defs.map(d => `<div class="trait-extra">Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}</div>`).join('');
-        extra += defHtml;
+        defs.forEach(d => {
+          extras.push(`Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}`);
+        });
       }
+
+      const extrasHtml = extras.map(text => `<div class="trait-extra">${text}</div>`).join('');
+
       return `
       <div class="trait" data-key="${k}">
-        <div class="trait-name">${k}</div>
-        <div class="trait-controls">
+        <div class="trait-header">
+          <div class="trait-heading">
+            <div class="trait-name">${k}</div>
+            ${countMarkup}
+          </div>
+          <div class="trait-value">${val}</div>
+        </div>
+        <div class="trait-controls" role="group" aria-label="Justera ${k}">
           <button class="trait-btn" data-d="-5">−5</button>
           <button class="trait-btn" data-d="-1">−1</button>
-          <div class="trait-value">${val}</div>
           <button class="trait-btn" data-d="1">+1</button>
           <button class="trait-btn" data-d="5">+5</button>
         </div>
-        ${beforeExtra}
-        ${extra}
-        ${afterExtra}
+        ${extrasHtml}
       </div>`;
     }).join('');
 

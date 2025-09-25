@@ -34,46 +34,55 @@
     scrollLocked = false;
   }
 
-  function isOverlay(el) {
-    if (!(el instanceof HTMLElement)) return false;
-    if (el.classList.contains('popup') || el.classList.contains('offcanvas')) return true;
-    return /Popup$/.test(el.id) || /Panel$/.test(el.id);
-  }
-
-  function observe(root) {
-    const obs = new MutationObserver(muts => {
-      for (const m of muts) {
-        const el = m.target;
-        if (!isOverlay(el)) continue;
-        const isOpen = el.classList.contains('open');
-        const wasOpen = openMap.get(el) || false;
-        if (isOpen && !wasOpen) {
-          openMap.set(el, true);
-          overlayStack.push(el);
-          history.pushState({ overlay: el.id }, '');
-        } else if (!isOpen && wasOpen) {
-          openMap.set(el, false);
-          const idx = overlayStack.lastIndexOf(el);
-          if (idx >= 0) overlayStack.splice(idx, 1);
-          if (!isPop) {
-            manualCloseCount++;
-            history.back();
-          }
+  const overlayTargets = new Set();
+  const overlayObserver = new MutationObserver(muts => {
+    for (const m of muts) {
+      const el = m.target;
+      const isOpen = el.classList.contains('open');
+      const wasOpen = openMap.get(el) || false;
+      if (isOpen && !wasOpen) {
+        openMap.set(el, true);
+        overlayStack.push(el);
+        history.pushState({ overlay: el.id }, '');
+      } else if (!isOpen && wasOpen) {
+        openMap.set(el, false);
+        const idx = overlayStack.lastIndexOf(el);
+        if (idx >= 0) overlayStack.splice(idx, 1);
+        if (!isPop) {
+          manualCloseCount++;
+          history.back();
         }
       }
-      if (overlayStack.length > 0) {
-        lockScroll();
-      } else {
-        unlockScroll();
-      }
-    });
-    obs.observe(root, { attributes: true, attributeFilter: ['class'], subtree: true });
+    }
+    if (overlayStack.length > 0) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+  });
+
+  const OVERLAY_SELECTOR = '.popup, .offcanvas';
+
+  function observeOverlay(el) {
+    if (!el || overlayTargets.has(el)) return;
+    overlayTargets.add(el);
+    overlayObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  function registerOverlays(root) {
+    if (!root) return;
+    const list = root.querySelectorAll ? root.querySelectorAll(OVERLAY_SELECTOR) : [];
+    list.forEach(observeOverlay);
   }
 
   function initObservers() {
-    observe(document.body);
+    registerOverlays(document);
     const bar = document.querySelector('shared-toolbar');
-    if (bar && bar.shadowRoot) observe(bar.shadowRoot);
+    const registerToolbarOverlays = () => registerOverlays(bar?.shadowRoot);
+    registerToolbarOverlays();
+    if (bar) {
+      bar.addEventListener('toolbar-rendered', registerToolbarOverlays);
+    }
   }
 
   if (document.readyState === 'loading') {
@@ -119,6 +128,98 @@ try {
 const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes' | 'inventory'
 let   store  = storeHelper.load();                   // Lokal lagring
 let   lastActiveChar = store.current || '';
+
+const ENTRY_META_FIELD = '__entryMeta';
+const entryDataVersions = window.__entryDataVersions || { db: 0, tables: 0 };
+window.__entryDataVersions = entryDataVersions;
+
+const toArray = (value) => (Array.isArray(value) ? value : []);
+
+function ensureEntryMeta(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  if (entry[ENTRY_META_FIELD]) return entry[ENTRY_META_FIELD];
+
+  const safeString = (value) => String(value ?? '').trim();
+  const toLower = (value) => safeString(value).toLowerCase();
+
+  const lowerName = toLower(entry.namn);
+  const normName = typeof searchNormalize === 'function'
+    ? searchNormalize(lowerName)
+    : lowerName;
+
+  const levelText = Object.values(entry.nivåer || {})
+    .map(toLower)
+    .join(' ');
+  const descText = toLower(entry.beskrivning);
+  const combined = `${lowerName} ${descText} ${levelText}`.trim();
+  const normText = typeof searchNormalize === 'function'
+    ? searchNormalize(combined)
+    : combined;
+
+  const normalizeList = (list) => toArray(list)
+    .map(safeString)
+    .filter(Boolean);
+
+  const tags = entry.taggar || {};
+  const typList = normalizeList(tags.typ);
+  let arkList = [];
+  try {
+    const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
+    arkList = normalizeList(exploded);
+  } catch {
+    arkList = [];
+  }
+  if (!arkList.length && Array.isArray(tags.ark_trad)) {
+    arkList = ['Traditionslös'];
+  }
+  const testList = normalizeList(tags.test);
+
+  const secondaryTags = [...arkList, ...testList];
+  const secondaryLookup = new Set(
+    secondaryTags.map(tag => {
+      const lower = tag.toLowerCase();
+      return typeof searchNormalize === 'function' ? searchNormalize(lower) : lower;
+    })
+  );
+
+  const allTagsNormalized = new Set(
+    [...typList, ...secondaryTags].map(tag => {
+      const lower = tag.toLowerCase();
+      return typeof searchNormalize === 'function' ? searchNormalize(lower) : lower;
+    })
+  );
+  const allTags = new Set([...typList, ...secondaryTags]);
+
+  const meta = {
+    normName,
+    normText,
+    typList,
+    primaryType: typList[0] || 'Övrigt',
+    primaryTypeLower: (typList[0] || 'Övrigt').toLowerCase(),
+    arkList,
+    testList,
+    secondaryTags,
+    secondaryLookup,
+    allTagsNormalized,
+    allTags
+  };
+
+  Object.defineProperty(entry, ENTRY_META_FIELD, {
+    value: meta,
+    enumerable: false,
+    configurable: true
+  });
+
+  return meta;
+}
+
+function ensureEntryMetaList(list) {
+  toArray(list).forEach(ensureEntryMeta);
+  return list;
+}
+
+window.ensureEntryMeta = ensureEntryMeta;
+window.ensureEntryMetaList = ensureEntryMetaList;
 
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
@@ -524,12 +625,15 @@ const DATA_FILES = [
   'fallor.json'
 ].map(f => `data/${f}`);
 
+const DATA_BUNDLE_FILE = 'data/all.json';
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
 fetch(TABELLER_FILE)
   .then(r => r.json())
   .then(arr => {
-    TABELLER = arr;
+    TABELLER = Array.isArray(arr) ? arr : [];
+    ensureEntryMetaList(TABELLER);
+    entryDataVersions.tables += 1;
     window.TABELLER = TABELLER;
     if (typeof window.indexViewUpdate === 'function') {
       window.indexViewUpdate();
@@ -539,13 +643,33 @@ fetch(TABELLER_FILE)
     }
   });
 
-Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
-  .then(arrays => {
-    DB = arrays.flat().sort(sortByType);
+function loadDatabaseData() {
+  return fetch(DATA_BUNDLE_FILE)
+    .then(resp => {
+      if (!resp.ok) throw new Error('bundle missing');
+      return resp.json();
+    })
+    .then(json => {
+      const entries = Array.isArray(json?.entries)
+        ? json.entries
+        : (Array.isArray(json) ? json : []);
+      return { entries, meta: json };
+    })
+    .catch(() => Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
+      .then(arrays => ({ entries: arrays.flat(), meta: null }))
+    );
+}
+
+loadDatabaseData()
+  .then(({ entries }) => {
+    DB = Array.isArray(entries) ? entries.slice() : [];
+    ensureEntryMetaList(DB);
+    DB = DB.sort(sortByType);
     DB.forEach((ent, idx) => {
       if (ent.id === undefined) ent.id = idx;
       DB[ent.id] = ent;
     });
+    entryDataVersions.db += 1;
     window.DB = DB;
     DBIndex = {};
     DB.forEach(ent => { DBIndex[ent.namn] = ent; });
@@ -555,6 +679,9 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
       store = storeHelper.load();
     }
     boot();
+  })
+  .catch(err => {
+    console.error('Kunde inte läsa databasen', err);
   });
 
 /* ===========================================================

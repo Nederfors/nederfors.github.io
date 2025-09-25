@@ -6,6 +6,77 @@
    =========================================================== */
 (function (global) {
   const STORAGE_KEY = 'rpall';
+  const STORAGE_META_KEY = 'rpall-meta';
+  const STORAGE_CHAR_PREFIX = 'rpall-char-';
+
+  const charStorageKey = (id) => `${STORAGE_CHAR_PREFIX}${id}`;
+
+  const runtimeVersions = {
+    custom: 0,
+    revealed: 0
+  };
+
+  const bumpRuntimeVersion = (key) => {
+    if (!Object.prototype.hasOwnProperty.call(runtimeVersions, key)) {
+      runtimeVersions[key] = 0;
+    }
+    runtimeVersions[key] += 1;
+  };
+
+  const getRuntimeVersion = (key) => runtimeVersions[key] || 0;
+
+  const getCustomEntriesVersionMeta = () => getRuntimeVersion('custom');
+  const getRevealedArtifactsVersionMeta = () => getRuntimeVersion('revealed');
+
+  const extractMeta = (store) => ({
+    current: store.current || '',
+    characters: Array.isArray(store.characters) ? store.characters : [],
+    folders: Array.isArray(store.folders) ? store.folders : [],
+    activeFolder: store.activeFolder || 'ALL',
+    filterUnion: Boolean(store.filterUnion),
+    compactEntries: Boolean(store.compactEntries),
+    onlySelected: Boolean(store.onlySelected),
+    recentSearches: Array.isArray(store.recentSearches) ? store.recentSearches.slice(0, MAX_RECENT_SEARCHES) : []
+  });
+
+  function persistMeta(store) {
+    try {
+      localStorage.setItem(STORAGE_META_KEY, JSON.stringify(extractMeta(store)));
+    } catch {}
+  }
+
+  function persistCharacter(store, charId) {
+    if (!charId) return;
+    const data = store.data?.[charId];
+    const key = charStorageKey(charId);
+    try {
+      if (!data) {
+        localStorage.removeItem(key);
+        return;
+      }
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch {}
+  }
+
+  const persistCurrentCharacter = (store) => {
+    if (store.current) persistCharacter(store, store.current);
+  };
+
+  const MAX_RECENT_SEARCHES = 10;
+
+  function save(store, options = {}) {
+    const { meta = true, charIds, allCharacters = false } = options || {};
+    if (meta) persistMeta(store);
+    if (allCharacters) {
+      Object.keys(store?.data || {}).forEach(id => persistCharacter(store, id));
+      return;
+    }
+    if (Array.isArray(charIds) && charIds.length) {
+      charIds.forEach(id => persistCharacter(store, id));
+      return;
+    }
+    persistCurrentCharacter(store);
+  }
 
   const HAMNSKIFTE_NAMES = {
     'Naturligt vapen': 'Naturligt vapen: Hamnskifte',
@@ -210,6 +281,103 @@
     return set;
   }
 
+  function normalizeCharacterData(store, id, source, charMeta, usedCustomIds) {
+    const base = (source && typeof source === 'object') ? { ...source } : {};
+    if (typeof base.partyAlchemist === 'boolean') {
+      base.partyAlchemist = base.partyAlchemist ? 'Mästare' : '';
+    }
+    if (typeof base.partySmith === 'boolean') {
+      base.partySmith = base.partySmith ? 'Mästare' : '';
+    }
+    if (typeof base.partyArtefacter === 'boolean') {
+      base.partyArtefacter = base.partyArtefacter ? 'Mästare' : '';
+    }
+
+    const data = {
+      custom: [],
+      artifactEffects: { xp: 0, corruption: 0 },
+      bonusMoney: defaultMoney(),
+      privMoney: defaultMoney(),
+      possessionMoney: defaultMoney(),
+      possessionRemoved: 0,
+      hamnskifteRemoved: [],
+      forcedDefense: '',
+      notes: defaultNotes(),
+      darkPastSuppressed: false,
+      nilasPopupShown: false,
+      ...base
+    };
+
+    let mutated = false;
+
+    if (!data.artifactEffects) {
+      data.artifactEffects = { xp: 0, corruption: 0 };
+      mutated = true;
+    }
+    if (!data.bonusMoney) {
+      data.bonusMoney = defaultMoney();
+      mutated = true;
+    }
+    if (!data.privMoney) {
+      data.privMoney = defaultMoney();
+      mutated = true;
+    }
+    if (!data.possessionMoney) {
+      data.possessionMoney = defaultMoney();
+      mutated = true;
+    }
+    if (!data.possessionRemoved) {
+      data.possessionRemoved = 0;
+    }
+    if (!Array.isArray(data.hamnskifteRemoved)) {
+      data.hamnskifteRemoved = [];
+      mutated = true;
+    }
+    if (data.darkPastSuppressed === undefined) {
+      data.darkPastSuppressed = false;
+      mutated = true;
+    }
+    if (!data.notes) {
+      data.notes = defaultNotes();
+      mutated = true;
+    }
+    if (data.forcedDefense === undefined) {
+      data.forcedDefense = '';
+      mutated = true;
+    }
+    if (data.nilasPopupShown === undefined) {
+      data.nilasPopupShown = false;
+      mutated = true;
+    }
+
+    const chars = Array.isArray(store.characters) ? store.characters : [];
+    const charInfo = charMeta || chars.find(c => c && c.id === id) || null;
+    const prefix = makeCustomIdPrefix(charInfo?.name, id);
+    const beforeCustom = JSON.stringify(data.custom || []);
+    const { entries: sanitizedCustom, idMap } = sanitizeCustomEntries(data.custom, { usedIds: usedCustomIds, prefix });
+    if (JSON.stringify(sanitizedCustom) !== beforeCustom) {
+      mutated = true;
+    }
+    data.custom = sanitizedCustom;
+
+    const beforeInventory = JSON.stringify(data.inventory || []);
+    const expandedInventory = expandInventory(data.inventory, data.custom, idMap);
+    if (JSON.stringify(expandedInventory) !== beforeInventory) {
+      mutated = true;
+    }
+    data.inventory = expandedInventory;
+
+    if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+      const updatedArtifacts = data.revealedArtifacts.map(n => idMap.get(n) || n);
+      if (JSON.stringify(updatedArtifacts) !== JSON.stringify(data.revealedArtifacts)) {
+        data.revealedArtifacts = [...new Set(updatedArtifacts)];
+        mutated = true;
+      }
+    }
+
+    return { data, mutated };
+  }
+
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
     return {
@@ -228,95 +396,66 @@
   /* ---------- 2. Load / Save ---------- */
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : emptyStore();
-      const store = { ...emptyStore(), ...parsed };
-      // Säkerställ att folders alltid finns
-      if (!Array.isArray(store.folders)) store.folders = [];
-      // Säkerställ systemmapp "Standard" och migrera ev. karaktärer
-      ensureSystemFolderAndMigrate(store);
-      // default aktiv mapp
-      if (!store.activeFolder || store.activeFolder === '') store.activeFolder = 'ALL';
-      if (store.data && typeof store.data === 'object') {
-        let mutated = false;
-        const usedCustomIds = new Set();
+      const metaRaw = localStorage.getItem(STORAGE_META_KEY);
+      const legacyRaw = localStorage.getItem(STORAGE_KEY);
+
+      if (metaRaw) {
+        const metaParsed = JSON.parse(metaRaw);
+        const store = { ...emptyStore(), ...metaParsed };
+        store.data = {};
         const chars = Array.isArray(store.characters) ? store.characters : [];
+        const usedCustomIds = new Set();
+        const mutatedIds = new Set();
+        chars.forEach(char => {
+          if (!char || !char.id) return;
+          let charData = {};
+          try {
+            const raw = localStorage.getItem(charStorageKey(char.id));
+            charData = raw ? JSON.parse(raw) : {};
+          } catch {}
+          const { data, mutated } = normalizeCharacterData(store, char.id, charData, char, usedCustomIds);
+          store.data[char.id] = data;
+          if (mutated) mutatedIds.add(char.id);
+        });
+
+        let metaMutated = false;
+        if (!Array.isArray(store.folders)) {
+          store.folders = [];
+          metaMutated = true;
+        }
+        if (!store.activeFolder || store.activeFolder === '') {
+          store.activeFolder = 'ALL';
+          metaMutated = true;
+        }
+        metaMutated = ensureSystemFolderAndMigrate(store) || metaMutated;
+
+        if (metaMutated) persistMeta(store);
+        mutatedIds.forEach(id => persistCharacter(store, id));
+        return store;
+      }
+
+      if (legacyRaw) {
+        const parsed = JSON.parse(legacyRaw) || emptyStore();
+        const store = { ...emptyStore(), ...parsed };
+        if (!store.data || typeof store.data !== 'object') store.data = {};
+        const chars = Array.isArray(store.characters) ? store.characters : [];
+        const usedCustomIds = new Set();
         Object.keys(store.data).forEach(id => {
-          const cur = store.data[id] || {};
-          if (typeof cur.partyAlchemist === 'boolean') {
-            cur.partyAlchemist = cur.partyAlchemist ? 'Mästare' : '';
-          }
-          if (typeof cur.partySmith === 'boolean') {
-            cur.partySmith = cur.partySmith ? 'Mästare' : '';
-          }
-          if (typeof cur.partyArtefacter === 'boolean') {
-            cur.partyArtefacter = cur.partyArtefacter ? 'Mästare' : '';
-          }
-          const data = {
-            custom: [],
-            artifactEffects: { xp:0, corruption:0 },
-            bonusMoney: defaultMoney(),
-            privMoney: defaultMoney(),
-            possessionMoney: defaultMoney(),
-            possessionRemoved: 0,
-            hamnskifteRemoved: [],
-            forcedDefense: '',
-            notes: defaultNotes(),
-            ...cur
-          };
-          if(!data.artifactEffects){
-            data.artifactEffects = { xp:0, corruption:0 };
-          }
-          if(!data.bonusMoney){
-            data.bonusMoney = defaultMoney();
-          }
-          if(!data.privMoney){
-            data.privMoney = defaultMoney();
-          }
-          if(!data.possessionMoney){
-            data.possessionMoney = defaultMoney();
-          }
-          if(!data.possessionRemoved){
-            data.possessionRemoved = 0;
-          }
-          if(!Array.isArray(data.hamnskifteRemoved)){
-            data.hamnskifteRemoved = [];
-          }
-          if(data.darkPastSuppressed === undefined){
-            data.darkPastSuppressed = false;
-          }
-          if(!data.notes){
-            data.notes = defaultNotes();
-          }
-          if(data.forcedDefense === undefined){
-            data.forcedDefense = '';
-          }
-          if(data.nilasPopupShown === undefined){
-            data.nilasPopupShown = false;
-          }
-          const charMeta = chars.find(c => c && c.id === id);
-          const prefix = makeCustomIdPrefix(charMeta?.name, id);
-          const { entries: sanitizedCustom, idMap } = sanitizeCustomEntries(data.custom, { usedIds: usedCustomIds, prefix });
-          if (JSON.stringify(sanitizedCustom) !== JSON.stringify(data.custom || [])) {
-            mutated = true;
-          }
-          data.custom = sanitizedCustom;
-          const expandedInventory = expandInventory(data.inventory, data.custom, idMap);
-          if (JSON.stringify(expandedInventory) !== JSON.stringify(data.inventory || [])) {
-            mutated = true;
-          }
-          data.inventory = expandedInventory;
-          if (idMap.size && Array.isArray(data.revealedArtifacts)) {
-            const updatedArtifacts = data.revealedArtifacts.map(n => idMap.get(n) || n);
-            if (JSON.stringify(updatedArtifacts) !== JSON.stringify(data.revealedArtifacts)) {
-              data.revealedArtifacts = [...new Set(updatedArtifacts)];
-              mutated = true;
-            }
-          }
+          const meta = chars.find(c => c && c.id === id) || null;
+          const { data } = normalizeCharacterData(store, id, store.data[id] || {}, meta, usedCustomIds);
           store.data[id] = data;
         });
-        if (mutated) save(store);
+        if (!Array.isArray(store.folders)) store.folders = [];
+        if (!store.activeFolder || store.activeFolder === '') store.activeFolder = 'ALL';
+        ensureSystemFolderAndMigrate(store);
+        persistMeta(store);
+        Object.keys(store.data).forEach(id => persistCharacter(store, id));
+        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        return store;
       }
+
+      const store = emptyStore();
+      persistMeta(store);
       return store;
     } catch {
       return emptyStore();
@@ -325,39 +464,45 @@
 
   // Skapa/finn systemmappen "Standard" och migrera karaktärer utan giltig mapp
   function ensureSystemFolderAndMigrate(store){
+    let mutated = false;
     try {
-      store.folders = Array.isArray(store.folders) ? store.folders : [];
-      // Hitta befintlig systemmapp eller mapp med namnet "Standard"
+      const beforeFolders = JSON.stringify(Array.isArray(store.folders) ? store.folders : []);
+      const beforeChars = JSON.stringify(Array.isArray(store.characters) ? store.characters : []);
+
+      store.folders = Array.isArray(store.folders) ? [...store.folders] : [];
+
       let standard = store.folders.find(f => f && (f.system === true));
       if (!standard) {
         standard = store.folders.find(f => (f?.name === 'Standard'));
       }
       if (!standard) {
-        // Skapa ny systemmapp
-        const id = 'fd-standard-' + Math.floor(Math.random()*1000000);
+        const id = 'fd-standard-' + Math.floor(Math.random() * 1000000);
         standard = { id, name: 'Standard', order: 0, system: true };
         store.folders.unshift(standard);
       } else {
-        // Markera som systemmapp om den inte redan är det
-        standard.system = true;
+        if (!standard.system) {
+          standard.system = true;
+        }
         if (standard.order === undefined) standard.order = 0;
       }
-      // Migrera karaktärer som saknar giltig mapp till Standard
+
       const folderIds = new Set(store.folders.map(f => f.id));
-      store.characters = (store.characters || []).map(c => {
-        const fid = c?.folderId || '';
+      const chars = Array.isArray(store.characters) ? store.characters : [];
+      const migratedChars = chars.map(c => {
+        if (!c || !c.id) return c;
+        const fid = c.folderId || '';
         if (!fid || !folderIds.has(fid)) {
           return { ...c, folderId: standard.id };
         }
         return c;
       });
-      // Spara direkt så att UI ser korrekta data
-      save(store);
-    } catch {}
-  }
+      store.characters = migratedChars;
 
-  function save(store) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      const afterFolders = JSON.stringify(store.folders);
+      const afterChars = JSON.stringify(store.characters);
+      mutated = mutated || afterFolders !== beforeFolders || afterChars !== beforeChars;
+    } catch {}
+    return mutated;
   }
 
   function genId() {
@@ -372,10 +517,15 @@
   function migrateInventoryIds(store) {
     try {
       if (!store.data || typeof store.data !== 'object') return;
-      let changed = false;
-      Object.values(store.data).forEach(data => {
+      const changedIds = new Set();
+      Object.entries(store.data).forEach(([id, data]) => {
         const custom = data.custom || [];
-        custom.forEach(c => { if (!c.id) { c.id = genId(); changed = true; } });
+        custom.forEach(c => {
+          if (!c.id) {
+            c.id = genId();
+            changedIds.add(id);
+          }
+        });
         const migrateRow = row => {
           if (!row || typeof row !== 'object') return;
           const entry = custom.find(e => e.id === row.id || e.namn === row.name)
@@ -383,8 +533,8 @@
               ? global.lookupEntry({ id: row.id, name: row.name })
               : null);
           if (entry) {
-            if (row.id !== entry.id) { row.id = entry.id; changed = true; }
-            if (row.name !== entry.namn) { row.name = entry.namn; changed = true; }
+            if (row.id !== entry.id) { row.id = entry.id; changedIds.add(id); }
+            if (row.name !== entry.namn) { row.name = entry.namn; changedIds.add(id); }
           }
           if (Array.isArray(row.contains)) row.contains.forEach(migrateRow);
         };
@@ -399,17 +549,15 @@
           });
           if (JSON.stringify(updated) !== JSON.stringify(data.revealedArtifacts)) {
             data.revealedArtifacts = [...new Set(updated)];
-            changed = true;
+            changedIds.add(id);
           }
         }
       });
-      if (changed) save(store);
+      changedIds.forEach(charId => persistCharacter(store, charId));
     } catch {}
   }
 
   /* ---------- 2b. Senaste sökningar ---------- */
-  const MAX_RECENT_SEARCHES = 10;
-
   function getRecentSearches(store) {
     try {
       const arr = Array.isArray(store.recentSearches) ? store.recentSearches : [];
@@ -429,7 +577,7 @@
     const filtered = cur.filter(x => String(x || '').toLowerCase() !== t.toLowerCase());
     filtered.unshift(t);
     store.recentSearches = filtered.slice(0, MAX_RECENT_SEARCHES);
-    save(store);
+    persistMeta(store);
   }
 
   /* ---------- 3. Förmåge­lista per karaktär ---------- */
@@ -656,7 +804,7 @@
     });
     store.data[store.current].bonusMoney = total;
 
-   save(store);
+    persistCurrentCharacter(store);
   }
 
   /* ---------- 4. Inventarie­funktioner ---------- */
@@ -670,7 +818,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].inventory = inv;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getCustomEntries(store) {
@@ -687,6 +835,7 @@
     const prefix = makeCustomIdPrefix(char?.name, store.current);
     const { entries: sanitized, idMap } = sanitizeCustomEntries(list, { usedIds, prefix });
     store.data[store.current].custom = sanitized;
+    bumpRuntimeVersion('custom');
     store.data[store.current].inventory = expandInventory(
       store.data[store.current].inventory,
       sanitized,
@@ -697,7 +846,8 @@
         store.data[store.current].revealedArtifacts.map(n => idMap.get(n) || n)
       )];
     }
-    save(store);
+    if (idMap.size) bumpRuntimeVersion('revealed');
+    persistCurrentCharacter(store);
     return { entries: sanitized, idMap };
   }
 
@@ -720,7 +870,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].money = { ...defaultMoney(), ...money };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getBonusMoney(store) {
@@ -733,7 +883,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].bonusMoney = { ...defaultMoney(), ...money };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPrivMoney(store) {
@@ -752,7 +902,7 @@
       'örtegar': (money['örtegar'] || 0) + ((store.data[store.current].possessionMoney || {})['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPossessionMoney(store) {
@@ -771,7 +921,7 @@
       'örtegar': (store.data[store.current].privMoney || {})['örtegar'] + (money['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function incrementPossessionRemoved(store) {
@@ -779,7 +929,7 @@
     store.data[store.current] = store.data[store.current] || {};
     const cur = Number(store.data[store.current].possessionRemoved || 0) + 1;
     store.data[store.current].possessionRemoved = cur;
-    save(store);
+    persistCurrentCharacter(store);
     return cur;
   }
 
@@ -787,7 +937,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].possessionRemoved = 0;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getHamnskifteRemoved(store) {
@@ -800,7 +950,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].hamnskifteRemoved = arr;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function duplicateCharacter(store, sourceId) {
@@ -820,7 +970,8 @@
       data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
     }
     store.data[newId] = data;
-    save(store);
+    persistMeta(store);
+    persistCharacter(store, newId);
     return newId;
   }
 
@@ -840,7 +991,8 @@
         data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
       }
     }
-    save(store);
+    persistMeta(store);
+    if (store.data[charId]) persistCharacter(store, charId);
   }
 
   function deleteCharacter(store, charId) {
@@ -848,14 +1000,17 @@
     store.characters = store.characters.filter(c => c.id !== charId);
     delete store.data[charId];
     if (store.current === charId) store.current = '';
-    save(store);
+    persistMeta(store);
+    persistCharacter(store, charId);
   }
 
   function deleteAllCharacters(store) {
+    const prevIds = Array.isArray(store.characters) ? store.characters.map(c => c.id).filter(Boolean) : [];
     store.characters = [];
     store.data = {};
     store.current = '';
-    save(store);
+    persistMeta(store);
+    prevIds.forEach(id => persistCharacter(store, id));
   }
 
   // Radera alla karaktärer i en specifik mapp
@@ -871,7 +1026,8 @@
       store.characters = (store.characters || []).filter(c => c && !idSet.has(c.id));
       toDelete.forEach(id => { try { delete store.data[id]; } catch {} });
       if (store.current && idSet.has(store.current)) store.current = '';
-      save(store);
+      persistMeta(store);
+      toDelete.forEach(id => persistCharacter(store, id));
       return toDelete.length;
     } catch {
       return 0;
@@ -900,7 +1056,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partySmith = level || '';
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPartyAlchemist(store) {
@@ -915,7 +1071,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyAlchemist = level || '';
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPartyArtefacter(store) {
@@ -930,7 +1086,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyArtefacter = level || '';
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getDefenseTrait(store) {
@@ -943,7 +1099,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].forcedDefense = trait || '';
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getArtifactEffects(store) {
@@ -956,7 +1112,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].artifactEffects = { ...defaultArtifactEffects(), ...(eff || {}) };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getFilterUnion(store) {
@@ -965,7 +1121,7 @@
 
   function setFilterUnion(store, val) {
     store.filterUnion = Boolean(val);
-    save(store);
+    persistMeta(store);
   }
 
   function getCompactEntries(store) {
@@ -974,7 +1130,7 @@
 
   function setCompactEntries(store, val) {
     store.compactEntries = Boolean(val);
-    save(store);
+    persistMeta(store);
   }
 
   function getOnlySelected(store) {
@@ -983,7 +1139,7 @@
 
   function setOnlySelected(store, val) {
     store.onlySelected = Boolean(val);
-    save(store);
+    persistMeta(store);
   }
 
   function getRevealedArtifacts(store) {
@@ -998,7 +1154,8 @@
     const set = new Set(store.data[store.current].revealedArtifacts || []);
     set.add(id);
     store.data[store.current].revealedArtifacts = [...set];
-    save(store);
+    persistCurrentCharacter(store);
+    bumpRuntimeVersion('revealed');
   }
 
   function removeRevealedArtifact(store, id) {
@@ -1006,7 +1163,8 @@
     store.data[store.current] = store.data[store.current] || {};
     const list = store.data[store.current].revealedArtifacts || [];
     store.data[store.current].revealedArtifacts = list.filter(n => n !== id);
-    save(store);
+    persistCurrentCharacter(store);
+    bumpRuntimeVersion('revealed');
   }
 
   function clearRevealedArtifacts(store) {
@@ -1040,10 +1198,10 @@
         });
       };
     collect(getInventory(store));
-
     const cur = getRevealedArtifacts(store);
     store.data[store.current].revealedArtifacts = cur.filter(n => keep.has(n));
-    save(store);
+    bumpRuntimeVersion('revealed');
+    persistCurrentCharacter(store);
   }
 
   function getNilasPopupSeen(store) {
@@ -1056,7 +1214,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].nilasPopupShown = Boolean(val);
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function normalizeMoney(m) {
@@ -1087,7 +1245,7 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].traits = { ...defaultTraits(), ...traits };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   /* ---------- 6b. Anteckningar ---------- */
@@ -1118,7 +1276,7 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].notes = { ...defaultNotes(), ...notes };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   /* ---------- 6. XP-hantering ---------- */
@@ -1134,7 +1292,7 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].baseXp = Number(xp) || 0;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   const RITUAL_COST = 10;
@@ -1791,7 +1949,8 @@ function defaultTraits() {
         store.data[id].notes = defaultNotes();
       }
       store.current = id;
-      save(store);
+      persistMeta(store);
+      persistCharacter(store, id);
       return id;
     } catch {
       return null;
@@ -1829,6 +1988,10 @@ function defaultTraits() {
     load,
     save,
     makeCharId,
+    persistMeta,
+    persistCharacter: (store, id) => persistCharacter(store, id),
+    persistCurrent: persistCurrentCharacter,
+    persistAllCharacters: (store) => save(store, { allCharacters: true }),
     // Aktiv mapp
     getActiveFolder: (store) => {
       try {
@@ -1844,7 +2007,7 @@ function defaultTraits() {
       try {
         const val = (folderId === '' || folderId === 'ALL') ? folderId : String(folderId || 'ALL');
         store.activeFolder = val;
-        save(store);
+        persistMeta(store);
       } catch {}
     },
     // Mapphantering
@@ -1857,7 +2020,7 @@ function defaultTraits() {
       const order = store.folders.length;
       const id = 'fd' + Date.now() + '-' + Math.floor(Math.random()*10000);
       store.folders.push({ id, name: nm, order });
-      save(store);
+      persistMeta(store);
       return id;
     },
     renameFolder: (store, id, name) => {
@@ -1867,7 +2030,7 @@ function defaultTraits() {
       const f = (store.folders || []).find(x => x.id === id);
       if (!f) return;
       f.name = nm;
-      save(store);
+      persistMeta(store);
     },
     deleteFolder: (store, id) => {
       if (!id) return;
@@ -1888,7 +2051,7 @@ function defaultTraits() {
       store.characters = (store.characters || []).map(c => (
         c && c.folderId === id ? { ...c, folderId: destId } : c
       ));
-      save(store);
+      persistMeta(store);
     },
     moveFolder: (store, id, offset) => {
       try {
@@ -1906,7 +2069,7 @@ function defaultTraits() {
         ordered.splice(targetIndex, 0, item);
         ordered.forEach((f, idx) => { f.order = idx; });
         store.folders = ordered;
-        save(store);
+        persistMeta(store);
       } catch {}
     },
     getCharacterFolder: (store, charId) => {
@@ -1926,7 +2089,7 @@ function defaultTraits() {
         if (standard) dest = standard.id;
       }
       c.folderId = dest;
-      save(store);
+      persistMeta(store);
     },
     // Flytta flera karaktärer på en gång (sparar endast en gång)
     setCharactersFolderBulk: (store, charIds, folderId) => {
@@ -1944,7 +2107,7 @@ function defaultTraits() {
         (store.characters || []).forEach(c => {
           if (c && idSet.has(c.id)) c.folderId = dest;
         });
-        save(store);
+        persistMeta(store);
       } catch {}
     },
     getRecentSearches,
@@ -2022,6 +2185,8 @@ function defaultTraits() {
     getDependents,
     HAMNSKIFTE_NAMES,
     HAMNSKIFTE_BASE,
-    DARK_BLOOD_TRAITS
+    DARK_BLOOD_TRAITS,
+    getCustomEntriesVersion: getCustomEntriesVersionMeta,
+    getRevealedArtifactsVersion: getRevealedArtifactsVersionMeta
   };
 })(window);

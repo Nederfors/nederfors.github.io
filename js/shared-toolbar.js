@@ -25,6 +25,7 @@ class SharedToolbar extends HTMLElement {
   /* ------------------------------------------------------- */
   connectedCallback() {
     this.render();
+    this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
     if (window.visualViewport) {
@@ -213,7 +214,7 @@ class SharedToolbar extends HTMLElement {
         <div class="toolbar-top">
           <button id="catToggle" class="char-btn icon" title="Minimera alla kategorier">▼</button>
           <div class="search-wrap">
-            <input id="searchField" placeholder="Sök…" autocomplete="off">
+            <input id="searchField" placeholder="T.ex 'Pajkastare'" autocomplete="off">
             <div id="searchSuggest" class="suggestions" hidden></div>
           </div>
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
@@ -239,27 +240,44 @@ class SharedToolbar extends HTMLElement {
           </div>
         </header>
 
-        <!-- Erfarenhetspoäng -->
-        <div class="filter-group">
-          <div class="xp-control">
-            <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">➖</button>
-            <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-            <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">➕</button>
-          </div>
-          <div id="xpSummary" class="card exp-counter">
-            <div class="card-title">Erfarenhetspoäng</div>
-            <div class="card-desc">
-              Totalt: <span id="xpTotal">0</span><br>
-              Använt: <span id="xpUsed">0</span><br>
-              Oanvänt: <span id="xpFree">0</span>
+        <div class="traits-content summary-content">
+          <section class="summary-section trait-xp-section">
+            <div id="xpSummary" class="trait-xp-summary">
+              <div class="trait-xp-header">
+                <span class="trait-xp-title">XP-status</span>
+                <div class="xp-control trait-xp-buttons">
+                  <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">➖</button>
+                  <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
+                  <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">➕</button>
+                </div>
+              </div>
+              <div class="trait-xp-row">
+                <span class="trait-xp-item">
+                  <span class="trait-xp-label">TOTALT:</span>
+                  <span id="xpTotal" class="trait-xp-value">0</span>
+                </span>
+                <span class="trait-xp-item">
+                  <span class="trait-xp-label">ANVÄNT:</span>
+                  <span id="xpUsed" class="trait-xp-value">0</span>
+                </span>
+                <span class="trait-xp-item">
+                  <span class="trait-xp-label">OANVÄNT:</span>
+                  <span id="xpFree" class="trait-xp-value">0</span>
+                </span>
+              </div>
             </div>
-          </div>
+          </section>
+
+          <section class="summary-section trait-list-section">
+            <div class="trait-meta">
+              <div class="traits-total" role="status">
+                Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
+              </div>
+              <div id="traitStats" class="trait-extra-meta" aria-live="polite"></div>
+            </div>
+            <div id="traits" class="traits-grid traits"></div>
+          </section>
         </div>
-        <div class="exp-counter traits-total" style="text-align:center;">
-          Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
-        </div>
-        <div id="traits" class="traits"></div>
-        <div id="traitStats" class="exp-counter"></div>
       </aside>
 
       <!-- ---------- Filter ---------- -->

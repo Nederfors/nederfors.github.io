@@ -14,6 +14,7 @@ function initIndex() {
   let catsMinimized = false;
   let showArtifacts = false;
   let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
+  let revealedArtifactsVersion = 0;
   const SECRET_SEARCH = { 'pajkastare': 'ar86' };
   const SECRET_IDS = new Set(Object.values(SECRET_SEARCH));
   const ONLY_SELECTED_VALUE = '__onlySelected';
@@ -44,21 +45,168 @@ function initIndex() {
     catState = saved.cats || {};
   }
 
-  const getEntries = () => {
-    const base = DB
-      .concat(window.TABELLER || [])
-      .concat(storeHelper.getCustomEntries(store));
-    if (showArtifacts) return base.filter(p => !SECRET_IDS.has(p.id));
-    return base.filter(p => (!isHidden(p) || revealedArtifacts.has(p.id)) && !SECRET_IDS.has(p.id));
+  const ENTRY_META_FIELD = '__entryMeta';
+  const toArray = (value) => (Array.isArray(value) ? value : []);
+
+  const fallbackEnsureEntryMeta = (entry) => {
+    if (!entry || typeof entry !== 'object') return null;
+    if (entry[ENTRY_META_FIELD]) return entry[ENTRY_META_FIELD];
+    const safeString = (value) => String(value ?? '').trim();
+    const toLower = (value) => safeString(value).toLowerCase();
+    const normFn = typeof searchNormalize === 'function'
+      ? searchNormalize
+      : (value) => value;
+
+    const lowerName = toLower(entry.namn);
+    const normName = normFn(lowerName);
+    const levelText = Object.values(entry.nivåer || {})
+      .map(toLower)
+      .join(' ');
+    const descText = toLower(entry.beskrivning);
+    const combined = `${lowerName} ${descText} ${levelText}`.trim();
+    const normText = normFn(combined);
+
+    const normalizeList = (list) => toArray(list)
+      .map(safeString)
+      .filter(Boolean);
+
+    const tags = entry.taggar || {};
+    const typList = normalizeList(tags.typ);
+    let arkList = [];
+    try {
+      const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
+      arkList = normalizeList(exploded);
+    } catch {
+      arkList = [];
+    }
+    if (!arkList.length && Array.isArray(tags.ark_trad)) {
+      arkList = ['Traditionslös'];
+    }
+    const testList = normalizeList(tags.test);
+    const secondaryTags = [...arkList, ...testList];
+    const allTagsNormalized = new Set(
+      [...typList, ...secondaryTags].map(tag => normFn(tag.toLowerCase()))
+    );
+    const allTags = new Set([...typList, ...secondaryTags]);
+
+    const meta = {
+      normName,
+      normText,
+      typList,
+      primaryType: typList[0] || 'Övrigt',
+      primaryTypeLower: (typList[0] || 'Övrigt').toLowerCase(),
+      arkList,
+      testList,
+      secondaryTags,
+      secondaryLookup: new Set(secondaryTags.map(tag => normFn(tag.toLowerCase()))),
+      allTagsNormalized,
+      allTags
+    };
+
+    Object.defineProperty(entry, ENTRY_META_FIELD, {
+      value: meta,
+      enumerable: false,
+      configurable: true
+    });
+    return meta;
   };
-  const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
-  const isHidden = p => {
-    const types = p.taggar?.typ || [];
-    const primary = types[0] ? String(types[0]).toLowerCase() : '';
-    return ['artefakt','kuriositet','skatt'].includes(primary);
+
+  const ensureEntryMeta = (entry) => {
+    if (typeof window.ensureEntryMeta === 'function') {
+      return window.ensureEntryMeta(entry);
+    }
+    return fallbackEnsureEntryMeta(entry);
   };
-  const hasArtifactTag = p => (p.taggar?.typ || [])
-    .some(t => String(t || '').trim().toLowerCase() === 'artefakt');
+
+  const ensureEntryMetaList = (list) => {
+    if (typeof window.ensureEntryMetaList === 'function') {
+      return window.ensureEntryMetaList(list);
+    }
+    toArray(list).forEach(fallbackEnsureEntryMeta);
+    return list;
+  };
+
+  const entryCache = {
+    baseKey: '',
+    baseEntries: [],
+    filteredKey: '',
+    filteredEntries: []
+  };
+
+  const touchFilteredCache = () => {
+    entryCache.filteredKey = '';
+  };
+
+  const bumpRevealedArtifactsVersion = () => {
+    revealedArtifactsVersion += 1;
+    touchFilteredCache();
+  };
+
+  const hiddenPrimaryTypes = new Set(['artefakt', 'kuriositet', 'skatt']);
+
+  const buildBaseEntries = () => {
+    const versions = window.__entryDataVersions || { db: 0, tables: 0 };
+    const customVersion = typeof storeHelper.getCustomEntriesVersion === 'function'
+      ? storeHelper.getCustomEntriesVersion(store)
+      : 0;
+    const key = [
+      versions.db,
+      versions.tables,
+      customVersion,
+      store.current || ''
+    ].join('|');
+    if (entryCache.baseKey !== key) {
+      const customEntries = storeHelper.getCustomEntries(store) || [];
+      ensureEntryMetaList(customEntries);
+      const base = [
+        ...(Array.isArray(DB) ? DB : []),
+        ...(Array.isArray(window.TABELLER) ? window.TABELLER : []),
+        ...customEntries
+      ];
+      ensureEntryMetaList(base);
+      entryCache.baseEntries = base;
+      entryCache.baseKey = key;
+      entryCache.filteredKey = '';
+      hiddenNameIndex = null;
+    }
+    return entryCache.baseEntries;
+  };
+
+  const isHidden = (entry) => {
+    const meta = ensureEntryMeta(entry);
+    const primary = meta?.primaryTypeLower || '';
+    return hiddenPrimaryTypes.has(primary);
+  };
+
+  const buildFilteredEntries = () => {
+    const base = buildBaseEntries();
+    const revealedVersion = typeof storeHelper.getRevealedArtifactsVersion === 'function'
+      ? storeHelper.getRevealedArtifactsVersion(store)
+      : 0;
+    const key = [
+      entryCache.baseKey,
+      showArtifacts ? '1' : '0',
+      revealedVersion,
+      revealedArtifactsVersion
+    ].join('|');
+    if (entryCache.filteredKey !== key) {
+      const filtered = base.filter(entry => {
+        if (!entry || SECRET_IDS.has(entry.id)) return false;
+        if (showArtifacts) return true;
+        return !isHidden(entry) || revealedArtifacts.has(entry.id);
+      });
+      entryCache.filteredEntries = filtered;
+      entryCache.filteredKey = key;
+    }
+    return entryCache.filteredEntries;
+  };
+
+  const getEntries = () => buildFilteredEntries();
+
+  const hasArtifactTag = entry => {
+    const meta = ensureEntryMeta(entry);
+    return (meta?.typList || []).some(t => t.toLowerCase() === 'artefakt');
+  };
 
   let hiddenNameIndex = null;
   const getHiddenNameIndex = () => {
@@ -207,23 +355,62 @@ function initIndex() {
   };
 
   /* fyll dropdowns */
+  const dropdownCache = {
+    key: '',
+    typ: [],
+    ark: [],
+    test: []
+  };
+
+  const categoryCache = {
+    key: '',
+    map: new Map(),
+    list: []
+  };
+
+  const getCategoryIndex = () => {
+    const entries = getEntries();
+    const key = entryCache.filteredKey;
+    if (categoryCache.key !== key) {
+      const map = new Map();
+      const set = new Set();
+      entries.forEach(entry => {
+        const meta = ensureEntryMeta(entry) || {};
+        (meta.typList || []).forEach(tag => {
+          const norm = searchNormalize(String(tag || '').toLowerCase());
+          if (norm && !map.has(norm)) map.set(norm, tag);
+          if (tag) set.add(tag);
+        });
+      });
+      categoryCache.key = key;
+      categoryCache.map = map;
+      categoryCache.list = Array.from(set).sort((a,b) => a.localeCompare(b));
+    }
+    return categoryCache.map;
+  };
+
+  const getCategoryList = () => {
+    getCategoryIndex();
+    return categoryCache.list;
+  };
+
   const fillDropdowns = ()=>{
-    const set = { typ:new Set(), ark:new Set(), test:new Set() };
-    getEntries().forEach(p=>{
-      (p.taggar.typ||[])
-        .filter(Boolean)
-        .forEach(v=>set.typ.add(v));
-      const arkTags = explodeTags(p.taggar.ark_trad);
-      if (arkTags.length) {
-        arkTags.forEach(v => set.ark.add(v));
-      } else if (Array.isArray(p.taggar?.ark_trad)) {
-        set.ark.add('Traditionslös');
-      }
-      (p.taggar.test||[])
-        .filter(Boolean)
-        .forEach(v=>set.test.add(v));
-    });
-    const fill = (sel, s, label, extra = []) => {
+    const entries = getEntries();
+    const cacheKey = entryCache.filteredKey;
+    if (dropdownCache.key !== cacheKey) {
+      const sets = { typ: new Set(), ark: new Set(), test: new Set() };
+      entries.forEach(entry => {
+        const meta = ensureEntryMeta(entry) || {};
+        (meta.typList || []).forEach(tag => sets.typ.add(tag));
+        (meta.arkList || []).forEach(tag => sets.ark.add(tag));
+        (meta.testList || []).forEach(tag => sets.test.add(tag));
+      });
+      dropdownCache.key = cacheKey;
+      dropdownCache.typ = Array.from(sets.typ).sort((a,b) => a.localeCompare(b));
+      dropdownCache.ark = Array.from(sets.ark).sort((a,b) => a.localeCompare(b));
+      dropdownCache.test = Array.from(sets.test).sort((a,b) => a.localeCompare(b));
+    }
+    const fill = (sel, values, label, extra = []) => {
       if (!sel) return;
       const opts = [`<option value="">${label} (alla)</option>`];
       extra.forEach(opt => {
@@ -232,12 +419,19 @@ function initIndex() {
         const value = String(opt?.value ?? '');
         opts.push(`<option value="${value}">${text}</option>`);
       });
-      opts.push(...[...s].sort().map(v => `<option>${v}</option>`));
-      sel.innerHTML = opts.join('');
+      values.forEach(value => {
+        const text = String(value || '').trim();
+        if (text) opts.push(`<option>${text}</option>`);
+      });
+      const markup = opts.join('');
+      if (sel.dataset.optionCache !== markup) {
+        sel.innerHTML = markup;
+        sel.dataset.optionCache = markup;
+      }
     };
-    fill(dom.typSel , set.typ ,'Typ', [{ value: ONLY_SELECTED_VALUE, label: ONLY_SELECTED_LABEL }]);
-    fill(dom.arkSel , set.ark ,'Arketyp');
-    fill(dom.tstSel , set.test,'Test');
+    fill(dom.typSel , dropdownCache.typ ,'Typ', [{ value: ONLY_SELECTED_VALUE, label: ONLY_SELECTED_LABEL }]);
+    fill(dom.arkSel , dropdownCache.ark ,'Arketyp');
+    fill(dom.tstSel , dropdownCache.test,'Test');
   };
   fillDropdowns();
 
@@ -263,18 +457,11 @@ function initIndex() {
         const num = (m[1] || '').trim();
         const prefix = m[2];
         const part = searchNormalize((m[3] || '').toLowerCase());
-        const seenCat = new Set();
-        const cats = [];
-        for (const p of getEntries()) {
-          for (const t of (p.taggar?.typ || [])) {
-            const key = searchNormalize(String(t).toLowerCase());
-            if (part && !key.includes(part)) continue;
-            if (seenCat.has(t)) continue;
-            seenCat.add(t);
-            cats.push(t);
-          }
-        }
-        cats.sort((a,b)=>String(a).localeCompare(String(b)));
+        const cats = getCategoryList()
+          .filter(cat => {
+            const key = searchNormalize(String(cat || '').toLowerCase());
+            return part ? key.includes(part) : true;
+          });
         if (cats.length) {
           sugEl.innerHTML = cats.map((cat,i)=>{
             const base = prefix.charAt(0).toUpperCase()+prefix.slice(1).toLowerCase();
@@ -384,6 +571,7 @@ function initIndex() {
           if (!revealedArtifacts.has(hid.id)) {
             revealedArtifacts.add(hid.id);
             storeHelper.addRevealedArtifact(store, hid.id);
+            bumpRevealedArtifactsVersion();
             fillDropdowns();
           }
           const cat = hid.taggar?.typ?.[0];
@@ -392,34 +580,27 @@ function initIndex() {
         }
       }
     }
-    return baseEntries.filter(p=>{
-      const levelText = Object.values(p.nivåer || {}).join(' ');
-      const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')} ${levelText}`.toLowerCase());
+    const combinedFilters = [...F.typ, ...F.ark, ...F.test];
+    const hasFilterTags = combinedFilters.length > 0;
+    return baseEntries.filter(entry => {
+      const meta = ensureEntryMeta(entry) || {};
+      const text = meta.normText || '';
       const hasTerms = terms.length > 0;
       const txtHit = hasTerms && (
         union ? terms.some(q => text.includes(q))
-              : terms.every(q => text.includes(q))
+               : terms.every(q => text.includes(q))
       );
-      const tags = p.taggar || {};
-      const selTags = [...F.typ, ...F.ark, ...F.test];
-      const hasTags = selTags.length > 0;
-      const arkTags = explodeTags(tags.ark_trad);
-      const itmTags = [
-        ...(tags.typ ?? []),
-        ...(arkTags.length ? arkTags : (Array.isArray(tags.ark_trad) ? ['Traditionslös'] : [])),
-        ...(tags.test ?? [])
-      ];
-      const tagHit = hasTags && (
-        union ? selTags.some(t => itmTags.includes(t))
-              : selTags.every(t => itmTags.includes(t))
+      const tagSet = meta.allTags || new Set();
+      const tagHit = hasFilterTags && (
+        union
+          ? combinedFilters.some(tag => tagSet.has(tag))
+          : combinedFilters.every(tag => tagSet.has(tag))
       );
-      const tagOk = !hasTags || tagHit;
+      const tagOk = !hasFilterTags || tagHit;
       const txtOk  = !hasTerms || txtHit;
-      const selOk = !onlySel || nameSet.has(p.namn);
-      // In utvidgad (union) läge: tillåt träff om texten ELLER taggarna matchar
-      // även om de andra filtret pekar på annan kategori.
+      const selOk = !onlySel || nameSet.has(entry.namn);
       const combinedOk = union
-        ? ((hasTags || hasTerms) ? (tagHit || txtHit) : true)
+        ? ((hasFilterTags || hasTerms) ? (tagHit || txtHit) : true)
         : (tagOk && txtOk);
       return combinedOk && selOk;
     }).sort(createSearchSorter(terms));
@@ -439,21 +620,27 @@ function initIndex() {
       [...dom.lista.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
     );
-    dom.lista.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     // Always render list; a fallback "Hoppsan" category is appended last.
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
+    const charByName = new Map();
+    charList.forEach(item => {
+      if (!item || !item.namn) return;
+      if (!charByName.has(item.namn)) charByName.set(item.namn, item);
+    });
     const cats = {};
     const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
     const searchActive = terms.length > 0;
     const catNameMatch = {};
     arr.forEach(p=>{
-      const cat = p.taggar?.typ?.[0] || 'Övrigt';
+      const meta = ensureEntryMeta(p) || {};
+      const cat = meta.primaryType || p.taggar?.typ?.[0] || 'Övrigt';
       (cats[cat] ||= []).push(p);
       if (searchActive) {
-        const name = searchNormalize((p.namn || '').toLowerCase());
+        const name = meta.normName || searchNormalize((p.namn || '').toLowerCase());
         const union = storeHelper.getFilterUnion(store);
         const nameOk = union ? terms.some(q => name.includes(q))
                              : terms.every(q => name.includes(q));
@@ -486,13 +673,13 @@ function initIndex() {
         saveState();
       });
       cats[cat].forEach(p=>{
+        const meta = ensureEntryMeta(p) || {};
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
           const infoBtn = `<button class="char-btn info-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">ℹ️</button>`;
           const dataset = { name: p.namn };
           if (p.id) dataset.id = p.id;
-          const visibleTags = (p.taggar?.typ || [])
-            .map(t => String(t || '').trim())
+          const visibleTags = (meta.typList || [])
             .filter(t => t && !/^tabell(er)?$/i.test(t));
           const tagsHtml = visibleTags.length
             ? visibleTags.map(t => `<span class="tag">${t}</span>`).join(' ')
@@ -515,7 +702,7 @@ function initIndex() {
           }
           return;
         }
-        const charEntry = charList.find(c => c.namn === p.namn);
+        const charEntry = charByName.get(p.namn);
         const levelStr = typeof charEntry?.nivå === 'string' ? charEntry.nivå.trim() : '';
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
         const charLevel = !isEx && levelStr ? levelStr : null;
@@ -545,7 +732,7 @@ function initIndex() {
         let priceText = '';
         let weightVal = null;
         let capacityVal = null;
-        const isVehicle = (p.taggar?.typ || []).includes('Färdmedel');
+        const isVehicle = (meta.typList || []).includes('Färdmedel');
         let priceLabel = '';
         if (isInv(p)) {
           const statsHtml = itemStatHtml(p);
@@ -615,7 +802,7 @@ function initIndex() {
         }
         let spec = null;
         if (p.namn === 'Monsterlärd') {
-          spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
+          spec = charByName.get('Monsterlärd')?.trait || null;
           if (spec) {
             const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
             cardDesc += block;
@@ -632,23 +819,22 @@ function initIndex() {
         const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
         const filterTagData = [];
         const primaryTagParts = [];
-        (p.taggar?.typ || [])
-          .filter(Boolean)
-          .forEach((t, idx) => {
-            const tag = { section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 };
-            filterTagData.push(tag);
-            if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
-          });
-        const trTags = explodeTags(p.taggar?.ark_trad);
-        const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
-        arkList.forEach(t => {
+        (meta.typList || []).forEach((t, idx) => {
+          if (!t) return;
+          const tag = { section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 };
+          filterTagData.push(tag);
+          if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+        });
+        (meta.arkList || []).forEach(t => {
+          if (!t) return;
           const tag = { section: 'ark', value: t, label: t, hidden: t === 'Traditionslös' };
           filterTagData.push(tag);
           if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
         });
-        (p.taggar?.test || [])
-          .filter(Boolean)
-          .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
+        (meta.testList || []).forEach(t => {
+          if (!t) return;
+          filterTagData.push({ section: 'test', value: t, label: t });
+        });
         const primaryTagsHtml = primaryTagParts.join(' ');
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
         const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
@@ -825,7 +1011,7 @@ function initIndex() {
           if (descEl) highlightInElement(descEl, terms);
         }
       });
-      dom.lista.appendChild(catLi);
+      fragment.appendChild(catLi);
     });
     // Append special "Hoppsan" category with a clear-filters action
     {
@@ -854,8 +1040,9 @@ function initIndex() {
         catState['Hoppsan'] = detailsEl.open;
         saveState();
       });
-      dom.lista.appendChild(hopLi);
+      fragment.appendChild(hopLi);
     }
+    dom.lista.replaceChildren(fragment);
     updateCatToggle();
     // Only auto-open once per triggering action
     openCatsOnce.clear();
@@ -997,13 +1184,7 @@ function initIndex() {
           if (catInput) {
             const ncat = searchNormalize(catInput.toLowerCase());
             // Build normalized -> canonical category map from current entries
-            const catMap = new Map();
-            for (const p of getEntries()) {
-              for (const t of (p.taggar?.typ || [])) {
-                const nt = searchNormalize(String(t).toLowerCase());
-                if (!catMap.has(nt)) catMap.set(nt, t);
-              }
-            }
+            const catMap = getCategoryIndex();
             const canonical = catMap.get(ncat);
             if (!canonical) {
               if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
@@ -1057,6 +1238,11 @@ function initIndex() {
         storeHelper.setOnlySelected(store, false);
         storeHelper.clearRevealedArtifacts(store);
         revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
+        bumpRevealedArtifactsVersion();
+        if (showArtifacts) {
+          showArtifacts = false;
+          touchFilteredCache();
+        }
         fillDropdowns();
         activeTags(); renderList(filtered());
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1064,6 +1250,7 @@ function initIndex() {
       }
       if (term === 'molly<3') {
         showArtifacts = true;
+        touchFilteredCache();
         dom.sIn.value=''; sTemp='';
         fillDropdowns();
         activeTags(); renderList(filtered());
