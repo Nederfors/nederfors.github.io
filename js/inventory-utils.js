@@ -25,6 +25,27 @@
     return root ? root.getElementById(id) : null;
   };
   const getEl = (id) => document.getElementById(id) || $T(id);
+  const listenerRegistry = new WeakMap();
+
+  function bindListenerOnce(target, type, handler, options) {
+    if (!target || typeof target.addEventListener !== 'function' || typeof handler !== 'function') {
+      return;
+    }
+    let typeMap = listenerRegistry.get(target);
+    if (!typeMap) {
+      typeMap = new Map();
+      listenerRegistry.set(target, typeMap);
+    }
+    const existing = typeMap.get(type);
+    if (existing && existing.handler === handler && existing.options === options) {
+      return;
+    }
+    if (existing) {
+      target.removeEventListener(type, existing.handler, existing.options);
+    }
+    target.addEventListener(type, handler, options);
+    typeMap.set(type, { handler, options });
+  }
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
@@ -1987,6 +2008,30 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     return { desc, rowLevel, freeCnt, qualityHtml, infoBody, infoTagParts, priceMultTag };
   }
 
+  function handleFormalEntryToggle(e) {
+    updateCollapseBtnState();
+    const expanded = Boolean(e?.detail?.expanded);
+    try {
+      localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+    } catch {}
+  }
+
+  function handleListEntryToggle(e) {
+    updateCollapseBtnState();
+    const detail = e?.detail || {};
+    const card = detail.card;
+    if (!card) return;
+    const expanded = Boolean(detail.expanded);
+    const special = card.dataset?.special || '';
+    try {
+      if (special === '__functions__') {
+        localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
+      } else if (special === '__info__') {
+        localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+      }
+    } catch {}
+  }
+
   function renderInventory () {
     const listEl = dom.invList;
     const openKeys = new Set(
@@ -2066,11 +2111,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         }
       };
 
-      dom.invFormal.addEventListener('entry-card-toggle', e => {
-        updateCollapseBtnState();
-        const expanded = Boolean(e.detail?.expanded);
-        localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
-      });
+      bindListenerOnce(dom.invFormal, 'entry-card-toggle', handleFormalEntryToggle);
     }
 
     const allInv = storeHelper.getInventory(store);
@@ -2699,18 +2740,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         updateCollapseBtnState();
       };
 
-      listEl.addEventListener('entry-card-toggle', e => {
-        updateCollapseBtnState();
-        const detail = e.detail || {};
-        const card = detail.card;
-        if (!card) return;
-        const expanded = Boolean(detail.expanded);
-        if (card.dataset.special === '__functions__') {
-          localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
-        } else if (card.dataset.special === '__info__') {
-          localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
-        }
-      });
+      bindListenerOnce(listEl, 'entry-card-toggle', handleListEntryToggle);
     }
     if (dom.dragToggle) {
       dom.dragToggle.classList.toggle('danger', dragEnabled);
