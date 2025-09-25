@@ -89,6 +89,15 @@ function initIndex() {
   const QUAL_TYPE_KEYS = Object.keys(QUAL_TYPE_MAP);
   const DOCK_TAG_TYPES = new Set(['Fördel','Nackdel','Särdrag','Monstruöst särdrag','Ritual','Mystisk kraft','Förmåga']);
 
+  const levelLetter = (lvl) => {
+    const text = String(lvl || '').trim();
+    if (!text) return '';
+    if (text === 'Mästare') return 'M';
+    if (text === 'Gesäll') return 'G';
+    if (text === 'Novis') return 'N';
+    return text.charAt(0).toUpperCase();
+  };
+
   const flashAdded = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
     const root = dom.lista || document;
@@ -417,6 +426,15 @@ function initIndex() {
   };
 
   const renderList = arr=>{
+    const cardKeyFromEl = el => {
+      const id = el.dataset.id || el.dataset.name || '';
+      const level = el.dataset.level || '';
+      const trait = el.dataset.trait || '';
+      return `${id}|${level}|${trait}`;
+    };
+    const prevCards = [...dom.lista.querySelectorAll('li.card.entry-card')];
+    const openCardKeys = new Set(prevCards.filter(li => !li.classList.contains('compact')).map(cardKeyFromEl));
+    const compactCardKeys = new Set(prevCards.filter(li => li.classList.contains('compact')).map(cardKeyFromEl));
     const openCats = new Set(
       [...dom.lista.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
@@ -458,7 +476,7 @@ function initIndex() {
       catLi.className='cat-group';
       // Allow temporary "open once" categories to override saved state
       const shouldOpen = openCatsOnce.has(cat) || (catState[cat] !== undefined ? catState[cat] : openCats.has(cat));
-      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list entry-card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=catLi.querySelector('ul');
       detailsEl.addEventListener('toggle', (ev) => {
@@ -484,9 +502,13 @@ function initIndex() {
             dataset,
             nameHtml: p.namn,
             tagsHtml,
-            titleActions: [infoBtn]
+            titleActions: [infoBtn],
+            collapsible: true
           });
           listEl.appendChild(li);
+          const entryKey = cardKeyFromEl(li);
+          if (openCardKeys.has(entryKey)) li.classList.remove('compact');
+          else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
           if (searchActive && terms.length) {
             const titleSpan = li.querySelector('.card-title > span');
             if (titleSpan) highlightInElement(titleSpan, terms);
@@ -503,9 +525,17 @@ function initIndex() {
         const availLvls = LVL.filter(l => p.nivåer?.[l]);
         const hasAnyLevel = availLvls.length > 0;
         const hasLevelSelect = availLvls.length > 1;
+        const levelOptionsHtml = hasLevelSelect
+          ? availLvls.map(l => {
+              const short = levelLetter(l);
+              const selected = l === curLvl ? ' selected' : '';
+              const shortAttr = short ? ` data-short="${short}"` : '';
+              return `<option value="${l}"${shortAttr}${selected}>${l}</option>`;
+            }).join('')
+          : '';
         const lvlSel = hasLevelSelect
-          ? `<select class="level" data-name="${p.namn}">
-              ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
+          ? `<select class="level" data-name="${p.namn}" aria-label="Välj nivå för ${p.namn}">
+              ${levelOptionsHtml}
             </select>`
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
@@ -626,10 +656,7 @@ function initIndex() {
         const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = filterTagHtml.join(' ');
         const lvlBadgeVal = hasAnyLevel ? curLvl : '';
-        const lvlShort =
-          lvlBadgeVal === 'Mästare' ? 'M'
-          : (lvlBadgeVal === 'Gesäll' ? 'G'
-          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const lvlShort = levelLetter(lvlBadgeVal);
         const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
           ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
           : '';
@@ -690,7 +717,7 @@ function initIndex() {
         const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
           ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
           : '';
-        const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="entry-xp-value">Erf: ${xpText}</span>` : '';
         const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
         // Compact meta badges (P/V/level) using short labels for mobile space
         const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
@@ -766,6 +793,9 @@ function initIndex() {
         if (spec) dataset.trait = spec;
         if (xpVal != null) dataset.xp = xpVal;
         if (p.id) dataset.id = p.id;
+        const descBlock = cardDesc
+          ? `<div class="card-desc">${cardDesc}</div>`
+          : '';
         const li = createEntryCard({
           compact,
           dataset,
@@ -776,12 +806,18 @@ function initIndex() {
           infoBox: infoBoxHtml,
           hasLevels: hasLevelSelect,
           levelHtml,
-          descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${cardDesc}</div>` : '',
+          levelShort: hasLevelSelect ? lvlShort : '',
+          levelShortLabel: hasLevelSelect ? lvlBadgeVal : '',
+          descHtml: descBlock,
           leftSections,
           titleActions,
-          buttonSections: actionButtons
+          buttonSections: actionButtons,
+          collapsible: true
         });
         listEl.appendChild(li);
+        const entryKey = cardKeyFromEl(li);
+        if (openCardKeys.has(entryKey)) li.classList.remove('compact');
+        else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
         if (searchActive && terms.length) {
           const titleSpan = li.querySelector('.card-title > span');
           if (titleSpan) highlightInElement(titleSpan, terms);
@@ -799,16 +835,18 @@ function initIndex() {
       hopLi.innerHTML = `
         <details data-cat="Hoppsan"${hopOpen ? ' open' : ''}>
           <summary>Hoppsan</summary>
-          <ul class="card-list"></ul>
+          <ul class="card-list entry-card-list" data-entry-page="hoppsan"></ul>
         </details>`;
       const listEl = hopLi.querySelector('ul');
-      const li = document.createElement('li');
-      li.className = 'card compact hoppsan-card';
-      li.dataset.name = 'Hoppsan';
-      li.innerHTML = `
-<div class="card-title"><span>Hoppsan, här tog det slut.</span></div>
-        <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;
-      listEl.appendChild(li);
+      const hopCard = createEntryCard({
+        compact: true,
+        classes: ['hoppsan-card'],
+        dataset: { name: 'Hoppsan' },
+        nameHtml: 'Hoppsan, här tog det slut.',
+        buttonSections: ['<button class="char-btn" data-clear-filters="1">Börja om?</button>'],
+        collapsible: false
+      });
+      listEl.appendChild(hopCard);
       const detailsEl = hopLi.querySelector('details');
       detailsEl.addEventListener('toggle', (ev) => {
         updateCatToggle();
@@ -1105,6 +1143,13 @@ function initIndex() {
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
     activeTags(); renderList(filtered());
   });
+
+  if (dom.lista && !dom.lista.dataset.entryToggleBound) {
+    dom.lista.dataset.entryToggleBound = '1';
+    dom.lista.addEventListener('entry-card-toggle', () => {
+      updateCatToggle();
+    });
+  }
 
   // Treat clicks on tags anywhere as filter selections
   document.addEventListener('click', e => {
@@ -1730,31 +1775,40 @@ function initIndex() {
   /* level-byte i listan */
   dom.lista.addEventListener('change', async e=>{
     if(!e.target.matches('select.level')) return;
-    const name = e.target.dataset.name;
-    const tr = e.target.closest('li').dataset.trait || null;
+    const select = e.target;
+    window.entryCardFactory?.syncLevelControl?.(select);
+    const name = select.dataset.name;
+    const tr = select.closest('li').dataset.trait || null;
     const list = storeHelper.getCurrentList(store);
     const ent  = list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
     if (ent){
       const before = list.map(x => ({...x}));
       const old = ent.nivå;
-      ent.nivå = e.target.value;
+      ent.nivå = select.value;
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
         ent.nivå = old;
-        e.target.value = old;
+        select.value = old;
+        window.entryCardFactory?.syncLevelControl?.(select);
         return;
       }
       if (storeHelper.hamnskifteNoviceLimit(list, ent, ent.nivå)) {
         await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
         ent.nivå = old;
-        e.target.value = old;
+        select.value = old;
+        window.entryCardFactory?.syncLevelControl?.(select);
         return;
       }
       if(name==='Monsterlärd'){
         if(['Gesäll','Mästare'].includes(ent.nivå)){
           if(!ent.trait && window.monsterLore){
             monsterLore.pickSpec(spec=>{
-              if(!spec){ ent.nivå=old; e.target.value=old; return; }
+              if(!spec){
+                ent.nivå=old;
+                select.value=old;
+                window.entryCardFactory?.syncLevelControl?.(select);
+                return;
+              }
               ent.trait=spec;
               storeHelper.setCurrentList(store,list); updateXP();
               renderList(filtered()); renderTraits();
@@ -1765,6 +1819,7 @@ function initIndex() {
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
           renderList(filtered()); renderTraits();
+          updateSearchDatalist();
           return;
         }
       }
@@ -1779,7 +1834,10 @@ function initIndex() {
         if(toRemove.length){
           const dispNames=toRemove.map(n=>storeHelper.HAMNSKIFTE_NAMES[n]);
           if(!(await confirmPopup(`Ta bort även: ${dispNames.join(', ')}?`))){
-            ent.nivå=old; e.target.value=old; return;
+            ent.nivå=old;
+            select.value=old;
+            window.entryCardFactory?.syncLevelControl?.(select);
+            return;
           }
           for(let i=list.length-1;i>=0;i--){
             const base=storeHelper.HAMNSKIFTE_BASE[list[i].namn];
@@ -1811,21 +1869,22 @@ function initIndex() {
     /* uppdatera pris om förmågan inte lagts till */
     const p = getEntries().find(x=>x.namn===name);
     if(!p) return;
-    const lvl = e.target.value;
+    const lvl = select.value;
     const xpVal = (isInv(p) || isEmployment(p) || isService(p))
       ? null
       : storeHelper.calcEntryXP({ ...p, nivå:lvl }, list);
     const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
-    const liEl = e.target.closest('li');
+    const liEl = select.closest('li');
     if (xpVal != null) liEl.dataset.xp = xpVal; else delete liEl.dataset.xp;
-    const xpSpan = liEl.querySelector('.card-title .xp-cost');
+    const xpSpan = liEl.querySelector('.entry-header-xp .entry-xp-value');
     if (xpSpan) xpSpan.textContent = `Erf: ${xpText}`;
     const infoBtn = liEl.querySelector('button[data-info]');
     if (infoBtn?.dataset.info) {
       const infoHtml = decodeURIComponent(infoBtn.dataset.info);
-      const newInfo = infoHtml.replace(/(<span class="tag xp-cost">Erf: )[^<]*/, `$1${xpText}`);
+      const newInfo = infoHtml.replace(/(<span class="tag xp-cost">)Erf: [^<]*/, `$1Erf: ${xpText}`);
       infoBtn.dataset.info = encodeURIComponent(newInfo);
     }
+    window.entryCardFactory?.syncLevelControl?.(select);
   });
 }
 

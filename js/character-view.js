@@ -131,6 +131,15 @@ function initCharacter() {
 
   const DOCK_TAG_TYPES = new Set(['Fördel','Nackdel','Särdrag','Monstruöst särdrag','Ritual','Mystisk kraft','Förmåga']);
 
+  const levelLetter = (lvl) => {
+    const text = String(lvl || '').trim();
+    if (!text) return '';
+    if (text === 'Mästare') return 'M';
+    if (text === 'Gesäll') return 'G';
+    if (text === 'Novis') return 'N';
+    return text.charAt(0).toUpperCase();
+  };
+
   const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
 
   const renderDockedTags = (tags, extraClass = '') => {
@@ -563,7 +572,7 @@ function initCharacter() {
     const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
       ? `${p.namn}: ${handlingName(p, p.nivå)}`
       : p.namn;
-    return `<li class="card${compact ? ' compact' : ''}"><div class="card-title"><span>${titleName}</span></div>${tagHtml}${desc}</li>`;
+    return `<li class="card entry-card${compact ? ' compact' : ''}"><div class="card-title"><span>${titleName}</span></div>${tagHtml}${desc}</li>`;
   }
 
   const charCategory = (entry, { allowFallback = true } = {}) => {
@@ -595,7 +604,7 @@ function initCharacter() {
 
   function renderConflicts(list){
     if(!list.length){
-      conflictList.innerHTML = '<li class="card">Inga konflikter.</li>';
+      conflictList.innerHTML = '<li class="card entry-card">Inga konflikter.</li>';
       return;
     }
 
@@ -612,7 +621,7 @@ function initCharacter() {
         <li class="cat-group">
           <details open>
             <summary>${catName(cat)}</summary>
-            <ul class="card-list">${items}</ul>
+            <ul class="card-list entry-card-list" data-entry-page="conflict">${items}</ul>
           </details>
         </li>`;
     }).join('');
@@ -1089,12 +1098,21 @@ function initCharacter() {
         }
     });
     const compact = storeHelper.getCompactEntries(store);
+    const cardKeyFromEl = el => {
+      const id = el.dataset.id || el.dataset.name || '';
+      const level = el.dataset.level || '';
+      const trait = el.dataset.trait || '';
+      return `${id}|${level}|${trait}`;
+    };
+    const prevCards = [...dom.valda.querySelectorAll('li.card.entry-card')];
+        const openCardKeys = new Set(prevCards.filter(li => !li.classList.contains('compact')).map(cardKeyFromEl));
+    const compactCardKeys = new Set(prevCards.filter(li => li.classList.contains('compact')).map(cardKeyFromEl));
     const openCats = new Set(
       [...dom.valda.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
     );
     dom.valda.innerHTML = '';
-    if(!groups.length){ dom.valda.innerHTML = '<li class="card">Inga träffar.</li>'; return; }
+    if(!groups.length){ dom.valda.innerHTML = '<li class="card entry-card">Inga träffar.</li>'; return; }
     const cats = {};
     const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
       .map(t => searchNormalize(t.toLowerCase()));
@@ -1126,7 +1144,7 @@ function initCharacter() {
       const catLi=document.createElement('li');
       catLi.className='cat-group';
       const shouldOpen = catState[cat] !== undefined ? catState[cat] : (openCats.has(cat) || openCatsOnce.has(cat));
-      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list entry-card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=detailsEl.querySelector('ul');
       detailsEl.addEventListener('toggle', () => {
@@ -1139,25 +1157,39 @@ function initCharacter() {
         const availLvls = LVL.filter(l=>p.nivåer?.[l]);
         const hasAnyLevel = availLvls.length > 0;
         const hasLevelSelect = availLvls.length > 1;
+        const levelOptionsHtml = hasLevelSelect
+          ? availLvls.map(l => {
+              const short = levelLetter(l);
+              const selected = l === p.nivå ? ' selected' : '';
+              const shortAttr = short ? ` data-short="${short}"` : '';
+              return `<option value="${l}"${shortAttr}${selected}>${l}</option>`;
+            }).join('')
+          : '';
         const lvlSel = hasLevelSelect
-          ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''}>
-              ${availLvls.map(l=>`<option${l===p.nivå?' selected':''}>${l}</option>`).join('')}
+          ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''} aria-label="Välj nivå för ${p.namn}">
+              ${levelOptionsHtml}
             </select>`
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
         let desc = abilityHtml(p, p.nivå);
         let infoBodyHtml = desc;
         const infoMeta = [];
+        let raceInfo = '';
+        let traitInfo = '';
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
           if (extra) infoBodyHtml += extra;
         }
         if (p.namn === 'Blodsband' && p.race) {
-          infoMeta.push({ label: 'Ras', value: p.race });
+          const race = escapeHtml(p.race);
+          infoMeta.push({ label: 'Ras', value: race });
+          raceInfo = `<p><strong>Ras:</strong> ${race}</p>`;
         }
         if (p.trait) {
           const label = p.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
-          infoMeta.push({ label, value: p.trait });
+          const value = escapeHtml(p.trait);
+          infoMeta.push({ label, value });
+          traitInfo = `<p><strong>${label}:</strong> ${value}</p>`;
         }
         const curList = storeHelper.getCurrentList(store);
         const xpVal = storeHelper.calcEntryXP(p, curList);
@@ -1191,10 +1223,7 @@ function initCharacter() {
         const infoTagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
         const tagsHtml = tagHtmlParts.join(' ');
         const lvlBadgeVal = hasAnyLevel ? (p.nivå || availLvls[0] || '') : '';
-        const lvlShort =
-          lvlBadgeVal === 'Mästare' ? 'M'
-          : (lvlBadgeVal === 'Gesäll' ? 'G'
-          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
+        const lvlShort = levelLetter(lvlBadgeVal);
         const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
           ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
           : '';
@@ -1246,7 +1275,7 @@ function initCharacter() {
         const infoBoxHtml = infoBoxContentHtml
           ? `<div class="card-info-box">${infoBoxContentHtml}</div>`
           : '';
-        const xpHtml = `<span class="xp-cost">Erf: ${xpText}</span>`;
+        const xpHtml = `<span class="entry-xp-value">Erf: ${xpText}</span>`;
         const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
         const infoPanelHtml = buildInfoPanelHtml({
           tagsHtml: infoTagsHtml,
@@ -1315,6 +1344,9 @@ function initCharacter() {
         const leftSections = [];
         if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
         else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
+        const descBlock = (!hideDetails && (desc || raceInfo || traitInfo))
+          ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>`
+          : '';
         const dataset = { name: p.namn };
         if (p.trait) dataset.trait = p.trait;
         dataset.xp = xpVal;
@@ -1329,13 +1361,24 @@ function initCharacter() {
           infoBox: infoBoxHtml,
           hasLevels: hasLevelSelect,
           levelHtml,
-          descHtml: (!compact && !hideDetails) ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>` : '',
+          levelShort: hasLevelSelect ? lvlShort : '',
+          levelShortLabel: hasLevelSelect ? lvlBadgeVal : '',
+          descHtml: descBlock,
           leftSections,
           titleActions,
-          buttonSections: buttonParts
+          buttonSections: buttonParts,
+          collapsible: true
         });
 
         listEl.appendChild(li);
+        const entryKey = cardKeyFromEl(li);
+        if (openCardKeys.has(entryKey)) {
+          li.classList.remove('compact');
+        } else if (compact && compactCardKeys.has(entryKey)) {
+          li.classList.add('compact');
+        } else if (!compact) {
+          li.classList.remove('compact');
+        }
       });
       dom.valda.appendChild(catLi);
     });
@@ -1597,6 +1640,11 @@ function initCharacter() {
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click', async e=>{
     if (e.target.closest('.filter-tag')) return;
+    if (e.target.closest('.entry-collapse-btn')) return;
+    const header = e.target.closest('.card-header');
+    if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
+      return;
+    }
     const conflictBtn = e.target.closest('.conflict-btn');
       if(conflictBtn){
         const currentName = conflictBtn.dataset.name;
@@ -1866,33 +1914,49 @@ function initCharacter() {
     }
 
   });
+
+  if (dom.valda) {
+    dom.valda.addEventListener('entry-card-toggle', () => {
+      updateCatToggle();
+      refreshEffectsPanel();
+    });
+  }
   dom.valda.addEventListener('change', async e=>{
     if(!e.target.matches('select.level')) return;
-    const name=e.target.dataset.name;
-    const tr=e.target.dataset.trait || e.target.closest('li').dataset.trait || null;
+    const select = e.target;
+    window.entryCardFactory?.syncLevelControl?.(select);
+    const name=select.dataset.name;
+    const tr=select.dataset.trait || select.closest('li').dataset.trait || null;
     const list=storeHelper.getCurrentList(store);
     const ent=list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
     if(ent){
       const before=list.map(x=>({...x}));
       const old = ent.nivå;
-      ent.nivå=e.target.value;
+      ent.nivå=select.value;
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
         ent.nivå = old;
-        e.target.value = old;
+        select.value = old;
+        window.entryCardFactory?.syncLevelControl?.(select);
         return;
       }
       if (storeHelper.hamnskifteNoviceLimit(list, ent, ent.nivå)) {
         await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
         ent.nivå = old;
-        e.target.value = old;
+        select.value = old;
+        window.entryCardFactory?.syncLevelControl?.(select);
         return;
       }
       if(name==='Monsterlärd'){
         if(['Gesäll','Mästare'].includes(ent.nivå)){
           if(!ent.trait && window.monsterLore){
             monsterLore.pickSpec(spec=>{
-              if(!spec){ ent.nivå=old; e.target.value=old; return; }
+              if(!spec){
+                ent.nivå=old;
+                select.value=old;
+                window.entryCardFactory?.syncLevelControl?.(select);
+                return;
+              }
               ent.trait=spec;
                 storeHelper.setCurrentList(store,list); updateXP();
                 renderSkills(filtered()); renderTraits(); updateSearchDatalist();
@@ -1903,12 +1967,14 @@ function initCharacter() {
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
           renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+          window.entryCardFactory?.syncLevelControl?.(select);
           return;
         }
       }
       storeHelper.setCurrentList(store,list); updateXP();
     }
       renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      window.entryCardFactory?.syncLevelControl?.(select);
       flashAdded(name, tr);
   });
 }

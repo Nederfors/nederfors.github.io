@@ -1,9 +1,10 @@
-const CACHE_NAME = 'symbaroum-pwa-v8';
+const CACHE_NAME = 'symbaroum-pwa-v9';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
   'character.html',
   'notes.html',
+  'inventory.html',
   'webapp.html',
   'css/style.css',
   'manifest.json',
@@ -20,6 +21,7 @@ const URLS_TO_CACHE = [
   'js/elite-req.js',
   'js/exceptionellt.js',
   'js/index-view.js',
+  'js/inventory-view.js',
   'js/jszip.min.js',
   'js/inventory-utils.js',
   'js/main.js',

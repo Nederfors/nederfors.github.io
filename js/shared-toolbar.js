@@ -2,11 +2,17 @@
    js/shared-toolbar.js
    Web Component som innehåller:
      • Verktygsrad
-     • Off-canvas-paneler: Inventarie, Egenskaper, Filter
+     • Off-canvas-paneler: Egenskaper, Filter, Info
      • Popup för kvaliteter
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
+const FILTER_INV_FUNCS_KEY = 'invToolsOpen';
+const FILTER_CARD_KEY_MAP = Object.freeze({
+  filterFormalCard: FILTER_TOOLS_KEY,
+  filterInventoryFunctions: FILTER_INV_FUNCS_KEY,
+  filterSettingsCard: FILTER_SETTINGS_KEY
+});
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -145,6 +151,14 @@ class SharedToolbar extends HTMLElement {
           flex: 1;
           min-width: 0;
         }
+        .button-row .nav-link.active {
+          background: var(--neutral);
+          color: #1d2118;
+          font-weight: 600;
+        }
+        .button-row .nav-link.active:hover {
+          opacity: 1;
+        }
         #invBadge {
           background: var(--danger);
           border-radius: 50%;
@@ -209,7 +223,6 @@ class SharedToolbar extends HTMLElement {
         /* Ensure help card and search filter cards can never be collapsed */
         .help-card.compact .card-desc { display: block !important; }
         #searchFiltersCard.compact .card-desc { display: block !important; }
-        #invSearchFilters.compact .card-desc { display: block !important; }
       </style>
       <link rel="stylesheet" href="css/style.css">
 
@@ -225,42 +238,14 @@ class SharedToolbar extends HTMLElement {
         </div>
         <div class="button-row">
           <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
-          <button  id="invToggle"    class="char-btn icon" title="Inventarie">
+          <a       id="inventoryLink" class="char-btn icon nav-link" title="Inventarievy" href="inventory.html">
             🎒 <span id="invBadge">0</span>
-          </button>
-          <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
+          </a>
+          <a       id="indexLink" class="char-btn icon nav-link" title="Index" href="index.html">📇</a>
+          <a       id="characterLink" class="char-btn icon nav-link" title="Rollperson" href="character.html">🧝</a>
           <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
         </div>
       </footer>
-
-      <!-- ---------- Inventarie ---------- -->
-      <aside id="invPanel" class="offcanvas">
-        <header class="inv-header">
-          <h2>Inventarie</h2>
-
-          <div class="inv-actions">
-            <button id="collapseAllInv" class="char-btn icon" title="Öppna alla">▶</button>
-            <button class="char-btn icon" data-close="invPanel">✕</button>
-          </div>
-        </header>
-        <!-- Formaliteter överst -->
-        <ul id="invFormal" class="card-list"></ul>
-        <!-- Sökfilter-kort i inventariepanelen -->
-        <div class="card" id="invSearchFilters">
-          <div class="card-title">Sökfilter</div>
-          <div class="card-desc">
-            <div class="filter-group">
-              <label for="invSearch">Sök i inventarie</label>
-              <input id="invSearch" type="text" placeholder="T.ex 'Pajkastare'" autocomplete="off">
-            </div>
-            <div class="filter-group">
-              <label for="invTypeFilter">Kategori</label>
-              <select id="invTypeFilter"></select>
-            </div>
-          </div>
-        </div>
-        <ul id="invList" class="card-list"></ul>
-      </aside>
 
       <!-- ---------- Egenskaper ---------- -->
       <aside id="traitsPanel" class="offcanvas">
@@ -344,6 +329,12 @@ class SharedToolbar extends HTMLElement {
               <div class="char-btn-row">
                 <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
               </div>
+            </div>
+          </li>
+          <li class="card" data-special="__invfunc__" id="filterInventoryFunctions">
+            <div class="card-title"><span><span class="collapse-btn"></span>Inventarie 💰</span></div>
+            <div class="card-desc">
+              <div class="inv-buttons" id="filterInventoryFunctionsInner"></div>
             </div>
           </li>
           <li class="card" data-special="__formal__" id="filterSettingsCard">
@@ -1064,7 +1055,6 @@ class SharedToolbar extends HTMLElement {
   cache() {
     const $ = id => this.shadowRoot.getElementById(id);
     this.panels = {
-      invPanel   : $('invPanel'),
       traitsPanel: $('traitsPanel'),
       filterPanel: $('filterPanel'),
       infoPanel  : $('infoPanel')
@@ -1074,16 +1064,19 @@ class SharedToolbar extends HTMLElement {
   }
 
   restoreFilterCollapse() {
-    const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
-    const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
-    const toolsVal = localStorage.getItem(FILTER_TOOLS_KEY);
-    const settingsVal = localStorage.getItem(FILTER_SETTINGS_KEY);
-    const toolsOpen = toolsVal === '1';
-    const settingsOpen = settingsVal === '1';
-    if (toolsCard) toolsCard.classList.toggle('compact', !toolsOpen);
-    if (settingsCard) settingsCard.classList.toggle('compact', !settingsOpen);
-    if (toolsVal === null) localStorage.setItem(FILTER_TOOLS_KEY, toolsOpen ? '1' : '0');
-    if (settingsVal === null) localStorage.setItem(FILTER_SETTINGS_KEY, settingsOpen ? '1' : '0');
+    const cards = [
+      { el: this.shadowRoot.getElementById('filterFormalCard'),    key: FILTER_TOOLS_KEY },
+      { el: this.shadowRoot.getElementById('filterInventoryFunctions'), key: FILTER_INV_FUNCS_KEY },
+      { el: this.shadowRoot.getElementById('filterSettingsCard'),  key: FILTER_SETTINGS_KEY }
+    ];
+    cards.forEach(({ el, key }) => {
+      if (!el) return;
+      const val = localStorage.getItem(key);
+      const open = val === '1' || val === null;
+      el.classList.toggle('compact', !open);
+      window.entryCardFactory?.syncCollapse?.(el);
+      if (val === null) localStorage.setItem(key, open ? '1' : '0');
+    });
   }
 
   updateFilterCollapseBtn() {
@@ -1099,21 +1092,21 @@ class SharedToolbar extends HTMLElement {
     const btn = e.target.closest('button, a');
     if (!btn) {
       // Support toggling special cards in Filter via title click
-      const title = e.target.closest('#filterFormalCard .card-title, #filterSettingsCard .card-title');
+      const title = e.target.closest('#filterPanel .card-title');
       if (title) {
         const card = title.closest('.card');
-        if (card) {
+        const key = FILTER_CARD_KEY_MAP[card?.id];
+        if (card && key) {
           const isCompact = card.classList.toggle('compact');
-          const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
           localStorage.setItem(key, isCompact ? '0' : '1');
           this.updateFilterCollapseBtn();
+          window.entryCardFactory?.syncCollapse?.(card);
         }
       }
       return;
     }
 
     /* öppna/stäng (toggle) */
-    if (btn.id === 'invToggle')    return this.toggle('invPanel');
     if (btn.id === 'traitsToggle') return this.toggle('traitsPanel');
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
     if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
@@ -1125,34 +1118,36 @@ class SharedToolbar extends HTMLElement {
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
-        if (c.id === 'filterFormalCard') {
-          localStorage.setItem(FILTER_TOOLS_KEY, c.classList.contains('compact') ? '0' : '1');
-        } else if (c.id === 'filterSettingsCard') {
-          localStorage.setItem(FILTER_SETTINGS_KEY, c.classList.contains('compact') ? '0' : '1');
-        }
+        const key = FILTER_CARD_KEY_MAP[c.id];
+        if (key) localStorage.setItem(key, c.classList.contains('compact') ? '0' : '1');
+        window.entryCardFactory?.syncCollapse?.(c);
       });
       // Ensure non-collapsible cards remain open
       const alwaysOpen = this.shadowRoot.querySelectorAll('#searchFiltersCard, .help-card');
-      alwaysOpen.forEach(c => c.classList.remove('compact'));
+      alwaysOpen.forEach(c => {
+        c.classList.remove('compact');
+        window.entryCardFactory?.syncCollapse?.(c);
+      });
       this.updateFilterCollapseBtn();
       return;
     }
 
     // Collapse/expand specialkorten i filterpanelen
     if (btn.classList.contains('collapse-btn')) {
-      const card = btn.closest('#filterFormalCard, #filterSettingsCard');
-      if (card) {
+      const card = btn.closest('#filterPanel .card');
+      const key = FILTER_CARD_KEY_MAP[card?.id];
+      if (card && key) {
         const isCompact = card.classList.toggle('compact');
-        const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
         localStorage.setItem(key, isCompact ? '0' : '1');
         this.updateFilterCollapseBtn();
+        window.entryCardFactory?.syncCollapse?.(card);
       }
     }
   }
 
   handleOutsideClick(e) {
     const path = e.composedPath();
-    const toggles = ['invToggle','traitsToggle','filterToggle','infoToggle'];
+    const toggles = ['traitsToggle','filterToggle','infoToggle'];
     if (path.some(el => toggles.includes(el.id))) return;
 
     // Hide search suggestions when clicking outside search UI
@@ -1253,17 +1248,20 @@ class SharedToolbar extends HTMLElement {
 
   updateToolbarLinks() {
     const role = document.body.dataset.role;
-    const switchLink = this.shadowRoot.getElementById('switchRole');
+    const setLinkState = (id, href, activeRoles) => {
+      const link = this.shadowRoot.getElementById(id);
+      if (!link) return;
+      if (href) link.href = href;
+      const act = Array.isArray(activeRoles) ? activeRoles : [activeRoles];
+      const isActive = act.includes(role);
+      link.classList.toggle('active', isActive);
+      if (isActive) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    };
 
-    if (role === 'character' || role === 'notes') {
-      switchLink.href = 'index.html';
-      switchLink.textContent = '📇';
-      switchLink.title = 'Till index';
-    } else {
-      switchLink.href = 'character.html';
-      switchLink.textContent = '🧝';
-      switchLink.title = 'Till rollperson';
-    }
+    setLinkState('inventoryLink', 'inventory.html', ['inventory']);
+    setLinkState('indexLink', 'index.html', ['index']);
+    setLinkState('characterLink', 'character.html', ['character', 'notes']);
   }
 }
 

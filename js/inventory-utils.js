@@ -3,7 +3,7 @@
    =========================================================== */
 
 (function(window){
-  const F = { typ: '', invTxt: '' };
+  const F = { invTxt: '', typ: [], ark: [], test: [] };
   // Bring shared currency bases into local scope
   const SBASE = window.SBASE;
   const OBASE = window.OBASE;
@@ -11,6 +11,8 @@
   const oToMoney = window.oToMoney;
   const INV_TOOLS_KEY = 'invToolsOpen';
   const INV_INFO_KEY  = 'invInfoOpen';
+  const INV_CAT_STATE_PREFIX = 'invCatState:';
+  let cachedCatState = { key: '', state: {} };
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
@@ -22,6 +24,7 @@
     const root = getToolbarRoot();
     return root ? root.getElementById(id) : null;
   };
+  const getEl = (id) => document.getElementById(id) || $T(id);
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
@@ -35,9 +38,64 @@
     'Galär': '⛵',
     'Flodbåt': '🛥️'
   };
+  const createEntryCard = (options) => {
+    const factory = window.entryCardFactory?.create;
+    if (typeof factory !== 'function') {
+      throw new Error('entryCardFactory not initialized');
+    }
+    return factory(options);
+  };
   let dragIdx = null;
   let dragEl = null;
   let dragEnabled = false;
+
+  function getCatStateKey() {
+    const charId = store?.current || 'default';
+    return `${INV_CAT_STATE_PREFIX}${charId}`;
+  }
+
+  function loadInvCatState() {
+    const key = getCatStateKey();
+    if (cachedCatState.key === key) return cachedCatState.state;
+    let state = {};
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) state = JSON.parse(raw) || {};
+    } catch {}
+    cachedCatState = { key, state };
+    return state;
+  }
+
+  function saveInvCatState(state) {
+    const key = getCatStateKey();
+    cachedCatState = { key, state };
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch {}
+  }
+
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[m]);
+
+  function renderActiveFilters() {
+    if (!dom.active) return;
+    const tags = [];
+    const text = (F.invTxt || '').trim();
+    if (text) {
+      tags.push(`<span class="tag removable" data-type="text">${escapeHtml(text)} ✕</span>`);
+    }
+    F.typ.forEach(val => {
+      tags.push(`<span class="tag removable" data-type="typ" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+    });
+    F.ark.forEach(val => {
+      tags.push(`<span class="tag removable" data-type="ark" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+    });
+    F.test.forEach(val => {
+      tags.push(`<span class="tag removable" data-type="test" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+    });
+    dom.active.innerHTML = tags.join('');
+  }
 
   const dividePrice = (amt, divisor) => {
     const o = typeof amt === 'number' ? amt : moneyToO(amt || {});
@@ -95,6 +153,29 @@
   function needsArtifactListSync(tagTyp) {
     return isHiddenType(tagTyp) || hasArtifactTag(tagTyp);
   }
+
+  const LEVEL_MARKERS = new Map([
+    ['Novis', 'N'],
+    ['Ges\u00e4ll', 'G'],
+    ['M\u00e4stare', 'M']
+  ]);
+
+  const levelMarker = (level) => {
+    if (!level) return '';
+    const key = String(level).trim();
+    if (!key) return '';
+    if (LEVEL_MARKERS.has(key)) return LEVEL_MARKERS.get(key);
+    const first = key[0];
+    return first ? first.toUpperCase() : '';
+  };
+
+  const hasSingleLevel = (entry) => {
+    if (!entry || typeof entry !== 'object') return false;
+    const keys = Object.keys(entry.nivåer || {})
+      .map(k => String(k || '').trim())
+      .filter(Boolean);
+    return keys.length === 1;
+  };
 
   function sortInvEntry(a, b) {
     const entA = getEntry(a.id || a.name);
@@ -1805,33 +1886,64 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const levelKeys = Object.keys(entry.nivåer || {});
     const rowLevel = row.nivå || (levelKeys.length ? levelKeys[0] : null);
     let desc = '';
+    let infoBody = '';
+    const infoTagParts = [];
+    (tagger.typ ?? []).forEach(t => {
+      const txt = String(t || '').trim();
+      if (txt) infoTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
+    });
     if (!isArtifact || isLArtifact) {
-      desc += abilityHtml(entry, rowLevel);
+      const ability = abilityHtml(entry, rowLevel);
+      if (ability) {
+        desc += ability;
+        infoBody += ability;
+      }
     }
     const arkTags = explodeTags(tagger.ark_trad);
-    const tagList = (tagger.typ || [])
-      .concat(arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : []), tagger.test || [])
-      .map(t => `<span class="tag">${t}</span>`);
-    if (rowLevel) tagList.push(`<span class="tag level">${rowLevel}</span>`);
-    if (freeCnt) tagList.push(`<span class="tag free removable" data-free="1">Gratis${freeCnt>1?`×${freeCnt}`:''} ✕</span>`);
+    const infoTags = (arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : []))
+      .concat(tagger.test || []);
+    const tagList = infoTags.map(t => `<span class="tag">${t}</span>`);
+    infoTags.forEach(t => {
+      const txt = String(t || '').trim();
+      if (txt) infoTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
+    });
+    if (rowLevel) {
+      tagList.push(`<span class="tag level">${rowLevel}</span>`);
+      infoTagParts.push(`<span class="tag level">${escapeHtml(rowLevel)}</span>`);
+    }
+    if (freeCnt) {
+      const freeTxt = `Gratis${freeCnt>1?`×${freeCnt}`:''}`;
+      tagList.push(`<span class="tag free removable" data-free="1">${freeTxt} ✕</span>`);
+      infoTagParts.push(`<span class="tag free">${escapeHtml(freeTxt)}</span>`);
+    }
     const priceMult = row.priceMult;
+    let priceMultTag = '';
     if (priceMult && Math.abs(priceMult - 1) > 0.001) {
       const mTxt = Number.isInteger(priceMult)
         ? priceMult
         : priceMult.toFixed(2).replace(/\.?0+$/, '');
-      tagList.push(`<span class="tag price-mult removable" data-mult="1">×${mTxt} ✕</span>`);
+      const safeMult = escapeHtml(String(mTxt));
+      priceMultTag = `<span class="tag price-mult removable" data-mult="1">×${safeMult} ✕</span>`;
+      infoTagParts.push(`<span class="tag price-mult">×${safeMult}</span>`);
     }
     if (row.basePrice) {
-      const t = formatMoney(row.basePrice);
-      tagList.push(`<span class="tag price-base removable" data-price="1">Grundpris: ${t} ✕</span>`);
+      const basePriceTxt = formatMoney(row.basePrice);
+      tagList.push(`<span class="tag price-base removable" data-price="1">Grundpris: ${basePriceTxt} ✕</span>`);
+      infoTagParts.push(`<span class="tag price-base">Grundpris: ${escapeHtml(basePriceTxt)}</span>`);
     }
     if (tagList.length) {
-      desc += `<div class="tags">${tagList.join(' ')}</div>`;
+      desc += `<div class="tags info-tags">${tagList.join(' ')}</div>`;
     }
-    desc += itemStatHtml(entry, row);
+    const statsHtml = itemStatHtml(entry, row);
+    if (statsHtml) {
+      desc += statsHtml;
+      infoBody += statsHtml;
+    }
     if (row.trait && !entry.bound && row.id !== 'l9') {
-      const label = entry.boundLabel || 'Karakt\u00e4rsdrag';
-      desc += `<br><strong>${label}:</strong> ${row.trait}`;
+      const label = entry.boundLabel || 'Karaktärsdrag';
+      const traitHtml = `<br><strong>${label}:</strong> ${row.trait}`;
+      desc += traitHtml;
+      infoBody += traitHtml;
     }
 
     const removedQ = row.removedKval ?? [];
@@ -1846,6 +1958,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       ...baseQ.map(q => ({ q, base: true })),
       ...addQ.map(q => ({ q, base: false }))
     ];
+    let qualityHtml = '';
     if (all.length) {
       const qhtml = all.map(obj => {
         const q = obj.q;
@@ -1853,7 +1966,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const baseAttr = obj.base ? ' data-base="1"' : '';
         return `<span class="${cls}" data-qual="${q}"${baseAttr}>${q} ✕</span>`;
       }).join('');
-      desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+      qualityHtml = `<div class="quality-tags tags">${qhtml}</div>`;
     }
 
     const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
@@ -1862,30 +1975,104 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (effectVal === 'corruption') {
         txt = '+1 Permanent korruption';
       } else if (effectVal === 'xp') {
-        txt = '\u20131 Erfarenhetspo\u00e4ng';
+        txt = '–1 Erfarenhetspoäng';
       } else {
         txt = 'Obunden';
         cls += ' unbound';
       }
-      desc += `<br><span class="${cls}">${txt}</span>`;
+      const effectHtml = `<br><span class="${cls}">${txt}</span>`;
+      desc += effectHtml;
+      infoBody += effectHtml;
     }
-    return { desc, rowLevel, freeCnt };
+    return { desc, rowLevel, freeCnt, qualityHtml, infoBody, infoTagParts, priceMultTag };
   }
 
   function renderInventory () {
-    if (!dom.invList) return;                        // index-sidan saknar listan
+    const listEl = dom.invList;
     const openKeys = new Set(
-      [...dom.invList.querySelectorAll('li.card:not(.compact)')]
-        .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+      listEl
+        ? [...listEl.querySelectorAll('li.card.entry-card:not(.compact)')]
+            .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+        : []
     );
-    // Preserve open state for Formaliteter cards (now split into tools/info)
+    const compactKeys = new Set(
+      listEl
+        ? [...listEl.querySelectorAll('li.card.entry-card.compact')]
+            .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+        : []
+    );
     if (dom.invFormal) {
       [...dom.invFormal.querySelectorAll('li.card')].forEach(li => {
         if (!li.classList.contains('compact') && li.dataset.special) {
           openKeys.add(li.dataset.special);
         }
       });
+
+      dom.invFormal.onclick = async e => {
+        if (e.target.closest('.entry-collapse-btn')) return;
+        const header = e.target.closest('.card-header');
+        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
+          return;
+        }
+
+        // Handle money +/- inside formal card
+        const btn = e.target.closest('button[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        if (act === 'moneyPlus' || act === 'moneyMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneyPlus' ? 1 : -1;
+          const newD = (cur.daler || 0) + delta;
+          if (newD < 0) {
+            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, daler: newD });
+          }
+          renderInventory();
+          return;
+        }
+        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneySkillingPlus' ? 1 : -1;
+          const newS = (cur.skilling || 0) + delta;
+          if (newS < 0) {
+            const newD = Math.max(0, (cur.daler || 0) - 1);
+            const newSkilling = 3 + newS;
+            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
+          } else if (newS >= 4) {
+            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, skilling: newS });
+          }
+          renderInventory();
+          return;
+        }
+        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
+          const newO = (cur['örtegar'] || 0) + delta;
+          if (newO < 0) {
+            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
+            const newOrtegar = 8 + newO;
+            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
+            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
+          } else if (newO >= 8) {
+            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
+          }
+          renderInventory();
+          return;
+        }
+      };
+
+      dom.invFormal.addEventListener('entry-card-toggle', e => {
+        updateCollapseBtnState();
+        const expanded = Boolean(e.detail?.expanded);
+        localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+      });
     }
+
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
     const nameMap = makeNameMap(allInv);
@@ -1894,18 +2081,14 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
     const list = storeHelper.getCurrentList(store);
 
-    /* ---------- summa i pengar ---------- */
     const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
-    const skillForge = storeHelper.abilityLevel(
-      list, 'Smideskonst');
+    const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
     const forgeLvl = Math.max(partyForge, skillForge);
     const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
-    const skillAlc = storeHelper.abilityLevel(
-      list, 'Alkemist');
+    const skillAlc = storeHelper.abilityLevel(list, 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
     const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-    const skillArt = storeHelper.abilityLevel(
-      list, 'Artefaktmakande');
+    const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
 
     const tot = flatInv.reduce((t, row) => {
@@ -1947,13 +2130,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const maxCapacity = baseCap;
     const remainingCap = maxCapacity - usedWeight;
 
-    // Capacity color helper: based on used/max ratio
     const capClassOf = (used, max) => {
       if (!max || max <= 0) return '';
       const ratio = used / max;
-      if (ratio > 1.0) return 'cap-neg';    // överlast: över maxkapacitet
-      if (ratio >= 0.95) return 'cap-crit'; // nära max
-      if (ratio >= 0.80) return 'cap-warn'; // närmar sig
+      if (ratio > 1.0) return 'cap-neg';
+      if (ratio >= 0.95) return 'cap-crit';
+      if (ratio >= 0.80) return 'cap-warn';
       return '';
     };
     const charCapClass = capClassOf(usedWeight, maxCapacity);
@@ -1962,32 +2144,45 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
 
-    if (dom.invTypeSel) {
-      const types = new Set();
-      allInv.forEach(row => {
-        const entry = getEntry(row.id || row.name);
-        (entry.taggar?.typ || [])
-          .filter(Boolean)
-          .forEach(t => types.add(t));
-      });
-      dom.invTypeSel.innerHTML =
-        '<option value="">Kategori (alla)</option>' +
-        [...types]
-          .sort((a, b) => catName(a).localeCompare(catName(b)))
-          .map(t =>
-            `<option value="${t}"${t===F.typ?' selected':''}>${catName(t)}</option>`)
-          .join('');
-    }
+    const searchTerm = (F.invTxt || '').trim().toLowerCase();
+    const hasSearch = Boolean(searchTerm);
+    const union = storeHelper.getFilterUnion(store);
+    const selectedTags = Array.from(new Set([...F.typ, ...F.ark, ...F.test]));
+    const hasTagFilters = selectedTags.length > 0;
+    const forcedCatOpen = new Set(F.typ);
+    const compactDefault = storeHelper.getCompactEntries(store);
+    const filteredRows = [];
+    for (let idx = 0; idx < allInv.length; idx++) {
+      const row = allInv[idx];
+      const entry = getEntry(row.id || row.name);
+      const typTags = entry.taggar?.typ || [];
+      const arkRaw = entry.taggar?.ark_trad;
+      const arkTags = explodeTags(arkRaw);
+      const arkList = arkTags.length ? arkTags : (Array.isArray(arkRaw) ? ['Traditionslös'] : []);
+      const testTags = entry.taggar?.test || [];
+      const itemTags = [...typTags, ...arkList, ...testTags];
 
-    const inv = allInv
-      .filter(row => {
-        if (F.typ) {
-          const entry = getEntry(row.id || row.name);
-          if (!(entry.taggar?.typ || []).includes(F.typ)) return false;
+      const tagHit = hasTagFilters && (
+        union
+          ? selectedTags.some(tag => itemTags.includes(tag))
+          : selectedTags.every(tag => itemTags.includes(tag))
+      );
+
+      const textHit = hasSearch ? rowMatchesText(row, searchTerm) : false;
+
+      let passes = true;
+      if (hasTagFilters || hasSearch) {
+        if (union) {
+          passes = (hasTagFilters && tagHit) || (hasSearch && textHit);
+        } else {
+          if (hasTagFilters && !tagHit) passes = false;
+          if (hasSearch && !textHit) passes = false;
         }
-        if (F.invTxt && !rowMatchesText(row, F.invTxt)) return false;
-        return true;
-      });
+      }
+
+      if (!passes) continue;
+      filteredRows.push({ row, idx, entry });
+    }
 
     const foodCount = flatInv
       .filter(row => {
@@ -1997,41 +2192,35 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
     const moneyRow = moneyWeight
-      ? `            <div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
+      ? `<div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
       : '';
 
-    /* ---------- kort för formaliteter (uppdelat: verktyg & information) ---------- */
-    const toolsKey = '__tools__';
+    const baseFunctionButtons = [
+      '<button id="addCustomBtn" class="char-btn">Nytt föremål</button>',
+      '<button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>',
+      '<button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>',
+      '<button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>'
+    ];
+    const vehicleButtons = vehicles
+      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`);
+    const trailingFunctionButtons = [
+      '<button id="dragToggle" class="char-btn">Dra & Släpp</button>',
+      '<button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>',
+      '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
+    ];
+    const allFunctionButtons = [...baseFunctionButtons, ...vehicleButtons, ...trailingFunctionButtons];
+    const invFunctionsContainer = getEl('filterInventoryFunctionsInner');
+    if (invFunctionsContainer) {
+      invFunctionsContainer.innerHTML = `<div class="inv-buttons">${allFunctionButtons.join('')}</div>`;
+      if (localStorage.getItem(INV_TOOLS_KEY) === null) localStorage.setItem(INV_TOOLS_KEY, '1');
+    }
+
     const infoKey  = '__info__';
-    const toolsLS = localStorage.getItem(INV_TOOLS_KEY) === '1';
-    const infoLS  = localStorage.getItem(INV_INFO_KEY) === '1';
-    if (toolsLS) openKeys.add(toolsKey); else openKeys.delete(toolsKey);
-    if (infoLS)  openKeys.add(infoKey);  else openKeys.delete(infoKey);
-    const vehicleBtns = vehicles
-      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`)
-      .join('');
+    const infoState = localStorage.getItem(INV_INFO_KEY);
+    const infoOpen  = infoState === null ? true : infoState === '1';
+    if (infoState === null) localStorage.setItem(INV_INFO_KEY, '1');
 
-    const toolsCard = `
-      <li class="card${openKeys.has(toolsKey) ? '' : ' compact'}" data-special="${toolsKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Funktioner 💰</span></div>
-        <div class="card-desc">
-          <div class="inv-buttons">
-            <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
-            <button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>
-            <button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>
-            <button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>
-            ${vehicleBtns}
-            <button id="dragToggle" class="char-btn">Dra & Släpp</button>
-            <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
-            <button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>
-          </div>
-        </div>
-      </li>`;
-
-    const infoCard = `
-      <li class="card${openKeys.has(infoKey) ? '' : ' compact'}" data-special="${infoKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Information 🔎</span></div>
-        <div class="card-desc">
+    const infoCardDesc = `
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
@@ -2041,161 +2230,377 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             </div>
             <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
             <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
-${moneyRow}
+            ${moneyRow}
           </div>
           <div class="formal-section ${charCapClass}">
             <div class="formal-title">Bärkapacitet</div>
             <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
             <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
             <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
-          </div>
-        </div>
-      </li>`;
+          </div>`;
+    const infoCard = createEntryCard({
+      compact: !infoOpen,
+      dataset: { special: infoKey },
+      nameHtml: 'Information 🔎',
+      descHtml: `<div class="card-desc">${infoCardDesc}</div>`,
+      collapsible: true
+    });
 
-    /* ---------- kort för varje föremål ---------- */
-    const itemCards = inv.length
-      ? inv.map((row) => {
-          const realIdx = allInv.indexOf(row);
-          const entry   = getEntry(row.id || row.name);
-          const tagTyp  = entry.taggar?.typ ?? [];
-          const isVehicle = tagTyp.includes('F\u00e4rdmedel');
-          const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
-          const rowWeight = calcRowWeight(row);
-          const loadWeight = rowWeight - baseWeight * row.qty;
-          const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
-          const remaining = capacity - loadWeight;
+    const renderRowCard = (row, realIdx, entryOverride) => {
+      const entry = entryOverride || getEntry(row.id || row.name);
+      const tagTyp = entry.taggar?.typ ?? [];
+      const isVehicle = tagTyp.includes('F\u00e4rdmedel');
+      const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
+      const rowWeight = calcRowWeight(row);
+      const loadWeight = rowWeight - baseWeight * (row.qty || 0);
+      const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
+      const remaining = capacity - loadWeight;
 
-          const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
-          const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
+      const { desc, rowLevel, freeCnt, qualityHtml, infoBody, infoTagParts, priceMultTag } = buildRowDesc(entry, row);
+      const dataset = {
+        idx: String(realIdx),
+        id: row.id || row.name,
+        name: row.name
+      };
+      if (row.trait) dataset.trait = row.trait;
+      if (rowLevel) dataset.level = rowLevel;
 
-          const isArtifact = tagTyp.includes('Artefakt');
-          const isCustom = tagTyp.includes('Hemmagjort');
+      const isArtifact = tagTyp.includes('Artefakt');
+      const isCustom = tagTyp.includes('Hemmagjort');
+      const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+      const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
+      const canStack = ['kraft','ritual'].includes(entry.bound);
+      const buttonParts = [];
+      if (isGear && !canStack) {
+        buttonParts.push('<button data-act="del" class="char-btn danger icon">🗑</button>');
+      } else {
+        buttonParts.push(
+          '<button data-act="del" class="char-btn danger icon">🗑</button>',
+          '<button data-act="sub" class="char-btn" aria-label="Minska">➖</button>',
+          '<button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>'
+        );
+      }
+      if (isCustom) buttonParts.push('<button data-act="editCustom" class="char-btn">✏️</button>');
+      if (allowQual) buttonParts.push('<button data-act="addQual" class="char-btn">🔨</button>');
+      if (allowQual) buttonParts.push('<button data-act="freeQual" class="char-btn">☭</button>');
+      if (isArtifact) buttonParts.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
+      buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}">🆓</button>`);
+      if (isVehicle) {
+        buttonParts.push('<button data-act="vehicleLoad" class="char-btn">⬇️</button>', '<button data-act="vehicleUnload" class="char-btn">⬆️</button>');
+      }
 
-          /* — knappar — */
-          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
-          const canStack = ['kraft','ritual'].includes(entry.bound);
-          const btnRow = (isGear && !canStack)
-            ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
-            : `<button data-act="del" class="char-btn danger icon">🗑</button>
-               <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
-               <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
-          const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
-          const editBtn = isCustom ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
-          const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
-          const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-          const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
+      const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
+      const priceText = formatMoney(calcRowCost(row, forgeLvl, alcLevel, artLevel));
+      const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön' : 'Pris';
+      const priceDisplay = `${priceLabel}: ${priceText}`.trim();
+      const weightText = formatWeight(rowWeight);
+      const weightClass = isVehicle ? capClassOf(loadWeight, capacity) : charCapClass;
+      const cardKey = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
 
-          // rowLevel och dataLevel beräknades tidigare
-          const priceText = formatMoney(
-            calcRowCost(row, forgeLvl, alcLevel, artLevel)
+      let isCompact = compactDefault;
+      if (openKeys.has(cardKey)) isCompact = false;
+      else if (compactKeys.has(cardKey)) isCompact = true;
+
+      const infoFacts = [];
+
+      const singleLevel = hasSingleLevel(entry);
+      const levelMark = singleLevel && rowLevel ? levelMarker(rowLevel) : '';
+      if (levelMark) {
+        const levelTitle = escapeHtml(rowLevel);
+        infoFacts.push(`<div class="card-info-fact level-marker" title="${levelTitle}"><span class="card-info-fact-value" aria-label="${levelTitle}">${levelMark}</span></div>`);
+      }
+
+      infoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Vikt</span><span class="card-info-fact-value">${weightText}</span></div>`);
+
+      const priceTitle = escapeHtml(priceLabel);
+      const priceValue = escapeHtml(priceDisplay);
+      const priceBtnHtml = `<button type="button" class="price-click" data-act="priceQuick" title="${priceTitle}" aria-label="${priceValue}">${priceValue}</button>`;
+      const priceFactParts = [
+        '<div class="card-info-fact card-info-price">',
+        `<span class="card-info-fact-value">${priceBtnHtml}</span>`
+      ];
+      if (priceMultTag) priceFactParts.push(priceMultTag);
+      priceFactParts.push('</div>');
+      const priceFactHtml = priceFactParts.join('');
+      if (isVehicle) {
+        infoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Kapacitet</span><span class="card-info-fact-value"><span class="${capClassOf(loadWeight, capacity)}">${formatWeight(remaining)}</span></span></div>`);
+      }
+      infoFacts.push(priceFactHtml);
+      const infoBoxHtml = `<div class="card-info-box"><div class="card-info-inline"><div class="card-info-facts">${infoFacts.join('')}</div></div></div>`;
+
+      const infoMeta = [];
+      if (priceText) infoMeta.push({ label: priceLabel, value: priceText });
+      if (weightText) infoMeta.push({ label: 'Vikt', value: weightText });
+      if (isVehicle) {
+        infoMeta.push({ label: 'Bärkapacitet', value: formatWeight(capacity) });
+        infoMeta.push({ label: 'Återstående kapacitet', value: formatWeight(remaining) });
+      }
+
+      const buildInfoButton = ({ bodyHtml = '', tags = [], meta = [] } = {}) => {
+        const tagsHtml = Array.isArray(tags) ? tags.filter(Boolean).join(' ') : String(tags || '');
+        const metaItems = Array.isArray(meta)
+          ? meta.filter(item => {
+              if (!item) return false;
+              const value = item.value;
+              return !(value === undefined || value === null || value === '');
+            })
+          : [];
+        const bodyStr = typeof bodyHtml === 'string' ? bodyHtml : String(bodyHtml || '');
+        if (!tagsHtml.trim() && !metaItems.length && !bodyStr.trim()) return '';
+        const infoPanelHtml = buildInfoPanelHtml({ tagsHtml, bodyHtml: bodyStr, meta: metaItems });
+        return `<button class="char-btn info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
+      };
+
+      const infoBtnHtml = buildInfoButton({
+        bodyHtml: infoBody,
+        tags: infoTagParts,
+        meta: infoMeta
+      });
+
+      const badgeParts = [];
+      badgeParts.push(`<span class="meta-badge weight-badge${weightClass ? ` ${weightClass}` : ''}" title="Vikt">V: ${weightText}</span>`);
+      if (isVehicle) {
+        badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${formatWeight(capacity)}</span>`);
+        badgeParts.push(`<span class="meta-badge remaining-badge${remaining < 0 ? ' cap-neg' : ''}" title="Återstående">ÅK: ${formatWeight(remaining)}</span>`);
+      }
+      const leftSections = badgeParts.length ? [`<div class="meta-badges">${badgeParts.join('')}</div>`] : [];
+
+      const descHtml = desc ? `<div class="card-desc">${desc}</div>` : '';
+      const classes = [];
+      if (isVehicle && remaining < 0) classes.push('vehicle-over');
+
+      const displayName = nameMap.get(row) || row.name;
+      const nameHtml = (row.id === 'l9' && row.trait)
+        ? `${displayName}: ${row.trait}${badge}`
+        : `${displayName}${badge}`;
+
+      const li = createEntryCard({
+        compact: isCompact,
+        classes,
+        dataset,
+        nameHtml,
+        infoBox: infoBoxHtml,
+        descHtml,
+        qualityHtml,
+        leftSections,
+        titleActions: infoBtnHtml ? [infoBtnHtml] : [],
+        buttonSections: buttonParts,
+        collapsible: true
+      });
+
+      const txt = (F.invTxt || '').toLowerCase();
+      const children = Array.isArray(row.contains) ? row.contains : [];
+      const filteredChildren = (() => {
+        if (!children.length) return [];
+        if (!isVehicle) return children.map((c, j) => ({ c, j }));
+        const pairs = children.map((c, j) => ({ c, j }));
+        if (!txt) return pairs;
+        const selfMatch = String(row.name || '').toLowerCase().includes(txt);
+        if (selfMatch) return pairs;
+        return pairs.filter(({ c }) => rowMatchesText(c, txt));
+      })();
+
+      const renderChildCard = (childRow, childIdx) => {
+        const centry = getEntry(childRow.name);
+        const cTagTyp = centry.taggar?.typ ?? [];
+        const cIsArtifact = cTagTyp.includes('Artefakt');
+        const cIsCustom = cTagTyp.includes('Hemmagjort');
+        const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => cTagTyp.includes(t));
+        const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => cTagTyp.includes(t));
+        const cCanStack = ['kraft','ritual'].includes(centry.bound);
+        const cButtons = [];
+        if (cIsGear && !cCanStack) {
+          cButtons.push('<button data-act="del" class="char-btn danger icon">🗑</button>');
+        } else {
+          cButtons.push(
+            '<button data-act="del" class="char-btn danger icon">🗑</button>',
+            '<button data-act="sub" class="char-btn" aria-label="Minska">➖</button>',
+            '<button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>'
           );
-          const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-          const weightText = formatWeight(rowWeight);
-          const key = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
-          let vehicleInfo = '';
-          let cardClass = '';
-          if (isVehicle) {
-            const vClass = capClassOf(loadWeight, capacity);
-            vehicleInfo = `<br><span class="${vClass}">B\u00e4rkapacitet: ${formatWeight(capacity)}<br>\u00c5terst\u00e5ende: ${formatWeight(remaining)}</span>`;
-            if (remaining < 0) cardClass = ' vehicle-over';
-          }
+        }
+        if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="char-btn">✏️</button>');
+        if (cAllowQual) cButtons.push('<button data-act="addQual" class="char-btn">🔨</button>');
+        if (cAllowQual) cButtons.push('<button data-act="freeQual" class="char-btn">☭</button>');
+        if (cIsArtifact) cButtons.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
 
-          const txt = (F.invTxt || '').toLowerCase();
-          const showChildrenPairs = (() => {
-            const children = (row.contains || []).map((c,j)=>({ c, j }));
-            if (!isVehicle) return children;
-            if (!txt) return children;
-            const selfMatch = String(row.name || '').toLowerCase().includes(txt);
-            if (selfMatch) return children;
-            return children.filter(({c}) => rowMatchesText(c, txt));
-          })();
+        const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
+        cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}">🆓</button>`);
 
-          const sublist = (row.contains && row.contains.length)
-            ? `<ul class="card-list vehicle-items">${showChildrenPairs.map(({c,j})=>{
-                const centry = getEntry(c.name);
-                const ctagTyp = centry.taggar?.typ ?? [];
-                const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
-                const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-                const cWeight = formatWeight(calcRowWeight(c));
-                const vClass = capClassOf(loadWeight, capacity);
-                const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
-                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
-                const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
-                const cCanStack = ['kraft','ritual'].includes(centry.bound);
-                const cBtnRow = (cIsGear && !cCanStack)
-                  ? `<button data-act="del" class="char-btn danger icon">🗑</button>`
-                  : `<button data-act="del" class="char-btn danger icon">🗑</button>
-                     <button data-act="sub" class="char-btn" aria-label="Minska">➖</button>
-                     <button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>`;
-                const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
-                const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
-                const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;
-                const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
-                const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
-                const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-                const cEditBtn = ctagTyp.includes('Hemmagjort') ? `<button data-act="editCustom" class="char-btn">✏️</button>` : '';
-                const cPath = `${realIdx}.${j}`;
-                const cTitle = nameMap.get(c) || c.name;
-                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait?` data-trait="${c.trait}"`:''}${cDataLevel}>
-                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${cTitle}: ${c.trait}` : cTitle}${cBadge}</span></div>
-                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
-                  <div class="inv-controls">
-                    ${cBtnRow}
-                    ${cEditBtn}
-                    ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
-                    ${cFreeQBtn}
-                    ${cToggleBtn}
-                    ${cFreeBtn}
-                  </div>
-                </li>`;}).join('')}</ul>`
-            : '';
+        const cBadge = childRow.qty > 1 ? ` <span class="count-badge">×${childRow.qty}</span>` : '';
+        const cPriceText = formatMoney(calcRowCost(childRow, forgeLvl, alcLevel, artLevel));
+        const cPriceLabel = cTagTyp.includes('Anställning') ? 'Dagslön' : 'Pris';
+        const cPriceDisplay = `${cPriceLabel}: ${cPriceText}`.trim();
+        const cWeightText = formatWeight(calcRowWeight(childRow));
+        const cWeightClass = capClassOf(loadWeight, capacity);
+        const cKey = `${childRow.id || childRow.name}|${childRow.trait || ''}|${cRowLevel || ''}`;
 
-          return `
-            <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
-                data-idx="${realIdx}"
-                data-id="${row.id || row.name}"
-                data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title"><span><span class="collapse-btn"></span>${(row.id === 'l9' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
-              <div class="card-desc">
-                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
-              </div>
-              <div class="inv-controls">
-                ${btnRow}
-                ${editBtn}
-                ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
-                ${freeQBtn}
-                ${toggleBtn}
-                ${freeBtn}
-                ${isVehicle ? `<button data-act="vehicleLoad" class="char-btn">⬇️</button><button data-act="vehicleUnload" class="char-btn">⬆️</button>` : ''}
-              </div>
-              ${sublist}
-            </li>`;
-      }).join('')
-    : '<li class="card">Inga föremål.</li>';
+        let childCompact = compactDefault;
+        if (openKeys.has(cKey)) childCompact = false;
+        else if (compactKeys.has(cKey)) childCompact = true;
 
-    /* ---------- skriv ut ---------- */
+        const cInfoFacts = [];
+
+        const cSingleLevel = hasSingleLevel(centry);
+        const cLevelMark = cSingleLevel && cRowLevel ? levelMarker(cRowLevel) : '';
+        if (cLevelMark) {
+          const cLevelTitle = escapeHtml(cRowLevel);
+          cInfoFacts.push(`<div class="card-info-fact level-marker" title="${cLevelTitle}"><span class="card-info-fact-value" aria-label="${cLevelTitle}">${cLevelMark}</span></div>`);
+        }
+
+        cInfoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Vikt</span><span class="card-info-fact-value">${cWeightText}</span></div>`);
+
+        const cPriceTitle = escapeHtml(cPriceLabel);
+        const cPriceValue = escapeHtml(cPriceDisplay);
+        cInfoFacts.push(`<div class="card-info-fact card-info-price"><span class="card-info-fact-value"><button type="button" class="price-click" data-act="priceQuick" title="${cPriceTitle}" aria-label="${cPriceValue}">${cPriceValue}</button></span></div>`);
+        const cInfoBox = `<div class="card-info-box"><div class="card-info-inline"><div class="card-info-facts">${cInfoFacts.join('')}</div></div></div>`;
+
+        const cInfoMeta = [];
+        if (cPriceText) cInfoMeta.push({ label: cPriceLabel, value: cPriceText });
+        if (cWeightText) cInfoMeta.push({ label: 'Vikt', value: cWeightText });
+
+        const cInfoBtnHtml = buildInfoButton({
+          bodyHtml: cInfoBody,
+          tags: cInfoTagParts,
+          meta: cInfoMeta
+        });
+
+        const cBadgeParts = [
+          `<span class="meta-badge weight-badge${cWeightClass ? ` ${cWeightClass}` : ''}" title="Vikt">V: ${cWeightText}</span>`
+        ];
+        const cLeftSections = cBadgeParts.length ? [`<div class="meta-badges">${cBadgeParts.join('')}</div>`] : [];
+
+        const childDataset = {
+          parent: String(realIdx),
+          child: String(childIdx),
+          id: childRow.id || childRow.name,
+          name: childRow.name
+        };
+        if (childRow.trait) childDataset.trait = childRow.trait;
+        if (cRowLevel) childDataset.level = cRowLevel;
+
+        const childClasses = [];
+        if (remaining < 0) childClasses.push('vehicle-over');
+
+        const childName = nameMap.get(childRow) || childRow.name;
+        const childNameHtml = (childRow.id === 'l9' && childRow.trait)
+          ? `${childName}: ${childRow.trait}${cBadge}`
+          : `${childName}${cBadge}`;
+
+        const childLi = createEntryCard({
+          compact: childCompact,
+          classes: childClasses,
+          dataset: childDataset,
+          nameHtml: childNameHtml,
+          infoBox: cInfoBox,
+          descHtml: cDesc ? `<div class="card-desc">${cDesc}</div>` : '',
+          qualityHtml: cQualityHtml,
+          leftSections: cLeftSections,
+          titleActions: cInfoBtnHtml ? [cInfoBtnHtml] : [],
+          buttonSections: cButtons,
+          collapsible: true
+        });
+
+        return childLi;
+      };
+
+      if (filteredChildren.length) {
+        const sublistEl = document.createElement('ul');
+        sublistEl.className = 'card-list vehicle-items entry-card-list';
+        filteredChildren.forEach(({ c, j }) => {
+          const childLi = renderChildCard(c, j);
+          if (childLi) sublistEl.appendChild(childLi);
+        });
+        if (sublistEl.childElementCount) {
+          const detailsHost = li.querySelector('.entry-card-details') || li;
+          detailsHost.appendChild(sublistEl);
+        }
+      }
+
+      return li;
+    };
     if (dom.invFormal) {
-      dom.invFormal.innerHTML = toolsCard + infoCard;
-      localStorage.setItem(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
-      localStorage.setItem(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
+      dom.invFormal.innerHTML = '';
+      dom.invFormal.appendChild(infoCard);
     }
-    dom.invList.innerHTML       = itemCards;
+
+    if (listEl) {
+      listEl.innerHTML = '';
+      if (filteredRows.length) {
+        const categories = new Map();
+        filteredRows.forEach(({ row, idx, entry }) => {
+          const cat = (entry.taggar?.typ || [])[0] || 'Övrigt';
+          const cardEl = renderRowCard(row, idx, entry);
+          if (!categories.has(cat)) categories.set(cat, []);
+          categories.get(cat).push(cardEl);
+        });
+        const catState = loadInvCatState();
+        const catKeys = [...categories.keys()].sort(catComparator);
+        const fragment = document.createDocumentFragment();
+        catKeys.forEach(cat => {
+          const shouldOpen = hasSearch
+            ? true
+            : (forcedCatOpen.has(cat)
+                ? true
+                : (catState[cat] !== undefined ? catState[cat] : true));
+          const catLi = document.createElement('li');
+          catLi.className = 'cat-group';
+          const detailsEl = document.createElement('details');
+          detailsEl.dataset.cat = cat;
+          if (shouldOpen) detailsEl.open = true;
+          const summaryEl = document.createElement('summary');
+          summaryEl.textContent = catName(cat);
+          detailsEl.appendChild(summaryEl);
+          const innerUl = document.createElement('ul');
+          innerUl.className = 'card-list entry-card-list';
+          innerUl.dataset.cat = cat;
+          categories.get(cat).forEach(card => innerUl.appendChild(card));
+          detailsEl.appendChild(innerUl);
+          catLi.appendChild(detailsEl);
+          fragment.appendChild(catLi);
+        });
+        listEl.appendChild(fragment);
+
+        listEl.querySelectorAll('.cat-group > details').forEach(detailsEl => {
+          detailsEl.addEventListener('toggle', ev => {
+            if (!ev.isTrusted) return;
+            const cat = detailsEl.dataset.cat;
+            catState[cat] = detailsEl.open;
+            saveInvCatState(catState);
+            if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+          });
+        });
+        if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+      } else {
+        const emptyCard = createEntryCard({
+          classes: ['empty'],
+          nameHtml: 'Inga föremål.',
+          collapsible: false
+        });
+        listEl.appendChild(emptyCard);
+        if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+      }
+    } else if (typeof window.inventorySyncCats === 'function') {
+      window.inventorySyncCats();
+    }
+
+
+    renderActiveFilters();
+
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-    dom.invBadge.textContent    = flatInv.reduce((s, r) => s + r.qty, 0);
+    dom.invBadge.textContent = flatInv.reduce((s, r) => s + r.qty, 0);
     dom.invBadge.classList.add('badge-pulse');
     setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
-    dom.unusedOut = $T('unusedOut');
-    dom.dragToggle = $T('dragToggle');
+    dom.unusedOut = getEl('unusedOut');
+    dom.dragToggle = getEl('dragToggle');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
-    if (dom.collapseAllBtn) updateCollapseBtnState();
     bindInv();
     bindMoney();
     if (typeof window.refreshEffectsPanel === 'function') {
       window.refreshEffectsPanel();
     }
   }
+
 
   function getInvCards() {
     const formalCards = dom.invFormal ? [...dom.invFormal.querySelectorAll('li.card')] : [];
@@ -2214,23 +2619,45 @@ ${moneyRow}
   }
 
   function bindInv() {
-    if (dom.invTypeSel) {
-      dom.invTypeSel.onchange = () => {
-        F.typ = dom.invTypeSel.value;
+    const listEl = dom.invList;
+    const searchEl = dom.sIn || getEl('searchField');
+    const bindFilterSelect = (el, key) => {
+      if (!el || el.dataset.invBound) return;
+      el.dataset.invBound = '1';
+      el.addEventListener('change', () => {
+        const val = el.value;
+        if (!val) return;
+        if (key === 'typ' && val === '__onlySelected') {
+          el.value = '';
+          return;
+        }
+        if (!F[key].includes(val)) F[key].push(val);
+        el.value = '';
         renderInventory();
-      };
-    }
-    const invSearch = $T('invSearch');
-    if (invSearch) {
-      invSearch.value = F.invTxt || '';
-      invSearch.oninput = () => {
-        F.invTxt = (invSearch.value || '').trim().toLowerCase();
+      });
+    };
+    bindFilterSelect(dom.typSel, 'typ');
+    bindFilterSelect(dom.arkSel, 'ark');
+    bindFilterSelect(dom.tstSel, 'test');
+    if (dom.active && !dom.active.dataset.invBound) {
+      dom.active.dataset.invBound = '1';
+      dom.active.addEventListener('click', e => {
+        const tag = e.target.closest('.tag.removable');
+        if (!tag) return;
+        const type = tag.dataset.type;
+        if (type === 'text') {
+          F.invTxt = '';
+          if (searchEl) searchEl.value = '';
+        } else if (type === 'typ' || type === 'ark' || type === 'test') {
+          const val = tag.dataset.val;
+          F[type] = F[type].filter(item => item !== val);
+        }
         renderInventory();
-      };
+      });
     }
-    const squareBtn = $T('squareBtn');
+    const squareBtn = getEl('squareBtn');
     if (squareBtn) squareBtn.onclick = openQtyPopup;
-    const customBtn = $T('addCustomBtn');
+    const customBtn = getEl('addCustomBtn');
     if (customBtn) customBtn.onclick = () => {
       openCustomPopup(entry => {
         if (!entry) return;
@@ -2262,7 +2689,8 @@ ${moneyRow}
         const anyOpen = cards.some(li => !li.classList.contains('compact'));
         cards.forEach(li => {
           li.classList.toggle('compact', anyOpen);
-          if (li.dataset.special === '__tools__') {
+          window.entryCardFactory?.syncCollapse?.(li);
+          if (li.dataset.special === '__functions__') {
             localStorage.setItem(INV_TOOLS_KEY, anyOpen ? '0' : '1');
           } else if (li.dataset.special === '__info__') {
             localStorage.setItem(INV_INFO_KEY, anyOpen ? '0' : '1');
@@ -2270,14 +2698,27 @@ ${moneyRow}
         });
         updateCollapseBtnState();
       };
+
+      listEl.addEventListener('entry-card-toggle', e => {
+        updateCollapseBtnState();
+        const detail = e.detail || {};
+        const card = detail.card;
+        if (!card) return;
+        const expanded = Boolean(detail.expanded);
+        if (card.dataset.special === '__functions__') {
+          localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
+        } else if (card.dataset.special === '__info__') {
+          localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+        }
+      });
     }
     if (dom.dragToggle) {
       dom.dragToggle.classList.toggle('danger', dragEnabled);
-      if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
+      if (listEl) listEl.classList.toggle('drag-mode', dragEnabled);
       dom.dragToggle.onclick = () => {
         dragEnabled = !dragEnabled;
         dom.dragToggle.classList.toggle('danger', dragEnabled);
-        if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
+        if (listEl) listEl.classList.toggle('drag-mode', dragEnabled);
       };
     }
     const getRowInfo = (inv, li) => {
@@ -2291,63 +2732,76 @@ ${moneyRow}
       }
       return { row: null, parentArr: inv, idx: -1 };
     };
-    dom.invList.onclick = async e => {
-      // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
-      const removeTagBtn = e.target.closest('.tag.removable');
-      if (removeTagBtn) {
-        const li   = removeTagBtn.closest('li');
-        const inv  = storeHelper.getInventory(store);
-        const { row } = getRowInfo(inv, li);
-        if (!row) return;
-        if (removeTagBtn.dataset.free) {
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
-          const pg = row.perkGratis || 0;
-          if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+    if (listEl) {
+      listEl.onclick = async e => {
+        const infoBtn = e.target.closest('button[data-info]');
+        if (infoBtn) {
+          let infoHtml = infoBtn.dataset.info || '';
+          try {
+            infoHtml = decodeURIComponent(infoHtml);
+          } catch {}
+          const li = infoBtn.closest('li');
+          const title = li?.querySelector('.card-title > span')?.textContent || '';
+          if (typeof window.yrkePanel?.open === 'function') {
+            window.yrkePanel.open(title, infoHtml);
           }
-          row.gratis = 0;
-          if (pg > 0) row.perkGratis = 0;
-        } else if (removeTagBtn.dataset.qual) {
-          const q    = removeTagBtn.dataset.qual;
-          const isBase = removeTagBtn.dataset.base === '1';
-          if (removeTagBtn.classList.contains('free')) {
-            row.gratisKval = (row.gratisKval || []).filter(x => x !== q);
-            row.kvaliteter = row.kvaliteter || [];
-            if (isBase) {
-              row.removedKval = row.removedKval || [];
-              if (!row.removedKval.includes(q)) row.removedKval.push(q);
-            } else {
-              row.kvaliteter = row.kvaliteter.filter(x => x !== q);
-            }
-            row.kvaliteter.push(q);
-          } else {
-            if (isBase) {
-              row.removedKval = row.removedKval || [];
-              if (!row.removedKval.includes(q)) row.removedKval.push(q);
-            } else if (row?.kvaliteter) {
-              row.kvaliteter = row.kvaliteter.filter(x => x !== q);
-            }
-            if (row.gratisKval) {
-              row.gratisKval = row.gratisKval.filter(x => x !== q);
-            }
-          }
-        } else if (removeTagBtn.dataset.mult) {
-          delete row.priceMult;
-        } else if (removeTagBtn.dataset.price) {
-          delete row.basePrice;
+          return;
         }
-        saveInventory(inv);
-        renderInventory();
-        return;
-      }
+        // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
+        const removeTagBtn = e.target.closest('.tag.removable');
+        if (removeTagBtn) {
+          const li   = removeTagBtn.closest('li');
+          const inv  = storeHelper.getInventory(store);
+          const { row } = getRowInfo(inv, li);
+          if (!row) return;
+          if (removeTagBtn.dataset.free) {
+            const perkActive = storeHelper.getCurrentList(store)
+              .some(x => x.namn === 'Välutrustad');
+            const pg = row.perkGratis || 0;
+            if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
+              if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+            }
+            row.gratis = 0;
+            if (pg > 0) row.perkGratis = 0;
+          } else if (removeTagBtn.dataset.qual) {
+            const q    = removeTagBtn.dataset.qual;
+            const isBase = removeTagBtn.dataset.base === '1';
+            if (removeTagBtn.classList.contains('free')) {
+              row.gratisKval = (row.gratisKval || []).filter(x => x !== q);
+              row.kvaliteter = row.kvaliteter || [];
+              if (isBase) {
+                row.removedKval = row.removedKval || [];
+                if (!row.removedKval.includes(q)) row.removedKval.push(q);
+              } else {
+                row.kvaliteter = row.kvaliteter.filter(x => x !== q);
+              }
+              row.kvaliteter.push(q);
+            } else {
+              if (isBase) {
+                row.removedKval = row.removedKval || [];
+                if (!row.removedKval.includes(q)) row.removedKval.push(q);
+              } else if (row?.kvaliteter) {
+                row.kvaliteter = row.kvaliteter.filter(x => x !== q);
+              }
+              if (row.gratisKval) {
+                row.gratisKval = row.gratisKval.filter(x => x !== q);
+              }
+            }
+          } else if (removeTagBtn.dataset.mult) {
+            delete row.priceMult;
+          } else if (removeTagBtn.dataset.price) {
+            delete row.basePrice;
+          }
+          saveInventory(inv);
+          renderInventory();
+          return;
+        }
 
-      // 2) Klick på titeln för att expandera/kollapsa posten
-      const cardTitle = e.target.closest('.card-title');
-      if (cardTitle) {
-        const li = cardTitle.closest('li.card');
-        li.classList.toggle('compact');
-        updateCollapseBtnState();
+      const collapseBtn = e.target.closest('.entry-collapse-btn');
+      if (collapseBtn) return;
+
+      const header = e.target.closest('.card-header');
+      if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
         return;
       }
 
@@ -2743,20 +3197,14 @@ ${moneyRow}
         return;
       }
     };
+    }
 
     // Bind clicks within the Formaliteter card when it is outside invList
     if (dom.invFormal) {
       dom.invFormal.onclick = async e => {
-        // Toggle expand/collapse on title
-        const cardTitle = e.target.closest('.card-title');
-        if (cardTitle) {
-          const li = cardTitle.closest('li.card');
-          if (li) {
-            const isCompact = li.classList.toggle('compact');
-            updateCollapseBtnState();
-            const key = li.dataset.special === '__tools__' ? INV_TOOLS_KEY : INV_INFO_KEY;
-            localStorage.setItem(key, isCompact ? '0' : '1');
-          }
+        if (e.target.closest('.entry-collapse-btn')) return;
+        const header = e.target.closest('.card-header');
+        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
           return;
         }
 
@@ -2776,17 +3224,57 @@ ${moneyRow}
           renderInventory();
           return;
         }
+        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneySkillingPlus' ? 1 : -1;
+          const newS = (cur.skilling || 0) + delta;
+          if (newS < 0) {
+            const newD = Math.max(0, (cur.daler || 0) - 1);
+            const newSkilling = 3 + newS;
+            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
+          } else if (newS >= 4) {
+            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, skilling: newS });
+          }
+          renderInventory();
+          return;
+        }
+        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
+          const newO = (cur['örtegar'] || 0) + delta;
+          if (newO < 0) {
+            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
+            const newOrtegar = 8 + newO;
+            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
+            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
+          } else if (newO >= 8) {
+            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
+          }
+          renderInventory();
+          return;
+        }
       };
+
+      dom.invFormal.addEventListener('entry-card-toggle', e => {
+        updateCollapseBtnState();
+        const expanded = Boolean(e.detail?.expanded);
+        localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+      });
     }
 
-    if (dom.invList) {
-      dom.invList.removeEventListener('pointerdown', handlePointerDown);
-      dom.invList.addEventListener('pointerdown', handlePointerDown);
+    if (listEl) {
+      listEl.removeEventListener('pointerdown', handlePointerDown);
+      listEl.addEventListener('pointerdown', handlePointerDown);
     }
   }
 
   function getDragAfterElement(container, y) {
-    const els = [...container.querySelectorAll('li[data-idx]:not(.dragging)')];
+    const els = [...container.children]
+      .filter(child => child.matches('li[data-idx]:not(.dragging)'));
     return els.reduce((closest, child) => {
       const box = child.getBoundingClientRect();
       const offset = y - box.top - box.height / 2;
@@ -2799,16 +3287,20 @@ ${moneyRow}
     const li = e.target.closest('li[data-idx]');
     if (!li || e.target.closest('button')) return;
 
+    const container = li.parentElement;
+    if (!(container instanceof HTMLElement)) return;
+    if (!container.closest('#invList')) return;
+
     let pressTimer;
 
     const onMove = ev => {
       if (!dragEl) return;
       ev.preventDefault();
-      const after = getDragAfterElement(dom.invList, ev.clientY);
+      const after = getDragAfterElement(container, ev.clientY);
       if (after == null) {
-        dom.invList.appendChild(dragEl);
+        container.appendChild(dragEl);
       } else {
-        dom.invList.insertBefore(dragEl, after);
+        container.insertBefore(dragEl, after);
       }
     };
 
@@ -2853,11 +3345,11 @@ ${moneyRow}
   }
 
   function bindMoney() {
-    const manageBtn = $T('manageMoneyBtn');
-    const multiBtn  = $T('multiPriceBtn');
-    const resetBtn  = $T('moneyResetBtn');
-    const clearBtn  = $T('clearInvBtn');
-    const saveFreeBtn = $T('saveFreeBtn');
+    const manageBtn = getEl('manageMoneyBtn');
+    const multiBtn  = getEl('multiPriceBtn');
+    const resetBtn  = getEl('moneyResetBtn');
+    const clearBtn  = getEl('clearInvBtn');
+    const saveFreeBtn = getEl('saveFreeBtn');
     // Bind existing buttons if present
     if (manageBtn) manageBtn.onclick = openMoneyPopup;
     if (multiBtn)  multiBtn.onclick  = openPricePopup;
@@ -2887,7 +3379,7 @@ ${moneyRow}
       .map(row => ({row, entry:getEntry(row.id || row.name)}))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'))
       .forEach(v => {
-        const b = $T(`vehicleBtn-${v.entry.id}`);
+        const b = getEl(`vehicleBtn-${v.entry.id}`);
         if (b) b.onclick = () => openVehiclePopup(v.entry.id);
       });
   }

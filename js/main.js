@@ -116,63 +116,62 @@ try {
 } catch {}
 
 /* ---------- Grunddata & konstanter ---------- */
-const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
+const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes' | 'inventory'
 let   store  = storeHelper.load();                   // Lokal lagring
 let   lastActiveChar = store.current || '';
 
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
-const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM
+const $T   = id => (bar && bar.shadowRoot) ? bar.shadowRoot.getElementById(id) : null;        // shadow-DOM
+const getDom = id => document.getElementById(id) || $T(id);
 const dom  = {
   /* toolbar / panel */
-  charSel : $T('charSelect'),   delBtn : $T('deleteChar'),
-  newBtn  : $T('newCharBtn'),   dupBtn : $T('duplicateChar'),   xpOut  : $T('xpOut'),
-  exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
-  xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
-  xpMinus : $T('xpMinus'),      xpPlus : $T('xpPlus'),
-  xpTotal : $T('xpTotal'),      xpUsed : $T('xpUsed'),       xpFree : $T('xpFree'),
+  charSel : getDom('charSelect'),   delBtn : getDom('deleteChar'),
+  newBtn  : getDom('newCharBtn'),   dupBtn : getDom('duplicateChar'),   xpOut  : getDom('xpOut'),
+  exportBtn: getDom('exportChar'),  importBtn: getDom('importChar'),
+  xpIn    : getDom('xpInput'),      xpSum  : getDom('xpSummary'),
+  xpMinus : getDom('xpMinus'),      xpPlus : getDom('xpPlus'),
+  xpTotal : getDom('xpTotal'),      xpUsed : getDom('xpUsed'),       xpFree : getDom('xpFree'),
 
   /* inventarie */
-  invFormal: $T('invFormal'),   invList : $T('invList'),      invBadge  : $T('invBadge'),
-  wtOut   : $T('weightOut'),    slOut     : $T('slotOut'),
-  invSearch: $T('invSearch'),
-  moneyD  : $T('moneyDaler'),
-  moneyS  : $T('moneySkilling'),
-  moneyO  : $T('moneyOrtegar'),
-  moneySetBtn: $T('moneySetBtn'),
-  moneyAddBtn: $T('moneyAddBtn'),
-  invTypeSel : $T('invTypeFilter'),
-  collapseAllBtn: $T('collapseAllInv'),
-  dragToggle: $T('dragToggle'),
-  unusedOut: $T('unusedOut'),
+  invFormal: getDom('invFormal'),   invList : getDom('invList'),      invBadge  : getDom('invBadge'),
+  wtOut   : getDom('weightOut'),    slOut     : getDom('slotOut'),
+  moneyD  : getDom('moneyDaler'),
+  moneyS  : getDom('moneySkilling'),
+  moneyO  : getDom('moneyOrtegar'),
+  moneySetBtn: getDom('moneySetBtn'),
+  moneyAddBtn: getDom('moneyAddBtn'),
+  collapseAllBtn: getDom('collapseAllInv'),
+  dragToggle: getDom('dragToggle'),
+  unusedOut: getDom('unusedOut'),
 
   /* smith filter */
-  forgeBtn : $T('partySmith'),
-  alcBtn  : $T('partyAlchemist'),
-  artBtn  : $T('partyArtefacter'),
-  defBtn  : $T('forceDefense'),
+  forgeBtn : getDom('partySmith'),
+  alcBtn  : getDom('partyAlchemist'),
+  artBtn  : getDom('partyArtefacter'),
+  defBtn  : getDom('forceDefense'),
 
   /* traits */
-  traits  : $T('traits'),       traitsTot: $T('traitsTotal'),
-  traitsMax: $T('traitsMax'),
-  traitStats: $T('traitStats'),
+  traits  : getDom('traits'),       traitsTot: getDom('traitsTotal'),
+  traitsMax: getDom('traitsMax'),
+  traitStats: getDom('traitStats'),
 
   /* filterfält */
-  catToggle: $T('catToggle'),
-  sIn   : $T('searchField'),  typSel : $T('typFilter'),
-  searchList: $T('searchAutocomplete'),
-  searchSug: $T('searchSuggest'),
-  arkSel: $T('arkFilter'),    tstSel : $T('testFilter'),
-  folderSel: $T('folderFilter'),
-  filterUnion: $T('filterUnion'),
-  entryViewToggle: $T('entryViewToggle'),
-  infoToggle: $T('infoToggle'),
+  catToggle: getDom('catToggle'),
+  sIn   : getDom('searchField'),  typSel : getDom('typFilter'),
+  searchList: getDom('searchAutocomplete'),
+  searchSug: getDom('searchSuggest'),
+  arkSel: getDom('arkFilter'),    tstSel : getDom('testFilter'),
+  folderSel: getDom('folderFilter'),
+  filterUnion: getDom('filterUnion'),
+  entryViewToggle: getDom('entryViewToggle'),
+  infoToggle: getDom('infoToggle'),
 
   /* element i main-DOM */
-  active : document.getElementById('activeFilters'),
-  lista  : document.getElementById('lista'),       // index-vy
-  valda  : document.getElementById('valda'),       // character-vy
-  cName  : document.getElementById('charName')
+  active : getDom('activeFilters'),
+  lista  : getDom('lista'),       // index-vy
+  valda  : getDom('valda'),       // character-vy
+  cName  : getDom('charName')
 };
 
 // Safari/WebKit exposes showOpenFilePicker but only allows selecting a single file.
@@ -226,8 +225,8 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       if (panelId && typeof bar.open === 'function') bar.open(panelId);
       let el = bar.shadowRoot.querySelector(sel);
       // For dynamic inventory vehicle buttons, fall back to first matching
-      if (!el && panelId === 'invPanel' && sel === '[id^="vehicleBtn-"]') {
-        el = bar.shadowRoot.querySelector('#invPanel [id^="vehicleBtn-"]');
+      if (!el && panelId === 'filterPanel' && sel === '[id^="vehicleBtn-"]') {
+        el = bar.shadowRoot.querySelector('#filterPanel [id^="vehicleBtn-"]');
       }
       // Fallback: allow selecting elements in the main document (outside the toolbar)
       if (!el) {
@@ -242,15 +241,11 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
           const allCards = panel.querySelectorAll('.card');
           allCards.forEach(c => {
             const cid = c.id || '';
-            const isAlwaysOpen = cid === 'searchFiltersCard' || cid === 'invSearchFilters' || c.classList.contains('help-card');
+            const isAlwaysOpen = cid === 'searchFiltersCard' || c.classList.contains('help-card');
             if (isAlwaysOpen || c === card) c.classList.remove('compact');
             else c.classList.add('compact');
+            window.entryCardFactory?.syncCollapse?.(c);
           });
-          // Special handling for inventory entries: also collapse all item cards
-          if (panelId === 'invPanel') {
-            const invCards = panel.querySelectorAll('#invList .card');
-            invCards.forEach(c => { if (c !== card) c.classList.add('compact'); });
-          }
           if (panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
             bar.updateFilterCollapseBtn();
           }
@@ -272,8 +267,8 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
   // Katalog med UI-kommandon: id, visningsnamn, panel och CSS-selector
   const UI_CMDS = [
     // Toppknappar
-    { id: 'open-inventory',  label: 'Inventarie',   sel: '#invToggle',    panel: 'invPanel',    emoji: '🎒',
-      syn: ['inventarie','inventory','ryggsäck','ryggsack','rygga','inv'] },
+    { id: 'open-inventory',  label: 'Inventarie',   sel: '#inventoryLink', panel: null,          emoji: '🎒',
+      syn: ['inventarie','inventarievy','inventory','ryggsäck','ryggsack','rygga','inv'] },
     { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsToggle', panel: 'traitsPanel', emoji: '📊',
       syn: ['egenskaper','traits','drag','karaktärsdrag','karaktarsdrag'] },
     { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '⚙️',
@@ -297,14 +292,14 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
     // Inventarie → Verktyg 🧰
-    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: 'invPanel', emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
-    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: 'invPanel', emoji: '💰', syn: ['pengar','hantera pengar','money'] },
-    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: 'invPanel', emoji: '💸', syn: ['multiplicera pris','pris'] },
-    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: 'invPanel', emoji: 'x²', syn: ['antal','lägg till antal'] },
-    { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: 'invPanel', emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
-    { id: 'inv-drag',    label: 'Dra & Släpp',          sel: '#dragToggle',     panel: 'invPanel', emoji: '🔀', syn: ['dra och släpp','drag','drag & drop'] },
-    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: 'invPanel', emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
-    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: 'invPanel', emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
+    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: 'filterPanel', emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
+    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: 'filterPanel', emoji: '💰', syn: ['pengar','hantera pengar','money'] },
+    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: 'filterPanel', emoji: '💸', syn: ['multiplicera pris','pris'] },
+    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: 'filterPanel', emoji: 'x²', syn: ['antal','lägg till antal'] },
+    { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: 'filterPanel', emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
+    { id: 'inv-drag',    label: 'Dra & Släpp',          sel: '#dragToggle',     panel: 'filterPanel', emoji: '🔀', syn: ['dra och släpp','drag','drag & drop'] },
+    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: 'filterPanel', emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
+    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: 'filterPanel', emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
 
     // Verktyg inne i Filter → Verktyg
     { id: 'new-character',   label: 'Ny rollperson',       sel: '#newCharBtn',      panel: 'filterPanel', emoji: '➕',
@@ -350,6 +345,11 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
   function executeUICommand(id){
     const cmd = UI_CMDS.find(c => c.id === id);
     if (!cmd) return false;
+    if (cmd.id === 'open-inventory' && ROLE !== 'inventory') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'inventory.html'; } catch {}
+      return true;
+    }
     // If this command belongs to character view but we are elsewhere, navigate
     if ((cmd.id === 'open-summary' || cmd.id === 'open-notes' || cmd.id === 'open-effects') && ROLE !== 'character') {
       try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
@@ -591,9 +591,10 @@ function boot() {
     renderTraits();
     if (typeof bindTraits === 'function') bindTraits();
   }
-  if (ROLE === 'index')     initIndex();
-  if (ROLE === 'character') initCharacter();
-  if (ROLE === 'notes')     initNotes();
+  if (ROLE === 'index')      initIndex();
+  if (ROLE === 'character')  initCharacter();
+  if (ROLE === 'notes')      initNotes();
+  if (ROLE === 'inventory')  initInventory();
 }
 
 /* ===========================================================
@@ -644,6 +645,7 @@ function applyCharacterChange() {
     if (typeof window.indexViewRefreshFilters === 'function') window.indexViewRefreshFilters();
     if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
     if (typeof window.notesUpdate === 'function') window.notesUpdate();
+    if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
   } catch (err) {
     // As a last resort, fall back to reload to avoid a broken UI
     try { location.reload(); } catch {}
@@ -1164,6 +1166,7 @@ function bindToolbar() {
       const val = dom.filterUnion.classList.toggle('active');
       storeHelper.setFilterUnion(store, val);
       if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.inventoryViewUpdate) window.inventoryViewUpdate();
     });
   }
   if (dom.entryViewToggle) {
@@ -1173,6 +1176,7 @@ function bindToolbar() {
       // "active" betyder nu expanderad/vanlig vy; compact = !active
       storeHelper.setCompactEntries(store, !val);
       if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.inventoryViewUpdate) window.inventoryViewUpdate();
     });
   }
 }
