@@ -1050,6 +1050,20 @@ function initIndex() {
     saveState();
   };
 
+  let renderListFrame = null;
+  const scheduleRenderList = () => {
+    if (renderListFrame !== null) return;
+    const run = () => {
+      renderListFrame = null;
+      renderList(filtered());
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      renderListFrame = requestAnimationFrame(run);
+    } else {
+      renderListFrame = setTimeout(run, 0);
+    }
+  };
+
   const updateCatToggle = () => {
     const allDetails = [...document.querySelectorAll('.cat-group > details')];
     const hop = allDetails.find(d => d.dataset.cat === 'Hoppsan');
@@ -1232,10 +1246,10 @@ function initIndex() {
   };
 
   /* första render */
-  renderList(filtered()); activeTags(); updateXP();
+  scheduleRenderList(); activeTags(); updateXP();
 
   /* expose update function for party toggles */
-  window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
+  window.indexViewUpdate = () => { scheduleRenderList(); activeTags(); };
   window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
@@ -1280,7 +1294,7 @@ function initIndex() {
             if (c) openCatsOnce.add(c);
           }
           dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          activeTags(); renderList(filtered());
+          activeTags(); scheduleRenderList();
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
@@ -1310,7 +1324,7 @@ function initIndex() {
           sTemp = '';
           updateSearchDatalist();
           activeTags();
-          renderList(filtered());
+          scheduleRenderList();
           dom.sIn.blur();
           window.scrollTo({ top: 0, behavior: 'smooth' });
         }
@@ -1384,7 +1398,7 @@ function initIndex() {
             if (cat) openCatsOnce.add(cat);
             dom.sIn.value=''; sTemp='';
             updateSearchDatalist();
-            activeTags(); renderList(filtered());
+            activeTags(); scheduleRenderList();
             window.scrollTo({ top: 0, behavior: 'smooth' });
             return;
           }
@@ -1415,7 +1429,7 @@ function initIndex() {
           touchFilteredCache();
         }
         fillDropdowns();
-        activeTags(); renderList(filtered());
+        activeTags(); scheduleRenderList();
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1424,7 +1438,7 @@ function initIndex() {
         touchFilteredCache();
         dom.sIn.value=''; sTemp='';
         fillDropdowns();
-        activeTags(); renderList(filtered());
+        activeTags(); scheduleRenderList();
         window.scrollTo({ top: 0, behavior: 'smooth' });
         return;
       }
@@ -1453,7 +1467,7 @@ function initIndex() {
         F.search = [];
       }
       dom.sIn.value=''; sTemp='';
-      activeTags(); renderList(filtered());
+      activeTags(); scheduleRenderList();
       updateSearchDatalist();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
@@ -1474,13 +1488,13 @@ function initIndex() {
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
-        activeTags(); renderList(filtered());
+        activeTags(); scheduleRenderList();
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
         dom[sel].value = '';
-        activeTags(); renderList(filtered());
+        activeTags(); scheduleRenderList();
         return;
       }
       if(v && !F[key].includes(v)) F[key].push(v);
@@ -1488,18 +1502,18 @@ function initIndex() {
       if (sel === 'typSel' && v) {
         openCatsOnce.add(v);
       }
-      dom[sel].value=''; activeTags(); renderList(filtered());
+      dom[sel].value=''; activeTags(); scheduleRenderList();
     });
   });
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); renderList(filtered()); return; }
+    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); scheduleRenderList(); return; }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    activeTags(); renderList(filtered());
+    activeTags(); scheduleRenderList();
   });
 
   if (dom.lista && !dom.lista.dataset.entryToggleBound) {
@@ -1519,7 +1533,7 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    activeTags(); renderList(filtered());
+    activeTags(); scheduleRenderList();
   });
 
   /* lista-knappar */
@@ -1631,7 +1645,7 @@ function initIndex() {
           if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
           invUtil.saveInventory(inv); invUtil.renderInventory();
           activeTags();
-          renderList(filtered());
+          scheduleRenderList();
         });
         return;
       }
@@ -1887,7 +1901,7 @@ function initIndex() {
             list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            renderList(filtered());
+            scheduleRenderList();
             renderTraits();
             flashAdded(added.namn, added.trait);
           });
@@ -1900,7 +1914,7 @@ function initIndex() {
             list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            renderList(filtered());
+            scheduleRenderList();
             renderTraits();
             flashAdded(added.namn, added.trait);
           });
@@ -1921,7 +1935,7 @@ function initIndex() {
             }
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            renderList(filtered());
+            scheduleRenderList();
             renderTraits();
             flashAdded(added.namn, added.trait);
           });
@@ -2140,7 +2154,7 @@ function initIndex() {
       if (!updateEntryCardUI(entry)) needsFullRefresh = true;
     });
     activeTags();
-    if (needsFullRefresh) renderList(filtered());
+    if (needsFullRefresh) scheduleRenderList();
     renderTraits();
     if (act==='add') {
       flashAdded(name, tr);
@@ -2188,14 +2202,14 @@ function initIndex() {
               }
               ent.trait=spec;
               storeHelper.setCurrentList(store,list); updateXP();
-              renderList(filtered()); renderTraits();
+              scheduleRenderList(); renderTraits();
             });
             return;
           }
         }else if(ent.trait){
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
-          renderList(filtered()); renderTraits();
+          scheduleRenderList(); renderTraits();
           updateSearchDatalist();
           return;
         }
@@ -2238,7 +2252,7 @@ function initIndex() {
         storeHelper.setHamnskifteRemoved(store, rem);
       }
       storeHelper.setCurrentList(store,list); updateXP();
-      renderList(filtered()); renderTraits();
+      scheduleRenderList(); renderTraits();
       flashAdded(name, tr);
       return;
     }
