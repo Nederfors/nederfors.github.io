@@ -383,6 +383,9 @@ class SharedToolbar extends HTMLElement {
                   </li>
                 </ul>
               </div>
+              <div class="char-btn-row">
+                <button id="checkForUpdates" class="char-btn">Uppdatera appen</button>
+              </div>
             </div>
           </li>
         </ul>
@@ -1114,6 +1117,46 @@ class SharedToolbar extends HTMLElement {
     if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
+
+    if (btn.id === 'checkForUpdates') {
+      if (typeof window.requestPwaUpdate !== 'function') {
+        window.toast?.('Uppdateringsfunktionen är inte tillgänglig.');
+        return;
+      }
+      const originalText = btn.textContent;
+      btn.disabled = true;
+      btn.textContent = 'Kontrollerar…';
+      Promise.resolve()
+        .then(() => window.requestPwaUpdate())
+        .then(result => {
+          switch (result?.status) {
+            case 'applied':
+              window.toast?.('Uppdaterar appen…');
+              break;
+            case 'up-to-date':
+              window.toast?.('Appen är redan uppdaterad.');
+              break;
+            case 'missing':
+              window.toast?.('Ingen installerad webapp hittades.');
+              break;
+            case 'error':
+              window.toast?.('Kunde inte söka efter uppdatering.');
+              break;
+            default:
+              window.toast?.('Kunde inte söka efter uppdatering.');
+              break;
+          }
+        })
+        .catch(error => {
+          console.error('PWA update failed', error);
+          window.toast?.('Kunde inte söka efter uppdatering.');
+        })
+        .finally(() => {
+          btn.disabled = false;
+          btn.textContent = originalText;
+        });
+      return;
+    }
 
     if (btn.id === 'collapseAllFilters') {
       const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
