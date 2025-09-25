@@ -103,17 +103,19 @@
   let collapseHandlerBound = false;
 
   const handleGlobalClick = e => {
+    const rootCard = e.target.closest('li.entry-card');
+    if (!rootCard) return;
     const collapseBtn = e.target.closest('.entry-collapse-btn');
     if (collapseBtn) {
-      const card = collapseBtn.closest('li.card');
+      const card = collapseBtn.closest('li.entry-card');
       if (card) toggleEntryCard(card);
       return;
     }
 
     const header = e.target.closest('.card-header');
-    if (!header) return;
+    if (!header || !rootCard.contains(header)) return;
 
-    const card = header.closest('li.card');
+    const card = rootCard;
     if (!card) return;
     if (card.dataset.collapsible !== '1') return;
 
