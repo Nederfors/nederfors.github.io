@@ -2282,10 +2282,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         );
       }
       if (isCustom) buttonParts.push('<button data-act="editCustom" class="char-btn">✏️</button>');
-      if (allowQual) buttonParts.push('<button data-act="addQual" class="char-btn">🔨</button>');
-      if (allowQual) buttonParts.push('<button data-act="freeQual" class="char-btn">☭</button>');
+      if (allowQual) buttonParts.push(`<button data-act="addQual" class="char-btn">${icon('addqual')}</button>`);
+      if (allowQual) buttonParts.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
       if (isArtifact) buttonParts.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
-      buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}">🆓</button>`);
+      buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}">${icon('free')}</button>`);
       if (isVehicle) {
         buttonParts.push('<button data-act="vehicleLoad" class="char-btn">⬇️</button>', '<button data-act="vehicleUnload" class="char-btn">⬆️</button>');
       }
@@ -2420,12 +2420,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           );
         }
         if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="char-btn">✏️</button>');
-        if (cAllowQual) cButtons.push('<button data-act="addQual" class="char-btn">🔨</button>');
-        if (cAllowQual) cButtons.push('<button data-act="freeQual" class="char-btn">☭</button>');
+        if (cAllowQual) cButtons.push(`<button data-act="addQual" class="char-btn">${icon('addqual')}</button>`);
+        if (cAllowQual) cButtons.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
         if (cIsArtifact) cButtons.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
 
         const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
-        cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}">🆓</button>`);
+        cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}">${icon('free')}</button>`);
 
         const cBadge = childRow.qty > 1 ? ` <span class="count-badge">×${childRow.qty}</span>` : '';
         const cPriceText = formatMoney(calcRowCost(childRow, forgeLvl, alcLevel, artLevel));

@@ -237,7 +237,7 @@ class SharedToolbar extends HTMLElement {
         <header class="inv-header">
           <h2>Egenskaper</h2>
           <div class="inv-actions">
-            <button id="resetTraits" class="char-btn icon danger" title="Återställ basegenskaper">🧹</button>
+            <button id="resetTraits" class="char-btn icon danger" title="Återställ basegenskaper">${icon('broom')}</button>
             <button class="char-btn icon" data-close="traitsPanel">✕</button>
           </div>
         </header>
@@ -358,7 +358,7 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Alkemist i partyt?</span>
                     </span>
-                    <button id="partyAlchemist" class="party-toggle">⚗️</button>
+                    <button id="partyAlchemist" class="party-toggle icon-only">${icon('alkemi')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
@@ -916,7 +916,7 @@ class SharedToolbar extends HTMLElement {
             <ul class="summary-list">
               <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
               <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-              <li>Öppna panelerna längst ned: 📊 Egenskaper, 🎒 Inventarie, ⚙️ Filter.</li>
+              <li>Öppna panelerna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('settings')} Filter.</li>
             </ul>
           </section>
 
@@ -924,9 +924,9 @@ class SharedToolbar extends HTMLElement {
             <h3>Verktygsrad</h3>
             <ul class="summary-list">
               <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
-              <li>🧝 / 📇: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
-              <li>📜: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-              <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
+              <li>${icon('character')} / ${icon('index')}: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
+              <li>${icon('anteckningar')}: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
+              <li>${icon('inventarie')}: Öppnar inventariepanelen. ${icon('egenskaper')}: Öppnar egenskapspanelen. ${icon('settings')}: Öppnar filter.</li>
               <li>XP: Visar dina totala erfarenhetspoäng.</li>
               <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
               <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
@@ -951,11 +951,11 @@ class SharedToolbar extends HTMLElement {
               <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
               <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
               <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-              <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
+              <li>${icon('smithing')}/${icon('alkemi')}/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
               <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
               <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
               <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-              <li>ℹ️ Hjälp: Visar denna panel.</li>
+              <li>${icon('info')} Hjälp: Visar denna panel.</li>
             </ul>
           </section>
 
@@ -965,9 +965,9 @@ class SharedToolbar extends HTMLElement {
               <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
               <li>▶/▼ Öppna eller kollapsa alla.</li>
               <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
-              <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; −/+ justerar 1 daler).</li>
+              <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).</li>
               <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
-              <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. 🧹 Töm inventariet.</li>
+              <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. ${icon('broom')} Töm inventariet.</li>
               <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
               <li>Kategori: Filtrera på föremålstyp.</li>
               <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
@@ -977,10 +977,10 @@ class SharedToolbar extends HTMLElement {
           <section class="summary-section">
             <h3>Egenskaper</h3>
             <ul class="summary-list">
-              <li>Ange total XP via −/+ eller genom att skriva värdet.</li>
+              <li>Ange total XP via ${icon('minus')}/${icon('plus')} eller genom att skriva värdet.</li>
               <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
               <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
-              <li>🧹 Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
+              <li>${icon('broom')} Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
             </ul>
           </section>
 
@@ -997,21 +997,21 @@ class SharedToolbar extends HTMLElement {
               <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
               <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
               <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
-              <li>📇/🧝 i sidhuvudet: Till index respektive rollperson.</li>
+              <li>${icon('index')}/${icon('character')} i sidhuvudet: Till index respektive rollperson.</li>
             </ul>
           </section>
 
           <section class="summary-section">
             <h3>Listor och rader</h3>
             <ul class="summary-list">
-              <li>Lägg till / +: Lägg till posten. −: Minska antal eller ta bort.</li>
+              <li>Lägg till / ${icon('plus')}: Lägg till posten. ${icon('minus')}: Minska antal eller ta bort.</li>
               <li>Info: Visa detaljer.</li>
               <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
-              <li>🔨 Lägg till kvalitet. ☭ Markera kostsam kvalitet som gratis.</li>
-              <li>🆓 Gör föremål gratis. 💔 Visa konflikter.</li>
+              <li>${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.</li>
+              <li>${icon('free')} Gör föremål gratis. 💔 Visa konflikter.</li>
               <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
               <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
-              <li>🗑 Ta bort posten helt.</li>
+              <li>${icon('remove')} Ta bort posten helt.</li>
             </ul>
           </section>
 
