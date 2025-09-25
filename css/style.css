@@ -916,6 +916,7 @@ input:focus, select:focus, textarea:focus {
 .entry-row-header {
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto auto;
+  grid-template-areas: "main xp actions";
   align-items: center;
   gap: .45rem;
 }
@@ -959,6 +960,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .entry-header-main {
+  grid-area: main;
   display: flex;
   align-items: center;
   gap: .45rem;
@@ -976,6 +978,14 @@ input:focus, select:focus, textarea:focus {
   align-items: center;
   gap: .35rem;
   justify-content: flex-end;
+}
+
+.entry-header-xp {
+  grid-area: xp;
+}
+
+.entry-header-actions {
+  grid-area: actions;
 }
 
 /* nivåväljare i åtgärdsraden */
@@ -1547,6 +1557,9 @@ input:focus, select:focus, textarea:focus {
 @media (max-width: 680px) {
   .entry-row-header {
     grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "main actions"
+      "xp xp";
     gap: .4rem;
   }
 
