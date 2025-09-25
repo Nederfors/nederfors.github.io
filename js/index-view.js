@@ -1061,6 +1061,176 @@ function initIndex() {
       : 'Minimera alla kategorier';
   };
 
+  const escapeSelectorValue = (value) => {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (window.CSS?.escape) return CSS.escape(str);
+    return str.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
+  };
+
+  const findEntryCards = (entry) => {
+    if (!entry || !dom.lista) return [];
+    const cards = [];
+    const id = entry.id !== undefined && entry.id !== null ? String(entry.id) : '';
+    const name = entry.namn ? String(entry.namn) : '';
+    if (id) {
+      cards.push(...dom.lista.querySelectorAll(
+        `li.entry-card[data-id="${escapeSelectorValue(id)}"]`
+      ));
+    }
+    if (!cards.length && name) {
+      cards.push(...dom.lista.querySelectorAll(
+        `li.entry-card[data-name="${escapeSelectorValue(name)}"]`
+      ));
+    }
+    return cards;
+  };
+
+  const syncActionRowState = (card) => {
+    if (!card) return;
+    const actionsRow = card.querySelector('.entry-row.entry-row-actions');
+    if (!actionsRow) return;
+    const dynamicGroup = actionsRow.querySelector('.entry-action-group-dynamic');
+    const standardGroup = actionsRow.querySelector('.entry-action-group-standard');
+    const levelControl = actionsRow.querySelector('.entry-level-control');
+    const hasDynamic = !!(dynamicGroup && dynamicGroup.children.length);
+    const hasStandard = !!(standardGroup && standardGroup.children.length);
+    const hasLevel = !!(levelControl && levelControl.children.length);
+    if (!hasDynamic && hasStandard && !hasLevel) actionsRow.classList.add('only-standard');
+    else actionsRow.classList.remove('only-standard');
+  };
+
+  const updateEntryCardUI = (entry) => {
+    const cards = findEntryCards(entry);
+    if (!cards.length) return false;
+    const charList = storeHelper.getCurrentList(store);
+    const invList  = storeHelper.getInventory(store);
+    const entryTypes = entry?.taggar?.typ || [];
+    const isInventory = isInv(entry);
+    const multi = isInventory || (entry.kan_införskaffas_flera_gånger && entryTypes.some(t => ["Fördel","Nackdel"].includes(t)));
+    let count = 0;
+    if (isInventory) {
+      if (entry.id === 'di79') {
+        const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
+        count = qtys.length ? Math.min(...qtys) : 0;
+      } else {
+        count = invList
+          .filter(c => c.id === entry.id)
+          .reduce((sum, c) => sum + (c.qty || 1), 0);
+      }
+    } else {
+      count = charList
+        .filter(c => {
+          if (!c || c.namn !== entry.namn) return false;
+          if (entry.id !== undefined && entry.id !== null && c.id !== entry.id) return false;
+          return !c.trait;
+        })
+        .length;
+    }
+    const limit = isInventory ? Infinity : storeHelper.monsterStackLimit(charList, entry.namn);
+    const allowAdd = !(isService(entry) || isEmployment(entry));
+
+    cards.forEach(card => {
+      const traitKey = card.dataset.trait || null;
+      const cardCharEntry = charList.find(item => {
+        if (!item || item.namn !== entry.namn) return false;
+        const itemTrait = item.trait || null;
+        if (traitKey) return itemTrait === traitKey;
+        return !itemTrait;
+      }) || null;
+      const isException = entry.namn === 'Exceptionellt karaktärsdrag';
+      const inChar = isException ? false : !!cardCharEntry;
+      let curLvl = null;
+      if (cardCharEntry?.nivå) curLvl = String(cardCharEntry.nivå);
+      if (!curLvl) {
+        const select = card.querySelector('select.level');
+        if (select?.value) curLvl = select.value;
+      }
+      if (!curLvl) {
+        curLvl = LVL.find(l => entry.nivåer?.[l]) || 'Novis';
+      }
+      let xpVal = null;
+      if (!isInventory && !isEmployment(entry) && !isService(entry)) {
+        const xpSource = cardCharEntry ? cardCharEntry : { ...entry, nivå: curLvl };
+        xpVal = storeHelper.calcEntryXP(xpSource, charList);
+      }
+      const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
+      if (xpVal != null) card.dataset.xp = xpVal;
+      else delete card.dataset.xp;
+      const xpSpan = card.querySelector('.entry-header-xp .entry-xp-value');
+      if (xpSpan) xpSpan.textContent = `Erf: ${xpText}`;
+      const infoBtn = card.querySelector('button[data-info]');
+      if (infoBtn?.dataset.info) {
+        const infoHtml = decodeURIComponent(infoBtn.dataset.info);
+        const newInfo = infoHtml.replace(/(<span class="tag xp-cost">)Erf: [^<]*/, `$1Erf: ${xpText}`);
+        infoBtn.dataset.info = encodeURIComponent(newInfo);
+      }
+
+      const nameSpan = card.querySelector('.card-title > span');
+      if (nameSpan) {
+        const badge = nameSpan.querySelector('.count-badge');
+        if (multi && count > 0) {
+          if (badge) {
+            badge.textContent = `×${count}`;
+          } else {
+            const badgeEl = document.createElement('span');
+            badgeEl.className = 'count-badge';
+            badgeEl.textContent = `×${count}`;
+            const spacer = document.createTextNode(' ');
+            nameSpan.appendChild(spacer);
+            nameSpan.appendChild(badgeEl);
+          }
+        } else if (badge) {
+          const prev = badge.previousSibling;
+          badge.remove();
+          if (prev && prev.nodeType === Node.TEXT_NODE && !prev.textContent.trim()) prev.remove();
+        }
+      }
+
+      const standardGroup = card.querySelector('.entry-action-group-standard');
+      if (standardGroup) {
+        const buttonName = card.dataset.name || entry.namn || '';
+        const buttonId = card.dataset.id || (entry.id !== undefined && entry.id !== null ? String(entry.id) : '');
+        const buttons = [];
+        const createButton = (act, classes, iconName, ariaLabel = '', highlight = false) => {
+          const btn = document.createElement('button');
+          btn.className = highlight ? `${classes} add-btn` : classes;
+          btn.dataset.act = act;
+          if (buttonName) btn.dataset.name = buttonName;
+          if (buttonId) btn.dataset.id = buttonId;
+          if (ariaLabel) btn.setAttribute('aria-label', ariaLabel);
+          btn.innerHTML = icon(iconName);
+          return btn;
+        };
+
+        if (allowAdd) {
+          if (multi) {
+            if (count > 0) {
+              buttons.push(createButton('del', 'char-btn danger icon icon-only', 'remove'));
+              buttons.push(createButton('sub', 'char-btn icon icon-only', 'minus', 'Minska'));
+              if (count < limit) {
+                buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till'));
+              }
+            } else {
+              buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
+            }
+          } else {
+            if (inChar) {
+              buttons.push(createButton('rem', 'char-btn danger icon icon-only', 'remove'));
+            } else {
+              buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
+            }
+          }
+        }
+
+        standardGroup.replaceChildren(...buttons);
+        syncActionRowState(card);
+      }
+    });
+
+    return true;
+  };
+
   /* första render */
   renderList(filtered()); activeTags(); updateXP();
 
@@ -1466,6 +1636,12 @@ function initIndex() {
         return;
       }
 
+    const pendingUpdates = new Set();
+    let needsFullRefresh = false;
+    const queueUpdate = (entry) => {
+      if (entry) pendingUpdates.add(entry);
+    };
+
     if (act==='add') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
@@ -1484,7 +1660,7 @@ function initIndex() {
             }
           });
           invUtil.saveInventory(inv); invUtil.renderInventory();
-          renderList(filtered());
+          queueUpdate(p);
           FALT_BUNDLE.forEach(id => {
             const ent = invUtil.getEntry(id);
             const i = inv.findIndex(r => r.id === id);
@@ -1566,7 +1742,8 @@ function initIndex() {
                 storeHelper.addRevealedArtifact(store, p.id);
               }
             }
-            renderList(filtered());
+            queueUpdate(p);
+            if (hidden || addedToList) needsFullRefresh = true;
             const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
             if (li) {
               li.classList.add('inv-flash');
@@ -1779,7 +1956,7 @@ function initIndex() {
             invUtil.addWellEquippedItems(inv);
             invUtil.saveInventory(inv); invUtil.renderInventory();
           }
-          renderList(filtered());
+          needsFullRefresh = true;
           renderTraits();
           flashAdded(added.namn, added.trait);
         };
@@ -1799,6 +1976,7 @@ function initIndex() {
         list.push(added);
         await finishAdd(added);
       }
+      needsFullRefresh = true;
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
@@ -1839,8 +2017,10 @@ function initIndex() {
             if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
           }
         }
-        renderList(filtered());
+        queueUpdate(p);
+        if (hidden || artifactTagged) needsFullRefresh = true;
       } else {
+        needsFullRefresh = true;
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
         if(p.namn==='Mörkt förflutet' && before.some(x=>x.namn==='Mörkt blod')){
@@ -1902,6 +2082,11 @@ function initIndex() {
             return;
         }
         storeHelper.setCurrentList(store,list); updateXP();
+        const affected = new Set([p.namn, ...remDeps]);
+        affected.forEach(name => {
+          const depEntry = entries.find(x => x.namn === name);
+          if (depEntry) pendingUpdates.add(depEntry);
+        });
         if (p.namn === 'Privilegierad') {
           invUtil.renderInventory();
         }
@@ -1950,8 +2135,12 @@ function initIndex() {
         }
       }
     }
+    pendingUpdates.add(p);
+    pendingUpdates.forEach(entry => {
+      if (!updateEntryCardUI(entry)) needsFullRefresh = true;
+    });
     activeTags();
-    renderList(filtered());
+    if (needsFullRefresh) renderList(filtered());
     renderTraits();
     if (act==='add') {
       flashAdded(name, tr);
