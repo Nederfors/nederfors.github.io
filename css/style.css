@@ -1559,14 +1559,15 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 680px) {
   .entry-row-header {
-    grid-template-columns: minmax(0, 1fr) auto;
-    grid-template-areas:
-      "main actions"
-      "xp xp";
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    grid-template-areas: "main xp actions";
     gap: .4rem;
   }
 
-  .entry-row-header .entry-header-xp,
+  .entry-row-header .entry-header-xp {
+    justify-content: flex-end;
+  }
+
   .entry-row-header .entry-header-actions {
     justify-content: flex-start;
   }
