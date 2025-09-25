@@ -134,8 +134,19 @@ function initIndex() {
     filteredEntries: []
   };
 
+  const filteredResultCache = {
+    key: '',
+    entries: null
+  };
+
+  const invalidateFilteredResults = () => {
+    filteredResultCache.key = '';
+    filteredResultCache.entries = null;
+  };
+
   const touchFilteredCache = () => {
     entryCache.filteredKey = '';
+    invalidateFilteredResults();
   };
 
   const bumpRevealedArtifactsVersion = () => {
@@ -198,6 +209,7 @@ function initIndex() {
       });
       entryCache.filteredEntries = filtered;
       entryCache.filteredKey = key;
+      invalidateFilteredResults();
     }
     return entryCache.filteredEntries;
   };
@@ -540,20 +552,60 @@ function initIndex() {
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
+  const buildFilterCacheKey = ({
+    baseKey,
+    unionFlag,
+    onlySelected,
+    selectedNames,
+    terms,
+    combinedFilters,
+    randomNames
+  }) => [
+    baseKey,
+    unionFlag,
+    onlySelected,
+    selectedNames,
+    terms.join('\u0001'),
+    combinedFilters.join('\u0001'),
+    randomNames.join('\u0001')
+  ].join('||');
+
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
     const onlySel = storeHelper.getOnlySelected(store);
     const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
     let baseEntries = getEntries();
+    let randomNames = [];
     if (fixedRandomEntries && fixedRandomEntries.length) {
-      const allowed = new Set(fixedRandomEntries.map(e => e.namn));
+      randomNames = fixedRandomEntries.map(e => e.namn || '').filter(Boolean);
+      const allowed = new Set(randomNames);
       baseEntries = baseEntries.filter(p => allowed.has(p.namn));
     }
-    const nameSet = onlySel
-      ? new Set(storeHelper.getCurrentList(store).map(x => x.namn))
-      : null;
-    if (!fixedRandomEntries && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1) {
+    let selectedNamesKey = '';
+    let nameSet = null;
+    if (onlySel) {
+      const currentList = storeHelper.getCurrentList(store);
+      const names = currentList
+        .map(x => x?.namn || '')
+        .filter(Boolean);
+      nameSet = new Set(names);
+      selectedNamesKey = names.slice().sort().join('\u0001');
+    }
+    const combinedFilters = [...F.typ, ...F.ark, ...F.test];
+    const cacheKey = buildFilterCacheKey({
+      baseKey: entryCache.filteredKey,
+      unionFlag: union ? '1' : '0',
+      onlySelected: onlySel ? '1' : '0',
+      selectedNames: selectedNamesKey,
+      terms,
+      combinedFilters,
+      randomNames
+    });
+    if (filteredResultCache.key === cacheKey && filteredResultCache.entries) {
+      return filteredResultCache.entries;
+    }
+    if (!fixedRandomEntries && combinedFilters.length === 0 && F.search.length === 1) {
       const term = terms[0];
       const specialId = SECRET_SEARCH[term];
       if (specialId) {
@@ -561,7 +613,9 @@ function initIndex() {
         if (hid) {
           const cat = hid.taggar?.typ?.[0];
           if (cat) openCatsOnce.add(cat);
-          return [hid];
+          filteredResultCache.entries = [hid];
+          filteredResultCache.key = cacheKey;
+          return filteredResultCache.entries;
         }
       }
       if (!showArtifacts) {
@@ -577,13 +631,14 @@ function initIndex() {
           }
           const cat = hid.taggar?.typ?.[0];
           if (cat) openCatsOnce.add(cat);
-          return [hid];
+          filteredResultCache.entries = [hid];
+          filteredResultCache.key = cacheKey;
+          return filteredResultCache.entries;
         }
       }
     }
-    const combinedFilters = [...F.typ, ...F.ark, ...F.test];
     const hasFilterTags = combinedFilters.length > 0;
-    return baseEntries.filter(entry => {
+    const result = baseEntries.filter(entry => {
       const meta = ensureEntryMeta(entry) || {};
       const text = meta.normText || '';
       const hasTerms = terms.length > 0;
@@ -605,6 +660,9 @@ function initIndex() {
         : (tagOk && txtOk);
       return combinedOk && selOk;
     }).sort(createSearchSorter(terms));
+    filteredResultCache.entries = result;
+    filteredResultCache.key = cacheKey;
+    return filteredResultCache.entries;
   };
 
   const renderList = arr=>{
@@ -1290,6 +1348,7 @@ function initIndex() {
             }
             fixedRandomEntries = picks;
             fixedRandomInfo = { cat, count: picks.length };
+            invalidateFilteredResults();
             const c = cat || picks[0]?.taggar?.typ?.[0];
             if (c) openCatsOnce.add(c);
           }
@@ -1310,6 +1369,7 @@ function initIndex() {
           } else {
             F.search = [];
           }
+          invalidateFilteredResults();
           // If exact name match, open that category once
           if (val) {
             const nval = searchNormalize(val.toLowerCase());
@@ -1394,6 +1454,7 @@ function initIndex() {
             }
             fixedRandomEntries = picks;
             fixedRandomInfo = { cat: canonical, count: picks.length };
+            invalidateFilteredResults();
             const cat = canonical || picks[0]?.taggar?.typ?.[0];
             if (cat) openCatsOnce.add(cat);
             dom.sIn.value=''; sTemp='';
@@ -1419,8 +1480,10 @@ function initIndex() {
       }
       if (term === 'lol') {
         F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp=''; fixedRandomEntries = null; fixedRandomInfo = null;
+        invalidateFilteredResults();
         dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
         storeHelper.setOnlySelected(store, false);
+        invalidateFilteredResults();
         storeHelper.clearRevealedArtifacts(store);
         revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
         bumpRevealedArtifactsVersion();
@@ -1466,6 +1529,7 @@ function initIndex() {
       } else {
         F.search = [];
       }
+      invalidateFilteredResults();
       dom.sIn.value=''; sTemp='';
       activeTags(); scheduleRenderList();
       updateSearchDatalist();
@@ -1488,16 +1552,19 @@ function initIndex() {
       if (sel === 'tstSel' && !v) {
         F[key] = [];
         storeHelper.setOnlySelected(store, false);
+        invalidateFilteredResults();
         activeTags(); scheduleRenderList();
         return;
       }
       if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
         storeHelper.setOnlySelected(store, true);
+        invalidateFilteredResults();
         dom[sel].value = '';
         activeTags(); scheduleRenderList();
         return;
       }
       if(v && !F[key].includes(v)) F[key].push(v);
+      if (v) invalidateFilteredResults();
       // If selecting a type filter, open that category once
       if (sel === 'typSel' && v) {
         openCatsOnce.add(v);
@@ -1508,11 +1575,12 @@ function initIndex() {
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); scheduleRenderList(); return; }
+    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; invalidateFilteredResults(); activeTags(); scheduleRenderList(); return; }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
+    invalidateFilteredResults();
     activeTags(); scheduleRenderList();
   });
 
@@ -1533,6 +1601,7 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
+    invalidateFilteredResults();
     activeTags(); scheduleRenderList();
   });
 
