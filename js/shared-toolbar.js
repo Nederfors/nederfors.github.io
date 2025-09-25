@@ -329,6 +329,9 @@ class SharedToolbar extends HTMLElement {
                 <button id="pdfLibraryBtn" class="char-btn">PDF-bank</button>
               </div>
               <div class="char-btn-row">
+                <button id="checkForUpdates" class="char-btn">Uppdatera appen</button>
+              </div>
+              <div class="char-btn-row">
                 <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
               </div>
             </div>
@@ -382,9 +385,6 @@ class SharedToolbar extends HTMLElement {
                     <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
                   </li>
                 </ul>
-              </div>
-              <div class="char-btn-row">
-                <button id="checkForUpdates" class="char-btn">Uppdatera appen</button>
               </div>
             </div>
           </li>
