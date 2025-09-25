@@ -24,6 +24,31 @@
   ];
   const SBASE = 10, OBASE = 10;
 
+  const ICON_SOURCES = Object.freeze({
+    character : 'icons/character.svg',
+    egenskaper: 'icons/egenskaper.svg',
+    index     : 'icons/index.svg',
+    info      : 'icons/info.svg',
+    inventarie: 'icons/inventarie.svg',
+    minus     : 'icons/minus.svg',
+    plus      : 'icons/plus.svg',
+    remove    : 'icons/remove.svg',
+    settings  : 'icons/settings.svg',
+    smithing  : 'icons/smithing.svg'
+  });
+
+  function iconHtml(name, opts = {}) {
+    if (!name) return '';
+    const src = ICON_SOURCES[name] || `icons/${name}.svg`;
+    const extraClass = opts.className ? ` ${opts.className}` : '';
+    const alt = typeof opts.alt === 'string' ? opts.alt : '';
+    const attrs = [];
+    if (opts.loading) attrs.push(`loading="${opts.loading}"`);
+    if (opts.decoding) attrs.push(`decoding="${opts.decoding}"`);
+    const attrStr = attrs.length ? ` ${attrs.join(' ')}` : '';
+    return `<img src="${src}" alt="${alt}" class="btn-icon${extraClass}"${attrStr}>`;
+  }
+
   // Konvertera ett penningobjekt till totalt antal örtegar
   function moneyToO(m) {
     m = m || {};
@@ -419,4 +444,5 @@
   window.catComparator = catComparator;
   window.catName = catName;
   window.lookupEntry = lookupEntry;
+  window.iconHtml = iconHtml;
 })(window);

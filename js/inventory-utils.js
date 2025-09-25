@@ -3,6 +3,7 @@
    =========================================================== */
 
 (function(window){
+  const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
   const F = { invTxt: '', typ: [], ark: [], test: [] };
   // Bring shared currency bases into local scope
   const SBASE = window.SBASE;
@@ -2224,8 +2225,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
-                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon" aria-label="Minska mynt" title="Minska mynt">➖</button>
-                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon" aria-label="Öka mynt" title="Öka mynt">➕</button>
+                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon icon-only" aria-label="Minska mynt" title="Minska mynt">${icon('minus')}</button>
+                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon icon-only" aria-label="Öka mynt" title="Öka mynt">${icon('plus')}</button>
               </div>
             </div>
             <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
@@ -2272,12 +2273,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const canStack = ['kraft','ritual'].includes(entry.bound);
       const buttonParts = [];
       if (isGear && !canStack) {
-        buttonParts.push('<button data-act="del" class="char-btn danger icon">🗑</button>');
+        buttonParts.push(`<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`);
       } else {
         buttonParts.push(
-          '<button data-act="del" class="char-btn danger icon">🗑</button>',
-          '<button data-act="sub" class="char-btn" aria-label="Minska">➖</button>',
-          '<button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>'
+          `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
+          `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
+          `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`
         );
       }
       if (isCustom) buttonParts.push('<button data-act="editCustom" class="char-btn">✏️</button>');
@@ -2348,7 +2349,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const bodyStr = typeof bodyHtml === 'string' ? bodyHtml : String(bodyHtml || '');
         if (!tagsHtml.trim() && !metaItems.length && !bodyStr.trim()) return '';
         const infoPanelHtml = buildInfoPanelHtml({ tagsHtml, bodyHtml: bodyStr, meta: metaItems });
-        return `<button class="char-btn info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">ℹ️</button>`;
+        return `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
       };
 
       const infoBtnHtml = buildInfoButton({
@@ -2410,12 +2411,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const cCanStack = ['kraft','ritual'].includes(centry.bound);
         const cButtons = [];
         if (cIsGear && !cCanStack) {
-          cButtons.push('<button data-act="del" class="char-btn danger icon">🗑</button>');
+          cButtons.push(`<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`);
         } else {
           cButtons.push(
-            '<button data-act="del" class="char-btn danger icon">🗑</button>',
-            '<button data-act="sub" class="char-btn" aria-label="Minska">➖</button>',
-            '<button data-act="add" class="char-btn" aria-label="Lägg till">➕</button>'
+            `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
+            `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
+            `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`
           );
         }
         if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="char-btn">✏️</button>');

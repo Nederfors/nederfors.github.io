@@ -1401,7 +1401,7 @@ function openFolderManagerPopup() {
     list.innerHTML = folders.map((f, idx) => {
       const cnt = charMap.get(f.id) || 0;
       const esc = s => String(s || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-      const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort">🗑</button>`;
+      const delBtn = f.system ? '' : `<button class="mini-btn danger icon-only" data-action="delete" title="Ta bort">${window.iconHtml ? window.iconHtml('remove') : '🗑'}</button>`;
       const upDisabled = idx === 0 ? ' disabled' : '';
       const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
       return (

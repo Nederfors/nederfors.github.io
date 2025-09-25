@@ -14,6 +14,8 @@ const FILTER_CARD_KEY_MAP = Object.freeze({
   filterSettingsCard: FILTER_SETTINGS_KEY
 });
 
+const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+
 class SharedToolbar extends HTMLElement {
   constructor() {
     super();
@@ -220,13 +222,13 @@ class SharedToolbar extends HTMLElement {
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
+          <button  id="traitsToggle" class="char-btn icon icon-only" title="Egenskaper">${icon('egenskaper')}</button>
           <a       id="inventoryLink" class="char-btn icon nav-link" title="Inventarievy" href="inventory.html">
-            🎒 <span id="invBadge">0</span>
+            ${icon('inventarie')}<span id="invBadge">0</span>
           </a>
-          <a       id="indexLink" class="char-btn icon nav-link" title="Index" href="index.html">📇</a>
-          <a       id="characterLink" class="char-btn icon nav-link" title="Rollperson" href="character.html">🧝</a>
-          <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
+          <a       id="indexLink" class="char-btn icon icon-only nav-link" title="Index" href="index.html">${icon('index')}</a>
+          <a       id="characterLink" class="char-btn icon icon-only nav-link" title="Rollperson" href="character.html">${icon('character')}</a>
+          <button  id="filterToggle" class="char-btn icon icon-only" title="Filter">${icon('settings')}</button>
         </div>
       </footer>
 
@@ -246,9 +248,9 @@ class SharedToolbar extends HTMLElement {
               <div class="trait-xp-header">
                 <span class="trait-xp-title">XP-status</span>
                 <div class="xp-control trait-xp-buttons">
-                  <button id="xpMinus" class="char-btn icon" type="button" aria-label="Minska XP" title="Minska XP">➖</button>
+                  <button id="xpMinus" class="char-btn icon icon-only" type="button" aria-label="Minska XP" title="Minska XP">${icon('minus')}</button>
                   <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-                  <button id="xpPlus" class="char-btn icon" type="button" aria-label="Öka XP" title="Öka XP">➕</button>
+                  <button id="xpPlus" class="char-btn icon icon-only" type="button" aria-label="Öka XP" title="Öka XP">${icon('plus')}</button>
                 </div>
               </div>
               <div class="trait-xp-row">
@@ -347,7 +349,7 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
                     </span>
-                    <button id="partySmith" class="party-toggle">⚒️</button>
+                    <button id="partySmith" class="party-toggle icon-only">${icon('smithing')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
@@ -411,7 +413,7 @@ class SharedToolbar extends HTMLElement {
                   <span class="toggle-desc">
                     <span class="toggle-question">Behöver du hjälp?</span>
                   </span>
-                  <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
+                  <button id="infoToggle" class="party-toggle icon-only" title="Visa hjälp">${icon('info')}</button>
                 </li>
               </ul>
             </div>
@@ -437,7 +439,7 @@ class SharedToolbar extends HTMLElement {
             <label for="customType">Typ</label>
             <div class="custom-type-row">
               <select id="customType"></select>
-              <button id="customTypeAdd" class="char-btn" type="button" aria-label="Lägg till typ" title="Lägg till typ">➕</button>
+              <button id="customTypeAdd" class="char-btn icon icon-only" type="button" aria-label="Lägg till typ" title="Lägg till typ">${icon('plus')}</button>
             </div>
             <div id="customTypeTags" class="tags"></div>
           </div>
@@ -472,7 +474,7 @@ class SharedToolbar extends HTMLElement {
           <div id="customPowerFields" class="filter-group" style="display:none">
             <label>Förmågor</label>
             <div id="customPowerList"></div>
-            <button id="customPowerAdd" class="char-btn" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">➕</button>
+            <button id="customPowerAdd" class="char-btn icon icon-only" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">${icon('plus')}</button>
           </div>
           <div id="customBoundFields" class="filter-group" style="display:none">
             <label for="customBoundType">Bundet till</label>
@@ -777,7 +779,7 @@ class SharedToolbar extends HTMLElement {
               <label for="newFolderName">+ Ny mapp:</label>
               <div class="inline-controls">
                 <input id="newFolderName" placeholder="Mappnamn">
-                <button id="addFolderBtn" class="char-btn" aria-label="Lägg till mapp" title="Lägg till mapp">➕</button>
+                <button id="addFolderBtn" class="char-btn icon icon-only" aria-label="Lägg till mapp" title="Lägg till mapp">${icon('plus')}</button>
               </div>
             </div>
           </section>
