@@ -1575,25 +1575,24 @@ input:focus, select:focus, textarea:focus {
 
 @media (max-width: 680px) {
   .entry-row-header {
-    display: flex;
-    align-items: center;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    align-items: start;
     gap: .4rem;
-    flex-wrap: nowrap;
   }
 
   .entry-row-header .entry-header-main {
-    flex: 1 1 auto;
     min-width: 0;
   }
 
   .entry-row-header .entry-header-xp {
-    margin-left: auto;
-    flex: 0 0 auto;
+    margin-left: 0;
+    justify-self: end;
   }
 
   .entry-row-header .entry-header-actions {
-    flex: 0 0 auto;
-    justify-content: flex-end;
+    justify-self: end;
+    align-self: start;
   }
 
   .entry-tags {
