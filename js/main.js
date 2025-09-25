@@ -219,6 +219,24 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
   const norm = s => searchNormalize(String(s||'').toLowerCase());
 
   // Hjälpare för att highlighta ett element i toolbarens shadow DOM
+  const highlightTimers = new WeakMap();
+
+  function scheduleHighlight(el) {
+    const prev = highlightTimers.get(el);
+    if (prev) {
+      if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(prev);
+      else clearTimeout(prev);
+    }
+    const schedule = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (cb) => setTimeout(cb, 16);
+    const rafId = schedule(() => {
+      el.classList.add('focus-highlight');
+      highlightTimers.delete(el);
+    });
+    highlightTimers.set(el, rafId);
+  }
+
   function highlightToolbarEl(sel, panelId){
     try {
       if (!bar || !bar.shadowRoot) return false;
@@ -233,30 +251,37 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
         el = document.querySelector(sel);
       }
       // Collapse all cards except the one containing the target element (within its panel)
-      const isInToolbar = !!(el && bar.shadowRoot && bar.shadowRoot.contains(el));
+      let collapseStateChanged = false;
       if (panelId && el) {
         const panel = bar.shadowRoot.getElementById(panelId);
         const card = el.closest('.card');
         if (panel && card) {
-          const allCards = panel.querySelectorAll('.card');
-          allCards.forEach(c => {
+          const cards = panel.querySelectorAll('.card');
+          cards.forEach(c => {
             const cid = c.id || '';
             const isAlwaysOpen = cid === 'searchFiltersCard' || c.classList.contains('help-card');
-            if (isAlwaysOpen || c === card) c.classList.remove('compact');
-            else c.classList.add('compact');
-            window.entryCardFactory?.syncCollapse?.(c);
+            const isTarget = c === card;
+            const shouldCompact = !isTarget && !isAlwaysOpen;
+            const currentlyCompact = c.classList.contains('compact');
+            if (shouldCompact && !currentlyCompact) {
+              c.classList.add('compact');
+              window.entryCardFactory?.syncCollapse?.(c);
+              collapseStateChanged = true;
+            } else if (!shouldCompact && currentlyCompact) {
+              c.classList.remove('compact');
+              window.entryCardFactory?.syncCollapse?.(c);
+              collapseStateChanged = true;
+            }
           });
-          if (panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
-            bar.updateFilterCollapseBtn();
-          }
         }
       }
       if (!el) return false;
       // Blink-animera, fokusera och scrolla in elementet
       el.classList.remove('focus-highlight');
-      // Force reflow to restart animation
-      void el.offsetWidth;
-      el.classList.add('focus-highlight');
+      scheduleHighlight(el);
+      if (collapseStateChanged && panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
+        bar.updateFilterCollapseBtn();
+      }
       // Global CSS now styles .focus-highlight consistently across toolbar and page
       try { el.focus?.(); } catch {}
       try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
