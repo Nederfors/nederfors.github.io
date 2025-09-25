@@ -18,16 +18,16 @@
   --subtxt:      #BCAE9E;
 
   /* Acent / highlights */
-  --accent:      linear-gradient(135deg, #B97A52, #6A443B);
+  --accent:      #B97A52;
 
   /* Taggar, chips, småkontroller */
-  --tag-interactive-bg:     linear-gradient(135deg, #4A3A2F, #352920);
+  --tag-interactive-bg:     #4A3A2F;
   --tag-interactive-border: #6A443B;
   --tag-interactive-text:   #EBDDC8;
   --entry-tag-row:          1.35rem;
 
   /* XP / status-piller */
-  --xp-pill-bg:             linear-gradient(135deg, #3A3029, #2A241F);
+  --xp-pill-bg:             #3A3029;
   --xp-pill-border:         #5A4A40;
   --xp-pill-text:           #F3E8D8;
 
@@ -39,7 +39,7 @@
   --negative:    #8B4513;   /* bränd sienna */
 
   /* Fara / CTA */
-  --danger:      linear-gradient(135deg, #ee6b61, #f64141);
+  --danger:      #ee6b61;
   --danger-bg:   #3B1C1C;
 
   /* Skugga och kontroller */
