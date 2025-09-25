@@ -1102,6 +1102,7 @@ input:focus, select:focus, textarea:focus {
   margin-right: auto;
   display: flex;
   align-items: center;
+  max-width: 100%;
 }
 
 .entry-row-actions .entry-action-controls {
@@ -1116,13 +1117,15 @@ input:focus, select:focus, textarea:focus {
 
 .entry-row-actions .entry-action-qualities .tags {
   display: flex;
+  flex: 1 1 auto;
   flex-wrap: nowrap;
   align-items: center;
-  gap: .25rem;
+  max-width: 100%;
+  gap: .35em;
   font-size: clamp(.55rem, .52rem + .18vw, .72rem);
   line-height: 1.1;
   white-space: nowrap;
-  overflow-x: auto;
+  overflow: hidden;
   scrollbar-width: none;
 }
 
