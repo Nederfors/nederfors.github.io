@@ -1160,9 +1160,51 @@ class SharedToolbar extends HTMLElement {
   }
 
   handleOutsideClick(e) {
+    const buildFallbackPath = start => {
+      if (!start) return [];
+      const path = [];
+      let current = start;
+      const seen = new Set();
+
+      while (current && !seen.has(current)) {
+        path.push(current);
+        seen.add(current);
+
+        if (current === document) {
+          path.push(window);
+          break;
+        }
+
+        if (current instanceof Element) {
+          const slot = current.assignedSlot;
+          if (slot) {
+            current = slot;
+            continue;
+          }
+        }
+
+        if (current.parentNode) {
+          current = current.parentNode;
+          continue;
+        }
+
+        if (current.host) {
+          current = current.host;
+          continue;
+        }
+
+        if (current.defaultView) {
+          path.push(current.defaultView);
+        }
+        break;
+      }
+
+      return path;
+    };
+
     const rawPath = typeof e.composedPath === 'function'
       ? e.composedPath()
-      : (e.path || []);
+      : (e.path || buildFallbackPath(e.target));
     const path = Array.isArray(rawPath) ? [...rawPath] : [];
     if (!path.length && e.target) path.push(e.target);
 
