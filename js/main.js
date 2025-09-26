@@ -253,7 +253,6 @@ const dom  = {
   moneySetBtn: getDom('moneySetBtn'),
   moneyAddBtn: getDom('moneyAddBtn'),
   collapseAllBtn: getDom('collapseAllInv'),
-  dragToggle: getDom('dragToggle'),
   unusedOut: getDom('unusedOut'),
 
   /* smith filter */
@@ -433,7 +432,6 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: 'filterPanel', emoji: '💸', syn: ['multiplicera pris','pris'] },
     { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: 'filterPanel', emoji: 'x²', syn: ['antal','lägg till antal'] },
     { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: 'filterPanel', emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
-    { id: 'inv-drag',    label: 'Dra & Släpp',          sel: '#dragToggle',     panel: 'filterPanel', emoji: '🔀', syn: ['dra och släpp','drag','drag & drop'] },
     { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: 'filterPanel', emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
     { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: 'filterPanel', emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
 
