@@ -466,6 +466,17 @@
     const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list) : 'Kvick';
     const kvickForDef = vals[defTrait];
     const defenseList = window.calcDefense ? calcDefense(kvickForDef) : [];
+    const defenseValues = (Array.isArray(defenseList) ? defenseList : [])
+      .map(def => {
+        if (!def || typeof def !== 'object') return '';
+        const parts = [];
+        const name = typeof def.name === 'string' ? def.name.trim() : '';
+        const value = def.value ?? '';
+        if (name) parts.push(`${name}:`);
+        if (value !== '' && value !== undefined) parts.push(String(value));
+        return parts.join(' ').trim();
+      })
+      .filter(Boolean);
 
     const cond = [];
     if(storeHelper.abilityLevel(list,'Fint') >= 1){
@@ -571,8 +582,7 @@
         { label: 'Försvarstärning', value: defTrait },
         {
           label: 'Försvarsvärden',
-          layout: 'block',
-          values: (defenseList || []).map(def => `${def.name ? `${def.name}: ` : ''}${def.value}`)
+          value: defenseValues.length ? defenseValues.join(', ') : '–'
         },
         { label: 'Tålighet', value: `${tal}` },
         { label: 'Smärtgräns', value: `${pain}` },
