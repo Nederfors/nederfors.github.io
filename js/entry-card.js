@@ -50,7 +50,7 @@
       dynamic.push(part);
     });
 
-    const standardOrder = ['remove', 'minus', 'plus', 'multi'];
+    const standardOrder = ['remove', 'multi', 'minus', 'plus'];
     const standard = standardOrder.reduce((acc, key) => acc.concat(standardBuckets[key]), []);
     return {
       dynamic,

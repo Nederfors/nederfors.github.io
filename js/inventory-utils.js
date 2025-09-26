@@ -3421,6 +3421,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     openVehicleRemovePopup,
     openRowPricePopup,
     openSaveFreePopup,
+    openBuyMultiplePopup,
     massFreeAndSave,
     recalcArtifactEffects,
     addWellEquippedItems,

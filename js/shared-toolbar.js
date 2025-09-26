@@ -506,8 +506,8 @@ class SharedToolbar extends HTMLElement {
           <p id="buyMultipleItemName" class="popup-item-name" hidden></p>
           <input id="buyMultipleInput" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
           <div class="confirm-row">
-            <button id="buyMultipleConfirm" class="char-btn">Lägg till</button>
             <button id="buyMultipleCancel" class="char-btn danger">Avbryt</button>
+            <button id="buyMultipleConfirm" class="char-btn">Lägg till</button>
           </div>
         </div>
       </div>
