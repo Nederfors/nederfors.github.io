@@ -259,17 +259,16 @@
       return `
       <div class="trait" data-key="${k}">
         <div class="trait-header">
-          <div class="trait-heading">
-            <div class="trait-name">${k}</div>
-            ${countMarkup}
-          </div>
-          <div class="trait-value">${val}</div>
+          <div class="trait-label">[${k}: ${val}]</div>
         </div>
         <div class="trait-controls" role="group" aria-label="Justera ${k}">
           <button class="trait-btn" data-d="-5">−5</button>
           <button class="trait-btn" data-d="-1">−1</button>
           <button class="trait-btn" data-d="1">+1</button>
           <button class="trait-btn" data-d="5">+5</button>
+        </div>
+        <div class="trait-count-row">
+          ${countMarkup}
         </div>
         ${extrasHtml}
       </div>`;
