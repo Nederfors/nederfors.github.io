@@ -34,6 +34,15 @@
     scrollLocked = false;
   }
 
+  function updateScrollLock() {
+    const requiresLock = overlayStack.some(el => el && !el.classList.contains('offcanvas'));
+    if (requiresLock) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+  }
+
   const overlayTargets = new Set();
   const overlayObserver = new MutationObserver(muts => {
     for (const m of muts) {
@@ -54,11 +63,7 @@
         }
       }
     }
-    if (overlayStack.length > 0) {
-      lockScroll();
-    } else {
-      unlockScroll();
-    }
+    updateScrollLock();
   });
 
   const OVERLAY_SELECTOR = '.popup, .offcanvas';
