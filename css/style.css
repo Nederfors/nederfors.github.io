@@ -1908,6 +1908,26 @@ select.level {
   gap: .6rem;
 }
 
+.traits-total-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .55rem;
+  margin: 0 auto;
+}
+
+.traits-total-row .traits-total {
+  margin: 0;
+}
+
+.traits-reset-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  padding: .45rem;
+  border-radius: .55rem;
+  flex-shrink: 0;
+}
+
 .traits-total {
   margin: 0 auto;
   font-weight: 600;
