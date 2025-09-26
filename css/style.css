@@ -1664,10 +1664,6 @@ input:focus, select:focus, textarea:focus {
   min-width: 0;
 }
 
-/* Badge för inventarie­knapp */
-#invBadge { background: var(--danger); border-radius: 50%;
-            padding: 0 .45rem; font-size: .75rem; margin-left: .25rem; }
-
 /* animation when inventory items change */
 .inv-flash { animation: invFlash .6s ease-out; }
 .rm-flash { animation: rmFlash .6s ease-out; }
@@ -1678,14 +1674,6 @@ input:focus, select:focus, textarea:focus {
 @keyframes rmFlash {
   0% { background: rgba(255, 61, 61, 0.1); }
   100% { background: var(--card); }
-}
-
-/* pulse effect for inventory badge */
-#invBadge.badge-pulse { animation: invBadgePulse .6s ease; }
-@keyframes invBadgePulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.3); }
-  100% { transform: scale(1); }
 }
 
 /* XP-räknare i verktygsrad */

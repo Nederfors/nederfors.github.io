@@ -2589,9 +2589,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-    dom.invBadge.textContent = flatInv.reduce((s, r) => s + r.qty, 0);
-    dom.invBadge.classList.add('badge-pulse');
-    setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
     dom.unusedOut = getEl('unusedOut');
     dom.dragToggle = getEl('dragToggle');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
