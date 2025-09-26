@@ -46,10 +46,6 @@
     }
     return factory(options);
   };
-  let dragIdx = null;
-  let dragEl = null;
-  let dragEnabled = false;
-
   function getCatStateKey() {
     const charId = store?.current || 'default';
     return `${INV_CAT_STATE_PREFIX}${charId}`;
@@ -2205,7 +2201,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const vehicleButtons = vehicles
       .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`);
     const trailingFunctionButtons = [
-      '<button id="dragToggle" class="char-btn">Dra & Släpp</button>',
       '<button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>',
       '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
     ];
@@ -2593,7 +2588,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     dom.invBadge.classList.add('badge-pulse');
     setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
     dom.unusedOut = getEl('unusedOut');
-    dom.dragToggle = getEl('dragToggle');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
     bindInv();
     bindMoney();
@@ -2712,15 +2706,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
         }
       });
-    }
-    if (dom.dragToggle) {
-      dom.dragToggle.classList.toggle('danger', dragEnabled);
-      if (listEl) listEl.classList.toggle('drag-mode', dragEnabled);
-      dom.dragToggle.onclick = () => {
-        dragEnabled = !dragEnabled;
-        dom.dragToggle.classList.toggle('danger', dragEnabled);
-        if (listEl) listEl.classList.toggle('drag-mode', dragEnabled);
-      };
     }
     const getRowInfo = (inv, li) => {
       const idx = Number(li.dataset.idx);
@@ -3267,82 +3252,6 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       });
     }
 
-    if (listEl) {
-      listEl.removeEventListener('pointerdown', handlePointerDown);
-      listEl.addEventListener('pointerdown', handlePointerDown);
-    }
-  }
-
-  function getDragAfterElement(container, y) {
-    const els = [...container.children]
-      .filter(child => child.matches('li[data-idx]:not(.dragging)'));
-    return els.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-      return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-  }
-
-  function handlePointerDown(e) {
-    if (!dragEnabled) return;
-    const li = e.target.closest('li[data-idx]');
-    if (!li || e.target.closest('button')) return;
-
-    const container = li.parentElement;
-    if (!(container instanceof HTMLElement)) return;
-    if (!container.closest('#invList')) return;
-
-    let pressTimer;
-
-    const onMove = ev => {
-      if (!dragEl) return;
-      ev.preventDefault();
-      const after = getDragAfterElement(container, ev.clientY);
-      if (after == null) {
-        container.appendChild(dragEl);
-      } else {
-        container.insertBefore(dragEl, after);
-      }
-    };
-
-    const startDrag = () => {
-      dragIdx = Number(li.dataset.idx);
-      dragEl = li;
-      li.classList.add('dragging');
-      li.setPointerCapture(e.pointerId);
-      window.addEventListener('pointermove', onMove);
-    };
-
-    const onUp = ev => {
-      clearTimeout(pressTimer);
-      if (!dragEl) {
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-        return;
-      }
-      onMove(ev);
-      dragEl.classList.remove('dragging');
-      dragEl.releasePointerCapture(ev.pointerId);
-      const inv = storeHelper.getInventory(store);
-      if (dragIdx !== null && inv) {
-        const items = [...dom.invList.querySelectorAll('li[data-idx]')];
-        const dropIdx = items.indexOf(dragEl);
-        const [moved] = inv.splice(dragIdx, 1);
-        inv.splice(dropIdx, 0, moved);
-        saveInventory(inv);
-        renderInventory();
-      }
-      dragIdx = null;
-      dragEl = null;
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-    };
-
-    // Require a slightly longer press before drag to avoid
-    // accidental drags when scrolling on touch devices
-    pressTimer = setTimeout(startDrag, 400);
-
-    window.addEventListener('pointerup', onUp);
   }
 
   function bindMoney() {
