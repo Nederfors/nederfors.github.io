@@ -2244,11 +2244,20 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         }
       };
 
-      dom.invFormal.addEventListener('entry-card-toggle', e => {
-        updateCollapseBtnState();
-        const expanded = Boolean(e.detail?.expanded);
-        localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
-      });
+      if (!dom.invFormal.dataset.toggleBound) {
+        dom.invFormal.addEventListener('entry-card-toggle', e => {
+          updateCollapseBtnState();
+          const card = e.detail?.card;
+          if (!card) return;
+          const expanded = Boolean(e.detail?.expanded);
+          if (card.dataset.special === '__info__') {
+            localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+          } else if (card.dataset.special === '__invfunc__') {
+            localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
+          }
+        });
+        dom.invFormal.dataset.toggleBound = '1';
+      }
     }
 
     const allInv = storeHelper.getInventory(store);
@@ -2386,11 +2395,16 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
     ];
     const allFunctionButtons = [...baseFunctionButtons, ...vehicleButtons, ...trailingFunctionButtons];
-    const invFunctionsContainer = getEl('filterInventoryFunctionsInner');
-    if (invFunctionsContainer) {
-      invFunctionsContainer.innerHTML = `<div class="inv-buttons">${allFunctionButtons.join('')}</div>`;
-      if (localStorage.getItem(INV_TOOLS_KEY) === null) localStorage.setItem(INV_TOOLS_KEY, '1');
-    }
+    const functionsState = localStorage.getItem(INV_TOOLS_KEY);
+    const functionsOpen = functionsState === null ? true : functionsState === '1';
+    if (functionsState === null) localStorage.setItem(INV_TOOLS_KEY, '1');
+    const functionsCard = createEntryCard({
+      compact: !functionsOpen,
+      dataset: { special: '__invfunc__' },
+      nameHtml: 'Inventarie 💰',
+      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div></div>`,
+      collapsible: true
+    });
 
     const infoKey  = '__info__';
     const infoState = localStorage.getItem(INV_INFO_KEY);
@@ -2699,6 +2713,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     };
     if (dom.invFormal) {
       dom.invFormal.innerHTML = '';
+      dom.invFormal.appendChild(functionsCard);
       dom.invFormal.appendChild(infoCard);
     }
 
@@ -2865,7 +2880,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         cards.forEach(li => {
           li.classList.toggle('compact', anyOpen);
           window.entryCardFactory?.syncCollapse?.(li);
-          if (li.dataset.special === '__functions__') {
+          if (li.dataset.special === '__invfunc__') {
             localStorage.setItem(INV_TOOLS_KEY, anyOpen ? '0' : '1');
           } else if (li.dataset.special === '__info__') {
             localStorage.setItem(INV_INFO_KEY, anyOpen ? '0' : '1');
@@ -2880,7 +2895,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const card = detail.card;
         if (!card) return;
         const expanded = Boolean(detail.expanded);
-        if (card.dataset.special === '__functions__') {
+        if (card.dataset.special === '__invfunc__') {
           localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
         } else if (card.dataset.special === '__info__') {
           localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
