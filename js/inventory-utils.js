@@ -1180,7 +1180,56 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx }) {
+  async function buildInventoryRow({ entry, list } = {}) {
+    if (!entry) return null;
+    const row = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
+    const tagTyp = entry.taggar?.typ || [];
+    const explode = typeof window.explodeTags === 'function' ? window.explodeTags : () => [];
+    const curList = Array.isArray(list) ? list : storeHelper.getCurrentList(store);
+    if (tagTyp.includes('L\u00e4gre Artefakt')) {
+      const reqYrken = explode(entry.taggar?.ark_trad);
+      if (reqYrken.length) {
+        const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+        const skillArt = storeHelper.abilityLevel(curList, 'Artefaktmakande');
+        const artLevel = Math.max(partyArt, skillArt);
+        const lvlName = Object.keys(entry.niv\u00e5er || {}).find(l => l) || '';
+        const itemLevel = LEVEL_IDX[lvlName] || 0;
+        const hasYrke = reqYrken.some(req => curList.some(it => {
+          const nameTags = explode([it.namn]);
+          const isJob = typeof window.isYrke === 'function' ? window.isYrke(it) : false;
+          const isElite = typeof window.isElityrke === 'function' ? window.isElityrke(it) : false;
+          return (isJob || isElite) && nameTags.includes(req);
+        }));
+        let allowPurchase = hasYrke;
+        if (!allowPurchase && artLevel >= itemLevel) {
+          allowPurchase = true;
+        }
+        if (!allowPurchase) {
+          const reqTxt = reqYrken.join(', ');
+          const msg = `Du har inte r\u00e4tt yrke (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${entry.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
+          if (typeof openDialog === 'function') {
+            const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
+            if (!ok) return null;
+          } else {
+            return null;
+          }
+          row.priceMult = 10;
+        }
+      }
+    }
+    if (tagTyp.includes('Artefakt')) {
+      if (typeof selectArtifactPayment === 'function') {
+        const val = await selectArtifactPayment();
+        if (val === null) return null;
+        if (val) row.artifactEffect = val;
+      }
+    } else if (entry.artifactEffect) {
+      row.artifactEffect = entry.artifactEffect;
+    }
+    return row;
+  }
+
+  function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx, onCancel: cancelCb, onConfirm: confirmCb, isNewRow = false }) {
     const root = getToolbarRoot();
     if (!root) return;
     const pop     = root.getElementById('buyMultiplePopup');
@@ -1188,8 +1237,8 @@
     const labelEl = root.getElementById('buyMultipleItemName');
     const input   = root.getElementById('buyMultipleInput');
     const confirm = root.getElementById('buyMultipleConfirm');
-    const cancel  = root.getElementById('buyMultipleCancel');
-    if (!pop || !input || !confirm || !cancel) return;
+    const cancelBtn  = root.getElementById('buyMultipleCancel');
+    if (!pop || !input || !confirm || !cancelBtn) return;
 
     const nameMap = makeNameMap(flattenInventory(inv));
     const displayName = nameMap.get(row) || row.name || entry?.namn || '';
@@ -1203,16 +1252,23 @@
     if (inner) inner.scrollTop = 0;
     setTimeout(() => input.focus(), 50);
 
-    const close = () => {
+    let closed = false;
+    const close = (reason = 'cancel') => {
+      if (closed) return;
+      closed = true;
       pop.classList.remove('open');
       confirm.removeEventListener('click', apply);
-      cancel.removeEventListener('click', close);
+      cancelBtn.removeEventListener('click', handleCancel);
       pop.removeEventListener('click', onOutside);
       input.removeEventListener('keydown', onKey);
       input.value = '';
+      if (reason !== 'confirm' && typeof cancelCb === 'function') {
+        cancelCb();
+      }
     };
 
     const highlight = targetIdx => {
+      if (!li) return;
       const parentIdx = Number(li?.dataset.parent);
       const baseName = row.name || entry?.namn || '';
       if (!baseName) return;
@@ -1241,25 +1297,51 @@
 
       let highlightIdx = idx;
       if (indiv && parentArr) {
-        for (let i = 0; i < qty; i++) {
-          const clone = JSON.parse(JSON.stringify(row));
-          clone.qty = 1;
-          parentArr.push(clone);
+        if (isNewRow) {
+          let baseIndex = parentArr.indexOf(row);
+          if (baseIndex < 0) {
+            parentArr.push(row);
+            baseIndex = parentArr.length - 1;
+          }
+          if (qty >= 1) {
+            row.qty = 1;
+          }
+          highlightIdx = baseIndex;
+          for (let i = 1; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            parentArr.push(clone);
+            highlightIdx = parentArr.length - 1;
+          }
+        } else {
+          for (let i = 0; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            parentArr.push(clone);
+          }
+          highlightIdx = parentArr.length - 1;
         }
-        highlightIdx = parentArr.length - 1;
       } else {
-        row.qty = (Number(row.qty) || 0) + qty;
+        if (isNewRow) {
+          row.qty = qty;
+          if (parentArr) highlightIdx = parentArr.indexOf(row);
+        } else {
+          row.qty = (Number(row.qty) || 0) + qty;
+        }
       }
 
       saveInventory(inv);
       renderInventory();
-      close();
+      close('confirm');
+      if (typeof confirmCb === 'function') {
+        confirmCb({ qty, highlightIdx, indiv, isNewRow });
+      }
       highlight(highlightIdx);
     };
 
     const onOutside = e => {
       if (!inner || inner.contains(e.target)) return;
-      close();
+      close('cancel');
     };
 
     const onKey = e => {
@@ -1268,12 +1350,13 @@
         apply();
       } else if (e.key === 'Escape') {
         e.preventDefault();
-        close();
+        close('cancel');
       }
     };
 
     confirm.addEventListener('click', apply);
-    cancel.addEventListener('click', close);
+    const handleCancel = () => close('cancel');
+    cancelBtn.addEventListener('click', handleCancel);
     pop.addEventListener('click', onOutside);
     input.addEventListener('keydown', onKey);
   }
@@ -3421,6 +3504,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     openVehicleRemovePopup,
     openRowPricePopup,
     openSaveFreePopup,
+    buildInventoryRow,
     openBuyMultiplePopup,
     massFreeAndSave,
     recalcArtifactEffects,
