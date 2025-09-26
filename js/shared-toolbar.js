@@ -237,7 +237,7 @@ class SharedToolbar extends HTMLElement {
           <section class="summary-section trait-xp-section">
             <div id="xpSummary" class="trait-xp-summary">
               <div class="trait-xp-header">
-                <span class="trait-xp-title">XP-status</span>
+                <span class="trait-xp-title">Erfarenhet</span>
                 <div class="xp-control trait-xp-buttons">
                   <button id="xpMinus" class="char-btn icon icon-only" type="button" aria-label="Minska XP" title="Minska XP">${icon('minus')}</button>
                   <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
