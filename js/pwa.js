@@ -146,29 +146,108 @@ if ('serviceWorker' in navigator) {
       }
     });
 
-  const triggerManualUpdate = async () => {
+  const postMessageToController = (message, { timeout = 15000 } = {}) =>
+    new Promise(resolve => {
+      if (typeof MessageChannel === 'undefined') {
+        resolve({ ok: false, reason: 'unsupported' });
+        return;
+      }
+
+      const controller = navigator.serviceWorker.controller;
+      if (!controller) {
+        resolve({ ok: false, reason: 'no-controller' });
+        return;
+      }
+
+      const channel = new MessageChannel();
+      let settled = false;
+      const finish = result => {
+        if (settled) return;
+        settled = true;
+        clearTimeout(timeoutId);
+        try {
+          channel.port1.close();
+        } catch (error) {
+          // Ignore close errors.
+        }
+        resolve(result);
+      };
+
+      const timeoutId = setTimeout(() => {
+        finish({ ok: false, reason: 'timeout' });
+      }, timeout);
+
+      channel.port1.onmessage = event => {
+        finish(event.data);
+      };
+
+      try {
+        controller.postMessage(message, [channel.port2]);
+      } catch (error) {
+        finish({
+          ok: false,
+          error: error instanceof Error ? error.message : String(error)
+        });
+      }
+    });
+
+  const requestCacheRefresh = async () => {
+    const response = await postMessageToController({ type: 'FORCE_REFRESH_CACHE' });
+    if (response?.ok) {
+      return { status: 'refreshed' };
+    }
+
+    if (response?.reason === 'no-controller' || response?.reason === 'unsupported') {
+      return { status: 'unavailable' };
+    }
+
+    const errorMessage = response?.error || response?.reason || 'unknown';
+    return { status: 'failed', error: errorMessage };
+  };
+
+  const triggerManualUpdate = async options => {
+    const { forceReload } = options || {};
     try {
       const registration = latestRegistration || (await navigator.serviceWorker.getRegistration());
       if (!registration) {
-        return { status: 'missing' };
+        const result = { status: 'missing' };
+        if (forceReload) {
+          result.cacheRefresh = { status: 'unavailable' };
+        }
+        return result;
       }
       latestRegistration = registration;
 
+      let status;
       if (registration.waiting) {
         applyWaitingWorker(registration);
-        return { status: 'applied' };
+        status = 'applied';
+      } else {
+        await registration.update();
+        const waiting = await waitForInstallingWorker(registration);
+        if (waiting) {
+          applyWaitingWorker(registration);
+          status = 'applied';
+        } else {
+          status = 'up-to-date';
+        }
       }
 
-      await registration.update();
-      const waiting = await waitForInstallingWorker(registration);
-      if (waiting) {
-        applyWaitingWorker(registration);
-        return { status: 'applied' };
+      const result = { status };
+      if (forceReload) {
+        result.cacheRefresh = await requestCacheRefresh();
       }
 
-      return { status: 'up-to-date' };
+      return result;
     } catch (error) {
-      return { status: 'error', error };
+      const result = { status: 'error', error };
+      if (forceReload) {
+        result.cacheRefresh = {
+          status: 'failed',
+          error: error instanceof Error ? error.message : String(error)
+        };
+      }
+      return result;
     }
   };
 

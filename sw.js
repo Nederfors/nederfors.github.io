@@ -80,34 +80,53 @@ const URLS_TO_CACHE = [
   'data/yrke.json'
 ];
 
+async function precacheResources(cache) {
+  const precacheRequests = URLS_TO_CACHE
+    .filter(Boolean)
+    .map(url => new Request(url, { cache: 'reload' }));
+  await cache.addAll(precacheRequests);
+
+  const response = await cache.match('data/pdf-list.json');
+  if (!response) {
+    return;
+  }
+
+  try {
+    const pdfs = await response.json();
+    const fileRequests = [];
+    (Array.isArray(pdfs) ? pdfs : []).forEach(collection => {
+      if (!collection || !Array.isArray(collection.items)) return;
+      collection.items.forEach(item => {
+        if (!item || !item.file) return;
+        fileRequests.push(new Request(item.file, { cache: 'reload' }));
+      });
+    });
+    if (fileRequests.length) {
+      await cache.addAll(fileRequests);
+    }
+  } catch (error) {
+    // Ignore invalid PDF list entries; they will be fetched on demand.
+  }
+}
+
+async function forceRefreshCaches() {
+  const keys = await caches.keys();
+  await Promise.all(
+    keys
+      .filter(key => key !== CACHE_NAME)
+      .map(key => caches.delete(key))
+  );
+
+  await caches.delete(CACHE_NAME);
+  const cache = await caches.open(CACHE_NAME);
+  await precacheResources(cache);
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      const precacheRequests = URLS_TO_CACHE
-        .filter(Boolean)
-        .map(url => new Request(url, { cache: 'reload' }));
-      await cache.addAll(precacheRequests);
-
-      const response = await cache.match('data/pdf-list.json');
-      if (response) {
-        try {
-          const pdfs = await response.json();
-          const fileRequests = [];
-          (Array.isArray(pdfs) ? pdfs : []).forEach(collection => {
-            if (!collection || !Array.isArray(collection.items)) return;
-            collection.items.forEach(item => {
-              if (!item || !item.file) return;
-              fileRequests.push(new Request(item.file, { cache: 'reload' }));
-            });
-          });
-          if (fileRequests.length) {
-            await cache.addAll(fileRequests);
-          }
-        } catch (error) {
-          // Ignore invalid PDF list entries; they will be fetched on demand.
-        }
-      }
+      await precacheResources(cache);
     })()
   );
 });
@@ -211,5 +230,32 @@ self.addEventListener('message', event => {
   if (!event.data) return;
   if (event.data === 'SKIP_WAITING' || (event.data.type && event.data.type === 'SKIP_WAITING')) {
     self.skipWaiting();
+    return;
+  }
+
+  if (event.data.type === 'FORCE_REFRESH_CACHE') {
+    const respond = message => {
+      if (event.ports && event.ports[0]) {
+        try {
+          event.ports[0].postMessage(message);
+        } catch (error) {
+          // Unable to communicate back to the page; ignore.
+        }
+      }
+    };
+
+    event.waitUntil(
+      (async () => {
+        try {
+          await forceRefreshCaches();
+          respond({ ok: true });
+        } catch (error) {
+          respond({
+            ok: false,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      })()
+    );
   }
 });
