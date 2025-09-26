@@ -396,6 +396,10 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
         }
       }
       if (!el) return false;
+      const card = el.closest('li.entry-card');
+      if (card && card.dataset.collapsible === '1' && card.classList.contains('compact')) {
+        window.entryCardFactory?.toggle?.(card, true);
+      }
       // Blink-animera, fokusera och scrolla in elementet
       el.classList.remove('focus-highlight');
       scheduleHighlight(el);
@@ -437,13 +441,13 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
     // Inventarie → Verktyg 🧰
-    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: 'filterPanel', emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
-    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: 'filterPanel', emoji: '💰', syn: ['pengar','hantera pengar','money'] },
-    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: 'filterPanel', emoji: '💸', syn: ['multiplicera pris','pris'] },
-    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: 'filterPanel', emoji: 'x²', syn: ['antal','lägg till antal'] },
-    { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: 'filterPanel', emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
-    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: 'filterPanel', emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
-    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: 'filterPanel', emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
+    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: null, emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
+    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: null, emoji: '💰', syn: ['pengar','hantera pengar','money'] },
+    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: null, emoji: '💸', syn: ['multiplicera pris','pris'] },
+    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: null, emoji: 'x²', syn: ['antal','lägg till antal'] },
+    { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: null, emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
+    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: null, emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
+    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: null, emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
 
     // Verktyg inne i Filter → Verktyg
     { id: 'new-character',   label: 'Ny rollperson',       sel: '#newCharBtn',      panel: 'filterPanel', emoji: '➕',
@@ -490,6 +494,11 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     const cmd = UI_CMDS.find(c => c.id === id);
     if (!cmd) return false;
     if (cmd.id === 'open-inventory' && ROLE !== 'inventory') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'inventory.html'; } catch {}
+      return true;
+    }
+    if (cmd.id.startsWith('inv-') && ROLE !== 'inventory') {
       try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
       try { window.location.href = 'inventory.html'; } catch {}
       return true;

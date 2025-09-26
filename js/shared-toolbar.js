@@ -7,10 +7,8 @@
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
-const FILTER_INV_FUNCS_KEY = 'invToolsOpen';
 const FILTER_CARD_KEY_MAP = Object.freeze({
   filterFormalCard: FILTER_TOOLS_KEY,
-  filterInventoryFunctions: FILTER_INV_FUNCS_KEY,
   filterSettingsCard: FILTER_SETTINGS_KEY
 });
 
@@ -301,12 +299,6 @@ class SharedToolbar extends HTMLElement {
               <div class="char-btn-row">
                 <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
               </div>
-            </div>
-          </li>
-          <li class="card" data-special="__invfunc__" id="filterInventoryFunctions">
-            <div class="card-title"><span><span class="collapse-btn"></span>Inventarie 💰</span></div>
-            <div class="card-desc">
-              <div class="inv-buttons" id="filterInventoryFunctionsInner"></div>
             </div>
           </li>
           <li class="card" data-special="__formal__" id="filterSettingsCard">
@@ -1049,9 +1041,8 @@ class SharedToolbar extends HTMLElement {
 
   restoreFilterCollapse() {
     const cards = [
-      { el: this.shadowRoot.getElementById('filterFormalCard'),    key: FILTER_TOOLS_KEY },
-      { el: this.shadowRoot.getElementById('filterInventoryFunctions'), key: FILTER_INV_FUNCS_KEY },
-      { el: this.shadowRoot.getElementById('filterSettingsCard'),  key: FILTER_SETTINGS_KEY }
+      { el: this.shadowRoot.getElementById('filterFormalCard'), key: FILTER_TOOLS_KEY },
+      { el: this.shadowRoot.getElementById('filterSettingsCard'), key: FILTER_SETTINGS_KEY }
     ];
     cards.forEach(({ el, key }) => {
       if (!el) return;
