@@ -510,7 +510,18 @@ function initIndex() {
         const cmds = window.getUICommandSuggestions(q) || [];
         if (cmds.length) {
           const escTxt = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\"/g,'&quot;');
-          uiHtml = cmds.map((c,i)=>`<div class="item" data-ui="${escTxt(c.id)}" data-idx="ui-${i}">${escTxt((c.emoji||'') + ' ' + c.label)}</div>`).join('');
+          uiHtml = cmds.map((c,i)=>{
+            const iconPart = (() => {
+              if (c.icon) {
+                const html = icon(c.icon, { className: 'suggest-icon-img' });
+                if (html) return `<span class="suggest-icon">${html}</span>`;
+              }
+              const emoji = (c.emoji || '').trim();
+              return emoji ? `<span class="suggest-emoji">${escTxt(emoji)}</span>` : '';
+            })();
+            const label = `<span class="suggest-label">${escTxt(c.label || '')}</span>`;
+            return `<div class="item" data-ui="${escTxt(c.id)}" data-idx="ui-${i}">${iconPart}${label}</div>`;
+          }).join('');
         }
       }
     } catch {}

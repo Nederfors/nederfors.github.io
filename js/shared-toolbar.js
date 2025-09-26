@@ -140,6 +140,25 @@ class SharedToolbar extends HTMLElement {
           padding: .4rem .6rem;
           border-radius: .4rem;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: .45rem;
+        }
+        .toolbar-top .suggestions .item .suggest-icon .btn-icon {
+          width: 1.1rem;
+          height: 1.1rem;
+        }
+        .toolbar-top .suggestions .item .suggest-emoji {
+          font-size: 1.1rem;
+          line-height: 1;
+        }
+        .toolbar-top .suggestions .item .suggest-label {
+          flex: 1;
+        }
+        .emoji-fallback {
+          display: inline-block;
+          font-size: 1.2rem;
+          line-height: 1;
         }
         .toolbar-top .suggestions .item:hover,
         .toolbar-top .suggestions .item.active {
@@ -305,25 +324,25 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Artefaktmakare i partyt?</span>
                     </span>
-                    <button id="partyArtefacter" class="party-toggle">🏺</button>
+                    <button id="partyArtefacter" class="party-toggle icon-only">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Utvidgad sökning?</span>
                     </span>
-                    <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
+                    <button id="filterUnion" class="party-toggle icon-only" title="Matcha någon tag (OR)">${icon('extend') || '<span class="emoji-fallback">🔭</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Expandera vy?</span>
                     </span>
-                    <button id="entryViewToggle" class="party-toggle" title="Expandera vy">↕️</button>
+                    <button id="entryViewToggle" class="party-toggle icon-only" title="Expandera vy">${icon('expand') || '<span class="emoji-fallback">↕️</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Tvinga försvar?</span>
                     </span>
-                    <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
+                    <button id="forceDefense" class="party-toggle icon-only" title="Välj försvarskaraktärsdrag">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
                   </li>
                 </ul>
               </div>
@@ -905,10 +924,10 @@ class SharedToolbar extends HTMLElement {
               <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
               <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
               <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-              <li>${icon('smithing')}/${icon('alkemi')}/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
-              <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
-              <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
-              <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
+              <li>${icon('smithing')}/${icon('alkemi')}/${icon('artefakt') || '🏺'}: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
+              <li>${icon('extend') || '🔭'} Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
+              <li>${icon('expand') || '↕️'} Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
+              <li>${icon('forsvar') || '🏃'} Försvar: Välj försvarskaraktärsdrag manuellt.</li>
               <li>${icon('info')} Hjälp: Visar denna panel.</li>
             </ul>
           </section>
@@ -962,7 +981,7 @@ class SharedToolbar extends HTMLElement {
               <li>Info: Visa detaljer.</li>
               <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
               <li>${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.</li>
-              <li>${icon('free')} Gör föremål gratis. 💔 Visa konflikter.</li>
+              <li>${icon('free')} Gör föremål gratis. ${(icon('active') || '💔')} Visa konflikter.</li>
               <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
               <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
               <li>${icon('remove')} Ta bort posten helt.</li>
