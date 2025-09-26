@@ -401,10 +401,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 .summary-pairs .summary-key::after {
-  content: ':';
-  display: inline-block;
-  margin-left: .15rem;
-  margin-right: .2rem;
+  content: '';
+  margin: 0;
 }
 
 .summary-pairs .summary-key:empty::after {

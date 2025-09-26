@@ -551,9 +551,9 @@
       layout: 'grid',
       items: [
         { label: 'Namn', value: charName || 'Okänd' },
-        { label: 'Totalt XP', value: `${totalXP}`, valueClass: freeXP < 0 ? 'xp-negative' : '' },
-        { label: 'Använt XP', value: `${usedXP}` },
-        { label: 'Oanvänt XP', value: `${freeXP}`, valueClass: freeXP < 0 ? 'xp-negative' : '' }
+        { label: 'Totalt ERF', value: `${totalXP}`, valueClass: freeXP < 0 ? 'xp-negative' : '' },
+        { label: 'Använt ERF', value: `${usedXP}` },
+        { label: 'Oanvänt ERF', value: `${freeXP}`, valueClass: freeXP < 0 ? 'xp-negative' : '' }
       ]
     });
 
@@ -628,6 +628,7 @@
           return `<li>${escapeHtml(row.text)}</li>`;
         }
         if (row.values) {
+          const labelText = row.label ? `${row.label}:` : '';
           const chips = row.values
             .map(val => {
               const text = val?.text ?? '';
@@ -645,13 +646,14 @@
           const extraChip = row.extra > 0
             ? `<span class="summary-chip summary-chip-more">+${row.extra} fler</span>`
             : '';
-          return `<li><span class="summary-key">${escapeHtml(row.label)}</span><span class="summary-values">${chips}${extraChip}</span></li>`;
+          return `<li><span class="summary-key">${escapeHtml(labelText)}</span><span class="summary-values">${chips}${extraChip}</span></li>`;
         }
         const classNames = ['summary-value'];
         if (row.valueClass) {
           row.valueClass.split(/\s+/).filter(Boolean).forEach(cls => classNames.push(cls));
         }
-        return `<li><span class="summary-key">${escapeHtml(row.label)}</span><span class="${classNames.join(' ')}">${escapeHtml(row.value ?? '')}</span></li>`;
+        const labelText = row.label ? `${row.label}:` : '';
+        return `<li><span class="summary-key">${escapeHtml(labelText)}</span><span class="${classNames.join(' ')}">${escapeHtml(row.value ?? '')}</span></li>`;
       }).join('');
       return `<section class="summary-section"><h3>${escapeHtml(section.title)}</h3><ul class="${listClasses.join(' ')}">${items}</ul></section>`;
     }).join('');
