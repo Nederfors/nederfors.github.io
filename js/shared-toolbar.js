@@ -162,13 +162,6 @@ class SharedToolbar extends HTMLElement {
         .button-row .nav-link.active:hover {
           opacity: 1;
         }
-        #invBadge {
-          background: var(--danger);
-          border-radius: 50%;
-          padding: 0 .45rem;
-          font-size: .75rem;
-          margin-left: .25rem;
-        }
         .toolbar .exp-counter {
           display: flex;
           align-items: center;
@@ -223,9 +216,7 @@ class SharedToolbar extends HTMLElement {
         </div>
         <div class="button-row">
           <button  id="traitsToggle" class="char-btn icon icon-only" title="Egenskaper">${icon('egenskaper')}</button>
-          <a       id="inventoryLink" class="char-btn icon nav-link" title="Inventarievy" href="inventory.html">
-            ${icon('inventarie')}<span id="invBadge">0</span>
-          </a>
+          <a       id="inventoryLink" class="char-btn icon nav-link" title="Inventarievy" href="inventory.html">${icon('inventarie')}</a>
           <a       id="indexLink" class="char-btn icon icon-only nav-link" title="Index" href="index.html">${icon('index')}</a>
           <a       id="characterLink" class="char-btn icon icon-only nav-link" title="Rollperson" href="character.html">${icon('character')}</a>
           <button  id="filterToggle" class="char-btn icon icon-only" title="Filter">${icon('settings')}</button>

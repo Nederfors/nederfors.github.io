@@ -245,7 +245,7 @@ const dom  = {
   xpTotal : getDom('xpTotal'),      xpUsed : getDom('xpUsed'),       xpFree : getDom('xpFree'),
 
   /* inventarie */
-  invFormal: getDom('invFormal'),   invList : getDom('invList'),      invBadge  : getDom('invBadge'),
+  invFormal: getDom('invFormal'),   invList : getDom('invList'),
   wtOut   : getDom('weightOut'),    slOut     : getDom('slotOut'),
   moneyD  : getDom('moneyDaler'),
   moneyS  : getDom('moneySkilling'),
