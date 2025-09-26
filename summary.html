@@ -11,7 +11,21 @@
   <link rel="stylesheet" href="css/style.css">
   <style>
     body[data-role="summary"] .summary-pairs li {
-      column-gap: 8px;
+      display: flex;
+      align-items: flex-start;
+      gap: .5rem;
+    }
+
+    body[data-role="summary"] .summary-key {
+      flex: 0 0 auto;
+    }
+
+    body[data-role="summary"] .summary-value {
+      flex: 1 1 auto;
+    }
+
+    body[data-role="summary"] .summary-values {
+      flex: 1 1 auto;
     }
   </style>
   <script src="js/text-format.js" defer></script>
