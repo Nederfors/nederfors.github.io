@@ -1180,6 +1180,104 @@
     pop.addEventListener('click', onOutside);
   }
 
+  function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx }) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop     = root.getElementById('buyMultiplePopup');
+    const inner   = pop ? pop.querySelector('.popup-inner') : null;
+    const labelEl = root.getElementById('buyMultipleItemName');
+    const input   = root.getElementById('buyMultipleInput');
+    const confirm = root.getElementById('buyMultipleConfirm');
+    const cancel  = root.getElementById('buyMultipleCancel');
+    if (!pop || !input || !confirm || !cancel) return;
+
+    const nameMap = makeNameMap(flattenInventory(inv));
+    const displayName = nameMap.get(row) || row.name || entry?.namn || '';
+    if (labelEl) {
+      labelEl.textContent = displayName;
+      labelEl.hidden = !displayName;
+    }
+
+    input.value = '';
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => input.focus(), 50);
+
+    const close = () => {
+      pop.classList.remove('open');
+      confirm.removeEventListener('click', apply);
+      cancel.removeEventListener('click', close);
+      pop.removeEventListener('click', onOutside);
+      input.removeEventListener('keydown', onKey);
+      input.value = '';
+    };
+
+    const highlight = targetIdx => {
+      const parentIdx = Number(li?.dataset.parent);
+      const baseName = row.name || entry?.namn || '';
+      if (!baseName) return;
+      const selector = !Number.isNaN(parentIdx)
+        ? `li[data-name="${CSS.escape(baseName)}"][data-parent="${parentIdx}"][data-child="${targetIdx}"]`
+        : `li[data-name="${CSS.escape(baseName)}"][data-idx="${targetIdx}"]`;
+      const flashEl = dom.invList?.querySelector(selector);
+      if (flashEl) {
+        flashEl.classList.add('inv-flash');
+        setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
+      }
+    };
+
+    const apply = () => {
+      const qty = parseInt(input.value, 10);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        input.focus();
+        return;
+      }
+
+      const tagTyp = entry.taggar?.typ || [];
+      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+        .some(t => tagTyp.includes(t)) &&
+        !STACKABLE_IDS.includes(entry.id) &&
+        !['kraft','ritual'].includes(entry.bound);
+
+      let highlightIdx = idx;
+      if (indiv && parentArr) {
+        for (let i = 0; i < qty; i++) {
+          const clone = JSON.parse(JSON.stringify(row));
+          clone.qty = 1;
+          parentArr.push(clone);
+        }
+        highlightIdx = parentArr.length - 1;
+      } else {
+        row.qty = (Number(row.qty) || 0) + qty;
+      }
+
+      saveInventory(inv);
+      renderInventory();
+      close();
+      highlight(highlightIdx);
+    };
+
+    const onOutside = e => {
+      if (!inner || inner.contains(e.target)) return;
+      close();
+    };
+
+    const onKey = e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        apply();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        close();
+      }
+    };
+
+    confirm.addEventListener('click', apply);
+    cancel.addEventListener('click', close);
+    pop.addEventListener('click', onOutside);
+    input.addEventListener('keydown', onKey);
+  }
+
   function openPricePopup() {
     const root    = getToolbarRoot();
     if (!root) return;
@@ -2273,7 +2371,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         buttonParts.push(
           `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
           `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
-          `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`
+          `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
+          `<button data-act="buyMulti" class="char-btn icon icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
         );
       }
       if (isCustom) buttonParts.push('<button data-act="editCustom" class="char-btn">✏️</button>');
@@ -2411,7 +2510,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           cButtons.push(
             `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
             `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
-            `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`
+            `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
+            `<button data-act="buyMulti" class="char-btn icon icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
           );
         }
         if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="char-btn">✏️</button>');
@@ -2910,6 +3010,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const itemName = li.dataset.name;
       const entry    = getEntry(itemName);
       const tagTyp   = entry.taggar?.typ || [];
+
+      if (act === 'buyMulti') {
+        if (!row || !entry) return;
+        openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx });
+        return;
+      }
 
         // "+" lägger till qty eller en ny instans
         if (act === 'add') {

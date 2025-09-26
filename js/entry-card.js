@@ -28,12 +28,13 @@
 
   const splitButtons = (buttonParts) => {
     const dynamic = [];
-    const standardBuckets = { remove: [], minus: [], plus: [] };
+    const standardBuckets = { remove: [], minus: [], plus: [], multi: [] };
     const ACT_MAP = new Map([
       ['del', 'remove'],
       ['rem', 'remove'],
       ['sub', 'minus'],
-      ['add', 'plus']
+      ['add', 'plus'],
+      ['buyMulti', 'multi']
     ]);
 
     buttonParts.forEach(part => {
@@ -49,7 +50,7 @@
       dynamic.push(part);
     });
 
-    const standardOrder = ['remove', 'minus', 'plus'];
+    const standardOrder = ['remove', 'minus', 'plus', 'multi'];
     const standard = standardOrder.reduce((acc, key) => acc.concat(standardBuckets[key]), []);
     return {
       dynamic,
