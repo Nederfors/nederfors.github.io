@@ -1092,12 +1092,24 @@ class SharedToolbar extends HTMLElement {
         window.toast?.('Uppdateringsfunktionen är inte tillgänglig.');
         return;
       }
-      const originalText = btn.textContent;
-      btn.disabled = true;
-      btn.textContent = 'Kontrollerar…';
-      Promise.resolve()
-        .then(() => window.requestPwaUpdate())
-        .then(result => {
+
+      const runUpdate = async () => {
+        const originalText = btn.textContent;
+        let cacheTextTimer;
+        btn.disabled = true;
+        btn.textContent = 'Kontrollerar…';
+
+        try {
+          cacheTextTimer = setTimeout(() => {
+            btn.textContent = 'Cachen uppdateras…';
+          }, 150);
+
+          const result = await window.requestPwaUpdate({ forceReload: true });
+          if (cacheTextTimer) {
+            clearTimeout(cacheTextTimer);
+            cacheTextTimer = null;
+          }
+
           switch (result?.status) {
             case 'applied':
               window.toast?.('Uppdaterar appen…');
@@ -1115,15 +1127,39 @@ class SharedToolbar extends HTMLElement {
               window.toast?.('Kunde inte söka efter uppdatering.');
               break;
           }
-        })
-        .catch(error => {
+
+          if (result?.cacheRefresh) {
+            switch (result.cacheRefresh.status) {
+              case 'refreshed':
+                window.toast?.('Cachen uppdaterades.');
+                break;
+              case 'unavailable':
+                window.toast?.('Ingen aktiv service worker kunde uppdatera cachen.');
+                break;
+              case 'failed':
+                window.toast?.('Kunde inte uppdatera cachen.');
+                break;
+              default:
+                break;
+            }
+          }
+        } catch (error) {
+          if (cacheTextTimer) {
+            clearTimeout(cacheTextTimer);
+            cacheTextTimer = null;
+          }
           console.error('PWA update failed', error);
           window.toast?.('Kunde inte söka efter uppdatering.');
-        })
-        .finally(() => {
+        } finally {
+          if (cacheTextTimer) {
+            clearTimeout(cacheTextTimer);
+          }
           btn.disabled = false;
           btn.textContent = originalText;
-        });
+        }
+      };
+
+      runUpdate();
       return;
     }
 
