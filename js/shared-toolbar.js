@@ -499,6 +499,19 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Köp Flera ---------- -->
+      <div id="buyMultiplePopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Köp flera</h3>
+          <p id="buyMultipleItemName" class="popup-item-name" hidden></p>
+          <input id="buyMultipleInput" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
+          <div class="confirm-row">
+            <button id="buyMultipleConfirm" class="char-btn">Lägg till</button>
+            <button id="buyMultipleCancel" class="char-btn danger">Avbryt</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Popup Pris ---------- -->
       <div id="pricePopup" class="popup popup-bottom">
         <div class="popup-inner">
@@ -1145,7 +1158,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
     if (path.some(el => popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

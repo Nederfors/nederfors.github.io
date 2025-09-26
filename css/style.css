@@ -2772,8 +2772,9 @@ select.level {
   width: auto;
 }
 
-/* ---------- Popup för antal ---------- */
-#qtyPopup {
+/* ---------- Popup för antal / köp flera ---------- */
+#qtyPopup,
+#buyMultiplePopup {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -2784,8 +2785,10 @@ select.level {
   background: rgba(0,0,0,.6);
   z-index: 3000;
 }
-#qtyPopup.open { display: flex; }
-#qtyPopup .popup-inner {
+#qtyPopup.open,
+#buyMultiplePopup.open { display: flex; }
+#qtyPopup .popup-inner,
+#buyMultiplePopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -2800,12 +2803,19 @@ select.level {
   flex-direction: column;
   gap: .8rem;
 }
-#qtyPopup.open .popup-inner { transform: translateY(0); }
-#qtyPopup .popup-inner button { width: 100%; }
+#qtyPopup.open .popup-inner,
+#buyMultiplePopup.open .popup-inner { transform: translateY(0); }
+#qtyPopup .popup-inner button,
+#buyMultiplePopup .popup-inner button { width: 100%; }
 #qtyItemList {
   display: flex;
   flex-direction: column;
   gap: .4rem;
+}
+
+#buyMultiplePopup .popup-item-name {
+  font-weight: 600;
+  margin: 0;
 }
 
 /* ---------- Popup för pris ---------- */
