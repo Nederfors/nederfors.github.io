@@ -621,7 +621,7 @@
     });
 
     const sectionsHtml = summarySections.map(section => {
-      const listClasses = ['summary-list'];
+      const listClasses = ['summary-list', 'summary-pairs'];
       if (section.layout) listClasses.push(`layout-${section.layout}`);
       const items = (section.items || []).map(row => {
         if (row.text) {
