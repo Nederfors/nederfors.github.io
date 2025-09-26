@@ -996,7 +996,8 @@ function initIndex() {
           meta: infoMeta
         });
         const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
-        const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const isInventoryEntry = isInv(p);
+        const multi = isInventoryEntry || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
         let count;
         if (isInv(p)) {
           if (p.id === 'di79') {
@@ -1030,11 +1031,11 @@ function initIndex() {
             if (count > 0) {
               actionButtons.push(`<button data-act="del" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`);
               actionButtons.push(`<button data-act="sub" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`);
-              actionButtons.push(buyMultiButton);
+              if (isInventoryEntry) actionButtons.push(buyMultiButton);
               if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
             } else {
               if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
-              actionButtons.push(buyMultiButton);
+              if (isInventoryEntry) actionButtons.push(buyMultiButton);
             }
           } else {
             const mainBtn = inChar
@@ -1294,11 +1295,13 @@ function initIndex() {
             if (count > 0) {
               buttons.push(createButton('del', 'char-btn danger icon icon-only', 'remove'));
               buttons.push(createButton('sub', 'char-btn icon icon-only', 'minus', 'Minska'));
+              if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
               if (count < limit) {
                 buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till'));
               }
             } else {
               buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
+              if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
             }
           } else {
             if (inChar) {
