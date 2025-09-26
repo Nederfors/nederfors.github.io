@@ -145,8 +145,8 @@ class SharedToolbar extends HTMLElement {
           gap: .45rem;
         }
         .toolbar-top .suggestions .item .suggest-icon .btn-icon {
-          width: 1.1rem;
-          height: 1.1rem;
+          width: 1.4rem;
+          height: 1.4rem;
         }
         .toolbar-top .suggestions .item .suggest-emoji {
           font-size: 1.1rem;
@@ -172,6 +172,13 @@ class SharedToolbar extends HTMLElement {
         .button-row > button {
           flex: 1;
           min-width: 0;
+        }
+        .button-row .char-btn {
+          padding: .55rem 1.1rem;
+          min-height: 3rem;
+        }
+        .button-row .char-btn.icon-only {
+          padding: .55rem 1.1rem;
         }
         .button-row .nav-link.active {
           background: var(--neutral);

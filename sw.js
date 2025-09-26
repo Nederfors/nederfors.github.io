@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v11';
+const CACHE_NAME = 'symbaroum-pwa-v12';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -84,39 +84,72 @@ self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(URLS_TO_CACHE);
+      const precacheRequests = URLS_TO_CACHE
+        .filter(Boolean)
+        .map(url => new Request(url, { cache: 'reload' }));
+      await cache.addAll(precacheRequests);
+
       const response = await cache.match('data/pdf-list.json');
       if (response) {
-        const pdfs = await response.json();
-        const files = pdfs.flatMap(c => c.items.map(p => p.file));
-        await cache.addAll(files);
+        try {
+          const pdfs = await response.json();
+          const fileRequests = [];
+          (Array.isArray(pdfs) ? pdfs : []).forEach(collection => {
+            if (!collection || !Array.isArray(collection.items)) return;
+            collection.items.forEach(item => {
+              if (!item || !item.file) return;
+              fileRequests.push(new Request(item.file, { cache: 'reload' }));
+            });
+          });
+          if (fileRequests.length) {
+            await cache.addAll(fileRequests);
+          }
+        } catch (error) {
+          // Ignore invalid PDF list entries; they will be fetched on demand.
+        }
       }
     })()
   );
 });
 
+const isNavigationRequest = request =>
+  request.mode === 'navigate' ||
+  request.destination === 'document' ||
+  (request.headers.get('accept') || '').includes('text/html');
+
+const shouldNetworkFirst = request =>
+  isNavigationRequest(request) ||
+  request.destination === 'style' ||
+  request.destination === 'script';
+
 self.addEventListener('fetch', event => {
+  const { request } = event;
   if (
-    event.request.method !== 'GET' ||
-    !event.request.url.startsWith(self.location.origin)
+    request.method !== 'GET' ||
+    !request.url.startsWith(self.location.origin)
   ) {
-    event.respondWith(fetch(event.request));
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if (shouldNetworkFirst(request)) {
+    event.respondWith(networkFirst(request));
     return;
   }
 
   event.respondWith(
     (async () => {
-      const cachedResponse = await caches.match(event.request);
+      const cachedResponse = await caches.match(request);
       if (cachedResponse) {
-        event.waitUntil(refreshCache(event.request));
+        event.waitUntil(refreshCache(request));
         return cachedResponse;
       }
 
       try {
-        const networkResponse = await fetch(event.request);
+        const networkResponse = await fetch(request, { cache: 'reload' });
         const cache = await caches.open(CACHE_NAME);
         if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
-          await cache.put(event.request, networkResponse.clone());
+          await cache.put(request, networkResponse.clone());
         }
         return networkResponse;
       } catch (error) {
@@ -126,9 +159,26 @@ self.addEventListener('fetch', event => {
   );
 });
 
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const networkResponse = await fetch(request, { cache: 'reload' });
+    if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+      await cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    throw error;
+  }
+}
+
 async function refreshCache(request) {
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, { cache: 'reload' });
     if (response && (response.ok || response.type === 'opaque')) {
       const cache = await caches.open(CACHE_NAME);
       await cache.put(request, response.clone());
