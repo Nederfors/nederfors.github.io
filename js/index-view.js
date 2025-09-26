@@ -1026,13 +1026,15 @@ function initIndex() {
         if (editBtn) actionButtons.push(editBtn);
         if (allowAdd) {
           if (multi) {
+            const buyMultiButton = `<button data-act="buyMulti" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Köp flera">${icon('buymultiple')}</button>`;
             if (count > 0) {
               actionButtons.push(`<button data-act="del" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`);
               actionButtons.push(`<button data-act="sub" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`);
-              actionButtons.push(`<button data-act="buyMulti" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Köp flera">${icon('buymultiple')}</button>`);
+              actionButtons.push(buyMultiButton);
               if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
             } else {
-              actionButtons.push(`<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
+              if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
+              actionButtons.push(buyMultiButton);
             }
           } else {
             const mainBtn = inChar
