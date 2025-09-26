@@ -878,11 +878,35 @@ function initCharacter() {
     const economyRows = [{ text: `Oanvänt: ${unusedText}` }];
     summarySections.push({ title: 'Ekonomi', rows: economyRows, listClass: 'summary-text' });
 
-    const defenseRows = defenseList.map(d => ({
-      label: d.name ? `Försvar (${d.name})` : 'Försvar',
-      value: String(d.value),
-      align: 'right'
-    }));
+    const normalizedDefense = defenseList
+      .map(d => ({
+        name: d?.name ? String(d.name).trim() : '',
+        value: Number(d?.value)
+      }))
+      .filter(d => Number.isFinite(d.value));
+
+    const defenseRows = [];
+    if (normalizedDefense.length) {
+      const highestDefense = normalizedDefense
+        .reduce((max, d) => Math.max(max, d.value), Number.NEGATIVE_INFINITY);
+      if (Number.isFinite(highestDefense)) {
+        defenseRows.push({
+          label: 'Försvarsvärde',
+          value: String(highestDefense),
+          align: 'right'
+        });
+      }
+
+      normalizedDefense.forEach(d => {
+        const label = d.name ? `Försvar (${d.name})` : 'Försvar';
+        defenseRows.push({
+          label,
+          value: String(d.value),
+          align: 'right'
+        });
+      });
+    }
+
     if (defenseRows.length) {
       summarySections.push({ title: 'Försvar', rows: defenseRows, listClass: 'summary-pairs' });
     }
