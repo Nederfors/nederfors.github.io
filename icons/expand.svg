@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 64 64" id="Expand">
+  <path fill="#ff8066" d="M41.955 3H61v19.045" class="colorf15439 svgShape"></path>
+  <path d="M62 22.045h-2V4H41.955V2H62z" fill="#3a3636" class="color000000 svgShape"></path>
+  <path d="m59.499 3.086 1.414 1.415L36.89 28.523l-1.415-1.414z" fill="#3a3636" class="color000000 svgShape"></path>
+  <path fill="#ff8066" d="M22.045 61H3V41.955" class="colorf15439 svgShape"></path>
+  <path d="M22.045 62H2V41.955h2V60h18.045z" fill="#3a3636" class="color000000 svgShape"></path>
+  <path d="m27.11 35.476 1.414 1.414L4.5 60.913l-1.414-1.415z" fill="#3a3636" class="color000000 svgShape"></path>
+  <path fill="#ffbf66" d="M61 41.955V61H41.955" class="color399bb9 svgShape"></path>
+  <path d="M62 62H41.955v-2H60V41.955h2z" fill="#3a3636" class="color000000 svgShape"></path>
+  <path d="m36.891 35.476 24.023 24.022-1.415 1.415L35.477 36.89z" fill="#3a3636" class="color000000 svgShape"></path>
+  <path fill="#ffbf66" d="M3 22.045V3h19.045" class="color399bb9 svgShape"></path>
+  <path d="M4 22.045H2V2h20.045v2H4z" fill="#3a3636" class="color000000 svgShape"></path>
+  <path d="M4.5 3.086 28.524 27.11l-1.414 1.414L3.086 4.5z" fill="#3a3636" class="color000000 svgShape"></path>
+</svg>
