@@ -1770,40 +1770,8 @@ function initIndex() {
         } else {
           const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
             .some(t=>p.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(p.id);
-          const rowBase = { id:p.id, name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-          const tagTyp = p.taggar?.typ || [];
-          if (tagTyp.includes('L\u00e4gre Artefakt')) {
-            const reqYrken = explodeTags(p.taggar?.ark_trad);
-            if (reqYrken.length) {
-              const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-              const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
-              const artLevel = Math.max(partyArt, skillArt);
-              const lvlName = Object.keys(p.niv\u00e5er || {}).find(l=>l) || '';
-              const itemLevel = LEVEL_IDX[lvlName] || 0;
-              let hasYrke = reqYrken.some(req =>
-                list.some(it =>
-                (isYrke(it) || isElityrke(it)) && explodeTags([it.namn]).includes(req)
-                )
-              );
-              if (!hasYrke && artLevel >= itemLevel) {
-                hasYrke = true;
-              }
-              if (!hasYrke) {
-                const reqTxt = reqYrken.join(', ');
-                const msg = `Du har inte r\u00e4tt yrke (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${p.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
-                const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
-                if (!ok) return;
-                rowBase.priceMult = 10;
-              }
-            }
-          }
-          if (tagTyp.includes('Artefakt')) {
-            const val = await selectArtifactPayment();
-            if (val === null) return;
-            if (val) rowBase.artifactEffect = val;
-          } else if (p.artifactEffect) {
-            rowBase.artifactEffect = p.artifactEffect;
-          }
+          const rowBase = await invUtil.buildInventoryRow({ entry: p, list });
+          if (!rowBase) return;
           const addRow = trait => {
             if (trait) rowBase.trait = trait;
             let flashIdx;
@@ -2078,21 +2046,43 @@ function initIndex() {
       if (!isInv(p)) return;
       if (!window.invUtil || typeof window.invUtil.openBuyMultiplePopup !== 'function') return;
       const inv = storeHelper.getInventory(store);
-      const idxInv = inv.findIndex(x => x.id === p.id);
-      if (idxInv < 0) return;
-      const row = inv[idxInv];
+      let idxInv = inv.findIndex(x => x.id === p.id);
+      let row = idxInv >= 0 ? inv[idxInv] : null;
+      let isNewRow = false;
+      if (idxInv < 0) {
+        if (typeof invUtil.buildInventoryRow !== 'function') return;
+        const list = storeHelper.getCurrentList(store);
+        const newRow = await invUtil.buildInventoryRow({ entry: p, list });
+        if (!newRow) return;
+        newRow.qty = 0;
+        inv.push(newRow);
+        row = newRow;
+        idxInv = inv.length - 1;
+        isNewRow = true;
+      }
       const safeName = escapeSelectorValue(p.namn);
       let invLi = null;
-      if (safeName) {
+      if (!isNewRow && safeName) {
         invLi = dom.invList?.querySelector(`li[data-name="${safeName}"][data-idx="${idxInv}"]`) || null;
       }
+      const cancelTempRow = () => {
+        if (!isNewRow) return;
+        const curIdx = inv.indexOf(row);
+        if (curIdx >= 0) inv.splice(curIdx, 1);
+      };
+      const confirmTempRow = () => {
+        if (isNewRow) queueUpdate(p);
+      };
       window.invUtil.openBuyMultiplePopup({
         row,
         entry: p,
         inv,
         li: invLi,
         parentArr: inv,
-        idx: idxInv
+        idx: idxInv,
+        onCancel: isNewRow ? cancelTempRow : undefined,
+        onConfirm: confirmTempRow,
+        isNewRow
       });
       return;
     } else if (act==='sub' || act==='del' || act==='rem') {
