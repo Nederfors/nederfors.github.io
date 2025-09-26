@@ -36,6 +36,40 @@ function initCharacter() {
     catState = saved.cats || {};
   }
 
+  const applyQueryFilters = () => {
+    if (typeof URLSearchParams !== 'function') return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const rawValues = params.getAll('test') || [];
+      const collected = [];
+      rawValues.forEach(val => {
+        String(val || '')
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean)
+          .forEach(v => collected.push(v));
+      });
+      if (!collected.length) return;
+
+      const deduped = [];
+      const seen = new Set();
+      collected.forEach(val => {
+        if (seen.has(val)) return;
+        seen.add(val);
+        deduped.push(val);
+      });
+
+      F.search = [];
+      F.typ = [];
+      F.ark = [];
+      F.test = deduped;
+      storeHelper.setOnlySelected(store, true);
+      openCatsOnce.add('Förmåga');
+      saveState();
+    } catch {}
+  };
+  applyQueryFilters();
+
   let catsMinimized = false;
   const updateCatToggle = () => {
     catsMinimized = [...document.querySelectorAll('.cat-group > details')]

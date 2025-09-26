@@ -312,12 +312,20 @@
       const countBtn = e.target.closest('.trait-count');
       if (countBtn) {
         const trait = countBtn.dataset.trait;
-        if (dom.tstSel) {
-          dom.tstSel.value = trait;
-          dom.tstSel.dispatchEvent(new Event('change'));
-        }
         storeHelper.setOnlySelected(store, true);
-        if (typeof indexViewUpdate === 'function') indexViewUpdate();
+        if (trait) {
+          let target = 'character.html';
+          try {
+            const params = new URLSearchParams();
+            params.set('test', trait);
+            target = `character.html?${params.toString()}`;
+          } catch {
+            target = `character.html?test=${encodeURIComponent(trait)}`;
+          }
+          window.location.href = target;
+        } else {
+          window.location.href = 'character.html';
+        }
         return;
       }
       const btn = e.target.closest('.trait-btn');
