@@ -1700,7 +1700,7 @@ input:focus, select:focus, textarea:focus {
 }
 .button-row {
   display: flex;
-  gap: .6rem;
+  gap: .3rem;
 }
 .button-row > a,
 .button-row > button {
