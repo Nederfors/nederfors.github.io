@@ -1029,6 +1029,7 @@ function initIndex() {
             if (count > 0) {
               actionButtons.push(`<button data-act="del" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`);
               actionButtons.push(`<button data-act="sub" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`);
+              actionButtons.push(`<button data-act="buyMulti" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Köp flera">${icon('buymultiple')}</button>`);
               if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
             } else {
               actionButtons.push(`<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
@@ -2071,6 +2072,27 @@ function initIndex() {
         await finishAdd(added);
       }
       needsFullRefresh = true;
+    } else if (act==='buyMulti') {
+      if (!isInv(p)) return;
+      if (!window.invUtil || typeof window.invUtil.openBuyMultiplePopup !== 'function') return;
+      const inv = storeHelper.getInventory(store);
+      const idxInv = inv.findIndex(x => x.id === p.id);
+      if (idxInv < 0) return;
+      const row = inv[idxInv];
+      const safeName = escapeSelectorValue(p.namn);
+      let invLi = null;
+      if (safeName) {
+        invLi = dom.invList?.querySelector(`li[data-name="${safeName}"][data-idx="${idxInv}"]`) || null;
+      }
+      window.invUtil.openBuyMultiplePopup({
+        row,
+        entry: p,
+        inv,
+        li: invLi,
+        parentArr: inv,
+        idx: idxInv
+      });
+      return;
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
