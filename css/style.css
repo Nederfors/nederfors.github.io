@@ -1907,34 +1907,37 @@ select.level {
 
 .trait-header {
   display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: .9rem;
-  flex-wrap: wrap;
+  justify-content: center;
+  margin-bottom: .5rem;
 }
 
-.trait-heading {
-  display: flex;
+.trait-label {
+  display: inline-flex;
   align-items: center;
-  gap: .35rem;
-  flex-wrap: wrap;
-  min-width: 0;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 650;
+  letter-spacing: .04em;
+  background: rgba(255, 255, 255, .04);
+  border: 1px solid var(--border);
+  border-radius: .75rem;
+  padding: .45rem 1.1rem;
+  text-align: center;
+  margin: 0 auto;
 }
 
 .trait-controls {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  display: flex;
+  justify-content: center;
   gap: .45rem;
+  flex-wrap: nowrap;
 }
 
-.trait-value {
-  font-weight: 700;
-  font-size: 1.8rem;
-  line-height: 1;
-  text-align: right;
-  flex: 0 0 auto;
+.trait-count-row {
+  display: flex;
+  justify-content: center;
+  margin-top: .25rem;
 }
-
 
 .trait-btn {
   background: rgba(255, 255, 255, .08);
@@ -1947,19 +1950,13 @@ select.level {
   text-align: center;
   color: var(--txt);
   transition: background .15s ease, transform .1s ease, border-color .15s ease;
+  min-width: 3.1rem;
 }
 
 .trait-btn:hover  { background: rgba(255, 255, 255, .16); }
 .trait-btn:active { transform: scale(.95); opacity: .8; }
 .trait-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-
-.trait-name  {
-  font-size: .9rem;
-  letter-spacing: .06em;
-  text-transform: uppercase;
-  color: var(--accent);
-}
 
 .trait-extra {
   font-size: .82rem;
@@ -1986,7 +1983,7 @@ select.level {
   border-radius: .65rem;
   padding: .2rem .6rem;
   cursor: pointer;
-  align-self: flex-start;
+  align-self: center;
   transition: background .15s ease, border-color .15s ease, transform .1s ease;
 }
 
@@ -2000,10 +1997,6 @@ select.level {
     align-items: center;
     justify-content: center;
     gap: 1.2rem;
-  }
-  .trait-controls {
-    grid-template-columns: repeat(4, minmax(0, auto));
-    justify-content: flex-start;
   }
 }
 
@@ -2047,8 +2040,7 @@ select.level {
   }
   .traits-grid  { gap: .7rem; }
   .trait        { padding: .75rem .85rem; }
-  .trait-btn    { padding: .22rem .55rem; font-size: .82rem; }
-  .trait-value  { font-size: 1.6rem; }
+  .trait-btn    { padding: .22rem .55rem; font-size: .82rem; min-width: 2.75rem; }
   .control-buttons { gap: .3rem; }
   .control-buttons .char-btn {
     font-size: .95rem;
