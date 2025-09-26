@@ -74,6 +74,11 @@
     overlayObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
   }
 
+  window.registerOverlayElement = function(el) {
+    if (!el) return;
+    observeOverlay(el);
+  };
+
   function registerOverlays(root) {
     if (!root) return;
     const list = root.querySelectorAll ? root.querySelectorAll(OVERLAY_SELECTOR) : [];
@@ -409,16 +414,16 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     // Toppknappar
     { id: 'open-inventory',  label: 'Inventarie',   sel: '#inventoryLink', panel: null,          emoji: '🎒',
       syn: ['inventarie','inventarievy','inventory','ryggsäck','ryggsack','rygga','inv'] },
-    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsToggle', panel: 'traitsPanel', emoji: '📊',
+    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsLink', panel: null,            emoji: '📊',
       syn: ['egenskaper','traits','drag','karaktärsdrag','karaktarsdrag'] },
     { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '⚙️',
       syn: ['filter','verktyg'] },
     // Huvudvyns knappar utanför toolbaren (rollpersonssidan)
     { id: 'open-notes',      label: 'Anteckningar', sel: '#notesLink',    panel: null,          emoji: '📜',
       syn: ['anteckningar','anteckning','notes','noteringar'] },
-    { id: 'open-summary',    label: 'Översikt',     sel: '#summaryToggle', panel: null,         emoji: '📋',
+    { id: 'open-summary',    label: 'Översikt',     sel: '#summaryToggle, #traitsTabSummary', panel: null,         emoji: '📋',
       syn: ['översikt','oversikt','sammanfattning','visa översikt','visa oversikt'] },
-    { id: 'open-effects',    label: 'Effekter',     sel: '#effectsToggle', panel: null,         emoji: '📚',
+    { id: 'open-effects',    label: 'Effekter',     sel: '#effectsToggle, #traitsTabEffects', panel: null,         emoji: '📚',
       syn: ['effekter','visa effekter','sammanställning effekter','sammanstallning effekter'] },
 
     // Inställningar 💡 (Filter → Inställningar)
@@ -760,6 +765,12 @@ function boot() {
   if (ROLE === 'character')  initCharacter();
   if (ROLE === 'notes')      initNotes();
   if (ROLE === 'inventory')  initInventory();
+  if (ROLE === 'summary' && window.summaryEffects?.initSummaryPage) {
+    window.summaryEffects.initSummaryPage();
+  }
+  if (ROLE === 'effects' && window.summaryEffects?.initEffectsPage) {
+    window.summaryEffects.initEffectsPage();
+  }
 }
 
 /* ===========================================================
@@ -811,6 +822,8 @@ function applyCharacterChange() {
     if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
     if (typeof window.notesUpdate === 'function') window.notesUpdate();
     if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
   } catch (err) {
     // As a last resort, fall back to reload to avoid a broken UI
     try { location.reload(); } catch {}
@@ -1242,26 +1255,30 @@ function bindToolbar() {
       applyCharacterChange();
     }
 
-    /* Återställ basegenskaper till 10 ---------------------- */
-    if (id === 'resetTraits') {
-      if (!store.current && !(await requireCharacter())) return;
-      const ok = await confirmPopup('Detta nollställer alla karaktärsdrag till 10. Karaktärsdrag från förmågor och inventarier påverkas inte. Åtgärden kan inte ångras. Vill du fortsätta?');
-      if (!ok) return;
-      const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
-      const t = storeHelper.getTraits(store);
-      const next = { ...t };
-      KEYS.forEach(k => { next[k] = 10; });
-      storeHelper.setTraits(store, next);
-      if (window.renderTraits) renderTraits();
-    }
+  });
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('#resetTraits');
+    if (!btn) return;
+    if (!store.current && !(await requireCharacter())) return;
+    const ok = await confirmPopup('Detta nollställer alla karaktärsdrag till 10. Karaktärsdrag från förmågor och inventarier påverkas inte. Åtgärden kan inte ångras. Vill du fortsätta?');
+    if (!ok) return;
+    const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+    const t = storeHelper.getTraits(store);
+    const next = { ...t };
+    KEYS.forEach(k => { next[k] = 10; });
+    storeHelper.setTraits(store, next);
+    if (typeof renderTraits === 'function') renderTraits();
   });
 
   /* Ändra total erf direkt när värdet byts */
-  dom.xpIn.addEventListener('change', () => {
-    const xp = Number(dom.xpIn.value) || 0;
-    storeHelper.setBaseXP(store, xp);
-    updateXP();
-  });
+  if (dom.xpIn) {
+    dom.xpIn.addEventListener('change', () => {
+      const xp = Number(dom.xpIn.value) || 0;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
 
   if (dom.xpPlus) {
     dom.xpPlus.addEventListener('click', () => {
@@ -2671,10 +2688,12 @@ function updateXP() {
   const used  = storeHelper.calcUsedXP(list, effects);
   const total = storeHelper.calcTotalXP(base, list);
   const free  = total - used;
-  dom.xpOut.textContent = free;
-  dom.xpIn.value = base;
-  const xpContainer = dom.xpOut.closest('.exp-counter');
-  if (xpContainer) xpContainer.classList.toggle('under', free < 0);
+  if (dom.xpOut) {
+    dom.xpOut.textContent = free;
+    const xpContainer = dom.xpOut.closest('.exp-counter');
+    if (xpContainer) xpContainer.classList.toggle('under', free < 0);
+  }
+  if (dom.xpIn) dom.xpIn.value = base;
   if (dom.xpTotal) dom.xpTotal.textContent = total;
   if (dom.xpUsed)  dom.xpUsed.textContent  = used;
   if (dom.xpFree)  dom.xpFree.textContent  = free;

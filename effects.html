@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon_DA">
+  <meta name="theme-color" content="#121416">
+  <title>Symbapedia - Effekter</title>
+
+  <link rel="stylesheet" href="css/style.css">
+  <script src="js/text-format.js" defer></script>
+  <script src="js/utils.js" defer></script>
+  <script src="js/store.js" defer></script>
+  <script src="js/inventory-utils.js" defer></script>
+  <script src="js/traits-utils.js" defer></script>
+  <script src="js/summary-effects.js" defer></script>
+  <script src="js/shared-toolbar.js" defer></script>
+  <script src="js/yrke-panel.js" defer></script>
+  <script src="js/tabell-popup.js" defer></script>
+  <script src="js/pdf-library.js" defer></script>
+  <script src="js/elite-req.js" defer></script>
+  <script src="js/entry-card.js" defer></script>
+  <script src="js/jszip.min.js" defer></script>
+  <script src="js/main.js" defer></script>
+  <script src="js/exceptionellt.js" defer></script>
+  <script src="js/djurmask.js" defer></script>
+  <script src="js/beastform.js" defer></script>
+  <script src="js/kraftval.js" defer></script>
+  <script src="js/artifact-payment.js" defer></script>
+  <script src="js/bloodbond.js" defer></script>
+  <script src="js/monsterlard.js" defer></script>
+  <script src="js/elite-add.js" defer></script>
+  <script src="js/pwa.js" defer></script>
+</head>
+<body data-role="effects">
+
+  <h1 class="app-title">EFFEKTER</h1>
+
+  <div id="activeFilters" class="tags"></div>
+
+  <nav class="traits-tabs" aria-label="Egenskapsnavigering">
+    <a id="traitsTabTraits" class="traits-tab" href="traits.html">Karaktärsdrag</a>
+    <a id="traitsTabSummary" class="traits-tab" href="summary.html">Översikt</a>
+    <a id="traitsTabEffects" class="traits-tab active" aria-current="page" href="effects.html">Effekter</a>
+  </nav>
+
+  <div class="panel effects-panel">
+    <div class="panel-header">
+      <h2 id="charName" style="margin:0;"></h2>
+    </div>
+    <div id="effectsContent" class="summary-content"></div>
+  </div>
+
+  <shared-toolbar></shared-toolbar>
+
+</body>
+</html>

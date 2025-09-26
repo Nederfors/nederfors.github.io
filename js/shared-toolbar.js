@@ -2,7 +2,7 @@
    js/shared-toolbar.js
    Web Component som innehåller:
      • Verktygsrad
-     • Off-canvas-paneler: Egenskaper, Filter, Info
+     • Off-canvas-paneler: Filter, Info
      • Popup för kvaliteter
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
@@ -215,63 +215,13 @@ class SharedToolbar extends HTMLElement {
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <button  id="traitsToggle" class="char-btn icon icon-only" title="Egenskaper">${icon('egenskaper')}</button>
+          <a       id="traitsLink" class="char-btn icon icon-only nav-link" title="Egenskaper" href="traits.html">${icon('egenskaper')}</a>
           <a       id="inventoryLink" class="char-btn icon nav-link" title="Inventarievy" href="inventory.html">${icon('inventarie')}</a>
           <a       id="indexLink" class="char-btn icon icon-only nav-link" title="Index" href="index.html">${icon('index')}</a>
           <a       id="characterLink" class="char-btn icon icon-only nav-link" title="Rollperson" href="character.html">${icon('character')}</a>
           <button  id="filterToggle" class="char-btn icon icon-only" title="Filter">${icon('settings')}</button>
         </div>
       </footer>
-
-      <!-- ---------- Egenskaper ---------- -->
-      <aside id="traitsPanel" class="offcanvas">
-        <header class="inv-header">
-          <h2>Egenskaper</h2>
-          <div class="inv-actions">
-            <button id="resetTraits" class="char-btn icon danger" title="Återställ basegenskaper">${icon('broom')}</button>
-            <button class="char-btn icon" data-close="traitsPanel">✕</button>
-          </div>
-        </header>
-
-        <div class="traits-content summary-content">
-          <section class="summary-section trait-xp-section">
-            <div id="xpSummary" class="trait-xp-summary">
-              <div class="trait-xp-header">
-                <span class="trait-xp-title">Erfarenhet</span>
-                <div class="xp-control trait-xp-buttons">
-                  <button id="xpMinus" class="char-btn icon icon-only" type="button" aria-label="Minska XP" title="Minska XP">${icon('minus')}</button>
-                  <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-                  <button id="xpPlus" class="char-btn icon icon-only" type="button" aria-label="Öka XP" title="Öka XP">${icon('plus')}</button>
-                </div>
-              </div>
-              <div class="trait-xp-row">
-                <span class="trait-xp-item">
-                  <span class="trait-xp-label">TOTALT:</span>
-                  <span id="xpTotal" class="trait-xp-value">0</span>
-                </span>
-                <span class="trait-xp-item">
-                  <span class="trait-xp-label">ANVÄNT:</span>
-                  <span id="xpUsed" class="trait-xp-value">0</span>
-                </span>
-                <span class="trait-xp-item">
-                  <span class="trait-xp-label">OANVÄNT:</span>
-                  <span id="xpFree" class="trait-xp-value">0</span>
-                </span>
-              </div>
-            </div>
-          </section>
-
-          <section class="summary-section trait-list-section">
-            <div class="trait-meta">
-              <div class="traits-total" role="status">
-                Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
-              </div>
-              <div id="traitStats" class="trait-extra-meta" aria-live="polite"></div>
-            </div>
-            <div id="traits" class="traits-grid traits"></div>
-          </section>
-        </div>
-      </aside>
 
       <!-- ---------- Filter ---------- -->
       <aside id="filterPanel" class="offcanvas">
@@ -907,7 +857,7 @@ class SharedToolbar extends HTMLElement {
             <ul class="summary-list">
               <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
               <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-              <li>Öppna panelerna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('settings')} Filter.</li>
+              <li>Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('settings')} Filter.</li>
             </ul>
           </section>
 
@@ -917,7 +867,7 @@ class SharedToolbar extends HTMLElement {
               <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
               <li>${icon('character')} / ${icon('index')}: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
               <li>${icon('anteckningar')}: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-              <li>${icon('inventarie')}: Öppnar inventariepanelen. ${icon('egenskaper')}: Öppnar egenskapspanelen. ${icon('settings')}: Öppnar filter.</li>
+              <li>${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (flikar för Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.</li>
               <li>XP: Visar dina totala erfarenhetspoäng.</li>
               <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
               <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
@@ -1051,7 +1001,6 @@ class SharedToolbar extends HTMLElement {
   cache() {
     const $ = id => this.shadowRoot.getElementById(id);
     this.panels = {
-      traitsPanel: $('traitsPanel'),
       filterPanel: $('filterPanel'),
       infoPanel  : $('infoPanel')
     };
@@ -1103,7 +1052,6 @@ class SharedToolbar extends HTMLElement {
     }
 
     /* öppna/stäng (toggle) */
-    if (btn.id === 'traitsToggle') return this.toggle('traitsPanel');
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
     if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
     /* stäng */
@@ -1183,7 +1131,7 @@ class SharedToolbar extends HTMLElement {
 
   handleOutsideClick(e) {
     const path = e.composedPath();
-    const toggles = ['traitsToggle','filterToggle','infoToggle'];
+    const toggles = ['filterToggle','infoToggle'];
     if (path.some(el => toggles.includes(el.id))) return;
 
     // Hide search suggestions when clicking outside search UI
@@ -1295,6 +1243,7 @@ class SharedToolbar extends HTMLElement {
       else link.removeAttribute('aria-current');
     };
 
+    setLinkState('traitsLink', 'traits.html', ['traits','summary','effects']);
     setLinkState('inventoryLink', 'inventory.html', ['inventory']);
     setLinkState('indexLink', 'index.html', ['index']);
     setLinkState('characterLink', 'character.html', ['character', 'notes']);

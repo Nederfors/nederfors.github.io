@@ -4,6 +4,7 @@
     if (document.getElementById('yrkePanel')) return;
     const panel = document.createElement('aside');
     panel.id = 'yrkePanel';
+    panel.classList.add('offcanvas');
     panel.innerHTML = `
       <header class="inv-header">
         <h2 id="yrkeTitle"></h2>
@@ -12,6 +13,7 @@
       <div id="yrkeContent"></div>
     `;
     document.body.appendChild(panel);
+    window.registerOverlayElement?.(panel);
     panel.querySelector('#yrkeClose').addEventListener('click', close);
   }
 

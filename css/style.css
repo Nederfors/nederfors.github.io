@@ -280,7 +280,9 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 #summaryPanel .summary-section,
+.summary-panel .summary-section,
 #effectsPanel .summary-section,
+.effects-panel .summary-section,
 #infoPanel .summary-section,
 #yrkePanel .summary-section {
   background: rgba(255, 255, 255, .04);
@@ -305,14 +307,18 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 #summaryPanel .summary-section:not(:last-child),
+.summary-panel .summary-section:not(:last-child),
 #effectsPanel .summary-section:not(:last-child),
+.effects-panel .summary-section:not(:last-child),
 #infoPanel .summary-section:not(:last-child),
 #yrkePanel .summary-section:not(:last-child) {
   margin-bottom: .6rem;
 }
 
 #summaryPanel .summary-section h3,
+.summary-panel .summary-section h3,
 #effectsPanel .summary-section h3,
+.effects-panel .summary-section h3,
 #infoPanel .summary-section h3,
 #yrkePanel .summary-section h3 {
   text-transform: uppercase;
@@ -351,6 +357,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 #summaryPanel .summary-pairs li,
+.summary-panel .summary-pairs li,
 #yrkePanel .summary-pairs li {
   background: rgba(31, 34, 40, .78);
   border: 1px solid rgba(255, 255, 255, .06);
@@ -358,6 +365,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 #summaryPanel .summary-pairs li::before,
+.summary-panel .summary-pairs li::before,
 #yrkePanel .summary-pairs li::before {
   content: '';
   position: absolute;
@@ -495,6 +503,26 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   line-height: 1.2;
 }
 
+.summary-chip-btn {
+  cursor: pointer;
+  transition: background .15s ease, box-shadow .15s ease, transform .1s ease;
+  color: inherit;
+}
+
+.summary-chip-btn:hover {
+  background: rgba(255, 255, 255, .14);
+}
+
+.summary-chip-btn:focus-visible {
+  outline: 2px solid rgba(255, 255, 255, .35);
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, .35);
+}
+
+.summary-chip-btn:active {
+  transform: scale(.97);
+}
+
 .summary-chip-more {
   color: var(--subtxt);
   border-style: dashed;
@@ -624,6 +652,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 
 #summaryPanel .summary-text li,
+.summary-panel .summary-text li,
 #yrkePanel .summary-text li {
   padding: .6rem .95rem .6rem 1.35rem;
 }
@@ -633,7 +662,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   padding-top: .35rem;
 }
 
-#summaryPanel .summary-text li + li {
+#summaryPanel .summary-text li + li,
+.summary-panel .summary-text li + li {
   border-top: none;
   margin-top: .35rem;
   padding-top: .6rem;
@@ -715,7 +745,8 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   }
 }
 
-#effectsPanel .effect-entry {
+#effectsPanel .effect-entry,
+.effects-panel .effect-entry {
   display: flex;
   flex-direction: column;
   gap: .35rem;
@@ -723,27 +754,31 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   border-left: .22rem solid rgba(227, 186, 106, .45);
 }
 
-#effectsPanel .effect-label {
+#effectsPanel .effect-label,
+.effects-panel .effect-label {
   font-size: 1rem;
   letter-spacing: .03em;
   text-transform: uppercase;
   color: var(--txt);
 }
 
-#effectsPanel .effect-lines {
+#effectsPanel .effect-lines,
+.effects-panel .effect-lines {
   display: flex;
   flex-direction: column;
   gap: .25rem;
   margin-left: .25rem;
 }
 
-#effectsPanel .effect-line {
+#effectsPanel .effect-line,
+.effects-panel .effect-line {
   color: var(--subtxt);
   font-size: .95rem;
   line-height: 1.35;
 }
 
-#effectsPanel .effect-source {
+#effectsPanel .effect-source,
+.effects-panel .effect-source {
   color: var(--accent);
   font-weight: 600;
 }
@@ -1689,16 +1724,56 @@ input:focus, select:focus, textarea:focus {
 
 /* Specifika paneler använder samma klass plus egna id:n */
 #filterPanel { max-width: 360px; }
-#traitsPanel { max-width: 360px; }
 #summaryPanel{ max-width: 360px; }
 #effectsPanel{ max-width: 360px; }
 
 .inv-header { display: flex; justify-content: space-between; align-items: center; }
 .inv-actions { display: flex; align-items: baseline; gap: .4rem; }
-/* Lite extra luft under rubriken i Egenskaper-panelen */
-#traitsPanel .inv-header { margin-bottom: 1rem; }
-/* Lite större mellanrum mellan knapparna i Egenskaper-panelen */
-#traitsPanel .inv-actions { gap: .6rem; }
+/* Lite extra luft under rubriken i Egenskaper-vyn */
+.traits-panel .panel-header,
+.summary-panel .panel-header,
+.effects-panel .panel-header { margin-bottom: 1rem; }
+/* Lite större mellanrum mellan knapparna i Egenskaper- och översiktssidorna */
+.traits-panel .header-actions,
+.summary-panel .header-actions,
+.effects-panel .header-actions { gap: .6rem; }
+
+.traits-tabs {
+  display: flex;
+  gap: .6rem;
+  margin: 0 auto 1.5rem;
+  padding: 0;
+  max-width: 520px;
+}
+
+.traits-tab {
+  flex: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: .7rem 1rem;
+  border-radius: .75rem;
+  background: rgba(255,255,255,.05);
+  color: var(--txt);
+  text-decoration: none;
+  font-weight: 600;
+  transition: background .15s ease, color .15s ease, transform .1s ease;
+  border: 1.5px solid rgba(255,255,255,.08);
+}
+
+.traits-tab:hover { opacity: .85; }
+.traits-tab:active { transform: scale(.97); }
+.traits-tab[aria-current="page"],
+.traits-tab.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: transparent;
+}
+
+.summary-panel,
+.effects-panel {
+  margin-top: 0;
+}
 
 /* Knappar i inventariepanelen */
 .inv-buttons {
@@ -2053,7 +2128,6 @@ select.level {
 }
 /* ---------- Off-canvas-paneler från höger ---------- */
 #filterPanel,
-#traitsPanel,
 #yrkePanel,
 #infoPanel,
 #summaryPanel,
@@ -2079,7 +2153,6 @@ select.level {
 
 /* Specifika max-breddar */
 #filterPanel { max-width: 360px; }
-#traitsPanel { max-width: 360px; }
 #summaryPanel{ max-width: 360px; }
 #effectsPanel{ max-width: 360px; }
 #conflictPanel { max-width: 360px; }
@@ -2104,7 +2177,6 @@ select.level {
 
 /* När klassen .open läggs på – låt panelen glida in */
 #filterPanel.open,
-#traitsPanel.open,
 #yrkePanel.open,
 #infoPanel.open,
 #summaryPanel.open,
@@ -2116,7 +2188,6 @@ select.level {
 
 @media (min-width: 1024px) {
   #filterPanel { max-width: 460px; }
-  #traitsPanel { max-width: 460px; }
   #summaryPanel{ max-width: 460px; }
   #effectsPanel{ max-width: 460px; }
   #conflictPanel{ max-width: 460px; }
@@ -2126,7 +2197,6 @@ select.level {
 /* Mobile: make right panels fill ~90% width and full dynamic height */
 @media (max-width: 640px) {
   #filterPanel,
-  #traitsPanel,
   #yrkePanel,
   #infoPanel,
   #summaryPanel,

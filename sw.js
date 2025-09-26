@@ -1,10 +1,13 @@
-const CACHE_NAME = 'symbaroum-pwa-v9';
+const CACHE_NAME = 'symbaroum-pwa-v11';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
   'character.html',
   'notes.html',
   'inventory.html',
+  'traits.html',
+  'summary.html',
+  'effects.html',
   'webapp.html',
   'css/style.css',
   'manifest.json',
@@ -19,11 +22,13 @@ const URLS_TO_CACHE = [
   'js/djurmask.js',
   'js/elite-add.js',
   'js/elite-req.js',
+  'js/entry-card.js',
   'js/exceptionellt.js',
   'js/index-view.js',
   'js/inventory-view.js',
   'js/jszip.min.js',
   'js/inventory-utils.js',
+  'js/summary-effects.js',
   'js/main.js',
   'js/monsterlard.js',
   'js/notes-view.js',

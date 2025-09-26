@@ -53,7 +53,7 @@ Verktygsraden innehåller:
 - Ett sökfält. Skriv ett ord och tryck Enter för att lägga till det som filter.
 - `XP:` visar hur mycket erfarenhet du har använt. Detta uppdateras automatiskt.
 - `🎒` öppnar inventariet.
-- `📊` öppnar egenskapspanelen.
+- `📊` öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter).
 - `📜` öppnar anteckningspanelen.
 - Skriv `lol` i sökfältet och tryck Enter för att rensa alla filter.
 - `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
@@ -75,11 +75,11 @@ Via `🎒` kommer du åt allt du har samlat på dig.
 - Under **Verktyg** hittar du knappar för **🆕**, **💰**, **🧹** och **x²** för att lägga till flera av samma föremål. Om föremålet inte kan staplas skapas nya fält.
 I listan för varje föremål finns knappar för att öka/minska antal, markera som gratis, redigera kvaliteter och mer.
 
-### 6. Egenskapspanelen
-`📊` visar en summering av karaktärens förmågor och särdrag.
-- Här fyller du i totala erfarenhetspoäng.
-- Panelen räknar ut använd XP, kostnader från artefakter samt eventuell korruption.
-- Du kan även se en lista över uppnådda totala poäng i olika kategorier.
+### 6. Egenskapssidorna
+`📊` öppnar en samlad sektion med tre flikar:
+- **Karaktärsdrag**: nuvarande vy för att justera drag, XP och bonusar.
+- **Översikt**: visar bärkapacitet, försvar, ekonomi och sammanfattande listor.
+- **Effekter**: listar alla aktiva effekter från förmågor och inventarie.
 
 ### 7. Anteckningspanelen
 `📜` låter dig skriva fria anteckningar om rollpersonen. Dessa sparas tillsammans med karaktären och följer med vid export och import om något fält innehåller text.
