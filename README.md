@@ -64,9 +64,9 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 - **Ta bort rollperson** raderar den aktuella karaktären.
 - **Export** öppnar en meny där du kan ladda ner alla rollpersoner eller välja en specifik att exportera som JSON-fil.
 - **Import** återställer en eller flera karaktärer från sparade filer.
-- **⚒️**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
-- **🔭** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
-- **↕️ Expandera vy** växlar till vanliga vyn.
+- **<img src="icons/smithing.svg" alt="Smed" width="18">**, **<img src="icons/alkemi.svg" alt="Alkemist" width="18">** och **<img src="icons/artefakt.svg" alt="Artefakt" width="18">** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
+- **<img src="icons/extend.svg" alt="Utvidga sökning" width="18">** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
+- **<img src="icons/expand.svg" alt="Expandera vy" width="18"> Expandera vy** växlar till vanliga vyn.
 - **ℹ️** visar en snabböversikt av alla knappar.
 
 ### 5. Inventariepanelen

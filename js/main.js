@@ -429,10 +429,10 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     // Inställningar 💡 (Filter → Inställningar)
     { id: 'settings-smith',   label: 'Smed i partyt',        sel: '#partySmith',      panel: 'filterPanel', emoji: '⚒️', syn: ['smed','smed i partyt','smed nivå'] },
     { id: 'settings-alch',    label: 'Alkemist i partyt',    sel: '#partyAlchemist',  panel: 'filterPanel', emoji: '⚗️', syn: ['alkemist','alkemist i partyt'] },
-    { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', syn: ['artefaktmakare','artefaktare'] },
-    { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', syn: ['utvidga sökning','or-sökning','union','OR'] },
-    { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', syn: ['expandera vy','vy','detaljer','expand'] },
-    { id: 'settings-defense', label: 'Tvinga försvar',       sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', syn: ['försvar','tvinga försvar','försvarskaraktärsdrag'] },
+    { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', icon: 'artefakt', syn: ['artefaktmakare','artefaktare'] },
+    { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', icon: 'extend', syn: ['utvidga sökning','or-sökning','union','OR'] },
+    { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', icon: 'expand', syn: ['expandera vy','vy','detaljer','expand'] },
+    { id: 'settings-defense', label: 'Tvinga försvar',       sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', icon: 'forsvar', syn: ['försvar','tvinga försvar','försvarskaraktärsdrag'] },
     { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
@@ -523,9 +523,9 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       return UI_CMDS
         .slice()
         .sort((a,b)=> String(a.label||'').localeCompare(String(b.label||''), 'sv'))
-        .map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '' }));
+        .map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '', icon: c.icon || '' }));
     }
-    return searchUICommands(q).map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '' }));
+    return searchUICommands(q).map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '', icon: c.icon || '' }));
   };
   window.executeUICommand = executeUICommand;
   window.tryUICommand = tryUICommand;
