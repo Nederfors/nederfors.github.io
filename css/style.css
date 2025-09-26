@@ -3304,8 +3304,15 @@ select.level {
 #rowPricePopup .export-card { padding: .8rem 1rem; }
 #rowPricePopup .export-card .card-desc { display: flex; flex-direction: column; gap: .45rem; text-align: left; }
 #rowPricePopup .inline-controls { margin-top: .2rem; }
-#rowPricePopup .money-row { display: flex; gap: .4rem; }
-#rowPricePopup .money-row input { flex: 1; min-width: 6rem; }
+#rowPricePopup .money-row {
+  display: flex;
+  gap: .4rem;
+  flex-wrap: wrap;
+}
+#rowPricePopup .money-row input {
+  flex: 1 1 6rem;
+  min-width: 4.5rem;
+}
 
 /* Döljer upp/ned-pilar i nummerfält i snabbpris-popupen */
 #rowPricePopup input[type="number"]::-webkit-outer-spin-button,
