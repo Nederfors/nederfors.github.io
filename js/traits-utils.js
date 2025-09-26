@@ -259,7 +259,7 @@
       return `
       <div class="trait" data-key="${k}">
         <div class="trait-header">
-          <div class="trait-label">[${k}: ${val}]</div>
+          <div class="trait-label">${k}: ${val}</div>
         </div>
         <div class="trait-controls" role="group" aria-label="Justera ${k}">
           <button class="trait-btn" data-d="-5">−5</button>
