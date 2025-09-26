@@ -1162,15 +1162,35 @@ class SharedToolbar extends HTMLElement {
   }
 
   handleOutsideClick(e) {
-    const path = e.composedPath();
-    const toggles = ['filterToggle','infoToggle'];
-    if (path.some(el => toggles.includes(el.id))) return;
+    const rawPath = typeof e.composedPath === 'function'
+      ? e.composedPath()
+      : (e.path || []);
+    const path = Array.isArray(rawPath) ? [...rawPath] : [];
+    if (!path.length && e.target) path.push(e.target);
+
+    const containsInPath = target => {
+      if (!target) return false;
+      return path.some(node => {
+        if (!node) return false;
+        if (node === target) return true;
+        if (typeof target.contains === 'function' && node instanceof Node) {
+          return target.contains(node);
+        }
+        return false;
+      });
+    };
+
+    const toggleButtons = ['filterToggle','infoToggle']
+      .map(id => this.shadowRoot.getElementById(id))
+      .filter(Boolean);
+    const isToggleClick = toggleButtons.some(btn => containsInPath(btn));
+    if (isToggleClick) return;
 
     // Hide search suggestions when clicking outside search UI
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
     const sIn   = this.shadowRoot.getElementById('searchField');
     if (sugEl && !sugEl.hidden) {
-      const insideSearch = path.includes(sugEl) || path.includes(sIn);
+      const insideSearch = containsInPath(sugEl) || containsInPath(sIn);
       if (!insideSearch) {
         sugEl.hidden = true;
       }
@@ -1178,10 +1198,10 @@ class SharedToolbar extends HTMLElement {
 
     // ignore clicks inside popups so panels stay open
       const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
-    if (path.some(el => popups.includes(el.id))) return;
+    if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
-    if (openPanel && !path.includes(openPanel)) {
+    if (openPanel && !containsInPath(openPanel)) {
       openPanel.classList.remove('open');
     }
   }
