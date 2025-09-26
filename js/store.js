@@ -587,6 +587,26 @@
     return list.map(x => ({ ...x }));
   }
 
+  function normalizeRaceName(value) {
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    return trimmed || '';
+  }
+
+  function getCharacterRaces(store) {
+    if (!store || !store.current) return { base: '', blood: [] };
+    const data = store.data?.[store.current] || {};
+    const list = Array.isArray(data.list) ? data.list : [];
+    const baseEntry = list.find(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Ras'));
+    const base = normalizeRaceName(baseEntry?.namn);
+    const blood = Array.from(new Set(list
+      .filter(entry => entry && entry.namn === 'Blodsband' && entry.race)
+      .map(entry => normalizeRaceName(entry.race))
+      .filter(Boolean)
+    ));
+    return { base, blood };
+  }
+
   function applyDarkBloodEffects(store, list) {
     const hasDark = list.some(x => x.namn === 'Mörkt blod');
     const idxBest = list.findIndex(x => x.namn === 'Mörkt förflutet');
@@ -2115,6 +2135,7 @@ function defaultTraits() {
     getRecentSearches,
     addRecentSearch,
     getCurrentList,
+    getCharacterRaces,
     setCurrentList,
     getInventory,
     setInventory,

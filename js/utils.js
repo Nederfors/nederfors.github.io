@@ -37,16 +37,96 @@
     smithing  : 'icons/smithing.svg'
   });
 
+  const DEFAULT_CHARACTER_ICON = ICON_SOURCES.character;
+  let characterIconOverride = '';
+
+  function normalizeIconPath(input) {
+    if (typeof input !== 'string') return '';
+    let str = input.trim();
+    if (!str) return '';
+    str = str.replace(/\\+/g, '/');
+    if (/^[a-z]+:/i.test(str)) return str; // Absolute/URL paths – leave untouched
+    if (str.includes('/')) {
+      const segments = str.split('/');
+      const last = segments.pop() || '';
+      const normalizedLast = (/\.svg$/i.test(last) ? last.slice(0, -4) : last).toLowerCase();
+      segments.push(`${normalizedLast}.svg`);
+      return segments.join('/');
+    }
+    const base = (/\.svg$/i.test(str) ? str.slice(0, -4) : str).toLowerCase();
+    return `icons/${base}.svg`;
+  }
+
+  function resolveIconSource(name) {
+    const rawName = typeof name === 'string' ? name.trim() : '';
+    if (!rawName) return '';
+    const lowerName = rawName.toLowerCase();
+    if (lowerName === 'character' && characterIconOverride) {
+      return characterIconOverride;
+    }
+    if (Object.prototype.hasOwnProperty.call(ICON_SOURCES, rawName)) {
+      return ICON_SOURCES[rawName];
+    }
+    if (Object.prototype.hasOwnProperty.call(ICON_SOURCES, lowerName)) {
+      return ICON_SOURCES[lowerName];
+    }
+    return `icons/${rawName}.svg`;
+  }
+
+  function refreshCharacterIconElements() {
+    if (typeof document === 'undefined') return;
+    const target = characterIconOverride || DEFAULT_CHARACTER_ICON;
+    const applyToRoot = (root) => {
+      if (!root || typeof root.querySelectorAll !== 'function') return;
+      const nodes = root.querySelectorAll('img[data-icon-name="character"]');
+      nodes.forEach(img => {
+        if (img.getAttribute('src') !== target) {
+          img.setAttribute('src', target);
+        }
+      });
+    };
+    applyToRoot(document);
+    const toolbars = document.querySelectorAll ? document.querySelectorAll('shared-toolbar') : [];
+    toolbars.forEach(el => applyToRoot(el.shadowRoot));
+  }
+
+  function setCharacterIconOverride(value) {
+    if (typeof document === 'undefined') {
+      characterIconOverride = '';
+      return;
+    }
+    const normalized = typeof value === 'string' ? value.trim() : '';
+    let resolved = normalized ? normalizeIconPath(normalized) : '';
+    if (resolved === DEFAULT_CHARACTER_ICON) resolved = '';
+    if (characterIconOverride === resolved) {
+      refreshCharacterIconElements();
+      return;
+    }
+    characterIconOverride = resolved;
+    refreshCharacterIconElements();
+  }
+
+  function setCharacterIconVariant(variant) {
+    setCharacterIconOverride(variant);
+  }
+
+  function getCharacterIconSrc() {
+    return resolveIconSource('character');
+  }
+
   function iconHtml(name, opts = {}) {
     if (!name) return '';
-    const src = ICON_SOURCES[name] || `icons/${name}.svg`;
+    const normalizedName = typeof name === 'string' ? name.trim() : '';
+    if (!normalizedName) return '';
+    const lowerName = normalizedName.toLowerCase();
+    const src = resolveIconSource(normalizedName);
     const extraClass = opts.className ? ` ${opts.className}` : '';
     const alt = typeof opts.alt === 'string' ? opts.alt : '';
     const attrs = [];
     if (opts.loading) attrs.push(`loading="${opts.loading}"`);
     if (opts.decoding) attrs.push(`decoding="${opts.decoding}"`);
     const attrStr = attrs.length ? ` ${attrs.join(' ')}` : '';
-    return `<img src="${src}" alt="${alt}" class="btn-icon${extraClass}"${attrStr}>`;
+    return `<img src="${src}" alt="${alt}" class="btn-icon${extraClass}" data-icon-name="${lowerName}"${attrStr}>`;
   }
 
   // Konvertera ett penningobjekt till totalt antal örtegar
@@ -445,4 +525,8 @@
   window.catName = catName;
   window.lookupEntry = lookupEntry;
   window.iconHtml = iconHtml;
+  window.refreshCharacterIconElements = refreshCharacterIconElements;
+  window.setCharacterIconOverride = setCharacterIconOverride;
+  window.setCharacterIconVariant = setCharacterIconVariant;
+  window.getCharacterIconSrc = getCharacterIconSrc;
 })(window);
