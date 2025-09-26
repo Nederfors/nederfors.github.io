@@ -48,11 +48,7 @@
   <div class="panel traits-panel">
     <div class="panel-header">
       <h2 id="charName" style="margin:0;"></h2>
-      <div class="header-actions">
-        <button id="resetTraits" class="char-btn icon danger" title="Återställ basegenskaper">
-          <img src="icons/broom.svg" alt="" class="btn-icon">
-        </button>
-      </div>
+      <div class="header-actions"></div>
     </div>
 
     <div class="traits-content summary-content">
@@ -89,8 +85,13 @@
 
       <section class="summary-section trait-list-section">
         <div class="trait-meta">
-          <div class="traits-total" role="status">
-            Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
+          <div class="traits-total-row">
+            <div class="traits-total" role="status">
+              Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
+            </div>
+            <button id="resetTraits" class="char-btn icon icon-only danger traits-reset-btn" title="Återställ basegenskaper" aria-label="Återställ basegenskaper">
+              <img src="icons/broom.svg" alt="" class="btn-icon">
+            </button>
           </div>
           <div id="traitStats" class="trait-extra-meta" aria-live="polite"></div>
         </div>
