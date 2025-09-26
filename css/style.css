@@ -1055,6 +1055,17 @@ input:focus, select:focus, textarea:focus {
   min-width: 0;
 }
 
+.entry-header-main .card-title > span {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-width: 0;
+}
+
+.entry-header-main .card-title > span .count-badge {
+  align-self: center;
+}
+
 .entry-header-xp,
 .entry-header-actions {
   display: flex;
