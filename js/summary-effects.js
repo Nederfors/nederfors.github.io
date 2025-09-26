@@ -598,12 +598,12 @@
     });
 
     const favorSections = [
-      createListRow('Fördelar', gatherEntries('Fördel')),
-      createListRow('Nackdelar', gatherEntries('Nackdel')),
-      createListRow('Mystiska krafter', gatherEntries('Mystisk kraft')),
-      createListRow('Ritualer', gatherEntries('Ritual')),
-      createListRow('Artefakter', gatherEntries('Artefakt')),
-      createListRow('Viktiga färdigheter', gatherEntries(['Yrke', 'Elityrke', 'Ras'], { annotateMultiples: true }))
+      createListRow('Fördelar', gatherEntries('Fördel'), { max: Infinity }),
+      createListRow('Nackdelar', gatherEntries('Nackdel'), { max: Infinity }),
+      createListRow('Mystiska krafter', gatherEntries('Mystisk kraft'), { max: Infinity }),
+      createListRow('Ritualer', gatherEntries('Ritual'), { max: Infinity }),
+      createListRow('Artefakter', gatherEntries('Artefakt'), { max: Infinity }),
+      createListRow('Viktiga färdigheter', gatherEntries(['Yrke', 'Elityrke', 'Ras'], { annotateMultiples: true, max: Infinity }))
     ].filter(Boolean);
 
     if (favorSections.length) {
