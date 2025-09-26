@@ -388,6 +388,14 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   line-height: 1.2;
 }
 
+.summary-pairs .summary-key::after {
+  content: ': ';
+}
+
+.summary-pairs .summary-key:empty::after {
+  content: '';
+}
+
 .summary-value {
   grid-column: 2;
   min-width: 0;
