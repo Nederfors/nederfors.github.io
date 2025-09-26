@@ -806,6 +806,8 @@ function applyCharacterChange() {
     if (dom.artBtn)   dom.artBtn.classList.toggle('active',   Boolean(storeHelper.getPartyArtefacter(store)));
     if (dom.defBtn)   dom.defBtn.classList.toggle('active',   Boolean(storeHelper.getDefenseTrait(store)));
 
+    updateCharacterIconVariant();
+
     // Re-render inventory (includes recalculating traits/XP side-effects)
     if (window.invUtil && typeof invUtil.renderInventory === 'function') {
       invUtil.renderInventory();
@@ -831,6 +833,28 @@ function applyCharacterChange() {
 }
 // Expose for other modules that want to trigger a full UI sync
 window.applyCharacterChange = applyCharacterChange;
+
+function updateCharacterIconVariant() {
+  if (typeof window.setCharacterIconVariant !== 'function') return;
+  try {
+    if (!store || !store.current || typeof storeHelper.getCharacterRaces !== 'function') {
+      window.setCharacterIconVariant('');
+      return;
+    }
+    const races = storeHelper.getCharacterRaces(store) || {};
+    const base = String(races.base || '').trim().toLowerCase();
+    const blood = Array.isArray(races.blood) ? races.blood : [];
+    const hasAndrik = base === 'andrik'
+      || blood.some(r => String(r || '').trim().toLowerCase() === 'andrik');
+    window.setCharacterIconVariant(hasAndrik ? 'andrik' : '');
+  } catch {
+    try { window.setCharacterIconVariant(''); } catch {}
+  }
+}
+
+window.updateCharacterIconVariant = updateCharacterIconVariant;
+
+updateCharacterIconVariant();
 
 function refreshCharSelect() {
   const folders = (storeHelper.getFolders(store) || []).slice()
@@ -2698,6 +2722,7 @@ function updateXP() {
   if (dom.xpUsed)  dom.xpUsed.textContent  = used;
   if (dom.xpFree)  dom.xpFree.textContent  = free;
   if (dom.xpSum)   dom.xpSum.classList.toggle('under', free < 0);
+  updateCharacterIconVariant();
 }
 /* -----------------------------------------------------------
    Synk mellan flikar – endast när AKTUELLA rollpersonen ändras
