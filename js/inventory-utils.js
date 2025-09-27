@@ -417,6 +417,7 @@
     const popInner = pop.querySelector('.popup-inner');
 
     pop.classList.add('open');
+    window.autoResizeAll?.(pop);
     if (popInner) popInner.scrollTop = 0;
 
     /* local helpers */
@@ -712,15 +713,17 @@
             const row = document.createElement('div');
             row.className = 'power-row';
             row.innerHTML = `
-              <input class=\"power-name\" placeholder=\"Förmågans namn\" value=\"${k.replace(/\"/g,'&quot;')}\">\n              <textarea class=\"power-desc\" placeholder=\"Beskrivning\">${existing.niv\u00e5er[k] ? String(existing.niv\u00e5er[k]) : ''}</textarea>\n              <button class=\"char-btn danger power-del\" type=\"button\">✕</button>
+              <input class=\"power-name\" placeholder=\"Förmågans namn\" value=\"${k.replace(/\"/g,'&quot;')}\">\n              <textarea class=\"power-desc auto-resize\" placeholder=\"Beskrivning\">${existing.niv\u00e5er[k] ? String(existing.niv\u00e5er[k]) : ''}</textarea>\n              <button class=\"char-btn danger power-del\" type=\"button\">✕</button>
             `;
             powerList.appendChild(row);
-          row.querySelector('.power-del').addEventListener('click', ev => {
-            ev.preventDefault();
-            ev.stopPropagation();
-            row.remove();
+            const descField = row.querySelector('.power-desc');
+            if (descField) window.autoResize?.(descField);
+            row.querySelector('.power-del').addEventListener('click', ev => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              row.remove();
+            });
           });
-        });
         powerBox.style.display = '';
       }
       }
@@ -892,6 +895,7 @@
     }
 
     pop.classList.add('open');
+    window.autoResizeAll?.(pop);
     if (popInner) popInner.scrollTop = 0;
     if (typeAdd) typeAdd.addEventListener('click', onAddType);
     if (typeTags) typeTags.addEventListener('click', onTagsClick);
@@ -914,10 +918,12 @@
       row.className = 'power-row';
       row.innerHTML = `
         <input class="power-name" placeholder="Förmågans namn">
-        <textarea class="power-desc" placeholder="Beskrivning"></textarea>
+        <textarea class="power-desc auto-resize" placeholder="Beskrivning"></textarea>
         <button class="char-btn danger power-del" type="button">✕</button>
       `;
       powerList.appendChild(row);
+      const descField = row.querySelector('.power-desc');
+      if (descField) window.autoResize?.(descField);
       row.querySelector('.power-del').addEventListener('click', ev => {
         ev.preventDefault();
         ev.stopPropagation();
