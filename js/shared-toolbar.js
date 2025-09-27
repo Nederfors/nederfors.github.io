@@ -25,6 +25,7 @@ class SharedToolbar extends HTMLElement {
   /* ------------------------------------------------------- */
   connectedCallback() {
     this.render();
+    window.autoResizeAll?.(this.shadowRoot);
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
@@ -429,9 +430,9 @@ class SharedToolbar extends HTMLElement {
               <option value="mastare">Mästare</option>
               <option value="triple">Novis/Gesäll/Mästare</option>
             </select>
-            <textarea id="customLevelNovis" placeholder="Novis"></textarea>
-            <textarea id="customLevelGesall" placeholder="Gesäll"></textarea>
-            <textarea id="customLevelMastare" placeholder="Mästare"></textarea>
+            <textarea id="customLevelNovis" class="auto-resize" placeholder="Novis"></textarea>
+            <textarea id="customLevelGesall" class="auto-resize" placeholder="Gesäll"></textarea>
+            <textarea id="customLevelMastare" class="auto-resize" placeholder="Mästare"></textarea>
           </div>
           <div id="customPowerFields" class="filter-group" style="display:none">
             <label>Förmågor</label>
@@ -462,7 +463,7 @@ class SharedToolbar extends HTMLElement {
             <input id="customSkilling" type="number" min="0" placeholder="Skilling">
             <input id="customOrtegar" type="number" min="0" placeholder="Örtegar">
           </div>
-          <textarea id="customDesc" placeholder="Beskrivning"></textarea>
+          <textarea id="customDesc" class="auto-resize" placeholder="Beskrivning"></textarea>
           <button id="customAdd" class="char-btn" type="button">Spara</button>
           <button id="customDelete" class="char-btn danger" type="button" style="display:none">Radera</button>
           <button id="customCancel" class="char-btn danger" type="button">Avbryt</button>
