@@ -31,6 +31,7 @@ class SharedToolbar extends HTMLElement {
     const toolbar = this.shadowRoot.querySelector('.toolbar');
     if (window.visualViewport) {
       this._vvBaseline = null;
+      const KEYBOARD_OFFSET_THRESHOLD = 80;
       this._vvHandler = () => {
         /*
           Lås verktygsraden precis ovanför tangentbordet. När tangent-
@@ -38,20 +39,16 @@ class SharedToolbar extends HTMLElement {
           skärmens nederkant.
         */
         const vv = window.visualViewport;
-        let offset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+        const currentViewport = vv.height + vv.offsetTop;
 
-        if (!this._vvBaseline) {
-          this._vvBaseline = {
-            offset,
-            height: vv.height,
-            offsetTop: vv.offsetTop,
-            innerHeight: window.innerHeight
-          };
-          toolbar.style.bottom = 'env(safe-area-inset-bottom)';
-          return;
+        if (this._vvBaseline == null || currentViewport > this._vvBaseline) {
+          this._vvBaseline = currentViewport;
         }
 
-        if (offset < 50) {
+        const rawOffset = Math.max(0, this._vvBaseline - currentViewport);
+        const offset = rawOffset > KEYBOARD_OFFSET_THRESHOLD ? rawOffset : 0;
+
+        if (offset === 0) {
           toolbar.style.bottom = 'env(safe-area-inset-bottom)';
         } else {
           toolbar.style.bottom = `calc(env(safe-area-inset-bottom) + ${offset}px)`;
@@ -62,11 +59,15 @@ class SharedToolbar extends HTMLElement {
       const fallbackEvents = [
         { target: window, type: 'focusout' },
         { target: window, type: 'touchend' },
-        { target: window, type: 'orientationchange' }
+        { target: window, type: 'orientationchange', resetBaseline: true }
       ];
-      this._vvFallbackCleanup = fallbackEvents.map(({ target, type }) => {
-        const fallbackHandler = () =>
+      this._vvFallbackCleanup = fallbackEvents.map(({ target, type, resetBaseline }) => {
+        const fallbackHandler = () => {
+          if (resetBaseline) {
+            this._vvBaseline = null;
+          }
           window.requestAnimationFrame(() => this._vvHandler?.());
+        };
         target.addEventListener(type, fallbackHandler, { passive: true });
         return () => target.removeEventListener(type, fallbackHandler, { passive: true });
       });
