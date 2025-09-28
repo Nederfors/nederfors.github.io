@@ -583,6 +583,21 @@
 
     const summarySections = [];
 
+    const quickOverviewRows = [
+      createListRow('Raser', gatherEntries('Ras'), { max: Infinity }),
+      createListRow('Yrken', gatherEntries('Yrke'), { max: Infinity }),
+      createListRow('Elityrken', gatherEntries('Elityrke'), { max: Infinity })
+    ].filter(Boolean);
+
+    if (quickOverviewRows.length) {
+      summarySections.push({
+        title: 'Snabböversikt',
+        layout: 'stack',
+        items: quickOverviewRows,
+        sectionClass: 'quick-overview'
+      });
+    }
+
     summarySections.push({
       title: 'Karaktärsdrag',
       items: KEYS.map(key => ({
@@ -637,20 +652,6 @@
       ]
     });
 
-    const quickOverviewRows = [
-      createListRow('Raser', gatherEntries('Ras'), { max: Infinity }),
-      createListRow('Yrken', gatherEntries('Yrke'), { max: Infinity }),
-      createListRow('Elityrken', gatherEntries('Elityrke'), { max: Infinity })
-    ].filter(Boolean);
-
-    if (quickOverviewRows.length) {
-      summarySections.push({
-        title: 'Snabböversikt',
-        layout: 'stack',
-        items: quickOverviewRows
-      });
-    }
-
     const categorySections = [
       { title: 'Förmågor', types: 'Förmåga' },
       { title: 'Mystiska krafter', types: 'Mystisk kraft' },
@@ -684,6 +685,17 @@
       const listClasses = ['summary-list', 'summary-pairs'];
       if (section.layout) listClasses.push(`layout-${section.layout}`);
       const showColon = section.layout !== 'grid';
+      const sectionClasses = ['summary-section'];
+      if (section.sectionClass) {
+        if (Array.isArray(section.sectionClass)) {
+          section.sectionClass.filter(Boolean).forEach(cls => sectionClasses.push(cls));
+        } else {
+          sectionClasses.push(section.sectionClass);
+        }
+      }
+      if (Array.isArray(section.sectionClasses)) {
+        section.sectionClasses.filter(Boolean).forEach(cls => sectionClasses.push(cls));
+      }
       const items = (section.items || []).map(row => {
         if (row.text) {
           return `<li>${escapeHtml(row.text)}</li>`;
@@ -717,7 +729,7 @@
         const valueText = row.value === null || row.value === undefined ? '–' : String(row.value);
         return `<li><span class="summary-key">${escapeHtml(labelText)}</span><span class="${classNames.join(' ')}">${escapeHtml(valueText)}</span></li>`;
       }).join('');
-      return `<section class="summary-section"><h3>${escapeHtml(section.title)}</h3><ul class="${listClasses.join(' ')}">${items}</ul></section>`;
+      return `<section class="${sectionClasses.join(' ')}"><h3>${escapeHtml(section.title)}</h3><ul class="${listClasses.join(' ')}">${items}</ul></section>`;
     }).join('');
 
     return sectionsHtml;
