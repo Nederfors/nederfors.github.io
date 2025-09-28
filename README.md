@@ -72,7 +72,7 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 ### 5. Inventariepanelen
 Via `🎒` kommer du åt allt du har samlat på dig.
 - **Kategori** låter dig filtrera inventarielistan på typ av utrustning.
-- Under **Verktyg** hittar du knappar för **🆕**, **💰**, **🧹** och **x²** för att lägga till flera av samma föremål. Om föremålet inte kan staplas skapas nya fält.
+- Under **Verktyg** hittar du knappar för **🆕**, **<img src="icons/basket.svg" alt="Pengar" width="18" height="18">**, **🧹** och **x²** för att lägga till flera av samma föremål. Om föremålet inte kan staplas skapas nya fält.
 I listan för varje föremål finns knappar för att öka/minska antal, markera som gratis, redigera kvaliteter och mer.
 
 ### 6. Egenskapssidorna
