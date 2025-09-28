@@ -30,6 +30,7 @@ class SharedToolbar extends HTMLElement {
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
     if (window.visualViewport) {
+      this._vvBaseline = null;
       this._vvHandler = () => {
         /*
           Lås verktygsraden precis ovanför tangentbordet. När tangent-
@@ -38,6 +39,18 @@ class SharedToolbar extends HTMLElement {
         */
         const vv = window.visualViewport;
         let offset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
+
+        if (!this._vvBaseline) {
+          this._vvBaseline = {
+            offset,
+            height: vv.height,
+            offsetTop: vv.offsetTop,
+            innerHeight: window.innerHeight
+          };
+          toolbar.style.bottom = 'env(safe-area-inset-bottom)';
+          return;
+        }
+
         if (offset < 50) {
           toolbar.style.bottom = 'env(safe-area-inset-bottom)';
         } else {
@@ -57,7 +70,7 @@ class SharedToolbar extends HTMLElement {
         target.addEventListener(type, fallbackHandler, { passive: true });
         return () => target.removeEventListener(type, fallbackHandler, { passive: true });
       });
-      this._vvHandler();
+      window.requestAnimationFrame(() => this._vvHandler?.());
     }
 
     this.cache();
@@ -103,6 +116,7 @@ class SharedToolbar extends HTMLElement {
     window.visualViewport?.removeEventListener('scroll', this._vvHandler);
     this._vvFallbackCleanup?.forEach(cleanup => cleanup());
     this._vvFallbackCleanup = null;
+    this._vvBaseline = null;
     document.removeEventListener('click', this._outsideHandler);
   }
 
