@@ -2407,7 +2407,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const functionsCard = createEntryCard({
       compact: !functionsOpen,
       dataset: { special: '__invfunc__' },
-      nameHtml: 'Inventarie 💰',
+      nameHtml: `Inventarie ${icon('basket', { className: 'title-icon', alt: 'Inventarie' })}`,
       descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div></div>`,
       collapsible: true
     });
@@ -2438,7 +2438,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const infoCard = createEntryCard({
       compact: !infoOpen,
       dataset: { special: infoKey },
-      nameHtml: 'Information 🔎',
+      nameHtml: `Information ${icon('money-bag', { className: 'title-icon', alt: 'Information' })}`,
       descHtml: `<div class="card-desc">${infoCardDesc}</div>`,
       collapsible: true
     });

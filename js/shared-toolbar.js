@@ -309,7 +309,7 @@ class SharedToolbar extends HTMLElement {
 
         <ul class="card-list">
           <li class="card" data-special="__formal__" id="filterFormalCard">
-            <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
+            <div class="card-title"><span><span class="collapse-btn"></span>Verktyg ${icon('tool-box', { className: 'title-icon', alt: 'Verktyg' })}</span></div>
             <div class="card-desc">
               <!-- Välj rollperson och Aktiv mapp -->
               <div class="filter-group">
@@ -352,7 +352,7 @@ class SharedToolbar extends HTMLElement {
             </div>
           </li>
           <li class="card" data-special="__formal__" id="filterSettingsCard">
-            <div class="card-title"><span><span class="collapse-btn"></span>Inställningar 💡</span></div>
+            <div class="card-title"><span><span class="collapse-btn"></span>Inställningar ${icon('lamp', { className: 'title-icon', alt: 'Inställningar' })}</span></div>
             <div class="card-desc">
               <!-- Grupp med partymedlemmar och vy-knappar -->
               <div class="filter-group party-toggles">
@@ -987,7 +987,7 @@ class SharedToolbar extends HTMLElement {
               <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
               <li>▶/▼ Öppna eller kollapsa alla.</li>
               <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
-              <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).</li>
+              <li>🆕 Eget föremål. ${icon('basket', { className: 'title-icon', alt: 'Pengar' })} Pengar (Spara/Addera/Nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).</li>
               <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
               <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. ${icon('broom')} Töm inventariet.</li>
               <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>

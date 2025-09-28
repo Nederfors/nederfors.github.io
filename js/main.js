@@ -430,7 +430,7 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     { id: 'open-effects',    label: 'Effekter',     sel: '#effectsToggle, #traitsTabEffects', panel: null,         emoji: '📚',
       syn: ['effekter','visa effekter','sammanställning effekter','sammanstallning effekter'] },
 
-    // Inställningar 💡 (Filter → Inställningar)
+    // Inställningar (Filter → Inställningar, lamp-ikon)
     { id: 'settings-smith',   label: 'Smed i partyt',        sel: '#partySmith',      panel: 'filterPanel', emoji: '⚒️', syn: ['smed','smed i partyt','smed nivå'] },
     { id: 'settings-alch',    label: 'Alkemist i partyt',    sel: '#partyAlchemist',  panel: 'filterPanel', emoji: '⚗️', syn: ['alkemist','alkemist i partyt'] },
     { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', icon: 'artefakt', syn: ['artefaktmakare','artefaktare'] },
@@ -440,9 +440,9 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
-    // Inventarie → Verktyg 🧰
+    // Inventarie → Verktyg (verktygslåda-ikon)
     { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: null, emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
-    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: null, emoji: '💰', syn: ['pengar','hantera pengar','money'] },
+    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: null, emoji: '', icon: 'basket', syn: ['pengar','hantera pengar','money'] },
     { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: null, emoji: '💸', syn: ['multiplicera pris','pris'] },
     { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: null, emoji: 'x²', syn: ['antal','lägg till antal'] },
     { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: null, emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },

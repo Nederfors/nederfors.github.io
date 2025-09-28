@@ -235,6 +235,13 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   height: 1.55rem;
 }
 
+.btn-icon.title-icon {
+  width: 1.35rem;
+  height: 1.35rem;
+  display: inline-block;
+  vertical-align: middle;
+}
+
 .icon-only {
   font-size: 0 !important;
   line-height: 0;
