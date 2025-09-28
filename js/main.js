@@ -2619,12 +2619,13 @@ async function requireCharacter() {
   const btnChoose = pop.querySelector('#charReqChoose');
   const btnNew    = pop.querySelector('#charReqNew');
   const btnCancel = pop.querySelector('#charReqCancel');
+  const inner  = pop.querySelector('.popup-inner');
 
   renderCharOptions(select);
   wrap.style.display = 'none';
 
   pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
+  inner.scrollTop = 0;
 
   return await new Promise(resolve => {
     function close(res) {
@@ -2658,11 +2659,20 @@ async function requireCharacter() {
       applyCharacterChange();
     }
     async function onNew() {
+      const wasOpen = pop.classList.contains('open');
+      const restorePopup = () => {
+        wrap.style.display = 'none';
+        if (wasOpen) {
+          pop.classList.add('open');
+          inner.scrollTop = 0;
+        }
+      };
+      if (wasOpen) pop.classList.remove('open');
       const active = storeHelper.getActiveFolder(store);
       const res = await openNewCharPopupWithFolder(active);
-      if (!res) return;
+      if (!res) { restorePopup(); return; }
       const { name, folderId, xp } = res;
-      if (!name) return;
+      if (!name) { restorePopup(); return; }
       const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
       store.characters.push({ id: charId, name, folderId: folderId || '' });
       store.data[charId] = { baseXp: Number(xp) || 0, custom: [] };
