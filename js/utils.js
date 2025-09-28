@@ -123,6 +123,14 @@
     const extraClass = opts.className ? ` ${opts.className}` : '';
     const alt = typeof opts.alt === 'string' ? opts.alt : '';
     const attrs = [];
+    const widthAttr = Object.prototype.hasOwnProperty.call(opts, 'width') ? opts.width : 32;
+    const heightAttr = Object.prototype.hasOwnProperty.call(opts, 'height') ? opts.height : 32;
+    if (widthAttr !== undefined && widthAttr !== null && widthAttr !== '') {
+      attrs.push(`width="${widthAttr}"`);
+    }
+    if (heightAttr !== undefined && heightAttr !== null && heightAttr !== '') {
+      attrs.push(`height="${heightAttr}"`);
+    }
     if (opts.loading) attrs.push(`loading="${opts.loading}"`);
     if (opts.decoding) attrs.push(`decoding="${opts.decoding}"`);
     const attrStr = attrs.length ? ` ${attrs.join(' ')}` : '';
