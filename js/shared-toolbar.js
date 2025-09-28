@@ -46,6 +46,17 @@ class SharedToolbar extends HTMLElement {
       };
       window.visualViewport.addEventListener('resize', this._vvHandler);
       window.visualViewport.addEventListener('scroll', this._vvHandler);
+      const fallbackEvents = [
+        { target: window, type: 'focusout' },
+        { target: window, type: 'touchend' },
+        { target: window, type: 'orientationchange' }
+      ];
+      this._vvFallbackCleanup = fallbackEvents.map(({ target, type }) => {
+        const fallbackHandler = () =>
+          window.requestAnimationFrame(() => this._vvHandler?.());
+        target.addEventListener(type, fallbackHandler, { passive: true });
+        return () => target.removeEventListener(type, fallbackHandler, { passive: true });
+      });
       this._vvHandler();
     }
 
@@ -90,6 +101,8 @@ class SharedToolbar extends HTMLElement {
   disconnectedCallback() {
     window.visualViewport?.removeEventListener('resize', this._vvHandler);
     window.visualViewport?.removeEventListener('scroll', this._vvHandler);
+    this._vvFallbackCleanup?.forEach(cleanup => cleanup());
+    this._vvFallbackCleanup = null;
     document.removeEventListener('click', this._outsideHandler);
   }
 
