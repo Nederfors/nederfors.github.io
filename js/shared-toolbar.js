@@ -179,6 +179,27 @@ class SharedToolbar extends HTMLElement {
         .button-row .char-btn.icon-only {
           padding: .55rem 1.1rem;
         }
+        .btn-icon {
+          width: 1.8rem;
+          height: 1.8rem;
+          max-width: 100%;
+          max-height: 100%;
+          display: block;
+          pointer-events: none;
+          object-fit: contain;
+        }
+        .char-btn.icon .btn-icon {
+          width: 1.8rem;
+          height: 1.8rem;
+        }
+        .char-btn.icon-only .btn-icon {
+          width: 2rem;
+          height: 2rem;
+        }
+        .party-toggle .btn-icon {
+          width: 1.85rem;
+          height: 1.85rem;
+        }
         .button-row .nav-link.active {
           background: var(--neutral);
           color: #1d2118;
