@@ -637,26 +637,42 @@
       ]
     });
 
-    const favorSections = [
-      createListRow('Fördelar', gatherEntries('Fördel'), { max: Infinity }),
-      createListRow('Nackdelar', gatherEntries('Nackdel'), { max: Infinity }),
-      createListRow('Mystiska krafter', gatherEntries('Mystisk kraft'), { max: Infinity }),
-      createListRow('Ritualer', gatherEntries('Ritual'), { max: Infinity }),
-      createListRow('Artefakter', gatherEntries('Artefakt'), { max: Infinity }),
-      createListRow(
-        'Viktiga färdigheter',
-        gatherEntries(['Yrke', 'Elityrke', 'Ras'], { annotateMultiples: true }),
-        { max: Infinity }
-      )
+    const quickOverviewRows = [
+      createListRow('Raser', gatherEntries('Ras'), { max: Infinity }),
+      createListRow('Yrken', gatherEntries('Yrke'), { max: Infinity }),
+      createListRow('Elityrken', gatherEntries('Elityrke'), { max: Infinity })
     ].filter(Boolean);
 
-    if (favorSections.length) {
+    if (quickOverviewRows.length) {
       summarySections.push({
         title: 'Snabböversikt',
         layout: 'stack',
-        items: favorSections
+        items: quickOverviewRows
       });
     }
+
+    const categorySections = [
+      { title: 'Förmågor', types: 'Förmåga' },
+      { title: 'Mystiska krafter', types: 'Mystisk kraft' },
+      { title: 'Ritualer', types: 'Ritual' },
+      { title: 'Fördelar', types: 'Fördel' },
+      { title: 'Nackdelar', types: 'Nackdel' },
+      { title: 'Särdrag', types: 'Särdrag' },
+      { title: 'Monstruösa särdrag', types: 'Monstruöst särdrag' },
+      { title: 'Artefakter', types: 'Artefakt' }
+    ];
+
+    categorySections.forEach(def => {
+      const row = createListRow(def.title, gatherEntries(def.types, def.gatherOptions), { max: Infinity });
+      if (!row) return;
+      const sectionTitle = row.label || def.title;
+      row.label = '';
+      summarySections.push({
+        title: sectionTitle,
+        layout: 'stack',
+        items: [row]
+      });
+    });
 
     summarySections.push({
       title: 'Träffsäkerhet',
