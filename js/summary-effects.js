@@ -433,6 +433,21 @@
     const effects = storeHelper.getArtifactEffects(store) || {};
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(inv) : {};
+    const formatNumber = (value, options = {}) => {
+      const { decimals, fallback = '–' } = options;
+      if (value === null || value === undefined) return fallback;
+      if (typeof value === 'number') {
+        if (!Number.isFinite(value)) return fallback;
+        if (typeof decimals === 'number') {
+          return value.toFixed(decimals);
+        }
+        if (Number.isInteger(value)) {
+          return String(value);
+        }
+        return value.toFixed(2);
+      }
+      return String(value);
+    };
     const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
     const vals = {};
     KEYS.forEach(k=>{ vals[k] = (traits[k]||0) + (bonus[k]||0) + (maskBonus[k]||0); });
@@ -466,17 +481,22 @@
     const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list) : 'Kvick';
     const kvickForDef = vals[defTrait];
     const defenseList = window.calcDefense ? calcDefense(kvickForDef) : [];
-    const defenseValues = (Array.isArray(defenseList) ? defenseList : [])
+    const defenseEntries = (Array.isArray(defenseList) ? defenseList : [])
       .map(def => {
-        if (!def || typeof def !== 'object') return '';
-        const parts = [];
+        if (!def || typeof def !== 'object') return null;
         const name = typeof def.name === 'string' ? def.name.trim() : '';
-        const value = def.value ?? '';
-        if (name) parts.push(`${name}:`);
-        if (value !== '' && value !== undefined) parts.push(String(value));
-        return parts.join(' ').trim();
+        const value = def.value;
+        return { name, value };
       })
-      .filter(Boolean);
+      .filter(entry => entry && (entry.name || (typeof entry.value === 'number' && Number.isFinite(entry.value))));
+    const primaryDefense = defenseEntries.reduce((max, entry) => {
+      const val = typeof entry.value === 'number' ? entry.value : Number(entry.value);
+      if (!Number.isFinite(val)) return max;
+      return Math.max(max, val);
+    }, Number.NEGATIVE_INFINITY);
+    const defenseDisplayValue = Number.isFinite(primaryDefense) && primaryDefense > Number.NEGATIVE_INFINITY
+      ? formatNumber(primaryDefense)
+      : formatNumber(typeof kvickForDef === 'number' ? kvickForDef : null);
 
     const cond = [];
     if(storeHelper.abilityLevel(list,'Fint') >= 1){
@@ -512,12 +532,17 @@
     const usedXP = storeHelper.calcUsedXP(list, effects);
     const totalXP = storeHelper.calcTotalXP(baseXP, list);
     const freeXP = totalXP - usedXP;
+    const totalXPText = formatNumber(totalXP);
+    const usedXPText = formatNumber(usedXP);
+    const freeXPText = formatNumber(freeXP);
 
     const totalMoney = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
     const moneyToOFn = typeof window.moneyToO === 'function' ? window.moneyToO : null;
     const oToMoneyFn = typeof window.oToMoney === 'function' ? window.oToMoney : null;
     const invUtil = window.invUtil || {};
-    let unusedText = `${totalMoney.daler}D ${totalMoney.skilling}S ${totalMoney['örtegar']}Ö`;
+    const moneyToString = (money) => `${money.daler}D ${money.skilling}S ${money['örtegar']}Ö`;
+    let unusedText = moneyToString(totalMoney);
+    let unusedNegative = false;
 
     if (moneyToOFn && oToMoneyFn && typeof invUtil.calcRowCost === 'function') {
       const LEVEL_IDX = { '': 0, Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
@@ -549,61 +574,66 @@
       const diffO = totalCashO - spentO;
       const diff = oToMoneyFn(Math.abs(diffO));
       unusedText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
+      unusedNegative = diffO < 0;
     }
 
-    const currentChar = (Array.isArray(store.characters) ? store.characters : [])
-      .find(c => c && c.id === store.current);
-    const charName = currentChar?.name ? String(currentChar.name).trim() : '';
+    if (!unusedNegative) {
+      unusedNegative = /^\s*-/.test(unusedText);
+    }
 
     const summarySections = [];
-
-    summarySections.push({
-      title: 'Karaktär',
-      layout: 'grid',
-      items: [
-        { label: 'Namn', value: charName || 'Okänd' },
-        { label: 'Totalt ERF', value: `${totalXP}`, valueClass: freeXP < 0 ? 'xp-negative' : '' },
-        { label: 'Använt ERF', value: `${usedXP}` },
-        { label: 'Oanvänt ERF', value: `${freeXP}`, valueClass: freeXP < 0 ? 'xp-negative' : '' }
-      ]
-    });
 
     summarySections.push({
       title: 'Karaktärsdrag',
       items: KEYS.map(key => ({
         label: key,
-        value: `${vals[key] || 0}`
-      }))
+        value: formatNumber(vals[key] || 0)
+      })),
+      layout: 'grid'
     });
 
     summarySections.push({
-      title: 'Försvar & tålighet',
+      title: 'Erfarenhet',
+      layout: 'grid',
       items: [
-        { label: 'Försvarstärning', value: defTrait },
-        {
-          label: 'Försvarsvärden',
-          value: defenseValues.length ? defenseValues.join(', ') : '–'
-        },
-        { label: 'Tålighet', value: `${tal}` },
-        { label: 'Smärtgräns', value: `${pain}` },
-        { label: 'Bärkapacitet', value: `${capacity}` }
+        { label: 'Total XP', value: totalXPText },
+        { label: 'Använt XP', value: usedXPText },
+        { label: 'XP kvar', value: freeXPText, valueClass: freeXP < 0 ? 'neg' : '' }
+      ]
+    });
+
+    summarySections.push({
+      title: 'Försvar',
+      layout: 'grid',
+      items: [
+        { label: 'Försvar', value: defenseDisplayValue },
+        { label: 'Försvarstärning', value: defTrait }
+      ]
+    });
+
+    summarySections.push({
+      title: 'Hälsa',
+      items: [
+        { label: 'Tålighet', value: formatNumber(tal) },
+        { label: 'Smärtgräns', value: formatNumber(pain) },
+        { label: 'Bärkapacitet', value: formatNumber(capacity, { decimals: 2 }) }
       ]
     });
 
     summarySections.push({
       title: 'Korruption',
       items: [
-        { label: 'Permanent', value: `${perm}` },
-        { label: 'Maximalt', value: `${maxCor}` },
-        { label: 'Tröskel', value: `${thresh}` }
+        { label: 'Maximal korruption', value: formatNumber(maxCor) },
+        { label: 'Permanent korruption', value: formatNumber(perm) },
+        { label: 'Korruptionströskel', value: formatNumber(thresh) }
       ]
     });
 
     summarySections.push({
       title: 'Ekonomi',
       items: [
-        { label: 'Totalt innehav', value: `${totalMoney.daler}D ${totalMoney.skilling}S ${totalMoney['örtegar']}Ö` },
-        { label: 'Oanvänt kapital', value: unusedText }
+        { label: 'Totalt innehav', value: moneyToString(totalMoney) },
+        { label: 'Oanvänt kapital', value: unusedText, valueClass: unusedNegative ? 'neg' : '' }
       ]
     });
 
@@ -613,7 +643,11 @@
       createListRow('Mystiska krafter', gatherEntries('Mystisk kraft'), { max: Infinity }),
       createListRow('Ritualer', gatherEntries('Ritual'), { max: Infinity }),
       createListRow('Artefakter', gatherEntries('Artefakt'), { max: Infinity }),
-      createListRow('Viktiga färdigheter', gatherEntries(['Yrke', 'Elityrke', 'Ras'], { annotateMultiples: true, max: Infinity }))
+      createListRow(
+        'Viktiga färdigheter',
+        gatherEntries(['Yrke', 'Elityrke', 'Ras'], { annotateMultiples: true }),
+        { max: Infinity }
+      )
     ].filter(Boolean);
 
     if (favorSections.length) {
@@ -625,7 +659,7 @@
     }
 
     summarySections.push({
-      title: 'Ersättningar',
+      title: 'Träffsäkerhet',
       layout: 'block',
       items: cond.map(text => ({ text }))
     });
@@ -633,12 +667,13 @@
     const sectionsHtml = summarySections.map(section => {
       const listClasses = ['summary-list', 'summary-pairs'];
       if (section.layout) listClasses.push(`layout-${section.layout}`);
+      const showColon = section.layout !== 'grid';
       const items = (section.items || []).map(row => {
         if (row.text) {
           return `<li>${escapeHtml(row.text)}</li>`;
         }
         if (row.values) {
-          const labelText = row.label ? `${row.label}:` : '';
+          const labelText = row.label ? `${row.label}${showColon ? ':' : ''}` : '';
           const chips = row.values
             .map(val => {
               const text = val?.text ?? '';
@@ -662,8 +697,9 @@
         if (row.valueClass) {
           row.valueClass.split(/\s+/).filter(Boolean).forEach(cls => classNames.push(cls));
         }
-        const labelText = row.label ? `${row.label}:` : '';
-        return `<li><span class="summary-key">${escapeHtml(labelText)}</span><span class="${classNames.join(' ')}">${escapeHtml(row.value ?? '')}</span></li>`;
+        const labelText = row.label ? `${row.label}${showColon ? ':' : ''}` : '';
+        const valueText = row.value === null || row.value === undefined ? '–' : String(row.value);
+        return `<li><span class="summary-key">${escapeHtml(labelText)}</span><span class="${classNames.join(' ')}">${escapeHtml(valueText)}</span></li>`;
       }).join('');
       return `<section class="summary-section"><h3>${escapeHtml(section.title)}</h3><ul class="${listClasses.join(' ')}">${items}</ul></section>`;
     }).join('');
