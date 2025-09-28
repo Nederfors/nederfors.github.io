@@ -30,6 +30,8 @@ class SharedToolbar extends HTMLElement {
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
     if (window.visualViewport) {
+      this._vvBaseline = 0;
+      const keyboardThreshold = 80;
       this._vvHandler = () => {
         /*
           Lås verktygsraden precis ovanför tangentbordet. När tangent-
@@ -37,8 +39,15 @@ class SharedToolbar extends HTMLElement {
           skärmens nederkant.
         */
         const vv = window.visualViewport;
-        let offset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
-        if (offset < 50) {
+        const available = vv.height + vv.offsetTop;
+        if (!Number.isFinite(available)) {
+          return;
+        }
+        if (!this._vvBaseline || available > this._vvBaseline) {
+          this._vvBaseline = available;
+        }
+        let offset = Math.max(0, this._vvBaseline - available);
+        if (offset < keyboardThreshold) {
           toolbar.style.bottom = 'env(safe-area-inset-bottom)';
         } else {
           toolbar.style.bottom = `calc(env(safe-area-inset-bottom) + ${offset}px)`;
@@ -52,8 +61,12 @@ class SharedToolbar extends HTMLElement {
         { target: window, type: 'orientationchange' }
       ];
       this._vvFallbackCleanup = fallbackEvents.map(({ target, type }) => {
-        const fallbackHandler = () =>
+        const fallbackHandler = () => {
+          if (type === 'orientationchange') {
+            this._vvBaseline = 0;
+          }
           window.requestAnimationFrame(() => this._vvHandler?.());
+        };
         target.addEventListener(type, fallbackHandler, { passive: true });
         return () => target.removeEventListener(type, fallbackHandler, { passive: true });
       });
@@ -103,6 +116,7 @@ class SharedToolbar extends HTMLElement {
     window.visualViewport?.removeEventListener('scroll', this._vvHandler);
     this._vvFallbackCleanup?.forEach(cleanup => cleanup());
     this._vvFallbackCleanup = null;
+    this._vvBaseline = 0;
     document.removeEventListener('click', this._outsideHandler);
   }
 
