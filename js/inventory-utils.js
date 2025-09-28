@@ -2484,7 +2484,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (isArtifact) buttonParts.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
       buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}">${icon('free')}</button>`);
       if (isVehicle) {
-        buttonParts.push('<button data-act="vehicleLoad" class="char-btn">⬇️</button>', '<button data-act="vehicleUnload" class="char-btn">⬆️</button>');
+        buttonParts.push(
+          `<button data-act="vehicleLoad" class="char-btn icon icon-only" aria-label="Lasta i fordon">${icon('arrow-down')}</button>`,
+          `<button data-act="vehicleUnload" class="char-btn icon icon-only" aria-label="Ta ur fordon">${icon('arrow-up')}</button>`
+        );
       }
 
       const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
