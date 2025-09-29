@@ -3151,7 +3151,7 @@
     }
   },
   "nivåer": {
-    "Förmåga 1": "Snabbkokning; Handling: Aktiv\nEn alkemist kan, med ett slag mot Listig, låta degeln kalla fram preparat ur intet: elixir, salvor, toxiner, rökmix eller enkla redskap. Alkemisten kan endast framkalla preparat som motsvarar hens kunskapsnivå (novis, gesäll eller mästare). Korruption: 1T4 (Noviselixir), 1T6 (Gesällelixir), 1T8 (Mästarelixir).",
+    "Förmåga 1": "Snabbkokning; Handling: Aktiv\nEn alkemist kan, med ett slag mot Listig, låta degeln kalla fram preparat ur intet: elixir, salvor, toxiner, rökmix eller enkla redskap. Alkemisten kan endast framkalla preparat som motsvarar hens kunskapsnivå (novis, gesäll eller mästare). Korruption: 1T4 (Noviselixir), 1T6 (Gesällelixir), 1T8 (Mästarelixir). Alla elixir som skapas är tillfälliga om inte brukaren tar 1 permanent korruption för att göra dem permanenta.",
     "Förmåga 2": "Delad dos; Handling: Aktiv\nSvartblodsdegeln kan driva fram en brygds essens ur själva brygden och tvinga den att ta sig till en allierad inom synhåll. Med ett lyckat slag mot Listig kan användaren applicera ett elixir på en allierad. Korruption: 1.",
     "Förmåga 3": "Överdestillera; Handling: Speciell\nIstället för att skapa nya preparat kan alkemisten låta degeln sluka redan färdiga elixir och ur dem pressa fram en större mängd. Med ett lyckat slag mot Listig kan användaren utöka doser av ett elixir istället för att koka nya: noviselixir ger 1T8 doser, gesällelixir 1T6, och mästarelixir 1T4. Den som överdestillerar genom degeln hör ofta ett eko som liknar hjärtslag eller skrik inifrån metallens ådror. Korruption: 1T8."
   },
