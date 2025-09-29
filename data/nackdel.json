@@ -1044,5 +1044,19 @@
       ]
     },
     "effekt": "Vid starkt äckel krävs Viljestark; misslyckas du kräks du upp dagsintaget av mat och vatten och måste äta/dricka extra."
-  }
+  },
+  {
+"id": "na78",
+"namn": "Halvdöv",
+"beskrivning": "Rollpersonen hör markant sämre än de flesta – viskningar, dova steg och ljud bakom hinder uppfattas sällan. Rollpersonen får därmed en andra chans att misslyckas med alla slag som syftar att identifiera och lokalisera ljudkällor.",
+"taggar": {
+"typ": [
+"Nackdel"
+],
+"test": [
+"Vaksam"
+]
+},
+"effekt": "Vid Vaksam-slag vars syfte är att uppfatta, lokalisera eller tolka ljud får rollpersonen en andra chans att misslyckas."
+}
 ]
