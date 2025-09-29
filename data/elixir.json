@@ -1519,5 +1519,25 @@
 },
 "grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 0.5 }
+},
+{
+"id": "elix94",
+"namn": "Tjudringsbrygd",
+"taggar": {
+"typ": [
+"Elixir"
+]
+},
+"nivåer": {
+"Novis": "En mild, besk tinktur som binder köttets drift. Den som dricker en dos en inför en studnande transformation får ignorera eller häva transformationens effekter (från elixir, sjukdomar, mystiska krafter eller förbannelser). En pågående transformation upphör inom 1T4 rundor när brygden sväljs. Effekten varar till nästa gryning. Brygden dämpar endast tvång; frivilliga, självvalda förvandlingar påverkas inte."
+},
+"grundpris": {
+"daler": 0,
+"skilling": 1,
+"örtegar": 0
+},
+"stat": {
+"vikt": 0.5
+}
 }
 ]
