@@ -663,5 +663,24 @@
       "vikt": 1.0
     },
     "effekt": "Alkemi i fält räknas som enkel verkstad och ger +1 Listig vid insamling/rening. Tillsammans med Reselaboratorium bryggs elixir i fält på 1 dag."
-  }
+  },
+  {
+"id": "sp36",
+"namn": "Görlamans Gröna",
+"beskrivning": "En hopfällbar fältflora med växtpress, smaknotiser och varningsmärkningar sammanställda av spanaren Görlaman. Innehåller enkla tester för att skilja ätliga örter och svampar från giftiga förväxlingar. Ger +1 i syfte att hitta ätbara flora inne i Davokar.",
+"taggar": {
+"typ": [
+"Specialverktyg"
+]
+},
+"grundpris": {
+"daler": 10,
+"skilling": 0,
+"örtegar": 0
+},
+"stat": {
+"vikt": 1.0
+},
+"effekt": "+1 på framgångsslag i syfte att hitta ätbara växter."
+}
 ]
