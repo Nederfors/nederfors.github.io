@@ -1072,5 +1072,23 @@
     "taggar": { "typ": ["Mat"] },
     "stat": { "vikt": 0.9 },
     "grundpris": { "daler": 1, "skilling": 4, "örtegar": 0 }
-  }
+  },
+  {
+"id": "ma63",
+"namn": "Pad Alberetor",
+"beskrivning": "Risnudlar stekta i söt-syrlig tamarindlag från Alberetors trädgårdar, med ägg, krispig kål och rovor. Toppas med rostad jordnöt och örter; serveras med klyfta av syrligt skogscitrus. Välj rökt forell eller tofu – smaken bär ekon av vägkrogarna vid Tempelvall och röken från härdarna i söder.",
+"taggar": {
+"typ": [
+"Mat"
+]
+},
+"stat": {
+"vikt": 0.8
+},
+"grundpris": {
+"daler": 1,
+"skilling": 3,
+"örtegar": 0
+}
+}
 ]
