@@ -1251,7 +1251,7 @@ function initCharacter() {
           traitInfo = `<p><strong>${label}:</strong> ${value}</p>`;
         }
         const curList = storeHelper.getCurrentList(store);
-        const xpVal = storeHelper.calcEntryXP(p, curList);
+        const xpVal = storeHelper.calcEntryDisplayXP(p, curList);
         let xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
