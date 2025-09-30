@@ -29,49 +29,92 @@ class SharedToolbar extends HTMLElement {
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
-    if (window.visualViewport) {
-      this._vvBaseline = null;
-      const KEYBOARD_OFFSET_THRESHOLD = 80;
-      this._vvHandler = () => {
-        /*
-          Lås verktygsraden precis ovanför tangentbordet. När tangent-
-          bordet inte är öppet blir offset noll och raden placeras mot
-          skärmens nederkant.
-        */
-        const vv = window.visualViewport;
-        const currentViewport = vv.height + vv.offsetTop;
+    if (window.visualViewport && toolbar) {
+      this._toolbarElement = toolbar;
+      this._largeViewportHeight = null;
 
-        if (this._vvBaseline == null || currentViewport > this._vvBaseline) {
-          this._vvBaseline = currentViewport;
-        }
+      const measureLayoutViewport = () =>
+        Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0);
 
-        const rawOffset = Math.max(0, this._vvBaseline - currentViewport);
-        const offset = rawOffset > KEYBOARD_OFFSET_THRESHOLD ? rawOffset : 0;
-
-        if (offset === 0) {
-          toolbar.style.bottom = 'env(safe-area-inset-bottom)';
-        } else {
-          toolbar.style.bottom = `calc(env(safe-area-inset-bottom) + ${offset}px)`;
+      const refreshLargeViewportHeight = (reset = false) => {
+        const measurement = measureLayoutViewport();
+        if (reset || this._largeViewportHeight == null || measurement > this._largeViewportHeight) {
+          this._largeViewportHeight = measurement;
         }
       };
-      window.visualViewport.addEventListener('resize', this._vvHandler);
-      window.visualViewport.addEventListener('scroll', this._vvHandler);
+
+      const updateToolbarLift = ({ resetLargeViewport } = {}) => {
+        const vv = window.visualViewport;
+        if (!vv || !this._toolbarElement) {
+          return;
+        }
+
+        refreshLargeViewportHeight(resetLargeViewport);
+
+        let lift = 0;
+        const virtualKeyboard = navigator.virtualKeyboard;
+        const keyboardRect = virtualKeyboard?.boundingRect;
+        if (keyboardRect && typeof keyboardRect.height === 'number') {
+          lift = Math.max(0, keyboardRect.height);
+        }
+
+        if (!lift) {
+          const vvHeight = vv.height ?? 0;
+          const vvPageTop = vv.pageTop ?? 0;
+          const layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
+          lift = Math.max(0, layoutViewportHeight - (vvHeight + vvPageTop));
+
+          if (!lift) {
+            const offsetTop = vv.offsetTop ?? 0;
+            lift = offsetTop > 0 ? offsetTop : 0;
+          }
+        }
+
+        if (lift > 0) {
+          this._toolbarElement.style.setProperty('--toolbar-lift', `${lift}px`);
+        } else {
+          this._toolbarElement.style.removeProperty('--toolbar-lift');
+        }
+      };
+
+      this._updateToolbarLift = updateToolbarLift;
+
+      const scheduleToolbarLiftUpdate = opts => {
+        window.requestAnimationFrame(() => this._updateToolbarLift?.(opts));
+      };
+
+      const vvEvents = 'ongeometrychange' in window.visualViewport
+        ? ['geometrychange']
+        : ['resize', 'scroll'];
+
+      this._vvCleanup = vvEvents.map(type => {
+        const handler = () => scheduleToolbarLiftUpdate();
+        window.visualViewport.addEventListener(type, handler);
+        return () => window.visualViewport?.removeEventListener(type, handler);
+      });
+
       const fallbackEvents = [
         { target: window, type: 'focusout' },
         { target: window, type: 'touchend' },
-        { target: window, type: 'orientationchange', resetBaseline: true }
+        { target: window, type: 'orientationchange', reset: true },
+        { target: window, type: 'resize', reset: true }
       ];
-      this._vvFallbackCleanup = fallbackEvents.map(({ target, type, resetBaseline }) => {
+
+      this._vvFallbackCleanup = fallbackEvents.map(({ target, type, reset }) => {
         const fallbackHandler = () => {
-          if (resetBaseline) {
-            this._vvBaseline = null;
-          }
-          window.requestAnimationFrame(() => this._vvHandler?.());
+          const opts = reset ? { resetLargeViewport: true } : undefined;
+          scheduleToolbarLiftUpdate(opts);
         };
         target.addEventListener(type, fallbackHandler, { passive: true });
         return () => target.removeEventListener(type, fallbackHandler, { passive: true });
       });
-      window.requestAnimationFrame(() => this._vvHandler?.());
+
+      if (navigator.virtualKeyboard?.addEventListener) {
+        this._vkHandler = () => scheduleToolbarLiftUpdate();
+        navigator.virtualKeyboard.addEventListener('geometrychange', this._vkHandler);
+      }
+
+      scheduleToolbarLiftUpdate({ resetLargeViewport: true });
     }
 
     this.cache();
@@ -113,11 +156,18 @@ class SharedToolbar extends HTMLElement {
   }
 
   disconnectedCallback() {
-    window.visualViewport?.removeEventListener('resize', this._vvHandler);
-    window.visualViewport?.removeEventListener('scroll', this._vvHandler);
+    this._vvCleanup?.forEach(cleanup => cleanup());
+    this._vvCleanup = null;
     this._vvFallbackCleanup?.forEach(cleanup => cleanup());
     this._vvFallbackCleanup = null;
-    this._vvBaseline = null;
+    if (navigator.virtualKeyboard?.removeEventListener && this._vkHandler) {
+      navigator.virtualKeyboard.removeEventListener('geometrychange', this._vkHandler);
+    }
+    this._vkHandler = null;
+    this._toolbarElement?.style.removeProperty('--toolbar-lift');
+    this._updateToolbarLift = null;
+    this._toolbarElement = null;
+    this._largeViewportHeight = null;
     document.removeEventListener('click', this._outsideHandler);
   }
 
@@ -129,7 +179,7 @@ class SharedToolbar extends HTMLElement {
 
         .toolbar {
           position: fixed;
-          bottom: 0;
+          bottom: calc(env(safe-area-inset-bottom) + var(--toolbar-lift, 0px));
           left: 0;
           right: 0;
           width: 100%;
