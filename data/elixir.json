@@ -669,12 +669,12 @@
       ]
     },
     "nivåer": {
-      "Novis": "En kaka av det mustiga långfärdsbrödet motsvarar en veckas mat för en person, men de säljes oftast per portion."
+      "Novis": "En portion av det mustiga långfärdsbrödet motsvarar en hel dags mat för en person. De tillverkas oftast per veckoportion."
     },
     "grundpris": {
       "daler": 0,
-      "skilling": 2,
-      "örtegar": 9
+      "skilling": 1,
+      "örtegar": 5
     },
     "stat": {
       "vikt": 0.15
