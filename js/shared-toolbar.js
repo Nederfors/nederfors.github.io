@@ -20,6 +20,8 @@ class SharedToolbar extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     // One-time flag: ensure filter cards restore state on first open
     this._filterFirstOpenHandled = false;
+    this._keyboardLikelyVisible = false;
+    this._keyboardVisibilityTimer = null;
   }
 
   /* ------------------------------------------------------- */
@@ -72,7 +74,11 @@ class SharedToolbar extends HTMLElement {
           }
 
           if (!lift) {
-            lift = offsetTop > 0 ? offsetTop : 0;
+            const offsetLift = offsetTop > 0 ? offsetTop : 0;
+            const minOffset = 8;
+            if (this._keyboardLikelyVisible && offsetLift > minOffset) {
+              lift = offsetLift;
+            }
           }
         }
 
@@ -88,6 +94,77 @@ class SharedToolbar extends HTMLElement {
       const scheduleToolbarLiftUpdate = opts => {
         window.requestAnimationFrame(() => this._updateToolbarLift?.(opts));
       };
+      this._scheduleToolbarLiftUpdate = scheduleToolbarLiftUpdate;
+
+      const setKeyboardLikelyVisible = visible => {
+        if (this._keyboardLikelyVisible === visible) {
+          return;
+        }
+        this._keyboardLikelyVisible = visible;
+        if (visible) {
+          scheduleToolbarLiftUpdate();
+        } else {
+          this._toolbarElement?.style.removeProperty('--toolbar-lift');
+          scheduleToolbarLiftUpdate({ resetLargeViewport: true });
+        }
+      };
+
+      if (!navigator.virtualKeyboard) {
+        const textInputTypes = new Set(['text', 'search', 'email', 'url', 'password', 'tel', 'number']);
+        const isTextInput = el => {
+          if (!el) {
+            return false;
+          }
+          if (el.isContentEditable) {
+            return true;
+          }
+          const tag = el.tagName;
+          if (!tag) {
+            return false;
+          }
+          const tagName = tag.toUpperCase();
+          if (tagName === 'TEXTAREA') {
+            return true;
+          }
+          if (tagName === 'INPUT') {
+            const type = (el.getAttribute('type') || '').toLowerCase();
+            return !type || textInputTypes.has(type);
+          }
+          return tagName === 'SELECT';
+        };
+
+        const handleFocusIn = event => {
+          if (isTextInput(event.target)) {
+            if (this._keyboardVisibilityTimer) {
+              clearTimeout(this._keyboardVisibilityTimer);
+              this._keyboardVisibilityTimer = null;
+            }
+            setKeyboardLikelyVisible(true);
+          }
+        };
+
+        const handleFocusOut = () => {
+          if (this._keyboardVisibilityTimer) {
+            clearTimeout(this._keyboardVisibilityTimer);
+          }
+          this._keyboardVisibilityTimer = setTimeout(() => {
+            const active = document.activeElement;
+            if (isTextInput(active)) {
+              setKeyboardLikelyVisible(true);
+            } else {
+              setKeyboardLikelyVisible(false);
+            }
+            this._keyboardVisibilityTimer = null;
+          }, 150);
+        };
+
+        document.addEventListener('focusin', handleFocusIn);
+        document.addEventListener('focusout', handleFocusOut);
+        this._keyboardVisibilityCleanup = () => {
+          document.removeEventListener('focusin', handleFocusIn);
+          document.removeEventListener('focusout', handleFocusOut);
+        };
+      }
 
       const vvEvents = 'ongeometrychange' in window.visualViewport
         ? ['geometrychange']
@@ -166,12 +243,20 @@ class SharedToolbar extends HTMLElement {
     this._vvCleanup = null;
     this._vvFallbackCleanup?.forEach(cleanup => cleanup());
     this._vvFallbackCleanup = null;
+    if (this._keyboardVisibilityTimer) {
+      clearTimeout(this._keyboardVisibilityTimer);
+      this._keyboardVisibilityTimer = null;
+    }
+    this._keyboardVisibilityCleanup?.();
+    this._keyboardVisibilityCleanup = null;
+    this._keyboardLikelyVisible = false;
     if (navigator.virtualKeyboard?.removeEventListener && this._vkHandler) {
       navigator.virtualKeyboard.removeEventListener('geometrychange', this._vkHandler);
     }
     this._vkHandler = null;
     this._toolbarElement?.style.removeProperty('--toolbar-lift');
     this._updateToolbarLift = null;
+    this._scheduleToolbarLiftUpdate = null;
     this._toolbarElement = null;
     this._largeViewportHeight = null;
     document.removeEventListener('click', this._outsideHandler);
