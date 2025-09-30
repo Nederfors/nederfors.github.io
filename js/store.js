@@ -1595,6 +1595,54 @@ function defaultTraits() {
     return xp;
   }
 
+  function stackableDisplayKey(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (!entry.kan_införskaffas_flera_gånger) return null;
+    if (entry.trait) return null;
+    const types = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
+      : [];
+    if (!types.length) return null;
+    const hasAdvantage = types.includes('fördel');
+    const hasDisadvantage = types.includes('nackdel');
+    if (!hasAdvantage && !hasDisadvantage) return null;
+    const name = typeof entry.namn === 'string' ? entry.namn.trim().toLowerCase() : '';
+    if (!name) return null;
+    if (hasAdvantage) {
+      const advKey = getAdvantageKey(entry, types);
+      if (advKey) return `adv:${advKey}`;
+      return `adv:${name}`;
+    }
+    return `dis:${name}`;
+  }
+
+  function calcEntryDisplayXP(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    const baseList = Array.isArray(list) ? list.filter(Boolean) : [];
+    const { xpSource: providedSource, level } = options || {};
+    const baseSource = providedSource || entry;
+    const xpSource = (level && (!baseSource || baseSource.nivå !== level))
+      ? { ...baseSource, nivå: level }
+      : baseSource;
+    const stackKey = stackableDisplayKey(entry);
+    let filtered = [];
+    if (stackKey) {
+      filtered = baseList.filter(item => {
+        if (!item || typeof item !== 'object') return false;
+        const itemKey = stackableDisplayKey(item);
+        if (!itemKey) return true;
+        if (itemKey !== stackKey) return true;
+        return item === xpSource;
+      });
+    } else {
+      filtered = baseList.slice();
+    }
+    if (xpSource && !filtered.includes(xpSource)) {
+      filtered.push(xpSource);
+    }
+    return calcEntryXP(xpSource, filtered);
+  }
+
   function calcTotalXP(baseXp, list) {
     return Number(baseXp || 0) + disadvantagesWithXP(list).length * 5;
   }
@@ -2181,6 +2229,7 @@ function defaultTraits() {
     setBaseXP,
     calcUsedXP,
     calcEntryXP,
+    calcEntryDisplayXP,
     calcTotalXP,
     countDisadvantages,
     calcPermanentCorruption,

@@ -881,8 +881,9 @@ function initIndex() {
         }
         let infoBodyHtml = desc;
         if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
-        const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
-        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
+        const xpVal = (isInv(p) || isEmployment(p) || isService(p))
+          ? null
+          : storeHelper.calcEntryDisplayXP(p, charList, { xpSource: charEntry, level: curLvl });
         let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
         const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
@@ -1238,8 +1239,7 @@ function initIndex() {
       }
       let xpVal = null;
       if (!isInventory && !isEmployment(entry) && !isService(entry)) {
-        const xpSource = cardCharEntry ? cardCharEntry : { ...entry, nivå: curLvl };
-        xpVal = storeHelper.calcEntryXP(xpSource, charList);
+        xpVal = storeHelper.calcEntryDisplayXP(entry, charList, { xpSource: cardCharEntry, level: curLvl });
       }
       const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
       if (xpVal != null) card.dataset.xp = xpVal;
@@ -2360,7 +2360,7 @@ function initIndex() {
     const lvl = select.value;
     const xpVal = (isInv(p) || isEmployment(p) || isService(p))
       ? null
-      : storeHelper.calcEntryXP({ ...p, nivå:lvl }, list);
+      : storeHelper.calcEntryDisplayXP(p, list, { level: lvl });
     const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
     const liEl = select.closest('li');
     if (xpVal != null) liEl.dataset.xp = xpVal; else delete liEl.dataset.xp;
