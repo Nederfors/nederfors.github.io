@@ -61,11 +61,17 @@ class SharedToolbar extends HTMLElement {
         if (!lift) {
           const vvHeight = vv.height ?? 0;
           const vvPageTop = vv.pageTop ?? 0;
-          const layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
+          let layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
           lift = Math.max(0, layoutViewportHeight - (vvHeight + vvPageTop));
+          const offsetTop = vv.offsetTop ?? 0;
+
+          if (lift > 0 && offsetTop === 0) {
+            refreshLargeViewportHeight(true);
+            layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
+            lift = Math.max(0, layoutViewportHeight - (vvHeight + vvPageTop));
+          }
 
           if (!lift) {
-            const offsetTop = vv.offsetTop ?? 0;
             lift = offsetTop > 0 ? offsetTop : 0;
           }
         }
