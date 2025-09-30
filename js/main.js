@@ -4,6 +4,11 @@
    2025-06-20
    =========================================================== */
 
+window.addEventListener('load', () => {
+  document.documentElement.classList.add('is-ready');
+  document.documentElement.removeAttribute('data-preload');
+});
+
 /* ---------- Back-navigering för menyer & popups ---------- */
 (function() {
   const overlayStack = [];
