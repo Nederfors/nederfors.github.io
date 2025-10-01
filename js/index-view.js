@@ -1570,6 +1570,11 @@ function initIndex() {
     ['arkSel', 'ark'],
     ['tstSel', 'test']
   ];
+  const DROPDOWN_ID_MAP = {
+    typSel: 'typFilter',
+    arkSel: 'arkFilter',
+    tstSel: 'testFilter'
+  };
 
   const handleDropdownChange = (sel, key) => (event) => {
     const el = event?.currentTarget;
@@ -1612,7 +1617,8 @@ function initIndex() {
     DROPDOWN_CONFIG.forEach(([sel, key]) => {
       let el = dom[sel];
       if (!el || !el.isConnected) {
-        el = root?.getElementById(sel) || document.getElementById(sel) || null;
+        const resolvedId = DROPDOWN_ID_MAP[sel] || sel;
+        el = root?.getElementById(resolvedId) || document.getElementById(resolvedId) || null;
       }
       if (!el) {
         missing = true;
