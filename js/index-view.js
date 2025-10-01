@@ -1559,6 +1559,69 @@ function initIndex() {
     }
   });
 
+  const DROPDOWN_CONFIG = [
+    ['typSel', 'typ'],
+    ['arkSel', 'ark'],
+    ['tstSel', 'test']
+  ];
+
+  const handleDropdownChange = (sel, key) => (event) => {
+    const el = event?.currentTarget;
+    if (!el) return;
+    dom[sel] = el;
+    const v = el.value;
+    if (sel === 'tstSel' && !v) {
+      F[key] = [];
+      storeHelper.setOnlySelected(store, false);
+      invalidateFilteredResults();
+      activeTags(); scheduleRenderList();
+      return;
+    }
+    if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
+      storeHelper.setOnlySelected(store, true);
+      invalidateFilteredResults();
+      el.value = '';
+      activeTags(); scheduleRenderList();
+      return;
+    }
+    if (v && !F[key].includes(v)) F[key].push(v);
+    if (v) invalidateFilteredResults();
+    if (sel === 'typSel' && v) {
+      openCatsOnce.add(v);
+    }
+    el.value = '';
+    activeTags(); scheduleRenderList();
+  };
+
+  const ensureDropdownChangeHandlers = () => {
+    const toolbar = document.querySelector('shared-toolbar');
+    if (toolbar && toolbar.dataset.indexDropdownWatcher !== '1') {
+      toolbar.addEventListener('toolbar-rendered', () => {
+        ensureDropdownChangeHandlers();
+      });
+      toolbar.dataset.indexDropdownWatcher = '1';
+    }
+    const root = toolbar?.shadowRoot || null;
+    let missing = false;
+    DROPDOWN_CONFIG.forEach(([sel, key]) => {
+      let el = dom[sel];
+      if (!el || !el.isConnected) {
+        el = root?.getElementById(sel) || document.getElementById(sel) || null;
+      }
+      if (!el) {
+        missing = true;
+        return;
+      }
+      dom[sel] = el;
+      if (el.dataset.indexDropdownBound === '1') return;
+      el.addEventListener('change', handleDropdownChange(sel, key));
+      el.dataset.indexDropdownBound = '1';
+    });
+    return !missing;
+  };
+
+  ensureDropdownChangeHandlers();
+
   dom.catToggle.addEventListener('click', () => {
     const details = document.querySelectorAll('.cat-group > details');
     if (catsMinimized) {
@@ -1571,32 +1634,7 @@ function initIndex() {
     }
     updateCatToggle();
   });
-  [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
-    dom[sel].addEventListener('change',()=>{
-      const v = dom[sel].value;
-      if (sel === 'tstSel' && !v) {
-        F[key] = [];
-        storeHelper.setOnlySelected(store, false);
-        invalidateFilteredResults();
-        activeTags(); scheduleRenderList();
-        return;
-      }
-      if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
-        storeHelper.setOnlySelected(store, true);
-        invalidateFilteredResults();
-        dom[sel].value = '';
-        activeTags(); scheduleRenderList();
-        return;
-      }
-      if(v && !F[key].includes(v)) F[key].push(v);
-      if (v) invalidateFilteredResults();
-      // If selecting a type filter, open that category once
-      if (sel === 'typSel' && v) {
-        openCatsOnce.add(v);
-      }
-      dom[sel].value=''; activeTags(); scheduleRenderList();
-    });
-  });
+  // Dropdown handlers are bound via ensureDropdownChangeHandlers().
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
