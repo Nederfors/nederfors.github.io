@@ -1604,7 +1604,8 @@ function initCharacter() {
       dom.sIn.blur();
       const termTry = (sTemp || '').trim();
       const term = sTemp.toLowerCase();
-      if (termTry && window.tryUICommand && window.tryUICommand(termTry)) {
+      const suggestionsActive = Boolean(sugEl && !sugEl.hidden && items.length);
+      if (!suggestionsActive && termTry && window.tryUICommand && window.tryUICommand(termTry)) {
         dom.sIn.value = '';
         sTemp = '';
         updateSearchDatalist();
