@@ -1648,6 +1648,31 @@ function defaultTraits() {
     return calcEntryXP(xpSource, workingList);
   }
 
+  function singlePickAdvantageInfo(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (entry.kan_införskaffas_flera_gånger) return null;
+    const types = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
+      : [];
+    if (!types.length) return null;
+    const isAdv = types.includes('fördel');
+    const isDis = types.includes('nackdel');
+    if (!isAdv && !isDis) return null;
+    return { isAdv, isDis };
+  }
+
+  function formatEntryXPText(entry, xpVal) {
+    if (xpVal === undefined || xpVal === null) return '';
+    if (typeof xpVal === 'number') {
+      const singleInfo = singlePickAdvantageInfo(entry);
+      if (singleInfo) {
+        return singleInfo.isDis ? '+5' : '5';
+      }
+      return xpVal < 0 ? `+${-xpVal}` : String(xpVal);
+    }
+    return String(xpVal);
+  }
+
   function calcTotalXP(baseXp, list) {
     return Number(baseXp || 0) + disadvantagesWithXP(list).length * 5;
   }
@@ -2235,6 +2260,7 @@ function defaultTraits() {
     calcUsedXP,
     calcEntryXP,
     calcEntryDisplayXP,
+    formatEntryXPText,
     calcTotalXP,
     countDisadvantages,
     calcPermanentCorruption,

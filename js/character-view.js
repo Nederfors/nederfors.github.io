@@ -1252,7 +1252,7 @@ function initCharacter() {
         }
         const curList = storeHelper.getCurrentList(store);
         const xpVal = storeHelper.calcEntryDisplayXP(p, curList);
-        let xpText = xpVal < 0 ? `+${-xpVal}` : xpVal;
+        let xpText = storeHelper.formatEntryXPText(p, xpVal);
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
         const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];

@@ -790,7 +790,7 @@
     if (window.isElityrke?.(entry) && window.eliteReq?.minXP) {
       xpText = `Minst ${window.eliteReq.minXP(entry, list)}`;
     } else if (typeof xpRaw === 'number') {
-      xpText = xpRaw < 0 ? `+${-xpRaw}` : xpRaw;
+      xpText = storeHelper.formatEntryXPText(entry, xpRaw);
     } else if (entry.xp !== undefined && entry.xp !== null) {
       xpText = entry.xp;
     }
