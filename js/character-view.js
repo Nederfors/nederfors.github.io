@@ -1662,25 +1662,68 @@ function initCharacter() {
       activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
     }
   });
-  [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
-    dom[sel].addEventListener('change',()=>{
-      const v=dom[sel].value;
-      if (sel === 'tstSel' && !v) {
-        F[key] = [];
-        storeHelper.setOnlySelected(store, false);
-        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+  const DROPDOWN_CONFIG = [
+    ['typSel', 'typ'],
+    ['arkSel', 'ark'],
+    ['tstSel', 'test']
+  ];
+  const DROPDOWN_ID_MAP = {
+    typSel: 'typFilter',
+    arkSel: 'arkFilter',
+    tstSel: 'testFilter'
+  };
+
+  const handleDropdownChange = (sel, key) => (event) => {
+    const el = event?.currentTarget;
+    if (!el) return;
+    dom[sel] = el;
+    const v = el.value;
+    if (sel === 'tstSel' && !v) {
+      F[key] = [];
+      storeHelper.setOnlySelected(store, false);
+      activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      return;
+    }
+    if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
+      storeHelper.setOnlySelected(store, true);
+      el.value = '';
+      activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      return;
+    }
+    if (v && !F[key].includes(v)) F[key].push(v);
+    el.value = '';
+    activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+  };
+
+  const ensureDropdownChangeHandlers = () => {
+    const toolbar = document.querySelector('shared-toolbar');
+    if (toolbar && toolbar.dataset.characterDropdownWatcher !== '1') {
+      toolbar.addEventListener('toolbar-rendered', () => {
+        ensureDropdownChangeHandlers();
+      });
+      toolbar.dataset.characterDropdownWatcher = '1';
+    }
+    const root = toolbar?.shadowRoot || null;
+    let missing = false;
+    DROPDOWN_CONFIG.forEach(([sel, key]) => {
+      let el = dom[sel];
+      if (!el || !el.isConnected) {
+        const resolvedId = DROPDOWN_ID_MAP[sel] || sel;
+        el = root?.getElementById(resolvedId) || document.getElementById(resolvedId) || null;
+      }
+      if (!el) {
+        missing = true;
         return;
       }
-      if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
-        storeHelper.setOnlySelected(store, true);
-        dom[sel].value = '';
-        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
-        return;
-      }
-      if(v&&!F[key].includes(v)) F[key].push(v);
-      dom[sel].value=''; activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      dom[sel] = el;
+      if (el.dataset.characterDropdownBound === '1') return;
+      el.addEventListener('change', handleDropdownChange(sel, key));
+      el.dataset.characterDropdownBound = '1';
     });
-  });
+    return !missing;
+  };
+
+  ensureDropdownChangeHandlers();
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const sec=t.dataset.type,val=t.dataset.val;
