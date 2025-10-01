@@ -1624,23 +1624,28 @@ function defaultTraits() {
     const xpSource = (level && (!baseSource || baseSource.nivå !== level))
       ? { ...baseSource, nivå: level }
       : baseSource;
+    const workingList = baseList.slice();
+    if (xpSource && !workingList.includes(xpSource)) {
+      workingList.push(xpSource);
+    }
     const stackKey = stackableDisplayKey(entry);
-    let filtered = [];
     if (stackKey) {
-      filtered = baseList.filter(item => {
-        if (!item || typeof item !== 'object') return false;
-        const itemKey = stackableDisplayKey(item);
-        if (!itemKey) return true;
-        if (itemKey !== stackKey) return true;
-        return item === xpSource;
-      });
-    } else {
-      filtered = baseList.slice();
+      const stackEntries = workingList.filter(item => stackableDisplayKey(item) === stackKey);
+      if (stackKey.startsWith('adv:')) {
+        const targetCount = stackEntries.length;
+        return advantageTotalCost(targetCount);
+      }
+      if (stackKey.startsWith('dis:')) {
+        const eligible = disadvantagesWithXP(workingList);
+        const eligibleSet = new Set(eligible);
+        const eligibleCount = stackEntries.reduce(
+          (count, item) => count + (eligibleSet.has(item) ? 1 : 0),
+          0
+        );
+        return eligibleCount * -ADVANTAGE_STEP_COST;
+      }
     }
-    if (xpSource && !filtered.includes(xpSource)) {
-      filtered.push(xpSource);
-    }
-    return calcEntryXP(xpSource, filtered);
+    return calcEntryXP(xpSource, workingList);
   }
 
   function calcTotalXP(baseXp, list) {
