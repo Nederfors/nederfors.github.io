@@ -1624,26 +1624,30 @@ function defaultTraits() {
     const xpSource = (level && (!baseSource || baseSource.nivå !== level))
       ? { ...baseSource, nivå: level }
       : baseSource;
-    const workingList = baseList.slice();
-    if (xpSource && !workingList.includes(xpSource)) {
-      workingList.push(xpSource);
-    }
     const stackKey = stackableDisplayKey(entry);
     if (stackKey) {
-      const stackEntries = workingList.filter(item => stackableDisplayKey(item) === stackKey);
+      const stackEntries = baseList.filter(item => stackableDisplayKey(item) === stackKey);
+      const actualCount = stackEntries.length;
+      const previewBonus = actualCount === 0 ? 1 : 0;
       if (stackKey.startsWith('adv:')) {
-        const targetCount = stackEntries.length;
+        const targetCount = actualCount + previewBonus;
         return advantageTotalCost(targetCount);
       }
       if (stackKey.startsWith('dis:')) {
-        const eligible = disadvantagesWithXP(workingList);
+        const eligible = disadvantagesWithXP(baseList);
         const eligibleSet = new Set(eligible);
         const eligibleCount = stackEntries.reduce(
           (count, item) => count + (eligibleSet.has(item) ? 1 : 0),
           0
         );
-        return eligibleCount * -ADVANTAGE_STEP_COST;
+        const totalEligible = eligible.length;
+        const extra = previewBonus && totalEligible < 5 ? 1 : 0;
+        return (eligibleCount + extra) * -ADVANTAGE_STEP_COST;
       }
+    }
+    const workingList = baseList.slice();
+    if (xpSource && !workingList.includes(xpSource)) {
+      workingList.push(xpSource);
     }
     return calcEntryXP(xpSource, workingList);
   }
