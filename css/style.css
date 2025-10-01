@@ -1177,6 +1177,11 @@ input:focus, select:focus, textarea:focus {
   cursor: pointer;
 }
 
+.cat-group > details.hoppsan-group > summary {
+  cursor: default;
+  pointer-events: none;
+}
+
 .cat-group .card-list {
   margin-top: .6rem;
 }

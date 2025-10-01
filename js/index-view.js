@@ -1092,9 +1092,8 @@ function initIndex() {
     {
       const hopLi = document.createElement('li');
       hopLi.className = 'cat-group';
-      const hopOpen = catState['Hoppsan'] !== undefined ? catState['Hoppsan'] : openCats.has('Hoppsan');
       hopLi.innerHTML = `
-        <details data-cat="Hoppsan"${hopOpen ? ' open' : ''}>
+        <details class="hoppsan-group" data-cat="Hoppsan" open>
           <summary>Hoppsan</summary>
           <ul class="card-list entry-card-list" data-entry-page="hoppsan"></ul>
         </details>`;
@@ -1111,10 +1110,15 @@ function initIndex() {
       const detailsEl = hopLi.querySelector('details');
       detailsEl.addEventListener('toggle', (ev) => {
         updateCatToggle();
+        if (!detailsEl.open) {
+          detailsEl.open = true;
+          return;
+        }
         if (!ev.isTrusted) return;
-        catState['Hoppsan'] = detailsEl.open;
+        catState['Hoppsan'] = true;
         saveState();
       });
+      catState['Hoppsan'] = true;
       fragment.appendChild(hopLi);
     }
     dom.lista.replaceChildren(fragment);
@@ -1559,7 +1563,10 @@ function initIndex() {
     if (catsMinimized) {
       details.forEach(d => { d.open = true; });
     } else {
-      details.forEach(d => { d.open = false; });
+      details.forEach(d => {
+        if (d.dataset.cat === 'Hoppsan') return;
+        d.open = false;
+      });
     }
     updateCatToggle();
   });
