@@ -543,7 +543,6 @@ class SharedToolbar extends HTMLElement {
                   </li>
                 </ul>
               </div>
-              <div id="manualAdjustSummary" class="manual-adjust-summary" hidden></div>
             </div>
           </li>
         </ul>
@@ -696,8 +695,8 @@ class SharedToolbar extends HTMLElement {
                 <span id="manualCorruptionDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons manual-adjust-buttons--even">
-                <button class="char-btn" type="button" data-type="corruption" data-delta="-1">-1</button>
-                <button class="char-btn" type="button" data-type="corruption" data-delta="1">+1</button>
+                <button class="char-btn" type="button" data-type="corruption" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="corruption" data-direction="increase">+1</button>
               </div>
             </div>
             <div class="manual-adjust-row">
@@ -706,7 +705,7 @@ class SharedToolbar extends HTMLElement {
                 <span id="manualXpDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons manual-adjust-buttons--single">
-                <button class="char-btn" type="button" data-type="xp" data-delta="1">-1</button>
+                <button class="char-btn" type="button" data-type="xp" data-direction="decrease">-1</button>
               </div>
             </div>
           </div>

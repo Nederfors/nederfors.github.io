@@ -621,19 +621,11 @@
       layout: 'grid'
     });
 
-    const manualXp = manualAdjust.xp || 0;
     const xpItems = [
       { label: 'Total XP', value: totalXPText },
       { label: 'Använt XP', value: usedXPText },
       { label: 'XP kvar', value: freeXPText, valueClass: freeXP < 0 ? 'neg' : '' }
     ];
-    if (manualXp) {
-      xpItems.splice(2, 0, {
-        label: 'Manuell justering',
-        value: formatSigned(-manualXp),
-        valueClass: manualXp > 0 ? 'neg' : manualXp < 0 ? 'pos' : ''
-      });
-    }
     summarySections.push({
       title: 'Erfarenhet',
       layout: 'grid',
@@ -658,19 +650,11 @@
       ]
     });
 
-    const manualCor = manualAdjust.corruption || 0;
     const corruptionItems = [
       { label: 'Maximal korruption', value: formatNumber(maxCor) },
       { label: 'Permanent korruption', value: formatNumber(perm) },
       { label: 'Korruptionströskel', value: formatNumber(thresh) }
     ];
-    if (manualCor) {
-      corruptionItems.splice(1, 0, {
-        label: 'Manuell justering',
-        value: formatSigned(manualCor),
-        valueClass: manualCor > 0 ? 'neg' : 'pos'
-      });
-    }
     summarySections.push({
       title: 'Korruption',
       items: corruptionItems
