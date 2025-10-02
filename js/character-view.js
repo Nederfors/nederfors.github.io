@@ -668,7 +668,12 @@ function initCharacter() {
     const list = storeHelper.getCurrentList(store);
     const inv = storeHelper.getInventory(store);
     const traits = storeHelper.getTraits(store);
-    const effects = storeHelper.getArtifactEffects(store);
+    const artifactEffects = storeHelper.getArtifactEffects(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store);
+    const combinedEffects = {
+      xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+      corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0)
+    };
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(inv) : {};
     const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
@@ -683,7 +688,7 @@ function initCharacter() {
     const hasSjalastark = list.some(p=>p.namn==='Själastark');
     const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
     const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
-    const permBase = storeHelper.calcPermanentCorruption(list, effects);
+    const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
     const hasEarth = list.some(p=>p.namn==='Jordnära');
     const baseMax = strongGift ? valWill + 5 : valWill;
     const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
@@ -692,7 +697,10 @@ function initCharacter() {
     const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
     let perm = hasEarth ? (permBase % 2) : permBase;
     perm += darkPerm;
-    const effectsWithDark = { ...effects, corruption: (effects.corruption || 0) + darkPerm };
+    const effectsWithDark = {
+      xp: combinedEffects.xp || 0,
+      corruption: (combinedEffects.corruption || 0) + darkPerm
+    };
 
     const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
     const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
@@ -737,7 +745,7 @@ function initCharacter() {
     if(!cond.length) cond.push('Inga särskilda ersättningar');
 
     const baseXP = storeHelper.getBaseXP(store);
-    const usedXP = storeHelper.calcUsedXP(list, effects);
+    const usedXP = storeHelper.calcUsedXP(list, combinedEffects);
     const totalXP = storeHelper.calcTotalXP(baseXP, list);
     const freeXP = totalXP - usedXP;
 
@@ -1450,71 +1458,9 @@ function initCharacter() {
     refreshEffectsPanel();
   };
 
-  /* custom suggestions above search (entries + UI-kommandon, min 2 chars) */
-  let sugIdx = -1;
+  /* custom suggestions handled globalt */
   const updateSearchDatalist = () => {
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    if (!sugEl) return;
-    const q = (dom.sIn?.value || '').trim();
-    if (q.length < 2) {
-      sugEl.innerHTML = '';
-      sugEl.hidden = true;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
-    const nq = searchNormalize(q.toLowerCase());
-    const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-    const seen = new Set();
-    const MAX = 50;
-    const items = [];
-    for (const p of filtered()) {
-      const name = String(p.namn || '').trim();
-      if (!name) continue;
-      const nname = searchNormalize(name.toLowerCase());
-      if (!nname.includes(nq)) continue;
-      if (seen.has(name)) continue;
-      seen.add(name);
-      items.push(name);
-      if (items.length >= MAX) break;
-    }
-    // UI-kommandoförslag
-    let uiHtml = '';
-    try {
-      if (window.getUICommandSuggestions) {
-        const cmds = window.getUICommandSuggestions(q) || [];
-        if (cmds.length) {
-          const escTxt = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\"/g,'&quot;');
-          uiHtml = cmds.map((c,i)=>{
-            const iconPart = (() => {
-              if (c.icon) {
-                const html = icon(c.icon, { className: 'suggest-icon-img' });
-                if (html) return `<span class="suggest-icon">${html}</span>`;
-              }
-              const emoji = (c.emoji || '').trim();
-              return emoji ? `<span class="suggest-emoji">${escTxt(emoji)}</span>` : '';
-            })();
-            const label = `<span class="suggest-label">${escTxt(c.label || '')}</span>`;
-            return `<div class="item" data-ui="${escTxt(c.id)}" data-idx="ui-${i}">${iconPart}${label}</div>`;
-          }).join('');
-        }
-      }
-    } catch {}
-    if (!items.length && !uiHtml) {
-      sugEl.innerHTML = '';
-      sugEl.hidden = true;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
-    const listHtml = items.map((v,i)=>{
-      const disp = v.charAt(0).toUpperCase() + v.slice(1);
-      return `<div class="item" data-idx="${i}" data-val="${esc(v)}">${disp}</div>`;
-    }).join('');
-    sugEl.innerHTML = `${uiHtml}${listHtml}`;
-    sugEl.hidden = false;
-    sugIdx = -1;
-    window.updateScrollLock?.();
+    window.globalSearch?.refreshSuggestions?.();
   };
 
   renderSkills(filtered()); activeTags(); updateXP(); renderTraits(); updateSearchDatalist();
@@ -1534,134 +1480,10 @@ function initCharacter() {
   });
 
   /* --- filter-events */
-  dom.sIn.addEventListener('input', ()=>{
+  dom.sIn.addEventListener('input', () => {
     sTemp = dom.sIn.value.trim();
-    updateSearchDatalist();
   });
-  {
-      const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
-        if (sugEl) {
-          sugEl.addEventListener('mousedown', e => {
-            const it = e.target.closest('.item');
-            if (!it) return;
-            e.preventDefault();
-            if (it.dataset.ui && window.executeUICommand) {
-              window.__searchBlurGuard = true;
-              dom.sIn.blur();
-              window.executeUICommand(it.dataset.ui);
-              dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              return;
-            }
-            const val = (it.dataset.val || '').trim();
-            if (val) {
-              const union = storeHelper.getFilterUnion(store);
-              if (union) {
-                if (!F.search.includes(val)) F.search.push(val);
-              } else {
-                F.search = [val];
-              }
-              const nval = searchNormalize(val.toLowerCase());
-              const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-              const cat = charCategory(match, { allowFallback: false });
-              if (cat) openCatsOnce.add(cat);
-              if (window.storeHelper?.addRecentSearch) {
-                storeHelper.addRecentSearch(store, val);
-              }
-            } else {
-              F.search = [];
-            }
-            dom.sIn.value = '';
-            sTemp = '';
-            updateSearchDatalist();
-            activeTags();
-            renderSkills(filtered());
-            renderTraits();
-            dom.sIn.blur();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          });
-        }
-  }
-  dom.sIn.addEventListener('keydown',e=>{
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    const items = sugEl && !sugEl.hidden ? [...sugEl.querySelectorAll('.item')] : [];
-    if (e.key==='ArrowDown' && items.length) {
-      e.preventDefault();
-      sugIdx = Math.min(items.length - 1, sugIdx + 1);
-      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
-      return;
-    }
-    if (e.key==='ArrowUp' && items.length) {
-      e.preventDefault();
-      sugIdx = Math.max(-1, sugIdx - 1);
-      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
-      return;
-    }
-    if(e.key==='Enter'){
-      e.preventDefault();
-      window.__searchBlurGuard = true;
-      dom.sIn.blur();
-      const termTry = (sTemp || '').trim();
-      const term = sTemp.toLowerCase();
-      const suggestionsActive = Boolean(sugEl && !sugEl.hidden && items.length);
-      if (!suggestionsActive && termTry && window.tryUICommand && window.tryUICommand(termTry)) {
-        dom.sIn.value = '';
-        sTemp = '';
-        updateSearchDatalist();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-        // Ignorera sökförslag på Enter; hantera bara skriven text
-      if (term === 'webapp') {
-        const ua = navigator.userAgent.toLowerCase();
-        let anchor = 'general';
-        if (/iphone|ipad|ipod/.test(ua)) anchor = 'ios';
-        else if (/android/.test(ua)) anchor = 'android';
-        else if (/edg|edge/.test(ua)) anchor = 'edge';
-        else if (/firefox/.test(ua)) anchor = 'firefox';
-        else if (/chrome/.test(ua)) anchor = 'chrome';
-        window.open(`webapp.html#${anchor}`, '_blank');
-        dom.sIn.value = ''; sTemp = '';
-        updateSearchDatalist();
-        return;
-      }
-      if (term === 'lol') {
-        F.search=[];F.typ=[];F.ark=[];F.test=[]; sTemp='';
-        dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
-        storeHelper.setOnlySelected(store, false);
-        storeHelper.clearRevealedArtifacts(store);
-        activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
-        return;
-      }
-      if (tryBomb(sTemp)) {
-        dom.sIn.value=''; sTemp='';
-        updateSearchDatalist();
-        return;
-      }
-      if (tryNilasPopup(sTemp)) {
-        dom.sIn.value=''; sTemp='';
-        updateSearchDatalist();
-        return;
-      }
-      if (sTemp) {
-        const union = storeHelper.getFilterUnion(store);
-        if (union) {
-          if (!F.search.includes(sTemp)) F.search.push(sTemp);
-        } else {
-          F.search = [sTemp];
-        }
-        const nval = searchNormalize(sTemp.toLowerCase());
-        const match = storeHelper.getCurrentList(store).find(p => !isInv(p) && searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-        const cat = charCategory(match, { allowFallback: false });
-        if (cat) openCatsOnce.add(cat);
-      } else {
-        F.search = [];
-      }
-      dom.sIn.value=''; sTemp='';
-      activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
-    }
-  });
+
   const DROPDOWN_CONFIG = [
     ['typSel', 'typ'],
     ['arkSel', 'ark'],

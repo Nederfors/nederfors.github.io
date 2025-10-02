@@ -2818,6 +2818,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
   }
 
   function bindInv() {
+    const role = document.body?.dataset?.role;
+    if (role !== 'inventory') {
+      // Shared toolbar exists on every page; avoid binding inventory-only filters elsewhere.
+      return;
+    }
+
     const listEl = dom.invList;
     const searchEl = dom.sIn || getEl('searchField');
     const bindFilterSelect = (el, key) => {

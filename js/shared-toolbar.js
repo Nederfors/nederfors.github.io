@@ -62,15 +62,16 @@ class SharedToolbar extends HTMLElement {
 
         if (!lift) {
           const vvHeight = vv.height ?? 0;
-          const vvPageTop = vv.pageTop ?? 0;
+          const vvOffsetTop = vv.offsetTop ?? 0;
           let layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
-          lift = Math.max(0, layoutViewportHeight - (vvHeight + vvPageTop));
-          const offsetTop = vv.offsetTop ?? 0;
+          // Use offsetTop instead of pageTop so the toolbar lift stays stable while scrolling.
+          lift = Math.max(0, layoutViewportHeight - (vvHeight + vvOffsetTop));
+          const offsetTop = vvOffsetTop;
 
           if (lift > 0 && offsetTop === 0) {
             refreshLargeViewportHeight(true);
             layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
-            lift = Math.max(0, layoutViewportHeight - (vvHeight + vvPageTop));
+            lift = Math.max(0, layoutViewportHeight - (vvHeight + vvOffsetTop));
           }
 
           if (!lift) {
@@ -534,8 +535,15 @@ class SharedToolbar extends HTMLElement {
                     </span>
                     <button id="forceDefense" class="party-toggle icon-only" title="Välj försvarskaraktärsdrag">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
                   </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Manuella justeringar?</span>
+                    </span>
+                    <button id="manualAdjustBtn" class="party-toggle icon-only" title="Hantera manuella justeringar">${icon('adjust')}</button>
+                  </li>
                 </ul>
               </div>
+              <div id="manualAdjustSummary" class="manual-adjust-summary" hidden></div>
             </div>
           </li>
         </ul>
@@ -673,6 +681,39 @@ class SharedToolbar extends HTMLElement {
           <button id="moneyAddBtn" class="char-btn">Addera till totalen</button>
           <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
           <button id="moneyCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Manuella justeringar ---------- -->
+      <div id="manualAdjustPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Manuella justeringar</h3>
+          <p class="manual-adjust-hint">Använd knapparna för att lägga till eller ta bort manuella ändringar. Erf påverkar endast spenderad erfarenhet.</p>
+          <div class="manual-adjust-groups" id="manualAdjustGroups">
+            <div class="manual-adjust-row">
+              <div class="manual-adjust-label">
+                <span>Korruption</span>
+                <span id="manualCorruptionDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+                <button class="char-btn" type="button" data-type="corruption" data-delta="-1">-1</button>
+                <button class="char-btn" type="button" data-type="corruption" data-delta="1">+1</button>
+              </div>
+            </div>
+            <div class="manual-adjust-row">
+              <div class="manual-adjust-label">
+                <span>Erf</span>
+                <span id="manualXpDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons manual-adjust-buttons--single">
+                <button class="char-btn" type="button" data-type="xp" data-delta="1">-1</button>
+              </div>
+            </div>
+          </div>
+          <div class="manual-adjust-footer">
+            <button id="manualAdjustReset" class="char-btn danger" type="button">Återställ</button>
+            <button id="manualAdjustClose" class="char-btn" type="button">Stäng</button>
+          </div>
         </div>
       </div>
 

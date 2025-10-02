@@ -291,6 +291,8 @@ const dom  = {
   filterUnion: getDom('filterUnion'),
   entryViewToggle: getDom('entryViewToggle'),
   infoToggle: getDom('infoToggle'),
+  manualBtn: getDom('manualAdjustBtn'),
+  manualSummary: getDom('manualAdjustSummary'),
 
   /* element i main-DOM */
   active : getDom('activeFilters'),
@@ -442,6 +444,7 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', icon: 'extend', syn: ['utvidga sökning','or-sökning','union','OR'] },
     { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', icon: 'expand', syn: ['expandera vy','vy','detaljer','expand'] },
     { id: 'settings-defense', label: 'Tvinga försvar',       sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', icon: 'forsvar', syn: ['försvar','tvinga försvar','försvarskaraktärsdrag'] },
+    { id: 'settings-manual',  label: 'Manuella justeringar', sel: '#manualAdjustBtn', panel: 'filterPanel', emoji: '🧮', syn: ['manuell justering','korruption','erf','erfarenhet','xp'] },
     { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
@@ -554,28 +557,398 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     }
   } catch {}
 
-  // Liten quality-of-life: i Notes-vyn finns ingen egen söklogik,
-  // så låt Enter köra UI-kommandon globalt där.
-  if (ROLE === 'notes' && dom.sIn) {
-    dom.sIn.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return;
-      const term = (dom.sIn.value || '').trim();
-      if (!term) return;
-      if (tryUICommand(term)) {
-        e.preventDefault();
-        const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-        if (sugEl) { sugEl.innerHTML = ''; sugEl.hidden = true; }
-        window.__searchBlurGuard = true;
-        dom.sIn.value = '';
-        dom.sIn.blur();
-      }
+})();
+
+const INDEX_VIEW_STATE_KEY = 'indexViewState';
+
+function persistIndexSearchTerm(term) {
+  try {
+    const raw = localStorage.getItem(INDEX_VIEW_STATE_KEY);
+    const state = raw ? JSON.parse(raw) : {};
+    const filters = (state && typeof state === 'object' && state.filters && typeof state.filters === 'object')
+      ? state.filters
+      : {};
+    filters.search = term ? [term] : [];
+    state.filters = filters;
+    localStorage.setItem(INDEX_VIEW_STATE_KEY, JSON.stringify(state));
+  } catch {}
+  if (term && window.storeHelper?.addRecentSearch) {
+    try { storeHelper.addRecentSearch(store, term); } catch {}
+  }
+}
+
+function navigateToIndexWithFilter(rawTerm, options = {}) {
+  const term = String(rawTerm || '').trim();
+  persistIndexSearchTerm(term);
+  try { sessionStorage.setItem('__pendingIndexSearch', term); } catch {}
+  if (ROLE === 'index') {
+    if (typeof window.handleIndexSearchTerm === 'function') {
+      try { window.handleIndexSearchTerm(term, options); } catch {}
+    }
+    try { sessionStorage.removeItem('__pendingIndexSearch'); } catch {}
+    return;
+  }
+  try { window.location.href = 'index.html'; }
+  catch {}
+}
+
+window.navigateToIndexWithFilter = navigateToIndexWithFilter;
+
+const globalSearch = (() => {
+  const SEARCH_MIN_CHARS = 2;
+  const ENTRY_LIMIT = 50;
+
+  let context = {};
+  let activeIndex = -1;
+  let lastQuery = '';
+  let suggestionEl = null;
+
+  const defaultContext = {
+    name: 'default',
+    minLength: SEARCH_MIN_CHARS,
+    maxEntries: ENTRY_LIMIT,
+    getEntrySource: () => Array.isArray(window.DB) ? window.DB : [],
+    buildExtraSuggestions: null,
+    handleDataset: null,
+    handleSubmit: null,
+    onQueryChanged: null
+  };
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+
+  const normalizeTerm = (value) => {
+    const lower = String(value || '').toLowerCase();
+    if (typeof searchNormalize === 'function') {
+      try { return searchNormalize(lower); }
+      catch { return lower; }
+    }
+    return lower;
+  };
+
+  const capitalize = (value) => {
+    const text = String(value || '');
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+
+  const getInput = () => dom.sIn || null;
+
+  function ensureSuggestionEl() {
+    let el = dom.searchSug;
+    if (!el || !el.isConnected) {
+      const root = document.querySelector('shared-toolbar')?.shadowRoot || null;
+      if (root) el = root.getElementById('searchSuggest');
+    }
+    if (el && el !== suggestionEl) {
+      if (suggestionEl) suggestionEl.removeEventListener('mousedown', onSuggestionMouseDown);
+      el.addEventListener('mousedown', onSuggestionMouseDown);
+      suggestionEl = el;
+    }
+    return suggestionEl;
+  }
+
+  function onSuggestionMouseDown(event) {
+    const target = event.target?.closest('.item');
+    if (!target) return;
+    event.preventDefault();
+    handleSuggestionElement(target, { event, reason: 'click' });
+  }
+
+  function setContext(custom = {}) {
+    context = { ...defaultContext, ...(custom || {}) };
+    activeIndex = -1;
+    refreshSuggestions();
+  }
+
+  function refreshSuggestions() {
+    const input = getInput();
+    if (!input) return;
+    updateSuggestions(input.value || '');
+  }
+
+  function updateSuggestions(rawQuery) {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl) return;
+    lastQuery = String(rawQuery || '');
+    if (typeof context.onQueryChanged === 'function') {
+      try { context.onQueryChanged(lastQuery); }
+      catch {}
+    }
+    const trimmed = lastQuery.trim();
+    const minLen = context.minLength ?? SEARCH_MIN_CHARS;
+    if (!trimmed || trimmed.length < minLen) {
+      hideSuggestions();
+      return;
+    }
+
+    const blocks = [];
+
+    if (typeof context.buildExtraSuggestions === 'function') {
+      try {
+        const extra = context.buildExtraSuggestions(trimmed, { query: lastQuery });
+        if (extra) blocks.push(extra);
+      } catch {}
+    }
+
+    const uiHtml = buildUiSuggestionHtml(trimmed);
+    if (uiHtml) blocks.push(uiHtml);
+
+    const entryHtml = buildEntrySuggestionHtml(trimmed);
+    if (entryHtml) blocks.push(entryHtml);
+
+    if (!blocks.length) {
+      hideSuggestions();
+      return;
+    }
+
+    sugEl.innerHTML = blocks.join('');
+    sugEl.hidden = false;
+    activeIndex = -1;
+    window.updateScrollLock?.();
+  }
+
+  function buildUiSuggestionHtml(query) {
+    if (typeof window.getUICommandSuggestions !== 'function') return '';
+    let suggestions = [];
+    try { suggestions = window.getUICommandSuggestions(query) || []; }
+    catch { suggestions = []; }
+    if (!suggestions.length) return '';
+    return suggestions.map((cmd, idx) => {
+      const iconPart = (() => {
+        if (cmd.icon && typeof window.iconHtml === 'function') {
+          try {
+            const html = window.iconHtml(cmd.icon, { className: 'suggest-icon-img' });
+            if (html) return `<span class="suggest-icon">${html}</span>`;
+          } catch {}
+        }
+        const emoji = String(cmd.emoji || '').trim();
+        return emoji ? `<span class="suggest-emoji">${escapeHtml(emoji)}</span>` : '';
+      })();
+      const label = `<span class="suggest-label">${escapeHtml(cmd.label || '')}</span>`;
+      return `<div class="item" data-ui="${escapeHtml(cmd.id || '')}" data-idx="ui-${idx}">${iconPart}${label}</div>`;
+    }).join('');
+  }
+
+  function getEntrySource() {
+    if (typeof context.getEntrySource === 'function') {
+      try {
+        const result = context.getEntrySource();
+        if (Array.isArray(result)) return result;
+        return Array.from(result || []);
+      } catch {}
+    }
+    return Array.isArray(window.DB) ? window.DB : [];
+  }
+
+  function buildEntrySuggestionHtml(query) {
+    const entries = getEntrySource();
+    if (!entries.length) return '';
+    const limit = context.maxEntries ?? ENTRY_LIMIT;
+    const normQuery = normalizeTerm(query);
+    if (!normQuery) return '';
+    const seen = new Set();
+    const items = [];
+    for (const entry of entries) {
+      const rawName = typeof entry === 'string'
+        ? entry
+        : (entry && typeof entry === 'object' ? (entry.namn ?? entry.name ?? '') : '');
+      const name = String(rawName || '').trim();
+      if (!name || seen.has(name)) continue;
+      const normName = normalizeTerm(name);
+      if (!normName.includes(normQuery)) continue;
+      seen.add(name);
+      items.push({ name, display: capitalize(name) });
+      if (items.length >= limit) break;
+    }
+    if (!items.length) return '';
+    return items.map((item, idx) =>
+      `<div class="item" data-entry="${escapeHtml(item.name)}" data-idx="entry-${idx}">${escapeHtml(item.display)}</div>`
+    ).join('');
+  }
+
+  function hideSuggestions() {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl) return;
+    sugEl.innerHTML = '';
+    sugEl.hidden = true;
+    activeIndex = -1;
+    window.updateScrollLock?.();
+  }
+
+  function getSuggestionItems() {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl || sugEl.hidden) return [];
+    return Array.from(sugEl.querySelectorAll('.item'));
+  }
+
+  function updateActiveHighlight() {
+    const items = getSuggestionItems();
+    items.forEach((el, idx) => {
+      el.classList.toggle('active', idx === activeIndex);
     });
   }
+
+  function moveSelection(delta) {
+    const items = getSuggestionItems();
+    if (!items.length) return false;
+    const nextIndex = Math.max(-1, Math.min(items.length - 1, activeIndex + delta));
+    if (nextIndex === activeIndex) return false;
+    activeIndex = nextIndex;
+    updateActiveHighlight();
+    if (activeIndex >= 0 && items[activeIndex]) {
+      try { items[activeIndex].scrollIntoView({ block: 'nearest' }); } catch {}
+    }
+    return true;
+  }
+
+  function selectActiveSuggestion() {
+    if (activeIndex < 0) return false;
+    const items = getSuggestionItems();
+    const current = items[activeIndex];
+    if (!current) return false;
+    return handleSuggestionElement(current, { reason: 'keyboard' });
+  }
+
+  function handleSuggestionElement(el, meta = {}) {
+    const dataset = el?.dataset || {};
+    if (dataset.ui) {
+      safeBlurInput();
+      let executed = false;
+      try { executed = typeof window.executeUICommand === 'function' ? window.executeUICommand(dataset.ui) : false; }
+      catch { executed = false; }
+      if (executed && dom.sIn) dom.sIn.value = '';
+      hideSuggestions();
+      return true;
+    }
+    if (typeof context.handleDataset === 'function') {
+      try {
+        if (context.handleDataset(dataset, { ...meta, query: lastQuery })) {
+          hideSuggestions();
+          return true;
+        }
+      } catch {}
+    }
+    if (dataset.entry || dataset.val) {
+      applyTermAndNavigate(dataset.entry || dataset.val || '');
+      return true;
+    }
+    return false;
+  }
+
+  function handleInput(event) {
+    updateSuggestions(event?.target?.value || '');
+  }
+
+  function handleKeydown(event) {
+    const key = event.key;
+    if (key === 'ArrowDown') {
+      const hadItems = getSuggestionItems().length > 0;
+      if (!hadItems) {
+        const val = String(getInput()?.value || '');
+        if (val.trim().length >= (context.minLength ?? SEARCH_MIN_CHARS)) {
+          updateSuggestions(val);
+        }
+      }
+      if (moveSelection(1)) event.preventDefault();
+      return;
+    }
+    if (key === 'ArrowUp') {
+      if (moveSelection(-1)) event.preventDefault();
+      return;
+    }
+    if (key === 'Enter') {
+      const input = getInput();
+      const term = String(input?.value || '').trim();
+      if (selectActiveSuggestion()) {
+        event.preventDefault();
+        return;
+      }
+      if (!term) {
+        hideSuggestions();
+        safeBlurInput();
+        event.preventDefault();
+        return;
+      }
+      let executedUI = false;
+      if (typeof window.tryUICommand === 'function') {
+        try { executedUI = window.tryUICommand(term); }
+        catch { executedUI = false; }
+      }
+      if (executedUI) {
+        if (input) input.value = '';
+        hideSuggestions();
+        safeBlurInput();
+        event.preventDefault();
+        return;
+      }
+      let handled = false;
+      if (typeof context.handleSubmit === 'function') {
+        try { handled = context.handleSubmit(term, { event, executedUI, query: lastQuery }); }
+        catch { handled = false; }
+      }
+      if (!handled) {
+        applyTermAndNavigate(term);
+      } else {
+        if (input) input.value = '';
+        hideSuggestions();
+        safeBlurInput();
+      }
+      event.preventDefault();
+      return;
+    }
+    if (key === 'Escape' && window.matchMedia('(pointer: fine)').matches) {
+      if (dom.sIn) dom.sIn.value = '';
+      hideSuggestions();
+      safeBlurInput();
+      event.preventDefault();
+    }
+  }
+
+  function applyTermAndNavigate(term) {
+    if (dom.sIn) dom.sIn.value = '';
+    hideSuggestions();
+    safeBlurInput();
+    navigateToIndexWithFilter(term);
+  }
+
+  function safeBlurInput() {
+    const input = getInput();
+    if (!input) return;
+    window.__searchBlurGuard = true;
+    try { input.blur(); }
+    catch {}
+  }
+
+  const toolbar = document.querySelector('shared-toolbar');
+  if (toolbar) {
+    toolbar.addEventListener('toolbar-rendered', () => {
+      suggestionEl = null;
+      ensureSuggestionEl();
+      refreshSuggestions();
+    });
+  }
+  ensureSuggestionEl();
+
+  return {
+    setContext,
+    refreshSuggestions,
+    hideSuggestions,
+    handleInput,
+    handleKeydown,
+    updateSuggestions,
+    moveSelection,
+    selectActiveSuggestion,
+    lastQuery: () => lastQuery
+  };
 })();
+
+window.globalSearch = globalSearch;
+globalSearch.setContext();
 
 /* ----- Hantera back-navigering för sökfältet ----- */
 let searchFocus = false;
-// Guard to prevent blur() from triggering history.back() when a UI command is running
 window.__searchBlurGuard = false;
 if (dom.sIn) {
   dom.sIn.addEventListener('focus', () => {
@@ -584,11 +957,9 @@ if (dom.sIn) {
   });
   dom.sIn.addEventListener('blur', () => {
     setTimeout(() => {
-      const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-      if (sugEl) sugEl.hidden = true;
+      globalSearch.hideSuggestions();
       if (searchFocus) {
         searchFocus = false;
-        // Skip history.back when a UI command triggered this blur
         if (window.__searchBlurGuard) {
           window.__searchBlurGuard = false;
           return;
@@ -597,20 +968,14 @@ if (dom.sIn) {
       }
     }, 0);
   });
-  dom.sIn.addEventListener('keydown', e => {
-    if (e.key === 'Enter') dom.sIn.blur();
-    else if (e.key === 'Escape' && window.matchMedia('(pointer: fine)').matches) {
-      e.preventDefault();
-      dom.sIn.blur();
-    }
-  });
+  dom.sIn.addEventListener('input', globalSearch.handleInput);
+  dom.sIn.addEventListener('keydown', globalSearch.handleKeydown);
 }
 
 window.addEventListener('popstate', () => {
   if (searchFocus && document.activeElement === dom.sIn) {
     searchFocus = false;
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    if (sugEl) sugEl.hidden = true;
+    globalSearch.hideSuggestions();
     dom.sIn.blur();
   }
 });
@@ -711,6 +1076,7 @@ loadDatabaseData()
       store = storeHelper.load();
     }
     boot();
+    try { window.globalSearch?.refreshSuggestions?.(); } catch {}
   })
   .catch(err => {
     console.error('Kunde inte läsa databasen', err);
@@ -1380,6 +1746,15 @@ function bindToolbar() {
       });
     });
   }
+  if (dom.manualBtn) {
+    dom.manualBtn.addEventListener('click', async () => {
+      if (!store.current) {
+        const ok = await requireCharacter();
+        if (!ok) return;
+      }
+      openManualAdjustPopup();
+    });
+  }
   if (dom.filterUnion) {
     if (storeHelper.getFilterUnion(store)) dom.filterUnion.classList.add('active');
     dom.filterUnion.addEventListener('click', () => {
@@ -1399,6 +1774,7 @@ function bindToolbar() {
       if (window.inventoryViewUpdate) window.inventoryViewUpdate();
     });
   }
+  syncManualAdjustButton();
 }
 
 // ---------- Popup: Mapphanterare ----------
@@ -1791,6 +2167,96 @@ function openDefensePopup(cb) {
   box.addEventListener('click', onBtn);
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
+}
+
+function openManualAdjustPopup() {
+  const pop = bar.shadowRoot?.getElementById('manualAdjustPopup');
+  if (!pop) return;
+  const inner = pop.querySelector('.popup-inner');
+  const groups = pop.querySelector('#manualAdjustGroups');
+  const closeBtn = pop.querySelector('#manualAdjustClose');
+  const resetBtn = pop.querySelector('#manualAdjustReset');
+  const corOut = pop.querySelector('#manualCorruptionDisplay');
+  const xpOut = pop.querySelector('#manualXpDisplay');
+
+  const refresh = () => {
+    const manual = getManualAdjustmentsSafe();
+    if (corOut) corOut.textContent = formatSignedNumber(manual.corruption);
+    if (xpOut)  xpOut.textContent  = formatSignedNumber(-manual.xp);
+  };
+
+  const applyUpdate = (updater) => {
+    if (!store || !store.current) return;
+    const manual = getManualAdjustmentsSafe();
+    const next = { ...manual };
+    updater(next);
+    storeHelper.setManualAdjustments(store, next);
+    updateXP();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+  };
+
+  function close() {
+    pop.classList.remove('open');
+    groups?.removeEventListener('click', onAction);
+    closeBtn?.removeEventListener('click', onClose);
+    resetBtn?.removeEventListener('click', onReset);
+    pop.removeEventListener('click', onOutside);
+    document.removeEventListener('keydown', onKey);
+  }
+
+  function onClose() {
+    close();
+  }
+
+  function onReset() {
+    applyUpdate(next => {
+      next.corruption = 0;
+      next.xp = 0;
+    });
+    refresh();
+  }
+
+  function onAction(e) {
+    const btn = e.target.closest('button[data-type][data-delta]');
+    if (!btn) return;
+    e.preventDefault();
+    const type = btn.dataset.type;
+    const rawDelta = Number(btn.dataset.delta);
+    const delta = Number.isFinite(rawDelta) ? (rawDelta > 0 ? 1 : rawDelta < 0 ? -1 : 0) : 0;
+    if (!type || delta === 0 || !store || !store.current) return;
+    applyUpdate(next => {
+      if (type === 'corruption') {
+        const cur = Number(next.corruption);
+        next.corruption = (Number.isFinite(cur) ? cur : 0) + delta;
+      } else if (type === 'xp') {
+        const cur = Number(next.xp);
+        next.xp = (Number.isFinite(cur) ? cur : 0) + delta;
+      }
+    });
+    refresh();
+  }
+
+  function onOutside(e) {
+    if (!inner || inner.contains(e.target)) return;
+    close();
+  }
+
+  function onKey(e) {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    }
+  }
+
+  refresh();
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+  groups?.addEventListener('click', onAction);
+  closeBtn?.addEventListener('click', onClose);
+  resetBtn?.addEventListener('click', onReset);
+  pop.addEventListener('click', onOutside);
+  document.addEventListener('keydown', onKey);
 }
 
 async function saveJsonFile(jsonText, suggested) {
@@ -2729,11 +3195,83 @@ function renderCharOptions(sel) {
 
 
 
+function formatSignedNumber(value) {
+  const num = Number(value || 0);
+  if (!Number.isFinite(num) || num === 0) return '0';
+  return num > 0 ? `+${num}` : `${num}`;
+}
+
+function getManualAdjustmentsSafe() {
+  if (!store || !store.current) return { xp: 0, corruption: 0 };
+  try {
+    if (typeof storeHelper.getManualAdjustments !== 'function') {
+      return { xp: 0, corruption: 0 };
+    }
+    const res = storeHelper.getManualAdjustments(store) || {};
+    return {
+      xp: Number(res.xp || 0),
+      corruption: Number(res.corruption || 0)
+    };
+  } catch {
+    return { xp: 0, corruption: 0 };
+  }
+}
+
+function manualAdjustmentSummaryText(manual) {
+  if (!manual) return '';
+  const parts = [];
+  const cor = Number(manual.corruption || 0);
+  const xpStore = Number(manual.xp || 0);
+  if (cor) parts.push(`Kor ${cor > 0 ? `+${cor}` : `${cor}`}`);
+  if (xpStore) {
+    const xpVisible = -xpStore;
+    parts.push(`Erf ${xpVisible > 0 ? `+${xpVisible}` : `${xpVisible}`}`);
+  }
+  return parts.join(', ');
+}
+
+function syncManualAdjustButton() {
+  const baseTitle = 'Hantera manuella justeringar för korruption och erfarenhet';
+  if (!dom.manualBtn && !dom.manualSummary) return;
+  if (!store || !store.current) {
+    if (dom.manualBtn) {
+      dom.manualBtn.classList.remove('active');
+      dom.manualBtn.title = baseTitle;
+    }
+    if (dom.manualSummary) {
+      dom.manualSummary.textContent = '';
+      dom.manualSummary.hidden = true;
+    }
+    return;
+  }
+  const manual = getManualAdjustmentsSafe();
+  const hasAdjustments = Boolean((manual.corruption || 0) || (manual.xp || 0));
+  const summary = hasAdjustments ? manualAdjustmentSummaryText(manual) : '';
+  if (dom.manualBtn) {
+    dom.manualBtn.classList.toggle('active', hasAdjustments);
+    dom.manualBtn.title = summary ? `${baseTitle} (${summary})` : baseTitle;
+  }
+  if (dom.manualSummary) {
+    if (summary) {
+      dom.manualSummary.textContent = summary;
+      dom.manualSummary.hidden = false;
+    } else {
+      dom.manualSummary.textContent = '';
+      dom.manualSummary.hidden = true;
+    }
+  }
+}
+
 function updateXP() {
   const list  = storeHelper.getCurrentList(store);
   const base  = storeHelper.getBaseXP(store);
-  const effects = storeHelper.getArtifactEffects(store);
-  const used  = storeHelper.calcUsedXP(list, effects);
+  const artifactEffects = storeHelper.getArtifactEffects(store);
+  const manualAdjust = storeHelper.getManualAdjustments(store);
+  const combinedEffects = {
+    xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+    corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0)
+  };
+  const used  = storeHelper.calcUsedXP(list, combinedEffects);
   const total = storeHelper.calcTotalXP(base, list);
   const free  = total - used;
   if (dom.xpOut) {
@@ -2747,6 +3285,7 @@ function updateXP() {
   if (dom.xpFree)  dom.xpFree.textContent  = free;
   if (dom.xpSum)   dom.xpSum.classList.toggle('under', free < 0);
   updateCharacterIconVariant();
+  syncManualAdjustButton();
 }
 /* -----------------------------------------------------------
    Synk mellan flikar – endast när AKTUELLA rollpersonen ändras

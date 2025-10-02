@@ -314,6 +314,13 @@
       data.artifactEffects = { xp: 0, corruption: 0 };
       mutated = true;
     }
+    if (!data.manualAdjustments) {
+      data.manualAdjustments = defaultManualAdjustments();
+      mutated = true;
+    }
+    if (data.manualAdjustments) {
+      data.manualAdjustments = { ...defaultManualAdjustments(), ...(data.manualAdjustments || {}) };
+    }
     if (!data.bonusMoney) {
       data.bonusMoney = defaultMoney();
       mutated = true;
@@ -880,6 +887,10 @@
     return { xp: 0, corruption: 0 };
   }
 
+  function defaultManualAdjustments() {
+    return { xp: 0, corruption: 0 };
+  }
+
   function getMoney(store) {
     if (!store.current) return defaultMoney();
     const data = store.data[store.current] || {};
@@ -1125,13 +1136,37 @@
   function getArtifactEffects(store) {
     if (!store.current) return defaultArtifactEffects();
     const data = store.data[store.current] || {};
-    return { ...defaultArtifactEffects(), ...(data.artifactEffects || {}) };
+    const auto = { ...defaultArtifactEffects(), ...(data.artifactEffects || {}) };
+    return {
+      xp: Number(auto.xp || 0),
+      corruption: Number(auto.corruption || 0)
+    };
   }
 
   function setArtifactEffects(store, eff) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].artifactEffects = { ...defaultArtifactEffects(), ...(eff || {}) };
+    persistCurrentCharacter(store);
+  }
+
+  function getManualAdjustments(store) {
+    if (!store.current) return defaultManualAdjustments();
+    const data = store.data[store.current] || {};
+    const manual = { ...defaultManualAdjustments(), ...(data.manualAdjustments || {}) };
+    return {
+      xp: Number(manual.xp || 0),
+      corruption: Number(manual.corruption || 0)
+    };
+  }
+
+  function setManualAdjustments(store, adj) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    const next = { ...defaultManualAdjustments(), ...(adj || {}) };
+    next.xp = Number(next.xp || 0);
+    next.corruption = Number(next.corruption || 0);
+    store.data[store.current].manualAdjustments = next;
     persistCurrentCharacter(store);
   }
 
@@ -1717,6 +1752,7 @@ function defaultTraits() {
     const obj = { ...(data || {}) };
     const emptyMoney = defaultMoney();
     const emptyEff = defaultArtifactEffects();
+    const emptyManual = defaultManualAdjustments();
 
     ['money','bonusMoney','privMoney','possessionMoney'].forEach(k => {
       if (obj[k] && JSON.stringify(obj[k]) === JSON.stringify(emptyMoney)) delete obj[k];
@@ -1724,6 +1760,7 @@ function defaultTraits() {
     if (obj.possessionRemoved === 0) delete obj.possessionRemoved;
     if (Array.isArray(obj.hamnskifteRemoved) && obj.hamnskifteRemoved.length === 0) delete obj.hamnskifteRemoved;
     if (obj.artifactEffects && JSON.stringify(obj.artifactEffects) === JSON.stringify(emptyEff)) delete obj.artifactEffects;
+    if (obj.manualAdjustments && JSON.stringify(obj.manualAdjustments) === JSON.stringify(emptyManual)) delete obj.manualAdjustments;
     ['inventory','list','custom'].forEach(k => {
       if (Array.isArray(obj[k]) && obj[k].length === 0) delete obj[k];
     });
@@ -2242,6 +2279,8 @@ function defaultTraits() {
     setDefenseTrait,
     getArtifactEffects,
     setArtifactEffects,
+    getManualAdjustments,
+    setManualAdjustments,
     getFilterUnion,
     setFilterUnion,
     getCompactEntries,

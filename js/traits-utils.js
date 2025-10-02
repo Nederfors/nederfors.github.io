@@ -151,8 +151,13 @@
     const KEYS = ['Diskret','Kvick','Listig','Stark','Tr\u00e4ffs\u00e4ker','Vaksam','Viljestark','\u00d6vertygande'];
 
     const list  = storeHelper.getCurrentList(store);
-    const effects = storeHelper.getArtifactEffects(store);
-    const permBase = storeHelper.calcPermanentCorruption(list, effects);
+    const artifactEffects = storeHelper.getArtifactEffects(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store);
+    const combinedEffects = {
+      xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+      corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0)
+    };
+    const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
     const hasEarth = list.some(p => p.namn === 'Jordnära');
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(storeHelper.getInventory(store)) : {};
@@ -178,7 +183,10 @@
     const maxCor = baseMax + (hasSjalastark ? 1 : 0);
     let   thresh = threshBase + resistCount - sensCount;
     const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
-    const effectsWithDark = { ...effects, corruption: (effects.corruption || 0) + darkPerm };
+    const effectsWithDark = {
+      xp: combinedEffects.xp || 0,
+      corruption: (combinedEffects.corruption || 0) + darkPerm
+    };
 
     const defTrait = getDefenseTraitName(list);
     const defs = calcDefense(vals[defTrait]);

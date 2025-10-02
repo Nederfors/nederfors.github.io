@@ -448,100 +448,252 @@ function initIndex() {
   };
   fillDropdowns();
 
-  /* custom suggestions above search (entries only, min 2 chars) */
-  let sugIdx = -1;
   const updateSearchDatalist = () => {
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    if (!sugEl) return;
-    const q = (dom.sIn?.value || '').trim();
-    if (q.length < 2) {
-      sugEl.innerHTML = '';
-      sugEl.hidden = true;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
-    const nq = searchNormalize(q.toLowerCase());
-    const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-    // Special suggestions for "[N] random: <kategori>" or "[N] slump: <kategori>"
-    {
-      const m = q.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.*)$/i);
-      if (m) {
-        const num = (m[1] || '').trim();
-        const prefix = m[2];
-        const part = searchNormalize((m[3] || '').toLowerCase());
-        const cats = getCategoryList()
-          .filter(cat => {
-            const key = searchNormalize(String(cat || '').toLowerCase());
-            return part ? key.includes(part) : true;
-          });
-        if (cats.length) {
-          sugEl.innerHTML = cats.map((cat,i)=>{
-            const base = prefix.charAt(0).toUpperCase()+prefix.slice(1).toLowerCase();
-            const text = `${num ? (num + ' ') : ''}${base}: ${cat}`;
-            const disp = text.charAt(0).toUpperCase() + text.slice(1);
-            return `<div class="item" data-idx="${i}" data-val="${esc(text)}" data-cat="${esc(cat)}" data-count="${esc(num || '1')}" data-cmd="random">${disp}</div>`;
-          }).join('');
-          sugEl.hidden = false;
-          sugIdx = -1;
-          window.updateScrollLock?.();
-          return;
-        }
-        // Fall back to default behavior if no categories matched
-      }
-    }
-    const seen = new Set();
-    const MAX = 50;
-    const items = [];
-    for (const p of getEntries()) {
-      const name = String(p.namn || '').trim();
-      if (!name) continue;
-      const nname = searchNormalize(name.toLowerCase());
-      if (!nname.includes(nq)) continue;
-      if (seen.has(name)) continue;
-      seen.add(name);
-      items.push(name);
-      if (items.length >= MAX) break;
-    }
-    // UI-kommandoförslag
-    let uiHtml = '';
-    try {
-      if (window.getUICommandSuggestions) {
-        const cmds = window.getUICommandSuggestions(q) || [];
-        if (cmds.length) {
-          const escTxt = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\"/g,'&quot;');
-          uiHtml = cmds.map((c,i)=>{
-            const iconPart = (() => {
-              if (c.icon) {
-                const html = icon(c.icon, { className: 'suggest-icon-img' });
-                if (html) return `<span class="suggest-icon">${html}</span>`;
-              }
-              const emoji = (c.emoji || '').trim();
-              return emoji ? `<span class="suggest-emoji">${escTxt(emoji)}</span>` : '';
-            })();
-            const label = `<span class="suggest-label">${escTxt(c.label || '')}</span>`;
-            return `<div class="item" data-ui="${escTxt(c.id)}" data-idx="ui-${i}">${iconPart}${label}</div>`;
-          }).join('');
-        }
-      }
-    } catch {}
-    if (!items.length && !uiHtml) {
-      sugEl.innerHTML = '';
-      sugEl.hidden = true;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
-    const listHtml = items.map((v,i)=>{
-      const disp = v.charAt(0).toUpperCase() + v.slice(1);
-      return `<div class="item" data-idx="${i}" data-val="${esc(v)}">${disp}</div>`;
+    window.globalSearch?.refreshSuggestions?.();
+  };
+
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+
+  const buildRandomSuggestionHtml = (query) => {
+    const q = String(query || '');
+    const match = q.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.*)$/i);
+    if (!match) return '';
+    const num = (match[1] || '').trim();
+    const prefix = match[2];
+    const part = searchNormalize((match[3] || '').toLowerCase());
+    const cats = getCategoryList()
+      .filter(cat => {
+        const key = searchNormalize(String(cat || '').toLowerCase());
+        return part ? key.includes(part) : true;
+      });
+    if (!cats.length) return '';
+    return cats.map((cat, i) => {
+      const base = prefix.charAt(0).toUpperCase() + prefix.slice(1).toLowerCase();
+      const text = `${num ? (num + ' ') : ''}${base}: ${cat}`;
+      const disp = text.charAt(0).toUpperCase() + text.slice(1);
+      return `<div class="item" data-idx="rand-${i}" data-val="${escapeHtml(text)}" data-cat="${escapeHtml(cat)}" data-count="${escapeHtml(num || '1')}" data-cmd="random">${escapeHtml(disp)}</div>`;
     }).join('');
-    sugEl.innerHTML = `${uiHtml}${listHtml}`;
-    sugEl.hidden = false;
-    sugIdx = -1;
-    window.updateScrollLock?.();
+  };
+
+  const clearSearchInput = ({ blur = true } = {}) => {
+    if (dom.sIn) dom.sIn.value = '';
+    sTemp = '';
+    window.globalSearch?.hideSuggestions?.();
+    if (blur && dom.sIn) {
+      window.__searchBlurGuard = true;
+      try { dom.sIn.blur(); } catch {}
+    }
+  };
+
+  const takePendingIndexSearch = () => {
+    try {
+      const stored = sessionStorage.getItem('__pendingIndexSearch');
+      if (stored !== null) sessionStorage.removeItem('__pendingIndexSearch');
+      return String(stored || '').trim();
+    } catch {
+      return '';
+    }
+  };
+
+  const applyIndexSearchTerm = (value, { scroll = true } = {}) => {
+    const term = String(value || '').trim();
+    const union = storeHelper.getFilterUnion(store);
+    if (term) {
+      if (union) {
+        if (!F.search.includes(term)) F.search.push(term);
+      } else {
+        F.search = [term];
+      }
+    } else {
+      F.search = [];
+    }
+    invalidateFilteredResults();
+    if (term) {
+      const norm = searchNormalize(term.toLowerCase());
+      const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === norm);
+      const cat = match?.taggar?.typ?.[0];
+      if (cat) openCatsOnce.add(cat);
+      if (window.storeHelper?.addRecentSearch) {
+        storeHelper.addRecentSearch(store, term);
+      }
+    }
+    clearSearchInput();
+    activeTags();
+    scheduleRenderList();
+    if (scroll) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleRandomSuggestion = (dataset) => {
+    const cat = dataset.cat || '';
+    const count = Math.max(1, parseInt(dataset.count || '1', 10) || 1);
+    const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
+    if (!pool.length) {
+      if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
+      clearSearchInput();
+      return true;
+    }
+    const picks = [];
+    const indices = pool.map((_, idx) => idx);
+    const drawCount = Math.min(count, pool.length);
+    for (let i = 0; i < drawCount; i++) {
+      const index = Math.floor(Math.random() * indices.length);
+      const [pickedIdx] = indices.splice(index, 1);
+      picks.push(pool[pickedIdx]);
+    }
+    fixedRandomEntries = picks;
+    fixedRandomInfo = { cat, count: picks.length };
+    invalidateFilteredResults();
+    const catName = cat || picks[0]?.taggar?.typ?.[0];
+    if (catName) openCatsOnce.add(catName);
+    clearSearchInput();
+    activeTags();
+    scheduleRenderList();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return true;
+  };
+
+  const handleIndexSearchSubmit = (term) => {
+    const raw = String(term || '').trim();
+    if (!raw) {
+      F.search = [];
+      invalidateFilteredResults();
+      clearSearchInput();
+      activeTags();
+      scheduleRenderList();
+      return true;
+    }
+    const lower = raw.toLowerCase();
+    if (lower === 'webapp') {
+      const ua = navigator.userAgent.toLowerCase();
+      let anchor = 'general';
+      if (/iphone|ipad|ipod/.test(ua)) anchor = 'ios';
+      else if (/android/.test(ua)) anchor = 'android';
+      else if (/edg|edge/.test(ua)) anchor = 'edge';
+      else if (/firefox/.test(ua)) anchor = 'firefox';
+      else if (/chrome/.test(ua)) anchor = 'chrome';
+      window.open(`webapp.html#${anchor}`, '_blank');
+      clearSearchInput();
+      return true;
+    }
+    if (lower === 'lol') {
+      F.search = [];
+      F.typ = [];
+      F.ark = [];
+      F.test = [];
+      fixedRandomEntries = null;
+      fixedRandomInfo = null;
+      invalidateFilteredResults();
+      clearSearchInput();
+      if (dom.typSel) dom.typSel.value = '';
+      if (dom.arkSel) dom.arkSel.value = '';
+      if (dom.tstSel) dom.tstSel.value = '';
+      storeHelper.setOnlySelected(store, false);
+      storeHelper.clearRevealedArtifacts(store);
+      revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
+      bumpRevealedArtifactsVersion();
+      if (showArtifacts) {
+        showArtifacts = false;
+        touchFilteredCache();
+      }
+      fillDropdowns();
+      activeTags();
+      scheduleRenderList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+    if (lower === 'molly<3') {
+      showArtifacts = true;
+      touchFilteredCache();
+      clearSearchInput();
+      fillDropdowns();
+      activeTags();
+      scheduleRenderList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+    const randomMatch = raw.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
+    if (randomMatch) {
+      const requested = Math.max(1, parseInt(randomMatch[1] || '1', 10) || 1);
+      const catInput = (randomMatch[3] || '').trim();
+      if (catInput) {
+        const normalizedCat = searchNormalize(catInput.toLowerCase());
+        const categoryIndex = getCategoryIndex();
+        const canonical = categoryIndex.get(normalizedCat);
+        if (!canonical) {
+          if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
+          clearSearchInput();
+          return true;
+        }
+        const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
+        if (!pool.length) {
+          if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
+          clearSearchInput();
+          return true;
+        }
+        const picks = [];
+        const idxs = pool.map((_, idx) => idx);
+        const drawCount = Math.min(requested, pool.length);
+        for (let i = 0; i < drawCount; i++) {
+          const index = Math.floor(Math.random() * idxs.length);
+          const [pickedIdx] = idxs.splice(index, 1);
+          picks.push(pool[pickedIdx]);
+        }
+        fixedRandomEntries = picks;
+        fixedRandomInfo = { cat: canonical, count: picks.length };
+        invalidateFilteredResults();
+        const catName = canonical || picks[0]?.taggar?.typ?.[0];
+        if (catName) openCatsOnce.add(catName);
+        clearSearchInput();
+        activeTags();
+        scheduleRenderList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return true;
+      }
+    }
+    if (tryBomb(raw)) {
+      clearSearchInput();
+      return true;
+    }
+    if (tryNilasPopup(raw)) {
+      clearSearchInput();
+      return true;
+    }
+    applyIndexSearchTerm(raw);
+    return true;
+  };
+
+  if (window.globalSearch) {
+    window.globalSearch.setContext({
+      name: 'index',
+      getEntrySource: () => getEntries(),
+      buildExtraSuggestions: (query) => buildRandomSuggestionHtml(query),
+      handleDataset: (dataset) => {
+        if (dataset.cmd === 'random') return handleRandomSuggestion(dataset);
+        if (dataset.entry) {
+          applyIndexSearchTerm(dataset.entry);
+          return true;
+        }
+        return false;
+      },
+      handleSubmit: (term) => handleIndexSearchSubmit(term),
+      onQueryChanged: (value) => {
+        sTemp = String(value || '').trim();
+      }
+    });
+  }
+  window.handleIndexSearchTerm = (term, opts) => {
+    applyIndexSearchTerm(term, opts);
   };
   updateSearchDatalist();
+
+  const pendingSearch = takePendingIndexSearch();
+  if (pendingSearch) {
+    applyIndexSearchTerm(pendingSearch);
+  }
 
   /* render helpers */
   const activeTags =()=>{
@@ -1340,229 +1492,6 @@ function initIndex() {
   /* -------- events -------- */
   dom.sIn.addEventListener('input', () => {
     sTemp = dom.sIn.value.trim();
-    updateSearchDatalist();
-  });
-  {
-    const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
-    if (sugEl) {
-      sugEl.addEventListener('mousedown', e => {
-        const it = e.target.closest('.item');
-        if (!it) return;
-        e.preventDefault();
-        // UI-kommando via förslag
-        if (it.dataset.ui && window.executeUICommand) {
-          window.__searchBlurGuard = true;
-          dom.sIn.blur();
-          window.executeUICommand(it.dataset.ui);
-          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          return;
-        }
-        if (it.dataset.cmd === 'random') {
-          const cat = it.dataset.cat || '';
-          const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
-          const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
-          if (!pool.length) {
-            if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
-          } else {
-            const n = Math.min(cnt, pool.length);
-            const picks = [];
-            const idxs = pool.map((_,i)=>i);
-            for (let i = 0; i < n; i++) {
-              const k = Math.floor(Math.random() * idxs.length);
-              const [idx] = idxs.splice(k, 1);
-              picks.push(pool[idx]);
-            }
-            fixedRandomEntries = picks;
-            fixedRandomInfo = { cat, count: picks.length };
-            invalidateFilteredResults();
-            const c = cat || picks[0]?.taggar?.typ?.[0];
-            if (c) openCatsOnce.add(c);
-          }
-          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          activeTags(); scheduleRenderList();
-          dom.sIn.blur();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          return;
-        } else {
-          const val = (it.dataset.val || '').trim();
-          if (val) {
-            const union = storeHelper.getFilterUnion(store);
-            if (union) {
-              if (!F.search.includes(val)) F.search.push(val);
-            } else {
-              F.search = [val];
-            }
-          } else {
-            F.search = [];
-          }
-          invalidateFilteredResults();
-          // If exact name match, open that category once
-          if (val) {
-            const nval = searchNormalize(val.toLowerCase());
-            const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-            const cat = match?.taggar?.typ?.[0];
-            if (cat) openCatsOnce.add(cat);
-          }
-          if (val && window.storeHelper?.addRecentSearch) {
-            storeHelper.addRecentSearch(store, val);
-          }
-          dom.sIn.value = '';
-          sTemp = '';
-          updateSearchDatalist();
-          activeTags();
-          scheduleRenderList();
-          dom.sIn.blur();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
-      });
-    }
-  }
-  dom.sIn.addEventListener('keydown',e=>{
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    const items = sugEl && !sugEl.hidden ? [...sugEl.querySelectorAll('.item')] : [];
-    if (e.key==='ArrowDown' && items.length) {
-      e.preventDefault();
-      sugIdx = Math.min(items.length - 1, sugIdx + 1);
-      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
-      return;
-    }
-    if (e.key==='ArrowUp' && items.length) {
-      e.preventDefault();
-      sugIdx = Math.max(-1, sugIdx - 1);
-      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
-      return;
-    }
-    if(e.key==='Enter'){
-      e.preventDefault();
-      window.__searchBlurGuard = true;
-      dom.sIn.blur();
-      const termTry = (sTemp || '').trim();
-      const term = sTemp.toLowerCase();
-      const suggestionsActive = Boolean(sugEl && !sugEl.hidden && items.length);
-      if (!suggestionsActive && termTry && window.tryUICommand && window.tryUICommand(termTry)) {
-        dom.sIn.value = '';
-        sTemp = '';
-        updateSearchDatalist();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-        // Ignorera sökförslag på Enter; hantera bara skriven text
-        // Command: [N] random: <kategori> — pick N random entries in category
-        {
-          const m = sTemp.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
-        if (m) {
-          const cnt = Math.max(1, parseInt((m[1] || '1'), 10) || 1);
-          const catInput = (m[3] || '').trim();
-          if (catInput) {
-            const ncat = searchNormalize(catInput.toLowerCase());
-            // Build normalized -> canonical category map from current entries
-            const catMap = getCategoryIndex();
-            const canonical = catMap.get(ncat);
-            if (!canonical) {
-              if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
-              dom.sIn.value = ''; sTemp = '';
-              updateSearchDatalist();
-              return;
-            }
-            const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
-            if (!pool.length) {
-              if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
-              dom.sIn.value = ''; sTemp = '';
-              updateSearchDatalist();
-              return;
-            }
-            const n = Math.min(cnt, pool.length);
-            const picks = [];
-            const idxs = pool.map((_,i)=>i);
-            for (let i = 0; i < n; i++) {
-              const k = Math.floor(Math.random() * idxs.length);
-              const [idx] = idxs.splice(k, 1);
-              picks.push(pool[idx]);
-            }
-            fixedRandomEntries = picks;
-            fixedRandomInfo = { cat: canonical, count: picks.length };
-            invalidateFilteredResults();
-            const cat = canonical || picks[0]?.taggar?.typ?.[0];
-            if (cat) openCatsOnce.add(cat);
-            dom.sIn.value=''; sTemp='';
-            updateSearchDatalist();
-            activeTags(); scheduleRenderList();
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-        }
-      }
-      // Ignorera aktivt förslag på Enter – välj endast via klick
-      if (term === 'webapp') {
-        const ua = navigator.userAgent.toLowerCase();
-        let anchor = 'general';
-        if (/iphone|ipad|ipod/.test(ua)) anchor = 'ios';
-        else if (/android/.test(ua)) anchor = 'android';
-        else if (/edg|edge/.test(ua)) anchor = 'edge';
-        else if (/firefox/.test(ua)) anchor = 'firefox';
-        else if (/chrome/.test(ua)) anchor = 'chrome';
-        window.open(`webapp.html#${anchor}`, '_blank');
-        dom.sIn.value = ''; sTemp = '';
-        return;
-      }
-      if (term === 'lol') {
-        F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp=''; fixedRandomEntries = null; fixedRandomInfo = null;
-        invalidateFilteredResults();
-        dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
-        storeHelper.setOnlySelected(store, false);
-        invalidateFilteredResults();
-        storeHelper.clearRevealedArtifacts(store);
-        revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
-        bumpRevealedArtifactsVersion();
-        if (showArtifacts) {
-          showArtifacts = false;
-          touchFilteredCache();
-        }
-        fillDropdowns();
-        activeTags(); scheduleRenderList();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      if (term === 'molly<3') {
-        showArtifacts = true;
-        touchFilteredCache();
-        dom.sIn.value=''; sTemp='';
-        fillDropdowns();
-        activeTags(); scheduleRenderList();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      if (tryBomb(sTemp)) {
-        dom.sIn.value=''; sTemp='';
-        return;
-      }
-      if (tryNilasPopup(sTemp)) {
-        dom.sIn.value=''; sTemp='';
-        return;
-      }
-      if (sTemp) {
-        const union = storeHelper.getFilterUnion(store);
-        if (union) {
-          if (!F.search.includes(sTemp)) F.search.push(sTemp);
-        } else {
-          F.search = [sTemp];
-        }
-        // If exact name match, open that category once
-        const nval = searchNormalize(sTemp.toLowerCase());
-        const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-        const cat = match?.taggar?.typ?.[0];
-        if (cat) openCatsOnce.add(cat);
-        if (window.storeHelper?.addRecentSearch) storeHelper.addRecentSearch(store, sTemp);
-      } else {
-        F.search = [];
-      }
-      invalidateFilteredResults();
-      dom.sIn.value=''; sTemp='';
-      activeTags(); scheduleRenderList();
-      updateSearchDatalist();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
   });
 
   const DROPDOWN_CONFIG = [

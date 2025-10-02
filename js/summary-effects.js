@@ -430,7 +430,12 @@
     const list = storeHelper.getCurrentList(store) || [];
     const inv = storeHelper.getInventory(store) || [];
     const traits = storeHelper.getTraits(store) || {};
-    const effects = storeHelper.getArtifactEffects(store) || {};
+    const artifactEffects = storeHelper.getArtifactEffects(store) || {};
+    const manualAdjust = storeHelper.getManualAdjustments(store) || {};
+    const combinedEffects = {
+      xp: (artifactEffects.xp || 0) + (manualAdjust.xp || 0),
+      corruption: (artifactEffects.corruption || 0) + (manualAdjust.corruption || 0)
+    };
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(inv) : {};
     const formatNumber = (value, options = {}) => {
@@ -452,6 +457,12 @@
     const vals = {};
     KEYS.forEach(k=>{ vals[k] = (traits[k]||0) + (bonus[k]||0) + (maskBonus[k]||0); });
 
+    const formatSigned = (value) => {
+      const num = Number(value || 0);
+      if (!Number.isFinite(num) || num === 0) return '0';
+      return num > 0 ? `+${num}` : `${num}`;
+    };
+
     const valStark = vals['Stark'];
     const valWill = vals['Viljestark'];
     const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
@@ -459,7 +470,7 @@
     const hasSjalastark = list.some(p=>p.namn==='Själastark');
     const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
     const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
-    const permBase = storeHelper.calcPermanentCorruption(list, effects);
+    const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
     const hasEarth = list.some(p=>p.namn==='Jordnära');
     const baseMax = strongGift ? valWill + 5 : valWill;
     const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
@@ -468,7 +479,10 @@
     const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
     let perm = hasEarth ? (permBase % 2) : permBase;
     perm += darkPerm;
-    const effectsWithDark = { ...effects, corruption: (effects.corruption || 0) + darkPerm };
+    const effectsWithDark = {
+      xp: combinedEffects.xp || 0,
+      corruption: (combinedEffects.corruption || 0) + darkPerm
+    };
 
     const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
     const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
@@ -529,7 +543,7 @@
     if(!cond.length) cond.push('Inga särskilda ersättningar');
 
     const baseXP = storeHelper.getBaseXP(store);
-    const usedXP = storeHelper.calcUsedXP(list, effects);
+    const usedXP = storeHelper.calcUsedXP(list, combinedEffects);
     const totalXP = storeHelper.calcTotalXP(baseXP, list);
     const freeXP = totalXP - usedXP;
     const totalXPText = formatNumber(totalXP);
@@ -607,14 +621,23 @@
       layout: 'grid'
     });
 
+    const manualXp = manualAdjust.xp || 0;
+    const xpItems = [
+      { label: 'Total XP', value: totalXPText },
+      { label: 'Använt XP', value: usedXPText },
+      { label: 'XP kvar', value: freeXPText, valueClass: freeXP < 0 ? 'neg' : '' }
+    ];
+    if (manualXp) {
+      xpItems.splice(2, 0, {
+        label: 'Manuell justering',
+        value: formatSigned(-manualXp),
+        valueClass: manualXp > 0 ? 'neg' : manualXp < 0 ? 'pos' : ''
+      });
+    }
     summarySections.push({
       title: 'Erfarenhet',
       layout: 'grid',
-      items: [
-        { label: 'Total XP', value: totalXPText },
-        { label: 'Använt XP', value: usedXPText },
-        { label: 'XP kvar', value: freeXPText, valueClass: freeXP < 0 ? 'neg' : '' }
-      ]
+      items: xpItems
     });
 
     summarySections.push({
@@ -635,13 +658,22 @@
       ]
     });
 
+    const manualCor = manualAdjust.corruption || 0;
+    const corruptionItems = [
+      { label: 'Maximal korruption', value: formatNumber(maxCor) },
+      { label: 'Permanent korruption', value: formatNumber(perm) },
+      { label: 'Korruptionströskel', value: formatNumber(thresh) }
+    ];
+    if (manualCor) {
+      corruptionItems.splice(1, 0, {
+        label: 'Manuell justering',
+        value: formatSigned(manualCor),
+        valueClass: manualCor > 0 ? 'neg' : 'pos'
+      });
+    }
     summarySections.push({
       title: 'Korruption',
-      items: [
-        { label: 'Maximal korruption', value: formatNumber(maxCor) },
-        { label: 'Permanent korruption', value: formatNumber(perm) },
-        { label: 'Korruptionströskel', value: formatNumber(thresh) }
-      ]
+      items: corruptionItems
     });
 
     summarySections.push({
