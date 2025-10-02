@@ -1973,6 +1973,12 @@ function defaultTraits() {
           res.bp = sanitizeMoneyStruct(src);
         }
       }
+      if (row.basePriceSource) {
+        const src = String(row.basePriceSource).toLowerCase();
+        if (src === 'live' || src === 'manual') {
+          res.bps = src;
+        }
+      }
       if (row.priceMult !== undefined) {
         const mult = Number(row.priceMult);
         if (Number.isFinite(mult) && mult !== 1) res.pm = mult;
@@ -2064,6 +2070,8 @@ function defaultTraits() {
           if (Number.isFinite(weightNum)) expanded.vikt = weightNum;
         }
         const basePriceRaw = row.basePrice ?? row.bp;
+        const baseSourceRaw = row.basePriceSource ?? row.bps;
+        let baseSource = typeof baseSourceRaw === 'string' ? baseSourceRaw.toLowerCase() : '';
         if (basePriceRaw && typeof basePriceRaw === 'object') {
           const src = {
             daler: basePriceRaw.daler ?? basePriceRaw.d,
@@ -2073,6 +2081,14 @@ function defaultTraits() {
           if (['daler','skilling','örtegar','d','s','o'].some(k => basePriceRaw[k] !== undefined)) {
             expanded.basePrice = sanitizeMoneyStruct(src);
           }
+        }
+        if (!baseSource && expanded.basePrice) {
+          if (qty > 0 && gratis >= qty) {
+            baseSource = 'live';
+          }
+        }
+        if (baseSource === 'live' || baseSource === 'manual') {
+          expanded.basePriceSource = baseSource;
         }
         const priceMultRaw = row.priceMult ?? row.pm;
         if (priceMultRaw !== undefined) {

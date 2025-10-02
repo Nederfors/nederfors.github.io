@@ -881,40 +881,13 @@ const globalSearch = (() => {
     if (key === 'Enter') {
       const input = getInput();
       const term = String(input?.value || '').trim();
-      if (selectActiveSuggestion()) {
-        event.preventDefault();
-        return;
-      }
       if (!term) {
         hideSuggestions();
         safeBlurInput();
         event.preventDefault();
         return;
       }
-      let executedUI = false;
-      if (typeof window.tryUICommand === 'function') {
-        try { executedUI = window.tryUICommand(term); }
-        catch { executedUI = false; }
-      }
-      if (executedUI) {
-        if (input) input.value = '';
-        hideSuggestions();
-        safeBlurInput();
-        event.preventDefault();
-        return;
-      }
-      let handled = false;
-      if (typeof context.handleSubmit === 'function') {
-        try { handled = context.handleSubmit(term, { event, executedUI, query: lastQuery }); }
-        catch { handled = false; }
-      }
-      if (!handled) {
-        applyTermAndNavigate(term);
-      } else {
-        if (input) input.value = '';
-        hideSuggestions();
-        safeBlurInput();
-      }
+      applyTermAndNavigate(term);
       event.preventDefault();
       return;
     }

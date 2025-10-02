@@ -40,7 +40,12 @@ class SharedToolbar extends HTMLElement {
 
       const refreshLargeViewportHeight = (reset = false) => {
         const measurement = measureLayoutViewport();
-        if (reset || this._largeViewportHeight == null || measurement > this._largeViewportHeight) {
+        const shouldForceBaseline = reset || !this._keyboardLikelyVisible || this._largeViewportHeight == null;
+        if (shouldForceBaseline) {
+          this._largeViewportHeight = measurement;
+          return;
+        }
+        if (measurement > this._largeViewportHeight) {
           this._largeViewportHeight = measurement;
         }
       };
@@ -83,6 +88,13 @@ class SharedToolbar extends HTMLElement {
           }
         }
 
+        if (!this._keyboardLikelyVisible && lift > 0) {
+          const minResidualLift = 12; // ignore tiny offsets caused by viewport chrome jitter
+          if (lift < minResidualLift) {
+            lift = 0;
+          }
+        }
+
         if (lift > 0) {
           this._toolbarElement.style.setProperty('--toolbar-lift', `${lift}px`);
         } else {
@@ -102,6 +114,9 @@ class SharedToolbar extends HTMLElement {
           return;
         }
         this._keyboardLikelyVisible = visible;
+        if (this._toolbarElement) {
+          this._toolbarElement.classList.toggle('keyboard-open', visible);
+        }
         if (visible) {
           scheduleToolbarLiftUpdate();
         } else {
@@ -251,6 +266,7 @@ class SharedToolbar extends HTMLElement {
     this._keyboardVisibilityCleanup?.();
     this._keyboardVisibilityCleanup = null;
     this._keyboardLikelyVisible = false;
+    this._toolbarElement?.classList.remove('keyboard-open');
     if (navigator.virtualKeyboard?.removeEventListener && this._vkHandler) {
       navigator.virtualKeyboard.removeEventListener('geometrychange', this._vkHandler);
     }
@@ -336,6 +352,11 @@ class SharedToolbar extends HTMLElement {
         .button-row {
           display: flex;
           gap: .6rem;
+        }
+        @media (pointer: coarse) {
+          .toolbar.keyboard-open .button-row {
+            pointer-events: none;
+          }
         }
         .button-row > a,
         .button-row > button {

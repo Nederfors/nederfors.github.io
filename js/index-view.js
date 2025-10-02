@@ -732,9 +732,6 @@ function initIndex() {
   updateSearchDatalist();
 
   const pendingSearch = takePendingIndexSearch();
-  if (pendingSearch) {
-    applyIndexSearchTerm(pendingSearch);
-  }
 
   /* render helpers */
   const activeTags =()=>{
@@ -1524,7 +1521,13 @@ function initIndex() {
   };
 
   /* första render */
-  scheduleRenderList(); activeTags(); updateXP();
+  if (pendingSearch) {
+    applyIndexSearchTerm(pendingSearch);
+  } else {
+    scheduleRenderList();
+    activeTags();
+  }
+  updateXP();
 
   /* expose update function for party toggles */
   window.indexViewUpdate = () => { scheduleRenderList(); activeTags(); };
@@ -1828,6 +1831,7 @@ function initIndex() {
               skilling: Number(priceMoney.skilling) || 0,
               'örtegar': Number(priceMoney['örtegar']) || 0
             };
+            target.basePriceSource = 'live';
           };
           const finalizeLivePayment = () => {
             if (!livePairs || !livePairs.length) return;

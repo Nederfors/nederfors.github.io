@@ -1377,7 +1377,8 @@
     };
 
     const defaultPrice = () => {
-      if (existingRow?.basePrice) {
+      const src = (existingRow?.basePriceSource || '').toLowerCase();
+      if (existingRow?.basePrice && src === 'live') {
         return storeHelper.normalizeMoney(existingRow.basePrice);
       }
       const cost = entry ? calcEntryCost(entry) : { daler: 0, skilling: 0, 'örtegar': 0 };
@@ -1495,8 +1496,9 @@
       const overrideO = purchase ? purchase.totalO : null;
       const priceMoney = purchase ? purchase.pricePerUnit : null;
       const assignPrice = target => {
-        if (!priceMoney) return;
+        if (!priceMoney || !target) return;
         target.basePrice = { daler: priceMoney.daler, skilling: priceMoney.skilling, 'örtegar': priceMoney['örtegar'] };
+        target.basePriceSource = 'live';
       };
 
       if (indiv && parentArr) {
@@ -1807,8 +1809,10 @@
       const o = parseInt(oEl?.value || '0', 10) || 0;
       if (d === 0 && s === 0 && o === 0) {
         delete row.basePrice;
+        delete row.basePriceSource;
       } else {
         row.basePrice = { daler: d, skilling: s, 'örtegar': o };
+        row.basePriceSource = 'manual';
       }
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
@@ -2151,6 +2155,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     flat.forEach(row => {
       row.basePrice = { daler: 0, skilling: 0, 'örtegar': 0 };
+      row.basePriceSource = 'manual';
       row.gratis = row.qty;
       const entry = getEntry(row.id || row.name);
       const removed = row.removedKval ?? [];
@@ -2173,7 +2178,18 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const entry  = getEntry(row.id || row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
-    let base = moneyToO(row.basePrice || entry.grundpris || {});
+    const entryBase = moneyToO(entry.grundpris || {});
+    const qtyNum = Math.max(0, Number(row.qty) || 0);
+    const gratisNum = Math.max(0, Number(row.gratis) || 0);
+    const srcRaw = typeof row.basePriceSource === 'string' ? row.basePriceSource.toLowerCase() : '';
+    let baseSource = srcRaw;
+    if (!baseSource && row.basePrice != null && qtyNum > 0 && gratisNum >= qtyNum) {
+      baseSource = 'live';
+    }
+    const hasBaseOverride = row.basePrice != null && baseSource !== 'live';
+    const overrideBase = hasBaseOverride ? moneyToO(row.basePrice || {}) : null;
+    let base = hasBaseOverride ? overrideBase : entryBase;
+    let fallbackBase = entryBase;
     const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
@@ -2193,20 +2209,28 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         (forgeLvl >= 3 && posCnt === 2 && mystCnt <= 1);
       if (qualifies) {
         base = dividePrice(base, 2);
+        fallbackBase = dividePrice(fallbackBase, 2);
       }
     }
     if (tagTyp.includes('Elixir')) {
       const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) base = dividePrice(base, 2);
+      if (alcLevel >= req) {
+        base = dividePrice(base, 2);
+        fallbackBase = dividePrice(fallbackBase, 2);
+      }
     }
     if (tagTyp.includes('L\u00e4gre Artefakt')) {
       const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) base = dividePrice(base, 2);
+      if (artLevel >= req) {
+        base = dividePrice(base, 2);
+        fallbackBase = dividePrice(fallbackBase, 2);
+      }
     }
     // Build price chain and track before/after for each quality
-    let price = base;
+    const priceBase = base > 0 ? base : fallbackBase; // ensures qualities still cost after mark-free flows
+    let price = priceBase;
     const steps = [];
     const posQuals = allQuals.filter(q => !isNegativeQual(q));
     const negQuals = allQuals.filter(q => isNegativeQual(q));
@@ -2223,15 +2247,17 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     });
 
     const mult = row.priceMult || 1;
-    const qty = row.qty || 1;
-    const freeBase = Math.min(Number(row.gratis || 0), qty);
+    const qty = qtyNum || 1;
+    const baseOverrideZero = hasBaseOverride && overrideBase === 0;
+    const rawFreeBase = Math.min(gratisNum, qty);
+    const freeBase = baseOverrideZero ? qty : rawFreeBase;
 
     // Full price before adjustments
     const fullPerUnit = price * mult;
     let total = fullPerUnit * qty;
 
     // Adjustment for free base price
-    total -= base * mult * freeBase;
+    total -= priceBase * mult * freeBase;
 
     // Adjustment for free qualities (left to right)
     const freeNames = (row.gratisKval || []).filter(q => {
@@ -2392,8 +2418,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     }
     if (row.basePrice) {
       const basePriceTxt = formatMoney(row.basePrice);
-      tagList.push(`<span class="tag price-base removable" data-price="1">Grundpris: ${basePriceTxt} ✕</span>`);
-      infoTagParts.push(`<span class="tag price-base">Grundpris: ${escapeHtml(basePriceTxt)}</span>`);
+      const baseLabelRaw = (row.basePriceSource || '').toLowerCase() === 'live'
+        ? 'Köpt för'
+        : 'Grundpris';
+      const baseLabel = escapeHtml(baseLabelRaw);
+      tagList.push(`<span class="tag price-base removable" data-price="1">${baseLabelRaw}: ${basePriceTxt} ✕</span>`);
+      infoTagParts.push(`<span class="tag price-base">${baseLabel}: ${escapeHtml(basePriceTxt)}</span>`);
     }
     if (tagList.length) {
       desc += `<div class="tags info-tags">${tagList.join(' ')}</div>`;
@@ -3281,6 +3311,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             delete row.priceMult;
           } else if (removeTagBtn.dataset.price) {
             delete row.basePrice;
+            delete row.basePriceSource;
           }
           saveInventory(inv);
           renderInventory();
@@ -3484,14 +3515,22 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             const addRow = trait => {
               const qtyToAdd = Math.max(1, purchase?.qty || 1);
               const priceMoney = purchase ? purchase.pricePerUnit : null;
-              const clonePrice = () => priceMoney ? { daler: priceMoney.daler, skilling: priceMoney.skilling, 'örtegar': priceMoney['örtegar'] } : null;
+              const applyLiveBase = target => {
+                if (!priceMoney || !target) return;
+                target.basePrice = {
+                  daler: priceMoney.daler,
+                  skilling: priceMoney.skilling,
+                  'örtegar': priceMoney['örtegar']
+                };
+                target.basePriceSource = 'live';
+              };
               let flashIdx;
               if (indiv) {
                 for (let iAdd = 0; iAdd < qtyToAdd; iAdd++) {
                   const obj = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
                   if (artifactEffect) obj.artifactEffect = artifactEffect;
                   if (trait) obj.trait = trait;
-                  if (priceMoney) obj.basePrice = clonePrice();
+                  applyLiveBase(obj);
                   parentArr.push(obj);
                   flashIdx = parentArr.length - 1;
                   if (livePairs) livePairs.push({ prev: null, next: obj });
@@ -3499,14 +3538,14 @@ function openVehiclePopup(preselectId, precheckedPaths) {
               } else if (row && (!trait || row.trait === trait)) {
                 const prevState = livePairs ? cloneRow(row) : null;
                 row.qty = (Number(row.qty) || 0) + qtyToAdd;
-                if (priceMoney) row.basePrice = clonePrice();
+                applyLiveBase(row);
                 flashIdx = idx;
                 if (livePairs) livePairs.push({ prev: prevState, next: row });
               } else if (row && trait && row.trait !== trait) {
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
                 obj.trait = trait;
-                if (priceMoney) obj.basePrice = clonePrice();
+                applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
                 if (livePairs) livePairs.push({ prev: null, next: obj });
@@ -3514,7 +3553,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
                 if (trait) obj.trait = trait;
-                if (priceMoney) obj.basePrice = clonePrice();
+                applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
                 if (livePairs) livePairs.push({ prev: null, next: obj });
