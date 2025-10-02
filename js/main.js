@@ -292,7 +292,6 @@ const dom  = {
   entryViewToggle: getDom('entryViewToggle'),
   infoToggle: getDom('infoToggle'),
   manualBtn: getDom('manualAdjustBtn'),
-  manualSummary: getDom('manualAdjustSummary'),
 
   /* element i main-DOM */
   active : getDom('activeFilters'),
@@ -2218,12 +2217,12 @@ function openManualAdjustPopup() {
   }
 
   function onAction(e) {
-    const btn = e.target.closest('button[data-type][data-delta]');
+    const btn = e.target.closest('button[data-type][data-direction]');
     if (!btn) return;
     e.preventDefault();
     const type = btn.dataset.type;
-    const rawDelta = Number(btn.dataset.delta);
-    const delta = Number.isFinite(rawDelta) ? (rawDelta > 0 ? 1 : rawDelta < 0 ? -1 : 0) : 0;
+    const dir = btn.dataset.direction;
+    const delta = dir === 'increase' ? 1 : dir === 'decrease' ? -1 : 0;
     if (!type || delta === 0 || !store || !store.current) return;
     applyUpdate(next => {
       if (type === 'corruption') {
@@ -3232,34 +3231,17 @@ function manualAdjustmentSummaryText(manual) {
 
 function syncManualAdjustButton() {
   const baseTitle = 'Hantera manuella justeringar för korruption och erfarenhet';
-  if (!dom.manualBtn && !dom.manualSummary) return;
+  if (!dom.manualBtn) return;
   if (!store || !store.current) {
-    if (dom.manualBtn) {
-      dom.manualBtn.classList.remove('active');
-      dom.manualBtn.title = baseTitle;
-    }
-    if (dom.manualSummary) {
-      dom.manualSummary.textContent = '';
-      dom.manualSummary.hidden = true;
-    }
+    dom.manualBtn.classList.remove('active');
+    dom.manualBtn.title = baseTitle;
     return;
   }
   const manual = getManualAdjustmentsSafe();
   const hasAdjustments = Boolean((manual.corruption || 0) || (manual.xp || 0));
   const summary = hasAdjustments ? manualAdjustmentSummaryText(manual) : '';
-  if (dom.manualBtn) {
-    dom.manualBtn.classList.toggle('active', hasAdjustments);
-    dom.manualBtn.title = summary ? `${baseTitle} (${summary})` : baseTitle;
-  }
-  if (dom.manualSummary) {
-    if (summary) {
-      dom.manualSummary.textContent = summary;
-      dom.manualSummary.hidden = false;
-    } else {
-      dom.manualSummary.textContent = '';
-      dom.manualSummary.hidden = true;
-    }
-  }
+  dom.manualBtn.classList.toggle('active', hasAdjustments);
+  dom.manualBtn.title = summary ? `${baseTitle} (${summary})` : baseTitle;
 }
 
 function updateXP() {

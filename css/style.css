@@ -1095,12 +1095,6 @@ body[data-role="summary"] .summary-value.neg {
   word-break: break-word;
 }
 
-#filterSettingsCard .manual-adjust-summary {
-  font-size: .9rem;
-  color: var(--subtxt);
-  margin: .2rem 0 .8rem;
-}
-
 /* Grupp för partytillhörighet */
 .party-toggles {
   padding: 0;
