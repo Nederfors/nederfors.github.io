@@ -1,6 +1,47 @@
 (function(window){
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+
+function ensureToolbarControls(onReady) {
+  const toolbar = document.querySelector('shared-toolbar');
+  if (!toolbar) {
+    return false;
+  }
+
+  const rerun = () => {
+    toolbar.__indexControlsPending = false;
+    if (ensureToolbarControls(onReady) && typeof onReady === 'function') {
+      onReady();
+    }
+  };
+
+  const registerRerun = () => {
+    if (toolbar.__indexControlsPending) return;
+    toolbar.__indexControlsPending = true;
+    toolbar.addEventListener('toolbar-rendered', rerun, { once: true });
+  };
+
+  const { shadowRoot } = toolbar;
+  if (!shadowRoot) {
+    registerRerun();
+    return false;
+  }
+
+  const filterUnion = shadowRoot.getElementById('filterUnion');
+  const entryViewToggle = shadowRoot.getElementById('entryViewToggle');
+  if (filterUnion && entryViewToggle) {
+    dom.filterUnion = filterUnion;
+    dom.entryViewToggle = entryViewToggle;
+    return true;
+  }
+
+  registerRerun();
+  return false;
+}
+
 function initIndex() {
+  if (!ensureToolbarControls(() => initIndex())) {
+    return;
+  }
   const createEntryCard = window.entryCardFactory.create;
   if (dom.cName) {
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
