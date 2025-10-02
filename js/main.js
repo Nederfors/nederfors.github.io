@@ -2184,6 +2184,12 @@ function openManualAdjustPopup() {
     if (xpOut)  xpOut.textContent  = formatSignedNumber(-manual.xp);
   };
 
+  refresh();
+
+  if (pop.classList.contains('open')) {
+    return;
+  }
+
   const applyUpdate = (updater) => {
     if (!store || !store.current) return;
     const manual = getManualAdjustmentsSafe();
@@ -2248,7 +2254,6 @@ function openManualAdjustPopup() {
     }
   }
 
-  refresh();
   pop.classList.add('open');
   if (inner) inner.scrollTop = 0;
   groups?.addEventListener('click', onAction);
