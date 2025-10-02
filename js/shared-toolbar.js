@@ -1535,7 +1535,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
