@@ -36,7 +36,8 @@
     filterUnion: Boolean(store.filterUnion),
     compactEntries: Boolean(store.compactEntries),
     onlySelected: Boolean(store.onlySelected),
-    recentSearches: Array.isArray(store.recentSearches) ? store.recentSearches.slice(0, MAX_RECENT_SEARCHES) : []
+    recentSearches: Array.isArray(store.recentSearches) ? store.recentSearches.slice(0, MAX_RECENT_SEARCHES) : [],
+    liveMode: Boolean(store.liveMode)
   });
 
   function persistMeta(store) {
@@ -297,6 +298,7 @@
       custom: [],
       artifactEffects: { xp: 0, corruption: 0 },
       bonusMoney: defaultMoney(),
+      savedUnusedMoney: defaultMoney(),
       privMoney: defaultMoney(),
       possessionMoney: defaultMoney(),
       possessionRemoved: 0,
@@ -305,6 +307,7 @@
       notes: defaultNotes(),
       darkPastSuppressed: false,
       nilasPopupShown: false,
+      liveMode: false,
       ...base
     };
 
@@ -325,12 +328,20 @@
       data.bonusMoney = defaultMoney();
       mutated = true;
     }
+    if (!data.savedUnusedMoney) {
+      data.savedUnusedMoney = defaultMoney();
+      mutated = true;
+    }
     if (!data.privMoney) {
       data.privMoney = defaultMoney();
       mutated = true;
     }
     if (!data.possessionMoney) {
       data.possessionMoney = defaultMoney();
+      mutated = true;
+    }
+    if (typeof data.liveMode !== 'boolean') {
+      data.liveMode = false;
       mutated = true;
     }
     if (!data.possessionRemoved) {
@@ -396,7 +407,8 @@
       filterUnion: false,
       compactEntries: true,
       onlySelected: false,
-      recentSearches: []
+      recentSearches: [],
+      liveMode: false
     };
   }
 
@@ -408,6 +420,7 @@
 
       if (metaRaw) {
         const metaParsed = JSON.parse(metaRaw);
+        const metaHasLiveMode = Object.prototype.hasOwnProperty.call(metaParsed || {}, 'liveMode');
         const store = { ...emptyStore(), ...metaParsed };
         store.data = {};
         const chars = Array.isArray(store.characters) ? store.characters : [];
@@ -436,6 +449,25 @@
         }
         metaMutated = ensureSystemFolderAndMigrate(store) || metaMutated;
 
+        const hasCurrent = Boolean(store.current);
+        const currentLive = hasCurrent
+          ? Boolean(store.data?.[store.current]?.liveMode)
+          : Boolean(store.liveMode);
+
+        if (!metaHasLiveMode) {
+          const normalized = Boolean(store.liveMode);
+          store.liveMode = hasCurrent ? currentLive : normalized;
+          metaMutated = true;
+        } else {
+          const metaLive = Boolean(store.liveMode);
+          if (hasCurrent && metaLive !== currentLive) {
+            store.liveMode = currentLive;
+            metaMutated = true;
+          } else {
+            store.liveMode = metaLive;
+          }
+        }
+
         if (metaMutated) persistMeta(store);
         mutatedIds.forEach(id => persistCharacter(store, id));
         return store;
@@ -455,6 +487,14 @@
         if (!Array.isArray(store.folders)) store.folders = [];
         if (!store.activeFolder || store.activeFolder === '') store.activeFolder = 'ALL';
         ensureSystemFolderAndMigrate(store);
+        const legacyCharIds = Object.keys(store.data || {});
+        const anyLegacyLive = legacyCharIds.some(id => Boolean(store.data[id]?.liveMode));
+        store.liveMode = anyLegacyLive;
+        legacyCharIds.forEach(id => {
+          if (store.data[id]) {
+            store.data[id].liveMode = Boolean(store.liveMode);
+          }
+        });
         persistMeta(store);
         Object.keys(store.data).forEach(id => persistCharacter(store, id));
         try { localStorage.removeItem(STORAGE_KEY); } catch {}
@@ -908,6 +948,48 @@
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].money = { ...defaultMoney(), ...money };
     persistCurrentCharacter(store);
+  }
+
+  function getSavedUnusedMoney(store) {
+    if (!store.current) return defaultMoney();
+    const data = store.data[store.current] || {};
+    return { ...defaultMoney(), ...(data.savedUnusedMoney || {}) };
+  }
+
+  function setSavedUnusedMoney(store, money) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    const normalized = normalizeMoney(money);
+    store.data[store.current].savedUnusedMoney = { ...defaultMoney(), ...normalized };
+    persistCurrentCharacter(store);
+  }
+
+  function getLiveMode(store) {
+    if (!store || typeof store !== 'object') return false;
+    if (store.current && store.data && typeof store.data === 'object') {
+      const currentData = store.data[store.current];
+      if (currentData && typeof currentData.liveMode === 'boolean') {
+        return currentData.liveMode;
+      }
+    }
+    return typeof store.liveMode === 'boolean' ? store.liveMode : false;
+  }
+
+  function setLiveMode(store, value) {
+    if (!store || typeof store !== 'object') return;
+    const next = Boolean(value);
+    if (store.current) {
+      store.data = store.data || {};
+      const currentData = store.data[store.current] = store.data[store.current] || {};
+      if (currentData.liveMode !== next) {
+        currentData.liveMode = next;
+        persistCurrentCharacter(store);
+      }
+    }
+    if (store.liveMode !== next) {
+      store.liveMode = next;
+    }
+    persistMeta(store);
   }
 
   function getBonusMoney(store) {
@@ -1771,7 +1853,7 @@ function defaultTraits() {
     const emptyEff = defaultArtifactEffects();
     const emptyManual = defaultManualAdjustments();
 
-    ['money','bonusMoney','privMoney','possessionMoney'].forEach(k => {
+    ['money','bonusMoney','privMoney','possessionMoney','savedUnusedMoney'].forEach(k => {
       if (obj[k] && JSON.stringify(obj[k]) === JSON.stringify(emptyMoney)) delete obj[k];
     });
     if (obj.possessionRemoved === 0) delete obj.possessionRemoved;
@@ -2095,10 +2177,12 @@ function defaultTraits() {
         custom: [],
         artifactEffects: defaultArtifactEffects(),
         bonusMoney: defaultMoney(),
+        savedUnusedMoney: defaultMoney(),
         privMoney: defaultMoney(),
         possessionMoney: defaultMoney(),
         possessionRemoved: 0,
         notes: defaultNotes(),
+        liveMode: false,
         ...data,
         custom,
         inventory: data.inventory
@@ -2281,6 +2365,10 @@ function defaultTraits() {
     setNotes,
     getMoney,
     setMoney,
+    getSavedUnusedMoney,
+    setSavedUnusedMoney,
+    getLiveMode,
+    setLiveMode,
     getBonusMoney,
     setBonusMoney,
     getPrivMoney,

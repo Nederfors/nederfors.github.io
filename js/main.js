@@ -1367,7 +1367,7 @@ function bindToolbar() {
       const { name, folderId, xp } = res;
       if (!name) return;
       store.characters.push({ id: charId, name, folderId: folderId || '' });
-      store.data[charId] = { baseXp: Number(xp) || 0, custom: [] };
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
       store.current = charId;
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);
@@ -3172,7 +3172,7 @@ async function requireCharacter() {
       if (!name) { restorePopup(); return; }
       const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
       store.characters.push({ id: charId, name, folderId: folderId || '' });
-      store.data[charId] = { baseXp: Number(xp) || 0, custom: [] };
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
       store.current = charId;
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);

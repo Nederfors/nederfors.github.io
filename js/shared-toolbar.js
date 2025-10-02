@@ -671,15 +671,40 @@ class SharedToolbar extends HTMLElement {
       <div id="moneyPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Hantera pengar</h3>
-          <div class="money-row">
-            <input id="moneyDaler" type="number" min="0" placeholder="Daler">
-            <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
-            <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
+          <div class="money-wrapper">
+            <section class="money-section card money-section-fast">
+              <header class="money-header">
+                <h4>Snabbspendera</h4>
+                <p>Kostnader som inte ska sparas i inventariet.</p>
+              </header>
+              <div class="money-row">
+                <input id="moneyDaler" type="number" min="0" placeholder="Daler">
+                <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
+                <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
+              </div>
+              <div class="money-button-row">
+                <button id="moneySpendBtn" class="char-btn">Betala</button>
+              </div>
+            </section>
+            <section class="money-section card money-section-balance">
+              <header class="money-header">
+                <h4>Saldo</h4>
+                <p>Justera kontanterna när ditt lager har ändrats.</p>
+              </header>
+              <div class="money-row">
+                <input id="moneyBalanceDaler" type="number" min="0" placeholder="Daler">
+                <input id="moneyBalanceSkilling" type="number" min="0" placeholder="Skilling">
+                <input id="moneyBalanceOrtegar" type="number" min="0" placeholder="Örtegar">
+              </div>
+              <div class="money-button-row">
+                <button id="moneySetBtn" class="char-btn">Spara som totalen</button>
+                <button id="moneyAddBtn" class="char-btn">Addera till totalen</button>
+              </div>
+              <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
+            </section>
+            <p id="moneyStatus" class="money-status"></p>
+            <button id="moneyCancel" class="char-btn danger">Stäng</button>
           </div>
-          <button id="moneySetBtn" class="char-btn">Spara som totalen</button>
-          <button id="moneyAddBtn" class="char-btn">Addera till totalen</button>
-          <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
-          <button id="moneyCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
@@ -788,6 +813,28 @@ class SharedToolbar extends HTMLElement {
           <div class="confirm-row">
             <button id="buyMultipleCancel" class="char-btn danger">Avbryt</button>
             <button id="buyMultipleConfirm" class="char-btn">Lägg till</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Live-köp ---------- -->
+      <div id="liveBuyPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Köp i live-läge</h3>
+          <p id="liveBuyItemName" class="popup-item-name" hidden></p>
+          <label class="live-buy-label" for="liveBuyQty">Antal</label>
+          <input id="liveBuyQty" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
+          <fieldset class="live-buy-fieldset">
+            <legend>Pris per enhet</legend>
+            <div class="money-row">
+              <input id="liveBuyPriceDaler" type="number" min="0" step="1" placeholder="Daler" aria-label="Pris i daler">
+              <input id="liveBuyPriceSkilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Pris i skilling">
+              <input id="liveBuyPriceOrtegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Pris i örtegar">
+            </div>
+          </fieldset>
+          <div class="confirm-row">
+            <button id="liveBuyCancel" class="char-btn danger">Avbryt</button>
+            <button id="liveBuyConfirm" class="char-btn">Köp</button>
           </div>
         </div>
       </div>
@@ -1535,7 +1582,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

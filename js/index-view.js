@@ -1760,24 +1760,75 @@ function initIndex() {
         } else {
           const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
             .some(t=>p.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(p.id);
-          const rowBase = await invUtil.buildInventoryRow({ entry: p, list });
-          if (!rowBase) return;
+          const rowTemplate = await invUtil.buildInventoryRow({ entry: p, list });
+          if (!rowTemplate) return;
+          const liveEnabled = typeof storeHelper?.getLiveMode === 'function'
+            && storeHelper.getLiveMode(store)
+            && window.invUtil
+            && typeof window.invUtil.openLiveBuyPopup === 'function'
+            && typeof window.invUtil.applyLiveModePayment === 'function';
+          const cloneInvRow = obj => JSON.parse(JSON.stringify(obj));
+          let desiredQty = 1;
+          let priceMoney = null;
+          let overrideO = null;
+          const livePairs = liveEnabled ? [] : null;
+          if (liveEnabled) {
+            const existingRow = indiv ? null : inv.find(x => x.id === p.id);
+            const purchase = await window.invUtil.openLiveBuyPopup(p, existingRow || null);
+            if (!purchase) return;
+            desiredQty = Math.max(1, Math.floor(Number(purchase.qty) || 0));
+            priceMoney = purchase.pricePerUnit || null;
+            overrideO = Number.isFinite(purchase.totalO) ? Math.max(0, Math.floor(purchase.totalO)) : null;
+          }
+          const assignPrice = target => {
+            if (!priceMoney || !target) return;
+            target.basePrice = {
+              daler: Number(priceMoney.daler) || 0,
+              skilling: Number(priceMoney.skilling) || 0,
+              'örtegar': Number(priceMoney['örtegar']) || 0
+            };
+          };
+          const finalizeLivePayment = () => {
+            if (!livePairs || !livePairs.length) return;
+            window.invUtil.applyLiveModePayment(
+              livePairs,
+              overrideO != null ? { overrideO } : undefined
+            );
+            livePairs.length = 0;
+          };
           const addRow = trait => {
-            if (trait) rowBase.trait = trait;
             let flashIdx;
+            const qtyToAdd = desiredQty;
             if (indiv) {
-              inv.push(rowBase);
-              flashIdx = inv.length - 1;
-            } else {
-              const match = inv.find(x => x.id===p.id && (!trait || x.trait===trait));
-              if (match) {
-                match.qty++;
-                flashIdx = inv.indexOf(match);
-              } else {
-                inv.push(rowBase);
+              for (let i = 0; i < qtyToAdd; i++) {
+                const instance = cloneInvRow(rowTemplate);
+                instance.qty = 1;
+                if (trait) instance.trait = trait;
+                assignPrice(instance);
+                inv.push(instance);
                 flashIdx = inv.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: instance });
+              }
+            } else {
+              const match = inv.find(x => x.id === p.id && (!trait || x.trait === trait));
+              if (match) {
+                const prevState = livePairs ? cloneInvRow(match) : null;
+                match.qty = (Number(match.qty) || 0) + qtyToAdd;
+                if (trait) match.trait = trait;
+                assignPrice(match);
+                flashIdx = inv.indexOf(match);
+                if (livePairs) livePairs.push({ prev: prevState, next: match });
+              } else {
+                const instance = cloneInvRow(rowTemplate);
+                instance.qty = qtyToAdd;
+                if (trait) instance.trait = trait;
+                assignPrice(instance);
+                inv.push(instance);
+                flashIdx = inv.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: instance });
               }
             }
+            finalizeLivePayment();
             invUtil.saveInventory(inv); invUtil.renderInventory();
             const hidden = isHidden(p);
             const artifactTagged = hasArtifactTag(p);

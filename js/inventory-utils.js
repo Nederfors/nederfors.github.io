@@ -39,6 +39,71 @@
     'Galär': '⛵',
     'Flodbåt': '🛥️'
   };
+  const cloneRow = (row) => (row ? JSON.parse(JSON.stringify(row)) : null);
+
+  function getCraftLevels() {
+    const list = storeHelper.getCurrentList(store);
+    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+    const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
+    const forgeLvl = Math.max(partyForge, skillForge);
+    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+    const skillAlc = storeHelper.abilityLevel(list, 'Alkemist');
+    const alcLevel = Math.max(partyAlc, skillAlc);
+    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+    const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
+    const artLevel = Math.max(partyArt, skillArt);
+    return { forgeLvl, alcLevel, artLevel };
+  }
+
+  function calcRowCostOWithLevels(row, levels) {
+    if (!row) return 0;
+    return moneyToO(calcRowCost(row, levels.forgeLvl, levels.alcLevel, levels.artLevel));
+  }
+
+  function markRowFree(row) {
+    if (!row) return;
+    const qty = Math.max(0, Number(row.qty) || 0);
+    row.gratis = qty;
+    const entry = getEntry(row.id || row.name);
+    const removed = Array.isArray(row.removedKval) ? row.removedKval : [];
+    const baseQuals = [
+      ...(entry.taggar?.kvalitet ?? []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const baseQ = baseQuals.filter(q => !removed.includes(q));
+    const extraQ = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
+    const allQ = [...baseQ, ...extraQ];
+    const positives = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+    row.gratisKval = [...new Set(positives)];
+  }
+
+  function applyLiveModePayment(pairs, opts) {
+    if (!Array.isArray(pairs) || !pairs.length) return;
+    if (typeof storeHelper?.getLiveMode !== 'function') return;
+    if (!storeHelper.getLiveMode(store)) return;
+    const levels = getCraftLevels();
+    const override = opts && Number.isFinite(opts.overrideO) ? Math.max(0, Math.floor(opts.overrideO)) : null;
+    let deltaO = 0;
+    if (override != null) {
+      deltaO = override;
+    } else {
+      pairs.forEach(({ prev, next }) => {
+        if (!next) return;
+        const prevO = prev ? calcRowCostOWithLevels(prev, levels) : 0;
+        const nextO = calcRowCostOWithLevels(next, levels);
+        const diff = Math.max(0, nextO - prevO);
+        if (diff > 0) deltaO += diff;
+      });
+    }
+    if (deltaO > 0) {
+      const money = storeHelper.getMoney(store);
+      const remainingO = Math.max(0, moneyToO(money) - deltaO);
+      storeHelper.setMoney(store, oToMoney(remainingO));
+    }
+    pairs.forEach(({ next }) => {
+      if (next) markRowFree(next);
+    });
+  }
   const createEntryCard = (options) => {
     const factory = window.entryCardFactory?.create;
     if (typeof factory !== 'function') {
@@ -940,28 +1005,56 @@
     const dIn   = root.getElementById('moneyDaler');
     const sIn   = root.getElementById('moneySkilling');
     const oIn   = root.getElementById('moneyOrtegar');
+    const balDIn = root.getElementById('moneyBalanceDaler');
+    const balSIn = root.getElementById('moneyBalanceSkilling');
+    const balOIn = root.getElementById('moneyBalanceOrtegar');
     const setBtn= root.getElementById('moneySetBtn');
     const addBtn= root.getElementById('moneyAddBtn');
-    const cancel= root.getElementById('moneyCancel');
+    const spendBtn = root.getElementById('moneySpendBtn');
+    const cancel = root.getElementById('moneyCancel');
+    const statusEl = root.getElementById('moneyStatus');
 
     // Fälten ska börja tomma oavsett aktuell summa pengar
-    dIn.value = sIn.value = oIn.value = '';
+    [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
+
+    const updateStatus = () => {
+      if (!statusEl || typeof formatMoney !== 'function') return;
+      const cash = storeHelper.normalizeMoney(storeHelper.getMoney(store));
+      const allInv = storeHelper.getInventory(store) || [];
+      const flat = flattenInventory(allInv);
+      const levels = getCraftLevels();
+      const totalCostO = flat.reduce((sum, row) => sum + calcRowCostOWithLevels(row, levels), 0);
+      const totalMoney = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+      const diffO = moneyToO(totalMoney) - totalCostO;
+      const diff = oToMoney(Math.abs(diffO));
+      const diffText = `${diffO < 0 ? '-' : ''}${formatMoney(diff)}`;
+      statusEl.textContent = `Kontant: ${formatMoney(cash)} · Oanvänt: ${diffText}`;
+    };
+
+    updateStatus();
 
     const close = () => {
       pop.classList.remove('open');
       setBtn.removeEventListener('click', onSet);
       addBtn.removeEventListener('click', onAdd);
+      if (spendBtn) spendBtn.removeEventListener('click', onSpend);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
-      dIn.value = sIn.value = oIn.value = '';
+      [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+      if (statusEl) statusEl.textContent = '';
     };
-    const getInputMoney = () => storeHelper.normalizeMoney({
-      daler: Number(dIn.value)||0,
-      skilling: Number(sIn.value)||0,
-      'örtegar': Number(oIn.value)||0
+    const getSpendMoney = () => storeHelper.normalizeMoney({
+      daler: Number(dIn?.value) || 0,
+      skilling: Number(sIn?.value) || 0,
+      'örtegar': Number(oIn?.value) || 0
+    });
+    const getBalanceMoney = () => storeHelper.normalizeMoney({
+      daler: Number(balDIn?.value) || 0,
+      skilling: Number(balSIn?.value) || 0,
+      'örtegar': Number(balOIn?.value) || 0
     });
     const maybeAdv = fn => {
       const priv = storeHelper.getPrivMoney(store);
@@ -980,14 +1073,14 @@
       }
     };
     const onSet = () => {
-      const money = getInputMoney();
+      const money = getBalanceMoney();
       maybeAdv(() => {
         storeHelper.setMoney(store, money);
         renderInventory();
       });
     };
     const onAdd = () => {
-      const addMoney = getInputMoney();
+      const addMoney = getBalanceMoney();
       const curMoney = storeHelper.getMoney(store);
       const total = storeHelper.normalizeMoney({
         daler: curMoney.daler + addMoney.daler,
@@ -999,13 +1092,33 @@
         renderInventory();
       });
     };
+    const onSpend = () => {
+      const spendMoney = getSpendMoney();
+      const spendO = moneyToO(spendMoney);
+      if (spendO <= 0) {
+        if (dIn) dIn.focus();
+        return;
+      }
+      const pay = () => {
+        const curMoney = storeHelper.getMoney(store);
+        const remainingO = Math.max(0, moneyToO(curMoney) - spendO);
+        storeHelper.setMoney(store, oToMoney(remainingO));
+        renderInventory();
+      };
+      if (typeof maybeAdv === 'function') {
+        maybeAdv(pay);
+      } else {
+        close();
+        pay();
+      }
+    };
     const onCancel = () => { close(); };
     const onOutside = e => {
       if(!pop.querySelector('.popup-inner').contains(e.target)) close();
     };
-
     setBtn.addEventListener('click', onSet);
     addBtn.addEventListener('click', onAdd);
+    if (spendBtn) spendBtn.addEventListener('click', onSpend);
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
   }
@@ -1162,16 +1275,23 @@
         !STACKABLE_IDS.includes(entry.id) &&
         !['kraft','ritual'].includes(entry.bound);
 
+      const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+      const livePairs = liveEnabled ? [] : null;
+
       if (indiv) {
         for (let i = 0; i < qty; i++) {
           const clone = JSON.parse(JSON.stringify(row));
           clone.qty = 1;
           parentArr.push(clone);
+          if (livePairs) livePairs.push({ prev: null, next: clone });
         }
       } else {
+        const prevState = livePairs ? cloneRow(row) : null;
         row.qty += qty;
+        if (livePairs) livePairs.push({ prev: prevState, next: row });
       }
 
+      if (livePairs && livePairs.length) applyLiveModePayment(livePairs);
       saveInventory(inv);
       renderInventory();
       close();
@@ -1235,7 +1355,227 @@
     return row;
   }
 
-  function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx, onCancel: cancelCb, onConfirm: confirmCb, isNewRow = false }) {
+  function openLiveBuyPopup(entry, existingRow) {
+    const root = getToolbarRoot();
+    if (!root) return null;
+    const pop    = root.getElementById('liveBuyPopup');
+    const inner  = pop ? pop.querySelector('.popup-inner') : null;
+    const nameEl = root.getElementById('liveBuyItemName');
+    const qtyEl  = root.getElementById('liveBuyQty');
+    const dEl    = root.getElementById('liveBuyPriceDaler');
+    const sEl    = root.getElementById('liveBuyPriceSkilling');
+    const oEl    = root.getElementById('liveBuyPriceOrtegar');
+    const confirm= root.getElementById('liveBuyConfirm');
+    const cancel = root.getElementById('liveBuyCancel');
+    if (!pop || !qtyEl || !dEl || !sEl || !oEl || !confirm || !cancel) return null;
+
+    const resolveName = () => {
+      if (existingRow?.name) return existingRow.name;
+      if (entry?.namn) return entry.namn;
+      if (entry?.name) return entry.name;
+      return '';
+    };
+
+    const defaultPrice = () => {
+      if (existingRow?.basePrice) {
+        return storeHelper.normalizeMoney(existingRow.basePrice);
+      }
+      const cost = entry ? calcEntryCost(entry) : { daler: 0, skilling: 0, 'örtegar': 0 };
+      return storeHelper.normalizeMoney(cost);
+    };
+
+    const fillPriceFields = money => {
+      dEl.value = money.daler ? String(money.daler) : '';
+      sEl.value = money.skilling ? String(money.skilling) : '';
+      oEl.value = money['örtegar'] ? String(money['örtegar']) : '';
+    };
+
+    qtyEl.value = '1';
+    fillPriceFields(defaultPrice());
+    const label = resolveName();
+    if (nameEl) {
+      if (label) {
+        nameEl.textContent = label;
+        nameEl.hidden = false;
+      } else {
+        nameEl.hidden = true;
+        nameEl.textContent = '';
+      }
+    }
+
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => qtyEl.focus(), 50);
+
+    return new Promise(resolve => {
+      let closed = false;
+      const cleanup = () => {
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        qtyEl.removeEventListener('keydown', onKey);
+        dEl.removeEventListener('keydown', onKey);
+        sEl.removeEventListener('keydown', onKey);
+        oEl.removeEventListener('keydown', onKey);
+      };
+      const close = result => {
+        if (closed) return;
+        closed = true;
+        cleanup();
+        qtyEl.value = '';
+        dEl.value = '';
+        sEl.value = '';
+        oEl.value = '';
+        if (nameEl) {
+          nameEl.textContent = '';
+          nameEl.hidden = true;
+        }
+        pop.classList.remove('open');
+        resolve(result);
+      };
+
+      const parseMoney = () => {
+        const daler = parseInt(dEl.value, 10) || 0;
+        const skilling = parseInt(sEl.value, 10) || 0;
+        const ort = parseInt(oEl.value, 10) || 0;
+        return storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ort });
+      };
+
+      const onConfirm = e => {
+        e?.preventDefault();
+        const qty = parseInt(qtyEl.value, 10);
+        if (!Number.isFinite(qty) || qty <= 0) {
+          qtyEl.focus();
+          return;
+        }
+        const pricePerUnit = parseMoney();
+        const pricePerUnitO = Math.max(0, moneyToO(pricePerUnit));
+        const totalO = pricePerUnitO * qty;
+        close({ qty, pricePerUnit, pricePerUnitO, totalO });
+      };
+      const onCancel = e => {
+        e?.preventDefault();
+        close(null);
+      };
+      const onOutside = e => {
+        if (!inner || inner.contains(e.target)) return;
+        close(null);
+      };
+      const onKey = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onConfirm(e);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          onCancel(e);
+        }
+      };
+
+      confirm.addEventListener('click', onConfirm);
+      cancel.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+      qtyEl.addEventListener('keydown', onKey);
+      dEl.addEventListener('keydown', onKey);
+      sEl.addEventListener('keydown', onKey);
+      oEl.addEventListener('keydown', onKey);
+    });
+  }
+
+  async function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx, onCancel: cancelCb, onConfirm: confirmCb, isNewRow = false }) {
+    const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+    const tagTyp = entry.taggar?.typ || [];
+    const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+      .some(t => tagTyp.includes(t)) &&
+      !STACKABLE_IDS.includes(entry.id) &&
+      !['kraft','ritual'].includes(entry.bound);
+
+    const processQty = ({ qty, purchase }) => {
+      const result = { qty, highlightIdx: idx, indiv, isNewRow };
+      const livePairs = liveEnabled ? [] : null;
+      const overrideO = purchase ? purchase.totalO : null;
+      const priceMoney = purchase ? purchase.pricePerUnit : null;
+      const assignPrice = target => {
+        if (!priceMoney) return;
+        target.basePrice = { daler: priceMoney.daler, skilling: priceMoney.skilling, 'örtegar': priceMoney['örtegar'] };
+      };
+
+      if (indiv && parentArr) {
+        if (isNewRow) {
+          let baseIndex = parentArr.indexOf(row);
+          if (baseIndex < 0) {
+            parentArr.push(row);
+            baseIndex = parentArr.length - 1;
+          }
+          if (qty >= 1) {
+            row.qty = 1;
+            if (priceMoney) assignPrice(row);
+            if (livePairs) livePairs.push({ prev: null, next: row });
+          }
+          result.highlightIdx = baseIndex;
+          for (let i = 1; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            if (priceMoney) assignPrice(clone);
+            parentArr.push(clone);
+            result.highlightIdx = parentArr.length - 1;
+            if (livePairs) livePairs.push({ prev: null, next: clone });
+          }
+        } else {
+          for (let i = 0; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            if (priceMoney) assignPrice(clone);
+            parentArr.push(clone);
+            if (livePairs) livePairs.push({ prev: null, next: clone });
+          }
+          result.highlightIdx = parentArr.length - 1;
+        }
+      } else {
+        if (isNewRow) {
+          row.qty = qty;
+          if (priceMoney) assignPrice(row);
+          if (parentArr) result.highlightIdx = parentArr.indexOf(row);
+          if (livePairs) livePairs.push({ prev: null, next: row });
+        } else {
+          const prevState = livePairs ? cloneRow(row) : null;
+          row.qty = (Number(row.qty) || 0) + qty;
+          if (priceMoney) assignPrice(row);
+          if (livePairs) livePairs.push({ prev: prevState, next: row });
+        }
+      }
+
+      if (livePairs && livePairs.length) {
+        applyLiveModePayment(livePairs, overrideO != null ? { overrideO } : undefined);
+      }
+      saveInventory(inv);
+      renderInventory();
+      if (typeof confirmCb === 'function') {
+        confirmCb(result);
+      }
+      const parentIdx = Number(li?.dataset.parent);
+      const baseName = row.name || entry?.namn || '';
+      if (li && baseName) {
+        const selector = !Number.isNaN(parentIdx)
+          ? `li[data-name="${CSS.escape(baseName)}"][data-parent="${parentIdx}"][data-child="${result.highlightIdx}"]`
+          : `li[data-name="${CSS.escape(baseName)}"][data-idx="${result.highlightIdx}"]`;
+        const flashEl = dom.invList?.querySelector(selector);
+        if (flashEl) {
+          flashEl.classList.add('inv-flash');
+          setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
+        }
+      }
+    };
+
+    if (liveEnabled) {
+      const purchase = await openLiveBuyPopup(entry, row);
+      if (!purchase) {
+        if (typeof cancelCb === 'function') cancelCb();
+        return;
+      }
+      processQty({ qty: purchase.qty, purchase });
+      return;
+    }
+
     const root = getToolbarRoot();
     if (!root) return;
     const pop     = root.getElementById('buyMultiplePopup');
@@ -1273,76 +1613,14 @@
       }
     };
 
-    const highlight = targetIdx => {
-      if (!li) return;
-      const parentIdx = Number(li?.dataset.parent);
-      const baseName = row.name || entry?.namn || '';
-      if (!baseName) return;
-      const selector = !Number.isNaN(parentIdx)
-        ? `li[data-name="${CSS.escape(baseName)}"][data-parent="${parentIdx}"][data-child="${targetIdx}"]`
-        : `li[data-name="${CSS.escape(baseName)}"][data-idx="${targetIdx}"]`;
-      const flashEl = dom.invList?.querySelector(selector);
-      if (flashEl) {
-        flashEl.classList.add('inv-flash');
-        setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
-      }
-    };
-
     const apply = () => {
       const qty = parseInt(input.value, 10);
       if (!Number.isFinite(qty) || qty <= 0) {
         input.focus();
         return;
       }
-
-      const tagTyp = entry.taggar?.typ || [];
-      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-        .some(t => tagTyp.includes(t)) &&
-        !STACKABLE_IDS.includes(entry.id) &&
-        !['kraft','ritual'].includes(entry.bound);
-
-      let highlightIdx = idx;
-      if (indiv && parentArr) {
-        if (isNewRow) {
-          let baseIndex = parentArr.indexOf(row);
-          if (baseIndex < 0) {
-            parentArr.push(row);
-            baseIndex = parentArr.length - 1;
-          }
-          if (qty >= 1) {
-            row.qty = 1;
-          }
-          highlightIdx = baseIndex;
-          for (let i = 1; i < qty; i++) {
-            const clone = JSON.parse(JSON.stringify(row));
-            clone.qty = 1;
-            parentArr.push(clone);
-            highlightIdx = parentArr.length - 1;
-          }
-        } else {
-          for (let i = 0; i < qty; i++) {
-            const clone = JSON.parse(JSON.stringify(row));
-            clone.qty = 1;
-            parentArr.push(clone);
-          }
-          highlightIdx = parentArr.length - 1;
-        }
-      } else {
-        if (isNewRow) {
-          row.qty = qty;
-          if (parentArr) highlightIdx = parentArr.indexOf(row);
-        } else {
-          row.qty = (Number(row.qty) || 0) + qty;
-        }
-      }
-
-      saveInventory(inv);
-      renderInventory();
+      processQty({ qty });
       close('confirm');
-      if (typeof confirmCb === 'function') {
-        confirmCb({ qty, highlightIdx, indiv, isNewRow });
-      }
-      highlight(highlightIdx);
     };
 
     const onOutside = e => {
@@ -1862,6 +2140,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.max(0, diffO));
+    storeHelper.setSavedUnusedMoney(store, diff);
     storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
     storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
     storeHelper.setMoney(store, {
@@ -1871,6 +2150,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     });
 
     flat.forEach(row => {
+      row.basePrice = { daler: 0, skilling: 0, 'örtegar': 0 };
       row.gratis = row.qty;
       const entry = getEntry(row.id || row.name);
       const removed = row.removedKval ?? [];
@@ -2406,11 +2686,23 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const functionsState = localStorage.getItem(INV_TOOLS_KEY);
     const functionsOpen = functionsState === null ? true : functionsState === '1';
     if (functionsState === null) localStorage.setItem(INV_TOOLS_KEY, '1');
+    const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+    const liveToggleHtml = `
+      <div class="inv-live-toggle">
+        <label class="toggle-switch">
+          <input id="inventoryLiveToggle" type="checkbox" aria-label="Slå på eller av live-läge"${liveModeEnabled ? ' checked' : ''}>
+          <span class="toggle-switch-track" aria-hidden="true"></span>
+          <div class="toggle-switch-copy">
+            <span class="toggle-switch-title">Live-läge</span>
+            <span class="toggle-switch-sub">Dra pengar direkt och markera inköp som gratis</span>
+          </div>
+        </label>
+      </div>`;
     const functionsCard = createEntryCard({
       compact: !functionsOpen,
       dataset: { special: '__invfunc__' },
       nameHtml: `Inventarie ${icon('basket', { className: 'title-icon', alt: 'Inventarie' })}`,
-      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div></div>`,
+      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div>${liveToggleHtml}</div>`,
       collapsible: true
     });
 
@@ -3134,6 +3426,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
         // "+" lägger till qty eller en ny instans
         if (act === 'add') {
+          const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+          const livePairs = liveEnabled ? [] : null;
+          let purchase = null;
           if (entry.id === 'di79') {
             const bundle = ['di10','di11','di12','di13','di14','di15'];
             bundle.forEach(id => {
@@ -3145,11 +3440,20 @@ function openVehiclePopup(preselectId, precheckedPaths) {
                 !['kraft','ritual'].includes(ent.bound);
               const existing = inv.findIndex(r => r.id === ent.id);
               if (indivItem || existing === -1) {
-                inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+                const obj = { id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+                inv.push(obj);
+                if (livePairs) livePairs.push({ prev: null, next: obj });
               } else {
-                inv[existing].qty++;
+                const target = inv[existing];
+                const prevState = livePairs ? cloneRow(target) : null;
+                target.qty++;
+                if (livePairs) livePairs.push({ prev: prevState, next: target });
               }
             });
+            if (livePairs && livePairs.length) {
+              applyLiveModePayment(livePairs);
+              livePairs.length = 0;
+            }
             saveInventory(inv);
             renderInventory();
             bundle.forEach(id => {
@@ -3162,6 +3466,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
               }
             });
           } else {
+            if (liveEnabled) {
+              purchase = await openLiveBuyPopup(entry, row);
+              if (!purchase) return;
+            }
             const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
               .some(t => entry.taggar.typ.includes(t)) &&
               !STACKABLE_IDS.includes(entry.id) &&
@@ -3174,22 +3482,46 @@ function openVehiclePopup(preselectId, precheckedPaths) {
               artifactEffect = val;
             }
             const addRow = trait => {
-              const obj = { id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-              if (artifactEffect) obj.artifactEffect = artifactEffect;
-              if (trait) obj.trait = trait;
+              const qtyToAdd = Math.max(1, purchase?.qty || 1);
+              const priceMoney = purchase ? purchase.pricePerUnit : null;
+              const clonePrice = () => priceMoney ? { daler: priceMoney.daler, skilling: priceMoney.skilling, 'örtegar': priceMoney['örtegar'] } : null;
               let flashIdx;
               if (indiv) {
-                parentArr.push(obj);
-                flashIdx = parentArr.length - 1;
+                for (let iAdd = 0; iAdd < qtyToAdd; iAdd++) {
+                  const obj = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
+                  if (artifactEffect) obj.artifactEffect = artifactEffect;
+                  if (trait) obj.trait = trait;
+                  if (priceMoney) obj.basePrice = clonePrice();
+                  parentArr.push(obj);
+                  flashIdx = parentArr.length - 1;
+                  if (livePairs) livePairs.push({ prev: null, next: obj });
+                }
               } else if (row && (!trait || row.trait === trait)) {
-                row.qty++;
+                const prevState = livePairs ? cloneRow(row) : null;
+                row.qty = (Number(row.qty) || 0) + qtyToAdd;
+                if (priceMoney) row.basePrice = clonePrice();
                 flashIdx = idx;
+                if (livePairs) livePairs.push({ prev: prevState, next: row });
               } else if (row && trait && row.trait !== trait) {
+                const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
+                if (artifactEffect) obj.artifactEffect = artifactEffect;
+                obj.trait = trait;
+                if (priceMoney) obj.basePrice = clonePrice();
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: obj });
               } else {
+                const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
+                if (artifactEffect) obj.artifactEffect = artifactEffect;
+                if (trait) obj.trait = trait;
+                if (priceMoney) obj.basePrice = clonePrice();
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: obj });
+              }
+              if (livePairs && livePairs.length) {
+                applyLiveModePayment(livePairs, purchase ? { overrideO: purchase.totalO } : undefined);
+                livePairs.length = 0;
               }
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
@@ -3501,6 +3833,18 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       }
     };
 
+    const liveToggle = getEl('inventoryLiveToggle');
+    if (liveToggle) {
+      const current = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+      liveToggle.checked = Boolean(current);
+      liveToggle.onchange = () => {
+        if (typeof storeHelper?.setLiveMode === 'function') {
+          storeHelper.setLiveMode(store, Boolean(liveToggle.checked));
+          renderInventory();
+        }
+      };
+    }
+
 
     const inv = storeHelper.getInventory(store);
     inv
@@ -3531,6 +3875,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     editArtifactEntry,
     openMoneyPopup,
     openQtyPopup,
+    applyLiveModePayment,
+    openLiveBuyPopup,
     openPricePopup,
     openVehiclePopup,
     openVehicleRemovePopup,

@@ -2990,6 +2990,149 @@ select.level {
 }
 #moneyPopup.open .popup-inner { transform: translateY(0); }
 #moneyPopup .popup-inner button { width: 100%; }
+#moneyPopup .money-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+#moneyPopup .money-section {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#moneyPopup .money-section .money-row {
+  display: flex;
+  gap: .6rem;
+  flex-wrap: wrap;
+}
+#moneyPopup .money-section .money-row input {
+  flex: 1 1 90px;
+  min-width: 90px;
+}
+#moneyPopup .money-header {
+  display: flex;
+  flex-direction: column;
+  gap: .25rem;
+  text-align: left;
+}
+#moneyPopup .money-header h4 {
+  margin: 0;
+  font-size: 1.05rem;
+  letter-spacing: .01em;
+}
+#moneyPopup .money-header p {
+  margin: 0;
+  font-size: .85rem;
+  color: var(--subtxt);
+}
+#moneyPopup .money-button-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .6rem;
+}
+#moneyPopup .money-button-row button {
+  flex: 1 1 150px;
+  min-width: 140px;
+}
+#moneyPopup .money-status {
+  margin: -.2rem 0 0;
+  font-size: .9rem;
+  color: var(--subtxt);
+  text-align: center;
+}
+#moneyPopup .money-section-balance button.char-btn.danger {
+  align-self: flex-start;
+}
+
+.inv-live-toggle {
+  margin-top: .85rem;
+  padding: .85rem 1rem;
+  border-radius: .9rem;
+  border: 1.5px solid var(--border);
+  background: rgba(255, 255, 255, .03);
+}
+#liveBuyPopup .popup-item-name {
+  margin: .2rem 0 .6rem;
+  font-weight: 600;
+}
+#liveBuyPopup .live-buy-label {
+  display: block;
+  margin: .6rem 0 .2rem;
+  font-size: .95rem;
+  font-weight: 600;
+}
+#liveBuyPopup .live-buy-fieldset {
+  border: 0;
+  padding: 0;
+  margin: .6rem 0 1rem;
+}
+#liveBuyPopup .live-buy-fieldset legend {
+  font-size: .95rem;
+  font-weight: 600;
+  margin-bottom: .35rem;
+}
+#liveBuyPopup .money-row {
+  display: flex;
+  gap: .45rem;
+}
+#liveBuyPopup .money-row input {
+  flex: 1 1 6rem;
+  min-width: 4.5rem;
+}
+.toggle-switch {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: .85rem;
+  align-items: center;
+  cursor: pointer;
+}
+.toggle-switch input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+.toggle-switch-track {
+  width: 46px;
+  height: 26px;
+  border-radius: 13px;
+  background: var(--border);
+  position: relative;
+  transition: background .2s ease;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.25);
+}
+.toggle-switch-track::after {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--card);
+  box-shadow: 0 1px 3px rgba(0,0,0,.45);
+  transition: transform .2s ease;
+}
+.toggle-switch input:checked + .toggle-switch-track {
+  background: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.2);
+}
+.toggle-switch input:checked + .toggle-switch-track::after {
+  transform: translateX(20px);
+}
+.toggle-switch-copy {
+  display: flex;
+  flex-direction: column;
+  gap: .1rem;
+}
+.toggle-switch-title {
+  font-size: 1rem;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+.toggle-switch-sub {
+  font-size: .85rem;
+  color: var(--subtxt);
+}
 
 /* ---------- Popup manuella justeringar ---------- */
 #manualAdjustPopup .popup-inner {
