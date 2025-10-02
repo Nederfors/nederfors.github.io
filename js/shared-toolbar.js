@@ -708,6 +708,36 @@ class SharedToolbar extends HTMLElement {
                 <button class="char-btn" type="button" data-type="xp" data-direction="decrease">-1</button>
               </div>
             </div>
+            <div class="manual-adjust-row">
+              <div class="manual-adjust-label">
+                <span>Tålighet</span>
+                <span id="manualToughnessDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+                <button class="char-btn" type="button" data-type="toughness" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="toughness" data-direction="increase">+1</button>
+              </div>
+            </div>
+            <div class="manual-adjust-row">
+              <div class="manual-adjust-label">
+                <span>Smärtgräns</span>
+                <span id="manualPainDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+                <button class="char-btn" type="button" data-type="pain" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="pain" data-direction="increase">+1</button>
+              </div>
+            </div>
+            <div class="manual-adjust-row">
+              <div class="manual-adjust-label">
+                <span>Bärkapacitet</span>
+                <span id="manualCapacityDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+                <button class="char-btn" type="button" data-type="capacity" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="capacity" data-direction="increase">+1</button>
+              </div>
+            </div>
           </div>
           <div class="manual-adjust-footer">
             <button id="manualAdjustReset" class="char-btn danger" type="button">Återställ</button>

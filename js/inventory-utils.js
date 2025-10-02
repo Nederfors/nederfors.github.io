@@ -2316,11 +2316,13 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       return s + (isVeh ? 0 : calcRowWeight(r));
     }, 0) + moneyWeight;
     const traits = storeHelper.getTraits(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store) || {};
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
     const valStark = (traits['Stark']||0) + (bonus['Stark']||0) + (maskBonus['Stark']||0);
+    const manualCapacity = Number(manualAdjust.capacity || 0);
     const baseCap = storeHelper.calcCarryCapacity(valStark, list);
-    const maxCapacity = baseCap;
+    const maxCapacity = baseCap + manualCapacity;
     const remainingCap = maxCapacity - usedWeight;
 
     const capClassOf = (used, max) => {
