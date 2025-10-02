@@ -2198,11 +2198,18 @@ function openManualAdjustPopup() {
   const resetBtn = pop.querySelector('#manualAdjustReset');
   const corOut = pop.querySelector('#manualCorruptionDisplay');
   const xpOut = pop.querySelector('#manualXpDisplay');
+  const toughOut = pop.querySelector('#manualToughnessDisplay');
+  const painOut = pop.querySelector('#manualPainDisplay');
+  const capOut = pop.querySelector('#manualCapacityDisplay');
 
   const refresh = () => {
     const manual = getManualAdjustmentsSafe();
     if (corOut) corOut.textContent = formatSignedNumber(manual.corruption);
     if (xpOut)  xpOut.textContent  = formatSignedNumber(-manual.xp);
+    if (toughOut) toughOut.textContent = formatSignedNumber(manual.toughness);
+    if (painOut) painOut.textContent = formatSignedNumber(manual.pain);
+    if (capOut) capOut.textContent = formatSignedNumber(manual.capacity);
+    syncManualAdjustButton();
   };
 
   refresh();
@@ -2220,6 +2227,11 @@ function openManualAdjustPopup() {
     updateXP();
     if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
     if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+      invUtil.renderInventory();
+    }
+    syncManualAdjustButton();
   };
 
   function close() {
@@ -2240,6 +2252,9 @@ function openManualAdjustPopup() {
     applyUpdate(next => {
       next.corruption = 0;
       next.xp = 0;
+      next.toughness = 0;
+      next.pain = 0;
+      next.capacity = 0;
     });
     refresh();
   }
@@ -2253,13 +2268,12 @@ function openManualAdjustPopup() {
     const delta = dir === 'increase' ? 1 : dir === 'decrease' ? -1 : 0;
     if (!type || delta === 0 || !store || !store.current) return;
     applyUpdate(next => {
-      if (type === 'corruption') {
-        const cur = Number(next.corruption);
-        next.corruption = (Number.isFinite(cur) ? cur : 0) + delta;
-      } else if (type === 'xp') {
-        const cur = Number(next.xp);
-        next.xp = (Number.isFinite(cur) ? cur : 0) + delta;
+      if (!Object.prototype.hasOwnProperty.call(next, type)) {
+        return;
       }
+      const current = Number(next[type]);
+      const base = Number.isFinite(current) ? current : 0;
+      next[type] = base + delta;
     });
     refresh();
   }
@@ -3230,18 +3244,23 @@ function formatSignedNumber(value) {
 }
 
 function getManualAdjustmentsSafe() {
-  if (!store || !store.current) return { xp: 0, corruption: 0 };
+  if (!store || !store.current) {
+    return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
+  }
   try {
     if (typeof storeHelper.getManualAdjustments !== 'function') {
-      return { xp: 0, corruption: 0 };
+      return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
     }
     const res = storeHelper.getManualAdjustments(store) || {};
     return {
       xp: Number(res.xp || 0),
-      corruption: Number(res.corruption || 0)
+      corruption: Number(res.corruption || 0),
+      toughness: Number(res.toughness || 0),
+      pain: Number(res.pain || 0),
+      capacity: Number(res.capacity || 0)
     };
   } catch {
-    return { xp: 0, corruption: 0 };
+    return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
   }
 }
 
@@ -3255,11 +3274,17 @@ function manualAdjustmentSummaryText(manual) {
     const xpVisible = -xpStore;
     parts.push(`Erf ${xpVisible > 0 ? `+${xpVisible}` : `${xpVisible}`}`);
   }
+  const tough = Number(manual.toughness || 0);
+  if (tough) parts.push(`Tålighet ${tough > 0 ? `+${tough}` : `${tough}`}`);
+  const pain = Number(manual.pain || 0);
+  if (pain) parts.push(`Smärtgräns ${pain > 0 ? `+${pain}` : `${pain}`}`);
+  const capacity = Number(manual.capacity || 0);
+  if (capacity) parts.push(`Bärkapacitet ${capacity > 0 ? `+${capacity}` : `${capacity}`}`);
   return parts.join(', ');
 }
 
 function syncManualAdjustButton() {
-  const baseTitle = 'Hantera manuella justeringar för korruption och erfarenhet';
+  const baseTitle = 'Hantera manuella justeringar för korruption, erfarenhet, tålighet, smärtgräns och bärkapacitet';
   if (!dom.manualBtn) return;
   if (!store || !store.current) {
     dom.manualBtn.classList.remove('active');
@@ -3267,7 +3292,13 @@ function syncManualAdjustButton() {
     return;
   }
   const manual = getManualAdjustmentsSafe();
-  const hasAdjustments = Boolean((manual.corruption || 0) || (manual.xp || 0));
+  const hasAdjustments = Boolean(
+    (manual.corruption || 0) ||
+    (manual.xp || 0) ||
+    (manual.toughness || 0) ||
+    (manual.pain || 0) ||
+    (manual.capacity || 0)
+  );
   const summary = hasAdjustments ? manualAdjustmentSummaryText(manual) : '';
   dom.manualBtn.classList.toggle('active', hasAdjustments);
   dom.manualBtn.title = summary ? `${baseTitle} (${summary})` : baseTitle;

@@ -888,7 +888,13 @@
   }
 
   function defaultManualAdjustments() {
-    return { xp: 0, corruption: 0 };
+    return {
+      xp: 0,
+      corruption: 0,
+      toughness: 0,
+      pain: 0,
+      capacity: 0
+    };
   }
 
   function getMoney(store) {
@@ -1156,7 +1162,10 @@
     const manual = { ...defaultManualAdjustments(), ...(data.manualAdjustments || {}) };
     return {
       xp: Number(manual.xp || 0),
-      corruption: Number(manual.corruption || 0)
+      corruption: Number(manual.corruption || 0),
+      toughness: Number(manual.toughness || 0),
+      pain: Number(manual.pain || 0),
+      capacity: Number(manual.capacity || 0)
     };
   }
 
@@ -1166,6 +1175,9 @@
     const next = { ...defaultManualAdjustments(), ...(adj || {}) };
     next.xp = Number(next.xp || 0);
     next.corruption = Number(next.corruption || 0);
+    next.toughness = Number(next.toughness || 0);
+    next.pain = Number(next.pain || 0);
+    next.capacity = Number(next.capacity || 0);
     store.data[store.current].manualAdjustments = next;
     persistCurrentCharacter(store);
   }

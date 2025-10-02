@@ -436,6 +436,9 @@
       xp: (artifactEffects.xp || 0) + (manualAdjust.xp || 0),
       corruption: (artifactEffects.corruption || 0) + (manualAdjust.corruption || 0)
     };
+    const manualToughness = Number(manualAdjust.toughness || 0);
+    const manualPain = Number(manualAdjust.pain || 0);
+    const manualCapacity = Number(manualAdjust.capacity || 0);
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(inv) : {};
     const formatNumber = (value, options = {}) => {
@@ -486,11 +489,11 @@
 
     const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
     const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
-    const capacity = storeHelper.calcCarryCapacity(valStark, list);
+    const capacity = storeHelper.calcCarryCapacity(valStark, list) + manualCapacity;
     const hardy = hasHardnackad ? 1 : 0;
     const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
-    const tal = talBase + hardy;
-    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark);
+    const tal = talBase + hardy + manualToughness;
+    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
 
     const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list) : 'Kvick';
     const kvickForDef = vals[defTrait];
