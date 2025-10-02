@@ -13,6 +13,7 @@ window.addEventListener('load', () => {
 (function() {
   const overlayStack = [];
   const openMap = new Map();
+  const overlayCleanupMap = new Map();
   let isPop = false;
   // Count how many history.back() calls we have triggered manually.
   // Using a counter (instead of a boolean) makes rapid open/close
@@ -84,6 +85,15 @@ window.addEventListener('load', () => {
     observeOverlay(el);
   };
 
+  window.registerOverlayCleanup = function(el, cleanup) {
+    if (!el) return;
+    if (typeof cleanup === 'function') {
+      overlayCleanupMap.set(el, cleanup);
+    } else {
+      overlayCleanupMap.delete(el);
+    }
+  };
+
   function registerOverlays(root) {
     if (!root) return;
     const list = root.querySelectorAll ? root.querySelectorAll(OVERLAY_SELECTOR) : [];
@@ -121,7 +131,18 @@ window.addEventListener('load', () => {
     const el = overlayStack[overlayStack.length - 1];
     if (el) {
       isPop = true;
-      el.classList.remove('open');
+      const cleanup = overlayCleanupMap.get(el);
+      if (typeof cleanup === 'function') {
+        try {
+          cleanup();
+        } finally {
+          if (overlayCleanupMap.get(el) === cleanup) {
+            overlayCleanupMap.delete(el);
+          }
+        }
+      } else {
+        el.classList.remove('open');
+      }
       // Vänta tills MutationObserver hunnit reagera innan flaggan återställs
       setTimeout(() => { isPop = false; });
     }
@@ -2208,6 +2229,7 @@ function openManualAdjustPopup() {
     resetBtn?.removeEventListener('click', onReset);
     pop.removeEventListener('click', onOutside);
     document.removeEventListener('keydown', onKey);
+    window.registerOverlayCleanup?.(pop, null);
   }
 
   function onClose() {
@@ -2253,6 +2275,8 @@ function openManualAdjustPopup() {
       close();
     }
   }
+
+  window.registerOverlayCleanup?.(pop, close);
 
   pop.classList.add('open');
   if (inner) inner.scrollTop = 0;
