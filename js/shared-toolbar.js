@@ -701,7 +701,7 @@ class SharedToolbar extends HTMLElement {
             </div>
             <div class="manual-adjust-card card">
               <div class="manual-adjust-label">
-                <span>Erf</span>
+                <span>Spenderad erf</span>
                 <span id="manualXpDisplay" class="manual-adjust-current">0</span>
               </div>
               <div class="manual-adjust-buttons">
