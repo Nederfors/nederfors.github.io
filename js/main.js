@@ -2239,8 +2239,6 @@ function openManualAdjustPopup() {
     groups?.removeEventListener('click', onAction);
     closeBtn?.removeEventListener('click', onClose);
     resetBtn?.removeEventListener('click', onReset);
-    pop.removeEventListener('click', onOutside);
-    document.removeEventListener('keydown', onKey);
     window.registerOverlayCleanup?.(pop, null);
   }
 
@@ -2278,18 +2276,6 @@ function openManualAdjustPopup() {
     refresh();
   }
 
-  function onOutside(e) {
-    if (!inner || inner.contains(e.target)) return;
-    close();
-  }
-
-  function onKey(e) {
-    if (e.key === 'Escape') {
-      e.preventDefault();
-      close();
-    }
-  }
-
   window.registerOverlayCleanup?.(pop, close);
 
   pop.classList.add('open');
@@ -2297,8 +2283,6 @@ function openManualAdjustPopup() {
   groups?.addEventListener('click', onAction);
   closeBtn?.addEventListener('click', onClose);
   resetBtn?.addEventListener('click', onReset);
-  pop.addEventListener('click', onOutside);
-  document.addEventListener('keydown', onKey);
 }
 
 async function saveJsonFile(jsonText, suggested) {
