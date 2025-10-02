@@ -1452,6 +1452,11 @@ function defaultTraits() {
     let cor = 0;
     const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
     list.forEach(it => {
+      const levelValue = LEVEL_IDX[it.nivå || 'Novis'] || 0;
+      if (it.namn === 'Reningskraft') {
+        cor += levelValue;
+        return;
+      }
       const types = it.taggar?.typ || [];
       if (!['Mystisk kraft', 'Ritual'].some(t => types.includes(t))) return;
       if (isDwarf && types.includes('Mystisk kraft') && it.namn === 'Vedergällning') return;
@@ -1465,7 +1470,7 @@ function defaultTraits() {
         }
       });
       if (types.includes('Mystisk kraft')) {
-        const plvl = LEVEL_IDX[it.nivå || 'Novis'] || 1;
+        const plvl = levelValue || 1;
         if (plvl > lvl) cor += (plvl - lvl);
       } else if (types.includes('Ritual')) {
         if (lvl < 1) cor++;
