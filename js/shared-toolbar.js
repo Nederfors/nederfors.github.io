@@ -689,51 +689,52 @@ class SharedToolbar extends HTMLElement {
           <h3>Manuella justeringar</h3>
           <p class="manual-adjust-hint">Använd knapparna för att lägga till eller ta bort manuella ändringar. Erf påverkar endast spenderad erfarenhet.</p>
           <div class="manual-adjust-groups" id="manualAdjustGroups">
-            <div class="manual-adjust-row">
+            <div class="manual-adjust-card card">
               <div class="manual-adjust-label">
                 <span>Korruption</span>
                 <span id="manualCorruptionDisplay" class="manual-adjust-current">0</span>
               </div>
-              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+              <div class="manual-adjust-buttons">
                 <button class="char-btn" type="button" data-type="corruption" data-direction="decrease">-1</button>
                 <button class="char-btn" type="button" data-type="corruption" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-row">
+            <div class="manual-adjust-card card">
               <div class="manual-adjust-label">
                 <span>Erf</span>
                 <span id="manualXpDisplay" class="manual-adjust-current">0</span>
               </div>
-              <div class="manual-adjust-buttons manual-adjust-buttons--single">
+              <div class="manual-adjust-buttons">
                 <button class="char-btn" type="button" data-type="xp" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="xp" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-row">
+            <div class="manual-adjust-card card">
               <div class="manual-adjust-label">
                 <span>Tålighet</span>
                 <span id="manualToughnessDisplay" class="manual-adjust-current">0</span>
               </div>
-              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+              <div class="manual-adjust-buttons">
                 <button class="char-btn" type="button" data-type="toughness" data-direction="decrease">-1</button>
                 <button class="char-btn" type="button" data-type="toughness" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-row">
+            <div class="manual-adjust-card card">
               <div class="manual-adjust-label">
                 <span>Smärtgräns</span>
                 <span id="manualPainDisplay" class="manual-adjust-current">0</span>
               </div>
-              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+              <div class="manual-adjust-buttons">
                 <button class="char-btn" type="button" data-type="pain" data-direction="decrease">-1</button>
                 <button class="char-btn" type="button" data-type="pain" data-direction="increase">+1</button>
               </div>
             </div>
-            <div class="manual-adjust-row">
+            <div class="manual-adjust-card card">
               <div class="manual-adjust-label">
                 <span>Bärkapacitet</span>
                 <span id="manualCapacityDisplay" class="manual-adjust-current">0</span>
               </div>
-              <div class="manual-adjust-buttons manual-adjust-buttons--even">
+              <div class="manual-adjust-buttons">
                 <button class="char-btn" type="button" data-type="capacity" data-direction="decrease">-1</button>
                 <button class="char-btn" type="button" data-type="capacity" data-direction="increase">+1</button>
               </div>

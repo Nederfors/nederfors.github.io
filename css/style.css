@@ -3007,10 +3007,9 @@ select.level {
   flex-direction: column;
   gap: 1rem;
 }
-#manualAdjustPopup .manual-adjust-row {
-  display: flex;
-  flex-direction: column;
-  gap: .4rem;
+#manualAdjustPopup .manual-adjust-card {
+  gap: .7rem;
+  padding: 1rem 1.2rem;
 }
 #manualAdjustPopup .manual-adjust-label {
   display: flex;
@@ -3024,22 +3023,12 @@ select.level {
   color: var(--accent);
 }
 #manualAdjustPopup .manual-adjust-buttons {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
   gap: .6rem;
-  flex-wrap: wrap;
-}
-#manualAdjustPopup .manual-adjust-buttons.manual-adjust-buttons--even button {
-  flex: 1 1 45%;
-}
-#manualAdjustPopup .manual-adjust-buttons.manual-adjust-buttons--single button {
-  flex: 0 0 auto;
-  min-width: 120px;
 }
 #manualAdjustPopup .manual-adjust-buttons button {
   width: 100%;
-}
-#manualAdjustPopup .manual-adjust-buttons.manual-adjust-buttons--single button {
-  width: auto;
 }
 #manualAdjustPopup .manual-adjust-footer {
   display: flex;
