@@ -957,7 +957,7 @@ function initIndex() {
           if (openCardKeys.has(entryKey)) li.classList.remove('compact');
           else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
           if (searchActive && terms.length) {
-            const titleSpan = li.querySelector('.card-title > span');
+            const titleSpan = li.querySelector('.card-title .entry-title-main');
             if (titleSpan) highlightInElement(titleSpan, terms);
           }
           return;
@@ -1204,7 +1204,7 @@ function initIndex() {
           count = charList.filter(c => c.id === p.id && !c.trait).length;
         }
         const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
-        const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
+        const badge = multi && count > 0 ? `<span class="count-badge">×${count}</span>` : '';
         const showInfo = compact || hideDetails;
         const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
         const idAttr = p.id ? ` data-id="${p.id}"` : '';
@@ -1253,7 +1253,8 @@ function initIndex() {
         const li = createEntryCard({
           compact,
           dataset,
-          nameHtml: `${p.namn}${badge}`,
+          nameHtml: p.namn,
+          titleSuffixHtml: badge,
           xpHtml,
           primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
@@ -1273,7 +1274,7 @@ function initIndex() {
         if (openCardKeys.has(entryKey)) li.classList.remove('compact');
         else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
         if (searchActive && terms.length) {
-          const titleSpan = li.querySelector('.card-title > span');
+          const titleSpan = li.querySelector('.card-title .entry-title-main');
           if (titleSpan) highlightInElement(titleSpan, terms);
           const descEl = li.querySelector('.card-desc');
           if (descEl) highlightInElement(descEl, terms);
@@ -1453,24 +1454,32 @@ function initIndex() {
         infoBtn.dataset.info = encodeURIComponent(newInfo);
       }
 
-      const nameSpan = card.querySelector('.card-title > span');
-      if (nameSpan) {
-        const badge = nameSpan.querySelector('.count-badge');
+      const titleEl = card.querySelector('.card-title');
+      if (titleEl) {
+        let suffix = titleEl.querySelector('.entry-title-suffix');
+        const ensureSuffix = () => {
+          if (suffix) return suffix;
+          suffix = document.createElement('span');
+          suffix.className = 'entry-title-suffix';
+          titleEl.appendChild(suffix);
+          return suffix;
+        };
+        const badge = suffix?.querySelector('.count-badge');
         if (multi && count > 0) {
+          const host = ensureSuffix();
           if (badge) {
             badge.textContent = `×${count}`;
           } else {
             const badgeEl = document.createElement('span');
             badgeEl.className = 'count-badge';
             badgeEl.textContent = `×${count}`;
-            const spacer = document.createTextNode(' ');
-            nameSpan.appendChild(spacer);
-            nameSpan.appendChild(badgeEl);
+            host.appendChild(badgeEl);
           }
         } else if (badge) {
-          const prev = badge.previousSibling;
           badge.remove();
-          if (prev && prev.nodeType === Node.TEXT_NODE && !prev.textContent.trim()) prev.remove();
+          if (suffix && !suffix.children.length && !suffix.textContent.trim()) {
+            suffix.remove();
+          }
         }
       }
 
@@ -1672,7 +1681,7 @@ function initIndex() {
     if(infoBtn){
       let html=decodeURIComponent(infoBtn.dataset.info||'');
       const liEl = infoBtn.closest('li');
-      const title=liEl?.querySelector('.card-title > span')?.textContent||'';
+      const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
       if(infoBtn.dataset.tabell!=null){
         const terms = F.search.map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
         if (terms.length) {

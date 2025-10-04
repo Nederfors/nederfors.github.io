@@ -1357,7 +1357,7 @@ function initCharacter() {
         const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
-        const badge = g.count>1 ? ` <span class="count-badge">×${g.count}</span>` : '';
+        const badge = g.count > 1 ? `<span class="count-badge">×${g.count}</span>` : '';
         const activeKeys = getActiveHandlingKeys(p);
         const activeNames = activeKeys.map(k => handlingName(p, k));
         const conflictIcon = icon('active');
@@ -1427,7 +1427,8 @@ function initCharacter() {
         const li = createEntryCard({
           compact,
           dataset,
-          nameHtml: `${p.namn}${badge}`,
+          nameHtml: p.namn,
+          titleSuffixHtml: badge,
           xpHtml,
           primaryTagsHtml,
           tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
@@ -1615,7 +1616,7 @@ function initCharacter() {
     if(infoBtn){
       let html=decodeURIComponent(infoBtn.dataset.info||'');
       const liEl = infoBtn.closest('li');
-      const title = liEl?.querySelector('.card-title > span')?.textContent || '';
+      const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
       if(infoBtn.dataset.tabell!=null){
         const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
         if (terms.length) {

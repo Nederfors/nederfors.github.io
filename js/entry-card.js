@@ -146,7 +146,9 @@
       titleActions = [],
       infoBox = '',
       hasLevels = false,
-      collapsible = false
+      collapsible = false,
+      titlePrefixHtml = '',
+      titleSuffixHtml = ''
     } = options;
 
     const li = document.createElement('li');
@@ -169,7 +171,19 @@
     const collapseBtnHtml = collapsible
       ? `<button type="button" class="collapse-btn entry-collapse-btn"></button>`
       : '';
-    const titleHtml = `<div class="card-title"><span>${collapseBtnHtml}${nameHtml || ''}</span></div>`;
+    const prefixBlock = titlePrefixHtml
+      ? `<span class="entry-title-prefix">${titlePrefixHtml}</span>`
+      : '';
+    const suffixBlock = titleSuffixHtml
+      ? `<span class="entry-title-suffix">${titleSuffixHtml}</span>`
+      : '';
+    const titleParts = [
+      collapseBtnHtml,
+      prefixBlock,
+      `<span class="entry-title-main">${nameHtml || ''}</span>`,
+      suffixBlock
+    ].filter(Boolean);
+    const titleHtml = `<div class="card-title">${titleParts.join('')}</div>`;
     const headerRowClasses = ['entry-row', 'entry-row-header'];
 
     const levelControl = hasLevels ? (levelHtml || '') : '';

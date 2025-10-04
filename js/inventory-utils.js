@@ -2731,7 +2731,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const functionsCard = createEntryCard({
       compact: !functionsOpen,
       dataset: { special: '__invfunc__' },
-      nameHtml: `Inventarie ${icon('basket', { className: 'title-icon', alt: 'Inventarie' })}`,
+      nameHtml: 'Inventarie',
+      titleSuffixHtml: icon('basket', { className: 'title-icon', alt: 'Inventarie' }),
       descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div>${liveToggleHtml}</div>`,
       collapsible: true
     });
@@ -2762,7 +2763,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const infoCard = createEntryCard({
       compact: !infoOpen,
       dataset: { special: infoKey },
-      nameHtml: `Information ${icon('money-bag', { className: 'title-icon', alt: 'Information' })}`,
+      nameHtml: 'Information',
+      titleSuffixHtml: icon('money-bag', { className: 'title-icon', alt: 'Information' }),
       descHtml: `<div class="card-desc">${infoCardDesc}</div>`,
       collapsible: true
     });
@@ -2814,7 +2816,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         );
       }
 
-      const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
+      const badge = row.qty > 1 ? `<span class="count-badge">×${row.qty}</span>` : '';
       const priceText = formatMoney(calcRowCost(row, forgeLvl, alcLevel, artLevel));
       const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön' : 'Pris';
       const priceDisplay = `${priceLabel}: ${priceText}`.trim();
@@ -2895,15 +2897,16 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (isVehicle && remaining < 0) classes.push('vehicle-over');
 
       const displayName = nameMap.get(row) || row.name;
-      const nameHtml = (row.id === 'l9' && row.trait)
-        ? `${displayName}: ${row.trait}${badge}`
-        : `${displayName}${badge}`;
+      const baseName = (row.id === 'l9' && row.trait)
+        ? `${displayName}: ${row.trait}`
+        : `${displayName}`;
 
       const li = createEntryCard({
         compact: isCompact,
         classes,
         dataset,
-        nameHtml,
+        nameHtml: baseName,
+        titleSuffixHtml: badge,
         infoBox: infoBoxHtml,
         descHtml,
         qualityHtml,
@@ -2952,7 +2955,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
         cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}">${icon('free')}</button>`);
 
-        const cBadge = childRow.qty > 1 ? ` <span class="count-badge">×${childRow.qty}</span>` : '';
+        const cBadge = childRow.qty > 1 ? `<span class="count-badge">×${childRow.qty}</span>` : '';
         const cPriceText = formatMoney(calcRowCost(childRow, forgeLvl, alcLevel, artLevel));
         const cPriceLabel = cTagTyp.includes('Anställning') ? 'Dagslön' : 'Pris';
         const cPriceDisplay = `${cPriceLabel}: ${cPriceText}`.trim();
@@ -3008,15 +3011,16 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         if (remaining < 0) childClasses.push('vehicle-over');
 
         const childName = nameMap.get(childRow) || childRow.name;
-        const childNameHtml = (childRow.id === 'l9' && childRow.trait)
-          ? `${childName}: ${childRow.trait}${cBadge}`
-          : `${childName}${cBadge}`;
+        const childBaseName = (childRow.id === 'l9' && childRow.trait)
+          ? `${childName}: ${childRow.trait}`
+          : childName;
 
         const childLi = createEntryCard({
           compact: childCompact,
           classes: childClasses,
           dataset: childDataset,
-          nameHtml: childNameHtml,
+          nameHtml: childBaseName,
+          titleSuffixHtml: cBadge,
           infoBox: cInfoBox,
           descHtml: cDesc ? `<div class="card-desc">${cDesc}</div>` : '',
           qualityHtml: cQualityHtml,
@@ -3261,7 +3265,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
             infoHtml = decodeURIComponent(infoHtml);
           } catch {}
           const li = infoBtn.closest('li');
-          const title = li?.querySelector('.card-title > span')?.textContent || '';
+          const title = li?.querySelector('.card-title .entry-title-main')?.textContent || '';
           if (typeof window.yrkePanel?.open === 'function') {
             window.yrkePanel.open(title, infoHtml);
           }

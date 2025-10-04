@@ -702,28 +702,19 @@ body[data-role="summary"] {
 }
 
 body[data-role="summary"] .app-title {
-  align-self: stretch;
-  max-width: 520px;
-  margin: 1.5rem auto 1rem;
-  text-align: left;
-  text-transform: uppercase;
-  letter-spacing: .16em;
-  font-size: 2rem;
+  margin: 1.2rem 0 .6rem;
+  font-size: 2.4rem;
+  letter-spacing: .03em;
+  text-align: center;
 }
 
 body[data-role="summary"] .summary-panel {
-  max-width: 360px;
-  padding: 1.7rem 1.45rem 2rem;
-  border-radius: 1.35rem;
+  max-width: 520px;
+  padding: 2rem 1.6rem;
+  border-radius: 1.2rem;
   background: var(--panel);
   border: 1.5px solid var(--border);
   box-shadow: var(--shadow);
-}
-
-@media (min-width: 1024px) {
-  body[data-role="summary"] .summary-panel {
-    max-width: 460px;
-  }
 }
 
 body[data-role="summary"] .summary-panel-header {
@@ -741,6 +732,7 @@ body[data-role="summary"] .summary-panel-heading {
 }
 
 body[data-role="summary"] .summary-panel-title {
+  display: block;
   margin: 0;
   text-transform: uppercase;
   letter-spacing: .18em;
@@ -749,6 +741,7 @@ body[data-role="summary"] .summary-panel-title {
 }
 
 body[data-role="summary"] .summary-panel-name {
+  margin: 0;
   font-size: 1.6rem;
   font-weight: 600;
   letter-spacing: .02em;
@@ -941,10 +934,6 @@ body[data-role="summary"] .summary-value.neg {
 }
 
 @media (max-width: 520px) {
-  body[data-role="summary"] .summary-panel {
-    padding: 1.5rem 1.25rem 1.7rem;
-  }
-
   body[data-role="summary"] .summary-pairs li {
     grid-template-columns: minmax(0, 1fr) minmax(80px, auto);
   }
@@ -1324,15 +1313,8 @@ input:focus, select:focus, textarea:focus {
   min-width: 0;
 }
 
-.entry-header-main .card-title > span {
-  display: inline-flex;
-  align-items: center;
-  gap: .45rem;
+.entry-header-main .card-title .entry-title-main {
   min-width: 0;
-}
-
-.entry-header-main .card-title > span .count-badge {
-  align-self: center;
 }
 
 .entry-header-xp,
@@ -1535,12 +1517,39 @@ input:focus, select:focus, textarea:focus {
   gap: .45rem;
   font-size: calc(1.34rem - 2px);
   font-weight: 600;
+  min-width: 0;
 }
 #invList .card-title {
   cursor: pointer;
 }
 #invFormal .card-title {
   cursor: pointer;
+}
+.card-title .entry-collapse-btn {
+  flex: 0 0 auto;
+}
+.card-title .entry-title-prefix,
+.card-title .entry-title-suffix {
+  display: inline-flex;
+  align-items: center;
+  gap: .35rem;
+  flex: 0 0 auto;
+}
+.card-title .entry-title-prefix:empty,
+.card-title .entry-title-suffix:empty {
+  display: none;
+}
+.card-title .entry-title-main {
+  display: block;
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.card-title .entry-title-suffix .count-badge {
+  align-self: center;
+  margin-left: 0;
 }
 .collapse-btn {
   width: 1.25rem;
@@ -1551,9 +1560,6 @@ input:focus, select:focus, textarea:focus {
   cursor: pointer;
   vertical-align: middle;
   user-select: none;
-}
-.card-title > span > .collapse-btn {
-  margin-right: .4rem;
 }
 .card-title .collapse-btn::before {
   content: '▼';
