@@ -318,8 +318,65 @@ const dom  = {
   active : getDom('activeFilters'),
   lista  : getDom('lista'),       // index-vy
   valda  : getDom('valda'),       // character-vy
-  cName  : getDom('charName')
+  cName  : getDom('charName'),
+
+  /* hemlig popup */
+  danielPopup: getDom('danielPopup'),
+  danielClose: getDom('danielPopupClose')
 };
+
+function isSecretDanielTerm(term) {
+  if (!term) return false;
+  const lower = String(term).toLowerCase();
+  const normalized = typeof searchNormalize === 'function'
+    ? searchNormalize(lower)
+    : lower;
+  return normalized === 'daniel';
+}
+
+function openDanielPopup() {
+  const root = bar && bar.shadowRoot ? bar.shadowRoot : null;
+  const pop = (root && root.getElementById('danielPopup')) || dom.danielPopup;
+  if (!pop) return;
+  if (pop.classList.contains('open')) return;
+  const closeBtn = (root && root.getElementById('danielPopupClose')) || dom.danielClose;
+  const inner = pop.querySelector('.popup-inner');
+
+  function close() {
+    pop.classList.remove('open');
+    closeBtn?.removeEventListener('click', onClose);
+    pop.removeEventListener('click', onBackdrop);
+    window.registerOverlayCleanup?.(pop, null);
+    if (dom.sIn && typeof dom.sIn.focus === 'function') {
+      try { dom.sIn.focus(); }
+      catch {}
+    }
+  }
+
+  function onClose(event) {
+    if (event) event.preventDefault();
+    close();
+  }
+
+  function onBackdrop(event) {
+    if (event?.target === pop) {
+      event.preventDefault();
+      close();
+    }
+  }
+
+  window.registerOverlayCleanup?.(pop, close);
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+  closeBtn?.addEventListener('click', onClose);
+  pop.addEventListener('click', onBackdrop);
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    setTimeout(() => {
+      try { closeBtn.focus(); }
+      catch {}
+    }, 0);
+  }
+}
 
 // Safari/WebKit exposes showOpenFilePicker but only allows selecting a single file.
 // Detect such browsers so we can fall back to the <input type="file" multiple> path.
@@ -884,6 +941,14 @@ const globalSearch = (() => {
       if (!term) {
         hideSuggestions();
         safeBlurInput();
+        event.preventDefault();
+        return;
+      }
+      if (isSecretDanielTerm(term)) {
+        if (dom.sIn) dom.sIn.value = '';
+        hideSuggestions();
+        safeBlurInput();
+        openDanielPopup();
         event.preventDefault();
         return;
       }
