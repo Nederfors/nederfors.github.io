@@ -1206,6 +1206,16 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Hemlig Daniel-popup ---------- -->
+      <div id="danielPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Vilken kille!</h3>
+          <div class="confirm-row">
+            <button id="danielPopupClose" class="char-btn">Visst?!</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Hj\u00e4lp ---------- -->
       <aside id="infoPanel" class="offcanvas">
         <header class="inv-header">
@@ -1603,7 +1613,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
