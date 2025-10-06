@@ -410,5 +410,24 @@
       "skilling": 0,
       "örtegar": 7
     }
+  },
+  {
+  "id": "kl20",
+  "namn": "Vinterkläder",
+  "beskrivning": "Tjock uppsättning för kyla: fodrad kappa, ylletröja, vadderade byxor, vantar, mössa och halsduk. Gjord för långvarigt uteliv i snö och vind.",
+  "taggar": {
+    "typ": [
+      "Kläder"
+    ]
+  },
+  "stat": {
+    "vikt": 3.0
+  },
+  "grundpris": {
+    "daler": 20,
+    "skilling": 0,
+    "örtegar": 0
   }
+}
+
 ]
