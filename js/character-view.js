@@ -1262,7 +1262,22 @@ function initCharacter() {
           traitInfo = `<p><strong>${label}:</strong> ${value}</p>`;
         }
         const curList = storeHelper.getCurrentList(store);
-        const xpVal = storeHelper.calcEntryDisplayXP(p, curList);
+        let xpSourceMatch = null;
+        if (Array.isArray(curList) && curList.length) {
+          xpSourceMatch = curList.find(item => {
+            if (!item || typeof item !== 'object') return false;
+            if (item === p) return true;
+            const sameId = item.id && p.id && item.id === p.id;
+            const sameName = item.namn && p.namn && item.namn === p.namn;
+            const sameLevel = (item.nivå ?? null) === (p.nivå ?? null);
+            const sameTrait = (item.trait ?? null) === (p.trait ?? null);
+            if (sameId) return sameLevel && sameTrait;
+            if (sameName) return sameLevel && sameTrait;
+            return false;
+          }) || null;
+        }
+        const xpOptions = xpSourceMatch ? { xpSource: xpSourceMatch } : undefined;
+        const xpVal = storeHelper.calcEntryDisplayXP(p, curList, xpOptions);
         let xpText = storeHelper.formatEntryXPText(p, xpVal);
         if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
         const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
