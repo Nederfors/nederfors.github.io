@@ -1804,7 +1804,11 @@ function defaultTraits() {
     if (typeof xpVal === 'number') {
       const singleInfo = singlePickAdvantageInfo(entry);
       if (singleInfo) {
-        return singleInfo.isDis ? '+5' : '5';
+        if (singleInfo.isDis) {
+          const disXp = Math.max(0, -xpVal);
+          return `+${disXp}`;
+        }
+        return `${Math.max(0, xpVal)}`;
       }
       return xpVal < 0 ? `+${-xpVal}` : String(xpVal);
     }
