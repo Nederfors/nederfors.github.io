@@ -558,6 +558,8 @@
     const del    = root.getElementById('customDelete');
     const cancel = root.getElementById('customCancel');
 
+    let originalDesc = '';
+
     // Hämta vapentyper och rustningssubtyper från DB (fallback till hårdkodade)
     const deriveSubtypes = () => {
       try {
@@ -710,7 +712,11 @@
         wIn.title = '';
       }
       dIn.value = sIn.value = oIn.value = '';
-      desc.value = '';
+      if (desc) {
+        desc.value = '';
+        delete desc.dataset.touched;
+      }
+      originalDesc = '';
       if (effSel) effSel.value = '';
       if (dmgIn) dmgIn.value = '';
       if (lvlNovis) lvlNovis.value = '';
@@ -747,7 +753,16 @@
       sIn.value = price.skilling ?? '';
       oIn.value = price['örtegar'] ?? '';
       wIn.value = existing.vikt ?? '';
-      desc.value = existing.beskrivning || '';
+      const legacyDesc = existing.beskrivning
+        || existing.beskrivningHtml
+        || existing.text
+        || existing.description
+        || '';
+      if (desc) {
+        desc.value = legacyDesc;
+        desc.dataset.touched = '';
+      }
+      originalDesc = legacyDesc;
       if (effSel) effSel.value = existing.artifactEffect || '';
       if (Array.isArray(existing.taggar?.typ)) {
         existing.taggar.typ.forEach(t => addType(t));
@@ -848,9 +863,13 @@
           skilling: Math.max(0, Number(sIn.value) || 0),
           'örtegar': Math.max(0, Number(oIn.value) || 0)
         },
-        beskrivning: desc.value.trim(),
+        beskrivning: '',
         artifactEffect: (effSel && types.includes('Artefakt')) ? effSel.value : ''
       };
+      const rawDesc = desc ? desc.value : '';
+      const trimmedDesc = rawDesc.trim();
+      const keepLegacyDesc = Boolean(isEditing && originalDesc && (!desc || !desc.dataset.touched) && !trimmedDesc);
+      entry.beskrivning = keepLegacyDesc ? originalDesc : trimmedDesc;
       entry.vikt = Math.max(0, Number(wIn.value) || 0);
       const stat = {};
       if (hasWeapon && dmgIn) {
@@ -951,6 +970,7 @@
       if (typeTags) typeTags.removeEventListener('click', onTagsClick);
       if (powerAdd) powerAdd.removeEventListener('click', onAddPower);
       if (lvlMode) lvlMode.removeEventListener('change', applyLevelMode);
+      if (desc) desc.removeEventListener('input', markDescTouched);
       resetFields();
       if (title) title.textContent = 'Nytt föremål';
       add.textContent = 'Spara';
@@ -962,6 +982,10 @@
     pop.classList.add('open');
     window.autoResizeAll?.(pop);
     if (popInner) popInner.scrollTop = 0;
+    const markDescTouched = () => {
+      if (desc) desc.dataset.touched = '1';
+    };
+    if (desc) desc.addEventListener('input', markDescTouched);
     if (typeAdd) typeAdd.addEventListener('click', onAddType);
     if (typeTags) typeTags.addEventListener('click', onTagsClick);
     add.addEventListener('click', onAdd);
