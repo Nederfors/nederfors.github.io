@@ -300,6 +300,46 @@ function initIndex() {
     return text.charAt(0).toUpperCase();
   };
 
+  const normalizeMatchValue = (val) => {
+    if (val === undefined || val === null) return null;
+    return typeof val === 'string' ? val.trim() : val;
+  };
+
+  const findMatchingListEntry = (list, entry, options = {}) => {
+    if (!Array.isArray(list) || !entry || typeof entry !== 'object') return null;
+    const wantsLevel = Object.prototype.hasOwnProperty.call(options, 'level')
+      || Object.prototype.hasOwnProperty.call(entry, 'nivå');
+    const wantsTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
+      || Object.prototype.hasOwnProperty.call(entry, 'trait');
+    const desiredLevel = Object.prototype.hasOwnProperty.call(options, 'level')
+      ? normalizeMatchValue(options.level)
+      : normalizeMatchValue(entry.nivå);
+    const desiredTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
+      ? normalizeMatchValue(options.trait)
+      : normalizeMatchValue(entry.trait);
+    let fallbackById = null;
+    let fallbackByName = null;
+    for (const item of list) {
+      if (!item || typeof item !== 'object') continue;
+      if (item === entry) return item;
+      const sameId = entry.id != null && item.id != null && item.id === entry.id;
+      const sameName = item.namn && entry.namn && item.namn === entry.namn;
+      const levelMatches = !wantsLevel || normalizeMatchValue(item.nivå) === desiredLevel;
+      const traitMatches = !wantsTrait || normalizeMatchValue(item.trait) === desiredTrait;
+      if ((sameId || sameName) && levelMatches && traitMatches) {
+        return item;
+      }
+      if (sameId && !fallbackById) {
+        fallbackById = item;
+        continue;
+      }
+      if (sameName && !fallbackByName) {
+        fallbackByName = item;
+      }
+    }
+    return fallbackById || fallbackByName || null;
+  };
+
   const flashAdded = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
     const root = dom.lista || document;
@@ -885,11 +925,6 @@ function initIndex() {
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
     const compact = storeHelper.getCompactEntries(store);
-    const charByName = new Map();
-    charList.forEach(item => {
-      if (!item || !item.namn) return;
-      if (!charByName.has(item.namn)) charByName.set(item.namn, item);
-    });
     const cats = {};
     const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
@@ -962,16 +997,25 @@ function initIndex() {
           }
           return;
         }
-        const charEntry = charByName.get(p.namn);
+        let charEntry = findMatchingListEntry(charList, p) || null;
         const levelStr = typeof charEntry?.nivå === 'string' ? charEntry.nivå.trim() : '';
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
         const charLevel = !isEx && levelStr ? levelStr : null;
-        const inChar = isEx ? false : !!charEntry;
         const curLvl = charLevel
           || LVL.find(l => p.nivåer?.[l]) || 'Novis';
         const availLvls = LVL.filter(l => p.nivåer?.[l]);
         const hasAnyLevel = availLvls.length > 0;
         const hasLevelSelect = availLvls.length > 1;
+        if (curLvl != null) {
+          const matchOpts = { level: curLvl };
+          const traitSource = charEntry && Object.prototype.hasOwnProperty.call(charEntry, 'trait')
+            ? charEntry.trait
+            : (Object.prototype.hasOwnProperty.call(p, 'trait') ? p.trait : undefined);
+          if (traitSource !== undefined) matchOpts.trait = traitSource;
+          const refinedEntry = findMatchingListEntry(charList, p, matchOpts);
+          if (refinedEntry) charEntry = refinedEntry;
+        }
+        const inChar = isEx ? false : !!charEntry;
         const levelOptionsHtml = hasLevelSelect
           ? availLvls.map(l => {
               const short = levelLetter(l);
@@ -1062,7 +1106,7 @@ function initIndex() {
         }
         let spec = null;
         if (p.namn === 'Monsterlärd') {
-          spec = charByName.get('Monsterlärd')?.trait || null;
+          spec = charEntry?.trait || null;
           if (spec) {
             const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
             cardDesc += block;
@@ -1418,14 +1462,10 @@ function initIndex() {
 
     cards.forEach(card => {
       const traitKey = card.dataset.trait || null;
-      const cardCharEntry = charList.find(item => {
-        if (!item || item.namn !== entry.namn) return false;
-        const itemTrait = item.trait || null;
-        if (traitKey) return itemTrait === traitKey;
-        return !itemTrait;
-      }) || null;
+      const baseMatchOpts = {};
+      if (traitKey !== null) baseMatchOpts.trait = traitKey;
+      let cardCharEntry = isInventory ? null : findMatchingListEntry(charList, entry, baseMatchOpts) || null;
       const isException = entry.namn === 'Exceptionellt karaktärsdrag';
-      const inChar = isException ? false : !!cardCharEntry;
       let curLvl = null;
       if (cardCharEntry?.nivå) curLvl = String(cardCharEntry.nivå);
       if (!curLvl) {
@@ -1435,6 +1475,13 @@ function initIndex() {
       if (!curLvl) {
         curLvl = LVL.find(l => entry.nivåer?.[l]) || 'Novis';
       }
+      if (!isInventory) {
+        const refineOpts = { ...baseMatchOpts };
+        if (curLvl != null) refineOpts.level = curLvl;
+        const refinedEntry = findMatchingListEntry(charList, entry, refineOpts);
+        if (refinedEntry) cardCharEntry = refinedEntry;
+      }
+      const inChar = isException ? false : !!cardCharEntry;
       let xpVal = null;
       if (!isInventory && !isEmployment(entry) && !isService(entry)) {
         xpVal = storeHelper.calcEntryDisplayXP(entry, charList, { xpSource: cardCharEntry, level: curLvl });
