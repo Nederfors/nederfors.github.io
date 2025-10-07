@@ -1531,7 +1531,7 @@ function initIndex() {
 
   /* första render */
   if (pendingSearch) {
-    applyIndexSearchTerm(pendingSearch);
+    handleIndexSearchSubmit(pendingSearch);
   } else {
     scheduleRenderList();
     activeTags();
