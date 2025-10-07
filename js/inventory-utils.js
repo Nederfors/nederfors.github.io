@@ -2808,7 +2808,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (allowQual) buttonParts.push(`<button data-act="addQual" class="char-btn">${icon('addqual')}</button>`);
       if (allowQual) buttonParts.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
       if (isArtifact) buttonParts.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
-      buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}">${icon('free')}</button>`);
+      buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
       if (isVehicle) {
         buttonParts.push(
           `<button data-act="vehicleLoad" class="char-btn icon icon-only" aria-label="Lasta i fordon">${icon('arrow-down')}</button>`,
@@ -2953,7 +2953,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         if (cIsArtifact) cButtons.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
 
         const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
-        cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}">${icon('free')}</button>`);
+        cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
 
         const cBadge = childRow.qty > 1 ? `<span class="count-badge">×${childRow.qty}</span>` : '';
         const cPriceText = formatMoney(calcRowCost(childRow, forgeLvl, alcLevel, artLevel));
@@ -3753,15 +3753,24 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       // "free" ökar gratis-räknaren (loopar när den nått max)
       if (act === 'free') {
         if (row) {
-          let newGratis = Number(row.gratis || 0) + 1;
-          if (newGratis > row.qty) newGratis = 0;
+          const shouldClearGratis = e.shiftKey || e.ctrlKey || e.metaKey || e.altKey;
+          const currentGratis = Number(row.gratis || 0);
+          let newGratis;
+
+          if (shouldClearGratis) {
+            if (!currentGratis) return;
+            newGratis = 0;
+          } else {
+            newGratis = currentGratis + 1;
+            if (newGratis > row.qty) newGratis = 0;
+          }
 
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
           if (
             perkActive &&
             row.perk === 'Välutrustad' &&
-            newGratis < (row.gratis || 0) &&
+            newGratis < currentGratis &&
             newGratis < (row.perkGratis || 0)
           ) {
             if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) {

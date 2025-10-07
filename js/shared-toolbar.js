@@ -1320,7 +1320,7 @@ class SharedToolbar extends HTMLElement {
               <li>Info: Visa detaljer.</li>
               <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
               <li>${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.</li>
-              <li>${icon('free')} Gör föremål gratis. ${(icon('active') || '💔')} Visa konflikter.</li>
+              <li>${icon('free')} Gör föremål gratis (Shift-klick tar bort gratis). ${(icon('active') || '💔')} Visa konflikter.</li>
               <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
               <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
               <li>${icon('remove')} Ta bort posten helt.</li>
