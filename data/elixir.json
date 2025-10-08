@@ -1325,7 +1325,7 @@
 "namn": "Pysslingblod",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Novis": "En prilligt söt brygd som får världen att växa. Drickaren krymper till halv storlek under en scen, får +5 Diskret och +5 Kvick, men –5 Stark vilket även påverkar Tålighet. Förvandlingen river i själen och ger 1T4 temporär korruption."
+"Novis": "En prilligt söt brygd som får världen att växa. Drickaren krymper till halv storlek under en scen, får +5 Diskret och +5 Kvick, men –5 Stark och -5 i maximal Tålighet (kan gå under 10). Förvandlingen river i själen och ger 1T4 temporär korruption."
 },
 "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 0.5 }
