@@ -1762,6 +1762,13 @@ function defaultTraits() {
     return getDisadvantages(list).length;
   }
 
+  function entryMembershipKey(entry) {
+    const sig = entrySignature(entry);
+    if (sig) return sig;
+    if (entry && entry.__uid) return `uid:${entry.__uid}`;
+    return null;
+  }
+
   function disadvantagesWithXP(list) {
     const disadvantages = getDisadvantages(list);
     if (disadvantages.length <= 5) return disadvantages;
@@ -1839,8 +1846,19 @@ function defaultTraits() {
       const hasDark = (list || []).some(x => x.namn === 'Mörkt blod');
       if (entry.namn === 'Mörkt förflutet' && hasDark) return 0;
       const disXp = disadvantagesWithXP(list || []);
-      if ((list || []).includes(entry)) {
-        return disXp.includes(entry) ? -5 : 0;
+      const entries = Array.isArray(list) ? list : [];
+      const entryKey = entryMembershipKey(entry);
+      if (entries.includes(entry)) {
+        if (disXp.includes(entry)) return -5;
+        if (entryKey) {
+          const hasKey = disXp.some(item => entryMembershipKey(item) === entryKey);
+          if (hasKey) return -5;
+        }
+        return 0;
+      }
+      if (entryKey) {
+        const hasKey = disXp.some(item => entryMembershipKey(item) === entryKey);
+        if (hasKey) return -5;
       }
       return disXp.length < 5 ? -5 : 0;
     }
@@ -1911,11 +1929,16 @@ function defaultTraits() {
       }
       if (stackKey.startsWith('dis:')) {
         const eligible = disadvantagesWithXP(baseList);
-        const eligibleSet = new Set(eligible);
-        const eligibleCount = stackEntries.reduce(
-          (count, item) => count + (eligibleSet.has(item) ? 1 : 0),
-          0
+        const eligibleSet = new Set(
+          eligible
+            .map(entryMembershipKey)
+            .filter(Boolean)
         );
+        const eligibleCount = stackEntries.reduce((count, item) => {
+          const key = entryMembershipKey(item);
+          if (!key) return count;
+          return count + (eligibleSet.has(key) ? 1 : 0);
+        }, 0);
         const totalEligible = eligible.length;
         const extra = previewBonus && totalEligible < 5 ? 1 : 0;
         return (eligibleCount + extra) * -ADVANTAGE_STEP_COST;
