@@ -92,6 +92,129 @@
 
   const DARK_BLOOD_TRAITS = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
 
+  let entryUidCounter = 0;
+
+  function nextEntryUid() {
+    entryUidCounter += 1;
+    const counterPart = entryUidCounter.toString(36);
+    const timePart = Date.now().toString(36);
+    return `ent-${timePart}-${counterPart}`;
+  }
+
+  function coerceOrderValue(value) {
+    if (value === undefined || value === null) return null;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function entrySignature(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const parts = [];
+    const id = entry.id !== undefined ? String(entry.id).trim() : '';
+    const name = entry.namn !== undefined ? String(entry.namn).trim() : '';
+    if (id) parts.push(`id:${id.toLowerCase()}`);
+    if (name) parts.push(`name:${name.toLowerCase()}`);
+    if (entry.trait !== undefined && entry.trait !== null) {
+      parts.push(`trait:${String(entry.trait).trim().toLowerCase()}`);
+    }
+    if (entry.race !== undefined && entry.race !== null) {
+      parts.push(`race:${String(entry.race).trim().toLowerCase()}`);
+    }
+    if (entry.form !== undefined && entry.form !== null) {
+      parts.push(`form:${String(entry.form).trim().toLowerCase()}`);
+    }
+    if (entry.nivå !== undefined && entry.nivå !== null) {
+      parts.push(`level:${String(entry.nivå).trim().toLowerCase()}`);
+    }
+    return parts.join('|');
+  }
+
+  function ensureListEntryMetadata(store, list) {
+    if (!store?.current) return;
+    const data = store.data?.[store.current];
+    if (!data) return;
+    let counter = coerceOrderValue(data.entryOrderCounter) || 0;
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (!entry.__uid) entry.__uid = nextEntryUid();
+      const coerced = coerceOrderValue(entry.__order);
+      if (coerced === null) {
+        counter += 1;
+        entry.__order = counter;
+      } else {
+        entry.__order = coerced;
+        if (coerced > counter) counter = coerced;
+      }
+    });
+    data.entryOrderCounter = counter;
+  }
+
+  function syncEntryMetadataFromPrev(store, prevList, nextList) {
+    if (!store?.current) return;
+    const data = store.data?.[store.current];
+    if (!data) return;
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const next = Array.isArray(nextList) ? nextList : [];
+
+    const queueBySig = new Map();
+    prev.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const sig = entrySignature(entry);
+      if (!queueBySig.has(sig)) queueBySig.set(sig, []);
+      queueBySig.get(sig).push(entry);
+    });
+    queueBySig.forEach(arr => arr.sort((a, b) => {
+      const aOrder = coerceOrderValue(a.__order) || 0;
+      const bOrder = coerceOrderValue(b.__order) || 0;
+      return aOrder - bOrder;
+    }));
+
+    let counter = coerceOrderValue(data.entryOrderCounter) || 0;
+    next.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const sig = entrySignature(entry);
+      let matched = null;
+      const queue = queueBySig.get(sig);
+      if (queue && queue.length) {
+        matched = queue.shift();
+      }
+      if (matched) {
+        if (matched.__uid && entry.__uid !== matched.__uid) entry.__uid = matched.__uid;
+        const matchedOrder = coerceOrderValue(matched.__order);
+        if (matchedOrder !== null) entry.__order = matchedOrder;
+      }
+      if (!entry.__uid) entry.__uid = nextEntryUid();
+      const coerced = coerceOrderValue(entry.__order);
+      if (coerced === null) {
+        counter += 1;
+        entry.__order = counter;
+      } else {
+        entry.__order = coerced;
+        if (coerced > counter) counter = coerced;
+      }
+    });
+    data.entryOrderCounter = counter;
+  }
+
+  function initializeEntryMetadata(data) {
+    if (!data || typeof data !== 'object') return;
+    const list = Array.isArray(data.list) ? data.list : [];
+    let counter = coerceOrderValue(data.entryOrderCounter) || 0;
+    list.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (!entry.__uid) entry.__uid = nextEntryUid();
+      const coerced = coerceOrderValue(entry.__order);
+      if (coerced === null) {
+        counter += 1;
+        entry.__order = counter;
+      } else {
+        entry.__order = coerced;
+        if (coerced > counter) counter = coerced;
+      }
+    });
+    data.entryOrderCounter = counter;
+  }
+
   function moneyToO(...args) {
     const fn = global.moneyToO;
     if (typeof fn !== 'function') {
@@ -385,16 +508,18 @@
     }
     data.inventory = expandedInventory;
 
-    if (idMap.size && Array.isArray(data.revealedArtifacts)) {
-      const updatedArtifacts = data.revealedArtifacts.map(n => idMap.get(n) || n);
-      if (JSON.stringify(updatedArtifacts) !== JSON.stringify(data.revealedArtifacts)) {
-        data.revealedArtifacts = [...new Set(updatedArtifacts)];
-        mutated = true;
+      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+        const updatedArtifacts = data.revealedArtifacts.map(n => idMap.get(n) || n);
+        if (JSON.stringify(updatedArtifacts) !== JSON.stringify(data.revealedArtifacts)) {
+          data.revealedArtifacts = [...new Set(updatedArtifacts)];
+          mutated = true;
+        }
       }
-    }
 
-    return { data, mutated };
-  }
+      initializeEntryMetadata(data);
+
+      return { data, mutated };
+    }
 
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
@@ -821,7 +946,9 @@
 
   function setCurrentList(store, list) {
     if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
     const prev = store.data[store.current]?.list || [];
+    ensureListEntryMetadata(store, prev);
     // Hantera undertryckning av Mörkt förflutet när Mörkt blod finns kvar
     try {
       const hadDark = prev.some(x => x.namn === 'Mörkt blod');
@@ -844,7 +971,7 @@
     enforceDwarf(list);
     enforcePackAnimal(list);
     applyHamnskifteTraits(store, list);
-    store.data[store.current] = store.data[store.current] || {};
+    syncEntryMetadataFromPrev(store, prev, list);
     store.data[store.current].list = list;
     const hadPriv = prev.some(x => x.namn === 'Privilegierad');
     const hasPriv = list.some(x => x.namn === 'Privilegierad');
@@ -1636,7 +1763,22 @@ function defaultTraits() {
   }
 
   function disadvantagesWithXP(list) {
-    return getDisadvantages(list).slice(0,5);
+    const disadvantages = getDisadvantages(list);
+    if (disadvantages.length <= 5) return disadvantages;
+    const sorted = disadvantages
+      .map((entry, index) => ({ entry, index }))
+      .sort((a, b) => {
+        const aOrder = coerceOrderValue(a.entry?.__order);
+        const bOrder = coerceOrderValue(b.entry?.__order);
+        if (aOrder !== null && bOrder !== null && aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+        if (aOrder !== null && bOrder === null) return -1;
+        if (bOrder !== null && aOrder === null) return 1;
+        return a.index - b.index;
+      })
+      .map(item => item.entry);
+    return sorted.slice(0, 5);
   }
 
   function getAdvantageKey(entry, types) {
@@ -1903,6 +2045,9 @@ function defaultTraits() {
           if (it.trait) row.t = it.trait;
           if (it.race) row.r = it.race;
           if (it.form) row.f = it.form;
+          if (it.__uid) row.u = it.__uid;
+          const orderVal = coerceOrderValue(it.__order);
+          if (orderVal !== null) row.o = orderVal;
           return row;
         }
       }
@@ -1922,6 +2067,9 @@ function defaultTraits() {
           if (it.t) base.trait = it.t;
           if (it.r) base.race = it.r;
           if (it.f) base.form = it.f;
+          if (it.u) base.__uid = it.u;
+          const orderVal = coerceOrderValue(it.o);
+          if (orderVal !== null) base.__order = orderVal;
           return base;
         }
       }
@@ -1935,6 +2083,9 @@ function defaultTraits() {
           if (it.t) base.trait = it.t;
           if (it.r) base.race = it.r;
           if (it.f) base.form = it.f;
+          if (it.u) base.__uid = it.u;
+          const orderVal = coerceOrderValue(it.o);
+          if (orderVal !== null) base.__order = orderVal;
           return base;
         }
       }
@@ -2210,6 +2361,7 @@ function defaultTraits() {
       if (!store.data[id].notes) {
         store.data[id].notes = defaultNotes();
       }
+      initializeEntryMetadata(store.data[id]);
       store.current = id;
       persistMeta(store);
       persistCharacter(store, id);
