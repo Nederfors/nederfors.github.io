@@ -1,6 +1,114 @@
 (function(window){
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 
+function computeIndexEntryXP(entry, list, options = {}) {
+  const defaults = {
+    allowInventory: true,
+    allowEmployment: true,
+    allowService: true,
+    forceDisplay: true,
+    label: 'Erf'
+  };
+  const xpOptions = { ...defaults, ...(options || {}) };
+  const baseList = Array.isArray(list) ? list.filter(Boolean) : [];
+  const workingList = baseList.slice();
+
+  const hasLevelOverride = Object.prototype.hasOwnProperty.call(xpOptions, 'level')
+    && xpOptions.level !== undefined
+    && xpOptions.level !== null
+    && xpOptions.level !== '';
+  const levelOverride = hasLevelOverride
+    ? xpOptions.level
+    : (entry && Object.prototype.hasOwnProperty.call(entry, 'nivå') ? entry.nivå : undefined);
+
+  const cloneEntryWithLevel = (src) => {
+    if (!src || typeof src !== 'object') return {};
+    const clone = { ...src };
+    if (hasLevelOverride) clone.nivå = levelOverride;
+    else if (levelOverride !== undefined && levelOverride !== null) clone.nivå = levelOverride;
+    return clone;
+  };
+
+  const ensureOrderValue = (listRef) => {
+    const orders = listRef
+      .map(item => Number(item?.__order))
+      .filter(value => Number.isFinite(value));
+    if (!orders.length) return listRef.length;
+    return Math.max(...orders) + 1;
+  };
+
+  const baseSource = xpOptions.xpSource || null;
+  let targetEntry = null;
+
+  if (baseSource && workingList.includes(baseSource)) {
+    if (hasLevelOverride && baseSource.nivå !== levelOverride) {
+      targetEntry = cloneEntryWithLevel(baseSource);
+      const idx = workingList.indexOf(baseSource);
+      if (idx !== -1) workingList[idx] = targetEntry;
+    } else {
+      targetEntry = baseSource;
+    }
+  } else if (baseSource && !workingList.includes(baseSource)) {
+    targetEntry = cloneEntryWithLevel(baseSource);
+    if (targetEntry.__order === undefined) {
+      targetEntry.__order = ensureOrderValue(workingList);
+    }
+    workingList.push(targetEntry);
+  } else {
+    targetEntry = cloneEntryWithLevel(entry || {});
+    if (targetEntry.__order === undefined) {
+      targetEntry.__order = ensureOrderValue(workingList);
+    }
+    workingList.push(targetEntry);
+  }
+
+  const helperOptions = {
+    ...xpOptions,
+    xpSource: targetEntry
+  };
+  if (hasLevelOverride) helperOptions.level = levelOverride;
+  else delete helperOptions.level;
+
+  const xpHelper = window.entryXp?.buildDisplay || window.entryXp?.compute;
+  if (typeof xpHelper === 'function') {
+    const result = xpHelper(targetEntry, workingList, helperOptions) || {};
+    return {
+      ...result,
+      label: result.label ?? helperOptions.label
+    };
+  }
+
+  if (window.storeHelper && typeof window.storeHelper.calcEntryDisplayXP === 'function') {
+    const calcOpts = {};
+    if (hasLevelOverride) calcOpts.level = levelOverride;
+    const rawValue = window.storeHelper.calcEntryDisplayXP(
+      targetEntry,
+      workingList,
+      Object.keys(calcOpts).length ? calcOpts : undefined
+    );
+    const rawText = window.storeHelper.formatEntryXPText(targetEntry, rawValue);
+    const shouldShow = helperOptions.forceDisplay || !!(rawText && String(rawText).trim());
+    const prefix = `${helperOptions.label}: `;
+    return {
+      value: rawValue,
+      text: rawText,
+      tagHtml: shouldShow ? `<span class="tag xp-cost">${prefix}${rawText}</span>` : '',
+      headerHtml: shouldShow ? `<span class="entry-xp-value">${prefix}${rawText}</span>` : '',
+      label: helperOptions.label,
+      shouldShow
+    };
+  }
+
+  return {
+    value: null,
+    text: '',
+    tagHtml: '',
+    headerHtml: '',
+    label: helperOptions.label,
+    shouldShow: false
+  };
+}
+
 function ensureToolbarControls(onReady) {
   const toolbar = document.querySelector('shared-toolbar');
   if (!toolbar) {
@@ -302,7 +410,39 @@ function initIndex() {
 
   const normalizeMatchValue = (val) => {
     if (val === undefined || val === null) return null;
-    return typeof val === 'string' ? val.trim() : val;
+    if (typeof val === 'string') return val.trim();
+    if (typeof val === 'number') return String(val);
+    return val;
+  };
+
+  const normalizeId = (val) => {
+    if (val === undefined || val === null) return null;
+    if (typeof val === 'number') return String(val);
+    return String(val).trim();
+  };
+
+  const entrySignature = (ent) => {
+    if (!ent || typeof ent !== 'object') return '';
+    const norm = value => String(value ?? '').trim().toLowerCase();
+    const parts = [];
+    if (ent.id !== undefined && ent.id !== null && String(ent.id).trim() !== '') {
+      parts.push(`id:${norm(ent.id)}`);
+    } else if (ent.namn !== undefined && ent.namn !== null) {
+      parts.push(`name:${norm(ent.namn)}`);
+    }
+    if (ent.trait !== undefined && ent.trait !== null && String(ent.trait).trim() !== '') {
+      parts.push(`trait:${norm(ent.trait)}`);
+    }
+    if (ent.race !== undefined && ent.race !== null && String(ent.race).trim() !== '') {
+      parts.push(`race:${norm(ent.race)}`);
+    }
+    if (ent.form !== undefined && ent.form !== null && String(ent.form).trim() !== '') {
+      parts.push(`form:${norm(ent.form)}`);
+    }
+    if (ent.nivå !== undefined && ent.nivå !== null && String(ent.nivå).trim() !== '') {
+      parts.push(`level:${norm(ent.nivå)}`);
+    }
+    return parts.join('|');
   };
 
   const findMatchingListEntry = (list, entry, options = {}) => {
@@ -317,13 +457,21 @@ function initIndex() {
     const desiredTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
       ? normalizeMatchValue(options.trait)
       : normalizeMatchValue(entry.trait);
+    const targetSig = entrySignature({
+      ...entry,
+      trait: Object.prototype.hasOwnProperty.call(options, 'trait') ? options.trait : entry.trait,
+      nivå: Object.prototype.hasOwnProperty.call(options, 'level') ? options.level : entry.nivå
+    });
     let fallbackById = null;
     let fallbackByName = null;
+    let fallbackBySig = null;
     for (const item of list) {
       if (!item || typeof item !== 'object') continue;
       if (item === entry) return item;
-      const sameId = entry.id != null && item.id != null && item.id === entry.id;
-      const sameName = item.namn && entry.namn && item.namn === entry.namn;
+      const sameId = entry.id != null && item.id != null
+        && normalizeId(item.id) === normalizeId(entry.id);
+      const sameName = item.namn && entry.namn
+        && String(item.namn).trim() === String(entry.namn).trim();
       const levelMatches = !wantsLevel || normalizeMatchValue(item.nivå) === desiredLevel;
       const traitMatches = !wantsTrait || normalizeMatchValue(item.trait) === desiredTrait;
       if ((sameId || sameName) && levelMatches && traitMatches) {
@@ -336,8 +484,11 @@ function initIndex() {
       if (sameName && !fallbackByName) {
         fallbackByName = item;
       }
+      if (!fallbackBySig && targetSig && targetSig === entrySignature(item)) {
+        fallbackBySig = item;
+      }
     }
-    return fallbackById || fallbackByName || null;
+    return fallbackById || fallbackByName || fallbackBySig || null;
   };
 
   const flashAdded = (name, trait) => {
@@ -1115,15 +1266,18 @@ function initIndex() {
         }
         let infoBodyHtml = desc;
         if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
-        const xpVal = (isInv(p) || isEmployment(p) || isService(p))
-          ? null
-          : storeHelper.calcEntryDisplayXP(p, charList, { xpSource: charEntry, level: curLvl });
-        let xpText = '';
-        if (xpVal != null) {
-          xpText = storeHelper.formatEntryXPText(p, xpVal);
+        const levelCapable = hasAnyLevel
+          || Object.prototype.hasOwnProperty.call(charEntry || {}, 'nivå')
+          || Object.prototype.hasOwnProperty.call(p, 'nivå');
+        let xpInfo = null;
+        if (!(isInv(p) || isEmployment(p) || isService(p))) {
+          const xpOptions = {};
+          if (charEntry) xpOptions.xpSource = charEntry;
+          if (levelCapable) xpOptions.level = curLvl;
+          xpInfo = computeIndexEntryXP(p, charList, xpOptions);
         }
-        if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
-        const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
+        const xpVal = xpInfo?.value ?? null;
+        const xpTag = xpInfo?.tagHtml || '';
         const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
         const filterTagData = [];
         const primaryTagParts = [];
@@ -1211,7 +1365,7 @@ function initIndex() {
         const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
           ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
           : '';
-        const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="entry-xp-value">Erf: ${xpText}</span>` : '';
+        const xpHtml = xpInfo?.headerHtml || '';
         const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
         // Compact meta badges (P/V/level) using short labels for mobile space
         const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
@@ -1228,10 +1382,14 @@ function initIndex() {
         if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
         if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
         const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
+        const infoSections = (isElityrke(p) && typeof buildElityrkeInfoSections === 'function')
+          ? buildElityrkeInfoSections(p)
+          : [];
         const infoPanelHtml = buildInfoPanelHtml({
           tagsHtml: infoTagsHtml,
           bodyHtml: infoBodyHtml,
-          meta: infoMeta
+          meta: infoMeta,
+          sections: infoSections
         });
         const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
         const isInventoryEntry = isInv(p);
@@ -1256,7 +1414,7 @@ function initIndex() {
           ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
           : '';
         const eliteBtn = isElityrke(p)
-          ? `<button class="char-btn" data-elite-req="${p.namn}">🏋🏻‍♂️</button>`
+          ? `<button class="char-btn icon icon-only" data-elite-req="${p.namn}" aria-label="Lägg till elityrke med krav">${icon('elityrke')}</button>`
           : '';
         const allowAdd = !(isService(p) || isEmployment(p));
         const titleActions = [];
@@ -1482,22 +1640,37 @@ function initIndex() {
         if (refinedEntry) cardCharEntry = refinedEntry;
       }
       const inChar = isException ? false : !!cardCharEntry;
-      let xpVal = null;
+      let xpInfo = null;
       if (!isInventory && !isEmployment(entry) && !isService(entry)) {
-        xpVal = storeHelper.calcEntryDisplayXP(entry, charList, { xpSource: cardCharEntry, level: curLvl });
+        const xpOptions = {};
+        if (cardCharEntry) xpOptions.xpSource = cardCharEntry;
+        if (curLvl != null) xpOptions.level = curLvl;
+        xpInfo = computeIndexEntryXP(entry, charList, xpOptions);
       }
-      let xpText = '';
-      if (xpVal != null) {
-        xpText = storeHelper.formatEntryXPText(entry, xpVal);
-      }
-      if (xpVal != null) card.dataset.xp = xpVal;
+      if (xpInfo && xpInfo.value != null) card.dataset.xp = xpInfo.value;
       else delete card.dataset.xp;
       const xpSpan = card.querySelector('.entry-header-xp .entry-xp-value');
-      if (xpSpan) xpSpan.textContent = `Erf: ${xpText}`;
+      if (xpSpan) {
+        if (xpInfo && xpInfo.headerHtml) {
+          xpSpan.textContent = `${xpInfo.label}: ${xpInfo.text}`;
+        } else {
+          xpSpan.textContent = '';
+        }
+      }
       const infoBtn = card.querySelector('button[data-info]');
       if (infoBtn?.dataset.info) {
         const infoHtml = decodeURIComponent(infoBtn.dataset.info);
-        const newInfo = infoHtml.replace(/(<span class="tag xp-cost">)Erf: [^<]*/, `$1Erf: ${xpText}`);
+        const xpTagHtml = xpInfo?.tagHtml || '';
+        let newInfo = infoHtml;
+        if (xpTagHtml) {
+          if (infoHtml.includes('class="tag xp-cost"')) {
+            newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>/, xpTagHtml);
+          } else {
+            newInfo = infoHtml.replace(/(<div class="tags">)/, `$1${xpTagHtml}`);
+          }
+        } else {
+          newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>\s*/g, '');
+        }
         infoBtn.dataset.info = encodeURIComponent(newInfo);
       }
 
@@ -2497,21 +2670,34 @@ function initIndex() {
     const p = getEntries().find(x=>x.namn===name);
     if(!p) return;
     const lvl = select.value;
-    const xpVal = (isInv(p) || isEmployment(p) || isService(p))
+    const xpInfo = (isInv(p) || isEmployment(p) || isService(p))
       ? null
-      : storeHelper.calcEntryDisplayXP(p, list, { level: lvl });
-    let xpText = '';
-    if (xpVal != null) {
-      xpText = storeHelper.formatEntryXPText(p, xpVal);
-    }
+      : computeIndexEntryXP(p, list, { level: lvl });
+    const xpVal = xpInfo?.value ?? null;
     const liEl = select.closest('li');
     if (xpVal != null) liEl.dataset.xp = xpVal; else delete liEl.dataset.xp;
     const xpSpan = liEl.querySelector('.entry-header-xp .entry-xp-value');
-    if (xpSpan) xpSpan.textContent = `Erf: ${xpText}`;
+    if (xpSpan) {
+      if (xpInfo && xpInfo.headerHtml) {
+        xpSpan.textContent = `${xpInfo.label}: ${xpInfo.text}`;
+      } else {
+        xpSpan.textContent = '';
+      }
+    }
     const infoBtn = liEl.querySelector('button[data-info]');
     if (infoBtn?.dataset.info) {
       const infoHtml = decodeURIComponent(infoBtn.dataset.info);
-      const newInfo = infoHtml.replace(/(<span class="tag xp-cost">)Erf: [^<]*/, `$1Erf: ${xpText}`);
+      const xpTagHtml = xpInfo?.tagHtml || '';
+      let newInfo = infoHtml;
+      if (xpTagHtml) {
+        if (infoHtml.includes('class="tag xp-cost"')) {
+          newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>/, xpTagHtml);
+        } else {
+          newInfo = infoHtml.replace(/(<div class="tags">)/, `$1${xpTagHtml}`);
+        }
+      } else {
+        newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>\s*/g, '');
+      }
       infoBtn.dataset.info = encodeURIComponent(newInfo);
     }
     window.entryCardFactory?.syncLevelControl?.(select);

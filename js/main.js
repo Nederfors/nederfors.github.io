@@ -1163,10 +1163,6 @@ function yrkeInfoHtml(p) {
   if (isElityrke(p)) {
     const parts = [];
     if (extra) parts.push(extra);
-    if (p.krav_formagor) parts.push(`<p><strong>Krav på förmågor (varav minst en på mästarnivå):</strong> ${p.krav_formagor}</p>`);
-    if ((p.Elityrkesförmågor || []).length) parts.push(`<p><strong>Elityrkesförmågor:</strong> ${p.Elityrkesförmågor.join(', ')}</p>`);
-    if ((p.mojliga_fordelar || []).length) parts.push(`<p><strong>Möjliga fördelar:</strong> ${p.mojliga_fordelar.join(', ')}</p>`);
-    if ((p.tankbara_nackdelar || []).length) parts.push(`<p><strong>Tänkbara nackdelar:</strong> ${p.tankbara_nackdelar.join(', ')}</p>`);
     if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
     return wrapBlocks(parts);
   }
@@ -1179,6 +1175,207 @@ function yrkeInfoHtml(p) {
   }
   if ((p.lampliga_formagor || []).length) parts.push(`<p><strong>Lämpliga förmågor:</strong> ${(p.lampliga_formagor || []).join(', ')}</p>`);
   return wrapBlocks(parts);
+}
+
+function buildElityrkeInfoSections(p) {
+  if (!p || !isElityrke(p)) return [];
+
+  const utils = window.eliteUtils || {};
+  const DBIndex = window.DBIndex || {};
+  const DBList = Array.isArray(window.DB) ? window.DB : [];
+  const abilityRenderer = typeof abilityHtml === 'function' ? abilityHtml : null;
+
+  const safe = (value) => String(value ?? '')
+    .replace(/[&<>"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[m] || m))
+    .replace(/'/g, '&#39;');
+
+  const renderTagList = (arr) => {
+    const list = Array.isArray(arr) ? arr : [];
+    if (!list.length) return '';
+    const items = list
+      .map(item => safe(item))
+      .filter(Boolean)
+      .map(item => `<span class="tag">${item}</span>`);
+    return items.length ? `<div class="tags elite-tag-list">${items.join('')}</div>` : '';
+  };
+
+  const findEntry = (name) => {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) return null;
+    if (DBIndex && DBIndex[trimmed]) return DBIndex[trimmed];
+    const withoutSuffix = trimmed.replace(/\s*\(([^)]+)\)$/u, '').trim();
+    if (withoutSuffix && DBIndex[withoutSuffix]) return DBIndex[withoutSuffix];
+    const lower = trimmed.toLowerCase();
+    const match = DBList.find(ent => String(ent?.namn || '').toLowerCase() === lower);
+    if (match) return match;
+    if (withoutSuffix) {
+      const match2 = DBList.find(ent => String(ent?.namn || '').toLowerCase() === withoutSuffix.toLowerCase());
+      if (match2) return match2;
+    }
+    return null;
+  };
+
+  const renderAbilityDetails = (lookupName, options = {}) => {
+    if (!lookupName) return '';
+    const displayName = options.displayName ? String(options.displayName).trim() : lookupName;
+    const entry = findEntry(lookupName);
+    const tags = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ
+          .map(tag => safe(tag))
+          .filter(Boolean)
+          .map(tag => `<span class="tag">${tag}</span>`)
+      : [];
+    const tagsHtml = tags.length ? `<div class="tags elite-ability-tags">${tags.join('')}</div>` : '';
+    const body = entry && abilityRenderer
+      ? abilityRenderer(entry)
+      : `<p class="elite-ability-missing-text">Kan inte hitta beskrivning för <em>${safe(displayName)}</em> i databasen.</p>`;
+    const missingClass = entry ? '' : ' missing';
+    const openAttr = options.defaultOpen ? ' open' : '';
+    return `
+      <details class="elite-ability-details${missingClass}"${openAttr}>
+        <summary>${safe(displayName)}</summary>
+        <div class="elite-ability-body">
+          ${tagsHtml}
+          ${body}
+        </div>
+      </details>
+    `.trim();
+  };
+
+  const extractGroupMeta = (group) => {
+    const names = [];
+    const displayMap = new Map();
+    const seen = new Set();
+    let anyMystic = false;
+    let anyRitual = false;
+    const expand = typeof utils.expandRequirement === 'function'
+      ? utils.expandRequirement
+      : (raw) => [{ names: [raw] }];
+    group.forEach(raw => {
+      const abilityPart = String(raw || '').split(';')[0].trim();
+      const target = abilityPart || raw;
+      expand(target).forEach(variant => {
+        if (variant?.anyMystic) {
+          anyMystic = true;
+          return;
+        }
+        if (variant?.anyRitual) {
+          anyRitual = true;
+          return;
+        }
+        (variant?.names || []).forEach(nm => {
+          const trimmed = String(nm || '').trim();
+          if (!trimmed || seen.has(trimmed)) return;
+          seen.add(trimmed);
+          names.push(trimmed);
+          if (!displayMap.has(trimmed)) {
+            displayMap.set(trimmed, abilityPart || raw);
+          }
+        });
+      });
+    });
+    return { names, anyMystic, anyRitual, displayMap };
+  };
+
+  const groups = (p.krav_formagor && typeof utils.parseElityrkeRequirements === 'function')
+    ? utils.parseElityrkeRequirements(p.krav_formagor)
+    : [];
+
+  const blocks = [];
+
+  if (p.krav_formagor) {
+    if (groups.length) {
+      const groupHtml = groups.map((group, idx) => {
+        const optionsList = (Array.isArray(group) ? group : [])
+          .map(opt => String(opt || '').trim())
+          .filter(Boolean);
+        if (!optionsList.length) return '';
+        const { names, anyMystic, anyRitual, displayMap } = extractGroupMeta(optionsList);
+        const notes = [];
+        if (anyMystic) notes.push('Valfri mystisk kraft – öppna listan över Mystiska krafter för detaljer.');
+        if (anyRitual) notes.push('Valfri ritual – öppna listan över Ritualer för detaljer.');
+        const abilityBlocks = names.map((name, idx) => renderAbilityDetails(name, {
+          displayName: displayMap.get(name) || name,
+          defaultOpen: names.length === 1 && idx === 0
+        })).filter(Boolean);
+        const abilitySection = abilityBlocks.length
+          ? `<div class="elite-ability-stack">${abilityBlocks.join('')}</div>`
+          : '';
+        const notesHtml = notes.length
+          ? notes.map(text => `<p class="elite-req-note">${safe(text)}</p>`).join('')
+          : '';
+        let hintText = '';
+        if (abilityBlocks.length > 1) {
+          hintText = '<p class="elite-req-hint">Välj minst en av alternativen nedan:</p>';
+        } else if (abilityBlocks.length === 1) {
+          hintText = '<p class="elite-req-hint">Obligatorisk förmåga:</p>';
+        }
+        return `
+          <section class="elite-req-group">
+            ${hintText}
+            ${abilitySection}
+            ${notesHtml}
+          </section>
+        `.trim();
+      }).filter(Boolean);
+
+      const requirementsContent = [
+        ...groupHtml,
+        '<p class="elite-req-note elite-req-master">Minst en vald förmåga måste vara på mästarnivå.</p>'
+      ].join('');
+
+      blocks.push(`<details class="elite-info-details" open><summary>Krav på förmågor</summary>${requirementsContent}</details>`);
+    } else {
+      const fallback = `<p class="elite-req-text">${safe(p.krav_formagor)}</p><p class="elite-req-note elite-req-master">Minst en vald förmåga måste vara på mästarnivå.</p>`;
+      blocks.push(`<details class="elite-info-details" open><summary>Krav på förmågor</summary>${fallback}</details>`);
+    }
+  }
+
+  const eliteAbilities = Array.isArray(p.Elityrkesförmågor) ? p.Elityrkesförmågor : [];
+  if (eliteAbilities.length) {
+    const abilityBlocks = eliteAbilities
+      .map(raw => {
+        const display = String(raw || '').trim();
+        if (!display) return '';
+        const lookup = display.replace(/\s*\(([^)]+)\)$/u, '').trim() || display;
+        let block = renderAbilityDetails(lookup, { displayName: display, defaultOpen: eliteAbilities.length === 1 });
+        if (block.includes('elite-ability-missing-text')) {
+          const inner = display.includes('(') ? display.slice(display.indexOf('(') + 1, display.lastIndexOf(')')).trim() : '';
+          if (inner) {
+            block = renderAbilityDetails(inner, { displayName: display, defaultOpen: eliteAbilities.length === 1 });
+          }
+        }
+        return block;
+      })
+      .filter(Boolean);
+    const listHtml = abilityBlocks.length
+      ? `<div class="elite-ability-stack">${abilityBlocks.join('')}</div>`
+      : renderTagList(eliteAbilities);
+    blocks.push(`<details class="elite-info-details" open><summary>Elityrkesförmågor</summary>${listHtml}</details>`);
+  }
+
+  if ((p.mojliga_fordelar || []).length) {
+    const listHtml = renderTagList(p.mojliga_fordelar);
+    blocks.push(`<details class="elite-info-details"><summary>Möjliga fördelar</summary>${listHtml}</details>`);
+  }
+
+  if ((p.tankbara_nackdelar || []).length) {
+    const listHtml = renderTagList(p.tankbara_nackdelar);
+    blocks.push(`<details class="elite-info-details"><summary>Tänkbara nackdelar</summary>${listHtml}</details>`);
+  }
+
+  if (!blocks.length) return [];
+
+  return [{
+    title: 'Elityrkesdetaljer',
+    className: 'info-panel-elite',
+    content: `<div class="elite-info-sections">${blocks.join('')}</div>`
+  }];
 }
 
 /* ---------- Popup för kvaliteter ---------- */

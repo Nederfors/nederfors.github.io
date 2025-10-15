@@ -1276,11 +1276,23 @@ function initCharacter() {
             return false;
           }) || null;
         }
-        const xpOptions = xpSourceMatch ? { xpSource: xpSourceMatch } : undefined;
-        const xpVal = storeHelper.calcEntryDisplayXP(p, curList, xpOptions);
-        let xpText = storeHelper.formatEntryXPText(p, xpVal);
-        if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
-        const xpTag = `<span class="tag xp-cost">Erf: ${xpText}</span>`;
+        const xpHelper = window.entryXp?.buildDisplay || window.entryXp?.compute;
+        const xpInfo = typeof xpHelper === 'function'
+          ? xpHelper(p, curList, {
+              xpSource: xpSourceMatch,
+              allowInventory: true,
+              allowEmployment: true,
+              allowService: true,
+              forceDisplay: true
+            })
+          : null;
+        const fallbackOpts = xpSourceMatch ? { xpSource: xpSourceMatch } : undefined;
+        const xpVal = xpInfo ? xpInfo.value : storeHelper.calcEntryDisplayXP(p, curList, fallbackOpts);
+        let xpText = xpInfo ? xpInfo.text : storeHelper.formatEntryXPText(p, xpVal);
+        if (!xpInfo && isElityrke(p)) {
+          xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
+        }
+        const xpTag = xpInfo?.tagHtml || `<span class="tag xp-cost">Erf: ${xpText}</span>`;
         const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
         const filterTagData = [];
         const primaryTagParts = [];
@@ -1360,12 +1372,16 @@ function initCharacter() {
         const infoBoxHtml = infoBoxContentHtml
           ? `<div class="card-info-box">${infoBoxContentHtml}</div>`
           : '';
-        const xpHtml = `<span class="entry-xp-value">Erf: ${xpText}</span>`;
+        const xpHtml = xpInfo?.headerHtml || `<span class="entry-xp-value">Erf: ${xpText}</span>`;
         const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
+        const infoSections = (isElityrke(p) && typeof buildElityrkeInfoSections === 'function')
+          ? buildElityrkeInfoSections(p)
+          : [];
         const infoPanelHtml = buildInfoPanelHtml({
           tagsHtml: infoTagsHtml,
           bodyHtml: infoBodyHtml,
-          meta: infoMeta
+          meta: infoMeta,
+          sections: infoSections
         });
         const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
 

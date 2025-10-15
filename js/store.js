@@ -1847,20 +1847,11 @@ function defaultTraits() {
       if (entry.namn === 'Mörkt förflutet' && hasDark) return 0;
       const disXp = disadvantagesWithXP(list || []);
       const entries = Array.isArray(list) ? list : [];
-      const entryKey = entryMembershipKey(entry);
       if (entries.includes(entry)) {
-        if (disXp.includes(entry)) return -5;
-        if (entryKey) {
-          const hasKey = disXp.some(item => entryMembershipKey(item) === entryKey);
-          if (hasKey) return -5;
-        }
+        if (disXp.includes(entry)) return -ADVANTAGE_STEP_COST;
         return 0;
       }
-      if (entryKey) {
-        const hasKey = disXp.some(item => entryMembershipKey(item) === entryKey);
-        if (hasKey) return -5;
-      }
-      return disXp.length < 5 ? -5 : 0;
+      return disXp.length < 5 ? -ADVANTAGE_STEP_COST : 0;
     }
     let xp = 0;
     if (

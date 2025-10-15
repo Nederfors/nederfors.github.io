@@ -223,6 +223,8 @@
   }
 
   function catComparator(a, b){
+    if (a === 'Färdmedel' && b !== 'Färdmedel') return 1;
+    if (b === 'Färdmedel' && a !== 'Färdmedel') return -1;
     const ai = CAT_ORDER.indexOf(a);
     const bi = CAT_ORDER.indexOf(b);
     if (ai !== -1 && bi !== -1) return ai - bi;

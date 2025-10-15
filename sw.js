@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v12';
+const CACHE_NAME = 'symbaroum-pwa-v13';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -21,6 +21,7 @@ const URLS_TO_CACHE = [
   'js/character-view.js',
   'js/djurmask.js',
   'js/elite-add.js',
+  'js/elite-utils.js',
   'js/elite-req.js',
   'js/entry-card.js',
   'js/exceptionellt.js',
@@ -136,10 +137,24 @@ const isNavigationRequest = request =>
   request.destination === 'document' ||
   (request.headers.get('accept') || '').includes('text/html');
 
+const isJsonRequest = request => {
+  const acceptHeader = request.headers.get('accept') || '';
+  if (acceptHeader.includes('application/json')) {
+    return true;
+  }
+  try {
+    const { pathname } = new URL(request.url);
+    return pathname.endsWith('.json');
+  } catch (error) {
+    return false;
+  }
+};
+
 const shouldNetworkFirst = request =>
   isNavigationRequest(request) ||
   request.destination === 'style' ||
-  request.destination === 'script';
+  request.destination === 'script' ||
+  isJsonRequest(request);
 
 self.addEventListener('fetch', event => {
   const { request } = event;
