@@ -802,12 +802,12 @@ function initIndex() {
     return true;
   };
 
-  const handleIndexSearchSubmit = (term) => {
+  const handleIndexSearchSubmit = (term, opts = {}) => {
     const raw = String(term || '').trim();
     if (!raw) {
       F.search = [];
       invalidateFilteredResults();
-      clearSearchInput();
+      clearSearchInput(opts);
       activeTags();
       scheduleRenderList();
       return true;
@@ -822,7 +822,7 @@ function initIndex() {
       else if (/firefox/.test(ua)) anchor = 'firefox';
       else if (/chrome/.test(ua)) anchor = 'chrome';
       window.open(`webapp.html#${anchor}`, '_blank');
-      clearSearchInput();
+      clearSearchInput(opts);
       return true;
     }
     if (lower === 'lol') {
@@ -833,7 +833,7 @@ function initIndex() {
       fixedRandomEntries = null;
       fixedRandomInfo = null;
       invalidateFilteredResults();
-      clearSearchInput();
+      clearSearchInput(opts);
       if (dom.typSel) dom.typSel.value = '';
       if (dom.arkSel) dom.arkSel.value = '';
       if (dom.tstSel) dom.tstSel.value = '';
@@ -856,7 +856,7 @@ function initIndex() {
       if (removed) invalidateFilteredResults();
       showArtifacts = true;
       touchFilteredCache();
-      clearSearchInput();
+      clearSearchInput(opts);
       fillDropdowns();
       activeTags();
       scheduleRenderList();
@@ -873,13 +873,13 @@ function initIndex() {
         const canonical = categoryIndex.get(normalizedCat);
         if (!canonical) {
           if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
-          clearSearchInput();
+          clearSearchInput(opts);
           return true;
         }
         const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
         if (!pool.length) {
           if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
-          clearSearchInput();
+          clearSearchInput(opts);
           return true;
         }
         const picks = [];
@@ -895,7 +895,7 @@ function initIndex() {
         invalidateFilteredResults();
         const catName = canonical || picks[0]?.taggar?.typ?.[0];
         if (catName) openCatsOnce.add(catName);
-        clearSearchInput();
+        clearSearchInput(opts);
         activeTags();
         scheduleRenderList();
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -910,7 +910,7 @@ function initIndex() {
       clearSearchInput();
       return true;
     }
-    applyIndexSearchTerm(raw);
+    applyIndexSearchTerm(raw, opts);
     return true;
   };
 
@@ -934,7 +934,7 @@ function initIndex() {
     });
   }
   window.handleIndexSearchTerm = (term, opts) => {
-    applyIndexSearchTerm(term, opts);
+    handleIndexSearchSubmit(term, opts);
   };
   updateSearchDatalist();
 
