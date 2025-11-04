@@ -154,9 +154,21 @@ function initIndex() {
   if (dom.cName) {
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
   }
-   const F = { search:[], typ:[], ark:[], test:[] };
-   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
-   let sTemp = '';
+  const F = { search:[], typ:[], ark:[], test:[] };
+  const INTERNAL_SEARCH_TERMS = new Set(['lol','molly<3']);
+  const scrubInternalSearchTerms = () => {
+    const filtered = F.search.filter(term => {
+      const lower = String(term || '').toLowerCase();
+      return !INTERNAL_SEARCH_TERMS.has(lower);
+    });
+    const changed = filtered.length !== F.search.length;
+    if (changed) {
+      F.search = filtered;
+    }
+    return changed;
+  };
+  const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+  let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
   let compact = storeHelper.getCompactEntries(store);
@@ -191,6 +203,7 @@ function initIndex() {
       ['search','typ','ark','test'].forEach(k => {
         if (Array.isArray(saved.filters[k])) F[k] = saved.filters[k];
       });
+      scrubInternalSearchTerms();
     }
     catState = saved.cats || {};
   }
@@ -741,6 +754,7 @@ function initIndex() {
     } else {
       F.search = [];
     }
+    scrubInternalSearchTerms();
     invalidateFilteredResults();
     if (term) {
       const norm = searchNormalize(term.toLowerCase());
@@ -838,6 +852,8 @@ function initIndex() {
       return true;
     }
     if (lower === 'molly<3') {
+      const removed = scrubInternalSearchTerms();
+      if (removed) invalidateFilteredResults();
       showArtifacts = true;
       touchFilteredCache();
       clearSearchInput();
