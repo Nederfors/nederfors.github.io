@@ -391,6 +391,124 @@
     return { movedRow, remainingQty: row.qty || 0 };
   }
 
+  function isNonStackableEntry(entry, row) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (Array.isArray(row?.contains) && row.contains.length) return true;
+    const tagTyp = Array.isArray(entry.taggar?.typ) ? entry.taggar.typ : [];
+    const baseNonStackable = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+      .some(t => tagTyp.includes(t));
+    if (!baseNonStackable) return false;
+    if (STACKABLE_IDS.includes(entry.id)) return false;
+    const bound = entry.bound;
+    return !['kraft','ritual'].includes(bound);
+  }
+
+  function normalizeStackKey(value) {
+    return value == null ? '' : String(value);
+  }
+
+  function mergeNumericField(target, source, field) {
+    const baseRaw = Number(target[field]);
+    const addRaw = Number(source[field]);
+    const baseVal = Number.isFinite(baseRaw) ? baseRaw : 0;
+    const addVal = Number.isFinite(addRaw) ? addRaw : 0;
+    const total = baseVal + addVal;
+    if (total > 0) target[field] = total;
+    else delete target[field];
+  }
+
+  function mergeArrayField(target, source, field) {
+    const base = Array.isArray(target[field]) ? target[field] : [];
+    const incoming = Array.isArray(source[field]) ? source[field] : [];
+    if (!base.length && !incoming.length) {
+      if (target[field]) delete target[field];
+      return;
+    }
+    if (!incoming.length) return;
+    const seen = new Set(base.map(item => {
+      try {
+        return JSON.stringify(item);
+      } catch {
+        return String(item);
+      }
+    }));
+    const merged = base.slice();
+    incoming.forEach(item => {
+      let key;
+      try {
+        key = JSON.stringify(item);
+      } catch {
+        key = String(item);
+      }
+      if (seen.has(key)) return;
+      seen.add(key);
+      merged.push(item);
+    });
+    if (merged.length) target[field] = merged;
+    else delete target[field];
+  }
+
+  function stackRowIntoList(targetArr, row) {
+    if (!Array.isArray(targetArr) || !row) return;
+    const entry = getEntry(row.id || row.name);
+    if (!entry) {
+      targetArr.push(row);
+      return;
+    }
+    if (isNonStackableEntry(entry, row)) {
+      targetArr.push(row);
+      return;
+    }
+    const keyId = row.id || row.name;
+    const traitKey = normalizeStackKey(row.trait);
+    const artifactKey = normalizeStackKey(row.artifactEffect);
+    const match = targetArr.find(other => {
+      if (other === row) return false;
+      if ((other.id || other.name) !== keyId) return false;
+      if (normalizeStackKey(other.trait) !== traitKey) return false;
+      if (normalizeStackKey(other.artifactEffect) !== artifactKey) return false;
+      const otherEntry = getEntry(other.id || other.name);
+      return otherEntry && !isNonStackableEntry(otherEntry, other);
+    });
+    if (!match) {
+      if (row.qty === undefined || row.qty === null) {
+        row.qty = 1;
+      } else {
+        const qtyVal = Number(row.qty);
+        row.qty = Number.isFinite(qtyVal) && qtyVal > 0 ? Math.floor(qtyVal) : 1;
+      }
+      targetArr.push(row);
+      return;
+    }
+    const addQtyRaw = Number(row.qty);
+    const addQty = Number.isFinite(addQtyRaw) && addQtyRaw > 0 ? Math.floor(addQtyRaw) : 0;
+    if (addQty > 0) {
+      const existingQtyRaw = Number(match.qty);
+      const existingQty = Number.isFinite(existingQtyRaw) && existingQtyRaw > 0
+        ? Math.floor(existingQtyRaw)
+        : 0;
+      const combined = existingQty + addQty;
+      match.qty = combined > 0 ? combined : 1;
+    }
+    mergeNumericField(match, row, 'gratis');
+    mergeNumericField(match, row, 'perkGratis');
+    mergeArrayField(match, row, 'gratisKval');
+    mergeArrayField(match, row, 'removedKval');
+    const qtyInt = Number(match.qty);
+    const clampNumericField = field => {
+      const raw = Number(match[field]);
+      if (!Number.isFinite(raw)) return;
+      const limited = Math.min(Math.floor(raw), Math.floor(qtyInt));
+      if (limited > 0) match[field] = limited;
+      else delete match[field];
+    };
+    clampNumericField('gratis');
+    clampNumericField('perkGratis');
+    if (!match.perk && row.perk) match.perk = row.perk;
+    if (!match.basePrice && row.basePrice) match.basePrice = { ...row.basePrice };
+    if (!match.basePriceSource && row.basePriceSource) match.basePriceSource = row.basePriceSource;
+  }
+
   function parsePathStr(str) {
     return str.split('.').map(n => Number(n)).filter(n => !Number.isNaN(n));
   }
@@ -2219,12 +2337,12 @@
         if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
         if (totalQty > 1 && moveQty < totalQty) {
           const { movedRow } = splitStackRow(row, moveQty);
-          if (movedRow) vehicle.contains.push(movedRow);
+          if (movedRow) stackRowIntoList(vehicle.contains, movedRow);
           const remaining = Number(row.qty);
           if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
         } else {
           const [item] = parentArr.splice(idx, 1);
-          if (item) vehicle.contains.push(item);
+          if (item) stackRowIntoList(vehicle.contains, item);
         }
       });
       vehicle.contains.sort(sortInvEntry);
@@ -2337,12 +2455,12 @@
         if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
         if (totalQty > 1 && moveQty < totalQty) {
           const { movedRow } = splitStackRow(row, moveQty);
-          if (movedRow) inv.push(movedRow);
+          if (movedRow) stackRowIntoList(inv, movedRow);
           const remaining = Number(row.qty);
           if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
         } else {
           const [item] = parentArr.splice(idx, 1);
-          if (item) inv.push(item);
+          if (item) stackRowIntoList(inv, item);
         }
       });
       saveInventory(inv);
