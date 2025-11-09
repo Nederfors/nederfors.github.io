@@ -446,10 +446,6 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
       if (!bar || !bar.shadowRoot) return false;
       if (panelId && typeof bar.open === 'function') bar.open(panelId);
       let el = bar.shadowRoot.querySelector(sel);
-      // For dynamic inventory vehicle buttons, fall back to first matching
-      if (!el && panelId === 'filterPanel' && sel === '[id^="vehicleBtn-"]') {
-        el = bar.shadowRoot.querySelector('#filterPanel [id^="vehicleBtn-"]');
-      }
       // Fallback: allow selecting elements in the main document (outside the toolbar)
       if (!el) {
         el = document.querySelector(sel);
@@ -530,7 +526,7 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: null, emoji: '', icon: 'basket', syn: ['pengar','hantera pengar','money'] },
     { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: null, emoji: '💸', syn: ['multiplicera pris','pris'] },
     { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: null, emoji: 'x²', syn: ['antal','lägg till antal'] },
-    { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: null, emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
+    { id: 'inv-vehicle', label: 'Lasta i',              sel: '#vehicleBtn', panel: null, emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
     { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: null, emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
     { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: null, emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
 

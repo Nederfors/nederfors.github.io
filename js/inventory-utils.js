@@ -3059,11 +3059,9 @@
       '<button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>',
       '<button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>'
     ];
-    const vehicleButtons = vehicles
-      .map(v => {
-        const vehId = v.entry?.id ?? '';
-        return `<button id="vehicleBtn-${v.idx}" data-vehicle-idx="${v.idx}" data-vehicle-id="${vehId}" class="char-btn">Lasta i ${v.entry.namn}</button>`;
-      });
+    const vehicleButtons = vehicles.length
+      ? ['<button id="vehicleBtn" class="char-btn">Lasta i färdmedel</button>']
+      : [];
     const trailingFunctionButtons = [
       '<button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>',
       '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
@@ -4262,18 +4260,14 @@
 
 
     const inv = storeHelper.getInventory(store);
-    inv
-      .map((row, idx) => ({row, entry:getEntry(row.id || row.name), idx}))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'))
-      .forEach(v => {
-        const btnId = `vehicleBtn-${v.idx}`;
-        const b = getEl(btnId);
-        if (b) {
-          const datasetIdx = Number(b.dataset?.vehicleIdx);
-          const targetIdx = Number.isNaN(datasetIdx) ? v.idx : datasetIdx;
-          b.onclick = () => openVehiclePopup(targetIdx);
-        }
-      });
+    const hasVehicle = Array.isArray(inv) && inv.some(row => {
+      const entry = getEntry(row.id || row.name);
+      return (entry?.taggar?.typ || []).includes('Färdmedel');
+    });
+    const vehicleBtn = getEl('vehicleBtn');
+    if (vehicleBtn && hasVehicle) {
+      vehicleBtn.onclick = () => openVehiclePopup();
+    }
   }
 
   window.invUtil = {
