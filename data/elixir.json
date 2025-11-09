@@ -1445,7 +1445,7 @@
 "namn": "Väderolja",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "En klar, kornig olja som doftar som efter en storm. Den ger total immunitet mot vädrets effekter i en dag: hetta, kyla, stormvindar och piskande regn blir som en mild bris."
+"Mästare": "En klar, kornig olja som doftar som efter en storm. Den tar en timme att smörja in sig i, men när det är klart ger den total immunitet mot vädrets effekter under en scen: hetta, kyla, stormvindar och piskande regn blir som en mild bris."
 },
 "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
