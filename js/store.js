@@ -2118,7 +2118,16 @@ function defaultTraits() {
       const canonical = row.id !== undefined && typeof global.lookupEntry === 'function'
         ? global.lookupEntry({ id: row.id })
         : null;
-      const entryName = row.name || canonical?.namn || '';
+      let entryName = row.name || canonical?.namn || '';
+      if (entryName && row.trait) {
+        const traitLabel = String(row.trait).trim();
+        if (traitLabel) {
+          const suffix = `: ${traitLabel}`;
+          if (String(entryName).trim().endsWith(suffix)) {
+            entryName = String(entryName).slice(0, -suffix.length).trimEnd();
+          }
+        }
+      }
       if (entryName) res.n = entryName;
       if (row.qty && row.qty !== 1) res.q = row.qty;
       if (row.gratis) res.g = row.gratis;
@@ -2201,7 +2210,17 @@ function defaultTraits() {
               : null);
         }
         const resolvedId = entry?.id !== undefined ? entry.id : (effectiveId !== undefined ? effectiveId : undefined);
-        const resolvedName = entry?.namn || rawName || '';
+        let resolvedName = entry?.namn || rawName || '';
+        const rowTrait = row.trait ?? row.t;
+        if (resolvedName && rowTrait) {
+          const traitLabel = String(rowTrait).trim();
+          if (traitLabel) {
+            const suffix = `: ${traitLabel}`;
+            if (String(resolvedName).trim().endsWith(suffix)) {
+              resolvedName = String(resolvedName).slice(0, -suffix.length).trimEnd();
+            }
+          }
+        }
         const qty = sanitizeCount(row.qty ?? row.q, 1);
         const gratis = sanitizeCount(row.gratis ?? row.g, 0);
         const kvaliteter = Array.isArray(row.kvaliteter ?? row.k)
