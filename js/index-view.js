@@ -2236,6 +2236,7 @@ function initIndex() {
             (list.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
             (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
+            (baseRace === 'Djur/Bjära' || bloodRaces.includes('Djur/Bjära')) ||
             (baseRace === 'Rese' && baseName === 'Robust') ||
             (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
             ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && baseName === 'Diminutiv') ||
