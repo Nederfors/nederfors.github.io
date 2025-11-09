@@ -40,6 +40,89 @@
     'Flodbåt': '🛥️'
   };
   const cloneRow = (row) => (row ? JSON.parse(JSON.stringify(row)) : null);
+  const INDIV_TAGS = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'];
+
+  function isStackableEntry(entry) {
+    if (!entry) return false;
+    const tagTyp = entry.taggar?.typ || [];
+    const indiv = INDIV_TAGS.some(t => tagTyp.includes(t)) &&
+      !STACKABLE_IDS.includes(entry.id) &&
+      !['kraft','ritual'].includes(entry.bound);
+    return !indiv;
+  }
+
+  function getStackInfo(row) {
+    if (!row) return { entry: null, qty: 0, stackable: false };
+    const entry = getEntry(row.id || row.name);
+    const qty = Math.max(0, Math.floor(Number(row.qty) || 0));
+    const stackable = entry ? isStackableEntry(entry) : qty > 1;
+    return { entry, qty, stackable };
+  }
+
+  function clampCountProp(obj, prop, maxQty) {
+    if (!obj || obj[prop] == null) return;
+    const val = Math.max(0, Math.floor(Number(obj[prop]) || 0));
+    if (!val || maxQty == null) {
+      if (!val) delete obj[prop];
+      return;
+    }
+    const clamped = Math.min(val, maxQty);
+    if (clamped > 0) obj[prop] = clamped;
+    else delete obj[prop];
+  }
+
+  function takeQuantityFromParent(parentArr, idx, qty, allowPartial) {
+    if (!Array.isArray(parentArr) || idx < 0) return null;
+    const row = parentArr[idx];
+    if (!row) return null;
+    const totalQty = Math.max(0, Math.floor(Number(row.qty) || 0));
+    if (!allowPartial || totalQty <= 0) {
+      return parentArr.splice(idx, 1)[0];
+    }
+    const desired = Math.max(1, Math.floor(Number(qty) || 0));
+    if (desired >= totalQty) {
+      return parentArr.splice(idx, 1)[0];
+    }
+    const moveQty = Math.min(desired, totalQty - 1) || 1;
+    const clone = cloneRow(row);
+    clone.qty = moveQty;
+
+    const adjustProp = prop => {
+      const total = Math.max(0, Math.floor(Number(row[prop]) || 0));
+      if (!total) {
+        delete clone[prop];
+        if (row[prop] != null) delete row[prop];
+        return;
+      }
+      const move = Math.min(total, moveQty);
+      if (move > 0) {
+        clone[prop] = move;
+        const remaining = total - move;
+        if (remaining > 0) {
+          row[prop] = remaining;
+        } else {
+          delete row[prop];
+        }
+      } else {
+        delete clone[prop];
+      }
+    };
+
+    adjustProp('gratis');
+    adjustProp('perkGratis');
+
+    row.qty = totalQty - moveQty;
+    clampCountProp(row, 'gratis', row.qty);
+    clampCountProp(row, 'perkGratis', row.qty);
+    clampCountProp(clone, 'gratis', clone.qty);
+    clampCountProp(clone, 'perkGratis', clone.qty);
+
+    if (row.qty <= 0) {
+      parentArr.splice(idx, 1);
+    }
+
+    return clone;
+  }
 
   function getCraftLevels() {
     const list = storeHelper.getCurrentList(store);
@@ -1968,7 +2051,78 @@
     pop.addEventListener('click', onOutside);
   }
 
-function openVehiclePopup(preselectId, precheckedPaths) {
+  function promptVehicleQuantity({ max, itemName, vehicleName, mode }) {
+    const root = getToolbarRoot();
+    if (!root) return Promise.resolve(null);
+    const pop     = root.getElementById('vehicleQtyPopup');
+    const message = root.getElementById('vehicleQtyMessage');
+    const input   = root.getElementById('vehicleQtyInput');
+    const confirm = root.getElementById('vehicleQtyConfirm');
+    const cancel  = root.getElementById('vehicleQtyCancel');
+    if (!pop || !message || !input || !confirm || !cancel) {
+      const fallbackMax = Math.max(1, Math.floor(Number(max) || 1));
+      return Promise.resolve(fallbackMax);
+    }
+
+    const cappedMax = Math.max(1, Math.floor(Number(max) || 1));
+    const safeName = itemName || 'föremål';
+    const action = mode === 'unload' ? 'lasta ur' : 'lasta in';
+    const prep = mode === 'unload' ? 'från' : 'i';
+    const vehicleText = vehicleName ? ` ${prep} ${vehicleName}` : '';
+    message.textContent = `Hur många ${safeName} vill du ${action}${vehicleText}?`;
+    input.value = '1';
+    input.min = '1';
+    input.max = String(cappedMax);
+    input.step = '1';
+
+    pop.classList.add('open');
+    pop.querySelector('.popup-inner').scrollTop = 0;
+    setTimeout(() => input.focus(), 50);
+
+    return new Promise(resolve => {
+      const close = result => {
+        pop.classList.remove('open');
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        input.removeEventListener('keydown', onKey);
+        resolve(result);
+      };
+      const onConfirm = e => {
+        e?.preventDefault();
+        const value = parseInt(input.value, 10);
+        if (!Number.isFinite(value) || value <= 0) {
+          input.focus();
+          return;
+        }
+        const qty = Math.max(1, Math.min(value, cappedMax));
+        close(qty);
+      };
+      const onCancel = e => {
+        e?.preventDefault();
+        close(null);
+      };
+      const onOutside = e => {
+        if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+      };
+      const onKey = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onConfirm(e);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          onCancel(e);
+        }
+      };
+
+      confirm.addEventListener('click', onConfirm);
+      cancel.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+      input.addEventListener('keydown', onKey);
+    });
+  }
+
+  function openVehiclePopup(preselectId, precheckedPaths) {
     const root = getToolbarRoot();
     if (!root) return;
     const pop    = root.getElementById('vehiclePopup');
@@ -2023,10 +2177,11 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       sel.innerHTML = '';
       list.innerHTML = '';
     };
-    const onApply = () => {
+    const onApply = async () => {
       const vIdx = Number(sel.value);
       if (Number.isNaN(vIdx)) return;
       const vehicle = inv[vIdx];
+      if (!vehicle) return;
       vehicle.contains = vehicle.contains || [];
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
@@ -2039,18 +2194,52 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           }
           return 0;
         });
+      if (!checks.length) { close(); return; }
+      const vehicleEntry = getEntry(vehicle.id || vehicle.name);
+      const vehicleName = vehicleEntry?.namn || vehicle.name || '';
+      const selected = [];
       checks.forEach(path => {
         if (path[0] === vIdx) return;
-        let arr = inv;
-        for (let i = 0; i < path.length - 1; i++) {
-          arr = arr[path[i]].contains || [];
-        }
-        const item = arr.splice(path[path.length - 1], 1)[0];
-        vehicle.contains.push(item);
+        const { row } = getRowByPath(inv, path);
+        if (!row) return;
+        const info = getStackInfo(row);
+        const label = nameMap.get(row) || row.name || info.entry?.namn || 'föremål';
+        selected.push({ path, info, label });
       });
-      vehicle.contains.sort(sortInvEntry);
-      saveInventory(inv);
-      renderInventory();
+      for (const item of selected) {
+        const { info } = item;
+        if (info.stackable && info.qty > 1) {
+          const chosen = await promptVehicleQuantity({
+            max: info.qty,
+            itemName: item.label,
+            vehicleName,
+            mode: 'load'
+          });
+          if (chosen == null) return;
+          item.moveQty = Math.max(1, Math.min(chosen, info.qty));
+        } else {
+          item.moveQty = Math.max(1, info.qty || 1);
+        }
+      }
+      let movedAny = false;
+      selected.forEach(item => {
+        const { path, moveQty } = item;
+        if (!path || path[0] === vIdx) return;
+        const { row, parentArr, idx } = getRowByPath(inv, path);
+        if (!row || !parentArr) return;
+        const currentInfo = getStackInfo(row);
+        const allowPartial = currentInfo.stackable && currentInfo.qty > 0;
+        const taken = takeQuantityFromParent(parentArr, idx, moveQty, allowPartial);
+        if (taken) {
+          vehicle.contains.push(taken);
+          movedAny = true;
+        }
+      });
+      if (movedAny) {
+        vehicle.contains.sort(sortInvEntry);
+        saveInventory(inv);
+        renderInventory();
+      }
       close();
     };
     const onCancel = () => { close(); };
@@ -2083,15 +2272,19 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       .join('');
     if (typeof preselectIdx === 'number') sel.value = String(preselectIdx);
 
+    let currentNameMap = new Map();
+
     const fillList = () => {
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
       if (!vehicle || !Array.isArray(vehicle.contains)) {
         list.innerHTML = '';
+        currentNameMap = new Map();
         return;
       }
       const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
       const nameMap = makeNameMap(items.map(i => i.row));
+      currentNameMap = nameMap;
       list.innerHTML = items
         .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`)
         .join('');
@@ -2116,7 +2309,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       sel.innerHTML = '';
       list.innerHTML = '';
     };
-    const onApply = () => {
+    const onApply = async () => {
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
       if (!vehicle) return;
@@ -2131,16 +2324,49 @@ function openVehiclePopup(preselectId, precheckedPaths) {
           }
           return 0;
         });
+      if (!checks.length) { close(); return; }
+      const vehicleEntry = getEntry(vehicle.id || vehicle.name);
+      const vehicleName = vehicleEntry?.namn || vehicle.name || '';
+      const selected = [];
       checks.forEach(path => {
-        let arr = inv;
-        for (let i=0; i<path.length-1; i++) {
-          arr = arr[path[i]].contains || [];
-        }
-        const item = arr.splice(path[path.length-1],1)[0];
-        if (item) inv.push(item);
+        const { row } = getRowByPath(inv, path);
+        if (!row) return;
+        const info = getStackInfo(row);
+        const label = currentNameMap.get(row) || row.name || info.entry?.namn || 'föremål';
+        selected.push({ path, info, label });
       });
-      saveInventory(inv);
-      renderInventory();
+      for (const item of selected) {
+        const { info } = item;
+        if (info.stackable && info.qty > 1) {
+          const chosen = await promptVehicleQuantity({
+            max: info.qty,
+            itemName: item.label,
+            vehicleName,
+            mode: 'unload'
+          });
+          if (chosen == null) return;
+          item.moveQty = Math.max(1, Math.min(chosen, info.qty));
+        } else {
+          item.moveQty = Math.max(1, info.qty || 1);
+        }
+      }
+      let movedAny = false;
+      selected.forEach(item => {
+        const { path, moveQty } = item;
+        const { row, parentArr, idx } = getRowByPath(inv, path);
+        if (!row || !parentArr) return;
+        const currentInfo = getStackInfo(row);
+        const allowPartial = currentInfo.stackable && currentInfo.qty > 0;
+        const taken = takeQuantityFromParent(parentArr, idx, moveQty, allowPartial);
+        if (taken) {
+          inv.push(taken);
+          movedAny = true;
+        }
+      });
+      if (movedAny) {
+        saveInventory(inv);
+        renderInventory();
+      }
       close();
     };
     const onCancel = () => { close(); };
