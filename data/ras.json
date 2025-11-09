@@ -385,5 +385,19 @@
         "Ras"
       ]
     }
+  },
+  {
+    "id": "ra12",
+    "namn": "Djur/Bjära",
+    "beskrivning": "Mystiskt frammanade väsen bundna till en mästares vilja snarare än till eget liv. Endast valbar för att skapa bjäror eller monster, inte spelbara karaktärer.",
+    "extra": "Bjäror och andra frammanade bestar kan anta vilka monstruösa särdrag deras skapare ger dem.",
+    "sardrag": "Monstruösa särdrag väljs fritt efter skaparen.",
+    "namn_man": [],
+    "namn_kvinna": [],
+    "taggar": {
+      "typ": [
+        "Ras"
+      ]
+    }
   }
 ]
