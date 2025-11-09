@@ -338,6 +338,59 @@
     return { row, parentArr: arr, idx: path[path.length - 1] };
   }
 
+  function splitStackRow(row, qty) {
+    if (!row) return { movedRow: null, remainingQty: 0 };
+    const currentQtyRaw = Number(row.qty);
+    const currentQty = Number.isFinite(currentQtyRaw) && currentQtyRaw > 0
+      ? Math.floor(currentQtyRaw)
+      : 0;
+    const amountRaw = Number(qty);
+    const amount = Math.min(
+      currentQty,
+      Math.max(1, Number.isFinite(amountRaw) ? Math.floor(amountRaw) : 0)
+    );
+    if (!currentQty || !amount) {
+      return { movedRow: null, remainingQty: currentQty };
+    }
+    const movedRow = cloneRow(row);
+    if (!movedRow) return { movedRow: null, remainingQty: currentQty };
+    movedRow.qty = amount;
+    const adjustCountField = field => {
+      const originalRaw = Number(row[field]);
+      const original = Number.isFinite(originalRaw) && originalRaw > 0
+        ? Math.floor(originalRaw)
+        : 0;
+      if (!original) {
+        delete movedRow[field];
+        delete row[field];
+        return;
+      }
+      const moveVal = Math.min(original, amount);
+      if (moveVal > 0) movedRow[field] = moveVal;
+      else delete movedRow[field];
+      const remain = original - moveVal;
+      if (remain > 0) {
+        row[field] = remain;
+      } else {
+        delete row[field];
+      }
+    };
+    adjustCountField('gratis');
+    adjustCountField('perkGratis');
+    row.qty = currentQty - amount;
+    if (row.qty <= 0) {
+      delete row.qty;
+      delete row.gratis;
+      delete row.perkGratis;
+    } else {
+      if (Number(row.gratis) > row.qty) row.gratis = row.qty;
+      if (Number(row.perkGratis) > row.qty) row.perkGratis = row.qty;
+    }
+    if (Number(movedRow.gratis) > movedRow.qty) movedRow.gratis = movedRow.qty;
+    if (Number(movedRow.perkGratis) > movedRow.qty) movedRow.perkGratis = movedRow.qty;
+    return { movedRow, remainingQty: row.qty || 0 };
+  }
+
   function parsePathStr(str) {
     return str.split('.').map(n => Number(n)).filter(n => !Number.isNaN(n));
   }
@@ -1968,7 +2021,95 @@
     pop.addEventListener('click', onOutside);
   }
 
-function openVehiclePopup(preselectValue, precheckedPaths) {
+  function openVehicleQtyPrompt({ maxQty, itemName, mode }) {
+    const maxRaw = Number(maxQty);
+    const max = Number.isFinite(maxRaw) && maxRaw > 0 ? Math.floor(maxRaw) : 0;
+    const fallback = max > 0 ? max : 1;
+    if (max <= 1) return Promise.resolve(fallback);
+    const root = getToolbarRoot();
+    if (!root) return Promise.resolve(fallback);
+    const pop     = root.getElementById('vehicleQtyPopup');
+    const input   = root.getElementById('vehicleQtyInput');
+    const confirm = root.getElementById('vehicleQtyConfirm');
+    const cancel  = root.getElementById('vehicleQtyCancel');
+    const message = root.getElementById('vehicleQtyMessage');
+    const hint    = root.getElementById('vehicleQtyHint');
+    const title   = root.getElementById('vehicleQtyTitle');
+    if (!pop || !input || !confirm || !cancel) return Promise.resolve(fallback);
+    const inner   = pop.querySelector('.popup-inner');
+    const safeName = itemName || 'föremål';
+    const actionText = mode === 'unload' ? 'lasta ur' : 'lasta i';
+    if (title) title.textContent = 'Välj antal';
+    if (message) message.textContent = `Hur många ”${safeName}” vill du ${actionText}?`;
+    if (hint) hint.textContent = max ? `Max: ${max}` : '';
+    input.value = String(max);
+    input.min = '1';
+    input.step = '1';
+    input.max = String(max);
+    if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => { if (typeof input.focus === 'function') input.focus(); if (typeof input.select === 'function') input.select(); }, 40);
+    return new Promise(resolve => {
+      let closed = false;
+      const clearValidity = () => {
+        if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
+      };
+      const close = result => {
+        if (closed) return;
+        closed = true;
+        pop.classList.remove('open');
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        input.removeEventListener('keydown', onKey);
+        input.removeEventListener('input', clearValidity);
+        if (hint) hint.textContent = '';
+        if (message) message.textContent = '';
+        input.value = '';
+        clearValidity();
+        resolve(result);
+      };
+      const onConfirm = () => {
+        clearValidity();
+        const value = parseInt(input.value, 10);
+        if (!Number.isFinite(value) || value <= 0) {
+          input.focus();
+          return;
+        }
+        if (value > max) {
+          if (typeof input.setCustomValidity === 'function') {
+            input.setCustomValidity(`Du kan som mest välja ${max}.`);
+            input.reportValidity();
+          }
+          input.focus();
+          return;
+        }
+        close(value);
+      };
+      const onCancel = () => close(null);
+      const onOutside = e => {
+        if (!inner || inner.contains(e.target)) return;
+        close(null);
+      };
+      const onKey = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onConfirm();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          onCancel();
+        }
+      };
+      confirm.addEventListener('click', onConfirm);
+      cancel.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+      input.addEventListener('keydown', onKey);
+      input.addEventListener('input', clearValidity);
+    });
+  }
+
+  function openVehiclePopup(preselectValue, precheckedPaths) {
     const root = getToolbarRoot();
     if (!root) return;
     const pop    = root.getElementById('vehiclePopup');
@@ -2031,30 +2172,52 @@ function openVehiclePopup(preselectValue, precheckedPaths) {
       sel.innerHTML = '';
       list.innerHTML = '';
     };
-    const onApply = () => {
+    const onApply = async () => {
       const vIdx = Number(sel.value);
       if (Number.isNaN(vIdx)) return;
       const vehicle = inv[vIdx];
+      if (!vehicle) return;
       vehicle.contains = vehicle.contains || [];
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
-        .sort((a,b)=>{
-          for (let i=0; i<Math.max(a.length,b.length); i++) {
-            const av=a[i], bv=b[i];
-            if (av===undefined) return 1;
-            if (bv===undefined) return -1;
-            if (av!==bv) return bv-av;
+        .sort((a, b) => {
+          for (let i = 0; i < Math.max(a.length, b.length); i++) {
+            const av = a[i], bv = b[i];
+            if (av === undefined) return 1;
+            if (bv === undefined) return -1;
+            if (av !== bv) return bv - av;
           }
           return 0;
         });
-      checks.forEach(path => {
-        if (path[0] === vIdx) return;
-        let arr = inv;
-        for (let i = 0; i < path.length - 1; i++) {
-          arr = arr[path[i]].contains || [];
+      const operations = [];
+      for (const path of checks) {
+        if (!Array.isArray(path) || !path.length) continue;
+        if (path[0] === vIdx && path.length === 1) continue;
+        const { row, parentArr, idx } = getRowByPath(inv, path);
+        if (!row || !Array.isArray(parentArr) || idx < 0) continue;
+        const qtyRaw = Number(row.qty);
+        const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+        let moveQty = totalQty;
+        if (totalQty > 1) {
+          const entry = getEntry(row.id || row.name) || {};
+          const displayName = nameMap.get(row) || row.name || entry.namn || 'föremål';
+          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'load' });
+          if (!chosen) return;
+          moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
         }
-        const item = arr.splice(path[path.length - 1], 1)[0];
-        vehicle.contains.push(item);
+        operations.push({ parentArr, idx, row, moveQty, totalQty });
+      }
+      operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
+        if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
+        if (totalQty > 1 && moveQty < totalQty) {
+          const { movedRow } = splitStackRow(row, moveQty);
+          if (movedRow) vehicle.contains.push(movedRow);
+          const remaining = Number(row.qty);
+          if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
+        } else {
+          const [item] = parentArr.splice(idx, 1);
+          if (item) vehicle.contains.push(item);
+        }
       });
       vehicle.contains.sort(sortInvEntry);
       saveInventory(inv);
@@ -2124,28 +2287,51 @@ function openVehiclePopup(preselectValue, precheckedPaths) {
       sel.innerHTML = '';
       list.innerHTML = '';
     };
-    const onApply = () => {
+    const onApply = async () => {
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
       if (!vehicle) return;
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
-        .sort((a,b)=>{
-          for (let i=0;i<Math.max(a.length,b.length);i++) {
-            const av=a[i], bv=b[i];
-            if (av===undefined) return 1;
-            if (bv===undefined) return -1;
-            if (av!==bv) return bv-av;
+        .sort((a, b) => {
+          for (let i = 0; i < Math.max(a.length, b.length); i++) {
+            const av = a[i], bv = b[i];
+            if (av === undefined) return 1;
+            if (bv === undefined) return -1;
+            if (av !== bv) return bv - av;
           }
           return 0;
         });
-      checks.forEach(path => {
-        let arr = inv;
-        for (let i=0; i<path.length-1; i++) {
-          arr = arr[path[i]].contains || [];
+      const nameMapAll = makeNameMap(flattenInventoryWithPath(inv).map(f => f.row));
+      const operations = [];
+      for (const path of checks) {
+        if (!Array.isArray(path) || !path.length) continue;
+        if (path[0] !== vIdx) continue;
+        const { row, parentArr, idx } = getRowByPath(inv, path);
+        if (!row || !Array.isArray(parentArr) || idx < 0) continue;
+        const qtyRaw = Number(row.qty);
+        const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+        let moveQty = totalQty;
+        if (totalQty > 1) {
+          const entry = getEntry(row.id || row.name) || {};
+          const displayName = nameMapAll.get(row) || row.name || entry.namn || 'föremål';
+          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'unload' });
+          if (!chosen) return;
+          moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
         }
-        const item = arr.splice(path[path.length-1],1)[0];
-        if (item) inv.push(item);
+        operations.push({ parentArr, idx, row, moveQty, totalQty });
+      }
+      operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
+        if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
+        if (totalQty > 1 && moveQty < totalQty) {
+          const { movedRow } = splitStackRow(row, moveQty);
+          if (movedRow) inv.push(movedRow);
+          const remaining = Number(row.qty);
+          if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
+        } else {
+          const [item] = parentArr.splice(idx, 1);
+          if (item) inv.push(item);
+        }
       });
       saveInventory(inv);
       renderInventory();

@@ -3541,7 +3541,9 @@ select.level {
 }
 
 /* ---------- Popup för färdmedel ---------- */
-#vehiclePopup {
+#vehiclePopup,
+#vehicleRemovePopup,
+#vehicleQtyPopup {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -3552,9 +3554,12 @@ select.level {
   background: rgba(0,0,0,.6);
   z-index: 3000;
 }
-#vehiclePopup.open { display: flex; }
+#vehiclePopup.open,
+#vehicleRemovePopup.open,
+#vehicleQtyPopup.open { display: flex; }
 #vehiclePopup .popup-inner,
-#vehicleRemovePopup .popup-inner {
+#vehicleRemovePopup .popup-inner,
+#vehicleQtyPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -3570,9 +3575,26 @@ select.level {
   gap: .8rem;
 }
 #vehiclePopup.open .popup-inner,
-#vehicleRemovePopup.open .popup-inner { transform: translateY(0); }
+#vehicleRemovePopup.open .popup-inner,
+#vehicleQtyPopup.open .popup-inner { transform: translateY(0); }
 #vehiclePopup .popup-inner button,
-#vehicleRemovePopup .popup-inner button { width: 100%; }
+#vehicleRemovePopup .popup-inner button,
+#vehicleQtyPopup .popup-inner button { width: 100%; }
+#vehicleQtyPopup .popup-inner input[type="number"] {
+  width: 100%;
+  padding: .4rem .6rem;
+  border-radius: .6rem;
+  border: 2px solid var(--card-border);
+  background: var(--bg);
+  color: var(--txt);
+  font-size: 1.1rem;
+  text-align: center;
+}
+#vehicleQtyPopup #vehicleQtyHint {
+  margin: -.4rem 0 0;
+  color: var(--subtxt);
+  font-size: .95rem;
+}
 #vehicleItemList,
 #vehicleRemoveItemList {
   display: flex;
