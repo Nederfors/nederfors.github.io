@@ -833,6 +833,7 @@ class SharedToolbar extends HTMLElement {
           <input id="buyMultipleInput" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
           <div class="confirm-row">
             <button id="buyMultipleCancel" class="char-btn danger">Avbryt</button>
+            <button id="buyMultipleRemove" class="char-btn">Ta bort</button>
             <button id="buyMultipleConfirm" class="char-btn">Lägg till</button>
           </div>
         </div>
