@@ -1514,18 +1514,76 @@
       !STACKABLE_IDS.includes(entry.id) &&
       !['kraft','ritual'].includes(entry.bound);
 
-    const processQty = ({ qty, purchase }) => {
-      const result = { qty, highlightIdx: idx, indiv, isNewRow };
-      const livePairs = liveEnabled ? [] : null;
-      const overrideO = purchase ? purchase.totalO : null;
-      const priceMoney = purchase ? purchase.pricePerUnit : null;
+    const referenceId = row.id || entry?.id || null;
+    const referenceName = row.name || entry?.namn || null;
+    const isSameItem = other => {
+      if (!other) return false;
+      if (referenceId && other.id) {
+        return other.id === referenceId;
+      }
+      if (referenceName && other.name) {
+        return other.name === referenceName;
+      }
+      return other === row;
+    };
+
+    const processQty = ({ qty, purchase, mode = 'add' }) => {
+      const remove = mode === 'remove';
+      const result = { qty, highlightIdx: idx, indiv, isNewRow, mode };
+      const livePairs = !remove && liveEnabled ? [] : null;
+      const overrideO = !remove && purchase ? purchase.totalO : null;
+      const priceMoney = !remove && purchase ? purchase.pricePerUnit : null;
       const assignPrice = target => {
         if (!priceMoney || !target) return;
         target.basePrice = { daler: priceMoney.daler, skilling: priceMoney.skilling, 'örtegar': priceMoney['örtegar'] };
         target.basePriceSource = 'live';
       };
 
-      if (indiv && parentArr) {
+      if (remove) {
+        if (indiv && parentArr) {
+          const matching = parentArr
+            .map((item, index) => ({ item, index }))
+            .filter(({ item }) => isSameItem(item));
+          const removeCount = Math.min(qty, matching.length);
+          const removeTargets = matching.slice(-removeCount).map(obj => obj.index).sort((a, b) => b - a);
+          removeTargets.forEach(i => parentArr.splice(i, 1));
+          const remaining = parentArr
+            .map((item, index) => ({ item, index }))
+            .filter(({ item }) => isSameItem(item));
+          if (remaining.length) {
+            result.highlightIdx = remaining[remaining.length - 1].index;
+          } else if (parentArr.length) {
+            const fallbackIdx = Math.min(idx, parentArr.length - 1);
+            result.highlightIdx = fallbackIdx >= 0 ? fallbackIdx : null;
+          } else {
+            result.highlightIdx = null;
+          }
+        } else {
+          const currentQty = Number(row.qty) || 0;
+          const newQty = currentQty - qty;
+          if (newQty > 0) {
+            row.qty = newQty;
+            if (parentArr) {
+              const indexInParent = parentArr.indexOf(row);
+              if (indexInParent >= 0) result.highlightIdx = indexInParent;
+            }
+          } else {
+            if (parentArr) {
+              const indexInParent = parentArr.indexOf(row);
+              if (indexInParent >= 0) {
+                parentArr.splice(indexInParent, 1);
+                const fallbackIdx = Math.min(indexInParent, parentArr.length - 1);
+                result.highlightIdx = fallbackIdx >= 0 ? fallbackIdx : null;
+              } else {
+                result.highlightIdx = null;
+              }
+            } else {
+              row.qty = 0;
+              result.highlightIdx = null;
+            }
+          }
+        }
+      } else if (indiv && parentArr) {
         if (isNewRow) {
           let baseIndex = parentArr.indexOf(row);
           if (baseIndex < 0) {
@@ -1580,10 +1638,13 @@
       }
       const parentIdx = Number(li?.dataset.parent);
       const baseName = row.name || entry?.namn || '';
-      if (li && baseName) {
+      const flashIdx = typeof result.highlightIdx === 'number' && result.highlightIdx >= 0
+        ? result.highlightIdx
+        : null;
+      if (li && baseName && flashIdx != null) {
         const selector = !Number.isNaN(parentIdx)
-          ? `li[data-name="${CSS.escape(baseName)}"][data-parent="${parentIdx}"][data-child="${result.highlightIdx}"]`
-          : `li[data-name="${CSS.escape(baseName)}"][data-idx="${result.highlightIdx}"]`;
+          ? `li[data-name="${CSS.escape(baseName)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
+          : `li[data-name="${CSS.escape(baseName)}"][data-idx="${flashIdx}"]`;
         const flashEl = dom.invList?.querySelector(selector);
         if (flashEl) {
           flashEl.classList.add('inv-flash');
@@ -1604,13 +1665,14 @@
 
     const root = getToolbarRoot();
     if (!root) return;
-    const pop     = root.getElementById('buyMultiplePopup');
-    const inner   = pop ? pop.querySelector('.popup-inner') : null;
-    const labelEl = root.getElementById('buyMultipleItemName');
-    const input   = root.getElementById('buyMultipleInput');
-    const confirm = root.getElementById('buyMultipleConfirm');
-    const cancelBtn  = root.getElementById('buyMultipleCancel');
-    if (!pop || !input || !confirm || !cancelBtn) return;
+    const pop       = root.getElementById('buyMultiplePopup');
+    const inner     = pop ? pop.querySelector('.popup-inner') : null;
+    const labelEl   = root.getElementById('buyMultipleItemName');
+    const input     = root.getElementById('buyMultipleInput');
+    const confirm   = root.getElementById('buyMultipleConfirm');
+    const cancelBtn = root.getElementById('buyMultipleCancel');
+    const removeBtn = root.getElementById('buyMultipleRemove');
+    if (!pop || !input || !confirm || !cancelBtn || !removeBtn) return;
 
     const nameMap = makeNameMap(flattenInventory(inv));
     const displayName = nameMap.get(row) || row.name || entry?.namn || '';
@@ -1619,7 +1681,22 @@
       labelEl.hidden = !displayName;
     }
 
+    const getAvailableQty = () => {
+      if (indiv && parentArr) {
+        return parentArr.reduce((count, item) => count + (isSameItem(item) ? 1 : 0), 0);
+      }
+      const current = Number(row.qty) || 0;
+      return current > 0 ? current : 0;
+    };
+
+    const clearInputValidity = () => {
+      if (typeof input.setCustomValidity === 'function') {
+        input.setCustomValidity('');
+      }
+    };
+
     input.value = '';
+    clearInputValidity();
     pop.classList.add('open');
     if (inner) inner.scrollTop = 0;
     setTimeout(() => input.focus(), 50);
@@ -1631,21 +1708,49 @@
       pop.classList.remove('open');
       confirm.removeEventListener('click', apply);
       cancelBtn.removeEventListener('click', handleCancel);
+      removeBtn.removeEventListener('click', handleRemove);
       pop.removeEventListener('click', onOutside);
       input.removeEventListener('keydown', onKey);
+      input.removeEventListener('input', onInput);
       input.value = '';
+      clearInputValidity();
       if (reason !== 'confirm' && typeof cancelCb === 'function') {
         cancelCb();
       }
     };
 
     const apply = () => {
+      clearInputValidity();
       const qty = parseInt(input.value, 10);
       if (!Number.isFinite(qty) || qty <= 0) {
         input.focus();
         return;
       }
       processQty({ qty });
+      close('confirm');
+    };
+
+    const handleRemove = () => {
+      clearInputValidity();
+      const qty = parseInt(input.value, 10);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        input.focus();
+        return;
+      }
+      const available = getAvailableQty();
+      if (qty > available) {
+        if (typeof input.setCustomValidity === 'function') {
+          const message = available <= 0
+            ? 'Det finns inget att ta bort.'
+            : `Du kan som mest ta bort ${available}.`;
+          input.setCustomValidity(message);
+          input.reportValidity();
+        }
+        input.focus();
+        if (typeof input.select === 'function') input.select();
+        return;
+      }
+      processQty({ qty, mode: 'remove' });
       close('confirm');
     };
 
@@ -1664,11 +1769,15 @@
       }
     };
 
+    const onInput = () => clearInputValidity();
+
     confirm.addEventListener('click', apply);
     const handleCancel = () => close('cancel');
     cancelBtn.addEventListener('click', handleCancel);
+    removeBtn.addEventListener('click', handleRemove);
     pop.addEventListener('click', onOutside);
     input.addEventListener('keydown', onKey);
+    input.addEventListener('input', onInput);
   }
 
   function openPricePopup() {
