@@ -2645,7 +2645,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const moneyWeight = calcMoneyWeight(unusedMoney);
 
     const usedWeight = allInv.reduce((s, r) => {
-      const entry = getEntry(r.name);
+      const entry = getEntry(r.id || r.name);
       const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
       return s + (isVeh ? 0 : calcRowWeight(r));
     }, 0) + moneyWeight;
