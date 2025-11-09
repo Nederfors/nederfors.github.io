@@ -2021,7 +2021,7 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function openVehicleQtyPrompt({ maxQty, itemName, mode }) {
+  function openVehicleQtyPrompt({ maxQty, itemName, mode, vehicleName }) {
     const maxRaw = Number(maxQty);
     const max = Number.isFinite(maxRaw) && maxRaw > 0 ? Math.floor(maxRaw) : 0;
     const fallback = max > 0 ? max : 1;
@@ -2039,8 +2039,12 @@
     const inner   = pop.querySelector('.popup-inner');
     const safeName = itemName || 'föremål';
     const actionText = mode === 'unload' ? 'lasta ur' : 'lasta i';
-    if (title) title.textContent = 'Välj antal';
-    if (message) message.textContent = `Hur många ”${safeName}” vill du ${actionText}?`;
+    const vehiclePreposition = mode === 'unload' ? 'från' : 'i';
+    if (title) title.textContent = vehicleName ? `Välj antal (${vehicleName})` : 'Välj antal';
+    if (message) {
+      const vehiclePart = vehicleName ? ` ${vehiclePreposition} ${vehicleName}` : '';
+      message.textContent = `Hur många ”${safeName}” vill du ${actionText}${vehiclePart}?`;
+    }
     if (hint) hint.textContent = max ? `Max: ${max}` : '';
     input.value = String(max);
     input.min = '1';
@@ -2124,8 +2128,11 @@
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     if (!vehicles.length) return;
 
+    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
+    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
+
     sel.innerHTML = vehicles
-      .map(v => `<option value="${v.idx}">${v.entry.namn}</option>`)
+      .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
       .join('');
 
     const resolvePreselectIdx = value => {
@@ -2178,6 +2185,7 @@
       const vehicle = inv[vIdx];
       if (!vehicle) return;
       vehicle.contains = vehicle.contains || [];
+      const vehicleName = vehicleNames.get(vIdx);
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
         .sort((a, b) => {
@@ -2201,7 +2209,7 @@
         if (totalQty > 1) {
           const entry = getEntry(row.id || row.name) || {};
           const displayName = nameMap.get(row) || row.name || entry.namn || 'föremål';
-          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'load' });
+          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'load', vehicleName });
           if (!chosen) return;
           moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
         }
@@ -2249,8 +2257,11 @@
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     if (!vehicles.length) return;
 
+    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
+    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
+
     sel.innerHTML = vehicles
-      .map(v => `<option value="${v.idx}">${v.entry.namn}</option>`)
+      .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
       .join('');
     if (typeof preselectIdx === 'number') sel.value = String(preselectIdx);
 
@@ -2291,6 +2302,7 @@
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
       if (!vehicle) return;
+      const vehicleName = vehicleNames.get(vIdx);
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
         .sort((a, b) => {
@@ -2315,7 +2327,7 @@
         if (totalQty > 1) {
           const entry = getEntry(row.id || row.name) || {};
           const displayName = nameMapAll.get(row) || row.name || entry.namn || 'föremål';
-          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'unload' });
+          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'unload', vehicleName });
           if (!chosen) return;
           moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
         }
