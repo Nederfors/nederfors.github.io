@@ -2055,6 +2055,7 @@ function defaultTraits() {
           : null;
         if (entry) {
           const row = entry.id !== undefined ? { i: entry.id } : { n: entry.namn };
+          if (it.namn && it.namn !== entry.namn) row.n = it.namn;
           if (it.nivå) row.l = it.nivå;
           if (it.trait) row.t = it.trait;
           if (it.race) row.r = it.race;
@@ -2077,6 +2078,7 @@ function defaultTraits() {
           : null;
         if (hitById) {
           const base = { ...hitById };
+          if (it.n && typeof it.n === 'string' && it.n !== base.namn) base.namn = it.n;
           if (it.l) base.nivå = it.l;
           if (it.t) base.trait = it.t;
           if (it.r) base.race = it.r;
