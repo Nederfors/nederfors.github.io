@@ -2045,13 +2045,24 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     pop.addEventListener('click', onOutside);
   }
 
-  function openDeleteContainerPopup(removeAll, removeOnly) {
+  function openDeleteContainerPopup(removeAll, removeOnly, options = {}) {
     const root = getToolbarRoot();
     if (!root) return;
     const pop    = root.getElementById('deleteContainerPopup');
     const allBtn = root.getElementById('deleteContainerAll');
     const onlyBtn= root.getElementById('deleteContainerOnly');
     const cancel = root.getElementById('deleteContainerCancel');
+    const textEl = root.getElementById('deleteContainerText');
+
+    const defaultText = textEl ? textEl.textContent : '';
+    const defaultAll  = allBtn ? allBtn.textContent : '';
+    const defaultOnly = onlyBtn ? onlyBtn.textContent : '';
+
+    const { message, allLabel, onlyLabel } = options || {};
+
+    if (textEl && message) textEl.textContent = message;
+    if (allBtn && allLabel) allBtn.textContent = allLabel;
+    if (onlyBtn && onlyLabel) onlyBtn.textContent = onlyLabel;
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
@@ -2062,6 +2073,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       onlyBtn.removeEventListener('click', onOnly);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
+      if (textEl) textEl.textContent = defaultText;
+      if (allBtn) allBtn.textContent = defaultAll;
+      if (onlyBtn) onlyBtn.textContent = defaultOnly;
     };
     const onAll = () => { removeAll(); close(); };
     const onOnly = () => { removeOnly(); close(); };
@@ -3450,6 +3464,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
                 parentArr.splice(idx, 1, ...(row.contains || []));
                 saveInventory(inv);
                 renderInventory();
+              },
+              {
+                message: 'Du håller på att ta bort ett färdmedel som innehåller föremål. Vill du ta bort föremålen i färdmedlet?',
+                onlyLabel: 'Ta bara bort färdmedlet'
               }
             );
           } else {
