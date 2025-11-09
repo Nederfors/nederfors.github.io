@@ -1968,7 +1968,7 @@
     pop.addEventListener('click', onOutside);
   }
 
-function openVehiclePopup(preselectId, precheckedPaths) {
+function openVehiclePopup(preselectValue, precheckedPaths) {
     const root = getToolbarRoot();
     if (!root) return;
     const pop    = root.getElementById('vehiclePopup');
@@ -1986,10 +1986,18 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     sel.innerHTML = vehicles
       .map(v => `<option value="${v.idx}">${v.entry.namn}</option>`)
       .join('');
-    if (preselectId) {
-      const found = vehicles.find(v => v.entry.id === preselectId);
-      if (found) sel.value = String(found.idx);
-    }
+
+    const resolvePreselectIdx = value => {
+      if (value === undefined || value === null) return null;
+      if (typeof value === 'number' && !Number.isNaN(value) && inv[value]) return value;
+      const asNum = Number(value);
+      if (!Number.isNaN(asNum) && inv[asNum]) return asNum;
+      const found = vehicles.find(v => v.entry.id === value || v.entry.namn === value);
+      return found ? found.idx : null;
+    };
+
+    const initialIdx = resolvePreselectIdx(preselectValue);
+    if (initialIdx !== null) sel.value = String(initialIdx);
 
     const flat = flattenInventoryWithPath(inv);
     const nameMap = makeNameMap(flat.map(f => f.row));
@@ -2854,7 +2862,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       '<button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>'
     ];
     const vehicleButtons = vehicles
-      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`);
+      .map(v => {
+        const vehId = v.entry?.id ?? '';
+        return `<button id="vehicleBtn-${v.idx}" data-vehicle-idx="${v.idx}" data-vehicle-id="${vehId}" class="char-btn">Lasta i ${v.entry.namn}</button>`;
+      });
     const trailingFunctionButtons = [
       '<button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>',
       '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
@@ -3527,7 +3538,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       }
       if (act === 'vehicleLoad') {
         const entry = getEntry(row.id || row.name);
-        if (entry?.id) openVehiclePopup(entry.id);
+        const rootIdx = Number(li?.dataset?.idx);
+        if (!Number.isNaN(rootIdx)) openVehiclePopup(rootIdx);
+        else if (entry?.id) openVehiclePopup(entry.id);
+        else openVehiclePopup();
         return;
       }
       if (act === 'vehicleUnload') {
@@ -4051,11 +4065,16 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
     const inv = storeHelper.getInventory(store);
     inv
-      .map(row => ({row, entry:getEntry(row.id || row.name)}))
+      .map((row, idx) => ({row, entry:getEntry(row.id || row.name), idx}))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'))
       .forEach(v => {
-        const b = getEl(`vehicleBtn-${v.entry.id}`);
-        if (b) b.onclick = () => openVehiclePopup(v.entry.id);
+        const btnId = `vehicleBtn-${v.idx}`;
+        const b = getEl(btnId);
+        if (b) {
+          const datasetIdx = Number(b.dataset?.vehicleIdx);
+          const targetIdx = Number.isNaN(datasetIdx) ? v.idx : datasetIdx;
+          b.onclick = () => openVehiclePopup(targetIdx);
+        }
       });
   }
 
