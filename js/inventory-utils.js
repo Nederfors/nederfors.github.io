@@ -15,6 +15,7 @@
   const INV_CAT_STATE_PREFIX = 'invCatState:';
   let cachedCatState = { key: '', state: {} };
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
+  const INDIVIDUAL_TYPES = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'];
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -389,6 +390,116 @@
     if (Number(movedRow.gratis) > movedRow.qty) movedRow.gratis = movedRow.qty;
     if (Number(movedRow.perkGratis) > movedRow.qty) movedRow.perkGratis = movedRow.qty;
     return { movedRow, remainingQty: row.qty || 0 };
+  }
+
+  function isIndividualItem(entry) {
+    if (!entry) return false;
+    const tagTyp = entry.taggar?.typ || [];
+    const indivType = INDIVIDUAL_TYPES.some(t => tagTyp.includes(t));
+    if (!indivType) return false;
+    if (STACKABLE_IDS.includes(entry.id)) return false;
+    if (['kraft', 'ritual'].includes(entry.bound)) return false;
+    return true;
+  }
+
+  function mergeStackRows(target, source) {
+    if (!target || !source) return;
+    const addCount = (field) => {
+      const srcRaw = Number(source[field]);
+      const srcVal = Number.isFinite(srcRaw) && srcRaw > 0 ? Math.floor(srcRaw) : 0;
+      if (!srcVal) return;
+      const tgtRaw = Number(target[field]);
+      const tgtVal = Number.isFinite(tgtRaw) && tgtRaw > 0 ? Math.floor(tgtRaw) : 0;
+      target[field] = tgtVal + srcVal;
+    };
+
+    const qtyRaw = Number(source.qty);
+    const qtyVal = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 0;
+    if (qtyVal) {
+      const tgtQtyRaw = Number(target.qty);
+      const tgtQtyVal = Number.isFinite(tgtQtyRaw) && tgtQtyRaw > 0 ? Math.floor(tgtQtyRaw) : 0;
+      target.qty = tgtQtyVal + qtyVal;
+    }
+
+    addCount('gratis');
+    addCount('perkGratis');
+
+    if (Array.isArray(source.gratisKval) && source.gratisKval.length) {
+      const set = new Set([...(target.gratisKval || []), ...source.gratisKval]);
+      target.gratisKval = [...set];
+    }
+    if (Array.isArray(source.removedKval) && source.removedKval.length) {
+      const set = new Set([...(target.removedKval || []), ...source.removedKval]);
+      target.removedKval = [...set];
+    }
+
+    if (!target.basePrice && source.basePrice) {
+      target.basePrice = { ...source.basePrice };
+    }
+    if (!target.basePriceSource && source.basePriceSource) {
+      target.basePriceSource = source.basePriceSource;
+    }
+    if (source.priceMult && !target.priceMult) {
+      target.priceMult = source.priceMult;
+    }
+
+    if (Number(target.gratis) > Number(target.qty)) target.gratis = Number(target.qty) || 0;
+    if (Number(target.perkGratis) > Number(target.qty)) target.perkGratis = Number(target.qty) || 0;
+  }
+
+  function canStackRows(target, source, entry) {
+    if (!target || !source) return false;
+    if (Array.isArray(target.contains)) return false;
+    if (Array.isArray(source.contains)) return false;
+
+    const entryName = entry?.namn || '';
+    const targetEntry = getEntry(target.id || target.name);
+    const targetEntryName = targetEntry?.namn || '';
+    if (source.id) {
+      if (target.id !== source.id) return false;
+    } else if (target.id) {
+      return false;
+    } else {
+      const sourceName = entryName || source.name || '';
+      const targetName = targetEntryName || target.name || '';
+      if (sourceName !== targetName) {
+        if (!entryName && !targetEntryName) return false;
+        const normalize = val => String(val || '').replace(/\s+\d+$/, '');
+        if (normalize(sourceName) !== normalize(targetName)) return false;
+      }
+    }
+
+    const targetTrait = target.trait || '';
+    const sourceTrait = source.trait || '';
+    if (targetTrait !== sourceTrait) return false;
+
+    const targetEffect = target.artifactEffect || '';
+    const sourceEffect = source.artifactEffect || '';
+    if (targetEffect !== sourceEffect) return false;
+
+    return true;
+  }
+
+  function addToInventory(inv, row) {
+    if (!row || !Array.isArray(inv)) return;
+    const entry = getEntry(row.id || row.name);
+    if (isIndividualItem(entry)) {
+      inv.push(row);
+      return;
+    }
+    const target = inv.find(existing => canStackRows(existing, row, entry));
+    if (target) {
+      mergeStackRows(target, row);
+    } else {
+      if (!Number.isFinite(Number(row.qty)) || Number(row.qty) <= 0) {
+        row.qty = 1;
+      }
+      if (!Array.isArray(row.gratisKval)) row.gratisKval = row.gratisKval ? [row.gratisKval] : [];
+      if (!Array.isArray(row.removedKval)) row.removedKval = row.removedKval ? [row.removedKval] : [];
+      if (Number(row.gratis) > Number(row.qty)) row.gratis = Number(row.qty) || 0;
+      if (Number(row.perkGratis) > Number(row.qty)) row.perkGratis = Number(row.qty) || 0;
+      inv.push(row);
+    }
   }
 
   function parsePathStr(str) {
@@ -2337,12 +2448,12 @@
         if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
         if (totalQty > 1 && moveQty < totalQty) {
           const { movedRow } = splitStackRow(row, moveQty);
-          if (movedRow) inv.push(movedRow);
+          if (movedRow) addToInventory(inv, movedRow);
           const remaining = Number(row.qty);
           if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
         } else {
           const [item] = parentArr.splice(idx, 1);
-          if (item) inv.push(item);
+          if (item) addToInventory(inv, item);
         }
       });
       saveInventory(inv);
