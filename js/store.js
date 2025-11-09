@@ -2070,41 +2070,90 @@ function defaultTraits() {
     });
   }
 
-  function expandList(list) {
-    return (list || []).map(it => {
-      if (it && it.i !== undefined) {
-        const hitById = typeof global.lookupEntry === 'function'
-          ? global.lookupEntry({ id: it.i })
-          : null;
-        if (hitById) {
-          const base = { ...hitById };
-          if (it.n && typeof it.n === 'string' && it.n !== base.namn) base.namn = it.n;
-          if (it.l) base.nivå = it.l;
-          if (it.t) base.trait = it.t;
-          if (it.r) base.race = it.r;
-          if (it.f) base.form = it.f;
-          if (it.u) base.__uid = it.u;
-          const orderVal = coerceOrderValue(it.o);
-          if (orderVal !== null) base.__order = orderVal;
-          return base;
-        }
+  function expandList(list, customEntries = [], idMap = null) {
+    const customs = Array.isArray(customEntries) ? customEntries : [];
+    const customById = new Map();
+    const customByName = new Map();
+    customs.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (entry.id !== undefined) customById.set(entry.id, entry);
+      if (entry.namn) customByName.set(entry.namn, entry);
+    });
+
+    const remapId = (value) => {
+      if (value === undefined || value === null) return value;
+      if (idMap instanceof Map) {
+        const mapped = idMap.get(value);
+        if (mapped !== undefined) return mapped;
+        const asString = typeof value === 'string' ? value : String(value);
+        const mappedString = idMap.get(asString);
+        if (mappedString !== undefined) return mappedString;
       }
-      if (it && it.n !== undefined) {
-        const hitByName = typeof global.lookupEntry === 'function'
-          ? global.lookupEntry({ id: it.n, name: it.n })
-          : null;
+      return value;
+    };
+
+    const cloneWithOrder = (base, src) => {
+      if (src.n && typeof src.n === 'string' && src.n !== base.namn) base.namn = src.n;
+      if (src.l) base.nivå = src.l;
+      if (src.t) base.trait = src.t;
+      if (src.r) base.race = src.r;
+      if (src.f) base.form = src.f;
+      if (src.u) base.__uid = src.u;
+      const orderVal = coerceOrderValue(src.o);
+      if (orderVal !== null) base.__order = orderVal;
+      return base;
+    };
+
+    return (list || []).map(it => {
+      if (!it || typeof it !== 'object') return it;
+
+      if (Object.prototype.hasOwnProperty.call(it, 'i')) {
+        const rawId = it.i;
+        const mappedId = remapId(rawId);
+        const hit = customById.get(mappedId)
+          || (typeof global.lookupEntry === 'function'
+            ? global.lookupEntry({ id: mappedId })
+            : null);
+        if (hit) {
+          const base = { ...hit };
+          if (mappedId !== undefined && mappedId !== null) base.id = mappedId;
+          return cloneWithOrder(base, { ...it, i: mappedId });
+        }
+        if (mappedId !== rawId) {
+          return { ...it, i: mappedId };
+        }
+        return it;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(it, 'id')) {
+        const rawId = it.id;
+        const mappedId = remapId(rawId);
+        const hit = customById.get(mappedId)
+          || (typeof global.lookupEntry === 'function'
+            ? global.lookupEntry({ id: mappedId })
+            : null);
+        if (hit) {
+          const base = { ...hit, ...it };
+          base.id = mappedId;
+          return cloneWithOrder(base, { ...it, id: mappedId });
+        }
+        if (mappedId !== rawId) {
+          return { ...it, id: mappedId };
+        }
+        return it;
+      }
+
+      if (Object.prototype.hasOwnProperty.call(it, 'n')) {
+        const hitByName = customByName.get(it.n)
+          || (typeof global.lookupEntry === 'function'
+            ? global.lookupEntry({ id: it.n, name: it.n })
+            : null);
         if (hitByName) {
           const base = { ...hitByName };
-          if (it.l) base.nivå = it.l;
-          if (it.t) base.trait = it.t;
-          if (it.r) base.race = it.r;
-          if (it.f) base.form = it.f;
-          if (it.u) base.__uid = it.u;
-          const orderVal = coerceOrderValue(it.o);
-          if (orderVal !== null) base.__order = orderVal;
-          return base;
+          return cloneWithOrder(base, it);
         }
       }
+
       return it;
     });
   }
@@ -2374,7 +2423,7 @@ function defaultTraits() {
       const usedIds = collectUsedCustomIds(store);
       const prefix = makeCustomIdPrefix(obj.name || '', id);
       const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
-      data.list = expandList(data.list);
+      data.list = expandList(data.list, custom, idMap);
       data.inventory = expandInventory(data.inventory, custom, idMap);
       if (idMap.size && Array.isArray(data.revealedArtifacts)) {
         data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
