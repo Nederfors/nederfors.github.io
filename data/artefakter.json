@@ -3164,5 +3164,41 @@
     "skilling": 0,
     "örtegar": 0
   }
+},
+  {
+"id": "ar97",
+"namn": "Slöjväskan",
+"beskrivning": "En sliten men märkligt intakt väska, sydd av skuggblekt skinn och sammanhållen av sömmar som skimrar svagt när månsken faller på dem. Inuti tycks väskan fortsätta i lager efter lager av mörker, som om rymden själv vikt sig inåt. När någon knyter väskan till sin själ öppnas dess djup endast för dem, medans främmande händer bara finner tomhet.",
+"kvalitet": [],
+"taggar": {
+"typ": [
+"Artefakt"
+],
+"handling": {
+"Förmåga 1": [
+"Passiv"
+],
+"Förmåga 2": [
+"Förflyttning"
+],
+"Förmåga 3": [
+"Aktiv"
+]
+}
+},
+"nivåer": {
+"Förmåga 1": "Fickrymdens djup; Handling: Passiv\nFöremål som stoppas i den bundna säcken faller in i en dold fickrymd. De första 20 i sammanlagd vikt på innehållet räknas inte mot bärarens börda; överskjutande vikt räknas som vanligt. Innehållet påverkas inte av väta, kyla eller vanlig eld och kan endast nås via säckens öppning. Korruption: Ingen.",
+"Förmåga 2": "Namngivet fynd; Handling: Fri\nBäraren kan som en fri handling namnge ett föremål som ligger i säcken och med ett lyckat Viljestark dra fram just det föremålet utan att rota. Vid misslyckande krävs en förflyttning för att leta fram saken på vanligt vis. Korruption: 1.",
+"Förmåga 3": "Svalja det otympliga; Handling: Aktiv\nSäcken kan forceras att sluka otympliga objekt som normalt inte ryms genom öppningen. Bäraren måste klara ett Viljestark; vid framgång dras objektet in under rundan och hamnar oskadat i fickrymden. Vid misslyckande fastnar objektet halvvägs och bäraren förlorar sin handling; nytt försök kan göras nästa runda. Levande varelser kan ej placeras i fickrymden. Om säcken genomborras eller bränns upp sprids innehållet på marken runt bäraren. Korruption: 1T4."
+},
+"stat": {
+"skada": "",
+"vikt": 1.0
+},
+"grundpris": {
+"daler": 0,
+"skilling": 0,
+"örtegar": 0
+}
 }
 ]
