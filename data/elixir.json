@@ -1539,5 +1539,26 @@
 "stat": {
 "vikt": 0.5
 }
+},
+{
+  "id": "elix95",
+  "namn": "Fjärdningbrygd",
+  "taggar": {
+    "typ": [
+      "Elixir"
+    ]
+  },
+  "nivåer": {
+    "Novis": "En stickande, varm brygd som väcker köttets drift. Den som dricker en dos låter transformationer ta fäste och flöda fritt. Pågående eller vilande förvandlingar (från elixir, sjukdomar, mystiska krafter eller förbannelser) tilltar omedelbart och fullbordas som en förflyttningshandling."
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 2,
+    "örtegar": 0
+  },
+  "stat": {
+    "vikt": 0.5
+  }
 }
+
 ]
