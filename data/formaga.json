@@ -682,7 +682,7 @@
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen har en stark intuition vilket låter denne slå Vaksam istället för Träffsäker vid attacker med avståndsvapen.",
       "Gesäll": "Handling: Passiv. Rollpersonens intuition har utökats och rollpersonen får beräkna sitt initiativ och Försvar med Vaksam istället för med Kvick.",
-      "Mästare": "Handling: Passiv. Rollpersonen kan röra sig och strida obehindrat, förblindad eller i kolmörker."
+      "Mästare": "Handling: Passiv. Rollpersonen kan röra sig och strida obehindrat, förblindad eller i kolmörker. Vidare så får rollpersonen använda Vaksam istället för träffsäker även vid attacker i närstrid."
     }
   },
   {
