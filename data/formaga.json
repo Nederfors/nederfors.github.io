@@ -2290,8 +2290,13 @@
   "namn": "Koreograferad strid",
   "beskrivning": "Striden följer ett nummer: steg, sväng, snitt. Rollpersonen tränar fotarbete och rytmisk tajming; kroppen sätter tempot och klingan följer takten.",
   "taggar": {
-    "typ": ["Förmåga"],
-    "ark_trad": ["Krigare", "Tjuv"],
+"typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Järnsvuren"
+      ],
     "test": ["Kvick"],
     "handling": {
       "Novis": ["Speciell"],
