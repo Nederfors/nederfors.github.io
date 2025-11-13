@@ -1,6 +1,59 @@
 (function(window){
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 
+const quoteName = (value) => {
+  const str = String(value ?? '').trim();
+  return str ? `“${str}”` : '';
+};
+
+function formatQuotedList(values) {
+  if (!Array.isArray(values) || !values.length) return '';
+  return values
+    .map(val => quoteName(val))
+    .filter(Boolean)
+    .join(', ');
+}
+
+function getGrundritualRequirements(entry) {
+  const raw = entry?.taggar?.grundritual;
+  if (Array.isArray(raw)) {
+    return raw
+      .map(val => (typeof val === 'string' ? val.trim() : ''))
+      .filter(Boolean);
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  return [];
+}
+
+async function enforceGrundritualRequirement(entry, list) {
+  const required = getGrundritualRequirements(entry);
+  if (!required.length) return { allowed: true, autoAdd: [] };
+  const current = Array.isArray(list) ? list : [];
+  const missing = required.filter(name => !current.some(item => item?.namn === name));
+  if (!missing.length) return { allowed: true, autoAdd: [] };
+  const entryLabel = quoteName(entry?.namn) || 'Denna ritual';
+  const requirementText = missing.length === 1 ? 'grundritualen' : 'grundritualerna';
+  const missingText = formatQuotedList(missing) || 'den angivna ritualen';
+  const baseMessage = `${entryLabel} kräver ${requirementText} ${missingText}.`;
+  if (typeof window.openDialog === 'function') {
+    const extraLabel = missing.length === 1 ? `Lägg till ${missingText}` : 'Lägg till alla';
+    const response = await window.openDialog(`${baseMessage} Lägg till grundritual nu, hoppa över kravet eller avbryt.`, {
+      cancel: true,
+      okText: 'Hoppa över kravet',
+      cancelText: 'Avbryt',
+      extraText: extraLabel
+    });
+    if (response === false) return { allowed: false, autoAdd: [] };
+    if (response === 'extra') return { allowed: true, autoAdd: missing };
+    return { allowed: true, autoAdd: [] };
+  }
+  const fallback = await confirmPopup(`${baseMessage}\nHoppa över kravet?`);
+  return { allowed: !!fallback, autoAdd: [] };
+}
+
 function computeIndexEntryXP(entry, list, options = {}) {
   const defaults = {
     allowInventory: true,
@@ -2303,10 +2356,10 @@ function initIndex() {
           });
           return;
         }
-        if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
-          const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
-          exceptionSkill.pickTrait(used, async trait => {
-            if(!trait) return;
+          if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
+            const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
+            exceptionSkill.pickTrait(used, async trait => {
+              if(!trait) return;
             const existing=list.find(x=>x.namn===p.namn && x.trait===trait);
             let added;
             if(existing){
@@ -2321,12 +2374,35 @@ function initIndex() {
             scheduleRenderList();
             renderTraits();
             flashAdded(added.namn, added.trait);
-          });
-          return;
-        }
-        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-        if(multi){
-          const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
+            });
+            return;
+          }
+          const grundCheck = await enforceGrundritualRequirement(p, list);
+          if (!grundCheck.allowed) return;
+          if (grundCheck.autoAdd.length) {
+            const autoAdded = [];
+            const missingBases = [];
+            grundCheck.autoAdd.forEach(baseName => {
+              if (list.some(item => item?.namn === baseName)) return;
+              const baseEntry = lookupEntry({ name: baseName });
+              if (baseEntry) {
+                list.push({ ...baseEntry });
+                autoAdded.push(baseName);
+              } else {
+                missingBases.push(baseName);
+              }
+            });
+            if (autoAdded.length && typeof window.toast === 'function') {
+              window.toast(`La till ${formatQuotedList(autoAdded)}.`);
+            }
+            if (missingBases.length && typeof alertPopup === 'function') {
+              const plural = missingBases.length === 1 ? 'grundritualen' : 'grundritualerna';
+              await alertPopup(`Hittar inte ${plural} ${formatQuotedList(missingBases)} i databasen. Lägg till manuellt.`);
+            }
+          }
+          const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+          if(multi){
+            const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
           const limit = storeHelper.monsterStackLimit(list, p.namn);
           if(p.namn !== 'Blodsband' && cnt >= limit){
             await alertPopup(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
