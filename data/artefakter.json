@@ -3257,13 +3257,13 @@
 "Passiv"
 ],
 "Förmåga 2": [
-"Aktiv"
+"Reaktiv"
 ]
 }
 },
 "nivåer": {
-"Förmåga 1":"När mästaren av spjutet svär en tydlig och bindande ed — det kan vara att skydda någon, nå en viss plats eller fälla en utpekad fiende — vaknar vapnets dolda kraft. Under strid, så länge eden fortfarande är i spel, börjar spjutets ringar sjunga med en dov metallisk resonans. För varje anfall som orsakar skada i syfte att fullfölja eden samlar spjutet på sig en extra ring, och dessa ringar kan när som helst spenderas för att hjälpa mästaren att fullfölja sin ed.\n En ring kan antingen användas för att ge +1 på ett slag som direkt bidrar till att uppfylla eden, eller för att öka effekten av ett redan lyckat slag med +1. Korruption: 1 per spenderad ring.",
-"Förmåga 2": "Blodsresonans; Handling: Aktiv\nNär mästaren sårar en fiende med spjutet kan hen låta spetsen dricka några droppar blod och viska en kort ed om att inte låta målet undkomma. Slå mot Viljestark: vid lyckat resultat märks fienden av en dov ton som bara mästaren (och andra järnsvurna inom hörhåll) uppfattar. Under resten av striden får mästaren 1T4 extra skada vid varje lyckad träff mot det märkta målet. Därtill kan målet inte använda sin förflyttning för att lämna närstrid utan att först lyckas med ett slag mot Viljestark; misslyckas slaget får mästaren omedelbart en fri attack mot målet. Effekten upphör om målet dör eller om mästaren avsiktligt ger upp jakten och därmed bryter sin ed.\nKorruption: 1T4."
+"Förmåga 1":"Edsklang; Handling: Passiv\nNär mästaren av spjutet svär en tydlig och bindande ed — det kan vara att skydda någon, nå en viss plats eller fälla en utpekad fiende — vaknar vapnets dolda kraft. Under strid, så länge eden fortfarande är i spel, börjar spjutets ringar sjunga med en dov metallisk resonans. För varje anfall som orsakar skada i syfte att fullfölja eden samlar spjutet på sig en extra ring, och dessa ringar kan när som helst spenderas för att hjälpa mästaren att fullfölja sin ed.\n En ring kan antingen användas för att ge +1 på ett slag som direkt bidrar till att uppfylla eden, eller för att öka effekten av ett redan lyckat slag med +1. Enbart en ed kan vara aktiv åt gången och de ansamlade ringarna försvinner vid avslutad eller bruten ed. Korruption: 1 per spenderad ring.",
+"Förmåga 2": "Blodsresonans; Handling: Reaktiv\nNär mästaren sårar en fiende med spjutet kan hen låta spetsen dricka några droppar blod och viska en kort ed om att inte låta målet undkomma. Slå mot Viljestark: vid lyckat resultat märks fienden av en dov ton som bara mästaren (och andra järnsvurna inom hörhåll) uppfattar. Under resten av striden får mästaren 1T4 extra skada vid varje lyckad träff mot det märkta målet. Därtill kan målet inte använda sin förflyttning för att lämna närstrid utan att först lyckas med ett slag mot Viljestark; misslyckas slaget får mästaren omedelbart en fri attack mot målet. Effekten upphör om målet dör eller om mästaren avsiktligt ger upp jakten och därmed bryter sin ed.\nKorruption: 1T4."
 },
 "stat": {
 "skada": "1T10",
