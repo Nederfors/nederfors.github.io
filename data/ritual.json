@@ -357,7 +357,8 @@
     "taggar": {
       "typ": ["Ritual", "Elityrkesförmåga"],
       "ark_trad": ["Själasörjare"],
-      "test": ["Viljestark"]
+      "test": ["Viljestark"],
+      "grundritual": ["Exorcism"]
     }
   },
   {
@@ -367,7 +368,8 @@
     "taggar": {
       "typ": ["Ritual", "Elityrkesförmåga"],
       "ark_trad": ["Nekromantiker"],
-      "test": ["Viljestark"]
+      "test": ["Viljestark"],
+      "grundritual": ["Väcka vandöd"]
     }
   },
   {
@@ -377,7 +379,8 @@
     "taggar": {
       "typ": ["Ritual", "Elityrkesförmåga"],
       "ark_trad": ["Andebesvärjare"],
-      "test": ["Viljestark"]
+      "test": ["Viljestark"],
+      "grundritual": ["Andebesvärjelse"]
     }
   },
   {
@@ -455,12 +458,13 @@
     "id": "ri46",
   "namn": "Hjärtebest",
   "beskrivning": "Tradition: Endast tillgänglig för Blodvadare\nDen högre nivån av ritualen Bjära knyter besten till mystikerns själ och hjärta; om bjäran dödas återvänder den återuppstånden i gryningen dagen därpå. Mystikern tar skada när hjärtebesten dödas, som tidigare. Och i händelse av att hjärtebesten genomkorrumperas – genom ritualen Blodsbest eller på annat sätt – så bryts bandet mellan mystiker och best för evigt.",
-  "taggar": {
-    "typ": ["Ritual", "Elityrkesförmåga"],
-    "ark_trad": ["Blodvadare"],
-      "test": ["Viljestark"]
-  }
-},
+    "taggar": {
+      "typ": ["Ritual", "Elityrkesförmåga"],
+      "ark_trad": ["Blodvadare"],
+      "test": ["Viljestark"],
+      "grundritual": ["Bjära"]
+    }
+  },
 {
     "id": "ri47",
   "namn": "Jordstöt",
@@ -486,12 +490,13 @@
     "id": "ri49",
   "namn": "Levande fästning",
   "beskrivning": "Tradition: Endast tillgänglig för Grönvävare\nDen högre nivån av ritualen Snabbväxt låter mystikern skapa en fästning av levande träd och taggiga snår. Fortet räknas som ett träfort (se Skada på byggnader, sidan 106) och försvarar sig mot dem som försöker ta sig igenom eller över levande murar – på både inoch utvägen. De som försöker passera måste klara tre [Kvick ← Viljestark] eller ta 1t12 i skada per misslyckande av ettriga törnens stick och tunga grenars slag, rustning skyddar ej.\nMystikern som skapade fortet kan släppa in eller ut vem den vill, och kan även lära sina allierade hemliga ord som låter dem passera obehindrat genom den farliga grönskan.\nFästningen lever en årstid (dvs. tre månader), sedan måste ritualen kastas igen för att inte fästningen ska förtvina. Det kostar en Erfarenhet att använda ritualen.",
-  "taggar": {
-    "typ": ["Ritual", "Elityrkesförmåga"],
-    "ark_trad": ["Grönvävare"],
-    "test": ["Viljestark"]
-  }
-},
+    "taggar": {
+      "typ": ["Ritual", "Elityrkesförmåga"],
+      "ark_trad": ["Grönvävare"],
+      "test": ["Viljestark"],
+      "grundritual": ["Snabbväxt"]
+    }
+  },
 {
     "id": "ri50",
   "namn": "Livsförlängning",
@@ -591,7 +596,8 @@
   "taggar": {
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Demonolog"],
-      "test": ["Viljestark"]
+      "test": ["Viljestark"],
+    "grundritual": ["Frammana daemon"]
   }
 },
 {
@@ -601,7 +607,8 @@
   "taggar": {
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Inkvisitor"],
-    "test": ["Listig", "Vaksam"]
+    "test": ["Listig", "Vaksam"],
+    "grundritual": ["Offerrök"]
   }
 },
 {
@@ -649,12 +656,13 @@
     "id": "ri65",
   "namn": "Fata morgana",
   "beskrivning": "Tradition: Endast tillgänglig för Illusionist\nDen högre nivån av ritualen Falsk terräng ger illusionisten sådan kraft över lögnen att den tangerar sanningen; det som skapas med en fata morgana finns i faktisk mening, i alla fall under det månvarv som ritualens kraft räcker. Skaparen kan skapa en terrängtyp över en annan eller välja en mindre byggnad, från torp till fort i sten (se Skada på byggnader, sidan 106) och uppföra den på en plats. Det går inte att genomskåda men väl att förstöra falskverket; om reglerna för Skada på byggnader används så har fata morgana hälften av Tåligheten som anges där. Efter ett månvarvs tid tynar illusionen bort över en natt; det eller dem som fanns i illusionen under natten vaknar på marken och inga spår av lögnen finns kvar.\nAtt kasta ritualen kostar en Erfarenhet.",
-  "taggar": {
-    "typ": ["Ritual", "Elityrkesförmåga"],
-    "ark_trad": ["Illusionist"],
-      "test": ["Viljestark"]
-  }
-},
+    "taggar": {
+      "typ": ["Ritual", "Elityrkesförmåga"],
+      "ark_trad": ["Illusionist"],
+        "test": ["Viljestark"],
+      "grundritual": ["Falsk terräng"]
+    }
+  },
 {
     "id": "ri66",
   "namn": "Fjärrskrift",
@@ -679,12 +687,13 @@
     "id": "ri68",
   "namn": "Formeltunnel",
   "beskrivning": "Tradition: Endast tillgänglig för Mentalist\nDen högre nivån av ritualen Klärvoajans öppnar möjligheten för mentalisten att skapa en mystisk tunnel till platsen som betraktas; genom tunneln kan alla mystiska krafter med räckvidd utöver personlig eller beröring användas. Mentalistens allierade kan också använda tunneln för att påverka andra sidan med mystiska krafter. Tunneln går åt båda håll, vilket gör att de på andra sidan kan slå tillbaka. Avståndsvapen fungerar inte genom tunneln, endast mystiska krafter och särdrag som fungerar som mystiska krafter.\nTunneln hålls öppen i en scen men kan stängas innan dess med kraften Anatema.",
-  "taggar": {
-    "typ": ["Ritual", "Elityrkesförmåga"],
-    "ark_trad": ["Mentalist"],
-      "test": ["Viljestark"]
-  }
-},
+    "taggar": {
+      "typ": ["Ritual", "Elityrkesförmåga"],
+      "ark_trad": ["Mentalist"],
+        "test": ["Viljestark"],
+      "grundritual": ["Klärvoajans"]
+    }
+  },
 
 {
     "id": "ri69",
