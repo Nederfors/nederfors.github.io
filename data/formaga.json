@@ -1606,7 +1606,7 @@
     "nivåer": {
       "Novis": "Passiv. Rollpersonen kan dela upp sin förflyttning och göra en del av sin förflyttning före sin stridshandling och en del efter – detta i syfte att utnyttja terrängens skottfält och skydd maximalt. Rollpersonen drar fortfarande på sig frislag av fiender om den uppdelade förflyttningen leder in den järnsvurne på närstridsavstånd.",
       "Gesäll": "Reaktiv. Rollpersonen kan fritt växla vapen som en del av sin stridshandling. Detta gäller enbart byte av vapen, det är inte en extra förflyttningshandling som kan användas till annat. Den järnsvurne kan exempelvis starta med två vapen i händerna, förflytta sig en del av sin förflyttning, och som stridshandling byta till pilbåge och anfalla med den samt därefter byta tillbaka till två vapen. Slutligen görs resten av förflyttningen.",
-      "Mästare": "Reaktiv. Rollpersonen växlar sömlöst mellan avståndsvapen och närstrid. Om den järnsvurne under sin runda har genomfört ett anfall med antingen avståndsvapen eller närstridsvapen får hen omedelbart utföra en extra aktiv handling för ett anfall med den andra vapentypen. Den extra aktiva handlingen får inte användas till något annat än detta anfall i närstrid eller på avstånd."
+      "Mästare": "Reaktiv. Rollpersonen växlar sömlöst mellan avståndsvapen och närstrid. Om den järnsvurne under sin runda har genomfört ett anfall med antingen avståndsvapen eller närstridsvapen får hen utföra en extra aktiv handling för ett anfall med den andra vapentypen. Den extra aktiva handlingen får inte användas till något annat än detta anfall i närstrid eller på avstånd."
     }
   },
   {
