@@ -592,7 +592,7 @@
 {
     "id": "ri59",
   "namn": "Frammana Tjänardaemon",
-  "beskrivning": "Tradition: Endast tillgänglig för Demonolog\nDen högre nivån av ritualen Frammana daemon binder en tjänardeamon vid demonologens sida. Daemonen är svag vid skapandet men kan sedan lära sig av erfarenhet och hanteras av spelaren som en andra rollperson. Daemonen kan också bli föremål för ritualen Blodsbest.",
+  "beskrivning": "Tradition: Endast tillgänglig för Demonolog\nDen högre nivån av ritualen Frammana daemon binder en tjänardeamon vid demonologens sida. Daemonen är svag vid skapandet men kan sedan lära sig av erfarenhet och hanteras av spelaren som en andra rollperson. Daemonen kan också bli föremål för ritualen Hjärtebest.",
   "taggar": {
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Demonolog"],
