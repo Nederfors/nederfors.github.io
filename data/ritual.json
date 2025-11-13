@@ -597,7 +597,12 @@
     "typ": ["Ritual", "Elityrkesförmåga"],
     "ark_trad": ["Demonolog"],
       "test": ["Viljestark"],
-    "grundritual": ["Frammana daemon"]
+    "grundritual": [
+      "Frammana Hämnddaemon",
+      "Frammana Kunskapsdaemon",
+      "Frammana Tjänardaemon",
+      "Frammana Väktardaemon"
+    ]
   }
 },
 {
