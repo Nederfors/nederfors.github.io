@@ -353,8 +353,7 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Kvalitet",
-        "Vapenkvalitet"
+        "Kvalitet"
       ]
     },
     "effekt": "Aktivera för 1t4 temporär korruption; skydd växer per runda tills träff och förbrukas då."
