@@ -872,12 +872,27 @@
         return LEVEL_VALUE[this.Formagor[name] || ''] >= LEVEL_VALUE[desired];
       };
 
+      const ensureRitualWithLocalBudget = (name) => {
+        const key = normalizeName(name);
+        if (!key) return false;
+        if (!Array.isArray(this.valdaRitualer)) this.valdaRitualer = [];
+        if (this.valdaRitualer.some(rit => normalizeName(rit) === key)) return true;
+        const entry = lookupEntryByName(name);
+        if (entry && !(entry.taggar?.typ || []).includes('Ritual')) return false;
+        if (ERFkvar < 10) return false;
+        const displayName = entry?.namn || name;
+        if (!displayName) return false;
+        ERFkvar -= 10;
+        this.valdaRitualer.push(displayName);
+        return true;
+      };
+
       const handleForcedRequirement = () => {
         const req = this.getPendingForcedAbility();
         if (!req) return false;
         const ok = this.resolveForcedRequirement(req, {
           ensureAbilityLevel,
-          ensureRitual: name => this.ensureRitualKnown(name)
+          ensureRitual: ensureRitualWithLocalBudget
         });
         if (ok) {
           req.done = true;
