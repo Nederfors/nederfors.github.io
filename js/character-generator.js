@@ -831,13 +831,72 @@
         return false;
       };
 
+      const isAbilityCompatibleWithCurrent = (name) => {
+        return getIncompatibleGroups().every(grupp => {
+          if (!grupp.includes(name)) return true;
+          return !grupp.some(val => this.Formagor[val]);
+        });
+      };
+
+      const tryFallbackPromotion = () => {
+        const options = Object.keys(this.Formagor)
+          .filter(name => (this.Formagor[name] === 'Novis' && ERFkvar >= 20) || (this.Formagor[name] === 'Gesäll' && ERFkvar >= 30));
+        if (!options.length) return false;
+        const list = options.slice();
+        while (list.length) {
+          const idx = randIndex(list.length);
+          const val = list.splice(idx, 1)[0];
+          if (!val) continue;
+          const ok = promoteAbility(val, this.Formagor[val]);
+          if (ok) return true;
+        }
+        return false;
+      };
+
+      const tryFallbackNewAbility = () => {
+        if (ERFkvar < 10) return false;
+        const known = new Set(Object.keys(this.Formagor));
+        const pool = getAbilityPool()
+          .map(item => item.name)
+          .filter(Boolean)
+          .filter(name => !known.has(name))
+          .filter(name => this.isAbilityAllowedByStats(name))
+          .filter(name => this.isAllowedByTraditionLock(name))
+          .filter(name => isAbilityCompatibleWithCurrent(name));
+        if (!pool.length) return false;
+        const picks = pool.slice();
+        while (picks.length && ERFkvar >= 10) {
+          const idx = randIndex(picks.length);
+          const val = picks.splice(idx, 1)[0];
+          if (!val) continue;
+          if (learnNovis(val)) return true;
+        }
+        return false;
+      };
+
+      const forceFallbackSpending = () => {
+        let guard = 0;
+        while (ERFkvar >= 10 && guard < 200) {
+          if (handleForcedRequirement()) continue;
+          if (tryFallbackPromotion()) {
+            guard += 1;
+            continue;
+          }
+          if (!tryFallbackNewAbility()) break;
+          guard += 1;
+        }
+      };
+
       const exhaustRemainingXP = () => {
         let guard = 0;
         while (ERFkvar >= 30 && guard < 50) {
           const list = Object.keys(this.Formagor).filter(name => this.Formagor[name] === 'Gesäll');
           if (!list.length) break;
           const val = list[randIndex(list.length)];
-          if (!promoteAbility(val, 'Gesäll')) break;
+          if (!promoteAbility(val, 'Gesäll')) {
+            guard += 1;
+            continue;
+          }
           guard += 1;
         }
         guard = 0;
@@ -850,6 +909,9 @@
             continue;
           }
           guard += 1;
+        }
+        if (ERFkvar >= 10) {
+          forceFallbackSpending();
         }
       };
 
