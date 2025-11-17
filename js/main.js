@@ -1609,6 +1609,58 @@ function bindToolbar() {
       applyCharacterChange();
     }
 
+    /* Generera rollperson ---------------------------------- */
+    if (id === 'generateCharBtn') {
+      const active = storeHelper.getActiveFolder(store);
+      const res = await openGeneratorPopup(active);
+      if (!res) return;
+      if (!window.symbaroumGenerator || typeof window.symbaroumGenerator.generate !== 'function') {
+        await alertPopup('Generatorn kunde inte laddas.');
+        return;
+      }
+      let generated = null;
+      try {
+        generated = window.symbaroumGenerator.generate({
+          name: res.name,
+          xp: res.xp,
+          attributeMode: res.attrMode,
+          abilityMode: res.abilityMode,
+          traitFocus: res.traitFocus,
+          race: res.race,
+          yrke: res.yrke,
+          elityrke: res.elityrke
+        });
+      } catch (err) {
+        console.error('Generator error', err);
+      }
+      if (!generated) {
+        await alertPopup('Generatorn misslyckades. Försök igen.');
+        return;
+      }
+      const charId = storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now());
+      const folderId = res.folderId || '';
+      store.characters.push({ id: charId, name: res.name, folderId });
+      store.data[charId] = { baseXp: Number(res.xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
+      store.current = charId;
+      const prevActive = storeHelper.getActiveFolder(store);
+      if (folderId && prevActive !== folderId) {
+        storeHelper.setActiveFolder(store, folderId);
+      }
+      try {
+        storeHelper.setTraits(store, generated.traits || {});
+      } catch (err) {
+        console.warn('Kunde inte sätta karaktärsdrag', err);
+      }
+      try {
+        storeHelper.setCurrentList(store, Array.isArray(generated.list) ? generated.list : []);
+      } catch (err) {
+        console.warn('Kunde inte sätta förmågor', err);
+      }
+      storeHelper.setBaseXP(store, Math.max(0, Number(res.xp) || 0));
+      storeHelper.save(store);
+      applyCharacterChange();
+    }
+
     /* Kopiera rollperson ----------------------------------- */
     if (id === 'duplicateChar') {
       if (!store.current && !(await requireCharacter())) return;
@@ -3195,6 +3247,119 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
     }
     create.addEventListener('click', onCreate);
     cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// Popup: Generera rollperson
+async function openGeneratorPopup(preferredFolderId) {
+  const pop = bar?.shadowRoot?.getElementById('generatorPopup');
+  if (!pop) return null;
+  const nameIn = bar.shadowRoot.getElementById('genCharName');
+  const folderEl = bar.shadowRoot.getElementById('genCharFolder');
+  const xpIn = bar.shadowRoot.getElementById('genCharXp');
+  const attrSel = bar.shadowRoot.getElementById('genCharAttr');
+  const abilitySel = bar.shadowRoot.getElementById('genCharAbility');
+  const traitSel = bar.shadowRoot.getElementById('genCharTrait');
+  const raceSel = bar.shadowRoot.getElementById('genCharRace');
+  const yrkeSel = bar.shadowRoot.getElementById('genCharYrke');
+  const eliteSel = bar.shadowRoot.getElementById('genCharElityrke');
+  const createBtn = bar.shadowRoot.getElementById('genCharCreate');
+  const cancelBtn = bar.shadowRoot.getElementById('genCharCancel');
+
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  folderEl.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = '';
+  if (xpIn) xpIn.value = 100;
+  if (attrSel) attrSel.value = '';
+  if (abilitySel) abilitySel.value = '';
+  if (traitSel) {
+    const attrs = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
+    const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const traitHtml = ['<option value="">Auto (matchar bästa drag)</option>']
+      .concat(attrs.map(attr => `<option value="${escapeOpt(attr)}">${attr}</option>`))
+      .join('');
+    traitSel.innerHTML = traitHtml;
+    traitSel.value = '';
+  }
+
+  const getEntriesByType = (type) => {
+    const db = Array.isArray(window.DB) ? window.DB : [];
+    return db
+      .filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type))
+      .map(entry => String(entry.namn || '').trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'sv'));
+  };
+
+  const applyEntryOptions = (select, type, placeholder) => {
+    if (!select) return;
+    const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const names = getEntriesByType(type);
+    const options = [`<option value="">${placeholder}</option>`];
+    names.forEach(name => options.push(`<option value="${escapeOpt(name)}">${name}</option>`));
+    select.innerHTML = options.join('');
+    select.value = '';
+  };
+
+  applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
+  applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
+  applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
+  if (eliteSel && eliteSel.options.length <= 1) {
+    eliteSel.disabled = true;
+    eliteSel.title = 'Databasen laddas ... öppna generatorn igen när listorna finns.';
+  } else if (eliteSel) {
+    eliteSel.disabled = false;
+    eliteSel.title = '';
+  }
+  if (raceSel && raceSel.options.length <= 1) raceSel.title = 'Databasen laddas ...';
+  else if (raceSel) raceSel.title = '';
+  if (yrkeSel && yrkeSel.options.length <= 1) yrkeSel.title = 'Databasen laddas ...';
+  else if (yrkeSel) yrkeSel.title = '';
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      createBtn.removeEventListener('click', onCreate);
+      cancelBtn.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onCreate() {
+      const name = String(nameIn.value || '').trim() || 'Slumpad rollperson';
+      const folderId = folderEl.value || '';
+      const xp = Math.max(0, Math.floor(Number(xpIn?.value || 0) / 10) * 10);
+      const attrMode = attrSel?.value || '';
+      const abilityMode = abilitySel?.value || '';
+      const traitFocus = traitSel?.value || '';
+      const race = raceSel?.value || '';
+      const yrke = yrkeSel?.value || '';
+      const elityrke = eliteSel?.value || '';
+      close({ name, folderId, xp, attrMode, abilityMode, traitFocus, race, yrke, elityrke });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onCreate();
+    }
+    createBtn.addEventListener('click', onCreate);
+    cancelBtn.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
     document.addEventListener('keydown', onKey);
   });

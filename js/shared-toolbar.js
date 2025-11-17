@@ -370,6 +370,28 @@ class SharedToolbar extends HTMLElement {
         .button-row .char-btn.icon-only {
           padding: .55rem 1.1rem;
         }
+        .generator-popup .popup-desc {
+          margin-bottom: .5rem;
+          color: var(--txt-muted, var(--txt));
+          opacity: .85;
+        }
+        .generator-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: .9rem;
+        }
+        .generator-grid .filter-group {
+          margin-bottom: 0;
+        }
+        .generator-popup .filter-group + .generator-grid,
+        .generator-grid + .generator-grid {
+          margin-top: .9rem;
+        }
+        .generator-popup .field-hint {
+          margin-top: .35rem;
+          font-size: .85rem;
+          color: var(--txt-muted, #c7c7c7);
+        }
         .btn-icon {
           width: 1.8rem;
           height: 1.8rem;
@@ -487,6 +509,9 @@ class SharedToolbar extends HTMLElement {
               <!-- Helradsknappar -->
               <div class="char-btn-row">
                 <button id="newCharBtn" class="char-btn">Ny rollperson</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="generateCharBtn" class="char-btn">Generera rollperson</button>
               </div>
               <div class="char-btn-row">
                 <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
@@ -1171,6 +1196,72 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Generera rollperson ---------- -->
+      <div id="generatorPopup" class="popup">
+        <div class="popup-inner generator-popup">
+          <h3>Generera rollperson</h3>
+          <p class="popup-desc">Välj startvärden och låt generatorn plocka förmågor automatiskt.</p>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharName">Namn</label>
+              <input id="genCharName" type="text" placeholder="Rollpersonens namn" autocomplete="off">
+            </div>
+            <div class="filter-group">
+              <label for="genCharFolder">Mapp</label>
+              <select id="genCharFolder"></select>
+            </div>
+          </div>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharXp">Erfarenhetspoäng</label>
+              <div class="xp-control">
+                <input id="genCharXp" type="number" min="0" step="10" value="100" aria-label="Erfarenhetspoäng">
+              </div>
+            </div>
+            <div class="filter-group">
+              <label for="genCharAttr">Karaktärsdrag</label>
+              <select id="genCharAttr">
+                <option value="">Balanserade (slump)</option>
+                <option value="specialist">Specialist (1 på 15)</option>
+                <option value="minmax">Min/Max</option>
+              </select>
+            </div>
+          </div>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharTrait">Fokusera drag</label>
+              <select id="genCharTrait"></select>
+            </div>
+            <div class="filter-group">
+              <label for="genCharAbility">Förmågefokus</label>
+              <select id="genCharAbility">
+                <option value="">Slumpmässigt</option>
+                <option value="master">Prioritera mästare</option>
+              </select>
+            </div>
+          </div>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharRace">Ras</label>
+              <select id="genCharRace"></select>
+            </div>
+            <div class="filter-group">
+              <label for="genCharYrke">Yrke</label>
+              <select id="genCharYrke"></select>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label for="genCharElityrke">Elityrke</label>
+            <select id="genCharElityrke"></select>
+            <p class="field-hint">Elityrket lägger automatiskt in sina krav och minst en elityrkesförmåga.</p>
+          </div>
+          <div class="confirm-row">
+            <button id="genCharCancel" class="char-btn danger">Avbryt</button>
+            <button id="genCharCreate" class="char-btn">Generera</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Popup Kopiera rollperson (med mappval) ---------- -->
       <div id="dupCharPopup" class="popup">
         <div class="popup-inner">
@@ -1628,7 +1719,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
