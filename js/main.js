@@ -1131,6 +1131,9 @@ loadDatabaseData()
     }
     boot();
     try { window.globalSearch?.refreshSuggestions?.(); } catch {}
+    try {
+      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', { detail: { entries: DB.length } }));
+    } catch {}
   })
   .catch(err => {
     console.error('Kunde inte läsa databasen', err);
@@ -3267,6 +3270,8 @@ async function openGeneratorPopup(preferredFolderId) {
   const eliteSel = bar.shadowRoot.getElementById('genCharElityrke');
   const createBtn = bar.shadowRoot.getElementById('genCharCreate');
   const cancelBtn = bar.shadowRoot.getElementById('genCharCancel');
+  const warning = bar.shadowRoot.getElementById('genCharDataWarning');
+  const defaultCreateLabel = createBtn?.textContent || 'Generera';
 
   const folders = (storeHelper.getFolders(store) || []).slice()
     .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
@@ -3310,20 +3315,56 @@ async function openGeneratorPopup(preferredFolderId) {
     select.value = '';
   };
 
-  applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
-  applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
-  applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
-  if (eliteSel && eliteSel.options.length <= 1) {
-    eliteSel.disabled = true;
-    eliteSel.title = 'Databasen laddas ... öppna generatorn igen när listorna finns.';
-  } else if (eliteSel) {
-    eliteSel.disabled = false;
-    eliteSel.title = '';
+  const generatorDataReady = () => {
+    const db = Array.isArray(window.DB) ? window.DB : [];
+    if (!db.length) return false;
+    return db.some(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Förmåga'));
+  };
+
+  const syncGeneratorReadyState = () => {
+    const ready = generatorDataReady();
+    if (createBtn) {
+      createBtn.disabled = !ready;
+      createBtn.textContent = ready ? defaultCreateLabel : 'Laddar databasen...';
+      createBtn.title = ready ? '' : 'Generatorn behöver databasen innan den kan köras.';
+    }
+    if (warning) {
+      warning.hidden = ready;
+    }
+    return ready;
+  };
+
+  const refreshEntryOptions = () => {
+    applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
+    applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
+    applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
+    if (eliteSel && eliteSel.options.length <= 1) {
+      eliteSel.disabled = true;
+      eliteSel.title = 'Databasen laddas ... öppna generatorn igen när listorna finns.';
+    } else if (eliteSel) {
+      eliteSel.disabled = false;
+      eliteSel.title = '';
+    }
+    if (raceSel && raceSel.options.length <= 1) raceSel.title = 'Databasen laddas ...';
+    else if (raceSel) raceSel.title = '';
+    if (yrkeSel && yrkeSel.options.length <= 1) yrkeSel.title = 'Databasen laddas ...';
+    else if (yrkeSel) yrkeSel.title = '';
+  };
+
+  refreshEntryOptions();
+  const readyOnOpen = syncGeneratorReadyState();
+  let removeDbListener = null;
+  if (!readyOnOpen) {
+    const onDbReady = () => {
+      refreshEntryOptions();
+      if (syncGeneratorReadyState() && removeDbListener) {
+        removeDbListener();
+        removeDbListener = null;
+      }
+    };
+    window.addEventListener('symbaroum-db-ready', onDbReady);
+    removeDbListener = () => window.removeEventListener('symbaroum-db-ready', onDbReady);
   }
-  if (raceSel && raceSel.options.length <= 1) raceSel.title = 'Databasen laddas ...';
-  else if (raceSel) raceSel.title = '';
-  if (yrkeSel && yrkeSel.options.length <= 1) yrkeSel.title = 'Databasen laddas ...';
-  else if (yrkeSel) yrkeSel.title = '';
 
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
@@ -3336,9 +3377,14 @@ async function openGeneratorPopup(preferredFolderId) {
       cancelBtn.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
       document.removeEventListener('keydown', onKey);
+      if (removeDbListener) {
+        removeDbListener();
+        removeDbListener = null;
+      }
       resolve(res);
     }
     function onCreate() {
+      if (!syncGeneratorReadyState()) return;
       const name = String(nameIn.value || '').trim() || 'Slumpad rollperson';
       const folderId = folderEl.value || '';
       const xp = Math.max(0, Math.floor(Number(xpIn?.value || 0) / 10) * 10);
