@@ -16,10 +16,32 @@
   };
 
   const LEVEL_VALUE = { '': 0, Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
-  const MELEE_SCHOOLS = ['Sköldkamp','Naturlig krigare','Stångverkan','Tvillingattack','Tvåhandskraft'];
+  const MELEE_SCHOOLS = [
+    'Sköldkamp',
+    'Naturlig krigare',
+    'Stavkamp',
+    'Stångverkan',
+    'Tvillingattack',
+    'Tvåhandskraft',
+    'Yxkonstnär',
+    'Svärdshelgon',
+    'Manteldans',
+    'Knivgöra',
+    'Stridsgisslare'
+  ];
   const RANGED_SCHOOLS = ['Prickskytt','Stålkast'];
-  const ALT_TRAFFSAKER = ['Fint','Taktiker','Järnnäve','Sjätte sinne','Dominera'];
-  const STATIC_INCOMPATIBLE_GROUPS = [MELEE_SCHOOLS, RANGED_SCHOOLS, ALT_TRAFFSAKER];
+  const ALT_TRAFFSAKER = [
+    'Fint',
+    'Taktiker',
+    'Järnnäve',
+    'Sjätte sinne',
+    'Dominera',
+    'Knivgöra',
+    'Koreograferad strid',
+    'Pareringsmästare'
+  ];
+  const ALT_VILJESTARK = ['Ledare','Lärd','Kallsinne'];
+  const STATIC_INCOMPATIBLE_GROUPS = [MELEE_SCHOOLS, RANGED_SCHOOLS, ALT_TRAFFSAKER, ALT_VILJESTARK];
   const dataCache = {
     abilityPool: null,
     mystic: null
@@ -74,7 +96,7 @@
       this.traditionTag = '';
       this.allaKrafter = [];
       this.allaRitualer = [];
-      this.mojligaKrafterOchRitualer('ingen');
+      this.mojligaKrafterOchRitualer(this.traditionLock || 'ingen');
       this.applyTraditionLockToMysticPools();
       const abilityMode = opts.abilityMode === 'master' ? 'Mästare' : opts.abilityMode;
       this.forcedAbilities = this.buildForcedAbilities();
@@ -238,19 +260,41 @@
       return '';
     }
 
+    getActiveTraditionLock() {
+      return normalizeTraditionKey(this.traditionLock || this.traditionTag || '');
+    }
+
+    ensureTraditionLock(tag, sourceName) {
+      if (!tag) return true;
+      const key = normalizeTraditionKey(tag);
+      if (!key) return true;
+      const current = this.getActiveTraditionLock();
+      if (current && current !== key) return false;
+      const resolved = resolveTraditionName(tag) || tag;
+      if (!this.traditionTag) this.traditionTag = resolved;
+      if (!this.tradition && sourceName) this.tradition = sourceName;
+      this.mojligaKrafterOchRitualer(resolved);
+      this.applyTraditionLockToAlternatives();
+      this.applyTraditionLockToMysticPools();
+      return true;
+    }
+
     applyTraditionLockToAlternatives() {
-      if (!this.traditionLock) return;
+      const lock = this.getActiveTraditionLock();
+      if (!lock) return;
       this.formagAlternativ = this.formagAlternativ.filter(name => this.isAllowedByTraditionLock(name));
     }
 
     applyTraditionLockToMysticPools() {
-      if (!this.traditionLock) return;
+      const lock = this.getActiveTraditionLock();
+      if (!lock) return;
       this.allaKrafter = this.allaKrafter.filter(name => this.isAllowedByTraditionLock(name));
       this.allaRitualer = this.allaRitualer.filter(name => this.isAllowedByTraditionLock(name));
     }
 
     isAllowedByTraditionLock(name) {
-      if (!this.traditionLock) return true;
+      const lock = this.getActiveTraditionLock();
+      if (!lock) return true;
       const norm = normalizeName(name);
       if (!norm) return false;
       if (norm === 'mystisk kraft' || norm === 'ritualist') return true;
@@ -260,9 +304,9 @@
       if (!exclusive) return true; // additive: non-exclusive entries are always allowed
       const abilityTrad = getAbilityTraditionName(name);
       if (abilityTrad) {
-        return normalizeName(abilityTrad) === normalizeName(this.traditionLock);
+        return normalizeTraditionKey(abilityTrad) === lock;
       }
-      return entryMatchesTradition(entry, this.traditionLock);
+      return entryMatchesTradition(entry, lock);
     }
 
     seedAbilityPreferences() {
@@ -654,25 +698,34 @@
     }
 
     valjRitual(antal, inom) {
+      const selectFromPool = (pool, removeFromKnown) => {
+        while (pool.length) {
+          const idx = randIndex(pool.length);
+          const val = pool.splice(idx, 1)[0];
+          const ritTrad = getAbilityTraditionName(val);
+          if (ritTrad && !this.ensureTraditionLock(ritTrad, '')) {
+            continue;
+          }
+          const allIdx = this.allaRitualer.indexOf(val);
+          if (allIdx >= 0) this.allaRitualer.splice(allIdx, 1);
+          if (removeFromKnown) {
+            const ritIdx = this.ritualer.indexOf(val);
+            if (ritIdx >= 0) this.ritualer.splice(ritIdx, 1);
+          }
+          this.valdaRitualer.push(val);
+          return true;
+        }
+        return false;
+      };
       if (inom === 'innanför') {
         const alt = this.ritualer.slice();
         for (let i = 0; i < antal && alt.length; i += 1) {
-          const idx = randIndex(alt.length);
-          const val = alt.splice(idx, 1)[0];
-          const ritIdx = this.ritualer.indexOf(val);
-          if (ritIdx >= 0) this.ritualer.splice(ritIdx, 1);
-          const allIdx = this.allaRitualer.indexOf(val);
-          if (allIdx >= 0) this.allaRitualer.splice(allIdx, 1);
-          this.valdaRitualer.push(val);
+          if (!selectFromPool(alt, true)) break;
         }
       } else {
         const alt = this.allaRitualer.filter(rit => !this.ritualer.includes(rit));
         for (let i = 0; i < antal && alt.length; i += 1) {
-          const idx = randIndex(alt.length);
-          const val = alt.splice(idx, 1)[0];
-          const allIdx = this.allaRitualer.indexOf(val);
-          if (allIdx >= 0) this.allaRitualer.splice(allIdx, 1);
-          this.valdaRitualer.push(val);
+          if (!selectFromPool(alt, false)) break;
         }
       }
     }
@@ -701,7 +754,7 @@
       };
 
       const addMysticChoiceCopies = (name) => {
-        if (this.traditionLock && !this.isAllowedByTraditionLock(name)) return;
+        if (this.getActiveTraditionLock() && !this.isAllowedByTraditionLock(name)) return;
         const count = this.formagAlternativ.filter(v => v === 'Mystisk kraft').length;
         for (let i = 0; i < count; i += 1) {
           this.formagAlternativ.push(name);
@@ -717,8 +770,9 @@
 
       const learnRandomRitual = () => {
         if (ERFkvar < 10) return false;
-        const isSvartkonst = normalizeName(this.traditionTag) === 'svartkonst';
-        let mode = (!this.traditionTag || isSvartkonst) ? 'utanför' : (Math.random() > 0.7 ? 'utanför' : 'innanför');
+        const activeTradition = this.traditionTag || resolveTraditionName(this.traditionLock) || this.traditionLock || '';
+        let mode = (!activeTradition) ? 'utanför' : (Math.random() > 0.7 ? 'utanför' : 'innanför');
+        if (this.getActiveTraditionLock()) mode = 'innanför';
         if (mode === 'innanför' && !getRitualPoolSize('innanför')) mode = 'utanför';
         if (!getRitualPoolSize(mode)) return false;
         if (mode === 'utanför' && !takeCorruption(1)) return false;
@@ -735,6 +789,8 @@
           if (takeCorruption(1) && this.allaKrafter.length) {
             const idx = randIndex(this.allaKrafter.length);
             val = this.allaKrafter.splice(idx, 1)[0];
+            const powerTrad = getAbilityTraditionName(val);
+            if (powerTrad && !this.ensureTraditionLock(powerTrad, '')) return false;
             addMysticChoiceCopies(val);
           } else {
             return false;
@@ -744,9 +800,8 @@
         } else {
           const abilityTrad = getAbilityTraditionName(val);
           if (abilityTrad) {
-            this.mojligaKrafterOchRitualer(abilityTrad);
+            if (!this.ensureTraditionLock(abilityTrad, val)) return false;
             this.tradition = val;
-            this.traditionTag = abilityTrad;
             this.Formagor[val] = 'Novis';
             this.krafter.forEach(kraft => addMysticChoiceCopies(kraft));
             ERFkvar -= 10;
@@ -754,7 +809,8 @@
             return true;
           }
         }
-        const isSvartkonst = normalizeName(this.traditionTag) === 'svartkonst';
+        const currentTradition = this.traditionTag || resolveTraditionName(this.traditionLock) || this.traditionLock || '';
+        const isSvartkonst = normalizeName(currentTradition) === 'svartkonst';
         if (this.krafter.includes(val) && isSvartkonst) {
           if (!takeCorruption(1)) return false;
         }
@@ -1071,12 +1127,15 @@
   }
 
   function entryIsTraditionExclusive(entry) {
+    if (!entry) return false;
     const tags = entry?.taggar || {};
     if (tags.exklusiv_tradition) return true;
     if (tags.traditionslås) return true;
     if (Array.isArray(tags.exklusiv)) {
       return tags.exklusiv.some(val => normalizeName(val) === 'tradition');
     }
+    if (isMysticEntry(entry) || isRitualEntry(entry)) return true;
+    if (getAbilityTraditionName(entry.namn)) return true;
     return false;
   }
 
@@ -1387,20 +1446,20 @@
   function getAbilityTraditionName(name) {
     const meta = getMysticPools();
     const entry = lookupEntryByName(name);
-    const isMysticType = entry && (isMysticEntry(entry) || isRitualEntry(entry));
-    if (entry && isMysticType) {
+    if (entry) {
       const tags = getEntryTraditions(entry);
-      if (tags.length) {
-        const resolved = resolveTraditionName(tags[0]);
+      for (let i = 0; i < tags.length; i += 1) {
+        const resolved = resolveTraditionName(tags[i]);
         if (resolved) return resolved;
       }
-      const key = normalizeName(entry.id || entry.namn);
-      if (key) {
-        const viaId = meta.abilityTraditions.get(key);
-        if (viaId) return viaId;
+      if (isMysticEntry(entry) || isRitualEntry(entry)) {
+        const key = normalizeName(entry.id || entry.namn);
+        if (key) {
+          const viaId = meta.abilityTraditions.get(key);
+          if (viaId) return viaId;
+        }
       }
     }
-    if (entry && !isMysticType) return '';
     const norm = normalizeName(name);
     if (!norm) return '';
     const viaAbility = meta.abilityTraditions.get(norm);
