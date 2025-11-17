@@ -1259,6 +1259,7 @@ class SharedToolbar extends HTMLElement {
             <button id="genCharCancel" class="char-btn danger">Avbryt</button>
             <button id="genCharCreate" class="char-btn">Generera</button>
           </div>
+          <p id="genCharDataWarning" class="field-hint" hidden>Databasen laddas – vänta tills den är klar innan du genererar.</p>
         </div>
       </div>
 
