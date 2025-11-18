@@ -46,6 +46,23 @@
     abilityPool: null,
     mystic: null
   };
+  const YRKE_TRADITION_PAIRS = [
+    ['häxa', 'Häxkonst'],
+    ['svartkonstnär', 'Svartkonst'],
+    ['teurg', 'Teurgi'],
+    ['ordensmagiker', 'Ordensmagi'],
+    ['symbolist', 'Symbolism'],
+    ['trollsångare', 'Trollsång']
+  ];
+  const TRADITION_BASE_ABILITY_PAIRS = [
+    ['Häxkonst', 'Häxkonster'],
+    ['Svartkonst', 'Svartkonst'],
+    ['Teurgi', 'Teurgi'],
+    ['Ordensmagi', 'Ordensmagi'],
+    ['Symbolism', 'Symbolism'],
+    ['Trollsång', 'Trollsång'],
+    ['Stavmagiker', 'Stavmagi']
+  ];
   const isEliteEntry = (entry) => {
     if (typeof window.isEliteSkill === 'function') return window.isEliteSkill(entry);
     return (entry?.taggar?.typ || []).includes('Elityrkesförmåga');
@@ -59,6 +76,8 @@
       this.namn = String(opts.name || '').trim() || DEFAULT_OPTIONS.name;
       const xp = Number(opts.xp);
       this.ERF = Number.isFinite(xp) ? Math.max(0, Math.floor(xp / 10) * 10) : DEFAULT_OPTIONS.xp;
+      this.baseXP = this.ERF;
+      this.totalXPBudget = this.ERF;
       this.ERFkvar = this.ERF;
       this.traitFocus = ATTR_KEYS.includes(opts.traitFocus) ? opts.traitFocus : '';
       this.extraPicks = [];
@@ -68,7 +87,8 @@
       this.selectedRace = resolveEntryByType(opts.race, 'Ras');
       this.selectedYrke = resolveEntryByType(opts.yrke, 'Yrke');
       this.selectedElityrke = resolveEntryByType(opts.elityrke, 'Elityrke');
-      this.isMysticProfession = isMysticProfession(this.selectedYrke);
+      this.isMysticElite = isMysticElityrke(this.selectedElityrke);
+      this.isMysticProfession = isMysticProfession(this.selectedYrke) || this.isMysticElite;
       this.isSelfTaughtMystic = isSelfTaughtMystic(this.selectedYrke);
       this.archetypePreferences = buildArchetypePreferenceSet(this.selectedRace, this.selectedYrke, this.selectedElityrke);
       this.traditionLock = this.deriveTraditionLock();
@@ -99,10 +119,12 @@
       this.mojligaKrafterOchRitualer(this.traditionLock || 'ingen');
       this.applyTraditionLockToMysticPools();
       const abilityMode = opts.abilityMode === 'master' ? 'Mästare' : opts.abilityMode;
+      this.abilityMode = abilityMode;
       this.forcedAbilities = this.buildForcedAbilities();
       this.valjNyaFormagor(this.ERF, abilityMode);
       this.ensureForcedAbilitiesAfterLoop();
       this.pickAdvantagesAndDisadvantages();
+      this.reconcileXPGap(abilityMode);
     }
 
     skapaKaraktarsdrag(typ, focus) {
@@ -246,18 +268,30 @@
     }
 
     deriveTraditionLock() {
-      if (!this.selectedYrke) return '';
-      const candidates = getEntryTraditions(this.selectedYrke);
-      if (candidates.length) {
-        const resolved = resolveTraditionName(candidates[0]);
-        if (resolved) return resolved;
-      }
-      const names = toNameArray(this.selectedYrke.lampliga_formagor);
-      for (let i = 0; i < names.length; i += 1) {
-        const found = resolveTraditionFromName(names[i]);
-        if (found) return found;
-      }
-      return '';
+      const resolveFromEntry = (entry) => {
+        if (!entry) return '';
+        const mappedTradition = getYrkeTraditionName(entry);
+        if (mappedTradition) return mappedTradition;
+        const candidates = getEntryTraditions(entry);
+        if (candidates.length) {
+          const resolved = resolveTraditionName(candidates[0]);
+          if (resolved) return resolved;
+        }
+        const likelyFields = [
+          entry.lampliga_formagor,
+          entry.lampliga,
+          entry.Elityrkesförmågor
+        ];
+        for (let i = 0; i < likelyFields.length; i += 1) {
+          const names = toNameArray(likelyFields[i]);
+          for (let j = 0; j < names.length; j += 1) {
+            const found = resolveTraditionFromName(names[j]);
+            if (found) return found;
+          }
+        }
+        return '';
+      };
+      return resolveFromEntry(this.selectedYrke) || resolveFromEntry(this.selectedElityrke) || '';
     }
 
     getActiveTraditionLock() {
@@ -376,6 +410,24 @@
 
     applyStatGateToAlternatives() {
       this.formagAlternativ = this.formagAlternativ.filter(name => this.isAbilityAllowedByStats(name));
+    }
+
+    getTraditionBaseLevel(tradition) {
+      const baseAbility = getTraditionBaseAbilityName(tradition);
+      if (!baseAbility) return { ability: '', level: '' };
+      const level = this.Formagor[baseAbility] || '';
+      return { ability: baseAbility, level };
+    }
+
+    isMysticLevelAllowed(name, desiredLevel) {
+      const abilityTrad = getAbilityTraditionName(name);
+      if (!abilityTrad) return true;
+      const baseAbility = getTraditionBaseAbilityName(abilityTrad);
+      if (!baseAbility) return true;
+      if (normalizeName(baseAbility) === normalizeName(name)) return true;
+      const target = desiredLevel && LEVEL_VALUE[desiredLevel] ? desiredLevel : 'Novis';
+      const baseLevel = this.Formagor[baseAbility] || '';
+      return LEVEL_VALUE[baseLevel] >= LEVEL_VALUE[target];
     }
 
     isAbilityAllowedByStats(name) {
@@ -541,6 +593,15 @@
 
     forceEnsureAbilityLevel(name, targetLevel) {
       if (!name) return false;
+      const desired = LEVEL_VALUE[targetLevel] ? targetLevel : 'Novis';
+      const abilityTrad = getAbilityTraditionName(name);
+      if (abilityTrad) {
+        const baseAbility = getTraditionBaseAbilityName(abilityTrad);
+        if (baseAbility && normalizeName(baseAbility) !== normalizeName(name)) {
+          if (!this.forceEnsureAbilityLevel(baseAbility, desired)) return false;
+        }
+        if (!this.isMysticLevelAllowed(name, desired)) return false;
+      }
       if (!this.Formagor[name]) {
         if (this.ERFkvar < 10) return false;
         const paid = this.spendXP(10);
@@ -553,7 +614,6 @@
         }
         this.Formagor[name] = 'Novis';
       }
-      const desired = LEVEL_VALUE[targetLevel] ? targetLevel : 'Novis';
       let guard = 0;
       while (LEVEL_VALUE[this.Formagor[name] || ''] < LEVEL_VALUE[desired] && guard < 5) {
         const current = this.Formagor[name] || 'Novis';
@@ -609,10 +669,63 @@
     pickAdvantagesAndDisadvantages() {
       const advPrefs = this.buildBenefitPreferenceList('mojliga_fordelar');
       const disPrefs = this.buildBenefitPreferenceList('tankbara_nackdelar');
-      this.advantagePicks = this.selectEntriesByTag('Fördel', 5, advPrefs, { weightByTrait: true, allowMultipleSame: true });
+      const extraAdv = Math.random() > 0.65 ? (1 + randIndex(2)) : 0; // Occasionally grab a couple of extra boons
+      const advCount = 5 + extraAdv;
+      this.advantagePicks = this.selectEntriesByTag('Fördel', advCount, advPrefs, { weightByTrait: true, allowMultipleSame: true });
       this.disadvantagePicks = this.selectEntriesByTag('Nackdel', 5, disPrefs, { weightByTrait: false, allowMultipleSame: true });
       this.advantagePicks.forEach(name => this.registerExtraEntry(name));
       this.disadvantagePicks.forEach(name => this.registerExtraEntry(name));
+    }
+
+    reconcileXPGap(mode) {
+      const abilityMode = mode || this.abilityMode || '';
+      const maxAttempts = 4;
+      let attempts = 0;
+      const progressLimiter = () => Object.keys(this.Formagor || {}).length + (this.valdaRitualer || []).length;
+      const xpContext = () => {
+        const list = buildEntryList({
+          abilities: this.Formagor,
+          rituals: this.valdaRitualer,
+          extraEntries: this.extraPicks
+        });
+        const calcUsed = window.storeHelper?.calcUsedXP;
+        const calcTotal = window.storeHelper?.calcTotalXP;
+        const base = this.baseXP || this.ERF || 0;
+        if (typeof calcUsed === 'function' && typeof calcTotal === 'function') {
+          const used = calcUsed(list, {});
+          const total = calcTotal(base, list);
+          return { total, used, remaining: Math.max(0, total - used) };
+        }
+        const LEVEL_XP = { Novis: 10, Gesäll: 30, Mästare: 60 };
+        const advantageCost = Math.max(0, (this.advantagePicks || []).length * 5);
+        const disBonus = Math.min(5, (this.disadvantagePicks || []).length) * 5;
+        const abilityUsed = list.reduce((sum, entry) => {
+          const types = entry?.taggar?.typ || [];
+          if (types.includes('Ritual')) return sum + 10;
+          if (['Mystisk kraft', 'Förmåga', 'Särdrag', 'Monstruöst särdrag'].some(t => types.includes(t))) {
+            return sum + (LEVEL_XP[entry?.nivå] || LEVEL_XP.Novis);
+          }
+          return sum;
+        }, 0);
+        const used = abilityUsed + advantageCost;
+        const total = base + disBonus;
+        return { total, used, remaining: Math.max(0, total - used) };
+      };
+
+      while (attempts < maxAttempts) {
+        const ctx = xpContext();
+        this.totalXPBudget = ctx.total;
+        this.ERFkvar = ctx.remaining;
+        if (ctx.remaining < 10) break;
+        const before = progressLimiter();
+        this.valjNyaFormagor(ctx.remaining, abilityMode);
+        attempts += 1;
+        const after = progressLimiter();
+        if (after <= before) break; // no progress, stop to avoid loops
+      }
+      const finalCtx = xpContext();
+      this.totalXPBudget = finalCtx.total;
+      this.ERFkvar = finalCtx.remaining;
     }
 
     buildBenefitPreferenceList(field) {
@@ -627,25 +740,36 @@
 
     selectEntriesByTag(tag, count, preferredNames, opts = {}) {
       const preferred = new Set((preferredNames || []).map(normalizeName).filter(Boolean));
-      const candidates = getEntriesByType(tag);
       const picks = [];
       const used = new Set();
       const traitKey = this.traitFocus ? this.traitFocus.toLowerCase() : '';
-      const pool = candidates
-        .filter(entry => entryMatchesRace(entry, this.selectedRace))
-        .filter(entry => this.isAbilityAllowedByStats(entry?.namn))
-        .map(entry => {
-          let weight = 1;
-          const nameKey = normalizeName(entry?.namn);
-          if (preferred.has(nameKey)) weight += 4;
-          const tests = toNameArray(entry?.taggar?.test).map(str => str.toLowerCase());
-          if (opts.weightByTrait && traitKey && tests.some(test => test.includes(traitKey))) weight += 2;
-          const archetypeMatch = getEntryArchetypes(entry).some(tag => this.archetypePreferences.has(tag));
-          if (archetypeMatch) weight += 2;
-          const allowMultiple = opts.allowMultipleSame && entryAllowsMultiple(entry);
-          return { entry, weight: Math.max(1, weight), allowMultiple };
-        });
+      const basePoolOptions = { respectRace: true, respectStats: true };
+      const buildPool = (poolOpts = {}) => {
+        const respectRace = poolOpts.respectRace !== false;
+        const respectStats = poolOpts.respectStats !== false;
+        return getEntriesByType(tag)
+          .filter(entry => !respectRace || entryMatchesRace(entry, this.selectedRace))
+          .filter(entry => !respectStats || this.isAbilityAllowedByStats(entry?.namn))
+          .map(entry => {
+            let weight = 1;
+            const nameKey = normalizeName(entry?.namn);
+            if (preferred.has(nameKey)) weight += 4;
+            const tests = toNameArray(entry?.taggar?.test).map(str => str.toLowerCase());
+            if (opts.weightByTrait && traitKey && tests.some(test => test.includes(traitKey))) weight += 2;
+            const archetypeMatch = getEntryArchetypes(entry).some(tag => this.archetypePreferences.has(tag));
+            if (archetypeMatch) weight += 2;
+            const allowMultiple = opts.allowMultipleSame && entryAllowsMultiple(entry);
+            return { entry, weight: Math.max(1, weight), allowMultiple };
+          })
+          .filter(item => {
+            const name = item?.entry?.namn;
+            if (!name) return false;
+            if (used.has(name) && !item.allowMultiple) return false;
+            return true;
+          });
+      };
 
+      let pool = buildPool(basePoolOptions);
       const pickEntry = () => {
         if (!pool.length) return null;
         const total = pool.reduce((sum, item) => sum + item.weight, 0);
@@ -662,15 +786,27 @@
         return item;
       };
 
-      while (picks.length < count) {
-        const item = pickEntry();
-        if (!item) break;
-        const entry = item.entry;
-        if (!entry) continue;
-        const already = used.has(entry.namn);
-        if (already && !item.allowMultiple) continue;
-        if (!item.allowMultiple) used.add(entry.namn);
-        picks.push(entry.namn);
+      const drawUntil = (targetCount) => {
+        while (picks.length < targetCount) {
+          const item = pickEntry();
+          if (!item) break;
+          const entry = item.entry;
+          if (!entry) continue;
+          const already = used.has(entry.namn);
+          if (already && !item.allowMultiple) continue;
+          if (!item.allowMultiple) used.add(entry.namn);
+          picks.push(entry.namn);
+        }
+      };
+
+      drawUntil(count);
+      if (picks.length < count) {
+        pool = buildPool({ ...basePoolOptions, respectRace: false });
+        drawUntil(count);
+      }
+      if (picks.length < count) {
+        pool = buildPool({ respectRace: false, respectStats: false });
+        drawUntil(count);
       }
 
       return picks.slice(0, count);
@@ -787,8 +923,12 @@
         if (!this.isAbilityAllowedByStats(val)) return false;
         if (val === 'Mystisk kraft') {
           if (takeCorruption(1) && this.allaKrafter.length) {
-            const idx = randIndex(this.allaKrafter.length);
-            val = this.allaKrafter.splice(idx, 1)[0];
+            const allowed = this.allaKrafter.filter(name => this.isMysticLevelAllowed(name, 'Novis'));
+            if (!allowed.length) return false;
+            const idx = randIndex(allowed.length);
+            val = allowed[idx];
+            const poolIdx = this.allaKrafter.indexOf(val);
+            if (poolIdx >= 0) this.allaKrafter.splice(poolIdx, 1);
             const powerTrad = getAbilityTraditionName(val);
             if (powerTrad && !this.ensureTraditionLock(powerTrad, '')) return false;
             addMysticChoiceCopies(val);
@@ -800,6 +940,7 @@
         } else {
           const abilityTrad = getAbilityTraditionName(val);
           if (abilityTrad) {
+            if (!this.isMysticLevelAllowed(val, 'Novis')) return false;
             if (!this.ensureTraditionLock(abilityTrad, val)) return false;
             this.tradition = val;
             this.Formagor[val] = 'Novis';
@@ -809,6 +950,7 @@
             return true;
           }
         }
+        if (!this.isMysticLevelAllowed(val, 'Novis')) return false;
         const currentTradition = this.traditionTag || resolveTraditionName(this.traditionLock) || this.traditionLock || '';
         const isSvartkonst = normalizeName(currentTradition) === 'svartkonst';
         if (this.krafter.includes(val) && isSvartkonst) {
@@ -823,6 +965,7 @@
         const nextLevel = currentLevel === 'Gesäll' ? 'Mästare' : 'Gesäll';
         const cost = currentLevel === 'Gesäll' ? 30 : 20;
         if (ERFkvar < cost) return false;
+        if (!this.isMysticLevelAllowed(val, nextLevel)) return false;
         let kbk = true;
         if (this.allaKrafter.includes(val)) {
           const isSvartkonst = normalizeName(this.traditionTag) === 'svartkonst';
@@ -1049,7 +1192,7 @@
 
 
     toPayload() {
-      const xpBudget = this.ERF;
+      const xpBudget = this.totalXPBudget || this.ERF;
       const xpSpentOnPicks = xpBudget - this.ERFkvar;
       const autoAddedNames = Array.from(new Set((this.autoAdded || []).map(item => item.name)));
       return {
@@ -1064,6 +1207,7 @@
         extraEntries: Array.from(new Set(this.extraPicks || [])),
         autoAdded: autoAddedNames,
         meta: {
+          baseXp: this.baseXP || this.ERF,
           race: this.selectedRace?.namn || '',
           yrke: this.selectedYrke?.namn || '',
           elityrke: this.selectedElityrke?.namn || '',
@@ -1118,6 +1262,20 @@
     return names.some(str => {
       const norm = normalizeName(str);
       return norm.startsWith('mystisk kraft') || norm === 'ritualist';
+    });
+  }
+
+  function isMysticElityrke(entry) {
+    if (!entry) return false;
+    const traditionTags = getEntryTraditions(entry).map(normalizeTraditionKey).filter(Boolean);
+    const canonical = new Set(getMysticPools().canonicalTraditions.keys());
+    const hasKnownTradition = traditionTags.some(tag => canonical.has(tag));
+    if (hasKnownTradition) return true;
+    const names = toNameArray(entry?.Elityrkesförmågor);
+    return names.some(name => {
+      const norm = normalizeName(name);
+      if (norm.startsWith('mystisk kraft') || norm === 'ritualist') return true;
+      return Boolean(getAbilityTraditionName(name));
     });
   }
 
@@ -1249,6 +1407,27 @@
         .filter(Boolean);
     }
     return [];
+  }
+
+  function getYrkeTraditionName(entry) {
+    const name = normalizeName(entry?.namn);
+    if (!name) return '';
+    const match = YRKE_TRADITION_PAIRS.find(pair => pair[0] === name);
+    return match ? match[1] : '';
+  }
+
+  function getTraditionBaseAbilityName(tradition) {
+    const key = normalizeTraditionKey(tradition);
+    if (!key) return '';
+    const match = TRADITION_BASE_ABILITY_PAIRS.find(pair => normalizeTraditionKey(pair[0]) === key);
+    return match ? match[1] : '';
+  }
+
+  function getTraditionFromBaseAbility(name) {
+    const norm = normalizeName(name);
+    if (!norm) return '';
+    const match = TRADITION_BASE_ABILITY_PAIRS.find(pair => normalizeName(pair[1]) === norm);
+    return match ? resolveTraditionName(pair[0]) || pair[0] : '';
   }
 
   function parseElityrkeRequirementGroups(text) {
@@ -1537,6 +1716,8 @@
         }
       }
     }
+    const viaBaseAbility = getTraditionFromBaseAbility(name);
+    if (viaBaseAbility) return viaBaseAbility;
     const norm = normalizeName(name);
     if (!norm) return '';
     const viaAbility = meta.abilityTraditions.get(norm);
