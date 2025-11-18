@@ -1427,7 +1427,7 @@
     const norm = normalizeName(name);
     if (!norm) return '';
     const match = TRADITION_BASE_ABILITY_PAIRS.find(pair => normalizeName(pair[1]) === norm);
-    return match ? resolveTraditionName(pair[0]) || pair[0] : '';
+    return match ? resolveTraditionName(match[0]) || match[0] : '';
   }
 
   function parseElityrkeRequirementGroups(text) {
