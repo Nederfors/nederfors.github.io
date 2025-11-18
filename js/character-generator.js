@@ -85,7 +85,7 @@
       this.advantagePicks = [];
       this.disadvantagePicks = [];
       this.selectedRace = resolveEntryByType(opts.race, 'Ras');
-      this.selectedYrke = resolveEntryByType(opts.yrke, 'Yrke');
+      this.selectedYrke = resolveEntryByType(opts.yrke, 'Yrke') || randomEntryByType('Yrke');
       this.selectedElityrke = resolveEntryByType(opts.elityrke, 'Elityrke');
       this.isMysticElite = isMysticElityrke(this.selectedElityrke);
       this.isMysticProfession = isMysticProfession(this.selectedYrke) || this.isMysticElite;
@@ -1249,6 +1249,13 @@
   function getEntriesByType(type) {
     const db = Array.isArray(window.DB) ? window.DB : [];
     return db.filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type));
+  }
+
+  function randomEntryByType(type) {
+    const entries = getEntriesByType(type);
+    if (!entries.length) return null;
+    const idx = randIndex(entries.length);
+    return { ...entries[idx] };
   }
 
   function normalizeName(name) {
