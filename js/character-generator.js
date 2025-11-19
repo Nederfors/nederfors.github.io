@@ -44,7 +44,8 @@
   const STATIC_INCOMPATIBLE_GROUPS = [MELEE_SCHOOLS, RANGED_SCHOOLS, ALT_TRAFFSAKER, ALT_VILJESTARK];
   const dataCache = {
     abilityPool: null,
-    mystic: null
+    mystic: null,
+    yrkeTraitGuide: null
   };
   const YRKE_TRADITION_PAIRS = [
     ['häxa', 'Häxkonst'],
@@ -79,17 +80,19 @@
       this.baseXP = this.ERF;
       this.totalXPBudget = this.ERF;
       this.ERFkvar = this.ERF;
-      this.traitFocus = ATTR_KEYS.includes(opts.traitFocus) ? opts.traitFocus : '';
       this.extraPicks = [];
       this.autoAdded = [];
       this.advantagePicks = [];
       this.disadvantagePicks = [];
-      this.selectedRace = resolveEntryByType(opts.race, 'Ras');
-      this.selectedYrke = resolveEntryByType(opts.yrke, 'Yrke') || randomEntryByType('Yrke');
+      this.selectedYrke = resolveEntryByType(opts.yrke, 'Yrke');
+      this.selectedRace = resolveEntryByType(opts.race, 'Ras') || pickRandomRaceForYrke(this.selectedYrke);
       this.selectedElityrke = resolveEntryByType(opts.elityrke, 'Elityrke');
       this.isMysticElite = isMysticElityrke(this.selectedElityrke);
       this.isMysticProfession = isMysticProfession(this.selectedYrke) || this.isMysticElite;
       this.isSelfTaughtMystic = isSelfTaughtMystic(this.selectedYrke);
+      this.traitPreferences = getYrkeTraitPreferences(this.selectedYrke);
+      const yrkeTraitFocus = derivePrimaryTraitFocus(this.traitPreferences);
+      this.traitFocus = ATTR_KEYS.includes(opts.traitFocus) ? opts.traitFocus : (yrkeTraitFocus || '');
       this.archetypePreferences = buildArchetypePreferenceSet(this.selectedRace, this.selectedYrke, this.selectedElityrke);
       this.traditionLock = this.deriveTraditionLock();
       if (this.selectedRace) this.registerExtraEntry(this.selectedRace.namn, 'race');
@@ -175,6 +178,7 @@
         }
       }
       this.applyTraitFocus(drag, focus);
+      this.applyYrkeTraitGuidance(drag);
       return drag;
     }
 
@@ -192,6 +196,33 @@
           drag[key] -= 1;
           drag[preferred] += 1;
           needed -= 1;
+        }
+      });
+    }
+
+    applyYrkeTraitGuidance(drag) {
+      if (!drag) return;
+      const prefs = Array.isArray(this.traitPreferences) ? this.traitPreferences : [];
+      if (!prefs.length) return;
+      const prioritized = prefs
+        .map(pref => ({ ...pref, attr: normalizeAttributeName(pref.name) }))
+        .filter(pref => ATTR_KEYS.includes(pref.attr))
+        .sort((a, b) => (b.target || 0) - (a.target || 0));
+      const protectedAttr = ATTR_KEYS.includes(this.traitFocus) ? this.traitFocus : '';
+      const nextDonor = (targetAttr) => ATTR_KEYS
+        .filter(key => key !== targetAttr && key !== protectedAttr && drag[key] > 5)
+        .sort((a, b) => (drag[b] - drag[a]) || ATTR_KEYS.indexOf(a) - ATTR_KEYS.indexOf(b))[0];
+      prioritized.forEach(pref => {
+        const goal = Math.min(15, pref.target || 11);
+        let needed = Math.max(0, goal - (drag[pref.attr] || 0));
+        let guard = 0;
+        while (needed > 0 && guard < 300) {
+          const donor = nextDonor(pref.attr);
+          if (!donor) break;
+          drag[donor] -= 1;
+          drag[pref.attr] = (drag[pref.attr] || 0) + 1;
+          needed -= 1;
+          guard += 1;
         }
       });
     }
@@ -346,6 +377,12 @@
     seedAbilityPreferences() {
       toNameArray(this.selectedYrke?.lampliga_formagor).forEach(name => this.addAbilityPreference(name, 4));
       toNameArray(this.selectedElityrke?.Elityrkesförmågor).forEach(name => this.addAbilityPreference(name, 5));
+      const traitPrefs = Array.isArray(this.traitPreferences) ? this.traitPreferences : [];
+      traitPrefs.forEach(pref => {
+        const weight = pref.weight || traitWeightFromTarget(pref.target);
+        if (!weight) return;
+        getAbilitiesMatchingTrait(pref.name).forEach(name => this.addAbilityPreference(name, weight));
+      });
       if (this.traitFocus) {
         getAbilitiesMatchingTrait(this.traitFocus).forEach(name => this.addAbilityPreference(name, 2));
       }
@@ -917,6 +954,146 @@
         return true;
       };
 
+      // --- Trait buckets and tall-first heuristics ---
+      const BUCKET_CONFIG = {
+        focusShare: 0.55,
+        supportShare: 0.3,
+        secondaryShare: 0.15,
+        secondaryStep1: 30, // add 1 secondary pick when ERF >= step
+        secondaryStep2: 70, // add 2 secondary picks when ERF >= step
+        tallMargin: 0 // promote first when width >= height + margin
+      };
+
+      const traitPreferenceOrder = (() => {
+        const order = new Map();
+        (Array.isArray(this.traitPreferences) ? this.traitPreferences : []).forEach((pref, idx) => {
+          if (pref?.name) order.set(pref.name, idx);
+        });
+        return order;
+      })();
+
+      const rankTraits = () => {
+        const traits = ATTR_KEYS.map(name => ({
+          name,
+          value: Number(this.Karaktarsdrag?.[name]) || 0
+        }));
+        traits.sort((a, b) => {
+          if (b.value !== a.value) return b.value - a.value;
+          if (this.traitFocus) {
+            if (b.name === this.traitFocus) return 1;
+            if (a.name === this.traitFocus) return -1;
+          }
+          const aPref = traitPreferenceOrder.has(a.name) ? traitPreferenceOrder.get(a.name) : Number.MAX_SAFE_INTEGER;
+          const bPref = traitPreferenceOrder.has(b.name) ? traitPreferenceOrder.get(b.name) : Number.MAX_SAFE_INTEGER;
+          if (aPref !== bPref) return aPref - bPref;
+          return a.name.localeCompare(b.name);
+        });
+        return traits;
+      };
+
+      const traitRanking = rankTraits();
+      const focusTrait = this.traitFocus || (traitRanking[0]?.name || '');
+      const supportTraits = traitRanking
+        .filter(tr => tr.name !== focusTrait)
+        .slice(0, 2)
+        .map(tr => tr.name);
+      const secondaryTraits = traitRanking
+        .filter(tr => tr.name !== focusTrait && !supportTraits.includes(tr.name))
+        .filter(tr => tr.value > 10)
+        .map(tr => tr.name);
+
+      const estimateAbilitySlots = Math.max(1, Math.floor(ERF / 10));
+      const baseSecondary = ERF >= BUCKET_CONFIG.secondaryStep2 ? 2 : (ERF >= BUCKET_CONFIG.secondaryStep1 ? 1 : 0);
+      const focusQuotaRaw = Math.max(1, Math.round(estimateAbilitySlots * BUCKET_CONFIG.focusShare));
+      const supportQuotaRaw = Math.max(1, Math.round(estimateAbilitySlots * BUCKET_CONFIG.supportShare));
+      const secondaryQuotaRaw = Math.max(baseSecondary, Math.round(estimateAbilitySlots * BUCKET_CONFIG.secondaryShare));
+      const bucketQuota = {
+        focus: focusTrait ? focusQuotaRaw : 0,
+        support: supportTraits.length ? supportQuotaRaw : 0,
+        secondary: secondaryTraits.length ? secondaryQuotaRaw : 0
+      };
+      const quotaTotal = Object.values(bucketQuota).reduce((sum, val) => sum + (val || 0), 0);
+      if (quotaTotal > estimateAbilitySlots) {
+        let overflow = quotaTotal - estimateAbilitySlots;
+        const trimOrder = ['secondary', 'support', 'focus'];
+        trimOrder.forEach(key => {
+          while (overflow > 0 && bucketQuota[key] > 0) {
+            bucketQuota[key] -= 1;
+            overflow -= 1;
+          }
+        });
+      } else if (quotaTotal < estimateAbilitySlots && focusTrait) {
+        bucketQuota.focus += (estimateAbilitySlots - quotaTotal);
+      }
+
+      const abilityTraitCache = new Map();
+      const abilityBucketCache = new Map();
+      const abilityMatchesTrait = (name, trait) => {
+        const key = normalizeName(name);
+        if (!key || !trait) return false;
+        const cached = abilityTraitCache.get(key);
+        if (cached) return cached.has(trait);
+        const entry = lookupEntryByName(name);
+        const tests = new Set(toNameArray(entry?.taggar?.test).map(normalizeAttributeName).filter(Boolean));
+        abilityTraitCache.set(key, tests);
+        return tests.has(trait);
+      };
+      const resolveAbilityBucket = (name) => {
+        const key = normalizeName(name);
+        if (!key) return '';
+        if (abilityBucketCache.has(key)) return abilityBucketCache.get(key);
+        const matches = {
+          focus: focusTrait && abilityMatchesTrait(name, focusTrait),
+          support: supportTraits.some(tr => abilityMatchesTrait(name, tr)),
+          secondary: secondaryTraits.some(tr => abilityMatchesTrait(name, tr))
+        };
+        const bucket = matches.focus ? 'focus' : (matches.support ? 'support' : (matches.secondary ? 'secondary' : ''));
+        abilityBucketCache.set(key, bucket);
+        return bucket;
+      };
+
+      const bucketCounts = { focus: 0, support: 0, secondary: 0 };
+      Object.keys(this.Formagor || {}).forEach(name => {
+        const bucket = resolveAbilityBucket(name);
+        if (bucket) bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1;
+      });
+
+      const registerBucketAcquisition = (name) => {
+        const bucket = resolveAbilityBucket(name);
+        if (bucket) bucketCounts[bucket] = (bucketCounts[bucket] || 0) + 1;
+      };
+
+      const bucketHasCapacity = (bucket) => {
+        if (!bucket) return false;
+        if (!bucketQuota[bucket]) return false;
+        return bucketCounts[bucket] < bucketQuota[bucket];
+      };
+
+      const bucketHasAvailableOptions = (bucket) => {
+        if (!bucket) return false;
+        return alt.some(name => resolveAbilityBucket(name) === bucket);
+      };
+
+      const rebalanceQuotaIfEmpty = () => {
+        ['focus', 'support', 'secondary'].forEach(bucket => {
+          if (bucketQuota[bucket] && !bucketHasAvailableOptions(bucket)) {
+            const spare = bucketQuota[bucket];
+            bucketQuota[bucket] = 0;
+            const candidates = ['focus', 'support', 'secondary'].filter(key => key !== bucket && bucketHasAvailableOptions(key));
+            candidates.forEach(key => { bucketQuota[key] += Math.ceil(spare / candidates.length); });
+          }
+        });
+      };
+
+      const levelValue = (level) => LEVEL_VALUE[level] || 0;
+      const heightScore = () => {
+        const abilityHeight = Object.keys(this.Formagor || {}).reduce((sum, key) => sum + levelValue(this.Formagor[key]), 0);
+        const ritualHeight = Math.floor((this.valdaRitualer || []).length / 3);
+        return abilityHeight + ritualHeight;
+      };
+      const widthScore = () => Object.keys(this.Formagor || {}).filter(name => this.Formagor[name] === 'Novis').length;
+      const shouldPromoteFirst = () => (widthScore() >= heightScore() + BUCKET_CONFIG.tallMargin);
+
       const learnNovis = (rawVal) => {
         if (!rawVal || ERFkvar < 10) return false;
         let val = rawVal;
@@ -944,6 +1121,7 @@
             if (!this.ensureTraditionLock(abilityTrad, val)) return false;
             this.tradition = val;
             this.Formagor[val] = 'Novis';
+            registerBucketAcquisition(val);
             this.krafter.forEach(kraft => addMysticChoiceCopies(kraft));
             ERFkvar -= 10;
             removeIncompatible(val);
@@ -957,6 +1135,7 @@
           if (!takeCorruption(1)) return false;
         }
         this.Formagor[val] = 'Novis';
+        registerBucketAcquisition(val);
         ERFkvar -= 10;
         removeIncompatible(val);
         return true;
@@ -1088,6 +1267,73 @@
         return false;
       };
 
+      const tryPromotionPriority = () => {
+        const bucketOrder = ['focus', 'support', 'secondary', ''];
+        const targets = typ === 'Mästare' ? ['Gesäll', 'Novis'] : ['Gesäll', 'Novis'];
+        for (let i = 0; i < targets.length; i += 1) {
+          const level = targets[i];
+          const pickables = Object.keys(this.Formagor || {}).filter(name => this.Formagor[name] === level);
+          pickables.sort((a, b) => bucketOrder.indexOf(resolveAbilityBucket(a)) - bucketOrder.indexOf(resolveAbilityBucket(b)));
+          const list = pickables.slice();
+          while (list.length) {
+            const idx = randIndex(list.length);
+            const val = list.splice(idx, 1)[0];
+            if (!val) continue;
+            if (promoteAbility(val, level)) return true;
+          }
+        }
+        return false;
+      };
+
+      const pickFromBucket = (bucketName) => {
+        if (!bucketName || ERFkvar < 10) return false;
+        rebalanceQuotaIfEmpty();
+        const pool = alt.filter(name => resolveAbilityBucket(name) === bucketName);
+        if (!pool.length) return false;
+        const picks = pool.slice();
+        while (picks.length) {
+          const idx = randIndex(picks.length);
+          const val = picks.splice(idx, 1)[0];
+          if (!val) continue;
+          const ok = learnNovis(val);
+          alt = removeFromAlternativ(alt, val);
+          if (ok) {
+            if (ERFkvar >= 10) alt.push(val);
+            return true;
+          }
+        }
+        return false;
+      };
+
+      const attemptBucketedPick = () => {
+        const priority = ['focus', 'support', 'secondary'];
+        const underQuota = priority.filter(bucketHasCapacity);
+        const order = underQuota.length ? underQuota : priority;
+        for (let i = 0; i < order.length; i += 1) {
+          if (pickFromBucket(order[i])) return true;
+        }
+        return false;
+      };
+
+      const attemptGeneralPick = () => {
+        if (ERFkvar < 10 || !alt.length) return false;
+        const idx = randIndex(alt.length);
+        const val = alt[idx];
+        let pushedBack = false;
+        if (this.Formagor[val]) {
+          if (this.Formagor[val] === 'Novis' && ERFkvar >= 20) {
+            if (promoteAbility(val, 'Novis')) pushedBack = true;
+          } else if (this.Formagor[val] === 'Gesäll' && ERFkvar >= 30) {
+            if (promoteAbility(val, 'Gesäll')) pushedBack = true;
+          }
+        } else if (learnNovis(val)) {
+          pushedBack = true;
+        }
+        alt = removeFromAlternativ(alt, val);
+        if (pushedBack && ERFkvar >= 10) alt.push(val);
+        return pushedBack;
+      };
+
       const forceFallbackSpending = () => {
         let guard = 0;
         while (ERFkvar >= 10 && guard < 200) {
@@ -1129,59 +1375,41 @@
         }
       };
 
-      if (typ === 'Mästare') {
-        while (ERFkvar >= 10) {
-          if (handleForcedRequirement()) continue;
-          const alt1 = [];
-          const alt2 = [];
-          const alt3 = [];
-          alt.forEach(formaga => {
-            if (this.Formagor[formaga] === 'Gesäll') alt1.push(formaga);
-            else if (this.Formagor[formaga] === 'Novis') alt2.push(formaga);
-            else alt3.push(formaga);
-          });
-          const span1 = alt1.length;
-          const span2 = alt2.length;
-          const span3 = alt3.length;
-          if (span1 && ERFkvar >= 30) {
-            const val = alt1[randIndex(span1)];
-            promoteAbility(val, 'Gesäll');
-          } else if (span2 && ERFkvar >= 20) {
-            const val = alt2[randIndex(span2)];
-            promoteAbility(val, 'Novis');
-          } else if (span3) {
-            const val = alt3[randIndex(span3)];
-            if (!learnNovis(val)) {
-              alt = removeFromAlternativ(alt, val);
-            }
-          } else {
-            break;
-          }
+      let mainGuard = 0;
+      while (ERFkvar >= 10 && mainGuard < 400) {
+        if (handleForcedRequirement()) {
+          mainGuard += 1;
+          continue;
         }
-      } else {
-        while (ERFkvar >= 10 && alt.length) {
-          if (handleForcedRequirement()) continue;
-          const idx = randIndex(alt.length);
-          const val = alt[idx];
-          let pushedBack = false;
-          if (this.Formagor[val]) {
-            if (this.Formagor[val] === 'Novis' && ERFkvar >= 20) {
-              if (promoteAbility(val, 'Novis')) {
-                pushedBack = true; // allow possible further promotion later
-              }
-            } else if (this.Formagor[val] === 'Gesäll' && ERFkvar >= 30) {
-              if (promoteAbility(val, 'Gesäll')) {
-                pushedBack = true;
-              }
-            }
-          } else {
-            if (learnNovis(val)) {
-              pushedBack = true; // allow Novis->Gesäll in later passes
-            }
-          }
-          alt = removeFromAlternativ(alt, val);
-          if (pushedBack && ERFkvar >= 10) alt.push(val);
+        if (shouldPromoteFirst() && tryPromotionPriority()) {
+          mainGuard += 1;
+          continue;
         }
+        if (attemptBucketedPick()) {
+          mainGuard += 1;
+          continue;
+        }
+        if (typ === 'Mästare' && tryPromotionPriority()) {
+          mainGuard += 1;
+          continue;
+        }
+        if (attemptGeneralPick()) {
+          mainGuard += 1;
+          continue;
+        }
+        if (tryFallbackPromotion()) {
+          mainGuard += 1;
+          continue;
+        }
+        if (learnRandomRitual()) {
+          mainGuard += 1;
+          continue;
+        }
+        if (attemptGeneralPick()) {
+          mainGuard += 1;
+          continue;
+        }
+        break;
       }
 
       exhaustRemainingXP();
@@ -1246,16 +1474,33 @@
     return { ...entry };
   }
 
+  function pickRandomRaceForYrke(yrkeEntry) {
+    const races = getEntriesByType('Ras').filter(r => r?.namn);
+    if (!races.length) return null;
+    const suggested = new Set(
+      toNameArray(yrkeEntry?.forslag_pa_slakte)
+        .map(normalizeName)
+        .filter(Boolean)
+    );
+    const weighted = races.map(entry => ({
+      entry,
+      weight: suggested.has(normalizeName(entry.namn)) ? 3 : 1
+    })).filter(item => item.weight > 0);
+    const total = weighted.reduce((sum, item) => sum + (item.weight || 0), 0);
+    if (!total) return null;
+    let roll = Math.random() * total;
+    for (let i = 0; i < weighted.length; i += 1) {
+      const item = weighted[i];
+      roll -= item.weight;
+      if (roll <= 0) return { ...item.entry };
+    }
+    const last = weighted[weighted.length - 1];
+    return last ? { ...last.entry } : null;
+  }
+
   function getEntriesByType(type) {
     const db = Array.isArray(window.DB) ? window.DB : [];
     return db.filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type));
-  }
-
-  function randomEntryByType(type) {
-    const entries = getEntriesByType(type);
-    if (!entries.length) return null;
-    const idx = randIndex(entries.length);
-    return { ...entries[idx] };
   }
 
   function normalizeName(name) {
@@ -1578,6 +1823,74 @@
     const lower = raw.toLowerCase();
     const match = ATTR_KEYS.find(attr => attr.toLowerCase() === lower);
     return match || raw;
+  }
+
+  function traitWeightFromTarget(target) {
+    const value = Number(target);
+    if (Number.isFinite(value)) {
+      if (value >= 14) return 4;
+      if (value >= 13) return 3;
+      if (value >= 12) return 2;
+    }
+    return 1;
+  }
+
+  function parseYrkeTraitGuidance(text) {
+    const rows = String(text || '')
+      .replace(/\n+/g, ',')
+      .split(/[,;]+/)
+      .map(part => part.trim())
+      .filter(Boolean);
+    const result = new Map();
+    const defaultTarget = 11;
+    rows.forEach(part => {
+      const targetMatch = part.match(/(\d+)\s*\+?/);
+      const targetVal = Number(targetMatch?.[1]) || defaultTarget;
+      ATTR_KEYS.forEach(attr => {
+        const re = new RegExp(`\\b${attr}\\b`, 'i');
+        if (!re.test(part)) return;
+        const existing = result.get(attr);
+        if (!existing || targetVal > existing.target) {
+          result.set(attr, {
+            name: attr,
+            target: targetVal,
+            weight: traitWeightFromTarget(targetVal),
+            source: 'viktiga_karaktarsdrag'
+          });
+        }
+      });
+    });
+    return Array.from(result.values()).sort((a, b) => (b.target || 0) - (a.target || 0));
+  }
+
+  function buildYrkeTraitGuide() {
+    if (dataCache.yrkeTraitGuide) return dataCache.yrkeTraitGuide;
+    const guide = new Map();
+    getEntriesByType('Yrke').forEach(entry => {
+      const name = normalizeName(entry?.namn);
+      if (!name) return;
+      const prefs = parseYrkeTraitGuidance(entry?.viktiga_karaktarsdrag);
+      if (prefs.length) guide.set(name, prefs);
+    });
+    dataCache.yrkeTraitGuide = guide;
+    return guide;
+  }
+
+  function getYrkeTraitPreferences(entry) {
+    if (!entry) return [];
+    const name = normalizeName(entry?.namn);
+    if (!name) return [];
+    const guide = buildYrkeTraitGuide();
+    const prefs = guide.get(name) || [];
+    return prefs.map(pref => ({ ...pref }));
+  }
+
+  function derivePrimaryTraitFocus(prefs) {
+    const list = Array.isArray(prefs) ? prefs.slice() : [];
+    if (!list.length) return '';
+    list.sort((a, b) => (b.target || 0) - (a.target || 0));
+    const pick = list[0];
+    return ATTR_KEYS.includes(pick?.name) ? pick.name : '';
   }
 
   function getAbilityPool() {

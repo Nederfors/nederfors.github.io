@@ -1222,8 +1222,8 @@ class SharedToolbar extends HTMLElement {
               <label for="genCharAttr">Karaktärsdrag</label>
               <select id="genCharAttr">
                 <option value="">Balanserade (slump)</option>
-                <option value="specialist">Specialist (1 på 15)</option>
-                <option value="minmax">Min/Max</option>
+                <option value="specialist">Spetskompetens (ett drag pressas till 15)</option>
+                <option value="minmax">Ytterligheter (en max, tre höga och ett svagt)</option>
               </select>
             </div>
           </div>
