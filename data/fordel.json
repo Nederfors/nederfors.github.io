@@ -1302,5 +1302,212 @@
       ]
     },
     "effekt": "En gång per etapp, när du leder i svår terräng, får alla allierade inom synhåll +1 på sitt första Vaksam för att hålla ihop (upp till +3)."
+  },
+  {
+    "id": "ford85",
+    "namn": "Stridsreflexer",
+    "beskrivning": "Rollpersonen har tränat upp en blixtsnabb reaktionsförmåga som svarar innan tanken hinner med. Rollpersonen får +1 på alla slag som avser att lyckas med reaktiva handlingar (ej försvar)",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Kvick"
+      ]
+    },
+    "effekt": "+1 på alla slag för reaktiva handlingar."
+  },
+  {
+    "id": "ford86",
+    "namn": "Sjövan",
+    "beskrivning": "Ett liv på däck har gett rollpersonen sjöben och en instinktiv förståelse för vind och vågor. Rollpersonen får +1 på alla slag som avser att hantera eller navigera med båtar. Sjövan kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Listig",
+        "Vaksam"
+      ]
+    },
+    "effekt": "+1 på slag för att hantera och navigera båtar (upp till +3)."
+  },
+  {
+    "id": "ford87",
+    "namn": "Falköga",
+    "beskrivning": "Blicken sveper över omgivningen och fastnar där andra blickar glider förbi. Rollpersonen får +1 i slag som avser att finna dolda ting, vare sig det är lönnfack eller gömda fiender. Falkblick kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Vaksam"
+      ]
+    },
+    "effekt": "+1 Vaksam för att finna dolda ting (upp till +3)."
+  },
+  {
+    "id": "ford88",
+    "namn": "Väderbiten",
+    "beskrivning": "Kyla, hetta och piskande regn bekommer inte rollpersonen lika illa som andra. Hen får +1 i slag som avser att tolerera vädereffekter och uthärda elementens raseri. Väderbiten kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "+1 för att tolerera vädereffekter (upp till +3)."
+  },
+  {
+    "id": "ford89",
+    "namn": "Grodbent",
+    "beskrivning": "Rollpersonen besitter en explosiv styrka i benen. Hen får +1 i slag som avser att lyckas med ett hopp, oavsett om det är över klyftor eller upp på avsatser. Spänstig kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "+1 på slag för att lyckas med hopp (upp till +3)."
+  },
+  {
+    "id": "ford90",
+    "namn": "Järnhälsa",
+    "beskrivning": "Sår sluter sig snabbare och blåmärken bleknar fortare på rollpersonen. Denna robusta fysik gör att rollpersonen läker 1 extra Tålighet per natt vid vila.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "Läker 1 extra Tålighet per natt."
+  },
+  {
+    "id": "ford91",
+    "namn": "Lagvrängare",
+    "beskrivning": "Genom studier eller bitter erfarenhet kan rollpersonen den ambriska lagen och dess kryphål. Hen får +1 i Övertygande gentemot ambriska tjänstemän. Lagvrängare kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Övertygande"
+      ]
+    },
+    "effekt": "+1 Övertygande mot ambriska tjänstemän (upp till +3)."
+  },
+  {
+    "id": "ford92",
+    "namn": "Klanvän",
+    "beskrivning": "Rollpersonen förstår de oskrivna lagarna och traditionerna hos klanfolket. Hen får +1 i Övertygande gentemot barbarättade häxor, hövdingar och gardister. Klanvän kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Övertygande"
+      ]
+    },
+    "effekt": "+1 Övertygande mot barbarättade häxor, hövdingar och gardister (upp till +3)."
+  },
+  {
+    "id": "ford93",
+    "namn": "Måttöga",
+    "beskrivning": "Rollpersonen kan avgöra nära nog exakt storlek på varelser och föremål även på distans; om det kan ses kan det mätas. Detta ger en fördel vid bedömning av avstånd, höjder och volymer som andra bara kan gissa sig till.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Vaksam"
+      ]
+    },
+    "effekt": "Kan avgöra exakt storlek och avstånd på allt som är synligt."
+  },
+  {
+    "id": "ford94",
+    "namn": "Kirurgisk precision",
+    "beskrivning": "Med en fältskärs säkerhet kan rollpersonen justera sin attack i sista sekund. Fördelen låter rollpersonen lägga till +1 eller ta bort -1 på tärningsutfallet för träfftabellen vid en lyckad siktad attack, för att maximera skadan.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Träffsäker"
+      ]
+    },
+    "effekt": "+1/-1 på träfftabellen vid lyckad siktad attack."
+  },
+  {
+    "id": "ford95",
+    "namn": "Rännstensfostran",
+    "beskrivning": "Rollpersonen är van vid rännstenens hederskodex där knytnävarna talar. Hen får +1 i Träffsäker så länge inga vapen av något slag förekommer i striden på någon sida (observera att naturliga vapen, knogvapen och dylikt räknas som vapen i detta sammanhang). Rännstensfostran kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Träffsäker"
+      ]
+    },
+    "effekt": "+1 Träffsäker i strid helt utan vapen (upp till +3)."
+  },
+  {
+    "id": "ford96",
+    "namn": "Styckmästare",
+    "beskrivning": "Rollpersonen ser potentialen i varje villebråd och vet hur man tar vara på allt. Kunskapen gör att det går att lägga till +1T6 ransoner vid styckning av större villebråd.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Listig"
+      ]
+    },
+    "effekt": "+1T6 extra ransoner vid styckning av större villebråd."
+  },
+  {
+    "id": "ford97",
+    "namn": "Stridsberedd",
+    "beskrivning": "Rollpersonen är alltid först på tårna när faran hotar. Hen får lägga till +1 på sitt initiativvärde. Stridsberedd kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Kvick"
+      ]
+    },
+    "effekt": "+1 på initiativ (upp till +3)."
   }
 ]
