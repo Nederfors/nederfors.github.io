@@ -1062,7 +1062,7 @@
   {
     "id": "na79",
     "namn": "Släktförbannelse",
-    "beskrivning": "Rollpersonen bär på arvet av en förfaders synder – ett brutet löfte till en skogsande, en pakt med en mörkermästare eller en stöld från en helig plats. Denna skuld har manifesterat sig som en mörk skugga som vilar över hela ätten och vägrar släppa taget. Förbannelsens exakta natur utformas i samråd med spelledaren, men den har en tendens att slå till vid sämsta tänkbara tillfälle. Det kan yttra sig som plötslig oförklarlig svaghet, utrustning som går sönder utan orsak, eller att varelser från det förflutna manifesterar sig för att utkräva en gammal skuld. En gång per spelmöte kan spelledaren aktivera förbannelsen. Detta kan t.ex innebära att rollpersonen antingen misslyckas automatiskt med ett tärningsslag (innan det slås) eller att en allvarlig, oväntad komplikation introduceras i scenen.",
+    "beskrivning": "Rollpersonen bär på arvet av en förfaders synder – ett brutet löfte till en skogsande, en pakt med en mörkermästare eller en stöld från en helig plats. Denna skuld har manifesterat sig som en mörk skugga som vilar över hela ätten och vägrar släppa taget. Förbannelsens exakta natur utformas i samråd med spelledaren, men den har en tendens att slå till vid sämsta tänkbara tillfälle. Det kan yttra sig som plötslig oförklarlig svaghet, utrustning som går sönder utan orsak, eller att varelser från det förflutna manifesterar sig för att utkräva en gammal skuld. En gång per äventyr kan spelledaren aktivera förbannelsen. Detta kan t.ex innebära att rollpersonen antingen misslyckas automatiskt med ett tärningsslag (innan det slås) eller att en allvarlig, oväntad komplikation introduceras i scenen.",
     "taggar": {
       "typ": [
         "Nackdel"
