@@ -1627,7 +1627,6 @@ function bindToolbar() {
           name: res.name,
           xp: res.xp,
           attributeMode: res.attrMode,
-          abilityMode: res.abilityMode,
           traitFocus: res.traitFocus,
           race: res.race,
           yrke: res.yrke,
@@ -3263,7 +3262,6 @@ async function openGeneratorPopup(preferredFolderId) {
   const folderEl = bar.shadowRoot.getElementById('genCharFolder');
   const xpIn = bar.shadowRoot.getElementById('genCharXp');
   const attrSel = bar.shadowRoot.getElementById('genCharAttr');
-  const abilitySel = bar.shadowRoot.getElementById('genCharAbility');
   const traitSel = bar.shadowRoot.getElementById('genCharTrait');
   const raceSel = bar.shadowRoot.getElementById('genCharRace');
   const yrkeSel = bar.shadowRoot.getElementById('genCharYrke');
@@ -3285,7 +3283,6 @@ async function openGeneratorPopup(preferredFolderId) {
   nameIn.value = '';
   if (xpIn) xpIn.value = 100;
   if (attrSel) attrSel.value = '';
-  if (abilitySel) abilitySel.value = '';
   if (traitSel) {
     const attrs = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
     const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
@@ -3389,12 +3386,11 @@ async function openGeneratorPopup(preferredFolderId) {
       const folderId = folderEl.value || '';
       const xp = Math.max(0, Math.floor(Number(xpIn?.value || 0) / 10) * 10);
       const attrMode = attrSel?.value || '';
-      const abilityMode = abilitySel?.value || '';
       const traitFocus = traitSel?.value || '';
       const race = raceSel?.value || '';
       const yrke = yrkeSel?.value || '';
       const elityrke = eliteSel?.value || '';
-      close({ name, folderId, xp, attrMode, abilityMode, traitFocus, race, yrke, elityrke });
+      close({ name, folderId, xp, attrMode, traitFocus, race, yrke, elityrke });
     }
     function onCancel() { close(null); }
     function onOutside(e) {

@@ -8,7 +8,7 @@
     name: 'Generator',
     xp: 100,
     attributeMode: '',
-    abilityMode: '',
+    abilityMode: 'master',
     traitFocus: '',
     race: '',
     yrke: '',
@@ -84,7 +84,11 @@
       this.autoAdded = [];
       this.advantagePicks = [];
       this.disadvantagePicks = [];
+      const wantsRandomYrke = !opts.yrke;
       this.selectedYrke = resolveEntryByType(opts.yrke, 'Yrke');
+      if (!this.selectedYrke && wantsRandomYrke) {
+        this.selectedYrke = pickRandomYrke();
+      }
       this.selectedRace = resolveEntryByType(opts.race, 'Ras') || pickRandomRaceForYrke(this.selectedYrke);
       this.selectedElityrke = resolveEntryByType(opts.elityrke, 'Elityrke');
       this.isMysticElite = isMysticElityrke(this.selectedElityrke);
@@ -121,7 +125,9 @@
       this.allaRitualer = [];
       this.mojligaKrafterOchRitualer(this.traditionLock || 'ingen');
       this.applyTraditionLockToMysticPools();
-      const abilityMode = opts.abilityMode === 'master' ? 'Mästare' : opts.abilityMode;
+      const abilityMode = opts.abilityMode === 'master'
+        ? 'Mästare'
+        : (opts.abilityMode || 'Mästare');
       this.abilityMode = abilityMode;
       this.forcedAbilities = this.buildForcedAbilities();
       this.valjNyaFormagor(this.ERF, abilityMode);
@@ -467,7 +473,9 @@
       return LEVEL_VALUE[baseLevel] >= LEVEL_VALUE[target];
     }
 
-    isAbilityAllowedByStats(name) {
+    isAbilityAllowedByStats(name, options = {}) {
+      const { minValue = 10, ignore = false } = options || {};
+      if (ignore) return true;
       const entry = lookupEntryByName(name);
       if (!entry) return true;
       const tests = toNameArray(entry?.taggar?.test);
@@ -478,7 +486,8 @@
         if (!attr) return true;
         const val = stats[attr];
         if (val === undefined || val === null) return true;
-        return Number(val) >= 10;
+        const threshold = Number.isFinite(Number(minValue)) ? Number(minValue) : 10;
+        return Number(val) >= threshold;
       });
     }
 
@@ -1092,12 +1101,26 @@
         return abilityHeight + ritualHeight;
       };
       const widthScore = () => Object.keys(this.Formagor || {}).filter(name => this.Formagor[name] === 'Novis').length;
-      const shouldPromoteFirst = () => (widthScore() >= heightScore() + BUCKET_CONFIG.tallMargin);
+      const preferPromotions = typ === 'Mästare';
+      const shouldPromoteFirst = () => {
+        if (preferPromotions && Object.keys(this.Formagor || {}).length) return true;
+        return widthScore() >= heightScore() + BUCKET_CONFIG.tallMargin;
+      };
 
-      const learnNovis = (rawVal) => {
+      const learnNovis = (rawVal, opts = {}) => {
         if (!rawVal || ERFkvar < 10) return false;
         let val = rawVal;
-        if (!this.isAbilityAllowedByStats(val)) return false;
+        const statGateMode = opts.statGateMode || 'strict';
+        let statAllowed = true;
+        if (statGateMode === 'ignore') {
+          statAllowed = true;
+        } else if (statGateMode === 'soft') {
+          const softThreshold = Number.isFinite(Number(opts.statMinValue)) ? Number(opts.statMinValue) : 8;
+          statAllowed = this.isAbilityAllowedByStats(val, { minValue: softThreshold });
+        } else {
+          statAllowed = this.isAbilityAllowedByStats(val);
+        }
+        if (!statAllowed) return false;
         if (val === 'Mystisk kraft') {
           if (takeCorruption(1) && this.allaKrafter.length) {
             const allowed = this.allaKrafter.filter(name => this.isMysticLevelAllowed(name, 'Novis'));
@@ -1246,23 +1269,28 @@
         return false;
       };
 
-      const tryFallbackNewAbility = () => {
+      const tryFallbackNewAbility = (opts = {}) => {
         if (ERFkvar < 10) return false;
+        const statGateMode = opts.statGateMode || 'strict';
+        const statMinValue = Number.isFinite(Number(opts.statMinValue)) ? Number(opts.statMinValue) : 8;
         const known = new Set(Object.keys(this.Formagor));
-        const pool = getAbilityPool()
+        let pool = getAbilityPool()
           .map(item => item.name)
           .filter(Boolean)
           .filter(name => !known.has(name))
-          .filter(name => this.isAbilityAllowedByStats(name))
           .filter(name => this.isAllowedByTraditionLock(name))
           .filter(name => isAbilityCompatibleWithCurrent(name));
+        if (statGateMode !== 'ignore') {
+          const threshold = statGateMode === 'soft' ? statMinValue : 10;
+          pool = pool.filter(name => this.isAbilityAllowedByStats(name, { minValue: threshold }));
+        }
         if (!pool.length) return false;
         const picks = pool.slice();
         while (picks.length && ERFkvar >= 10) {
           const idx = randIndex(picks.length);
           const val = picks.splice(idx, 1)[0];
           if (!val) continue;
-          if (learnNovis(val)) return true;
+          if (learnNovis(val, { statGateMode, statMinValue })) return true;
         }
         return false;
       };
@@ -1335,6 +1363,11 @@
       };
 
       const forceFallbackSpending = () => {
+        const fallbackPhases = [
+          { statGateMode: 'strict' },
+          { statGateMode: 'soft', statMinValue: 8 },
+          { statGateMode: 'ignore' }
+        ];
         let guard = 0;
         while (ERFkvar >= 10 && guard < 200) {
           if (handleForcedRequirement()) continue;
@@ -1342,7 +1375,14 @@
             guard += 1;
             continue;
           }
-          if (!tryFallbackNewAbility()) break;
+          let phaseSpent = false;
+          for (let i = 0; i < fallbackPhases.length && !phaseSpent; i += 1) {
+            if (tryFallbackNewAbility(fallbackPhases[i])) {
+              phaseSpent = true;
+              break;
+            }
+          }
+          if (!phaseSpent) break;
           guard += 1;
         }
       };
@@ -1389,7 +1429,7 @@
           mainGuard += 1;
           continue;
         }
-        if (typ === 'Mästare' && tryPromotionPriority()) {
+        if (preferPromotions && tryPromotionPriority()) {
           mainGuard += 1;
           continue;
         }
@@ -1496,6 +1536,14 @@
     }
     const last = weighted[weighted.length - 1];
     return last ? { ...last.entry } : null;
+  }
+
+  function pickRandomYrke() {
+    const yrken = getEntriesByType('Yrke').filter(entry => entry?.namn);
+    if (!yrken.length) return null;
+    const idx = randIndex(yrken.length);
+    const entry = yrken[idx];
+    return entry ? { ...entry } : null;
   }
 
   function getEntriesByType(type) {

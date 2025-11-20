@@ -1232,13 +1232,6 @@ class SharedToolbar extends HTMLElement {
               <label for="genCharTrait">Fokusera drag</label>
               <select id="genCharTrait"></select>
             </div>
-            <div class="filter-group">
-              <label for="genCharAbility">Förmågefokus</label>
-              <select id="genCharAbility">
-                <option value="">Slumpmässigt</option>
-                <option value="master">Prioritera mästare</option>
-              </select>
-            </div>
           </div>
           <div class="generator-grid">
             <div class="filter-group">
