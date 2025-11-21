@@ -1481,7 +1481,7 @@
   {
     "id": "ford96",
     "namn": "Styckmästare",
-    "beskrivning": "Rollpersonen ser potentialen i varje villebråd och vet hur man tar vara på allt. Kunskapen gör att det går att lägga till +1T6 ransoner vid styckning av större villebråd.",
+    "beskrivning": "Rollpersonen ser potentialen i varje villebråd och vet hur man tar vara på allt. Kunskapen gör att det går att lägga till +1T10 ransoner vid styckning av större villebråd.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
@@ -1510,9 +1510,8 @@
     },
     "effekt": "+1 på initiativ (upp till +3)."
   },
-  [
   {
-    "id": "ford85",
+    "id": "ford98",
     "namn": "Obruten Skärpa",
     "beskrivning": "Rollpersonen har en perfekt stridsteknik som är beroende av total balans och hälsa. Så länge kroppen är helt oskadd och Tåligheten är på sitt maximum, rör sig rollpersonen med en övernaturlig precision och får +1 i karaktärsdraget Träffsäker på alla attacker.",
     "kan_införskaffas_flera_gånger": false,
@@ -1528,7 +1527,7 @@
     "effekt": "Så länge du har din maximala Tålighet i behåll får du +1 i Träffsäker på alla attacker."
   },
   {
-    "id": "ford86",
+    "id": "ford99",
     "namn": "Klippvandrare",
     "beskrivning": "Vare sig det är Davokars raviner eller Titanernas bergväggar ser rollpersonen fäste där andra ser slät sten. Rollpersonen rör sig obehindrat vertikalt och tröttas knappt inte ut av klättring. Rollpersonen får +1 på alla slag för att klättra och förflytta sig i brant terräng per nivå av fördelen. Denna fördel kan väljas flera gånger för att representera en närmast onaturlig vighet i bergen (upp till +3).",
     "kan_införskaffas_flera_gånger": true,
@@ -1544,7 +1543,7 @@
     "effekt": "+1 på alla slag för att klättra och förflytta sig i brant terräng per nivå (upp till +3)."
   },
   {
-    "id": "ford87",
+    "id": "ford100",
     "namn": "Ljusvakt",
     "beskrivning": "Rollpersonens skråmor har alltid läkt snabbare än andras och när hen vilar är sömnen djupare och återhämtningen starkare än för andra, som om köttet lyftade på hens uppmaning att läka. Vid en timmes aktiv meditation läker rollpersonen alltid +1 Tålighet utöver den normala läkningstakten.",
     "kan_införskaffas_flera_gånger": false,
@@ -1558,7 +1557,7 @@
     "effekt": "Vid en timmes vila (kort vila) läker du alltid +1 Tålighet utöver den normala läkningstakten."
   },
   {
-    "id": "ford88",
+    "id": "ford101",
     "namn": "Stäppfödd",
     "beskrivning": "Rollpersonen är mer eller mindre född i sadeln, likt västerns klanryttare eller de ambriska pansar-riddarna. Ryttare och riddjur rör sig som en enda varelse. Rollpersonen får +1 på alla slag som rör ridning. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
     "kan_införskaffas_flera_gånger": true,
@@ -1573,5 +1572,4 @@
     },
     "effekt": "+1 på alla slag som rör ridning"
   }
-]
 ]
