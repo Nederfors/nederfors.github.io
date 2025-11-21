@@ -1070,5 +1070,68 @@
       "test": []
     },
     "effekt": "En gång per spelmöte kan SL aktivera förbannelsen för att orsaka ett automatiskt misslyckande eller en allvarlig komplikation."
+  },
+[
+  {
+    "id": "na79",
+    "namn": "Djurbane",
+    "beskrivning": "Naturen känner en onaturlig vittring kring rollpersonen; fåglar skränar varnande och hundar reser ragg i dennes närvaro. Vilda bestar prioriterar alltid att anfalla rollpersonen framför andra mål om möjligt. Dessutom får rollpersonen en andra chans att misslyckas med alla slag som rör hantering av djur (t.ex. rida, lugna eller dressera), då djuren instinktivt kämpar emot.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Övertygande",
+        "Viljestark"
+      ]
+    },
+    "effekt": "Bestar anfaller dig först; andra chans att misslyckas vid hantering av djur."
+  },
+  {
+    "id": "na80",
+    "namn": "Dödsångest",
+    "beskrivning": "När döden kommer nära hör rollpersonen ett stressande, dunkande ljud – likt hjärtslag i öronen – som dränker allt förnuft. När rollpersonens Tålighet understiger hälften av maxvärdet drabbas hen av panik och får en andra chans att misslyckas med alla slag mot Listig, Vaksam och Viljestark.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Listig",
+        "Vaksam",
+        "Viljestark"
+      ]
+    },
+    "effekt": "Vid <50% Tålighet: andra chans att misslyckas med Listig, Vaksam och Viljestark."
+  },
+  {
+    "id": "na81",
+    "namn": "Sjusovare",
+    "beskrivning": "Rollpersonen sover djupt som en stock och har mycket svårt att vakna till sans. Om sällskapet överraskas eller attackeras medan rollpersonen sover, missar hen automatiskt den första stridsrundan. Därefter krävs ett lyckat slag mot Vaksam i början av varje runda för att vakna och kunna agera.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Vaksam"
+      ]
+    },
+    "effekt": "Missar första rundan vid överraskning i sömn; kräver Vaksam för att vakna."
+  },
+  {
+    "id": "na82",
+    "namn": "Masktvång",
+    "beskrivning": "Rollpersonen lider av en fixering vid att dölja sitt ansikte och känner sig blottad och sårbar utan sin mask. Om rollpersonen tvingas visa sitt ansikte, eller om masken förstörs eller tappas, drabbas hen av svår ångest. Detta ger en andra chans att misslyckas med alla slag fram tills dess att ansiktet åter är dolt.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Utan mask: andra chans att misslyckas med alla slag."
   }
+]
 ]
