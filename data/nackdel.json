@@ -1071,7 +1071,6 @@
     },
     "effekt": "En gång per spelmöte kan SL aktivera förbannelsen för att orsaka ett automatiskt misslyckande eller en allvarlig komplikation."
   },
-[
   {
     "id": "na80",
     "namn": "Djurbane",
@@ -1133,5 +1132,4 @@
     },
     "effekt": "Utan mask: andra chans att misslyckas med alla slag."
   }
-]
 ]
