@@ -4,6 +4,7 @@
     const nameMap = invUtil.makeNameMap(inv);
     const list = storeHelper.getCurrentList(store);
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
+    const hasSensorySensitive = list.some(p => p.namn === 'Sensoriskt känslig');
 
     const PEN = { Novis: 2, 'Gesäll': 3, 'Mästare': 4 };
     const robustPenalty = list
@@ -70,7 +71,8 @@
       if(allQ.includes('Stenpansar')) stonePen -= 4;
       if(rustLvl >= 2) limit = 0;
       limit += stonePen;
-      out.push({ name: nameMap.get(row), value: kvick + limit });
+      const armorPenalty = hasSensorySensitive ? 2 : 0;
+      out.push({ name: nameMap.get(row), value: kvick + limit - armorPenalty });
       return out;
     }, []);
 
