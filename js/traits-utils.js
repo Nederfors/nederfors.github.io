@@ -320,7 +320,7 @@
 
   function bindTraits(){
     if(!dom.traits) return;
-    dom.traits.addEventListener('click', e => {
+    dom.traits.addEventListener('click', async e => {
       const countBtn = e.target.closest('.trait-count');
       if (countBtn) {
         const trait = countBtn.dataset.trait;
@@ -350,8 +350,21 @@
       const bonusMask = window.maskSkill ? maskSkill.getBonus(key) : 0;
       const bonus = bonusEx + bonusMask;
       const min   = bonus;
-      const next  = Math.max(0, (t[key] || 0) + d);
-      t[key] = Math.max(min - bonus, next);
+      const currentVal = t[key] || 0;
+      const next  = Math.max(0, currentVal + d);
+      const proposed = Math.max(min - bonus, next);
+
+      const shouldConfirm = d < 0 && proposed < currentVal && proposed < 5;
+      if (shouldConfirm) {
+        const confirmMsg = 'Detta sänker karaktärsdraget under 5. Vill du fortsätta?';
+        const confirmer = window.confirmPopup || window.confirm;
+        if (typeof confirmer === 'function') {
+          const ok = await confirmer(confirmMsg);
+          if (!ok) return;
+        }
+      }
+
+      t[key] = proposed;
       storeHelper.setTraits(store, t);
       renderTraits();
     });
