@@ -1328,10 +1328,10 @@ function buildElityrkeInfoSections(p) {
         '<p class="elite-req-note elite-req-master">Minst en vald förmåga måste vara på mästarnivå.</p>'
       ].join('');
 
-      blocks.push(`<details class="elite-info-details" open><summary>Krav på förmågor</summary>${requirementsContent}</details>`);
+      blocks.push(`<details class="elite-info-details"><summary>Krav på förmågor</summary>${requirementsContent}</details>`);
     } else {
       const fallback = `<p class="elite-req-text">${safe(p.krav_formagor)}</p><p class="elite-req-note elite-req-master">Minst en vald förmåga måste vara på mästarnivå.</p>`;
-      blocks.push(`<details class="elite-info-details" open><summary>Krav på förmågor</summary>${fallback}</details>`);
+      blocks.push(`<details class="elite-info-details"><summary>Krav på förmågor</summary>${fallback}</details>`);
     }
   }
 
@@ -1355,7 +1355,7 @@ function buildElityrkeInfoSections(p) {
     const listHtml = abilityBlocks.length
       ? `<div class="elite-ability-stack">${abilityBlocks.join('')}</div>`
       : renderTagList(eliteAbilities);
-    blocks.push(`<details class="elite-info-details" open><summary>Elityrkesförmågor</summary>${listHtml}</details>`);
+    blocks.push(`<details class="elite-info-details"><summary>Elityrkesförmågor</summary>${listHtml}</details>`);
   }
 
   if ((p.mojliga_fordelar || []).length) {
