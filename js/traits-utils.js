@@ -354,6 +354,24 @@
       const next  = Math.max(0, currentVal + d);
       const proposed = Math.max(min - bonus, next);
 
+      const isIncrease = d > 0 && proposed > currentVal;
+      if (isIncrease) {
+        const baseValues = storeHelper.getTraits(store); // basvärden utan bonusar som exceptionellt karaktärsdrag
+        const countBaseHigh = vals => Object.values(vals).filter(v => v >= 15).length;
+        const currentBaseHigh = countBaseHigh(baseValues);
+        const simulated = { ...baseValues, [key]: proposed };
+        const simulatedBaseHigh = countBaseHigh(simulated);
+
+        if (simulatedBaseHigh > 1 && simulatedBaseHigh > currentBaseHigh) {
+          const confirmMsg = 'Detta skulle göra att mer än ett karaktärsdrag får basvärde 15 eller mer. Vill du fortsätta?';
+          const confirmer = window.confirmPopup || window.confirm;
+          if (typeof confirmer === 'function') {
+            const ok = await confirmer(confirmMsg);
+            if (!ok) return;
+          }
+        }
+      }
+
       const shouldConfirm = d < 0 && proposed < currentVal && proposed < 5;
       if (shouldConfirm) {
         const confirmMsg = 'Detta sänker karaktärsdraget under 5. Vill du fortsätta?';
