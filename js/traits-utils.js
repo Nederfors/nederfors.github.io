@@ -1,4 +1,6 @@
 (function(window){
+  const TRAIT_KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+  const TRAIT_15_WARNING = 'Enligt grundreglerna får bara ett karaktärsdrag ha basvärde 15 eller högre. Fortsätta ändå?';
   function calcDefense(kvick){
     const inv = storeHelper.getInventory(store);
     const nameMap = invUtil.makeNameMap(inv);
@@ -148,7 +150,6 @@
   function renderTraits(){
     if(!dom.traits) return;
     const data = storeHelper.getTraits(store);
-    const KEYS = ['Diskret','Kvick','Listig','Stark','Tr\u00e4ffs\u00e4ker','Vaksam','Viljestark','\u00d6vertygande'];
 
     const list  = storeHelper.getCurrentList(store);
     const artifactEffects = storeHelper.getArtifactEffects(store);
@@ -166,7 +167,7 @@
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(storeHelper.getInventory(store)) : {};
     const counts = {};
     const vals = {};
-    KEYS.forEach(k => {
+    TRAIT_KEYS.forEach(k => {
       counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length;
       vals[k] = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
     });
@@ -194,7 +195,7 @@
     const defTrait = getDefenseTraitName(list);
     const defs = calcDefense(vals[defTrait]);
 
-    dom.traits.innerHTML = KEYS.map(k => {
+    dom.traits.innerHTML = TRAIT_KEYS.map(k => {
       const val = vals[k];
       const extras = [];
       const countMarkup = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>`;
@@ -286,7 +287,7 @@
       </div>`;
     }).join('');
 
-    const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0)+(maskBonus[k]||0),0);
+    const total = TRAIT_KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0)+(maskBonus[k]||0),0);
 
     const lvlMap = { Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
     let maxTot = 80;
@@ -320,7 +321,7 @@
 
   function bindTraits(){
     if(!dom.traits) return;
-    dom.traits.addEventListener('click', e => {
+    dom.traits.addEventListener('click', async e => {
       const countBtn = e.target.closest('.trait-count');
       if (countBtn) {
         const trait = countBtn.dataset.trait;
@@ -350,8 +351,25 @@
       const bonusMask = window.maskSkill ? maskSkill.getBonus(key) : 0;
       const bonus = bonusEx + bonusMask;
       const min   = bonus;
-      const next  = Math.max(0, (t[key] || 0) + d);
-      t[key] = Math.max(min - bonus, next);
+      const current = t[key] || 0;
+      const nextBase  = Math.max(0, current + d);
+      const updatedValue = Math.max(min - bonus, nextBase);
+
+      if (d > 0) {
+        const baseMap = { ...t };
+        const beforeAt15 = TRAIT_KEYS.reduce((count, traitKey) =>
+          count + ((baseMap[traitKey] || 0) >= 15 ? 1 : 0), 0);
+        baseMap[key] = updatedValue;
+        const afterAt15 = TRAIT_KEYS.reduce((count, traitKey) =>
+          count + ((baseMap[traitKey] || 0) >= 15 ? 1 : 0), 0);
+
+        if (afterAt15 > 1 && afterAt15 > beforeAt15) {
+          const proceed = await confirmPopup(TRAIT_15_WARNING);
+          if (!proceed) return;
+        }
+      }
+
+      t[key] = updatedValue;
       storeHelper.setTraits(store, t);
       renderTraits();
     });
