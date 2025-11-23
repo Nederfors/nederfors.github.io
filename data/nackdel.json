@@ -1131,5 +1131,237 @@
       "test": []
     },
     "effekt": "Utan mask: andra chans att misslyckas med alla slag."
+  },
+  {
+    "id": "na84",
+    "namn": "Reumatism",
+    "beskrivning": "Fukt och kyla tränger in i lederna och gör dem stela som gammalt läder. Vid regn, dimma eller i kalla miljöer får rollpersonen -1 på Kvick och alla förflyttningshandlingar är 3 meter kortare.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Kvick"
+      ]
+    },
+    "effekt": "Vid kyla/fukt: -1 Kvick och -3 m förflyttning."
+  },
+  {
+    "id": "na85",
+    "namn": "Krupp",
+    "beskrivning": "Lungorna är ansatta av en kronisk hosta som vägrar ge med sig. Rollpersonen drabbas av svåra hostattacker vid fysisk ansträngning. Varje gång hen misslyckas med ett slag i Stark börjar rollpersonen hosta i 1T4 rundor och kan inte utföra aktiva eller förflyttningshandlingar tills hostattacken är avklarad.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "Misslyckat Stark ger hosta i 1T4 rundor (inga aktiva/förflyttningshandlingar)."
+  },
+  {
+    "id": "na86",
+    "namn": "Blödaresjuka",
+    "beskrivning": "Blodet koagulerar långsamt. Varje gång rollpersonen tar skada av en skärande eller stickande attack tar hen 1T4 poäng extra i skada.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "+1T4 skada vid skärande/stickande träffar."
+  },
+  {
+    "id": "na87",
+    "namn": "Narkolepsi",
+    "beskrivning": "Rollpersonen riskerar att somna vid monotona aktiviteter eller extrem stress. I början av varje scen måste rollpersonen slå 1T20, om slaget blir 18-20 så somnar rollpersonen omedelbart.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Slå 1T20 vid scenstart; 18–20 innebär att du somnar."
+  },
+  {
+    "id": "na88",
+    "namn": "Benskörhet",
+    "beskrivning": "Skelettet är skört som torra kvistar. Rollpersonen tar dubbel skada av fall.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Dubbel skada av fall."
+  },
+  {
+    "id": "na89",
+    "namn": "Dåligt läkekött",
+    "beskrivning": "Rollpersonen återfår ingen Tålighet genom naturliga medel, som Medicus och Örtkurer. All läkning kräver livselixir eller magi.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Ingen naturlig läkning vid medicus/örtkur; kräver magi/livselixir."
+  },
+  {
+    "id": "na90",
+    "namn": "Ansiktsblind",
+    "beskrivning": "Rollpersonen kan inte skilja på ansikten, inte ens på sina vänner. För att identifiera en person (annat än väldigt nära allierade) krävs ett lyckat slag mot Listig; vid misslyckande vet hen inte vem personen är.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Listig"
+      ]
+    },
+    "effekt": "Kräver Listig för att identifiera personer (ej nära allierade)."
+  },
+  {
+    "id": "na91",
+    "namn": "Vindögd",
+    "beskrivning": "Ögonen samarbetar inte, vilket gör avståndsbedömning svår. Rollpersonen får en andra chans att misslyckas med alla slag mot karaktärsdraget Träffsäker.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Träffsäker"
+      ]
+    },
+    "effekt": "Andra chans att misslyckas med Träffsäker."
+  },
+  {
+    "id": "na92",
+    "namn": "Sensoriskt känslig",
+    "beskrivning": "Huden är extremt känslig, sprucken eller sårig. Att bära rustning (lätt, medel eller tung) ger karaktären 2 mindre i försvar.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "-2 i Försvar om rustning bärs."
+  },
+  {
+    "id": "na93",
+    "namn": "Migrän",
+    "beskrivning": "Starkt ljus eller höga ljud kan utlösa förlamande huvudvärk. Om rollpersonen utsätts för åskbollar, ljungeld eller andra högljudda effekter måste hen klara ett slag mot Stark eller bli helt passiv (kan bara försvara sig) i 1T4 rundor.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "Vid högt ljud/ljus: slå Stark eller bli passiv i 1T4 rundor."
+  },
+  {
+    "id": "na94",
+    "namn": "Klenväxt",
+    "beskrivning": "Rollpersonen är onaturligt späd. Hen kan inte använda tunga vapen eller bära tung rustning, och slår alla slag mot Stark utanför strid med en modifikation på -3.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "Kan ej bära tungt; -3 på Stark utanför strid."
+  },
+  {
+    "id": "na95",
+    "namn": "Greppsvag",
+    "beskrivning": "Greppet är svagt. Om rollpersonen slår ett slag på något som kräver att hen använder händerna, räknas slaget som ett kritiskt misslyckande på 18-20.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Handlingsslag med händer är kritiskt misslyckande på 18-20."
+  },
+  {
+    "id": "na96",
+    "namn": "Mytoman",
+    "beskrivning": "Rollpersonen känner ett tvångsmässigt behov av att ljuga, även om småsaker. En gång per dag, om rollpersonen samtalar med andra än nära allierade, så måste hen dra till med en relativt stor lögn. Vad som räknas som stor lögn avgörs ytterst av SL.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Måste ljuga stort en gång per dag för främlingar."
+  },
+  {
+    "id": "na97",
+    "namn": "Kleptoman",
+    "beskrivning": "Rollpersonen kan inte låta bli att stjäla småsaker. Om hen ser ett oövervakat föremål av värde måste hen klara ett slag mot Viljestark eller försöka stjäla det, oavsett risken för upptäckt.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    },
+    "effekt": "Vid oövervakat värdeföremål: slå Viljestark eller försök stjäla."
+  },
+  {
+    "id": "na98",
+    "namn": "Hypokondriker",
+    "beskrivning": "Rollpersonen är övertygad om att hen bär på sjukdomar. Varje gång hen påverkas av gift eller ser en sjuk person får hen en andra chans att misslyckas med alla handlingar resten av scenen på grund av inbillade symptom.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Vid gift/sjukdom: andra chans att misslyckas resten av scenen."
+  },
+  {
+    "id": "na99",
+    "namn": "Stelbent",
+    "beskrivning": "En ryggradsskada eller hopväxta leder gör rollpersonen stel som en pinne. Hen kan knappt resa på sig, och att resa sig från liggande tar således alltid hela rundans handling.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Att resa sig från liggande tar hela rundan."
+  },
+  {
+    "id": "na100",
+    "namn": "Schizofreni",
+    "beskrivning": "Rollpersonen hör ständigt viskningar som uppmanar till dåd eller varnar för icke-existerande hot. En gång per äventyr måste rollpersonen lyckas med ett slag på Viljestark -5 eller spendera en erfarenhet. Om slaget misslyckas måste rollpersonen utföra en av SL bestämd handling.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    },
+    "effekt": "1 gång/äventyr: Slå Viljestark -5 eller betala 1 XP; annars utför SL-vald handling."
+  },
+  {
+    "id": "na101",
+    "namn": "Periferiblind",
+    "beskrivning": "Synfältet är kraftigt begränsat, som att titta genom rör. Fiender får Övertag mot rollpersonen så fort de inte står rakt framför (i flank eller rygg), även om de är ensamma.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": []
+    },
+    "effekt": "Fiender får Övertag om de inte står rakt framför."
   }
 ]
