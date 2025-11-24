@@ -2224,6 +2224,41 @@
     });
   }
 
+  function addMoneyToVehicle(vehicle, moneyBundle) {
+    const inv = storeHelper.getInventory(store);
+    if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
+      return { success: false, error: 'Ogiltigt färdmedel.' };
+    }
+    const parseNonNegInt = (val) => {
+      if (val === undefined || val === null || val === '') return 0;
+      const num = Number(val);
+      if (!Number.isFinite(num) || num < 0) return null;
+      return Math.floor(num);
+    };
+    const daler = parseNonNegInt(moneyBundle?.daler);
+    const skilling = parseNonNegInt(moneyBundle?.skilling);
+    const ortegar = parseNonNegInt(moneyBundle?.ortegar ?? moneyBundle?.['örtegar']);
+    if (daler === null || skilling === null || ortegar === null) {
+      return { success: false, error: 'Beloppet måste vara ett heltal och får inte vara negativt.' };
+    }
+    const money = { daler, skilling, 'örtegar': ortegar };
+    if (moneyToO(money) <= 0) {
+      return { success: false, error: 'Beloppet måste vara större än noll.' };
+    }
+    vehicle.contains = vehicle.contains || [];
+    const row = {
+      name: 'Pengar',
+      typ: 'currency',
+      money,
+      qty: 1
+    };
+    vehicle.contains.push(row);
+    vehicle.contains.sort(sortInvEntry);
+    saveInventory(inv);
+    renderInventory();
+    return { success: true, row };
+  }
+
   function openVehiclePopup(preselectValue, precheckedPaths) {
     const root = getToolbarRoot();
     if (!root) return;
@@ -4403,6 +4438,7 @@
     applyLiveModePayment,
     openLiveBuyPopup,
     openPricePopup,
+    addMoneyToVehicle,
     openVehiclePopup,
     openVehicleRemovePopup,
     openRowPricePopup,
