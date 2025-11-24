@@ -2162,6 +2162,27 @@ function defaultTraits() {
     if (!Array.isArray(inv)) return [];
     return inv.map(row => {
       if (!row || typeof row !== 'object') return row;
+      const typeRaw = row.typ ?? row.t;
+      const moneyRaw = row.money ?? row.m;
+      if (typeRaw === 'currency' || moneyRaw) {
+        const res = { t: 'currency' };
+        const src = (moneyRaw && typeof moneyRaw === 'object') ? moneyRaw : {};
+        res.m = sanitizeMoneyStruct({
+          daler: src.daler ?? src.d,
+          skilling: src.skilling ?? src.s,
+          'örtegar': src['örtegar'] ?? src.o
+        });
+        const qty = row.qty ?? row.q;
+        if (qty && qty !== 1) res.q = qty;
+        const name = row.name || row.n;
+        if (name) res.n = name;
+        const weightRaw = row.vikt ?? row.w;
+        if (weightRaw !== undefined) {
+          const weightNum = Number(weightRaw);
+          if (Number.isFinite(weightNum)) res.w = weightNum;
+        }
+        return res;
+      }
       const res = {};
       if (row.id !== undefined) res.i = row.id;
       const canonical = row.id !== undefined && typeof global.lookupEntry === 'function'
@@ -2239,6 +2260,33 @@ function defaultTraits() {
       return rows.map(row => {
         if (!row || typeof row !== 'object') {
           return { id: undefined, name: '', qty: 1, gratis: 0, kvaliteter: [], gratisKval: [], removedKval: [] };
+        }
+        const typeRaw = row.typ ?? row.t;
+        const moneyRaw = row.money ?? row.m;
+        if (typeRaw === 'currency' || moneyRaw) {
+          const qty = sanitizeCount(row.qty ?? row.q, 1);
+          const src = (moneyRaw && typeof moneyRaw === 'object') ? moneyRaw : {};
+          const money = sanitizeMoneyStruct({
+            daler: src.daler ?? src.d,
+            skilling: src.skilling ?? src.s,
+            'örtegar': src['örtegar'] ?? src.o
+          });
+          const expanded = {
+            typ: 'currency',
+            name: row.name ?? row.n ?? 'Pengar',
+            qty,
+            money
+          };
+          const weightRaw = row.vikt ?? row.w;
+          if (weightRaw !== undefined) {
+            const weightNum = Number(weightRaw);
+            if (Number.isFinite(weightNum)) expanded.vikt = weightNum;
+          }
+          const contains = row.contains ?? row.c;
+          if (Array.isArray(contains) && contains.length) {
+            expanded.contains = expandRows(contains);
+          }
+          return expanded;
         }
         // Determine matching entry from DB or custom definitions
         const rawId = row.id !== undefined ? row.id : row.i;
