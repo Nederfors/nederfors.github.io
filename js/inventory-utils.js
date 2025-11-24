@@ -2224,6 +2224,100 @@
     });
   }
 
+  function openVehicleMoneyPrompt({ maxMoney, vehicleName, itemName }) {
+    const maxNormalized = storeHelper.normalizeMoney(maxMoney || {});
+    const maxTotalO = moneyToO(maxNormalized);
+    if (!maxTotalO) return Promise.resolve(null);
+    const root = getToolbarRoot();
+    if (!root) return Promise.resolve(null);
+    const pop      = root.getElementById('vehicleMoneyPopup');
+    const title    = root.getElementById('vehicleMoneyTitle');
+    const message  = root.getElementById('vehicleMoneyMessage');
+    const hint     = root.getElementById('vehicleMoneyHint');
+    const errorEl  = root.getElementById('vehicleMoneyError');
+    const dInput   = root.getElementById('vehicleMoneyDalerRemove');
+    const sInput   = root.getElementById('vehicleMoneySkillingRemove');
+    const oInput   = root.getElementById('vehicleMoneyOrtegarRemove');
+    const confirm  = root.getElementById('vehicleMoneyConfirm');
+    const cancel   = root.getElementById('vehicleMoneyCancel');
+    if (!pop || !confirm || !cancel) return Promise.resolve(null);
+    const inner    = pop.querySelector('.popup-inner');
+    const displayName = itemName || 'Pengar';
+    if (title) title.textContent = 'Ta ut pengar';
+    if (message) {
+      const vehiclePart = vehicleName ? ` från ${vehicleName}` : '';
+      message.textContent = `Hur mycket av ”${displayName}” vill du ta ut${vehiclePart}?`;
+    }
+    if (hint && typeof formatMoney === 'function') {
+      hint.textContent = `Max: ${formatMoney(maxNormalized)}`;
+    }
+    [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; });
+    if (errorEl) errorEl.textContent = '';
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => { if (typeof dInput?.focus === 'function') dInput.focus(); }, 40);
+
+    return new Promise(resolve => {
+      let closed = false;
+      const close = result => {
+        if (closed) return;
+        closed = true;
+        pop.classList.remove('open');
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        [dInput, sInput, oInput].forEach(inp => { if (inp) inp.removeEventListener('keydown', onKey); });
+        if (hint) hint.textContent = '';
+        if (message) message.textContent = '';
+        [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; if (typeof inp?.setCustomValidity === 'function') inp.setCustomValidity(''); });
+        if (errorEl) errorEl.textContent = '';
+        resolve(result);
+      };
+      const parseNonNegInt = input => {
+        if (!input) return 0;
+        const val = input.value;
+        if (val === undefined || val === null || val === '') return 0;
+        const num = Number(val);
+        if (!Number.isFinite(num) || num < 0 || !Number.isInteger(num)) return null;
+        if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
+        return num;
+      };
+      const showError = msg => { if (errorEl) errorEl.textContent = msg || ''; };
+      const onConfirm = () => {
+        const d = parseNonNegInt(dInput);
+        const s = parseNonNegInt(sInput);
+        const o = parseNonNegInt(oInput);
+        if (d === null || s === null || o === null) {
+          showError('Beloppen måste vara heltal och får inte vara negativa.');
+          return;
+        }
+        const bundle = storeHelper.normalizeMoney({ daler: d, skilling: s, 'örtegar': o });
+        const total = moneyToO(bundle);
+        if (total <= 0) {
+          showError('Ange ett belopp att ta ut.');
+          (dInput || sInput || oInput)?.focus();
+          return;
+        }
+        if (total > maxTotalO) {
+          showError('Beloppet överskrider summan i färdmedlet.');
+          return;
+        }
+        showError('');
+        close(bundle);
+      };
+      const onCancel = () => close(null);
+      const onOutside = e => { if (!inner || inner.contains(e.target)) return; close(null); };
+      const onKey = e => {
+        if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
+        else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+      };
+      confirm.addEventListener('click', onConfirm);
+      cancel.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+      [dInput, sInput, oInput].forEach(inp => inp?.addEventListener('keydown', onKey));
+    });
+  }
+
   function addMoneyToVehicle(vehicle, moneyBundle) {
     const inv = storeHelper.getInventory(store);
     if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
@@ -2257,6 +2351,49 @@
     saveInventory(inv);
     renderInventory();
     return { success: true, row };
+  }
+
+  function removeMoneyFromVehicle(vehicle, path, removeBundle) {
+    const inv = storeHelper.getInventory(store);
+    if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
+      return { success: false, error: 'Ogiltigt färdmedel.' };
+    }
+    const { row, parentArr, idx } = getRowByPath(inv, path);
+    if (!row || !Array.isArray(parentArr) || idx < 0) {
+      return { success: false, error: 'Kunde inte hitta pengarna i färdmedlet.' };
+    }
+    const parseNonNegInt = val => {
+      if (val === undefined || val === null || val === '') return 0;
+      const num = Number(val);
+      if (!Number.isFinite(num) || num < 0) return null;
+      return Math.floor(num);
+    };
+    const daler = parseNonNegInt(removeBundle?.daler);
+    const skilling = parseNonNegInt(removeBundle?.skilling);
+    const ortegar = parseNonNegInt(removeBundle?.ortegar ?? removeBundle?.['örtegar']);
+    if (daler === null || skilling === null || ortegar === null) {
+      return { success: false, error: 'Beloppet måste vara ett heltal och får inte vara negativt.' };
+    }
+    const toRemove = storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ortegar });
+    const removeTotalO = moneyToO(toRemove);
+    if (removeTotalO <= 0) {
+      return { success: false, error: 'Beloppet måste vara större än noll.' };
+    }
+    const current = storeHelper.normalizeMoney(row.money || {});
+    const currentO = moneyToO(current);
+    if (removeTotalO > currentO) {
+      return { success: false, error: 'Beloppet är större än summan i färdmedlet.' };
+    }
+    const remaining = oToMoney(currentO - removeTotalO);
+    if (moneyToO(remaining) <= 0) {
+      parentArr.splice(idx, 1);
+    } else {
+      row.money = remaining;
+      row.qty = 1;
+    }
+    saveInventory(inv);
+    renderInventory();
+    return { success: true, remaining };
   }
 
   function openVehiclePopup(preselectValue, precheckedPaths) {
@@ -2469,23 +2606,50 @@
       .join('');
     if (typeof preselectIdx === 'number') sel.value = String(preselectIdx);
 
+    const isMoneyRow = row => row && row.typ === 'currency' && row.money;
     const fillList = () => {
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
+      const vehicleName = vehicleNames.get(vIdx);
       if (!vehicle || !Array.isArray(vehicle.contains)) {
         list.innerHTML = '';
         return;
       }
       const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
       const nameMap = makeNameMap(items.map(i => i.row));
-      list.innerHTML = items
-        .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`)
-        .join('');
+      const parts = items.map(o => {
+        const pathStr = o.path.join('.');
+        if (isMoneyRow(o.row)) {
+          const normalized = storeHelper.normalizeMoney(o.row.money || {});
+          const amountText = typeof formatMoney === 'function' ? formatMoney(normalized) : nameMap.get(o.row);
+          const label = nameMap.get(o.row) || 'Pengar';
+          return `<div class="price-item vehicle-money-action-row"><span>${label}: ${amountText}</span><button type="button" class="char-btn vehicle-money-action" data-path="${pathStr}">Ta ut pengar</button></div>`;
+        }
+        return `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${pathStr}"></label>`;
+      });
+      list.innerHTML = parts.join('');
       if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
         const set = new Set(precheckedPaths.map(String));
         [...list.querySelectorAll('input[type="checkbox"][data-path]')]
           .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
       }
+      [...list.querySelectorAll('.vehicle-money-action[data-path]')].forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const path = btn.dataset.path?.split('.').map(Number);
+          const { row } = getRowByPath(inv, path || []);
+          if (!row || !isMoneyRow(row)) return;
+          const maxMoney = storeHelper.normalizeMoney(row.money || {});
+          if (moneyToO(maxMoney) <= 0) return;
+          const promptRes = await openVehicleMoneyPrompt({ maxMoney, vehicleName, itemName: nameMap.get(row) });
+          if (!promptRes) return;
+          const result = removeMoneyFromVehicle(vehicle, path, promptRes);
+          if (!result?.success) {
+            if (result?.error) alert(result.error);
+            return;
+          }
+          fillList();
+        });
+      });
     };
 
     fillList();
@@ -4499,6 +4663,8 @@
     addMoneyToVehicle,
     openVehiclePopup,
     openVehicleRemovePopup,
+    openVehicleMoneyPrompt,
+    removeMoneyFromVehicle,
     openRowPricePopup,
     openSaveFreePopup,
     buildInventoryRow,
