@@ -3630,6 +3630,24 @@ select.level {
   background: var(--accent);
   border-color: var(--accent);
 }
+#vehicleItemList .vehicle-money-row {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+  background: var(--card);
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .6rem;
+}
+#vehicleItemList .vehicle-money-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+#vehicleItemList .vehicle-money-inputs input {
+  flex: 1 1 6rem;
+  min-width: 4.5rem;
+}
 
 .vehicle-group {
   position: relative;

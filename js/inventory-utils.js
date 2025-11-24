@@ -2298,6 +2298,15 @@
     const vehIdx = vehicles.map(v => v.idx);
     const movable = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length === 1));
     const outside = movable.filter(obj => !vehIdx.includes(obj.path[0]));
+    const moneyRowHtml = `
+      <div class="vehicle-money-row">
+        <span>Lägg till pengar</span>
+        <div class="vehicle-money-inputs">
+          <input id="vehicleMoneyDaler" type="number" min="0" step="1" placeholder="Daler">
+          <input id="vehicleMoneySkilling" type="number" min="0" step="1" placeholder="Skilling">
+          <input id="vehicleMoneyOrtegar" type="number" min="0" step="1" placeholder="Örtegar">
+        </div>
+      </div>`;
     const vehicleHtml = vehicles.map(v => {
       const items = movable.filter(o => o.path[0] === v.idx);
       if (!items.length) return '';
@@ -2305,9 +2314,12 @@
       const inner = items.map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`).join('');
       return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
     }).join('');
-    list.innerHTML = outside
+    list.innerHTML = moneyRowHtml + outside
       .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`)
       .join('') + vehicleHtml;
+    const dalerInput = root.getElementById('vehicleMoneyDaler');
+    const skillingInput = root.getElementById('vehicleMoneySkilling');
+    const ortegarInput = root.getElementById('vehicleMoneyOrtegar');
     if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
       const set = new Set(precheckedPaths.map(String));
       [...list.querySelectorAll('input[type="checkbox"][data-path]')]
@@ -2317,11 +2329,20 @@
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
 
+    const clearMoneyInputs = () => {
+      [dalerInput, skillingInput, ortegarInput].forEach(inp => {
+        if (inp) {
+          inp.value = '';
+          inp.setCustomValidity('');
+        }
+      });
+    };
     const close = () => {
       pop.classList.remove('open');
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
+      clearMoneyInputs();
       sel.innerHTML = '';
       list.innerHTML = '';
     };
@@ -2332,6 +2353,43 @@
       if (!vehicle) return;
       vehicle.contains = vehicle.contains || [];
       const vehicleName = vehicleNames.get(vIdx);
+      const parseNonNegInt = (input) => {
+        if (!input) return 0;
+        const val = input.value;
+        if (val === undefined || val === null || val === '') {
+          input.setCustomValidity('');
+          return 0;
+        }
+        const num = Number(val);
+        if (!Number.isFinite(num) || num < 0 || !Number.isInteger(num)) {
+          input.setCustomValidity('Beloppet måste vara ett heltal och får inte vara negativt.');
+          return null;
+        }
+        input.setCustomValidity('');
+        return num;
+      };
+      const amounts = [
+        { key: 'daler', input: dalerInput },
+        { key: 'skilling', input: skillingInput },
+        { key: 'örtegar', input: ortegarInput }
+      ];
+      const moneyBundle = {};
+      for (const { key, input } of amounts) {
+        const parsed = parseNonNegInt(input);
+        if (parsed === null) {
+          input?.reportValidity();
+          return;
+        }
+        moneyBundle[key] = parsed;
+      }
+      const totalMoneyO = moneyToO(moneyBundle);
+      if (totalMoneyO > 0) {
+        const addResult = addMoneyToVehicle(vehicle, moneyBundle);
+        if (!addResult?.success) {
+          if (addResult?.error) alert(addResult.error);
+          return;
+        }
+      }
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
         .sort((a, b) => {
