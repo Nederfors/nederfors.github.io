@@ -3543,7 +3543,8 @@ select.level {
 /* ---------- Popup för färdmedel ---------- */
 #vehiclePopup,
 #vehicleRemovePopup,
-#vehicleQtyPopup {
+#vehicleQtyPopup,
+#vehicleMoneyPopup {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -3556,10 +3557,12 @@ select.level {
 }
 #vehiclePopup.open,
 #vehicleRemovePopup.open,
-#vehicleQtyPopup.open { display: flex; }
+#vehicleQtyPopup.open,
+#vehicleMoneyPopup.open { display: flex; }
 #vehiclePopup .popup-inner,
 #vehicleRemovePopup .popup-inner,
-#vehicleQtyPopup .popup-inner {
+#vehicleQtyPopup .popup-inner,
+#vehicleMoneyPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -3576,10 +3579,12 @@ select.level {
 }
 #vehiclePopup.open .popup-inner,
 #vehicleRemovePopup.open .popup-inner,
-#vehicleQtyPopup.open .popup-inner { transform: translateY(0); }
+#vehicleQtyPopup.open .popup-inner,
+#vehicleMoneyPopup.open .popup-inner { transform: translateY(0); }
 #vehiclePopup .popup-inner button,
 #vehicleRemovePopup .popup-inner button,
-#vehicleQtyPopup .popup-inner button { width: 100%; }
+#vehicleQtyPopup .popup-inner button,
+#vehicleMoneyPopup .popup-inner button { width: 100%; }
 #vehicleQtyPopup .popup-inner input[type="number"] {
   width: 100%;
   padding: .4rem .6rem;
@@ -3662,6 +3667,27 @@ select.level {
   position: absolute;
   top: .2rem;
   right: .4rem;
+}
+
+#vehicleMoneyPopup .vehicle-money-inputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .4rem;
+}
+#vehicleMoneyPopup .vehicle-money-inputs input {
+  flex: 1 1 6rem;
+  min-width: 4.5rem;
+}
+#vehicleMoneyPopup .popup-error {
+  margin: -.2rem 0 .2rem;
+  color: var(--danger);
+  min-height: 1.2rem;
+}
+#vehicleRemoveItemList .vehicle-money-action-row {
+  gap: .6rem;
+}
+#vehicleRemoveItemList .vehicle-money-action-row button {
+  width: auto;
 }
 
 /* ---------- Popup för borttagning av behållare ---------- */

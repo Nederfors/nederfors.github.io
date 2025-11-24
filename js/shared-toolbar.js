@@ -971,6 +971,25 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Pengar i färdmedel ---------- -->
+      <div id="vehicleMoneyPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3 id="vehicleMoneyTitle">Ta ut pengar</h3>
+          <p id="vehicleMoneyMessage"></p>
+          <p id="vehicleMoneyHint"></p>
+          <div class="vehicle-money-inputs">
+            <input id="vehicleMoneyDalerRemove" type="number" min="0" step="1" placeholder="Daler">
+            <input id="vehicleMoneySkillingRemove" type="number" min="0" step="1" placeholder="Skilling">
+            <input id="vehicleMoneyOrtegarRemove" type="number" min="0" step="1" placeholder="Örtegar">
+          </div>
+          <p id="vehicleMoneyError" class="popup-error"></p>
+          <div class="confirm-row">
+            <button id="vehicleMoneyCancel" class="char-btn danger">Avbryt</button>
+            <button id="vehicleMoneyConfirm" class="char-btn">Verkställ</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
       <div id="deleteContainerPopup" class="popup popup-bottom">
         <div class="popup-inner">
@@ -1713,7 +1732,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
