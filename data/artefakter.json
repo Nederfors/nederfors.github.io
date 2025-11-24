@@ -3603,5 +3603,45 @@
       "skilling": 0,
       "örtegar": 0
     }
+  },
+    {
+    "id": "ar109",
+    "namn": "Klagoklingan",
+    "beskrivning": "En smäcker värja av mörkt, matt stål där parerplåten är utformad som en sörjande mun. Klingan är perforerad av exakta hålrum som får vapnet att sjunga en lågmäld, melankolisk ton när det klyver luften. Vapnet sägs ha smitts för en legendarisk trollsångare, Faal-Xetto, som vandrade djupt in i Davokar för att sjunga sina fiender till den eviga sömnen. Klagoklingan är inte bara ett vapen utan ett instrument; den resonerar med stridens rytm och förstärker en sångares kraft..",
+    "kvalitet": [
+      "Djupverkande",
+      "Genomträngande"
+    ],
+    "taggar": {
+      "typ": [
+        "Artefakt",
+        "Vapen"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Passiv"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ],
+        "Förmåga 3": [
+          "Passiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Harmonisk klang; Handling: Passiv\nVapnet fungerar som en förlängning av trollsångarens röst. När klingan träffar en fiende eller lyckas med ett försvar avger den en ren, stärkande ton som skänker klarhet i mästarens röst och handling. Detta ger mästaren 1T4 som får dras av från eller läggs till på ett valfritt slag (anfall, försvar, skada eller egenskapsprov) innan slutet av nästa runda. Korruption: 1.",
+      "Förmåga 2": "Skärande dissonans; Handling: Reaktiv\nNär en fiende lyckas med en attack mot värjans mästare kan denne tvinga vapnet att ge ifrån sig ett vidrigt, skärande skri – en akustisk chockvåg som angriper balanssinnet och viljan. Fienden tar omedelbart 1T4 i skada (ignorerar Bepansring) och tvingas slå om sitt anfallsslag och välja det sämsta resultatet, då koncentrationen splittras av oljudet. Korruption: 1T6.",
+      "Förmåga 3": "Den hånande sången;; Handling: Passiv\nKlagoklinga är ett krävande och hånande vapen: om mästaren slår ett kritiskt misslyckande (20) på ett slag, svarar vapnet med en sorgsen, dömande ton som river i själen, vilket ger mästaren 1T4 temporär korruption."
+    },
+    "stat": {
+      "skada": "1T10",
+      "vikt": 0.8
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
   }
 ]
