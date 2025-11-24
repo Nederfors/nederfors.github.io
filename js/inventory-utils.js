@@ -3567,6 +3567,18 @@
       const weightText = formatWeight(rowWeight);
       const weightClass = isVehicle ? capClassOf(loadWeight, capacity) : charCapClass;
       const cardKey = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
+      const children = Array.isArray(row.contains) ? row.contains : [];
+      const vehicleMoneyO = isVehicle
+        ? children.reduce((sum, child) => {
+            if (child?.typ === 'currency' && child.money) {
+              return sum + moneyToO(storeHelper.normalizeMoney(child.money));
+            }
+            return sum;
+          }, 0)
+        : 0;
+      const vehicleMoneyText = vehicleMoneyO > 0 && typeof formatMoney === 'function'
+        ? formatMoney(oToMoney(vehicleMoneyO))
+        : '';
 
       let isCompact = compactDefault;
       if (openKeys.has(cardKey)) isCompact = false;
@@ -3665,18 +3677,6 @@
       });
 
       const txt = (F.invTxt || '').toLowerCase();
-      const children = Array.isArray(row.contains) ? row.contains : [];
-      const vehicleMoneyO = isVehicle
-        ? children.reduce((sum, child) => {
-            if (child?.typ === 'currency' && child.money) {
-              return sum + moneyToO(storeHelper.normalizeMoney(child.money));
-            }
-            return sum;
-          }, 0)
-        : 0;
-      const vehicleMoneyText = vehicleMoneyO > 0 && typeof formatMoney === 'function'
-        ? formatMoney(oToMoney(vehicleMoneyO))
-        : '';
       const filteredChildren = (() => {
         if (!children.length) return [];
         if (!isVehicle) return children.map((c, j) => ({ c, j }));
