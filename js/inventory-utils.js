@@ -2319,7 +2319,11 @@
   }
 
   function addMoneyToVehicle(vehicle, moneyBundle, opts = {}) {
-    const { skipSave = false, skipRender = false } = opts || {};
+    const {
+      skipSave = false,
+      skipRender = false,
+      deductFromWallet = true
+    } = opts || {};
     const inv = storeHelper.getInventory(store);
     if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
       return { success: false, error: 'Ogiltigt färdmedel.' };
@@ -2342,6 +2346,15 @@
     const moneyO = moneyToO(money);
     if (moneyO <= 0) {
       return { success: false, error: 'Beloppet måste vara större än noll.' };
+    }
+    if (deductFromWallet) {
+      const wallet = storeHelper.normalizeMoney(storeHelper.getMoney(store));
+      const walletO = moneyToO(wallet);
+      if (moneyO > walletO) {
+        return { success: false, error: 'Du har inte så mycket pengar i bältesbörsen.' };
+      }
+      const remainingWallet = oToMoney(walletO - moneyO);
+      storeHelper.setMoney(store, remainingWallet);
     }
     vehicle.contains = vehicle.contains || [];
     const existing = vehicle.contains.find(r => r?.typ === 'currency' && r.money);
@@ -2366,7 +2379,8 @@
     return { success: true, row, added: money, total: row.money || money };
   }
 
-  function removeMoneyFromVehicle(vehicle, path, removeBundle) {
+  function removeMoneyFromVehicle(vehicle, path, removeBundle, opts = {}) {
+    const { addToWallet = true } = opts || {};
     const inv = storeHelper.getInventory(store);
     if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
       return { success: false, error: 'Ogiltigt färdmedel.' };
@@ -2398,6 +2412,11 @@
       return { success: false, error: 'Beloppet är större än summan i färdmedlet.' };
     }
     const remaining = oToMoney(currentO - removeTotalO);
+    if (addToWallet) {
+      const wallet = storeHelper.normalizeMoney(storeHelper.getMoney(store));
+      const walletO = moneyToO(wallet);
+      storeHelper.setMoney(store, oToMoney(walletO + removeTotalO));
+    }
     if (moneyToO(remaining) <= 0) {
       parentArr.splice(idx, 1);
     } else {
@@ -3019,6 +3038,9 @@
 
   function calcRowWeight(row) {
     const entry  = getEntry(row.id || row.name);
+    if (row.typ === 'currency' && row.money) {
+      return calcMoneyWeight(storeHelper.normalizeMoney(row.money));
+    }
     const base   = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
     const removed = row.removedKval ?? [];
     const baseQuals = [
@@ -3383,6 +3405,26 @@
     const vehicles = allInv
       .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
+    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
+    const sumVehicleMoneyO = (vehRow) => {
+      let totalO = 0;
+      const stack = Array.isArray(vehRow?.contains) ? [...vehRow.contains] : [];
+      while (stack.length) {
+        const node = stack.pop();
+        if (!node || typeof node !== 'object') continue;
+        if (node.typ === 'currency' && node.money) {
+          totalO += moneyToO(storeHelper.normalizeMoney(node.money));
+        }
+        if (Array.isArray(node.contains)) stack.push(...node.contains);
+      }
+      return totalO;
+    };
+    const vehicleMoneyLines = vehicles
+      .map(v => {
+        const moneyO = sumVehicleMoneyO(v.row);
+        return moneyO > 0 ? { name: vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel', money: formatMoney(oToMoney(moneyO)) } : null;
+      })
+      .filter(Boolean);
 
     const searchTerm = (F.invTxt || '').trim().toLowerCase();
     const hasSearch = Boolean(searchTerm);
@@ -3489,6 +3531,7 @@
             <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
             <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
             ${moneyRow}
+            ${vehicleMoneyLines.map(v => `<div class="money-line"><span class="label">Pengar på ${escapeHtml(v.name)}:</span><span class="value">${v.money}</span></div>`).join('')}
           </div>
           <div class="formal-section ${charCapClass}">
             <div class="formal-title">Bärkapacitet</div>
