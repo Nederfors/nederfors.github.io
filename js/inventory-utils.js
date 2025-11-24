@@ -2318,7 +2318,8 @@
     });
   }
 
-  function addMoneyToVehicle(vehicle, moneyBundle) {
+  function addMoneyToVehicle(vehicle, moneyBundle, opts = {}) {
+    const { skipSave = false, skipRender = false } = opts || {};
     const inv = storeHelper.getInventory(store);
     if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
       return { success: false, error: 'Ogiltigt färdmedel.' };
@@ -2326,12 +2327,14 @@
     const parseNonNegInt = (val) => {
       if (val === undefined || val === null || val === '') return 0;
       const num = Number(val);
-      if (!Number.isFinite(num) || num < 0) return null;
-      return Math.floor(num);
+      if (!Number.isFinite(num) || num < 0 || !Number.isInteger(num)) return null;
+      return num;
     };
-    const daler = parseNonNegInt(moneyBundle?.daler);
-    const skilling = parseNonNegInt(moneyBundle?.skilling);
-    const ortegar = parseNonNegInt(moneyBundle?.ortegar ?? moneyBundle?.['örtegar']);
+    const daler = parseNonNegInt(moneyBundle?.daler ?? moneyBundle?.d);
+    const skilling = parseNonNegInt(moneyBundle?.skilling ?? moneyBundle?.s);
+    const ortegar = parseNonNegInt(
+      moneyBundle?.ortegar ?? moneyBundle?.['örtegar'] ?? moneyBundle?.o
+    );
     if (daler === null || skilling === null || ortegar === null) {
       return { success: false, error: 'Beloppet måste vara ett heltal och får inte vara negativt.' };
     }
@@ -2345,7 +2348,9 @@
     let row = existing;
     if (existing) {
       const currentO = moneyToO(storeHelper.normalizeMoney(existing.money));
-      row.money = oToMoney(currentO + moneyO);
+      row.money = storeHelper.normalizeMoney(oToMoney(currentO + moneyO));
+      row.qty = 1;
+      row.typ = 'currency';
     } else {
       row = {
         name: 'Pengar',
@@ -2356,9 +2361,9 @@
       vehicle.contains.push(row);
     }
     vehicle.contains.sort(sortInvEntry);
-    saveInventory(inv);
-    renderInventory();
-    return { success: true, row };
+    if (!skipSave) saveInventory(inv);
+    if (!skipRender) renderInventory();
+    return { success: true, row, added: money, total: row.money || money };
   }
 
   function removeMoneyFromVehicle(vehicle, path, removeBundle) {
@@ -2527,9 +2532,10 @@
         }
         moneyBundle[key] = parsed;
       }
-      const totalMoneyO = moneyToO(moneyBundle);
+      const normalizedMoney = storeHelper.normalizeMoney(moneyBundle);
+      const totalMoneyO = moneyToO(normalizedMoney);
       if (totalMoneyO > 0) {
-        const addResult = addMoneyToVehicle(vehicle, moneyBundle);
+        const addResult = addMoneyToVehicle(vehicle, normalizedMoney, { skipSave: true, skipRender: true });
         if (!addResult?.success) {
           if (addResult?.error) alert(addResult.error);
           return;
@@ -3576,6 +3582,9 @@
       }
 
       infoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Vikt</span><span class="card-info-fact-value">${weightText}</span></div>`);
+      if (isVehicle && vehicleMoneyText) {
+        infoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Pengar</span><span class="card-info-fact-value">${vehicleMoneyText}</span></div>`);
+      }
 
       const priceTitle = escapeHtml(priceLabel);
       const priceValue = escapeHtml(priceDisplay);
@@ -3597,6 +3606,7 @@
       if (priceText) infoMeta.push({ label: priceLabel, value: priceText });
       if (weightText) infoMeta.push({ label: 'Vikt', value: weightText });
       if (isVehicle) {
+        if (vehicleMoneyText) infoMeta.push({ label: 'Pengar', value: vehicleMoneyText });
         infoMeta.push({ label: 'Bärkapacitet', value: formatWeight(capacity) });
         infoMeta.push({ label: 'Återstående kapacitet', value: formatWeight(remaining) });
       }
@@ -3656,6 +3666,17 @@
 
       const txt = (F.invTxt || '').toLowerCase();
       const children = Array.isArray(row.contains) ? row.contains : [];
+      const vehicleMoneyO = isVehicle
+        ? children.reduce((sum, child) => {
+            if (child?.typ === 'currency' && child.money) {
+              return sum + moneyToO(storeHelper.normalizeMoney(child.money));
+            }
+            return sum;
+          }, 0)
+        : 0;
+      const vehicleMoneyText = vehicleMoneyO > 0 && typeof formatMoney === 'function'
+        ? formatMoney(oToMoney(vehicleMoneyO))
+        : '';
       const filteredChildren = (() => {
         if (!children.length) return [];
         if (!isVehicle) return children.map((c, j) => ({ c, j }));
@@ -3693,9 +3714,17 @@
         const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
         cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
 
+        const cIsCurrency = childRow.typ === 'currency' && childRow.money;
+        const cMoneyAmount = cIsCurrency && typeof formatMoney === 'function'
+          ? formatMoney(storeHelper.normalizeMoney(childRow.money))
+          : '';
         const cBadge = childRow.qty > 1 ? `<span class="count-badge">×${childRow.qty}</span>` : '';
-        const cPriceText = formatMoney(calcRowCost(childRow, forgeLvl, alcLevel, artLevel));
-        const cPriceLabel = cTagTyp.includes('Anställning') ? 'Dagslön' : 'Pris';
+        const cPriceText = cIsCurrency && cMoneyAmount
+          ? cMoneyAmount
+          : formatMoney(calcRowCost(childRow, forgeLvl, alcLevel, artLevel));
+        const cPriceLabel = cIsCurrency
+          ? 'Belopp'
+          : (cTagTyp.includes('Anställning') ? 'Dagslön' : 'Pris');
         const cPriceDisplay = `${cPriceLabel}: ${cPriceText}`.trim();
         const cWeightText = formatWeight(calcRowWeight(childRow));
         const cWeightClass = capClassOf(loadWeight, capacity);
@@ -3749,9 +3778,12 @@
         if (remaining < 0) childClasses.push('vehicle-over');
 
         const childName = nameMap.get(childRow) || childRow.name;
-        const childBaseName = (childRow.id === 'l9' && childRow.trait)
-          ? `${childName}: ${childRow.trait}`
+        const childDisplayName = (cIsCurrency && cPriceText)
+          ? `${childName} (${cPriceText})`
           : childName;
+        const childBaseName = (childRow.id === 'l9' && childRow.trait)
+          ? `${childDisplayName}: ${childRow.trait}`
+          : childDisplayName;
 
         const childLi = createEntryCard({
           compact: childCompact,
