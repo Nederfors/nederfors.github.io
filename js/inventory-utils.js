@@ -2335,18 +2335,26 @@
     if (daler === null || skilling === null || ortegar === null) {
       return { success: false, error: 'Beloppet måste vara ett heltal och får inte vara negativt.' };
     }
-    const money = { daler, skilling, 'örtegar': ortegar };
-    if (moneyToO(money) <= 0) {
+    const money = storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ortegar });
+    const moneyO = moneyToO(money);
+    if (moneyO <= 0) {
       return { success: false, error: 'Beloppet måste vara större än noll.' };
     }
     vehicle.contains = vehicle.contains || [];
-    const row = {
-      name: 'Pengar',
-      typ: 'currency',
-      money,
-      qty: 1
-    };
-    vehicle.contains.push(row);
+    const existing = vehicle.contains.find(r => r?.typ === 'currency' && r.money);
+    let row = existing;
+    if (existing) {
+      const currentO = moneyToO(storeHelper.normalizeMoney(existing.money));
+      row.money = oToMoney(currentO + moneyO);
+    } else {
+      row = {
+        name: 'Pengar',
+        typ: 'currency',
+        money,
+        qty: 1
+      };
+      vehicle.contains.push(row);
+    }
     vehicle.contains.sort(sortInvEntry);
     saveInventory(inv);
     renderInventory();
@@ -3515,6 +3523,10 @@
       const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
       const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
       const canStack = ['kraft','ritual'].includes(entry.bound);
+      const isCurrency = row.typ === 'currency' && row.money;
+      const moneyAmount = (isCurrency && typeof formatMoney === 'function')
+        ? formatMoney(storeHelper.normalizeMoney(row.money))
+        : '';
       const buttonParts = [];
       if (isGear && !canStack) {
         buttonParts.push(`<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`);
@@ -3539,8 +3551,12 @@
       }
 
       const badge = row.qty > 1 ? `<span class="count-badge">×${row.qty}</span>` : '';
-      const priceText = formatMoney(calcRowCost(row, forgeLvl, alcLevel, artLevel));
-      const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön' : 'Pris';
+      const priceText = isCurrency
+        ? moneyAmount
+        : formatMoney(calcRowCost(row, forgeLvl, alcLevel, artLevel));
+      const priceLabel = isCurrency
+        ? 'Belopp'
+        : (tagTyp.includes('Anställning') ? 'Dagslön' : 'Pris');
       const priceDisplay = `${priceLabel}: ${priceText}`.trim();
       const weightText = formatWeight(rowWeight);
       const weightClass = isVehicle ? capClassOf(loadWeight, capacity) : charCapClass;
