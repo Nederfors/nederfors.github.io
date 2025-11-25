@@ -1085,7 +1085,7 @@
     "nivåer": {
       "Novis": "Handling: Speciell. Teurgen får ingen permanent Korruption av att lära sig teurgins krafter till novisnivå, och inte heller av att lära sig teurgins ritualer. Däremot har novisen inget skydd mot den temporära Korruption som följer av att använda krafter och ritualer.",
       "Gesäll": "Handling: Speciell. Teurgen får ingen permanent Korruption av att lära sig teurgins krafter till gesällnivå. Gesällen har också lärt sig att vila teurgins krafter och ritualer mot trons fundament så pass väl att de inte ger någon temporär Korruption då de kastas.",
-      "Mästare": "Handling: Speciell. Teurgen har nått insikt i det heligas väsen och gör 1T4 extra i effekt vid användandet av alla helande och heliga krafter, inklusive när dessa skadar styggelser och vandöda. Teurgen får ingen Korruption av att lära sig teurgins krafter till mästarnivå."
+      "Mästare": "Handling: Speciell. Teurgen har nått insikt i det heligas väsen, tärningsslag får 1T4 extra i effekt vid användandet av alla helande och heliga krafter, inklusive när dessa skadar styggelser och vandöda. Teurgen får ingen Korruption av att lära sig teurgins krafter till mästarnivå."
     }
   },
   {
