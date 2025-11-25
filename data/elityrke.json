@@ -13,7 +13,7 @@
     "krav_formagor": "Lärd, Monsterlärd, Prickskytt, Stångverkan eller Tvillingattack",
     "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
     "Elityrkesförmågor": [
-      "Rörlig strid, Koreograferad Strid, Miljökämpe"
+      "Rörlig strid", "Koreograferad Strid", "Miljökämpe"
     ],
     "mojliga_fordelar": [
       "Bestars tunga",
@@ -507,7 +507,7 @@
     "krav_formagor": "Lönnstöt, Fint, Tvillingattack, Svärdshelgon eller Knivgöra",
     "viktiga_karaktarsdrag": "Diskret 13+, Övertygande 11+",
     "Elityrkesförmågor": [
-      "Manteldans, Miljökämpe"
+      "Manteldans", "Miljökämpe"
     ],
     "mojliga_fordelar": [
       "Arvegods",
