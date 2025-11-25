@@ -1289,9 +1289,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Mystikern styr med ett Viljestark det heliga ljuset mot ett mål, vilket ger 1T6 i brännskada. Om målet är en styggelse eller en vandöd blir skadan 1T10.",
-      "Gesäll": "Handling: Aktiv. Mystikern låter det heliga ljuset svepa över alla fiender inom synhåll med ett lyckat Viljestark. Den brännande energin ger 1T8 i skada, 1T12 mot styggelser och vandöda.",
-      "Mästare": "Handling: Aktiv. Mystikern låter med ett Viljestark sitt ljus skina över alla närvarande fiender, 1T8 i skada och 1T12 för styggelser och vandöda. Styggelser och vandöda paralyseras för en runda om mystikern lyckas med [Viljestark←Viljestark]."
+      "Novis": "Handling: Aktiv. Mystikern styr med ett Viljestark det heliga ljuset mot ett mål, vilket ger 1T8 i brännskada. Om målet är en styggelse eller en vandöd blir skadan 1T12.",
+      "Gesäll": "Handling: Aktiv. Mystikern låter det heliga ljuset svepa över alla fiender inom synhåll med ett lyckat Viljestark. Den brännande energin ger 1T4 i skada, 1T8 mot styggelser och vandöda.",
+      "Mästare": "Handling: Aktiv. Mystikern kan med ett Viljestark låta sitt ljus skina över alla fiender inom synhåll, ljuset gör 1T6 i skada och 1T10 för styggelser och vandöda. Styggelser och vandöda paralyseras för en runda om mystikern lyckas med  [Viljestark←Viljestark]."
     },
     "id": "mystiskkr40"
   },
