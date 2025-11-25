@@ -1548,8 +1548,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Passiv. Rollpersonen sveper manteln omkring sig för att sudda ut sin siluett och förvirra anfallare. När rollpersonen har en mantel eller liknande tygstycke i ena handen kan denne använda Diskret i stället för Kvick för sitt Försvar.",
-      "Gesäll": "Aktiv. Rollpersonen använder manteln för att skapa en ridå framför fiendens ögon. Med ett lyckat slag mot [Diskret←Vaksam] skyms fiendens sikt i det avgörande ögonblicket. Fienden räknas som förblindad under resten av rundan och rollpersonen får omedelbart utföra ett frislag mot målet (attacken görs med fördel av förblindningen).",
+      "Novis": "Passiv. Rollpersonen sveper manteln omkring sig för att sudda ut sin siluett och förvirra fientliga mystiker. När rollpersonen har en mantel eller liknande tygstycke i ena handen kan denne använda Diskret i stället för Viljestark vid försvar mot mystiska krafter.",
+      "Gesäll": "Aktiv. Rollpersonen använder manteln för att skapa en ridå framför fiendens ögon. Med ett lyckat slag mot [Diskret←Vaksam] skyms fiendens sikt i det avgörande ögonblicket. Fienden räknas som förblindad under resten av rundan och rollpersonen får omedelbart utföra ett frislag mot målet (attacken görs med övertag som följd av förblindningen).",
       "Mästare": "Reaktiv. Rollpersonen låter manteln leva sitt eget liv, snärjande och bindande likt en orm i händerna på en mästare. När en fiende missar en närstridsattack mot rollpersonen kan denne som en reaktion kasta manteln för att låsa fiendens vapen eller lemmar. Ett lyckat slag mot [Diskret←Kvick] innebär att fienden blir Snärjd (se kvaliteten Snärjande, s. 118) av tyget."
     }
   },
