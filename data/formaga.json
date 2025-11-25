@@ -1523,7 +1523,7 @@
   {
     "id": "form50",
     "namn": "Manteldans",
-    "beskrivning": "Endast tillgänglig för Gentlemannatjuv. Bland Ambrias fäktare ses sköldar som klumpiga och barbariska, vilket gjort parerdolken till ett mer fashionabelt försvarsverktyg. En annan skola har tagit det förfinade försvaret ett steg längre och utvecklat eleganta tekniker som förvandlar fäktarens mantel till en dansande sköld. Rollpersonen kan utnyttja sin fria hand och sin mantel eller liknande tygstycke för att effektivt försvara sig. Tygstycket blir i rollpersonens händer en svepande och hypnotisk sköld som till och med kan förvirra eller tillfälligt förblinda en fiende.",
+    "beskrivning": "Endast tillgänglig för Gentlemannatjuv. I de fina salongernas skuggor och grändernas mörker är en mantel inte bara ett plagg, utan ett redskap för vilseledning. Gentlemannatjuven använder tyget för att dölja sina avsikter, förvilla blicken och dölja stålet tills det är för sent. Genom att röra sig med beräknad diskretion blir manteln en danspartner som skyddar bäraren och förblindar fienden.",
     "taggar": {
       "typ": [
         "Förmåga",
@@ -1531,6 +1531,9 @@
       ],
       "ark_trad": [
         "Gentlemannatjuv"
+      ],
+      "test": [
+        "Diskret"
       ],
       "handling": {
         "Novis": [
@@ -1540,14 +1543,14 @@
           "Aktiv"
         ],
         "Mästare": [
-          "Aktiv"
+          "Reaktiv"
         ]
       }
     },
     "nivåer": {
-      "Novis": "Passiv. Rollpersonens mantel, eller improviserat tygstycke hållet i en hand, ger +1 Försvar.",
-      "Gesäll": "Aktiv. Manteln slås över fiendens ögon vilket gör att målet tillfälligt förblindas om rollpersonen lyckas med attacken. Rollpersonen får direkt ett frislag mot den förblindade fienden, en attack som fienden förblindad måste försvara sig mot. Även andra i offrets närhet har fördel av att målet är förblindat under resten av rundan.",
-      "Mästare": "Aktiv. Manteln blir i mästarens händer en piska med snärjande kvaliteter, vilket gör att den kan nyttjas som ett fångstmedel; för detaljer se kvaliteten Snärjande på sidan 118."
+      "Novis": "Passiv. Rollpersonen sveper manteln omkring sig för att sudda ut sin siluett och förvirra anfallare. När rollpersonen har en mantel eller liknande tygstycke i ena handen kan denne använda Diskret i stället för Kvick för sitt Försvar.",
+      "Gesäll": "Aktiv. Rollpersonen använder manteln för att skapa en ridå framför fiendens ögon. Med ett lyckat slag mot [Diskret←Vaksam] skyms fiendens sikt i det avgörande ögonblicket. Fienden räknas som förblindad under resten av rundan och rollpersonen får omedelbart utföra ett frislag mot målet (attacken görs med fördel av förblindningen).",
+      "Mästare": "Reaktiv. Rollpersonen låter manteln leva sitt eget liv, snärjande och bindande likt en orm i händerna på en mästare. När en fiende missar en närstridsattack mot rollpersonen kan denne som en reaktion kasta manteln för att låsa fiendens vapen eller lemmar. Ett lyckat slag mot [Diskret←Kvick] innebär att fienden blir Snärjd (se kvaliteten Snärjande, s. 118) av tyget."
     }
   },
   {
