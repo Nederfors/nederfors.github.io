@@ -2341,6 +2341,41 @@
       "Gesäll": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett slag i Listig-slag under en scen får hen en kumulativ +1 på kommande Listig-slag riktade mot just den effekten. Bonusen varar till scenens slut.",
       "Mästare": "Handling: Reaktiv. Den kalla rationaliteten biter i själen och skärper fokuset till perfektion; men ibland kan det vara nödvändigt att växla en liten dos korruption mot ett ännu skarpare fokus. Varje gång rollpersonen slår ett slag mot Listig får hen samtidigt slå 1T4 och subtrahera utfallet från framgångsslaget. Tärningsutfallet kan ökas genom att rollpersonen frivilligt tar lika mycket temporär Korruption. Denna effekt kan dock inte användas för att hindra kritiskt misslyckande."
     }
+  },
+  {
+    "id": "form77",
+    "namn": "Miljökämpe",
+    "beskrivning": "Där andra ser hinder ser rollpersonen möjligheter. En nedfallen stam, en lös gatsten, en pelare eller en svajande ljuskrona är lika mycket vapen som svärd och sköld. Rollpersonen är tränad i att blixtsnabbt läsa sin omgivning och utnyttja den för att förvirra, skydda sig mot eller nedgöra sina fiender med oväntade manövrar. Notera att denna förmåga använder karaktärsdraget Diskret om rollpersonen är Gentlemannatjuv, och Kvick om rollpersonen är Järnsvuren.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Gentlemannatjuv",
+        "Järnsvuren"
+      ],
+      "test": [
+        "Kvick",
+        "Diskret"
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Rollpersonen är van vid att strida med miljön som hjälpmedel och kan använda lösa föremål eller terräng (grenar, krukor, möbler) för att störa en fiende i närstrid. Genom ett lyckat slag mot [Kvick/Diskret←Vaksam] skapar rollpersonen ett momentant hinder som ger fienden två chanser att misslyckas med sitt nästa försvar.",
+      "Gesäll": "Handling: Reaktiv. Rollpersonen är expert på att placera hinder mellan sig själv och fienden i sista sekunden. När rollpersonen blir mål för en projektilbaserad mystisk kraft eller avståndsanfall och det finns objekt eller terräng inom räckvidd, kan hen slå ett slag mot [Kvick/Diskret←Vaksam]. Vid lyckat slag manövrerar rollpersonen så att attacken träffar miljön istället för rollpersonen. Misslyckas slaget får rollpersonen försvara sig mot anfallet som vanligt.",
+      "Mästare": "Handling: Aktiv. Rollpersonen använder miljön för att skapa dödligt momentum i sina anfall—springer längs väggar, svingar sig i grenar eller studsar mot pelare för att anfalla från oväntade vinklar. Rollpersonen får med ett lyckat slag i Kvick/Diskret utföra en förflyttning inom närstrid, utan att dra på sig frislag, och en närstridsattack i samma handling. Anfallet får +1T6 i skada utöver eventuellt övertag som skapas."
+    }
   }
 
 ]
