@@ -1796,9 +1796,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. Mystikern kan en gång per runda slå ett slag på [Viljestark←Träffsäker] för att parera ett anfall, oavsett vapen.",
-      "Gesäll": "Handling: Reaktiv. Mystikern kan parera två anfall per runda, men måste slå ett [Viljestark←Träffsäker] för varje.",
-      "Mästare": "Handling: Reaktiv. Mystikern kan parera alla anfall under en runda, men måste slå ett [Viljestark←Träffsäker] för varje."
+      "Novis": "Handling: Reaktiv. Mystikern kan en gång per runda slå ett slag på [Viljestark] för att parera ett anfall.",
+      "Gesäll": "Handling: Reaktiv. Mystikern kan parera två anfall per runda, men måste slå ett [Viljestark] för varje.",
+      "Mästare": "Handling: Reaktiv. Mystikern kan parera alla anfall under en runda, men måste slå ett [Viljestark] för varje."
     },
     "id": "mystiskkr57"
   },
@@ -1833,6 +1833,499 @@
 "Mästare": "Handling: Aktiv. Som på gesällnivå, men greppet krossar brosk och blodkärl. Med ett lyckat [Viljestark←Stark] tar offret 1T8 i skada per runda (rustning skyddar ej). Om skadan når eller överstiger offrets Smärtgräns faller det medvetslöst till marken och förblir utslaget tills ny skada tillfogas eller striden tar slut."
 },
 "id": "mystiskkr58"
-}
+},
+{
+    "id": "mystiskkr59",
+    "namn": "Avgrundsband",
+    "beskrivning": "Tradition: Svartkonst\nMaterial: En droppe blod eller en flisa ben\nGenom att öppna en reva till Bortomvärlden kan mystikern tvinga en demon att besätta en kropp, antingen för att stärka den med mörkrets kraft eller för att förtära dess förmåga inifrån. Varje enskild varelse kan endast vara påverkad av ett Avgrundsband åt gången; en ny tillämpning ersätter den gamla. Det karaktärsdrag som påverkas bestäms när mystikern skaffar kraften.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Svartkonst"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern manar fram en demonisk ande som besätter ett mål. Mot en allierad stärker anden värdkroppen inifrån: målet får +1 i ett av mystikern valt karaktärsdrag men lider samtidigt 1T4 temporär Korruption av den traumatiska upplevelsen. Mot en fiende angriper anden offret: om mystikern lyckas med [Viljestark←Viljestark] får fienden –1 i ett valt karaktärsdrag. Effekten varar tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada].",
+      "Gesäll": "Handling: Aktiv. Som novis men demonen blir mer aggressiv och effekten ökar till +2 för allierade respektive –2 för fiender. Dessutom söker sig anden vidare; om mystikern lyckas med det första målet får denne försöka påverka ytterligare ett mål inom synhåll, och så vidare tills ett slag misslyckas. Koncentrationen hålls för alla drabbade samtidigt.",
+      "Mästare": "Handling: Aktiv. Som gesäll men den frammanade demonen är av högre rang. Effekten ökar till +3 för allierade och –3 för fiender."
+    }
+  },
+ {
+    "id": "mystiskkr60",
+    "namn": "Inferno",
+    "beskrivning": "Tradition: Pyromantiker\nMaterial: En bit kol från en härd eller ett bål\nGenom att mana fram en fruktansvärd hetta kan mystikern släppa lös en förtärande eld. Lågorna är blåa, tunga och svåra att släcka, och de tycks hungra efter levande bränsle.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft", "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Pyromantiker"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern manar fram en blå eld som slår upp runt en fiende inom synhåll. Målet tar 1T6 i eldskada per runda. Effekten varar tills mystikern misslyckas med ett slag mot Viljestark eller tappar koncentrationen [Viljestark – Skada].",
+      "Gesäll": "Handling: Aktiv. Mystikern får marken inom ett område med en diameter motsvarande en förflyttning att brinna med  blå eld. Alla varelser som befinner sig i området eller rör sig in i det tar 1T6 i eldskada. Effekten pågår så länge mystikern upprätthåller koncentrationen eller misslyckas med ett slag mot Viljestark.",
+      "Mästare": "Handling: Aktiv. Ett inferno av blå eld exploderar över ett område motsvarande två förflyttningar i diameter. Alla i området tar omedelbart 1T6 i eldskada och börjar brinna. Den kvarsittande elden gör ytterligare 1T6 i eldskada varje runda i 1T6 rundor, eller tills offret lyckas släcka den (vilket kräver en aktiv handling samt en förflyttningshandling)."
+    }
+  },
+   {
+    "id": "mystiskkr61",
+    "namn": "Jordslukning",
+    "beskrivning": "Tradition: Grönvävare\nMaterial: En handfull dy eller våt lera\nMystikern väcker markens slumrande hunger och får den att mjukna och gripa efter fiendens ben. Det som nyss var fast mark förvandlas till ett gungfly som vägrar släppa sitt byte, och varje steg blir till en kamp mot jordens egen vilja.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft", "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Grönvävare"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern riktar sin vilja mot en fiende inom synhåll och får marken under denne att ge vika. Om mystikern lyckas med [Viljestark←Stark] sjunker offret ner och får sin förflyttning halverad och en andra chans att misslyckas med alla slag mot Kvick. Effekten varar tills mystikern medvetet släpper effekten eller offret klarar ett [Stark←Viljestark]",
+      "Gesäll": "Handling: Aktiv. Som novis men kraften omfattar alla fiender inom synhåll. Mystikern slår ett slag för varje fiende; de som misslyckas fångas av markens grepp.",
+      "Mästare": "Handling: Aktiv. Som gesäll men marken är omättlig. De drabbade sjunker ner till midjan och jorden stelnar kring dem som sten. Offren blir helt rotade och kan inte förflytta sig alls. De kan inte bryta sig loss på egen hand;"
+    }
+  },
 
+{
+    "id": "mystiskkr62",
+    "namn": "Åskvärn",
+    "beskrivning": "Tradition: Ordensmagi \nMaterial: En kopparspole eller en bit bärnsten\nMystikern väver en mantel av statisk elektricitet som skyddar mot skada och laddas upp av fiendens anfall. Den uppsamlade energin kan sedan frigöras i en förödande urladdning.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Ordensmagi"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Fri"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Med ett lyckat Viljestark omsluter mystikern sig själv i ett sprakande åskvärn som ger 1T4 i bepansring under resten av scenen. Varje gång värnet absorberar skada med sin bepansring genereras 1 energiladdning (max 4 laddningar). Som en fri handling kan mystikern med ett lyckat Viljestark utlösa en blixtstöt mot en fiende inom synhåll. Skadan är 1 elektrisk skada per spenderad laddning. Både urladdning och aktivering orsakar korruption hos användaren.",
+      "Gesäll": "Handling: Fri. Som novis, men att etablera värnet är en fri handling och det kan nu lagra upp till 8 laddningar. Vid urladdning träffar blixten alla fiender inom synhåll och gör 1 skada per spenderad laddning. Fiender som bär metallvapen och tar skada måste dessutom lyckas med [Stark – Skada] för att inte tappa sina vapen.",
+      "Mästare": "Handling: Speciell. Värnet är ständigt aktivt, kräver ingen handling och ger 1T6 i bepansring. Det kan lagra upp till 12 laddningar. När laddningarna utlöses formar de en stötkrans som träffar alla fiender inom synhåll. Varje mål tar 1T8 elektrisk skada per spenderad laddning. Fiender med metallvapen måste klara [Stark – Skada] för att inte tappa sina vapen."
+    }
+  },
+    {
+    "id": "mystiskkr63",
+    "namn": "Vinterruna",
+    "beskrivning": "Tradition: Symbolism\nMaterial: En bit krita eller en vit sten\nMystikern ristar ett tecken i form av en snöflinga som sänker temperaturen till en nivå där de drabbades blod nästan fryser. Runan lyser med ett spöklikt, blåvitt sken när den aktiveras och täcker offren i tjock rimfrost.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Symbolism"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Symbolen täcker en fiende inom synhåll med is. Målet tar 1T6 i frostskada och får sina rörelser hindrade av kylan, vilket ger −1T4 i Kvick. Effekten varar tills mystikern misslyckas med ett slag mot Viljestark eller tappar koncentrationen [Viljestark – Skada].",
+      "Gesäll": "Handling: Aktiv. Symbolen utlöser en kedja av bitande kyla som drabbar alla fiender i en kon framför hen. Alla drabbade tar direkt 1T8 frostskada och får −1T4 i Kvick under 1T4 rundor. Flera fall av reducerat Kvick adderas inte.",
+      "Mästare": "Handling: Aktiv. Mystikern aktiverar en runa som fryser ett enskilt mål till en isstod om mystikern lyckas med [Viljestark←Kvick]. Offret misslyckas automatiskt med alla slag mot Kvick, tar 1T6 frostskada varje runda och alla anfall mot målet träffar automatiskt. Den hårda isen ger dock offret 1T6 i bepansring mot fysiska attacker. Effekten varar tills mystikern misslyckas med ett slag mot Viljestark."
+    }
+  },
+    {
+    "id": "mystiskkr64",
+    "namn": "Rötsmitta",
+    "beskrivning": "Tradition: Häxkonst, Svartkonst, Trollsång\nMaterial: En sårskorpa, en rostig spik eller en bit mögligt bröd\nMystikern fokuserar sin vilja på ett öppet sår och tvingar den naturliga läkningsprocessen att reversera till omedelbar förruttnelse. Där blodet borde stillas uppstår istället en aggressiv infektion; köttet svullnar i feberhetta, venerna runt skadan svartnar likt rötter i förgiftad jord och såret fylls av illaluktande var.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Häxkonst",
+        "Svartkonst",
+        "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern infekterar ett öppet sår på en fiende inom synhåll (kräver att offret redan har tagit skada). Offret tar 1T4 i intern skada per runda så länge mystikern inte tappar koncentrationen [Viljestark – Skada] eller misslyckas med ett slag mot Viljestark.",
+      "Gesäll": "Handling: Aktiv. Som novis, men såret varar och smärtar så intensivt att offret inte kan helas naturligt eller med magiska medel så länge kraften är aktiv. Dessutom drabbas offret omedelbart vid aktiveringen av en effekt som om dess smärtgräns överskridits (faller omkull eller ger frislag). Effekten håller i sig så länge mystikern upprätthåller koncentrationen.",
+      "Mästare": "Handling: Aktiv. Som gesäll, men infektionen övergår snabbt i kallbrand. Offret drabbas varje runda av effekten av överskriden smärtgräns. Om såret inte läks på magisk väg inom ett dygn efter att mystikern släppt koncentrationen måste den drabbade kroppsdelen amputeras, vilket sänker ett av offrets Karaktärsdrag permanent (SL avgör vilket beroende på skada)."
+    }
+  },
+
+  {
+    "id": "mystiskkr65",
+    "namn": "Bergasång",
+    "beskrivning": "Tradition: Trollsång\nMaterial: En bit granit eller en näve grus\nGenom att nynna de uråldriga, dova toner som en gång formade bergen kan mystikern tvinga marken att lyda. Jorden och stenen svarar på sången genom att resa sig i pelare som kan skydda, fängsla eller krossa.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern sjunger en låg, vibrerande ton som får en pelare av sten eller packad jord att skjuta upp ur marken (ca 2 meter hög). Pelaren kan användas som skydd (Tålighet 15, skydd 5, brytpunnkt 8) eller för att lyfta mystikern själv till en högre position. Sången är dock inte stark nog att lyfta en ovillig fiende.",
+      "Gesäll": "Handling: Aktiv. Mystikern väver en inneslutande melodi som skapar en bur av stenpelare runt ett mål inom synhåll. Offret är fångat tills det lyckas bryta sig ut (Tålighet 15, skydd 5, brytpunnkt 8) eller tills mystikern misslyckas med ett slag mot Viljestark.",
+      "Mästare": "Handling: Aktiv. Mystikern tar i från tårna i ett dundrande crescendo och en pelare skjuter våldsamt upp under en fiende. Offret måste klara [Kvick←Viljestark] eller slungas upp i luften, ta 1T6 i fallskada och landa liggande. Om det finns ett tak krossas offret mot detta för ytterligare 1T10 i skada. Om pelaren måste bryta igenom ett golv eller en annan struktur för att nå målet krävs ett extra lyckat slag mot Viljestark."
+    }
+  },
+  {
+    "id": "mystiskkr66",
+    "namn": "Kroppsförvrängning",
+    "beskrivning": "Tradition: Svartkonst\nMaterial: En bit rått kött eller en sena\nEn grotesk men effektiv konst där mystikern tillfälligt gör sin kropp elastisk och formbar. Armar kan sträckas ut som piskor, ben kan bli styltor och huden kan göras hård som bark eller hal som olja.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Svartkonst"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Fri"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Mystikern formar om sina händer och underarmar till verktyg för dråp; piskor av muskler, hammare av ben eller klingor av härdat brosk. Mystikerns obeväpnade attacker gör 1T10 i skada och får använda Viljestark istället för Träffsäker för anfallsslaget. I början av varje runda väljer mystikern en vapenkvalitet som attackerna får fram till nästa runda: Balanserat, Blodsgjutande, Djupverkande, Långt eller Precist.",
+      "Gesäll": "Handling: Reaktiv. Mystikerns kropp blir onaturligt följsam och väjer undan för attacker genom att forma om sig så att slaget går igenom kroppen utan att skada. Mystikern får beräkna sitt Försvar med Viljestark istället för Kvick. Varje lyckat försvar med denna förmåga genererar 1T4 temporär korruption.",
+      "Mästare": "Handling: Aktiv. Mystikern kan slunga ut sina elastiska lemmar för att gripa tag i fiender på avstånd. Attacken har en räckvidd motsvarande två förflyttningshandlingar. Om attacken träffar gör den skada som en vanlig attack (enligt Novis-nivån). Därefter kan mystikern välja att antingen behålla greppet (vilket gör 1T6 skada per runda så länge mystikern lyckas med [Viljestark←Stark]), dra målet till sig (in i närstrid) eller dra sig själv till målet. Mästarnivån kräver att Novisnivån redan är aktiverad."
+    }
+  },
+
+   {
+    "id": "mystiskkr67",
+    "namn": "Irrbloss",
+    "beskrivning": "Tradition: Häxkonst, Trollsång\nMaterial: En burk torkade eldflugor eller en bit lysmossa\nMystikern frammanar en svärm av glödande insekter från omgivningens skuggor. Dessa små ljus kan lysa upp mörkret, leda vilsna rätt eller bränna mörkrets varelser med sin intensiva glöd.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Häxkonst",
+        "Teurgi"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern manar fram en svärm som lyser upp ett område motsvarande en facklas sken. Svärmen kan beordras att markera en varelse eller ett föremål inom synhåll. Insekterna klamrar sig fast vid målet och lyser upp dess konturer; målet kan inte gömma sig eller dra nytta av osynlighet, och alla avståndsattacker mot det markerade målet får en andra chans att lyckas. Effekten varar tills mystikern tappar koncentrationen [Viljestark – Skada] eller väljer att skingra svärmen.",
+      "Gesäll": "Handling: Aktiv. Svärmen kan gå till anfall mot ett måls sinnen. Genom att flyga i spiraler och pulsera med ett intensivt ljus desorienteras offret. Om mystikern lyckas med [Viljestark←Viljestark] blir målet så distraherat att det får −3 på alla sina anfall och försvar tills koncentrationen bryts. Svärmen kan på denna nivå också delas upp för att markera upp till fem olika föremål eller platser samtidigt, exempelvis för att lysa upp en stig.",
+      "Mästare": "Handling: Aktiv. Ljuset har nu en renande hetta som bränner mörkrets varelser. Styggelser och vandöda som befinner sig i svärmen tar 1T6 i skada per runda (bepansring skyddar ej). Svärmen är stor nog att distrahera upp till tre fiender samtidigt (enligt Gesällnivån) eller markera upp till tio föremål. Dessutom avger svärmen värme motsvarande en lägereld."
+    }
+  },
+    {
+    "id": "mystiskkr68",
+    "namn": "Järnmakt",
+    "beskrivning": "Tradition: Ordensmagi, Trollsång \nMaterial: En bit magnetit eller en järnfilspån\nMystikern kan manipulera magnetismens osynliga strömmar för att rycka vapen ur fiendens händer eller kalla till sig föremål av metall. Kraften ger en påtaglig fördel mot välrustade motståndare men biter inte på förtrollade föremål eller artefakter.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Ordensmagi",
+        "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern riktar sin kraft mot en fiende inom 10 meter (ca en förflyttningshandling). Om mystikern lyckas med [Viljestark←Stark] slits målets vapen eller metallföremål ur dess grepp och faller till marken vid offrets fötter. Kraften påverkar även ammunition som pilar och lod i koger. Alternativt kan mystikern använda kraften för att känna av och identifiera alla metallföremål en varelse bär på sig. Kraften påverkar inte artefakter.",
+      "Gesäll": "Handling: Aktiv. Som novis, men med större kontroll. Om mystikern lyckas med [Viljestark←Stark] flyger det avväpnade föremålet genom luften och landar i mystikerns hand (om denne har en hand ledig) eller vid dennes fötter.",
+      "Mästare": "Handling: Reaktiv. Mystikern kan reagera blixtsnabbt på ett anfall. När en fiende attackerar med ett metallvapen kan mystikern försöka slita det ur angriparens hand innan skadan utdelas. Om mystikern lyckas med [Viljestark←Stark] avväpnas fienden och anfallet avbryts helt."
+    }
+  },
+    {
+    "id": "mystiskkr69",
+    "namn": "Stålvärn",
+    "beskrivning": "Tradition: Ordensmagi, Trollsång\nMaterial: En bit magnetit eller en krökt järnspik\nMystikern frammanar ett osynligt kraftfält som stöter bort järn och stål. Luften kring mystikern vibrerar svagt och inkommande klingor tycks möta ett osynligt motstånd precis innan de träffar huden.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Ordensmagi",
+        "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern omger sig med ett magnetiskt fält som ger 1T6 i extra bepansring mot attacker utförda med metallvapen. Effekten varar under en scen eller tills den bryts.",
+      "Gesäll": "Handling: Reaktiv. Fältet kan aktivt stöta bort inkommande metall. När mystikern blir beskjuten av projektiler med metallspets (såsom pilar eller lod) kan hen slå ett slag mot Viljestark. Vid lyckat slag viker projektilen av precis innan träff och orsakar ingen skada.",
+      "Mästare": "Handling: Reaktiv. Fältet reagerar nu aggressivt mot den metall som försöker tränga igenom det. När mystikern attackeras av ett metallvapen i närstrid slås ett slag mot [Viljestark←Träffsäker]. Om slaget lyckas vänds anfallet tillbaka mot angriparen, som träffar sig själv och tar hälften av anfallets skada (avrundat uppåt)."
+    }
+  },
+    {
+    "id": "mystiskkr70",
+    "namn": "Skuggprojektil",
+    "beskrivning": "Tradition: Illusionist\nMaterial: En skärva spegelglas eller en slipad bergkristall\nGenom att väva falska kopior av en avlossad pil, kastkniv eller magisk projektil lurar fiendens syn. Luften fylls av vinande dubbelgångare, vilket gör det omöjligt för offret att veta vilken projektil som bär döden och vilken som blott är en skugga.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft", "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Illusionist"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Reaktiv"
+        ],
+        "Gesäll": [
+          "Reaktiv"
+        ],
+        "Mästare": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Reaktiv. En gång per runda kan mystikern med ett lyckat Viljestark skapa illusionära kopior av en projektil som hen själv eller en allierad just avlossat (via avståndsvapen, kastvapen eller projektilbaserade krafter). Förvirringen ger anfallaren en andra chans att lyckas med anfallsslaget.",
+      "Gesäll": "Handling: Reaktiv. Som novis, men illusionerna är så övertygande att offrets sinne tror att det träffats av flera projektiler. Vid en träff får anfallaren slå anfallets basskada en extra gång och addera resultatet till totalen.",
+      "Mästare": "Handling: Reaktiv. Som gesäll, men projektilen mångfaldigas i verkligheten genom skuggmagi. Anfallet räknas nu som två helt separata attacker mot samma mål; anfallaren slår för träff och skada individuellt för båda projektilerna."
+    }
+  },
+  {
+    "id": "mystiskkr71",
+    "namn": "Naturens Hämnd",
+    "beskrivning": "Tradition: Andebesvärjare, Blodvadare, Grönvävare\nMaterial: En benknota, en vargtand eller en tova mossa\nNaturen vaknar till liv runt mystikerns fiender. Grenar piskar, rötter snärjer och vilda djur dyker upp från intet för att skydda naturens väktare. Kraften hämtar näring ur både det levande och det döda kretsloppet.",
+   "taggar": {
+      "typ": [
+        "Mystisk kraft", "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Andebesvärjare",
+        "Blodvadare",
+        "Grönvävare"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern väcker naturens vrede mot alla fiender inom synhåll. Svarta, pulserande rötter och rankor bryter fram ur marken, griper tag i målen och suger ur deras kraft. Varje runda som effekten är aktiv förlorar alla påverkade fiender 1 i Stark. Effekten varar i 1T4 rundor.",
+      "Gesäll": "Handling: Aktiv. Mystikern slår ett slag mot Viljestark. Om slaget lyckas materialiseras en andeformad best – en jättelik varg eller ett vildsvin med brinnande ögon – ur tomma luften och kastar sig över en fiende. Besten utför en attack med värdet 15 i Träffsäker och orsakar vid träff 1T4 i alternativ skada på offrets Stark (bepansring skyddar ej).",
+ "Mästare": "Handling: Aktiv. Mystikern blir ett nav för naturens raseri. Inom synhåll vaknar omgivningen till liv för att dräpa; grenar piskar, stenar krossar och osynliga klor river. Alla fiender i zonen attackeras automatiskt varje runda med ett attackvärde på 15. Vid träff tar offret 1T4 i alternativ skada på Stark. Dessutom räknas alla fiender i zonen som omringade, vilket ger övriga anfallare Övertag mot dem. Effekten varar i 1T4 rundor." 
+} 
+},
+{
+    "id": "mystiskkr72",
+    "namn": "Sinnesstorm",
+    "beskrivning": "Tradition: Mentalist\nMaterial: En liten kristall eller en torkad vallmokapsel\nEn brutal tillämpning av mentalism där mystikern överbelastar offrets sinne med en kakofoni av intryck och smärta, till den grad att hjärnan tar fysisk skada av ansträngningen.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Mentalist"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern angriper offrets sinne med en mental stöt. Om mystikern lyckas med [Viljestar]] tar offret 1 i skada på karaktärsdraget Listig (bepansring skyddar ej). Den mentala chocken gör dessutom att offret får en andra chans att misslyckas med sin nästa handling.",
+      "Gesäll": "Handling: Aktiv. Som novis, men den mentala pressen är förkrossande och skadan på Listig ökar till 1T4.",
+      "Mästare": "Handling: Aktiv. Som gesäll, men om offrets Listig efter attacken är under 10 så är sinnet så sargat att offret får en andra chans att misslyckas med alla framgångsslag under resten av scenen."
+    }
+  },
+
+  {
+    "id": "mystiskkr73",
+    "namn": "Söndring",
+    "beskrivning": "Tradition: Häxkonst, Ordensmagi, Svartkonst\nMaterial: En liten hammare, en rostig spik eller krossat glas\nMed en gest och ett kraftord tvingar mystikern dött material att spricka och splittras. Broar kan raseras, vapen bräckas och rustningar smulas sönder under den osynliga påfrestningen.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Häxkonst",
+        "Ordensmagi",
+        "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern orsakar 1T12 i skada på ett icke-magiskt föremål eller en struktur inom synhåll, och ignorerar dess hårdhet eller skydd. Kraften kan krossa lås, dörrar eller obevakade föremål. För mindre objekt, såsom ett hänglås, kan mystikern med ett lyckat slag mot Diskret utföra handlingen utan att det märks av folk i närheten.",
+      "Gesäll": "Handling: Aktiv. Mystikern riktar kraften mot en fiendes rustning eller sköld. Målet måste lyckas med [Kvick←Viljestark] för att undvika effekten; vid misslyckande sänks föremålets effekttärning (skydd eller skada) med ett steg (t.ex. från 1T8 till 1T6) tills det repareras av en smed. Om tärningen är 1T4 sänks effekten till 1, och om effekten redan är 1 förstörs objektet helt och kan inte repareras.",
+      "Mästare": "Handling: Aktiv. Mystikern utsätter ett objekt för en massiv påfrestning som ger 1T20 i skada. Om objektet går sönder exploderar det i skärvor och alla inom en förflyttnings avstånd tar 1T12 i skada. Om kraften riktas mot ett buret föremål (t.ex. vapen eller rustning) sänks dess kvalitet med två tärningssteg permanent (samma motståndsslag som för gesäll). Om ett buret objekt går sönder helt av effekten tar bäraren omedelbart 1T12 i skada som ignorerar Bepansring."
+    }
+  }
 ]
