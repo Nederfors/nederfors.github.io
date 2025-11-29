@@ -7,6 +7,8 @@
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
+// Dessa kort ska alltid starta kollapsade och inte minnas sitt läge.
+const NON_PERSISTENT_FILTER_CARDS = new Set(['filterFormalCard', 'filterSettingsCard']);
 const FILTER_CARD_KEY_MAP = Object.freeze({
   filterFormalCard: FILTER_TOOLS_KEY,
   filterSettingsCard: FILTER_SETTINGS_KEY
@@ -437,6 +439,96 @@ class SharedToolbar extends HTMLElement {
           color: var(--accent);
           font-variant-numeric: tabular-nums;
         }
+        #entrySortPopup .popup-inner {
+          align-items: stretch;
+          text-align: left;
+        }
+        .sort-grid {
+          display: flex;
+          flex-direction: column;
+          gap: .5rem;
+          margin-bottom: .2rem;
+        }
+        .sort-btn {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: .75rem;
+          padding: .9rem 1rem;
+          width: 100%;
+          background: var(--card);
+          color: var(--txt);
+          border-radius: .8rem;
+          border: 2px solid var(--card-border);
+          cursor: pointer;
+          text-align: left;
+          transition: background .14s ease, transform .08s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease;
+        }
+        .sort-btn .sort-label-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: .2rem;
+          align-items: flex-start;
+          min-width: 0;
+          flex: 1;
+        }
+        .sort-btn .sort-label {
+          display: flex;
+          align-items: center;
+          gap: .65rem;
+          font-weight: 700;
+        }
+        .sort-btn .sort-label .btn-icon {
+          width: 1.45rem;
+          height: 1.45rem;
+          flex-shrink: 0;
+        }
+        .sort-btn .sort-hint {
+          color: var(--txt-muted, var(--txt));
+          font-size: .92rem;
+        }
+        .sort-btn .sort-check {
+          width: 1.2rem;
+          height: 1.2rem;
+          border-radius: .35rem;
+          border: 2px solid var(--card-border);
+          display: grid;
+          place-items: center;
+          background: var(--bg);
+          color: transparent;
+          flex-shrink: 0;
+          box-shadow: 0 2px 6px rgba(0,0,0,.12) inset;
+        }
+        .sort-btn:hover {
+          border-color: var(--accent);
+          box-shadow: 0 10px 24px rgba(0,0,0,.18);
+        }
+        .sort-btn:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+        }
+        .sort-btn.active {
+          background: var(--accent);
+          border-color: var(--accent);
+          color: #fff;
+        }
+        .sort-btn.active .sort-hint {
+          color: rgba(255,255,255,.85);
+        }
+        .sort-btn.active .sort-check {
+          background: #fff;
+          border-color: #fff;
+          color: var(--accent);
+        }
+        .sort-btn.active .sort-check::after {
+          content: '✓';
+          font-weight: 800;
+        }
+        .sort-meta {
+          color: var(--txt-muted, var(--txt));
+          font-size: .9rem;
+          margin: .15rem 0 .35rem;
+        }
         .char-btn,
         .toolbar button,
         .toolbar a {
@@ -586,6 +678,14 @@ class SharedToolbar extends HTMLElement {
                       <span class="toggle-question">Manuella justeringar?</span>
                     </span>
                     <button id="manualAdjustBtn" class="party-toggle icon-only" title="Hantera manuella justeringar">${icon('adjust')}</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Sortering?</span>
+                    </span>
+                    <button id="entrySortBtn" class="party-toggle icon-only" title="Välj sorteringsordning">
+                      ${icon('sort', { className: 'btn-icon', alt: 'Sortering' })}
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -1061,6 +1161,61 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Sortering ---------- -->
+      <div id="entrySortPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Sortera poster</h3>
+          <p class="popup-desc">Välj hur posterna i varje kategori ska ordnas.</p>
+          <div id="entrySortOptions" class="sort-grid">
+            <button class="sort-btn" type="button" data-mode="alpha-asc">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Alfabetisk (A → Ö)</span>
+                <span class="sort-hint">Standardordning</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="alpha-desc">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Alfabetisk (Ö → A)</span>
+                <span class="sort-hint">Omvänd alfabetisk ordning</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="newest">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Nyast först</span>
+                <span class="sort-hint">Senast tillagda hamnar överst</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="oldest">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Äldst först</span>
+                <span class="sort-hint">Äldre poster visas före nya</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="test">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Efter test</span>
+                <span class="sort-hint">Sorterar på test-taggen</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="ark">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Efter arketyp</span>
+                <span class="sort-hint">Sorterar på arketyp/tradition</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+          </div>
+          <p class="sort-meta">Standard: Alfabetisk (A → Ö)</p>
+          <button id="entrySortSave" class="char-btn">Spara</button>
+          <button id="entrySortCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
       <!-- ---------- Popup PDF-bank ---------- -->
       <div id="pdfPopup" class="popup popup-bottom">
         <div class="popup-inner">
@@ -1498,19 +1653,22 @@ class SharedToolbar extends HTMLElement {
     this.filterCollapseBtn = $('collapseAllFilters');
   }
 
-  restoreFilterCollapse() {
-    const cards = [
-      { el: this.shadowRoot.getElementById('filterFormalCard'), key: FILTER_TOOLS_KEY },
-      { el: this.shadowRoot.getElementById('filterSettingsCard'), key: FILTER_SETTINGS_KEY }
-    ];
-    cards.forEach(({ el, key }) => {
+  collapseNonPersistentCards() {
+    const ids = Array.from(NON_PERSISTENT_FILTER_CARDS);
+    ids.forEach(id => {
+      const el = this.shadowRoot.getElementById(id);
       if (!el) return;
-      const val = localStorage.getItem(key);
-      const open = val === '1' || val === null;
-      el.classList.toggle('compact', !open);
+      el.classList.add('compact');
       window.entryCardFactory?.syncCollapse?.(el);
-      if (val === null) localStorage.setItem(key, open ? '1' : '0');
     });
+    try {
+      localStorage.removeItem(FILTER_TOOLS_KEY);
+      localStorage.removeItem(FILTER_SETTINGS_KEY);
+    } catch {}
+  }
+
+  restoreFilterCollapse() {
+    this.collapseNonPersistentCards();
   }
 
   updateFilterCollapseBtn() {
@@ -1530,9 +1688,11 @@ class SharedToolbar extends HTMLElement {
       if (title) {
         const card = title.closest('.card');
         const key = FILTER_CARD_KEY_MAP[card?.id];
-        if (card && key) {
+        if (card) {
           const isCompact = card.classList.toggle('compact');
-          localStorage.setItem(key, isCompact ? '0' : '1');
+          if (key && !NON_PERSISTENT_FILTER_CARDS.has(card.id)) {
+            localStorage.setItem(key, isCompact ? '0' : '1');
+          }
           this.updateFilterCollapseBtn();
           window.entryCardFactory?.syncCollapse?.(card);
         }
@@ -1628,7 +1788,9 @@ class SharedToolbar extends HTMLElement {
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
         const key = FILTER_CARD_KEY_MAP[c.id];
-        if (key) localStorage.setItem(key, c.classList.contains('compact') ? '0' : '1');
+        if (key && !NON_PERSISTENT_FILTER_CARDS.has(c.id)) {
+          localStorage.setItem(key, c.classList.contains('compact') ? '0' : '1');
+        }
         window.entryCardFactory?.syncCollapse?.(c);
       });
       // Ensure non-collapsible cards remain open
@@ -1645,9 +1807,11 @@ class SharedToolbar extends HTMLElement {
     if (btn.classList.contains('collapse-btn')) {
       const card = btn.closest('#filterPanel .card');
       const key = FILTER_CARD_KEY_MAP[card?.id];
-      if (card && key) {
+      if (card) {
         const isCompact = card.classList.toggle('compact');
-        localStorage.setItem(key, isCompact ? '0' : '1');
+        if (key && !NON_PERSISTENT_FILTER_CARDS.has(card.id)) {
+          localStorage.setItem(key, isCompact ? '0' : '1');
+        }
         this.updateFilterCollapseBtn();
         window.entryCardFactory?.syncCollapse?.(card);
       }
@@ -1732,7 +1896,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
@@ -1747,11 +1911,14 @@ class SharedToolbar extends HTMLElement {
     const isOpen = panel.classList.contains('open');
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
     if (!isOpen) {
-      if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        this.restoreFilterCollapse();
-        this._filterFirstOpenHandled = true;
+      if (id === 'filterPanel') {
+        this.collapseNonPersistentCards();
+        if (!this._filterFirstOpenHandled) {
+          this.restoreFilterCollapse();
+          this._filterFirstOpenHandled = true;
+        }
+        this.updateFilterCollapseBtn();
       }
-      if (id === 'filterPanel') this.updateFilterCollapseBtn();
       panel.classList.add('open');
       panel.scrollTop = 0;
     }
@@ -1760,11 +1927,14 @@ class SharedToolbar extends HTMLElement {
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
     const panel = this.panels[id];
     if (panel) {
-      if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        this.restoreFilterCollapse();
-        this._filterFirstOpenHandled = true;
+      if (id === 'filterPanel') {
+        this.collapseNonPersistentCards();
+        if (!this._filterFirstOpenHandled) {
+          this.restoreFilterCollapse();
+          this._filterFirstOpenHandled = true;
+        }
+        this.updateFilterCollapseBtn();
       }
-      if (id === 'filterPanel') this.updateFilterCollapseBtn();
       panel.classList.add('open');
       panel.scrollTop = 0;
     }

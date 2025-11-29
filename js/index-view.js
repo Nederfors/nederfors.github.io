@@ -695,7 +695,9 @@ function initIndex() {
       });
       categoryCache.key = key;
       categoryCache.map = map;
-      categoryCache.list = Array.from(set).sort((a,b) => a.localeCompare(b));
+      categoryCache.list = Array.from(set).sort((a,b) => (typeof compareSv === 'function'
+        ? compareSv(a, b)
+        : a.localeCompare(b, 'sv')));
     }
     return categoryCache.map;
   };
@@ -1127,6 +1129,14 @@ function initIndex() {
   };
 
   const renderList = arr=>{
+    const sortMode = storeHelper.getEntrySort
+      ? storeHelper.getEntrySort(store)
+      : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
+    const entrySorter = typeof entrySortComparator === 'function'
+      ? entrySortComparator(sortMode)
+      : ((a, b) => (typeof compareSv === 'function'
+          ? compareSv(a?.namn || '', b?.namn || '')
+          : String(a?.namn || '').localeCompare(String(b?.namn || ''), 'sv')));
     const cardKeyFromEl = el => {
       const id = el.dataset.id || el.dataset.name || '';
       const level = el.dataset.level || '';
@@ -1174,6 +1184,7 @@ function initIndex() {
       return catComparator(a,b);
     });
     catKeys.forEach(cat=>{
+      cats[cat].sort(entrySorter);
       const catLi=document.createElement('li');
       catLi.className='cat-group';
       // Allow temporary "open once" categories to override saved state

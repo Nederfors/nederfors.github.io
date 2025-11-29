@@ -3585,6 +3585,35 @@ select.level {
 #vehicleRemovePopup .popup-inner button,
 #vehicleQtyPopup .popup-inner button,
 #vehicleMoneyPopup .popup-inner button { width: 100%; }
+#entrySortPopup {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  display: none;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(0,0,0,.6);
+  z-index: 3000;
+}
+#entrySortPopup.open { display: flex; }
+#entrySortPopup .popup-inner {
+  background: var(--panel);
+  border: 1.5px solid var(--border);
+  border-radius: 1.2rem 1.2rem 0 0;
+  box-shadow: var(--shadow);
+  padding: 1.5rem 1.4rem 2rem;
+  width: 100%;
+  max-width: 420px;
+  text-align: left;
+  transform: translateY(100%);
+  transition: transform .25s ease;
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+#entrySortPopup.open .popup-inner { transform: translateY(0); }
+#entrySortPopup .popup-inner button { width: 100%; }
 #vehicleQtyPopup .popup-inner input[type="number"] {
   width: 100%;
   padding: .4rem .6rem;

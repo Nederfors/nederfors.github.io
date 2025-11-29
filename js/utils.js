@@ -40,6 +40,22 @@
   const DEFAULT_CHARACTER_ICON = ICON_SOURCES.character;
   let characterIconOverride = '';
 
+  const SV_COLLATOR = (typeof Intl !== 'undefined' && typeof Intl.Collator === 'function')
+    ? new Intl.Collator('sv', { sensitivity: 'base', usage: 'sort', ignorePunctuation: true })
+    : null;
+
+  function compareSv(a, b) {
+    const aStr = String(a ?? '').trim();
+    const bStr = String(b ?? '').trim();
+    if (SV_COLLATOR) {
+      const res = SV_COLLATOR.compare(aStr, bStr);
+      if (res) return res;
+    }
+    const localeRes = aStr.localeCompare(bStr, 'sv');
+    if (localeRes) return localeRes;
+    return aStr.localeCompare(bStr);
+  }
+
   function normalizeIconPath(input) {
     if (typeof input !== 'string') return '';
     let str = input.trim();
@@ -230,7 +246,7 @@
     if (ai !== -1 && bi !== -1) return ai - bi;
     if (ai !== -1) return -1;
     if (bi !== -1) return 1;
-    return a.localeCompare(b);
+    return compareSv(a, b);
   }
 
   const EQUIP_LC_SET = new Set(EQUIP.map(t => String(t).toLowerCase()));
@@ -372,7 +388,7 @@
     const bt = tbList.join(',');
     if(at < bt) return -1;
     if(at > bt) return 1;
-    return (a.namn || '').localeCompare(b.namn || '');
+    return compareSv(a.namn || '', b.namn || '');
   }
 
   function explodeTags(arr){
@@ -502,6 +518,115 @@
     };
   }
 
+  const ENTRY_SORT_DEFAULT = 'alpha-asc';
+  const ENTRY_SORT_MODES = new Set([ENTRY_SORT_DEFAULT, 'alpha-desc', 'newest', 'oldest', 'test', 'ark']);
+
+  function normalizeEntrySortMode(mode) {
+    return ENTRY_SORT_MODES.has(mode) ? mode : ENTRY_SORT_DEFAULT;
+  }
+
+  function entryIdNumber(entry) {
+    if (!entry || typeof entry !== 'object') return NaN;
+    const rawId = String(entry.id ?? '').trim();
+    if (!rawId) return NaN;
+    const matches = rawId.match(/(\d+)/g);
+    if (!matches || !matches.length) return NaN;
+    const last = matches[matches.length - 1];
+    const num = Number(last);
+    return Number.isFinite(num) ? num : NaN;
+  }
+
+  function entrySortComparator(mode = ENTRY_SORT_DEFAULT, opts = {}) {
+    const normalizedMode = normalizeEntrySortMode(mode);
+    const extract = typeof opts.extract === 'function' ? opts.extract : (v => v);
+    const tieKey = typeof opts.tieKey === 'function'
+      ? opts.tieKey
+      : (ent => {
+          const name = String(ent?.namn ?? ent?.name ?? '').trim();
+          const lvl  = String(ent?.nivå ?? ent?.level ?? '').trim();
+          const trait = String(ent?.trait ?? '').trim();
+          const id = String(ent?.id ?? '').trim();
+          return `${name}|${lvl}|${trait}|${id}`;
+        });
+
+    const primaryTest = (ent) => {
+      if (!ent || typeof ent !== 'object') return '';
+      const tags = ent.taggar || {};
+      const list = Array.isArray(tags.test) ? tags.test : [];
+      return list[0] || '';
+    };
+
+    const primaryArk = (ent) => {
+      if (!ent || typeof ent !== 'object') return '';
+      const tags = ent.taggar || {};
+      if (Array.isArray(tags.ark_trad) && tags.ark_trad.length) {
+        const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : tags.ark_trad;
+        if (Array.isArray(exploded) && exploded.length) return exploded[0];
+        return tags.ark_trad[0] || '';
+      }
+      return '';
+    };
+
+    return (a, b) => {
+      const entA = extract(a) || {};
+      const entB = extract(b) || {};
+      const nameA = entA ? (entA.namn ?? entA.name ?? '') : '';
+      const nameB = entB ? (entB.namn ?? entB.name ?? '') : '';
+      const idNumA = entryIdNumber(entA);
+      const idNumB = entryIdNumber(entB);
+      const tieA = tieKey(entA);
+      const tieB = tieKey(entB);
+
+      if (normalizedMode === 'test') {
+        const tA = primaryTest(entA);
+        const tB = primaryTest(entB);
+        const res = compareSv(tA, tB);
+        if (res) return res;
+        const nameRes = compareSv(nameA, nameB);
+        if (nameRes) return nameRes;
+        return compareSv(tieA, tieB);
+      }
+
+      if (normalizedMode === 'ark') {
+        const aArk = primaryArk(entA);
+        const bArk = primaryArk(entB);
+        const res = compareSv(aArk, bArk);
+        if (res) return res;
+        const nameRes = compareSv(nameA, nameB);
+        if (nameRes) return nameRes;
+        return compareSv(tieA, tieB);
+      }
+
+      if (normalizedMode === 'newest') {
+        const aHas = Number.isFinite(idNumA);
+        const bHas = Number.isFinite(idNumB);
+        if (aHas || bHas) {
+          const aVal = aHas ? idNumA : -Infinity;
+          const bVal = bHas ? idNumB : -Infinity;
+          if (aVal !== bVal) return bVal - aVal;
+        }
+      } else if (normalizedMode === 'oldest') {
+        const aHas = Number.isFinite(idNumA);
+        const bHas = Number.isFinite(idNumB);
+        if (aHas || bHas) {
+          const aVal = aHas ? idNumA : Infinity;
+          const bVal = bHas ? idNumB : Infinity;
+          if (aVal !== bVal) return aVal - bVal;
+        }
+      }
+
+      if (normalizedMode === 'alpha-desc') {
+        const res = compareSv(nameB, nameA);
+        if (res) return res;
+        return compareSv(tieB, tieA);
+      }
+
+      const res = compareSv(nameA, nameB);
+      if (res) return res;
+      return compareSv(tieA, tieB);
+    };
+  }
+
   window.LVL = LVL;
   window.EQUIP = EQUIP;
   window.SBASE = SBASE;
@@ -530,6 +655,11 @@
   window.formatWeight = formatWeight;
   window.searchNormalize = searchNormalize;
   window.createSearchSorter = createSearchSorter;
+  window.normalizeEntrySortMode = normalizeEntrySortMode;
+  window.entrySortComparator = entrySortComparator;
+  window.compareSv = compareSv;
+  window.ENTRY_SORT_DEFAULT = ENTRY_SORT_DEFAULT;
+  window.ENTRY_SORT_MODES = ENTRY_SORT_MODES;
   window.copyToClipboard = copyToClipboard;
   window.catComparator = catComparator;
   window.catName = catName;

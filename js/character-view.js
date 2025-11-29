@@ -1155,6 +1155,14 @@ function initCharacter() {
   };
 
   const renderSkills = arr=>{
+    const sortMode = storeHelper.getEntrySort
+      ? storeHelper.getEntrySort(store)
+      : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
+    const entrySorter = typeof entrySortComparator === 'function'
+      ? entrySortComparator(sortMode, { extract: g => g.entry })
+      : ((a, b) => (typeof compareSv === 'function'
+          ? compareSv(a?.entry?.namn || '', b?.entry?.namn || '')
+          : String(a?.entry?.namn || '').localeCompare(String(b?.entry?.namn || ''), 'sv')));
     const groups = [];
     arr.forEach(p=>{
         const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
@@ -1211,6 +1219,7 @@ function initCharacter() {
       return catComparator(a,b);
     });
     catKeys.forEach(cat=>{
+      cats[cat].sort(entrySorter);
       const catLi=document.createElement('li');
       catLi.className='cat-group';
       const shouldOpen = catState[cat] !== undefined ? catState[cat] : (openCats.has(cat) || openCatsOnce.has(cat));

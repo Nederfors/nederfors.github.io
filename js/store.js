@@ -8,12 +8,22 @@
   const STORAGE_KEY = 'rpall';
   const STORAGE_META_KEY = 'rpall-meta';
   const STORAGE_CHAR_PREFIX = 'rpall-char-';
+  const ENTRY_SORT_DEFAULT = (global.ENTRY_SORT_DEFAULT || 'alpha-asc');
 
   const charStorageKey = (id) => `${STORAGE_CHAR_PREFIX}${id}`;
 
   const runtimeVersions = {
     custom: 0,
     revealed: 0
+  };
+
+  const normalizeEntrySort = (mode) => {
+    if (typeof global.normalizeEntrySortMode === 'function') {
+      return global.normalizeEntrySortMode(mode);
+    }
+    const val = typeof mode === 'string' ? mode : '';
+    const allowed = new Set(['alpha-asc', 'alpha-desc', 'newest', 'oldest', 'test', 'ark']);
+    return allowed.has(val) ? val : ENTRY_SORT_DEFAULT;
   };
 
   const bumpRuntimeVersion = (key) => {
@@ -37,7 +47,8 @@
     compactEntries: Boolean(store.compactEntries),
     onlySelected: Boolean(store.onlySelected),
     recentSearches: Array.isArray(store.recentSearches) ? store.recentSearches.slice(0, MAX_RECENT_SEARCHES) : [],
-    liveMode: Boolean(store.liveMode)
+    liveMode: Boolean(store.liveMode),
+    entrySort: normalizeEntrySort(store.entrySort)
   });
 
   function persistMeta(store) {
@@ -533,7 +544,8 @@
       compactEntries: true,
       onlySelected: false,
       recentSearches: [],
-      liveMode: false
+      liveMode: false,
+      entrySort: ENTRY_SORT_DEFAULT
     };
   }
 
@@ -593,6 +605,8 @@
           }
         }
 
+        store.entrySort = normalizeEntrySort(store.entrySort);
+
         if (metaMutated) persistMeta(store);
         mutatedIds.forEach(id => persistCharacter(store, id));
         return store;
@@ -615,6 +629,7 @@
         const legacyCharIds = Object.keys(store.data || {});
         const anyLegacyLive = legacyCharIds.some(id => Boolean(store.data[id]?.liveMode));
         store.liveMode = anyLegacyLive;
+        store.entrySort = normalizeEntrySort(store.entrySort);
         legacyCharIds.forEach(id => {
           if (store.data[id]) {
             store.data[id].liveMode = Boolean(store.liveMode);
@@ -1406,6 +1421,15 @@
 
   function setCompactEntries(store, val) {
     store.compactEntries = Boolean(val);
+    persistMeta(store);
+  }
+
+  function getEntrySort(store) {
+    return normalizeEntrySort(store?.entrySort);
+  }
+
+  function setEntrySort(store, val) {
+    store.entrySort = normalizeEntrySort(val);
     persistMeta(store);
   }
 
@@ -2694,6 +2718,8 @@ function defaultTraits() {
     setFilterUnion,
     getCompactEntries,
     setCompactEntries,
+    getEntrySort,
+    setEntrySort,
     getOnlySelected,
     setOnlySelected,
     getRevealedArtifacts,

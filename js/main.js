@@ -313,6 +313,7 @@ const dom  = {
   entryViewToggle: getDom('entryViewToggle'),
   infoToggle: getDom('infoToggle'),
   manualBtn: getDom('manualAdjustBtn'),
+  entrySortBtn: getDom('entrySortBtn'),
 
   /* element i main-DOM */
   active : getDom('activeFilters'),
@@ -2060,6 +2061,24 @@ function bindToolbar() {
       openManualAdjustPopup();
     });
   }
+  if (dom.entrySortBtn) {
+    dom.entrySortBtn.addEventListener('click', () => {
+      openEntrySortPopup(mode => {
+        if (!mode) return;
+        const normalized = typeof normalizeEntrySortMode === 'function'
+          ? normalizeEntrySortMode(mode)
+          : mode;
+        const current = storeHelper.getEntrySort(store);
+        if (normalized === current) return;
+        storeHelper.setEntrySort(store, normalized);
+        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+        if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
+        if (typeof window.notesUpdate === 'function') window.notesUpdate();
+        if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+        if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+      });
+    });
+  }
   if (dom.filterUnion) {
     if (storeHelper.getFilterUnion(store)) dom.filterUnion.classList.add('active');
     dom.filterUnion.addEventListener('click', () => {
@@ -2471,6 +2490,63 @@ function openDefensePopup(cb) {
   }
   box.addEventListener('click', onBtn);
   cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openEntrySortPopup(cb) {
+  const pop = bar.shadowRoot?.getElementById('entrySortPopup');
+  if (!pop) return;
+  const inner = pop.querySelector('.popup-inner');
+  const buttons = [...pop.querySelectorAll('.sort-btn[data-mode]')];
+  const saveBtn = pop.querySelector('#entrySortSave');
+  const cancelBtn = pop.querySelector('#entrySortCancel');
+  const current = storeHelper.getEntrySort ? storeHelper.getEntrySort(store) : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
+  let selected = current;
+
+  const setActive = (mode) => {
+    selected = mode;
+    buttons.forEach(btn => {
+      const isActive = btn.dataset.mode === mode;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  };
+
+  setActive(current);
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+
+  const close = () => {
+    pop.classList.remove('open');
+    buttons.forEach(btn => btn.removeEventListener('click', onSelect));
+    saveBtn?.removeEventListener('click', onSave);
+    cancelBtn?.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  };
+
+  const onSelect = (e) => {
+    const btn = e.currentTarget;
+    if (!btn) return;
+    setActive(btn.dataset.mode);
+  };
+
+  const onSave = () => {
+    close();
+    cb?.(selected);
+  };
+
+  const onCancel = () => { close(); cb?.(null); };
+
+  const onOutside = e => {
+    if (inner && !inner.contains(e.target)) {
+      close();
+      cb?.(null);
+    }
+  };
+
+  buttons.forEach(btn => btn.addEventListener('click', onSelect));
+  saveBtn?.addEventListener('click', onSave);
+  cancelBtn?.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
 }
 
