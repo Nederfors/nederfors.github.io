@@ -1960,7 +1960,7 @@
     "nivåer": {
       "Novis": "Handling: Aktiv. Med ett lyckat Viljestark omsluter mystikern sig själv i ett sprakande åskvärn som ger 1T4 i bepansring under resten av scenen. Varje gång värnet absorberar skada med sin bepansring genereras 1 energiladdning (max 4 laddningar). Som en fri handling kan mystikern med ett lyckat Viljestark utlösa en blixtstöt mot en fiende inom synhåll. Skadan är 1 elektrisk skada per spenderad laddning. Både urladdning och aktivering orsakar korruption hos användaren.",
       "Gesäll": "Handling: Fri. Som novis, men att etablera värnet är en fri handling och det kan nu lagra upp till 8 laddningar. Vid urladdning träffar blixten alla fiender inom synhåll och gör 1 skada per spenderad laddning. Fiender som bär metallvapen och tar skada måste dessutom lyckas med [Stark – Skada] för att inte tappa sina vapen.",
-      "Mästare": "Handling: Speciell. Värnet är ständigt aktivt, kräver ingen handling och ger 1T6 i bepansring. Det kan lagra upp till 12 laddningar. När laddningarna utlöses formar de en stötkrans som träffar alla fiender inom synhåll. Varje mål tar 1T8 elektrisk skada per spenderad laddning. Fiender med metallvapen måste klara [Stark – Skada] för att inte tappa sina vapen."
+      "Mästare": "Handling: Speciell. Som gesäll, men värnet är ständigt aktivt, kräver ingen handling att etablera och ger 1T6 i bepansring. Det kan dessutom lagra upp till 12 laddningar."
     }
   },
     {
