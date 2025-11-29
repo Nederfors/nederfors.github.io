@@ -794,7 +794,7 @@
  },
  {
  "id": "ri80",
- "namn": "Blixtfånga",
+ "namn": "Blixtfång",
  "beskrivning": "Tradition: Ordensmagi\nEtt kopparspjut, tre järnringar och en stormladdad bägare fångar himlens vrede. Vid lyckad ritual lagras en elektrisk urladdning i ett valt metallföremål i upp till 1T6 dagar. Den första som rör vid platsen eller föremålet tar 2T12 blixtskada; rustning skyddar ej. Misslyckas ritualen urladdas kraften i mystikerns händer: slå 1T12 elektricitetsskada; rustning skyddar ej.",
  "taggar": {
  "typ": ["Ritual"],
@@ -808,7 +808,7 @@
  "beskrivning": "Tradition:Trollsång, Häxkonst\nEn klangskål sätts i svängning och tonerna leds genom ett objekt i fokus. Under 1T4 timmar kan mystikern förflytta ett massivt objekt (upp till en vagnslast sten eller timmer) långsamt över marken, en förflyttningshandling per timme, utan att bryta det. Varje gång ett hinder måste överträdas (t.ex andra stora objekt som måste skjutas undan) passeras krävs ett lyckat Viljestark; misslyckande ger sprickor eller skador som minskar objektets brukbarhet tills det repareras.",
  "taggar": {
  "typ": ["Ritual"],
- "ark_trad": ["Stavmagiker", "Häxkonst"],
+ "ark_trad": ["Trollsång", "Häxkonst"],
  "test": ["Viljestark"]
  }
  },
@@ -831,6 +831,195 @@
  "ark_trad": ["Häxkonst, Symbolism"],
  "test": ["Viljestark"]
  }
- }
+ },
+  {
+    "id": "ri84",
+    "namn": "Renhetsvärn",
+    "beskrivning": "Tradition: Endast tillgänglig för Templár\nDen högre nivån av ritualen Sanktum skapar en helgad zon som fysiskt och andligt stöter bort korruptionens varelser. Mystikern ritar en cirkel av heliga tecken som fungerar som en barriär; styggelser och daemoner kan inte passera in i cirkeln utan att vinna ett motståndsslag mot [Viljestark←Viljestark]. Dessutom renas luften innanför gränsen så att mörkrets verkan dämpas: alla effekttärningar som orsakar temporär eller permanent korruption sänks med en nivå (exempelvis från 1T6 till 1T4, eller 1 till 0.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Templár"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "grundritual": [
+        "Sanktum"
+      ]
+    }
+  },
+  {
+    "id": "ri85",
+    "namn": "Demonform",
+    "beskrivning": "Tradition: Demonologi\nGenom förbjudna anropningar och offerböner bjuder mystikern in en daemon att ta plats i det egna köttet. Denna oheliga symbios mellan dödlig och ovärldsväsen skänker en oerhörd, men lånad, makt: mystikern erhåller under en scen två valfria monstruösa särdrag, vilka kan nyttjas upp till Mästarnivå. Men att agera kärl för mörkret är förenat med den yttersta av risker. Vid scenens slut måste mystikern driva ut anden genom ett lyckat slag mot Viljestark. Misslyckas slaget tar daemonen fullständig kontroll över kroppen, och mystikern går förlorad för alltid – förvriden till en permanent styggelse.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+         "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Demonolog"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+   {
+    "id": "ri86",
+    "namn": "Draktjusning",
+    "beskrivning": "Tradition: Stavmagiker\nEn uråldrig och riskfylld ritual där stavmagikern mäter sin vilja mot reptilbestar såsom lindormar och drakormar – dock ej de äldsta drakarna. Genom att rikta sin runstav och uttala tvingande kraftord måste mystikern vinna ett slag mot [Viljestark←Viljestark]. Vid framgång binds besten till mystikerns vilja och lyder order under en scen, eller tills den skadas då förtrollningen bryts omedelbart. Ett misslyckande hetsar besten till ett blint ursinne, där den ursinnigt fokuserar all sin vrede mot den som försökte fjättra den.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+ "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Stavmagiker"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri87",
+    "namn": "Marans Vaggvisa",
+    "beskrivning": "Tradition: Trollsång\nGenom att nynna en mörk och suggestiv melodi kan trollsångaren tränga in i en varelses drömmar och förvandla vilan till en utmattande prövning. Ritualen kräver antingen att sångaren befinner sig inom hörhåll för den sovande eller sjunger över en mystisk länk, såsom en lock hår eller ett personligt föremål. Offret förvägras nattens läkande kraft; ingen Tålighet återfås och dagen därpå plågas varelsen av en trötthet som ger -1 på alla framgångsslag. Sången bär också med sig möjligheten att så subtila tankar eller tvivel i drömmarens sinne – idéer som vid uppvaknandet känns som offrets egna. För att lyckas med denna manipulation krävs ett vunnet slag mot [Viljestark←Viljestark].",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri88",
+    "namn": "Elementets Hamn",
+    "beskrivning": "Tradition: Häxkonst, Ordensmagi\n Genom en andlig metamorfos låter mystikern sin kropp upplösas och återfödas som ren elementkraft – vare sig det är eld, is, vatten, blixt eller luft. Under en scen erhåller mystikern det monstruösa särdraget Andeform på novisnivå, och all skada som mystikern orsakar räknas som elementarskada av den valda sorten. Dessutom blir mystikern under denna tid immun mot skada från det valda elementet. Priset för att bli ett med elementen är dock högt: ritualen ger 1 permanent korruption eller kostar 1 erfarenhet om inte en offergåva av betydande värde (minst 30 daler, dock ej i mynt) skänks till elementets andar vid utförandet.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Häxkonst",
+        "Ordensmagi"
+      ],
+      "test": ["Viljestark"]
+    }
+  },
+  {
+    "id": "ri89",
+    "namn": "Naturvakt",
+    "beskrivning": "Tradition: Endast tillgänglig för Grönvävare\nDen högre nivån av ritualen Häxcirkel låter mystikern väcka skogens slumrande andar till ett aktivt försvar. Runt en lägerplats eller grottöppning förtätas växtligheten till en svårgenomtränglig barriär av sly, rötter och dimma (radie ca 25 meter). För alla utom mystikern och dennes utvalda bryts siktlinjerna och marken blir svårframkomlig. Fiender som försöker tränga sig igenom snåren måste bokstavligen hugga sig fram, vilket kräver tre lyckade slag mot [Stark←Viljestark]. Misslyckas de hindras de av den levande grönskan och måste söka en väg runt eller ge upp.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Grönvävare"
+      ],
+      "test": [
+        "Stark",
+        "Viljestark"
+      ],
+      "grundritual": [
+        "Häxcirkel"
+      ]
+    }
+  },
+  {
+    "id": "ri90",
+    "namn": "Rotväckelse",
+    "beskrivning": "Tradition: Häxkonst\nGenom en lågmäld, mässande sång kan mystikern väcka den lokala växtlighetens slumrande medvetanden tillfälligt till liv. Mystikern får ställa frågor till växterna, där varje fråga kräver ett lyckat slag mot Viljestark. Svaren ges genom subtila rörelser i bladverk och grenar: ett prassel eller en ryckning för ”ja”, orubblig stillhet för ”nej”. Det bör dock noteras att florans minne är annorlunda än faunans; ett träd minns vibrationer från tunga steg, smaken av spillt blod eller hettan från en fackla, men ser inte ansikten och förstår inte talat språk. Vid ett misslyckat slag sluter sig alla växter i närheten åter i dvala och kan inte väckas igen förrän solen gått ett varv.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Häxkonst", "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri91",
+    "namn": "Örtakur",
+    "beskrivning": "Tradition: Häxkonst\nGenom att bränna bittra örter och mässa urgamla ramsor kan mystikern skingra dimmorna i en varelses sinne. Ritualen driver omedelbart ut effekter av berusning, drogpåverkan och förvirring (inklusive den mystiska kraften Förvirring, förslavande runor och dylikt). Uppvaknandet är dock brutalt och offret tar 1T4 i skada på listig när klarheten slår till som en slägga.\nRitualen kan även användas för att stävja ett drogberoende eller stärka sinnet mot yttre påverkan under tre dygn. Priset är att offret tar 1 i skada på listig vid ritualens slut, samt ytterligare 1 i skada på Listig varje morgon då hjärnan mot gifterna. I gengäld får offret en onaturlig skärpa: en bonus på Viljestark gällande att motstå mental påverkan och begär. Bonusen är +3 första dygnet, +2 det andra och +1 det tredje.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Häxkonst"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri92",
+    "namn": "Själafängsel",
+    "beskrivning": "Tradition: Svartkonst\nGenom mörka bindningar och förbjudna tecken kan svartkonstnären snärja en flyende själ innan den hinner försvinna in i dödsrikets dimmor. Ritualen måste utföras över en nyligen avliden varelse (inom en timme från dödsögonblicket) och anden tvingas in i ett dyrbart föremål (värde minst 10 daler). Så länge själen hålls fången är kroppen omöjlig att resa som vandöd eller återuppväcka.\nFängelset kan senare offras för att konsumera den fångna livskraften: mystikern krossar föremålet och drar i sig energin för att antingen läka 1T12 Tålighet eller rena sitt sinne från 1T6 temporär Korruption. Vid denna handling förstörs föremålet totalt och själen förintas. Om föremålet däremot förstörs utan att den mörka konsumtionen aktiveras, bryts fängelset och själen släpps fri att vandra vidare till sin slutgiltiga vila.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Svartkonst"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri93",
+    "namn": "Själsprojektion",
+    "beskrivning": "Tradition: Häxkonst, Teurgi\nGenom djup trans lösgör mystikern sin ande från kroppens fängelse och låter den sväva fritt. Anden färdas osedd och immateriell i 1T12 minuter och kan endast uppfattas eller beröras av varelser som har förmågan att förnimma Bortomvärlden (såsom styggelser, daemoner och varelser med särdraget Andeform). Under projektionen kan mystikern nyttja sina mystiska krafter för att påverka den fysiska världen, men är bunden till andeformen tills tiden löper ut; återvändo i förtid är omöjlig. Om mystikern väljer att stanna kvar bortom den utmätta tiden krävs ett slag mot Viljestark för varje ytterligare minut. Ett misslyckat slag sliter sönder själen och sänker permanent mystikerns Viljestark med 1. Om tärningen visar 20 går själen förlorad i Bortomvärldens mörker och kroppen lämnas som ett tomt skal.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Häxkonst",
+        "Teurgi"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri94",
+    "namn": "Skuggsmide",
+    "beskrivning": "Tradition: Endast tillgänglig för Illusionist\nGenom att väva samman nattens skuggor och drömmarnas flyktiga substans kan illusionisten tvinga fram en fysisk verklighet ur intet. Ritualen manifesterar icke-levande föremål eller enklare strukturer – såsom en bro över en klyfta, en dörr i en slät vägg eller en stege mot höjden. Det skapade objektet är solitt och brukbart men bär en onaturlig kyla och en gråtonad yta. Skapelsen varar i ett dygn innan den löses upp och återgår till att vara blott skuggor.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Illusionist"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  }
+
 
 ]
