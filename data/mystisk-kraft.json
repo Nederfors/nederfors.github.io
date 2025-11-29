@@ -2327,5 +2327,38 @@
       "Gesäll": "Handling: Aktiv. Mystikern riktar kraften mot en fiendes rustning eller sköld. Målet måste lyckas med [Kvick←Viljestark] för att undvika effekten; vid misslyckande sänks föremålets effekttärning (skydd eller skada) med ett steg (t.ex. från 1T8 till 1T6) tills det repareras av en smed. Om tärningen är 1T4 sänks effekten till 1, och om effekten redan är 1 förstörs objektet helt och kan inte repareras.",
       "Mästare": "Handling: Aktiv. Mystikern utsätter ett objekt för en massiv påfrestning som ger 1T20 i skada. Om objektet går sönder exploderar det i skärvor och alla inom en förflyttnings avstånd tar 1T12 i skada. Om kraften riktas mot ett buret föremål (t.ex. vapen eller rustning) sänks dess kvalitet med två tärningssteg permanent (samma motståndsslag som för gesäll). Om ett buret objekt går sönder helt av effekten tar bäraren omedelbart 1T12 i skada som ignorerar Bepansring."
     }
+  },
+  {
+    "id": "mystiskkr74",
+    "namn": "Solkraft",
+    "beskrivning": "Tradition: Teurgi\nMaterial: En solsymbol i guld eller bärnsten\nTeurgen gör sin kropp till en ledare för Prios dömande kraft och projicerar en fysisk vägg av strålande energi. Kraften trycker tillbaka fiender och gör luften tung att röra sig genom, som om själva atmosfären gör motstånd mot kättare och mörkrets varelser.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Teurgi"
+      ],
+      "test": [
+        "Viljestark",
+        "Stark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern riktar Prios ljus mot en enskild fiende. Med ett lyckat [Viljestark←Stark] förtätas luften kring målet. Fiendens förflyttning halveras under sin nästa runda och dess rörelser blir tröga; om fienden anfaller någon under tiden som den är påverkad får den två chanser att misslyckas med sina anfall.",
+      "Gesäll": "Handling: Aktiv. Som novis, men kraften slår nu med fysisk tyngd. Om mystikern lyckas med [Viljestark←Stark] knuffas fienden dessutom 1T4 meter bakåt och faller omkull. Om målet är en styggelse eller vandöd fräser ljuset mot dess orena hud och ger 1T4 i mystisk skada.",
+      "Mästare": "Handling: Aktiv. Mystikern sänder ut en kon av bländande kraft som drabbar alla fiender framför sig. Mystikern slår [Viljestark←Stark] för varje fiende i konen. Effekterna är som på gesällnivå, men styggelser och vandöda tar 1T6 i mystisk skada istället för 1T4."
+    }
   }
 ]
