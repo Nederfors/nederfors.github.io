@@ -522,5 +522,40 @@
       "Ärkefiende"
     ],
     "id": "elit17"
+  },
+  {
+    "id": "elit18",
+    "namn": "Stormbringare",
+    "beskrivning": "*”Himlen är mitt städ, blixten min hammare.”*\n\nÅsktornet i Yndaros var från början ett enkelt duvslag varifrån korrespondens hölls med de olika ordensmästarna. Från en dag till en annan blev duvornas värv ett minne blott då den magiska cirkeln gjorde deras idoga flygande till ett osäkert och föråldrat sätt att förmedla information de olika ordenshusen emellan.\n\nLänge stod tornet tomt tills den första blixten slog ned i dess spira och den följande elden härjade byggnaden. Två hängivna inom orden, Heldonmei och Simnon, tog det på sig att utforska möjligheten att snärja kraften given från himlen. De två experimenterade med bärnsten och järn, och utvecklade allt eftersom det vi idag känner som Stormbringare – de med kunskapen att tämja åskan till sin vilja. Tornet förseddes med en skulptur av järn och ögon av bärnsten; en lindorm vars kropp slingrar sig ner längs tornet och försvinner ner i marken, ledande himlens vrede dit magikern önskar.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": [
+        "Stormbringare"
+      ]
+    },
+    "krav_formagor": "Lärd, Mystisk kraft (Blixtfrämjande), Mystisk kraft (Åskvärn), Ordensmagi",
+    "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
+    "Elityrkesförmågor": [
+      "Klotblixt",
+      "Fokuserad Urladdning",
+      "Himmelsbrand"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Arvegods",
+      "Elixirkännare",
+      "Kontaktnät",
+      "Privilegierad"
+    ],
+    "tankbara_nackdelar": [
+      "Sensoriskt känslig",
+      "Övermod"
+    ],
+    "forslag_pa_slakte": [
+      "Ambrier",
+      "bortbyting"
+    ]
   }
 ]
