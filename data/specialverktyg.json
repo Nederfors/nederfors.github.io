@@ -358,7 +358,7 @@
     "stat": {
       "vikt": 1.0
     },
-    "effekt": "+1 på första framgångsslaget i varje scen."
+    "effekt": "En gång per dag +1 på första framgångsslaget i en ny scen."
   },
   {
     "id": "sp20",
