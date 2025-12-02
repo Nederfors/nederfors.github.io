@@ -2360,5 +2360,72 @@
       "Gesäll": "Handling: Aktiv. Som novis, men kraften slår nu med fysisk tyngd. Om mystikern lyckas med [Viljestark←Stark] knuffas fienden dessutom 1T4 meter bakåt och faller omkull. Om målet är en styggelse eller vandöd fräser ljuset mot dess orena hud och ger 1T4 i mystisk skada.",
       "Mästare": "Handling: Aktiv. Mystikern sänder ut en kon av bländande kraft som drabbar alla fiender framför sig. Mystikern slår [Viljestark←Stark] för varje fiende i konen. Effekterna är som på gesällnivå, men styggelser och vandöda tar 1T6 i mystisk skada istället för 1T4."
     }
+  },
+  {
+    "id": "mystiskkr75",
+    "namn": "Klotblixt",
+    "beskrivning": "Tradition: Endast tillgänglig för Stormbringare\nMaterial: En kula av magnetit\nMystikern tvingar samman den statiska laddningen i luften till ett klot av ren, sprakande energi. Klotet vibrerar av tyglad vrede och lyder mystikerns minsta vink för att slå ner på fiender med himlens kraft.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Stormbringare"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv.\nMystikern frammanar ett blixtklot inom synhåll. Klotet stannar där och avlossar en blixt varje runda mot en fiende du väljer (inom en förflyttning från klotet). Blixten träffar automatiskt och gör 1T6 blixtskada. Effekten varar tills du tappar koncentrationen [Viljestark – Skada] eller misslyckas med ett slag mot Viljestark.",
+      "Gesäll": "Handling: Aktiv.\nSom Novis, men mystikern kan flytta klotet en förflyttning varje runda som en fri handling. Klotet avlossar nu två blixtar per runda (mot samma eller olika mål).",
+      "Mästare": "Handling: Aktiv.\nMystikern detonerar klotet i en våldsam chockvåg. Alla fiender inom en förflyttning från klotet tar 1T12 blixtskada. De drabbade måste dessutom klara [Stark ← Viljestark] eller ta 1T4 i skada på Viljestark."
+    }
+  },
+  {
+    "id": "mystiskkr76",
+    "namn": "Fokuserad Urladdning",
+    "beskrivning": "Tradition: Endast tillgänglig för Stormbringare\nMaterial: En bit förkolnat trä från ett blixtnedslag\nStormbringaren låter sin kropp bli en ledare för omätliga mängder energi och förvandlas för ett ögonblick till en levande blixt. Genom att göra sig ett med stormens hastighet kastar sig mystikern över slagfältet och lämnar förödelse i sitt spår.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Stormbringare"
+      ],
+      "test": [
+        "Viljestark",
+        "Stark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv.\nMystikern förvandlas till en blixt och förflyttar sig ögonblickligen till en plats inom synhåll. Vid ankomst exploderar energin utåt. Alla fiender inom närstridsavstånd tar 1T6 i blixtskada och måste lyckas med [Stark←Viljestark] för att inte kastas omkull. Om förflyttningen påbörjas inom närstrid får alla dessa fiender frislag på mystikern som vanligt innan förflyttningen träder i kraft.",
+      "Gesäll": "Handling: Aktiv.\nSom Novis, men skadan ökar till 1T8. Förflyttningen sker med sådan hastighet och intensitet att mystikern inte drar på sig några frislag och kan passera genom fiender under rörelsen. Fiender som passeras igenom tar 1T6 i blixtskada.",
+      "Mästare": "Handling: Aktiv.\nSom Gesäll, men hastigheten och intensiteten är så stark att mystikern hinner ladda en till förflyttning under den första. Direkt när hen landar kan kraften aktiveras igen, fast på gesällnivå."
+    }
   }
 ]
