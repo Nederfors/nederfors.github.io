@@ -1019,6 +1019,23 @@
         "Viljestark"
       ]
     }
+  },
+  {
+    "id": "ri95",
+    "namn": "Himmelsbrand",
+    "beskrivning": "Tradition: Endast tillgänglig för Stormbringare\nMaterial: Bägare med järnfilspån, åskledare av koppar\nMystikern mässar till stormens styrka och pekar ut en fast punkt under bar himmel. Luften mörknar och en pelare av blixtrande ljus slår ner med himmelsk vrede.\nRitualen kräver fri sikt mot himlen. Vid nedslaget drabbas varelser i punkten av 3T10 i blixtskada. Kraften är så våldsam att den har kvaliteten Raserande och skadar byggnader och strukturer. Dessutom antänds allt brännbart material inom en förflyttnings avstånd från nedslaget omedelbart.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Stormbringare"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
   }
 
 
