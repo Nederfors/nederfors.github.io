@@ -344,7 +344,7 @@
   {
     "id": "sp19",
     "namn": "Förberedelsesäck",
-    "beskrivning": "Ett lätt packsystem med färdiga satser för alla möjliga händelser, rollpersonen är helt enkelt kittad för vad som helst. När en ny scen börjar får bäraren +1 på sitt första framgångsslag under den.",
+    "beskrivning": "Ett lätt packsystem med färdiga satser för alla möjliga händelser, rollpersonen är helt enkelt kittad för vad som helst. En gång per dag, när en ny scen börjar får bäraren +1 på sitt första framgångsslag under den.",
     "taggar": {
       "typ": [
         "Specialverktyg"
