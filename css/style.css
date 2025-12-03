@@ -230,6 +230,23 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   height: 1.85rem;
 }
 
+.defense-action-btn {
+  padding: .45rem .85rem;
+  background: var(--card-border);
+  color: var(--txt);
+  font-size: .95rem;
+}
+
+.defense-action-btn.active {
+  background: var(--accent);
+  color: #fff;
+}
+
+.defense-action-btn .btn-icon {
+  width: 1.4rem;
+  height: 1.4rem;
+}
+
 .mini-btn .btn-icon {
   width: 1.55rem;
   height: 1.55rem;
@@ -290,6 +307,29 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
+}
+
+.summary-section-header {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+}
+
+.summary-section-header h3 {
+  margin: 0;
+}
+
+.summary-section-header .summary-action {
+  margin-left: auto;
+}
+
+.summary-section-header .char-btn {
+  width: auto;
+}
+
+.summary-panel .summary-section-header h3,
+body[data-role="summary"] .summary-section-header h3 {
+  margin: 0;
 }
 
 .summary-section ul {
@@ -2392,6 +2432,7 @@ select.level {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-wrap: wrap;
   gap: .55rem;
   margin: 0 auto;
 }
@@ -3544,7 +3585,8 @@ select.level {
 #vehiclePopup,
 #vehicleRemovePopup,
 #vehicleQtyPopup,
-#vehicleMoneyPopup {
+#vehicleMoneyPopup,
+#defenseCalcPopup {
   position: fixed;
   inset: 0;
   width: 100%;
@@ -3558,11 +3600,13 @@ select.level {
 #vehiclePopup.open,
 #vehicleRemovePopup.open,
 #vehicleQtyPopup.open,
-#vehicleMoneyPopup.open { display: flex; }
+#vehicleMoneyPopup.open,
+#defenseCalcPopup.open { display: flex; }
 #vehiclePopup .popup-inner,
 #vehicleRemovePopup .popup-inner,
 #vehicleQtyPopup .popup-inner,
-#vehicleMoneyPopup .popup-inner {
+#vehicleMoneyPopup .popup-inner,
+#defenseCalcPopup .popup-inner {
   background: var(--panel);
   border: 1.5px solid var(--border);
   border-radius: 1.2rem 1.2rem 0 0;
@@ -3580,11 +3624,13 @@ select.level {
 #vehiclePopup.open .popup-inner,
 #vehicleRemovePopup.open .popup-inner,
 #vehicleQtyPopup.open .popup-inner,
-#vehicleMoneyPopup.open .popup-inner { transform: translateY(0); }
+#vehicleMoneyPopup.open .popup-inner,
+#defenseCalcPopup.open .popup-inner { transform: translateY(0); }
 #vehiclePopup .popup-inner button,
 #vehicleRemovePopup .popup-inner button,
 #vehicleQtyPopup .popup-inner button,
-#vehicleMoneyPopup .popup-inner button { width: 100%; }
+#vehicleMoneyPopup .popup-inner button,
+#defenseCalcPopup .popup-inner button { width: 100%; }
 #entrySortPopup {
   position: fixed;
   inset: 0;
@@ -3681,6 +3727,129 @@ select.level {
 #vehicleItemList .vehicle-money-inputs input {
   flex: 1 1 6rem;
   min-width: 4.5rem;
+}
+
+#defenseCalcPopup {
+  text-align: left;
+}
+
+#defenseCalcPopup .popup-inner {
+  text-align: left;
+}
+
+#defenseCalcPopup .defense-calc-card {
+  display: flex;
+  flex-direction: column;
+  gap: .55rem;
+  border: 2px solid var(--card-border);
+  border-radius: .85rem;
+  padding: .75rem .85rem;
+  background: var(--card);
+}
+
+#defenseCalcPopup .defense-calc-card + .defense-calc-card {
+  margin-top: .65rem;
+}
+
+#defenseCalcPopup .defense-calc-card-dancing {
+  border-color: var(--accent);
+  background: linear-gradient(135deg, rgba(255,255,255,.05), rgba(255,255,255,.02)), var(--card);
+}
+
+#defenseCalcPopup:not(.defense-calc-has-dancing) .defense-calc-card-dancing {
+  display: none;
+}
+
+#defenseCalcPopup .defense-calc-field {
+  display: flex;
+  flex-direction: column;
+  gap: .35rem;
+}
+
+#defenseCalcPopup .defense-calc-field label,
+#defenseCalcPopup .defense-calc-heading {
+  font-weight: 600;
+  font-size: .95rem;
+  color: var(--txt);
+}
+
+#defenseCalcPopup select {
+  width: 100%;
+  padding: .55rem .7rem;
+  border-radius: .6rem;
+  border: 2px solid var(--card-border);
+  background: var(--bg);
+  color: var(--txt);
+}
+
+#defenseCalcPopup .defense-item-list {
+  display: flex;
+  flex-direction: column;
+  gap: .4rem;
+}
+
+#defenseCalcPopup .defense-item-list .price-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: var(--bg);
+  border: 2px solid var(--card-border);
+  border-radius: .6rem;
+  padding: .4rem .6rem;
+}
+
+#defenseCalcPopup .defense-item-list .price-item span {
+  flex: 1;
+}
+
+#defenseCalcPopup .defense-item-list .price-item input[type="checkbox"] {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid var(--card-border);
+  border-radius: .25rem;
+  background: var(--bg);
+  cursor: pointer;
+}
+
+#defenseCalcPopup .defense-item-list .price-item input[type="checkbox"]:checked {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+
+#defenseCalcPopup .defense-item-meta {
+  display: flex;
+  gap: .35rem;
+  flex-wrap: wrap;
+  color: var(--subtxt);
+  font-size: .9rem;
+}
+
+#defenseCalcPopup .defense-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: .2rem;
+  padding: .1rem .35rem;
+  border-radius: .35rem;
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--card-border);
+  font-size: .85rem;
+}
+
+#defenseCalcPopup .defense-chip.balanced { border-color: rgba(143, 218, 140, .7); color: #8fda8c; }
+#defenseCalcPopup .defense-chip.shield { border-color: rgba(130, 191, 255, .6); color: #9bc8ff; }
+#defenseCalcPopup .defense-chip.long { border-color: rgba(255, 214, 140, .6); color: #ffd68c; }
+
+#defenseCalcPopup .defense-calc-group .defense-item-list {
+  margin-top: .1rem;
+}
+
+#defenseCalcPopup .defense-calc-card .popup-desc {
+  margin: 0;
+}
+
+#defenseCalcPopup .confirm-row {
+  margin-top: .75rem;
 }
 
 .vehicle-group {
@@ -3857,42 +4026,6 @@ select.level {
   gap: .6rem;
 }
 #artPopup .popup-inner button { width: 100%; }
-
-/* ---------- Popup för försvarskaraktärsdrag ---------- */
-#defensePopup {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  display: none;
-  align-items: flex-end;
-  justify-content: center;
-  background: rgba(0,0,0,.6);
-  z-index: 3000;
-}
-#defensePopup.open { display: flex; }
-#defensePopup .popup-inner {
-  background: var(--panel);
-  border: 1.5px solid var(--border);
-  border-radius: 1.2rem 1.2rem 0 0;
-  box-shadow: var(--shadow);
-  padding: 1.5rem 1.4rem 2rem;
-  width: 100%;
-  max-width: 420px;
-  text-align: center;
-  transform: translateY(100%);
-  transition: transform .25s ease;
-  display: flex;
-  flex-direction: column;
-  gap: .8rem;
-}
-#defensePopup.open .popup-inner { transform: translateY(0); }
-#defensePopup #defenseOptions {
-  display: flex;
-  flex-direction: column;
-  gap: .6rem;
-}
-#defensePopup .popup-inner button { width: 100%; }
 
 /* ---------- Popup för PDF-bank ---------- */
 #pdfPopup {

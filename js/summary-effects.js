@@ -73,6 +73,7 @@
     'Negativa kvaliteter',
     'Övrigt'
   ];
+  const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 
   const EFFECT_STATE = {
     summaryRenderer: null,
@@ -497,7 +498,7 @@
 
     const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list) : 'Kvick';
     const kvickForDef = vals[defTrait];
-    const defenseList = window.calcDefense ? calcDefense(kvickForDef) : [];
+    const defenseList = window.calcDefense ? calcDefense(kvickForDef, { mode: 'standard' }) : [];
     const defenseEntries = (Array.isArray(defenseList) ? defenseList : [])
       .map(def => {
         if (!def || typeof def !== 'object') return null;
@@ -514,6 +515,19 @@
     const defenseDisplayValue = Number.isFinite(primaryDefense) && primaryDefense > Number.NEGATIVE_INFINITY
       ? formatNumber(primaryDefense)
       : formatNumber(typeof kvickForDef === 'number' ? kvickForDef : null);
+    const dancingTrait = window.getDancingDefenseTraitName ? getDancingDefenseTraitName(list) : '';
+    const dancingList = dancingTrait && window.calcDefense
+      ? calcDefense(vals[dancingTrait], { mode: 'dancing' })
+      : [];
+    const dancingPrimary = (Array.isArray(dancingList) ? dancingList : []).reduce((max, entry) => {
+      const val = typeof entry?.value === 'number' ? entry.value : Number(entry?.value);
+      if (!Number.isFinite(val)) return max;
+      return Math.max(max, val);
+    }, Number.NEGATIVE_INFINITY);
+    const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
+      ? storeHelper.getDefenseSetup(store)
+      : null;
+    const defenseActionBtn = `<button type="button" class="char-btn icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Beräkna försvar</span></button>`;
 
     const cond = [];
     if(storeHelper.abilityLevel(list,'Fint') >= 1){
@@ -638,9 +652,13 @@
     summarySections.push({
       title: 'Försvar',
       layout: 'grid',
+      action: defenseActionBtn,
       items: [
         { label: 'Försvar', value: defenseDisplayValue },
-        { label: 'Försvarstärning', value: defTrait }
+        { label: 'Försvarstärning', value: defTrait },
+        ...(Number.isFinite(dancingPrimary) && dancingPrimary > Number.NEGATIVE_INFINITY
+          ? [{ label: 'Försvar (Dansande v.)', value: formatNumber(dancingPrimary) }]
+          : [])
       ]
     });
 
@@ -715,6 +733,9 @@
       if (Array.isArray(section.sectionClasses)) {
         section.sectionClasses.filter(Boolean).forEach(cls => sectionClasses.push(cls));
       }
+      const headerHtml = section.action
+        ? `<div class="summary-section-header"><h3>${escapeHtml(section.title)}</h3><div class="summary-action">${section.action}</div></div>`
+        : `<h3>${escapeHtml(section.title)}</h3>`;
       const items = (section.items || []).map(row => {
         if (row.text) {
           return `<li>${escapeHtml(row.text)}</li>`;
@@ -748,7 +769,7 @@
         const valueText = row.value === null || row.value === undefined ? '–' : String(row.value);
         return `<li><span class="summary-key">${escapeHtml(labelText)}</span><span class="${classNames.join(' ')}">${escapeHtml(valueText)}</span></li>`;
       }).join('');
-      return `<section class="${sectionClasses.join(' ')}"><h3>${escapeHtml(section.title)}</h3><ul class="${listClasses.join(' ')}">${items}</ul></section>`;
+      return `<section class="${sectionClasses.join(' ')}">${headerHtml}<ul class="${listClasses.join(' ')}">${items}</ul></section>`;
     }).join('');
 
     return sectionsHtml;

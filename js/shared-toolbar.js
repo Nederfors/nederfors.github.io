@@ -669,9 +669,9 @@ class SharedToolbar extends HTMLElement {
                   </li>
                   <li>
                     <span class="toggle-desc">
-                      <span class="toggle-question">Tvinga försvar?</span>
+                      <span class="toggle-question">Beräkna försvar?</span>
                     </span>
-                    <button id="forceDefense" class="party-toggle icon-only" title="Välj försvarskaraktärsdrag">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
+                    <button id="forceDefense" class="party-toggle icon-only" title="Öppna försvarsberäkning">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
@@ -1090,6 +1090,46 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Beräkna försvar ---------- -->
+      <div id="defenseCalcPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Beräkna försvar</h3>
+          <div class="defense-calc-card">
+            <div class="defense-calc-heading">Grundval</div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcTrait">Karaktärsdrag</label>
+              <select id="defenseCalcTrait"></select>
+            </div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcArmor">Rustning</label>
+              <select id="defenseCalcArmor"></select>
+            </div>
+          </div>
+          <div class="defense-calc-card defense-calc-group">
+            <div class="defense-calc-heading">Vapen & sköldar</div>
+            <p id="defenseCalcEmpty" class="popup-desc" hidden></p>
+            <div id="defenseCalcWeaponList" class="defense-item-list"></div>
+          </div>
+          <div id="defenseCalcDancingCard" class="defense-calc-card defense-calc-card-dancing">
+            <div class="defense-calc-heading">Dansande vapen</div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcDancingTrait">Karaktärsdrag</label>
+              <select id="defenseCalcDancingTrait"></select>
+            </div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcDancingWeapon">Vapen</label>
+              <select id="defenseCalcDancingWeapon"></select>
+            </div>
+            <p class="popup-desc">Om inget vapen väljs används inget vapen för dansande vapen.</p>
+          </div>
+          <div class="confirm-row">
+            <button id="defenseCalcReset" class="char-btn danger" type="button">Återställ</button>
+            <button id="defenseCalcCancel" class="char-btn danger" type="button">Avbryt</button>
+            <button id="defenseCalcApply" class="char-btn" type="button">Verkställ</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
       <div id="deleteContainerPopup" class="popup popup-bottom">
         <div class="popup-inner">
@@ -1140,25 +1180,6 @@ class SharedToolbar extends HTMLElement {
           </div>
         <button id="artCancel" class="char-btn danger">Avbryt</button>
       </div>
-      </div>
-
-      <!-- ---------- Popup Försvarskaraktärsdrag ---------- -->
-      <div id="defensePopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Försvarskaraktärsdrag</h3>
-          <div id="defenseOptions">
-            <button data-trait="" class="char-btn">Automatiskt</button>
-            <button data-trait="Diskret" class="char-btn">Diskret</button>
-            <button data-trait="Kvick" class="char-btn">Kvick</button>
-            <button data-trait="Listig" class="char-btn">Listig</button>
-            <button data-trait="Stark" class="char-btn">Stark</button>
-            <button data-trait="Träffsäker" class="char-btn">Träffsäker</button>
-            <button data-trait="Vaksam" class="char-btn">Vaksam</button>
-            <button data-trait="Viljestark" class="char-btn">Viljestark</button>
-            <button data-trait="Övertygande" class="char-btn">Övertygande</button>
-          </div>
-          <button id="defenseCancel" class="char-btn danger">Avbryt</button>
-        </div>
       </div>
 
       <!-- ---------- Popup Sortering ---------- -->
@@ -1896,7 +1917,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

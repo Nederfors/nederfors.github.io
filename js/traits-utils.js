@@ -1,8 +1,91 @@
 (function(window){
-  function calcDefense(kvick){
+  const STAFF_NAMES = ['runstav', 'vandringsstav', 'tr\u00e4stav'];
+  const isBalancedQuality = q => {
+    const txt = String(q || '').toLowerCase();
+    return txt.startsWith('balanser');
+  };
+
+  function flattenInventoryWithPath(arr, prefix = []) {
+    return (Array.isArray(arr) ? arr : []).reduce((acc, row, idx) => {
+      const path = [...prefix, idx];
+      acc.push({ row, path });
+      if (Array.isArray(row?.contains)) {
+        acc.push(...flattenInventoryWithPath(row.contains, path));
+      }
+      return acc;
+    }, []);
+  }
+
+  function getAllQualities(row, entry) {
+    if (!row || !entry) return [];
+    const tagger = entry.taggar || {};
+    const baseQ = [
+      ...(tagger.kvalitet || []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const removed = Array.isArray(row.removedKval) ? row.removedKval : [];
+    const extra = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
+    return [
+      ...baseQ.filter(q => !removed.includes(q)),
+      ...extra
+    ];
+  }
+
+  function resolveDefenseSelection(inv, mode = 'standard') {
+    const setup = typeof storeHelper.getDefenseSetup === 'function'
+      ? storeHelper.getDefenseSetup(store)
+      : { enabled: false, armor: null, weapons: [] };
+    if (!setup || !setup.enabled) {
+      return { enabled: false, armor: null, weapons: [] };
+    }
+    const flat = flattenInventoryWithPath(inv);
+    const byPath = new Map(flat.map(obj => [obj.path.join('.'), obj]));
+    const matchItem = (item) => {
+      if (!item) return null;
+      const pathStr = Array.isArray(item.path) ? item.path.join('.') : '';
+      if (pathStr && byPath.has(pathStr)) return byPath.get(pathStr);
+      const fallbackId = typeof item.id === 'string' ? item.id : '';
+      const fallbackName = typeof item.name === 'string' ? item.name : '';
+      if (!fallbackId && !fallbackName) return null;
+      return flat.find(obj => {
+        if (!obj?.row) return false;
+        if (fallbackId && obj.row.id === fallbackId) return true;
+        if (fallbackName && obj.row.name === fallbackName) return true;
+        return false;
+      }) || null;
+    };
+    const armor = matchItem(setup.armor);
+    const weapons = mode === 'dancing'
+      ? (setup.dancingWeapon ? [matchItem(setup.dancingWeapon)].filter(Boolean) : [])
+      : (Array.isArray(setup.weapons) ? setup.weapons.map(matchItem).filter(Boolean) : []);
+    return { enabled: true, armor, weapons };
+  }
+
+  function calcDefense(traitValue, opts = {}){
+    const mode = opts.mode === 'dancing' ? 'dancing' : 'standard';
     const inv = storeHelper.getInventory(store);
-    const nameMap = invUtil.makeNameMap(inv);
     const list = storeHelper.getCurrentList(store);
+    const selection = resolveDefenseSelection(inv, mode);
+    const flatInv = flattenInventoryWithPath(inv);
+    const nameMap = invUtil.makeNameMap(flatInv.map(f => f.row));
+    const baseTraitVal = Number.isFinite(traitValue) ? traitValue : 0;
+
+    if (mode === 'dancing') {
+      if (storeHelper.abilityLevel(list, 'Dansande vapen') < 3) {
+        return [];
+      }
+      const weaponItems = Array.isArray(selection.weapons) ? selection.weapons : [];
+      const hasBalancedWeapon = weaponItems.some(obj => {
+        const entry = invUtil.getEntry(obj?.row?.id || obj?.row?.name);
+        if (!entry) return false;
+        const quals = getAllQualities(obj.row, entry);
+        return quals.some(isBalancedQuality);
+      });
+      const weaponName = weaponItems.length ? nameMap.get(weaponItems[0].row) : '';
+      const value = Math.max(1, baseTraitVal + (hasBalancedWeapon ? 1 : 0));
+      return [{ name: weaponName || '', value, source: 'dancing' }];
+    }
+
     const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
     const hasSensorySensitive = list.some(p => p.namn === 'Sensoriskt känslig');
 
@@ -15,55 +98,55 @@
       .filter(x => x.namn === hamRobustName)
       .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
 
+    const resolvedArmor = selection.enabled && selection.armor ? [selection.armor] : [];
+    const resolvedWeapons = mode === 'dancing'
+      ? selection.weapons || []
+      : (selection.enabled ? selection.weapons : null);
+
+    const armorItems = selection.enabled
+      ? (resolvedArmor.length ? resolvedArmor : [])
+      : flatInv.filter(obj => {
+          const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+          return entry && (entry.taggar?.typ || []).includes('Rustning');
+        });
+
+    const weaponItems = (resolvedWeapons && Array.isArray(resolvedWeapons))
+      ? resolvedWeapons
+      : (mode === 'dancing'
+          ? []
+          : flatInv.filter(obj => {
+              const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+              const types = entry?.taggar?.typ || [];
+              return entry && (types.includes('Vapen') || types.includes('Sköld'));
+            }));
+
     let hasBalancedWeapon = false;
     let hasLongWeapon = false;
     let hasLongStaff = false;
     let hasShield = false;
-    let weaponCount = 0;
-    inv.forEach(row => {
-      const entry = invUtil.getEntry(row.id || row.name);
-      if (!entry) return;
+    const weaponCount = weaponItems.reduce((count, obj) => {
+      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+      if (!entry) return count;
       const types = entry.taggar?.typ || [];
-      if (!types.includes('Vapen') && !types.includes('Sköld')) return;
-      weaponCount += 1;
+      if (!types.includes('Vapen') && !types.includes('Sköld')) return count;
       if (types.includes('Sköld')) hasShield = true;
-      const tagger = entry.taggar || {};
-      const baseQ = [
-        ...(tagger.kvalitet || []),
-        ...splitQuals(entry.kvalitet)
-      ];
-      const removed = row.removedKval || [];
-      const allQ = [
-        ...baseQ.filter(q => !removed.includes(q)),
-        ...(row.kvaliteter || [])
-      ];
-      if (allQ.includes('Balanserat')) hasBalancedWeapon = true;
-      if (allQ.includes('L\u00e5ngt')) {
+      const quals = getAllQualities(obj.row, entry);
+      if (quals.some(isBalancedQuality)) hasBalancedWeapon = true;
+      if (quals.includes('L\u00e5ngt')) {
         hasLongWeapon = true;
-        const lname = (row.name || '').toLowerCase();
-        if ([
-          'runstav',
-          'vandringsstav',
-          'tr\u00e4stav'
-        ].includes(lname)) {
+        const lname = (obj.row.name || '').toLowerCase();
+        if (STAFF_NAMES.includes(lname)) {
           hasLongStaff = true;
         }
       }
-    });
+      return count + 1;
+    }, 0);
 
-    let res = inv.reduce((out,row)=>{
+    let res = armorItems.reduce((out,obj)=>{
+      const row = obj.row;
       const entry = invUtil.getEntry(row.id || row.name);
       if(!entry || !((entry.taggar?.typ||[]).includes('Rustning'))) return out;
-      const tagger = entry.taggar || {};
-      const baseQ = [
-        ...(tagger.kvalitet || []),
-        ...splitQuals(entry.kvalitet)
-      ];
-      const removed = row.removedKval || [];
-      const allQ = [
-        ...baseQ.filter(q=>!removed.includes(q)),
-        ...(row.kvaliteter || [])
-      ];
+      const allQ = getAllQualities(row, entry);
       let limit = entry.stat?.['begränsning'] || 0;
       let stonePen = 0;
       if(allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
@@ -72,11 +155,11 @@
       if(rustLvl >= 2) limit = 0;
       limit += stonePen;
       const armorPenalty = hasSensorySensitive ? 2 : 0;
-      out.push({ name: nameMap.get(row), value: kvick + limit - armorPenalty });
+      out.push({ name: nameMap.get(row), value: baseTraitVal + limit - armorPenalty });
       return out;
     }, []);
 
-    res = res.length ? res : [ { value: kvick } ];
+    res = res.length ? res : [ { value: baseTraitVal } ];
 
     if (robustPenalty) {
       res.forEach(r => { r.value -= robustPenalty; });
@@ -112,7 +195,7 @@
 
     let hamRes = [];
     if (hamRobustPenalty) {
-      hamRes = [ { name: hamRobustName, value: kvick - hamRobustPenalty } ];
+      hamRes = [ { name: hamRobustName, value: baseTraitVal - hamRobustPenalty } ];
       if (mantleLvl >= 1) {
         hamRes.forEach(r => { r.value += 1; });
       }
@@ -121,15 +204,22 @@
     res.forEach(r => { r.value = Math.max(1, r.value); });
     hamRes.forEach(r => { r.value = Math.max(1, r.value); });
 
-    return res.concat(hamRes);
+    return res.concat(hamRes).map(entry => ({
+      ...entry,
+      source: mode
+    }));
   }
 
   function getDefenseTraitName(list) {
+    const setup = typeof storeHelper.getDefenseSetup === 'function'
+      ? storeHelper.getDefenseSetup(store)
+      : null;
+    if (setup?.enabled && setup.trait) return setup.trait;
+
     const forced = storeHelper.getDefenseTrait(store);
     if (forced) return forced;
 
     const ABILITY_TRAITS = [
-      { ability: 'Dansande vapen', level: 3, trait: 'Viljestark' },
       { ability: 'Fint', level: 2, trait: 'Diskret' },
       { ability: ['Sjätte Sinne', 'Sjätte sinne'], level: 2, trait: 'Vaksam' },
       { ability: 'Taktiker', level: 2, trait: 'Listig' },
@@ -145,6 +235,15 @@
     }
 
     return 'Kvick';
+  }
+
+  function getDancingDefenseTraitName(list) {
+    const setup = typeof storeHelper.getDefenseSetup === 'function'
+      ? storeHelper.getDefenseSetup(store)
+      : null;
+    if (setup?.dancingTrait) return setup.dancingTrait;
+    if (storeHelper.abilityLevel(list, 'Dansande vapen') >= 3) return 'Viljestark';
+    return '';
   }
 
   function renderTraits(){
@@ -194,7 +293,16 @@
     };
 
     const defTrait = getDefenseTraitName(list);
-    const defs = calcDefense(vals[defTrait]);
+    const defs = calcDefense(vals[defTrait], { mode: 'standard' });
+    const dancingTrait = getDancingDefenseTraitName(list);
+    const dancingDefs = dancingTrait ? calcDefense(vals[dancingTrait], { mode: 'dancing' }) : [];
+    if (dom.defenseCalcBtn) {
+      const setup = typeof storeHelper.getDefenseSetup === 'function'
+        ? storeHelper.getDefenseSetup(store)
+        : null;
+      dom.defenseCalcBtn.classList.toggle('active', Boolean(setup?.enabled));
+      dom.defenseCalcBtn.setAttribute('aria-pressed', setup?.enabled ? 'true' : 'false');
+    }
 
     dom.traits.innerHTML = KEYS.map(k => {
       const val = vals[k];
@@ -265,6 +373,13 @@
       if (k === defTrait) {
         defs.forEach(d => {
           extras.push(`Försvar${d.name ? ' (' + d.name + ')' : ''}: ${d.value}`);
+        });
+      }
+
+      if (k === dancingTrait && dancingDefs.length) {
+        dancingDefs.forEach(d => {
+          const label = d.name ? `Försvar (Dansande v. ${d.name})` : 'Försvar (Dansande v.)';
+          extras.push(`${label}: ${d.value}`);
         });
       }
 
@@ -394,4 +509,5 @@
   window.bindTraits = bindTraits;
   window.calcDefense = calcDefense;
   window.getDefenseTraitName = getDefenseTraitName;
+  window.getDancingDefenseTraitName = getDancingDefenseTraitName;
 })(window);

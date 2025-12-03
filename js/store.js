@@ -438,6 +438,7 @@
       possessionRemoved: 0,
       hamnskifteRemoved: [],
       forcedDefense: '',
+      defenseSetup: defaultDefenseSetup(),
       notes: defaultNotes(),
       darkPastSuppressed: false,
       nilasPopupShown: false,
@@ -496,6 +497,12 @@
     if (data.forcedDefense === undefined) {
       data.forcedDefense = '';
       mutated = true;
+    }
+    if (!data.defenseSetup) {
+      data.defenseSetup = defaultDefenseSetup();
+      mutated = true;
+    } else {
+      data.defenseSetup = normalizeDefenseSetup(data.defenseSetup);
     }
     if (data.nilasPopupShown === undefined) {
       data.nilasPopupShown = false;
@@ -1079,6 +1086,51 @@
     };
   }
 
+  function defaultDefenseSetup() {
+    return {
+      enabled: false,
+      trait: '',
+      armor: null,
+      weapons: [],
+      dancingTrait: '',
+      dancingWeapon: null
+    };
+  }
+
+  function normalizeDefensePath(path) {
+    if (!Array.isArray(path)) return [];
+    const nums = path.map(n => Number(n)).filter(n => Number.isInteger(n) && n >= 0);
+    return nums.length ? nums : [];
+  }
+
+  function normalizeDefenseItem(item) {
+    if (!item || typeof item !== 'object') return null;
+    const normalizedPath = normalizeDefensePath(item.path);
+    const id = typeof item.id === 'string' ? item.id : undefined;
+    const name = typeof item.name === 'string' ? item.name : undefined;
+    if (!normalizedPath.length && !id && !name) return null;
+    return {
+      path: normalizedPath,
+      id,
+      name
+    };
+  }
+
+  function normalizeDefenseSetup(setup) {
+    const base = { ...defaultDefenseSetup(), ...(setup || {}) };
+    const weapons = Array.isArray(base.weapons)
+      ? base.weapons.map(normalizeDefenseItem).filter(Boolean)
+      : [];
+    return {
+      enabled: Boolean(base.enabled),
+      trait: typeof base.trait === 'string' ? base.trait : '',
+      armor: normalizeDefenseItem(base.armor),
+      weapons,
+      dancingTrait: typeof base.dancingTrait === 'string' ? base.dancingTrait : '',
+      dancingWeapon: normalizeDefenseItem(base.dancingWeapon)
+    };
+  }
+
   function getMoney(store) {
     if (!store.current) return defaultMoney();
     const data = store.data[store.current] || {};
@@ -1360,6 +1412,19 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].forcedDefense = trait || '';
+    persistCurrentCharacter(store);
+  }
+
+  function getDefenseSetup(store) {
+    if (!store.current) return defaultDefenseSetup();
+    const data = store.data[store.current] || {};
+    return normalizeDefenseSetup(data.defenseSetup);
+  }
+
+  function setDefenseSetup(store, setup) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].defenseSetup = normalizeDefenseSetup(setup);
     persistCurrentCharacter(store);
   }
 
@@ -2710,6 +2775,8 @@ function defaultTraits() {
     setPartyArtefacter,
     getDefenseTrait,
     setDefenseTrait,
+    getDefenseSetup,
+    setDefenseSetup,
     getArtifactEffects,
     setArtifactEffects,
     getManualAdjustments,
