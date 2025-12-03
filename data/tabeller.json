@@ -1613,114 +1613,128 @@
 },
   {
     "id": "ta23",
-    "namn": "Perfekt slag",
+    "namn": "Perfekt slag överskott",
     "taggar": { "typ": ["Tabell"] },
     "kolumner": [
       "effektivt värde",
+      "överskott",
       "perfekt slag på"
     ],
     "rader": [
       {
-        "effektivt värde": "20",
+        "effektivt värde": "21",
+        "överskott": "+1",
         "perfekt slag på": "1–2"
       },
       {
-        "effektivt värde": "21",
+        "effektivt värde": "22",
+        "överskott": "+2",
         "perfekt slag på": "1–3"
       },
       {
-        "effektivt värde": "22",
+        "effektivt värde": "23",
+        "överskott": "+3",
         "perfekt slag på": "1–4"
       },
       {
-        "effektivt värde": "23",
+        "effektivt värde": "24",
+        "överskott": "+4",
         "perfekt slag på": "1–5"
       },
       {
-        "effektivt värde": "24",
+        "effektivt värde": "25",
+        "överskott": "+5",
         "perfekt slag på": "1–6"
       },
       {
-        "effektivt värde": "25",
+        "effektivt värde": "26",
+        "överskott": "+6",
         "perfekt slag på": "1–7"
       },
       {
-        "effektivt värde": "26",
+        "effektivt värde": "27",
+        "överskott": "+7",
         "perfekt slag på": "1–8"
       },
       {
-        "effektivt värde": "27",
+        "effektivt värde": "28",
+        "överskott": "+8",
         "perfekt slag på": "1–9"
       },
       {
-        "effektivt värde": "28",
+        "effektivt värde": "29",
+        "överskott": "+9",
         "perfekt slag på": "1–10"
       },
       {
-        "effektivt värde": "29",
-        "perfekt slag på": "1–11"
-      },
-      {
         "effektivt värde": "30",
-        "perfekt slag på": "1–12"
+        "överskott": "+10",
+        "perfekt slag på": "1–11"
       }
     ],
-    "extra": "När en rollpersons effektiva värde (Attribut + Modifikation) når 20 eller högre, ökar sannolikheten för ett perfekt slag avsevärt. Normalt sker detta endast om tärningen visar 1, men vid ett effektivt värde på 20 expanderar intervallet till 1–2. För varje poäng över 20 ökar intervallet för perfekta slag ytterligare ett steg."
+    "extra": "När det effektiva värdet (Förmåga + Modifikation) överstiger 20, börjar chansen för perfekt slag att öka. För varje poäng över 20 (överskottet) utökas intervallet för perfekt slag med 1. Vid värde 21 lyckas man alltså perfekt på 1–2."
   },
   {
     "id": "ta24",
-    "namn": "Fatalt misslyckat",
+    "namn": "Fatalt misslyckat underskott",
     "taggar": { "typ": ["Tabell"] },
     "kolumner": [
       "effektivt värde",
+      "underskott",
       "fatalt misslyckande på"
     ],
     "rader": [
       {
         "effektivt värde": "0",
-        "fatalt misslyckande på": "19–20"
+        "underskott": "0",
+        "fatalt misslyckande på": "20 (Normal risk)"
       },
       {
         "effektivt värde": "-1",
-        "fatalt misslyckande på": "18–20"
+        "underskott": "-1",
+        "fatalt misslyckande på": "19–20"
       },
       {
         "effektivt värde": "-2",
-        "fatalt misslyckande på": "17–20"
+        "underskott": "-2",
+        "fatalt misslyckande på": "18–20"
       },
       {
         "effektivt värde": "-3",
-        "fatalt misslyckande på": "16–20"
+        "underskott": "-3",
+        "fatalt misslyckande på": "17–20"
       },
       {
         "effektivt värde": "-4",
-        "fatalt misslyckande på": "15–20"
+        "underskott": "-4",
+        "fatalt misslyckande på": "16–20"
       },
       {
         "effektivt värde": "-5",
-        "fatalt misslyckande på": "14–20"
+        "underskott": "-5",
+        "fatalt misslyckande på": "15–20"
       },
       {
         "effektivt värde": "-6",
-        "fatalt misslyckande på": "13–20"
+        "underskott": "-6",
+        "fatalt misslyckande på": "14–20"
       },
       {
         "effektivt värde": "-7",
-        "fatalt misslyckande på": "12–20"
+        "underskott": "-7",
+        "fatalt misslyckande på": "13–20"
       },
       {
         "effektivt värde": "-8",
-        "fatalt misslyckande på": "11–20"
+        "underskott": "-8",
+        "fatalt misslyckande på": "12–20"
       },
       {
         "effektivt värde": "-9",
-        "fatalt misslyckande på": "10–20"
-      },
-      {
-        "effektivt värde": "-10",
-        "fatalt misslyckande på": "9–20"
+        "underskott": "-9",
+        "fatalt misslyckande på": "11–20"
       }
     ],
-    "extra": "Om modifikationer sänker det effektiva värdet (Attribut + Modifikation) till 0 eller lägre, ökar risken drastiskt för ett fatalt misslyckande (fummel). Normalt sker detta endast om tärningen visar 20, men vid ett effektivt värde på 0 expanderar intervallet till 19–20. För varje poäng under 0 ökar intervallet för fatala slag nedåt."
+    "extra": "När det effektiva värdet (Förmåga + Modifikation) sjunker under 0, ökar risken för fatalt misslyckande. Vid värde 0 är risken fortfarande normal (endast 20), men från och med -1 expanderar intervallet nedåt (19–20)."
   }
 ]
