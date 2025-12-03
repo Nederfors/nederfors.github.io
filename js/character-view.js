@@ -1957,7 +1957,15 @@ function initCharacter() {
       if(name==='Monsterlärd'){
         if(['Gesäll','Mästare'].includes(ent.nivå)){
           if(!ent.trait && window.monsterLore){
-            monsterLore.pickSpec(spec=>{
+            const usedSpecs = list.filter(x => x?.namn === 'Monsterlärd' && x.trait).map(x => x.trait);
+            if (usedSpecs.length >= (Array.isArray(window.monsterLore?.SPECS) ? window.monsterLore.SPECS.length : 4)) {
+              ent.nivå=old;
+              select.value=old;
+              window.entryCardFactory?.syncLevelControl?.(select);
+              await alertPopup('Alla specialiseringar är redan valda.');
+              return;
+            }
+            monsterLore.pickSpec(usedSpecs, spec=>{
               if(!spec){
                 ent.nivå=old;
                 select.value=old;

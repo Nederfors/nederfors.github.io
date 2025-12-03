@@ -568,6 +568,19 @@ function initIndex() {
     }
   };
 
+  const getMonsterLoreSpecs = () => {
+    const list = window.monsterLore?.SPECS;
+    if (Array.isArray(list) && list.length) return list;
+    return ['Bestar','Kulturvarelser','Odöda','Styggelser'];
+  };
+
+  const usedMonsterLoreSpecs = (list) => {
+    if (!Array.isArray(list)) return [];
+    return list
+      .filter(x => x?.namn === 'Monsterlärd' && x.trait)
+      .map(x => x.trait);
+  };
+
   const flashRemoved = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
     const root = dom.lista || document;
@@ -1473,7 +1486,10 @@ function initIndex() {
         });
         const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
         const isInventoryEntry = isInv(p);
-        const multi = isInventoryEntry || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const isMonsterLore = p.namn === 'Monsterlärd';
+        const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
+        const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
+        const multi = isInventoryEntry || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) || monsterLoreMulti;
         let count;
         if (isInv(p)) {
           if (p.id === 'di79') {
@@ -1483,9 +1499,17 @@ function initIndex() {
             count = invList.filter(c => c.id === p.id).reduce((sum,c)=>sum+(c.qty||1),0);
           }
         } else {
-          count = charList.filter(c => c.id === p.id && !c.trait).length;
+          if (isMonsterLore) {
+            count = charList.filter(c => c.namn === p.namn && c.trait).length;
+          } else {
+            count = charList.filter(c => c.id === p.id && !c.trait).length;
+          }
         }
-        const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
+        const limit = isInv(p)
+          ? Infinity
+          : isMonsterLore
+            ? getMonsterLoreSpecs().length
+            : storeHelper.monsterStackLimit(charList, p.namn);
         const badge = multi && count > 0 ? `<span class="count-badge">×${count}</span>` : '';
         const showInfo = compact || hideDetails;
         const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
@@ -1675,7 +1699,10 @@ function initIndex() {
     const invList  = storeHelper.getInventory(store);
     const entryTypes = entry?.taggar?.typ || [];
     const isInventory = isInv(entry);
-    const multi = isInventory || (entry.kan_införskaffas_flera_gånger && entryTypes.some(t => ["Fördel","Nackdel"].includes(t)));
+    const isMonsterLore = entry.namn === 'Monsterlärd';
+    const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
+    const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
+    const multi = isInventory || (entry.kan_införskaffas_flera_gånger && entryTypes.some(t => ["Fördel","Nackdel"].includes(t))) || monsterLoreMulti;
     let count = 0;
     if (isInventory) {
       if (entry.id === 'di79') {
@@ -1687,15 +1714,23 @@ function initIndex() {
           .reduce((sum, c) => sum + (c.qty || 1), 0);
       }
     } else {
-      count = charList
-        .filter(c => {
-          if (!c || c.namn !== entry.namn) return false;
-          if (entry.id !== undefined && entry.id !== null && c.id !== entry.id) return false;
-          return !c.trait;
-        })
-        .length;
+      if (isMonsterLore) {
+        count = charList.filter(c => c?.namn === entry.namn && c.trait).length;
+      } else {
+        count = charList
+          .filter(c => {
+            if (!c || c.namn !== entry.namn) return false;
+            if (entry.id !== undefined && entry.id !== null && c.id !== entry.id) return false;
+            return !c.trait;
+          })
+          .length;
+      }
     }
-    const limit = isInventory ? Infinity : storeHelper.monsterStackLimit(charList, entry.namn);
+    const limit = isInventory
+      ? Infinity
+      : isMonsterLore
+        ? getMonsterLoreSpecs().length
+        : storeHelper.monsterStackLimit(charList, entry.namn);
     const allowAdd = !(isService(entry) || isEmployment(entry));
 
     cards.forEach(card => {
@@ -2355,8 +2390,14 @@ function initIndex() {
           return;
         }
         if (p.namn === 'Monsterlärd' && ['Gesäll','Mästare'].includes(lvl) && window.monsterLore) {
-          monsterLore.pickSpec(async spec => {
-            if(!spec) return;
+          const usedSpecs = usedMonsterLoreSpecs(list);
+          const availableSpecs = getMonsterLoreSpecs();
+          if (usedSpecs.length >= availableSpecs.length) {
+            await alertPopup('Alla specialiseringar är redan valda.');
+            return;
+          }
+          monsterLore.pickSpec(usedSpecs, async spec => {
+            if(!spec || usedSpecs.includes(spec)) return;
             const added = { ...p, nivå: lvl, trait: spec };
             list.push(added);
             await checkDisadvWarning();
@@ -2706,7 +2747,15 @@ function initIndex() {
       if(name==='Monsterlärd'){
         if(['Gesäll','Mästare'].includes(ent.nivå)){
           if(!ent.trait && window.monsterLore){
-            monsterLore.pickSpec(spec=>{
+            const usedSpecs = usedMonsterLoreSpecs(list);
+            if (usedSpecs.length >= getMonsterLoreSpecs().length) {
+              ent.nivå=old;
+              select.value=old;
+              window.entryCardFactory?.syncLevelControl?.(select);
+              await alertPopup('Alla specialiseringar är redan valda.');
+              return;
+            }
+            monsterLore.pickSpec(usedSpecs, spec=>{
               if(!spec){
                 ent.nivå=old;
                 select.value=old;
