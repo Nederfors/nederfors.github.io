@@ -1600,7 +1600,7 @@ function defaultTraits() {
 
   const ELITE_TO_BASE_MAGIC = {
     'Templár': 'Teurgi',
-    'Stavmagiker': 'Ordensmagi',
+    'Stavmagiker': 'Stavmagiker',
     'Andebesvärjare': 'Häxkonst',
     'Blodvadare': 'Häxkonst',
     'Demonolog': 'Svartkonst',
