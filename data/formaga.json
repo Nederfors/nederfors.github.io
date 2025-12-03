@@ -492,14 +492,14 @@
           "Fri"
         ],
         "Mästare": [
-          "Fri"
+          "Speciell"
         ]
       }
     },
     "nivåer": {
-      "Novis": "Handling: Fri. Rollpersonen har studerat monster och kan med ett lyckat slag i Listig känna igen och dra sig till minnes styrkor och svagheter för ett monster per runda. Spelledaren berättar för spelaren om varelsens beskrivning och värden.",
-      "Gesäll": "Handling: Fri. Rollpersonen är en erkänd monsterkännare som noga studerat en viss undergrupp av monster (välj en av Bestar, Kulturvarelser, Odöda eller Styggelser). Rollpersonen gör +1T4 extra skada mot monster ur den valda kategorin. Bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bäst bekämpar varelsen.",
-      "Mästare": "Handling: Fri. Rollpersonen gör +1T6 extra skada mot varelser ur den kategori hen har specialiserat sig på. Den bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bekämpar varelsen."
+      "Novis": "Handling: Fri. Rollpersonen studerar en fiende och söker efter blottor i dess försvar. Med ett lyckat slag mot Listig identifierar rollpersonen en sårbarhet, vilket ger +1T4 i skada på rollpersonens nästa attack mot målet. Dessutom avslöjar spelledaren ett av monstrets särdrag och dess nivå. Alternativt kan rollpersonen välja att slå ett slag mot Listig −5 för att identifiera en tydlig svaghet (t.ex. oförmögen att regenerera skada från eld). Dessa svagheter återfinns oftast hos mäktigare varelser.",
+      "Gesäll": "Handling: Fri. Rollpersonen specialiserar sig på en kategori av monster (Bestar, Kulturvarelser, Odöda eller Styggelser) och identifierar automatiskt deras särdrag. Mot denna kategori utgår alltid +1T4 i skada på alla attacker. Dessutom kan rollpersonen med ett rop och ett lyckat slag mot Listig dela sin taktiska analys med sina allierade; de får då +1T4 i skada på sina attacker mot varelser av den valda kategorin under resten av rundan.",
+      "Mästare": "Handling: Speciell. Som gesäll, men rollpersonens skadebonus mot specialkategorin höjs till +1T6. Att dela analysen med allierade (som ger dem +1T4 skada) kräver inte längre något tärningsslag. Mästaren besitter dessutom så pass bred kunskap att hen med ett lyckat Listig −5 kan använda gesällnivåns effekt även mot monster utanför sin specialisering; vid lyckat slag får hela gruppen skadebonusen."
     }
   },
   {
