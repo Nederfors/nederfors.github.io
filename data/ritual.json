@@ -973,7 +973,7 @@
   {
     "id": "ri92",
     "namn": "Själafängsel",
-    "beskrivning": "Tradition: Svartkonst\nGenom mörka bindningar och förbjudna tecken kan svartkonstnären snärja en flyende själ innan den hinner försvinna in i dödsrikets dimmor. Ritualen måste utföras över en nyligen avliden varelse (inom en timme från dödsögonblicket) och anden tvingas in i ett dyrbart föremål (värde minst 10 daler). Så länge själen hålls fången är kroppen omöjlig att resa som vandöd eller återuppväcka.\nFängelset kan senare offras för att konsumera den fångna livskraften: mystikern krossar föremålet och drar i sig energin för att antingen läka 1T12 Tålighet eller rena sitt sinne från 1T6 temporär Korruption. Vid denna handling förstörs föremålet totalt och själen förintas. Om föremålet däremot förstörs utan att den mörka konsumtionen aktiveras, bryts fängelset och själen släpps fri att vandra vidare till sin slutgiltiga vila.",
+    "beskrivning": "Tradition: Svartkonst\n Den som bär på ett kärl, fyllt av ritualen Själafälla, håller inte bara en ande fängslad, utan även en källa till förbjuden styrka. Genom att bruka mörka bindningar kan mystikern krossa fängelset och sluka den skrikande själen innan den hinner fly. Denna groteska konsumtion helar mystikerns kött (läker 1T12 Tålighet) eller tvättar bort mörkret från dennes eget sinne (renar 1T8 temporär Korruption). Priset är absolut: kärlet blir till stoft och offrets själ utplånas ur existensen. Utan denna aktiva konsumtion innebär ett krossat kärl endast att själen släpps fri.",
     "taggar": {
       "typ": [
         "Ritual"
