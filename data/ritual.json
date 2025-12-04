@@ -561,7 +561,7 @@
 {
     "id": "ri56",
   "namn": "Själafälla",
-  "beskrivning": "Tradition: Svartkonst\nMystikern binder med ett lyckat Viljestark en nyligen död varelses själ i ett förberett kärl, ofta en ädelsten innefattad i ett smycke. Döden måste ha inträffat inom en minut innan ritualen inleds, och mystikern måste befinna sig på dödsplatsen eller ha tillgång till det färska liket. Syftet med att fånga själen är oftast att hindra den från att kontaktas med ritualen Andebesvärjelse.\nSjälafällan förstörs enklast genom att kärlet krossas, men även ritualerna Bryta länk eller Exorcism kan användas på själafällan om man vill spara ädelstenen.",
+  "beskrivning": "Tradition: Svartkonst\nMystikern binder med ett lyckat Viljestark en nyligen död varelses själ i ett förberett kärl, ofta en ädelsten innefattad i ett smycke. Döden måste ha inträffat inom en minut innan ritualen inleds, och mystikern måste befinna sig på dödsplatsen eller ha tillgång till det färska liket. Syftet med att fånga själen är oftast att hindra den från att bli mål för ritualerna Andebesvärjelse eller Väcka Vandöd.\nSjälafällan förstörs enklast genom att kärlet krossas, men även ritualerna Bryta länk eller Exorcism kan användas på själafällan om man vill spara ädelstenen.",
   "taggar": {
     "typ": ["Ritual"],
     "ark_trad": ["Svartkonst"],
