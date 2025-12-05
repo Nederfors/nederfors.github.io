@@ -2222,8 +2222,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. En gång per runda kan mystikern med ett lyckat Viljestark skapa illusionära kopior av en projektil som hen själv eller en allierad just avlossat (via avståndsvapen, kastvapen eller projektilbaserade krafter). Förvirringen ger anfallaren en andra chans att lyckas med anfallsslaget.",
-      "Gesäll": "Handling: Reaktiv. Som novis, men illusionerna är så övertygande att offrets sinne tror att det träffats av flera projektiler. Vid en träff får anfallaren slå anfallets basskada en extra gång och addera resultatet till totalen.",
-      "Mästare": "Handling: Reaktiv. Som gesäll, men projektilen mångfaldigas i verkligheten genom skuggmagi. Anfallet räknas nu som två helt separata attacker mot samma mål; anfallaren slår för träff och skada individuellt för båda projektilerna."
+      "Gesäll": "Handling: Reaktiv. men projektilen mångfaldigas i verkligheten genom skuggmagi. Anfallet räknas nu som två helt separata attacker mot samma mål; anfallaren slår för träff och full skada individuellt för båda projektilerna.",
+      "Mästare": "Handling: Reaktiv. Som gesäll, men projektilerna kan synkroniseras så effektivt att de slår till samtidigt. Anfallet räknas nu som en enhetlig attack som slår för träff och full skada kombinerat för båda projektilerna."
     }
   },
   {
