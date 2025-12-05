@@ -1685,9 +1685,10 @@
     },
     "id": "mystiskkr52"
 },
-{
-    "namn": "Orokes Ödesväv",
-    "beskrivning": "Genom Orokes välsignelse får mystikern tillgång till tidens dolda väv, där varje tråd bär på ögonblick som ännu inte inträffat och minnen som redan bleknat. Med vilja och fokus kan de dra, knyta om och tänja dessa trådar för att förändra skeendet, låta handlingar ske för tidigt eller för sent, eller sudda ut avgörande stunder helt. För de som står i vägen kan detta kännas som att världen plötsligt rör sig emot dem, medan mystikern själv vandrar fritt mellan ögonblicken.",
+  {
+    "id": "mystiskkr53",
+    "namn": "Ödesväv",
+    "beskrivning": "Tradition: Häxkonst\nMaterial: En spindel i bärnsten eller en tråd av silver\nGenom att åkalla spindelgudens Orokes uråldriga pakt med ödet kan mystikern se och manipulera de osynliga trådar som binder händelser samman. Mystikern lär sig att fånga ögonblick av både framgång och misslyckande i en metafysisk väv, för att senare släppa lös dem när det gagnar den egna saken. För utomstående ser det ut som om turen vikit sig för mystikerns vilja, men i sanning är det stulna ögonblick som spelas upp på nytt.",
     "taggar": {
       "typ": [
         "Mystisk kraft"
@@ -1706,17 +1707,16 @@
           "Reaktiv"
         ],
         "Mästare": [
-          "Aktiv"
+          "Reaktiv"
         ]
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. Vid ett lyckat Viljestark kan mystikern “låsa” ett lyckat slag hen gör under scenen. En gång innan scenen tar slut kan detta resultat ersätta ett framtida slag av samma typ för mystikern. Bara ett lyckat slag kan vara låst åt gången och det förbrukas när det har använts, varpå ett nytt misslyckande kan låsas",
-      "Gesäll": "Handling: Reaktiv. Vid ett lyckat Viljestark kan mystikern “låsa” ett misslyckat slag som en motståndare gör under scenen. En gång innan scenen tar slut kan detta resultat ersätta ett framtida slag av samma typ av motståndaren. Bara ett misslyckat slag kan vara låst åt gången och det förbrukas när det har använts, varpå ett nytt misslyckande kan låsas",
-      "Mästare": "Handling: Aktiv. Mystikern snärjer tidens trådar kring sig själv och rycker till, vilket gör att hen försvinner. När som helst innan scenens slut kan hen återuppträda var som helst de rimligen kunnat nå (givet två förflyttningshandlingar per runda de varit borta) och agera omedelbart, därefter fortsätter initiativet som vanligt. Varje spelrunda som mystikern befinner sig utanför tidsrymden drabbas denne av 1 temporär korruption."
-    },
-    "id": "mystiskkr53"
-},
+      "Novis": "Handling: Reaktiv. När en varelse inom synhåll misslyckas med ett tärningsslag kan mystikern med ett lyckat Viljestark fånga misslyckandet i sin väv. Det sparade resultatet kan sedan, som en reaktion, tvingas på en fiende som ska slå ett slag; fienden använder då det sparade misslyckandet istället för att slå. Endast ett resultat kan sparas åt gången och det försvinner vid scenens slut.",
+      "Gesäll": "Handling: Reaktiv. Mystikern kan nu även fånga framgångar. När en varelse lyckas med ett slag kan mystikern med ett lyckat Viljestark väva in resultatet i sitt nät. Detta kan senare skänkas till en allierad (eller mystikern själv) som ska slå ett slag; denne får då automatiskt det sparade resultatet.",
+      "Mästare": "Handling: Reaktiv. Mystikern behärskar vävens alla trådar och kan vränga dem efter behag. Ett sparat lyckande kan nu vridas om till en perfekt framgång (1) när det ges till en allierad, och ett sparat misslyckande kan korrumperas till ett fatalt misslyckande (värde 20) när det tvingas på en fiende."
+    }
+  },
 
 {
   "namn": "Förskjutning",
