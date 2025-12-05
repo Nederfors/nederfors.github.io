@@ -2380,6 +2380,113 @@
       "Gesäll": "Handling: Reaktiv. Rollpersonen är expert på att placera hinder mellan sig själv och fienden i sista sekunden. När rollpersonen blir mål för en projektilbaserad mystisk kraft eller avståndsanfall och det finns objekt eller terräng inom räckvidd, kan hen slå ett slag mot [Kvick/Diskret←Vaksam]. Vid lyckat slag manövrerar rollpersonen så att attacken träffar miljön istället för rollpersonen. Misslyckas slaget får rollpersonen försvara sig mot anfallet som vanligt.",
       "Mästare": "Handling: Aktiv. Rollpersonen använder miljön för att skapa dödligt momentum i sina anfall—springer längs väggar, svingar sig i grenar eller studsar mot pelare för att anfalla från oväntade vinklar. Rollpersonen får med ett lyckat slag i Kvick/Diskret utföra en förflyttning inom närstrid, utan att dra på sig frislag, och en närstridsattack i samma handling. Anfallet får +1T6 i skada utöver eventuellt övertag som skapas."
     }
+  },
+  { 
+
+     "id": "form78", 
+
+     "namn": "Vinkelskytte", 
+
+
+     "beskrivning": "I de täta skogarna kring Karvosti och i Tistla Fästes trånga gränder är en rak siktlinje sällan en garanti för träff. Rollpersonen har lärt sig att utnyttja vinklar, distraktioner och fiendens fokus på annat för att placera sina pilar där de gör mest skada. Det är en stridskonst som premierar tålamod och list framför rå styrka eller hastighet, och som ofta utövas av jägare som fäller byten långt större än de själva.", 
+
+     "taggar": { 
+
+       "typ": [ 
+
+         "Förmåga" 
+
+       ], 
+
+       "ark_trad": [ 
+
+         "Jägare", 
+
+         "Tjuv" 
+
+       ], 
+
+       "test": [ 
+
+         "Träffsäker" 
+
+       ], 
+
+       "handling": { 
+
+         "Novis": [ 
+
+           "Passiv" 
+
+         ], 
+
+         "Gesäll": [ 
+
+           "Passiv" 
+
+         ], 
+
+         "Mästare": [ 
+
+           "Passiv" 
+
+         ] 
+
+       } 
+
+     }, 
+
+     "nivåer": { 
+
+
+       "Novis": "Handling: Passiv. Rollpersonen vet att utnyttja fiendens blinda vinklar. Skytten räknas ha Övertag vid attacker med avståndsvapen så länge hen befinner sig i fiendens flank eller rygg. Denna positionering räknas dock inte som att skytten flankerar fienden i syfte att ge allierade Övertag.", 
+
+
+       "Gesäll": "Handling: Passiv. Skytten siktar mot mjuka delar och blottor som uppstår när fienden är distraherad. Avståndsattacker som görs med Övertag ignorerar 1T4 av fiendens bepansring.", 
+
+
+       "Mästare": "Handling: Passiv. Skytten läser stridens kaos och hittar öppningar där inga borde finnas. Skytten räknas alltid ha Övertag mot fiender som är engagerade i närstrid med skyttens allierade, oavsett positionering. Dessutom ökar skadebonusen vid Övertag till +1T6." 
+
+     } 
+
+   },
+
+  {
+    "id": "form79",
+    "namn": "Spjutdans",
+    "beskrivning": "Spjutet är mer än en spetsig påk; i händerna på en spjutdansare är det en förlängning av kroppen, en balansstång och en dödlig huggorm i ett. Denna stridskonst, som sägs ha sitt ursprung bland de smidiga alverna i Davokars djup och de akrobatiska krigarna som fortfarande vandrar ökenområdena till öster om Ravennerna. Spjutdansen betonar rölighet och precision framför råstyrka. En spjutdansare står aldrig stilla; de flyter runt sina motståndare, använder vapnets längd för att hålla fienden på avstånd och dess skaft för att svinga sig ur farans väg.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare",
+        "Tjuv"
+      ],
+      "test": [
+        "Kvick"
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv.\n Rollpersonen rör sig som vatten runt sitt spjut och använder dess räckvidd och flöde för att styra sina attacker med en dödlig precision. \n Rollpersonen får använda sig av “Kvick” istället för “Träffsäker” för att styra sina attacker. ",
+      "Gesäll": "Handling: Aktiv\n Rollpersonen virvlar sitt vapen i dödliga bågar och slår med en otrolig hastighet \n Rollpersonen kan innan ett anfall slå [Kvick←Kvick] för att med spjutet tvinga fiender bort fienden ur närstrid. Fienden pressas ett par meter bakåt och måste återigen möta kvaliteten Långt. Om slaget lyckas får rollpersonen välja att antingen dra sig ut ur striden, eller engagera fienden på nytt varpå hen får slå ett frislag och sen anfalla som vanligt.",
+      "Mästare": "Handling: Speciell .\n Rollpersonen är en så pass van spjutdansare att hens frislag med kvaliteten “Långt” räknas som aktiva handlingar. Dessutom så slåss spjutdansaren med en så förblindande hastighet att hen lätt träffar offrets svaga punkter och gör 1T6 i skada så länge fienden befinner sig på spjutlängds avstånd."
+    }
   }
+
+
+
+
 
 ]
