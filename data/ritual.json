@@ -561,7 +561,7 @@
 {
     "id": "ri56",
   "namn": "Själafälla",
-  "beskrivning": "Tradition: Svartkonst\nMystikern binder med ett lyckat Viljestark en nyligen död varelses själ i ett förberett kärl, ofta en ädelsten innefattad i ett smycke. Döden måste ha inträffat inom en minut innan ritualen inleds, och mystikern måste befinna sig på dödsplatsen eller ha tillgång till det färska liket. Syftet med att fånga själen är oftast att hindra den från att bli mål för ritualerna Andebesvärjelse eller Väcka Vandöd.\nSjälafällan förstörs enklast genom att kärlet krossas, men även ritualerna Bryta länk eller Exorcism kan användas på själafällan om man vill spara ädelstenen.",
+  "beskrivning": "Tradition: Svartkonst\nMystikern binder med ett lyckat Viljestark en nyligen död varelses själ i ett förberett kärl, ofta en ädelsten innefattad i ett smycke. Döden måste ha inträffat inom en minut innan ritualen inleds, och mystikern måste befinna sig på dödsplatsen eller ha tillgång till det färska liket. Syftet med att fånga själen är oftast att hindra den från att kontaktas med ritualen Andebesvärjelse.\nSjälafällan förstörs enklast genom att kärlet krossas, men även ritualerna Bryta länk eller Exorcism kan användas på själafällan om man vill spara ädelstenen.",
   "taggar": {
     "typ": ["Ritual"],
     "ark_trad": ["Svartkonst"],
@@ -972,8 +972,8 @@
   },
   {
     "id": "ri92",
-    "namn": "Själaätare",
-    "beskrivning": "Tradition: Svartkonst\n Den som bär på ett kärl, fyllt av ritualen Själafälla, håller inte bara en ande fängslad, utan även en källa till förbjuden styrka. Genom att bruka mörka bindningar kan mystikern krossa fängelset och sluka den skrikande själen innan den hinner fly. Denna groteska konsumtion helar mystikerns kött (läker 1T12 Tålighet) eller tvättar bort mörkret från dennes eget sinne (renar 1T8 temporär Korruption). Priset är absolut: kärlet blir till stoft och offrets själ utplånas ur existensen. Utan denna aktiva konsumtion innebär ett krossat kärl endast att själen släpps fri.",
+    "namn": "Själafängsel",
+    "beskrivning": "Tradition: Svartkonst\nGenom mörka bindningar och förbjudna tecken kan svartkonstnären snärja en flyende själ innan den hinner försvinna in i dödsrikets dimmor. Ritualen måste utföras över en nyligen avliden varelse (inom en timme från dödsögonblicket) och anden tvingas in i ett dyrbart föremål (värde minst 10 daler). Så länge själen hålls fången är kroppen omöjlig att resa som vandöd eller återuppväcka.\nFängelset kan senare offras för att konsumera den fångna livskraften: mystikern krossar föremålet och drar i sig energin för att antingen läka 1T12 Tålighet eller rena sitt sinne från 1T6 temporär Korruption. Vid denna handling förstörs föremålet totalt och själen förintas. Om föremålet däremot förstörs utan att den mörka konsumtionen aktiveras, bryts fängelset och själen släpps fri att vandra vidare till sin slutgiltiga vila.",
     "taggar": {
       "typ": [
         "Ritual"
@@ -1031,6 +1031,55 @@
       ],
       "ark_trad": [
         "Stormbringare"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri96",
+    "namn": "Kraftruna",
+    "beskrivning": "Tradition: Symbolism\nMaterial: Blod, aska eller ockra\nSymbolisten målar en temporär kraftruna på en varelses hud eller rustning. Runan laddas med energi som kan frigöras i ett nödläge.\nMottagaren av kraftrunan kan aktivera runan som en fri handling för att få +5 på ett slag relaterat till valfritt karaktärsdrag. När runan använts bränns den bort från huden och ger 1T6 temporär Korruption till bäraren.\nVarje mystiker kan enbart ha en kraftruna aktiv åt gången.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Symbolism"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri97",
+    "namn": "Vindtjänare",
+    "beskrivning": "Tradition: Endast tillgänglig för Andebesvärjare\nMaterial: En fjäder som offras till vinden\nGenom att vissla en uråldrig melodi binder mystikern en osynlig ande till sin tjänst. Anden kan inte strida eller påverka tunga föremål, men är en utmärkt spejare och budbärare.\nVindtjänaren kan ta sig in överallt där luft kan passera, bära lätta föremål (upp till en dolks vikt), viska meddelanden på avstånd eller tjuvlyssna på samtal. Mystikern har telepatisk kontakt med tjänaren inom en kilometers avstånd.\nAnden stannar i ett dygn eller tills den skingras. Den är osynlig och kan bara förnimmas av varelser med koppling till bortomvärlden (t.ex. via Häxsyn). Den har Tålighet 1, ingen bepansring, men ett effektivt Försvar på −8 om den upptäcks.\nKostnad: Att utföra ritualen kostar 1 Erfarenhet eller 1 permanent Korruption.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Andebesvärjare"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "ri98",
+    "namn": "Vattnets väg",
+    "beskrivning": "Tradition: Häxkonst\nMaterial: Fetter från fisk och groda\nGenom att smörja kroppen med fetter och sjunga till djupens andar kan mystikern anpassa sin eller en allierads fysiologi till livet under ytan.\nHalsen spricker upp i gälar och fingrar samt tår förenas av simhud. Målet får det monstruösa särdraget Amfibisk; kan andas under vatten, simmar med full hastighet och slipper avdrag för strid i vatten.\nEffekten varar i upp till 24 timmar eller tills den påverkade kliver upp ur vattnet.",
+    "taggar": {
+      "typ": [
+        "Ritual"
+      ],
+      "ark_trad": [
+        "Häxkonst"
       ],
       "test": [
         "Viljestark"
