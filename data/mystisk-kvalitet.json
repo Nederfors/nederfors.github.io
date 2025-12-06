@@ -113,8 +113,7 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Kvalitet",
-        "Vapenkvalitet"
+        "Kvalitet"
       ]
     },
     "effekt": "Närstridsanfallare som misslyckas med Kvick tar 1t4 syraskada i 1t4 rundor."
@@ -218,8 +217,7 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Kvalitet",
-        "Vapenkvalitet"
+        "Kvalitet"
       ]
     },
     "effekt": "Laddar +1 Bepansring per lyckat slag mot försvar i rad (max +5); förbrukas vid nästa träff."
@@ -245,8 +243,7 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Kvalitet",
-        "Vapenkvalitet"
+        "Kvalitet"
       ]
     },
     "effekt": "Upp till 4 opåverkade bepansringspoäng bärs över som bonus i en runda."
@@ -254,7 +251,7 @@
   {
     "id": "mystiskkv20",
     "namn": "Vredesband",
-    "beskrivning": "Bandet kring vapnets skaft är spänt av obändig kraft och bryter i samma stund som det frigörs. När bäraren släpper lös dess vrede flammar styrkan till, men skyddet faller undan. Den runda det aktiveras får bärarens anfall +1t6 skada. Samma runda kan bäraren inte göra försvarsslag om hen blir attackerad, då vredens hetta driver bort allt fokus från att värja sig.",
+    "beskrivning": "Bandet kring vapnets skaft är spänt av obändig kraft och bryter i samma stund som det frigörs. När bäraren släpper lös dess vrede flammar styrkan till, men skyddet faller undan. Den runda det aktiveras får ett av bärarens anfall +1t6 skada. Samma runda kan bäraren inte göra försvarsslag om hen blir attackerad, då vredens hetta driver bort allt fokus från att värja sig.",
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
@@ -325,7 +322,6 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Vapenkvalitet",
         "Kvalitet"
       ]
     },
@@ -339,8 +335,7 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Kvalitet",
-        "Vapenkvalitet"
+        "Kvalitet"
       ]
     },
     "effekt": "Byt förestående korruption mot lika mycket skada; skadan läks endast naturligt."
@@ -357,5 +352,18 @@
       ]
     },
     "effekt": "Aktivera för 1t4 temporär korruption; skydd växer per runda tills träff och förbrukas då."
+  },
+  {
+    "id": "mystiskkv28",
+    "namn": "Blodsvultet",
+    "beskrivning": "I strid måste vapnet få känna fiendens blod. Varje runda det gör skada ökar skadan på nästa anfall med +1, kumulativt, då vapnet ivrar efter mer. Men om vapnet missar, inte biter genom pansar eller träffar ett blodlöst mål nollställs bonusen direkt av dess besvikelse.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Vapenkvalitet",
+        "Kvalitet"
+      ]
+    },
+    "effekt": "Skadan ökar med +1 kumulativt för varje runda vapnet orsakar skada; nollställs vid miss, ingen skada eller blodlöst mål."
   }
 ]
