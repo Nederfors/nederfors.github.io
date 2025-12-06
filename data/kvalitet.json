@@ -51,13 +51,12 @@
   {
     "id": "kv5",
     "namn": "Smidigt",
-    "beskrivning": "Rustningen är ovanligt smidig och dess begränsning är lägre. En smidig lätt rustning har ingen begränsning, medan en smidig medeltung rustning får (−1) och en tung rustning har begränsning −2. En sköld som är smidig kan bäras på armen, redo att parera med, samtidigt som båda händerna används till annat, exempelvis ett långt eller tungt vapen. Även avståndsvapen kan användas utan problem tillsammans med en smidig sköld.",
+    "beskrivning": "Rustningen eller skölden är ovanligt smidig och dess begränsning är lägre. En smidig lätt rustning har ingen begränsning, medan en smidig medeltung rustning får (−1) och en tung rustning har begränsning −2. En sköld som är smidig kan bäras på armen, redo att parera med, samtidigt som båda händerna används till annat, exempelvis ett långt eller tungt vapen. Även avståndsvapen kan användas utan problem tillsammans med en smidig sköld.",
     "taggar": {
       "typ": [
         "Kvalitet",
         "Sköldkvalitet",
-        "Rustningskvalitet",
-        "Vapenkvalitet"
+        "Rustningskvalitet"
       ]
     },
     "effekt": "Minskad begränsning; smidig sköld kan bäras på armen och tillåter tvåhands- och avståndsvapen."
@@ -94,8 +93,7 @@
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Rustningskvalitet",
-        "Vapenkvalitet"
+        "Rustningskvalitet"
       ]
     },
     "effekt": "Rustningen ger +1 på bepansringsslag."
@@ -217,8 +215,7 @@
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Rustningskvalitet",
-        "Vapenkvalitet"
+        "Rustningskvalitet"
       ]
     },
     "effekt": "+1t4 i Bepansring mot avståndsattacker."
