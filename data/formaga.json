@@ -2640,11 +2640,11 @@
         },
         "Gesäll": {
           "handling": "Passiv",
-          "skadetyp": "Ingen"
+          "skadetyp": "Ignorerar bepansring"
         },
         "Mästare": {
           "handling": "Passiv",
-          "skadetyp": "Ingen"
+          "skadetyp": "Yttre fysisk"
         }
       }
     },
@@ -2680,7 +2680,7 @@
         },
         "Mästare": {
           "handling": "Speciell",
-          "skadetyp": "Ingen"
+          "skadetyp": "Yttre fysisk"
         }
       }
     },
