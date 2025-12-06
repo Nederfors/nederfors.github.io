@@ -13,16 +13,19 @@
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Förflyttning"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Förflyttning",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -45,16 +48,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -74,16 +80,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -106,16 +115,19 @@
       "test": [
         "Övertygande"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -135,16 +147,19 @@
       "ark_trad": [
         "Krigare, Mystiker, Tjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -167,16 +182,19 @@
       "test": [
         "Diskret"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -199,16 +217,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Gift"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Gift"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Gift"
+        }
       }
     },
     "nivåer": {
@@ -228,16 +249,19 @@
       "ark_trad": [
         "Mystiker, Häxkonst"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -260,16 +284,19 @@
       "test": [
         "Vaksam"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -292,16 +319,19 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -324,16 +354,19 @@
       "test": [
         "Övertygande"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -356,16 +389,19 @@
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -388,16 +424,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -420,16 +459,19 @@
       "test": [
         "Diskret"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk & Inre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk & Inre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk & Inre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -446,30 +488,31 @@
       "typ": [
         "Förmåga"
       ],
-      "ark_trad": [
-      ],
+      "ark_trad": [],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
-  "Novis": "Handling: Aktiv. Rollpersonen är en skicklig fältskär. Ett lyckat slag i Listig återställer 1T4 Tålighet hos patienten. Vid användning av en örtkur lyckas slaget automatiskt och återställer istället 1T6. Omvårdnad kan dessutom stoppa blödningar eller läka kritiska skador som uppstått genom överskriden smärtgräns. Förmågan kan användas med lyckat resultat högst två gånger per patient och dag.",
-  "Gesäll": "Handling: Aktiv. Som Novis, men slaget återställer 1T6 istället för 1T4. Med örtkur läks 1T8 istället för 1T6. Ett misslyckat slag på Listig återställer 1T4 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat högst tre gånger per patient och dag.",
-  "Mästare": "Handling: Aktiv. Gesäll, men slaget återställer 1T8 istället för 1T6. Med örtkur läks 1T10 istället för 1T8. Ett misslyckat slag på Listig återställer 1T6 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat helt obegränsat. Vidare så får patienter som vårdas av mästaren dessutom använda mästarens värde i Listig när de slår sina dödsslag."
-}
-
-    },
+      "Novis": "Handling: Aktiv. Rollpersonen är en skicklig fältskär. Ett lyckat slag i Listig återställer 1T4 Tålighet hos patienten. Vid användning av en örtkur lyckas slaget automatiskt och återställer istället 1T6. Omvårdnad kan dessutom stoppa blödningar eller läka kritiska skador som uppstått genom överskriden smärtgräns. Förmågan kan användas med lyckat resultat högst två gånger per patient och dag.",
+      "Gesäll": "Handling: Aktiv. Som Novis, men slaget återställer 1T6 istället för 1T4. Med örtkur läks 1T8 istället för 1T6. Ett misslyckat slag på Listig återställer 1T4 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat högst tre gånger per patient och dag.",
+      "Mästare": "Handling: Aktiv. Gesäll, men slaget återställer 1T8 istället för 1T6. Med örtkur läks 1T10 istället för 1T8. Ett misslyckat slag på Listig återställer 1T6 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat helt obegränsat. Vidare så får patienter som vårdas av mästaren dessutom använda mästarens värde i Listig när de slår sina dödsslag."
+    }
+  },
   {
     "id": "form16",
     "namn": "Monsterlärd",
@@ -484,16 +527,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -513,16 +559,19 @@
       "ark_trad": [
         "Krigare, Tjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -542,16 +591,19 @@
       "ark_trad": [
         "Ordensmagi"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -574,16 +626,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -606,16 +661,19 @@
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -635,16 +693,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -667,16 +728,19 @@
       "test": [
         "Vaksam"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -699,16 +763,19 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -729,16 +796,19 @@
         "Krigare",
         "Tjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -758,16 +828,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -790,16 +863,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Elementär"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Inre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Elementär"
+        }
       }
     },
     "nivåer": {
@@ -820,18 +896,22 @@
         "Krigare"
       ],
       "test": [
-        "Stark", "Kvick"
+        "Stark",
+        "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Fallskada"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Fallskada"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Fallskada"
+        }
       }
     },
     "nivåer": {
@@ -854,16 +934,19 @@
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -886,16 +969,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -919,16 +1005,19 @@
         "Stark",
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Inre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -948,16 +1037,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -977,16 +1069,19 @@
       "ark_trad": [
         "Krigare, Tjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1009,16 +1104,19 @@
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1041,16 +1139,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1070,16 +1171,19 @@
       "ark_trad": [
         "Teurgi"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1099,16 +1203,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1128,16 +1235,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -1160,16 +1270,19 @@
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1193,16 +1306,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1222,18 +1338,20 @@
       "ark_trad": [
         "Krigare"
       ],
-      "test": [
-      ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "test": [],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1254,16 +1372,19 @@
       "ark_trad": [
         "Templár"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1283,16 +1404,19 @@
       "ark_trad": [
         "Tjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1313,16 +1437,19 @@
       "ark_trad": [
         "Vredesgardist"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1345,16 +1472,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1377,16 +1507,19 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1406,16 +1539,19 @@
       "ark_trad": [
         "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1438,16 +1574,19 @@
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1470,16 +1609,19 @@
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1502,16 +1644,19 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1535,16 +1680,19 @@
       "test": [
         "Diskret"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1564,16 +1712,19 @@
       "ark_trad": [
         "Symbolism, Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Mystisk"
+        }
       }
     },
     "nivåer": {
@@ -1594,16 +1745,19 @@
       "ark_trad": [
         "Järnsvuren"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1623,16 +1777,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1652,16 +1809,19 @@
       "ark_trad": [
         "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1681,16 +1841,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Inre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1710,16 +1873,19 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1742,16 +1908,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1772,16 +1941,19 @@
       "ark_trad": [
         "Stavmagiker"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Elementär"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1801,16 +1973,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1830,16 +2005,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1860,16 +2038,19 @@
         "Mystiker",
         "Symbolism"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1892,16 +2073,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -1924,16 +2108,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1954,16 +2141,19 @@
       "ark_trad": [
         "Trollsång"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1986,16 +2176,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -2018,16 +2211,19 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -2047,16 +2243,19 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -2076,16 +2275,19 @@
       "ark_trad": [
         "Krigare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -2095,37 +2297,40 @@
     }
   },
   {
-  "id": "form69",
-  "namn": "Tvåhandsfiness",
-  "beskrivning": "Många som slåss med tvåhandsvapen förlitar sig på redskapets tyngd men det finns också de som övar upp förmågan att manövrera väldiga tvåhandssvärd med verklig finess. Den som behärskar denna förmåga tillhör den kategorin och kan nyttja vapnets längd för att bättre bekämpa alla sorters motståndare.",
-  "taggar": {
-    "typ": [
-      "Förmåga"
-    ],
-    "ark_trad": [
-      "Krigare"
-    ],
-    "test": [
-      "Stark"
-    ],
-    "handling": {
-      "Novis": [
-        "Passiv"
+    "id": "form69",
+    "namn": "Tvåhandsfiness",
+    "beskrivning": "Många som slåss med tvåhandsvapen förlitar sig på redskapets tyngd men det finns också de som övar upp förmågan att manövrera väldiga tvåhandssvärd med verklig finess. Den som behärskar denna förmåga tillhör den kategorin och kan nyttja vapnets längd för att bättre bekämpa alla sorters motståndare.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
       ],
-      "Gesäll": [
-        "Reaktiv"
+      "ark_trad": [
+        "Krigare"
       ],
-      "Mästare": [
-        "Aktiv"
-      ]
+      "test": [
+        "Stark"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Tvåhandssvärd får kvaliteten Långt i novisens händer, och kan därmed användas tillsammans med förmågan Stångverkan.",
+      "Gesäll": "Handling: Reaktiv. Efter ett lyckat Försvar per runda, slå [Stark←Stark] för att med svärdet trycka bort fienden ur närstrid. Fienden tar 1T6 i skada, pressas ett par meter bakåt och måste återigen möta kvaliteten Långt.",
+      "Mästare": "Handling: Aktiv. Mästarens flödande hugg räknas som en kedja av attacker mot fiender på närstridsavstånd – om en fiende träffas görs en attack mot nästa, och så vidare tills en attack misslyckas."
     }
   },
-  "nivåer": {
-    "Novis": "Handling: Passiv. Tvåhandssvärd får kvaliteten Långt i novisens händer, och kan därmed användas tillsammans med förmågan Stångverkan.",
-    "Gesäll": "Handling: Reaktiv. Efter ett lyckat Försvar per runda, slå [Stark←Stark] för att med svärdet trycka bort fienden ur närstrid. Fienden tar 1T6 i skada, pressas ett par meter bakåt och måste återigen möta kvaliteten Långt.",
-    "Mästare": "Handling: Aktiv. Mästarens flödande hugg räknas som en kedja av attacker mot fiender på närstridsavstånd – om en fiende träffas görs en attack mot nästa, och så vidare tills en attack misslyckas."
-  }
-},
   {
     "id": "form70",
     "namn": "Pansarbrottning",
@@ -2140,16 +2345,19 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Förflyttning"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Förflyttning",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -2172,16 +2380,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -2205,16 +2416,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -2238,16 +2452,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -2256,63 +2473,77 @@
       "Mästare": "Handling: Speciell. Rollpersonens målmärkning är så effektiv att effekterna för novis och gesällnivå gäller även för dess allierade, novisnivåns bonusskada ökar med varje allierad som lyckas som lyckats med en attack mot målet medans målmärket är aktivt."
     }
   },
-{
-  "id": "form74",
-  "namn": "Samlingstecken",
-  "beskrivning": "På slagfältet krävs tydliga signaler – en kort fras, en handrörelse eller ett hornstöt som samlar splittrade kämpar mot samma mål. Rollpersonen har lärt sig att känna igen och använda dessa tecken för att samordna angrepp och förvandla en rad enskilda attacker till en samlad, mer dödlig offensiv. Krigare memorerar mönster, mystiker binder rytm och tjuvar läser öppningar. Tecknet styr fokus, stärker efterföljande slag och gör kombinerade attacker farligare än isolerade.",
-  "taggar": {
-    "typ": [
-      "Förmåga"
-    ],
-    "ark_trad": [
-      "Krigare"
-    ],
-    "test": [
-      "Övertygande"
-    ],
-    "handling": {
-      "Novis": [
-        "Aktiv"
+  {
+    "id": "form74",
+    "namn": "Samlingstecken",
+    "beskrivning": "På slagfältet krävs tydliga signaler – en kort fras, en handrörelse eller ett hornstöt som samlar splittrade kämpar mot samma mål. Rollpersonen har lärt sig att känna igen och använda dessa tecken för att samordna angrepp och förvandla en rad enskilda attacker till en samlad, mer dödlig offensiv. Krigare memorerar mönster, mystiker binder rytm och tjuvar läser öppningar. Tecknet styr fokus, stärker efterföljande slag och gör kombinerade attacker farligare än isolerade.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
       ],
-      "Gesäll": [
-        "Reaktiv"
+      "ark_trad": [
+        "Krigare"
       ],
-      "Mästare": [
-        "Reaktiv"
-      ]
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande ← Försvar göra ett anfall som dirigerar handlingar mot ett samlingsmål. När två andra allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
+      "Gesäll": "Handling: Reaktiv. Om den andra aktiva handlingen av en allierad denna runda lyckas mot samlingsmålet får du utse en allierad inom räckvidd som får göra ett frislag mot samma mål (närstrid om inom närstridsavstånd, annars avståndsvapen om laddat).",
+      "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets Bepansring."
     }
   },
-  "nivåer": {
-    "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande ← Försvar göra ett anfall som dirigerar handlingar mot ett samlingsmål. När två andra allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
-    "Gesäll": "Handling: Reaktiv. Om den andra aktiva handlingen av en allierad denna runda lyckas mot samlingsmålet får du utse en allierad inom räckvidd som får göra ett frislag mot samma mål (närstrid om inom närstridsavstånd, annars avståndsvapen om laddat).",
-    "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets Bepansring."
-  }
-},
-{
-  "id": "form75",
-  "namn": "Koreograferad strid",
-  "beskrivning": "Striden följer ett nummer: steg, sväng, snitt. Rollpersonen tränar fotarbete och rytmisk tajming; kroppen sätter tempot och klingan följer takten.",
-  "taggar": {
-"typ": [
+  {
+    "id": "form75",
+    "namn": "Koreograferad strid",
+    "beskrivning": "Striden följer ett nummer: steg, sväng, snitt. Rollpersonen tränar fotarbete och rytmisk tajming; kroppen sätter tempot och klingan följer takten.",
+    "taggar": {
+      "typ": [
         "Förmåga",
         "Elityrkesförmåga"
       ],
       "ark_trad": [
         "Järnsvuren"
       ],
-    "test": ["Kvick"],
-    "handling": {
-      "Novis": ["Speciell"],
-      "Gesäll": ["Reaktiv"],
-      "Mästare": ["Reaktiv"]
+      "test": [
+        "Kvick"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
+      "Gesäll": "Handling: Reaktiv. När en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
+      "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
     }
   },
-  "nivåer": {
-    "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
-    "Gesäll": "Handling: Reaktiv. När en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
-    "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
-  }
-},
   {
     "id": "form76",
     "namn": "Kallsinne",
@@ -2328,16 +2559,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -2363,16 +2597,19 @@
         "Kvick",
         "Diskret"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -2381,76 +2618,42 @@
       "Mästare": "Handling: Aktiv. Rollpersonen använder miljön för att skapa dödligt momentum i sina anfall—springer längs väggar, svingar sig i grenar eller studsar mot pelare för att anfalla från oväntade vinklar. Rollpersonen får med ett lyckat slag i Kvick/Diskret utföra en förflyttning inom närstrid, utan att dra på sig frislag, och en närstridsattack i samma handling. Anfallet får +1T6 i skada utöver eventuellt övertag som skapas."
     }
   },
-  { 
-
-     "id": "form78", 
-
-     "namn": "Vinkelskytte", 
-
-
-     "beskrivning": "I de täta skogarna kring Karvosti och i Tistla Fästes trånga gränder är en rak siktlinje sällan en garanti för träff. Rollpersonen har lärt sig att utnyttja vinklar, distraktioner och fiendens fokus på annat för att placera sina pilar där de gör mest skada. Det är en stridskonst som premierar tålamod och list framför rå styrka eller hastighet, och som ofta utövas av jägare som fäller byten långt större än de själva.", 
-
-     "taggar": { 
-
-       "typ": [ 
-
-         "Förmåga" 
-
-       ], 
-
-       "ark_trad": [ 
-
-         "Jägare", 
-
-         "Tjuv" 
-
-       ], 
-
-       "test": [ 
-
-         "Träffsäker" 
-
-       ], 
-
-       "handling": { 
-
-         "Novis": [ 
-
-           "Passiv" 
-
-         ], 
-
-         "Gesäll": [ 
-
-           "Passiv" 
-
-         ], 
-
-         "Mästare": [ 
-
-           "Passiv" 
-
-         ] 
-
-       } 
-
-     }, 
-
-     "nivåer": { 
-
-
-       "Novis": "Handling: Passiv. Rollpersonen vet att utnyttja fiendens blinda vinklar. Skytten räknas ha Övertag vid attacker med avståndsvapen så länge hen befinner sig i fiendens flank eller rygg. Denna positionering räknas dock inte som att skytten flankerar fienden i syfte att ge allierade Övertag.", 
-
-
-       "Gesäll": "Handling: Passiv. Skytten siktar mot mjuka delar och blottor som uppstår när fienden är distraherad. Avståndsattacker som görs med Övertag ignorerar 1T4 av fiendens bepansring.", 
-
-
-       "Mästare": "Handling: Passiv. Skytten läser stridens kaos och hittar öppningar där inga borde finnas. Skytten räknas alltid ha Övertag mot fiender som är engagerade i närstrid med skyttens allierade, oavsett positionering. Dessutom ökar skadebonusen vid Övertag till +1T6." 
-
-     } 
-
-   },
-
+  {
+    "id": "form78",
+    "namn": "Vinkelskytte",
+    "beskrivning": "I de täta skogarna kring Karvosti och i Tistla Fästes trånga gränder är en rak siktlinje sällan en garanti för träff. Rollpersonen har lärt sig att utnyttja vinklar, distraktioner och fiendens fokus på annat för att placera sina pilar där de gör mest skada. Det är en stridskonst som premierar tålamod och list framför rå styrka eller hastighet, och som ofta utövas av jägare som fäller byten långt större än de själva.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Jägare",
+        "Tjuv"
+      ],
+      "test": [
+        "Träffsäker"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Rollpersonen vet att utnyttja fiendens blinda vinklar. Skytten räknas ha Övertag vid attacker med avståndsvapen så länge hen befinner sig i fiendens flank eller rygg. Denna positionering räknas dock inte som att skytten flankerar fienden i syfte att ge allierade Övertag.",
+      "Gesäll": "Handling: Passiv. Skytten siktar mot mjuka delar och blottor som uppstår när fienden är distraherad. Avståndsattacker som görs med Övertag ignorerar 1T4 av fiendens bepansring.",
+      "Mästare": "Handling: Passiv. Skytten läser stridens kaos och hittar öppningar där inga borde finnas. Skytten räknas alltid ha Övertag mot fiender som är engagerade i närstrid med skyttens allierade, oavsett positionering. Dessutom ökar skadebonusen vid Övertag till +1T6."
+    }
+  },
   {
     "id": "form79",
     "namn": "Spjutdans",
@@ -2466,16 +2669,19 @@
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -2484,9 +2690,4 @@
       "Mästare": "Handling: Speciell .\n Rollpersonen är en så pass van spjutdansare att hens frislag med kvaliteten “Långt” räknas som aktiva handlingar. Dessutom så slåss spjutdansaren med en så förblindande hastighet att hen lätt träffar offrets svaga punkter och gör 1T6 i skada så länge fienden befinner sig på spjutlängds avstånd."
     }
   }
-
-
-
-
-
 ]

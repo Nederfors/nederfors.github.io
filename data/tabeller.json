@@ -1559,10 +1559,15 @@
     ],
    "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T20 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
 },
+
 {
   "id": "ta22",
   "namn": "Bepansring och skydd",
-  "taggar": { "typ": ["Tabell"] },
+  "taggar": {
+    "typ": [
+      "Tabell"
+    ]
+  },
   "kolumner": [
     "Bepansringstyp",
     "Yttre fysisk",
@@ -1570,17 +1575,19 @@
     "Elementär",
     "Mystisk",
     "Gift",
-    "Ignorerar bepansring"
+    "Ignorerar bepansring",
+    "Fallskada"
   ],
   "rader": [
     {
-      "Bepansringstyp": "Bepansring – rustningar",
+      "Bepansringstyp": "Rustningar",
       "Yttre fysisk": "Skyddar",
       "Inre fysisk": "Skyddar inte",
       "Elementär": "Skyddar inte",
       "Mystisk": "Skyddar inte",
       "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar inte"
+      "Ignorerar bepansring": "Skyddar inte",
+      "Fallskada": "Skyddar inte"
     },
     {
       "Bepansringstyp": "Naturligt pansar",
@@ -1589,7 +1596,8 @@
       "Elementär": "Skyddar",
       "Mystisk": "Skyddar inte",
       "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar inte"
+      "Ignorerar bepansring": "Skyddar inte",
+      "Fallskada": "Skyddar inte"
     },
     {
       "Bepansringstyp": "Mystisk bepansring",
@@ -1598,7 +1606,8 @@
       "Elementär": "Skyddar",
       "Mystisk": "Skyddar",
       "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar"
+      "Ignorerar bepansring": "Skyddar",
+      "Fallskada": "Skyddar inte"
     },
     {
       "Bepansringstyp": "Robust/Överlevnadsinstinkt",
@@ -1607,10 +1616,12 @@
       "Elementär": "Skyddar",
       "Mystisk": "Skyddar inte",
       "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar"
+      "Ignorerar bepansring": "Skyddar",
+      "Fallskada": "Skyddar inte"
     }
   ]
 },
+
   {
     "id": "ta23",
     "namn": "Perfekt slag överskott",
@@ -1736,5 +1747,72 @@
       }
     ],
     "extra": "När det effektiva värdet (Förmåga + Modifikation) sjunker under 0, ökar risken för fatalt misslyckande. Vid värde 0 är risken fortfarande normal (endast 20), men från och med -1 expanderar intervallet nedåt (19–20)."
-  }
+  },
+  {
+  "id": "ta23",
+  "namn": "Skadetyper och penetrering",
+  "taggar": {
+    "typ": [
+      "Tabell"
+    ]
+  },
+  "kolumner": [
+    "Skadetyp",
+    "Rustningar",
+    "Naturligt pansar",
+    "Mystisk bepansring",
+    "Robust/Överlevnadsinstinkt"
+  ],
+  "rader": [
+    {
+      "Skadetyp": "Yttre fysisk",
+      "Bepansring – rustningar": "Stoppas",
+      "Naturligt pansar": "Stoppas",
+      "Mystisk bepansring": "Stoppas",
+      "Robust/Överlevnadsinstinkt": "Stoppas"
+    },
+    {
+      "Skadetyp": "Inre fysisk",
+      "Bepansring – rustningar": "Går igenom",
+      "Naturligt pansar": "Går igenom",
+      "Mystisk bepansring": "Går igenom",
+      "Robust/Överlevnadsinstinkt": "Går igenom"
+    },
+    {
+      "Skadetyp": "Elementär",
+      "Bepansring – rustningar": "Går igenom",
+      "Naturligt pansar": "Stoppas",
+      "Mystisk bepansring": "Stoppas",
+      "Robust/Överlevnadsinstinkt": "Stoppas"
+    },
+    {
+      "Skadetyp": "Mystisk",
+      "Bepansring – rustningar": "Går igenom",
+      "Naturligt pansar": "Går igenom",
+      "Mystisk bepansring": "Stoppas",
+      "Robust/Överlevnadsinstinkt": "Går igenom"
+    },
+    {
+      "Skadetyp": "Gift",
+      "Bepansring – rustningar": "Går igenom",
+      "Naturligt pansar": "Går igenom",
+      "Mystisk bepansring": "Går igenom",
+      "Robust/Överlevnadsinstinkt": "Går igenom"
+    },
+    {
+      "Skadetyp": "Ignorerar bepansring",
+      "Bepansring – rustningar": "Går igenom",
+      "Naturligt pansar": "Går igenom",
+      "Mystisk bepansring": "Stoppas",
+      "Robust/Överlevnadsinstinkt": "Stoppas"
+    },
+    {
+      "Skadetyp": "Fallskada",
+      "Bepansring – rustningar": "Går igenom",
+      "Naturligt pansar": "Går igenom",
+      "Mystisk bepansring": "Går igenom",
+      "Robust/Överlevnadsinstinkt": "Går igenom"
+    }
+  ]
+}
 ]
