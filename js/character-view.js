@@ -558,8 +558,18 @@ function initCharacter() {
   };
 
   function getActiveHandlingKeys(p){
-    return Object.entries(p?.taggar?.handling || {})
-      .filter(([,v]) => Array.isArray(v) && v.includes('Aktiv'))
+    const meta = typeof window.getEntryLevelMeta === 'function'
+      ? window.getEntryLevelMeta(p)
+      : (p?.taggar?.nivå_data || {});
+    const source = Object.keys(meta || {}).length ? meta : (p?.taggar?.handling || {});
+    return Object.entries(source)
+      .filter(([, v]) => {
+        const handlingVal = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, 'handling')
+          ? v.handling
+          : v;
+        const list = Array.isArray(handlingVal) ? handlingVal : [handlingVal];
+        return list.some(item => String(item || '').toLowerCase().includes('aktiv'));
+      })
       .map(([k]) => k);
   }
 
@@ -575,7 +585,6 @@ function initCharacter() {
   }
 
   function conflictEntryHtml(p){
-    const compact = storeHelper.getCompactEntries(store);
     const activeKeys = getActiveHandlingKeys(p);
     const activeNames = activeKeys.map(k => handlingName(p, k));
     const lvlHtml = activeKeys
@@ -590,7 +599,7 @@ function initCharacter() {
         const body = formatText(desc);
         if (!body) return '';
         return `
-          <details class="level-block" open>
+          <details class="level-block">
             <summary>${name}</summary>
             <div class="level-content">${body}</div>
           </details>
@@ -598,16 +607,13 @@ function initCharacter() {
       })
       .filter(Boolean)
       .join('');
-    const tagHtml = compact && activeNames.length
-      ? `<div class="tags">${activeNames.map(n=>`<span class="tag">${n}</span>`).join('')}</div>`
-      : '';
-    const desc = (!compact && lvlHtml)
+    const desc = lvlHtml
       ? `<div class="card-desc"><div class="levels">${lvlHtml}</div></div>`
       : '';
     const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
       ? `${p.namn}: ${handlingName(p, p.nivå)}`
       : p.namn;
-    return `<li class="card entry-card${compact ? ' compact' : ''}"><div class="card-title"><span>${titleName}</span></div>${tagHtml}${desc}</li>`;
+    return `<li class="card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
   }
 
   const charCategory = (entry, { allowFallback = true } = {}) => {
@@ -638,9 +644,15 @@ function initCharacter() {
   };
 
   function renderConflicts(list){
+    conflictList.innerHTML = buildConflictsHtml(list, { wrap: false });
+  }
+
+  function buildConflictsHtml(list, { wrap = true } = {}){
     if(!list.length){
-      conflictList.innerHTML = '<li class="card entry-card">Inga konflikter.</li>';
-      return;
+      const emptyLi = '<li class="card entry-card">Inga konflikter.</li>';
+      return wrap
+        ? `<ul class="card-list entry-card-list" data-entry-page="conflict">${emptyLi}</ul>`
+        : emptyLi;
     }
 
     const cats = {};
@@ -661,7 +673,8 @@ function initCharacter() {
         </li>`;
     }).join('');
 
-    conflictList.innerHTML = html;
+    if (!wrap) return html;
+    return `<ul class="card-list entry-card-list" data-entry-page="conflict">${html}</ul>`;
   }
 
   function renderSummary(){
@@ -1259,11 +1272,12 @@ function initCharacter() {
         const p = g.entry;
         const availLvls = LVL.filter(l=>p.nivåer?.[l]);
         const hasAnyLevel = availLvls.length > 0;
+        const curLvl = p.nivå || (hasAnyLevel ? availLvls[0] : null);
         const hasLevelSelect = availLvls.length > 1;
         const levelOptionsHtml = hasLevelSelect
           ? availLvls.map(l => {
               const short = levelLetter(l);
-              const selected = l === p.nivå ? ' selected' : '';
+              const selected = l === curLvl ? ' selected' : '';
               const shortAttr = short ? ` data-short="${short}"` : '';
               return `<option value="${l}"${shortAttr}${selected}>${l}</option>`;
             }).join('')
@@ -1351,8 +1365,8 @@ function initCharacter() {
         const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
         const tagHtmlParts = dockableTagData.map(tag => renderFilterTag(tag));
         const infoTagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
-        const tagsHtml = tagHtmlParts.join(' ');
-        const lvlBadgeVal = hasAnyLevel ? (p.nivå || availLvls[0] || '') : '';
+        let tagsHtml = tagHtmlParts.join(' ');
+        const lvlBadgeVal = hasAnyLevel ? (curLvl || '') : '';
         const lvlShort = levelLetter(lvlBadgeVal);
         const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
           ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
@@ -1361,9 +1375,18 @@ function initCharacter() {
           .concat(infoTagHtmlParts)
           .filter(Boolean);
         if (singleLevelTagHtml) infoTagParts.push(singleLevelTagHtml);
-        const infoTagsHtml = infoTagParts.join(' ');
         const infoBoxTagParts = infoTagHtmlParts.filter(Boolean);
         if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
+        const activeKeys = getActiveHandlingKeys(p);
+        const currentList = storeHelper.getCurrentList(store);
+        const conflictPool = currentList.filter(x => x.namn !== p.namn && getActiveHandlingKeys(x).length);
+        const conflictsHtml = (activeKeys.length && conflictPool.length)
+          ? buildConflictsHtml(conflictPool)
+          : '';
+        const conflictWarn = conflictsHtml
+          ? `<span class="tag filter-tag conflict-flag" title="Har konflikter med valda förmågor">${icon('active', { className: 'btn-icon conflict-icon', alt: 'Konflikt' }) || '⚠️'}</span>`
+          : '';
+        if (conflictWarn) infoBoxTagParts.unshift(conflictWarn);
         const infoBoxFacts = infoMeta.filter(meta => {
           if (!meta) return false;
           const value = meta.value;
@@ -1410,26 +1433,35 @@ function initCharacter() {
         const infoSections = (isElityrke(p) && typeof buildElityrkeInfoSections === 'function')
           ? buildElityrkeInfoSections(p)
           : [];
-        const infoPanelHtml = buildInfoPanelHtml({
-          tagsHtml: infoTagsHtml,
-          bodyHtml: infoBodyHtml,
-          meta: infoMeta,
-          sections: infoSections
-        });
-        const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
-
+        const resolvedForSkadetyp = (!Array.isArray(p.taggar?.typ) || !p.taggar.typ.includes('Hemmagjort'))
+          ? (resolveDbEntry(p) || null)
+          : null;
+        const skadeEntry = (() => {
+          if (typeof entryHasDamageType !== 'function') return null;
+          if (entryHasDamageType(p)) return p;
+          if (resolvedForSkadetyp && entryHasDamageType(resolvedForSkadetyp)) return resolvedForSkadetyp;
+          return null;
+        })();
+        const skadeTabHtml = (typeof buildSkadetypPanelHtml === 'function' && skadeEntry)
+          ? buildSkadetypPanelHtml(skadeEntry, { level: curLvl, tables: window.TABELLER })
+          : '';
         const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
         const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
         const badge = g.count > 1 ? `<span class="count-badge">×${g.count}</span>` : '';
-        const activeKeys = getActiveHandlingKeys(p);
-        const activeNames = activeKeys.map(k => handlingName(p, k));
-        const conflictIcon = icon('active');
-        const conflictBtn = activeKeys.length
-          ? (conflictIcon
-            ? `<button class="char-btn icon icon-only conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeNames.join(', ')}">${conflictIcon}</button>`
-            : `<button class="char-btn icon conflict-btn" data-name="${p.namn}" title="Aktiva nivåer: ${activeNames.join(', ')}">💔</button>`)
-          : '';
+        const conflictTabHtml = conflictsHtml ? renderConflictTabButton() : '';
+        const infoTagsHtml = infoTagParts.join(' ');
+        const infoPanelHtml = buildInfoPanelHtml({
+          tagsHtml: infoTagsHtml,
+          bodyHtml: infoBodyHtml,
+          meta: infoMeta,
+          sections: infoSections,
+          skadetypHtml: skadeTabHtml,
+          conflictTabHtml,
+          conflictContentHtml: conflictsHtml
+        });
+        const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
+
         const showInfo = compact || hideDetails;
         const hasCustomEdit = typesList.includes('Hemmagjort');
         const hasArtifactType = typesList.some(t => String(t).trim().toLowerCase() === 'artefakt');
@@ -1456,7 +1488,6 @@ function initCharacter() {
               const addBtn = `<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`;
               buttonParts.push(addBtn);
             }
-            if (conflictBtn) buttonParts.push(conflictBtn);
           } else {
             const remBtn = total > 0
               ? `<button data-act="rem" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`
@@ -1465,12 +1496,10 @@ function initCharacter() {
               ? `<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`
               : '';
             if (remBtn) buttonParts.push(remBtn);
-            if (conflictBtn) buttonParts.push(conflictBtn);
             if (addBtn) buttonParts.push(addBtn);
           }
         } else {
           buttonParts.push(`<button class="char-btn danger icon icon-only" data-act="rem">${icon('remove')}</button>`);
-          if (conflictBtn) buttonParts.push(conflictBtn);
         }
         const dockPrimary = (p.taggar?.typ || [])[0] || '';
         const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
@@ -1627,6 +1656,7 @@ function initCharacter() {
   // Treat clicks on tags anywhere as filter selections
   document.addEventListener('click', e => {
     const tag = e.target.closest('.filter-tag');
+    if (tag && tag.classList.contains('conflict-flag')) return;
     if (!tag) return;
     const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
     const section = sectionMap[tag.dataset.section];
@@ -1644,8 +1674,60 @@ function initCharacter() {
     return `${list.slice(0,-1).join(', ')} och ${list[list.length-1]}`;
   }
 
+  function activateInfoTab(panel, tabName){
+    if (!panel || !tabName) return;
+    const tabBtn = panel.querySelector(`.info-tab[data-tab="${tabName}"]`);
+    if (!tabBtn) return;
+    const tabs = panel.querySelectorAll('.info-tab');
+    const panels = panel.querySelectorAll('.info-tab-panel');
+    tabs.forEach(btn => btn.classList.toggle('active', btn === tabBtn));
+    panels.forEach(pnl => pnl.classList.toggle('active', pnl.dataset.tabPanel === tabName));
+  }
+
+  function openConflictPanelFor(entryName){
+    if (!entryName) return false;
+    const currentList = storeHelper.getCurrentList(store);
+    const current = currentList.find(x => x.namn === entryName);
+    const curKeys = getActiveHandlingKeys(current || {});
+    const curNames = curKeys.map(k => handlingName(current || {}, k));
+    let baseName = entryName;
+    let levelsText = '';
+    if (curKeys.length) {
+      if (curKeys.every(k => !LVL.includes(k))) {
+        baseName = `${entryName}: ${curNames.join(', ')}`;
+      } else {
+        const lvlWord = curNames.length === 1 ? 'nivån' : 'nivåerna';
+        levelsText = ` på ${lvlWord} ${formatLevels(curNames)}`;
+      }
+    }
+    conflictTitle.textContent = `${baseName}${levelsText} kan ej användas samtidigt som:`;
+    const others = currentList.filter(x => x.namn !== entryName && getActiveHandlingKeys(x).length);
+    renderConflicts(others);
+    conflictPanel.classList.add('open');
+    conflictPanel.scrollTop = 0;
+    return true;
+  }
+
+  function renderConflictTabButton(){
+    return '<button class="info-tab" data-tab="conflict" type="button">Konflikter</button>';
+  }
+
   /* ta bort & nivåbyte */
   dom.valda.addEventListener('click', async e=>{
+    const conflictFlag = e.target.closest('.conflict-flag');
+    if (conflictFlag) {
+      const liEl = conflictFlag.closest('li');
+      const infoBtn = liEl?.querySelector('button[data-info]');
+      if (infoBtn?.dataset.info) {
+        let html = decodeURIComponent(infoBtn.dataset.info || '');
+        const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
+        yrkePanel.open(title, html);
+        setTimeout(() => activateInfoTab(document.getElementById('yrkePanel'), 'conflict'), 0);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     if (e.target.closest('.filter-tag')) return;
     if (e.target.closest('.entry-collapse-btn')) return;
     const header = e.target.closest('.card-header');
@@ -1653,34 +1735,16 @@ function initCharacter() {
       return;
     }
     const conflictBtn = e.target.closest('.conflict-btn');
-      if(conflictBtn){
-        const currentName = conflictBtn.dataset.name;
-        const current = storeHelper.getCurrentList(store).find(x=>x.namn===currentName);
-        const curKeys = getActiveHandlingKeys(current || {});
-        const curNames = curKeys.map(k => handlingName(current || {}, k));
-        let baseName = currentName;
-        let levelsText = '';
-        if (curKeys.length) {
-          if (curKeys.every(k => !LVL.includes(k))) {
-            baseName = `${currentName}: ${curNames.join(', ')}`;
-          } else {
-            const lvlWord = curNames.length === 1 ? 'nivån' : 'nivåerna';
-            levelsText = ` på ${lvlWord} ${formatLevels(curNames)}`;
-          }
-        }
-        conflictTitle.textContent = `${baseName}${levelsText} kan ej användas samtidigt som:`;
-        const others = storeHelper.getCurrentList(store)
-          .filter(x => x.namn !== currentName && getActiveHandlingKeys(x).length);
-        renderConflicts(others);
-        conflictPanel.classList.add('open');
-        conflictPanel.scrollTop = 0;
-        return;
-      }
+    if(conflictBtn){
+      openConflictPanelFor(conflictBtn.dataset.name);
+      return;
+    }
     const infoBtn=e.target.closest('button[data-info]');
     if(infoBtn){
       let html=decodeURIComponent(infoBtn.dataset.info||'');
       const liEl = infoBtn.closest('li');
       const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
+      const entryName = liEl?.dataset.name || title;
       if(infoBtn.dataset.tabell!=null){
         const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
         if (terms.length) {

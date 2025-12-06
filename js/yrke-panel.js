@@ -1,5 +1,7 @@
 (function(window){
   let outsideHandler = null;
+  let conflictHandler = null;
+
   function create() {
     if (document.getElementById('yrkePanel')) return;
     const panel = document.createElement('aside');
@@ -8,20 +10,39 @@
     panel.innerHTML = `
       <header class="inv-header">
         <h2 id="yrkeTitle"></h2>
-        <div class="inv-actions"><button id="yrkeClose" class="char-btn icon">✕</button></div>
+        <div class="inv-actions">
+          <button id="yrkeClose" class="char-btn icon">✕</button>
+        </div>
       </header>
       <div id="yrkeContent"></div>
     `;
     document.body.appendChild(panel);
     window.registerOverlayElement?.(panel);
     panel.querySelector('#yrkeClose').addEventListener('click', close);
+    panel.addEventListener('click', (e) => {
+      const conflictBtn = e.target.closest('[data-conflict-btn]');
+      const tab = e.target.closest('.info-tab');
+      if (!tab) return;
+      const root = tab.closest('.info-panel-content.has-tabs');
+      if (!root) return;
+      const target = tab.dataset.tab;
+      if (!target) return;
+      root.querySelectorAll('.info-tab').forEach(btn => btn.classList.toggle('active', btn === tab));
+      root.querySelectorAll('.info-tab-panel').forEach(panelEl => {
+        panelEl.classList.toggle('active', panelEl.dataset.tabPanel === target);
+      });
+    });
   }
 
-  function open(title, html){
+  function open(title, html, opts){
+    const options = (opts && typeof opts === 'object') ? opts : {};
     create();
     document.getElementById('yrkeTitle').textContent = title || '';
     document.getElementById('yrkeContent').innerHTML = html || '';
     const panel = document.getElementById('yrkePanel');
+    conflictHandler = (options.conflict && typeof options.conflict.onClick === 'function')
+      ? options.conflict.onClick
+      : null;
 
     // Ensure any previous listener is removed to avoid duplicates
     if(outsideHandler){
@@ -45,6 +66,7 @@
       p.classList.remove('open');
       window.updateScrollLock?.();
     }
+    conflictHandler = null;
     if(outsideHandler){
       document.removeEventListener('click', outsideHandler);
       outsideHandler = null;

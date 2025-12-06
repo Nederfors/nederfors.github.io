@@ -95,7 +95,12 @@
       tagsHtml = '',
       bodyHtml = '',
       meta = [],
-      sections = []
+      sections = [],
+      skadetypHtml = '',
+      skadetypLabel = 'Skadetyper',
+      conflictTabHtml = '',
+      conflictContentHtml = '',
+      conflictLabel = 'Konflikter'
     } = options || {};
 
     const parts = [];
@@ -162,7 +167,28 @@
     });
 
     const inner = parts.join('');
-    return `<div class="info-panel-content summary-content">${inner}</div>`;
+    const hasSkadeTab = String(skadetypHtml || '').trim().length > 0;
+    const hasConflictTab = String(conflictContentHtml || '').trim().length > 0;
+    if (!hasSkadeTab && !hasConflictTab) {
+      return `<div class="info-panel-content summary-content">${inner}</div>`;
+    }
+
+    const tabLabel = String(skadetypLabel || 'Skadetyper').trim() || 'Skadetyper';
+    const conflictTabLabel = String(conflictLabel || 'Konflikter').trim() || 'Konflikter';
+    const conflictTab = conflictTabHtml || `<button class="info-tab" data-tab="conflict">${conflictTabLabel}</button>`;
+    return `
+      <div class="info-panel-content summary-content has-tabs">
+        <div class="info-tab-header">
+          <button class="info-tab active" data-tab="info">Info</button>
+          ${hasSkadeTab ? `<button class="info-tab" data-tab="skadetyp">${tabLabel}</button>` : ''}
+          ${hasConflictTab ? conflictTab : ''}
+        </div>
+        <div class="info-tab-panels">
+          <div class="info-tab-panel active" data-tab-panel="info">${inner}</div>
+          ${hasSkadeTab ? `<div class="info-tab-panel" data-tab-panel="skadetyp">${skadetypHtml}</div>` : ''}
+          ${hasConflictTab ? `<div class="info-tab-panel" data-tab-panel="conflict">${conflictContentHtml}</div>` : ''}
+        </div>
+      </div>`;
   }
   window.formatText = formatText;
   window.abilityHtml = abilityHtml;

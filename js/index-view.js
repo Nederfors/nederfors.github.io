@@ -14,7 +14,7 @@ function formatQuotedList(values) {
     .join(', ');
 }
 
-function getGrundritualRequirements(entry) {
+  function getGrundritualRequirements(entry) {
   const raw = entry?.taggar?.grundritual;
   if (Array.isArray(raw)) {
     return raw
@@ -115,6 +115,16 @@ function computeIndexEntryXP(entry, list, options = {}) {
     workingList.push(targetEntry);
   }
 
+  function activateInfoTab(panel, tabName){
+    if (!panel || !tabName) return;
+    const tabBtn = panel.querySelector(`.info-tab[data-tab="${tabName}"]`);
+    if (!tabBtn) return;
+    const tabs = panel.querySelectorAll('.info-tab');
+    const panels = panel.querySelectorAll('.info-tab-panel');
+    tabs.forEach(btn => btn.classList.toggle('active', btn === tabBtn));
+    panels.forEach(pnl => pnl.classList.toggle('active', pnl.dataset.tabPanel === tabName));
+  }
+
   const helperOptions = {
     ...xpOptions,
     xpSource: targetEntry
@@ -160,6 +170,126 @@ function computeIndexEntryXP(entry, list, options = {}) {
     label: helperOptions.label,
     shouldShow: false
   };
+}
+
+function getActiveHandlingKeys(p){
+  const meta = typeof window.getEntryLevelMeta === 'function'
+    ? window.getEntryLevelMeta(p)
+    : (p?.taggar?.nivå_data || {});
+  const source = Object.keys(meta || {}).length ? meta : (p?.taggar?.handling || {});
+  return Object.entries(source)
+    .filter(([, v]) => {
+      const handlingVal = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, 'handling')
+        ? v.handling
+        : v;
+      const list = Array.isArray(handlingVal) ? handlingVal : [handlingVal];
+      return list.some(item => String(item || '').toLowerCase().includes('aktiv'));
+    })
+    .map(([k]) => k);
+}
+
+function handlingName(p, key){
+  if (!LVL.includes(key)) {
+    const txt = p?.nivåer?.[key];
+    if (typeof txt === 'string') {
+      const idx = txt.indexOf(';');
+      return idx >= 0 ? txt.slice(0, idx) : txt;
+    }
+  }
+  return key;
+}
+
+const charCategory = (entry, { allowFallback = true } = {}) => {
+  const rawTypes = Array.isArray(entry?.taggar?.typ)
+    ? entry.taggar.typ
+    : [];
+  const normalized = rawTypes
+    .map(t => typeof t === 'string' ? t.trim() : '')
+    .filter(Boolean);
+  if (!normalized.length) {
+    return allowFallback ? 'Övrigt' : undefined;
+  }
+
+  const primaryType = normalized[0];
+  const firstNonCustomIdx = normalized.findIndex(t => t.toLowerCase() !== 'hemmagjort');
+  const artifactIdx = normalized.findIndex(t => t.toLowerCase() === 'artefakt');
+
+  if (artifactIdx > 0 && artifactIdx === firstNonCustomIdx && primaryType) {
+    return primaryType;
+  }
+
+  if (firstNonCustomIdx >= 0) {
+    return normalized[firstNonCustomIdx];
+  }
+
+  if (primaryType) return primaryType;
+  return allowFallback ? 'Övrigt' : undefined;
+};
+
+function renderConflictTabButton(){
+  return '<button class="info-tab" data-tab="conflict" type="button">Konflikter</button>';
+}
+
+function conflictEntryHtml(p){
+  const activeKeys = getActiveHandlingKeys(p);
+  const activeNames = activeKeys.map(k => handlingName(p, k));
+  const lvlHtml = activeKeys
+    .map(k => {
+      const name = handlingName(p, k);
+      let desc = p.nivåer?.[k] || '';
+      if (!LVL.includes(k) && typeof desc === 'string') {
+        const idx = desc.indexOf(';');
+        desc = idx >= 0 ? desc.slice(idx + 1) : '';
+      }
+      if (!desc) return '';
+      const body = formatText(desc);
+      if (!body) return '';
+      return `
+        <details class="level-block">
+          <summary>${name}</summary>
+          <div class="level-content">${body}</div>
+        </details>
+      `.trim();
+    })
+    .filter(Boolean)
+    .join('');
+  const desc = lvlHtml
+    ? `<div class="card-desc"><div class="levels">${lvlHtml}</div></div>`
+    : '';
+  const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
+    ? `${p.namn}: ${handlingName(p, p.nivå)}`
+    : p.namn;
+  return `<li class="card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
+}
+
+function buildConflictsHtml(list, { wrap = true } = {}){
+  if(!list.length){
+    const emptyLi = '<li class="card entry-card">Inga konflikter.</li>';
+    return wrap
+      ? `<ul class="card-list entry-card-list" data-entry-page="conflict">${emptyLi}</ul>`
+      : emptyLi;
+  }
+
+  const cats = {};
+  list.forEach(p=>{
+    const cat = charCategory(p);
+    (cats[cat] ||= []).push(p);
+  });
+
+  const catKeys = Object.keys(cats).sort(catComparator);
+  const html = catKeys.map(cat => {
+    const items = cats[cat].map(conflictEntryHtml).join('');
+    return `
+      <li class="cat-group">
+        <details open>
+          <summary>${catName(cat)}</summary>
+          <ul class="card-list entry-card-list" data-entry-page="conflict">${items}</ul>
+        </details>
+      </li>`;
+  }).join('');
+
+  if (!wrap) return html;
+  return `<ul class="card-list entry-card-list" data-entry-page="conflict">${html}</ul>`;
 }
 
 function ensureToolbarControls(onReady) {
@@ -1395,7 +1525,7 @@ function initIndex() {
         const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
         const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
         const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
-        const tagsHtml = filterTagHtml.join(' ');
+        let tagsHtml = filterTagHtml.join(' ');
         const lvlBadgeVal = hasAnyLevel ? curLvl : '';
         const lvlShort = levelLetter(lvlBadgeVal);
         const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
@@ -1403,9 +1533,18 @@ function initIndex() {
           : '';
         const infoTagParts = [xpTag].concat(infoFilterTagHtml).filter(Boolean);
         if (singleLevelTagHtml) infoTagParts.push(singleLevelTagHtml);
-        const infoTagsHtml = infoTagParts.join(' ');
         const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
         if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
+        const activeKeys = getActiveHandlingKeys(p);
+        const currentChars = storeHelper.getCurrentList(store);
+        const conflictPool = currentChars.filter(x => x.namn !== p.namn && getActiveHandlingKeys(x).length);
+        const conflictsHtml = (activeKeys.length && conflictPool.length)
+          ? buildConflictsHtml(conflictPool)
+          : '';
+        const conflictWarn = conflictsHtml
+          ? `<span class="tag filter-tag conflict-flag" title="Har konflikter med valda förmågor">${icon('active', { className: 'btn-icon conflict-icon', alt: 'Konflikt' }) || '⚠️'}</span>`
+          : '';
+        if (conflictWarn) infoBoxTagParts.unshift(conflictWarn);
         const infoBoxFacts = infoMeta.filter(meta => {
           if (!meta) return false;
           const value = meta.value;
@@ -1478,11 +1617,19 @@ function initIndex() {
         const infoSections = (isElityrke(p) && typeof buildElityrkeInfoSections === 'function')
           ? buildElityrkeInfoSections(p)
           : [];
+        const skadeTabHtml = (typeof buildSkadetypPanelHtml === 'function' && typeof entryHasDamageType === 'function' && entryHasDamageType(p))
+          ? buildSkadetypPanelHtml(p, { level: curLvl, tables: window.TABELLER })
+          : '';
+        const conflictTabHtml = conflictsHtml ? renderConflictTabButton() : '';
+        const infoTagsHtml = infoTagParts.join(' ');
         const infoPanelHtml = buildInfoPanelHtml({
           tagsHtml: infoTagsHtml,
           bodyHtml: infoBodyHtml,
           meta: infoMeta,
-          sections: infoSections
+          sections: infoSections,
+          skadetypHtml: skadeTabHtml,
+          conflictTabHtml,
+          conflictContentHtml: conflictsHtml
         });
         const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
         const isInventoryEntry = isInv(p);
@@ -1986,6 +2133,7 @@ function initIndex() {
   // Treat clicks on tags anywhere as filter selections
   document.addEventListener('click', e => {
     const tag = e.target.closest('.filter-tag');
+    if (tag && tag.classList.contains('conflict-flag')) return;
     if (!tag) return;
     const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
     const section = sectionMap[tag.dataset.section];
@@ -1999,6 +2147,20 @@ function initIndex() {
 
   /* lista-knappar */
   dom.lista.addEventListener('click', async e=>{
+    const conflictFlag = e.target.closest('.conflict-flag');
+    if (conflictFlag) {
+      const liEl = conflictFlag.closest('li');
+      const infoBtn = liEl?.querySelector('button[data-info]');
+      if (infoBtn?.dataset.info) {
+        let html = decodeURIComponent(infoBtn.dataset.info || '');
+        const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
+        yrkePanel.open(title, html);
+        setTimeout(() => activateInfoTab(document.getElementById('yrkePanel'), 'conflict'), 0);
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     if (e.target.closest('.filter-tag')) return;
     // Special clear-filters action inside the Hoppsan category
     const clearBtn = e.target.closest('button[data-clear-filters]');

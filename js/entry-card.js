@@ -100,7 +100,7 @@
     return !shouldCompact;
   };
 
-  const INTERACTIVE_SELECTOR = 'button, a, select, input, textarea, [contenteditable="true"], [role="button"]';
+  const INTERACTIVE_SELECTOR = 'button, a, select, input, textarea, [contenteditable="true"], [role="button"], .filter-tag';
   let collapseHandlerBound = false;
 
   const handleGlobalClick = e => {
