@@ -19,8 +19,7 @@
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Rustningskvalitet",
-        "Vapenkvalitet"
+        "Rustningskvalitet"
       ]
     },
     "negativ": true,
@@ -86,8 +85,7 @@
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Rustningskvalitet",
-        "Vapenkvalitet"
+        "Rustningskvalitet"
       ]
     },
     "negativ": true,
