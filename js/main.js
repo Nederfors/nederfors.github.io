@@ -1224,6 +1224,7 @@ function buildElityrkeInfoSections(p) {
   const renderAbilityDetails = (lookupName, options = {}) => {
     if (!lookupName) return '';
     const displayName = options.displayName ? String(options.displayName).trim() : lookupName;
+    const collapseAbility = options.collapseAbility !== false;
     const entry = findEntry(lookupName);
     const tags = Array.isArray(entry?.taggar?.typ)
       ? entry.taggar.typ
@@ -1236,7 +1237,8 @@ function buildElityrkeInfoSections(p) {
       ? abilityRenderer(entry, undefined, { collapseLevels: true })
       : `<p class="elite-ability-missing-text">Kan inte hitta beskrivning för <em>${safe(displayName)}</em> i databasen.</p>`;
     const missingClass = entry ? '' : ' missing';
-    const openAttr = options.defaultOpen ? ' open' : '';
+    const isOpen = options.defaultOpen && !collapseAbility;
+    const openAttr = isOpen ? ' open' : '';
     return `
       <details class="elite-ability-details${missingClass}"${openAttr}>
         <summary>${safe(displayName)}</summary>
