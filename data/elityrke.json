@@ -557,5 +557,38 @@
       "Ambrier",
       "Bortbyting"
     ]
+  },
+  
+    {
+    "id": "elit19",
+    "namn": "Skald",
+    "beskrivning": "*”Berget sjunger. Och jag är dess röst.”*\n\n Trollsångarna har länge vandrat i Davokars utkanter och de djupa dalarna, men Skalderna är de som gått djupare, in i bergets hjärta och historiens mörker. De är inte bara sångare utan väktare av de gamla sanningarna, de som kan sjunga så att urberget spricker och viljor krossas. En Skald söker ofta efter de glömda verser som sades ha format världen, och deras röst bär en tyngd som får både kungar och bestar att darra.\nSkalden är ofta knuten till trollens kultursfär men även människor med tillräckligt djup röst och stark vilja kan vandra denna väg, ofta efter att ha skolats av en urgammal läromästare i någon av Ravennernas grottor.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": [
+        "Skald"
+      ]
+    },
+    "krav_formagor": "Trollsång, Ledare, Mystisk Kraft (Bergasång), Stensång (ritual)",
+    "viktiga_karaktarsdrag": "Övertygande 13+, Viljestark 11+",
+    "Elityrkesförmågor": [
+      "Bergatroll",
+      "Urbergskammare (ritual)",
+      "Tvångslockelse (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Arvegods",
+      "Kommenderande stämma",
+      "Kontaktnät",
+      "Marschvana",
+      "Musikalisk",
+      "Skräckinjagande"
+    ],
+    "tankbara_nackdelar": [
+      "Hävdningsproblem",
+      "Mörkt förflutet"
+    ]
   }
 ]

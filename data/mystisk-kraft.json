@@ -2948,5 +2948,39 @@
       "Gesäll": "Handling: Aktiv.\nVindstöten blir en bred front. Alla varelser i en kon framför mystikern (längd ca 2 förflyttningar) påverkas.\nDe som misslyckas med motståndsslaget kastas bakåt och faller som på novis.",
       "Mästare": "Handling: Aktiv.\nMystikern skapar en cyklon runt sig själv. Alla fiender inom en förflyttning måste lyckas med [Stark←Viljestark] eller slungas våldsamt 1T8 meter bakåt och ta 1T4 i fallskada.\nMystikern kan också fokusera en starkare vindstöt mot ett mål, som på novisnivå, men målet slungas istället 1T8 + 4 meter bakåt och tar lika 1T8 + 4 i fallsakada om de slår i ett föremål."
     }
+  },
+    {
+    "id": "mystiskkr85",
+    "namn": "Bergatroll",
+    "beskrivning": "Tradition: Trollsång\nMaterial: En bit av en stalaktit eller en trolltand.\n Genom dova, skrapande toner vibrerar mystikern i takt med underjordens massiva urberg. De rytmiska, malande ljuden är en ekokammare av jordens geologiska minne. Trollets naturliga drag antar berggrundens karaktär. Skaldens hud blir en tjock, sprickfri mantel av grovkornig sten, naglarna förvandlas till vassa, glimmande stalaktiter, och blodet sjuder av bergets sega livskraft. Sången stärker det slumrande trollarvet och gör mystikern till en levande avatar av urberget, rotad i världens äldsta materia",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Trollsång"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern sjunger fram en hud av levande gråsten. Med ett lyckat Viljestark erhåller mystikern särdraget Pansar på novisnivå (skydd 1T4). Om mystikern redan besitter naturligt pansar ökar skyddstärningen istället ett steg. Effekten varar under en scen.",
+      "Gesäll": "Handling: Aktiv. Sången gör händerna tunga och naglarna skarpa som flinta. Med ett lyckat Viljestark får mystikern särdraget Naturligt vapen på novisnivå (skada 1T6). Om mystikern redan har naturliga vapen ökar skadetärningen ett steg (exempelvis från 1T6 till 1T8). Effekten aktiveras samtidigt som Pansar-effekten från novisnivån.",
+      "Mästare": "Handling: Aktiv. Mystikern väcker trollens legendariska läkekraft i sitt eget blod. Med ett lyckat Viljestark får mystikern särdraget Regeneration på novisnivå (återfår 1T4 Tålighet per runda). Om mystikern redan har regeneration ökar effekttärningen ett steg (exempelvis från 1T4 till 1T6). Denna nivå aktiverar samtidigt effekterna från både novis- och gesällnivå."
+    }
   }
+
 ]

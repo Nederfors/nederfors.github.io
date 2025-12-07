@@ -1085,6 +1085,44 @@
         "Viljestark"
       ]
     }
+  },
+
+    {
+    "id": "rit99",
+    "namn": "Urbergskammare",
+    "beskrivning": "Tradition: Endast tillgänglig för Skald\nMystikern sjunger fram en liten sal i närliggande berg, klippa eller kulle. Kammaren är torr, tät och dämpad mot omvärldens larm. Upp till [Viljestark/2] personer kan tas in; de som bjuds in lärs en låg visfras som öppnar passagen. Utifrån är kammaren nästintill omöjlig att upptäcka, vilket gör att enbart de med visfrasen kan ta sig in i den.\nLjud och ljus läcker svagt och således kan existensen av den enbart förnimmas om en eld tänds i den eller om de där inne väsnas, då enbart med ett lyckat slag mot Vaksam -5 för den som letar utanför. Om kammaren upptäcks så är den däremot så pass djupt insjunken i berget att det tar en hel dag av grävande och hackande för att ta sig in med våld. Kammaren varar tills mystikern avslutar ritualen eller öppnar en ny Urbergskammare.\n Skalden kan även sjunga alternativa vägar ut ur kammaren, dessa urholkas motsvarande 2 förflyttningshandlingar per timme, så det är ett mödosamt arbete. Men en idogen Skald kan under sitt långa liv urholka ett helt berg.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Skald"
+      ],
+      "test": [
+        "Viljestark"
+      ]
+    }
+  },
+  {
+    "id": "rit100",
+    "namn": "Tvångslockelse",
+    "beskrivning": "Tradition: Endast tillgänglig för Skald\nDen högre nivån av ritualen “Lockelse” låter skalden bära budskapet långt och riktat, med en tvingande kraft som få kan motstå. Skalden väljer en familj av varelser precis som i Lockelse (Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur). Alla mottagare inom en dagsmarsch som hör sången måste klara ett Viljestark←Viljestark.\nLyckas prövningen kan målet ignorera tvångskallelsen fritt. Misslyckas slaget måste däremot mottagaren söka sig mot sångaren så snart det är möjligt, och agera som om det var dens egna fria vilja att finna källan till sången. Om det på vägen uppstår en uppenbart farlig situation får mottagaren ett nytt [Viljestark]-slag en gång per scen för att bryta impulsen igen. Tvånget varar medan sången pågår och upp till ett dygn efter att skalden tystnat. När mottagaren når skalden upphör impulsen och den kan inte kallas av samma sångare igen.",
+    "taggar": {
+      "typ": [
+        "Ritual",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Skald"
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "grundritual": [
+        "Lockelse"
+      ]
+    }
   }
 
 
