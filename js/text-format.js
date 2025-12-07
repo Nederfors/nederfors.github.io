@@ -23,8 +23,10 @@
       .join('');
   }
 
-  function abilityHtml(p, maxLevel){
+  function abilityHtml(p, maxLevel, opts){
     if(!p) return '';
+    const options = opts || {};
+    const collapseLevels = !!options.collapseLevels;
     const isBio = (window.isRas && window.isRas(p)) || (window.isYrke && window.isYrke(p)) || (window.isElityrke && window.isElityrke(p));
     let descText = p.beskrivning || '';
     // Ensure a standalone motto/quote at the start becomes its own paragraph
@@ -72,7 +74,7 @@
       const isUnlocked = idx <= highestUnlockedIdx;
       const classes = ['level-block'];
       if (shouldStyleLock && !isUnlocked) classes.push('level-locked');
-      const isOpen = !shouldCollapseLocked || isUnlocked;
+      const isOpen = collapseLevels ? false : (!shouldCollapseLocked || isUnlocked);
       levelBlocks.push(`
         <details class="${classes.join(' ')}"${isOpen ? ' open' : ''}>
           <summary>${key}</summary>
