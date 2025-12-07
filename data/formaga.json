@@ -1219,9 +1219,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Rollpersonen hanterar säkert två vapen, ett i varje hand. Novisen slåss med ett enhandsvapen i huvudhanden och ett Kort vapen i andra handen. Rollpersonen gör två anfall mot samma mål, skada 1T8 respektive 1T6. Fienden försvarar sig separat mot de båda anfallen. Som passiv förmåga får novisen också en defensiv bonus på +1 till sitt Försvar, såklart endast då denne hanterar ett vapen i varje hand.",
-      "Gesäll": "Handling: Aktiv. Gesällen kan använda två enhandsvapen och då gör attackerna 1T8 vardera i skada.",
-      "Mästare": "Handling: Aktiv. Skadan för huvudhandens vapen är i mästarens hand 1T10 och andra handens vapen gör 1T8 i skada."
+      "Novis": "Handling: Aktiv. Rollpersonen hanterar skickligt två enhandsvapen samtidigt, ett i varje hand. Detta tillåter rollpersonen att slåss obehindrat med den sekundära handen utan de vanliga avdragen för ovana.",
+      "Gesäll": "Gesällen är en veteran när det kommer till att strida med dubbla vapen. Den virvel av stål som rollpersonen skapar gör det svårt för fienden att försvara sig. Ett av anfallen varje runda gör +1T4 extra i skada.",
+      "Mästare": "Rollpersonen är så pass koordinerad i sina hugg att hen kan välja taktik i ögonblicket: låt skadan för tvillingattackerna räknas separat (för att t.ex. tvinga fram flera smärttröskel-slag) eller summeras som ett enda massivt anfall (för att tränga igenom tjockt pansar). För att denna dödliga precision ska lyckas krävs ett lyckat slag i Träffsäker som täcker båda anfallen."
     }
   },
   {
@@ -2012,18 +2012,18 @@
         },
         "Gesäll": {
           "handling": "Reaktiv",
-          "skadetyp": "Ingen"
+          "skadetyp": "Yttre fysisk"
         },
         "Mästare": {
           "handling": "Reaktiv",
-          "skadetyp": "Yttre fysisk"
+          "skadetyp": "Ignorerar bepansring"
         }
       }
     },
     "nivåer": {
-      "Novis": "Passiv. Rollpersonen har börjat inse fördelarna med att slåss med ett balanserat svärd i ena handen och en parerdolk i andra. Skadan för duellsvärdet ökar till 1T10 istället för normala 1T8.",
-      "Gesäll": "Reaktiv. Rollpersonen kan utföra en blixtsnabb ripost. Vid ett lyckat försvar per runda får rollpersonen ett frislag mot anfallaren.",
-      "Mästare": "Reaktiv. Mästaren kan utföra en rad blixtsnabb riposter. Rollpersonen får göra ett frislag mot anfallaren vid varje lyckat försvar, ingen begränsning i antal per runda. Som ett passivt tillägg ökar också skadan för det balanserade svärdet till 1T12."
+      "Novis": "Passiv. Rollpersonen har lärt sig att använda sköldens profil för att dölja svärdets anfallsvinkel in i det sista. Detta gör det mycket svårt för fienden att förutse huggen. När rollpersonen strider med enhandssvärd och sköld får svärdsattackerna +1T4 i skada.",
+      "Gesäll": "Reaktiv. Mästaren straffar varje misstag fienden gör. Skölden används för att låsa fast eller slå undan fiendens vapen i samma ögonblick som det träffar garden. Varje gång rollpersonen lyckas med sitt Försvar i närstrid får denne omedelbart utföra ett frislag med svärdet mot anfallaren.",
+      "Mästare": "Rollpersonen kan utföra en genomträngande stöt”. Genom att aggressivt tvinga fram en blotta i försvaret hos motståndaren med  sin egen sköld skapas en blotta rakt in mot kroppen. Rollpersonen gör en attack med svärdet; om den träffar ignorerar attacken målets Bepansring helt."
     }
   },
   {
