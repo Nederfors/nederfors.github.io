@@ -2015,7 +2015,7 @@
           "skadetyp": "Yttre fysisk"
         },
         "Mästare": {
-          "handling": "Reaktiv",
+          "handling": "Aktiv",
           "skadetyp": "Ignorerar bepansring"
         }
       }
@@ -2023,7 +2023,7 @@
     "nivåer": {
       "Novis": "Passiv. Rollpersonen har lärt sig att använda sköldens profil för att dölja svärdets anfallsvinkel in i det sista. Detta gör det mycket svårt för fienden att förutse huggen. När rollpersonen strider med enhandssvärd och sköld får svärdsattackerna +1T4 i skada.",
       "Gesäll": "Reaktiv. Mästaren straffar varje misstag fienden gör. Skölden används för att låsa fast eller slå undan fiendens vapen i samma ögonblick som det träffar garden. Varje gång rollpersonen lyckas med sitt Försvar i närstrid får denne omedelbart utföra ett frislag med svärdet mot anfallaren.",
-      "Mästare": "Rollpersonen kan utföra en genomträngande stöt”. Genom att aggressivt tvinga fram en blotta i försvaret hos motståndaren med  sin egen sköld skapas en blotta rakt in mot kroppen. Rollpersonen gör en attack med svärdet; om den träffar ignorerar attacken målets Bepansring helt."
+      "Mästare": "Aktiv. Rollpersonen kan utföra en genomträngande stöt”. Genom att aggressivt tvinga fram en blotta i försvaret hos motståndaren med  sin egen sköld skapas en blotta rakt in mot kroppen. Rollpersonen gör en attack med svärdet; om den träffar ignorerar attacken målets Bepansring helt."
     }
   },
   {
