@@ -1108,6 +1108,11 @@ body[data-role="summary"] .summary-value.neg {
   box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .25);
 }
 
+#yrkePanel .info-panel-elite .elite-info-details .levels,
+#infoPanel .info-panel-elite .elite-info-details .levels {
+  padding: .45rem .4rem .6rem;
+}
+
 #yrkePanel .info-panel-elite .elite-info-details summary,
 #infoPanel .info-panel-elite .elite-info-details summary {
   font-weight: 600;
