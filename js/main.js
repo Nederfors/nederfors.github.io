@@ -1233,7 +1233,7 @@ function buildElityrkeInfoSections(p) {
       : [];
     const tagsHtml = tags.length ? `<div class="tags elite-ability-tags">${tags.join('')}</div>` : '';
     const body = entry && abilityRenderer
-      ? abilityRenderer(entry)
+      ? abilityRenderer(entry, undefined, { collapseLevels: true })
       : `<p class="elite-ability-missing-text">Kan inte hitta beskrivning för <em>${safe(displayName)}</em> i databasen.</p>`;
     const missingClass = entry ? '' : ' missing';
     const openAttr = options.defaultOpen ? ' open' : '';
