@@ -1944,7 +1944,7 @@
     "nivåer": {
       "Novis": "Aktiv. Rollpersonen kan med ett lyckat Viljestark skicka iväg en blixt från klar himmel mot en motståndare. Fienden tar 1T10 i elementarskada. Blixtfrämjaren kan också kalla på en blixt som förgrenar sig i en radie av 6 meter och gör 1T8 i elementarskada på alla fiender som står inom den radien.",
       "Gesäll": "Aktiv. Som novis men skadan ökar till 1T12 alternativt 1T10 vid förgrening.",
-      "Mästare": "Aktiv. Blixtens kraft följs av en dundrande åskknall. Slå 1t20 för varje motståndare som träffas; vid resultat 1–10 drabbas de av en så stark ström att de förlorar förmågan att använda aktiva handlingar under nästa runda."
+      "Mästare": "Aktiv. Som gesäll, men efter nedslaget gör Blixtfrämjaren ett motståndsslag, Viljestark mot målets Stark. Lyckas slaget tar tar målet dessutom 1T6 alternativ skada på Viljestark; vid förgrening tar i stället varje träffat mål 1T4 alternativ skada på Viljestark."
     },
     "id": "mystiskkr56"
   },
@@ -2246,27 +2246,25 @@
       "test": [
         "Viljestark"
       ],
-      "nivå_data": {
-        "Novis": {
-          "handling": "Aktiv",
-          "skadetyp": "Ingen"
-        },
-        "Gesäll": {
-          "handling": "Aktiv",
-          "skadetyp": "Ingen"
-        },
-        "Mästare": {
-          "handling": "Aktiv",
-          "skadetyp": "Fallskada"
-        }
+      "handling": {
+        "Novis": [
+          "Aktiv"
+        ],
+        "Gesäll": [
+          "Aktiv"
+        ],
+        "Mästare": [
+          "Aktiv"
+        ]
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Mystikern sjunger en låg, vibrerande ton som får en pelare av sten eller packad jord att skjuta upp ur marken (ca 2 meter hög). Pelaren kan användas som skydd (Tålighet 15, skydd 5, brytpunnkt 8) eller för att lyfta mystikern själv till en högre position. Sången är dock inte stark nog att lyfta en ovillig fiende.",
-      "Gesäll": "Handling: Aktiv. Mystikern väver en inneslutande melodi som skapar en bur av stenpelare runt ett mål inom synhåll. Offret är fångat tills det lyckas bryta sig ut (Tålighet 15, skydd 5, brytpunnkt 8) eller tills mystikern misslyckas med ett slag mot Viljestark.",
-      "Mästare": "Handling: Aktiv. Mystikern tar i från tårna i ett dundrande crescendo och en pelare skjuter våldsamt upp under en fiende. Offret måste klara [Kvick←Viljestark] eller slungas upp i luften, ta 1T6 i fallskada och landa liggande. Om det finns ett tak krossas offret mot detta för ytterligare 1T10 i skada. Om pelaren måste bryta igenom ett golv eller en annan struktur för att nå målet krävs ett extra lyckat slag mot Viljestark. Varelser med det monstruösa särdraget 'Väldig' är för tunga för att slungas på det här sättet."
+      "Novis": "Handling: Aktiv. Mystikern nynnar en djup ton och en stenpelare skjuter upp under en fiende i närstrid. Med ett lyckat [Viljestark←Stark] slungas fienden upp, tar 1T4 i skada och landar liggande. Om det finns ett tak krossas offret mot detta för ytterligare 1T8 i skada. Varelser med särdraget Väldig påverkas ej.",
+      "Gesäll": "Handling: Aktiv. Som novis, men sången når nu längre och är mer våldsam. Mystikern kan rikta kraften mot en fiende inom synhåll. Vid träff (slag [Viljestark←Stark]) tar offret 1T6 i skada och landar liggande. Om det finns ett tak tar offret ytterligare 1T10 i skada.",
+      "Mästare": "Handling: Aktiv. Som gesäll, men mystikern kan låta sången eka mellan fienderna. Om mystikern lyckas påverka en fiende (enligt gesällnivån) kan kraften omedelbart hoppa till en annan fiende inom synhåll. Detta fortsätter i en kedja tills ett slag [Viljestark←Stark] misslyckas eller inga fler mål finns. Om mystikern vill, så går kraften dock att använda på novisnivå och kräver då bara ett lyckat slag på Viljestark"
     }
   },
+
   {
     "id": "mystiskkr66",
     "namn": "Kroppsförvrängning",
