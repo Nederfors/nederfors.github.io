@@ -1613,7 +1613,7 @@
       "Bepansringstyp": "Robust/Överlevnadsinstinkt",
       "Yttre fysisk": "Skyddar",
       "Inre fysisk": "Skyddar inte",
-      "Elementär": "Skyddar",
+      "Elementär": "Skyddar inte",
       "Mystisk": "Skyddar inte",
       "Gift": "Skyddar inte",
       "Ignorerar bepansring": "Skyddar",
@@ -1783,7 +1783,7 @@
       "Bepansring – rustningar": "Går igenom",
       "Naturligt pansar": "Stoppas",
       "Mystisk bepansring": "Stoppas",
-      "Robust/Överlevnadsinstinkt": "Stoppas"
+      "Robust/Överlevnadsinstinkt": "Går igenom"
     },
     {
       "Skadetyp": "Mystisk",
