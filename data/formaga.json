@@ -1997,7 +1997,7 @@
   {
     "id": "form60",
     "namn": "Svärdshelgon",
-    "beskrivning": "Bland Ambrias duellister finns det vissa som uppnått en nästa mystisk symbios med sitt duellsvärd och hanterar det som om det var en förlängning av fäktarens kropp och själ. Svärdshelgonets tekniker kan endast användas med duellsvärd (eller annat svärd med kvaliteten Balanserad), ensamt eller tillsammans med parerdolk. Förmågan Manteldans kan också användas parallellt med svärdet, då istället för parerdolk. Förmågan kan inte kombineras med Tvillingattack för ytterligare ökad skada.",
+    "beskrivning": "Vare sig de skolats i Yndaros förnäma fäktningssalar eller härdats under Davokars mörka trädkronor, finns det krigare som blivit ett med sitt stål. För dessa svärdshelgon är klingan inte ett verktyg, utan en förlängning av kroppen – en lem av kallt järn. Med en dödlig elegans rör de sig genom slagfältets kaos, där barbarernas yxor och ridderskapets tunga hammare framstår som klumpiga redskap för slakt. I deras händer sjunger enhandssvärdet en egen sång, oavsett om det förs ensamt, pareras med sköld eller understöds av en dolk.",
     "taggar": {
       "typ": [
         "Förmåga"
