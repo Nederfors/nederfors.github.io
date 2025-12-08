@@ -2246,21 +2246,24 @@
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+       "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Fallskada"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Fallskada"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Fallskada"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Mystikern nynnar en djup ton och en stenpelare skjuter upp under en fiende i närstrid. Med ett lyckat [Viljestark←Stark] slungas fienden upp, tar 1T4 i skada och landar liggande. Om det finns ett tak krossas offret mot detta för ytterligare 1T8 i skada. Varelser med särdraget Väldig påverkas ej.",
-      "Gesäll": "Handling: Aktiv. Som novis, men sången når nu längre och är mer våldsam. Mystikern kan rikta kraften mot en fiende inom synhåll. Vid träff (slag [Viljestark←Stark]) tar offret 1T6 i skada och landar liggande. Om det finns ett tak tar offret ytterligare 1T10 i skada.",
+      "Novis": "Handling: Aktiv. Mystikern nynnar en djup ton och en stenpelare skjuter upp under en fiende i närstrid. Med ett lyckat [Viljestark←Stark] slungas fienden upp, tar 1T6 i fallskada och landar liggande. Om det finns ett tak krossas offret mot detta för ytterligare 1T8 i fallskada. Varelser med särdraget Väldig påverkas ej.",
+      "Gesäll": "Handling: Aktiv. Som novis, men sången når nu längre och är mer våldsam. Mystikern kan rikta kraften mot en fiende inom synhåll. Vid träff (slag [Viljestark←Stark]) tar offret 1T8 i skada och landar liggande. Om det finns ett tak tar offret ytterligare 1T10 i skada.",
       "Mästare": "Handling: Aktiv. Som gesäll, men mystikern kan låta sången eka mellan fienderna. Om mystikern lyckas påverka en fiende (enligt gesällnivån) kan kraften omedelbart hoppa till en annan fiende inom synhåll. Detta fortsätter i en kedja tills ett slag [Viljestark←Stark] misslyckas eller inga fler mål finns. Om mystikern vill, så går kraften dock att använda på novisnivå och kräver då bara ett lyckat slag på Viljestark"
     }
   },
