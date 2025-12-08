@@ -189,6 +189,22 @@ function handlingName(p, key){
   return key;
 }
 
+function findConflictingEntries(entry, list){
+  const baseKeys = new Set(getActiveHandlingKeys(entry));
+  if (!baseKeys.size) return [];
+  return (Array.isArray(list) ? list : [])
+    .filter(item => {
+      if (!item || item === entry) return false;
+      if ((item.namn || '') === (entry?.namn || '')
+        && (item.trait ?? null) === (entry?.trait ?? null)
+        && (item.nivå ?? null) === (entry?.nivå ?? null)) {
+        return false;
+      }
+      const otherKeys = getActiveHandlingKeys(item);
+      return otherKeys.some(k => baseKeys.has(k));
+    });
+}
+
 const charCategory = (entry, { allowFallback = true } = {}) => {
   const rawTypes = Array.isArray(entry?.taggar?.typ)
     ? entry.taggar.typ
@@ -1527,7 +1543,7 @@ function initIndex() {
         if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
         const activeKeys = getActiveHandlingKeys(p);
         const currentChars = storeHelper.getCurrentList(store);
-        const conflictPool = currentChars.filter(x => x.namn !== p.namn && getActiveHandlingKeys(x).length);
+        const conflictPool = findConflictingEntries(p, currentChars);
         const conflictsHtml = (activeKeys.length && conflictPool.length)
           ? buildConflictsHtml(conflictPool)
           : '';
