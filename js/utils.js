@@ -700,8 +700,8 @@
       pierce: SKADETYP_ARMOR_KEYS
     },
     'elementär': {
-      stop: ['Naturligt pansar', 'Mystisk bepansring', 'Robust/Överlevnadsinstinkt'],
-      pierce: ['Bepansring – rustningar']
+      stop: ['Naturligt pansar', 'Mystisk bepansring'],
+      pierce: ['Bepansring – rustningar', 'Robust/Överlevnadsinstinkt']
     },
     'mystisk': {
       stop: ['Mystisk bepansring'],
