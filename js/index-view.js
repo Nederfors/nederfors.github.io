@@ -115,16 +115,6 @@ function computeIndexEntryXP(entry, list, options = {}) {
     workingList.push(targetEntry);
   }
 
-  function activateInfoTab(panel, tabName){
-    if (!panel || !tabName) return;
-    const tabBtn = panel.querySelector(`.info-tab[data-tab="${tabName}"]`);
-    if (!tabBtn) return;
-    const tabs = panel.querySelectorAll('.info-tab');
-    const panels = panel.querySelectorAll('.info-tab-panel');
-    tabs.forEach(btn => btn.classList.toggle('active', btn === tabBtn));
-    panels.forEach(pnl => pnl.classList.toggle('active', pnl.dataset.tabPanel === tabName));
-  }
-
   const helperOptions = {
     ...xpOptions,
     xpSource: targetEntry
@@ -2154,8 +2144,7 @@ function initIndex() {
       if (infoBtn?.dataset.info) {
         let html = decodeURIComponent(infoBtn.dataset.info || '');
         const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
-        yrkePanel.open(title, html);
-        setTimeout(() => activateInfoTab(document.getElementById('yrkePanel'), 'conflict'), 0);
+        yrkePanel.open(title, html, { initialTab: 'conflict' });
       }
       e.preventDefault();
       e.stopPropagation();
