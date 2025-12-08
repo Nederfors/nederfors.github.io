@@ -2,6 +2,20 @@
   let outsideHandler = null;
   let conflictHandler = null;
 
+  function activateTab(container, tabName) {
+    if (!container || !tabName) return;
+    const root = container.matches?.('.info-panel-content.has-tabs')
+      ? container
+      : container.querySelector?.('.info-panel-content.has-tabs');
+    if (!root) return;
+    const tabBtn = root.querySelector(`.info-tab[data-tab="${tabName}"]`);
+    if (!tabBtn) return;
+    root.querySelectorAll('.info-tab').forEach(btn => btn.classList.toggle('active', btn === tabBtn));
+    root.querySelectorAll('.info-tab-panel').forEach(panelEl => {
+      panelEl.classList.toggle('active', panelEl.dataset.tabPanel === tabName);
+    });
+  }
+
   function create() {
     if (document.getElementById('yrkePanel')) return;
     const panel = document.createElement('aside');
@@ -23,14 +37,9 @@
       const conflictBtn = e.target.closest('[data-conflict-btn]');
       const tab = e.target.closest('.info-tab');
       if (!tab) return;
-      const root = tab.closest('.info-panel-content.has-tabs');
-      if (!root) return;
       const target = tab.dataset.tab;
       if (!target) return;
-      root.querySelectorAll('.info-tab').forEach(btn => btn.classList.toggle('active', btn === tab));
-      root.querySelectorAll('.info-tab-panel').forEach(panelEl => {
-        panelEl.classList.toggle('active', panelEl.dataset.tabPanel === target);
-      });
+      activateTab(tab.closest('.info-panel-content.has-tabs'), target);
     });
   }
 
@@ -51,6 +60,10 @@
 
     panel.classList.add('open');
     panel.scrollTop = 0;
+    if (options.initialTab) {
+      activateTab(panel, options.initialTab);
+      requestAnimationFrame(() => activateTab(panel, options.initialTab));
+    }
     window.updateScrollLock?.();
     outsideHandler = e => {
       if(!panel.contains(e.target)){

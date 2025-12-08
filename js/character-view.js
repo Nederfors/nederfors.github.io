@@ -1674,16 +1674,6 @@ function initCharacter() {
     return `${list.slice(0,-1).join(', ')} och ${list[list.length-1]}`;
   }
 
-  function activateInfoTab(panel, tabName){
-    if (!panel || !tabName) return;
-    const tabBtn = panel.querySelector(`.info-tab[data-tab="${tabName}"]`);
-    if (!tabBtn) return;
-    const tabs = panel.querySelectorAll('.info-tab');
-    const panels = panel.querySelectorAll('.info-tab-panel');
-    tabs.forEach(btn => btn.classList.toggle('active', btn === tabBtn));
-    panels.forEach(pnl => pnl.classList.toggle('active', pnl.dataset.tabPanel === tabName));
-  }
-
   function openConflictPanelFor(entryName){
     if (!entryName) return false;
     const currentList = storeHelper.getCurrentList(store);
@@ -1721,8 +1711,7 @@ function initCharacter() {
       if (infoBtn?.dataset.info) {
         let html = decodeURIComponent(infoBtn.dataset.info || '');
         const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
-        yrkePanel.open(title, html);
-        setTimeout(() => activateInfoTab(document.getElementById('yrkePanel'), 'conflict'), 0);
+        yrkePanel.open(title, html, { initialTab: 'conflict' });
       }
       e.preventDefault();
       e.stopPropagation();
