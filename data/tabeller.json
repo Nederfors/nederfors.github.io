@@ -295,31 +295,31 @@
     {
       "avståndskategori": "Närstrid",
       "effekt på avståndsvapen": "Anfall endast möjligt under första rundan och bara om initiativet hålls av skytten",
-      "ungefärligt avstånd": "1–2 meter",
+      "ungefärligt avstånd": "0-2 meter",
       "antal förflyttningar": "Ingen"
     },
     {
       "avståndskategori": "Kort",
       "effekt på avståndsvapen": "+2 på Träffsäker, +1T4 i skada",
-      "ungefärligt avstånd": "10 meter",
+      "ungefärligt avstånd": " 2-10 meter",
       "antal förflyttningar": "1"
     },
     {
       "avståndskategori": "Medellångt",
       "effekt på avståndsvapen": "Ingen",
-      "ungefärligt avstånd": "20 meter",
+      "ungefärligt avstånd": "10-20 meter",
       "antal förflyttningar": "2"
     },
     {
       "avståndskategori": "Långt",
       "effekt på avståndsvapen": "–2 på Träffsäker",
-      "ungefärligt avstånd": "50 meter",
+      "ungefärligt avstånd": "20-50 meter",
       "antal förflyttningar": "5"
     },
     {
       "avståndskategori": "Extremt",
       "effekt på avståndsvapen": "–5 på Träffsäker, –1T4 i skada",
-      "ungefärligt avstånd": "100 meter",
+      "ungefärligt avstånd": "50-100 meter",
       "antal förflyttningar": "10"
     }
   ]
