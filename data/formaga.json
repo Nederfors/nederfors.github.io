@@ -2007,11 +2007,11 @@
       ],
       "nivå_data": {
         "Novis": {
-          "handling": "Passiv",
-          "skadetyp": "Yttre fysisk"
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
         },
         "Gesäll": {
-          "handling": "Reaktiv",
+          "handling": "Passiv",
           "skadetyp": "Yttre fysisk"
         },
         "Mästare": {
@@ -2021,9 +2021,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Passiv. Rollpersonen har lärt sig att använda sköldens profil för att dölja svärdets anfallsvinkel in i det sista. Detta gör det mycket svårt för fienden att förutse huggen. När rollpersonen strider med enhandssvärd och sköld får svärdsattackerna +1T4 i skada.",
-      "Gesäll": "Reaktiv. Mästaren straffar varje misstag fienden gör. Skölden används för att låsa fast eller slå undan fiendens vapen i samma ögonblick som det träffar garden. Varje gång rollpersonen lyckas med sitt Försvar i närstrid får denne omedelbart utföra ett frislag med svärdet mot anfallaren.",
-      "Mästare": "Aktiv. Rollpersonen kan utföra en genomträngande stöt”. Genom att aggressivt tvinga fram en blotta i försvaret hos motståndaren med  sin egen sköld skapas en blotta rakt in mot kroppen. Rollpersonen gör en attack med svärdet; om den träffar ignorerar attacken målets Bepansring helt."
+      "Novis": "Handling: Reaktiv.\nSvärdsmästarens klinga flyter som vatten mellan fienderna. Om rollpersonen träffar en fiende med en attack får hen omedelbart göra en fri attack mot en annan fiende inom räckvidd.",
+      "Gesäll": "Handling: Passiv.\nRollpersonen har lärt sig att utnyttja svärdets balans och skärpa till fullo för att hitta blottor i fiendens gard. Alla attacker utförda med ett enhandssvärd gör +1T4 i skada",
+      "Mästare": "Handling: Aktiv.\nRollpersonen utför en blixtsnabb kombination, en 'dubbelstöt', mot en och samma fiende. Om rollpersonen träffar med två anfalsslag har svärdet med första anfallet öppnat en blotta i fiendens bepansring. Varpå det andra slaget kan slå djupt i en vital del och ignorera målets bepansring. Extraskadan från gesällnivån ökar till 1T6 för det andra slaget."
     }
   },
   {
