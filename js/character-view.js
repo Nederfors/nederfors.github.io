@@ -584,6 +584,22 @@ function initCharacter() {
     return key;
   }
 
+  function findConflictingEntries(entry, list){
+    const baseKeys = new Set(getActiveHandlingKeys(entry));
+    if (!baseKeys.size) return [];
+    return (Array.isArray(list) ? list : [])
+      .filter(item => {
+        if (!item || item === entry) return false;
+        if ((item.namn || '') === (entry?.namn || '')
+          && (item.trait ?? null) === (entry?.trait ?? null)
+          && (item.nivå ?? null) === (entry?.nivå ?? null)) {
+          return false;
+        }
+        const otherKeys = getActiveHandlingKeys(item);
+        return otherKeys.some(k => baseKeys.has(k));
+      });
+  }
+
   function conflictEntryHtml(p){
     const activeKeys = getActiveHandlingKeys(p);
     const activeNames = activeKeys.map(k => handlingName(p, k));
@@ -1379,7 +1395,7 @@ function initCharacter() {
         if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
         const activeKeys = getActiveHandlingKeys(p);
         const currentList = storeHelper.getCurrentList(store);
-        const conflictPool = currentList.filter(x => x.namn !== p.namn && getActiveHandlingKeys(x).length);
+        const conflictPool = findConflictingEntries(p, currentList);
         const conflictsHtml = (activeKeys.length && conflictPool.length)
           ? buildConflictsHtml(conflictPool)
           : '';
@@ -1691,8 +1707,8 @@ function initCharacter() {
       }
     }
     conflictTitle.textContent = `${baseName}${levelsText} kan ej användas samtidigt som:`;
-    const others = currentList.filter(x => x.namn !== entryName && getActiveHandlingKeys(x).length);
-    renderConflicts(others);
+    const conflicts = findConflictingEntries(current || { namn: entryName }, currentList);
+    renderConflicts(conflicts);
     conflictPanel.classList.add('open');
     conflictPanel.scrollTop = 0;
     return true;
