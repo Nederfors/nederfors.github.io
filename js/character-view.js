@@ -562,8 +562,19 @@ function initCharacter() {
       ? window.getEntryLevelMeta(p)
       : (p?.taggar?.nivå_data || {});
     const source = Object.keys(meta || {}).length ? meta : (p?.taggar?.handling || {});
+
+    const availableLevels = LVL.filter(l => p?.nivåer?.[l]);
+    const currentLevel = LVL.includes(p?.nivå || '')
+      ? p.nivå
+      : (availableLevels.length === 1 ? availableLevels[0] : null);
+    const currentIdx = currentLevel ? LVL.indexOf(currentLevel) : -1;
+
     return Object.entries(source)
-      .filter(([, v]) => {
+      .filter(([levelKey, v]) => {
+        if (LVL.includes(levelKey)) {
+          if (currentIdx < 0 || LVL.indexOf(levelKey) > currentIdx) return false;
+        }
+
         const handlingVal = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, 'handling')
           ? v.handling
           : v;
