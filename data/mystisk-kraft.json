@@ -2228,7 +2228,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Mystikern infekterar ett öppet sår på en fiende inom synhåll (kräver att offret redan har tagit skada). Offret tar 1T4 i intern skada per runda så länge mystikern inte tappar koncentrationen [Viljestark – Skada] eller misslyckas med ett slag mot Viljestark.",
-      "Gesäll": "Handling: Aktiv. Som novis, men såret varar och smärtar så intensivt att offret inte kan helas naturligt eller med magiska medel så länge kraften är aktiv. Dessutom drabbas offret omedelbart vid aktiveringen av en effekt som om dess smärtgräns överskridits (faller omkull eller ger frislag). Effekten håller i sig så länge mystikern upprätthåller koncentrationen.",
+      "Gesäll": "Handling: Aktiv. Som novis, men såret varar och smärtar så intensivt att offret inte kan helas naturligt eller med magiska medel så länge kraften är aktiv. Dessutom drabbas offret omedelbart vid aktiveringen av en effekt som om dess smärtgräns överskridits. Effekten håller i sig så länge mystikern upprätthåller koncentrationen.",
       "Mästare": "Handling: Aktiv. Som gesäll, men infektionen övergår snabbt i kallbrand. Offret drabbas varje runda av effekten av överskriden smärtgräns. Om såret inte läks på magisk väg inom ett dygn efter att mystikern släppt koncentrationen måste den drabbade kroppsdelen amputeras, vilket sänker ett av offrets Karaktärsdrag permanent (SL avgör vilket beroende på skada)."
     }
   },
