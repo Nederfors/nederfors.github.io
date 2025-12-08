@@ -1209,7 +1209,7 @@
           "skadetyp": "Yttre fysisk"
         },
         "Gesäll": {
-          "handling": "Aktiv",
+          "handling": "Passiv",
           "skadetyp": "Yttre fysisk"
         },
         "Mästare": {
@@ -1220,8 +1220,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Aktiv. Rollpersonen hanterar skickligt två enhandsvapen samtidigt, ett i varje hand. Detta tillåter rollpersonen att slåss obehindrat med den sekundära handen utan de vanliga avdragen för ovana.",
-      "Gesäll": "Gesällen är en veteran när det kommer till att strida med dubbla vapen. Den virvel av stål som rollpersonen skapar gör det svårt för fienden att försvara sig. Ett av anfallen varje runda gör +1T4 extra i skada.",
-      "Mästare": "Rollpersonen är så pass koordinerad i sina hugg att hen kan välja taktik i ögonblicket: låt skadan för tvillingattackerna räknas separat (för att t.ex. tvinga fram flera smärttröskel-slag) eller summeras som ett enda massivt anfall (för att tränga igenom tjockt pansar). För att denna dödliga precision ska lyckas krävs ett lyckat slag i Träffsäker som täcker båda anfallen."
+      "Gesäll": "Handling: Passiv. Gesällen är en veteran när det kommer till att strida med dubbla vapen. Den virvel av stål som rollpersonen skapar gör det svårt för fienden att försvara sig. Ett av anfallen varje runda gör +1T4 extra i skada.",
+      "Mästare": "Handling: Aktiv. Rollpersonen är så pass koordinerad i sina hugg att hen kan välja taktik i ögonblicket: låt skadan för tvillingattackerna räknas **separat** eller **summeras** som ett enda massivt anfall. Ett slag på Träffsäkerhet slås för varje attack. Om båda attackerna träffar gäller bonusskadan från Gesällnivån för **båda** attackerna, oavsett om skadan räknas separat eller summeras."
     }
   },
   {
