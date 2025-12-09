@@ -371,7 +371,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonens starka personlighet gör att denne får använda Övertygande istället för Viljestark, exempelvis vid användandet av mystiska krafter, dock inte som grund för korruptionströskel.",
-      "Gesäll": "Handling: Fri. Med ett lyckat slag mot Övertygande kan rollpersonen kan under en scen utse en varelse eller ett objekt till gemensam måltavla för sin grupp av allierade. Alla allierade som attackerar målet får +1T4 i skada mot målet. Att byta mål kräver en ny handling från ledaren, bara ett mål kan vara aktivt åt gången. Kan användas som aktiv handling för att lyckas utan slag mot Övertygande.",
+      "Gesäll": "Handling: Fri. Med ett lyckat slag mot Övertygande kan rollpersonen kan under en scen utse en varelse eller ett objekt till gemensam måltavla för sin grupp av allierade. Alla allierade som riktar en aktiv handling specifikt mot målet får +1T4 effekttärning mot det. Att byta mål kräver en ny handling från ledaren, bara ett mål kan vara aktivt åt gången. Kan användas som aktiv handling för att lyckas utan slag mot Övertygande.",
       "Mästare": "Handling: Fri. Med ett lyckat slag mot Övertygande kan ledaren hålla ett brandtal till sina allierade, vilket innebär att de allierade får använda ledarens Övertygande istället för sin egen Viljestark under scenen. Kan användas som aktiv handling för att lyckas utan slag mot Övertygande."
     }
   },
