@@ -1448,116 +1448,60 @@
 {
   "id": "ta21",
   "namn": "Effekt vid överskriden Smärtgräns",
-  "taggar": { "typ": ["Tabell"] },
+  "taggar": { "typ": ["Tabell", "Skada"] },
   "kolumner": [
-    "1T20",
+    "1T10",
     "Effekt",
-    "Beskrivning"
+    "Regelmekanik"
   ],
   "rader": [
     {
-      "1T20": "1",
+      "1T10": "1-2",
       "Effekt": "Ingen",
-      "Beskrivning": "Skadan kändes i ett ögonblick värre än den var."
+      "Regelmekanik": "Smärtan verkade i ett ögonblick värre än den egentligen var."
     },
     {
-      "1T20": "2",
-      "Effekt": "Blind aggression",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag som gäller anfall."
+      "1T10": "3",
+      "Effekt": "Chockad",
+      "Regelmekanik": "Offret faller omedelbart omkull."
     },
     {
-      "1T20": "3",
-      "Effekt": "Blödning",
-      "Beskrivning": "Rollpersonen blöder och tar 1T4 skada varje runda fram tills behandlad av Medicus, Livselixir, Örtkur eller Helbrägdagörelse."
+      "1T10": "4",
+      "Effekt": "Vacklande gard",
+      "Regelmekanik": "Offret tvingas ta ett steg tillbaka och fienden får ett Frislag."
     },
     {
-      "1T20": "4",
-      "Effekt": "Chocktillstånd",
-      "Beskrivning": "Rollpersonen får svårt att reagera på händelser och får en andra chans att misslyckas med alla försök till försvar."
-    },
-    {
-      "1T20": "5",
-      "Effekt": "Kraftig huvudvärk",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Viljestark."
-    },
-    {
-      "1T20": "6",
-      "Effekt": "Yrsel",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Kvick."
-    },
-    {
-      "1T20": "7",
-      "Effekt": "Synförlust",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Träffsäker."
-    },
-    {
-      "1T20": "8",
-      "Effekt": "Tunnelseende",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Vaksam."
-    },
-    {
-      "1T20": "9",
-      "Effekt": "Kramper",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Stark."
-    },
-    {
-      "1T20": "10",
-      "Effekt": "Andningssvårigheter",
-      "Beskrivning": "Rollpersonen får en andra chans att lyckas med alla slag mot Övertygande."
-    },
-    {
-      "1T20": "11",
+      "1T10": "5",
       "Effekt": "Hjärnskakning",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Listig."
+      "Regelmekanik": "Offret får en andra chans att misslyckas med alla slag mot försvar under resten av striden."
     },
     {
-      "1T20": "12",
-      "Effekt": "Smärtsam kramp",
-      "Beskrivning": "Rollpersonen får en andra chans att misslyckas med alla slag mot Diskret."
+      "1T10": "6",
+      "Effekt": "Knäckt revben",
+      "Regelmekanik": "Offret får en andra chans att misslyckas med alla aktiva handlingar under resten av striden."
     },
     {
-      "1T20": "13",
-      "Effekt": "Dubbelseende",
-      "Beskrivning": "Rollpersonen slår en T20 vid varje anfall, 1–10 träffar rätt, 11–19 träffar luften och 20 träffar en allierad inom räckvidd (om möjligt)."
+      "1T10": "7",
+      "Effekt": "Brutet ben",
+      "Regelmekanik": "Rollpersonen måste klara ett slag mot Kvick för att lyckas utföra en förflyttning."
     },
     {
-      "1T20": "14",
+      "1T10": "8",
+      "Effekt": "Öppen skada",
+      "Regelmekanik": "Offret tar 1T4 intern skada i början av varje runda."
+    },
+    {
+      "1T10": "9",
       "Effekt": "Förlamande smärta",
-      "Beskrivning": "Rollpersonen kan inte agera förrän den klarar ett slag mot Stark."
+      "Regelmekanik": "Rollpersonen kan inte agera alls förrän den klarar ett slag mot Stark eller Viljestark."
     },
     {
-      "1T20": "15",
-      "Effekt": "Förlamande rädsla",
-      "Beskrivning": "Rollpersonen kan inte agera förrän den klarar ett slag mot Viljestark."
-    },
-    {
-      "1T20": "16",
-      "Effekt": "Skadade ben",
-      "Beskrivning": "Rollpersonen måste klara ett slag mot Kvick för att lyckas utföra en förflyttning."
-    },
-    {
-      "1T20": "17",
-      "Effekt": "Tappat vapen",
-      "Beskrivning": "Rollpersonen tappar sitt vapen vilket glider en halv förflyttning bort (avrundat nedåt); slå 1T8 för att avgöra riktning."
-    },
-    {
-      "1T20": "18",
-      "Effekt": "Initiativtrög",
-      "Beskrivning": "Rollpersonen hamnar längst ned i initiativordningen och det går inte att skjuta upp sitt initiativ till efter rollpersonen."
-    },
-    {
-      "1T20": "19",
-      "Effekt": "Reflextrög",
-      "Beskrivning": "Rollpersonen får –1 på alla slag mot försvar och anfall."
-    },
-    {
-      "1T20": "20",
+      "1T10": "10",
       "Effekt": "Kritiskt skadad",
-      "Beskrivning": "Rollpersonen skadas så illa att den faller till marken och dessutom permanent får –1 på sin Tålighet."
+      "Regelmekanik": "Slå fram två separata effekter på tabellen (som inte är ingen effekt eller kritisk skada)."
     }
-    
-    ],
-   "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T20 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
+  ],
+   "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T10 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
 },
 
 {
