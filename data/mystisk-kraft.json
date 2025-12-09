@@ -2262,7 +2262,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Mystikern nynnar en djup ton och en stenpelare skjuter upp under en fiende i närstrid. Med ett lyckat [Viljestark←Stark] slungas fienden upp, tar 1T6 i fallskada och landar liggande. Om det finns ett tak krossas offret mot detta för ytterligare 1T8 i fallskada. Varelser med särdraget Väldig påverkas ej.",
+      "Novis": "Handling: Aktiv. Mystikern nynnar en djup ton och en stenpelare skjuter upp under en fiende i närstrid. Med ett lyckat [Viljestark←Stark] slungas fienden upp, tar 1T6 i fallskada och landar liggande. Om det finns ett tak krossas offret mot detta för ytterligare 1T8 i fallskada. Rollpersonen kan också välja att sätta en pelare under sig själv eller en allierad, som då hamnar utanför närstridsräckvidd från alla vapen förutom de med kvaliteten långt. Pelaren går dock att slå sönder enligt reglerna 'skada på byggnader', då den har Tålighet 20, skydd 10.",
       "Gesäll": "Handling: Aktiv. Som novis, men sången når nu längre och är mer våldsam. Mystikern kan rikta kraften mot en fiende inom synhåll. Vid träff (slag [Viljestark←Stark]) tar offret 1T8 i skada och landar liggande. Om det finns ett tak tar offret ytterligare 1T10 i skada.",
       "Mästare": "Handling: Aktiv. Som gesäll, men mystikern kan låta sången eka mellan fienderna. Om mystikern lyckas påverka en fiende (enligt gesällnivån) kan kraften omedelbart hoppa till en annan fiende inom synhåll. Detta fortsätter i en kedja tills ett slag [Viljestark←Stark] misslyckas eller inga fler mål finns. Om mystikern vill, så går kraften dock att använda på novisnivå och kräver då bara ett lyckat slag på Viljestark"
     }
