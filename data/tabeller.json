@@ -1456,9 +1456,14 @@
   ],
   "rader": [
     {
-      "1T10": "1-2",
+      "1T10": "1",
       "Effekt": "Ingen",
       "Regelmekanik": "Smärtan verkade i ett ögonblick värre än den egentligen var."
+    },
+    {
+      "1T10": "2",
+      "Effekt": "Kritiskt skadad",
+      "Regelmekanik": "Slå fram två separata effekter på tabellen (som inte är ingen effekt eller kritisk skada)."
     },
     {
       "1T10": "3",
@@ -1487,18 +1492,18 @@
     },
     {
       "1T10": "8",
+      "Effekt": "Ingen",
+      "Regelmekanik": "Smärtan verkade i ett ögonblick värre än den egentligen var."
+    },
+    {
+      "1T10": "9",
       "Effekt": "Öppen skada",
       "Regelmekanik": "Offret tar 1T4 intern skada i början av varje runda."
     },
     {
-      "1T10": "9",
+      "1T10": "10",
       "Effekt": "Förlamande smärta",
       "Regelmekanik": "Rollpersonen kan inte agera alls förrän den klarar ett slag mot Stark eller Viljestark."
-    },
-    {
-      "1T10": "10",
-      "Effekt": "Kritiskt skadad",
-      "Regelmekanik": "Slå fram två separata effekter på tabellen (som inte är ingen effekt eller kritisk skada)."
     }
   ],
    "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T10 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
