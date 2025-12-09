@@ -2260,7 +2260,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet",
-      "Gesäll": "Handling: Reaktiv. Efter ett misslyckat försök att aktivera en mystisk kraft, kan rollpersonen ta emot 1T4 temporär Korruption och genast försöka på nytt.",
+      "Gesäll": "Handling: Reaktiv. När mystikern har påverkat ett enskilt mål med en mystisk kraft kan denne välja att ådra sig 1T4 temporär korruption igen för att låta magin eka. Kraften slår omedelbart till mot samma mål igen, men med halverade tärningar (avrundat uppåt).",
       "Mästare": "Handling: Reaktiv. När en mystisk kraft har aktiverats kan rollpersonen välja att förstärka den bortom det normala genom att släppa in mer av världens råa och fördärvade energi. Effekten av kraften ökar med en tärning (valfri mellan 1T4 och 1T12). Samtidigt drabbas rollpersonen av temporär korruption motsvarande hälften av tärningskastet, avrundat uppåt."
     }
   },
