@@ -304,7 +304,7 @@
   {
     "id": "mystiskkv24",
     "namn": "Dödshungrigt",
-    "beskrivning": "När ett vapen smids med denna kvalitet väcks en hunger som närs av strid. Varje gång ett anfall fäller en motståndare slukar vapnet segern och matar sin bärare med segeryra. Denna glöd ger omedelbart en extra aktiv handling under samma runda. Handlingen måste användas på plats – kraften falnar om den inte tas i bruk direkt.",
+    "beskrivning": "När ett vapen smids med denna kvalitet väcks en hunger som närs av strid. Varje gång ett anfall fäller en motståndare slukar vapnet segern och matar sin bärare med segeryra. Denna glöd ger omedelbart ett extra frislag mot en fiende inom räckvidd. Handlingen måste användas på plats – kraften falnar om den inte tas i bruk direkt.",
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
