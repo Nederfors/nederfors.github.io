@@ -1890,7 +1890,7 @@
     },
     "nivåer": {
       "Novis": "Speciell. Redan på novisnivå låter den starka gåvan rollpersonen använda hela sin Viljestark som korruptionströskel i stället för halva. Total förstyggelse infaller först när den totala korruptionen uppgår till Viljestark +5",
-      "Gesäll": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter varpå den kraften orsakar 1 extra temporär korruption, men får också sin effekttärning höjd med 1T4. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där.",
+      "Gesäll": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften får sin korruptionstärning höjd med en nivå (till minst 1T4), men får också sin effekttärning höjd med 1T6. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där.",
       "Mästare": "Speciell. Mästarens starka gåva låter rollpersonen använda valfri mystisk kraft, dock enbart på novisnivå. Framgångsslagen har en andra chans att misslyckas och användandet ger 1T8 temporär Korruption. Alla mystiska krafter kan användas, oavsett vilken tradition de tillhör."
     }
   },
@@ -2259,7 +2259,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. Efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet",
+      "Novis": "Handling: Reaktiv. En gång per runda, efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet",
       "Gesäll": "Handling: Reaktiv. När mystikern har påverkat ett enskilt mål med en mystisk kraft kan denne välja att ådra sig 1T4 temporär korruption igen för att låta magin eka. Kraften slår omedelbart till mot samma mål igen, men med halverade tärningar (avrundat uppåt).",
       "Mästare": "Handling: Reaktiv. När en mystisk kraft har aktiverats kan rollpersonen välja att förstärka den bortom det normala genom att släppa in mer av världens råa och fördärvade energi. Effekten av kraften ökar med en tärning (valfri mellan 1T4 och 1T12). Samtidigt drabbas rollpersonen av temporär korruption motsvarande hälften av tärningskastet, avrundat uppåt."
     }
