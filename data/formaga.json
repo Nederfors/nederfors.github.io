@@ -2162,7 +2162,7 @@
       "Mästare": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till mästarnivå. Trollsångarmästaren får en andra chans att lyckas med alla de slag som slås för att skapa och upprätthålla en kedja av förtrollningar där motståndaren försvarar sig med Viljestark."
     }
   },
-  {
+    {
     "id": "form65",
     "namn": "Yxkonstnär",
     "beskrivning": "Många barbarättade legosoldater bär yxor av hävd och ohejdad vana, och bland dessa yxbärande krigare har en tradition av yxkamp utvecklats – en skola som verkligen tar vara på detta vapens möjligheter. I rollpersonens händer är yxan ett mäktigt krigsverktyg. Vapnet måste vara en yxa, men den kan vara av enhands- eller tvåhandsmodell.",
@@ -2178,23 +2178,23 @@
       ],
       "nivå_data": {
         "Novis": {
-          "handling": "Aktiv",
-          "skadetyp": "Yttre fysisk"
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
         },
         "Gesäll": {
-          "handling": "Aktiv",
+          "handling": "Passiv",
           "skadetyp": "Yttre fysisk"
         },
         "Mästare": {
-          "handling": "Passiv",
+          "handling": "Reaktiv",
           "skadetyp": "Yttre fysisk"
         }
       }
     },
     "nivåer": {
-      "Novis": "Aktiv. Det allra första en yxkonstnär lär sig är att stöta med yxans kortända, för att med smärta distrahera motståndare inför kommande krafthugg. Stöten gör 1T6 i skada och ett lyckat [Träffsäker←Viljestark] bedövar den fienden; om fienden bedövas får yxkonstnären direkt ett frislag mot målet.",
-      "Gesäll": "Aktiv. Det andra yxkonstnären utvecklar är det mäktiga dubbelhugget: att slå med yxans ena sida och sedan omedelbart följa upp det med ett hugg med andra sidan. Rollpersonen gör två attacker med en stridshandling, båda med en nivå lägre skadetärning än annars.",
-      "Mästare": "Passiv. Yxmästaren återvänder till yxandets kärna, det mäktiga hugget. Varje hugg med yxans egg gör 1T4 extra i skada, dock maximalt ett hugg per stridshandling."
+      "Novis": "Passiv. Yxans tyngd krossar allt motstånd. Varje gång karaktären träffar en fiende med en yxa och gör skada som överstiger målets Smärtgräns, slår målet två slag på smärtgränstabellen.",
+      "Gesäll": "Passiv. Yxmästaren återvänder till yxandets kärna, hugget. Varje hugg med yxans egg gör 1T4 extra i skada. Dock bara ett hugg per runda.",
+      "Mästare": "Reaktiv. Det första yxkonstnären utvecklar är dubbelhugget: att slå med yxans ena sida och sedan omedelbart följa upp det med ett hugg med andra sidan. En gång per runda får rollpersonen gör två attacker med en stridshandling, båda med en nivå lägre skadetärning än annars."
     }
   },
   {
