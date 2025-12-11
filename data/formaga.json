@@ -2689,5 +2689,45 @@
       "Gesäll": "Handling: Aktiv\n Rollpersonen virvlar sitt vapen i dödliga bågar och slår med en otrolig hastighet \n Rollpersonen kan innan ett anfall slå [Kvick←Kvick] för att med spjutet tvinga fiender bort fienden ur närstrid. Fienden pressas ett par meter bakåt och måste återigen möta kvaliteten Långt. Om slaget lyckas får rollpersonen välja att antingen dra sig ut ur striden, eller engagera fienden på nytt varpå hen får slå ett frislag och sen anfalla som vanligt.",
       "Mästare": "Handling: Speciell .\n Rollpersonen är en så pass van spjutdansare att hens frislag med kvaliteten “Långt” räknas som aktiva handlingar. Dessutom så slåss spjutdansaren med en så förblindande hastighet att hen lätt träffar offrets svaga punkter och gör 1T6 i skada så länge fienden befinner sig på spjutlängds avstånd."
     }
+  },
+  [
+  {
+    "id": "form80",
+    "namn": "Vredesvirvel",
+    "beskrivning": "Inspirerad av legenderna om den fallne guden som stred med kedjor av eld, har Vredesgardisten lärt sig att svinga sitt vapen i vida, ohejdbara bågar. Denna teknik kräver total avsaknad av självbevarelsedrift men tillåter krigaren att ensam hålla en hel armé stången.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Vredesgardist"
+      ],
+      "test": [
+        "Träffsäker",
+        "Stark"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Vredesgardisten offrar precision för räckvidd och rå kraft. Karaktären kan utföra en svepande attack som riktas mot samtliga fiender i närstrid. Karaktären slår ett anfallsslag per fiende. Skadan vid träff är 1T6, oavsett vilket vapen som används, men andra tärningseffekter går att addera till slaget.",
+      "Gesäll": "Handling: Aktiv. Virveln är nu en orkan av stål och vrede. Utöver effekten för Novis måste varje fiende som träffas dessutom lyckas med ett test mot [Stark←Stark] för att inte kastas omkull.",
+      "Mästare": "Handling: Aktiv. Tekniken är förfinad till brutal effektivitet. Det krävs nu endast ett enda lyckat test mot [Träffsäker] för att attacken ska träffa samtliga fiender inom räckhåll för närstrid. Skada och eventuell nedslagning hanteras som tidigare."
+    }
   }
+]
+
 ]
