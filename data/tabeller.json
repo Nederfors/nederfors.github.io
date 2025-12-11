@@ -1451,59 +1451,48 @@
   "taggar": { "typ": ["Tabell", "Skada"] },
   "kolumner": [
     "1T10",
-    "Effekt",
-    "Regelmekanik"
+    "Effekt"
   ],
   "rader": [
     {
       "1T10": "1",
-      "Effekt": "Ingen",
-      "Regelmekanik": "Smärtan verkade i ett ögonblick värre än den egentligen var."
+      "Effekt": "Smärtan verkade i ett ögonblick värre än den egentligen var, ingenting händer." 
     },
     {
       "1T10": "2",
-      "Effekt": "Kritiskt skadad",
-      "Regelmekanik": "Slå fram två separata effekter på tabellen (som inte är ingen effekt eller kritisk skada)."
+      "Effekt": "Slå fram två separata effekter på tabellen (som inte är ingen effekt eller kritisk skada)."
     },
     {
       "1T10": "3",
-      "Effekt": "Chockad",
-      "Regelmekanik": "Offret faller omedelbart omkull."
+      "Effekt": "Offret faller omedelbart omkull."
     },
     {
       "1T10": "4",
-      "Effekt": "Vacklande gard",
-      "Regelmekanik": "Offret tvingas ta ett steg tillbaka och fienden får ett Frislag."
+      "Effekt": "Offret tvingas ta ett steg tillbaka och fienden får ett Frislag."
     },
     {
       "1T10": "5",
-      "Effekt": "Hjärnskakning",
-      "Regelmekanik": "Offret får en andra chans att misslyckas med alla slag mot försvar under resten av striden."
+      "Effekt": "Offret får en andra chans att misslyckas med alla slag mot försvar under resten av striden."
     },
     {
       "1T10": "6",
-      "Effekt": "Knäckt revben",
-      "Regelmekanik": "Offret får en andra chans att misslyckas med alla aktiva handlingar under resten av striden."
+      "Effekt":  "Offret får en andra chans att misslyckas med alla aktiva handlingar under resten av striden."
     },
     {
       "1T10": "7",
-      "Effekt": "Brutet ben",
-      "Regelmekanik": "Rollpersonen måste klara ett slag mot Kvick för att lyckas utföra en förflyttning."
+      "Effekt": "Rollpersonen måste klara ett slag mot Kvick för att lyckas utföra en förflyttning."
     },
     {
       "1T10": "8",
-      "Effekt": "Ingen",
-      "Regelmekanik": "Smärtan verkade i ett ögonblick värre än den egentligen var."
+      "Effekt":"Smärtan verkade i ett ögonblick värre än den egentligen var, ingenting händer." 
     },
     {
       "1T10": "9",
-      "Effekt": "Öppen skada",
-      "Regelmekanik": "Offret tar 1T4 intern skada i början av varje runda."
+      "Effekt": "Offret tar 1T4 intern skada i början av varje runda."
     },
     {
       "1T10": "10",
-      "Effekt": "Förlamande smärta",
-      "Regelmekanik": "Rollpersonen kan inte agera alls förrän den klarar ett slag mot Stark eller Viljestark."
+      "Effekt":  "Rollpersonen kan inte agera alls förrän den klarar ett slag mot Stark eller Viljestark."
     }
   ],
    "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T10 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
