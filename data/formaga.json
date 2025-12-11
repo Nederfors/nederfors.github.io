@@ -2690,11 +2690,10 @@
       "Mästare": "Handling: Speciell .\n Rollpersonen är en så pass van spjutdansare att hens frislag med kvaliteten “Långt” räknas som aktiva handlingar. Dessutom så slåss spjutdansaren med en så förblindande hastighet att hen lätt träffar offrets svaga punkter och gör 1T6 i skada så länge fienden befinner sig på spjutlängds avstånd."
     }
   },
-  [
   {
     "id": "form80",
     "namn": "Vredesvirvel",
-    "beskrivning": "Inspirerad av legenderna om den fallne guden som stred med kedjor av eld, har Vredesgardisten lärt sig att svinga sitt vapen i vida, ohejdbara bågar. Denna teknik kräver total avsaknad av självbevarelsedrift men tillåter krigaren att ensam hålla en hel armé stången.",
+    "beskrivning": "Inspirerad av legenderna om spindelguden Oroke har Vredesgardisten lärt sig att svinga sitt vapen i vida, ohejdbara bågar. Denna teknik kräver total avsaknad av precision men tillåter i gengäld krigaren att ensam hålla en hel armé på tårna.",
     "taggar": {
       "typ": [
         "Förmåga",
@@ -2725,9 +2724,8 @@
     "nivåer": {
       "Novis": "Handling: Aktiv. Vredesgardisten offrar precision för räckvidd och rå kraft. Karaktären kan utföra en svepande attack som riktas mot samtliga fiender i närstrid. Karaktären slår ett anfallsslag per fiende. Skadan vid träff är 1T6, oavsett vilket vapen som används, men andra tärningseffekter går att addera till slaget.",
       "Gesäll": "Handling: Aktiv. Virveln är nu en orkan av stål och vrede. Utöver effekten för Novis måste varje fiende som träffas dessutom lyckas med ett test mot [Stark←Stark] för att inte kastas omkull.",
-      "Mästare": "Handling: Aktiv. Tekniken är förfinad till brutal effektivitet. Det krävs nu endast ett enda lyckat test mot [Träffsäker] för att attacken ska träffa samtliga fiender inom räckhåll för närstrid. Skada och eventuell nedslagning hanteras som tidigare."
+      "Mästare": "Handling: Aktiv. Tekniken är förfinad till brutal effektivitet. Det krävs nu endast ett enda lyckat test mot Träffsäker för att attacken ska träffa samtliga fiender inom räckhåll för närstrid. Skada och eventuell nedslagning hanteras som tidigare."
     }
   }
-]
 
 ]
