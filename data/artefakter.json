@@ -3643,5 +3643,42 @@
       "skilling": 0,
       "örtegar": 0
     }
+  },
+    {
+    "id": "ar110",
+    "namn": "Den vises sten",
+    "beskrivning": "En oslipad, blodröd kristall, tung som bly och varm som kött. Den kan lagra upp till 6 själar som används för att driva dess krafter. Artefakten låter bäraren ersätta materiella komponenter och tid med själskraft, eller skydda sig mot korruption. Att fylla på stenen kräver att bäraren fångar en döende själs kraft, en riskfylld och korruptionsvidrig handling som riskerar att  befläcka användarens egen själ permanent.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Speciell"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ],
+        "Förmåga 3": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Upphävt utbyte; Handling: Speciell\nMästaren kan ignorera de materiella lagarna och tidens krav vid skapande. När bäraren utför smider ett föremål med Smideskonst, skapar en lägre artefakt med Artefaktmakande eller brygger ett elixir med Alkemi kan denne aktivera stenen. Handlingen kräver då inga ingredienser, ingen smedja, inget laboratorium och processen fullbordas på endast en timme. Kostnad: 1 själ.",
+      "Förmåga 2": "Själsslukare; Handling: Reaktiv När bäraren använder en mystisk kraft, ritual eller artefakt som skulle ge temporär korruption, kan hen låta den vises sten absorbera korruptionen istället. Stenen slukar mörkret och skonar bärarens själ helt från fläcken. Kostnad: 1 själ.",
+      "Förmåga 3": "När en kulturvarelse dör inom synhåll kan bäraren öppna stenen för att fånga den flyende själen. Detta kräver ett lyckat slag mot Viljestark vid dödsögonblicket eller ritualen Själafälla. Om slaget lyckas absorberas själen och lagras i stenen (upp till max 6). Om slaget misslyckas går själen förlorad och den mörka rekylen ger bäraren 1 poäng permanent Korruption. Korruption: 1 permanent vid misslyckat slag."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.5
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
   }
+
 ]
