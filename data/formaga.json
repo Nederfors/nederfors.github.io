@@ -773,15 +773,15 @@
           "skadetyp": "Yttre fysisk"
         },
         "Mästare": {
-          "handling": "Reaktiv",
-          "skadetyp": "Yttre fysisk"
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
         }
       }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Skadan för vapenhandens attacker ökar med ett steg, alltså till 1T10 om rollpersonen slåss med ett enhandsvapen eller till 1T8 om attackerna sker med ett Kort vapen. Sköldkampsnovisen hanterar också sin sköld effektivare som defensivt verktyg, och får +2 i Försvar istället för det vanliga +1.",
       "Gesäll": "Handling: Reaktiv. Rollpersonen har lärt sig att kombinera vapen och sköld så väl att denne kan följa upp varje lyckat vapenangrepp med en sköldstöt mot målet. Attackslaget slås separat. Skadan för sköldstöten är 1T4 och fienden faller omkull om rollpersonen lyckas med [Stark←Stark].",
-      "Mästare": "Handling: Reaktiv. Skadan för sköldstöten ökas till 1T8, fienden faller omkull om rollpersonen lyckas med [Stark←Stark]."
+      "Mästare": "Handling: Passiv. Skölden blir en förlängning av kroppen och ger 1T4 i naturligt pansar. Rollpersonen står även så stadigt att hen inte kan kastas omkull, knuffas eller greppas mot sin vilja, såvida inte motståndaren besitter särdraget Väldig."
     }
   },
   {
