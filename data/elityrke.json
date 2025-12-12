@@ -552,10 +552,6 @@
     "tankbara_nackdelar": [
       "Sensoriskt känslig",
       "Övermod"
-    ],
-    "forslag_pa_slakte": [
-      "Ambrier",
-      "Bortbyting"
     ]
   },
   
@@ -579,7 +575,6 @@
       "Tvångslockelse (ritual)"
     ],
     "mojliga_fordelar": [
-      "Arvegods",
       "Kommenderande stämma",
       "Kontaktnät",
       "Marschvana",
@@ -589,6 +584,40 @@
     "tankbara_nackdelar": [
       "Hävdningsproblem",
       "Mörkt förflutet"
+    ]
+  },
+    {
+    "id": "elit20",
+    "namn": "Ulvahedna",
+    "beskrivning": "*”Björnen slår i blindo, men vargen väljer var bettet ska ta.”*\n\n”Han är älskad av månen” väste häxan Grindock och ryggade tillbaka inför den väldige krigaren. Jakaarskinnet över hans axlar var styvt av koagulerat blod och svärdet i hans hand vilade tungt men stadigt, trots den stridens hetta som fortfarande ångade från hans kropp.\n\nEn Ulvahedna är bärsärkagångens förädlade form; skogens främsta rovdjur och en levande mardröm för både ambriernas disciplinerade led och de vilda klanernas otyglade slagskämpar. Där en vanlig bärsärk förlorar sig i en röd dimma av vansinne, finner Ulvahednan en skrämmande klarhet i sitt raseri. Vreden är inte en eld som förtär förståndet, utan en slipsten som skärper sinnena till det yttersta. Likt vargflockens ledare som med skoningslös precision urskiljer svagheten i bytet, kanaliserar Ulvahednan sin inre storm till ett enda, dödligt fokus. Häxorna viskar om att en sådan mordlystnad inte är mänsklig; det är ett ursinne tvingat till lydnad, ett sätt att binda naturens vildhet i kedjor av vilja och rikta den med tvärsäker precision. Det farligaste odjuret är inte det som vrålar av smärta, utan det som mördar med blicken fäst vid strupen oavsett vad. Ulvahedna, det riktade raseriet.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": [
+        "Krigare"
+      ]
+    },
+    "krav_formagor": "Bärsärk, Tvåhandskraft eller Tvillingattack eller Naturlig Krigare, Järnnäve eller Dominera, Kraftprov",
+    "viktiga_karaktarsdrag": "Stark 15+, Viljestark 13+",
+    "Elityrkesförmågor": [
+      "Ursinneslopp",
+      "Blodsrus",
+      "Dödsförakt"
+    ],
+    "mojliga_fordelar": [
+      "Blodhund",
+      "Seglivad",
+      "Skräckinjagande",
+      "Snabbfotad",
+      "Stigfinnare",
+      "Stridsraseri",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Bestialisk",
+      "Blodtörstig",
+      "Mardrömmar"
     ]
   }
 ]
