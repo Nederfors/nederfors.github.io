@@ -973,7 +973,7 @@
   {
     "id": "ri92",
     "namn": "Själafängsel",
-    "beskrivning": "Tradition: Svartkonst\nGenom mörka bindningar och förbjudna tecken kan svartkonstnären snärja en flyende själ innan den hinner försvinna in i dödsrikets dimmor. Ritualen måste utföras över en nyligen avliden varelse (inom en timme från dödsögonblicket) och anden tvingas in i ett dyrbart föremål (värde minst 10 daler). Så länge själen hålls fången är kroppen omöjlig att resa som vandöd eller återuppväcka.\nFängelset kan senare offras för att konsumera den fångna livskraften: mystikern krossar föremålet och drar i sig energin för att antingen läka 1T12 Tålighet eller rena sitt sinne från 1T6 temporär Korruption. Vid denna handling förstörs föremålet totalt och själen förintas. Om föremålet däremot förstörs utan att den mörka konsumtionen aktiveras, bryts fängelset och själen släpps fri att vandra vidare till sin slutgiltiga vila.",
+    "beskrivning": "Tradition: Svartkonst\n Rollpersonen kan offra en själ fångad via Själafälla för att konsumera den fångna livskraften: mystikern krossar själafällan och drar i sig energin för att antingen läka 1T12 Tålighet eller rena sitt sinne från 1T6 temporär Korruption. Vid denna handling förstörs föremålet totalt och själen förintas. Om föremålet däremot förstörs utan att den mörka konsumtionen aktiveras, bryts fängelset och själen släpps fri att vandra vidare till sin slutgiltiga vila. Denna ritual går att utföra som en aktiv handling, men kräver att rollpersonen har en själ fångad innan utförandet.",
     "taggar": {
       "typ": [
         "Ritual"
