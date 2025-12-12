@@ -41,6 +41,11 @@
     'Flodbåt': '🛥️'
   };
   const cloneRow = (row) => (row ? JSON.parse(JSON.stringify(row)) : null);
+  const sanitizeArmorQualities = (entry, qualities) => {
+    const fn = window.enforceArmorQualityExclusion;
+    if (typeof fn === 'function') return fn(entry, qualities);
+    return Array.isArray(qualities) ? qualities.filter(Boolean) : [];
+  };
 
   function getCraftLevels() {
     const list = storeHelper.getCurrentList(store);
@@ -73,7 +78,7 @@
     ];
     const baseQ = baseQuals.filter(q => !removed.includes(q));
     const extraQ = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
-    const allQ = [...baseQ, ...extraQ];
+    const allQ = sanitizeArmorQualities(entry, [...baseQ, ...extraQ]);
     const positives = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
     row.gratisKval = [...new Set(positives)];
   }
@@ -2918,7 +2923,7 @@
         ...splitQuals(entry.kvalitet)
       ];
       const baseQ = baseQuals.filter(q => !removed.includes(q));
-      const allQ = [...baseQ, ...(row.kvaliteter || [])];
+      const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter || [])]);
       row.gratisKval = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
       // remove any price multiplier when everything is made free
       delete row.priceMult;
@@ -2950,10 +2955,10 @@
       ...splitQuals(entry.kvalitet)
     ];
     const removedQ = row.removedKval ?? [];
-    const allQuals = [
+    const allQuals = sanitizeArmorQualities(entry, [
       ...baseQuals.filter(q => !removedQ.includes(q)),
       ...(row.kvaliteter || [])
-    ];
+    ]);
     if (forgeLvl && forgeable) {
       const posCnt = countPositiveQuals(allQuals);
       const mystCnt = allQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
@@ -3047,10 +3052,10 @@
       ...(entry.taggar?.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
     ];
-    const allQuals = [
+    const allQuals = sanitizeArmorQualities(entry, [
       ...baseQuals.filter(q => !removed.includes(q)),
       ...(row.kvaliteter || [])
-    ];
+    ]);
     const massCnt = allQuals.filter(q => q === 'Massivt').length;
     const sub = Array.isArray(row.contains)
       ? row.contains.reduce((s, r) => s + calcRowWeight(r), 0)
@@ -3358,10 +3363,10 @@
         ...splitQuals(entry.kvalitet)
       ];
       const removedQ = row.removedKval ?? [];
-      const allQualsRow = [
+      const allQualsRow = sanitizeArmorQualities(entry, [
         ...baseQuals.filter(q => !removedQ.includes(q)),
         ...(row.kvaliteter || [])
-      ];
+      ]);
       row.posQualCnt = countPositiveQuals(allQualsRow);
       const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
       t.d += m.d; t.s += m.s; t.o += m.o;
@@ -4545,7 +4550,7 @@
           ...splitQuals(entry.kvalitet)
         ];
         const baseQ = baseQuals.filter(q => !removed.includes(q));
-        const allQ = [...baseQ, ...(row.kvaliteter ?? [])];
+        const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter ?? [])]);
         if (!allQ.length) return;
 
         // Behåll endast positiva/mystiska gratis-kvaliteter

@@ -193,7 +193,10 @@
       ...splitFn(entry?.kvalitet).filter(Boolean)
     ].filter(q => !removed.includes(q));
     const extraQuals = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
-    const allQuals = [...baseQuals, ...extraQuals];
+    let allQuals = [...baseQuals, ...extraQuals];
+    if (typeof window.enforceArmorQualityExclusion === 'function') {
+      allQuals = window.enforceArmorQualityExclusion(entry, allQuals);
+    }
     const seenQuals = new Set();
     allQuals.forEach(name => {
       const clean = String(name || '').trim();
