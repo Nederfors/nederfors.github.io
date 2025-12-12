@@ -1034,7 +1034,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "Ett par skosnören flätade av mjuk pilbark, tillverkade av kringvandrande häxor. De som lär sig nyttja deras kraft kan samla sina steg och frigöra dem som en plötslig språngmarsch. Om bäraren avstår från förflyttning under en runda kan denne under nästa runda förflytta sig tre meter extra vid en förflyttningshandling."
+      "Gesäll": "Ett par skosnören flätade av mjuk pilbark, tillverkade av kringvandrande häxor. De som lär sig nyttja deras kraft kan samla sina steg och frigöra dem som en plötslig språngmarsch. Om bäraren avstår från förflyttning under en runda kan denne under nästa runda förflytta sig en tredjedels förflyttning extra vid en förflyttningshandling. Skosnörena konsumeras dock när deras förhastande energi frigörs."
     },
     "grundpris": {
       "daler": 6,
