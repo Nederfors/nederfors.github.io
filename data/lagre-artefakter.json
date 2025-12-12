@@ -1056,7 +1056,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "En lantärna vars flamma aldrig falnar, oavsett vind eller regn. Den ger tryggt ljus för resande, men dess ständiga sken gör det svårt att hålla sig undan fiendens blickar. Den fungerar som en fackla som brinner utan slut, men bäraren får –1 på Diskret när det gäller att smyga och gömma sig."
+      "Gesäll": "En lantärna vars flamma aldrig falnar, oavsett vind eller regn. Den ger tryggt ljus för resande, men dess ständiga sken gör det svårt att hålla sig undan fiendens blickar. Den fungerar som en fackla som brinner utan slut, men bäraren och dess allierade inom synhåll får –1 på Diskret när det gäller att smyga och gömma sig."
     },
     "grundpris": {
       "daler": 7,
@@ -1066,7 +1066,7 @@
     "stat": {
       "vikt": 1.0
     },
-    "effekt": "Ger evigt fackelljus; –1 Diskret för smyga och gömma sig."
+    "effekt": "Ger evigt fackelljus; –1 Diskret för allierade inom synhåll på att smyga och gömma sig."
   },
   {
     "id": "l46",
