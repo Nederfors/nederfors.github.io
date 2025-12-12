@@ -898,7 +898,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "En tung, kantstött runskiva som bärs nära kroppen. När runorna berörs känns marken ge med sig och stegen pressas fram, som om stigen dömts fri. En gång per scen får bäraren ta en extra förflyttningshandling. Aktiveringen kostar 1T4 temporär Korruption. "
+      "Gesäll": "En tung, kantstött runskiva som bärs nära kroppen. När runorna berörs känns marken ge med sig och stegen pressas fram, som om stigen dömts fri. En gång per scen får bäraren ta en extra förflyttningshandling. Aktiveringen kostar 1T4 temporär Korruption och runskivan konsumeras när magin frigörs. "
     },
     "grundpris": {
       "daler": 10,
