@@ -1199,5 +1199,32 @@
       "vikt": 0.5
     },
     "effekt": "Analys av elixir får en andra chans att identifiera typ, nivå och huvudverkan."
+  },
+  {
+    "id": "l52",
+    "namn": "Baiagornsärk",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt",
+        "Rustning",
+        "Lätt Rustning"
+      ],
+"kvalitet": [ "Otymplig", "Förstärkt" ],
+      "ark_trad": ["Bärsärkare"]
+    },
+    "nivåer": {
+      "Gesäll": "Denna massiva väst är sydd av dubbla lager baiagornhud, förstärkt med grova nitar av svärtat järn och benplattor från bestens bröstkorg. Den tjocka pälsen och de tunga förstärkningarna gör rustningen klumpig att röra sig i, men den erbjuder ett skydd som få andra lätta rustningar kan mäta sig med. Precis som med enklare varianter pulserar särken av en dov värme när bärarens vrede stiger, och de inbundna andarna tycks hårdna till en ogenomtränglig barriär vid strid. I vanliga fall skyddar rustningen 1T4 +1, men när användaren är i Bärsärkargång så skyddar den 1T6 +1."
+    },
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "skydd": "1T4",
+      "vikt": 2.5,
+      "begränsning": -2
+    },
+    "effekt": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
   }
 ]
