@@ -25,10 +25,13 @@
     ];
     const removed = Array.isArray(row.removedKval) ? row.removedKval : [];
     const extra = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
-    return [
+    const combined = [
       ...baseQ.filter(q => !removed.includes(q)),
       ...extra
     ];
+    return typeof window.enforceArmorQualityExclusion === 'function'
+      ? window.enforceArmorQualityExclusion(entry, combined)
+      : combined;
   }
 
   function resolveDefenseSelection(inv, mode = 'standard') {

@@ -414,6 +414,28 @@
     return String(val).split(',').map(t=>t.trim()).filter(Boolean);
   }
 
+  function enforceArmorQualityExclusion(entry, qualities) {
+    const types = entry?.taggar?.typ || [];
+    const isArmor = Array.isArray(types) && types.includes('Rustning');
+    const list = Array.isArray(qualities) ? qualities.filter(Boolean) : [];
+    if (!isArmor) return list;
+
+    const out = [];
+    let hasOtymplig = false;
+    let hasSmidig = false;
+    list.forEach(q => {
+      const txt = String(q || '').toLowerCase();
+      const isOtymplig = txt.startsWith('otymplig');
+      const isSmidig = txt.startsWith('smidig');
+      if ((isOtymplig && hasSmidig) || (isSmidig && hasOtymplig)) return;
+      if (isOtymplig) hasOtymplig = true;
+      if (isSmidig) hasSmidig = true;
+      out.push(q);
+    });
+
+    return out;
+  }
+
   function formatMoney(m) {
     if (!m) m = {};
     const d = m.d ?? m.daler ?? 0;
@@ -443,7 +465,8 @@
             ...splitQuals(entry.kvalitet)
           ];
           const baseQ = baseQuals.filter(q => !removed.includes(q));
-          const allQ = [...baseQ, ...(row.kvaliteter || [])];
+          let allQ = [...baseQ, ...(row.kvaliteter || [])];
+          allQ = enforceArmorQualityExclusion(entry, allQ);
           let stonePen = 0;
           if (allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
           if (allQ.includes('Otymplig') || allQ.includes('Otympligt')) limit -= 1;
@@ -974,6 +997,7 @@
   window.sortByType = sortByType;
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
+  window.enforceArmorQualityExclusion = enforceArmorQualityExclusion;
   window.formatMoney = formatMoney;
   window.itemStatHtml = itemStatHtml;
   window.formatWeight = formatWeight;
