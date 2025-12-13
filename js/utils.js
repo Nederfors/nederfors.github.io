@@ -997,7 +997,11 @@
   window.sortByType = sortByType;
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
-  window.enforceArmorQualityExclusion = enforceArmorQualityExclusion;
+  Object.defineProperty(window, 'enforceArmorQualityExclusion', {
+    value: enforceArmorQualityExclusion,
+    writable: false,
+    configurable: false
+  });
   window.formatMoney = formatMoney;
   window.itemStatHtml = itemStatHtml;
   window.formatWeight = formatWeight;
