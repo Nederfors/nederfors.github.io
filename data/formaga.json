@@ -2021,7 +2021,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv.\nSvärdsmästarens klinga flyter som vatten mellan fienderna. Om rollpersonen träffar en fiende med en attack får hen omedelbart göra en fri attack mot en annan fiende inom räckvidd.",
+      "Novis": "Handling: Reaktiv.\nSvärdsmästarens klinga flyter som vatten mellan fienderna. En gång per runda, om rollpersonen träffar en fiende med en attack får hen omedelbart göra en fri attack mot en annan fiende inom räckvidd.",
       "Gesäll": "Handling: Passiv.\nRollpersonen har lärt sig att utnyttja svärdets balans och skärpa till fullo för att hitta blottor i fiendens gard. Anfall utförda med ett enhandssvärd gör +1T4 i skada. Dock bara ett anfall per runda.",
       "Mästare": "Handling: Aktiv.\nRollpersonen utför en blixtsnabb kombination, en 'dubbelstöt', mot en och samma fiende. Om rollpersonen träffar med två anfalsslag har svärdet med första anfallet öppnat en blotta i fiendens bepansring. Varpå det andra slaget kan slå djupt i en vital del och ignorera målets bepansring. Extraskadan från gesällnivån ökar till 1T6 för det andra slaget."
     }
