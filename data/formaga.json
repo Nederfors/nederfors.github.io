@@ -2368,7 +2368,7 @@
   },
   {
     "id": "form71",
-    "namn": "Krigarens skärpa",
+    "namn": "Krigarskärpa",
     "beskrivning": "En krigare, oavsett om hen slåss med pilbåge eller knytnävar, vet att träffsäkerhet är nyckeln till att hitta fiendens svaga punkter. Genom målmedveten träning och koncentration känner karaktären sitt mål bättre än de flesta.",
     "taggar": {
       "typ": [
@@ -2725,6 +2725,42 @@
       "Novis": "Handling: Aktiv. Vredesgardisten offrar precision för räckvidd och rå kraft. Karaktären kan utföra en svepande attack som riktas mot samtliga fiender i närstrid. Karaktären slår ett anfallsslag per fiende. Skadan vid träff är 1T6, oavsett vilket vapen som används, men andra tärningseffekter går att addera till slaget.",
       "Gesäll": "Handling: Aktiv. Virveln är nu en orkan av stål och vrede. Utöver effekten för Novis måste varje fiende som träffas dessutom lyckas med ett test mot [Stark←Stark] för att inte kastas omkull.",
       "Mästare": "Handling: Aktiv. Tekniken är förfinad till brutal effektivitet. Det krävs nu endast ett enda lyckat test mot Träffsäker för att attacken ska träffa samtliga fiender inom räckhåll för närstrid. Skada och eventuell nedslagning hanteras som tidigare."
+    }
+  },
+   {
+    "id": "form81",
+    "namn": "Krönikör",
+    "beskrivning": "Det sägs att en sann krönikör inte bara observerar historien, utan fångar den. Genom att studera de mönster som magin lämnar i väven kan rollpersonen binda flyktiga krafter i beständigt bläck. Där andra ser en blixt ser krönikören en ekvation; där andra ser en offerplats ser krönikören en instruktion. Förmågan är vanlig bland Ordo Magicas fältagenter och de skalder som vågar sig in i Davokars djup för att dokumentera det okända.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Mystiker",
+        "Ordensmagiker"
+      ],
+      "test": [
+        "Listig"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Speciell. Krönikören bär alltid penna, bläck och pergament redo. När rollpersonen bevittnar en Mystisk Kraft användas kan denne efter scenens slut spendera en timme och material för att binda effekten i skrift. Ett lyckat slag mot Listig skapar ett Formelpergament på novis- eller gesällnivå, förutsatt att kraften använts till dessa nivåer eller högre. Rollpersonen kan skapa ett pergament per scen.",
+      "Gesäll": "Handling: Speciell. Krönikörens blick för magins spår har skärpts. Rollpersonen kan nu nedteckna krafter på upp till mästarnivå, förutsatt att förmågan utförts till den nivån. Dessutom kan krönikören, genom att undersöka en plats där magi verkat och lämnat tydliga spår, försöka rekonstruera händelsen. Genom att spendera en timme på platsen och lyckas med ett slag mot Listig kan rollpersonen skapa en ritualkodex för en på platsen utförd ritual.",
+      "Mästare": "Handling: Speciell. Förståelsen för de magiska formlerna är nu så djup att krönikören kan manipulera bläcket i stunden. En gång per scen kan mästaren aktivera en mystisk kraft som hen har bevittnat under samma scen; detta ersätter slaget för Viljestark med Listig men kostar 1T6 i temporär korruption. Vidare kan formelpergamenten som rollpersonen skapar alltid nå mästarnivå, oavsett vilken nivå de observerades på. Rollpersonen kan skapa upp till två pergament av krafter hen bevittnat under en scen (dock endast ett pergament per unik kraft)."
     }
   }
 
