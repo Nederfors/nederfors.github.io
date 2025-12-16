@@ -71,13 +71,16 @@
   {
     "id": "na6",
     "namn": "Fallandesjuk",
-    "beskrivning": "Rollpersonen är drabbad av ett mycket känsligt sinnelag vilket innebär att denne i upphetsat tillstånd kan utsättas för kramper i hela kroppen. Om rollpersonen råkar slå ett kritiskt misslyckande på ett framgångsslag inträffar detta, varpå rollpersonen är utslagen under 1t4 rundor.",
+    "beskrivning": "När stressen blir övermäktig stänger kroppen ner. Vid kritiskt misslyckande drabbas rollpersonen av kramper i 1t4 rundor, såvida inte ett slag mot [Stark] lyckas bryta anfallet i början av rundan.",
     "taggar": {
       "typ": [
         "Nackdel"
+      ],
+      "test": [
+        "Stark"
       ]
     },
-    "effekt": "Vid kritiskt misslyckande på ett framgångsslag slås du ut i 1t4 rundor."
+    "effekt": "Vid kritiskt misslyckande på ett framgångsslag slås du ut i 1t4 rundor eller tills du lyckas med [Stark]."
   },
   {
     "id": "na7",
