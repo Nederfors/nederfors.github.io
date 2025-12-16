@@ -1965,7 +1965,7 @@
   {
     "id": "form59",
     "namn": "Stridsgisslare",
-    "beskrivning": "Bland ambriska riddare och deras vapendragare har kättingvapens effektivitet länge varit känd. På slagfältet har nya sätt att utnyttja de ledade vapnen framkommit, och dessa lärdomar har sedan förts vidare till andra krigare. Rollpersonen har studerat de snärjande kättingvapnens hemligheter och har lärt sig att utnyttja deras styrkor på bästa sätt.",
+    "beskrivning": "Bland ambriska riddare och deras vapendragare har kättingvapens effektivitet länge varit känd, men på slagfältet har nya, dödliga tekniker vuxit fram. Rollpersonen har studerat de ledade vapnens oförutsägbara rörelser och lärt sig att utnyttja centrifugalkraften för att krossa och snärja sina fiender.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -1979,19 +1979,19 @@
           "skadetyp": "Ingen"
         },
         "Gesäll": {
-          "handling": "Passiv",
+          "handling": "Förflyttning",
           "skadetyp": "Yttre fysisk"
         },
         "Mästare": {
-          "handling": "Aktiv",
-          "skadetyp": "Ingen"
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
         }
       }
     },
     "nivåer": {
-      "Novis": "Passiv. I rollpersonens händer får ett ledat vapen också kvaliteten Snärjande och kan därmed användas för att snärja en fiende istället för att låta det slå runt försvaret.",
-      "Gesäll": "Passiv. Stridsgisslaren kan lägga tryck också i ledade vapens sekundära skada och dessa kringgående attacker gör 1T8 i skada istället för 1T6.",
-      "Mästare": "Aktiv. Gisselmästaren kan låta gisslet vina och fortsätta göra det även om den träffar ett mål. Den svepande attacken kan slå mot varje fiende som mästaren möter i närstrid. Varje attack slås separat."
+      "Novis": "Handling: Passiv. Rollpersonen vet hur kedjan ska svingas för att låsa fiendens lemmar. Vapen med kvaliteten Ledat får i rollpersonens händer även kvaliteten Snärjande och kan därmed användas för att fånga in en fiende istället för att bara slå runt dennes försvar.",
+      "Gesäll": "Handling: Förflyttning. Rollpersonen svingar upp en våldsam fart på sitt vapen innan anfallet. Om rollpersonen spenderar sin förflyttningshandling till att veva igång sitt ledade vapen gör den efterföljande attacken +1T6 i skada. Attacken måste ske i samma runda som förflyttningshandlingen offras.",
+      "Mästare": "Handling: Passiv. Rollpersonen är så van vid stridsgisslets nyckfullhet att även parerade anfall kan tränga igenom. Om en fiende lyckas med sitt försvarsslag mot ett ledat vapen, men försvarstärningen visar ett udda resultat (vilket aktiverar kvaliteten Ledat), räknas attacken ändå som en träff. Vid en sådan träff sänks dock effekten på alla bonustärningar för skada (från förmågor eller särdrag) till 1T4."
     }
   },
   {
