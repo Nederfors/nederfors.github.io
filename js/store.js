@@ -140,6 +140,161 @@
     return parts.join('|');
   }
 
+  const ENTRY_DIGEST_IGNORE_KEYS = new Set([
+    '__uid',
+    '__order',
+    '__entryMeta',
+    '__appliedDigest',
+    '__dbPinnedDigest',
+    'nivå',
+    'trait',
+    'form',
+    'race',
+    'noInv'
+  ]);
+
+  const ENTRY_PRESERVE_KEYS = new Set([
+    '__uid',
+    '__order',
+    '__dbPinnedDigest',
+    'nivå',
+    'trait',
+    'form',
+    'race',
+    'noInv'
+  ]);
+
+  const stableClone = (value) => {
+    if (value === null || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(stableClone);
+    const out = {};
+    Object.keys(value).sort().forEach(key => {
+      if (ENTRY_DIGEST_IGNORE_KEYS.has(key)) return;
+      const v = value[key];
+      if (v === undefined) return;
+      out[key] = stableClone(v);
+    });
+    return out;
+  };
+
+  const computeEntryDigest = (entry) => {
+    if (!entry || typeof entry !== 'object') return '';
+    try {
+      return JSON.stringify(stableClone(entry));
+    } catch {
+      return '';
+    }
+  };
+
+  function ensureAppliedDigest(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const current = typeof entry.__appliedDigest === 'string' ? entry.__appliedDigest : '';
+    if (current) return current;
+    const digest = computeEntryDigest(entry);
+    if (digest) entry.__appliedDigest = digest;
+    return digest;
+  }
+
+  function lookupDbEntryInfo(entry) {
+    try {
+      if (typeof global.lookupEntry !== 'function') return { dbEntry: null, dbDigest: '' };
+      const dbEntry = global.lookupEntry(entry);
+      if (!dbEntry) return { dbEntry: null, dbDigest: '' };
+      const dbDigest = computeEntryDigest(dbEntry);
+      return { dbEntry, dbDigest };
+    } catch {
+      return { dbEntry: null, dbDigest: '' };
+    }
+  }
+
+  function mergeEntryWithDb(entry, dbEntry, dbDigest) {
+    if (!dbEntry || typeof dbEntry !== 'object') return entry;
+    const merged = { ...dbEntry };
+    Object.keys(entry || {}).forEach(key => {
+      if (ENTRY_PRESERVE_KEYS.has(key)) merged[key] = entry[key];
+    });
+    const digest = dbDigest || computeEntryDigest(merged);
+    if (digest) merged.__appliedDigest = digest;
+    if (merged.__dbPinnedDigest) delete merged.__dbPinnedDigest;
+    return merged;
+  }
+
+  function ensureListAppliedDigests(list) {
+    let mutated = false;
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const before = entry.__appliedDigest;
+      const digest = ensureAppliedDigest(entry);
+      if (!before && digest) mutated = true;
+    });
+    return mutated;
+  }
+
+  function findOutdatedEntries(store, options = {}) {
+    const charId = options.charId || (store && store.current) || '';
+    const includePinned = Boolean(options.includePinned);
+    const res = { charId, outdated: [], pinned: [], mutated: false };
+    if (!charId || !store?.data?.[charId]) return res;
+    const list = Array.isArray(store.data[charId].list) ? store.data[charId].list : [];
+    list.forEach((entry, index) => {
+      if (!entry || typeof entry !== 'object') return;
+      const appliedDigest = ensureAppliedDigest(entry);
+      if (!entry.__appliedDigest && appliedDigest) res.mutated = true;
+      const { dbEntry, dbDigest } = lookupDbEntryInfo(entry);
+      if (!dbDigest) return;
+      const pinnedDigest = entry.__dbPinnedDigest;
+      const stale = appliedDigest !== dbDigest && (!pinnedDigest || pinnedDigest !== dbDigest);
+      const info = { index, entry, dbEntry, dbDigest, appliedDigest, pinnedDigest };
+      if (stale) res.outdated.push(info);
+      else if (includePinned && pinnedDigest) res.pinned.push(info);
+    });
+    if (res.mutated) persistCharacter(store, charId);
+    return res;
+  }
+
+  function syncEntriesWithDb(store, options = {}) {
+    const charId = options.charId || (store && store.current) || '';
+    const mode = options.mode === 'pin' ? 'pin' : 'update';
+    const targetIndexes = Array.isArray(options.targetIndexes)
+      ? new Set(options.targetIndexes.map(idx => Number(idx)).filter(n => Number.isInteger(n) && n >= 0))
+      : null;
+    const res = { charId, updated: 0, pinned: 0 };
+    if (!charId || !store?.data?.[charId]) return res;
+    const list = Array.isArray(store.data[charId].list) ? store.data[charId].list : [];
+    let mutated = false;
+
+    list.forEach((entry, index) => {
+      if (!entry || typeof entry !== 'object') return;
+      if (targetIndexes && !targetIndexes.has(index)) return;
+      const hadDigest = Boolean(entry.__appliedDigest);
+      const appliedDigest = ensureAppliedDigest(entry);
+      if (!hadDigest && appliedDigest) mutated = true;
+      const { dbEntry, dbDigest } = lookupDbEntryInfo(entry);
+      if (!dbDigest) {
+        return;
+      }
+      const pinnedDigest = entry.__dbPinnedDigest;
+      const stale = appliedDigest !== dbDigest && (!pinnedDigest || pinnedDigest !== dbDigest);
+      if (!stale) return;
+      if (mode === 'pin') {
+        entry.__dbPinnedDigest = dbDigest;
+        mutated = true;
+        res.pinned += 1;
+        return;
+      }
+      const merged = mergeEntryWithDb(entry, dbEntry, dbDigest);
+      list[index] = merged;
+      mutated = true;
+      res.updated += 1;
+    });
+
+    if (mutated) {
+      store.data[charId].list = list;
+      persistCharacter(store, charId);
+    }
+    return res;
+  }
+
   function ensureListEntryMetadata(store, list) {
     if (!store?.current) return;
     const data = store.data?.[store.current];
@@ -1019,6 +1174,7 @@
       'örtegar': store.data[store.current].privMoney['örtegar'] + store.data[store.current].possessionMoney['örtegar']
     });
     store.data[store.current].bonusMoney = total;
+    ensureListAppliedDigests(list);
 
     persistCurrentCharacter(store);
   }
@@ -2750,6 +2906,8 @@ function defaultTraits() {
     getCurrentList,
     getCharacterRaces,
     setCurrentList,
+    findOutdatedEntries,
+    syncEntriesWithDb,
     getInventory,
     setInventory,
     getCustomEntries,

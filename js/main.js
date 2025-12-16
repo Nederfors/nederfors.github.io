@@ -174,6 +174,7 @@ try {
 const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes' | 'inventory'
 let   store  = storeHelper.load();                   // Lokal lagring
 let   lastActiveChar = store.current || '';
+let   outdatedPromptInFlight = false;
 
 const ENTRY_META_FIELD = '__entryMeta';
 const entryDataVersions = window.__entryDataVersions || { db: 0, tables: 0 };
@@ -414,6 +415,95 @@ const shouldBypassShowOpenFilePickerMulti = (() => {
     return bypass;
   };
 })();
+
+function makeAbortError() {
+  try {
+    return new DOMException('Operation aborted', 'AbortError');
+  } catch {
+    const err = new Error('Operation aborted');
+    err.name = 'AbortError';
+    return err;
+  }
+}
+
+async function pickJsonFilesWithInput() {
+  return await new Promise((resolve, reject) => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = 'application/json';
+    inp.multiple = true;
+    inp.style.position = 'fixed';
+    inp.style.left = '-9999px';
+    inp.style.opacity = '0';
+    inp.style.pointerEvents = 'none';
+    inp.tabIndex = -1;
+    let settled = false;
+    const cleanup = () => {
+      inp.removeEventListener('change', onChange);
+      inp.removeEventListener('cancel', abort);
+      window.removeEventListener('focus', onFocus, true);
+      if (inp.parentNode) inp.parentNode.removeChild(inp);
+      settled = true;
+    };
+    const abort = () => {
+      if (settled) return;
+      cleanup();
+      reject(makeAbortError());
+    };
+    const onChange = () => {
+      if (settled) return;
+      const list = (inp.files && inp.files.length) ? Array.from(inp.files) : null;
+      cleanup();
+      if (list) resolve(list);
+      else abort();
+    };
+    const onFocus = () => {
+      // If the dialog closes without a selection, treat it as an abort so callers can bail cleanly.
+      setTimeout(() => abort(), 50);
+    };
+    inp.addEventListener('change', onChange, { once: true });
+    inp.addEventListener('cancel', abort, { once: true });
+    window.addEventListener('focus', onFocus, true);
+    document.body.appendChild(inp);
+    inp.click();
+  });
+}
+
+async function pickJsonFilesWithFallback() {
+  const useInput = () => pickJsonFilesWithInput();
+  const canUseNativePicker = !!(window.showOpenFilePicker && !shouldBypassShowOpenFilePickerMulti());
+  if (canUseNativePicker) {
+    try {
+      const handles = await window.showOpenFilePicker({
+        multiple: true,
+        types: [{
+          description: 'JSON',
+          accept: { 'application/json': ['.json'] }
+        }]
+      });
+      return await Promise.all(handles.map(h => h.getFile()));
+    } catch (err) {
+      if (err && (err.name === 'AbortError')) throw err;
+      if (err && err.name === 'NotAllowedError') return await useInput();
+      throw err;
+    }
+  }
+  return await useInput();
+}
+
+async function pickJsonFilesFromDirectoryWithFallback() {
+  if (window.showDirectoryPicker) {
+    try {
+      const dir = await window.showDirectoryPicker({ mode: 'read' });
+      return await getFilesFromDirectory(dir);
+    } catch (err) {
+      if (err && err.name === 'AbortError') throw err;
+      if (err && err.name === 'NotAllowedError') return await pickJsonFilesWithFallback();
+      throw err;
+    }
+  }
+  return await pickJsonFilesWithFallback();
+}
 
 /* ===========================================================
    UI-KOMMANDON (sök efter menyknappar och lyft fram dem)
@@ -1400,7 +1490,7 @@ function boot() {
     if (typeof bindTraits === 'function') bindTraits();
   }
   if (ROLE === 'index')      initIndex();
-  if (ROLE === 'character')  initCharacter();
+  if (ROLE === 'character')  { initCharacter(); promptOutdatedEntriesIfNeeded(); }
   if (ROLE === 'notes')      initNotes();
   if (ROLE === 'inventory')  initInventory();
   if (ROLE === 'summary' && window.summaryEffects?.initSummaryPage) {
@@ -1464,6 +1554,7 @@ function applyCharacterChange() {
     if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
     if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
     if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+    if (ROLE === 'character') promptOutdatedEntriesIfNeeded();
   } catch (err) {
     // As a last resort, fall back to reload to avoid a broken UI
     try { location.reload(); } catch {}
@@ -1471,6 +1562,45 @@ function applyCharacterChange() {
 }
 // Expose for other modules that want to trigger a full UI sync
 window.applyCharacterChange = applyCharacterChange;
+
+async function promptOutdatedEntriesIfNeeded() {
+  if (outdatedPromptInFlight) return;
+  if (ROLE !== 'character') return;
+  if (!store || !store.current) return;
+  if (typeof window.openDialog !== 'function') return;
+  if (!Array.isArray(window.DB) || !window.DB.length) return;
+  if (typeof storeHelper?.findOutdatedEntries !== 'function' || typeof storeHelper?.syncEntriesWithDb !== 'function') {
+    return;
+  }
+  const { outdated } = storeHelper.findOutdatedEntries(store, { charId: store.current });
+  if (!Array.isArray(outdated) || !outdated.length) return;
+
+  outdatedPromptInFlight = true;
+  try {
+    const names = outdated
+      .map(item => item?.entry?.namn || item?.dbEntry?.namn)
+      .filter(Boolean);
+    const bulletList = names.map(n => `• ${n}`).join('\n');
+    const message = names.length === 1
+      ? `${names[0]} har ändrats i databasen. Uppdatera den sparade versionen?`
+      : `Följande val har ändrats i databasen:\n${bulletList}\nUppdatera de sparade versionerna?`;
+    const res = await openDialog(message, {
+      cancel: true,
+      okText: 'Uppdatera',
+      cancelText: 'Behåll nuvarande'
+    });
+    if (res === true) {
+      storeHelper.syncEntriesWithDb(store, { charId: store.current, mode: 'update' });
+      applyCharacterChange();
+    } else {
+      storeHelper.syncEntriesWithDb(store, { charId: store.current, mode: 'pin' });
+    }
+  } catch {
+    // ignore prompt errors
+  } finally {
+    outdatedPromptInFlight = false;
+  }
+}
 
 function updateCharacterIconVariant() {
   if (typeof window.setCharacterIconVariant !== 'function') return;
@@ -1758,20 +1888,6 @@ function bindToolbar() {
           if (!settings) return;
 
           // Steg 2: Välj filer eller mapp
-          const pickJsonFilesWithInput = () => {
-            const inp = document.createElement('input');
-            inp.type = 'file';
-            inp.accept = 'application/json';
-            inp.multiple = true;
-            return new Promise((resolve, reject) => {
-              inp.addEventListener('change', () => {
-                const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
-                if (!list) return reject(new Error('Ingen fil vald'));
-                resolve(list);
-              });
-              inp.click();
-            });
-          };
           let files;
           if (window.showDirectoryPicker) {
             const pick = await openDialog('Vad vill du importera?', {
@@ -1781,32 +1897,14 @@ function bindToolbar() {
               cancelText: 'Avbryt'
             });
             if (pick === 'extra') {
-              try {
-                const dir = await window.showDirectoryPicker({ mode: 'read' });
-                files = await getFilesFromDirectory(dir);
-              } catch (err) {
-                if (err && err.name === 'AbortError') return;
-                throw err;
-              }
+              files = await pickJsonFilesFromDirectoryWithFallback();
             } else if (pick === true) {
-              const canUseNativePicker = !!(window.showOpenFilePicker && !shouldBypassShowOpenFilePickerMulti());
-              if (canUseNativePicker) {
-                const handles = await window.showOpenFilePicker({
-                  multiple: true,
-                  types: [{
-                    description: 'JSON',
-                    accept: { 'application/json': ['.json'] }
-                  }]
-                });
-                files = await Promise.all(handles.map(h => h.getFile()));
-              } else {
-                files = await pickJsonFilesWithInput();
-              }
+              files = await pickJsonFilesWithFallback();
             } else {
               return;
             }
           } else {
-            files = await pickJsonFilesWithInput();
+            files = await pickJsonFilesWithFallback();
           }
           // Mappningslogik för mål
           const override = settings.mode === 'choose';
@@ -2849,7 +2947,18 @@ function openManualAdjustPopup() {
   resetBtn?.addEventListener('click', onReset);
 }
 
+function downloadBlob(blob, suggested) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = suggested;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+
 async function saveJsonFile(jsonText, suggested) {
+  const blob = new Blob([jsonText], { type: 'application/json' });
   if (window.showSaveFilePicker) {
     try {
       const handle = await window.showSaveFilePicker({
@@ -2860,21 +2969,16 @@ async function saveJsonFile(jsonText, suggested) {
         }]
       });
       const writable = await handle.createWritable();
-      await writable.write(jsonText);
+      await writable.write(blob);
       await writable.close();
+      return;
     } catch (err) {
-      if (err && err.name !== 'AbortError') {
+      if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
         await alertPopup('Sparande misslyckades');
       }
     }
-  } else {
-    const blob = new Blob([jsonText], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = suggested;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
+  downloadBlob(blob, suggested);
 }
 
 function sanitizeFilename(name) {
@@ -2973,38 +3077,70 @@ async function exportAllCharactersZipped() {
     return;
   }
 
+  const suggested = 'Rollpersoner.zip';
+  let saveHandle = null;
+  let requestedHandle = false;
+  if (window.showSaveFilePicker) {
+    requestedHandle = true;
+    try {
+      saveHandle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+      });
+    } catch (err) {
+      if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+        console.warn('Save picker failed', err);
+      }
+    }
+  }
+
   const zip = new JSZip();
   for (const data of all) {
     const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
     zip.file(`${name}.json`, JSON.stringify(data, null, 2));
   }
   const blob = await zip.generateAsync({ type: 'blob' });
-  await saveBlobFile(blob, 'Rollpersoner.zip');
+  await saveBlobFile(blob, suggested, { handle: saveHandle, skipNativeDialog: requestedHandle });
 }
 
 
-async function saveBlobFile(blob, suggested) {
-  if (window.showSaveFilePicker) {
+async function writeBlobToHandle(handle, blob) {
+  try {
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return true;
+  } catch (err) {
+    if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+      console.warn('Write to file handle failed', err);
+    }
+    return false;
+  }
+}
+
+async function saveBlobFile(blob, suggested, opts = {}) {
+  const { handle: existingHandle, skipNativeDialog = false } = opts || {};
+  if (existingHandle) {
+    const wrote = await writeBlobToHandle(existingHandle, blob);
+    if (wrote) return;
+  }
+  if (!skipNativeDialog && window.showSaveFilePicker) {
     try {
       const handle = await window.showSaveFilePicker({
         suggestedName: suggested,
         types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
       });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      return;
+      const wrote = await writeBlobToHandle(handle, blob);
+      if (wrote) return;
     } catch (err) {
-      if (err && err.name === 'AbortError') return;
+      if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+        // Fall back to download path below
+      } else {
+        await alertPopup('Sparande misslyckades');
+      }
     }
   }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = suggested;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  downloadBlob(blob, suggested);
 }
 
 async function exportActiveFolder() {
@@ -3119,6 +3255,23 @@ async function exportActiveFolderZipped() {
 
     if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
 
+    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.zip`;
+    let saveHandle = null;
+    let requestedHandle = false;
+    if (window.showSaveFilePicker) {
+      requestedHandle = true;
+      try {
+        saveHandle = await window.showSaveFilePicker({
+          suggestedName: suggested,
+          types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+        });
+      } catch (err) {
+        if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+          console.warn('Save picker failed', err);
+        }
+      }
+    }
+
     const zip = new JSZip();
     for (const c of chars) {
       const data = storeHelper.exportCharacterJSON(store, c.id, true);
@@ -3127,8 +3280,7 @@ async function exportActiveFolderZipped() {
       zip.file(`${name}.json`, JSON.stringify(data, null, 2));
     }
     const blob = await zip.generateAsync({ type: 'blob' });
-    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.zip`;
-    await saveBlobFile(blob, suggested);
+    await saveBlobFile(blob, suggested, { handle: saveHandle, skipNativeDialog: requestedHandle });
   } catch {
     await alertPopup('Export av mapp misslyckades.');
   }
