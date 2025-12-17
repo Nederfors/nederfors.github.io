@@ -2875,7 +2875,7 @@
     "nivåer": {
       "Novis": "Handling: Aktiv.\nMystikern skapar en zon av totalt mörker (diameter 2 förflyttningar) runt sig själv. Alla inuti zonen (som är statisk), utom mystikern, räknas som förblindade och får slå två slag för alla attacker och försvar och välja det sämsta resultatet.\nNär mystikern är i mörkret ser hen inte ut ur det, och är hen utanför ser hen inte in. Mörkret ligger kvar i 1T4 rundor.",
       "Gesäll": "Handling: Aktiv.\nSom Novis, men mystikern kan se obehindrat genom sitt eget mörker, oavsett vart hen är.\nDessutom är mörkret klibbigt och kallt; alla förutom mystikern i zonen får halverad förflyttning.",
-      "Mästare": "Handling: Aktiv.\nMörkret växer till en diameter på cirka 3 förflyttningar. Mörkret blir dessutom fysiskt och fientligt.\nFörutom effekterna från gesällnivån måste alla förutom mystikern som befinner sig i mörkret klara ett slag på [Stark <- Viljestark] i början av varje runda, om slaget misslyckas tar de 1T4 temporär korruption, då mörkret river och sliter i deras skuggor."
+      "Mästare": "Handling: Aktiv.\nMörkret växer till en diameter på cirka 3 förflyttningar. Mörkret blir dessutom fysiskt och fientligt.\nFörutom effekterna från gesällnivån måste alla förutom mystikern som befinner sig i mörkret klara ett slag på [Stark] i början av varje runda, om slaget misslyckas tar de 1T4 temporär korruption, då mörkret river och sliter i deras skuggor."
     }
   },
   {
