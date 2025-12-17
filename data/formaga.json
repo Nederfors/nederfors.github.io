@@ -440,9 +440,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Fri. Rollpersonen har en grundlig skolning; med ett lyckat slag mot Listig kan denne lista ut vad en artefakt har för egenskaper och krafter. På samma sätt kan novisen med ett lyckat Listig översätta en text eller förstå vad som sägs på ett annat mänskligt språk. Att uttala enklare fraser på andra mänskliga språk kräver inget slag, men för att konversera krävs ett lyckat slag i Listig. Rollpersonen kan dessutom använda formelpergament upp till novisnivå.",
-      "Gesäll": "Handling: Fri. Om en mystisk artefakt har en kraft som kräver ett slag mot Viljestark för att användas kan den lärde gesällen välja att slå mot Listig i stället. Gesällen kan också med ett lyckat slag i Listig läsa och förstå alviska och trollens oviga tungomål. Att uttala enklare fraser på alviska eller trolltunga kräver inget slag, men för att inleda en konversation krävs ett lyckat slag i Listig. Rollpersonen kan dessutom använda formelpergament upp till gesällnivå och kan också använda ritualer med hjälp av en ritualkodex.",
-      "Mästare": "Handling: Fri. Rollpersonen kan som erkänd formeltydare med ett lyckat slag i Listig kasta magi från formelpergament upp till mästarnivå. Dessutom kan mästaren använda Listig istället för Viljestark för att motstå magisk påverkan. För mästaren är därtill den gamla symbariskans hemligheter kända. Ett lyckat slag i Listig behövs för att förstå texter på detta uråldriga och utdöda språk. Att uttala enklare fraser på symbariska kräver inget slag, men för att inleda en konversation krävs ett lyckat slag i Listig."
+      "Novis": "Handling: Fri. Rollpersonen har en grundlig skolning; med ett lyckat slag mot Listig kan denne lista ut vad en artefakt har för egenskaper och krafter. På samma sätt kan novisen med ett lyckat Listig översätta en text eller förstå vad som sägs på ett annat mänskligt språk. Att uttala enklare fraser på andra mänskliga språk kräver inget slag, men för att konversera krävs ett lyckat slag i Listig.",
+      "Gesäll": "Handling: Fri. Om en mystisk artefakt har en kraft som kräver ett slag mot Viljestark för att användas kan den lärde gesällen välja att slå mot Listig i stället. Gesällen kan också med ett lyckat slag i Listig läsa och förstå alviska och trollens oviga tungomål. Att uttala enklare fraser på alviska eller trolltunga kräver inget slag, men för att inleda en konversation krävs ett lyckat slag i Listig.",
+      "Mästare": "Handling: Fri. Rollpersonen kan som erkänd formeltydare med ett lyckat slag i Listig kasta magi från formelpergament utan skolning i en mystisk tradition. Dessutom kan mästaren använda Listig istället för Viljestark för att motstå magisk påverkan. För mästaren är därtill den gamla symbariskans hemligheter kända. Ett lyckat slag i Listig behövs för att förstå texter på detta uråldriga och utdöda språk. Att uttala enklare fraser på symbariska kräver inget slag, men för att inleda en konversation krävs ett lyckat slag i Listig."
     }
   },
   {
@@ -2368,7 +2368,7 @@
   },
   {
     "id": "form71",
-    "namn": "Krigarskärpa",
+    "namn": "Krigarens skärpa",
     "beskrivning": "En krigare, oavsett om hen slåss med pilbåge eller knytnävar, vet att träffsäkerhet är nyckeln till att hitta fiendens svaga punkter. Genom målmedveten träning och koncentration känner karaktären sitt mål bättre än de flesta.",
     "taggar": {
       "typ": [
@@ -2729,26 +2729,94 @@
   },
    {
     "id": "form81",
-    "namn": "Krönikör",
-    "beskrivning": "Det sägs att en sann krönikör inte bara observerar historien, utan fångar den. Genom att studera de mönster som magin lämnar i väven kan rollpersonen binda flyktiga krafter i beständigt bläck. Där andra ser en blixt ser krönikören en ekvation; där andra ser en offerplats ser krönikören en instruktion. Förmågan är vanlig bland Ordo Magicas fältagenter och de skalder som vågar sig in i Davokars djup för att dokumentera det okända.",
+    "namn": "Blodsrus",
+    "beskrivning": "För en Ulvahedna är stridens hetta oskiljaktig från jaktens extas. Likt en Jakaar som vädrar svaghet hos sitt byte, finner krigaren ny styrka i fiendens blod. Döden är bara en måltid som livnär nästa attack.",
     "taggar": {
       "typ": [
-        "Förmåga"
+        "Förmåga",
+        "Elityrkesförmåga"
       ],
       "ark_trad": [
-        "Mystiker",
-        "Ordensmagiker"
+        "Ulvahedna"
+      ],
+      "test": [],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Ulvahednan livnär sig på stridens utgång. Varje gång karaktären reducerar en fiende till 0 i Tålighet eller dödar denne, läker hen 1T4 Tålighet och får omedelbart en fri förflyttning riktad mot närmaste möjliga fiende.",
+      "Gesäll": "Handling: Passiv. Ruset av våldet är mer potent. Ulvahednan återfår 1T6 i Tålighet vid en fiendes fall och gör dessutom 1T6 extra i skada med nästa stridshandling innan scenens slut.",
+      "Mästare": "Handling: Passiv. Krigaren är en outtröttlig dödsmaskin och får utöver novis- och gesälleffekterna utföra en extra närstridsattack denna runda när effekten triggas."
+    }
+  },
+  {
+    "id": "form82",
+    "namn": "Hungerlopp",
+    "beskrivning": "En Ulvahedna rör sig inte genom slagfältet, den jagar genom det. Genom att kanalisera hungerulvens desperata och våldsamma framfart kan krigaren kasta sig in i fiendens led med en kraft som krossar ben och skingrar formationer.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Ulvahedna"
       ],
       "test": [
-        "Listig"
+        "Stark"
       ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Fysisk"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Om Ulvahednan rör sig minst halva sin förflyttning i en rät linje och avslutar med en närstridsattack, räknas attacken dessutom som en tackling. Vid träff gör anfallet normal skada och fienden måste slå [Stark←Stark] eller ramla till marken.",
+      "Gesäll": "Handling: Passiv. Som Novis, men kraften i anloppet är förödande. Anfall efter förflyttning gör 1T4 extra i skada och vid en lyckad tackling (enligt Novis) tar offret dessutom 1T4 i fallskada.",
+      "Mästare": "Handling: Aktiv. Ingen kan stoppa flockens ledare. Under en rusning kan Ulvahednan passera genom flera fienders närstridszoner. Alla som står i rollpersonens väg under förflyttningen måste klara [Stark←Stark] eller ta 1T8 i skada (rustning skyddar som vanligt) och ramla omkull där de står. När rollpersonen kommer fram till sitt mål får hen anfalla enligt gesällnivån. Om någon av fienderna lyckas med motståndsslaget innebär dock detta att denne har lyckats stoppa hungerloppet, vilket avslutar förflyttningen omedelbart och ger den fienden ett frislag."
+    }
+  },
+  {
+    "id": "form83",
+    "namn": "Dödsförakt",
+    "beskrivning": "Det sägs att en sann Ulvahedna inte dör förrän bytet är fällt. Genom att omfamna sin inre best kan krigaren ignorera kroppens varningssignaler och fortsätta slita och riva långt efter att en vanlig krigare borde ha fallit.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Ulvahedna"
+      ],
+      "test": [],
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
           "skadetyp": "Ingen"
         },
         "Gesäll": {
-          "handling": "Speciell",
+          "handling": "Passiv",
           "skadetyp": "Ingen"
         },
         "Mästare": {
@@ -2758,10 +2826,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Speciell. Krönikören bär alltid penna, bläck och pergament redo. När rollpersonen bevittnar en Mystisk Kraft användas kan denne efter scenens slut spendera en timme och material för att binda effekten i skrift. Ett lyckat slag mot Listig skapar ett Formelpergament på novis- eller gesällnivå, förutsatt att kraften använts till dessa nivåer eller högre. Rollpersonen kan skapa ett pergament per scen.",
-      "Gesäll": "Handling: Speciell. Krönikörens blick för magins spår har skärpts. Rollpersonen kan nu nedteckna krafter på upp till mästarnivå, förutsatt att förmågan utförts till den nivån. Dessutom kan krönikören, genom att undersöka en plats där magi verkat och lämnat tydliga spår, försöka rekonstruera händelsen. Genom att spendera en timme på platsen och lyckas med ett slag mot Listig kan rollpersonen skapa en ritualkodex för en på platsen utförd ritual.",
-      "Mästare": "Handling: Speciell. Förståelsen för de magiska formlerna är nu så djup att krönikören kan manipulera bläcket i stunden. En gång per scen kan mästaren aktivera en mystisk kraft som hen har bevittnat under samma scen; detta ersätter slaget för Viljestark med Listig men kostar 1T6 i temporär korruption. Vidare kan formelpergamenten som rollpersonen skapar alltid nå mästarnivå, oavsett vilken nivå de observerades på. Rollpersonen kan skapa upp till två pergament av krafter hen bevittnat under en scen (dock endast ett pergament per unik kraft)."
+      "Novis": "Handling: Speciell. Vreden är starkare än rädslan för döden. Om Tåligheten når noll eller lägre fortsätter rollpersonen slå dödsslag som vanligt, men kan välja att fortsätta agera som om hen vore oskadd. Att pressa sig själv på detta vis sliter dock på kroppen; medan rollpersonen är under noll Tålighet räknas alla helande effekter som hälften av sin vanliga effekt, avrundat uppåt.",
+      "Gesäll": "Handling: Passiv. Om Ulvahednan ligger på eller under 0 Tålighet är det förblindande raseriet totalt. Varje anfall gör ytterligare 1T6 i skada.",
+      "Mästare": "Handling: Speciell. Döden måste vänta. Om Ulvahednan slår ett slag som leder till döden, dör hen inte omedelbart. Istället fortsätter karaktären strida i 3 rundor till, utan att behöva slå dödsslag. Rollpersonens kropp är dock i dåligt skick och tar i slutet av varje runda 1T6 intern skada. Rollpersonen dör omedelbart om tiden löper ut och Tåligheten är under noll, men hinner göra ett sista anfall mot en fiende inom räckvidd som gör ytterligare 1T12 skada."
     }
   }
-
 ]
