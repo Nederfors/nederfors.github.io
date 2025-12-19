@@ -1512,16 +1512,6 @@
 },
 {
 "id": "elix93",
-"namn": "Varselljus",
-"taggar": { "typ": ["Elixir"] },
-"nivåer": {
-"Novis": "Ett vaxljus med blågrön låga som avger en svag kyla medan det brinner. Dess sken gör osynliga ting synliga i rummet under scenen."
-},
-"grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
-"stat": { "vikt": 0.5 }
-},
-{
-"id": "elix94",
 "namn": "Tjudringsbrygd",
 "taggar": {
 "typ": [
@@ -1541,7 +1531,7 @@
 }
 },
 {
-  "id": "elix95",
+  "id": "elix94",
   "namn": "Fjärdningbrygd",
   "taggar": {
     "typ": [
