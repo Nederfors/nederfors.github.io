@@ -1355,7 +1355,7 @@
 "namn": "Kvickblod",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "Ett kvicksilverlikt elixir som bultar under tungan. Drickaren får en extra aktiv handling var och en av de kommande två rundorna och rör sig som om tiden själv sackade efter."
+"Mästare": "Ett kvicksilverlikt elixir som bultar under tungan. Drickaren får en extra aktiv handling var och en av de kommande två rundorna och rör sig som om tiden själv sackade efter. Nackdelen är att i början av båda rundorna drabbas rollpersonen av 1T4 korruption."
 },
 "grundpris": { "daler": 16, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
