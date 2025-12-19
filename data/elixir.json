@@ -1315,7 +1315,7 @@
 "namn": "Viljesnara",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "En färglös dryck som lämnar nästan ingen smak. Den som dricker blir ovetande och medgörlig på ett sätt som hen annars inte hade varit; personen kan inte förmås skada sig själv eller andra, men kommer svara sanningsenligt på 1T6 frågor eller utföra 1T6 aktiva handlingar. Efteråt är personen förvirrad men anar inte att hen blivit förgiftad."
+"Mästare": "En färglös dryck som lämnar nästan ingen smak. Den som dricker blir ovetande och medgörlig på ett sätt som hen annars inte hade varit; personen kan inte förmås skada sig själv eller andra, men kommer villigt utföra 1T4 aktiva handlingar. Efteråt är personen förvirrad men anar inte att hen blivit förgiftad."
 },
 "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
