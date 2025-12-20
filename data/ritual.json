@@ -322,7 +322,7 @@
   {
     "id": "ri33",
     "namn": "Vädervända",
-    "beskrivning": "Tradition: Häxkonst\nMystikern ombildar vädret i trakten efter eget huvud. Dimma som hindrar sikt, storm som hindrar resor eller stiltje som lugnar en storm är alla möjliga att åstadkomma. Ritualen tar en timme att utföra och effekten håller i sig under ett halvt dygn, sedan återtar det lokala vädret sin naturgivna form.",
+    "beskrivning": "Tradition: Häxkonst\nMystikern ombildar vädret i trakten efter eget huvud. Dimma som hindrar sikt, storm som hindrar resor eller stiltje som lugnar en storm är alla möjliga att åstadkomma. Rollpersonen får välja ett nytt väder i vädertabellen för den givna säsongen och effekten håller i sig under ett halvt dygn, sedan återtar det lokala vädret sin naturgivna form.",
     "taggar": {
       "typ": ["Ritual"],
       "ark_trad": ["Häxkonst"],
