@@ -186,11 +186,23 @@
     }
   };
 
-  function ensureAppliedDigest(entry) {
+  const computeComparableDigest = (entry) => {
+    if (!entry || typeof entry !== 'object') return '';
+    const name = typeof entry.namn === 'string' ? entry.namn : '';
+    const hamBase = name && HAMNSKIFTE_BASE[name];
+    if (hamBase) {
+      return computeEntryDigest({ ...entry, namn: hamBase });
+    }
+    return computeEntryDigest(entry);
+  };
+
+  function ensureAppliedDigest(entry, dbDigest = '') {
     if (!entry || typeof entry !== 'object') return '';
     const current = typeof entry.__appliedDigest === 'string' ? entry.__appliedDigest : '';
     if (current) return current;
-    const digest = computeEntryDigest(entry);
+    const digest = (typeof dbDigest === 'string' && dbDigest)
+      ? dbDigest
+      : computeEntryDigest(entry);
     if (digest) entry.__appliedDigest = digest;
     return digest;
   }
@@ -213,6 +225,9 @@
     Object.keys(entry || {}).forEach(key => {
       if (ENTRY_PRESERVE_KEYS.has(key)) merged[key] = entry[key];
     });
+    if (entry && typeof entry.namn === 'string' && HAMNSKIFTE_BASE[entry.namn]) {
+      merged.namn = entry.namn;
+    }
     const digest = dbDigest || computeEntryDigest(merged);
     if (digest) merged.__appliedDigest = digest;
     if (merged.__dbPinnedDigest) delete merged.__dbPinnedDigest;
@@ -224,7 +239,9 @@
     (Array.isArray(list) ? list : []).forEach(entry => {
       if (!entry || typeof entry !== 'object') return;
       const before = entry.__appliedDigest;
-      const digest = ensureAppliedDigest(entry);
+      if (before) return;
+      const { dbDigest } = lookupDbEntryInfo(entry);
+      const digest = ensureAppliedDigest(entry, dbDigest);
       if (!before && digest) mutated = true;
     });
     return mutated;
@@ -238,11 +255,24 @@
     const list = Array.isArray(store.data[charId].list) ? store.data[charId].list : [];
     list.forEach((entry, index) => {
       if (!entry || typeof entry !== 'object') return;
-      const appliedDigest = ensureAppliedDigest(entry);
-      if (!entry.__appliedDigest && appliedDigest) res.mutated = true;
       const { dbEntry, dbDigest } = lookupDbEntryInfo(entry);
+      const before = entry.__appliedDigest;
+      let appliedDigest = ensureAppliedDigest(entry, dbDigest);
+      if (!before && appliedDigest) res.mutated = true;
       if (!dbDigest) return;
-      const pinnedDigest = entry.__dbPinnedDigest;
+      let pinnedDigest = entry.__dbPinnedDigest;
+      if (appliedDigest && appliedDigest !== dbDigest) {
+        const comparable = computeComparableDigest(entry);
+        if (comparable && comparable === dbDigest) {
+          entry.__appliedDigest = dbDigest;
+          appliedDigest = dbDigest;
+          if (pinnedDigest && pinnedDigest !== dbDigest) {
+            entry.__dbPinnedDigest = dbDigest;
+            pinnedDigest = dbDigest;
+          }
+          res.mutated = true;
+        }
+      }
       const stale = appliedDigest !== dbDigest && (!pinnedDigest || pinnedDigest !== dbDigest);
       const info = { index, entry, dbEntry, dbDigest, appliedDigest, pinnedDigest };
       if (stale) res.outdated.push(info);
@@ -266,10 +296,10 @@
     list.forEach((entry, index) => {
       if (!entry || typeof entry !== 'object') return;
       if (targetIndexes && !targetIndexes.has(index)) return;
-      const hadDigest = Boolean(entry.__appliedDigest);
-      const appliedDigest = ensureAppliedDigest(entry);
-      if (!hadDigest && appliedDigest) mutated = true;
       const { dbEntry, dbDigest } = lookupDbEntryInfo(entry);
+      const before = entry.__appliedDigest;
+      const appliedDigest = ensureAppliedDigest(entry, dbDigest);
+      if (!before && appliedDigest) mutated = true;
       if (!dbDigest) {
         return;
       }
