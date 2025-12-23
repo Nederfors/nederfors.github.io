@@ -2830,5 +2830,110 @@
       "Gesäll": "Handling: Passiv. Om Ulvahednan ligger på eller under 0 Tålighet är det förblindande raseriet totalt. Varje anfall gör ytterligare 1T6 i skada.",
       "Mästare": "Handling: Speciell. Döden måste vänta. Om Ulvahednan slår ett slag som leder till döden, dör hen inte omedelbart. Istället fortsätter karaktären strida i 3 rundor till, utan att behöva slå dödsslag. Rollpersonens kropp är dock i dåligt skick och tar i slutet av varje runda 1T6 intern skada. Rollpersonen dör omedelbart om tiden löper ut och Tåligheten är under noll, men hinner göra ett sista anfall mot en fiende inom räckvidd som gör ytterligare 1T12 skada."
     }
+  },
+    {
+    "id": "form84",
+    "namn": "Provokatör",
+    "beskrivning": "Vare sig det rör sig om gycklarens giftiga tungomål, krigarens dånande utmaning eller vilddjurets avgrundsvrål, vet rollpersonen hur man tränger innanför huden på sina fiender. Genom att projicera en överväldigande närvaro eller utslunga välriktade hån kan rollpersonen styra slagfältets fokus. För en person med förmågan Provokatör är striden lika mycket en kamp om psykologiskt övertag som en utväxling av stål.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare, Tjuv"
+      ],
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Rollpersonen använder sin röst och sitt kroppsspråk för att tvinga till sig en fiendes uppmärksamhet. Med ett lyckat slag på [Övertygande ← Viljestark] tappar fienden fattningen och måste rikta sin nästa aktiva handling mot rollpersonen om möjligt.",
+      "Gesäll": "Handling: Passiv. Rollpersonens utstrålning är så pass distraherande och provocerande att anfallare tvekar i det avgörande ögonblicket. Rollpersonen får beräkna sitt Försvar med Övertygande istället för med Kvick.",
+      "Mästare": "Handling: Reaktiv. Rollpersonen kan med ett kraftfullt utrop eller en skräckinjagande gest avbryta en fiendes påbörjade handling. När en fiende påbörjar en aktiv handling mot rollpersonen eller dennes allierade får rollpersonen slå ett slag mot [Övertygande ← Viljestark]. Om slaget lyckas tappar fienden fokus och handlingen avbryts omedelbart. Denna effekt kan användas en gång per runda, men varje enskild fiende kan endast utsättas för detta en gång per scen."
+    }
+  },
+  {
+    "id": "form85",
+    "namn": "Inspirerande talare",
+    "beskrivning": "Där Ledaren styr med kall auktoritet, verkar denna förmåga genom rena känslor och okuvlig vilja. Rollpersonen är en mästare på att finna ljus i mörkret; med rop, sång eller passionerad retorik kan denne väcka nytt hopp i sina allierade när mörkret tätnar. Det är en förmåga vanlig bland skaldar som sett krigets fasa och veteraner som vet att stridsmoral är det enda som skiljer en armé från en flyende mobb.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Skald, Krigare"
+      ],
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Även i stridens hetta når rollpersonens röst fram. En gång per runda kan rollpersonen ropa stärkande ord till en allierad inom synhåll. Med ett lyckat slag för Övertygande får den allierade +1T4 på sitt nästa framgångsslag innan rundans slut. Denna effekt kan endast appliceras en gång per scen för varje unik allierad.",
+      "Gesäll": "Handling: Aktiv. Rollpersonen kan hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka fem minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning.",
+      "Mästare": "Handling: Reaktiv. Rollpersonen vägrar låta sina kamrater falla. När en allierad inom hörhåll misslyckas med ett slag kan rollpersonen omedelbart ingripa. Rollpersonen slår ett slag mot Övertygande; om det lyckas får den allierade slå om sitt tärningsslag och använder då rollpersonens Övertygande som värde istället för sitt eget karaktärsdrag. Denna inspiration kan endast utföras en gång per scen för varje unik allierad."
+    }
+  },
+  {
+    "id": "form86",
+    "namn": "Oljudsverkare",
+    "beskrivning": "Genom att skapa ett infernaliskt oväsen kan rollpersonen slita sönder koncentrationen hos såväl mystiker som strateger. Det är ingen vacker konst – en skärande, atonal matta av ljud som tränger igenom tankar och gör det omöjligt att finna det inre lugn som magins flöden eller taktiska beslut kräver. Bland tjuvar kallas det att ”skramla”, medan mystiker fruktar det som den grå dissonansen.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Mystiker, Tjuv"
+      ],
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Förflyttning",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Inre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Förflyttning. Rollpersonen kan offra sin förflyttning för att aktivt föra ett sådant oväsen att brukandet av mystiska krafter försvåras. Med ett lyckat slag mot Övertygande får alla fientliga mystiker inom hörhåll modifikationen -1T4 på sitt nästa slag för att aktivera mystiska krafter.",
+      "Gesäll": "Handling: Aktiv. Rollpersonen riktar ett skärande, fokuserat oljud mot en enskild fiende inom syn- och hörhåll. Om rollpersonen lyckas med ett slag mot [Övertygande ← Viljestark] bryts fiendens koncentration omedelbart. Detta avbryter alla pågående effekter som kräver koncentration av målet.",
+      "Mästare": "Handling: Passiv. Rollpersonen skapar en så skärande dissonans att den blir fysiskt smärtsam för dem som är öppna för magins flöden. Varje gång en fientlig mystiker inom hörhåll får sin koncentration bruten av gesällnivån, eller misslyckas med ett kraftslag på grund av novisnivåns störning, tar denne omedelbart 1T6 i skada (ignorerar Rustning)."
+    }
   }
 ]
