@@ -938,13 +938,13 @@
       "Säsong": "Höst",
       "T20": "2",
       "Väderbild": "Prasslande lövtäcke",
-      "Effekter": "Markens torra löv gör att alla försök att smyga [Diskret←Vaksam] görs med en andra chans att misslyckas."
+      "Effekter": "Markens torra löv gör att alla försök att smyga utomhus [Diskret←Vaksam] görs med en andra chans att misslyckas."
     },
     {
       "Säsong": "Höst",
       "T20": "3",
-      "Väderbild": "Davokars täta dimma",
-      "Effekter": "Sikten är obefintlig. Alla anfall på avstånd och slag mot Vaksam som rör syn misslyckas automatiskt utom på nära håll."
+      "Väderbild": "Tät dimma",
+      "Effekter": "Sikten är obefintlig. Alla anfall på avstånd och slag mot Vaksam som rör syn misslyckas automatiskt. Alla färdsträckor under dagen halveras."
     },
     {
       "Säsong": "Höst",
@@ -955,7 +955,7 @@
     {
       "Säsong": "Höst",
       "T20": "5",
-      "Väderbild": "Stormvindar från Titanerna",
+      "Väderbild": "Stormvindar från Ravennerna",
       "Effekter": "Vinden kastar om pilar och projektiler. Alla avståndsanfall räknas som en kategori högre enligt tabellen för Avståndskategorier."
     },
     {
@@ -985,7 +985,7 @@
     {
       "Säsong": "Höst",
       "T20": "10",
-      "Väderbild": "Mörkt i Davokar",
+      "Väderbild": "Höstmörker",
       "Effekter": "Ett kvävande onaturligt mörker följer med ett piskande oväder under skogen. Spelledaren slår 1T20; vid 11-20 dyker en eller flera hungriga styggelser upp, lockad av det piskande ovädret."
     },
     {
@@ -1010,7 +1010,7 @@
       "Säsong": "Höst",
       "T20": "14",
       "Väderbild": "Vilda stormbyar",
-      "Effekter": "Flygande varelser kan inte lyfta och alla varelser får -2 på Försvar per nivå av Robust på grund av obalans."
+      "Effekter": "Flygande varelser kan inte lyfta och alla varelser får -2 på Försvar per nivå av på grund av obalans."
     },
     {
       "Säsong": "Höst",
@@ -1039,7 +1039,7 @@
     {
       "Säsong": "Höst",
       "T20": "19",
-      "Väderbild": "Svällande bäckar",
+      "Väderbild": "Svällande vattendrag",
       "Effekter": "Vattenflödena är förrädiska. Vid vadställen krävs ett lyckat [Stark] för att inte dras med av strömmen och förlora en slumpmässig del av utrustningen. Hur många vadställen som möts under dagen avgörs med 1T6 -2"
     },
     {
@@ -1068,7 +1068,7 @@
     {
       "Säsong": "Sommar",
       "T20": "1",
-      "Väderbild": "Svalkande sjöbris",
+      "Väderbild": "Svalkande bris",
       "Effekter": "Den friska vinden ger ny energi. Rollpersoner som vilar under dagen återhämtar +1T4 extra Tålighet."
     },
     {
@@ -1081,7 +1081,7 @@
       "Säsong": "Sommar",
       "T20": "3",
       "Väderbild": "Olidlig värmebölja",
-      "Effekter": "Hettan är livsfarlig. Rollpersonerna måste lyckas med ett slag mot [Stark] eller drabbas av 1T4 alternativ skada på Stark som enbart kan läkas naturligt."
+      "Effekter": "Hettan är livsfarlig. Rollpersonerna måste efter en hel dags vandring lyckas med ett slag mot [Stark] eller drabbas av 1T4 alternativ skada på Stark som enbart kan läkas naturligt."
     },
     {
       "Säsong": "Sommar",
@@ -1105,7 +1105,7 @@
       "Säsong": "Sommar",
       "T20": "7",
       "Väderbild": "Vilt åskväder",
-      "Effekter": "Himlen öppnar sig i ett raseri. Alla aktiva handlingar görs med en andra chans att misslyckas."
+      "Effekter": "Himlen öppnar sig i ett raseri. Alla försök att upprätthålla koncentration slås med en andra chans att misslyckas."
     },
     {
       "Säsong": "Sommar",
@@ -1135,7 +1135,7 @@
       "Säsong": "Sommar",
       "T20": "12",
       "Väderbild": "Bitande bromsar",
-      "Effekter": "Envetna insekter stör koncentrationen. Alla slag mot Viljestark, Listig eller Övertygande görs med -1."
+      "Effekter": "Envetna insekter stör tankeverksamheten. Alla slag mot Viljestark, Listig eller Övertygande görs med -1."
     },
     {
       "Säsong": "Sommar",
@@ -1152,20 +1152,20 @@
     {
       "Säsong": "Sommar",
       "T20": "15",
-      "Väderbild": "Sommardis",
+      "Väderbild": "Underjordsdis",
       "Effekter": "Ett dis lyfter från marken och bär med sig ångor från underjorden. Spelledaren slår 1T20; vid 18-20 sker ett möte med en eller flera styggelser under dagen."
     },
     {
       "Säsong": "Sommar",
       "T20": "16",
-      "Väderbild": "Givmild natur",
-      "Effekter": "Skogen bjuder på mogna bär och nötter. Alla slag mot Vildmarksvana för att finna föda eller vatten får +3."
+      "Väderbild": "Solmoget område",
+      "Effekter": "Skogen skiner milt och bjuder på mogna bär och nötter. Alla slag mot Vildmarksvana för att finna föda eller vatten görs med +3."
     },
     {
       "Säsong": "Sommar",
       "T20": "17",
       "Väderbild": "Tät sommardimma",
-      "Effekter": "En fuktig dimma rullar in från floderna. Slag mot [Vaksam] som rör syn görs med -2."
+      "Effekter": "En fuktig dimma rullar in från floderna och våtmarkerna. Slag mot [Vaksam] som rör syn görs med -3."
     },
     {
       "Säsong": "Sommar",
@@ -1206,7 +1206,7 @@
       "Säsong": "Vinter",
       "T20": "1",
       "Väderbild": "Dämpat ljud",
-      "Effekter": "Snön sväljer allt ljud. En andra chans att misslyckas med [Vaksam] för att höra varelser som närmar sig."
+      "Effekter": "Snön sväljer allt ljud. Alla får en andra chans att misslyckas med [Vaksam] för att höra varelser som närmar sig."
     },
     {
       "Säsong": "Vinter",
@@ -1217,26 +1217,26 @@
     {
       "Säsong": "Vinter",
       "T20": "3",
-      "Väderbild": "Vintergatan",
+      "Väderbild": "Vintergata",
       "Effekter": "Himlen är strålande klar. Stjärnorna vägleder vandraren; slag för att navigera eller finna vägen på Listig och Vaksam får +3."
     },
     {
       "Säsong": "Vinter",
       "T20": "4",
       "Väderbild": "Bländande snörök",
-      "Effekter": "Sikten är noll och kylan extrem. Slag mot Vaksam misslyckas automatiskt och gruppen måste lyckas med ett [Listig] varje timme för att inte gå hopplöst vilse."
+      "Effekter": "Sikten är noll och kylan extrem. Slag mot Vaksam misslyckas automatiskt och majoriteten av gruppen måste lyckas med ett [Listig] varje timme för att de inte kollektivt ska gå hopplöst vilse."
     },
     {
       "Säsong": "Vinter",
       "T20": "5",
       "Väderbild": "Snöskare",
-      "Effekter": "Isen på snön bär rollpersonernas vikt. Färdsträckan under dagen ökar med hälften då man kan gå ovanpå drivorna."
+      "Effekter": "Isen på snön bär rollpersonernas vikt. Färdsträckan under dagen ökar med hälften då man lätt kan gå ovanpå drivorna."
     },
     {
       "Säsong": "Vinter",
       "T20": "6",
-      "Väderbild": "Isande storm från Titanerna",
-      "Effekter": "Vinden piskar huden i trasor. Rollpersoner som färdas utan tunga vinterkläder drabbas av 1T6 alternativ skada på Stark varje timme. De som bär tunga vinterkläder får slå ett slag mot [Stark] varje timme för att klara sig."
+      "Väderbild": "Isande storm",
+      "Effekter": "Vinden piskar huden i trasor. Rollpersoner som färdas utan tunga vinterkläder drabbas av 1T6 alternativ skada på Stark varje timme. De som bär tunga vinterkläder får slå ett slag mot [Stark] varje timme för att klara sig. Den alternativa skadan läks bara när vädret är mildare, när det finns tillgång till dugligt skydd eller värme. Och då läker den enbart naturligt."
     },
     {
       "Säsong": "Vinter",
@@ -1248,42 +1248,42 @@
       "Säsong": "Vinter",
       "T20": "8",
       "Väderbild": "Hungersnö",
-      "Effekter": "Snön faller tung och döljer allt ätbart. Rollpersoner måste konsumera dubbla ransoner mat under dagen."
+      "Effekter": "Snön faller tung och döljer allt ätbart. Rollpersoner måste konsumera dubbla ransoner mat under dagen och kan inte hitta mat med hjälp av Vildmarksvana."
     },
     {
       "Säsong": "Vinter",
       "T20": "9",
       "Väderbild": "Svartfrost",
-      "Effekter": "Allt täcks av glashal is. Varje förflyttning i aktiv förflyttning kräver ett lyckat [Kvick -2] för att inte falla och förlora sin handling. Längre färdsträckor är möjliga, men enbart till fjärdedelsfart."
+      "Effekter": "Allt täcks av glashal is. Varje förflyttning i aktiv förflyttning kräver ett lyckat [Kvick -2] för att inte falla och förlora sin handling. Längre färdsträckor är möjliga, men då enbart till fjärdedels fart."
     },
     {
       "Säsong": "Vinter",
       "T20": "10",
-      "Väderbild": "Hungriga spår",
-      "Effekter": "En styggelse eller best, desperat av vinterhungern, har spårat rollpersonerna genom snön och går till anfall vid första bästa tillfälle. Spelledaren slår 1T20; vid 5-20 sker ett möte med en eller flera styggelser under dagen."
+      "Väderbild": "Vintersvält",
+      "Effekter": "Ett onaturligt mörker faller över skogen och styggelser, desperata av vinterhunger, rör sig genom snön i jakt på byte. Spelledaren slår 1T20; vid 5-20 sker ett möte med en eller flera styggelser under dagen."
     },
     {
       "Säsong": "Vinter",
       "T20": "11",
       "Väderbild": "Gråmulet och bitande",
-      "Effekter": "En rå kyla som aldrig släpper. Alla slag för finmotorik (T.ex Dyrka lås, Kirurgi, Fällor) görs med -2."
+      "Effekter": "En rå kyla som aldrig släpper. Alla slag för finmotorik (T.ex Dyrka lås, Kirurgi, Fällor) görs med -5."
     },
     {
       "Säsong": "Vinter",
       "T20": "12",
       "Väderbild": "Sköra isar",
-      "Effekter": "Vid passage av fruset vatten krävs ett lyckat [Kvick] för att inte gå igenom och bli genomblöt eller rakt av riskeras att svepas med. En genomblöt rollperson tar 1T4 alternativ skada på stark per timmes färd som enbart kan läkas naturligt. Att torka kläderna tar en halvdag vid en lägereld.  Hur många frusna vattendrag som möts under dagen avgörs med 1T6 -2 "
+      "Effekter": "Vid passage av fruset vatten krävs ett lyckat slag på [Kvick] för att inte gå igenom och bli genomblöt eller rakt av riskeras att svepas med. En genomblöt rollperson tar 1T4 alternativ skada på stark per timmes färd som enbart kan läkas naturligt. Hur många frusna vattendrag som möts under dagen avgörs med 1T6 -2 "
     },
     {
       "Säsong": "Vinter",
       "T20": "13",
       "Väderbild": "Djupsnö",
-      "Effekter": "Snön når till knäna. All förflyttning under dagen halveras."
+      "Effekter": "Snön når till knäna. All förflyttning under dagen halveras, både i strid och vid "
     },
     {
       "Säsong": "Vinter",
       "T20": "14",
-      "Väderbild": "Den djupa dvalan",
+      "Väderbild": "Ovärldskyla",
       "Effekter": "Kylan kommer från bortomvärlden och tränger in i själen. Alla rollpersoner drabbas av +2 temporär korruption vid användandet av mystiska krafter och artefakter."
     },
     {
@@ -1296,19 +1296,19 @@
       "Säsong": "Vinter",
       "T20": "16",
       "Väderbild": "Snöstorm",
-      "Effekter": "En fruktansvärd snöstorm täcker området. För varje timme som spenderas i den utan skydd slås ett dödsslag. Ansamlade dödsslag under dagen nollställs inte förens dagens slut."
+      "Effekter": "En fruktansvärd och dödlig snöstorm täcker området. För varje timme som spenderas i den utan skydd slås ett dödsslag. Ansamlade dödsslag under dagen nollställs inte förrän stormens slut."
     },
     {
       "Säsong": "Vinter",
       "T20": "17",
       "Väderbild": "Lavinfara",
-      "Effekter": "I kuperad terräng eller berg krävs ett lyckat [Vaksam] av hela gruppen. Om någon misslyckas sveps någon med och tar 1T20 intern skada."
+      "Effekter": "I kuperad terräng eller berg krävs ett lyckat [Vaksam] av hela gruppen. Om någon misslyckas sveps någon med och tar 1T20 intern skada och kan enbart finnas med slag på [Vaksam -5]."
     },
     {
       "Säsong": "Vinter",
       "T20": "18",
       "Väderbild": "Isande skönhet",
-      "Effekter": "Den friska luften rensar sinnet. Rollpersoner take -1 poäng temporär korruption (minst 1) vid aktivering av mystiska krafter och artefakter."
+      "Effekter": "Den friska luften rensar sinnet. Rollpersoner tar -1 poäng temporär korruption (minst 1) vid aktivering av mystiska krafter och artefakter."
     },
     {
       "Säsong": "Vinter",
@@ -1319,8 +1319,8 @@
     {
       "Säsong": "Vinter",
       "T20": "20",
-      "Väderbild": "Tung andning",
-      "Effekter": "Den kalla luften gör lungorna ömma. Vid fysisk ansträngning drabbas rollpersonen av -1 kumulativt på [Stark] som återfås vid 1 timmes vila vid en lägereld."
+      "Väderbild": "Lungfrost",
+      "Effekter": "Den kalla luften gör lungorna ömma. Vid varje aktiv handling drabbas rollpersonen av -1 alternativ skada på [Stark] som återfås vid 1 timmes vila vid en lägereld."
     }
   ]
 },
@@ -1342,20 +1342,20 @@
     {
       "Säsong": "Vår",
       "T20": "1",
-      "Väderbild": "Frätande pollen",
-      "Effekter": "Luften är mättad med gult stoft. Slag mot Vaksam får -2 och rollpersoner som smyger måste klara ett slag på [Diskret +2] för att inte nysa."
+      "Väderbild": "Vårdis",
+      "Effekter": "Luften är mättad med lätt dis. Slag mot Vaksam får -2 och rollpersoner som som smyger får +2 i Diskret."
     },
     {
       "Säsong": "Vår",
       "T20": "2",
       "Väderbild": "Tjurig tjäle",
-      "Effekter": "Marken är en blandning av is och lera. Varje förflyttning i närstrid kräver ett lyckat [Kvick] för att inte falla omkull (förlorad handling)."
+      "Effekter": "Marken är en blandning av is och lera. Varje förflyttning och aktiv handling i närstrid kräver ett lyckat [Kvick] för att rollpersonen inte ska falla omkull."
     },
     {
       "Säsong": "Vår",
       "T20": "3",
       "Väderbild": "Isande bakslag",
-      "Effekter": "En plötslig köldknäpp slår till. I slutet av dagen måste rollpersonerna lyckas med ett [Stark] eller ta 1T4 poäng alternativ skada på Stark som enbart kan läkas naturligt."
+      "Effekter": "En plötslig köldknäpp slår till. Efter en hel dagsfärd måste rollpersonerna lyckas med ett slag mot [Stark] eller ta 1T4 poäng alternativ skada på Stark som enbart kan läkas naturligt."
     },
     {
       "Säsong": "Vår",
@@ -1366,8 +1366,8 @@
     {
       "Säsong": "Vår",
       "T20": "5",
-      "Väderbild": "Skugglika skurar",
-      "Effekter": "Slöjan mellan världarna är tunn och drar med sig skugglika skurar. Aktiverandet av mystiska krafter och artefakter ger +1 extra temporär korruption."
+      "Väderbild": "Mörka skurar",
+      "Effekter": "Slöjan mellan världarna är tunn och drar med sig tunga, mörka skurar. Aktiverandet av mystiska krafter och artefakter ger +1 extra temporär korruption."
     },
     {
       "Säsong": "Vår",
@@ -1385,13 +1385,13 @@
       "Säsong": "Vår",
       "T20": "8",
       "Väderbild": "Lervälling",
-      "Effekter": "Markens beskaffenhet halverar färdsträckan under dagen. Dessutom får alla slag för att smyga [Diskret] -2 på grund av det sugande ljudet."
+      "Effekter": "Markens beskaffenhet halverar färdsträckan under dagen. Dessutom får alla slag för att smyga [Diskret] -2 på grund av det sugande ljudet av fotsteg."
     },
     {
       "Säsong": "Vår",
       "T20": "9",
       "Väderbild": "Tung blötsnö",
-      "Effekter": "Den tunga nederbörden gör packningen tung och blöt. Rollpersonerna räknas som om de bär över sin kapacitet oavsett faktisk vikt enligt tabellen färdsätt och tid."
+      "Effekter": "Den tunga nederbörden gör packningen tung och blöt. Rollpersonerna räknas som om de bär över sin kapacitet oavsett faktisk vikt enligt tabellen för färdsätt och tid."
     },
     {
       "Säsong": "Vår",
@@ -1402,25 +1402,25 @@
     {
       "Säsong": "Vår",
       "T20": "11",
-      "Väderbild": "Vaknande rötter",
+      "Väderbild": "Vaknande grönska",
       "Effekter": "Marken känns levande och förrädisk. Vid strid i skogsmiljö räknas alla förflyttningar som halverade."
     },
     {
       "Säsong": "Vår",
       "T20": "12",
       "Väderbild": "Töstank",
-      "Effekter": "När marken tinar blottas gammalt förfall. Rollpersoner som misslyckas med ett [Viljestark] under dagen drabbas av illamående och får en andra chans att misslyckas med nästa framgångsslag."
+      "Effekter": "När marken tinar blottas gammalt förfall. Rollpersoner som misslyckas med ett [Viljestark] i början av dagen drabbas av illamående och måste äta en extra portion på kvällen på grund av uppstött kost."
     },
     {
       "Säsong": "Vår",
       "T20": "13",
       "Väderbild": "Davokar hungrar",
-      "Effekter": "Davokar sjuder av livslust och hunger. Alla rollpersoner måste klara ett [Viljestark -5] eller äta 1.5x en vanlig dagsranson under dagen."
+      "Effekter": "Davokar sjuder av livslust och hunger. Alla rollpersoner måste äta1.5x en vanlig dagsranson under dagen."
     },
     {
       "Säsong": "Vår",
       "T20": "14",
-      "Väderbild": "Åskmuller över Ravennerna",
+      "Väderbild": "Åskmuller",
       "Effekter": "Det dånande ljudet gör djur nervösa. Ett slag måste göras mot [Övertygande -3] för att medhavda djur inte ska slita sig och skena."
     },
     {
@@ -1433,7 +1433,7 @@
       "Säsong": "Vår",
       "T20": "16",
       "Väderbild": "Kristallklar gryning",
-      "Effekter": "Den krispiga luften skänker hopp. Alla rollpersoner får +1 på sitt allra första egenskapslag under dagen."
+      "Effekter": "Den krispiga luften skänker hopp. Alla rollpersoner får +1 på sitt allra första framgångsslag under dagen."
     },
     {
       "Säsong": "Vår",
@@ -1457,7 +1457,7 @@
       "Säsong": "Vår",
       "T20": "20",
       "Väderbild": "Virvlande stormbyar",
-      "Effekter": "Flygande varelser kan inte lyfta och alla varelser får -2 på Försvar per nivå av Robust på grund av obalans."
+      "Effekter": "Flygande varelser kan inte lyfta och alla varelser får -1 på Försvar på grund av obalans."
     }
   ]
 },
