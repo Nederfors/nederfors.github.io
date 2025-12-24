@@ -2886,7 +2886,7 @@
           "skadetyp": "Ingen"
         },
         "Gesäll": {
-          "handling": "Aktiv",
+          "handling": "Speciell",
           "skadetyp": "Ingen"
         },
         "Mästare": {
@@ -2897,7 +2897,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Fri. Även i stridens hetta når rollpersonens röst fram. En gång per runda kan rollpersonen ropa stärkande ord till en allierad inom synhåll. Med ett lyckat slag för Övertygande får den allierade +1T4 på sitt nästa framgångsslag innan rundans slut. Denna effekt kan endast appliceras en gång per scen för varje unik allierad.",
-      "Gesäll": "Handling: Aktiv. Rollpersonen kan hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka fem minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning.",
+      "Gesäll": "Handling: Speciell. Rollpersonen kan hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka fem minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning.",
       "Mästare": "Handling: Reaktiv. Rollpersonen vägrar låta sina kamrater falla. När en allierad inom hörhåll misslyckas med ett slag kan rollpersonen omedelbart ingripa. Rollpersonen slår ett slag mot Övertygande; om det lyckas får den allierade slå om sitt tärningsslag och använder då rollpersonens Övertygande som värde istället för sitt eget karaktärsdrag. Denna inspiration kan endast utföras en gång per scen för varje unik allierad."
     }
   },
