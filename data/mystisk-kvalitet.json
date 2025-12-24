@@ -356,7 +356,7 @@
   {
     "id": "mystiskkv28",
     "namn": "Blodsvultet",
-    "beskrivning": "I strid måste vapnet få känna fiendens blod. Varje runda det gör skada ökar skadan på nästa anfall med +1, kumulativt, då vapnet ivrar efter mer. Men om vapnet missar, inte biter genom pansar eller träffar ett blodlöst mål nollställs bonusen direkt av dess besvikelse.",
+    "beskrivning": "I strid måste vapnet få känna fiendens blod. Varje runda det gör skada ökar skadan på nästa anfall med +1, kumulativt, då vapnet ivrar efter mer. Men om vapnet missar, inte biter genom pansar eller träffar ett blodlöst mål nollställs bonusen direkt av dess besvikelse, varpå vapnet tar ut besvikelsen på sin bärare och rollpersonen tar lika mycket intern skada som vapnet byggt upp.",
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
@@ -364,6 +364,6 @@
         "Kvalitet"
       ]
     },
-    "effekt": "Skadan ökar med +1 kumulativt för varje runda vapnet orsakar skada; nollställs vid miss, ingen skada eller blodlöst mål."
+    "effekt": "Skadan ökar med +1 kumulativt för varje runda vapnet orsakar skada; nollställs och skadar bärare vid miss, ingen skada eller blodlöst mål."
   }
 ]
