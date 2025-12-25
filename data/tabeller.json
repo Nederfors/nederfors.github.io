@@ -737,6 +737,43 @@
 },
 {
   "id": "ta13",
+  "namn": "Karaktärsdrag för försvar",
+  "taggar": { "typ": ["Tabell"] },
+  "kolumner": [
+    "förmåga",
+    "karaktärsdrag",
+    "förutsättning"
+  ],
+  "rader": [
+    {
+      "förmåga": "Fint (gesäll)",
+      "karaktärsdrag": "Diskret",
+      "förutsättning": "Försvar; vapen med kvaliteterna Kort eller Precist"
+    },
+    {
+      "förmåga": "Pareringsmästare (novis)",
+      "karaktärsdrag": "Träffsäker",
+      "förutsättning": "Försvar i närstrid med vapen eller Naturlig krigare"
+    },
+    {
+      "förmåga": "Sjätte sinne (gesäll)",
+      "karaktärsdrag": "Vaksam",
+      "förutsättning": "Försvar (och initiativ)"
+    },
+    {
+      "förmåga": "Taktiker (gesäll)",
+      "karaktärsdrag": "Listig",
+      "förutsättning": "Försvar"
+    },
+    {
+      "förmåga": "Provokatör (gesäll)",
+      "karaktärsdrag": "Övertygande",
+      "förutsättning": "Försvar"
+    }
+  ]
+},
+{
+  "id": "ta14",
   "namn": "Kompetensnivå",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
@@ -774,7 +811,7 @@
 },
 
 {
-  "id": "ta14",
+  "id": "ta15",
   "namn": "Monster som studieobjekt",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
@@ -824,7 +861,7 @@
 },
 
 {
-  "id": "ta15",
+  "id": "ta16",
   "namn": "Kostnad för boende på/vid Karvosti",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
@@ -887,7 +924,7 @@
   ]
 },
 {
-  "id": "ta16",
+  "id": "ta17",
   "namn": "Fyndtabell",
   "taggar": { "typ": ["Tabell"] },
   "kolumner": [
@@ -924,7 +961,7 @@
   ]
 },
 {
-  "id": "ta17",
+  "id": "ta18",
   "namn": "Väder: Höst",
   "taggar": {
     "typ": [
@@ -1061,7 +1098,7 @@
   ]
 },
 {
-  "id": "ta18",
+  "id": "ta19",
   "namn": "Väder: Sommar",
   "taggar": {
     "typ": [
@@ -1198,7 +1235,7 @@
   ]
 },
 {
-  "id": "ta19",
+  "id": "ta20",
   "namn": "Väder: Vinter",
   "taggar": {
     "typ": [
@@ -1335,7 +1372,7 @@
   ]
 },
 {
-  "id": "ta20",
+  "id": "ta21",
   "namn": "Väder: Vår",
   "taggar": {
     "typ": [
@@ -1472,7 +1509,7 @@
   ]
 },
 {
-  "id": "ta21",
+  "id": "ta22",
   "namn": "Effekt vid överskriden Smärtgräns",
   "taggar": { "typ": ["Tabell", "Skada"] },
   "kolumner": [
@@ -1525,7 +1562,7 @@
 },
 
 {
-  "id": "ta22",
+  "id": "ta23",
   "namn": "Bepansring och skydd",
   "taggar": {
     "typ": [
@@ -1587,7 +1624,7 @@
 },
 
   {
-    "id": "ta23",
+    "id": "ta24",
     "namn": "Perfekt slag överskott",
     "taggar": { "typ": ["Tabell"] },
     "kolumner": [
@@ -1650,7 +1687,7 @@
     "extra": "När det effektiva värdet (Förmåga + Modifikation) överstiger 20, börjar chansen för perfekt slag att öka. För varje poäng över 20 (överskottet) utökas intervallet för perfekt slag med 1. Vid värde 21 lyckas man alltså perfekt på 1–2."
   },
   {
-    "id": "ta24",
+    "id": "ta25",
     "namn": "Fatalt misslyckat underskott",
     "taggar": { "typ": ["Tabell"] },
     "kolumner": [
@@ -1713,7 +1750,7 @@
     "extra": "När det effektiva värdet (Förmåga + Modifikation) sjunker under 0, ökar risken för fatalt misslyckande. Vid värde 0 är risken fortfarande normal (endast 20), men från och med -1 expanderar intervallet nedåt (19–20)."
   },
   {
-  "id": "ta23",
+  "id": "ta26",
   "namn": "Skadetyper och penetrering",
   "taggar": {
     "typ": [
