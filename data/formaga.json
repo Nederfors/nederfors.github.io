@@ -1890,8 +1890,8 @@
     },
     "nivåer": {
       "Novis": "Speciell. Redan på novisnivå låter den starka gåvan rollpersonen använda hela sin Viljestark som korruptionströskel i stället för halva. Total förstyggelse infaller först när den totala korruptionen uppgår till Viljestark +5",
-      "Gesäll": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften får sin korruptionstärning höjd med en nivå (till minst 1T4), men får också sin effekttärning höjd med 1T6. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där.",
-      "Mästare": "Speciell. Mästarens starka gåva låter rollpersonen använda valfri mystisk kraft, dock enbart på novisnivå. Framgångsslagen har en andra chans att misslyckas och användandet ger 1T8 temporär Korruption. Alla mystiska krafter kan användas, oavsett vilken tradition de tillhör."
+      "Gesäll": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften får sin korruptionstärning höjd med en nivå (till minst 1T4), men får också lägga till extra 1T4 till kraftens effekt. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där.",
+      "Mästare": "Speciell. Mästarens starka gåva låter rollpersonen använda valfri mystisk kraft, dock enbart på novisnivå. Användandet ger dock 1T8 temporär Korruption. Alla mystiska krafter kan användas, oavsett vilken tradition de tillhör (exklusive elityrkesförmågor)."
     }
   },
   {
@@ -2259,9 +2259,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. En gång per runda, efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet",
-      "Gesäll": "Handling: Reaktiv. När mystikern har påverkat ett enskilt mål med en mystisk kraft kan denne välja att ådra sig 1T4 temporär korruption igen för att låta magin eka. Kraften slår omedelbart till mot samma mål igen, men med halverade tärningar (avrundat uppåt).",
-      "Mästare": "Handling: Reaktiv. När en mystisk kraft har aktiverats kan rollpersonen välja att förstärka den bortom det normala genom att släppa in mer av världens råa och fördärvade energi. Effekten av kraften ökar med en tärning (valfri mellan 1T4 och 1T12). Samtidigt drabbas rollpersonen av temporär korruption motsvarande hälften av tärningskastet, avrundat uppåt."
+      "Novis": "Handling: Reaktiv. En gång per runda, efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet.",
+      "Gesäll": "Handling: Reaktiv. När mystikern har påverkat ett enskilt mål med en mystisk kraft kan mystikern välja att ådra sig en temporär korruption för att slå om alla effekttärningar och välja det högsta resultatet.",
+      "Mästare": "Handling: Reaktiv.  När mystikern har påverkat ett enskilt mål med en mystisk kraft kan denne med ett lyckat [Viljestark] välja att ådra sig 1T4 temporär korruption igen för att låta magin eka. Kraften slår omedelbart till mot samma mål igen, men med halverade tärningar (avrundat uppåt)."
     }
   },
   {
@@ -2886,7 +2886,7 @@
           "skadetyp": "Ingen"
         },
         "Gesäll": {
-          "handling": "Speciell",
+          "handling": "Aktiv",
           "skadetyp": "Ingen"
         },
         "Mästare": {
@@ -2897,7 +2897,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Fri. Även i stridens hetta når rollpersonens röst fram. En gång per runda kan rollpersonen ropa stärkande ord till en allierad inom synhåll. Med ett lyckat slag för Övertygande får den allierade +1T4 på sitt nästa framgångsslag innan rundans slut. Denna effekt kan endast appliceras en gång per scen för varje unik allierad.",
-      "Gesäll": "Handling: Speciell. Rollpersonen kan hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka fem minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning.",
+      "Gesäll": "Handling: Aktiv. Rollpersonen kan hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka fem minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning.",
       "Mästare": "Handling: Reaktiv. Rollpersonen vägrar låta sina kamrater falla. När en allierad inom hörhåll misslyckas med ett slag kan rollpersonen omedelbart ingripa. Rollpersonen slår ett slag mot Övertygande; om det lyckas får den allierade slå om sitt tärningsslag och använder då rollpersonens Övertygande som värde istället för sitt eget karaktärsdrag. Denna inspiration kan endast utföras en gång per scen för varje unik allierad."
     }
   },
@@ -2917,7 +2917,7 @@
       ],
       "nivå_data": {
         "Novis": {
-          "handling": "Aktiv",
+          "handling": "Förflyttning",
           "skadetyp": "Ingen"
         },
         "Gesäll": {
@@ -2931,7 +2931,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Rollpersonen kan offra sin förflyttning för att aktivt föra ett sådant oväsen att brukandet av mystiska krafter försvåras. Med ett lyckat slag mot Övertygande får alla fientliga mystiker inom hörhåll modifikationen -1T4 på sitt nästa slag för att aktivera mystiska krafter.",
+      "Novis": "Handling: Förflyttning. Rollpersonen kan offra sin förflyttning för att aktivt föra ett sådant oväsen att brukandet av mystiska krafter försvåras. Med ett lyckat slag mot Övertygande får alla fientliga mystiker inom hörhåll modifikationen -1T4 på sitt nästa slag för att aktivera mystiska krafter.",
       "Gesäll": "Handling: Aktiv. Rollpersonen riktar ett skärande, fokuserat oljud mot en enskild fiende inom syn- och hörhåll. Om rollpersonen lyckas med ett slag mot [Övertygande ← Viljestark] bryts fiendens koncentration omedelbart. Detta avbryter alla pågående effekter som kräver koncentration av målet.",
       "Mästare": "Handling: Passiv. Rollpersonen skapar en så skärande dissonans att den blir fysiskt smärtsam för dem som är öppna för magins flöden. Varje gång en fientlig mystiker inom hörhåll får sin koncentration bruten av gesällnivån, eller misslyckas med ett kraftslag på grund av novisnivåns störning, tar denne omedelbart 1T6 i skada (ignorerar Rustning)."
     }
