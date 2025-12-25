@@ -345,8 +345,16 @@
         }
       }
 
-      if (k === 'Kvick' && storeHelper.abilityLevel(list, 'Koreograferad strid') >= 1) {
-        extras.push('Kan användas som träffsäker för attacker som utförs efter en förflyttning');
+      if (k === 'Kvick') {
+        if (storeHelper.abilityLevel(list, 'Knivgöra') >= 1) {
+          extras.push('Kan användas som träffsäker för attacker med knivliknande vapen med kvaliteten Kort');
+        }
+        if (storeHelper.abilityLevel(list, 'Koreograferad strid') >= 1) {
+          extras.push('Kan användas som träffsäker för närstridsattacker med kort eller balanserat vapen efter en förflyttning');
+        }
+        if (storeHelper.abilityLevel(list, 'Spjutdans') >= 1) {
+          extras.push('Kan användas som träffsäker för närstridsattacker med spjut (kvalitet Långt)');
+        }
       }
 
       if (k === 'Listig' && storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
@@ -358,19 +366,17 @@
           storeHelper.abilityLevel(list, 'Sjätte Sinne'),
           storeHelper.abilityLevel(list, 'Sjätte sinne')
         );
-        if (sjatteSinneLvl >= 3) {
-          extras.push('Kan användas som träffsäker');
-        } else if (sjatteSinneLvl >= 1) {
-          extras.push('Kan användas som träffsäker för attacker med avståndsvapen');
+        if (sjatteSinneLvl >= 1) {
+          extras.push('Kan användas som träffsäker för avståndsattacker');
         }
       }
 
       if (k === 'Stark' && storeHelper.abilityLevel(list, 'Järnnäve') >= 1) {
-        extras.push('Kan användas som träffsäker för attacker i närstrid');
+        extras.push('Kan användas som träffsäker för närstridsattacker');
       }
 
       if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Dominera') >= 1) {
-        extras.push('Kan användas som träffsäker för attacker i närstrid');
+        extras.push('Kan användas som träffsäker för närstridsattacker');
       }
 
       if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Ledare') >= 1) {
