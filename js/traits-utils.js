@@ -222,11 +222,15 @@
     const forced = storeHelper.getDefenseTrait(store);
     if (forced) return forced;
 
+    // Automatiska karaktärsdrag för försvar enligt tabellen "Karaktärsdrag för försvar"
+    // (ta13) i data/tabeller. Förutsättningarna om vapen och liknande hanteras inte här,
+    // utan valet baseras enbart på uppnådd nivå i respektive förmåga.
     const ABILITY_TRAITS = [
       { ability: 'Fint', level: 2, trait: 'Diskret' },
+      { ability: 'Pareringsmästare', level: 1, trait: 'Träffsäker' },
       { ability: ['Sjätte Sinne', 'Sjätte sinne'], level: 2, trait: 'Vaksam' },
       { ability: 'Taktiker', level: 2, trait: 'Listig' },
-      { ability: 'Pareringsmästare', level: 1, trait: 'Tr\u00e4ffs\u00e4ker' }
+      { ability: 'Provokatör', level: 2, trait: 'Övertygande' }
     ];
 
     for (const { ability, level, trait } of ABILITY_TRAITS) {
