@@ -770,6 +770,15 @@ function initCharacter() {
     if(storeHelper.abilityLevel(list,'Lönnstöt') >= 1){
       cond.push('Diskret som träffsäker vid attacker med Övertag');
     }
+    if(storeHelper.abilityLevel(list,'Knivgöra') >= 1){
+      cond.push('Kvick som träffsäker för attacker med knivliknande vapen med kvaliteten Kort');
+    }
+    if(storeHelper.abilityLevel(list,'Koreograferad strid') >= 1){
+      cond.push('Kvick som träffsäker för närstridsattacker med kort eller balanserat vapen efter en förflyttning');
+    }
+    if(storeHelper.abilityLevel(list,'Spjutdans') >= 1){
+      cond.push('Kvick som träffsäker för närstridsattacker med spjut (kvalitet Långt)');
+    }
     if(storeHelper.abilityLevel(list,'Taktiker') >= 3){
       cond.push('Listig som träffsäker för allt utom tunga vapen');
     }
@@ -777,16 +786,14 @@ function initCharacter() {
       storeHelper.abilityLevel(list,'Sjätte Sinne'),
       storeHelper.abilityLevel(list,'Sjätte sinne')
     );
-    if(sjatte >= 3){
-      cond.push('Vaksam som träffsäker');
-    } else if(sjatte >= 1){
+    if(sjatte >= 1){
       cond.push('Vaksam som träffsäker för avståndsattacker');
     }
     if(storeHelper.abilityLevel(list,'Järnnäve') >= 1){
-      cond.push('Stark som träffsäker i närstrid');
+      cond.push('Stark som träffsäker för närstridsattacker');
     }
     if(storeHelper.abilityLevel(list,'Dominera') >= 1){
-      cond.push('Övertygande som träffsäker i närstrid');
+      cond.push('Övertygande som träffsäker för närstridsattacker');
     }
     if(storeHelper.abilityLevel(list,'Ledare') >= 1){
       cond.push('Övertygande istället för Viljestark vid mystiska förmågor och ritualer');
