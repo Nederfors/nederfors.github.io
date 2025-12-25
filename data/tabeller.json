@@ -704,6 +704,11 @@
       "förutsättning": "Knivliknande vapen med kvaliteten Kort"
     },
     {
+      "förmåga": "Koreograferad strid (novis)",
+      "karaktärsdrag": "Kvick",
+      "förutsättning": "Närstridsattacker med Kort eller Balanserat vapen efter förflyttning"
+    },
+    {
       "förmåga": "Ledare (novis)",
       "karaktärsdrag": "Övertygande",
       "förutsättning": "Mystiska krafter baserade på Viljestark"
@@ -717,6 +722,11 @@
       "förmåga": "Sjätte sinne (novis)",
       "karaktärsdrag": "Vaksam",
       "förutsättning": "Avståndsattacker"
+    },
+    {
+      "förmåga": "Spjutdans (novis)",
+      "karaktärsdrag": "Kvick",
+      "förutsättning": "Närstridsattacker med spjut (kvalitet Långt)"
     },
     {
       "förmåga": "Taktiker (mästare)",
