@@ -1152,7 +1152,7 @@
   {
     "id": "na85",
     "namn": "Krupp",
-    "beskrivning": "Lungorna är ansatta av en kronisk hosta som vägrar ge med sig. Rollpersonen drabbas av svåra hostattacker vid fysisk ansträngning. Varje gång hen misslyckas med ett slag i Stark börjar rollpersonen hosta i 1T4 rundor och kan inte utföra aktiva eller förflyttningshandlingar tills hostattacken är avklarad.",
+    "beskrivning": "Lungorna är ansatta av en kronisk hosta som vägrar ge med sig. Rollpersonen drabbas av svåra hostattacker vid fysisk ansträngning. Varje gång hen misslyckas med ett slag i Stark börjar rollpersonen hosta i 1T4 rundor och kan inte utföra aktiva eller förflyttningshandlingar tills hostattacken är avklarad eller rollpersonen lyckas med ett slag mot Stark i början av sin runda.",
     "taggar": {
       "typ": [
         "Nackdel"
@@ -1161,7 +1161,7 @@
         "Stark"
       ]
     },
-    "effekt": "Misslyckat Stark ger hosta i 1T4 rundor (inga aktiva/förflyttningshandlingar)."
+    "effekt": "Misslyckat Stark ger hosta i 1T4 rundor (inga aktiva/förflyttningshandlingar) eller tills hen lyckas med ett slag mot Stark."
   },
   {
     "id": "na86",
@@ -1178,7 +1178,7 @@
   {
     "id": "na87",
     "namn": "Narkolepsi",
-    "beskrivning": "Rollpersonen riskerar att somna vid monotona aktiviteter eller extrem stress. I början av varje scen måste rollpersonen slå 1T20, om slaget blir 18-20 så somnar rollpersonen omedelbart.",
+    "beskrivning": "Rollpersonen riskerar att somna vid monotona aktiviteter eller extrem stress. I början av varje scen måste rollpersonen slå 1T20, om slaget blir 18-20 så somnar rollpersonen omedelbart, men kan väckas genom en aktiv handling från sina allierade.",
     "taggar": {
       "typ": [
         "Nackdel"
@@ -1190,14 +1190,14 @@
   {
     "id": "na88",
     "namn": "Benskörhet",
-    "beskrivning": "Skelettet är skört som torra kvistar. Rollpersonen tar dubbel skada av fall.",
+    "beskrivning": "Skelettet är skört som torra kvistar. Rollpersonen tar 1T4 extra skada av fall och slag av krossande vapen.",
     "taggar": {
       "typ": [
         "Nackdel"
       ],
       "test": []
     },
-    "effekt": "Dubbel skada av fall."
+    "effekt": "Dubbel skada av fall och krossande vapen."
   },
   {
     "id": "na89",
@@ -1214,7 +1214,7 @@
   {
     "id": "na90",
     "namn": "Ansiktsblind",
-    "beskrivning": "Rollpersonen kan inte skilja på ansikten, inte ens på sina vänner. För att identifiera en person (annat än väldigt nära allierade) krävs ett lyckat slag mot Listig; vid misslyckande vet hen inte vem personen är.",
+    "beskrivning": "Rollpersonen kan inte skilja på ansikten, inte ens på sina vänner. För att identifiera en person (annat än väldigt nära allierade) krävs ett lyckat slag mot Listig -5; vid misslyckande vet hen inte vem personen är.",
     "taggar": {
       "typ": [
         "Nackdel"
@@ -1223,7 +1223,7 @@
         "Listig"
       ]
     },
-    "effekt": "Kräver Listig för att identifiera personer (ej nära allierade)."
+    "effekt": "Kräver Listig -5 för att identifiera personer (ej nära allierade)."
   },
   {
     "id": "na91",
@@ -1268,7 +1268,7 @@
   {
     "id": "na94",
     "namn": "Klenväxt",
-    "beskrivning": "Rollpersonen är onaturligt späd. Hen kan inte använda tunga vapen eller bära tung rustning, och slår alla slag mot Stark utanför strid med en modifikation på -3.",
+    "beskrivning": "Rollpersonen är onaturligt späd. Hen kan inte använda tunga vapen eller bära tung rustning, och slår alla slag mot Stark utanför strid med en modifikation på -4.",
     "taggar": {
       "typ": [
         "Nackdel"
@@ -1277,7 +1277,7 @@
         "Stark"
       ]
     },
-    "effekt": "Kan ej bära tungt; -3 på Stark utanför strid."
+    "effekt": "Kan ej bära tungt; -4 på Stark utanför strid."
   },
   {
     "id": "na95",
@@ -1353,7 +1353,7 @@
         "Viljestark"
       ]
     },
-    "effekt": "1 gång/äventyr: Slå Viljestark -5 eller betala 1 XP; annars utför SL-vald handling."
+    "effekt": "1 gång/äventyr: Slå Viljestark -5 eller betala 1 erf; annars utför SL-vald handling."
   },
   {
     "id": "na101",
