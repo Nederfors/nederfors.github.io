@@ -1110,7 +1110,7 @@
   {
     "id": "na82",
     "namn": "Sjusovare",
-    "beskrivning": "Rollpersonen sover djupt som en stock och har mycket svårt att vakna till sans. Om sällskapet överraskas eller attackeras medan rollpersonen sover, missar hen automatiskt den första stridsrundan. Därefter krävs ett lyckat slag mot Vaksam i början av varje runda för att vakna och kunna agera.",
+    "beskrivning": "Rollpersonen sover djupt som en stock och har mycket svårt att vakna till sans. Om sällskapet överraskas eller attackeras medan rollpersonen sover, missar hen automatiskt den första stridsrundan. Därefter krävs ett lyckat slag mot Vaksam -5 i början av varje runda för att vakna och kunna agera.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
@@ -1120,7 +1120,7 @@
         "Vaksam"
       ]
     },
-    "effekt": "Missar första rundan vid överraskning i sömn; kräver Vaksam för att vakna."
+    "effekt": "Missar första rundan vid överraskning i sömn; kräver Vaksam -5 för att vakna."
   },
   {
     "id": "na83",
