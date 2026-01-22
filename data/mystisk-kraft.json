@@ -774,9 +774,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Mystikern planterar larver inne i fiendens kropp, vilka sedan äter sig ut. 1T4 i skada per runda, Bepansring skyddar ej. Effekten är automatisk första rundan och pågår tills mystikern misslyckas med [Viljestark←Stark].",
-      "Gesäll": "Handling: Aktiv. Den inre larvtillväxten ger 1T6 i skada per runda, Bepansring skyddar ej. Effekten varar tills mystikern misslyckas med [Viljestark←Stark].",
-      "Mästare": "Handling: Aktiv. Larverna myllrar i offrets kropp och gör 1T8 i skada per runda, Bepansring skyddar ej. Effekten varar tills mystikern misslyckas med [Viljestark←Stark]."
+      "Novis": "Handling: Aktiv. Mystikern planterar larver inne i fiendens kropp, vilka sedan äter sig ut. 1T6 i skada per runda, Bepansring skyddar ej. Effekten är automatisk första rundan och pågår tills mystikern misslyckas med [Viljestark←Stark].",
+      "Gesäll": "Handling: Aktiv. Den inre larvtillväxten ger 1T8 i skada per runda, Bepansring skyddar ej. Effekten varar tills mystikern misslyckas med [Viljestark←Stark].",
+      "Mästare": "Handling: Aktiv. Larverna myllrar i offrets kropp och gör 1T10 i skada per runda, Bepansring skyddar ej. Effekten varar tills mystikern misslyckas med [Viljestark←Stark]."
     },
     "id": "mystiskkr22"
   },
@@ -2012,9 +2012,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Med ett lyckat [Viljestark←Stark] pressas målets strupe samman. Offret tar 1T4 i skada per runda (rustning skyddar ej) och kan inte tala eller använda handlingar som kräver röst. Effekten varar tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada]. Ett mål som tar skada får en andra chans att misslyckas med att upprätthålla koncentration under samma runda.",
-      "Gesäll": "Handling: Aktiv. Greppet hårdnar och lyfter upp målet från marken. Offret räknas som fasthållet och kan inte förflytta sig eller utföra aktiva handlingar. Med ett lyckat [Viljestark←Stark] orsakas 1T6 i skada per runda (rustning skyddar ej). Under effekten kan målet endast försvara sig eller göra reaktiva handlingar som inte kräver tal. Effekten bryts om mystikern misslyckas med ett Viljestark eller förlorar koncentrationen [Viljestark – Skada].",
-      "Mästare": "Handling: Aktiv. Som på gesällnivå, men greppet krossar brosk och blodkärl. Med ett lyckat [Viljestark←Stark] tar offret 1T8 i skada per runda (rustning skyddar ej). Om skadan når eller överstiger offrets Smärtgräns faller det medvetslöst till marken och förblir utslaget tills ny skada tillfogas eller striden tar slut."
+      "Novis": "Handling: Aktiv. Med ett lyckat [Viljestark←Stark] pressas målets strupe samman. Offret tar 1T4 i skada per runda (rustning skyddar ej) och kan inte tala eller använda handlingar som kräver röst. Effekten varar tills mystikern misslyckas med ett Viljestark eller tappar koncentrationen [Viljestark – Skada].",
+      "Gesäll": "Handling: Aktiv. Som novis, men greppet hårdnar och lyfter upp målet från marken. Offret räknas som fasthållet och kan inte förflytta sig eller utföra aktiva handlingar. Under effekten kan målet endast försvara sig eller göra reaktiva handlingar som inte kräver tal. Effekten bryts om mystikern misslyckas med ett Viljestark eller förlorar koncentrationen [Viljestark – Skada].",
+      "Mästare": "Handling: Aktiv. Som på gesällnivå, men greppet krossar brosk och blodkärl. Med ett lyckat [Viljestark←Stark] tar offret 1T6 i skada per runda (rustning skyddar ej). Om skadan når eller överstiger offrets Smärtgräns faller det medvetslöst till marken och förblir utslaget tills ny skada tillfogas eller att det blir läkt. För varje runda som målet är utslaget tar det 1T4 skada."
     },
     "id": "mystiskkr58"
   },
