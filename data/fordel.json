@@ -447,8 +447,8 @@
   {
     "id": "ford29",
     "namn": "Manipulatör",
-    "beskrivning": "Rollpersonen är skicklig på att spela på folks känslor medelst smicker, hot eller en kombination därav. Rollpersonen får +1 i Övertygande mot en utvald person under scenen. Manipulationer tar tid att genomföra effektivt, de kräver en scen av känslospel för att nå avsedd verkan. Å andra sidan är de manipulationerna verksamma över en längre tid, den manipulerade anser att känslorna och åsikterna är dess egna och kommer försvara dem långt efter att manipulatören lämnat platsen. Manipulatör kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
-    "kan_införskaffas_flera_gånger": true,
+    "beskrivning": "Rollpersonen är skicklig på att spela på folks känslor medelst smicker, hot eller en kombination därav. Rollpersonen får en gång per äventyr, med ett lyckat Övertygande -5 mot en utvald person, manipulera denna till ett känslotillstånd mot rollpersonen. Det kräver en scen av känslospel för att nå avsedd verkan. Å andra sidan är de manipulationerna verksamma över en längre tid, den manipulerade anser att känslorna och åsikterna är dess egna och kommer försvara dem långt efter att manipulatören lämnat platsen.",
+    "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Fördel"
@@ -458,7 +458,7 @@
         "Övertygande"
       ]
     },
-    "effekt": "+1 Övertygande mot utvald person under scenen; påverkan biter över tid (upp till +3)."
+    "effekt": "Får en gång per äventyr med Övertygande -5 manipulera en person till ett känslotillstånd mot rollpersonen."
   },
   {
     "id": "ford30",
