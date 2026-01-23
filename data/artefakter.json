@@ -3679,6 +3679,40 @@
       "skilling": 0,
       "örtegar": 0
     }
+  },
+   {
+    "id": "ar111",
+    "namn": "Gammelfars Ring",
+    "beskrivning": "En slät, tung ring av skinande silver som alltid känns kall och fuktig mot huden, som om den nyss plockats upp ur tjärnen. På insidan löper den ålderdomliga inskriptionen \"Född i ljus, uppväxt i mörker. Vildhjarta i evighet.\" Ringen fungerar som en länk till gäddan Gammelfar. Den som bär ringen bevakas ständigt av ett hungrigt öga från djupet.",
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Fri"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ],
+        "Förmåga 3": [
+          "Speciell"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Själahänder; Handling: Fri\nGenom att kyssa ringen och viska Gammelfars namn aktiveras ringens kraft för en scen. Bärarens händer och vapen omsluts av en svag, grönaktig aura som låter dem interagera med andeväsen och spöken som om de vore fysiska. Detta gör att bärarens attacker räknas som magiska mot okroppsliga varelser, och bäraren kan greppa eller knuffa andar. Korruption: 1.",
+      "Förmåga 2": "Själafrakt; Handling: Reaktiv\nNär en besjälad varelse (ej styggelse) dör inom en armlängds avstånd, kan bäraren öppna ringen för att fånga den flyende själen innan den försvinner till dödsriket. Med ett lyckat Viljestark-slag (passivt motstånd saknas oftast hos den döde) slussas själen istället direkt till Gammelfar i djupet. Korruption: 1T6.",
+      "Förmåga 3": "Gammelfars byte; Handling: Speciell\nI det ögonblick bäraren når 0 Tålighet eller slår ett misslyckat dödsslag (som inte leder till döden), kan denne desperat sända en tanke till Gammelfar och be om liv. Om besten lystrar (vilket den oftast gör för sina trogna leverantörer), fylls bärarens kropp omedelbart med nytt, kallt liv. Bäraren reser sig redan nästa runda med 1T12 tålighet. Priset är dock att den gamla själen har tagits som betalning; kroppen bebos nu av en ny, främmande själ som Gammelfar spottat ur sig – kanske en drunknad sjöman, en uråldrig kultist eller något av rollpersonens egna offer – vilket också medför drastiska personlighetsförändringar. Korruption: 1T8."
+    },
+    "stat": {
+      "vikt": 0.1
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
   }
 
 ]
