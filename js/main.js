@@ -430,7 +430,7 @@ async function pickJsonFilesWithInput() {
   return await new Promise((resolve, reject) => {
     const inp = document.createElement('input');
     inp.type = 'file';
-    inp.accept = 'application/json';
+   inp.accept = '.json,application/json';
     inp.multiple = true;
     inp.style.position = 'fixed';
     inp.style.left = '-9999px';
@@ -463,7 +463,6 @@ async function pickJsonFilesWithInput() {
     };
     inp.addEventListener('change', onChange, { once: true });
     inp.addEventListener('cancel', abort, { once: true });
-    window.addEventListener('focus', onFocus, true);
     document.body.appendChild(inp);
     inp.click();
   });
