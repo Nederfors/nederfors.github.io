@@ -1455,7 +1455,7 @@
     "nivåer": {
       "Novis": "Reaktiv. Rollpersonen drar kraft ur sitt eget spillda blod. När Tålighet når hälften får rollpersonen en andra chans att lyckas med alla anfallsslag i närstrid.",
       "Gesäll": "Reaktiv. Blodkämpens hugg blir värre i takt med egna skador; när Tåligheten går ner under hälften ökar skadan på alla rollpersonens attacker med 1T8.",
-      "Mästare": "Reaktiv. Blodkämpen helas av fiendens spillda blod, hälften av den skada som rollpersonen åsamkar fiender i närstrid återfås som läkt Tålighet, avrundat nedåt."
+      "Mästare": "Reaktiv. Blodkämpen helas av fiendens spillda blod, hälften av den skada som rollpersonen åsamkar fiender i närstrid återfås som läkt Tålighet, avrundat uppåt."
     }
   },
   {
@@ -2540,7 +2540,7 @@
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
-      "Gesäll": "Handling: Reaktiv. När en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
+      "Gesäll": "Handling: Reaktiv. En gång per runda, när en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
       "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
     }
   },
@@ -2577,7 +2577,7 @@
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen låter intellektet styra över driften av mystik och parerar sinnespåverkan med kylig rationalitet. Rollpersonen får alltså använda Listig i stället för Viljestark, exempelvis vid användandet av mystiska krafter, koncentrationsslag och motstånd mot sinnes- och viljepåverkan; dock inte som grund för korruptionströskel.",
       "Gesäll": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett slag i Listig-slag under en scen får hen en kumulativ +1 på kommande Listig-slag riktade mot just den effekten. Bonusen varar till scenens slut.",
-      "Mästare": "Handling: Reaktiv. Den kalla rationaliteten biter i själen och skärper fokuset till perfektion; men ibland kan det vara nödvändigt att växla en liten dos korruption mot ett ännu skarpare fokus. Varje gång rollpersonen slår ett slag mot Listig får hen samtidigt slå 1T4 och subtrahera utfallet från framgångsslaget. Tärningsutfallet kan ökas genom att rollpersonen frivilligt tar lika mycket temporär Korruption. Denna effekt kan dock inte användas för att hindra kritiskt misslyckande."
+      "Mästare": "Handling: Reaktiv. Den kalla rationaliteten biter i själen och skärper fokuset till perfektion; men ibland kan det vara nödvändigt att växla en liten dos korruption mot ett ännu skarpare fokus. Varje gång rollpersonen slår ett slag mot Listig får hen samtidigt slå 1T4 och subtrahera utfallet från framgångsslaget. Rollpersonen tar dock temporär Korruption lika med hälften av utfallet, avrundat uppåt. Denna effekt kan dock inte användas för att hindra kritiskt misslyckande."
     }
   },
   {
