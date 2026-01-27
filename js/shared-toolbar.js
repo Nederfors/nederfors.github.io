@@ -1929,8 +1929,27 @@ class SharedToolbar extends HTMLElement {
   toggle(id) {
     const panel = this.panels[id];
     if (!panel) return;
+
+    // 1. 🛡️ DEBOUNCE: Ignore rapid-fire clicks (Ghost Clicks)
+    // If we just toggled this panel <300ms ago, ignore this click.
+    const now = Date.now();
+    if (this._lastToggle && (now - this._lastToggle < 300)) {
+        console.log("🚫 Ghost click blocked.");
+        return;
+    }
+    this._lastToggle = now;
+
+    // 2. CHECK STATE
     const isOpen = panel.classList.contains('open');
-    Object.values(this.panels).forEach(p=>p.classList.remove('open'));
+
+    // 3. SYNCHRONOUS CLOSE
+    // Always close other panels immediately.
+    Object.values(this.panels).forEach(p => p.classList.remove('open'));
+
+    // 4. ASYNC OPEN
+    // If we need to open, we WAIT 50ms.
+    // This allows the 'click' event to finish bubbling up to the document
+    // and for 'handleOutsideClick' to run and finish BEFORE the menu actually opens.
     if (!isOpen) {
       if (id === 'filterPanel') {
         this.collapseNonPersistentCards();
@@ -1940,8 +1959,12 @@ class SharedToolbar extends HTMLElement {
         }
         this.updateFilterCollapseBtn();
       }
-      panel.classList.add('open');
-      panel.scrollTop = 0;
+      
+      // The Magic Delay
+      setTimeout(() => {
+          panel.classList.add('open');
+          panel.scrollTop = 0;
+      }, 50); 
     }
   }
   open(id)  {
