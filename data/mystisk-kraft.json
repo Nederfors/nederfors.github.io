@@ -2802,9 +2802,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv.\nMystikern täcker ett område (en förflyttning i diameter) med hal is och piskande hagel.\nAlla fiender som går in i eller startar sin runda i området måste lyckas med ett slag mot Kvick eller falla omkull.",
-      "Gesäll": "Handling: Aktiv.\nMystikern slungar en skur av ispiggar mot en fiende. Attacken sker med [Viljestark←Kvick] och gör 1T8 i fysisk skada.\nOm målet tar skada blir det nedkylt och får -1T4 på Kvick under resten av scenen, reduceringen i kvick stackar inte med upprepade isspikar, men däremot med skadan av mästarnivån.",
-      "Mästare": "Handling: Aktiv.\nMystikern manar fram en onaturlig kyla över området.\nUtöver effekterna från novisnivån tar alla fiender inom synhåll, om de misslyckas med ett slag mot Stark i början av sin runda, 1 i skada på Kvick.\nEffekten är aktiv fram tills mystikern misslyckas med ett slag på Viljestark eller tappar koncentrationen."
+      "Novis": "Handling: Aktiv.\n Mystikern täcker ett område (en förflyttning i diameter) med hal is och piskande hagel.\n Alla fiender som går in i eller startar sin runda i området måste lyckas med ett slag mot Kvick eller falla omkull.",
+      "Gesäll": "Handling: Aktiv.\n Mystikern slungar en skur av ispiggar mot en fiende. Attacken sker med [Viljestark←Kvick] och gör 1T8 i fysisk skada.\nOm målet tar skada blir det nedkylt och får -1T6 på Kvick under resten av scenen, reduceringen i kvick stackar inte med upprepade isspikar, men däremot med skadan av mästarnivån.",
+      "Mästare": "Handling: Aktiv.\n Mystikern manar fram en onaturlig kyla över hela området.\n Utöver effekterna från novisnivån tar alla fiender inom synhåll 1 i skada på Kvick.\nEffekten är aktiv fram tills mystikern misslyckas med ett slag på Viljestark."
     }
   },
   {
