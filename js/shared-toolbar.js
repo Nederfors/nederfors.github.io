@@ -1523,7 +1523,7 @@ class SharedToolbar extends HTMLElement {
             <ul class="summary-list">
               <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
               <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-              <li>Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('settings')} Filter.</li>
+              <li>Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Filter.</li>
             </ul>
           </section>
 
@@ -1531,9 +1531,9 @@ class SharedToolbar extends HTMLElement {
             <h3>Verktygsrad</h3>
             <ul class="summary-list">
               <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
-              <li>${icon('character')} / ${icon('index')}: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
+              <li>${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.</li>
+              <li>${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.</li>
               <li>${icon('anteckningar')}: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-              <li>${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (flikar för Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.</li>
               <li>XP: Visar dina totala erfarenhetspoäng.</li>
               <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
               <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
@@ -1556,12 +1556,17 @@ class SharedToolbar extends HTMLElement {
               <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
               <li>Typ, Arketyp, Test: Filtrerar listor.</li>
               <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
+              <li>Generera rollperson: Skapar en rollperson automatiskt.</li>
+              <li>PDF-bank: Öppnar samlingen med regel-PDF:er.</li>
+              <li>Uppdatera appen: Söker efter ny version och uppdaterar.</li>
               <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
               <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
               <li>${icon('smithing')}/${icon('alkemi')}/${icon('artefakt') || '🏺'}: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
               <li>${icon('extend') || '🔭'} Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
               <li>${icon('expand') || '↕️'} Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
               <li>${icon('forsvar') || '🏃'} Försvar: Välj försvarskaraktärsdrag manuellt.</li>
+              <li>${icon('adjust')} Manuella justeringar: Hantera egna modifieringar.</li>
+              <li>${icon('sort')} Sortering: Välj ordning för listor.</li>
               <li>${icon('info')} Hjälp: Visar denna panel.</li>
             </ul>
           </section>
@@ -1595,6 +1600,8 @@ class SharedToolbar extends HTMLElement {
             <h3>Rollperson</h3>
             <ul class="summary-list">
               <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
+              <li>${icon('effects')} Effekter: Öppnar aktiv effektöversikt.</li>
+              <li>${icon('overview')} Översikt: Snabb sammanställning av värden och modifikationer.</li>
             </ul>
           </section>
 
