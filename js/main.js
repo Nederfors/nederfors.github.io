@@ -3121,11 +3121,24 @@ function requestDriveTokenInteractive() {
   });
 }
 
+function isDriveGisNotLoaded(err) {
+  return String(err?.message || err || '').includes('GIS not loaded');
+}
+
+async function requestDriveTokenFromClick() {
+  const cached = getCachedDriveToken();
+  if (cached) return cached;
+  if (!window.google?.accounts?.oauth2) {
+    loadDriveGis().catch(() => {});
+    throw new Error('GIS not loaded');
+  }
+  return await requestDriveTokenInteractive();
+}
+
 async function ensureDriveToken() {
   const cached = getCachedDriveToken();
   if (cached) return cached;
-  await loadDriveGis();
-  return await requestDriveTokenInteractive();
+  throw new Error('Drive auth required');
 }
 
 async function driveApiFetch(path, { method = 'GET', params = {}, body, headers = {} } = {}) {
@@ -3396,14 +3409,18 @@ function openDriveStoragePopup() {
       saveAllBtn.disabled = true;
       saveAllBtn.textContent = 'Ansluter till Drive…';
       try {
-        await requestDriveTokenInteractive();
+        await requestDriveTokenFromClick();
         select({
           mode: 'drive-save-all',
           driveFolder: saveFolderSelect.value || 'Alla'
         });
       } catch (err) {
         console.error(err);
-        await alertPopup('Kunde inte ansluta till Google Drive.');
+        if (isDriveGisNotLoaded(err)) {
+          await alertPopup('Drive laddas… klicka igen.');
+        } else {
+          await alertPopup('Kunde inte ansluta till Google Drive.');
+        }
         saveAllBtn.disabled = false;
         saveAllBtn.textContent = originalText;
       }
@@ -3432,7 +3449,7 @@ function openDriveStoragePopup() {
         const b = make('button', 'char-btn small', c.name || 'Namnlös');
         b.addEventListener('click', async () => {
           try {
-            await requestDriveTokenInteractive();
+            await requestDriveTokenFromClick();
             select({
               mode: 'drive-save',
               charId: c.id,
@@ -3440,7 +3457,11 @@ function openDriveStoragePopup() {
             });
           } catch (err) {
             console.error(err);
-            await alertPopup('Kunde inte ansluta till Google Drive.');
+            if (isDriveGisNotLoaded(err)) {
+              await alertPopup('Drive laddas… klicka igen.');
+            } else {
+              await alertPopup('Kunde inte ansluta till Google Drive.');
+            }
           }
         });
         gl.appendChild(b);
@@ -3464,7 +3485,7 @@ function openDriveStoragePopup() {
         const b = make('button', 'char-btn small', c.name || 'Namnlös');
         b.addEventListener('click', async () => {
           try {
-            await requestDriveTokenInteractive();
+            await requestDriveTokenFromClick();
             select({
               mode: 'drive-save',
               charId: c.id,
@@ -3472,7 +3493,11 @@ function openDriveStoragePopup() {
             });
           } catch (err) {
             console.error(err);
-            await alertPopup('Kunde inte ansluta till Google Drive.');
+            if (isDriveGisNotLoaded(err)) {
+              await alertPopup('Drive laddas… klicka igen.');
+            } else {
+              await alertPopup('Kunde inte ansluta till Google Drive.');
+            }
           }
         });
         gl.appendChild(b);
@@ -3549,12 +3574,16 @@ function openDriveStoragePopup() {
     loadBtn.addEventListener('click', async () => {
       listWrap.textContent = 'Laddar...';
       try {
-        await requestDriveTokenInteractive();
+        await requestDriveTokenFromClick();
         allFiles = await driveListCharacterFiles(importFolderSelect.value || 'Alla');
         renderList();
       } catch (err) {
         console.error(err);
-        listWrap.textContent = 'Kunde inte läsa Drive.';
+        if (isDriveGisNotLoaded(err)) {
+          listWrap.textContent = 'Drive laddas… klicka igen.';
+        } else {
+          listWrap.textContent = 'Kunde inte läsa Drive.';
+        }
       }
     });
 
