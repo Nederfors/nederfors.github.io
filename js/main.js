@@ -3202,10 +3202,12 @@ async function driveUploadCharacterFile(charId, driveFolderName, opts = {}) {
 
   const metadata = {
     name: fileName,
-    parents: [folderId],
     mimeType: 'application/json',
     appProperties: { symbapediaType: 'character' }
   };
+  if (!existing) {
+    metadata.parents = [folderId];
+  }
 
   const body =
     `--${boundary}\r\n` +
