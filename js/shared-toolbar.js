@@ -621,6 +621,9 @@ class SharedToolbar extends HTMLElement {
                 <button id="importChar" class="char-btn">Importera</button>
               </div>
               <div class="char-btn-row">
+                <button id="driveStorageBtn" class="char-btn">Drivelagring</button>
+              </div>
+              <div class="char-btn-row">
                 <button id="pdfLibraryBtn" class="char-btn">PDF-bank</button>
               </div>
               <div class="char-btn-row">
@@ -1252,6 +1255,15 @@ class SharedToolbar extends HTMLElement {
           <h3>Export</h3>
           <div id="exportOptions"></div>
           <button id="exportCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Drivelagring ---------- -->
+      <div id="driveStoragePopup" class="popup">
+        <div class="popup-inner">
+          <h3>Drivelagring</h3>
+          <div id="driveStorageOptions"></div>
+          <button id="driveStorageCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
@@ -1924,7 +1936,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','exportPopup','driveStoragePopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
