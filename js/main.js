@@ -58,7 +58,7 @@ window.addEventListener('load', () => {
       if (isOpen && !wasOpen) {
         openMap.set(el, true);
         overlayStack.push(el);
-        history.pushState({ overlay: el.id }, '');
+       history.pushState({ overlay: el.id }, '');
       } else if (!isOpen && wasOpen) {
         openMap.set(el, false);
         const idx = overlayStack.lastIndexOf(el);
@@ -120,10 +120,6 @@ window.addEventListener('load', () => {
     if (manualCloseCount > 0) {
       manualCloseCount--;
       const topOverlay = overlayStack[overlayStack.length - 1];
-      // Om popstate kommer från en historiknavigering vi själva triggat
-      // (t.ex. när en annan panel stängts manuellt) så motsvarar eventets
-      // state den nu öppna panelen. I det fallet ska vi inte stänga något
-      // ytterligare, men en användarinitierad back ska fortfarande fungera.
       if (!topOverlay || ev?.state?.overlay === topOverlay.id) {
         return;
       }
@@ -132,6 +128,29 @@ window.addEventListener('load', () => {
     if (el) {
       isPop = true;
       const cleanup = overlayCleanupMap.get(el);
+      
+      // --- SPÖK-FIXEN BÖRJAR HÄR ---
+      // 1. Ta bort klassen omedelbart
+      el.classList.remove('open'); 
+      
+      // 2. "Hack" för att tvinga webbläsaren att fatta att rutan är borta:
+      // Vi gömmer den helt (display: none) en millisekund.
+      // Detta dödar alla pågående animationer och spöken direkt.
+      const originalDisplay = el.style.display;
+      el.style.display = 'none';
+      
+      // 3. Tvinga webbläsaren att räkna om layouten (Reflow)
+      void el.offsetHeight; 
+      
+      // 4. Återställ ordningen efter en blinkning
+      setTimeout(() => {
+          el.style.display = originalDisplay; 
+          // Rensa allt skräp som swipen kan ha lämnat kvar
+          el.style.transform = '';
+          el.style.transition = '';
+      }, 50);
+      // --- SPÖK-FIXEN SLUT ---
+
       if (typeof cleanup === 'function') {
         try {
           cleanup();
@@ -141,10 +160,11 @@ window.addEventListener('load', () => {
           }
         }
       } else {
+        // Fallback om ingen cleanup-funktion fanns
         el.classList.remove('open');
       }
-      // Vänta tills MutationObserver hunnit reagera innan flaggan återställs
-      setTimeout(() => { isPop = false; });
+      
+      setTimeout(() => { isPop = false; }, 50);
     }
   });
 
