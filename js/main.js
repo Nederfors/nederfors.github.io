@@ -3012,7 +3012,7 @@ const DRIVE_CONFIG = {
   apiKey: 'AIzaSyB5f67LBlMssggG7SREFbCZD43YzDESW5Q',
   scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly',
   rootFolderName: 'Symbapedia_Backups',
-  subfolders: ['Alla','Daniel','David','Elin','Isak','Leo','Nilas','Victor']
+  subfolders: ['Alla','Daniel','David','Elias','Elin','Isak','Leo','Nilas','Victor']
 };
 
 function driveEscapeQuery(value) {
@@ -3186,9 +3186,10 @@ async function driveFindCharacterFile(folderId, fileName) {
   return res.files?.[0] || null;
 }
 
-async function driveUploadCharacterFile(charId, driveFolderName) {
+async function driveUploadCharacterFile(charId, driveFolderName, opts = {}) {
+  const { silent = false } = opts;
   const data = storeHelper.exportCharacterJSON(store, charId, true);
-  if (!data) return;
+  if (!data) return false;
 
   const jsonText = JSON.stringify(data, null, 2);
   const fileName = `${sanitizeFilename(data.name || 'rollperson')}.json`;
@@ -3230,7 +3231,31 @@ async function driveUploadCharacterFile(charId, driveFolderName) {
 
   const payload = await res.json();
   if (!res.ok) throw new Error(payload?.error?.message || 'Drive upload failed');
-  window.toast?.(`Sparad i Drive: ${data.name || 'rollperson'}`);
+  if (!silent) {
+    window.toast?.(`Sparad i Drive: ${data.name || 'rollperson'}`);
+  }
+  return true;
+}
+
+async function driveUploadAllCharacters(driveFolderName) {
+  const chars = (store.characters || []).slice()
+    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+  let saved = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const c of chars) {
+    try {
+      const ok = await driveUploadCharacterFile(c.id, driveFolderName, { silent: true });
+      if (ok) saved++;
+      else skipped++;
+    } catch (err) {
+      console.error('Drive upload failed', c, err);
+      failed++;
+    }
+  }
+
+  return { saved, skipped, failed, total: chars.length };
 }
 
 async function driveListCharacterFiles(driveFolderName) {
@@ -3326,6 +3351,30 @@ function openDriveStoragePopup() {
     });
     saveFolderWrap.appendChild(saveFolderSelect);
     saveSection.appendChild(saveFolderWrap);
+
+    const saveAllBtn = make('button', 'char-btn', 'Spara alla (separata filer)');
+    saveAllBtn.addEventListener('click', async () => {
+      if (!store.characters?.length) {
+        await alertPopup('Inga rollpersoner att spara.');
+        return;
+      }
+      const originalText = saveAllBtn.textContent;
+      saveAllBtn.disabled = true;
+      saveAllBtn.textContent = 'Ansluter till Drive…';
+      try {
+        await requestDriveTokenInteractive();
+        select({
+          mode: 'drive-save-all',
+          driveFolder: saveFolderSelect.value || 'Alla'
+        });
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte ansluta till Google Drive.');
+        saveAllBtn.disabled = false;
+        saveAllBtn.textContent = originalText;
+      }
+    });
+    saveSection.appendChild(saveAllBtn);
 
     const saveListWrap = make('div', 'export-list');
     const folders = (storeHelper.getFolders(store) || []).slice()
@@ -3483,6 +3532,26 @@ function openDriveStoragePopup() {
     opts.appendChild(wrap);
   }, async choice => {
     if (!choice) return;
+    if (choice.mode === 'drive-save-all') {
+      try {
+        const result = await driveUploadAllCharacters(choice.driveFolder || 'Alla');
+        if (!result.total) {
+          await alertPopup('Inga rollpersoner att spara.');
+          return;
+        }
+        if (result.failed > 0) {
+          await alertPopup(`Sparade ${result.saved} av ${result.total}. ${result.failed} misslyckades.`);
+        } else if (result.skipped > 0) {
+          window.toast?.(`Sparade ${result.saved}. ${result.skipped} hoppades över.`);
+        } else {
+          window.toast?.(`Sparade ${result.saved} rollpersoner i Drive.`);
+        }
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte spara alla till Drive.');
+      }
+      return;
+    }
     if (choice.mode === 'drive-save') {
       try {
         await driveUploadCharacterFile(choice.charId, choice.driveFolder || 'Alla');
