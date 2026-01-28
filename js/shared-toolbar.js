@@ -552,6 +552,14 @@ class SharedToolbar extends HTMLElement {
         /* Ensure help card and search filter cards can never be collapsed */
         .help-card.compact .card-desc { display: block !important; }
         #searchFiltersCard.compact .card-desc { display: block !important; }
+        /* Inline ikoner i hjälplistan så de inte bryter rader */
+        .help-content .btn-icon {
+          display: inline-block;
+          vertical-align: text-bottom;
+          width: 1.15em;
+          height: 1.15em;
+          margin: 0 .25em 0 0;
+        }
       </style>
       <link rel="stylesheet" href="css/style.css">
 
