@@ -3010,8 +3010,11 @@ function sanitizeFilename(name) {
 const DRIVE_CONFIG = {
   clientId: '618760628907-j5pdjhke84shln3sadl5t61e2sskav0s.apps.googleusercontent.com',
   apiKey: 'AIzaSyB5f67LBlMssggG7SREFbCZD43YzDESW5Q',
-  scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly',
+  // Full Drive access so all users with access to the shared folder can see each other's files.
+  scope: 'https://www.googleapis.com/auth/drive',
   rootFolderName: 'Symbapedia_Backups',
+  // Shared folder ID (all users must have access to this folder)
+  rootFolderId: '1AxuJ4DAb_Ao7wgidQMy4QxlBnYu4gojX',
   subfolders: ['Alla','Daniel','David','Elias','Elin','Isak','Leo','Nilas','Victor']
 };
 
@@ -3038,6 +3041,7 @@ let driveTokenClient = null;
 let driveGisPromise = null;
 let driveAccessToken = '';
 let driveAccessTokenExpiresAt = 0;
+const DRIVE_SCOPE_KEY = 'symbapediaDriveScope';
 
 function cacheDriveToken(resp) {
   const token = resp?.access_token;
@@ -3093,13 +3097,27 @@ function requestDriveTokenInteractive() {
   }
   initDriveTokenClient();
   return new Promise((resolve, reject) => {
+    let prompt = '';
+    let shouldStoreScope = false;
+    try {
+      const prevScope = localStorage.getItem(DRIVE_SCOPE_KEY);
+      if (prevScope !== DRIVE_CONFIG.scope) {
+        prompt = 'consent';
+        shouldStoreScope = true;
+      }
+    } catch {}
     driveTokenClient.callback = (resp) => {
       const token = cacheDriveToken(resp);
-      if (token) resolve(token);
+      if (token) {
+        if (shouldStoreScope) {
+          try { localStorage.setItem(DRIVE_SCOPE_KEY, DRIVE_CONFIG.scope); } catch {}
+        }
+        resolve(token);
+      }
       else reject(resp);
     };
     // Måste ske via användarklick
-    driveTokenClient.requestAccessToken({ prompt: '' });
+    driveTokenClient.requestAccessToken({ prompt });
   });
 }
 
@@ -3113,7 +3131,12 @@ async function ensureDriveToken() {
 async function driveApiFetch(path, { method = 'GET', params = {}, body, headers = {} } = {}) {
   const token = await ensureDriveToken();
   const url = new URL(`https://www.googleapis.com/drive/v3/${path}`);
-  Object.entries(params).forEach(([k, v]) => {
+  const finalParams = { ...(params || {}) };
+  if (DRIVE_CONFIG.rootFolderId) {
+    if (finalParams.supportsAllDrives === undefined) finalParams.supportsAllDrives = true;
+    if (finalParams.includeItemsFromAllDrives === undefined) finalParams.includeItemsFromAllDrives = true;
+  }
+  Object.entries(finalParams).forEach(([k, v]) => {
     if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
   });
   const res = await fetch(url.toString(), {
@@ -3165,6 +3188,15 @@ async function driveEnsureFolder(name, parentId = null) {
 }
 
 async function driveEnsureRootFolder() {
+  if (DRIVE_CONFIG.rootFolderId) {
+    const info = await driveApiFetch(`files/${DRIVE_CONFIG.rootFolderId}`, {
+      params: { fields: 'id,name,mimeType' }
+    });
+    if (info?.mimeType !== 'application/vnd.google-apps.folder') {
+      throw new Error('Drive root folder is not a folder');
+    }
+    return info.id;
+  }
   return await driveEnsureFolder(DRIVE_CONFIG.rootFolderName);
 }
 
@@ -3219,8 +3251,8 @@ async function driveUploadCharacterFile(charId, driveFolderName, opts = {}) {
     `--${boundary}--`;
 
   const url = existing
-    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart`
-    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart&supportsAllDrives=true`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true`;
 
   const res = await fetch(url, {
     method: existing ? 'PATCH' : 'POST',
@@ -3280,7 +3312,7 @@ async function driveListCharacterFiles(driveFolderName) {
 
 async function driveDownloadFile(fileId) {
   const token = await ensureDriveToken();
-  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   if (!res.ok) throw new Error('Drive download failed');
