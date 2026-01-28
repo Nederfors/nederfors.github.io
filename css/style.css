@@ -4371,18 +4371,32 @@ select.level {
   white-space: nowrap;
 }
 
-#exportPopup .export-search input { width: 100%; }
-#exportPopup .export-search { margin-top: .2rem; }
+#exportPopup .export-search input,
+#driveStoragePopup .export-search input { width: 100%; }
+#exportPopup .export-search,
+#driveStoragePopup .export-search { margin-top: .2rem; }
 
-#exportPopup .export-list { display: flex; flex-direction: column; gap: .4rem; }
-#exportPopup .export-group { display: flex; flex-direction: column; gap: .3rem; }
-#exportPopup .group-title { text-align: left; font-size: .9rem; font-weight: 600; opacity: .8; margin-top: .2rem; }
-#exportPopup .group-list { display: grid; grid-template-columns: 1fr; gap: .4rem; align-items: stretch; }
+#exportPopup .export-list,
+#driveStoragePopup .export-list { display: flex; flex-direction: column; gap: .4rem; }
+#exportPopup .export-group,
+#driveStoragePopup .export-group { display: flex; flex-direction: column; gap: .3rem; }
+#exportPopup .group-title,
+#driveStoragePopup .group-title { text-align: left; font-size: .9rem; font-weight: 600; opacity: .8; margin-top: .2rem; }
+#exportPopup .group-list,
+#driveStoragePopup .group-list { display: grid; grid-template-columns: 1fr; gap: .4rem; align-items: stretch; }
 @media (min-width: 420px) {
-  #exportPopup .group-list { grid-template-columns: 1fr 1fr; }
+  #exportPopup .group-list,
+  #driveStoragePopup .group-list { grid-template-columns: 1fr 1fr; }
 }
-#exportPopup .group-list .char-btn.small { padding: .45rem .7rem; font-size: .95rem; height: 100%; }
-#exportPopup .char-btn.primary { background: var(--accent); }
+#exportPopup .group-list .char-btn.small,
+#driveStoragePopup .group-list .char-btn.small { padding: .45rem .7rem; font-size: .95rem; height: 100%; }
+#exportPopup .char-btn.primary,
+#driveStoragePopup .char-btn.primary { background: var(--accent); }
+
+/* ---------- Drivelagring-popup layout ---------- */
+#driveStoragePopup .export-sections { display: flex; flex-direction: column; gap: .6rem; }
+#driveStoragePopup .export-card { padding: .8rem 1rem; }
+#driveStoragePopup .export-section { display: flex; flex-direction: column; gap: .5rem; text-align: left; }
 
 /* (removed) Popup för inventarie Export/Import */
 
