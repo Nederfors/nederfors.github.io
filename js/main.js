@@ -2039,6 +2039,11 @@ function bindToolbar() {
       })();
     }
 
+    /* Drivelagring -------------------------------------- */
+    if (id === 'driveStorageBtn') {
+      openDriveStoragePopup();
+    }
+
     /* Ta bort rollperson ----------------------------------- */
     if (id === 'deleteChar') {
       if (!store.current && !(await requireCharacter())) return;
@@ -3001,6 +3006,507 @@ function sanitizeFilename(name) {
   }
 }
 
+// --- Google Drive (manuell lagring, en fil per rollperson) ---
+const DRIVE_CONFIG = {
+  clientId: '618760628907-j5pdjhke84shln3sadl5t61e2sskav0s.apps.googleusercontent.com',
+  apiKey: 'AIzaSyB5f67LBlMssggG7SREFbCZD43YzDESW5Q',
+  scope: 'https://www.googleapis.com/auth/drive.file https://www.googleapis.com/auth/drive.metadata.readonly',
+  rootFolderName: 'Symbapedia_Backups',
+  subfolders: ['Alla','Daniel','David','Elin','Isak','Leo','Nilas','Victor']
+};
+
+function driveEscapeQuery(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function driveDefaultFolderName() {
+  try {
+    const saved = localStorage.getItem('symbapediaDriveFolder');
+    if (DRIVE_CONFIG.subfolders.includes(saved)) return saved;
+
+    const activeId = storeHelper.getActiveFolder(store);
+    const folders = storeHelper.getFolders(store) || [];
+    const activeFolder = folders.find(f => f.id === activeId);
+    if (activeFolder && DRIVE_CONFIG.subfolders.includes(activeFolder.name)) {
+      return activeFolder.name;
+    }
+  } catch {}
+  return 'Alla';
+}
+
+let driveTokenClient = null;
+let driveGisPromise = null;
+let driveAccessToken = '';
+let driveAccessTokenExpiresAt = 0;
+
+function cacheDriveToken(resp) {
+  const token = resp?.access_token;
+  if (!token) return null;
+  driveAccessToken = token;
+  const expiresIn = Number(resp.expires_in) || 0;
+  const skewMs = 60 * 1000;
+  driveAccessTokenExpiresAt = Date.now() + (expiresIn * 1000) - skewMs;
+  return token;
+}
+
+function getCachedDriveToken() {
+  if (driveAccessToken && Date.now() < driveAccessTokenExpiresAt) {
+    return driveAccessToken;
+  }
+  return null;
+}
+
+function loadDriveGis() {
+  if (driveGisPromise) return driveGisPromise;
+  driveGisPromise = new Promise((resolve, reject) => {
+    if (window.google?.accounts?.oauth2) {
+      resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('GIS load failed'));
+    document.head.appendChild(s);
+  });
+  return driveGisPromise;
+}
+
+function initDriveTokenClient() {
+  if (!driveTokenClient) {
+    driveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CONFIG.clientId,
+      scope: DRIVE_CONFIG.scope,
+      callback: () => {}
+    });
+  }
+  return driveTokenClient;
+}
+
+function requestDriveTokenInteractive() {
+  const cached = getCachedDriveToken();
+  if (cached) return Promise.resolve(cached);
+  if (!window.google?.accounts?.oauth2) {
+    return Promise.reject(new Error('GIS not loaded'));
+  }
+  initDriveTokenClient();
+  return new Promise((resolve, reject) => {
+    driveTokenClient.callback = (resp) => {
+      const token = cacheDriveToken(resp);
+      if (token) resolve(token);
+      else reject(resp);
+    };
+    // Måste ske via användarklick
+    driveTokenClient.requestAccessToken({ prompt: '' });
+  });
+}
+
+async function ensureDriveToken() {
+  const cached = getCachedDriveToken();
+  if (cached) return cached;
+  await loadDriveGis();
+  return await requestDriveTokenInteractive();
+}
+
+async function driveApiFetch(path, { method = 'GET', params = {}, body, headers = {} } = {}) {
+  const token = await ensureDriveToken();
+  const url = new URL(`https://www.googleapis.com/drive/v3/${path}`);
+  Object.entries(params).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+  });
+  const res = await fetch(url.toString(), {
+    method,
+    headers: { Authorization: `Bearer ${token}`, ...headers },
+    body
+  });
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  const data = isJson ? await res.json() : await res.text();
+  if (!res.ok) throw new Error(data?.error?.message || data || 'Drive request failed');
+  return data;
+}
+
+async function driveFindFolderByName(name, parentId = null) {
+  const q = [
+    `name='${driveEscapeQuery(name)}'`,
+    `mimeType='application/vnd.google-apps.folder'`,
+    `trashed=false`
+  ];
+  if (parentId) q.push(`'${parentId}' in parents`);
+  const res = await driveApiFetch('files', {
+    params: {
+      q: q.join(' and '),
+      fields: 'files(id,name)',
+      spaces: 'drive',
+      pageSize: 1
+    }
+  });
+  return res.files?.[0] || null;
+}
+
+async function driveEnsureFolder(name, parentId = null) {
+  const existing = await driveFindFolderByName(name, parentId);
+  if (existing) return existing.id;
+
+  const metadata = {
+    name,
+    mimeType: 'application/vnd.google-apps.folder'
+  };
+  if (parentId) metadata.parents = [parentId];
+
+  const created = await driveApiFetch('files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(metadata),
+    params: { fields: 'id' }
+  });
+  return created.id;
+}
+
+async function driveEnsureRootFolder() {
+  return await driveEnsureFolder(DRIVE_CONFIG.rootFolderName);
+}
+
+async function driveEnsureSubfolder(name) {
+  const rootId = await driveEnsureRootFolder();
+  return await driveEnsureFolder(name, rootId);
+}
+
+async function driveFindCharacterFile(folderId, fileName) {
+  const q = [
+    `name='${driveEscapeQuery(fileName)}'`,
+    `trashed=false`,
+    `'${folderId}' in parents`,
+    `appProperties has { key='symbapediaType' and value='character' }`
+  ];
+  const res = await driveApiFetch('files', {
+    params: { q: q.join(' and '), fields: 'files(id,name,modifiedTime)', spaces: 'drive', pageSize: 1 }
+  });
+  return res.files?.[0] || null;
+}
+
+async function driveUploadCharacterFile(charId, driveFolderName) {
+  const data = storeHelper.exportCharacterJSON(store, charId, true);
+  if (!data) return;
+
+  const jsonText = JSON.stringify(data, null, 2);
+  const fileName = `${sanitizeFilename(data.name || 'rollperson')}.json`;
+
+  const folderId = await driveEnsureSubfolder(driveFolderName);
+  const existing = await driveFindCharacterFile(folderId, fileName);
+
+  const token = await ensureDriveToken();
+  const boundary = `symbapedia_${Date.now()}`;
+
+  const metadata = {
+    name: fileName,
+    parents: [folderId],
+    mimeType: 'application/json',
+    appProperties: { symbapediaType: 'character' }
+  };
+
+  const body =
+    `--${boundary}\r\n` +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    JSON.stringify(metadata) + '\r\n' +
+    `--${boundary}\r\n` +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    jsonText + '\r\n' +
+    `--${boundary}--`;
+
+  const url = existing
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart`;
+
+  const res = await fetch(url, {
+    method: existing ? 'PATCH' : 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`
+    },
+    body
+  });
+
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error?.message || 'Drive upload failed');
+  window.toast?.(`Sparad i Drive: ${data.name || 'rollperson'}`);
+}
+
+async function driveListCharacterFiles(driveFolderName) {
+  const folderId = await driveEnsureSubfolder(driveFolderName);
+  const q = [
+    `'${folderId}' in parents`,
+    `trashed=false`,
+    `appProperties has { key='symbapediaType' and value='character' }`
+  ];
+  const res = await driveApiFetch('files', {
+    params: {
+      q: q.join(' and '),
+      fields: 'files(id,name,modifiedTime)',
+      spaces: 'drive',
+      pageSize: 200
+    }
+  });
+  return (res.files || []).sort((a, b) => String(a.name).localeCompare(String(b.name), 'sv'));
+}
+
+async function driveDownloadFile(fileId) {
+  const token = await ensureDriveToken();
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error('Drive download failed');
+  return await res.text();
+}
+
+async function driveImportFile(fileId) {
+  const text = await driveDownloadFile(fileId);
+  const obj = JSON.parse(text);
+  let imported = 0;
+
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const id = storeHelper.importCharacterJSON(store, item);
+      if (id) imported++;
+    }
+  } else if (obj && Array.isArray(obj.characters)) {
+    for (const item of obj.characters) {
+      const id = storeHelper.importCharacterJSON(store, item);
+      if (id) imported++;
+    }
+  } else if (obj && typeof obj === 'object') {
+    const id = storeHelper.importCharacterJSON(store, obj);
+    if (id) imported++;
+  }
+
+  if (imported > 0) {
+    applyCharacterChange();
+    window.toast?.('Import från Drive klar.');
+  } else {
+    await alertPopup('Kunde inte importera filen.');
+  }
+}
+
+function openDriveStoragePopup() {
+  loadDriveGis().catch(() => {});
+  openChoicePopup((opts, select) => {
+    const make = (tag, cls, text) => {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (text != null) el.textContent = text;
+      return el;
+    };
+
+    const wrap = make('div', 'export-sections');
+    let importFolderSelect;
+
+    // --- Save section ---
+    const saveCard = make('div', 'card export-card');
+    saveCard.appendChild(make('div', 'card-title', 'Spara till Google Drive'));
+    const saveSection = make('div', 'export-section');
+
+    const saveFolderWrap = make('div', 'filter-group');
+    const saveLabel = make('label', null, 'Drive-mapp');
+    saveLabel.setAttribute('for', 'driveExportFolderSelect');
+    saveFolderWrap.appendChild(saveLabel);
+
+    const saveFolderSelect = document.createElement('select');
+    saveFolderSelect.id = 'driveExportFolderSelect';
+    DRIVE_CONFIG.subfolders.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      saveFolderSelect.appendChild(opt);
+    });
+    saveFolderSelect.value = driveDefaultFolderName();
+    saveFolderSelect.addEventListener('change', () => {
+      localStorage.setItem('symbapediaDriveFolder', saveFolderSelect.value);
+      if (importFolderSelect) importFolderSelect.value = saveFolderSelect.value;
+    });
+    saveFolderWrap.appendChild(saveFolderSelect);
+    saveSection.appendChild(saveFolderWrap);
+
+    const saveListWrap = make('div', 'export-list');
+    const folders = (storeHelper.getFolders(store) || []).slice()
+      .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    const map = new Map();
+    for (const c of (store.characters || [])) {
+      const fid = c.folderId || '';
+      if (!map.has(fid)) map.set(fid, []);
+      map.get(fid).push(c);
+    }
+
+    const seen = new Set();
+    for (const f of folders) {
+      const arr = (map.get(f.id) || []).slice()
+        .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      if (!arr.length) continue;
+      const grp = make('div', 'export-group');
+      grp.appendChild(make('div', 'group-title', f.name || 'Mapp'));
+      const gl = make('div', 'group-list');
+      for (const c of arr) {
+        const b = make('button', 'char-btn small', c.name || 'Namnlös');
+        b.addEventListener('click', async () => {
+          try {
+            await requestDriveTokenInteractive();
+            select({
+              mode: 'drive-save',
+              charId: c.id,
+              driveFolder: saveFolderSelect.value || 'Alla'
+            });
+          } catch (err) {
+            console.error(err);
+            await alertPopup('Kunde inte ansluta till Google Drive.');
+          }
+        });
+        gl.appendChild(b);
+      }
+      grp.appendChild(gl);
+      saveListWrap.appendChild(grp);
+      seen.add(f.id);
+    }
+
+    const rest = [];
+    for (const [fid, arr] of map.entries()) {
+      if (seen.has(fid)) continue;
+      rest.push(...arr);
+    }
+    if (rest.length) {
+      const arr = rest.slice().sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const grp = make('div', 'export-group');
+      grp.appendChild(make('div', 'group-title', 'Övrigt'));
+      const gl = make('div', 'group-list');
+      for (const c of arr) {
+        const b = make('button', 'char-btn small', c.name || 'Namnlös');
+        b.addEventListener('click', async () => {
+          try {
+            await requestDriveTokenInteractive();
+            select({
+              mode: 'drive-save',
+              charId: c.id,
+              driveFolder: saveFolderSelect.value || 'Alla'
+            });
+          } catch (err) {
+            console.error(err);
+            await alertPopup('Kunde inte ansluta till Google Drive.');
+          }
+        });
+        gl.appendChild(b);
+      }
+      grp.appendChild(gl);
+      saveListWrap.appendChild(grp);
+    }
+
+    saveSection.appendChild(saveListWrap);
+    saveCard.appendChild(saveSection);
+    wrap.appendChild(saveCard);
+
+    // --- Import section ---
+    const importCard = make('div', 'card export-card');
+    importCard.appendChild(make('div', 'card-title', 'Importera från Google Drive'));
+    const importSection = make('div', 'export-section');
+
+    const importFolderWrap = make('div', 'filter-group');
+    const importLabel = make('label', null, 'Drive-mapp');
+    importLabel.setAttribute('for', 'driveImportFolderSelect');
+    importFolderWrap.appendChild(importLabel);
+
+    importFolderSelect = document.createElement('select');
+    importFolderSelect.id = 'driveImportFolderSelect';
+    DRIVE_CONFIG.subfolders.forEach(name => {
+      const opt = document.createElement('option');
+      opt.value = name;
+      opt.textContent = name;
+      importFolderSelect.appendChild(opt);
+    });
+    importFolderSelect.value = driveDefaultFolderName();
+    importFolderSelect.addEventListener('change', () => {
+      localStorage.setItem('symbapediaDriveFolder', importFolderSelect.value);
+      if (saveFolderSelect) saveFolderSelect.value = importFolderSelect.value;
+    });
+    importFolderWrap.appendChild(importFolderSelect);
+    importSection.appendChild(importFolderWrap);
+
+    const loadBtn = make('button', 'char-btn', 'Hämta filer');
+    importSection.appendChild(loadBtn);
+
+    const searchWrap = make('div', 'export-search');
+    const search = document.createElement('input');
+    search.type = 'text';
+    search.placeholder = 'Filtrera namn…';
+    search.autocomplete = 'off';
+    searchWrap.appendChild(search);
+    importSection.appendChild(searchWrap);
+
+    const listWrap = make('div', 'export-list');
+    importSection.appendChild(listWrap);
+
+    let allFiles = [];
+
+    function renderList() {
+      const q = String(search.value || '').toLocaleLowerCase('sv');
+      listWrap.innerHTML = '';
+      const files = allFiles.filter(f => !q || String(f.name).toLocaleLowerCase('sv').includes(q));
+      if (!files.length) {
+        listWrap.appendChild(make('div', 'popup-desc', 'Inga filer hittades.'));
+        return;
+      }
+      for (const f of files) {
+        const label = String(f.name || '').replace(/\.json$/i, '');
+        const b = make('button', 'char-btn small', label || f.name);
+        b.addEventListener('click', () => select({
+          mode: 'drive-import',
+          fileId: f.id
+        }));
+        listWrap.appendChild(b);
+      }
+    }
+
+    loadBtn.addEventListener('click', async () => {
+      listWrap.textContent = 'Laddar...';
+      try {
+        await requestDriveTokenInteractive();
+        allFiles = await driveListCharacterFiles(importFolderSelect.value || 'Alla');
+        renderList();
+      } catch (err) {
+        console.error(err);
+        listWrap.textContent = 'Kunde inte läsa Drive.';
+      }
+    });
+
+    search.addEventListener('input', renderList);
+
+    importCard.appendChild(importSection);
+    wrap.appendChild(importCard);
+
+    opts.appendChild(wrap);
+  }, async choice => {
+    if (!choice) return;
+    if (choice.mode === 'drive-save') {
+      try {
+        await driveUploadCharacterFile(choice.charId, choice.driveFolder || 'Alla');
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte spara till Drive.');
+      }
+      return;
+    }
+    if (choice.mode === 'drive-import') {
+      try {
+        await driveImportFile(choice.fileId);
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte importera från Drive.');
+      }
+    }
+  }, {
+    popupId: 'driveStoragePopup',
+    optsId: 'driveStorageOptions',
+    cancelId: 'driveStorageCancel'
+  });
+}
+
 async function exportCharacterFile(id) {
   const data = storeHelper.exportCharacterJSON(store, id);
   if (!data) return;
@@ -3284,12 +3790,20 @@ async function exportActiveFolderZipped() {
     await alertPopup('Export av mapp misslyckades.');
   }
 }
-function openChoicePopup(build, cb) {
-  const pop  = bar.shadowRoot.getElementById('exportPopup');
-  const opts = bar.shadowRoot.getElementById('exportOptions');
-  const cls  = bar.shadowRoot.getElementById('exportCancel');
+function openChoicePopup(build, cb, config = {}) {
+  const popupId = config.popupId || 'exportPopup';
+  const optsId = config.optsId || 'exportOptions';
+  const cancelId = config.cancelId || 'exportCancel';
+  const pop  = bar.shadowRoot.getElementById(popupId);
+  const opts = bar.shadowRoot.getElementById(optsId);
+  const cls  = bar.shadowRoot.getElementById(cancelId);
+  if (!pop || !opts || !cls) return;
+  let outsideArmed = false;
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(() => {
+    outsideArmed = true;
+  }, 150);
   function close() {
     pop.classList.remove('open');
     cls.removeEventListener('click', onCancel);
@@ -3298,6 +3812,7 @@ function openChoicePopup(build, cb) {
   }
   function onCancel() { close(); cb(null); }
   function onOutside(e) {
+    if (!outsideArmed) return;
     if (!pop.querySelector('.popup-inner').contains(e.target)) {
       close();
       cb(null);
