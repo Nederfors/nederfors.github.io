@@ -20,6 +20,10 @@ window.addEventListener('load', () => {
   // sequences robust and prevents desync when multiple popstate
   // events arrive after fast clicks.
   let manualCloseCount = 0;
+  // Track which overlay id we expect to see in the next popstate that
+  // corresponds to a manually triggered history.back(). This prevents a
+  // delayed popstate from accidentally stänga en nyöppnad inforuta.
+  const pendingBackTargets = [];
 
   let scrollLocked = false;
   let scrollY = 0;
@@ -49,6 +53,48 @@ window.addEventListener('load', () => {
     }
   }
 
+  // Skydda mot native back-swipe från vänsterkanten när overlay är öppen
+  let edgeSwipeGuard = false;
+  let edgeGuardEl = null;
+  const EDGE_GUTTER = 12; // px från vänster kant, liten yta så övriga gester funkar
+
+  function ensureEdgeGuard() {
+    if (edgeGuardEl) return;
+    edgeGuardEl = document.createElement('div');
+    edgeGuardEl.setAttribute('data-edge-guard', '');
+    Object.assign(edgeGuardEl.style, {
+      position: 'fixed',
+      inset: '0 auto 0 0',
+      width: `${EDGE_GUTTER}px`,
+      height: '100%',
+      zIndex: '5000',
+      background: 'transparent',
+      touchAction: 'none',
+      pointerEvents: 'auto',
+    });
+    const blockStart = (e) => {
+      edgeSwipeGuard = true;
+      e.preventDefault();
+    };
+    const blockMove = (e) => {
+      if (!edgeSwipeGuard) return;
+      e.preventDefault();
+    };
+    edgeGuardEl.addEventListener('touchstart', blockStart, { passive: false });
+    edgeGuardEl.addEventListener('touchmove', blockMove, { passive: false });
+    edgeGuardEl.addEventListener('touchend', clearEdgeGuard, { passive: true });
+    edgeGuardEl.addEventListener('touchcancel', clearEdgeGuard, { passive: true });
+  }
+
+  function updateEdgeGuard() {
+    if (overlayStack.length) {
+      ensureEdgeGuard();
+      if (!edgeGuardEl.isConnected) document.body.appendChild(edgeGuardEl);
+    } else if (edgeGuardEl?.isConnected) {
+      edgeGuardEl.remove();
+    }
+  }
+
   const overlayTargets = new Set();
   const overlayObserver = new MutationObserver(muts => {
     for (const m of muts) {
@@ -63,13 +109,18 @@ window.addEventListener('load', () => {
         openMap.set(el, false);
         const idx = overlayStack.lastIndexOf(el);
         if (idx >= 0) overlayStack.splice(idx, 1);
-        if (!isPop) {
+        if (!isPop && !edgeSwipeGuard) {
+          const expectedId = overlayStack.length
+            ? (overlayStack[overlayStack.length - 1]?.id || null)
+            : null;
+          pendingBackTargets.push(expectedId);
           manualCloseCount++;
           history.back();
         }
       }
     }
     updateScrollLock();
+    updateEdgeGuard();
   });
 
   const OVERLAY_SELECTOR = '.popup, .offcanvas';
@@ -117,16 +168,19 @@ window.addEventListener('load', () => {
   }
 
   window.addEventListener('popstate', (ev) => {
+    const stateId = ev?.state?.overlay ?? null;
     if (manualCloseCount > 0) {
       manualCloseCount--;
-      const topOverlay = overlayStack[overlayStack.length - 1];
-      // Om popstate kommer från en historiknavigering vi själva triggat
-      // (t.ex. när en annan panel stängts manuellt) så motsvarar eventets
-      // state den nu öppna panelen. I det fallet ska vi inte stänga något
-      // ytterligare, men en användarinitierad back ska fortfarande fungera.
-      if (!topOverlay || ev?.state?.overlay === topOverlay.id) {
-        return;
-      }
+      const expected = (pendingBackTargets.shift() ?? null);
+      // Om detta popstate motsvarar det vi själva triggat – gör inget mer.
+      if (stateId === expected) return;
+    }
+    // Skydda mot försenade/stale popstate-event som gäller ett annat overlay.
+    // Om stateId pekar på ett annat overlay än det som faktiskt ligger överst,
+    // låt eventet passera utan att stänga något.
+    const topOverlay = overlayStack[overlayStack.length - 1];
+    if (topOverlay && stateId && stateId !== topOverlay.id) {
+      return;
     }
     const el = overlayStack[overlayStack.length - 1];
     if (el) {
@@ -146,6 +200,7 @@ window.addEventListener('load', () => {
       // Vänta tills MutationObserver hunnit reagera innan flaggan återställs
       setTimeout(() => { isPop = false; });
     }
+    updateEdgeGuard();
   });
 
   // Close open menus/panels with Escape on desktop devices
@@ -158,6 +213,27 @@ window.addEventListener('load', () => {
       history.back();
     }
   });
+
+  // Dokument-nivå fallback: om touch startar i vänsterkanten, blockera back-swipe
+  const onTouchStartEdge = (e) => {
+    if (!overlayStack.length) return;
+    const t = e.touches?.[0];
+    if (!t) return;
+    if (t.clientX <= EDGE_GUTTER) {
+      edgeSwipeGuard = true;
+      e.preventDefault();
+    }
+  };
+  const onTouchMoveEdge = (e) => {
+    if (!edgeSwipeGuard) return;
+    e.preventDefault();
+  };
+  function clearEdgeGuard() { edgeSwipeGuard = false; }
+
+  document.addEventListener('touchstart', onTouchStartEdge, { passive: false });
+  document.addEventListener('touchmove',  onTouchMoveEdge,  { passive: false });
+  document.addEventListener('touchend',   clearEdgeGuard,   { passive: true });
+  document.addEventListener('touchcancel',clearEdgeGuard,   { passive: true });
 })();
 
 // Ensure we are at top after a Hoppsan reset reload
