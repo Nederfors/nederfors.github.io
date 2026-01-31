@@ -1071,25 +1071,22 @@
   {
     "id": "l46",
     "namn": "Mumifierad hartass",
+    "beskrivning": "En torkad hartass insvept i bandage och täckt av små vaxsigill, preparerad för att kanalisera och stärka magins flöde. Genom att krama tassen hårt under den långa ritualen skänker den mystikern fokus och kraft och ger således +1 vid utförandet av mystiska ritualer.",
     "taggar": {
       "typ": [
-        "Lägre Artefakt"
-      ],
-      "ark_trad": []
-    },
-    "nivåer": {
-      "Gesäll": "En torkad hartass insvept i bandage och sigill som påskyndar magins långsamma verk. Ritualer som normalt tar en timme att utföra tar 30 minuter."
+        "Specialverktyg"
+      ]
     },
     "grundpris": {
-      "daler": 8,
+      "daler": 5,
       "skilling": 0,
       "örtegar": 0
     },
     "stat": {
-      "vikt": 1
+      "vikt": 0.1
     },
-    "effekt": "Halverar ritualtid från 60 till 30 minuter."
-  },
+    "effekt": "Ger +1 på [Viljestark] vid utförandet av ritualer."
+  }
   {
     "id": "l47",
     "namn": "Blått vaxljus",
