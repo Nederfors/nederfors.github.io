@@ -1779,7 +1779,18 @@ function initCharacter() {
           highlightInElement(tmp, terms);
           html = tmp.innerHTML;
         }
-        tabellPopup.open(html, title);
+        if (!window.tabellPopup && typeof window.ensureTabellPopup === 'function') {
+          try {
+            await window.ensureTabellPopup();
+          } catch (err) {
+            console.warn('Table popup script could not be loaded', err);
+          }
+        }
+        if (window.tabellPopup?.open) {
+          window.tabellPopup.open(html, title);
+        } else {
+          yrkePanel.open(title, html);
+        }
         return;
       }
       {

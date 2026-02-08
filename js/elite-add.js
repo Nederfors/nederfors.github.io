@@ -407,11 +407,21 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
     handle(b);
   }
 
-  document.addEventListener('DOMContentLoaded',()=>{
+  function bindIndexList() {
     if(document.body.dataset.role==='index'){
-      document.getElementById('lista').addEventListener('click',onClick);
+      const list = document.getElementById('lista');
+      if (list && !list.dataset.eliteReqBound) {
+        list.dataset.eliteReqBound = '1';
+        list.addEventListener('click',onClick);
+      }
     }
-  });
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', bindIndexList);
+  } else {
+    bindIndexList();
+  }
 
   window.eliteAdd={parseNames,parseGroupRequirements,addReq,addElite};
 })(window);

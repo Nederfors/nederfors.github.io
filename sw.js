@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v13';
+const CACHE_NAME = 'symbaroum-pwa-v15';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -14,16 +14,19 @@ const URLS_TO_CACHE = [
   // Icons
   'icons/icon_DA',
   // JavaScript
+  'js/app-bootstrap.js',
   'js/auto-resize.js',
   'js/artifact-payment.js',
   'js/beastform.js',
   'js/bloodbond.js',
+  'js/character-generator.js',
   'js/character-view.js',
   'js/djurmask.js',
   'js/elite-add.js',
   'js/elite-utils.js',
   'js/elite-req.js',
   'js/entry-card.js',
+  'js/entry-xp.js',
   'js/exceptionellt.js',
   'js/index-view.js',
   'js/inventory-view.js',
@@ -42,43 +45,8 @@ const URLS_TO_CACHE = [
   'js/traits-utils.js',
   'js/utils.js',
   'js/yrke-panel.js',
-  // Data JSON
-  'data/anstallning.json',
-  'data/artefakter.json',
-  'data/byggnader.json',
-  'data/diverse.json',
-  'data/dryck.json',
-  'data/elityrke.json',
-  'data/elixir.json',
-  'data/kuriositeter.json',
-  'data/skatter.json',
-  'data/fallor.json',
-  'data/fardmedel.json',
-  'data/fordel.json',
-  'data/formaga.json',
-  'data/forvaring.json',
-  'data/gardsdjur.json',
-  'data/instrument.json',
-  'data/klader.json',
-  'data/kvalitet.json',
-  'data/lagre-artefakter.json',
-  'data/mat.json',
-  'data/monstruost-sardrag.json',
-  'data/mystisk-kraft.json',
-  'data/mystisk-kvalitet.json',
-  'data/nackdel.json',
-  'data/negativ-kvalitet.json',
-  'data/neutral-kvalitet.json',
-  'data/pdf-list.json',
-  'data/ras.json',
-  'data/ritual.json',
-  'data/rustning.json',
-  'data/sardrag.json',
-  'data/specialverktyg.json',
-  'data/tabeller.json',
-  'data/tjanster.json',
-  'data/vapen.json',
-  'data/yrke.json'
+  // Bundled database
+  'data/all.json'
 ];
 
 async function precacheResources(cache) {
@@ -86,28 +54,6 @@ async function precacheResources(cache) {
     .filter(Boolean)
     .map(url => new Request(url, { cache: 'reload' }));
   await cache.addAll(precacheRequests);
-
-  const response = await cache.match('data/pdf-list.json');
-  if (!response) {
-    return;
-  }
-
-  try {
-    const pdfs = await response.json();
-    const fileRequests = [];
-    (Array.isArray(pdfs) ? pdfs : []).forEach(collection => {
-      if (!collection || !Array.isArray(collection.items)) return;
-      collection.items.forEach(item => {
-        if (!item || !item.file) return;
-        fileRequests.push(new Request(item.file, { cache: 'reload' }));
-      });
-    });
-    if (fileRequests.length) {
-      await cache.addAll(fileRequests);
-    }
-  } catch (error) {
-    // Ignore invalid PDF list entries; they will be fetched on demand.
-  }
 }
 
 async function forceRefreshCaches() {
@@ -150,6 +96,19 @@ const isJsonRequest = request => {
   }
 };
 
+const isPdfRequest = request => {
+  const acceptHeader = request.headers.get('accept') || '';
+  if (acceptHeader.includes('application/pdf')) {
+    return true;
+  }
+  try {
+    const { pathname } = new URL(request.url);
+    return pathname.toLowerCase().endsWith('.pdf');
+  } catch (error) {
+    return false;
+  }
+};
+
 const shouldNetworkFirst = request =>
   isNavigationRequest(request) ||
   request.destination === 'style' ||
@@ -163,6 +122,11 @@ self.addEventListener('fetch', event => {
     !request.url.startsWith(self.location.origin)
   ) {
     event.respondWith(fetch(request));
+    return;
+  }
+
+  if (isPdfRequest(request)) {
+    event.respondWith(cachePdfOnDemand(request));
     return;
   }
 
@@ -208,6 +172,20 @@ async function networkFirst(request) {
     }
     throw error;
   }
+}
+
+async function cachePdfOnDemand(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cachedResponse = await cache.match(request);
+  if (cachedResponse) {
+    return cachedResponse;
+  }
+
+  const networkResponse = await fetch(request, { cache: 'reload' });
+  if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+    await cache.put(request, networkResponse.clone());
+  }
+  return networkResponse;
 }
 
 async function refreshCache(request) {

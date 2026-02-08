@@ -1205,25 +1205,53 @@ fetch(TABELLER_FILE)
     }
   });
 
-function loadDatabaseData() {
-  return fetch(DATA_BUNDLE_FILE)
-    .then(resp => {
-      if (!resp.ok) throw new Error('bundle missing');
-      return resp.json();
-    })
-    .then(json => {
-      const entries = Array.isArray(json?.entries)
-        ? json.entries
-        : (Array.isArray(json) ? json : []);
-      return { entries, meta: json };
-    })
-    .catch(() => Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
-      .then(arrays => ({ entries: arrays.flat(), meta: null }))
-    );
+function extractBundleEntries(payload) {
+  if (Array.isArray(payload)) return payload;
+  if (payload && typeof payload === 'object' && Array.isArray(payload.entries)) {
+    return payload.entries;
+  }
+  return null;
 }
 
-loadDatabaseData()
-  .then(({ entries }) => {
+async function loadBundledDatabase() {
+  const resp = await fetch(DATA_BUNDLE_FILE);
+  if (!resp.ok) {
+    throw new Error(`${DATA_BUNDLE_FILE} returned ${resp.status}`);
+  }
+  const payload = await resp.json();
+  const entries = extractBundleEntries(payload);
+  if (!Array.isArray(entries)) {
+    throw new Error(`${DATA_BUNDLE_FILE} does not contain a valid entries array.`);
+  }
+  return { entries, meta: payload, source: 'bundle' };
+}
+
+async function loadDatabaseFallbackFiles() {
+  const arrays = await Promise.all(DATA_FILES.map(async (file) => {
+    const resp = await fetch(file);
+    if (!resp.ok) {
+      throw new Error(`${file} returned ${resp.status}`);
+    }
+    const json = await resp.json();
+    if (!Array.isArray(json)) {
+      throw new Error(`${file} does not contain a top-level array.`);
+    }
+    return json;
+  }));
+  return { entries: arrays.flat(), meta: null, source: 'files' };
+}
+
+async function loadDatabaseData() {
+  try {
+    return await loadBundledDatabase();
+  } catch (bundleErr) {
+    console.warn('Bundle load failed, falling back to individual data files.', bundleErr);
+    return await loadDatabaseFallbackFiles();
+  }
+}
+
+const dbLoadPromise = loadDatabaseData()
+  .then(({ entries, source }) => {
     DB = Array.isArray(entries) ? entries.slice() : [];
     ensureEntryMetaList(DB);
     DB = DB.sort(sortByType);
@@ -1243,12 +1271,21 @@ loadDatabaseData()
     boot();
     try { window.globalSearch?.refreshSuggestions?.(); } catch {}
     try {
-      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', { detail: { entries: DB.length } }));
+      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', {
+        detail: {
+          entries: DB.length,
+          source
+        }
+      }));
     } catch {}
-  })
-  .catch(err => {
-    console.error('Kunde inte läsa databasen', err);
+    return { entries: DB.length, source };
   });
+
+window.__symbaroumDbLoadPromise = dbLoadPromise;
+
+dbLoadPromise.catch(err => {
+  console.error('Kunde inte läsa databasen', err);
+});
 
 /* ===========================================================
    HJÄLPFUNKTIONER
@@ -1768,6 +1805,13 @@ function bindToolbar() {
     /* Generera rollperson ---------------------------------- */
     if (id === 'generateCharBtn') {
       const active = storeHelper.getActiveFolder(store);
+      if (!window.symbaroumGenerator && typeof window.ensureCharacterGenerator === 'function') {
+        try {
+          await window.ensureCharacterGenerator();
+        } catch (err) {
+          console.warn('Generator script could not be loaded', err);
+        }
+      }
       const res = await openGeneratorPopup(active);
       if (!res) return;
       if (!window.symbaroumGenerator || typeof window.symbaroumGenerator.generate !== 'function') {
@@ -3728,6 +3772,14 @@ async function exportAllCharactersZipped() {
     .filter(Boolean);
   if (!all.length) return;
 
+  if (!window.JSZip && typeof window.ensureJsZip === 'function') {
+    try {
+      await window.ensureJsZip();
+    } catch (err) {
+      console.warn('JSZip script could not be loaded', err);
+    }
+  }
+
   if (!window.JSZip) {
     // Fallback to separate if JSZip not loaded
     await exportAllCharactersSeparate();
@@ -3909,6 +3961,14 @@ async function exportActiveFolderZipped() {
       .filter(c => (c.folderId || '') === activeId)
       .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
     if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
+
+    if (!window.JSZip && typeof window.ensureJsZip === 'function') {
+      try {
+        await window.ensureJsZip();
+      } catch (err) {
+        console.warn('JSZip script could not be loaded', err);
+      }
+    }
 
     if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
 
@@ -4353,6 +4413,13 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
 
 // Popup: Generera rollperson
 async function openGeneratorPopup(preferredFolderId) {
+  if (!window.symbaroumGenerator && typeof window.ensureCharacterGenerator === 'function') {
+    try {
+      await window.ensureCharacterGenerator();
+    } catch (err) {
+      console.warn('Generator script could not be loaded', err);
+    }
+  }
   const pop = bar?.shadowRoot?.getElementById('generatorPopup');
   if (!pop) return null;
   const nameIn = bar.shadowRoot.getElementById('genCharName');
