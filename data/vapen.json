@@ -1322,14 +1322,14 @@
   {
     "id": "v59",
     "namn": "Precisionspil",
-    "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precist.",
+    "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precis.",
     "taggar": {
       "typ": [
         "Pil/Lod",
         "Projektilvapen"
       ],
       "kvalitet": [
-        "Precist"
+        "Precis"
       ]
     },
     "stat": {
