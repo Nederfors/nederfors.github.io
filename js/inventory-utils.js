@@ -3129,6 +3129,43 @@
     return oToMoney(price);
   }
 
+  function buildQualityInfoSections(qualities, freeQualities) {
+    const list = Array.isArray(qualities) ? qualities : [];
+    if (!list.length) return [];
+    const freeSet = new Set(Array.isArray(freeQualities) ? freeQualities.filter(Boolean) : []);
+    const blocks = list.map(({ q, base }) => {
+      const name = String(q || '').trim();
+      if (!name) return '';
+      const qEntry = getEntry(name) || {};
+      const tagParts = [`<span class="tag">${base ? 'Grund' : 'Tillagd'}</span>`];
+      if (freeSet.has(name)) tagParts.push('<span class="tag free">Gratis</span>');
+      if (isMysticQual(name)) tagParts.push('<span class="tag mystic">Mystisk</span>');
+      if (isNegativeQual(name)) tagParts.push('<span class="tag negative">Negativ</span>');
+      else if (isNeutralQual(name)) tagParts.push('<span class="tag neutral">Neutral</span>');
+
+      const descHtml = abilityHtml(qEntry);
+      const effectText = typeof qEntry.effekt === 'string' ? qEntry.effekt.trim() : '';
+      const effectHtml = effectText
+        ? `<p><strong>Effekt:</strong> ${escapeHtml(effectText)}</p>`
+        : '';
+      const bodyHtml = `${descHtml || ''}${effectHtml}`;
+      const tagsHtml = tagParts.length ? `<div class="tags">${tagParts.join(' ')}</div>` : '';
+      return `
+        <div class="info-block">
+          <p><strong>${escapeHtml(name)}</strong></p>
+          ${tagsHtml}
+          ${bodyHtml}
+        </div>
+      `;
+    }).filter(Boolean);
+    if (!blocks.length) return [];
+    return [{
+      title: 'Kvaliteter',
+      className: 'info-panel-qualities',
+      content: blocks.join('')
+    }];
+  }
+
   function buildRowDesc(entry, row) {
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
@@ -3224,6 +3261,7 @@
       }).join('');
       qualityHtml = `<div class="quality-tags tags">${qhtml}</div>`;
     }
+    const qualityInfoSections = buildQualityInfoSections(all, freeQ);
 
     const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
     if (isArtifact) {
@@ -3240,7 +3278,7 @@
       desc += effectHtml;
       infoBody += effectHtml;
     }
-    return { desc, rowLevel, freeCnt, qualityHtml, infoBody, infoTagParts, priceMultTag };
+    return { desc, rowLevel, freeCnt, qualityHtml, qualityInfoSections, infoBody, infoTagParts, priceMultTag };
   }
 
   function renderInventory () {
@@ -3563,7 +3601,7 @@
       const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
       const remaining = capacity - loadWeight;
 
-      const { desc, rowLevel, freeCnt, qualityHtml, infoBody, infoTagParts, priceMultTag } = buildRowDesc(entry, row);
+      const { desc, rowLevel, freeCnt, qualityHtml, qualityInfoSections, infoBody, infoTagParts, priceMultTag } = buildRowDesc(entry, row);
       const dataset = {
         idx: String(realIdx),
         id: row.id || row.name,
@@ -3671,7 +3709,7 @@
         infoMeta.push({ label: 'Återstående kapacitet', value: formatWeight(remaining) });
       }
 
-      const buildInfoButton = ({ bodyHtml = '', tags = [], meta = [] } = {}) => {
+      const buildInfoButton = ({ bodyHtml = '', tags = [], meta = [], sections = [] } = {}) => {
         const tagsHtml = Array.isArray(tags) ? tags.filter(Boolean).join(' ') : String(tags || '');
         const metaItems = Array.isArray(meta)
           ? meta.filter(item => {
@@ -3680,16 +3718,20 @@
               return !(value === undefined || value === null || value === '');
             })
           : [];
+        const sectionItems = Array.isArray(sections)
+          ? sections.filter(item => item && String(item.content || '').trim())
+          : [];
         const bodyStr = typeof bodyHtml === 'string' ? bodyHtml : String(bodyHtml || '');
-        if (!tagsHtml.trim() && !metaItems.length && !bodyStr.trim()) return '';
-        const infoPanelHtml = buildInfoPanelHtml({ tagsHtml, bodyHtml: bodyStr, meta: metaItems });
+        if (!tagsHtml.trim() && !metaItems.length && !bodyStr.trim() && !sectionItems.length) return '';
+        const infoPanelHtml = buildInfoPanelHtml({ tagsHtml, bodyHtml: bodyStr, meta: metaItems, sections: sectionItems });
         return `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
       };
 
       const infoBtnHtml = buildInfoButton({
         bodyHtml: infoBody,
         tags: infoTagParts,
-        meta: infoMeta
+        meta: infoMeta,
+        sections: qualityInfoSections
       });
 
       const badgeParts = [];
@@ -3759,7 +3801,7 @@
         if (cAllowQual) cButtons.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
         if (cIsArtifact) cButtons.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
 
-        const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
+        const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, qualityInfoSections: cQualityInfoSections, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
         cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
 
         const cIsCurrency = childRow.typ === 'currency' && childRow.money;
@@ -3805,7 +3847,8 @@
         const cInfoBtnHtml = buildInfoButton({
           bodyHtml: cInfoBody,
           tags: cInfoTagParts,
-          meta: cInfoMeta
+          meta: cInfoMeta,
+          sections: cQualityInfoSections
         });
 
         const cBadgeParts = [
