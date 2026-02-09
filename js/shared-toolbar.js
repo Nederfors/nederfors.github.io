@@ -1447,13 +1447,6 @@ class SharedToolbar extends HTMLElement {
               <label for="genCharTrait">Fokusera drag</label>
               <select id="genCharTrait"></select>
             </div>
-            <div class="filter-group">
-              <label for="genCharAbilityMode">Förmågeprofil</label>
-              <select id="genCharAbilityMode">
-                <option value="master">Mästartung (färre men högre nivåer)</option>
-                <option value="breadth">Bredd (fler novisförmågor)</option>
-              </select>
-            </div>
           </div>
           <div class="generator-grid">
             <div class="filter-group">

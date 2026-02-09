@@ -8,7 +8,6 @@ const crypto = require('crypto');
 const ROOT_DIR = path.resolve(__dirname, '..');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
 const OUTPUT_FILE = path.join(DATA_DIR, 'all.json');
-const OUTPUT_TMP_FILE = `${OUTPUT_FILE}.tmp`;
 
 const DATA_FILES = [
   'diverse.json',
@@ -57,10 +56,6 @@ async function readJson(filePath) {
   }
 }
 
-function normalizeRelPath(filePath) {
-  return filePath.split(path.sep).join('/');
-}
-
 async function build() {
   const sources = [];
   const entries = [];
@@ -68,7 +63,7 @@ async function build() {
 
   for (const fileName of DATA_FILES) {
     const absPath = path.join(DATA_DIR, fileName);
-    const relPath = normalizeRelPath(path.relative(ROOT_DIR, absPath));
+    const relPath = path.relative(ROOT_DIR, absPath);
     const json = await readJson(absPath);
     if (!Array.isArray(json)) {
       throw new Error(`${relPath} does not contain a top-level array.`);
@@ -102,18 +97,12 @@ async function build() {
     entries
   };
 
-  const serialized = `${JSON.stringify(db, null, 2)}\n`;
-  await fs.mkdir(DATA_DIR, { recursive: true });
-  await fs.writeFile(OUTPUT_TMP_FILE, serialized, 'utf8');
-  await fs.rename(OUTPUT_TMP_FILE, OUTPUT_FILE);
-  console.log(`Wrote ${entries.length} entries to ${normalizeRelPath(path.relative(ROOT_DIR, OUTPUT_FILE))}`);
+  const serialized = JSON.stringify(db, null, 2);
+  await fs.writeFile(OUTPUT_FILE, `${serialized}\n`);
+  console.log(`Wrote ${entries.length} entries to ${path.relative(ROOT_DIR, OUTPUT_FILE)}`);
 }
 
-build()
-  .catch(async err => {
-    try {
-      await fs.unlink(OUTPUT_TMP_FILE);
-    } catch {}
-    console.error(err);
-    process.exitCode = 1;
-  });
+build().catch(err => {
+  console.error(err);
+  process.exitCode = 1;
+});

@@ -1205,53 +1205,25 @@ fetch(TABELLER_FILE)
     }
   });
 
-function extractBundleEntries(payload) {
-  if (Array.isArray(payload)) return payload;
-  if (payload && typeof payload === 'object' && Array.isArray(payload.entries)) {
-    return payload.entries;
-  }
-  return null;
+function loadDatabaseData() {
+  return fetch(DATA_BUNDLE_FILE)
+    .then(resp => {
+      if (!resp.ok) throw new Error('bundle missing');
+      return resp.json();
+    })
+    .then(json => {
+      const entries = Array.isArray(json?.entries)
+        ? json.entries
+        : (Array.isArray(json) ? json : []);
+      return { entries, meta: json };
+    })
+    .catch(() => Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
+      .then(arrays => ({ entries: arrays.flat(), meta: null }))
+    );
 }
 
-async function loadBundledDatabase() {
-  const resp = await fetch(DATA_BUNDLE_FILE);
-  if (!resp.ok) {
-    throw new Error(`${DATA_BUNDLE_FILE} returned ${resp.status}`);
-  }
-  const payload = await resp.json();
-  const entries = extractBundleEntries(payload);
-  if (!Array.isArray(entries)) {
-    throw new Error(`${DATA_BUNDLE_FILE} does not contain a valid entries array.`);
-  }
-  return { entries, meta: payload, source: 'bundle' };
-}
-
-async function loadDatabaseFallbackFiles() {
-  const arrays = await Promise.all(DATA_FILES.map(async (file) => {
-    const resp = await fetch(file);
-    if (!resp.ok) {
-      throw new Error(`${file} returned ${resp.status}`);
-    }
-    const json = await resp.json();
-    if (!Array.isArray(json)) {
-      throw new Error(`${file} does not contain a top-level array.`);
-    }
-    return json;
-  }));
-  return { entries: arrays.flat(), meta: null, source: 'files' };
-}
-
-async function loadDatabaseData() {
-  try {
-    return await loadBundledDatabase();
-  } catch (bundleErr) {
-    console.warn('Bundle load failed, falling back to individual data files.', bundleErr);
-    return await loadDatabaseFallbackFiles();
-  }
-}
-
-const dbLoadPromise = loadDatabaseData()
-  .then(({ entries, source }) => {
+loadDatabaseData()
+  .then(({ entries }) => {
     DB = Array.isArray(entries) ? entries.slice() : [];
     ensureEntryMetaList(DB);
     DB = DB.sort(sortByType);
@@ -1271,21 +1243,12 @@ const dbLoadPromise = loadDatabaseData()
     boot();
     try { window.globalSearch?.refreshSuggestions?.(); } catch {}
     try {
-      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', {
-        detail: {
-          entries: DB.length,
-          source
-        }
-      }));
+      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', { detail: { entries: DB.length } }));
     } catch {}
-    return { entries: DB.length, source };
+  })
+  .catch(err => {
+    console.error('Kunde inte läsa databasen', err);
   });
-
-window.__symbaroumDbLoadPromise = dbLoadPromise;
-
-dbLoadPromise.catch(err => {
-  console.error('Kunde inte läsa databasen', err);
-});
 
 /* ===========================================================
    HJÄLPFUNKTIONER
@@ -1805,13 +1768,6 @@ function bindToolbar() {
     /* Generera rollperson ---------------------------------- */
     if (id === 'generateCharBtn') {
       const active = storeHelper.getActiveFolder(store);
-      if (!window.symbaroumGenerator && typeof window.ensureCharacterGenerator === 'function') {
-        try {
-          await window.ensureCharacterGenerator();
-        } catch (err) {
-          console.warn('Generator script could not be loaded', err);
-        }
-      }
       const res = await openGeneratorPopup(active);
       if (!res) return;
       if (!window.symbaroumGenerator || typeof window.symbaroumGenerator.generate !== 'function') {
@@ -1819,13 +1775,11 @@ function bindToolbar() {
         return;
       }
       let generated = null;
-      let generatorError = '';
       try {
         generated = window.symbaroumGenerator.generate({
           name: res.name,
           xp: res.xp,
           attributeMode: res.attrMode,
-          abilityMode: res.abilityMode,
           traitFocus: res.traitFocus,
           race: res.race,
           yrke: res.yrke,
@@ -1833,10 +1787,9 @@ function bindToolbar() {
         });
       } catch (err) {
         console.error('Generator error', err);
-        generatorError = String(err?.message || '').trim();
       }
       if (!generated) {
-        await alertPopup(generatorError || 'Generatorn misslyckades. Försök igen.');
+        await alertPopup('Generatorn misslyckades. Försök igen.');
         return;
       }
       const charId = storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now());
@@ -3775,14 +3728,6 @@ async function exportAllCharactersZipped() {
     .filter(Boolean);
   if (!all.length) return;
 
-  if (!window.JSZip && typeof window.ensureJsZip === 'function') {
-    try {
-      await window.ensureJsZip();
-    } catch (err) {
-      console.warn('JSZip script could not be loaded', err);
-    }
-  }
-
   if (!window.JSZip) {
     // Fallback to separate if JSZip not loaded
     await exportAllCharactersSeparate();
@@ -3964,14 +3909,6 @@ async function exportActiveFolderZipped() {
       .filter(c => (c.folderId || '') === activeId)
       .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
     if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
-
-    if (!window.JSZip && typeof window.ensureJsZip === 'function') {
-      try {
-        await window.ensureJsZip();
-      } catch (err) {
-        console.warn('JSZip script could not be loaded', err);
-      }
-    }
 
     if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
 
@@ -4416,13 +4353,6 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
 
 // Popup: Generera rollperson
 async function openGeneratorPopup(preferredFolderId) {
-  if (!window.symbaroumGenerator && typeof window.ensureCharacterGenerator === 'function') {
-    try {
-      await window.ensureCharacterGenerator();
-    } catch (err) {
-      console.warn('Generator script could not be loaded', err);
-    }
-  }
   const pop = bar?.shadowRoot?.getElementById('generatorPopup');
   if (!pop) return null;
   const nameIn = bar.shadowRoot.getElementById('genCharName');
@@ -4430,7 +4360,6 @@ async function openGeneratorPopup(preferredFolderId) {
   const xpIn = bar.shadowRoot.getElementById('genCharXp');
   const attrSel = bar.shadowRoot.getElementById('genCharAttr');
   const traitSel = bar.shadowRoot.getElementById('genCharTrait');
-  const abilitySel = bar.shadowRoot.getElementById('genCharAbilityMode');
   const raceSel = bar.shadowRoot.getElementById('genCharRace');
   const yrkeSel = bar.shadowRoot.getElementById('genCharYrke');
   const eliteSel = bar.shadowRoot.getElementById('genCharElityrke');
@@ -4451,7 +4380,6 @@ async function openGeneratorPopup(preferredFolderId) {
   nameIn.value = '';
   if (xpIn) xpIn.value = 100;
   if (attrSel) attrSel.value = '';
-  if (abilitySel) abilitySel.value = 'master';
   if (traitSel) {
     const attrs = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
     const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
@@ -4503,7 +4431,7 @@ async function openGeneratorPopup(preferredFolderId) {
   const refreshEntryOptions = () => {
     applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
     applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
-    applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke');
+    applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
     if (eliteSel && eliteSel.options.length <= 1) {
       eliteSel.disabled = true;
       eliteSel.title = 'Databasen laddas ... öppna generatorn igen när listorna finns.';
@@ -4555,12 +4483,11 @@ async function openGeneratorPopup(preferredFolderId) {
       const folderId = folderEl.value || '';
       const xp = Math.max(0, Math.floor(Number(xpIn?.value || 0) / 10) * 10);
       const attrMode = attrSel?.value || '';
-      const abilityMode = abilitySel?.value || 'master';
       const traitFocus = traitSel?.value || '';
       const race = raceSel?.value || '';
       const yrke = yrkeSel?.value || '';
       const elityrke = eliteSel?.value || '';
-      close({ name, folderId, xp, attrMode, abilityMode, traitFocus, race, yrke, elityrke });
+      close({ name, folderId, xp, attrMode, traitFocus, race, yrke, elityrke });
     }
     function onCancel() { close(null); }
     function onOutside(e) {

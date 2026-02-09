@@ -56,8 +56,7 @@
     if (mysticMatch) {
       const inner = mysticMatch[1].trim();
       if (inner.toLowerCase() === 'valfri') return [{ anyMystic: true }];
-      const normalized = inner.replace(/\boch\b/gi, ',');
-      const variants = [].concat(...splitComma(normalized).map(segment => splitOr(segment)));
+      const variants = [].concat(...splitComma(inner).map(segment => splitOr(segment)));
       return variants
         .map(nm => nm.trim())
         .filter(Boolean)
@@ -68,8 +67,7 @@
     if (ritualMatch) {
       const inner = ritualMatch[1].trim();
       if (inner.toLowerCase() === 'valfri') return [{ anyRitual: true }];
-      const normalized = inner.replace(/\boch\b/gi, ',');
-      const variants = [].concat(...splitComma(normalized).map(segment => splitOr(segment)));
+      const variants = [].concat(...splitComma(inner).map(segment => splitOr(segment)));
       return variants
         .map(nm => nm.trim())
         .filter(Boolean)

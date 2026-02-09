@@ -84,11 +84,6 @@
       this.autoAdded = [];
       this.advantagePicks = [];
       this.disadvantagePicks = [];
-      this.generationWarnings = [];
-      this.explicitSelections = {
-        yrke: Boolean(String(opts.yrke || '').trim()),
-        elityrke: Boolean(String(opts.elityrke || '').trim())
-      };
       const wantsRandomYrke = !opts.yrke;
       this.selectedYrke = resolveEntryByType(opts.yrke, 'Yrke');
       if (!this.selectedYrke && wantsRandomYrke) {
@@ -103,9 +98,7 @@
       const yrkeTraitFocus = derivePrimaryTraitFocus(this.traitPreferences);
       this.traitFocus = ATTR_KEYS.includes(opts.traitFocus) ? opts.traitFocus : (yrkeTraitFocus || '');
       this.archetypePreferences = buildArchetypePreferenceSet(this.selectedRace, this.selectedYrke, this.selectedElityrke);
-      this.traditionConflict = null;
       this.traditionLock = this.deriveTraditionLock();
-      this.assertSelectionCompatibility();
       if (this.selectedRace) this.registerExtraEntry(this.selectedRace.namn, 'race');
       if (this.selectedYrke) this.registerExtraEntry(this.selectedYrke.namn, 'yrke');
       if (this.selectedElityrke) this.registerExtraEntry(this.selectedElityrke.namn, 'elityrke');
@@ -132,21 +125,15 @@
       this.allaRitualer = [];
       this.mojligaKrafterOchRitualer(this.traditionLock || 'ingen');
       this.applyTraditionLockToMysticPools();
-      const abilityMode = normalizeAbilityMode(opts.abilityMode);
+      const abilityMode = opts.abilityMode === 'master'
+        ? 'Mästare'
+        : (opts.abilityMode || 'Mästare');
       this.abilityMode = abilityMode;
       this.forcedAbilities = this.buildForcedAbilities();
+      this.valjNyaFormagor(this.ERF, abilityMode);
+      this.ensureForcedAbilitiesAfterLoop();
       this.pickAdvantagesAndDisadvantages();
-      const baseCtx = this.buildXPContext();
-      this.totalXPBudget = baseCtx.total;
-      this.ERFkvar = baseCtx.remaining;
-      this.valjNyaFormagor(this.ERFkvar, abilityMode);
-      this.ensureForcedAbilitiesAfterLoop();
       this.reconcileXPGap(abilityMode);
-      this.ensureForcedAbilitiesAfterLoop();
-      this.assertForcedRequirementsResolved();
-      const finalCtx = this.buildXPContext();
-      this.totalXPBudget = finalCtx.total;
-      this.ERFkvar = finalCtx.remaining;
     }
 
     skapaKaraktarsdrag(typ, focus) {
@@ -301,13 +288,12 @@
       return Alternativ;
     }
 
-    registerExtraEntry(name, source = 'manual', options = {}) {
-      const { allowDuplicate = false } = options || {};
+    registerExtraEntry(name, source = 'manual') {
       if (!name) return;
       const key = normalizeName(name);
       if (!key) return;
       if (!Array.isArray(this.extraPicks)) this.extraPicks = [];
-      if (!allowDuplicate && this.extraPicks.some(val => normalizeName(val) === key)) return;
+      if (this.extraPicks.some(val => normalizeName(val) === key)) return;
       this.extraPicks.push(name);
       if (source && source !== 'manual') {
         const already = (this.autoAdded || []).some(item => normalizeName(item?.name) === key);
@@ -342,30 +328,7 @@
         }
         return '';
       };
-      const yrkeTradition = resolveFromEntry(this.selectedYrke);
-      const eliteTradition = resolveFromEntry(this.selectedElityrke);
-      if (yrkeTradition && eliteTradition
-          && normalizeTraditionKey(yrkeTradition) !== normalizeTraditionKey(eliteTradition)) {
-        this.traditionConflict = {
-          yrke: yrkeTradition,
-          elityrke: eliteTradition
-        };
-      } else {
-        this.traditionConflict = null;
-      }
-      return eliteTradition || yrkeTradition || '';
-    }
-
-    assertSelectionCompatibility() {
-      if (!this.traditionConflict) return;
-      const hasExplicitYrke = Boolean(this.explicitSelections?.yrke && this.selectedYrke);
-      const hasExplicitElityrke = Boolean(this.explicitSelections?.elityrke && this.selectedElityrke);
-      if (!hasExplicitYrke || !hasExplicitElityrke) return;
-      const yrkeName = this.selectedYrke?.namn || 'Yrke';
-      const eliteName = this.selectedElityrke?.namn || 'Elityrke';
-      this.generationWarnings.push(
-        `Valen krockar: ${yrkeName} (${this.traditionConflict.yrke}) och ${eliteName} (${this.traditionConflict.elityrke}). Elityrkets tradition prioriterades.`
-      );
+      return resolveFromEntry(this.selectedYrke) || resolveFromEntry(this.selectedElityrke) || '';
     }
 
     getActiveTraditionLock() {
@@ -511,31 +474,29 @@
     }
 
     isAbilityAllowedByStats(name, options = {}) {
-      const { minValue = 10, ignore = false, requireAll = false } = options || {};
+      const { minValue = 10, ignore = false } = options || {};
       if (ignore) return true;
       const entry = lookupEntryByName(name);
       if (!entry) return true;
-      const tests = toNameArray(entry?.taggar?.test)
-        .map(normalizeAttributeName)
-        .filter(attr => ATTR_KEYS.includes(attr));
+      const tests = toNameArray(entry?.taggar?.test);
       if (!tests.length) return true;
       const stats = this.Karaktarsdrag || {};
-      const threshold = Number.isFinite(Number(minValue)) ? Number(minValue) : 10;
-      const passes = (attr) => {
+      return tests.every(test => {
+        const attr = normalizeAttributeName(test);
+        if (!attr) return true;
         const val = stats[attr];
         if (val === undefined || val === null) return true;
+        const threshold = Number.isFinite(Number(minValue)) ? Number(minValue) : 10;
         return Number(val) >= threshold;
-      };
-      return requireAll ? tests.every(passes) : tests.some(passes);
+      });
     }
 
     buildForcedAbilities() {
       const forced = [];
       const elite = this.selectedElityrke;
       if (!elite) return forced;
-      const rawReqText = String(elite.krav_formagor || '');
 
-      const groups = parseElityrkeRequirementGroups(rawReqText);
+      const groups = parseElityrkeRequirementGroups(elite.krav_formagor);
       const used = new Set();
       const picks = [];
       groups.forEach(group => {
@@ -550,116 +511,51 @@
         });
       });
 
-      // Safety net: keep explicit "valfri" requirements as typed requirements
-      // even if an external parser failed to materialize the group.
-      if (/Mystisk kraft\s*\(\s*valfri\s*\)/i.test(rawReqText) && !forced.some(req => req?.anyMystic)) {
-        forced.push({
-          name: '',
-          type: 'ability',
-          targetLevel: 'Novis',
-          anyMystic: true,
-          done: this.hasAnyMysticPower('Novis')
-        });
-      }
-      if (/Ritualist\s*\(\s*valfri\s*\)/i.test(rawReqText) && !forced.some(req => req?.anyRitual)) {
-        forced.push({
-          name: '',
-          type: 'ritual',
-          targetLevel: 'Novis',
-          anyRitual: true,
-          done: this.hasAnyKnownRitual()
-        });
-      }
-
-      const eliteSkillOptions = [];
-      const eliteSkills = toEliteSkillArray(elite.Elityrkesförmågor);
-      eliteSkills.forEach(raw => {
-        const skillExpr = stripRequirementTypeSuffix(raw);
-        if (!skillExpr) return;
-        const reqGroups = parseElityrkeRequirementGroups(skillExpr);
-        if (reqGroups.length) {
-          const localUsed = new Set();
-          reqGroups.forEach(group => {
-            const resolved = this.pickRequirementForGroup(group, localUsed, { allowElite: true });
-            if (resolved) eliteSkillOptions.push(resolved);
-          });
-          return;
-        }
-        const entry = lookupEntryByName(skillExpr);
-        if (!entry || !this.isRequirementEntryValid(entry, { allowElite: true })) return;
-        eliteSkillOptions.push({
-          name: entry.namn,
-          type: this.getRequirementEntryType(entry),
-          targetLevel: 'Novis'
-        });
-      });
-      if (eliteSkillOptions.length) {
-        const pick = eliteSkillOptions[randIndex(eliteSkillOptions.length)];
+      const eliteSkills = toNameArray(elite.Elityrkesförmågor);
+      if (eliteSkills.length) {
+        const pick = eliteSkills[randIndex(eliteSkills.length)];
         if (pick) {
           forced.push({
-            ...pick,
-            done: this.isRequirementComplete(pick)
+            name: pick,
+            type: 'ability',
+            targetLevel: 'Novis',
+            done: Boolean(this.Formagor[pick])
           });
         }
       }
       return forced;
     }
 
-    pickRequirementForGroup(group, used, options = {}) {
+    pickRequirementForGroup(group, used) {
       if (!group) return null;
-      const allowElite = Boolean(options?.allowElite);
       const pool = [];
       const pushEntry = (entry) => {
-        if (!entry || !this.isRequirementEntryValid(entry, { allowElite })) return;
+        if (!entry || !this.isRequirementEntryValid(entry)) return;
         pool.push(entry);
       };
-      const entryAllowedByCurrentLock = (entry) => {
-        if (!entry?.namn) return false;
-        if (!this.getActiveTraditionLock()) return true;
-        return this.isAllowedByTraditionLock(entry.namn);
-      };
       if (group.anyMystic) {
-        let mysticPool = getEntriesByType('Mystisk kraft')
-          .filter(entry => allowElite || !isEliteEntry(entry))
-          .filter(entryAllowedByCurrentLock);
-        if (!mysticPool.length) {
-          mysticPool = getEntriesByType('Mystisk kraft').filter(entry => allowElite || !isEliteEntry(entry));
-        }
-        mysticPool.forEach(entry => pushEntry(entry));
+        getEntriesByType('Mystisk kraft').forEach(entry => {
+          if (!isEliteEntry(entry)) pushEntry(entry);
+        });
       } else if (group.anyRitual && !(group.names || []).length) {
-        let ritualPool = getEntriesByType('Ritual')
-          .filter(entry => allowElite || !isEliteEntry(entry))
-          .filter(entryAllowedByCurrentLock);
-        if (!ritualPool.length) {
-          ritualPool = getEntriesByType('Ritual').filter(entry => allowElite || !isEliteEntry(entry));
-        }
-        ritualPool.forEach(entry => pushEntry(entry));
+        getEntriesByType('Ritual').forEach(entry => pushEntry(entry));
       } else {
         (group.names || []).forEach(name => pushEntry(lookupEntryByName(name)));
       }
       if (!pool.length) return null;
       const dedup = pool.filter(entry => entry?.namn && !used.has(normalizeName(entry.namn)));
       const preferred = dedup.filter(entry => this.isRequirementEntryAlreadySatisfied(entry));
-      const baseList = preferred.length ? preferred : (dedup.length ? dedup : pool);
-      const list = baseList.filter(entry => {
-        if (group.anyMystic) return isMysticEntry(entry);
-        if (group.anyRitual && !(group.names || []).length) return isRitualEntry(entry);
-        return true;
-      });
-      const pickList = list.length ? list : baseList;
-      const entry = pickList[randIndex(pickList.length)];
+      const list = preferred.length ? preferred : (dedup.length ? dedup : pool);
+      const entry = list[randIndex(list.length)];
       if (!entry) return null;
       const name = entry.namn;
       used.add(normalizeName(name));
       const type = this.getRequirementEntryType(entry);
-      const req = {
+      return {
         name,
         type,
         targetLevel: type === 'ritual' ? 'Novis' : 'Novis'
       };
-      if (group.anyMystic) req.anyMystic = true;
-      if (group.anyRitual && !(group.names || []).length) req.anyRitual = true;
-      return req;
     }
 
     applyMasterPreference(picks) {
@@ -691,10 +587,9 @@
       choice.targetLevel = 'Mästare';
     }
 
-    isRequirementEntryValid(entry, options = {}) {
-      const allowElite = Boolean(options?.allowElite);
+    isRequirementEntryValid(entry) {
       if (!entry || !entry.namn) return false;
-      if (!allowElite && isEliteEntry(entry)) return false;
+      if (isEliteEntry(entry)) return false;
       const types = entry.taggar?.typ || [];
       if (!types.length) return false;
       return types.some(type =>
@@ -719,7 +614,7 @@
 
     getPendingForcedAbility() {
       if (!Array.isArray(this.forcedAbilities)) return null;
-      return this.forcedAbilities.find(req => req && !req.done && !this.isRequirementComplete(req));
+      return this.forcedAbilities.find(req => req && !req.done && !req.failed && !this.isRequirementComplete(req));
     }
 
     ensureForcedAbilitiesAfterLoop() {
@@ -732,72 +627,18 @@
     }
 
     resolveForcedRequirement(req, handlers = {}) {
-      if (!req) return true;
+      if (!req || !req.name) return true;
       if (this.isRequirementComplete(req)) return true;
-      const ensureAbility = handlers.ensureAbilityLevel || ((name, target) => this.forceEnsureAbilityLevel(name, target));
-      const ensureRitual = handlers.ensureRitual || (name => this.ensureRitualKnown(name));
-      if (req.anyMystic) {
-        const desired = req.targetLevel && LEVEL_VALUE[req.targetLevel] ? req.targetLevel : 'Novis';
-        if (this.hasAnyMysticPower(desired)) return true;
-        const preferred = (() => {
-          if (!req.name) return [];
-          const entry = lookupEntryByName(req.name);
-          if (!entry || !isMysticEntry(entry)) return [];
-          return [entry.namn];
-        })();
-        const lockFiltered = getEntriesByType('Mystisk kraft')
-          .filter(entry => !isEliteEntry(entry))
-          .map(entry => entry?.namn)
-          .filter(Boolean)
-          .filter(name => this.isAllowedByTraditionLock(name));
-        const fallback = lockFiltered.length ? [] : getEntriesByType('Mystisk kraft')
-          .filter(entry => !isEliteEntry(entry))
-          .map(entry => entry?.namn)
-          .filter(Boolean);
-        const knownMystics = Object.keys(this.Formagor || {}).filter(name => {
-          const entry = lookupEntryByName(name);
-          return Boolean(entry && isMysticEntry(entry));
-        });
-        const candidates = Array.from(new Set([...preferred, ...knownMystics, ...lockFiltered, ...fallback]));
-        for (let i = 0; i < candidates.length; i += 1) {
-          const name = candidates[i];
-          const entry = lookupEntryByName(name);
-          if (!entry || !isMysticEntry(entry)) continue;
-          if (ensureAbility(name, desired)) return true;
-        }
-        return false;
-      }
-      if (req.anyRitual) {
-        if (this.hasAnyKnownRitual()) return true;
-        const preferred = req.name ? [req.name] : [];
-        const lockFiltered = getEntriesByType('Ritual')
-          .map(entry => entry?.namn)
-          .filter(Boolean)
-          .filter(name => this.isAllowedByTraditionLock(name));
-        const fallback = lockFiltered.length ? [] : getEntriesByType('Ritual')
-          .map(entry => entry?.namn)
-          .filter(Boolean);
-        const knownRituals = (this.valdaRitualer || []).filter(Boolean);
-        const candidates = Array.from(new Set([...preferred, ...knownRituals, ...lockFiltered, ...fallback]));
-        for (let i = 0; i < candidates.length; i += 1) {
-          const name = candidates[i];
-          const entry = lookupEntryByName(name);
-          if (!entry || !isRitualEntry(entry)) continue;
-          if (ensureRitual(name)) return true;
-        }
-        return false;
-      }
-      if (!req.name) return true;
       if (req.type === 'ritual') {
+        const ensureRitual = handlers.ensureRitual || (name => this.ensureRitualKnown(name));
         return ensureRitual(req.name);
       }
+      const ensureAbility = handlers.ensureAbilityLevel || ((name, target) => this.forceEnsureAbilityLevel(name, target));
       return ensureAbility(req.name, req.targetLevel || 'Novis');
     }
 
     forceEnsureAbilityLevel(name, targetLevel) {
       if (!name) return false;
-      const entry = lookupEntryByName(name);
-      if (!entry || !this.isLearnableAbilityEntry(entry)) return false;
       const desired = LEVEL_VALUE[targetLevel] ? targetLevel : 'Novis';
       const abilityTrad = getAbilityTraditionName(name);
       if (abilityTrad) {
@@ -839,7 +680,7 @@
       if (!Array.isArray(this.valdaRitualer)) this.valdaRitualer = [];
       if (this.valdaRitualer.some(rit => normalizeName(rit) === key)) return true;
       const entry = lookupEntryByName(name);
-      if (!entry || !(entry.taggar?.typ || []).includes('Ritual')) return false;
+      if (entry && !(entry.taggar?.typ || []).includes('Ritual')) return false;
       if (this.ERFkvar < 10) return false;
       const paid = this.spendXP(10);
       if (paid < 10) return false;
@@ -855,32 +696,6 @@
       return (this.valdaRitualer || []).some(rit => normalizeName(rit) === key);
     }
 
-    hasAnyKnownRitual() {
-      return (this.valdaRitualer || []).some(name => {
-        const entry = lookupEntryByName(name);
-        return Boolean(entry && isRitualEntry(entry));
-      });
-    }
-
-    hasAnyMysticPower(minLevel = 'Novis') {
-      const min = LEVEL_VALUE[minLevel] || LEVEL_VALUE.Novis;
-      return Object.keys(this.Formagor || {}).some(name => {
-        const entry = lookupEntryByName(name);
-        if (!entry || !isMysticEntry(entry)) return false;
-        const level = this.Formagor[name] || '';
-        return LEVEL_VALUE[level] >= min;
-      });
-    }
-
-    isLearnableAbilityEntry(entry) {
-      if (!entry || !entry.namn) return false;
-      const types = entry.taggar?.typ || [];
-      if (!types.length) return false;
-      return types.includes('Förmåga')
-        || types.includes('Mystisk kraft')
-        || types.includes('Monstruöst särdrag');
-    }
-
     spendXP(amount) {
       const val = Math.max(0, Number(amount) || 0);
       if (!val) return 0;
@@ -890,89 +705,11 @@
     }
 
     isRequirementComplete(req) {
-      if (!req) return true;
-      if (req.anyMystic) return this.hasAnyMysticPower(req.targetLevel || 'Novis');
-      if (req.anyRitual) return this.hasAnyKnownRitual();
-      if (!req.name) return true;
+      if (!req || !req.name) return true;
       if (req.type === 'ritual') return this.hasRitual(req.name);
       const current = this.Formagor[req.name] || '';
       const target = req.targetLevel || 'Novis';
       return LEVEL_VALUE[current] >= LEVEL_VALUE[target];
-    }
-
-    collectUnresolvedForcedRequirements() {
-      if (!Array.isArray(this.forcedAbilities)) return [];
-      return this.forcedAbilities
-        .filter(req => req && !this.isRequirementComplete(req))
-        .map(req => ({ ...req }));
-    }
-
-    assertForcedRequirementsResolved() {
-      const unresolved = this.collectUnresolvedForcedRequirements();
-      if (!unresolved.length) return;
-      const names = unresolved.map(req => {
-        if (req.anyMystic) {
-          const lvl = req.targetLevel && req.targetLevel !== 'Novis' ? `, ${req.targetLevel}` : '';
-          return `Mystisk kraft (valfri${lvl})`;
-        }
-        if (req.anyRitual) return 'Ritualist (valfri)';
-        const target = req.type === 'ability' ? (req.targetLevel || 'Novis') : '';
-        return target ? `${req.name} (${target})` : req.name;
-      });
-      this.generationWarnings.push(`Kunde inte uppfylla alla elityrkeskrav: ${names.join(', ')}`);
-    }
-
-    buildXPContext() {
-      const list = buildEntryList({
-        abilities: this.Formagor,
-        rituals: this.valdaRitualer,
-        extraEntries: this.extraPicks
-      });
-      const calcUsed = window.storeHelper?.calcUsedXP;
-      const calcTotal = window.storeHelper?.calcTotalXP;
-      const base = this.baseXP || this.ERF || 0;
-      if (typeof calcUsed === 'function' && typeof calcTotal === 'function') {
-        const used = calcUsed(list, {});
-        const total = calcTotal(base, list);
-        return { total, used, remaining: Math.max(0, total - used) };
-      }
-      const LEVEL_XP = { Novis: 10, Gesäll: 30, Mästare: 60 };
-      const advantageCounts = new Map();
-      let disadvantageCount = 0;
-      const abilityUsed = list.reduce((sum, entry) => {
-        const types = entry?.taggar?.typ || [];
-        if (types.includes('Fördel')) {
-          const key = [
-            normalizeName(entry?.id || ''),
-            normalizeName(entry?.namn || ''),
-            normalizeName(entry?.trait || ''),
-            normalizeName(entry?.race || '')
-          ].filter(Boolean).join('#');
-          if (key) {
-            advantageCounts.set(key, (advantageCounts.get(key) || 0) + 1);
-          }
-          return sum;
-        }
-        if (types.includes('Nackdel')) {
-          disadvantageCount += 1;
-          return sum;
-        }
-        if (types.includes('Ritual')) return sum + 10;
-        if (['Mystisk kraft', 'Förmåga', 'Särdrag', 'Monstruöst särdrag'].some(t => types.includes(t))) {
-          return sum + (LEVEL_XP[entry?.nivå] || LEVEL_XP.Novis);
-        }
-        return sum;
-      }, 0);
-      const advantageCost = Array.from(advantageCounts.values()).reduce((sum, count) => {
-        if (count <= 0) return sum;
-        if (count === 1) return sum + 5;
-        if (count === 2) return sum + 10;
-        return sum + 15;
-      }, 0);
-      const disBonus = Math.min(5, disadvantageCount) * 5;
-      const used = abilityUsed + advantageCost;
-      const total = base + disBonus;
-      return { total, used, remaining: Math.max(0, total - used) };
     }
 
     pickAdvantagesAndDisadvantages() {
@@ -982,8 +719,8 @@
       const advCount = 5 + extraAdv;
       this.advantagePicks = this.selectEntriesByTag('Fördel', advCount, advPrefs, { weightByTrait: true, allowMultipleSame: true });
       this.disadvantagePicks = this.selectEntriesByTag('Nackdel', 5, disPrefs, { weightByTrait: false, allowMultipleSame: true });
-      this.advantagePicks.forEach(name => this.registerExtraEntry(name, 'manual', { allowDuplicate: true }));
-      this.disadvantagePicks.forEach(name => this.registerExtraEntry(name, 'manual', { allowDuplicate: true }));
+      this.advantagePicks.forEach(name => this.registerExtraEntry(name));
+      this.disadvantagePicks.forEach(name => this.registerExtraEntry(name));
     }
 
     reconcileXPGap(mode) {
@@ -991,7 +728,35 @@
       const maxAttempts = 4;
       let attempts = 0;
       const progressLimiter = () => Object.keys(this.Formagor || {}).length + (this.valdaRitualer || []).length;
-      const xpContext = () => this.buildXPContext();
+      const xpContext = () => {
+        const list = buildEntryList({
+          abilities: this.Formagor,
+          rituals: this.valdaRitualer,
+          extraEntries: this.extraPicks
+        });
+        const calcUsed = window.storeHelper?.calcUsedXP;
+        const calcTotal = window.storeHelper?.calcTotalXP;
+        const base = this.baseXP || this.ERF || 0;
+        if (typeof calcUsed === 'function' && typeof calcTotal === 'function') {
+          const used = calcUsed(list, {});
+          const total = calcTotal(base, list);
+          return { total, used, remaining: Math.max(0, total - used) };
+        }
+        const LEVEL_XP = { Novis: 10, Gesäll: 30, Mästare: 60 };
+        const advantageCost = Math.max(0, (this.advantagePicks || []).length * 5);
+        const disBonus = Math.min(5, (this.disadvantagePicks || []).length) * 5;
+        const abilityUsed = list.reduce((sum, entry) => {
+          const types = entry?.taggar?.typ || [];
+          if (types.includes('Ritual')) return sum + 10;
+          if (['Mystisk kraft', 'Förmåga', 'Särdrag', 'Monstruöst särdrag'].some(t => types.includes(t))) {
+            return sum + (LEVEL_XP[entry?.nivå] || LEVEL_XP.Novis);
+          }
+          return sum;
+        }, 0);
+        const used = abilityUsed + advantageCost;
+        const total = base + disBonus;
+        return { total, used, remaining: Math.max(0, total - used) };
+      };
 
       while (attempts < maxAttempts) {
         const ctx = xpContext();
@@ -1337,10 +1102,8 @@
       };
       const widthScore = () => Object.keys(this.Formagor || {}).filter(name => this.Formagor[name] === 'Novis').length;
       const preferPromotions = typ === 'Mästare';
-      const preferBreadth = typ === 'Bredd';
       const shouldPromoteFirst = () => {
         if (preferPromotions && Object.keys(this.Formagor || {}).length) return true;
-        if (preferBreadth) return false;
         return widthScore() >= heightScore() + BUCKET_CONFIG.tallMargin;
       };
 
@@ -1441,19 +1204,10 @@
 
       const ensureAbilityLevel = (name, targetLevel) => {
         if (!name) return true;
-        const entry = lookupEntryByName(name);
-        if (!entry || !this.isLearnableAbilityEntry(entry)) return false;
-        const desired = targetLevel && LEVEL_VALUE[targetLevel] ? targetLevel : 'Novis';
-        const abilityTrad = getAbilityTraditionName(name);
-        if (abilityTrad) {
-          const baseAbility = getTraditionBaseAbilityName(abilityTrad);
-          if (baseAbility && normalizeName(baseAbility) !== normalizeName(name)) {
-            if (!ensureAbilityLevel(baseAbility, 'Novis')) return false;
-          }
-        }
         if (!this.Formagor[name]) {
-          if (!learnNovis(name, { statGateMode: 'ignore' })) return false;
+          if (!learnNovis(name)) return false;
         }
+        const desired = targetLevel && LEVEL_VALUE[targetLevel] ? targetLevel : 'Novis';
         let guard = 0;
         while (LEVEL_VALUE[this.Formagor[name] || ''] < LEVEL_VALUE[desired] && guard < 5) {
           const current = this.Formagor[name];
@@ -1469,7 +1223,7 @@
         if (!Array.isArray(this.valdaRitualer)) this.valdaRitualer = [];
         if (this.valdaRitualer.some(rit => normalizeName(rit) === key)) return true;
         const entry = lookupEntryByName(name);
-        if (!entry || !(entry.taggar?.typ || []).includes('Ritual')) return false;
+        if (entry && !(entry.taggar?.typ || []).includes('Ritual')) return false;
         if (ERFkvar < 10) return false;
         const displayName = entry?.namn || name;
         if (!displayName) return false;
@@ -1489,6 +1243,7 @@
           req.done = true;
           return true;
         }
+        req.failed = true;
         return false;
       };
 
@@ -1542,7 +1297,7 @@
 
       const tryPromotionPriority = () => {
         const bucketOrder = ['focus', 'support', 'secondary', ''];
-        const targets = preferBreadth ? ['Novis', 'Gesäll'] : ['Gesäll', 'Novis'];
+        const targets = typ === 'Mästare' ? ['Gesäll', 'Novis'] : ['Gesäll', 'Novis'];
         for (let i = 0; i < targets.length; i += 1) {
           const level = targets[i];
           const pickables = Object.keys(this.Formagor || {}).filter(name => this.Formagor[name] === level);
@@ -1615,11 +1370,7 @@
         ];
         let guard = 0;
         while (ERFkvar >= 10 && guard < 200) {
-          const pendingForced = this.getPendingForcedAbility();
-          if (pendingForced) {
-            if (!handleForcedRequirement()) break;
-            continue;
-          }
+          if (handleForcedRequirement()) continue;
           if (tryFallbackPromotion()) {
             guard += 1;
             continue;
@@ -1666,9 +1417,7 @@
 
       let mainGuard = 0;
       while (ERFkvar >= 10 && mainGuard < 400) {
-        const pendingForced = this.getPendingForcedAbility();
-        if (pendingForced) {
-          if (!handleForcedRequirement()) break;
+        if (handleForcedRequirement()) {
           mainGuard += 1;
           continue;
         }
@@ -1723,15 +1472,14 @@
         xpBudget,
         xpSpentOnPicks,
         xpRemaining: this.ERFkvar,
-        extraEntries: [...(this.extraPicks || [])],
+        extraEntries: Array.from(new Set(this.extraPicks || [])),
         autoAdded: autoAddedNames,
         meta: {
           baseXp: this.baseXP || this.ERF,
           race: this.selectedRace?.namn || '',
           yrke: this.selectedYrke?.namn || '',
           elityrke: this.selectedElityrke?.namn || '',
-          autoAddedSources: [...(this.autoAdded || [])],
-          warnings: [...(this.generationWarnings || [])]
+          autoAddedSources: [...(this.autoAdded || [])]
         }
       };
     }
@@ -1806,13 +1554,6 @@
   function normalizeName(name) {
     if (!name && name !== 0) return '';
     return String(name).trim().toLowerCase();
-  }
-
-  function normalizeAbilityMode(mode) {
-    const key = normalizeName(mode);
-    if (!key || key === 'master' || key === 'mästare' || key === 'mastare') return 'Mästare';
-    if (key === 'breadth' || key === 'bredd') return 'Bredd';
-    return 'Mästare';
   }
 
   function isMysticProfession(entry) {
@@ -1968,28 +1709,6 @@
     return [];
   }
 
-  function toEliteSkillArray(value) {
-    if (!value && value !== 0) return [];
-    if (Array.isArray(value)) {
-      return value.flatMap(item => toEliteSkillArray(item)).filter(Boolean);
-    }
-    if (typeof value === 'string') {
-      return value
-        .split(/[;\n]+/)
-        .map(part => String(part || '').trim())
-        .filter(Boolean);
-    }
-    return [];
-  }
-
-  function stripRequirementTypeSuffix(value) {
-    const raw = String(value || '').trim();
-    if (!raw) return '';
-    const match = raw.match(/^(.+?)\s*\((mystisk kraft|ritual|förmåga|monstruöst särdrag)\)\s*$/i);
-    if (!match) return raw;
-    return String(match[1] || '').trim();
-  }
-
   function getYrkeTraditionName(entry) {
     const name = normalizeName(entry?.namn);
     if (!name) return '';
@@ -2128,8 +1847,7 @@
 
   function expandRequirementOptions(inner) {
     const opts = [];
-    const normalized = String(inner || '').replace(/\boch\b/gi, ',');
-    splitRequirementComma(normalized).forEach(segment => {
+    splitRequirementComma(inner).forEach(segment => {
       splitRequirementOr(segment).forEach(val => {
         const nm = String(val || '').trim();
         if (nm) opts.push({ names: [nm] });

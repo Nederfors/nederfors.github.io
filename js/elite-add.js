@@ -56,8 +56,7 @@
       if (mysticMatch) {
         const inner = mysticMatch[1].trim();
         if (inner.toLowerCase() === 'valfri') return [{ anyMystic: true }];
-        const normalized = inner.replace(/\boch\b/gi, ',');
-        const variants = [].concat(...splitComma(normalized).map(segment => splitOr(segment)));
+        const variants = [].concat(...splitComma(inner).map(segment => splitOr(segment)));
         return variants
           .map(nm => nm.trim())
           .filter(Boolean)
@@ -67,8 +66,7 @@
       if (ritualMatch) {
         const inner = ritualMatch[1].trim();
         if (inner.toLowerCase() === 'valfri') return [{ anyRitual: true }];
-        const normalized = inner.replace(/\boch\b/gi, ',');
-        const variants = [].concat(...splitComma(normalized).map(segment => splitOr(segment)));
+        const variants = [].concat(...splitComma(inner).map(segment => splitOr(segment)));
         return variants
           .map(nm => nm.trim())
           .filter(Boolean)
@@ -210,21 +208,13 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
         if(!s.dataset.name || s.value==='skip') return;
         levels[s.dataset.name]=s.value;
       });
-      // Val från valfri mystisk kraft/ritual-grupp
+      // Val från valfri ritual-grupp (ingen nivå)
       const ablSels = box.querySelectorAll('select[data-ability]');
       ablSels.forEach(sel => {
         const grp = groups[Number(sel.dataset.group)];
-        if (grp && grp.anyMystic) {
-          const nm = sel.value;
-          if (!nm || nm === 'skip' || !isMysticPower(nm)) return;
-          const lvlSel = box.querySelector(`select[data-name][data-group="${sel.dataset.group}"]`);
-          const lvl = (lvlSel && lvlSel.value && lvlSel.value !== 'skip') ? lvlSel.value : 'Novis';
-          levels[nm] = lvl;
-          return;
-        }
         if (grp && grp.anyRitual) {
           const nm = sel.value;
-          if (nm && nm !== 'skip' && isRitual(nm)) levels[nm] = 'Novis';
+          if (nm && nm !== 'skip') levels[nm] = 'Novis';
         }
       });
       close();
@@ -243,9 +233,6 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
         const nameSel=box.querySelector(`select[data-ability][data-group="${i}"]`);
         if(nameSel){
           if(nameSel.value==='skip'){ add.disabled=true; return; }
-          const grp = groups[i];
-          if (grp?.anyMystic && !isMysticPower(nameSel.value)) { add.disabled=true; return; }
-          if (grp?.anyRitual && !isRitual(nameSel.value)) { add.disabled=true; return; }
           continue;
         }
         const sgs=box.querySelectorAll(`select[data-group="${i}"][data-name]`);
@@ -346,11 +333,6 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
     return (entry?.taggar?.typ||[]).includes('Ritual');
   }
 
-  function isMysticPower(name){
-    const entry=lookupEntry({ id: name, name });
-    return (entry?.taggar?.typ||[]).includes('Mystisk kraft');
-  }
-
   async function addReq(entry, levels){
     if(!store.current && !(await requireCharacter())) return;
     const names=parseNames(entry.krav_formagor||'');
@@ -425,21 +407,11 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
     handle(b);
   }
 
-  function bindIndexList() {
+  document.addEventListener('DOMContentLoaded',()=>{
     if(document.body.dataset.role==='index'){
-      const list = document.getElementById('lista');
-      if (list && !list.dataset.eliteReqBound) {
-        list.dataset.eliteReqBound = '1';
-        list.addEventListener('click',onClick);
-      }
+      document.getElementById('lista').addEventListener('click',onClick);
     }
-  }
-
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', bindIndexList);
-  } else {
-    bindIndexList();
-  }
+  });
 
   window.eliteAdd={parseNames,parseGroupRequirements,addReq,addElite};
 })(window);

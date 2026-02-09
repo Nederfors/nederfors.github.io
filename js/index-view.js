@@ -2203,18 +2203,7 @@ function initIndex() {
           highlightInElement(tmp, terms);
           html = tmp.innerHTML;
         }
-        if (!window.tabellPopup && typeof window.ensureTabellPopup === 'function') {
-          try {
-            await window.ensureTabellPopup();
-          } catch (err) {
-            console.warn('Table popup script could not be loaded', err);
-          }
-        }
-        if (window.tabellPopup?.open) {
-          window.tabellPopup.open(html, title);
-        } else {
-          yrkePanel.open(title, html);
-        }
+        tabellPopup.open(html, title);
         return;
       }
       {
