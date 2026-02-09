@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-02-09T14:21:43.994Z",
+  "generatedAt": "2026-02-09T14:22:46.351Z",
   "totalCount": 1494,
   "sources": [
     {
@@ -135,7 +135,7 @@
     {
       "file": "data/vapen.json",
       "count": 67,
-      "checksum": "sha256-25e4da90360c09e24120542c231c6ad5d98dc81de223dfe0dadf07f809ff4070"
+      "checksum": "sha256-ebff2889c096c3b585f496207b0227d1ede48da10c27a8b4978d5fa21a603c71"
     },
     {
       "file": "data/mat.json",
@@ -170,7 +170,7 @@
     {
       "file": "data/fallor.json",
       "count": 6,
-      "checksum": "sha256-f4ae6ea8acf6042d4ba3c82ea7322357ece5ddb7f76f70500ba7c50838e706b8"
+      "checksum": "sha256-f422239d603211d2c42eb7c79f1cc2943ae79b09030af165388ca12aa3416075"
     }
   ],
   "entries": [
@@ -24131,14 +24131,14 @@
     {
       "id": "v59",
       "namn": "Precisionspil",
-      "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precis.",
+      "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precist.",
       "taggar": {
         "typ": [
           "Pil/Lod",
           "Projektilvapen"
         ],
         "kvalitet": [
-          "Precis"
+          "Precist"
         ]
       },
       "stat": {
@@ -32539,7 +32539,7 @@
         ]
       },
       "nivåer": {
-        "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T8 skada; därefter brinner substansen i 1T4 rundor och ger 1T4 skada per runda."
+        "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t8 skada; därefter brinner substansen i 1t4 rundor och ger 1t4 skada per runda."
       },
       "stat": {
         "vikt": 1
@@ -32560,7 +32560,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T10 skada; därefter brinner substansen i 1T6 rundor och ger 1T6 skada per runda."
+        "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t10 skada; därefter brinner substansen i 1t6 rundor och ger 1t6 skada per runda."
       },
       "stat": {
         "vikt": 1
@@ -32581,7 +32581,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T12 skada; därefter brinner substansen i 1T8 rundor och ger 1T8 skada per runda."
+        "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t12 skada; därefter brinner substansen i 1t8 rundor och ger 1t8 skada per runda."
       },
       "stat": {
         "vikt": 1
@@ -32601,7 +32601,7 @@
         ]
       },
       "nivåer": {
-        "Novis": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T8 skada."
+        "Novis": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1t8 skada."
       },
       "stat": {
         "vikt": 1
@@ -32621,7 +32621,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T10 skada."
+        "Gesäll": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1t10 skada."
       },
       "stat": {
         "vikt": 1
@@ -32641,7 +32641,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1T12 skada."
+        "Mästare": "Fångstarmar med taggar hugger i offret. För att slita sig loss krävs lyckat [Stark←Listig] där Listig motsvarar fällsmedens (vanligen 13, −3). Varje försök är en stridshandling. Fällan ger 1t12 skada."
       },
       "stat": {
         "vikt": 1
