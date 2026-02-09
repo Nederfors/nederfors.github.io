@@ -66,14 +66,16 @@
     if (m2) {
       const inner = m2[1].trim();
       if (inner.toLowerCase() === 'valfri') return [{ anyMystic: true }];
-      const opts = [].concat(...splitComma(inner).map(h => splitOr(h)));
+      const normalized = inner.replace(/\boch\b/gi, ',');
+      const opts = [].concat(...splitComma(normalized).map(h => splitOr(h)));
       return opts.map(o => ({ names: [o] }));
     }
     const r = String(name || '').match(/^Ritualist\s*\(([^)]+)\)/i);
     if (r) {
       const inner = r[1].trim();
       if (inner.toLowerCase() === 'valfri') return [{ anyRitual: true }];
-      const opts = [].concat(...splitComma(inner).map(h => splitOr(h)));
+      const normalized = inner.replace(/\boch\b/gi, ',');
+      const opts = [].concat(...splitComma(normalized).map(h => splitOr(h)));
       return opts.map(o => ({ names: [o] }));
     }
     if (/^Ritualist$/i.test(String(name || '').trim())) return [{ anyRitual: true }];

@@ -1819,11 +1819,13 @@ function bindToolbar() {
         return;
       }
       let generated = null;
+      let generatorError = '';
       try {
         generated = window.symbaroumGenerator.generate({
           name: res.name,
           xp: res.xp,
           attributeMode: res.attrMode,
+          abilityMode: res.abilityMode,
           traitFocus: res.traitFocus,
           race: res.race,
           yrke: res.yrke,
@@ -1831,9 +1833,10 @@ function bindToolbar() {
         });
       } catch (err) {
         console.error('Generator error', err);
+        generatorError = String(err?.message || '').trim();
       }
       if (!generated) {
-        await alertPopup('Generatorn misslyckades. Försök igen.');
+        await alertPopup(generatorError || 'Generatorn misslyckades. Försök igen.');
         return;
       }
       const charId = storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now());
@@ -4427,6 +4430,7 @@ async function openGeneratorPopup(preferredFolderId) {
   const xpIn = bar.shadowRoot.getElementById('genCharXp');
   const attrSel = bar.shadowRoot.getElementById('genCharAttr');
   const traitSel = bar.shadowRoot.getElementById('genCharTrait');
+  const abilitySel = bar.shadowRoot.getElementById('genCharAbilityMode');
   const raceSel = bar.shadowRoot.getElementById('genCharRace');
   const yrkeSel = bar.shadowRoot.getElementById('genCharYrke');
   const eliteSel = bar.shadowRoot.getElementById('genCharElityrke');
@@ -4447,6 +4451,7 @@ async function openGeneratorPopup(preferredFolderId) {
   nameIn.value = '';
   if (xpIn) xpIn.value = 100;
   if (attrSel) attrSel.value = '';
+  if (abilitySel) abilitySel.value = 'master';
   if (traitSel) {
     const attrs = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
     const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
@@ -4498,7 +4503,7 @@ async function openGeneratorPopup(preferredFolderId) {
   const refreshEntryOptions = () => {
     applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
     applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
-    applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
+    applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke');
     if (eliteSel && eliteSel.options.length <= 1) {
       eliteSel.disabled = true;
       eliteSel.title = 'Databasen laddas ... öppna generatorn igen när listorna finns.';
@@ -4550,11 +4555,12 @@ async function openGeneratorPopup(preferredFolderId) {
       const folderId = folderEl.value || '';
       const xp = Math.max(0, Math.floor(Number(xpIn?.value || 0) / 10) * 10);
       const attrMode = attrSel?.value || '';
+      const abilityMode = abilitySel?.value || 'master';
       const traitFocus = traitSel?.value || '';
       const race = raceSel?.value || '';
       const yrke = yrkeSel?.value || '';
       const elityrke = eliteSel?.value || '';
-      close({ name, folderId, xp, attrMode, traitFocus, race, yrke, elityrke });
+      close({ name, folderId, xp, attrMode, abilityMode, traitFocus, race, yrke, elityrke });
     }
     function onCancel() { close(null); }
     function onOutside(e) {

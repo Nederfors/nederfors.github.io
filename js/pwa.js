@@ -2,6 +2,7 @@ if ('serviceWorker' in navigator) {
   let reloadOnControllerChange = false;
   let latestRegistration = null;
   const storageKeyPrefix = 'pwa-dismissed:';
+  const startupUpdateSessionKey = 'pwa:update-check-done';
 
   const buildStorageKey = id => (id ? `${storageKeyPrefix}${id}` : null);
 
@@ -90,6 +91,19 @@ if ('serviceWorker' in navigator) {
 
   const clearAllWorkerDismissals = () => {
     clearDismissalsExcept(null);
+  };
+
+  const shouldRunStartupUpdateCheck = () => {
+    try {
+      if (window.sessionStorage?.getItem(startupUpdateSessionKey) === '1') {
+        return false;
+      }
+      window.sessionStorage?.setItem(startupUpdateSessionKey, '1');
+      return true;
+    } catch (error) {
+      // If storage is unavailable, default to checking.
+      return true;
+    }
   };
 
   const applyWaitingWorker = registration => {
@@ -257,13 +271,10 @@ if ('serviceWorker' in navigator) {
 
     navigator.serviceWorker.register('sw.js').then(registration => {
       latestRegistration = registration;
-      // Proactively check for updates
-      registration.update();
-      document.addEventListener('visibilitychange', () => {
-        if (!document.hidden) {
-          registration.update();
-        }
-      });
+      // Check once per app-launch session to avoid network checks on each page swap.
+      if (shouldRunStartupUpdateCheck()) {
+        registration.update();
+      }
 
       // If there's already a waiting worker, prompt immediately
       const promptUserToRefresh = async reg => {
