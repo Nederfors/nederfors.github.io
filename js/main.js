@@ -1187,7 +1187,6 @@ const DATA_FILES = [
   'fallor.json'
 ].map(f => `data/${f}`);
 
-const DATA_BUNDLE_FILE = 'data/all.json';
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
 fetch(TABELLER_FILE)
@@ -1206,20 +1205,8 @@ fetch(TABELLER_FILE)
   });
 
 function loadDatabaseData() {
-  return fetch(DATA_BUNDLE_FILE)
-    .then(resp => {
-      if (!resp.ok) throw new Error('bundle missing');
-      return resp.json();
-    })
-    .then(json => {
-      const entries = Array.isArray(json?.entries)
-        ? json.entries
-        : (Array.isArray(json) ? json : []);
-      return { entries, meta: json };
-    })
-    .catch(() => Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
-      .then(arrays => ({ entries: arrays.flat(), meta: null }))
-    );
+  return Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
+    .then(arrays => ({ entries: arrays.flat(), meta: null }));
 }
 
 loadDatabaseData()
