@@ -2936,7 +2936,6 @@
       "Mästare": "Handling: Passiv. Rollpersonen skapar en så skärande dissonans att den blir fysiskt smärtsam för dem som är öppna för magins flöden. Varje gång en fientlig mystiker inom hörhåll får sin koncentration bruten av gesällnivån, eller misslyckas med ett kraftslag på grund av novisnivåns störning, tar denne omedelbart 1T6 i skada (ignorerar Rustning)."
     }
   },
-  [
   {
     "id": "form87",
     "namn": "Sköldvärn",
@@ -2969,6 +2968,40 @@
       "Gesäll": "Handling: Aktiv. Rollpersonen kan som aktiv handling välja att dra ihop sig bakom sin sköld och på så vis öka bepansringen från den upp till 1T12.",
       "Mästare": "Handling: Passiv. Rollpersonen har lärt sig att maximera sin profil för att täcka upp för andra. Allierade som befinner sig inom närstridsavstånd får tillgodoräkna sig sköldbärarens bepansringsbonus."
     }
+  },
+   {
+    "id": "form88",
+    "namn": "Sköldföring",
+    "beskrivning": "Att bara blockera är passivt; Sköldföring handlar om att använda skölden som ett precisionsinstrument för att kontrollera stridens flöde. Med perfekt timing och fotarbete kan inkommande hugg ledas bort eller låsas fast, vilket lämnar fienden frustrerad och blottad. Stilen bygger på öga-mot-hand-koordination snarare än råstyrka. Förmågan kräver en sköld (ej bucklare).",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare"
+      ],
+      "test": [
+        "Träffsäker"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Rollpersonen läser fiendens kroppsspråk och placerar skölden exakt där den behövs. När rollpersonen bär sköld får denne använda karaktärsdraget Träffsäker istället för Kvick för att beräkna sitt värde i Försvar.",
+      "Gesäll": "Handling: Reaktiv. Rollpersonen rör sig alltid med skölden höjd för att täcka sig mot pilar och hugg. Rollpersonen får slå mot [Träffsäker] för att undvika att dra på sig frislag från fiender i närstrid. Detta gäller alla frislag som utlöses av förflyttning, långa vapen eller förmågor som normalt orsakar frislag. Om slaget misslyckas får hen försvara sig mot frislaget på vanligt vis.",
+      "Mästare": "Handling: Reaktiv. En gång per runda när rollpersonen träffas av ett anfall, kan hen aktivt möta och styra undan anfallet. När rollpersonen träffas av en närstridsattack kan denne försöka blockera slaget helt med skölden genom att slå [Träffsäker]. Om slaget lyckas styrs attacken bort mot sköldens tåligaste delar och orsakar ingen skada."
+    }
   }
-]
 ]
