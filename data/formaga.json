@@ -2935,5 +2935,40 @@
       "Gesäll": "Handling: Aktiv. Rollpersonen riktar ett skärande, fokuserat oljud mot en enskild fiende inom syn- och hörhåll. Om rollpersonen lyckas med ett slag mot [Övertygande ← Viljestark] bryts fiendens koncentration omedelbart. Detta avbryter alla pågående effekter som kräver koncentration av målet.",
       "Mästare": "Handling: Passiv. Rollpersonen skapar en så skärande dissonans att den blir fysiskt smärtsam för dem som är öppna för magins flöden. Varje gång en fientlig mystiker inom hörhåll får sin koncentration bruten av gesällnivån, eller misslyckas med ett kraftslag på grund av novisnivåns störning, tar denne omedelbart 1T6 i skada (ignorerar Rustning)."
     }
+  },
+  [
+  {
+    "id": "form87",
+    "namn": "Sköldvärn",
+    "beskrivning": "Där andra ser skölden som ett hinder för rörlighet ser denna krigare en flyttbar fästningsmur. Genom att vinkla skölden, ta spjärn mot marken och möta kraft med kraft kan krigaren låta plåt och trä ta smällen istället för rustning och kött. Tekniken är vanlig bland tempelväktare och tungt infanteri som förväntas hålla linjen till varje pris. Förmågan kräver en sköld (ej bucklare).",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare"
+      ],
+      "test": [],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Rollpersonen använder skölden så tätt inpå kroppen att den fungerar som ett extra lager pansar. Så länge skölden bärs får rollpersonen +1T4 i Bepansring mot alla fysiska attacker.",
+      "Gesäll": "Handling: Aktiv. Rollpersonen kan som aktiv handling välja att dra ihop sig bakom sin sköld och på så vis öka bepansringen från den upp till 1T12.",
+      "Mästare": "Handling: Passiv. Rollpersonen har lärt sig att maximera sin profil för att täcka upp för andra. Allierade som befinner sig inom närstridsavstånd får tillgodoräkna sig sköldbärarens bepansringsbonus."
+    }
   }
+]
 ]
