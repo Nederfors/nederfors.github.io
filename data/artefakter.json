@@ -2704,7 +2704,7 @@
     "namn": "Solkross",
     "beskrivning": "En kort dagsstjärna av blek stål; skaftet är svept i tunn solförgylld runväv som flammar guld när vapnet höjs.\n\nBland ruinerna av det sista fäste där riddarebeskyddarna från Soltemplet drev tillbaka mörkrets arméer hittades Solkross, en kort stålstav inlindad i förgyllda runband. Legenden säger att vapensmeden Savalon Quire smälte ned slagg från Prios första altare och grundade vapnet för att ge de nyinvigda teurgerna mod nog att stå axel mot axel med svärdsbröder. Solkross bars av martyrprästen Efora; hennes sista slag bröt en abominations pansar innan hon föll. Runorna bränner ännu med hennes tro.",
     "kvalitet": [
-      "Djupverkande"
+      "Ledat","Helig"
     ],
     "taggar": {
       "typ": [
@@ -2724,7 +2724,7 @@
       }
     },
     "nivåer": {
-      "Förmåga 1": "Prios hand; Handling: Speciell\nBäraren kan väcka runväven och slå med sin trosstyrka. Under resten av scenen får användaren använda Viljestark istället för Träffsäker vid alla närstridsanfall och vapnet får kvaliteten Heligt. Villkor: Fri handling.",
+      "Förmåga 1": "Prios hand; Handling: Speciell\nBäraren kan väcka runväven och slå med sin trosstyrka. Under resten av scenen får användaren använda Viljestark istället för Träffsäker vid alla närstridsanfall. Korruption: 1T4",
       "Förmåga 2": "Solsteg; Handling: Aktiv\nBäraren blottar runorna och förflyttar sig blixtsnabbt till en fiende inom en förflyttning utan att utlösa frislag. Det första närstridsanfallet efter förflyttningen görs med Övertag; om slaget dödar målet försvinner 1T4 temporär korruption från bäraren. Korruption: 1T6.",
       "Förmåga 3": "Strålspets; Handling: Speciell\nVapnets huvud laddas med solgnister. Nästa träff som faktiskt ger skada adderar 1T6 extra skada och gör såret omöjligt att läka under scenen. Villkor: Fri handling. Korruption: 1T6."
     },
