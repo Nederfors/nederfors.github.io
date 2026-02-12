@@ -611,25 +611,10 @@ class SharedToolbar extends HTMLElement {
                 <button id="newCharBtn" class="char-btn">Ny rollperson</button>
               </div>
               <div class="char-btn-row">
-                <button id="generateCharBtn" class="char-btn">Generera rollperson</button>
+                <button id="characterToolsBtn" class="char-btn">Rollpersonshantering</button>
               </div>
               <div class="char-btn-row">
-                <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="renameChar" class="char-btn">Byt namn</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="manageFolders" class="char-btn">Mapphantering</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="exportChar" class="char-btn">Exportera</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="importChar" class="char-btn">Importera</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="driveStorageBtn" class="char-btn">Drivelagring</button>
+                <button id="driveStorageBtn" class="char-btn">Lagring</button>
               </div>
               <div class="char-btn-row">
                 <button id="pdfLibraryBtn" class="char-btn">PDF-bank</button>
@@ -1257,58 +1242,21 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- ---------- Popup Export ---------- -->
-      <div id="exportPopup" class="popup">
-        <div class="popup-inner">
-          <h3>Export</h3>
-          <div id="exportOptions"></div>
-          <button id="exportCancel" class="char-btn danger">Avbryt</button>
-        </div>
-      </div>
-
       <!-- ---------- Popup Drivelagring ---------- -->
       <div id="driveStoragePopup" class="popup">
-        <div class="popup-inner">
-          <h3>Drivelagring</h3>
+        <div class="popup-inner drive-storage-ui">
+          <h3>Lagring</h3>
           <div id="driveStorageOptions"></div>
           <button id="driveStorageCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
-      <!-- ---------- Popup Import ---------- -->
-      <div id="importPopup" class="popup">
-        <div class="popup-inner">
-          <h3>Importera</h3>
-          <div class="export-sections">
-            <div class="card export-card">
-              <div class="card-title">Vald mapp</div>
-              <div class="card-desc">
-                <label for="importFolderSelect">Mapp</label>
-                <div class="inline-controls">
-                  <select id="importFolderSelect"></select>
-                </div>
-                <button id="importBtnChoose" class="char-btn">Importera</button>
-                <label class="price-item import-check">
-                  <input type="checkbox" id="importMakeActiveChoose">
-                  <span>Gör målmappen aktiv efter import</span>
-                </label>
-              </div>
-            </div>
-            <div class="card export-card">
-              <div class="card-title">Mappar i fil</div>
-              <div class="card-desc">
-                <p>Importera en hel mapp</p>
-                <button id="importBtnFromFile" class="char-btn">Importera</button>
-                <label class="price-item import-check">
-                  <input type="checkbox" id="importMakeActiveFromDir">
-                  <span>Gör målmappen aktiv efter import</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="confirm-row">
-            <button id="importCancel" class="char-btn danger">Avbryt</button>
-          </div>
+      <!-- ---------- Popup Rollpersonshantering ---------- -->
+      <div id="characterToolsPopup" class="popup">
+        <div class="popup-inner character-tools-ui">
+          <h3>Rollpersonshantering</h3>
+          <div id="characterToolsOptions"></div>
+          <button id="characterToolsCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
@@ -1763,6 +1711,12 @@ class SharedToolbar extends HTMLElement {
       const runUpdate = async () => {
         const originalText = btn.textContent;
         let cacheTextTimer;
+        let shouldReloadNow = false;
+        const queuePostUpdateSync = () => {
+          try {
+            sessionStorage.setItem('pwa-post-update-sync', '1');
+          } catch {}
+        };
         btn.disabled = true;
         btn.textContent = 'Kontrollerar…';
 
@@ -1779,6 +1733,10 @@ class SharedToolbar extends HTMLElement {
 
           switch (result?.status) {
             case 'applied':
+              queuePostUpdateSync();
+              if (!navigator.serviceWorker?.controller) {
+                shouldReloadNow = true;
+              }
               window.toast?.('Uppdaterar appen…');
               break;
             case 'up-to-date':
@@ -1798,6 +1756,10 @@ class SharedToolbar extends HTMLElement {
           if (result?.cacheRefresh) {
             switch (result.cacheRefresh.status) {
               case 'refreshed':
+                queuePostUpdateSync();
+                if (result?.status !== 'applied') {
+                  shouldReloadNow = true;
+                }
                 window.toast?.('Cachen uppdaterades.');
                 break;
               case 'unavailable':
@@ -1809,6 +1771,13 @@ class SharedToolbar extends HTMLElement {
               default:
                 break;
             }
+          }
+
+          if (shouldReloadNow) {
+            window.toast?.('Laddar om för att slutföra uppdateringen…');
+            setTimeout(() => {
+              try { window.location.reload(); } catch {}
+            }, 120);
           }
         } catch (error) {
           if (cacheTextTimer) {
@@ -1944,7 +1913,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','exportPopup','driveStoragePopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','driveStoragePopup','characterToolsPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

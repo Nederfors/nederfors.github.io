@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v13';
+const CACHE_NAME = 'symbaroum-pwa-v14';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -103,7 +103,9 @@ async function precacheResources(cache) {
       });
     });
     if (fileRequests.length) {
-      await cache.addAll(fileRequests);
+      await Promise.allSettled(
+        fileRequests.map(request => cache.add(request))
+      );
     }
   } catch (error) {
     // Ignore invalid PDF list entries; they will be fetched on demand.
@@ -111,16 +113,15 @@ async function precacheResources(cache) {
 }
 
 async function forceRefreshCaches() {
+  const cache = await caches.open(CACHE_NAME);
+  await precacheResources(cache);
+
   const keys = await caches.keys();
   await Promise.all(
     keys
       .filter(key => key !== CACHE_NAME)
       .map(key => caches.delete(key))
   );
-
-  await caches.delete(CACHE_NAME);
-  const cache = await caches.open(CACHE_NAME);
-  await precacheResources(cache);
 }
 
 self.addEventListener('install', event => {

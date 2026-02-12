@@ -163,6 +163,18 @@ function computeIndexEntryXP(entry, list, options = {}) {
 }
 
 function getActiveHandlingKeys(p){
+  const isActiveHandling = (value) => {
+    const values = Array.isArray(value) ? value : [value];
+    return values.some(item => {
+      const raw = String(item ?? '').trim();
+      if (!raw) return false;
+      return raw
+        .split(/[;,/|]+/)
+        .map(part => part.trim().replace(/[.!?]$/g, '').toLowerCase())
+        .some(part => part === 'aktiv');
+    });
+  };
+
   const meta = typeof window.getEntryLevelMeta === 'function'
     ? window.getEntryLevelMeta(p)
     : (p?.taggar?.nivå_data || {});
@@ -183,8 +195,7 @@ function getActiveHandlingKeys(p){
       const handlingVal = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, 'handling')
         ? v.handling
         : v;
-      const list = Array.isArray(handlingVal) ? handlingVal : [handlingVal];
-      return list.some(item => String(item || '').toLowerCase().includes('aktiv'));
+      return isActiveHandling(handlingVal);
     })
     .map(([k]) => k);
 }
@@ -201,8 +212,8 @@ function handlingName(p, key){
 }
 
 function findConflictingEntries(entry, list){
-  const baseKeys = new Set(getActiveHandlingKeys(entry));
-  if (!baseKeys.size) return [];
+  const hasActiveHandling = getActiveHandlingKeys(entry).length > 0;
+  if (!hasActiveHandling) return [];
   return (Array.isArray(list) ? list : [])
     .filter(item => {
       if (!item || item === entry) return false;
@@ -211,8 +222,7 @@ function findConflictingEntries(entry, list){
         && (item.nivå ?? null) === (entry?.nivå ?? null)) {
         return false;
       }
-      const otherKeys = getActiveHandlingKeys(item);
-      return otherKeys.some(k => baseKeys.has(k));
+      return getActiveHandlingKeys(item).length > 0;
     });
 }
 

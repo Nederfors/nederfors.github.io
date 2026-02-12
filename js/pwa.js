@@ -146,16 +146,15 @@ if ('serviceWorker' in navigator) {
       }
     });
 
-  const postMessageToController = (message, { timeout = 15000 } = {}) =>
+  const postMessageToWorker = (worker, message, { timeout = 15000 } = {}) =>
     new Promise(resolve => {
       if (typeof MessageChannel === 'undefined') {
         resolve({ ok: false, reason: 'unsupported' });
         return;
       }
 
-      const controller = navigator.serviceWorker.controller;
-      if (!controller) {
-        resolve({ ok: false, reason: 'no-controller' });
+      if (!worker || typeof worker.postMessage !== 'function') {
+        resolve({ ok: false, reason: 'no-worker' });
         return;
       }
 
@@ -182,7 +181,7 @@ if ('serviceWorker' in navigator) {
       };
 
       try {
-        controller.postMessage(message, [channel.port2]);
+        worker.postMessage(message, [channel.port2]);
       } catch (error) {
         finish({
           ok: false,
@@ -191,13 +190,25 @@ if ('serviceWorker' in navigator) {
       }
     });
 
-  const requestCacheRefresh = async () => {
-    const response = await postMessageToController({ type: 'FORCE_REFRESH_CACHE' });
+  const resolveCacheRefreshWorker = registration =>
+    navigator.serviceWorker.controller
+    || registration?.active
+    || registration?.waiting
+    || registration?.installing
+    || null;
+
+  const requestCacheRefresh = async registration => {
+    const worker = resolveCacheRefreshWorker(registration);
+    const response = await postMessageToWorker(
+      worker,
+      { type: 'FORCE_REFRESH_CACHE' },
+      { timeout: 45000 }
+    );
     if (response?.ok) {
       return { status: 'refreshed' };
     }
 
-    if (response?.reason === 'no-controller' || response?.reason === 'unsupported') {
+    if (response?.reason === 'no-worker' || response?.reason === 'unsupported') {
       return { status: 'unavailable' };
     }
 
@@ -208,7 +219,14 @@ if ('serviceWorker' in navigator) {
   const triggerManualUpdate = async options => {
     const { forceReload } = options || {};
     try {
-      const registration = latestRegistration || (await navigator.serviceWorker.getRegistration());
+      let registration = latestRegistration || (await navigator.serviceWorker.getRegistration());
+      if (!registration) {
+        try {
+          registration = await navigator.serviceWorker.ready;
+        } catch {
+          registration = null;
+        }
+      }
       if (!registration) {
         const result = { status: 'missing' };
         if (forceReload) {
@@ -235,7 +253,7 @@ if ('serviceWorker' in navigator) {
 
       const result = { status };
       if (forceReload) {
-        result.cacheRefresh = await requestCacheRefresh();
+        result.cacheRefresh = await requestCacheRefresh(registration);
       }
 
       return result;

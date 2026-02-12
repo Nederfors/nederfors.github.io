@@ -285,6 +285,7 @@
   function syncEntriesWithDb(store, options = {}) {
     const charId = options.charId || (store && store.current) || '';
     const mode = options.mode === 'pin' ? 'pin' : 'update';
+    const includePinned = Boolean(options.includePinned);
     const targetIndexes = Array.isArray(options.targetIndexes)
       ? new Set(options.targetIndexes.map(idx => Number(idx)).filter(n => Number.isInteger(n) && n >= 0))
       : null;
@@ -304,8 +305,13 @@
         return;
       }
       const pinnedDigest = entry.__dbPinnedDigest;
-      const stale = appliedDigest !== dbDigest && (!pinnedDigest || pinnedDigest !== dbDigest);
-      if (!stale) return;
+      const pinnedCurrentVersion = Boolean(pinnedDigest && pinnedDigest === dbDigest);
+      const stale = appliedDigest !== dbDigest && !pinnedCurrentVersion;
+      const shouldForcePinnedUpdate = mode === 'update'
+        && includePinned
+        && pinnedCurrentVersion
+        && appliedDigest !== dbDigest;
+      if (!stale && !shouldForcePinnedUpdate) return;
       if (mode === 'pin') {
         entry.__dbPinnedDigest = dbDigest;
         mutated = true;
