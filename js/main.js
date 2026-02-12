@@ -3648,7 +3648,66 @@ function openManualAdjustPopup() {
   resetBtn?.addEventListener('click', onReset);
 }
 
-function downloadBlob(blob, suggested) {
+function isIosDevice() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const touchMac = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iPad|iPhone|iPod/.test(ua) || touchMac;
+}
+
+function isStandaloneDisplayMode() {
+  try {
+    if (window.matchMedia?.('(display-mode: standalone)').matches) return true;
+  } catch {}
+  return window.navigator?.standalone === true;
+}
+
+function shouldUseShareFallbackForExport() {
+  return isIosDevice() && isStandaloneDisplayMode();
+}
+
+function inferMimeType(fileName, fallback = '') {
+  const name = String(fileName || '').toLowerCase();
+  if (name.endsWith('.json')) return 'application/json';
+  if (name.endsWith('.zip')) return 'application/zip';
+  return fallback || 'application/octet-stream';
+}
+
+async function shareBlobAsFile(blob, suggested) {
+  if (!navigator.share || typeof File === 'undefined') return null;
+  try {
+    const file = new File(
+      [blob],
+      suggested || 'export.dat',
+      { type: inferMimeType(suggested, blob?.type || '') }
+    );
+    if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+      return null;
+    }
+    await navigator.share({
+      files: [file],
+      title: suggested || 'Export'
+    });
+    return true;
+  } catch (err) {
+    if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+      return false;
+    }
+    console.warn('Share export failed', err);
+    return null;
+  }
+}
+
+async function downloadBlob(blob, suggested) {
+  if (shouldUseShareFallbackForExport()) {
+    const shared = await shareBlobAsFile(blob, suggested);
+    if (shared === true) return true;
+    if (shared === false) return false;
+    if (typeof alertPopup === 'function') {
+      await alertPopup('Export stöds inte i den här vyn. Öppna sidan i Safari och exportera där.');
+    }
+    return false;
+  }
   const a = document.createElement('a');
   a.href = URL.createObjectURL(blob);
   a.download = suggested;
@@ -3656,6 +3715,7 @@ function downloadBlob(blob, suggested) {
   a.click();
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  return true;
 }
 
 async function saveJsonFile(jsonText, suggested) {
@@ -3679,7 +3739,7 @@ async function saveJsonFile(jsonText, suggested) {
       }
     }
   }
-  downloadBlob(blob, suggested);
+  await downloadBlob(blob, suggested);
 }
 
 function sanitizeFilename(name) {
@@ -5036,13 +5096,8 @@ async function exportAllCharactersSeparate() {
     const name = (data && data.name) ? data.name : 'rollperson';
     const jsonText = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonText], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${sanitizeFilename(name)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    const ok = await downloadBlob(blob, `${sanitizeFilename(name)}.json`);
+    if (!ok) break;
     await new Promise(r => setTimeout(r, 100));
   }
 }
@@ -5122,7 +5177,7 @@ async function saveBlobFile(blob, suggested, opts = {}) {
       }
     }
   }
-  downloadBlob(blob, suggested);
+  await downloadBlob(blob, suggested);
 }
 
 async function exportActiveFolder() {
@@ -5208,13 +5263,8 @@ async function exportActiveFolderSeparate() {
       const name = (data && data.name) ? data.name : 'rollperson';
       const jsonText = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${sanitizeFilename(name)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      const ok = await downloadBlob(blob, `${sanitizeFilename(name)}.json`);
+      if (!ok) break;
       await new Promise(r => setTimeout(r, 100));
     }
   } catch {
