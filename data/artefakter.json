@@ -2702,9 +2702,9 @@
   {
     "id": "ar84",
     "namn": "Solkross",
-    "beskrivning": "En kort morgonstjärna av blekt stål; skaftet är svept i tunn solförgylld runväv som flammar guld när vapnet höjs.\n\nBland ruinerna av det sista fäste där riddarebeskyddarna från soltemplet på Karvosti drev tillbaka Spindelkonungens arméer hittades Solkross, en kort stålstav inlindad i förgyllda runband. Legenden säger att vapensmeden Savalon Quire smälte ned slagg från Prios första altare och grundade vapnet för att ge de nyinvigda teurgerna mod nog att stå axel mot axel med svärdsbröder. Solkross bars av martyrprästen Efora; hennes sista slag bröt en abominations pansar innan hon föll. Runorna bränner ännu med hennes tro.",
+    "beskrivning": "En kort dagsstjärna av blek stål; skaftet är svept i tunn solförgylld runväv som flammar guld när vapnet höjs.\n\nBland ruinerna av det sista fäste där riddarebeskyddarna från Soltemplet drev tillbaka mörkrets arméer hittades Solkross, en kort stålstav inlindad i förgyllda runband. Legenden säger att vapensmeden Savalon Quire smälte ned slagg från Prios första altare och grundade vapnet för att ge de nyinvigda teurgerna mod nog att stå axel mot axel med svärdsbröder. Solkross bars av martyrprästen Efora; hennes sista slag bröt en abominations pansar innan hon föll. Runorna bränner ännu med hennes tro.",
     "kvalitet": [
-      "Ledat","Helig"
+      "Djupverkande"
     ],
     "taggar": {
       "typ": [
@@ -2724,9 +2724,9 @@
       }
     },
     "nivåer": {
-      "Förmåga 1": "Prios hand; Handling: Fri\nBäraren kan väcka runväven och slå med sin trosstyrka. Under resten av scenen får användaren använda Viljestark istället för Träffsäker vid alla närstridsanfall. Korruption: 1T4",
+      "Förmåga 1": "Prios hand; Handling: Speciell\nBäraren kan väcka runväven och slå med sin trosstyrka. Under resten av scenen får användaren använda Viljestark istället för Träffsäker vid alla närstridsanfall och vapnet får kvaliteten Heligt. Villkor: Fri handling.",
       "Förmåga 2": "Solsteg; Handling: Aktiv\nBäraren blottar runorna och förflyttar sig blixtsnabbt till en fiende inom en förflyttning utan att utlösa frislag. Det första närstridsanfallet efter förflyttningen görs med Övertag; om slaget dödar målet försvinner 1T4 temporär korruption från bäraren. Korruption: 1T6.",
-      "Förmåga 3": "Strålspets; Handling: Fri\nVapnets huvud laddas med solgnister. Nästa träff som faktiskt ger skada adderar 1T6 extra fysisk skada och gör såret omöjligt att läka under scenen. Korruption: 1T6."
+      "Förmåga 3": "Strålspets; Handling: Speciell\nVapnets huvud laddas med solgnister. Nästa träff som faktiskt ger skada adderar 1T6 extra skada och gör såret omöjligt att läka under scenen. Villkor: Fri handling. Korruption: 1T6."
     },
     "stat": {
       "skada": "1T8",
@@ -3713,6 +3713,391 @@
       "skilling": 0,
       "örtegar": 0
     }
+  },
+  {
+    "id": "ar112",
+    "namn": "Skinnvandrarens Hölje",
+    "beskrivning": "Ett sjok av garvad hud från en hamnskiftare, segt som senor och ständigt fuktigt av en gulaktig olja. När den dras över axlarna smälter den samman med bärarens eget kött, och lederna börjar knaka och sträckas ut i groteska proportioner.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Aktiv"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Ledlös Attack; Handling: Aktiv\nBäraren kan med ett lyckat “Kvick” för en scen låta sina lemmar \"lossna\" och töjas ut. Detta ger alla närstridsattacker kvaliteten Långt. Om bäraren redan har lång räckvidd blir den Väldigt lång som trumfar kvaliteten \"lång\" vid frislag. Korruption: 1T4.",
+      "Förmåga 2": "Köttbarriär; Handling: Reaktiv\nNär bäraren träffas av skada från vapen utan egg eller från fallskada kan denne låta sin kropp deformeras och svikta onaturligt, som en säck med våt lera. Skadan halveras (avrunda uppåt) efter att bepansring dragits av. Korruption: 1T4."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 1.5
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar113",
+    "namn": "Soltörst",
+    "beskrivning": "En grovhuggen dolk av vulkaniskt glas, het vid beröring och pulserande av en inre glöd. Den hittades i askan av ett nedbränt soltempel där prästerna offrade sig själva till elden. Klingan kräver inte bara blod utan livsvärme, och lämnar sina offer som kalla, grå skal.",
+    "kvalitet": [
+      "Kort"
+    ],
+    "taggar": {
+      "typ": [
+        "Artefakt",
+        "Vapen"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Passiv"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ],
+        "Förmåga 3": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Eldfödd; Handling: Passiv\nMed ett lyckat “Listig” kan dolkens eld tändas. Alla skador som dolken gör under resten av scenen är Elementär (eld). Korruption: 1T6.",
+      "Förmåga 2": "Asksvepet; Handling: Aktiv\nMed ett lyckat slag på [Listig←Försvar] kan bäraren skära ett snitt i luften och en kvast av svart eld slungas mot en fiende inom två förflyttningar och gör 1T8 elementär skada. Om målet bär metallrustning hettas den upp och gör ytterligare 1T4 skada i början av sin nästa runda. Korruption: 1T4.",
+      "Förmåga 3": "Levande Bål; Handling: Reaktiv\nNär bäraren utdelar en kritisk skada (perfekt lyckat) kan hen med ett lyckat slag på [Listig] antända offret inifrån. Offret tar 1T4 mystisk skada varje runda. Elden brinner kraftigt och mystiskt och är omöjlig att släcka, utan offret kommer att brinna tills bara aska finns kvar. Korruption: 1T4."
+    },
+    "stat": {
+      "skada": "1T6",
+      "vikt": 1.0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar114",
+    "namn": "Jordbunden Krona",
+    "beskrivning": "En sliten huvudbonad flätad av gräs från de förlorade trädgårdarna i Symbaroum. Den ser anspråkslös ut, men den som bär den utstrålar en auktoritet som får både vänner och fiender att tveka, som om själva jorden kräver deras lydnad.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Fri"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ],
+        "Förmåga 3": [
+          "Passiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Den Utvaldes Röst; Handling: Fri\nEn gång per äventyr kan bäraren med ett lyckat slag mot [Övertygande] vråla ett kommando. Alla allierade som hör det kommer lyckas automatiskt med sitt nästa framgångsslag. Korruption: 1T4.",
+      "Förmåga 2": "Ödets Gunst; Handling: Reaktiv\nNär bäraren misslyckas med ett slag mot Övertygande kan hatten tvinga ödet att ändra sig. Slå om slaget. Korruption: 1T4.",
+      "Förmåga 3": "Obeveklig vilja; Handling: Passiv\nSvaga viljor böjer sig. Varelser med lägre Viljestark än bärarens Övertygande tvekar att attackera denne först i en strid (måste klara ett Viljestark-test eller välja ett annat mål)."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.2
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar115",
+    "namn": "Sorgmanteln",
+    "beskrivning": "Ett väldigt tveeggat svärd smitt i en metall mörkare än natten. Klingan tycks 'svettas' en svart, trögflytande olja som doftar av gammal sorg. Vapnet är tungt av död och längtar efter att släcka allt ljus.",
+    "kvalitet": [
+      "Massivt"
+    ],
+    "taggar": {
+      "typ": [
+        "Artefakt",
+        "Vapen"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Passiv"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ],
+        "Förmåga 3": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Fördärvaren; Handling: Passiv\nSvärdet gör alltid maxskada på alla livlösa objekt och strukturer. Korruption: Ingen.",
+      "Förmåga 2": "Avgrundshugget; Handling: Aktiv\nBäraren kan med ett lyckat [Stark] svinga svärdet i en vid båge och sända iväg en skära av vakuum och mörker mot en fiende inom synhåll. Skäran gör 1T10 Mystisk Skada. Korruption: 1T4.",
+      "Förmåga 3": "Dödens Parad; Handling: Reaktiv\nOm bäraren lyckas parera en attack med ett perfekt slag kan hen slå ett slag mot [Stark] för att splittra angriparens vapen. Om bäraren angrips av ett naturligt Vapen så faller istället angriparen ner på marken. Korruption: 1."
+    },
+    "stat": {
+      "skada": "1T12",
+      "vikt": 2.0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar116",
+    "namn": "Livsparasitens Frö",
+    "beskrivning": "En snidad benask fylld med skrynkliga, mörka frön. De ser döda ut, men pulserar svagt mot handflatan. Att svälja ett är att bjuda in en våldsam livskraft som helar köttet men som sedan kräver sin tribut i blod och smärta.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Aktiv"
+        ],
+        "Förmåga 2": [
+          "Speciell"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Parasitisk Läkning; Handling: Aktiv\nBäraren eller en allierad sväljer ett frö. Detta återställer omedelbart all förlorad Tålighet (upp till max) och stoppar blödningar/gifter. Därefter kommer den som åt fröet ta 1T4 i intern skada varje runda tills en med “Medicus” lyckats skära ut parasiten igen, vilket vid misslyckat försök orsakar 1T12 skada. Korruption: 1T4 för både användaren av artefakten och den som äter fröet.",
+      "Förmåga 2": "Överlevnad; Handling: Speciell\nEn svald böna kan helt mätta och släcka bärarens hunger och törst i en vecka, men under den tiden får hen nackdelen “Mardrömmar” och drabbas av 1 permanent korruption."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.2
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar117",
+    "namn": "Blodslinsen",
+    "beskrivning": "En slipad rubin infattad i blekt ben, avsedd att bäras över ena ögat. Genom stenen framträder världen i gråskala, men allt levande lyser med en pulserande röd aura som avslöjar både styrka och svaghet.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Fri"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Dödlig Insikt; Handling: Fri\nBäraren kan med ett lyckat slag mot [Listig] se fiendens nuvarande Tålighet. Korruption: 1.",
+      "Förmåga 2": "Blottad Strupe; Handling: Aktiv\nBäraren kan med ett lyckat slag mot [Listig]  analysera fiendens försvar. Nästa aktiva attack mot målet får +1T8 skada och träffar automatiskt. Korruption: 1T4."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.1
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar118",
+    "namn": "Reflexögat",
+    "beskrivning": "En amulett formad som ett öga med en iris av rött glas, där svarta stråk virvlar långsamt. Den bärs mot pannan eller i en tom ögonhåla. För bäraren rör sig världen ryckigt, och fiendens avsikter avslöjas ögonblicket innan de blir handling.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Reaktiv"
+        ],
+        "Förmåga 2": [
+          "Reaktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Reflekterad Teknik; Handling: Reaktiv\nNär bäraren ser en mystisk kraft, förmåga eller särdrag användas, kan denne med ett lyckat [Vaksam] \"spegla\" den. Bäraren kan använda samma förmåga under scenen på novisnivå om denne har rätt vapen/förutsättningar. Korruption: 1T4 + förmågans egen kostnad.",
+      "Förmåga 2": "Förutsägelse; Handling: Reaktiv\nBäraren kan aktivera artefakten med ett lyckat slag mot [Vaksam] och därefter se fiendens attack innan den sker. Under resten av scenen får bäraren två försök till att försvara sig mot den fienden. Först med ett [Vaksam←Träffsäker] och sen ett som slås som vanligt. Korruption: 1T4"
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.1
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar119",
+    "namn": "Besttungan",
+    "beskrivning": "Ett vidrigt vapen, mer organ än smide. Klingan är täckt av vita fjäll som reser sig när magi är i närheten, och den saknar egg – istället sliter den sönder sina offer. Den dreglar frätande galla och tycks ha en egen, hungrig vilja.",
+    "kvalitet": [
+      "Massivt"
+    ],
+    "taggar": {
+      "typ": [
+        "Artefakt",
+        "Vapen"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Reaktiv"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ],
+        "Förmåga 3": [
+          "Passiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Äta Magi; Handling: Reaktiv\nOm bäraren träffas av en mystisk kraft eller besvärjelse, kan svärdet försöka \"äta\" den. Slå [Viljestark←Viljestark]. Vid lyckat negeras effekten och bäraren läker 1T4 Tålighet. Korruption: 1T4.",
+      "Förmåga 2": "Sammansmältning; Handling: Aktiv\nSvärdet kan med ett lyckat [Viljestark] vira sitt handtag (som ser ut som bandage) runt bärarens arm. Detta ger +1T4 i naturligt pansar under scenen men bäraren kan inte släppa vapnet förens alla närvarande fiender är döda eller utom synhåll. Korruption: 1T4.",
+      "Förmåga 3": "Vildsint Hunger; Handling: Passiv\nOm målet har Tillfällig Korruption så river svärdet hårdare och målet tar +1T4 extra skada, men renar också lika mycket korruption då svärdet slukar det. Korruption: ingen."
+    },
+    "stat": {
+      "skada": "1T12",
+      "vikt": 2.0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar120",
+    "namn": "Kättarurnan",
+    "beskrivning": "En tung urna av stengods, fylld med benmjöl från tusen brända kättare. Stoftet är inte dött; det virvlar och formar sig efter bärarens vilja, ivrigt att kväva och krossa de levande på sin mästares order.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Passiv"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ],
+        "Förmåga 3": [
+          "Speciell"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Benvallen; Handling: Passiv\nBenmjölet svävar ständigt runt bäraren och bildar en reaktiv sköld när mästaren blir anfallen som ger +1T4 i bepansring.",
+      "Förmåga 2": "Gravgreppet; Handling: Aktiv\nMed ett lyckat [Viljestark←Stark] väller Mjölet fram och omsluter en fiende. Fienden är oförmögen att agera aktivt eller reaktivt tills mästaren av urnan misslyckas med ett [Viljestark←Stark]. Alla allierade till mästaren har dessutom övertag mot den fasthållne fienden. Mästaren själv kan inte heller agera med mer än att hålla fast, vilket lämnar denne blottad för fiender som får övertag mot mästaren. Korruption: 1T4",
+      "Förmåga 3": "Krossa; Handling: Speciell\nBäraren kan skaffa det monstruösa särdraget Naturligt Vapen då stoftet i urnan kan ta formen av nävar och klor. Bäraren får då använda [Viljestark] för varje anfall. Denna förmåga går att kombinera med Korruption: 1 permanent per nivå av Naturligt Vapen"
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 3.0
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar121",
+    "namn": "Skuggskäran",
+    "beskrivning": "En sabel som inte verkar reflektera ljus, utan snarare absorberar det. Den är smidd av en skugga fångad under en blodmåne. I strid tycks klingan vara överallt samtidigt, och bäraren rör sig som en flimrande vålnad.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt",
+        "Vapen"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Aktiv"
+        ],
+        "Förmåga 2": [
+          "Fri"
+        ],
+        "Förmåga 3": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Månens Bana; Handling: Aktiv\nBäraren kan anfalla fiender inom synhåll på distans som om de befann sig inom närstrid. Korruption: 1T4.",
+      "Förmåga 2": "Skuggsprång; Handling: Fri\nBäraren kan med ett lyckat [Kvick] aktivera månskäran för att öka på sin förflyttning. I sammanhang där en mer exakt angivelse är relevant förflyttar sig varelsen 12 meter per handling. Och i anslutning till regeln om Flykt & jakt ger förmågan +3 på ett slag i Kvick. Korruption: 1.",
+      "Förmåga 3": "Det Slutgiltiga Mörkret; Handling: Aktiv\nBäraren låter svärdets skugga uppsluka sig. För en scen ökar bärarens Kvick med +3 och alla attacker gör +1T6 skada. Efter scenen kollapsar bäraren och dess tålighet går ner till 0 av utmattning och ett dödsslag måste slås omedelbart. Korruption: 1T8."
+    },
+    "stat": {
+      "skada": "1T10",
+      "vikt": 1.5
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "ar122",
+    "namn": "Hungermasken",
+    "beskrivning": "En dödskallemask av gulnat ben, funnen i en arena där gladiatorer offrades till mörkret. Den har ett evigt, hungrigt grin och ibland hörs tänderna claappra av sig själva. Den skänker bäraren ursinnig styrka men dränker förståndet i blodtörst.",
+    "kvalitet": [],
+    "taggar": {
+      "typ": [
+        "Artefakt"
+      ],
+      "handling": {
+        "Förmåga 1": [
+          "Fri"
+        ],
+        "Förmåga 2": [
+          "Aktiv"
+        ]
+      }
+    },
+    "nivåer": {
+      "Förmåga 1": "Besatt Styrka; Handling: Fri\nBäraren sätter på sig masken. Styrkan ökar onaturligt och alla anfall gör 1T4 extra i skada samtidigt som bäraren har +3 i Stark. Men bäraren tappar även förmågan att tala eller planera, driven av ren mordlust och kan bara använda aktiva anfall. Bäraren kommer främst anfalla fiender, men kommer också anfalla allierade om inga fiender finns på plats. För att ta av sig masken krävs ett slag på en T20 där utfallet måste vara högre än användarens totala korruption. Korruption: 1T4 per runda som masken bärs",
+      "Förmåga 2": "Dödsstråle; Handling: Aktiv\nBäraren kan med ett lyckat [Stark] samla korruption i munnen och spy ut en stråle av svart energi. Alla som befinner sig framför rollpersonen i en linje tar lika mycket skada som användaren har total korruption efter att denna förmågas korruption ansamlats. Attacken är så kraftfull att bäraren själv kastas bakåt en förflyttning och måste klara ett slag mot [Stark]  för att inte falla omkull. Korruption: 1T6."
+    },
+    "stat": {
+      "skada": "",
+      "vikt": 0.5
+    },
+    "grundpris": {
+      "daler": 0,
+      "skilling": 0,
+      "örtegar": 0
+    }
   }
-
 ]
