@@ -983,7 +983,11 @@ function initIndex() {
     invalidateFilteredResults();
     if (term) {
       const norm = searchNormalize(term.toLowerCase());
-      const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === norm);
+      const aliasTarget = typeof window.resolveSearchAliasTarget === 'function'
+        ? window.resolveSearchAliasTarget(term)
+        : '';
+      const targetNorm = aliasTarget || norm;
+      const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === targetNorm);
       const cat = match?.taggar?.typ?.[0];
       if (cat) openCatsOnce.add(cat);
       if (window.storeHelper?.addRecentSearch) {
