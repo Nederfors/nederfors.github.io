@@ -1718,18 +1718,18 @@
           "skadetyp": "Ingen"
         },
         "Gesäll": {
-          "handling": "Reaktiv",
+          "handling": "Fri",
           "skadetyp": "Ingen"
         },
         "Mästare": {
           "handling": "Reaktiv",
-          "skadetyp": "Mystisk"
+          "skadetyp": "Yttre fysisk"
         }
       }
     },
     "nivåer": {
       "Novis": "Reaktiv. Runtatueringen ger 1T4 i extra Bepansring mot en träffande attack – närhelst runkrigaren så önskar. Rustningseffekten ger nämligen en temporär Korruption per användande. Runkrigaren måste bestämma sig för att aktivera tatueringen samtidigt som eventuellt annat skydd slås. Dessutom skyddar tecknen bäraren mot väder och vind som om de var rejäla kläder.",
-      "Gesäll": "Reaktiv. Runtatueringen dras till skador på bäraren kropp och glöder läkande kring såren. Regenereringen läker ett Tålighet varje runda; varje läkt Tålighet genom tatueringen ger också en temporär Korruption. Den tatuerade krigaren kan avbryta regenereringen närhelst denne så önskar.",
+      "Gesäll": "Fri. Runtatueringen dras till skador på bäraren kropp och glöder läkande kring såren. Rollpersonen kan som fri handling låta tatueringen läka Tålighet; men varje läkt Tålighet genom tatueringen ger också en temporär Korruption.",
       "Mästare": "Reaktiv. Runtatueringen ger krigarens attacker extra kraft. När krigaren träffar en fiende och så önskar flyter tatueringen glödande ut över vapnet och ger offret 1T4 extra i skada, för samma mängd temporär Korruption till den tatuerade krigaren."
     }
   },
