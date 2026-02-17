@@ -2982,5 +2982,43 @@
       "Gesäll": "Handling: Aktiv. Sången gör händerna tunga och naglarna skarpa som flinta. Med ett lyckat Viljestark får mystikern särdraget Naturligt vapen på novisnivå (skada 1T6). Om mystikern redan har naturliga vapen ökar skadetärningen ett steg (exempelvis från 1T6 till 1T8). Effekten aktiveras samtidigt som Pansar-effekten från novisnivån.",
       "Mästare": "Handling: Aktiv. Mystikern väcker trollens legendariska läkekraft i sitt eget blod. Med ett lyckat Viljestark får mystikern särdraget Regeneration på novisnivå (återfår 1T4 Tålighet per runda). Om mystikern redan har regeneration ökar effekttärningen ett steg (exempelvis från 1T4 till 1T6). Denna nivå aktiverar samtidigt effekterna från både novis- och gesällnivå."
     }
+  },
+   {
+    "namn": "Pestvind",
+    "beskrivning": "Material: En torkad giftkörtel från ett reptildjur\nMystikern kan frammana och dirigera en ström av kondenserad miasma. Denna onaturliga vindpust förgiftar inte bara sitt första offer, utan kan styras att ringla vidare och smitta ner hela grupper av fiender med sina kvävande ångor.",
+    "taggar": {
+      "typ": [
+        "Mystisk kraft"
+      ],
+      "ark_trad": [
+        "Svartkonst",
+        "Häxkonst"
+      ],
+      "test": [
+        "Viljestark",
+        "Stark"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Gift"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Gift"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Gift"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Mystikern manar fram en koncentrerad pust av gulgrön gas som sveper mot ett mål. Om mystikern lyckas med [Viljestark←Stark] andas offret in giftet och tar 1T4 i giftskada varje runda i 1T4 rundor. Om slaget misslyckas tar målet endast 1T4 skada omedelbart när gasen passerar, utan kvardröjande effekt.",
+      "Gesäll": "Handling: Aktiv. Mystikern kan nu styra vinddraget vidare. Om mystikern lyckas med [Viljestark←Stark] mot det första målet, drabbas detta av 1T4 skada i 1T4 rundor. Därefter får mystikern omedelbart försöka leda gasströmmen mot en ny fiende inom avstånd för en förflyttning. Detta upprepas, där gasen hoppar från offer till offer, tills mystikern misslyckas med ett test eller inga nya mål finns inom räckvidd.",
+      "Mästare": "Handling: Aktiv. Gasen blir tjockare, mer frätande och svårstoppad. Skadan ökar till 1T6 per runda i 1T6 rundor för alla drabbade. Om slaget misslyckas tar målet endast 1T6 skada omedelbart när gasen passerar, utan kvardröjande effekt."
+    },
+    "id": "mystiskkr86"
   }
+
 ]
