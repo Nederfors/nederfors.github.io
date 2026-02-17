@@ -318,7 +318,7 @@
   {
     "id": "v15",
     "namn": "Bucklare",
-    "beskrivning": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och pikenerare. Den fästs på underarmen så att handen kan användas till annat, men är för nätt för att användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
+    "beskrivning": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och duellanter. Den fästs på underarmen och ger +1 försvar, samtidigt som handen kan användas till annat, men är för nätt för att användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
     "taggar": {
       "typ": [
         "Sköld"
