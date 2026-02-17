@@ -29,7 +29,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Förflyttning. Rollpersonen får slå mot Kvick för att undvika att dra på sig frislag från fiender i närstrid. Slaget måste slås för varje fiende som rollpersonen passerar. Det gäller både vid passage av fiender eller för att dra sig ur en närstrid med en fiende. Om slaget misslyckas kan spelaren välja att antingen bli kvar eller att förflytta sig i alla fall, och då ådra sig ett frislag på vanligt vis.",
+      "Novis": "Handling: Förflyttning. Rollpersonen kan slå mot Kvick för att undvika frislag vid rörelse i närstrid. Detta kan användas för att passera fiender, positionera sig för ett övertag eller dra sig ur en strid. Ett slag krävs för varje fiende som passeras eller lämnas. Vid misslyckande väljer spelaren att antingen stanna kvar eller genomföra förflyttningen och då ta ett frislag.",
       "Gesäll": "Handling: Fri. Rollpersonen studsar spänstigt upp på fötter med ett lyckat Kvick direkt den har fällts eller ramlat omkull, detta som en fri handling. Om slaget misslyckas måste rollpersonen spendera en förflyttning på att ställa sig upp.",
       "Mästare": "Handling: Reaktiv. Rollpersonen kan utnyttja sina fiender som sköldar. I strid mot fler än en fiende kan rollpersonen en gång per runda använda en fiende som sköld och låta denne ta en träff istället för rollpersonen. Fienden i fråga får inte försvara sig mot sin allierades attack, men mästerakrobaten måste lyckas med ett Kvick för att fienden ska överta träffen."
     }
