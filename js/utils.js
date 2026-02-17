@@ -414,6 +414,26 @@
     return String(val).split(',').map(t=>t.trim()).filter(Boolean);
   }
 
+  const TWO_HANDED_WEAPON_TYPES = Object.freeze(['Långa vapen', 'Tunga vapen']);
+  const normalizeTypeNameForMatch = value => String(value || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '');
+  const TWO_HANDED_WEAPON_TYPE_KEYS = new Set(
+    TWO_HANDED_WEAPON_TYPES.map(normalizeTypeNameForMatch)
+  );
+
+  function isTwoHandedWeaponType(typeName) {
+    if (!typeName) return false;
+    return TWO_HANDED_WEAPON_TYPE_KEYS.has(normalizeTypeNameForMatch(typeName));
+  }
+
+  function isTwoHandedWeaponEntry(entry) {
+    const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+    return types.some(isTwoHandedWeaponType);
+  }
+
   function enforceArmorQualityExclusion(entry, qualities) {
     const types = entry?.taggar?.typ || [];
     const isArmor = Array.isArray(types) && types.includes('Rustning');
@@ -1017,6 +1037,9 @@
   window.sortByType = sortByType;
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
+  window.TWO_HANDED_WEAPON_TYPES = TWO_HANDED_WEAPON_TYPES;
+  window.isTwoHandedWeaponType = isTwoHandedWeaponType;
+  window.isTwoHandedWeaponEntry = isTwoHandedWeaponEntry;
   Object.defineProperty(window, 'enforceArmorQualityExclusion', {
     value: enforceArmorQualityExclusion,
     writable: false,

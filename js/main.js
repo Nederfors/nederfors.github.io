@@ -3341,6 +3341,17 @@ function openDefenseCalcPopup() {
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[ch]);
   const isBalancedQuality = (q) => String(q || '').toLowerCase().startsWith('balanser');
+  const isArmMountedShieldQuality = q => {
+    const txt = String(q || '').toLowerCase();
+    return txt.startsWith('armf\u00e4st') || txt.startsWith('armfast') || txt.startsWith('smidig');
+  };
+  const isTwoHandedWeaponType = typeName => {
+    if (typeof window.isTwoHandedWeaponType === 'function') {
+      return window.isTwoHandedWeaponType(typeName);
+    }
+    const txt = String(typeName || '').toLowerCase();
+    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tunga vapen';
+  };
 
   const inv = storeHelper.getInventory(store) || [];
   const flat = typeof invUtil?.flattenInventoryWithPath === 'function'
@@ -3420,14 +3431,73 @@ function openDefenseCalcPopup() {
       if (quals.some(isBalancedQuality)) chips.push('<span class="defense-chip balanced">Balanserat</span>');
       if (quals.includes('L\u00e5ngt')) chips.push('<span class="defense-chip long">Långt</span>');
       if (types.includes('Sköld')) chips.push('<span class="defense-chip shield">Sköld</span>');
+      const isArmMountedShield = types.includes('Sköld') && quals.some(isArmMountedShieldQuality);
+      const isTwoHandedWeapon = !types.includes('Sköld') && types.some(isTwoHandedWeaponType);
       const metaHtml = chips.length ? `<span class="defense-item-meta">${chips.join('')}</span>` : '';
       const checked = selectedWeaponPaths.has(value) ? ' checked' : '';
-      weaponMeta.set(value, { path: obj.path, id: obj.row.id, name: obj.row.name || entry.namn || '' });
+      weaponMeta.set(value, {
+        path: obj.path,
+        id: obj.row.id,
+        name: obj.row.name || entry.namn || '',
+        isArmMountedShield,
+        isTwoHandedWeapon
+      });
       return `<label class="price-item defense-item"><span>${escapeText(name)}${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(value)}"${checked}></label>`;
     })
     .filter(Boolean)
     .join('');
   weaponList.innerHTML = weaponHtml;
+  const getWeaponCheckboxes = () => [...weaponList.querySelectorAll('input[type="checkbox"][data-path]')];
+  const isArmMountedShieldPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isArmMountedShield);
+  const isTwoHandedWeaponPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isTwoHandedWeapon);
+  const sanitizeWeaponPathSelection = (paths, preferredPath = '') => {
+    const unique = [];
+    const seen = new Set();
+    (Array.isArray(paths) ? paths : []).forEach(pathStr => {
+      if (!pathStr || seen.has(pathStr) || !weaponMeta.has(pathStr)) return;
+      seen.add(pathStr);
+      unique.push(pathStr);
+    });
+    const hasArmMountedShield = unique.some(isArmMountedShieldPath);
+    const hasTwoHandedWeapon = unique.some(isTwoHandedWeaponPath);
+    if (!hasArmMountedShield || !hasTwoHandedWeapon) return unique;
+    if (isTwoHandedWeaponPath(preferredPath)) {
+      return unique.filter(pathStr => !isArmMountedShieldPath(pathStr));
+    }
+    return unique.filter(pathStr => !isTwoHandedWeaponPath(pathStr));
+  };
+  const syncWeaponSelectionUi = (preferredPath = '') => {
+    const checkboxes = getWeaponCheckboxes();
+    const selectedPaths = sanitizeWeaponPathSelection(
+      checkboxes.filter(ch => ch.checked).map(ch => ch.dataset.path || ''),
+      preferredPath
+    );
+    const selectedSet = new Set(selectedPaths);
+    const hasArmMountedShield = selectedPaths.some(isArmMountedShieldPath);
+    const hasTwoHandedWeapon = selectedPaths.some(isTwoHandedWeaponPath);
+    checkboxes.forEach(ch => {
+      const pathStr = ch.dataset.path || '';
+      const isSelected = selectedSet.has(pathStr);
+      ch.checked = isSelected;
+      const disable = !isSelected && (
+        (hasArmMountedShield && isTwoHandedWeaponPath(pathStr)) ||
+        (hasTwoHandedWeapon && isArmMountedShieldPath(pathStr))
+      );
+      ch.disabled = disable;
+      if (disable) {
+        ch.title = 'Kan inte kombineras med Armfäst/Tvåhandsvapen.';
+      } else {
+        ch.removeAttribute('title');
+      }
+    });
+    return selectedPaths;
+  };
+  syncWeaponSelectionUi();
+  getWeaponCheckboxes().forEach(ch => {
+    ch.addEventListener('change', () => {
+      syncWeaponSelectionUi(ch.dataset.path || '');
+    });
+  });
   const weaponOptions = ['<option value="">Inget vapen</option>'].concat(
     [...weaponMeta.entries()].map(([pathStr, meta]) => {
       const label = escapeText(meta.name || meta.id || pathStr || 'Vapen');
@@ -3474,9 +3544,8 @@ function openDefenseCalcPopup() {
     const dancingEnabled = hasDancingAbility;
     const danceWeaponVal = dancingEnabled ? danceWeaponSel.value : '';
     const danceWeaponRef = dancingEnabled ? (weaponMeta.get(danceWeaponVal) || null) : null;
-    const selectedWeaponsNext = [...weaponList.querySelectorAll('input[type="checkbox"][data-path]:checked')]
-      .map(ch => ch.dataset.path)
-      .filter(Boolean)
+    const selectedWeaponPathsNext = syncWeaponSelectionUi();
+    const selectedWeaponsNext = selectedWeaponPathsNext
       .map(pathStr => weaponMeta.get(pathStr))
       .filter(Boolean);
     const nextSetup = {

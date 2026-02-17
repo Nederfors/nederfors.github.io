@@ -8,6 +8,13 @@
     const txt = String(q || '').toLowerCase();
     return txt.startsWith('armf\u00e4st') || txt.startsWith('armfast') || txt.startsWith('smidig');
   };
+  const isTwoHandedWeaponType = typeName => {
+    if (typeof window.isTwoHandedWeaponType === 'function') {
+      return window.isTwoHandedWeaponType(typeName);
+    }
+    const txt = String(typeName || '').toLowerCase();
+    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tunga vapen';
+  };
 
   function flattenInventoryWithPath(arr, prefix = []) {
     return (Array.isArray(arr) ? arr : []).reduce((acc, row, idx) => {
@@ -146,8 +153,9 @@
       if (!types.includes('Vapen') && !types.includes('Sköld')) return count;
       if (types.includes('Sköld')) hasShield = true;
 
-      // Armfäst sköld kan inte användas tillsammans med tvåhandsvapen.
-      if (hasArmMountedShield && !types.includes('Sköld') && types.includes('Tunga vapen')) {
+      // Armfäst sköld kan inte användas tillsammans med tvåhandsvapen
+      // (här: Långa vapen och Tunga vapen).
+      if (hasArmMountedShield && !types.includes('Sköld') && types.some(isTwoHandedWeaponType)) {
         return count;
       }
 
