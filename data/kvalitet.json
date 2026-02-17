@@ -49,17 +49,28 @@
     "effekt": "+1 på anfallsslag."
   },
   {
-    "id": "kv5",
+    "id": "kv5_a",
     "namn": "Smidigt",
-    "beskrivning": "Rustningen eller skölden är ovanligt smidig och dess begränsning är lägre. En smidig lätt rustning har ingen begränsning, medan en smidig medeltung rustning får (−1) och en tung rustning har begränsning −2. En sköld som är smidig kan bäras på armen, redo att parera med, samtidigt som båda händerna används till annat. En smidig sköld är dock för nätt för att användas till sköldbaserade förmågor och kan inte heller ha fler positiva kvaliteter.",
+    "beskrivning": "Rustningen är ovanligt smidig och dess begränsning är lägre. En smidig lätt rustning har ingen begränsning, medan en smidig medeltung rustning får (−1) och en tung rustning har begränsning −2.",
     "taggar": {
       "typ": [
         "Kvalitet",
-        "Sköldkvalitet",
         "Rustningskvalitet"
       ]
     },
-    "effekt": "Minskad begränsning; smidig sköld kan bäras på armen utan begränsingar för vapen. Skölden kan ej användas för sköldbaserade förmågor."
+    "effekt": "Minskad begränsning (Lätt: 0, Medel: −1, Tung: −2)."
+  },
+  {
+    "id": "kv5_b",
+    "namn": "Armfäst",
+    "beskrivning": "Skölden fästs på underarmen så att handen lämnas fri till annat, men dess placering omöjliggör hantering av tvåhandsvapen. En armfäst sköld är dessutom för nätt för att användas till sköldbaserade förmågor och kan inte heller ha fler positiva kvaliteter.",
+    "taggar": {
+      "typ": [
+        "Kvalitet",
+        "Sköldkvalitet"
+      ]
+    },
+    "effekt": "Skölden ockuperar inte handen, men tillåter ej användning av tvåhandsvapen. Kan ej användas för sköldbaserade förmågor eller kombineras med fler positiva kvaliteter."
   },
   {
     "id": "kv6",
