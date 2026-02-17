@@ -63,7 +63,7 @@
   {
     "id": "kv5_b",
     "namn": "Armfäst",
-    "beskrivning": "Skölden fästs på underarmen så att handen lämnas fri till annat, men dess placering omöjliggör hantering av både långa och tunga vapen. En armfäst sköld är dessutom för nätt för att användas till sköldbaserade förmågor och kan inte heller ha fler positiva kvaliteter.",
+    "beskrivning": "Skölden fästs på underarmen så att handen lämnas fri till annat, men dess placering omöjliggör hantering av både långa och tunga vapen. En armfäst sköld är dessutom för nätt för att användas till sköldbaserade förmågor och kan därför inte heller ha andra positiva kvaliteter.",
     "taggar": {
       "typ": [
         "Kvalitet",
