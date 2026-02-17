@@ -1211,8 +1211,10 @@ function initCharacter() {
     return base
       .filter(p => !isInv(p))
       .filter(p => {
+        const meta = typeof window.ensureEntryMeta === 'function' ? window.ensureEntryMeta(p) : null;
         const levelText = Object.values(p.nivåer || {}).join(' ');
-        const text = searchNormalize(`${p.namn} ${(p.beskrivning || '')} ${levelText}`.toLowerCase());
+        const text = meta?.normText
+          || searchNormalize(`${p.namn} ${(p.beskrivning || '')} ${levelText}`.toLowerCase());
         const hasTerms = terms.length > 0;
         const txt = hasTerms && (
           union ? terms.some(q => text.includes(q))
