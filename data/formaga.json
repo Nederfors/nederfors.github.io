@@ -752,7 +752,7 @@
   {
     "id": "form23",
     "namn": "Sköldkamp",
-    "beskrivning": "Rollpersonen är tränad i att utnyttja sin sköld på bästa sätt, och även i att slåss med en sköld på ett aktivt sätt. Bakom sköldens skydd kan rollpersonen generera stor kraft till sina hugg och med skölden kan anfall göras. Kombinationen är effektiv och en av anledningarna till att det är så vanligt med just denna beväpning bland både barbarer och ambriska krigare. Den så kallade bucklaren, den lätta sköld som vanligen nyttjas av bågskyttar, är för lätt för att kunna användas tillsammans med förmågan Sköldkamp. För sköldkampen måste krigaren bära rejäl sköld i trä eller stål, med vilken erforderlig kraft kan genereras.",
+    "beskrivning": "Rollpersonen är tränad i att utnyttja sin sköld på bästa sätt, och även i att slåss med en sköld på ett aktivt sätt. Bakom sköldens skydd kan rollpersonen generera stor kraft till sina hugg och med skölden kan anfall göras. Kombinationen är effektiv och en av anledningarna till att det är så vanligt med just denna beväpning bland både barbarer och ambriska krigare. Sköldar med kvaliteten 'Armfäst', som vanligen nyttjas av bågskyttar, är för lätt för att kunna användas tillsammans med förmågan Sköldkamp. För sköldkampen måste krigaren bära rejäl sköld i trä eller stål, med vilken erforderlig kraft kan genereras.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -2939,7 +2939,7 @@
   {
     "id": "form87",
     "namn": "Sköldvärn",
-    "beskrivning": "Där andra ser skölden som ett hinder för rörlighet ser denna krigare en flyttbar fästningsmur. Genom att vinkla skölden, ta spjärn mot marken och möta kraft med kraft kan krigaren låta plåt och trä ta smällen istället för rustning och kött. Tekniken är vanlig bland tempelväktare och tungt infanteri som förväntas hålla linjen till varje pris. Förmågan kräver en sköld (ej bucklare).",
+    "beskrivning": "Där andra ser skölden som ett hinder för rörlighet ser denna krigare en flyttbar fästningsmur. Genom att vinkla skölden, ta spjärn mot marken och möta kraft med kraft kan krigaren låta plåt och trä ta smällen istället för rustning och kött. Tekniken är vanlig bland tempelväktare och tungt infanteri som förväntas hålla linjen till varje pris. Förmågan kräver en sköld utan kvaliteten 'Armfäst' för att fungera.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -2972,7 +2972,7 @@
    {
     "id": "form88",
     "namn": "Sköldföring",
-    "beskrivning": "Att bara blockera är passivt; Sköldföring handlar om att använda skölden som ett precisionsinstrument för att kontrollera stridens flöde. Med perfekt timing och fotarbete kan inkommande hugg ledas bort eller låsas fast, vilket lämnar fienden frustrerad och blottad. Stilen bygger på öga-mot-hand-koordination snarare än råstyrka. Förmågan kräver en sköld (ej bucklare).",
+    "beskrivning": "Att bara blockera är passivt; Sköldföring handlar om att använda skölden som ett precisionsinstrument för att kontrollera stridens flöde. Med perfekt timing och fotarbete kan inkommande hugg ledas bort eller låsas fast, vilket lämnar fienden frustrerad och blottad. Stilen bygger på öga-mot-hand-koordination snarare än råstyrka. Förmågan kräver en sköld utan kvaliteten 'Armfäst' för att fungera.",
     "taggar": {
       "typ": [
         "Förmåga"
