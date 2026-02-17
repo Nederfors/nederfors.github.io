@@ -1,403 +1,22 @@
 (function(window){
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
-
-const quoteName = (value) => {
-  const str = String(value ?? '').trim();
-  return str ? `“${str}”` : '';
-};
-
-function formatQuotedList(values) {
-  if (!Array.isArray(values) || !values.length) return '';
-  return values
-    .map(val => quoteName(val))
-    .filter(Boolean)
-    .join(', ');
-}
-
-  function getGrundritualRequirements(entry) {
-  const raw = entry?.taggar?.grundritual;
-  if (Array.isArray(raw)) {
-    return raw
-      .map(val => (typeof val === 'string' ? val.trim() : ''))
-      .filter(Boolean);
-  }
-  if (typeof raw === 'string') {
-    const trimmed = raw.trim();
-    return trimmed ? [trimmed] : [];
-  }
-  return [];
-}
-
-async function enforceGrundritualRequirement(entry, list) {
-  const required = getGrundritualRequirements(entry);
-  if (!required.length) return { allowed: true, autoAdd: [] };
-  const current = Array.isArray(list) ? list : [];
-  const missing = required.filter(name => !current.some(item => item?.namn === name));
-  if (!missing.length) return { allowed: true, autoAdd: [] };
-  const entryLabel = quoteName(entry?.namn) || 'Denna ritual';
-  const requirementText = missing.length === 1 ? 'grundritualen' : 'grundritualerna';
-  const missingText = formatQuotedList(missing) || 'den angivna ritualen';
-  const baseMessage = `${entryLabel} kräver ${requirementText} ${missingText}.`;
-  if (typeof window.openDialog === 'function') {
-    const extraLabel = missing.length === 1 ? `Lägg till ${missingText}` : 'Lägg till alla';
-    const response = await window.openDialog(`${baseMessage} Lägg till grundritual nu, hoppa över kravet eller avbryt.`, {
-      cancel: true,
-      okText: 'Hoppa över kravet',
-      cancelText: 'Avbryt',
-      extraText: extraLabel
-    });
-    if (response === false) return { allowed: false, autoAdd: [] };
-    if (response === 'extra') return { allowed: true, autoAdd: missing };
-    return { allowed: true, autoAdd: [] };
-  }
-  const fallback = await confirmPopup(`${baseMessage}\nHoppa över kravet?`);
-  return { allowed: !!fallback, autoAdd: [] };
-}
-
-function computeIndexEntryXP(entry, list, options = {}) {
-  const defaults = {
-    allowInventory: true,
-    allowEmployment: true,
-    allowService: true,
-    forceDisplay: true,
-    label: 'Erf'
-  };
-  const xpOptions = { ...defaults, ...(options || {}) };
-  const baseList = Array.isArray(list) ? list.filter(Boolean) : [];
-  const workingList = baseList.slice();
-
-  const hasLevelOverride = Object.prototype.hasOwnProperty.call(xpOptions, 'level')
-    && xpOptions.level !== undefined
-    && xpOptions.level !== null
-    && xpOptions.level !== '';
-  const levelOverride = hasLevelOverride
-    ? xpOptions.level
-    : (entry && Object.prototype.hasOwnProperty.call(entry, 'nivå') ? entry.nivå : undefined);
-
-  const cloneEntryWithLevel = (src) => {
-    if (!src || typeof src !== 'object') return {};
-    const clone = { ...src };
-    if (hasLevelOverride) clone.nivå = levelOverride;
-    else if (levelOverride !== undefined && levelOverride !== null) clone.nivå = levelOverride;
-    return clone;
-  };
-
-  const ensureOrderValue = (listRef) => {
-    const orders = listRef
-      .map(item => Number(item?.__order))
-      .filter(value => Number.isFinite(value));
-    if (!orders.length) return listRef.length;
-    return Math.max(...orders) + 1;
-  };
-
-  const baseSource = xpOptions.xpSource || null;
-  let targetEntry = null;
-
-  if (baseSource && workingList.includes(baseSource)) {
-    if (hasLevelOverride && baseSource.nivå !== levelOverride) {
-      targetEntry = cloneEntryWithLevel(baseSource);
-      const idx = workingList.indexOf(baseSource);
-      if (idx !== -1) workingList[idx] = targetEntry;
-    } else {
-      targetEntry = baseSource;
-    }
-  } else if (baseSource && !workingList.includes(baseSource)) {
-    targetEntry = cloneEntryWithLevel(baseSource);
-    if (targetEntry.__order === undefined) {
-      targetEntry.__order = ensureOrderValue(workingList);
-    }
-    workingList.push(targetEntry);
-  } else {
-    targetEntry = cloneEntryWithLevel(entry || {});
-    if (targetEntry.__order === undefined) {
-      targetEntry.__order = ensureOrderValue(workingList);
-    }
-    workingList.push(targetEntry);
-  }
-
-  const helperOptions = {
-    ...xpOptions,
-    xpSource: targetEntry
-  };
-  if (hasLevelOverride) helperOptions.level = levelOverride;
-  else delete helperOptions.level;
-
-  const xpHelper = window.entryXp?.buildDisplay || window.entryXp?.compute;
-  if (typeof xpHelper === 'function') {
-    const result = xpHelper(targetEntry, workingList, helperOptions) || {};
-    return {
-      ...result,
-      label: result.label ?? helperOptions.label
-    };
-  }
-
-  if (window.storeHelper && typeof window.storeHelper.calcEntryDisplayXP === 'function') {
-    const calcOpts = {};
-    if (hasLevelOverride) calcOpts.level = levelOverride;
-    const rawValue = window.storeHelper.calcEntryDisplayXP(
-      targetEntry,
-      workingList,
-      Object.keys(calcOpts).length ? calcOpts : undefined
-    );
-    const rawText = window.storeHelper.formatEntryXPText(targetEntry, rawValue);
-    const shouldShow = helperOptions.forceDisplay || !!(rawText && String(rawText).trim());
-    const prefix = `${helperOptions.label}: `;
-    return {
-      value: rawValue,
-      text: rawText,
-      tagHtml: shouldShow ? `<span class="tag xp-cost">${prefix}${rawText}</span>` : '',
-      headerHtml: shouldShow ? `<span class="entry-xp-value">${prefix}${rawText}</span>` : '',
-      label: helperOptions.label,
-      shouldShow
-    };
-  }
-
-  return {
-    value: null,
-    text: '',
-    tagHtml: '',
-    headerHtml: '',
-    label: helperOptions.label,
-    shouldShow: false
-  };
-}
-
-function getActiveHandlingKeys(p){
-  const isActiveHandling = (value) => {
-    const values = Array.isArray(value) ? value : [value];
-    return values.some(item => {
-      const raw = String(item ?? '').trim();
-      if (!raw) return false;
-      return raw
-        .split(/[;,/|]+/)
-        .map(part => part.trim().replace(/[.!?]$/g, '').toLowerCase())
-        .some(part => part === 'aktiv');
-    });
-  };
-
-  const meta = typeof window.getEntryLevelMeta === 'function'
-    ? window.getEntryLevelMeta(p)
-    : (p?.taggar?.nivå_data || {});
-  const source = Object.keys(meta || {}).length ? meta : (p?.taggar?.handling || {});
-
-  const availableLevels = LVL.filter(l => p?.nivåer?.[l]);
-  const currentLevel = LVL.includes(p?.nivå || '')
-    ? p.nivå
-    : (availableLevels.length === 1 ? availableLevels[0] : null);
-  const currentIdx = currentLevel ? LVL.indexOf(currentLevel) : -1;
-
-  return Object.entries(source)
-    .filter(([levelKey, v]) => {
-      if (LVL.includes(levelKey)) {
-        if (currentIdx < 0 || LVL.indexOf(levelKey) > currentIdx) return false;
-      }
-
-      const handlingVal = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, 'handling')
-        ? v.handling
-        : v;
-      return isActiveHandling(handlingVal);
-    })
-    .map(([k]) => k);
-}
-
-function handlingName(p, key){
-  if (!LVL.includes(key)) {
-    const txt = p?.nivåer?.[key];
-    if (typeof txt === 'string') {
-      const idx = txt.indexOf(';');
-      return idx >= 0 ? txt.slice(0, idx) : txt;
-    }
-  }
-  return key;
-}
-
-function findConflictingEntries(entry, list){
-  const hasActiveHandling = getActiveHandlingKeys(entry).length > 0;
-  if (!hasActiveHandling) return [];
-  return (Array.isArray(list) ? list : [])
-    .filter(item => {
-      if (!item || item === entry) return false;
-      if ((item.namn || '') === (entry?.namn || '')
-        && (item.trait ?? null) === (entry?.trait ?? null)
-        && (item.nivå ?? null) === (entry?.nivå ?? null)) {
-        return false;
-      }
-      return getActiveHandlingKeys(item).length > 0;
-    });
-}
-
-const charCategory = (entry, { allowFallback = true } = {}) => {
-  const rawTypes = Array.isArray(entry?.taggar?.typ)
-    ? entry.taggar.typ
-    : [];
-  const normalized = rawTypes
-    .map(t => typeof t === 'string' ? t.trim() : '')
-    .filter(Boolean);
-  if (!normalized.length) {
-    return allowFallback ? 'Övrigt' : undefined;
-  }
-
-  const primaryType = normalized[0];
-  const firstNonCustomIdx = normalized.findIndex(t => t.toLowerCase() !== 'hemmagjort');
-  const artifactIdx = normalized.findIndex(t => t.toLowerCase() === 'artefakt');
-
-  if (artifactIdx > 0 && artifactIdx === firstNonCustomIdx && primaryType) {
-    return primaryType;
-  }
-
-  if (firstNonCustomIdx >= 0) {
-    return normalized[firstNonCustomIdx];
-  }
-
-  if (primaryType) return primaryType;
-  return allowFallback ? 'Övrigt' : undefined;
-};
-
-function renderConflictTabButton(){
-  return '<button class="info-tab" data-tab="conflict" type="button">Konflikter</button>';
-}
-
-function conflictEntryHtml(p){
-  const activeKeys = getActiveHandlingKeys(p);
-  const activeNames = activeKeys.map(k => handlingName(p, k));
-  const lvlHtml = activeKeys
-    .map(k => {
-      const name = handlingName(p, k);
-      let desc = p.nivåer?.[k] || '';
-      if (!LVL.includes(k) && typeof desc === 'string') {
-        const idx = desc.indexOf(';');
-        desc = idx >= 0 ? desc.slice(idx + 1) : '';
-      }
-      if (!desc) return '';
-      const body = formatText(desc);
-      if (!body) return '';
-      return `
-        <details class="level-block">
-          <summary>${name}</summary>
-          <div class="level-content">${body}</div>
-        </details>
-      `.trim();
-    })
-    .filter(Boolean)
-    .join('');
-  const desc = lvlHtml
-    ? `<div class="card-desc"><div class="levels">${lvlHtml}</div></div>`
-    : '';
-  const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
-    ? `${p.namn}: ${handlingName(p, p.nivå)}`
-    : p.namn;
-  return `<li class="card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
-}
-
-function buildConflictsHtml(list, { wrap = true } = {}){
-  if(!list.length){
-    const emptyLi = '<li class="card entry-card">Inga konflikter.</li>';
-    return wrap
-      ? `<ul class="card-list entry-card-list" data-entry-page="conflict">${emptyLi}</ul>`
-      : emptyLi;
-  }
-
-  const cats = {};
-  list.forEach(p=>{
-    const cat = charCategory(p);
-    (cats[cat] ||= []).push(p);
-  });
-
-  const catKeys = Object.keys(cats).sort(catComparator);
-  const html = catKeys.map(cat => {
-    const items = cats[cat].map(conflictEntryHtml).join('');
-    return `
-      <li class="cat-group">
-        <details open>
-          <summary>${catName(cat)}</summary>
-          <ul class="card-list entry-card-list" data-entry-page="conflict">${items}</ul>
-        </details>
-      </li>`;
-  }).join('');
-
-  if (!wrap) return html;
-  return `<ul class="card-list entry-card-list" data-entry-page="conflict">${html}</ul>`;
-}
-
-function ensureToolbarControls(onReady) {
-  const toolbar = document.querySelector('shared-toolbar');
-  if (!toolbar) {
-    return false;
-  }
-
-  const rerun = () => {
-    toolbar.__indexControlsPending = false;
-    if (ensureToolbarControls(onReady) && typeof onReady === 'function') {
-      onReady();
-    }
-  };
-
-  const registerRerun = () => {
-    if (toolbar.__indexControlsPending) return;
-    toolbar.__indexControlsPending = true;
-    toolbar.addEventListener('toolbar-rendered', rerun, { once: true });
-  };
-
-  const { shadowRoot } = toolbar;
-  if (!shadowRoot) {
-    registerRerun();
-    return false;
-  }
-
-  const filterUnion = shadowRoot.getElementById('filterUnion');
-  const entryViewToggle = shadowRoot.getElementById('entryViewToggle');
-  if (filterUnion && entryViewToggle) {
-    dom.filterUnion = filterUnion;
-    dom.entryViewToggle = entryViewToggle;
-    return true;
-  }
-
-  registerRerun();
-  return false;
-}
-
-function initIndex() {
-  if (!ensureToolbarControls(() => initIndex())) {
-    return;
-  }
+function initCharacter() {
   const createEntryCard = window.entryCardFactory.create;
-  if (dom.cName) {
-    dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
-  }
+  dom.cName.textContent = store.characters.find(c=>c.id===store.current)?.name||'';
+
   const F = { search:[], typ:[], ark:[], test:[] };
-  const INTERNAL_SEARCH_TERMS = new Set(['lol','molly<3']);
-  const scrubInternalSearchTerms = () => {
-    const filtered = F.search.filter(term => {
-      const lower = String(term || '').toLowerCase();
-      return !INTERNAL_SEARCH_TERMS.has(lower);
-    });
-    const changed = filtered.length !== F.search.length;
-    if (changed) {
-      F.search = filtered;
-    }
-    return changed;
-  };
-  const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+  const ONLY_SELECTED_VALUE = '__onlySelected';
+  const ONLY_SELECTED_LABEL = 'Endast valda';
   let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
   let compact = storeHelper.getCompactEntries(store);
   dom.entryViewToggle.classList.toggle('active', !compact);
-  let catsMinimized = false;
-  let showArtifacts = false;
-  let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
-  let revealedArtifactsVersion = 0;
-  const SECRET_SEARCH = { 'pajkastare': 'ar86' };
-  const SECRET_IDS = new Set(Object.values(SECRET_SEARCH));
-  const ONLY_SELECTED_VALUE = '__onlySelected';
-  const ONLY_SELECTED_LABEL = 'Endast valda';
-  // Open matching categories once after certain actions (search/type select)
+  // Open matching categories once after certain actions (search)
   let openCatsOnce = new Set();
-  // (Removed) Hoppsan no longer auto-syncs with other categories
-  // If set, override filtered list with these entries (from Random:N)
-  let fixedRandomEntries = null;
 
-  const STATE_KEY = 'indexViewState';
+  const charId = store.current || 'default';
+  const STATE_KEY = `charViewState:${charId}`;
   let catState = {};
   const loadState = () => {
     try { return JSON.parse(localStorage.getItem(STATE_KEY)) || {}; }
@@ -413,213 +32,138 @@ function initIndex() {
       ['search','typ','ark','test'].forEach(k => {
         if (Array.isArray(saved.filters[k])) F[k] = saved.filters[k];
       });
-      scrubInternalSearchTerms();
     }
     catState = saved.cats || {};
   }
 
-  const ENTRY_META_FIELD = '__entryMeta';
-  const toArray = (value) => (Array.isArray(value) ? value : []);
-
-  const fallbackEnsureEntryMeta = (entry) => {
-    if (!entry || typeof entry !== 'object') return null;
-    if (entry[ENTRY_META_FIELD]) return entry[ENTRY_META_FIELD];
-    const safeString = (value) => String(value ?? '').trim();
-    const toLower = (value) => safeString(value).toLowerCase();
-    const normFn = typeof searchNormalize === 'function'
-      ? searchNormalize
-      : (value) => value;
-
-    const lowerName = toLower(entry.namn);
-    const normName = normFn(lowerName);
-    const levelText = Object.values(entry.nivåer || {})
-      .map(toLower)
-      .join(' ');
-    const descText = toLower(entry.beskrivning);
-    const combined = `${lowerName} ${descText} ${levelText}`.trim();
-    const normText = normFn(combined);
-
-    const normalizeList = (list) => toArray(list)
-      .map(safeString)
-      .filter(Boolean);
-
-    const tags = entry.taggar || {};
-    const typList = normalizeList(tags.typ);
-    let arkList = [];
+  const applyQueryFilters = () => {
+    if (typeof URLSearchParams !== 'function') return;
     try {
-      const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
-      arkList = normalizeList(exploded);
-    } catch {
-      arkList = [];
-    }
-    if (!arkList.length && Array.isArray(tags.ark_trad)) {
-      arkList = ['Traditionslös'];
-    }
-    const testList = normalizeList(tags.test);
-    const secondaryTags = [...arkList, ...testList];
-    const allTagsNormalized = new Set(
-      [...typList, ...secondaryTags].map(tag => normFn(tag.toLowerCase()))
-    );
-    const allTags = new Set([...typList, ...secondaryTags]);
-
-    const meta = {
-      normName,
-      normText,
-      typList,
-      primaryType: typList[0] || 'Övrigt',
-      primaryTypeLower: (typList[0] || 'Övrigt').toLowerCase(),
-      arkList,
-      testList,
-      secondaryTags,
-      secondaryLookup: new Set(secondaryTags.map(tag => normFn(tag.toLowerCase()))),
-      allTagsNormalized,
-      allTags
-    };
-
-    Object.defineProperty(entry, ENTRY_META_FIELD, {
-      value: meta,
-      enumerable: false,
-      configurable: true
-    });
-    return meta;
-  };
-
-  const ensureEntryMeta = (entry) => {
-    if (typeof window.ensureEntryMeta === 'function') {
-      return window.ensureEntryMeta(entry);
-    }
-    return fallbackEnsureEntryMeta(entry);
-  };
-
-  const ensureEntryMetaList = (list) => {
-    if (typeof window.ensureEntryMetaList === 'function') {
-      return window.ensureEntryMetaList(list);
-    }
-    toArray(list).forEach(fallbackEnsureEntryMeta);
-    return list;
-  };
-
-  const entryCache = {
-    baseKey: '',
-    baseEntries: [],
-    filteredKey: '',
-    filteredEntries: []
-  };
-
-  const filteredResultCache = {
-    key: '',
-    entries: null
-  };
-
-  const invalidateFilteredResults = () => {
-    filteredResultCache.key = '';
-    filteredResultCache.entries = null;
-  };
-
-  const touchFilteredCache = () => {
-    entryCache.filteredKey = '';
-    invalidateFilteredResults();
-  };
-
-  const bumpRevealedArtifactsVersion = () => {
-    revealedArtifactsVersion += 1;
-    touchFilteredCache();
-  };
-
-  const hiddenPrimaryTypes = new Set(['artefakt', 'kuriositet', 'skatt']);
-
-  const buildBaseEntries = () => {
-    const versions = window.__entryDataVersions || { db: 0, tables: 0 };
-    const customVersion = typeof storeHelper.getCustomEntriesVersion === 'function'
-      ? storeHelper.getCustomEntriesVersion(store)
-      : 0;
-    const key = [
-      versions.db,
-      versions.tables,
-      customVersion,
-      store.current || ''
-    ].join('|');
-    if (entryCache.baseKey !== key) {
-      const customEntries = storeHelper.getCustomEntries(store) || [];
-      ensureEntryMetaList(customEntries);
-      const base = [
-        ...(Array.isArray(DB) ? DB : []),
-        ...(Array.isArray(window.TABELLER) ? window.TABELLER : []),
-        ...customEntries
-      ];
-      ensureEntryMetaList(base);
-      entryCache.baseEntries = base;
-      entryCache.baseKey = key;
-      entryCache.filteredKey = '';
-      hiddenNameIndex = null;
-    }
-    return entryCache.baseEntries;
-  };
-
-  const isHidden = (entry) => {
-    const meta = ensureEntryMeta(entry);
-    const primary = meta?.primaryTypeLower || '';
-    return hiddenPrimaryTypes.has(primary);
-  };
-
-  const buildFilteredEntries = () => {
-    const base = buildBaseEntries();
-    const revealedVersion = typeof storeHelper.getRevealedArtifactsVersion === 'function'
-      ? storeHelper.getRevealedArtifactsVersion(store)
-      : 0;
-    const key = [
-      entryCache.baseKey,
-      showArtifacts ? '1' : '0',
-      revealedVersion,
-      revealedArtifactsVersion
-    ].join('|');
-    if (entryCache.filteredKey !== key) {
-      const filtered = base.filter(entry => {
-        if (!entry || SECRET_IDS.has(entry.id)) return false;
-        if (showArtifacts) return true;
-        return !isHidden(entry) || revealedArtifacts.has(entry.id);
+      const params = new URLSearchParams(window.location.search);
+      const rawValues = params.getAll('test') || [];
+      const collected = [];
+      rawValues.forEach(val => {
+        String(val || '')
+          .split(',')
+          .map(v => v.trim())
+          .filter(Boolean)
+          .forEach(v => collected.push(v));
       });
-      entryCache.filteredEntries = filtered;
-      entryCache.filteredKey = key;
-      invalidateFilteredResults();
-    }
-    return entryCache.filteredEntries;
+      if (!collected.length) return;
+
+      const deduped = [];
+      const seen = new Set();
+      collected.forEach(val => {
+        if (seen.has(val)) return;
+        seen.add(val);
+        deduped.push(val);
+      });
+
+      F.search = [];
+      F.typ = [];
+      F.ark = [];
+      F.test = deduped;
+      storeHelper.setOnlySelected(store, true);
+      openCatsOnce.add('Förmåga');
+      saveState();
+    } catch {}
+  };
+  applyQueryFilters();
+
+  let catsMinimized = false;
+  const updateCatToggle = () => {
+    catsMinimized = [...document.querySelectorAll('.cat-group > details')]
+      .every(d => !d.open);
+    dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
+    dom.catToggle.title = catsMinimized
+      ? 'Öppna alla kategorier'
+      : 'Minimera alla kategorier';
   };
 
-  const getEntries = () => buildFilteredEntries();
+  const summaryBtn = document.getElementById('summaryToggle');
+  const summaryPanel = document.getElementById('summaryPanel');
+  const summaryClose = document.getElementById('summaryClose');
+  const summaryContent = document.getElementById('summaryContent');
+  const effectsBtn = document.getElementById('effectsToggle');
+  const effectsPanel = document.getElementById('effectsPanel');
+  const effectsClose = document.getElementById('effectsClose');
+  const effectsContent = document.getElementById('effectsContent');
 
-  const hasArtifactTag = entry => {
-    const meta = ensureEntryMeta(entry);
-    return (meta?.typList || []).some(t => t.toLowerCase() === 'artefakt');
-  };
+  const EFFECT_SECTION_LABELS = new Map([
+    ['Fördel', 'Fördelar'],
+    ['Nackdel', 'Nackdelar'],
+    ['Förmåga', 'Förmågor'],
+    ['Mystisk kraft', 'Mystiska krafter'],
+    ['Ritual', 'Ritualer'],
+    ['Särdrag', 'Särdrag'],
+    ['Monstruöst särdrag', 'Monstruösa särdrag'],
+    ['Yrke', 'Yrken'],
+    ['Elityrke', 'Elityrken'],
+    ['Ras', 'Raser'],
+    ['Artefakt', 'Artefakter'],
+    ['L\u00e4gre Artefakt', 'L\u00e4gre artefakter'],
+    ['Vapen', 'Vapen'],
+    ['Rustning', 'Rustningar'],
+    ['Sköld', 'Sköldar'],
+    ['Elixir', 'Elixir'],
+    ['Specialverktyg', 'Specialverktyg'],
+    ['Förvaring', 'Förvaring'],
+    ['Instrument', 'Instrument'],
+    ['F\u00e4rdmedel', 'F\u00e4rdmedel'],
+    ['G\u00e5rdsdjur', 'G\u00e5rdsdjur'],
+    ['Byggnad', 'Byggnader'],
+    ['Anst\u00e4llning', 'Anst\u00e4llningar'],
+    ['Tj\u00e4nst', 'Tj\u00e4nster'],
+    ['Mat', 'Mat'],
+    ['Dryck', 'Dryck'],
+    ['Kuriositet', 'Kuriositeter'],
+    ['Skatt', 'Skatter'],
+    ['Diverse', 'Diverse'],
+    ['F\u00e4lla', 'F\u00e4llor'],
+    ['Kvalitet', 'Kvaliteter'],
+    ['Mystisk kvalitet', 'Mystiska kvaliteter'],
+    ['Neutral kvalitet', 'Neutrala kvaliteter'],
+    ['Negativ kvalitet', 'Negativa kvaliteter']
+  ]);
 
-  let hiddenNameIndex = null;
-  const getHiddenNameIndex = () => {
-    const dbArr = Array.isArray(DB) ? DB : [];
-    if (hiddenNameIndex && hiddenNameIndex.size === dbArr.length) {
-      return hiddenNameIndex.map;
-    }
-    const map = new Map();
-    dbArr.forEach(ent => {
-      if (!isHidden(ent) || SECRET_IDS.has(ent.id)) return;
-      const key = searchNormalize(String(ent.namn || '').toLowerCase());
-      if (!key) return;
-      if (!map.has(key)) map.set(key, ent.id);
-    });
-    hiddenNameIndex = { map, size: dbArr.length };
-    return map;
-  };
+  const EFFECT_SECTION_ORDER = [
+    'Fördelar',
+    'Nackdelar',
+    'Förmågor',
+    'Mystiska krafter',
+    'Ritualer',
+    'Särdrag',
+    'Monstruösa särdrag',
+    'Yrken',
+    'Elityrken',
+    'Raser',
+    'Vapen',
+    'Rustningar',
+    'Sköldar',
+    'Artefakter',
+    'L\u00e4gre artefakter',
+    'Elixir',
+    'Specialverktyg',
+    'Förvaring',
+    'Instrument',
+    'F\u00e4rdmedel',
+    'G\u00e5rdsdjur',
+    'Byggnader',
+    'Anst\u00e4llningar',
+    'Tj\u00e4nster',
+    'Mat',
+    'Dryck',
+    'Kuriositeter',
+    'Skatter',
+    'Diverse',
+    'F\u00e4llor',
+    'Kvaliteter',
+    'Mystiska kvaliteter',
+    'Neutrala kvaliteter',
+    'Negativa kvaliteter',
+    'Övrigt'
+  ];
 
-  const FALT_BUNDLE = ['di10','di11','di12','di13','di14','di15'];
-  const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
-
-  const QUAL_TYPE_MAP = {
-    'Vapenkvalitet': 'Vapen',
-    'Rustningskvalitet': 'Rustning',
-    'Sköldkvalitet': 'Sköld',
-    'Allmän kvalitet': 'Allmänt'
-  };
-  const QUAL_TYPE_KEYS = Object.keys(QUAL_TYPE_MAP);
   const DOCK_TAG_TYPES = new Set(['Fördel','Nackdel','Särdrag','Monstruöst särdrag','Ritual','Mystisk kraft','Förmåga']);
 
   const levelLetter = (lvl) => {
@@ -631,156 +175,321 @@ function initIndex() {
     return text.charAt(0).toUpperCase();
   };
 
-  const normalizeMatchValue = (val) => {
-    if (val === undefined || val === null) return null;
-    if (typeof val === 'string') return val.trim();
-    if (typeof val === 'number') return String(val);
-    return val;
+  const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
+
+  const renderDockedTags = (tags, extraClass = '') => {
+    if (!Array.isArray(tags) || !tags.length) return '';
+    const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
+    return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
   };
 
-  const normalizeId = (val) => {
-    if (val === undefined || val === null) return null;
-    if (typeof val === 'number') return String(val);
-    return String(val).trim();
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, m => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&#39;'
+  }[m]));
+
+  const resolveDbEntry = (entry) => {
+    if (!entry) return null;
+    const hit = typeof lookupEntry === 'function' ? lookupEntry(entry) : null;
+    return hit || null;
   };
 
-  const entrySignature = (ent) => {
-    if (!ent || typeof ent !== 'object') return '';
-    const norm = value => String(value ?? '').trim().toLowerCase();
-    const parts = [];
-    if (ent.id !== undefined && ent.id !== null && String(ent.id).trim() !== '') {
-      parts.push(`id:${norm(ent.id)}`);
-    } else if (ent.namn !== undefined && ent.namn !== null) {
-      parts.push(`name:${norm(ent.namn)}`);
-    }
-    if (ent.trait !== undefined && ent.trait !== null && String(ent.trait).trim() !== '') {
-      parts.push(`trait:${norm(ent.trait)}`);
-    }
-    if (ent.race !== undefined && ent.race !== null && String(ent.race).trim() !== '') {
-      parts.push(`race:${norm(ent.race)}`);
-    }
-    if (ent.form !== undefined && ent.form !== null && String(ent.form).trim() !== '') {
-      parts.push(`form:${norm(ent.form)}`);
-    }
-    if (ent.nivå !== undefined && ent.nivå !== null && String(ent.nivå).trim() !== '') {
-      parts.push(`level:${norm(ent.nivå)}`);
-    }
-    return parts.join('|');
-  };
-
-  const findMatchingListEntry = (list, entry, options = {}) => {
-    if (!Array.isArray(list) || !entry || typeof entry !== 'object') return null;
-    const wantsLevel = Object.prototype.hasOwnProperty.call(options, 'level')
-      || Object.prototype.hasOwnProperty.call(entry, 'nivå');
-    const wantsTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
-      || Object.prototype.hasOwnProperty.call(entry, 'trait');
-    const desiredLevel = Object.prototype.hasOwnProperty.call(options, 'level')
-      ? normalizeMatchValue(options.level)
-      : normalizeMatchValue(entry.nivå);
-    const desiredTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
-      ? normalizeMatchValue(options.trait)
-      : normalizeMatchValue(entry.trait);
-    const targetSig = entrySignature({
-      ...entry,
-      trait: Object.prototype.hasOwnProperty.call(options, 'trait') ? options.trait : entry.trait,
-      nivå: Object.prototype.hasOwnProperty.call(options, 'level') ? options.level : entry.nivå
+  const mergeEffectGroups = (baseName, groups) => {
+    const seen = new Set();
+    const safeBase = baseName || '';
+    const out = [];
+    (Array.isArray(groups) ? groups : []).forEach(group => {
+      if (!group) return;
+      const label = String(group.label || safeBase || '').trim();
+      const texts = Array.isArray(group.texts)
+        ? group.texts
+        : effectTextsFrom(group.texts || {});
+      texts.forEach(raw => {
+        const text = String(raw || '').trim();
+        if (!text) return;
+        const key = `${label.toLowerCase()}||${text.toLowerCase()}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        out.push({ source: label || safeBase, text });
+      });
     });
-    let fallbackById = null;
-    let fallbackByName = null;
-    let fallbackBySig = null;
-    for (const item of list) {
-      if (!item || typeof item !== 'object') continue;
-      if (item === entry) return item;
-      const sameId = entry.id != null && item.id != null
-        && normalizeId(item.id) === normalizeId(entry.id);
-      const sameName = item.namn && entry.namn
-        && String(item.namn).trim() === String(entry.namn).trim();
-      const levelMatches = !wantsLevel || normalizeMatchValue(item.nivå) === desiredLevel;
-      const traitMatches = !wantsTrait || normalizeMatchValue(item.trait) === desiredTrait;
-      if ((sameId || sameName) && levelMatches && traitMatches) {
-        return item;
-      }
-      if (sameId && !fallbackById) {
-        fallbackById = item;
-        continue;
-      }
-      if (sameName && !fallbackByName) {
-        fallbackByName = item;
-      }
-      if (!fallbackBySig && targetSig && targetSig === entrySignature(item)) {
-        fallbackBySig = item;
-      }
+    return out;
+  };
+
+  const effectTextsFrom = (source) => {
+    if (!source || typeof source !== 'object') return [];
+    const raw = source.effekt ?? source.Effekt ?? source.effect ?? source.effects;
+    if (!raw) return [];
+    if (Array.isArray(raw)) {
+      return raw
+        .map(v => String(v || '').trim())
+        .filter(Boolean);
     }
-    return fallbackById || fallbackByName || fallbackBySig || null;
+    if (typeof raw === 'string') {
+      const txt = raw.trim();
+      return txt ? [txt] : [];
+    }
+    return [];
   };
 
-  const flashAdded = (name, trait) => {
-    const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
-    const root = dom.lista || document;
-    const items = root.querySelectorAll(selector);
-    const li = items?.[items.length - 1];
-    if (li) {
-      li.classList.add('inv-flash');
-      setTimeout(() => li.classList.remove('inv-flash'), 1000);
+  const sectionIndex = (label) => {
+    const idx = EFFECT_SECTION_ORDER.indexOf(label);
+    return idx === -1 ? EFFECT_SECTION_ORDER.length : idx;
+  };
+
+  const getSectionLabel = (types, fallback) => {
+    const arr = Array.isArray(types) ? types : [];
+    for (const raw of arr) {
+      const key = String(raw || '').trim();
+      if (!key) continue;
+      const label = EFFECT_SECTION_LABELS.get(key);
+      if (label) return label;
+    }
+    return fallback || 'Övrigt';
+  };
+
+  const abilityDisplayName = (entry) => {
+    const base = entry?.namn ? String(entry.namn).trim() : 'Okänd post';
+    const parts = [];
+    if (entry?.trait) parts.push(String(entry.trait).trim());
+    const lvl = entry?.nivå || '';
+    if (lvl && LVL.includes(lvl)) parts.push(lvl);
+    if (!parts.length) return base;
+    return `${base} (${parts.join(', ')})`;
+  };
+
+  const inventoryDisplayName = (row, entry) => {
+    const base = entry?.namn || row?.name || 'Okänt föremål';
+    const extras = [];
+    if (row?.trait) extras.push(String(row.trait).trim());
+    const lvl = row?.nivå || '';
+    if (lvl) extras.push(String(lvl).trim());
+    const detail = extras.length ? ` (${extras.join(', ')})` : '';
+    return `${base}${detail}`;
+  };
+
+  const flattenInventoryRows = (rows) => {
+    const out = [];
+    const walk = (list) => {
+      (Array.isArray(list) ? list : []).forEach(row => {
+        out.push(row);
+        if (Array.isArray(row?.contains) && row.contains.length) walk(row.contains);
+      });
+    };
+    walk(rows);
+    return out;
+  };
+
+  const extractInventoryEffects = (row, entry) => {
+    const baseName = entry?.namn || row?.name || 'Föremål';
+    const groups = [];
+    const pushGroup = (label, texts) => {
+      if (!texts || !texts.length) return;
+      groups.push({ label: label || baseName, texts });
+    };
+    pushGroup(baseName, effectTextsFrom(entry));
+    pushGroup(row?.name || baseName, effectTextsFrom(row));
+
+    const removed = Array.isArray(row?.removedKval) ? row.removedKval : [];
+    const splitFn = typeof window.splitQuals === 'function' ? window.splitQuals : (() => []);
+    const baseQuals = [
+      ...((entry?.taggar?.kvalitet ?? []).filter(Boolean)),
+      ...splitFn(entry?.kvalitet).filter(Boolean)
+    ].filter(q => !removed.includes(q));
+    const extraQuals = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
+    let allQuals = [...baseQuals, ...extraQuals];
+    if (typeof window.enforceArmorQualityExclusion === 'function') {
+      allQuals = window.enforceArmorQualityExclusion(entry, allQuals);
+    }
+    const seenQuals = new Set();
+    allQuals.forEach(name => {
+      const clean = String(name || '').trim();
+      if (!clean || seenQuals.has(clean)) return;
+      seenQuals.add(clean);
+      const qEntry = lookupEntry({ id: clean, name: clean });
+      const texts = effectTextsFrom(qEntry || {});
+      pushGroup(clean, texts);
+    });
+
+    return mergeEffectGroups(baseName, groups);
+  };
+
+  const collectEffectsData = () => {
+    const sections = new Map();
+    const ensureSection = (label) => {
+      const key = label || 'Övrigt';
+      if (!sections.has(key)) sections.set(key, { label: key, entries: [] });
+      return sections.get(key);
+    };
+
+    const abilityMap = new Map();
+    storeHelper.getCurrentList(store).
+      filter(entry => !isInv(entry)).
+      forEach(entry => {
+        const baseEntry = resolveDbEntry(entry);
+        const baseName = baseEntry?.namn || entry?.namn || 'Post';
+        const sectionFromEntry = getSectionLabel(entry?.taggar?.typ, null);
+        const section = sectionFromEntry && sectionFromEntry !== 'Övrigt'
+          ? sectionFromEntry
+          : getSectionLabel(baseEntry?.taggar?.typ, 'Förmågor');
+        const effects = mergeEffectGroups(baseName, [
+          { label: baseEntry?.namn || baseName, texts: effectTextsFrom(baseEntry) },
+          { label: entry?.namn || baseName, texts: effectTextsFrom(entry) }
+        ]);
+        if (!effects.length) return;
+        const keyParts = [];
+        if (baseEntry?.id !== undefined) keyParts.push(`id:${baseEntry.id}`);
+        else if (entry?.id !== undefined) keyParts.push(`id:${entry.id}`);
+        else if (entry?.namn) keyParts.push(`name:${entry.namn}`);
+        if (entry?.trait) keyParts.push(`trait:${entry.trait}`);
+        if (entry?.nivå) keyParts.push(`lvl:${entry.nivå}`);
+        if (!keyParts.length) keyParts.push(`name:${baseName}`);
+        const key = keyParts.join('|');
+        let bucket = abilityMap.get(key);
+        if (!bucket) {
+          bucket = {
+            section,
+            label: abilityDisplayName(entry),
+            baseName,
+            count: 0,
+            effects
+          };
+          abilityMap.set(key, bucket);
+        }
+        bucket.count += 1;
+      });
+
+    abilityMap.forEach(bucket => {
+      const section = ensureSection(bucket.section);
+      section.entries.push({
+        label: bucket.label,
+        count: bucket.count,
+        baseName: bucket.baseName,
+        effects: bucket.effects
+      });
+    });
+
+    const invRows = flattenInventoryRows(storeHelper.getInventory(store));
+    const itemMap = new Map();
+    invRows.forEach(row => {
+      const entry = (window.invUtil && typeof window.invUtil.getEntry === 'function')
+        ? window.invUtil.getEntry(row?.id || row?.name)
+        : (lookupEntry({ id: row?.id, name: row?.name }) || {});
+      const effects = extractInventoryEffects(row, entry || {});
+      if (!effects.length) return;
+      const section = getSectionLabel(entry?.taggar?.typ, 'Inventarie');
+      const qty = Math.max(1, Number(row?.qty) || 1);
+      const keyParts = [
+        entry?.id !== undefined ? `id:${entry.id}` : `name:${entry?.namn || row?.name || ''}`,
+        `trait:${row?.trait || ''}`,
+        `lvl:${row?.nivå || ''}`,
+        `effects:${effects.map(e => `${e.source}|${e.text}`).sort().join('||')}`
+      ];
+      const key = keyParts.join('|');
+      let bucket = itemMap.get(key);
+      if (!bucket) {
+        bucket = {
+          section,
+          label: inventoryDisplayName(row, entry),
+          baseName: entry?.namn || row?.name || '',
+          count: 0,
+          effects
+        };
+        itemMap.set(key, bucket);
+      }
+      bucket.count += qty;
+    });
+
+    itemMap.forEach(bucket => {
+      const section = ensureSection(bucket.section);
+      section.entries.push({
+        label: bucket.label,
+        count: bucket.count,
+        baseName: bucket.baseName,
+        effects: bucket.effects
+      });
+    });
+
+    const result = [...sections.values()];
+    result.sort((a, b) => sectionIndex(a.label) - sectionIndex(b.label) || a.label.localeCompare(b.label, 'sv'));
+    result.forEach(section => {
+      section.entries.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
+    });
+    return result.filter(section => section.entries.length);
+  };
+
+  const renderEffects = () => {
+    if (!effectsContent) return;
+    const sections = collectEffectsData();
+    if (!sections.length) {
+      effectsContent.innerHTML = '<p>Inga effekter att visa för den här rollpersonen.</p>';
+      return;
+    }
+    const html = sections.map(section => {
+      const rows = section.entries.map(entry => {
+        const countTxt = entry.count > 1 ? ` <span class="count-badge">×${entry.count}</span>` : '';
+        const base = entry.baseName || '';
+        const lines = entry.effects.map(effect => {
+          const source = String(effect.source || '').trim();
+          const needsLabel = source && source !== base;
+          const srcHtml = needsLabel ? `<span class="effect-source">${escapeHtml(source)}:</span> ` : '';
+          const textHtml = escapeHtml(effect.text).replace(/\n/g, '<br>');
+          return `<div class="effect-line">${srcHtml}<span class="effect-text">${textHtml}</span></div>`;
+        }).join('');
+        const title = `<strong class="effect-label">${escapeHtml(entry.label)}${countTxt}</strong>`;
+        return `<li class="effect-entry">${title}${lines ? `<div class="effect-lines">${lines}</div>` : ''}</li>`;
+      }).join('');
+      return `<section class="summary-section"><h3>${escapeHtml(section.label)}</h3><ul>${rows}</ul></section>`;
+    }).join('');
+    effectsContent.innerHTML = html;
+  };
+
+  const refreshEffectsPanel = () => {
+    if (effectsPanel?.classList.contains('open')) {
+      renderEffects();
     }
   };
 
-  const getMonsterLoreSpecs = () => {
-    const list = window.monsterLore?.SPECS;
-    if (Array.isArray(list) && list.length) return list;
-    return ['Bestar','Kulturvarelser','Odöda','Styggelser'];
-  };
+  // Rensa allt utom inventariet (suddgummi)
+  const clearBtn = document.getElementById('clearNonInv');
+  if (clearBtn) {
+    clearBtn.addEventListener('click', async () => {
+      if (!store.current && !(await requireCharacter())) return;
+      const ok = await confirmPopup('Detta tar bort Ras, Yrken, Elityrken, Förmågor, Mystisk kraft, Ritualer, Fördelar, Nackdelar, Särdrag och Monstruösa särdrag från karaktären. Inventariet lämnas orört. Vill du fortsätta?');
+      if (!ok) return;
+      const before = storeHelper.getCurrentList(store);
+      const keep = before.filter(p => isInv(p));
+      storeHelper.setCurrentList(store, keep);
+      if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+        invUtil.renderInventory();
+      }
+      renderSkills(filtered());
+      updateXP();
+      renderTraits();
+      updateSearchDatalist();
+    });
+  }
 
-  const usedMonsterLoreSpecs = (list) => {
-    if (!Array.isArray(list)) return [];
-    return list
-      .filter(x => x?.namn === 'Monsterlärd' && x.trait)
-      .map(x => x.trait);
-  };
+  const conflictPanel = document.getElementById('conflictPanel');
+  const conflictClose = document.getElementById('conflictClose');
+  const conflictList = document.getElementById('conflictList');
+  const conflictTitle = document.getElementById('conflictTitle');
 
-  const flashRemoved = (name, trait) => {
-    const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
-    const root = dom.lista || document;
-    const items = root.querySelectorAll(selector);
-    const li = items?.[items.length - 1];
-    if (li) {
-      li.classList.add('rm-flash');
-      setTimeout(() => li.classList.remove('rm-flash'), 1000);
-    }
-  };
-
-  const tabellInfoHtml = p => {
-    const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-    const cols = p.kolumner || [];
-    const rows = p.rader || [];
-
-    const head = `<tr>${cols.map(c => `<th>${cap(c)}</th>`).join('')}</tr>`;
-    const body = rows
-      .map(r => `<tr>${cols.map(c => {
-        const v = r[c] ?? '';
-        const dl = cap(c);
-        return `<td data-label=\"${dl}\">${v}</td>`;
-      }).join('')}</tr>`)
-      .join('');
-    const tableHtml = `<div class=\"table-wrap\"><table class=\"stack-mobile\"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
-    const extraHtml = p.extra ? `<div class=\"table-notes\">${formatText(p.extra)}</div>` : '';
-    return `${tableHtml}${extraHtml}`;
-  };
-
-  // Inline highlight (wrap <mark>) for current search terms
+  // Inline highlight for Info content (same normalization as index-view)
   const buildNormMap = (str) => {
     const low = String(str || '').toLowerCase();
     let norm = '';
     const map = [];
     for (let i = 0; i < low.length; i++) {
-      const ch = low[i];
-      const n = searchNormalize(ch);
+      const n = searchNormalize(low[i]);
       norm += n;
       for (let k = 0; k < n.length; k++) map.push(i);
     }
     return { norm, map };
   };
-
   const highlightTextNode = (node, termsNorm) => {
     const text = node.nodeValue;
     if (!text || !text.trim()) return;
@@ -793,8 +502,8 @@ function initIndex() {
         const idx = norm.indexOf(term, start);
         if (idx === -1) break;
         const s = map[idx];
-        const e = map[idx + term.length - 1] + 1; // exclusive
-        if (s != null && e != null && e > s) ranges.push([s, e]);
+        const e = map[idx + term.length - 1] + 1;
+        if (s != null && e != null && e > s) ranges.push([s,e]);
         start = idx + Math.max(1, term.length);
       }
     }
@@ -818,7 +527,6 @@ function initIndex() {
     if (pos < text.length) frag.appendChild(document.createTextNode(text.slice(pos)));
     node.parentNode.replaceChild(frag, node);
   };
-
   const highlightInElement = (el, termsNorm) => {
     if (!el || !termsNorm || !termsNorm.length) return;
     const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT, {
@@ -835,65 +543,635 @@ function initIndex() {
     nodes.forEach(n => highlightTextNode(n, termsNorm));
   };
 
-  /* fyll dropdowns */
-  const dropdownCache = {
-    key: '',
-    typ: [],
-    ark: [],
-    test: []
+  const flashAdded = (name, trait) => {
+    const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
+    const items = dom.valda?.querySelectorAll(selector);
+    const li = items?.[items.length - 1];
+    if (li) {
+      li.classList.add('inv-flash');
+      setTimeout(() => li.classList.remove('inv-flash'), 1000);
+    }
   };
 
-  const categoryCache = {
-    key: '',
-    map: new Map(),
-    list: []
+  const flashRemoved = li => {
+    if (li) {
+      li.classList.add('rm-flash');
+      setTimeout(() => li.classList.remove('rm-flash'), 1000);
+    }
   };
 
-  const getCategoryIndex = () => {
-    const entries = getEntries();
-    const key = entryCache.filteredKey;
-    if (categoryCache.key !== key) {
-      const map = new Map();
-      const set = new Set();
-      entries.forEach(entry => {
-        const meta = ensureEntryMeta(entry) || {};
-        (meta.typList || []).forEach(tag => {
-          const norm = searchNormalize(String(tag || '').toLowerCase());
-          if (norm && !map.has(norm)) map.set(norm, tag);
-          if (tag) set.add(tag);
+  function getActiveHandlingKeys(p){
+    const isActiveHandling = (value) => {
+      const values = Array.isArray(value) ? value : [value];
+      return values.some(item => {
+        const raw = String(item ?? '').trim();
+        if (!raw) return false;
+        return raw
+          .split(/[;,/|]+/)
+          .map(part => part.trim().replace(/[.!?]$/g, '').toLowerCase())
+          .some(part => part === 'aktiv');
+      });
+    };
+
+    const meta = typeof window.getEntryLevelMeta === 'function'
+      ? window.getEntryLevelMeta(p)
+      : (p?.taggar?.nivå_data || {});
+    const source = Object.keys(meta || {}).length ? meta : (p?.taggar?.handling || {});
+
+    const availableLevels = LVL.filter(l => p?.nivåer?.[l]);
+    const currentLevel = LVL.includes(p?.nivå || '')
+      ? p.nivå
+      : (availableLevels.length === 1 ? availableLevels[0] : null);
+    const currentIdx = currentLevel ? LVL.indexOf(currentLevel) : -1;
+
+    return Object.entries(source)
+      .filter(([levelKey, v]) => {
+        if (LVL.includes(levelKey)) {
+          if (currentIdx < 0 || LVL.indexOf(levelKey) > currentIdx) return false;
+        }
+
+        const handlingVal = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, 'handling')
+          ? v.handling
+          : v;
+        return isActiveHandling(handlingVal);
+      })
+      .map(([k]) => k);
+  }
+
+  function handlingName(p, key){
+    if (!LVL.includes(key)) {
+      const txt = p?.nivåer?.[key];
+      if (typeof txt === 'string') {
+        const idx = txt.indexOf(';');
+        return idx >= 0 ? txt.slice(0, idx) : txt;
+      }
+    }
+    return key;
+  }
+
+  function findConflictingEntries(entry, list){
+    const hasActiveHandling = getActiveHandlingKeys(entry).length > 0;
+    if (!hasActiveHandling) return [];
+    return (Array.isArray(list) ? list : [])
+      .filter(item => {
+        if (!item || item === entry) return false;
+        if ((item.namn || '') === (entry?.namn || '')
+          && (item.trait ?? null) === (entry?.trait ?? null)
+          && (item.nivå ?? null) === (entry?.nivå ?? null)) {
+          return false;
+        }
+        return getActiveHandlingKeys(item).length > 0;
+      });
+  }
+
+  function conflictEntryHtml(p){
+    const activeKeys = getActiveHandlingKeys(p);
+    const activeNames = activeKeys.map(k => handlingName(p, k));
+    const lvlHtml = activeKeys
+      .map(k => {
+        const name = handlingName(p, k);
+        let desc = p.nivåer?.[k] || '';
+        if (!LVL.includes(k) && typeof desc === 'string') {
+          const idx = desc.indexOf(';');
+          desc = idx >= 0 ? desc.slice(idx + 1) : '';
+        }
+        if (!desc) return '';
+        const body = formatText(desc);
+        if (!body) return '';
+        return `
+          <details class="level-block">
+            <summary>${name}</summary>
+            <div class="level-content">${body}</div>
+          </details>
+        `.trim();
+      })
+      .filter(Boolean)
+      .join('');
+    const desc = lvlHtml
+      ? `<div class="card-desc"><div class="levels">${lvlHtml}</div></div>`
+      : '';
+    const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
+      ? `${p.namn}: ${handlingName(p, p.nivå)}`
+      : p.namn;
+    return `<li class="card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
+  }
+
+  const charCategory = (entry, { allowFallback = true } = {}) => {
+    const rawTypes = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ
+      : [];
+    const normalized = rawTypes
+      .map(t => typeof t === 'string' ? t.trim() : '')
+      .filter(Boolean);
+    if (!normalized.length) {
+      return allowFallback ? 'Övrigt' : undefined;
+    }
+
+    const primaryType = normalized[0];
+    const firstNonCustomIdx = normalized.findIndex(t => t.toLowerCase() !== 'hemmagjort');
+    const artifactIdx = normalized.findIndex(t => t.toLowerCase() === 'artefakt');
+
+    if (artifactIdx > 0 && artifactIdx === firstNonCustomIdx && primaryType) {
+      return primaryType;
+    }
+
+    if (firstNonCustomIdx >= 0) {
+      return normalized[firstNonCustomIdx];
+    }
+
+    if (primaryType) return primaryType;
+    return allowFallback ? 'Övrigt' : undefined;
+  };
+
+  function renderConflicts(list){
+    conflictList.innerHTML = buildConflictsHtml(list, { wrap: false });
+  }
+
+  function buildConflictsHtml(list, { wrap = true } = {}){
+    if(!list.length){
+      const emptyLi = '<li class="card entry-card">Inga konflikter.</li>';
+      return wrap
+        ? `<ul class="card-list entry-card-list" data-entry-page="conflict">${emptyLi}</ul>`
+        : emptyLi;
+    }
+
+    const cats = {};
+    list.forEach(p=>{
+      const cat = charCategory(p);
+      (cats[cat] ||= []).push(p);
+    });
+
+    const catKeys = Object.keys(cats).sort(catComparator);
+    const html = catKeys.map(cat => {
+      const items = cats[cat].map(conflictEntryHtml).join('');
+      return `
+        <li class="cat-group">
+          <details open>
+            <summary>${catName(cat)}</summary>
+            <ul class="card-list entry-card-list" data-entry-page="conflict">${items}</ul>
+          </details>
+        </li>`;
+    }).join('');
+
+    if (!wrap) return html;
+    return `<ul class="card-list entry-card-list" data-entry-page="conflict">${html}</ul>`;
+  }
+
+  function renderSummary(){
+    const list = storeHelper.getCurrentList(store);
+    const inv = storeHelper.getInventory(store);
+    const traits = storeHelper.getTraits(store);
+    const artifactEffects = storeHelper.getArtifactEffects(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store);
+    const combinedEffects = {
+      xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+      corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0)
+    };
+    const manualToughness = Number(manualAdjust?.toughness || 0);
+    const manualPain = Number(manualAdjust?.pain || 0);
+    const manualCapacity = Number(manualAdjust?.capacity || 0);
+    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(inv) : {};
+    const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+    const vals = {};
+    KEYS.forEach(k=>{ vals[k] = (traits[k]||0) + (bonus[k]||0) + (maskBonus[k]||0); });
+
+    const valStark = vals['Stark'];
+
+    const valWill = vals['Viljestark'];
+    const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
+    const strongGift = strongGiftLevel >= 1;
+    const hasSjalastark = list.some(p=>p.namn==='Själastark');
+    const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
+    const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
+    const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
+    const hasEarth = list.some(p=>p.namn==='Jordnära');
+    const baseMax = strongGift ? valWill + 5 : valWill;
+    const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
+    const maxCor = baseMax + (hasSjalastark ? 1 : 0);
+    let thresh = threshBase + resistCount - sensCount;
+    const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
+    let perm = hasEarth ? (permBase % 2) : permBase;
+    perm += darkPerm;
+    const effectsWithDark = {
+      xp: combinedEffects.xp || 0,
+      corruption: (combinedEffects.corruption || 0) + darkPerm
+    };
+
+    const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
+    const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
+    const capacity = storeHelper.calcCarryCapacity(valStark, list) + manualCapacity;
+    const hardy = hasHardnackad ? 1 : 0;
+    const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
+    const tal = talBase + hardy + manualToughness;
+    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
+
+    const defTrait = getDefenseTraitName(list);
+    const kvickForDef = vals[defTrait];
+    const defenseListStd = calcDefense(kvickForDef, { mode: 'standard' });
+    const dancingTrait = getDancingDefenseTraitName(list);
+    const defenseListDance = dancingTrait ? calcDefense(vals[dancingTrait], { mode: 'dancing' }) : [];
+    const defenseList = [...defenseListStd, ...defenseListDance];
+
+    const cond = [];
+    if(storeHelper.abilityLevel(list,'Fint') >= 1){
+      cond.push('Diskret som träffsäker för kort eller precist vapen i närstrid');
+    }
+    if(storeHelper.abilityLevel(list,'Lönnstöt') >= 1){
+      cond.push('Diskret som träffsäker vid attacker med Övertag');
+    }
+    if(storeHelper.abilityLevel(list,'Knivgöra') >= 1){
+      cond.push('Kvick som träffsäker för attacker med knivliknande vapen med kvaliteten Kort');
+    }
+    if(storeHelper.abilityLevel(list,'Koreograferad strid') >= 1){
+      cond.push('Kvick som träffsäker för närstridsattacker med kort eller balanserat vapen efter en förflyttning');
+    }
+    if(storeHelper.abilityLevel(list,'Spjutdans') >= 1){
+      cond.push('Kvick som träffsäker för närstridsattacker med spjut (kvalitet Långt)');
+    }
+    if(storeHelper.abilityLevel(list,'Taktiker') >= 3){
+      cond.push('Listig som träffsäker för allt utom tunga vapen');
+    }
+    const sjatte = Math.max(
+      storeHelper.abilityLevel(list,'Sjätte Sinne'),
+      storeHelper.abilityLevel(list,'Sjätte sinne')
+    );
+    if(sjatte >= 1){
+      cond.push('Vaksam som träffsäker för avståndsattacker');
+    }
+    if(storeHelper.abilityLevel(list,'Järnnäve') >= 1){
+      cond.push('Stark som träffsäker för närstridsattacker');
+    }
+    if(storeHelper.abilityLevel(list,'Dominera') >= 1){
+      cond.push('Övertygande som träffsäker för närstridsattacker');
+    }
+    if(storeHelper.abilityLevel(list,'Ledare') >= 1){
+      cond.push('Övertygande istället för Viljestark vid mystiska förmågor och ritualer');
+    }
+    if(!cond.length) cond.push('Inga särskilda ersättningar');
+
+    const baseXP = storeHelper.getBaseXP(store);
+    const usedXP = storeHelper.calcUsedXP(list, combinedEffects);
+    const totalXP = storeHelper.calcTotalXP(baseXP, list);
+    const freeXP = totalXP - usedXP;
+
+    const totalMoney = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+    const moneyToOFn = typeof window.moneyToO === 'function' ? window.moneyToO : null;
+    const oToMoneyFn = typeof window.oToMoney === 'function' ? window.oToMoney : null;
+    const invUtil = window.invUtil || {};
+    let unusedText = `${totalMoney.daler}D ${totalMoney.skilling}S ${totalMoney['örtegar']}Ö`;
+
+    if (moneyToOFn && oToMoneyFn && typeof invUtil.calcRowCost === 'function') {
+      const LEVEL_IDX = { '': 0, Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
+      const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+      const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
+      const forgeLevel = Math.max(partyForge, skillForge);
+      const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+      const skillAlc = storeHelper.abilityLevel(list, 'Alkemist');
+      const alcLevel = Math.max(partyAlc, skillAlc);
+      const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+      const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
+      const artLevel = Math.max(partyArt, skillArt);
+
+      const calcSpentO = (rows) => {
+        let sum = 0;
+        (Array.isArray(rows) ? rows : []).forEach(row => {
+          if (!row || typeof row !== 'object') return;
+          const rowCost = invUtil.calcRowCost(row, forgeLevel, alcLevel, artLevel);
+          sum += moneyToOFn(rowCost || {});
+          if (Array.isArray(row.contains) && row.contains.length) {
+            sum += calcSpentO(row.contains);
+          }
+        });
+        return sum;
+      };
+
+      const totalCashO = moneyToOFn(totalMoney);
+      const spentO = calcSpentO(inv);
+      const diffO = totalCashO - spentO;
+      const diff = oToMoneyFn(Math.abs(diffO));
+      unusedText = `${diffO < 0 ? '-' : ''}${diff.d}D ${diff.s}S ${diff.o}Ö`;
+    }
+
+    const currentChar = (Array.isArray(store.characters) ? store.characters : [])
+      .find(c => c && c.id === store.current);
+    const charName = currentChar?.name ? String(currentChar.name).trim() : '';
+
+    const dedupeList = (items) => {
+      const seen = new Map();
+      (Array.isArray(items) ? items : []).forEach(item => {
+        let text = '';
+        let count = 1;
+        if (typeof item === 'string') {
+          text = item;
+        } else if (item && typeof item === 'object') {
+          if (item.label !== undefined) text = item.label;
+          else if (item.text !== undefined) text = item.text;
+          else if (item.display !== undefined) text = item.display;
+          else if (item.value !== undefined) text = item.value;
+          const parsed = Number(item.count ?? item.total ?? 1);
+          if (Number.isFinite(parsed) && parsed > 0) count = parsed;
+        }
+        text = String(text || '').trim();
+        if (!text) return;
+        const key = text.toLocaleLowerCase('sv');
+        if (seen.has(key)) {
+          const existing = seen.get(key);
+          existing.count += count;
+        } else {
+          seen.set(key, { text, count });
+        }
+      });
+      return Array.from(seen.values());
+    };
+
+    const createListRow = (label, entries, options = {}) => {
+      const { max = 5, showCount = true, countMode = 'unique' } = options;
+      const clean = dedupeList(entries);
+      if (!clean.length) return null;
+      const totalCount = clean.reduce((sum, item) => sum + (item.count || 1), 0);
+      const headerCount = countMode === 'total' ? totalCount : clean.length;
+      const header = showCount && headerCount > 1 ? `${label} (${headerCount})` : label;
+      const slice = clean.slice(0, max);
+      const values = slice.map(item => item.text);
+      const extra = Math.max(0, clean.length - slice.length);
+      return { label: header, values, extra };
+    };
+
+    const gatherEntries = (types, options = {}) => {
+      const wanted = Array.isArray(types) ? types : [types];
+      const { annotateMultiples = false, multipleThreshold = 2 } = options;
+      const counts = new Map();
+      list.forEach(entry => {
+        const entryTypes = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+        if (!wanted.some(type => entryTypes.includes(type))) return;
+        const display = abilityDisplayName(entry);
+        if (!display) return;
+        const key = display.toLocaleLowerCase('sv');
+        const item = counts.get(key);
+        if (item) {
+          item.count += 1;
+        } else {
+          counts.set(key, { label: display, count: 1 });
+        }
+      });
+      const entries = Array.from(counts.values());
+      entries.sort((a, b) => a.label.localeCompare(b.label, 'sv'));
+      return entries.map(entry => {
+        const display = (annotateMultiples && entry.count >= multipleThreshold)
+          ? `${entry.label} ×${entry.count}`
+          : entry.label;
+        return { label: display, count: entry.count };
+      });
+    };
+
+    const summarySections = [];
+
+    const profileRows = [];
+    if (charName) profileRows.push({ label: 'Namn', value: charName, layout: 'stack' });
+    const raceRow = createListRow('Ras', gatherEntries('Ras'), { max: 3, showCount: false });
+    if (raceRow) profileRows.push(raceRow);
+    const jobRow = createListRow('Yrken', gatherEntries('Yrke'), { max: 3 });
+    if (jobRow) profileRows.push(jobRow);
+    const eliteRow = createListRow('Elityrken', gatherEntries('Elityrke'), { max: 3 });
+    if (eliteRow) profileRows.push(eliteRow);
+    if (profileRows.length) {
+      summarySections.push({ title: 'Profil', rows: profileRows, listClass: 'summary-pairs' });
+    }
+
+    const focusRows = [];
+    const pushListRows = (label, values, options = {}) => {
+      const row = createListRow(label, values, { max: 999, ...options });
+      if (!row) return;
+      focusRows.push({
+        label: row.label,
+        values: row.values,
+        extra: row.extra
+      });
+    };
+
+    pushListRows('Förmågor', gatherEntries('Förmåga'));
+    pushListRows('Mystiska krafter', gatherEntries('Mystisk kraft'));
+    pushListRows('Ritualer', gatherEntries('Ritual'));
+    pushListRows('Fördelar', gatherEntries('Fördel', {
+      annotateMultiples: true,
+      multipleThreshold: 3
+    }), { countMode: 'total' });
+    pushListRows('Nackdelar', gatherEntries('Nackdel', {
+      annotateMultiples: true,
+      multipleThreshold: 3
+    }), { countMode: 'total' });
+    pushListRows('Särdrag', gatherEntries('Särdrag'));
+    pushListRows('Monstruösa särdrag', gatherEntries('Monstruöst särdrag'));
+
+    if (focusRows.length) {
+      summarySections.push({ title: 'Nyckelval', rows: focusRows, listClass: 'summary-titles' });
+    }
+
+    const traitRows = KEYS.map(k => ({
+      label: k,
+      value: String(vals[k] ?? 0)
+    }));
+    if (traitRows.length) {
+      summarySections.push({ title: 'Karaktärsdrag', rows: traitRows, listClass: 'summary-grid tight' });
+    }
+
+    const xpRows = [
+      { label: 'Total XP', value: String(totalXP), align: 'right' },
+      { label: 'Använt XP', value: String(usedXP), align: 'right' },
+      { label: 'XP kvar', value: String(freeXP), align: 'right', valueClass: freeXP < 0 ? 'neg' : '' }
+    ];
+    summarySections.push({ title: 'Erfarenhet', rows: xpRows, listClass: 'summary-pairs' });
+
+    const economyRows = [{ text: `Oanvänt: ${unusedText}` }];
+    summarySections.push({ title: 'Ekonomi', rows: economyRows, listClass: 'summary-text' });
+
+    const normalizedDefense = defenseList
+      .map(d => ({
+        name: d?.name ? String(d.name).trim() : '',
+        value: Number(d?.value),
+        source: d?.source || 'standard'
+      }))
+      .filter(d => Number.isFinite(d.value));
+    const defenseStandard = normalizedDefense.filter(d => d.source !== 'dancing');
+    const defenseDancing = normalizedDefense.filter(d => d.source === 'dancing');
+
+    const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
+      ? storeHelper.getDefenseSetup(store)
+      : null;
+    const defenseAction = `<button type="button" class="char-btn icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Beräkna försvar</span></button>`;
+    const defenseRows = [];
+    if (defenseStandard.length) {
+      const highestDefense = defenseStandard
+        .reduce((max, d) => Math.max(max, d.value), Number.NEGATIVE_INFINITY);
+      if (Number.isFinite(highestDefense)) {
+        defenseRows.push({
+          label: 'Försvarsvärde',
+          value: String(highestDefense),
+          align: 'right'
+        });
+      }
+
+      defenseStandard.forEach(d => {
+        const label = d.name ? `Försvar (${d.name})` : 'Försvar';
+        defenseRows.push({
+          label,
+          value: String(d.value),
+          align: 'right'
         });
       });
-      categoryCache.key = key;
-      categoryCache.map = map;
-      categoryCache.list = Array.from(set).sort((a,b) => (typeof compareSv === 'function'
-        ? compareSv(a, b)
-        : a.localeCompare(b, 'sv')));
     }
-    return categoryCache.map;
-  };
 
-  const getCategoryList = () => {
-    getCategoryIndex();
-    return categoryCache.list;
-  };
-
-  const fillDropdowns = ()=>{
-    const entries = getEntries();
-    const cacheKey = entryCache.filteredKey;
-    if (dropdownCache.key !== cacheKey) {
-      const sets = { typ: new Set(), ark: new Set(), test: new Set() };
-      entries.forEach(entry => {
-        const meta = ensureEntryMeta(entry) || {};
-        (meta.typList || []).forEach(tag => sets.typ.add(tag));
-        (meta.arkList || []).forEach(tag => sets.ark.add(tag));
-        (meta.testList || []).forEach(tag => sets.test.add(tag));
+    if (defenseDancing.length) {
+      defenseDancing.forEach(d => {
+        const label = d.name ? `Försvar (Dansande v. ${d.name})` : 'Försvar (Dansande v.)';
+        defenseRows.push({
+          label,
+          value: String(d.value),
+          align: 'right'
+        });
       });
-      dropdownCache.key = cacheKey;
-      dropdownCache.typ = Array.from(sets.typ).sort((a,b) => a.localeCompare(b));
-      dropdownCache.ark = Array.from(sets.ark).sort((a,b) => a.localeCompare(b));
-      dropdownCache.test = Array.from(sets.test).sort((a,b) => a.localeCompare(b));
     }
-    const fill = (sel, values, label, extra = []) => {
+
+    if (defenseRows.length) {
+      summarySections.push({ title: 'Försvar', rows: defenseRows, listClass: 'summary-pairs', action: defenseAction });
+    }
+
+    const healthRows = [
+      { label: 'Tålighet', value: String(tal), align: 'right' },
+      { label: 'Smärtgräns', value: String(pain), align: 'right' },
+      { label: 'Bärkapacitet', value: formatWeight(capacity), align: 'right' }
+    ];
+    summarySections.push({ title: 'Hälsa', rows: healthRows, listClass: 'summary-pairs' });
+
+    const corruptionRows = [
+      { label: 'Maximal korruption', value: String(maxCor), align: 'right' },
+      { label: 'Permanent korruption', value: String(perm), align: 'right' },
+      { label: 'Korruptionströskel', value: String(thresh), align: 'right' }
+    ];
+    summarySections.push({ title: 'Korruption', rows: corruptionRows, listClass: 'summary-pairs' });
+
+    const accuracyRows = cond.map(text => ({ text }));
+    summarySections.push({ title: 'Träffsäkerhet', rows: accuracyRows, listClass: 'summary-text' });
+
+    const sectionHtml = summarySections
+      .filter(section => Array.isArray(section.rows) && section.rows.length)
+      .map(section => {
+        const listClasses = ['summary-list'];
+        if (section.listClass) listClasses.push(section.listClass);
+        const headerHtml = section.action
+          ? `<div class="summary-section-header"><h3>${escapeHtml(section.title)}</h3><div class="summary-action">${section.action}</div></div>`
+          : `<h3>${escapeHtml(section.title)}</h3>`;
+        const items = section.rows.map(row => {
+          if (section.listClass === 'summary-titles') {
+            const normalized = Array.isArray(row.values)
+              ? row.values.map(val => val?.text ?? val ?? '')
+              : [];
+            const listItems = normalized
+              .map(val => `<li class="summary-subitem">${escapeHtml(val)}</li>`)
+              .join('');
+            const extraItem = row.extra > 0
+              ? `<li class="summary-subitem">+${row.extra} fler</li>`
+              : '';
+            return `<li class="summary-title-item"><div class="summary-sublist"><div class="summary-chip summary-chip-title">${escapeHtml(row.label)}</div><ul>${listItems}${extraItem}</ul></div></li>`;
+          }
+
+          if (row.text) {
+            return `<li>${escapeHtml(row.text)}</li>`;
+          }
+
+          const buildValue = () => {
+            if (Array.isArray(row.values)) {
+              const normalized = row.values.map(val => val?.text ?? val ?? '');
+              const chips = normalized
+                .map(val => `<span class="summary-chip">${escapeHtml(val)}</span>`)
+                .join('');
+              const extraChip = row.extra > 0
+                ? `<span class="summary-chip summary-chip-more">+${row.extra} fler</span>`
+                : '';
+              return `<span class="summary-values">${chips}${extraChip}</span>`;
+            }
+            const classNames = ['summary-value'];
+            if (row.align === 'right') classNames.push('align-right');
+            if (row.valueClass) {
+              row.valueClass.split(/\s+/).filter(Boolean).forEach(cls => classNames.push(cls));
+            }
+            return `<span class="${classNames.join(' ')}">${escapeHtml(row.value ?? '')}</span>`;
+          };
+
+          const liClasses = [];
+          if (row.layout) liClasses.push(`layout-${row.layout}`);
+          const liClassAttr = liClasses.length ? ` class="${liClasses.join(' ')}"` : '';
+          return `<li${liClassAttr}><span class="summary-key">${escapeHtml(row.label)}</span>${buildValue()}</li>`;
+        }).join('');
+        return `<section class="summary-section">${headerHtml}<ul class="${listClasses.join(' ')}">${items}</ul></section>`;
+      }).join('');
+
+    summaryContent.innerHTML = sectionHtml;
+  }
+
+  if (summaryBtn && summaryPanel) {
+    summaryBtn.addEventListener('click',()=>{
+      renderSummary();
+      const isOpen = summaryPanel.classList.toggle('open');
+      if (isOpen) summaryPanel.scrollTop = 0;
+    });
+  }
+  summaryClose?.addEventListener('click',()=>summaryPanel.classList.remove('open'));
+  document.addEventListener('click',e=>{
+    if (summaryPanel && summaryPanel.classList.contains('open') &&
+        !summaryPanel.contains(e.target) && e.target!==summaryBtn) {
+      summaryPanel.classList.remove('open');
+    }
+  });
+
+  if (effectsBtn && effectsPanel) {
+    effectsBtn.addEventListener('click',()=>{
+      renderEffects();
+      const isOpen = effectsPanel.classList.toggle('open');
+      if (isOpen) effectsPanel.scrollTop = 0;
+    });
+  }
+  effectsClose?.addEventListener('click',()=>effectsPanel.classList.remove('open'));
+  document.addEventListener('click',e=>{
+    if (effectsPanel && effectsPanel.classList.contains('open') &&
+        !effectsPanel.contains(e.target) && e.target!==effectsBtn) {
+      effectsPanel.classList.remove('open');
+    }
+  });
+
+  conflictClose.addEventListener('click',()=>conflictPanel.classList.remove('open'));
+  document.addEventListener('click',e=>{
+    if(conflictPanel.classList.contains('open') &&
+      !conflictPanel.contains(e.target) &&
+      !e.target.closest('.conflict-btn')){
+      conflictPanel.classList.remove('open');
+    }
+  });
+
+  /* Dropdowns baserat på karaktärslista */
+  function refreshCharacterFilters(){
+    const lst = storeHelper.getCurrentList(store).filter(p=>!isInv(p));
+    const sets = { typ:new Set(), ark:new Set(), test:new Set() };
+    lst.forEach(p=>{
+      const taggar = p && typeof p === 'object' ? (p.taggar || {}) : {};
+      const typTags = Array.isArray(taggar.typ) ? taggar.typ : [];
+      typTags
+        .filter(Boolean)
+        .forEach(v=>sets.typ.add(v));
+      const arkSource = taggar.ark_trad;
+      const arkTags = explodeTags(arkSource);
+      if (arkTags.length) {
+        arkTags.forEach(v => sets.ark.add(v));
+      } else if (Array.isArray(arkSource)) {
+        sets.ark.add('Traditionslös');
+      }
+      const testTags = Array.isArray(taggar.test) ? taggar.test : [];
+      testTags
+        .filter(Boolean)
+        .forEach(v=>sets.test.add(v));
+    });
+    const fill = (sel, set, label, extra = []) => {
       if (!sel) return;
       const opts = [`<option value="">${label} (alla)</option>`];
       extra.forEach(opt => {
@@ -902,286 +1180,20 @@ function initIndex() {
         const value = String(opt?.value ?? '');
         opts.push(`<option value="${value}">${text}</option>`);
       });
-      values.forEach(value => {
-        const text = String(value || '').trim();
-        if (text) opts.push(`<option>${text}</option>`);
-      });
-      const markup = opts.join('');
-      if (sel.dataset.optionCache !== markup) {
-        sel.innerHTML = markup;
-        sel.dataset.optionCache = markup;
-      }
+      opts.push(...[...set].sort().map(v => `<option>${v}</option>`));
+      sel.innerHTML = opts.join('');
     };
-    fill(dom.typSel , dropdownCache.typ ,'Typ', [{ value: ONLY_SELECTED_VALUE, label: ONLY_SELECTED_LABEL }]);
-    fill(dom.arkSel , dropdownCache.ark ,'Arketyp');
-    fill(dom.tstSel , dropdownCache.test,'Test');
-  };
-  fillDropdowns();
-
-  const updateSearchDatalist = () => {
-    window.globalSearch?.refreshSuggestions?.();
-  };
-
-  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[ch]);
-
-  const buildRandomSuggestionHtml = (query) => {
-    const q = String(query || '');
-    const match = q.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.*)$/i);
-    if (!match) return '';
-    const num = (match[1] || '').trim();
-    const prefix = match[2];
-    const part = searchNormalize((match[3] || '').toLowerCase());
-    const cats = getCategoryList()
-      .filter(cat => {
-        const key = searchNormalize(String(cat || '').toLowerCase());
-        return part ? key.includes(part) : true;
-      });
-    if (!cats.length) return '';
-    return cats.map((cat, i) => {
-      const base = prefix.charAt(0).toUpperCase() + prefix.slice(1).toLowerCase();
-      const text = `${num ? (num + ' ') : ''}${base}: ${cat}`;
-      const disp = text.charAt(0).toUpperCase() + text.slice(1);
-      return `<div class="item" data-idx="rand-${i}" data-val="${escapeHtml(text)}" data-cat="${escapeHtml(cat)}" data-count="${escapeHtml(num || '1')}" data-cmd="random">${escapeHtml(disp)}</div>`;
-    }).join('');
-  };
-
-  const clearSearchInput = ({ blur = true } = {}) => {
-    if (dom.sIn) dom.sIn.value = '';
-    sTemp = '';
-    window.globalSearch?.hideSuggestions?.();
-    if (blur && dom.sIn) {
-      window.__searchBlurGuard = true;
-      try { dom.sIn.blur(); } catch {}
-    }
-  };
-
-  const takePendingIndexSearch = () => {
-    try {
-      const stored = sessionStorage.getItem('__pendingIndexSearch');
-      if (stored !== null) sessionStorage.removeItem('__pendingIndexSearch');
-      return String(stored || '').trim();
-    } catch {
-      return '';
-    }
-  };
-
-  const applyIndexSearchTerm = (value, { scroll = true } = {}) => {
-    const term = String(value || '').trim();
-    const union = storeHelper.getFilterUnion(store);
-    if (term) {
-      if (union) {
-        if (!F.search.includes(term)) F.search.push(term);
-      } else {
-        F.search = [term];
-      }
-    } else {
-      F.search = [];
-    }
-    scrubInternalSearchTerms();
-    invalidateFilteredResults();
-    if (term) {
-      const norm = searchNormalize(term.toLowerCase());
-      const aliasTarget = typeof window.resolveSearchAliasTarget === 'function'
-        ? window.resolveSearchAliasTarget(term)
-        : '';
-      const targetNorm = aliasTarget || norm;
-      const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === targetNorm);
-      const cat = match?.taggar?.typ?.[0];
-      if (cat) openCatsOnce.add(cat);
-      if (window.storeHelper?.addRecentSearch) {
-        storeHelper.addRecentSearch(store, term);
-      }
-    }
-    clearSearchInput();
-    activeTags();
-    scheduleRenderList();
-    if (scroll) {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  };
-
-  const handleRandomSuggestion = (dataset) => {
-    const cat = dataset.cat || '';
-    const count = Math.max(1, parseInt(dataset.count || '1', 10) || 1);
-    const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
-    if (!pool.length) {
-      if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
-      clearSearchInput();
-      return true;
-    }
-    const picks = [];
-    const indices = pool.map((_, idx) => idx);
-    const drawCount = Math.min(count, pool.length);
-    for (let i = 0; i < drawCount; i++) {
-      const index = Math.floor(Math.random() * indices.length);
-      const [pickedIdx] = indices.splice(index, 1);
-      picks.push(pool[pickedIdx]);
-    }
-    fixedRandomEntries = picks;
-    fixedRandomInfo = { cat, count: picks.length };
-    invalidateFilteredResults();
-    const catName = cat || picks[0]?.taggar?.typ?.[0];
-    if (catName) openCatsOnce.add(catName);
-    clearSearchInput();
-    activeTags();
-    scheduleRenderList();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
-    return true;
-  };
-
-  const handleIndexSearchSubmit = (term, opts = {}) => {
-    const raw = String(term || '').trim();
-    if (!raw) {
-      F.search = [];
-      invalidateFilteredResults();
-      clearSearchInput(opts);
-      activeTags();
-      scheduleRenderList();
-      return true;
-    }
-    const lower = raw.toLowerCase();
-    if (lower === 'webapp') {
-      const ua = navigator.userAgent.toLowerCase();
-      let anchor = 'general';
-      if (/iphone|ipad|ipod/.test(ua)) anchor = 'ios';
-      else if (/android/.test(ua)) anchor = 'android';
-      else if (/edg|edge/.test(ua)) anchor = 'edge';
-      else if (/firefox/.test(ua)) anchor = 'firefox';
-      else if (/chrome/.test(ua)) anchor = 'chrome';
-      window.open(`webapp.html#${anchor}`, '_blank');
-      clearSearchInput(opts);
-      return true;
-    }
-    if (lower === 'lol') {
-      F.search = [];
-      F.typ = [];
-      F.ark = [];
-      F.test = [];
-      fixedRandomEntries = null;
-      fixedRandomInfo = null;
-      invalidateFilteredResults();
-      clearSearchInput(opts);
-      if (dom.typSel) dom.typSel.value = '';
-      if (dom.arkSel) dom.arkSel.value = '';
-      if (dom.tstSel) dom.tstSel.value = '';
-      storeHelper.setOnlySelected(store, false);
-      storeHelper.clearRevealedArtifacts(store);
-      revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
-      bumpRevealedArtifactsVersion();
-      if (showArtifacts) {
-        showArtifacts = false;
-        touchFilteredCache();
-      }
-      fillDropdowns();
-      activeTags();
-      scheduleRenderList();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return true;
-    }
-    if (lower === 'molly<3') {
-      const removed = scrubInternalSearchTerms();
-      if (removed) invalidateFilteredResults();
-      showArtifacts = true;
-      touchFilteredCache();
-      clearSearchInput(opts);
-      fillDropdowns();
-      activeTags();
-      scheduleRenderList();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return true;
-    }
-    const randomMatch = raw.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
-    if (randomMatch) {
-      const requested = Math.max(1, parseInt(randomMatch[1] || '1', 10) || 1);
-      const catInput = (randomMatch[3] || '').trim();
-      if (catInput) {
-        const normalizedCat = searchNormalize(catInput.toLowerCase());
-        const categoryIndex = getCategoryIndex();
-        const canonical = categoryIndex.get(normalizedCat);
-        if (!canonical) {
-          if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
-          clearSearchInput(opts);
-          return true;
-        }
-        const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
-        if (!pool.length) {
-          if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
-          clearSearchInput(opts);
-          return true;
-        }
-        const picks = [];
-        const idxs = pool.map((_, idx) => idx);
-        const drawCount = Math.min(requested, pool.length);
-        for (let i = 0; i < drawCount; i++) {
-          const index = Math.floor(Math.random() * idxs.length);
-          const [pickedIdx] = idxs.splice(index, 1);
-          picks.push(pool[pickedIdx]);
-        }
-        fixedRandomEntries = picks;
-        fixedRandomInfo = { cat: canonical, count: picks.length };
-        invalidateFilteredResults();
-        const catName = canonical || picks[0]?.taggar?.typ?.[0];
-        if (catName) openCatsOnce.add(catName);
-        clearSearchInput(opts);
-        activeTags();
-        scheduleRenderList();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return true;
-      }
-    }
-    if (tryBomb(raw)) {
-      clearSearchInput();
-      return true;
-    }
-    if (tryNilasPopup(raw)) {
-      clearSearchInput();
-      return true;
-    }
-    applyIndexSearchTerm(raw, opts);
-    return true;
-  };
-
-  if (window.globalSearch) {
-    window.globalSearch.setContext({
-      name: 'index',
-      getEntrySource: () => getEntries(),
-      buildExtraSuggestions: (query) => buildRandomSuggestionHtml(query),
-      handleDataset: (dataset) => {
-        if (dataset.cmd === 'random') return handleRandomSuggestion(dataset);
-        if (dataset.entry) {
-          applyIndexSearchTerm(dataset.entry);
-          return true;
-        }
-        return false;
-      },
-      handleSubmit: (term) => handleIndexSearchSubmit(term),
-      onQueryChanged: (value) => {
-        sTemp = String(value || '').trim();
-      }
-    });
+    fill(dom.typSel,sets.typ ,'Typ', [{ value: ONLY_SELECTED_VALUE, label: ONLY_SELECTED_LABEL }]);
+    fill(dom.arkSel,sets.ark ,'Arketyp');
+    fill(dom.tstSel,sets.test,'Test');
   }
-  window.handleIndexSearchTerm = (term, opts) => {
-    handleIndexSearchSubmit(term, opts);
-  };
-  updateSearchDatalist();
+  refreshCharacterFilters();
 
-  const pendingSearch = takePendingIndexSearch();
-
-  /* render helpers */
-  const activeTags =()=>{
+  const activeTags = ()=>{
     dom.active.innerHTML='';
     const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
     if (storeHelper.getOnlySelected(store)) {
       push('<span class="tag removable" data-type="onlySel">Endast valda ✕</span>');
-    }
-    if (fixedRandomEntries && fixedRandomEntries.length) {
-      const cnt = fixedRandomEntries.length;
-      const cat = (window.catName ? (fixedRandomInfo?.cat || '') : (fixedRandomInfo?.cat || ''));
-      const labelCat = cat ? (window.catName ? catName(cat) : cat) : 'Urval';
-      const label = `Random: ${labelCat} ×${cnt}`;
-      push(`<span class="tag removable" data-type="random" data-cat="${fixedRandomInfo?.cat || ''}" data-count="${cnt}">${label} ✕</span>`);
     }
     F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
@@ -1189,157 +1201,92 @@ function initIndex() {
     F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
-  const buildFilterCacheKey = ({
-    baseKey,
-    unionFlag,
-    onlySelected,
-    selectedNames,
-    terms,
-    combinedFilters,
-    randomNames
-  }) => [
-    baseKey,
-    unionFlag,
-    onlySelected,
-    selectedNames,
-    terms.join('\u0001'),
-    combinedFilters.join('\u0001'),
-    randomNames.join('\u0001')
-  ].join('||');
-
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
     const onlySel = storeHelper.getOnlySelected(store);
     const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
-    let baseEntries = getEntries();
-    let randomNames = [];
-    if (fixedRandomEntries && fixedRandomEntries.length) {
-      randomNames = fixedRandomEntries.map(e => e.namn || '').filter(Boolean);
-      const allowed = new Set(randomNames);
-      baseEntries = baseEntries.filter(p => allowed.has(p.namn));
-    }
-    let selectedNamesKey = '';
-    let nameSet = null;
-    if (onlySel) {
-      const currentList = storeHelper.getCurrentList(store);
-      const names = currentList
-        .map(x => x?.namn || '')
-        .filter(Boolean);
-      nameSet = new Set(names);
-      selectedNamesKey = names.slice().sort().join('\u0001');
-    }
-    const combinedFilters = [...F.typ, ...F.ark, ...F.test];
-    const cacheKey = buildFilterCacheKey({
-      baseKey: entryCache.filteredKey,
-      unionFlag: union ? '1' : '0',
-      onlySelected: onlySel ? '1' : '0',
-      selectedNames: selectedNamesKey,
-      terms,
-      combinedFilters,
-      randomNames
-    });
-    if (filteredResultCache.key === cacheKey && filteredResultCache.entries) {
-      return filteredResultCache.entries;
-    }
-    if (!fixedRandomEntries && combinedFilters.length === 0 && F.search.length === 1) {
-      const term = terms[0];
-      const specialId = SECRET_SEARCH[term];
-      if (specialId) {
-        const hid = lookupEntry({ id: specialId });
-        if (hid) {
-          const cat = hid.taggar?.typ?.[0];
-          if (cat) openCatsOnce.add(cat);
-          filteredResultCache.entries = [hid];
-          filteredResultCache.key = cacheKey;
-          return filteredResultCache.entries;
-        }
-      }
-      if (!showArtifacts) {
-        const hiddenIndex = getHiddenNameIndex();
-        const hiddenId = hiddenIndex.get(term);
-        const hid = hiddenId !== undefined ? lookupEntry({ id: hiddenId }) : null;
-        if (hid) {
-          if (!revealedArtifacts.has(hid.id)) {
-            revealedArtifacts.add(hid.id);
-            storeHelper.addRevealedArtifact(store, hid.id);
-            bumpRevealedArtifactsVersion();
-            fillDropdowns();
-          }
-          const cat = hid.taggar?.typ?.[0];
-          if (cat) openCatsOnce.add(cat);
-          filteredResultCache.entries = [hid];
-          filteredResultCache.key = cacheKey;
-          return filteredResultCache.entries;
-        }
-      }
-    }
-    const hasFilterTags = combinedFilters.length > 0;
-    const result = baseEntries.filter(entry => {
-      const meta = ensureEntryMeta(entry) || {};
-      const text = meta.normText || '';
-      const hasTerms = terms.length > 0;
-      const txtHit = hasTerms && (
-        union ? terms.some(q => text.includes(q))
-               : terms.every(q => text.includes(q))
-      );
-      const tagSet = meta.allTags || new Set();
-      const tagHit = hasFilterTags && (
-        union
-          ? combinedFilters.some(tag => tagSet.has(tag))
-          : combinedFilters.every(tag => tagSet.has(tag))
-      );
-      const tagOk = !hasFilterTags || tagHit;
-      const txtOk  = !hasTerms || txtHit;
-      const selOk = !onlySel || nameSet.has(entry.namn);
-      const combinedOk = union
-        ? ((hasFilterTags || hasTerms) ? (tagHit || txtHit) : true)
-        : (tagOk && txtOk);
-      return combinedOk && selOk;
-    }).sort(createSearchSorter(terms));
-    filteredResultCache.entries = result;
-    filteredResultCache.key = cacheKey;
-    return filteredResultCache.entries;
+    const base = storeHelper.getCurrentList(store);
+    const nameSet = onlySel ? new Set(base.map(x => x.namn)) : null;
+    return base
+      .filter(p => !isInv(p))
+      .filter(p => {
+        const meta = typeof window.ensureEntryMeta === 'function' ? window.ensureEntryMeta(p) : null;
+        const levelText = Object.values(p.nivåer || {}).join(' ');
+        const text = meta?.normText
+          || searchNormalize(`${p.namn} ${(p.beskrivning || '')} ${levelText}`.toLowerCase());
+        const hasTerms = terms.length > 0;
+        const txt = hasTerms && (
+          union ? terms.some(q => text.includes(q))
+                : terms.every(q => text.includes(q))
+        );
+        const tags = p.taggar || {};
+        const selTags = [...F.typ, ...F.ark, ...F.test];
+        const hasTags = selTags.length > 0;
+        const arkTags = explodeTags(tags.ark_trad);
+        const itmTags = [
+          ...(tags.typ ?? []),
+          ...(arkTags.length ? arkTags : (Array.isArray(tags.ark_trad) ? ['Traditionslös'] : [])),
+          ...(tags.test ?? [])
+        ];
+        const tagOk = !hasTags || (
+          union ? selTags.some(t => itmTags.includes(t))
+                : selTags.every(t => itmTags.includes(t))
+        );
+        const txtOk = !hasTerms || txt;
+        const selOk = !nameSet || nameSet.has(p.namn);
+        return txtOk && tagOk && selOk;
+      })
+      .sort(createSearchSorter(terms));
   };
 
-  const renderList = arr=>{
+  const renderSkills = arr=>{
     const sortMode = storeHelper.getEntrySort
       ? storeHelper.getEntrySort(store)
       : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
     const entrySorter = typeof entrySortComparator === 'function'
-      ? entrySortComparator(sortMode)
+      ? entrySortComparator(sortMode, { extract: g => g.entry })
       : ((a, b) => (typeof compareSv === 'function'
-          ? compareSv(a?.namn || '', b?.namn || '')
-          : String(a?.namn || '').localeCompare(String(b?.namn || ''), 'sv')));
+          ? compareSv(a?.entry?.namn || '', b?.entry?.namn || '')
+          : String(a?.entry?.namn || '').localeCompare(String(b?.entry?.namn || ''), 'sv')));
+    const groups = [];
+    arr.forEach(p=>{
+        const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
+        const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+        if(multi){
+          const g = groups.find(x=>x.entry.namn===p.namn);
+          if(g) { g.count++; return; }
+          groups.push({entry:p, count:1});
+        } else {
+          groups.push({entry:p, count:1});
+        }
+    });
+    const compact = storeHelper.getCompactEntries(store);
     const cardKeyFromEl = el => {
       const id = el.dataset.id || el.dataset.name || '';
       const level = el.dataset.level || '';
       const trait = el.dataset.trait || '';
       return `${id}|${level}|${trait}`;
     };
-    const prevCards = [...dom.lista.querySelectorAll('li.card.entry-card')];
-    const openCardKeys = new Set(prevCards.filter(li => !li.classList.contains('compact')).map(cardKeyFromEl));
+    const prevCards = [...dom.valda.querySelectorAll('li.card.entry-card')];
+        const openCardKeys = new Set(prevCards.filter(li => !li.classList.contains('compact')).map(cardKeyFromEl));
     const compactCardKeys = new Set(prevCards.filter(li => li.classList.contains('compact')).map(cardKeyFromEl));
     const openCats = new Set(
-      [...dom.lista.querySelectorAll('.cat-group > details[open]')]
+      [...dom.valda.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
     );
-    const fragment = document.createDocumentFragment();
-    // Always render list; a fallback "Hoppsan" category is appended last.
-    const charList = storeHelper.getCurrentList(store);
-    const invList  = storeHelper.getInventory(store);
-    const compact = storeHelper.getCompactEntries(store);
+    dom.valda.innerHTML = '';
+    if(!groups.length){ dom.valda.innerHTML = '<li class="card entry-card">Inga träffar.</li>'; return; }
     const cats = {};
-    const terms = F.search
+    const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
       .map(t => searchNormalize(t.toLowerCase()));
     const searchActive = terms.length > 0;
     const catNameMatch = {};
-    arr.forEach(p=>{
-      const meta = ensureEntryMeta(p) || {};
-      const cat = meta.primaryType || p.taggar?.typ?.[0] || 'Övrigt';
-      (cats[cat] ||= []).push(p);
+    groups.forEach(g=>{
+      const cat = charCategory(g.entry);
+      (cats[cat] ||= []).push(g);
       if (searchActive) {
-        const name = meta.normName || searchNormalize((p.namn || '').toLowerCase());
+        const name = searchNormalize((g.entry.namn || '').toLowerCase());
         const union = storeHelper.getFilterUnion(store);
         const nameOk = union ? terms.some(q => name.includes(q))
                              : terms.every(q => name.includes(q));
@@ -1361,66 +1308,21 @@ function initIndex() {
       cats[cat].sort(entrySorter);
       const catLi=document.createElement('li');
       catLi.className='cat-group';
-      // Allow temporary "open once" categories to override saved state
-      const shouldOpen = openCatsOnce.has(cat) || (catState[cat] !== undefined ? catState[cat] : openCats.has(cat));
+      const shouldOpen = catState[cat] !== undefined ? catState[cat] : (openCats.has(cat) || openCatsOnce.has(cat));
       catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list entry-card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
-      const listEl=catLi.querySelector('ul');
-      detailsEl.addEventListener('toggle', (ev) => {
+      const listEl=detailsEl.querySelector('ul');
+      detailsEl.addEventListener('toggle', () => {
         updateCatToggle();
-        if (!ev.isTrusted) return;
         catState[cat] = detailsEl.open;
         saveState();
       });
-      cats[cat].forEach(p=>{
-        const meta = ensureEntryMeta(p) || {};
-        if (p.kolumner && p.rader) {
-          const infoHtml = tabellInfoHtml(p);
-          const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">${icon('info')}</button>`;
-          const dataset = { name: p.namn };
-          if (p.id) dataset.id = p.id;
-          const visibleTags = (meta.typList || [])
-            .filter(t => t && !/^tabell(er)?$/i.test(t));
-          const tagsHtml = visibleTags.length
-            ? visibleTags.map(t => `<span class="tag">${t}</span>`).join(' ')
-            : '';
-          const li = createEntryCard({
-            compact,
-            dataset,
-            nameHtml: p.namn,
-            tagsHtml,
-            titleActions: [infoBtn],
-            collapsible: true
-          });
-          listEl.appendChild(li);
-          const entryKey = cardKeyFromEl(li);
-          if (openCardKeys.has(entryKey)) li.classList.remove('compact');
-          else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
-          if (searchActive && terms.length) {
-            const titleSpan = li.querySelector('.card-title .entry-title-main');
-            if (titleSpan) highlightInElement(titleSpan, terms);
-          }
-          return;
-        }
-        let charEntry = findMatchingListEntry(charList, p) || null;
-        const levelStr = typeof charEntry?.nivå === 'string' ? charEntry.nivå.trim() : '';
-        const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
-        const charLevel = !isEx && levelStr ? levelStr : null;
-        const curLvl = charLevel
-          || LVL.find(l => p.nivåer?.[l]) || 'Novis';
-        const availLvls = LVL.filter(l => p.nivåer?.[l]);
+      cats[cat].forEach(g=>{
+        const p = g.entry;
+        const availLvls = LVL.filter(l=>p.nivåer?.[l]);
         const hasAnyLevel = availLvls.length > 0;
+        const curLvl = p.nivå || (hasAnyLevel ? availLvls[0] : null);
         const hasLevelSelect = availLvls.length > 1;
-        if (curLvl != null) {
-          const matchOpts = { level: curLvl };
-          const traitSource = charEntry && Object.prototype.hasOwnProperty.call(charEntry, 'trait')
-            ? charEntry.trait
-            : (Object.prototype.hasOwnProperty.call(p, 'trait') ? p.trait : undefined);
-          if (traitSource !== undefined) matchOpts.trait = traitSource;
-          const refinedEntry = findMatchingListEntry(charList, p, matchOpts);
-          if (refinedEntry) charEntry = refinedEntry;
-        }
-        const inChar = isEx ? false : !!charEntry;
         const levelOptionsHtml = hasLevelSelect
           ? availLvls.map(l => {
               const short = levelLetter(l);
@@ -1430,145 +1332,103 @@ function initIndex() {
             }).join('')
           : '';
         const lvlSel = hasLevelSelect
-          ? `<select class="level" data-name="${p.namn}" aria-label="Välj nivå för ${p.namn}">
+          ? `<select class="level" data-name="${p.namn}"${p.trait?` data-trait="${p.trait}"`:''} aria-label="Välj nivå för ${p.namn}">
               ${levelOptionsHtml}
             </select>`
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
-        let desc = abilityHtml(p, charLevel || undefined);
-        let cardDesc = desc;
+        let desc = abilityHtml(p, p.nivå);
+        let infoBodyHtml = desc;
         const infoMeta = [];
-        let priceText = '';
-        let weightVal = null;
-        let capacityVal = null;
-        const isVehicle = (meta.typList || []).includes('Färdmedel');
-        let priceLabel = '';
-        if (isInv(p)) {
-          const statsHtml = itemStatHtml(p);
-          desc += statsHtml;
-          cardDesc += statsHtml;
-          const baseQuals = [
-            ...(p.taggar?.kvalitet ?? []),
-            ...splitQuals(p.kvalitet)
-          ];
-          if (baseQuals.length) {
-            const qhtml = baseQuals
-              .map(q => `<span class="tag">${q}</span>`)
-              .join(' ');
-            const qualBlock = `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
-            desc += qualBlock;
-            cardDesc += qualBlock;
-          }
-          if (p.grundpris) {
-            priceText = formatMoney(invUtil.calcEntryCost(p));
-            priceLabel = 'Pris:';
-          }
-          const baseW = p.vikt ?? p.stat?.vikt ?? 0;
-          const massCnt = baseQuals.filter(q => q === 'Massivt').length;
-          if (baseW || massCnt) {
-            const w = baseW + massCnt;
-            weightVal = formatWeight(w);
-          }
-          if (isVehicle) {
-            const cap = p.stat?.bärkapacitet ?? null;
-            if (cap != null) {
-              capacityVal = cap;
-            }
-          }
-        } else if (isEmployment(p)) {
-          if (p.grundpris) {
-            priceText = formatMoney(p.grundpris);
-            priceLabel = 'Dagslön:';
-          }
-        } else if (isService(p)) {
-          if (p.grundpris) {
-            priceText = formatMoney(p.grundpris);
-            priceLabel = 'Pris:';
-          }
-        }
-        if (priceText) {
-          infoMeta.push({ label: priceLabel.replace(/:$/, ''), value: priceText });
-        }
-        if (capacityVal != null) {
-          infoMeta.push({ label: 'Bärkapacitet', value: capacityVal });
-        }
-        if (weightVal != null) {
-          infoMeta.push({ label: 'Vikt', value: weightVal });
-        }
-        const infoBodyExtras = [];
+        let raceInfo = '';
+        let traitInfo = '';
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
-          if (extra) infoBodyExtras.push(extra);
+          if (extra) infoBodyHtml += extra;
         }
-        if (p.namn === 'Blodsband') {
-          const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
-          if (races.length) {
-            const str = races.join(', ');
-            const block = `<p><strong>Raser:</strong> ${str}</p>`;
-            cardDesc += block;
-            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
-          }
+        if (p.namn === 'Blodsband' && p.race) {
+          const race = escapeHtml(p.race);
+          infoMeta.push({ label: 'Ras', value: race });
+          raceInfo = `<p><strong>Ras:</strong> ${race}</p>`;
         }
-        let spec = null;
-        if (p.namn === 'Monsterlärd') {
-          spec = charEntry?.trait || null;
-          if (spec) {
-            const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
-            cardDesc += block;
-            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
-          }
+        if (p.trait) {
+          const label = p.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
+          const value = escapeHtml(p.trait);
+          infoMeta.push({ label, value });
+          traitInfo = `<p><strong>${label}:</strong> ${value}</p>`;
         }
-        let infoBodyHtml = desc;
-        if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
-        const levelCapable = hasAnyLevel
-          || Object.prototype.hasOwnProperty.call(charEntry || {}, 'nivå')
-          || Object.prototype.hasOwnProperty.call(p, 'nivå');
-        let xpInfo = null;
-        if (!(isInv(p) || isEmployment(p) || isService(p))) {
-          const xpOptions = {};
-          if (charEntry) xpOptions.xpSource = charEntry;
-          if (levelCapable) xpOptions.level = curLvl;
-          xpInfo = computeIndexEntryXP(p, charList, xpOptions);
+        const curList = storeHelper.getCurrentList(store);
+        let xpSourceMatch = null;
+        if (Array.isArray(curList) && curList.length) {
+          xpSourceMatch = curList.find(item => {
+            if (!item || typeof item !== 'object') return false;
+            if (item === p) return true;
+            const sameId = item.id && p.id && item.id === p.id;
+            const sameName = item.namn && p.namn && item.namn === p.namn;
+            const sameLevel = (item.nivå ?? null) === (p.nivå ?? null);
+            const sameTrait = (item.trait ?? null) === (p.trait ?? null);
+            if (sameId) return sameLevel && sameTrait;
+            if (sameName) return sameLevel && sameTrait;
+            return false;
+          }) || null;
         }
-        const xpVal = xpInfo?.value ?? null;
-        const xpTag = xpInfo?.tagHtml || '';
-        const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
+        const xpHelper = window.entryXp?.buildDisplay || window.entryXp?.compute;
+        const xpInfo = typeof xpHelper === 'function'
+          ? xpHelper(p, curList, {
+              xpSource: xpSourceMatch,
+              allowInventory: true,
+              allowEmployment: true,
+              allowService: true,
+              forceDisplay: true
+            })
+          : null;
+        const fallbackOpts = xpSourceMatch ? { xpSource: xpSourceMatch } : undefined;
+        const xpVal = xpInfo ? xpInfo.value : storeHelper.calcEntryDisplayXP(p, curList, fallbackOpts);
+        let xpText = xpInfo ? xpInfo.text : storeHelper.formatEntryXPText(p, xpVal);
+        if (!xpInfo && isElityrke(p)) {
+          xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, curList) : 50}`;
+        }
+        const xpTag = xpInfo?.tagHtml || `<span class="tag xp-cost">Erf: ${xpText}</span>`;
+        const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
         const filterTagData = [];
         const primaryTagParts = [];
-        (meta.typList || []).forEach((t, idx) => {
-          if (!t) return;
-          const tag = { section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 };
-          filterTagData.push(tag);
-          if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
-        });
-        (meta.arkList || []).forEach(t => {
-          if (!t) return;
+        typesList
+          .filter(Boolean)
+          .forEach((t, idx) => {
+            const tag = { section: 'typ', value: t, label: t, hidden: idx === 0 };
+            filterTagData.push(tag);
+            if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+          });
+        const trTags = explodeTags(p.taggar?.ark_trad);
+        const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
+        arkList.forEach(t => {
           const tag = { section: 'ark', value: t, label: t, hidden: t === 'Traditionslös' };
           filterTagData.push(tag);
           if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
         });
-        (meta.testList || []).forEach(t => {
-          if (!t) return;
-          filterTagData.push({ section: 'test', value: t, label: t });
-        });
+        (p.taggar?.test || [])
+          .filter(Boolean)
+          .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
         const primaryTagsHtml = primaryTagParts.join(' ');
         const visibleTagData = filterTagData.filter(tag => !tag.hidden);
         const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
-        const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
-        const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
-        let tagsHtml = filterTagHtml.join(' ');
-        const lvlBadgeVal = hasAnyLevel ? curLvl : '';
+        const tagHtmlParts = dockableTagData.map(tag => renderFilterTag(tag));
+        const infoTagHtmlParts = visibleTagData.map(tag => renderFilterTag(tag));
+        let tagsHtml = tagHtmlParts.join(' ');
+        const lvlBadgeVal = hasAnyLevel ? (curLvl || '') : '';
         const lvlShort = levelLetter(lvlBadgeVal);
         const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
           ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
           : '';
-        const infoTagParts = [xpTag].concat(infoFilterTagHtml).filter(Boolean);
+        const infoTagParts = [xpTag]
+          .concat(infoTagHtmlParts)
+          .filter(Boolean);
         if (singleLevelTagHtml) infoTagParts.push(singleLevelTagHtml);
-        const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
+        const infoBoxTagParts = infoTagHtmlParts.filter(Boolean);
         if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
         const activeKeys = getActiveHandlingKeys(p);
-        const currentChars = storeHelper.getCurrentList(store);
-        const conflictPool = findConflictingEntries(p, currentChars);
+        const currentList = storeHelper.getCurrentList(store);
+        const conflictPool = findConflictingEntries(p, currentList);
         const conflictsHtml = (activeKeys.length && conflictPool.length)
           ? buildConflictsHtml(conflictPool)
           : '';
@@ -1617,40 +1477,27 @@ function initIndex() {
         const infoBoxHtml = infoBoxContentHtml
           ? `<div class="card-info-box">${infoBoxContentHtml}</div>`
           : '';
-        const dockPrimary = (p.taggar?.typ || [])[0] || '';
-        const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
-        const renderDockedTags = (tags, extraClass = '') => {
-          if (!tags.length) return '';
-          const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
-          return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
-        };
-        const dockedTagsHtml = shouldDockTags ? renderDockedTags(dockableTagData) : '';
-        const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
-          ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
-          : '';
-        const xpHtml = xpInfo?.headerHtml || '';
+        const xpHtml = xpInfo?.headerHtml || `<span class="entry-xp-value">Erf: ${xpText}</span>`;
         const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
-        // Compact meta badges (P/V/level) using short labels for mobile space
-        const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
-        const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
-        const badgeParts = [];
-        if (isQual(p)) {
-          (p.taggar?.typ || [])
-            .filter(t => QUAL_TYPE_KEYS.includes(t))
-            .map(t => QUAL_TYPE_MAP[t])
-            .forEach(lbl => badgeParts.push(`<span class="meta-badge">${lbl}</span>`));
-        }
-        if (priceText) badgeParts.push(`<span class="meta-badge price-badge" title="${priceBadgeLabel}">${priceBadgeText}: ${priceText}</span>`);
-        if (capacityVal != null) badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${capacityVal}</span>`);
-        if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
-        if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
-        const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
         const infoSections = (isElityrke(p) && typeof buildElityrkeInfoSections === 'function')
           ? buildElityrkeInfoSections(p)
           : [];
-        const skadeTabHtml = (typeof buildSkadetypPanelHtml === 'function' && typeof entryHasDamageType === 'function' && entryHasDamageType(p))
-          ? buildSkadetypPanelHtml(p, { level: curLvl, tables: window.TABELLER })
+        const resolvedForSkadetyp = (!Array.isArray(p.taggar?.typ) || !p.taggar.typ.includes('Hemmagjort'))
+          ? (resolveDbEntry(p) || null)
+          : null;
+        const skadeEntry = (() => {
+          if (typeof entryHasDamageType !== 'function') return null;
+          if (entryHasDamageType(p)) return p;
+          if (resolvedForSkadetyp && entryHasDamageType(resolvedForSkadetyp)) return resolvedForSkadetyp;
+          return null;
+        })();
+        const skadeTabHtml = (typeof buildSkadetypPanelHtml === 'function' && skadeEntry)
+          ? buildSkadetypPanelHtml(skadeEntry, { level: curLvl, tables: window.TABELLER })
           : '';
+        const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+        const total = storeHelper.getCurrentList(store).filter(x=>x.namn===p.namn && !x.trait).length;
+        const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
+        const badge = g.count > 1 ? `<span class="count-badge">×${g.count}</span>` : '';
         const conflictTabHtml = conflictsHtml ? renderConflictTabButton() : '';
         const infoTagsHtml = infoTagParts.join(' ');
         const infoPanelHtml = buildInfoPanelHtml({
@@ -1663,77 +1510,62 @@ function initIndex() {
           conflictContentHtml: conflictsHtml
         });
         const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
-        const isInventoryEntry = isInv(p);
-        const isMonsterLore = p.namn === 'Monsterlärd';
-        const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
-        const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
-        const multi = isInventoryEntry || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) || monsterLoreMulti;
-        let count;
-        if (isInv(p)) {
-          if (p.id === 'di79') {
-            const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
-            count = Math.min(...qtys);
-          } else {
-            count = invList.filter(c => c.id === p.id).reduce((sum,c)=>sum+(c.qty||1),0);
-          }
-        } else {
-          if (isMonsterLore) {
-            count = charList.filter(c => c.namn === p.namn && c.trait).length;
-          } else {
-            count = charList.filter(c => c.id === p.id && !c.trait).length;
-          }
-        }
-        const limit = isInv(p)
-          ? Infinity
-          : isMonsterLore
-            ? getMonsterLoreSpecs().length
-            : storeHelper.monsterStackLimit(charList, p.namn);
-        const badge = multi && count > 0 ? `<span class="count-badge">×${count}</span>` : '';
+
         const showInfo = compact || hideDetails;
-        const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
+        const hasCustomEdit = typesList.includes('Hemmagjort');
+        const hasArtifactType = typesList.some(t => String(t).trim().toLowerCase() === 'artefakt');
+        const editAction = hasCustomEdit ? 'editCustom' : (hasArtifactType ? 'editArtifact' : '');
         const idAttr = p.id ? ` data-id="${p.id}"` : '';
-        const editBtn = canEdit
-          ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+        const editBtn = editAction
+          ? `<button data-act="${editAction}" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
           : '';
-        const eliteBtn = isElityrke(p)
-          ? `<button class="char-btn icon icon-only" data-elite-req="${p.namn}" aria-label="Lägg till elityrke med krav">${icon('elityrke')}</button>`
-          : '';
-        const allowAdd = !(isService(p) || isEmployment(p));
+        const infoBtnHtml = showInfo ? infoBtn : '';
         const titleActions = [];
-        const actionButtons = [];
-        if (showInfo) titleActions.push(infoBtn);
-        if (editBtn) actionButtons.push(editBtn);
-        if (allowAdd) {
-          if (multi) {
-            const buyMultiButton = `<button data-act="buyMulti" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Köp flera">${icon('buymultiple')}</button>`;
-            if (count > 0) {
-              actionButtons.push(`<button data-act="del" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`);
-              actionButtons.push(`<button data-act="sub" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`);
-              if (isInventoryEntry) actionButtons.push(buyMultiButton);
-              if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
+        const buttonParts = [];
+        if (infoBtnHtml) titleActions.push(infoBtnHtml);
+        if (editBtn) buttonParts.push(editBtn);
+        if (multi) {
+          const isDisadv = typesList.includes('Nackdel');
+          if (isDisadv) {
+            if (total > 0) {
+              const delBtn = `<button data-act="del" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`;
+              const subBtn = `<button data-act="sub" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`;
+              const addBtn = total < limit ? `<button data-act="add" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>` : '';
+              buttonParts.push(delBtn, subBtn);
+              if (addBtn) buttonParts.push(addBtn);
             } else {
-              if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
-              if (isInventoryEntry) actionButtons.push(buyMultiButton);
+              const addBtn = `<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`;
+              buttonParts.push(addBtn);
             }
           } else {
-            const mainBtn = inChar
+            const remBtn = total > 0
               ? `<button data-act="rem" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`
-              : `<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`;
-            actionButtons.push(mainBtn);
+              : '';
+            const addBtn = total < limit
+              ? `<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`
+              : '';
+            if (remBtn) buttonParts.push(remBtn);
+            if (addBtn) buttonParts.push(addBtn);
           }
+        } else {
+          buttonParts.push(`<button class="char-btn danger icon icon-only" data-act="rem">${icon('remove')}</button>`);
         }
-        if (eliteBtn) actionButtons.push(eliteBtn);
+        const dockPrimary = (p.taggar?.typ || [])[0] || '';
+        const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
+        const dockedTagsHtml = shouldDockTags ? renderDockedTags(dockableTagData) : '';
+        const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
+          ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
+          : '';
         const leftSections = [];
-        if (metaBadges) leftSections.push(metaBadges);
         if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
         else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
-        const dataset = { name: p.namn };
-        if (spec) dataset.trait = spec;
-        if (xpVal != null) dataset.xp = xpVal;
-        if (p.id) dataset.id = p.id;
-        const descBlock = cardDesc
-          ? `<div class="card-desc">${cardDesc}</div>`
+        const descBlock = (!hideDetails && (desc || raceInfo || traitInfo))
+          ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>`
           : '';
+        const dataset = { name: p.namn };
+        if (p.trait) dataset.trait = p.trait;
+        dataset.xp = xpVal;
+        if (p.id) dataset.id = p.id;
         const li = createEntryCard({
           compact,
           dataset,
@@ -1750,312 +1582,50 @@ function initIndex() {
           descHtml: descBlock,
           leftSections,
           titleActions,
-          buttonSections: actionButtons,
+          buttonSections: buttonParts,
           collapsible: true
         });
+
         listEl.appendChild(li);
         const entryKey = cardKeyFromEl(li);
-        if (openCardKeys.has(entryKey)) li.classList.remove('compact');
-        else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
-        if (searchActive && terms.length) {
-          const titleSpan = li.querySelector('.card-title .entry-title-main');
-          if (titleSpan) highlightInElement(titleSpan, terms);
-          const descEl = li.querySelector('.card-desc');
-          if (descEl) highlightInElement(descEl, terms);
+        if (openCardKeys.has(entryKey)) {
+          li.classList.remove('compact');
+        } else if (compact && compactCardKeys.has(entryKey)) {
+          li.classList.add('compact');
+        } else if (!compact) {
+          li.classList.remove('compact');
         }
       });
-      fragment.appendChild(catLi);
+      dom.valda.appendChild(catLi);
     });
-    // Append special "Hoppsan" category with a clear-filters action
-    {
-      const hopLi = document.createElement('li');
-      hopLi.className = 'cat-group';
-      hopLi.innerHTML = `
-        <details class="hoppsan-group" data-cat="Hoppsan" open>
-          <summary>Hoppsan</summary>
-          <ul class="card-list entry-card-list" data-entry-page="hoppsan"></ul>
-        </details>`;
-      const listEl = hopLi.querySelector('ul');
-      const hopCard = createEntryCard({
-        compact: true,
-        classes: ['hoppsan-card'],
-        dataset: { name: 'Hoppsan' },
-        nameHtml: 'Hoppsan, här tog det slut.',
-        buttonSections: ['<button class="char-btn" data-clear-filters="1">Börja om?</button>'],
-        collapsible: false
-      });
-      listEl.appendChild(hopCard);
-      const detailsEl = hopLi.querySelector('details');
-      detailsEl.addEventListener('toggle', (ev) => {
-        updateCatToggle();
-        if (!detailsEl.open) {
-          detailsEl.open = true;
-          return;
-        }
-        if (!ev.isTrusted) return;
-        catState['Hoppsan'] = true;
-        saveState();
-      });
-      catState['Hoppsan'] = true;
-      fragment.appendChild(hopLi);
-    }
-    dom.lista.replaceChildren(fragment);
     updateCatToggle();
-    // Only auto-open once per triggering action
     openCatsOnce.clear();
     saveState();
+    refreshEffectsPanel();
   };
 
-  let renderListFrame = null;
-  const scheduleRenderList = () => {
-    if (renderListFrame !== null) return;
-    const run = () => {
-      renderListFrame = null;
-      renderList(filtered());
-    };
-    if (typeof requestAnimationFrame === 'function') {
-      renderListFrame = requestAnimationFrame(run);
+  /* custom suggestions handled globalt */
+  const updateSearchDatalist = () => {
+    window.globalSearch?.refreshSuggestions?.();
+  };
+
+  renderSkills(filtered()); activeTags(); updateXP(); renderTraits(); updateSearchDatalist();
+  window.indexViewUpdate = () => { renderSkills(filtered()); renderTraits(); updateSearchDatalist(); };
+  // expose for main.js to refresh dropdowns when switching character
+  window.indexViewRefreshFilters = () => { refreshCharacterFilters(); updateSearchDatalist(); };
+  window.refreshEffectsPanel = refreshEffectsPanel;
+
+  dom.catToggle.addEventListener('click', () => {
+    const details = document.querySelectorAll('.cat-group > details');
+    if (catsMinimized) {
+      details.forEach(d => { d.open = true; });
     } else {
-      renderListFrame = setTimeout(run, 0);
+      details.forEach(d => { d.open = false; });
     }
-  };
+    updateCatToggle();
+  });
 
-  const updateCatToggle = () => {
-    const allDetails = [...document.querySelectorAll('.cat-group > details')];
-    const hop = allDetails.find(d => d.dataset.cat === 'Hoppsan');
-    const others = allDetails.filter(d => d !== hop);
-    catsMinimized = others.length ? others.every(d => !d.open) : true;
-    dom.catToggle.textContent = catsMinimized ? '▶' : '▼';
-    dom.catToggle.title = catsMinimized
-      ? 'Öppna alla kategorier'
-      : 'Minimera alla kategorier';
-  };
-
-  const escapeSelectorValue = (value) => {
-    if (value === null || value === undefined) return '';
-    const str = String(value);
-    if (window.CSS?.escape) return CSS.escape(str);
-    return str.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
-  };
-
-  const findEntryCards = (entry) => {
-    if (!entry || !dom.lista) return [];
-    const cards = [];
-    const id = entry.id !== undefined && entry.id !== null ? String(entry.id) : '';
-    const name = entry.namn ? String(entry.namn) : '';
-    if (id) {
-      cards.push(...dom.lista.querySelectorAll(
-        `li.entry-card[data-id="${escapeSelectorValue(id)}"]`
-      ));
-    }
-    if (!cards.length && name) {
-      cards.push(...dom.lista.querySelectorAll(
-        `li.entry-card[data-name="${escapeSelectorValue(name)}"]`
-      ));
-    }
-    return cards;
-  };
-
-  const syncActionRowState = (card) => {
-    if (!card) return;
-    const actionsRow = card.querySelector('.entry-row.entry-row-actions');
-    if (!actionsRow) return;
-    const dynamicGroup = actionsRow.querySelector('.entry-action-group-dynamic');
-    const standardGroup = actionsRow.querySelector('.entry-action-group-standard');
-    const levelControl = actionsRow.querySelector('.entry-level-control');
-    const hasDynamic = !!(dynamicGroup && dynamicGroup.children.length);
-    const hasStandard = !!(standardGroup && standardGroup.children.length);
-    const hasLevel = !!(levelControl && levelControl.children.length);
-    if (!hasDynamic && hasStandard && !hasLevel) actionsRow.classList.add('only-standard');
-    else actionsRow.classList.remove('only-standard');
-  };
-
-  const updateEntryCardUI = (entry) => {
-    const cards = findEntryCards(entry);
-    if (!cards.length) return false;
-    const charList = storeHelper.getCurrentList(store);
-    const invList  = storeHelper.getInventory(store);
-    const entryTypes = entry?.taggar?.typ || [];
-    const isInventory = isInv(entry);
-    const isMonsterLore = entry.namn === 'Monsterlärd';
-    const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
-    const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
-    const multi = isInventory || (entry.kan_införskaffas_flera_gånger && entryTypes.some(t => ["Fördel","Nackdel"].includes(t))) || monsterLoreMulti;
-    let count = 0;
-    if (isInventory) {
-      if (entry.id === 'di79') {
-        const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
-        count = qtys.length ? Math.min(...qtys) : 0;
-      } else {
-        count = invList
-          .filter(c => c.id === entry.id)
-          .reduce((sum, c) => sum + (c.qty || 1), 0);
-      }
-    } else {
-      if (isMonsterLore) {
-        count = charList.filter(c => c?.namn === entry.namn && c.trait).length;
-      } else {
-        count = charList
-          .filter(c => {
-            if (!c || c.namn !== entry.namn) return false;
-            if (entry.id !== undefined && entry.id !== null && c.id !== entry.id) return false;
-            return !c.trait;
-          })
-          .length;
-      }
-    }
-    const limit = isInventory
-      ? Infinity
-      : isMonsterLore
-        ? getMonsterLoreSpecs().length
-        : storeHelper.monsterStackLimit(charList, entry.namn);
-    const allowAdd = !(isService(entry) || isEmployment(entry));
-
-    cards.forEach(card => {
-      const traitKey = card.dataset.trait || null;
-      const baseMatchOpts = {};
-      if (traitKey !== null) baseMatchOpts.trait = traitKey;
-      let cardCharEntry = isInventory ? null : findMatchingListEntry(charList, entry, baseMatchOpts) || null;
-      const isException = entry.namn === 'Exceptionellt karaktärsdrag';
-      let curLvl = null;
-      if (cardCharEntry?.nivå) curLvl = String(cardCharEntry.nivå);
-      if (!curLvl) {
-        const select = card.querySelector('select.level');
-        if (select?.value) curLvl = select.value;
-      }
-      if (!curLvl) {
-        curLvl = LVL.find(l => entry.nivåer?.[l]) || 'Novis';
-      }
-      if (!isInventory) {
-        const refineOpts = { ...baseMatchOpts };
-        if (curLvl != null) refineOpts.level = curLvl;
-        const refinedEntry = findMatchingListEntry(charList, entry, refineOpts);
-        if (refinedEntry) cardCharEntry = refinedEntry;
-      }
-      const inChar = isException ? false : !!cardCharEntry;
-      let xpInfo = null;
-      if (!isInventory && !isEmployment(entry) && !isService(entry)) {
-        const xpOptions = {};
-        if (cardCharEntry) xpOptions.xpSource = cardCharEntry;
-        if (curLvl != null) xpOptions.level = curLvl;
-        xpInfo = computeIndexEntryXP(entry, charList, xpOptions);
-      }
-      if (xpInfo && xpInfo.value != null) card.dataset.xp = xpInfo.value;
-      else delete card.dataset.xp;
-      const xpSpan = card.querySelector('.entry-header-xp .entry-xp-value');
-      if (xpSpan) {
-        if (xpInfo && xpInfo.headerHtml) {
-          xpSpan.textContent = `${xpInfo.label}: ${xpInfo.text}`;
-        } else {
-          xpSpan.textContent = '';
-        }
-      }
-      const infoBtn = card.querySelector('button[data-info]');
-      if (infoBtn?.dataset.info) {
-        const infoHtml = decodeURIComponent(infoBtn.dataset.info);
-        const xpTagHtml = xpInfo?.tagHtml || '';
-        let newInfo = infoHtml;
-        if (xpTagHtml) {
-          if (infoHtml.includes('class="tag xp-cost"')) {
-            newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>/, xpTagHtml);
-          } else {
-            newInfo = infoHtml.replace(/(<div class="tags">)/, `$1${xpTagHtml}`);
-          }
-        } else {
-          newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>\s*/g, '');
-        }
-        infoBtn.dataset.info = encodeURIComponent(newInfo);
-      }
-
-      const titleEl = card.querySelector('.card-title');
-      if (titleEl) {
-        let suffix = titleEl.querySelector('.entry-title-suffix');
-        const ensureSuffix = () => {
-          if (suffix) return suffix;
-          suffix = document.createElement('span');
-          suffix.className = 'entry-title-suffix';
-          titleEl.appendChild(suffix);
-          return suffix;
-        };
-        const badge = suffix?.querySelector('.count-badge');
-        if (multi && count > 0) {
-          const host = ensureSuffix();
-          if (badge) {
-            badge.textContent = `×${count}`;
-          } else {
-            const badgeEl = document.createElement('span');
-            badgeEl.className = 'count-badge';
-            badgeEl.textContent = `×${count}`;
-            host.appendChild(badgeEl);
-          }
-        } else if (badge) {
-          badge.remove();
-          if (suffix && !suffix.children.length && !suffix.textContent.trim()) {
-            suffix.remove();
-          }
-        }
-      }
-
-      const standardGroup = card.querySelector('.entry-action-group-standard');
-      if (standardGroup) {
-        const buttonName = card.dataset.name || entry.namn || '';
-        const buttonId = card.dataset.id || (entry.id !== undefined && entry.id !== null ? String(entry.id) : '');
-        const buttons = [];
-        const createButton = (act, classes, iconName, ariaLabel = '', highlight = false) => {
-          const btn = document.createElement('button');
-          btn.className = highlight ? `${classes} add-btn` : classes;
-          btn.dataset.act = act;
-          if (buttonName) btn.dataset.name = buttonName;
-          if (buttonId) btn.dataset.id = buttonId;
-          if (ariaLabel) btn.setAttribute('aria-label', ariaLabel);
-          btn.innerHTML = icon(iconName);
-          return btn;
-        };
-
-        if (allowAdd) {
-          if (multi) {
-            if (count > 0) {
-              buttons.push(createButton('del', 'char-btn danger icon icon-only', 'remove'));
-              buttons.push(createButton('sub', 'char-btn icon icon-only', 'minus', 'Minska'));
-              if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
-              if (count < limit) {
-                buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till'));
-              }
-            } else {
-              buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
-              if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
-            }
-          } else {
-            if (inChar) {
-              buttons.push(createButton('rem', 'char-btn danger icon icon-only', 'remove'));
-            } else {
-              buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
-            }
-          }
-        }
-
-        standardGroup.replaceChildren(...buttons);
-        syncActionRowState(card);
-      }
-    });
-
-    return true;
-  };
-
-  /* första render */
-  if (pendingSearch) {
-    handleIndexSearchSubmit(pendingSearch);
-  } else {
-    scheduleRenderList();
-    activeTags();
-  }
-  updateXP();
-
-  /* expose update function for party toggles */
-  window.indexViewUpdate = () => { scheduleRenderList(); activeTags(); };
-  window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
-
-  /* -------- events -------- */
+  /* --- filter-events */
   dom.sIn.addEventListener('input', () => {
     sTemp = dom.sIn.value.trim();
   });
@@ -2079,33 +1649,27 @@ function initIndex() {
     if (sel === 'tstSel' && !v) {
       F[key] = [];
       storeHelper.setOnlySelected(store, false);
-      invalidateFilteredResults();
-      activeTags(); scheduleRenderList();
+      activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
       return;
     }
     if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
       storeHelper.setOnlySelected(store, true);
-      invalidateFilteredResults();
       el.value = '';
-      activeTags(); scheduleRenderList();
+      activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
       return;
     }
     if (v && !F[key].includes(v)) F[key].push(v);
-    if (v) invalidateFilteredResults();
-    if (sel === 'typSel' && v) {
-      openCatsOnce.add(v);
-    }
     el.value = '';
-    activeTags(); scheduleRenderList();
+    activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
   };
 
   const ensureDropdownChangeHandlers = () => {
     const toolbar = document.querySelector('shared-toolbar');
-    if (toolbar && toolbar.dataset.indexDropdownWatcher !== '1') {
+    if (toolbar && toolbar.dataset.characterDropdownWatcher !== '1') {
       toolbar.addEventListener('toolbar-rendered', () => {
         ensureDropdownChangeHandlers();
       });
-      toolbar.dataset.indexDropdownWatcher = '1';
+      toolbar.dataset.characterDropdownWatcher = '1';
     }
     const root = toolbar?.shadowRoot || null;
     let missing = false;
@@ -2120,46 +1684,23 @@ function initIndex() {
         return;
       }
       dom[sel] = el;
-      if (el.dataset.indexDropdownBound === '1') return;
+      if (el.dataset.characterDropdownBound === '1') return;
       el.addEventListener('change', handleDropdownChange(sel, key));
-      el.dataset.indexDropdownBound = '1';
+      el.dataset.characterDropdownBound = '1';
     });
     return !missing;
   };
 
   ensureDropdownChangeHandlers();
-
-  dom.catToggle.addEventListener('click', () => {
-    const details = document.querySelectorAll('.cat-group > details');
-    if (catsMinimized) {
-      details.forEach(d => { d.open = true; });
-    } else {
-      details.forEach(d => {
-        if (d.dataset.cat === 'Hoppsan') return;
-        d.open = false;
-      });
-    }
-    updateCatToggle();
-  });
-  // Dropdown handlers are bound via ensureDropdownChangeHandlers().
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
-    const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; invalidateFilteredResults(); activeTags(); scheduleRenderList(); return; }
-    if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
-    else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
-    else F[section] = (F[section] || []).filter(x=>x!==val);
-    if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    invalidateFilteredResults();
-    activeTags(); scheduleRenderList();
+    const sec=t.dataset.type,val=t.dataset.val;
+    if(sec==='search'){F.search=F.search.filter(x=>x!==val);} 
+    else if(sec==='onlySel'){ storeHelper.setOnlySelected(store,false); }
+    else F[sec]=F[sec].filter(x=>x!==val);
+    if(sec==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
+    activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
   });
-
-  if (dom.lista && !dom.lista.dataset.entryToggleBound) {
-    dom.lista.dataset.entryToggleBound = '1';
-    dom.lista.addEventListener('entry-card-toggle', () => {
-      updateCatToggle();
-    });
-  }
 
   // Treat clicks on tags anywhere as filter selections
   document.addEventListener('click', e => {
@@ -2172,12 +1713,46 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    invalidateFilteredResults();
-    activeTags(); scheduleRenderList();
+    activeTags(); renderSkills(filtered()); renderTraits();
   });
 
-  /* lista-knappar */
-  dom.lista.addEventListener('click', async e=>{
+  function formatLevels(list){
+    if(list.length===0) return '';
+    if(list.length===1) return list[0];
+    if(list.length===2) return `${list[0]} och ${list[1]}`;
+    return `${list.slice(0,-1).join(', ')} och ${list[list.length-1]}`;
+  }
+
+  function openConflictPanelFor(entryName){
+    if (!entryName) return false;
+    const currentList = storeHelper.getCurrentList(store);
+    const current = currentList.find(x => x.namn === entryName);
+    const curKeys = getActiveHandlingKeys(current || {});
+    const curNames = curKeys.map(k => handlingName(current || {}, k));
+    let baseName = entryName;
+    let levelsText = '';
+    if (curKeys.length) {
+      if (curKeys.every(k => !LVL.includes(k))) {
+        baseName = `${entryName}: ${curNames.join(', ')}`;
+      } else {
+        const lvlWord = curNames.length === 1 ? 'nivån' : 'nivåerna';
+        levelsText = ` på ${lvlWord} ${formatLevels(curNames)}`;
+      }
+    }
+    conflictTitle.textContent = `${baseName}${levelsText} kan ej användas samtidigt som:`;
+    const conflicts = findConflictingEntries(current || { namn: entryName }, currentList);
+    renderConflicts(conflicts);
+    conflictPanel.classList.add('open');
+    conflictPanel.scrollTop = 0;
+    return true;
+  }
+
+  function renderConflictTabButton(){
+    return '<button class="info-tab" data-tab="conflict" type="button">Konflikter</button>';
+  }
+
+  /* ta bort & nivåbyte */
+  dom.valda.addEventListener('click', async e=>{
     const conflictFlag = e.target.closest('.conflict-flag');
     if (conflictFlag) {
       const liEl = conflictFlag.closest('li');
@@ -2192,16 +1767,14 @@ function initIndex() {
       return;
     }
     if (e.target.closest('.filter-tag')) return;
-    // Special clear-filters action inside the Hoppsan category
-    const clearBtn = e.target.closest('button[data-clear-filters]');
-    if (clearBtn) {
-      // Reset all filters and state
-      storeHelper.setOnlySelected(store, false);
-      storeHelper.clearRevealedArtifacts(store);
-      try { localStorage.removeItem(STATE_KEY); sessionStorage.setItem('hoppsanReset', '1'); } catch {}
-      // Scroll to top immediately, then refresh the page to restore default state
-      window.scrollTo(0, 0);
-      location.reload();
+    if (e.target.closest('.entry-collapse-btn')) return;
+    const header = e.target.closest('.card-header');
+    if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
+      return;
+    }
+    const conflictBtn = e.target.closest('.conflict-btn');
+    if(conflictBtn){
+      openConflictPanelFor(conflictBtn.dataset.name);
       return;
     }
     const infoBtn=e.target.closest('button[data-info]');
@@ -2209,8 +1782,9 @@ function initIndex() {
       let html=decodeURIComponent(infoBtn.dataset.info||'');
       const liEl = infoBtn.closest('li');
       const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
+      const entryName = liEl?.dataset.name || title;
       if(infoBtn.dataset.tabell!=null){
-        const terms = F.search.map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
+        const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
         if (terms.length) {
           const tmp = document.createElement('div');
           tmp.innerHTML = html;
@@ -2221,7 +1795,7 @@ function initIndex() {
         return;
       }
       {
-        const terms = F.search.map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
+        const terms = [...F.search, ...(sTemp ? [sTemp] : [])].map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
         if (terms.length) {
           const tmp = document.createElement('div');
           tmp.innerHTML = html;
@@ -2232,696 +1806,242 @@ function initIndex() {
       yrkePanel.open(title, html);
       return;
     }
-    const btn = e.target.closest('button[data-act]');
-    if (!btn) return;
-    if (!store.current && !(await requireCharacter())) return;
-    const act = btn.dataset.act;
-    const li = btn.closest('li');
-    if (!li) return;
-    const name = btn.dataset.name || li.dataset.name;
-    const tr = li.dataset.trait || null;
-    const idAttr = btn.dataset.id || li.dataset.id || null;
+    const actBtn=e.target.closest('button[data-act]');
+    if(!actBtn) return;
+    const act = actBtn.dataset.act;
+    const liEl = actBtn.closest('li');
+    if (!liEl) return;
+    const name = actBtn.dataset.name || liEl.dataset.name;
+    const idAttr = actBtn.dataset.id || liEl.dataset.id || null;
     const ref = { id: idAttr || undefined, name };
-    const entries = getEntries();
-    let p = idAttr ? entries.find(x => String(x.id) === String(idAttr)) : null;
-    if (!p && name) p = entries.find(x => x.namn === name);
-    if (!p) p = lookupEntry(ref);
-    if (!p) return;
+    const tr = liEl.dataset.trait || null;
+    const before = storeHelper.getCurrentList(store);
+    const disBefore = storeHelper.countDisadvantages(before);
+    let p = idAttr ? before.find(x => String(x.id) === String(idAttr)) : null;
+    if(!p && name) p = before.find(x=>x.namn===name);
+    if(!p) p = lookupEntry(ref);
+    if(!p) return;
+    const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
+    const handleEntryEdited = () => {
+      refreshCharacterFilters();
+      activeTags();
+      renderSkills(filtered());
+      renderTraits();
+      updateSearchDatalist();
+      if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+      if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
+        window.invUtil.renderInventory();
+      }
+      updateXP();
+    };
     if (act === 'editCustom') {
       if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
-      window.invUtil.editCustomEntry(p, () => {
-        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
-        if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
-          window.invUtil.renderInventory();
-        }
-        if (window.updateXP) updateXP();
-      });
+      window.invUtil.editCustomEntry(p, handleEntryEdited);
       return;
     }
-    const lvlSel = li.querySelector('select.level');
-    let   lvl = lvlSel ? lvlSel.value : null;
-    if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || null;
-
-
-    /* Lägg till kvalitet direkt */
-      if (isQual(p)) {
-        const inv = storeHelper.getInventory(store);
-        if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
-        const qTypes = p.taggar?.typ || [];
-        const TYPE_MAP = {
-          'Vapenkvalitet': 'Vapen',
-          'Rustningskvalitet': 'Rustning',
-          'Sköldkvalitet': 'Sköld',
-          'Allmän kvalitet': ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt']
-        };
-        const allowed = new Set();
-        qTypes.forEach(t => {
-          const mapped = TYPE_MAP[t];
-          if (Array.isArray(mapped)) mapped.forEach(x => allowed.add(x));
-          else if (mapped) allowed.add(mapped);
-        });
-        if (!allowed.size) ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'].forEach(x => allowed.add(x));
-        const elig = inv.filter(it => {
-          const entry = invUtil.getEntry(it.id || it.name);
-          if (window.canApplyQuality) return canApplyQuality(entry, p);
-          const types = entry?.taggar?.typ || [];
-          return types.some(t => allowed.has(t));
-        });
-        if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
-        invUtil.openQualPopup(elig, iIdx => {
-          const row   = elig[iIdx];
-          const entry = invUtil.getEntry(row.id || row.name);
-          if (window.canApplyQuality && !canApplyQuality(entry, p)) return;
-          row.kvaliteter = row.kvaliteter || [];
-          const qn = p.namn;
-          if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
-          invUtil.saveInventory(inv); invUtil.renderInventory();
-          activeTags();
-          scheduleRenderList();
-        });
+    if (act === 'editArtifact') {
+      if (!window.invUtil || typeof window.invUtil.editArtifactEntry !== 'function') {
+        if (typeof alertPopup === 'function') await alertPopup('Kan inte redigera artefakten just nu.');
         return;
       }
-
-    const pendingUpdates = new Set();
-    let needsFullRefresh = false;
-    const queueUpdate = (entry) => {
-      if (entry) pendingUpdates.add(entry);
-    };
-
-    if (act==='add') {
-      if (isInv(p)) {
-        const inv = storeHelper.getInventory(store);
-        const list = storeHelper.getCurrentList(store);
-        if (p.id === 'di79') {
-          FALT_BUNDLE.forEach(id => {
-            const ent = invUtil.getEntry(id);
-            if (!ent.namn) return;
-            const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-              .some(t=>ent.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(ent.id);
-            const existing = inv.find(r => r.id === ent.id);
-            if (indivItem || !existing) {
-              inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
-            } else {
-              existing.qty++;
-            }
-          });
-          invUtil.saveInventory(inv); invUtil.renderInventory();
-          queueUpdate(p);
-          FALT_BUNDLE.forEach(id => {
-            const ent = invUtil.getEntry(id);
-            const i = inv.findIndex(r => r.id === id);
-            const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(ent.namn)}"][data-idx="${i}"]`);
-            if (li) {
-              li.classList.add('inv-flash');
-              setTimeout(() => li.classList.remove('inv-flash'), 1000);
-            }
-          });
-        } else {
-          const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-            .some(t=>p.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(p.id);
-          const rowTemplate = await invUtil.buildInventoryRow({ entry: p, list });
-          if (!rowTemplate) return;
-          const liveEnabled = typeof storeHelper?.getLiveMode === 'function'
-            && storeHelper.getLiveMode(store)
-            && window.invUtil
-            && typeof window.invUtil.openLiveBuyPopup === 'function'
-            && typeof window.invUtil.applyLiveModePayment === 'function';
-          const cloneInvRow = obj => JSON.parse(JSON.stringify(obj));
-          let desiredQty = 1;
-          let priceMoney = null;
-          let overrideO = null;
-          const livePairs = liveEnabled ? [] : null;
-          if (liveEnabled) {
-            const existingRow = indiv ? null : inv.find(x => x.id === p.id);
-            const purchase = await window.invUtil.openLiveBuyPopup(p, existingRow || null);
-            if (!purchase) return;
-            desiredQty = Math.max(1, Math.floor(Number(purchase.qty) || 0));
-            priceMoney = purchase.pricePerUnit || null;
-            overrideO = Number.isFinite(purchase.totalO) ? Math.max(0, Math.floor(purchase.totalO)) : null;
+      const success = await window.invUtil.editArtifactEntry(p, { trait: tr }, handleEntryEdited);
+      if (!success) {
+        if (typeof alertPopup === 'function') await alertPopup('Föremålet hittades inte i inventariet.');
+      }
+      return;
+    }
+    const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel","Nackdel"].includes(t))) && !p.trait;
+    let list;
+    if(act==='add'){
+          if(name==='Korruptionskänslig' && before.some(x=>x.namn==='Dvärg')){
+            await alertPopup('Dvärgar kan inte ta Korruptionskänslig.');
+            return;
           }
-          const assignPrice = target => {
-            if (!priceMoney || !target) return;
-            target.basePrice = {
-              daler: Number(priceMoney.daler) || 0,
-              skilling: Number(priceMoney.skilling) || 0,
-              'örtegar': Number(priceMoney['örtegar']) || 0
-            };
-            target.basePriceSource = 'live';
-          };
-          const finalizeLivePayment = () => {
-            if (!livePairs || !livePairs.length) return;
-            window.invUtil.applyLiveModePayment(
-              livePairs,
-              overrideO != null ? { overrideO } : undefined
-            );
-            livePairs.length = 0;
-          };
-          const addRow = trait => {
-            let flashIdx;
-            const qtyToAdd = desiredQty;
-            if (indiv) {
-              for (let i = 0; i < qtyToAdd; i++) {
-                const instance = cloneInvRow(rowTemplate);
-                instance.qty = 1;
-                if (trait) instance.trait = trait;
-                assignPrice(instance);
-                inv.push(instance);
-                flashIdx = inv.length - 1;
-                if (livePairs) livePairs.push({ prev: null, next: instance });
-              }
-            } else {
-              const match = inv.find(x => x.id === p.id && (!trait || x.trait === trait));
-              if (match) {
-                const prevState = livePairs ? cloneInvRow(match) : null;
-                match.qty = (Number(match.qty) || 0) + qtyToAdd;
-                if (trait) match.trait = trait;
-                assignPrice(match);
-                flashIdx = inv.indexOf(match);
-                if (livePairs) livePairs.push({ prev: prevState, next: match });
-              } else {
-                const instance = cloneInvRow(rowTemplate);
-                instance.qty = qtyToAdd;
-                if (trait) instance.trait = trait;
-                assignPrice(instance);
-                inv.push(instance);
-                flashIdx = inv.length - 1;
-                if (livePairs) livePairs.push({ prev: null, next: instance });
-              }
-            }
-            finalizeLivePayment();
-            invUtil.saveInventory(inv); invUtil.renderInventory();
-            const hidden = isHidden(p);
-            const artifactTagged = hasArtifactTag(p);
-            let addedToList = false;
-            if (hidden || artifactTagged) {
-              const list = storeHelper.getCurrentList(store);
-              if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
-                list.push({ ...p, noInv: true });
-                storeHelper.setCurrentList(store, list);
-                addedToList = true;
-              }
-              if (addedToList || hidden) {
-                if (window.updateXP) updateXP();
-                if (window.renderTraits) renderTraits();
-              }
-              if (hidden && p.id) {
-                storeHelper.addRevealedArtifact(store, p.id);
-              }
-            }
-            queueUpdate(p);
-            if (hidden || addedToList) needsFullRefresh = true;
-            const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
-            if (li) {
-              li.classList.add('inv-flash');
-              setTimeout(() => li.classList.remove('inv-flash'), 1000);
-            }
-          };
-          if (p.traits && window.maskSkill) {
-            const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
-            maskSkill.pickTrait(used, async trait => {
-              if(!trait) return;
-              if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-              addRow(trait);
-            });
-          } else if (p.bound === 'kraft' && window.powerPicker) {
-            const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
-            powerPicker.pickKraft(used, async val => {
-              if(!val) return;
-              if (used.includes(val) && !STACKABLE_IDS.includes(p.id) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-              addRow(val);
-            });
-          } else if (p.bound === 'ritual' && window.powerPicker) {
-            const used = inv.filter(it => it.id===p.id).map(it=>it.trait).filter(Boolean);
-            powerPicker.pickRitual(used, async val => {
-              if(!val) return;
-              if (used.includes(val) && !STACKABLE_IDS.includes(p.id) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-              addRow(val);
-            });
-          } else {
-            addRow();
+          if(!multi) return;
+          const cnt = before.filter(x=>x.namn===name && !x.trait).length;
+          const limit = storeHelper.monsterStackLimit(before, name);
+          if(cnt >= limit){
+            await alertPopup(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
+            return;
           }
-        }
-      } else {
-        const list = storeHelper.getCurrentList(store);
-        const disBefore = storeHelper.countDisadvantages(list);
-        const checkDisadvWarning = async () => {
-          if (storeHelper.countDisadvantages(list) === 5 && disBefore < 5) {
-            await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
-          }
-        };
-        if (p.namn === 'Korruptionskänslig' && list.some(x => x.namn === 'Dvärg')) {
-          await alertPopup('Dvärgar kan inte ta Korruptionskänslig.');
-          return;
-        }
-        if (isRas(p) && list.some(isRas)) {
-          if (!(await confirmPopup('Du kan bara välja en ras. Lägga till ändå?'))) return;
-        }
-        if (p.namn === 'Dvärg') {
-          const hasKorrupt = list.some(x => x.namn === 'Korruptionskänslig');
-          if (hasKorrupt) {
-            if (!(await confirmPopup('Du har korruptionskänslig, om du väljer till rasen Dvärg så kommer den nackdelen tas bort. Fortsätt?'))) return;
-            for (let i = list.length - 1; i >= 0; i--) {
-              if (list[i].namn === 'Korruptionskänslig') list.splice(i, 1);
-            }
-          }
-        }
-        if (isYrke(p) && list.some(isYrke)) {
-          if (!(await confirmPopup('Du kan bara välja ett yrke. Lägga till ändå?'))) return;
-        }
-        if (isElityrke(p) && list.some(isElityrke)) {
-          if (!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
-        }
-        if (isElityrke(p)) {
-          const res = eliteReq.check(p, list);
-          if (!res.ok) {
-            const msg = 'Krav ej uppfyllda:\n' +
-              (res.missing.length ? 'Saknar: ' + res.missing.join(', ') + '\n' : '') +
-              (res.master ? '' : 'Ingen av kraven på Mästare-nivå.\n') +
-              'Lägga till ändå?';
-            if (!(await confirmPopup(msg))) return;
-          }
-        }
-        if (isEliteSkill(p)) {
-          const allowed = explodeTags(p.taggar.ark_trad).some(reqYrke =>
-            list.some(item => isElityrke(item) && item.namn === reqYrke)
-          );
-          if (!allowed) {
-            const msg =
-              'Förmågan är låst till elityrket ' +
-              explodeTags(p.taggar.ark_trad).join(', ') +
-              '.\nLägga till ändå?';
-            if (!(await confirmPopup(msg))) return;
-          }
-        }
-        let monsterOk = false;
-        if (isMonstrousTrait(p)) {
+        const lvlSel = liEl.querySelector('select.level');
+        let   lvl = lvlSel ? lvlSel.value : null;
+        if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
+        if(isMonstrousTrait(p)){
           const baseName = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
-          const baseRace = list.find(isRas)?.namn;
+          const baseRace = before.find(isRas)?.namn;
           const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
           const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
           const bloodvaderTraits = ['Naturligt vapen','Pansar','Regeneration','Robust'];
-          const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
-          const bloodRaces = list.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
-          monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
-            (list.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
+          const hamLvl = storeHelper.abilityLevel(before, 'Hamnskifte');
+          const bloodRaces = before.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
+          let monsterOk = typesList.includes('Elityrkesförmåga') ||
+            (before.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
             (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
-            (baseRace === 'Djur/Bjära' || bloodRaces.includes('Djur/Bjära')) ||
             (baseRace === 'Rese' && baseName === 'Robust') ||
-            (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
+            (before.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
             ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && baseName === 'Diminutiv') ||
             (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen','Pansar'].includes(baseName)) ||
             (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration','Robust'].includes(baseName));
-          if (!monsterOk) {
-            if (!(await confirmPopup('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?'))) return;
+          if(!monsterOk){
+            if(!(await confirmPopup('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')))
+              return;
           }
-          if (storeHelper.hamnskifteNoviceLimit(list, p, lvl)) {
+          if (storeHelper.hamnskifteNoviceLimit(before, p, lvl)) {
             await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
             return;
           }
         }
-        if (storeHelper.HAMNSKIFTE_BASE[p.namn] ? storeHelper.HAMNSKIFTE_BASE[p.namn] === 'Robust' : p.namn === 'Robust') {
-          const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
-          const robustOk = monsterOk || (hamLvl >= 3 && lvl === 'Novis');
-          if (!robustOk) {
-            if (!(await confirmPopup('Robust kan normalt inte väljas. Lägga till ändå?'))) return;
-          }
-        }
-        if (p.namn === 'Råstyrka') {
-          const robust = list.find(x => x.namn === 'Robust');
-          const hasRobust = !!robust && (robust.nivå === undefined || robust.nivå !== '');
-          if (!hasRobust) {
-            if (!(await confirmPopup('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?'))) return;
+        if(name==='Råstyrka'){
+          const robust=before.find(x=>x.namn==='Robust');
+          const hasRobust=!!robust && (robust.nivå===undefined || robust.nivå!=='');
+          if(!hasRobust){
+            if(!(await confirmPopup('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?')))
+              return;
           }
         }
         // Tidigare blockerades Mörkt förflutet om Jordnära fanns – inte längre.
-        if (isSardrag(p) && (p.taggar.ras || []).length && !(isMonstrousTrait(p) && monsterOk)) {
-          const races = [];
-          const base = list.find(isRas)?.namn;
-          if (base) races.push(base);
-          list.forEach(it => { if (it.namn === 'Blodsband' && it.race) races.push(it.race); });
-          const ok = races.some(r => p.taggar.ras.includes(r));
-          if (!ok) {
-            const msg = 'Särdraget är bundet till rasen ' + p.taggar.ras.join(', ') + '.\nLägga till ändå?';
-            if (!(await confirmPopup(msg))) return;
-          }
-        }
-        if (p.namn === 'Blodsband' && window.bloodBond) {
-          const used=list.filter(x=>x.namn===p.namn).map(x=>x.race).filter(Boolean);
-          bloodBond.pickRace(used, async race => {
-            if(!race) return;
-            const added = { ...p, race };
-            list.push(added);
-            await checkDisadvWarning();
-            storeHelper.setCurrentList(store,list); updateXP();
-            scheduleRenderList();
-            renderTraits();
-            flashAdded(added.namn, added.trait);
-          });
+        if(name==='Packåsna' && before.some(x=>x.namn==='Hafspackare')){
+          await alertPopup('Karaktärer med Hafspackare kan inte ta Packåsna.');
           return;
         }
-        if (p.namn === 'Monsterlärd' && ['Gesäll','Mästare'].includes(lvl) && window.monsterLore) {
-          const usedSpecs = usedMonsterLoreSpecs(list);
-          const availableSpecs = getMonsterLoreSpecs();
-          if (usedSpecs.length >= availableSpecs.length) {
-            await alertPopup('Alla specialiseringar är redan valda.');
-            return;
-          }
-          monsterLore.pickSpec(usedSpecs, async spec => {
-            if(!spec || usedSpecs.includes(spec)) return;
-            const added = { ...p, nivå: lvl, trait: spec };
-            list.push(added);
-            await checkDisadvWarning();
-            storeHelper.setCurrentList(store,list); updateXP();
-            scheduleRenderList();
-            renderTraits();
-            flashAdded(added.namn, added.trait);
-          });
+        if(name==='Hafspackare' && before.some(x=>x.namn==='Packåsna')){
+          await alertPopup('Karaktärer med Packåsna kan inte ta Hafspackare.');
           return;
         }
-          if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
-            const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
-            exceptionSkill.pickTrait(used, async trait => {
-              if(!trait) return;
-            const existing=list.find(x=>x.namn===p.namn && x.trait===trait);
-            let added;
-            if(existing){
-              existing.nivå=lvl;
-              added = existing;
-            }else{
-              added = { ...p, nivå:lvl, trait };
-              list.push(added);
-            }
-            await checkDisadvWarning();
-            storeHelper.setCurrentList(store,list); updateXP();
-            scheduleRenderList();
-            renderTraits();
-            flashAdded(added.namn, added.trait);
-            });
-            return;
-          }
-          const grundCheck = await enforceGrundritualRequirement(p, list);
-          if (!grundCheck.allowed) return;
-          if (grundCheck.autoAdd.length) {
-            const autoAdded = [];
-            const missingBases = [];
-            grundCheck.autoAdd.forEach(baseName => {
-              if (list.some(item => item?.namn === baseName)) return;
-              const baseEntry = lookupEntry({ name: baseName });
-              if (baseEntry) {
-                list.push({ ...baseEntry });
-                autoAdded.push(baseName);
-              } else {
-                missingBases.push(baseName);
-              }
-            });
-            if (autoAdded.length && typeof window.toast === 'function') {
-              window.toast(`La till ${formatQuotedList(autoAdded)}.`);
-            }
-            if (missingBases.length && typeof alertPopup === 'function') {
-              const plural = missingBases.length === 1 ? 'grundritualen' : 'grundritualerna';
-              await alertPopup(`Hittar inte ${plural} ${formatQuotedList(missingBases)} i databasen. Lägg till manuellt.`);
-            }
-          }
-          const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-          if(multi){
-            const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
-          const limit = storeHelper.monsterStackLimit(list, p.namn);
-          if(p.namn !== 'Blodsband' && cnt >= limit){
-            await alertPopup(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
-            return;
-          }
-        }else if(list.some(x=>x.namn===p.namn && !x.trait)){
+        list = [...before, { ...p, nivå: lvl }];
+        const disAfter = storeHelper.countDisadvantages(list);
+        if (disAfter === 5 && disBefore < 5) {
+          await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
+        }
+    }else if(act==='sub' || act==='del' || act==='rem'){
+      if(name==='Mörkt förflutet' && before.some(x=>x.namn==='Mörkt blod')){
+        if(!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
           return;
-        }
-        let form = 'normal';
-        const finishAdd = async added => {
-          await checkDisadvWarning();
-          storeHelper.setCurrentList(store, list); updateXP();
-          if (p.namn === 'Privilegierad') {
-            invUtil.renderInventory();
-          }
-          if (p.namn === 'Besittning') {
-            const amount = Math.floor(Math.random() * 10) + 11;
-            storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
-            await alertPopup(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
-            invUtil.renderInventory();
-          }
-          if (p.namn === 'Välutrustad') {
-            const inv = storeHelper.getInventory(store);
-            invUtil.addWellEquippedItems(inv);
-            invUtil.saveInventory(inv); invUtil.renderInventory();
-          }
-          needsFullRefresh = true;
-          renderTraits();
-          flashAdded(added.namn, added.trait);
-        };
-        if (isMonstrousTrait(p)) {
-          const test = { ...p, nivå: lvl, form: 'beast' };
-          if (storeHelper.isFreeMonsterTrait(list, test) && window.beastForm) {
-            beastForm.pickForm(async res => {
-              if(!res) return;
-              const added = { ...p, nivå: lvl, form: res };
-              list.push(added);
-              await finishAdd(added);
-            });
-            return;
-          }
-        }
-        const added = { ...p, nivå: lvl, form };
-        list.push(added);
-        await finishAdd(added);
       }
-      needsFullRefresh = true;
-    } else if (act==='buyMulti') {
-      if (!isInv(p)) return;
-      if (!window.invUtil || typeof window.invUtil.openBuyMultiplePopup !== 'function') return;
-      const inv = storeHelper.getInventory(store);
-      let idxInv = inv.findIndex(x => x.id === p.id);
-      let row = idxInv >= 0 ? inv[idxInv] : null;
-      let isNewRow = false;
-      if (idxInv < 0) {
-        if (typeof invUtil.buildInventoryRow !== 'function') return;
-        const list = storeHelper.getCurrentList(store);
-        const newRow = await invUtil.buildInventoryRow({ entry: p, list });
-        if (!newRow) return;
-        newRow.qty = 0;
-        inv.push(newRow);
-        row = newRow;
-        idxInv = inv.length - 1;
-        isNewRow = true;
+      const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
+      if(isMonstrousTrait(p) && storeHelper.DARK_BLOOD_TRAITS.includes(baseRem) && before.some(x=>x.namn==='Mörkt blod')){
+        if(!(await confirmPopup(name+' hänger ihop med Mörkt blod. Ta bort ändå?')))
+          return;
       }
-      const safeName = escapeSelectorValue(p.namn);
-      let invLi = null;
-      if (!isNewRow && safeName) {
-        invLi = dom.invList?.querySelector(`li[data-name="${safeName}"][data-idx="${idxInv}"]`) || null;
-      }
-      const cancelTempRow = () => {
-        if (!isNewRow) return;
-        const curIdx = inv.indexOf(row);
-        if (curIdx >= 0) inv.splice(curIdx, 1);
-      };
-      const confirmTempRow = () => {
-        if (isNewRow) queueUpdate(p);
-      };
-      window.invUtil.openBuyMultiplePopup({
-        row,
-        entry: p,
-        inv,
-        li: invLi,
-        parentArr: inv,
-        idx: idxInv,
-        onCancel: isNewRow ? cancelTempRow : undefined,
-        onConfirm: confirmTempRow,
-        isNewRow
-      });
-      return;
-    } else if (act==='sub' || act==='del' || act==='rem') {
-      if (isInv(p)) {
-        const inv = storeHelper.getInventory(store);
-        if (p.id === 'di79') {
-          const removeCnt = (act === 'del' || act === 'rem')
-            ? Math.min(...FALT_BUNDLE.map(id => inv.find(r => r.id === id)?.qty || 0))
-            : 1;
-          if (removeCnt > 0) {
-            FALT_BUNDLE.forEach(id => {
-              const idxRow = inv.findIndex(r => r.id === id);
-              if (idxRow >= 0) {
-                inv[idxRow].qty -= removeCnt;
-                if (inv[idxRow].qty < 1) inv.splice(idxRow,1);
-              }
-            });
+      if (act === 'sub') {
+        // Remove a single instance
+        let removed=false;
+        list=[];
+        for(const it of before){
+          if(!removed && it.namn===name && !it.trait){
+            removed=true; continue;
           }
-        } else {
-          const idxInv = inv.findIndex(x => x.id===p.id);
-          if (idxInv >= 0) {
-            if (act === 'del' || act === 'rem') {
-              inv.splice(idxInv,1);
-            } else {
-              inv[idxInv].qty--;
-              if (inv[idxInv].qty < 1) inv.splice(idxInv,1);
-            }
-          }
+          list.push(it);
         }
-        invUtil.saveInventory(inv); invUtil.renderInventory();
-        const hidden = isHidden(p);
-        const artifactTagged = hasArtifactTag(p);
-        if (hidden || artifactTagged) {
-          const still = inv.some(r => r.id === p.id);
-          if (!still) {
-            let list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
-            storeHelper.setCurrentList(store, list);
-            if (window.updateXP) updateXP();
-            if (window.renderTraits) renderTraits();
-            if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
+      } else if (act === 'del' || (!multi && act === 'rem')) {
+        // Remove all instances (or single non-multi)
+        list = before.filter(x => !(x.namn===name && (tr?x.trait===tr:!x.trait)));
+      } else if (act === 'rem') {
+        // Backward compat: for multi, old 'rem' removed one
+        let removed=false;
+        list=[];
+        for(const it of before){
+          if(!removed && it.namn===name && !it.trait){
+            removed=true; continue;
           }
+          list.push(it);
         }
-        queueUpdate(p);
-        if (hidden || artifactTagged) needsFullRefresh = true;
       } else {
-        needsFullRefresh = true;
-        const tr = btn.closest('li').dataset.trait || null;
-        const before = storeHelper.getCurrentList(store);
-        if(p.namn==='Mörkt förflutet' && before.some(x=>x.namn==='Mörkt blod')){
-          if(!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
-            return;
-        }
-        const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
-        if(isMonstrousTrait(p) && storeHelper.DARK_BLOOD_TRAITS.includes(baseRem) && before.some(x=>x.namn==='Mörkt blod')){
-          if(!(await confirmPopup(p.namn+' hänger ihop med Mörkt blod. Ta bort ändå?')))
-            return;
-        }
-        if(storeHelper.HAMNSKIFTE_BASE[p.namn] && before.some(x=>x.namn==='Hamnskifte')){
-          if(!(await confirmPopup(p.namn+' hänger ihop med Hamnskifte. Ta bort ändå?')))
-            return;
-          const rem=storeHelper.getHamnskifteRemoved(store);
-          const base=storeHelper.HAMNSKIFTE_BASE[p.namn];
-          if(!rem.includes(base)){
-            rem.push(base);
-            storeHelper.setHamnskifteRemoved(store, rem);
-          }
-        }
-        let list;
-        if(act === 'del' || act === 'rem'){
-          list = before.filter(x => !(x.namn===p.namn && (tr?x.trait===tr:!x.trait)));
-        }else{
-          let removed=false;
-          list = [];
-          for(const it of before){
-            if(!removed && it.namn===p.namn && (tr?it.trait===tr:!it.trait)){
-              removed=true;
-              continue;
-            }
-            list.push(it);
-          }
-        }
-        const removed = before.find(it => it.namn===p.namn && (tr?it.trait===tr:!it.trait));
-        const remDeps = storeHelper.getDependents(before, removed);
-        if(p.namn==='Mörkt blod' && remDeps.length){
-          if(await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)){
-            list = list.filter(x => !remDeps.includes(x.namn));
-          }
-        } else if(p.namn==='Hamnskifte' && remDeps.length){
-          if(await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)){
-            list = list.filter(x => !remDeps.includes(x.namn));
-            storeHelper.setHamnskifteRemoved(store, []);
-          }
-        } else if(remDeps.length){
-          if(!(await confirmPopup(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`))) return;
-        }
-        if(eliteReq.canChange(before) && !eliteReq.canChange(list)) {
-          const deps = before
-            .filter(isElityrke)
-            .filter(el => eliteReq.check(el, before).ok && !eliteReq.check(el, list).ok)
-            .map(el => el.namn);
-        const msg = deps.length
-            ? `Förmågan krävs för: ${deps.join(', ')}. Ta bort ändå?`
-            : 'Förmågan krävs för ett valt elityrke. Ta bort ändå?';
-          if(!(await confirmPopup(msg)))
-            return;
-        }
-        storeHelper.setCurrentList(store,list); updateXP();
-        const affected = new Set([p.namn, ...remDeps]);
-        affected.forEach(name => {
-          const depEntry = entries.find(x => x.namn === name);
-          if (depEntry) pendingUpdates.add(depEntry);
-        });
-        if (p.namn === 'Privilegierad') {
-          invUtil.renderInventory();
-        }
-        if (p.namn === 'Besittning') {
-          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          const cnt = storeHelper.incrementPossessionRemoved(store);
-          if (cnt >= 3) {
-            const id = store.current;
-            await alertPopup('Karaktären raderas på grund av misstänkt fusk.');
-            storeHelper.deleteCharacter(store, id);
-            // Soft refresh after deletion: pick next sensible current and re-render
-            try {
-              const active = storeHelper.getActiveFolder(store);
-              const remaining = (store.characters || [])
-                .filter(c => !active || active === 'ALL' || (c.folderId || '') === active)
-                .slice()
-                .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-              store.current = remaining[0]?.id || '';
-              storeHelper.save(store);
-            } catch {}
-            if (window.applyCharacterChange) { applyCharacterChange(); }
-            return;
-          } else if (cnt === 2) {
-            await alertPopup('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
-          }
-          invUtil.renderInventory();
-        }
-        if (p.namn === 'Välutrustad') {
-          const inv = storeHelper.getInventory(store);
-          invUtil.removeWellEquippedItems(inv);
-          invUtil.saveInventory(inv); invUtil.renderInventory();
-        }
-        const hidden = isHidden(p);
-        const artifactTagged = hasArtifactTag(p);
-        if (hidden || artifactTagged) {
-          const inv = storeHelper.getInventory(store);
-          const removeItem = arr => {
-            for (let i = arr.length - 1; i >= 0; i--) {
-              if (arr[i].id === p.id) arr.splice(i, 1);
-              else if (Array.isArray(arr[i].contains)) removeItem(arr[i].contains);
-            }
-          };
-          removeItem(inv);
-          invUtil.saveInventory(inv); invUtil.renderInventory();
-          if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
-        }
+        return;
       }
+      const removed = before.find(it => it.namn===name && (tr?it.trait===tr:!it.trait));
+      const remDeps = storeHelper.getDependents(before, removed);
+      if(name==='Mörkt blod' && remDeps.length){
+        if(await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)){
+          list = list.filter(x => !remDeps.includes(x.namn));
+        }
+      } else if(remDeps.length){
+        if(!(await confirmPopup(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`))) return;
+      }
+      if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
+        const deps = before
+          .filter(isElityrke)
+          .filter(el => eliteReq.check(el, before).ok && !eliteReq.check(el, list).ok)
+          .map(el => el.namn);
+        const msg = deps.length
+          ? `F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${deps.join(', ')}. Ta bort \u00e4nd\u00e5?`
+          : 'F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r ett valt elityrke. Ta bort \u00e4nd\u00e5?';
+        if(!(await confirmPopup(msg)))
+          return;
+      }
+      flashRemoved(liEl);
+      await new Promise(r => setTimeout(r, 100));
+    } else {
+      return;
     }
-    pendingUpdates.add(p);
-    pendingUpdates.forEach(entry => {
-      if (!updateEntryCardUI(entry)) needsFullRefresh = true;
-    });
-    activeTags();
-    if (needsFullRefresh) scheduleRenderList();
-    renderTraits();
-    if (act==='add') {
+    storeHelper.setCurrentList(store, list);
+    if (p.namn === 'Privilegierad') {
+      invUtil.renderInventory();
+    }
+    if (p.namn === 'Besittning') {
+      if (act === 'add') {
+        const amount = Math.floor(Math.random() * 10) + 11;
+        storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
+        await alertPopup(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
+      } else {
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+      }
+      invUtil.renderInventory();
+    }
+    if (p.namn === 'Välutrustad') {
+      const inv = storeHelper.getInventory(store);
+      if (act === 'add') {
+        invUtil.addWellEquippedItems(inv);
+      } else {
+        invUtil.removeWellEquippedItems(inv);
+      }
+      invUtil.saveInventory(inv);
+      invUtil.renderInventory();
+    }
+    if ((p.taggar?.typ || []).includes('Artefakt')) {
+      const inv = storeHelper.getInventory(store);
+      const removeItem = arr => {
+        for (let i = arr.length - 1; i >= 0; i--) {
+          if (arr[i].id === p.id) arr.splice(i, 1);
+          else if (Array.isArray(arr[i].contains)) removeItem(arr[i].contains);
+        }
+      };
+      removeItem(inv);
+      invUtil.saveInventory(inv);
+      invUtil.renderInventory();
+      storeHelper.removeRevealedArtifact(store, p.id);
+    }
+      renderSkills(filtered());
+      updateXP();
+      renderTraits();
+      updateSearchDatalist();
+    if (act === 'add') {
       flashAdded(name, tr);
-    } else if (act==='sub' || act==='del' || act==='rem') {
-      flashRemoved(name, tr);
     }
+
   });
 
-  /* level-byte i listan */
-  dom.lista.addEventListener('change', async e=>{
+  if (dom.valda) {
+    dom.valda.addEventListener('entry-card-toggle', () => {
+      updateCatToggle();
+      refreshEffectsPanel();
+    });
+  }
+  dom.valda.addEventListener('change', async e=>{
     if(!e.target.matches('select.level')) return;
     const select = e.target;
     window.entryCardFactory?.syncLevelControl?.(select);
-    const name = select.dataset.name;
-    const tr = select.closest('li').dataset.trait || null;
-    const list = storeHelper.getCurrentList(store);
-    const ent  = list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
-    if (ent){
-      const before = list.map(x => ({...x}));
+    const name=select.dataset.name;
+    const tr=select.dataset.trait || select.closest('li').dataset.trait || null;
+    const list=storeHelper.getCurrentList(store);
+    const ent=list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
+    if(ent){
+      const before=list.map(x=>({...x}));
       const old = ent.nivå;
-      ent.nivå = select.value;
+      ent.nivå=select.value;
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
         ent.nivå = old;
@@ -2939,8 +2059,8 @@ function initIndex() {
       if(name==='Monsterlärd'){
         if(['Gesäll','Mästare'].includes(ent.nivå)){
           if(!ent.trait && window.monsterLore){
-            const usedSpecs = usedMonsterLoreSpecs(list);
-            if (usedSpecs.length >= getMonsterLoreSpecs().length) {
+            const usedSpecs = list.filter(x => x?.namn === 'Monsterlärd' && x.trait).map(x => x.trait);
+            if (usedSpecs.length >= (Array.isArray(window.monsterLore?.SPECS) ? window.monsterLore.SPECS.length : 4)) {
               ent.nivå=old;
               select.value=old;
               window.entryCardFactory?.syncLevelControl?.(select);
@@ -2955,99 +2075,26 @@ function initIndex() {
                 return;
               }
               ent.trait=spec;
-              storeHelper.setCurrentList(store,list); updateXP();
-              scheduleRenderList(); renderTraits();
+                storeHelper.setCurrentList(store,list); updateXP();
+                renderSkills(filtered()); renderTraits(); updateSearchDatalist();
             });
             return;
           }
         }else if(ent.trait){
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
-          scheduleRenderList(); renderTraits();
-          updateSearchDatalist();
+          renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+          window.entryCardFactory?.syncLevelControl?.(select);
           return;
         }
       }
-      if(name==='Hamnskifte'){
-        const lvlMap={"":0,Novis:1, Gesäll:2, Mästare:3};
-        const oldIdx=lvlMap[old]||0;
-        const newIdx=lvlMap[ent.nivå]||0;
-        let toRemove=[];
-        if(oldIdx>=3 && newIdx<3) toRemove.push('Robust','Regeneration');
-        if(oldIdx>=2 && newIdx<2) toRemove.push('Naturligt vapen','Pansar');
-        toRemove=toRemove.filter(n=>list.some(x=>x.namn===storeHelper.HAMNSKIFTE_NAMES[n]));
-        if(toRemove.length){
-          const dispNames=toRemove.map(n=>storeHelper.HAMNSKIFTE_NAMES[n]);
-          if(!(await confirmPopup(`Ta bort även: ${dispNames.join(', ')}?`))){
-            ent.nivå=old;
-            select.value=old;
-            window.entryCardFactory?.syncLevelControl?.(select);
-            return;
-          }
-          for(let i=list.length-1;i>=0;i--){
-            const base=storeHelper.HAMNSKIFTE_BASE[list[i].namn];
-            if(base && toRemove.includes(base)) list.splice(i,1);
-          }
-          const rem=storeHelper.getHamnskifteRemoved(store).filter(x=>!toRemove.includes(x));
-          storeHelper.setHamnskifteRemoved(store, rem);
-        }
-        const toAdd=[];
-        if(newIdx>=2 && oldIdx<2) toAdd.push('Naturligt vapen','Pansar');
-        if(newIdx>=3 && oldIdx<3) toAdd.push('Robust','Regeneration');
-        let rem=storeHelper.getHamnskifteRemoved(store);
-        toAdd.forEach(n=>{
-          const hamName=storeHelper.HAMNSKIFTE_NAMES[n];
-          if(!list.some(x=>x.namn===hamName) && !rem.includes(n)){
-            const entry=lookupEntry({ id: n, name: n });
-            if(entry) list.push({ ...entry, namn:hamName, form:'beast' });
-          }
-          rem=rem.filter(x=>x!==n);
-        });
-        storeHelper.setHamnskifteRemoved(store, rem);
-      }
       storeHelper.setCurrentList(store,list); updateXP();
-      scheduleRenderList(); renderTraits();
+    }
+      renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+      window.entryCardFactory?.syncLevelControl?.(select);
       flashAdded(name, tr);
-      return;
-    }
-
-    /* uppdatera pris om förmågan inte lagts till */
-    const p = getEntries().find(x=>x.namn===name);
-    if(!p) return;
-    const lvl = select.value;
-    const xpInfo = (isInv(p) || isEmployment(p) || isService(p))
-      ? null
-      : computeIndexEntryXP(p, list, { level: lvl });
-    const xpVal = xpInfo?.value ?? null;
-    const liEl = select.closest('li');
-    if (xpVal != null) liEl.dataset.xp = xpVal; else delete liEl.dataset.xp;
-    const xpSpan = liEl.querySelector('.entry-header-xp .entry-xp-value');
-    if (xpSpan) {
-      if (xpInfo && xpInfo.headerHtml) {
-        xpSpan.textContent = `${xpInfo.label}: ${xpInfo.text}`;
-      } else {
-        xpSpan.textContent = '';
-      }
-    }
-    const infoBtn = liEl.querySelector('button[data-info]');
-    if (infoBtn?.dataset.info) {
-      const infoHtml = decodeURIComponent(infoBtn.dataset.info);
-      const xpTagHtml = xpInfo?.tagHtml || '';
-      let newInfo = infoHtml;
-      if (xpTagHtml) {
-        if (infoHtml.includes('class="tag xp-cost"')) {
-          newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>/, xpTagHtml);
-        } else {
-          newInfo = infoHtml.replace(/(<div class="tags">)/, `$1${xpTagHtml}`);
-        }
-      } else {
-        newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>\s*/g, '');
-      }
-      infoBtn.dataset.info = encodeURIComponent(newInfo);
-    }
-    window.entryCardFactory?.syncLevelControl?.(select);
   });
 }
 
-  window.initIndex = initIndex;
+  window.initCharacter = initCharacter;
 })(window);
