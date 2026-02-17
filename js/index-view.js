@@ -2268,6 +2268,21 @@ function initIndex() {
       if (isQual(p)) {
         const inv = storeHelper.getInventory(store);
         if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
+        const qualityAllowedForRow = (entry, row, qualityName) => {
+          const sanitizer = window.enforceArmorQualityExclusion;
+          if (typeof sanitizer !== 'function') return true;
+          if (!entry || !qualityName) return true;
+          const removed = Array.isArray(row?.removedKval) ? row.removedKval : [];
+          const baseQuals = [
+            ...(entry.taggar?.kvalitet ?? []),
+            ...splitQuals(entry.kvalitet)
+          ];
+          const baseQ = baseQuals.filter(q => !removed.includes(q));
+          const addedQ = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
+          if ([...baseQ, ...addedQ].includes(qualityName)) return true;
+          const next = sanitizer(entry, [...baseQ, ...addedQ, qualityName]);
+          return next.includes(qualityName);
+        };
         const qTypes = p.taggar?.typ || [];
         const TYPE_MAP = {
           'Vapenkvalitet': 'Vapen',
@@ -2287,12 +2302,19 @@ function initIndex() {
           if (window.canApplyQuality) return canApplyQuality(entry, p);
           const types = entry?.taggar?.typ || [];
           return types.some(t => allowed.has(t));
+        }).filter(it => {
+          const entry = invUtil.getEntry(it.id || it.name);
+          return qualityAllowedForRow(entry, it, p.namn);
         });
         if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
-        invUtil.openQualPopup(elig, iIdx => {
+        invUtil.openQualPopup(elig, async iIdx => {
           const row   = elig[iIdx];
           const entry = invUtil.getEntry(row.id || row.name);
           if (window.canApplyQuality && !canApplyQuality(entry, p)) return;
+          if (!qualityAllowedForRow(entry, row, p.namn)) {
+            await alertPopup('En sköld med kvaliteten "Armfäst" kan inte ha fler positiva kvaliteter.');
+            return;
+          }
           row.kvaliteter = row.kvaliteter || [];
           const qn = p.namn;
           if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);

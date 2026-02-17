@@ -417,21 +417,41 @@
   function enforceArmorQualityExclusion(entry, qualities) {
     const types = entry?.taggar?.typ || [];
     const isArmor = Array.isArray(types) && types.includes('Rustning');
+    const isShield = Array.isArray(types) && types.includes('Sköld');
     const list = Array.isArray(qualities) ? qualities.filter(Boolean) : [];
-    if (!isArmor) return list;
+    if (!isArmor && !isShield) return list;
+
+    const isArmorAgile = txt => txt.startsWith('smidig');
+    // Backward compatibility: old saves may still have "Smidig/Smidigt" on shields.
+    const isArmMountedShield = txt =>
+      txt.startsWith('armfäst') || txt.startsWith('armfast') || txt.startsWith('smidig');
 
     const out = [];
     let hasOtymplig = false;
-    let hasSmidig = false;
+    let hasArmorAgile = false;
+    let hasArmMountedShield = false;
     list.forEach(q => {
       const txt = String(q || '').toLowerCase();
       const isOtymplig = txt.startsWith('otymplig');
-      const isSmidig = txt.startsWith('smidig');
-      if ((isOtymplig && hasSmidig) || (isSmidig && hasOtymplig)) return;
+      const armorAgile = isArmorAgile(txt);
+      const armMountedShield = isArmMountedShield(txt);
+      if (isArmor && ((isOtymplig && hasArmorAgile) || (armorAgile && hasOtymplig))) return;
       if (isOtymplig) hasOtymplig = true;
-      if (isSmidig) hasSmidig = true;
+      if (armorAgile) hasArmorAgile = true;
+      if (armMountedShield) hasArmMountedShield = true;
       out.push(q);
     });
+
+    if (isShield && hasArmMountedShield) {
+      let hasKeptArmMounted = false;
+      return out.filter(q => {
+        if (isNegativeQual(q) || isNeutralQual(q)) return true;
+        if (!isArmMountedShield(String(q || '').toLowerCase())) return false;
+        if (hasKeptArmMounted) return false;
+        hasKeptArmMounted = true;
+        return true;
+      });
+    }
 
     return out;
   }

@@ -4,6 +4,10 @@
     const txt = String(q || '').toLowerCase();
     return txt.startsWith('balanser');
   };
+  const isArmMountedShieldQuality = q => {
+    const txt = String(q || '').toLowerCase();
+    return txt.startsWith('armf\u00e4st') || txt.startsWith('armfast') || txt.startsWith('smidig');
+  };
 
   function flattenInventoryWithPath(arr, prefix = []) {
     return (Array.isArray(arr) ? arr : []).reduce((acc, row, idx) => {
@@ -127,17 +131,30 @@
     let hasLongWeapon = false;
     let hasLongStaff = false;
     let hasShield = false;
-    const weaponCount = weaponItems.reduce((count, obj) => {
+    const weaponFacts = weaponItems.map(obj => {
       const entry = invUtil.getEntry(obj.row.id || obj.row.name);
-      if (!entry) return count;
+      if (!entry) return null;
       const types = entry.taggar?.typ || [];
+      const quals = getAllQualities(obj.row, entry);
+      return { types, quals, row: obj.row };
+    }).filter(Boolean);
+    const hasArmMountedShield = weaponFacts.some(f =>
+      f.types.includes('Sköld') && f.quals.some(isArmMountedShieldQuality)
+    );
+    const weaponCount = weaponFacts.reduce((count, fact) => {
+      const { types, quals, row } = fact;
       if (!types.includes('Vapen') && !types.includes('Sköld')) return count;
       if (types.includes('Sköld')) hasShield = true;
-      const quals = getAllQualities(obj.row, entry);
+
+      // Armfäst sköld kan inte användas tillsammans med tvåhandsvapen.
+      if (hasArmMountedShield && !types.includes('Sköld') && types.includes('Tunga vapen')) {
+        return count;
+      }
+
       if (quals.some(isBalancedQuality)) hasBalancedWeapon = true;
       if (quals.includes('L\u00e5ngt')) {
         hasLongWeapon = true;
-        const lname = (obj.row.name || '').toLowerCase();
+        const lname = (row.name || '').toLowerCase();
         if (STAFF_NAMES.includes(lname)) {
           hasLongStaff = true;
         }
@@ -180,7 +197,7 @@
     if (hasShield) {
       res.forEach(r => { r.value += 1; });
       const shieldfightLvl = storeHelper.abilityLevel(list, 'Sköldkamp');
-      if (shieldfightLvl >= 1) {
+      if (shieldfightLvl >= 1 && !hasArmMountedShield) {
         res.forEach(r => { r.value += 1; });
       }
     }

@@ -46,6 +46,80 @@
     if (typeof fn === 'function') return fn(entry, qualities);
     return Array.isArray(qualities) ? qualities.filter(Boolean) : [];
   };
+  const normalizeShieldQualityName = (entry, qualityName) => {
+    const isShield = Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Sköld');
+    if (!isShield) return qualityName;
+    const txt = String(qualityName || '').toLowerCase();
+    if (txt.startsWith('smidig')) return 'Armfäst';
+    return qualityName;
+  };
+  const mapRowQualityArray = (entry, list) => {
+    if (!Array.isArray(list)) return list;
+    const out = [];
+    const seen = new Set();
+    list.forEach(q => {
+      const mapped = normalizeShieldQualityName(entry, q);
+      if (!mapped) return;
+      const key = String(mapped);
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(mapped);
+    });
+    return out;
+  };
+  const getRowQualityState = (entry, row) => {
+    const removed = Array.isArray(row?.removedKval) ? row.removedKval : [];
+    const baseQuals = [
+      ...(entry?.taggar?.kvalitet ?? []),
+      ...splitQuals(entry?.kvalitet)
+    ];
+    const baseQ = baseQuals.filter(q => !removed.includes(q));
+    const addedQ = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
+    return { baseQ, addedQ };
+  };
+  const isQualityAllowedByRules = (entry, row, qualityName) => {
+    if (!entry || !qualityName) return true;
+    const { baseQ, addedQ } = getRowQualityState(entry, row);
+    if ([...baseQ, ...addedQ].includes(qualityName)) return true;
+    const next = sanitizeArmorQualities(entry, [...baseQ, ...addedQ, qualityName]);
+    return next.includes(qualityName);
+  };
+  const normalizeRowQualities = (row) => {
+    if (!row || typeof row !== 'object') return;
+    const entry = getEntry(row.id || row.name);
+    if (entry) {
+      if (Array.isArray(row.kvaliteter)) row.kvaliteter = mapRowQualityArray(entry, row.kvaliteter);
+      if (Array.isArray(row.gratisKval)) row.gratisKval = mapRowQualityArray(entry, row.gratisKval);
+      if (Array.isArray(row.removedKval)) row.removedKval = mapRowQualityArray(entry, row.removedKval);
+      const { baseQ, addedQ } = getRowQualityState(entry, row);
+      const allowedAll = sanitizeArmorQualities(entry, [...baseQ, ...addedQ]);
+      const allowance = new Map();
+      allowedAll.forEach(q => allowance.set(q, (allowance.get(q) || 0) + 1));
+      baseQ.forEach(q => {
+        const count = allowance.get(q) || 0;
+        if (count > 0) allowance.set(q, count - 1);
+      });
+      if (Array.isArray(row.kvaliteter)) {
+        row.kvaliteter = addedQ.filter(q => {
+          const count = allowance.get(q) || 0;
+          if (count <= 0) return false;
+          allowance.set(q, count - 1);
+          return true;
+        });
+      }
+      if (Array.isArray(row.gratisKval)) {
+        const allowedSet = new Set(allowedAll);
+        row.gratisKval = row.gratisKval.filter(q => allowedSet.has(q));
+      }
+    }
+    if (Array.isArray(row.contains)) {
+      row.contains.forEach(child => normalizeRowQualities(child));
+    }
+  };
+  const normalizeInventoryQualities = (inv) => {
+    if (!Array.isArray(inv)) return;
+    inv.forEach(row => normalizeRowQualities(row));
+  };
 
   function getCraftLevels() {
     const list = storeHelper.getCurrentList(store);
@@ -256,6 +330,7 @@
   }
 
   function saveInventory(inv) {
+    normalizeInventoryQualities(inv);
     const nonVeh = [];
     const veh = [];
     inv.forEach(row => {
@@ -3246,10 +3321,24 @@
     ];
     const baseQ = baseQuals.filter(q => !removedQ.includes(q));
     const addQ  = row.kvaliteter ?? [];
-    const freeQ = (row.gratisKval ?? []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+    const allowedQuals = sanitizeArmorQualities(entry, [...baseQ, ...addQ]);
+    const allowance = new Map();
+    allowedQuals.forEach(q => allowance.set(q, (allowance.get(q) || 0) + 1));
+    const consumeAllowed = q => {
+      const count = allowance.get(q) || 0;
+      if (count <= 0) return false;
+      allowance.set(q, count - 1);
+      return true;
+    };
+    const visibleBaseQ = baseQ.filter(consumeAllowed);
+    const visibleAddQ = addQ.filter(consumeAllowed);
+    const allowedSet = new Set(allowedQuals);
+    const freeQ = (row.gratisKval ?? [])
+      .filter(q => !isNegativeQual(q) && !isNeutralQual(q))
+      .filter(q => allowedSet.has(q));
     const all = [
-      ...baseQ.map(q => ({ q, base: true })),
-      ...addQ.map(q => ({ q, base: false }))
+      ...visibleBaseQ.map(q => ({ q, base: true })),
+      ...visibleAddQ.map(q => ({ q, base: false }))
     ];
     let qualityHtml = '';
     if (all.length) {
@@ -4559,15 +4648,24 @@
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
         if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t))) return;
-        const qualities = DB.filter(isQual).filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true);
+        const qualities = DB
+          .filter(isQual)
+          .filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true)
+          .filter(q => isQualityAllowedByRules(entry, row, q.namn || q.name));
         if (!qualities.length) {
           if (window.alertPopup) await alertPopup('Inga passande kvaliteter för detta föremål.');
           return;
         }
-        openQualPopup(qualities, qIdx => {
+        openQualPopup(qualities, async qIdx => {
           if (row && qualities[qIdx]) {
             row.kvaliteter = row.kvaliteter || [];
             const qn = qualities[qIdx].namn;
+            if (!isQualityAllowedByRules(entry, row, qn)) {
+              if (window.alertPopup) {
+                await alertPopup('En sköld med kvaliteten "Armfäst" kan inte ha fler positiva kvaliteter.');
+              }
+              return;
+            }
             const removed = row.removedKval ?? [];
             const baseQuals = [
               ...(entry.taggar?.kvalitet ?? []),
