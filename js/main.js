@@ -203,6 +203,40 @@ window.__entryDataVersions = entryDataVersions;
 
 const toArray = (value) => (Array.isArray(value) ? value : []);
 
+// Search aliases: typing these terms should surface the target entry.
+const SEARCH_ENTRY_ALIASES = new Map([
+  ['felicia', 'pestvind'],
+  ['isak', 'pestvind']
+]);
+
+function normalizeSearchAliasTerm(value) {
+  const lower = String(value ?? '').trim().toLowerCase();
+  if (!lower) return '';
+  if (typeof searchNormalize === 'function') {
+    try { return searchNormalize(lower); }
+    catch { return lower; }
+  }
+  return lower;
+}
+
+function resolveSearchAliasTarget(value) {
+  const key = normalizeSearchAliasTerm(value);
+  if (!key) return '';
+  return SEARCH_ENTRY_ALIASES.get(key) || '';
+}
+
+function getAliasesForEntryName(name) {
+  const target = normalizeSearchAliasTerm(name);
+  if (!target) return [];
+  const aliases = [];
+  for (const [alias, mappedTarget] of SEARCH_ENTRY_ALIASES.entries()) {
+    if (mappedTarget === target) aliases.push(alias);
+  }
+  return aliases;
+}
+
+window.resolveSearchAliasTarget = resolveSearchAliasTarget;
+
 function ensureEntryMeta(entry) {
   if (!entry || typeof entry !== 'object') return null;
   if (entry[ENTRY_META_FIELD]) return entry[ENTRY_META_FIELD];
@@ -219,7 +253,8 @@ function ensureEntryMeta(entry) {
     .map(toLower)
     .join(' ');
   const descText = toLower(entry.beskrivning);
-  const combined = `${lowerName} ${descText} ${levelText}`.trim();
+  const aliasTerms = getAliasesForEntryName(entry.namn);
+  const combined = `${lowerName} ${descText} ${levelText} ${aliasTerms.join(' ')}`.trim();
   const normText = typeof searchNormalize === 'function'
     ? searchNormalize(combined)
     : combined;
@@ -926,6 +961,7 @@ const globalSearch = (() => {
     if (!entries.length) return '';
     const limit = context.maxEntries ?? ENTRY_LIMIT;
     const normQuery = normalizeTerm(query);
+    const aliasTarget = resolveSearchAliasTarget(query);
     if (!normQuery) return '';
     const seen = new Set();
     const items = [];
@@ -936,7 +972,8 @@ const globalSearch = (() => {
       const name = String(rawName || '').trim();
       if (!name || seen.has(name)) continue;
       const normName = normalizeTerm(name);
-      if (!normName.includes(normQuery)) continue;
+      const aliasMatch = aliasTarget && normName === aliasTarget;
+      if (!normName.includes(normQuery) && !aliasMatch) continue;
       seen.add(name);
       items.push({ name, display: capitalize(name) });
       if (items.length >= limit) break;
