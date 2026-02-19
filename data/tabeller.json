@@ -1767,49 +1767,49 @@
   "rader": [
     {
       "Skadetyp": "Yttre fysisk",
-      "Bepansring – rustningar": "Stoppas",
+      "Rustningar": "Stoppas",
       "Naturligt pansar": "Stoppas",
       "Mystisk bepansring": "Stoppas",
       "Robust/Överlevnadsinstinkt": "Stoppas"
     },
     {
       "Skadetyp": "Inre fysisk",
-      "Bepansring – rustningar": "Går igenom",
+      "Rustningar": "Går igenom",
       "Naturligt pansar": "Går igenom",
       "Mystisk bepansring": "Går igenom",
       "Robust/Överlevnadsinstinkt": "Går igenom"
     },
     {
       "Skadetyp": "Elementär",
-      "Bepansring – rustningar": "Går igenom",
+      "Rustningar": "Går igenom",
       "Naturligt pansar": "Stoppas",
       "Mystisk bepansring": "Stoppas",
       "Robust/Överlevnadsinstinkt": "Går igenom"
     },
     {
       "Skadetyp": "Mystisk",
-      "Bepansring – rustningar": "Går igenom",
+      "Rustningar": "Går igenom",
       "Naturligt pansar": "Går igenom",
       "Mystisk bepansring": "Stoppas",
       "Robust/Överlevnadsinstinkt": "Går igenom"
     },
     {
       "Skadetyp": "Gift",
-      "Bepansring – rustningar": "Går igenom",
+      "Rustningar": "Går igenom",
       "Naturligt pansar": "Går igenom",
       "Mystisk bepansring": "Går igenom",
       "Robust/Överlevnadsinstinkt": "Går igenom"
     },
     {
       "Skadetyp": "Ignorerar bepansring",
-      "Bepansring – rustningar": "Går igenom",
+      "Rustningar": "Går igenom",
       "Naturligt pansar": "Går igenom",
       "Mystisk bepansring": "Stoppas",
       "Robust/Överlevnadsinstinkt": "Stoppas"
     },
     {
       "Skadetyp": "Fallskada",
-      "Bepansring – rustningar": "Går igenom",
+      "Rustningar": "Går igenom",
       "Naturligt pansar": "Går igenom",
       "Mystisk bepansring": "Går igenom",
       "Robust/Överlevnadsinstinkt": "Går igenom"
