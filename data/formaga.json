@@ -711,7 +711,7 @@
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen är van att rida och strida uppsutten på ett riddjur. Rollpersonen vet hur man utnyttjar riddjurets tyngd i en kavallerichock och får +1T6 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken.",
       "Gesäll": "Handling: Aktiv. Samklang mellan riddjur och ryttare öppnar för att ekipaget kan göra svepande attacker, det vill säga utnyttja en del av sin förflyttning innan en attack och resten efter. På så sätt fastnar ekipaget inte i närstrid men kan ändå utföra en närstridsattack. Fienden kan endast slå tillbaka med reaktioner, alternativt spendera förflyttning på att hinna ikapp ekipaget.",
-      "Mästare": "Handling: Reaktiv. Mästerryttaren kan utnyttja kavallerichock ännu bättre och får +1T10 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken."
+      "Mästare": "Handling: Speciell. Mästerryttaren är med sitt riddjur som en enda varelse. Rollpersonen kan rida helt obehindrat genom de tätaste skogar och den svåraste terrängen utan att hindras avsevärt. I öppen terräng utnyttjar mästerryttaren dessutom djurets smidighet för att genomföra defensiva manövrar och kan med ett lyckat [Kvick] helt undvika frislag mot sitt riddjur när det passerar fiender i närstrid. Vidare så ökar skadebonusen om riddjuret förflyttar sig innan en närstrids attack till +1T10."
     }
   },
   {
