@@ -227,14 +227,14 @@
     if (text) {
       tags.push(`<span class="tag removable" data-type="text">${escapeHtml(text)} ✕</span>`);
     }
+    F.test.forEach(val => {
+      tags.push(`<span class="tag removable" data-type="test" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+    });
     F.typ.forEach(val => {
       tags.push(`<span class="tag removable" data-type="typ" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
     });
     F.ark.forEach(val => {
       tags.push(`<span class="tag removable" data-type="ark" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
-    });
-    F.test.forEach(val => {
-      tags.push(`<span class="tag removable" data-type="test" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
     });
     dom.active.innerHTML = tags.join('');
   }
@@ -3252,9 +3252,10 @@
     let desc = '';
     let infoBody = '';
     const infoTagParts = [];
+    const typeTagParts = [];
     (tagger.typ ?? []).forEach(t => {
       const txt = String(t || '').trim();
-      if (txt) infoTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
+      if (txt) typeTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
     });
     if (!isArtifact || isLArtifact) {
       const ability = abilityHtml(entry, rowLevel);
@@ -3264,13 +3265,16 @@
       }
     }
     const arkTags = explodeTags(tagger.ark_trad);
-    const infoTags = (arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : []))
-      .concat(tagger.test || []);
+    const testTags = Array.isArray(tagger.test) ? tagger.test : [];
+    const infoTags = testTags.concat(
+      arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : [])
+    );
     const tagList = infoTags.map(t => `<span class="tag">${t}</span>`);
     infoTags.forEach(t => {
       const txt = String(t || '').trim();
       if (txt) infoTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
     });
+    infoTagParts.push(...typeTagParts);
     if (rowLevel) {
       tagList.push(`<span class="tag level">${rowLevel}</span>`);
       infoTagParts.push(`<span class="tag level">${escapeHtml(rowLevel)}</span>`);

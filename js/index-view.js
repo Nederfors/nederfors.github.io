@@ -1170,6 +1170,17 @@ function initIndex() {
   const pendingSearch = takePendingIndexSearch();
 
   /* render helpers */
+  const tagSectionPriority = (section) => {
+    if (section === 'test') return 0;
+    if (section === 'typ') return 1;
+    if (section === 'ark') return 2;
+    return 9;
+  };
+  const sortTagsForDisplay = (tags) => [...tags].sort((a, b) => {
+    const prio = tagSectionPriority(a?.section) - tagSectionPriority(b?.section);
+    if (prio !== 0) return prio;
+    return String(a?.label || '').localeCompare(String(b?.label || ''), 'sv');
+  });
   const activeTags =()=>{
     dom.active.innerHTML='';
     const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
@@ -1184,9 +1195,9 @@ function initIndex() {
       push(`<span class="tag removable" data-type="random" data-cat="${fixedRandomInfo?.cat || ''}" data-count="${cnt}">${label} ✕</span>`);
     }
     F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
+    F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
     F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
-    F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
 
   const buildFilterCacheKey = ({
@@ -1552,8 +1563,8 @@ function initIndex() {
           filterTagData.push({ section: 'test', value: t, label: t });
         });
         const primaryTagsHtml = primaryTagParts.join(' ');
-        const visibleTagData = filterTagData.filter(tag => !tag.hidden);
-        const dockableTagData = visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark');
+        const visibleTagData = sortTagsForDisplay(filterTagData.filter(tag => !tag.hidden));
+        const dockableTagData = sortTagsForDisplay(visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark'));
         const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
         const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
         let tagsHtml = filterTagHtml.join(' ');
