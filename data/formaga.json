@@ -52,9 +52,8 @@
       ],
       "ark_trad": [
         "Mystiker",
-        "Häxa",
-        "Ordensmagiker",
         "Svartkonstnär",
+        "Tjuv",
         "Skattletare",
         "Före detta kultist",
         "Sappör"
@@ -458,10 +457,9 @@
       ],
       "ark_trad": [
         "Mystiker",
+        "Jägare",
         "Ordensmagiker",
         "Tjuv",
-        "Jägare",
-        "Utbygdsjägare",
         "Häxjägare",
         "Monsterjägare"
       ],
@@ -3141,7 +3139,6 @@
         "Kapten",
         "Säljsvärd",
         "Riddare",
-        "Jägare",
         "Häxjägare",
         "Monsterjägare"
       ],
@@ -3177,7 +3174,6 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Jägare",
         "Häxjägare",
         "Monsterjägare"
       ],
