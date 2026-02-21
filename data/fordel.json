@@ -89,8 +89,8 @@
       ],
       "ark_trad": [],
       "test": [
-        "Övertygande",
-        "Vaksam"
+        "Vaksam",
+        "Övertygande"
       ]
     },
     "effekt": "+1 Övertygande och Vaksam i samband med lögner; effekten är kortvarig (upp till +3)."
@@ -106,8 +106,8 @@
       ],
       "ark_trad": [],
       "test": [
-        "Vaksam",
-        "Listig"
+        "Listig",
+        "Vaksam"
       ]
     },
     "effekt": "+1 Vaksam och Listig för att finna/följa spår eller lista ut gömställen (upp till +3)."
@@ -135,9 +135,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Övertygande"
       ]
@@ -167,9 +165,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Eldskydd 1 samt +1 på eldrelaterade framgångsslag."
@@ -199,9 +195,8 @@
       ],
       "ark_trad": [],
       "test": [
-        "Listig",
         "Diskret",
-        "Vaksam"
+        "Listig"
       ]
     },
     "effekt": "+1 Listig i spel och extra chans att undvika upptäckt via [Diskret←Vaksam] (upp till +3)."
@@ -247,9 +242,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "+1 på natur- och alkemislag i skog/mark (orientering, föda, skydd, fällor; upp till +3)."
@@ -307,9 +300,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Vaksam",
         "Viljestark",
@@ -357,9 +348,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Ger tillgång till monstruösa särdrag (Naturligt vapen, Pansar, Robust, Regeneration, Vingar) men medför nackdelen Mörkt förflutet."
@@ -374,9 +363,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Stark"
-      ]
+      "test": []
     },
     "effekt": "Bärkapacitet = Stark×1,5 + 3."
   },
@@ -408,8 +395,8 @@
       ],
       "ark_trad": [],
       "test": [
-        "Kvick",
-        "Diskret"
+        "Diskret",
+        "Kvick"
       ]
     },
     "effekt": "+1 vid låsdyrkning (Kvick vid brådska, Diskret för smyg/dölja spår), upp till +3."
@@ -543,9 +530,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Diskret"
       ]
@@ -594,9 +579,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "+1 på ritualerna Spådomskonst, Offerrök och Orakelkonst (upp till +3)."
@@ -684,9 +667,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "+1 försvar per nivå mot genomkorrumperade; vid avfall blir fördelen till nackdelen Prios Förtappad av samma grad."
@@ -700,9 +681,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Övertygande"
       ]
@@ -904,9 +883,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Viljestark"
       ]
@@ -936,9 +913,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Korruptionströskeln ökar med +1 varje gång (max +3)."
@@ -952,9 +927,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Krigare"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Smärtgränsen ökar med +1 varje gång (max +3)."
@@ -968,9 +941,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Krigare"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Total Tålighet ökar med +1."
@@ -984,9 +955,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Max korruption ökar med +1; tröskeln ändras inte."
@@ -1118,9 +1087,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Tar alltid 1 mindre tillfällig korruption (minst 1); gäller bara utan permanent korruption, annars blir det nackdelen Korruptionsmagnet."
@@ -1164,12 +1131,8 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
-      "test": [
-        "Viljestark"
-      ]
+      "ark_trad": [],
+      "test": []
     },
     "effekt": "En gång per dag får du slå extra och välja bästa när en mystisk kraft används för att påverka någons sinne."
   },
@@ -1199,10 +1162,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Listig",
-        "Stark"
-      ]
+      "test": []
     },
     "effekt": "Identifierar gifter/elixir och deras symptom utan Listig-slag (kräver Giftbrukare, Medicus eller Alkemist)."
   },
@@ -1215,9 +1175,7 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Listig",
         "Vaksam"
@@ -1313,9 +1271,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Kvick"
-      ]
+      "test": []
     },
     "effekt": "+1 på alla slag för reaktiva handlingar."
   },
@@ -1329,10 +1285,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Listig",
-        "Vaksam"
-      ]
+      "test": []
     },
     "effekt": "+1 på slag för att hantera och navigera båtar (upp till +3)."
   },
@@ -1362,9 +1315,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Stark"
-      ]
+      "test": []
     },
     "effekt": "+1 för att tolerera vädereffekter (upp till +3)."
   },
@@ -1440,9 +1391,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Vaksam"
-      ]
+      "test": []
     },
     "effekt": "Kan avgöra exakt storlek och avstånd på allt som är synligt."
   },
@@ -1488,9 +1437,7 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Listig"
-      ]
+      "test": []
     },
     "effekt": "+1T6 extra ransoner vid styckning av större villebråd."
   },
