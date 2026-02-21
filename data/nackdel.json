@@ -7,7 +7,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Måste lämna lägret ~10 min varje natt; hoppar du över triggas konflikt i följet."
   },
@@ -22,7 +23,8 @@
       "test": [
         "Diskret",
         "Övertygande"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Rollpersonen har bestialiska drag, att dölja dragen kräver Diskret; misslyckas du får svårare att be om hjälp men lättare att hota, och hotade försöker anmäla dig."
   },
@@ -36,7 +38,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Skonar inte fiender efter att du tagit skada; att avstå kräver 1 Erfarenhet eller lyckat Viljestark −5."
   },
@@ -50,7 +53,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Behöver daglig dos (1 skilling); abstinens ger −1 till −5 på alla slag och dagligt Viljestark för att inte jaga dos."
   },
@@ -64,7 +68,8 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Risk att bli igenkänd och jagad; en gång per äventyr krävs ett lyckat Diskret för att undgå igenkänning."
   },
@@ -78,7 +83,8 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid kritiskt misslyckande på ett framgångsslag slås du ut i 1t4 rundor eller tills du lyckas med [Stark]."
   },
@@ -89,7 +95,11 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [
+        "Viljestark"
+      ],
+      "ark_trad": []
     },
     "effekt": "Kan inte fly från en påbörjad strid; fienden måste besegras; kan slita sig med ett lyckat Viljestark -5 eller genom att offra en erfarenhet."
   },
@@ -100,7 +110,9 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Första uttalade handlingen genomförs; att hejda kräver 1 Erfarenhet eller 1 permanent Korruption."
   },
@@ -114,7 +126,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Varje natt kräver Viljestark för utvilad sömn; misslyckas du får −1 på alla slag nästa dag."
   },
@@ -128,7 +141,8 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "I situationer där det är befogat krävs Diskret mot Vaksam för att undvika oönskad uppmärksamhet."
   },
@@ -142,7 +156,8 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Ett misslyckat Diskret-slag per äventyr kan avslöja rollpersonen; avslöjad hemlighet ger upphov till ny nackdel."
   },
@@ -153,7 +168,9 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Du måste beskydda en SLP som drar trubbel; förlust/ frånvaro skapar nya problem."
   },
@@ -164,7 +181,9 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Dödsslag slås med två tärningar; ta det sämsta."
   },
@@ -175,7 +194,11 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [
+        "Kvick"
+      ],
+      "ark_trad": []
     },
     "effekt": "Förflyttning 7 m per handling och −3 Kvick vid flykt/jakt."
   },
@@ -186,7 +209,9 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Dagens första slag avgör dagsform; misslyckas du får −1 på alla slag resten av dagen."
   },
@@ -197,7 +222,9 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "En mäktig fiende motverkar dig minst en gång per äventyr, ofta via ombud och rykten."
   },
@@ -209,9 +236,7 @@
       "typ": [
         "Nackdel"
       ],
-      "ark_trad": [
-        ""
-      ],
+      "ark_trad": [],
       "test": [
         "Övertygande"
       ]
@@ -303,8 +328,8 @@
       ],
       "ark_trad": [],
       "test": [
-        "Vaksam",
-        "Listig"
+        "Listig",
+        "Vaksam"
       ]
     },
     "effekt": "Vid att genomskåda bluff/lögn slår du två gånger och tar det sämsta."
@@ -318,9 +343,7 @@
       "typ": [
         "Nackdel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Övertygande"
       ]
@@ -382,9 +405,7 @@
       "typ": [
         "Nackdel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "Få permanent Korruption = ¼ av tröskeln (uppåt); med Jordnära sänks smärtgränsen i stället med ¼."
@@ -398,9 +419,7 @@
       "typ": [
         "Nackdel"
       ],
-      "ark_trad": [
-        ""
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "−1 på korruptionströskeln per nivå (max −3)."
@@ -414,9 +433,7 @@
       "typ": [
         "Nackdel"
       ],
-      "ark_trad": [
-        ""
-      ],
+      "ark_trad": [],
       "test": []
     },
     "effekt": "−1 på smärtgränsen per nivå (max −3)."
@@ -441,7 +458,11 @@
     "taggar": {
       "typ": [
         "Nackdel"
-      ]
+      ],
+      "test": [
+        "Kvick"
+      ],
+      "ark_trad": []
     },
     "effekt": "Handlingar som kräver flinka händer inleds med Kvick; misslyckas du faller handlingen bort."
   },
@@ -455,7 +476,8 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "−1 Vaksam i starkt ljus eller nära flammande ljus."
   },
@@ -469,7 +491,8 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Ytterligare −1 Vaksam i dunkel eller mörker."
   },
@@ -481,7 +504,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "I vatten över knähöjd: två slag på alla handlingar; ta det sämsta."
   },
@@ -493,9 +517,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": [
-        "Stark"
-      ]
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Bärkapacitet = Stark ×0,5 + 3 (avrundat uppåt)."
   },
@@ -509,7 +532,8 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "När läger bryts krävs Vaksam; misslyckas du tappas ett föremål (värde ≤10 daler)."
   },
@@ -524,7 +548,8 @@
       "test": [
         "Kvick",
         "Stark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid regn: −1 Kvick och −1 Stark."
   },
@@ -536,7 +561,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "I hetta/varm sol: −1 på alla framgångsslag."
   },
@@ -550,7 +576,8 @@
       ],
       "test": [
         "Övertygande"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Inför ≥4 åhörare: −1 Övertygande."
   },
@@ -564,7 +591,8 @@
       ],
       "test": [
         "Övertygande"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "När du ljuger: två slag på Övertygande; ta det sämsta."
   },
@@ -578,7 +606,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "När du tar blodsgjutande skada krävs Viljestark; misslyckas rollpersonen faller den till marken eller drar på sig ett frislag."
   },
@@ -592,7 +621,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Varje gång du tar Korruption krävs Viljestark; misslyckas du får du +1 temporär Korruption."
   },
@@ -606,7 +636,8 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "För att hitta utan ledsagare krävs Vaksam; misslyckas du går du vilse eller fastnar."
   },
@@ -620,7 +651,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Efter första mottagna skadan i strid måste nästa handling riktas mot källan; bryt med Viljestark −5 eller 1 Erfarenhet."
   },
@@ -632,7 +664,10 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [
+        "Träffsäker"
+      ],
+      "ark_trad": []
     },
     "effekt": "Var tredje runda: −1 Försvar och −1 Träffsäker, kumulativt tills striden slutar."
   },
@@ -644,7 +679,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Med ≥2 fiender i närstrid får de Övertag mot dig."
   },
@@ -656,7 +692,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Alla gifter räknas en nivå starkare (svagt→medel→starkt→jättestarkt)."
   },
@@ -670,7 +707,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid misstänkt artefakt krävs Viljestark för att låta bli att binda sig till den; misslyckas du binder och skyddar föremålet denna scen."
   },
@@ -684,7 +722,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid syn av oskyddad skatt krävs Viljestark −5 eller 1 Erfarenhet; misslyckas du tar du bytet direkt."
   },
@@ -696,7 +735,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Löften måste fullföljas eller gottgöras snabbt; till dess har du −1 på allt."
   },
@@ -710,7 +750,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid offentlig provokation krävs Viljestark; misslyckas du gör du ett obeväpnat utfall."
   },
@@ -722,7 +763,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Saknas reagens för mystik: slå två tärningar och ta sämsta; varje reagens väger 0,5."
   },
@@ -736,7 +778,8 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "När du använder magi nära andra krävs Diskret; misslyckas du drar du oönskad uppmärksamhet och risk för anmälan."
   },
@@ -750,7 +793,8 @@
       ],
       "test": [
         "Övertygande"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid kontakt med andra mystiktraditioner: två slag på Övertygande; ta sämsta."
   },
@@ -762,7 +806,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Utan signaturvapnet: andra chans att misslyckas med alla framgångsslag; Tvillingattack ger två signaturvapen."
   },
@@ -776,7 +821,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Varje morgon: slå Listig; misslyckas du måste du dokumentera 1 timme eller få −1 på allt tills det är gjort."
   },
@@ -788,7 +834,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "När du tar skada får du +1 temporär Korruption."
   },
@@ -800,7 +847,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Vid risk för fall: andra chans att misslyckas med alla framgångsslag."
   },
@@ -812,7 +860,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Välj fiendeledaren som mål före underhuggare när en tydlig ledare finns."
   },
@@ -824,7 +873,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Misslyckas du med ett slag får du −1 på nästa slag mot samma karaktärsdrag."
   },
@@ -836,7 +886,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "En vald vardagssituation en gång per dag kräver ritual; hindras den får du andra chans att lyckas på alla slag resten av scenen."
   },
@@ -849,9 +900,9 @@
         "Nackdel"
       ],
       "test": [
-        "Viljestark",
-        "Övertygande"
-      ]
+        "Viljestark"
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid hot/ilska mot dig: [Viljestark←Övertygande]; misslyckas du ger du efter och försöker få allierade att göra detsamma."
   },
@@ -863,9 +914,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": [
-        "Vaksam"
-      ]
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Med tydligt mål inom en dags marsch/arbete: −1 på allt tills målet nås."
   },
@@ -879,7 +929,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Mot fler än en fiende kräver målval ett Listig; misslyckas du står du kvar till nästa runda."
   },
@@ -893,7 +944,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "I sociala situationer krävs ett slag mot Listig; misslyckas du läser du in en subtext vald av SL."
   },
@@ -907,7 +959,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Efter två misslyckanden i rad krävs Viljestark i runda-start; misslyckas du avstår du nästa aktiva handling."
   },
@@ -919,7 +972,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Efter scen med ≥5 utomstående krävs 1 timmes vila; annars −1 på alla framgångsslag tills du vilat."
   },
@@ -931,7 +985,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Vid oförenliga planer inom gruppen vägrar du agera tills någon lyckas med Övertygande mot dig; misslyckas det får du −1 resten av dagen."
   },
@@ -945,7 +1000,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "När du försöker minnas: andra chans att misslyckas med Listig-slag."
   },
@@ -959,7 +1015,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Avfärd kräver Listig; misslyckas du fördröjs avfärd 1 timme. Tvingas du iväg får du andra chans att misslyckas resten av dagen."
   },
@@ -973,7 +1030,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Omringad av ≥3 fiender krävs Viljestark −5 eller 1 Erfarenhet; misslyckas du kan du bara förflytta dig tills ringen bryts."
   },
@@ -987,7 +1045,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid möte med okända kulturvarelser krävs lyckat Listig; misslyckas du låser du dig i tron att de är fientliga."
   },
@@ -1001,7 +1060,8 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Efter överlevda dödsslag krävs Vaksam −5 eller 1 Erfarenhet per runda för att agera; annars inga aktiva handlingar."
   },
@@ -1015,7 +1075,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Efter fälld fiende/övertag: slå Listig; misslyckas du får du −1 Försvar resten av striden (kumulativt)."
   },
@@ -1029,7 +1090,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid vald trigger krävs Viljestark −5 eller 1 Erfarenhet; misslyckas du försöker du undanröja källan hinder-för-hinder."
   },
@@ -1044,24 +1106,26 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid starkt äckel krävs Viljestark; misslyckas du kräks du upp dagsintaget av mat och vatten och måste äta/dricka extra."
   },
   {
-"id": "na78",
-"namn": "Halvdöv",
-"beskrivning": "Rollpersonen hör markant sämre än de flesta – viskningar, dova steg och ljud bakom hinder uppfattas sällan. Rollpersonen får därmed en andra chans att misslyckas med alla slag som syftar att identifiera och lokalisera ljudkällor.",
-"taggar": {
-"typ": [
-"Nackdel"
-],
-"test": [
-"Vaksam"
-]
-},
-"effekt": "Vid Vaksam-slag vars syfte är att uppfatta, lokalisera eller tolka ljud får rollpersonen en andra chans att misslyckas."
-},
+    "id": "na78",
+    "namn": "Halvdöv",
+    "beskrivning": "Rollpersonen hör markant sämre än de flesta – viskningar, dova steg och ljud bakom hinder uppfattas sällan. Rollpersonen får därmed en andra chans att misslyckas med alla slag som syftar att identifiera och lokalisera ljudkällor.",
+    "taggar": {
+      "typ": [
+        "Nackdel"
+      ],
+      "test": [
+        "Vaksam"
+      ],
+      "ark_trad": []
+    },
+    "effekt": "Vid Vaksam-slag vars syfte är att uppfatta, lokalisera eller tolka ljud får rollpersonen en andra chans att misslyckas."
+  },
   {
     "id": "na79",
     "namn": "Släktförbannelse",
@@ -1070,7 +1134,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "En gång per spelmöte kan SL aktivera förbannelsen för att orsaka ett automatiskt misslyckande eller en allvarlig komplikation."
   },
@@ -1084,9 +1149,9 @@
         "Nackdel"
       ],
       "test": [
-        "Övertygande",
-        "Viljestark"
-      ]
+        "Övertygande"
+      ],
+      "ark_trad": []
     },
     "effekt": "Bestar anfaller dig först; andra chans att misslyckas vid hantering av djur."
   },
@@ -1103,7 +1168,8 @@
         "Listig",
         "Vaksam",
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid <50% Tålighet: andra chans att misslyckas med Listig, Vaksam och Viljestark."
   },
@@ -1118,7 +1184,8 @@
       ],
       "test": [
         "Vaksam"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Missar första rundan vid överraskning i sömn; kräver Vaksam -5 för att vakna."
   },
@@ -1131,7 +1198,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Utan mask: andra chans att misslyckas med alla slag."
   },
@@ -1145,7 +1213,8 @@
       ],
       "test": [
         "Kvick"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid kyla/fukt: -1 Kvick och -3 m förflyttning."
   },
@@ -1159,7 +1228,8 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Misslyckat Stark ger hosta i 1T4 rundor (inga aktiva/förflyttningshandlingar) eller tills hen lyckas med ett slag mot Stark."
   },
@@ -1171,7 +1241,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "+1T4 skada vid skärande/stickande träffar."
   },
@@ -1183,7 +1254,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Slå 1T20 vid scenstart; 18–20 innebär att du somnar."
   },
@@ -1195,7 +1267,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Dubbel skada av fall och krossande vapen."
   },
@@ -1207,7 +1280,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Ingen naturlig läkning vid medicus/örtkur; kräver magi/livselixir."
   },
@@ -1221,7 +1295,8 @@
       ],
       "test": [
         "Listig"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Kräver Listig -5 för att identifiera personer (ej nära allierade)."
   },
@@ -1235,7 +1310,8 @@
       ],
       "test": [
         "Träffsäker"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Andra chans att misslyckas med Träffsäker."
   },
@@ -1247,7 +1323,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "-2 i Försvar om rustning bärs."
   },
@@ -1261,7 +1338,8 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid högt ljud/ljus: slå Stark eller bli passiv i 1T4 rundor."
   },
@@ -1275,7 +1353,8 @@
       ],
       "test": [
         "Stark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Kan ej bära tungt; -4 på Stark utanför strid."
   },
@@ -1287,7 +1366,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Handlingsslag med händer är kritiskt misslyckande på 18-20."
   },
@@ -1299,7 +1379,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Måste ljuga stort en gång per dag för främlingar."
   },
@@ -1313,7 +1394,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "Vid oövervakat värdeföremål: slå Viljestark eller försök stjäla."
   },
@@ -1325,7 +1407,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Vid gift/sjukdom: andra chans att misslyckas resten av scenen."
   },
@@ -1337,7 +1420,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Att resa sig från liggande tar hela rundan."
   },
@@ -1351,7 +1435,8 @@
       ],
       "test": [
         "Viljestark"
-      ]
+      ],
+      "ark_trad": []
     },
     "effekt": "1 gång/äventyr: Slå Viljestark -5 eller betala 1 erf; annars utför SL-vald handling."
   },
@@ -1363,7 +1448,8 @@
       "typ": [
         "Nackdel"
       ],
-      "test": []
+      "test": [],
+      "ark_trad": []
     },
     "effekt": "Fiender får Övertag om de inte står rakt framför."
   }
