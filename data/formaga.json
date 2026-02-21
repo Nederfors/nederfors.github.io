@@ -8,7 +8,15 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Krigare",
+        "Duellant",
+        "Vapenmästare",
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Skattletare",
+        "Jägare",
+        "Utbygdsjägare"
       ],
       "test": [
         "Kvick"
@@ -43,7 +51,13 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Mystiker",
+        "Svartkonstnär",
+        "Tjuv",
+        "Skattletare",
+        "Före detta kultist",
+        "Sappör",
+        "Jägare"
       ],
       "test": [
         "Listig"
@@ -78,7 +92,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Bärsärkare"
       ],
       "nivå_data": {
         "Novis": {
@@ -110,7 +125,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Krigare",
+        "Kapten",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Övertygande"
@@ -145,7 +163,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Krigare",
+        "Tjuv",
+        "Jägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -177,7 +197,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Krigare",
+        "Duellant",
+        "Tjuv",
+        "Bedragare"
       ],
       "test": [
         "Diskret"
@@ -212,7 +235,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Tjuv",
+        "Ligist",
+        "Före detta kultist",
+        "Jägare"
       ],
       "test": [
         "Listig"
@@ -247,7 +273,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Häxkonst"
+        "Mystiker",
+        "Häxa"
       ],
       "nivå_data": {
         "Novis": {
@@ -279,7 +306,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Mystiker",
+        "Självlärd besvärjare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Vaksam"
@@ -314,7 +344,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Jägare"
       ],
       "test": [
         "Stark"
@@ -349,7 +380,12 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Krigare",
+        "Kapten",
+        "Mystiker",
+        "Trollsångare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Övertygande"
@@ -384,7 +420,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Riddare",
+        "Jägare"
       ],
       "test": [
         "Viljestark"
@@ -419,7 +457,13 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Mystiker",
+        "Ordensmagiker",
+        "Tjuv",
+        "Jägare",
+        "Utbygdsjägare",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Listig"
@@ -454,7 +498,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Bedragare"
       ],
       "test": [
         "Diskret"
@@ -488,7 +533,12 @@
       "typ": [
         "Förmåga"
       ],
-      "ark_trad": [],
+      "ark_trad": [
+        "Mystiker",
+        "Teurg",
+        "Tjuv",
+        "Jägare"
+      ],
       "test": [
         "Listig"
       ],
@@ -522,7 +572,12 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker"
+        "Mystiker",
+        "Tjuv",
+        "Jägare",
+        "Utbygdsjägare",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Listig"
@@ -557,7 +612,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Mystiker",
+        "Häxa",
+        "Tjuv"
       ],
       "nivå_data": {
         "Novis": {
@@ -589,7 +646,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Ordensmagi"
+        "Mystiker",
+        "Ordensmagiker"
       ],
       "nivå_data": {
         "Novis": {
@@ -621,7 +679,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Träffsäker"
@@ -656,7 +715,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Sappör",
+        "Jägare"
       ],
       "test": [
         "Kvick"
@@ -691,7 +753,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Jägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -723,7 +787,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Jägare",
+        "Utbygdsjägare"
       ],
       "test": [
         "Vaksam"
@@ -758,7 +824,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Kapten",
+        "Säljsvärd"
       ],
       "test": [
         "Stark"
@@ -794,7 +862,13 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv"
+        "Tjuv",
+        "Ligist",
+        "Gillestjuv",
+        "Jägare",
+        "Häxjägare",
+        "Prisjägare",
+        "Monsterjägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -826,7 +900,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Gillestjuv"
       ],
       "nivå_data": {
         "Novis": {
@@ -855,7 +931,8 @@
     "beskrivning": "Endast tillgänglig för Drottningspion. Alkemins framsteg har i Ambria lett till stridstekniker baserade på alkemiska produkter. Särskilt drottningens hemliga agenter är kända för att utnyttja sådana taktiker för att slå ut rikets fiender eller för att fly från en knivig situation. Rollpersonen kan använda särskilda elixir för att förblinda och på andra sätt försvaga fiender. Notera att förmågan Sjätte sinne på mästarnivå gör att man kan agera normalt trots förblindningen. Sjätte sinne påverkar inte andra effekter av pyrotekniken.",
     "taggar": {
       "typ": [
-        "Förmåga"
+        "Förmåga",
+        "Elityrkesförmåga"
       ],
       "ark_trad": [
         "Drottningspion"
@@ -893,7 +970,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv"
       ],
       "test": [
         "Stark",
@@ -929,7 +1007,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Krigare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Kvick"
@@ -964,7 +1044,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Ligist"
       ],
       "test": [
         "Listig"
@@ -999,7 +1080,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker"
+        "Krigare",
+        "Tjuv",
+        "Jägare",
+        "Häxjägare"
       ],
       "test": [
         "Stark",
@@ -1035,7 +1119,13 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Säljsvärd",
+        "Ristad krigare",
+        "Vapenmästare",
+        "Tjuv",
+        "Jägare",
+        "Monsterjägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -1067,7 +1157,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Tjuv",
+        "Skattletare",
+        "Jägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -1099,7 +1191,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Svartkonst"
+        "Mystiker",
+        "Svartkonstnär"
       ],
       "test": [
         "Viljestark"
@@ -1134,7 +1227,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Tjuv",
+        "Skattletare",
+        "Jägare"
       ],
       "test": [
         "Listig"
@@ -1169,7 +1264,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Teurgi"
+        "Mystiker",
+        "Teurg"
       ],
       "nivå_data": {
         "Novis": {
@@ -1201,7 +1297,13 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Duellant",
+        "Vapenmästare",
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Jägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -1233,7 +1335,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Sappör"
       ],
       "nivå_data": {
         "Novis": {
@@ -1265,7 +1369,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker"
+        "Krigare",
+        "Bärsärkare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Viljestark"
@@ -1336,7 +1443,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Sappör"
       ],
       "test": [],
       "nivå_data": {
@@ -1467,7 +1576,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Gillestjuv",
+        "Jägare",
+        "Monsterjägare"
       ],
       "test": [
         "Listig"
@@ -1502,7 +1614,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Runsmed"
       ],
       "test": [
         "Stark"
@@ -1569,7 +1682,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Svartkonst"
+        "Tjuv",
+        "Före detta kultist"
       ],
       "test": [
         "Viljestark"
@@ -1604,7 +1718,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Gillestjuv"
       ],
       "test": [
         "Kvick"
@@ -1710,7 +1825,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Symbolism, Krigare"
+        "Krigare",
+        "Ristad krigare",
+        "Mystiker",
+        "Symbolist"
       ],
       "nivå_data": {
         "Novis": {
@@ -1790,7 +1908,14 @@
           "handling": "Speciell",
           "skadetyp": "Ingen"
         }
-      }
+      },
+      "ark_trad": [
+        "Krigare",
+        "Runsmed",
+        "Tjuv",
+        "Sappör",
+        "Jägare"
+      ]
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Rollpersonen kan med ett lyckat Listig göra ett novissmide. Rollpersonen kan också med ett lyckat Listig laga en skadad rustning eller anpassa en rustning för större och mindre varelser. Novissmiden omfattar alla vanliga vapen och rustningar, inklusive dem med kvaliteterna Kort och Långt. Inga andra kvaliteter kan smidas av novissmeden.",
@@ -1839,7 +1964,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare",
+        "Jägare",
+        "Prisjägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -1903,7 +2031,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
       "test": [
         "Träffsäker"
@@ -1971,7 +2100,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
       "nivå_data": {
         "Novis": {
@@ -2003,7 +2133,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
       "nivå_data": {
         "Novis": {
@@ -2036,7 +2167,7 @@
       ],
       "ark_trad": [
         "Mystiker",
-        "Symbolism"
+        "Symbolist"
       ],
       "nivå_data": {
         "Novis": {
@@ -2068,7 +2199,12 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Gillestjuv",
+        "Jägare",
+        "Prisjägare"
       ],
       "test": [
         "Listig"
@@ -2103,6 +2239,10 @@
         "Förmåga"
       ],
       "ark_trad": [
+        "Tjuv",
+        "Ligist",
+        "Skattletare",
+        "Gillestjuv",
         "Jägare"
       ],
       "test": [
@@ -2139,7 +2279,8 @@
         "Mystisk tradition"
       ],
       "ark_trad": [
-        "Trollsång"
+        "Mystiker",
+        "Trollsångare"
       ],
       "nivå_data": {
         "Novis": {
@@ -2162,7 +2303,7 @@
       "Mästare": "Speciell. Trollsångaren får ingen permanent korruption av att lära sig trollsånger till mästarnivå. Trollsångarmästaren får en andra chans att lyckas med alla de slag som slås för att skapa och upprätthålla en kedja av förtrollningar där motståndaren försvarar sig med Viljestark."
     }
   },
-    {
+  {
     "id": "form65",
     "namn": "Yxkonstnär",
     "beskrivning": "Många barbarättade legosoldater bär yxor av hävd och ohejdad vana, och bland dessa yxbärande krigare har en tradition av yxkamp utvecklats – en skola som verkligen tar vara på detta vapens möjligheter. I rollpersonens händer är yxan ett mäktigt krigsverktyg. Vapnet måste vara en yxa, men den kan vara av enhands- eller tvåhandsmodell.",
@@ -2171,7 +2312,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
       "test": [
         "Träffsäker"
@@ -2206,7 +2348,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Riddare",
+        "Jägare",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Stark"
@@ -2273,7 +2419,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Duellant",
+        "Jägare",
+        "Häxjägare",
+        "Prisjägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -2340,7 +2490,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Riddare"
       ],
       "test": [
         "Stark"
@@ -2375,7 +2528,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Duellant",
+        "Kapten",
+        "Vapenmästare"
       ],
       "test": [
         "Träffsäker"
@@ -2411,7 +2567,11 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv"
+        "Duellant",
+        "Riddare",
+        "Vapenmästare",
+        "Tjuv",
+        "Bedragare"
       ],
       "test": [
         "Träffsäker"
@@ -2447,7 +2607,10 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv"
+        "Kapten",
+        "Jägare",
+        "Utbygdsjägare",
+        "Prisjägare"
       ],
       "test": [
         "Träffsäker"
@@ -2482,7 +2645,14 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Riddare",
+        "Jägare",
+        "Häxjägare",
+        "Prisjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Övertygande"
@@ -2554,7 +2724,11 @@
       ],
       "ark_trad": [
         "Mystiker",
-        "Tjuv"
+        "Ordensmagiker",
+        "Tjuv",
+        "Bedragare",
+        "Skattletare",
+        "Gillestjuv"
       ],
       "test": [
         "Listig"
@@ -2627,8 +2801,12 @@
         "Förmåga"
       ],
       "ark_trad": [
+        "Tjuv",
+        "Ligist",
+        "Gillestjuv",
         "Jägare",
-        "Tjuv"
+        "Utbygdsjägare",
+        "Prisjägare"
       ],
       "test": [
         "Träffsäker"
@@ -2664,7 +2842,8 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv"
+        "Vapenmästare",
+        "Jägare"
       ],
       "test": [
         "Kvick"
@@ -2727,7 +2906,7 @@
       "Mästare": "Handling: Aktiv. Tekniken är förfinad till brutal effektivitet. Det krävs nu endast ett enda lyckat test mot Träffsäker för att attacken ska träffa samtliga fiender inom räckhåll för närstrid. Skada och eventuell nedslagning hanteras som tidigare."
     }
   },
-   {
+  {
     "id": "form81",
     "namn": "Blodsrus",
     "beskrivning": "För en Ulvahedna är stridens hetta oskiljaktig från jaktens extas. Likt en Jakaar som vädrar svaghet hos sitt byte, finner krigaren ny styrka i fiendens blod. Döden är bara en måltid som livnär nästa attack.",
@@ -2831,7 +3010,7 @@
       "Mästare": "Handling: Speciell. Döden måste vänta. Om Ulvahednan slår ett slag som leder till döden, dör hen inte omedelbart. Istället fortsätter karaktären strida i 3 rundor till, utan att behöva slå dödsslag. Rollpersonens kropp är dock i dåligt skick och tar i slutet av varje runda 1T6 intern skada. Rollpersonen dör omedelbart om tiden löper ut och Tåligheten är under noll, men hinner göra ett sista anfall mot en fiende inom räckvidd som gör ytterligare 1T12 skada."
     }
   },
-    {
+  {
     "id": "form84",
     "namn": "Provokatör",
     "beskrivning": "Vare sig det rör sig om gycklarens giftiga tungomål, krigarens dånande utmaning eller vilddjurets avgrundsvrål, vet rollpersonen hur man tränger innanför huden på sina fiender. Genom att projicera en överväldigande närvaro eller utslunga välriktade hån kan rollpersonen styra slagfältets fokus. För en person med förmågan Provokatör är striden lika mycket en kamp om psykologiskt övertag som en utväxling av stål.",
@@ -2840,7 +3019,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Tjuv",
+        "Ligist"
       ],
       "test": [
         "Övertygande"
@@ -2875,7 +3058,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Skald, Krigare"
+        "Krigare",
+        "Kapten",
+        "Mystiker",
+        "Teurg",
+        "Trollsångare"
       ],
       "test": [
         "Övertygande"
@@ -2910,7 +3097,12 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Mystiker",
+        "Trollsångare",
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Gillestjuv"
       ],
       "test": [
         "Övertygande"
@@ -2945,7 +3137,13 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Riddare",
+        "Jägare",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [],
       "nivå_data": {
@@ -2969,7 +3167,7 @@
       "Mästare": "Handling: Passiv. Rollpersonen har lärt sig att maximera sin profil för att täcka upp för andra. Allierade som befinner sig inom närstridsavstånd får tillgodoräkna sig sköldbärarens bepansringsbonus."
     }
   },
-   {
+  {
     "id": "form88",
     "namn": "Sköldföring",
     "beskrivning": "Att bara blockera är passivt; Sköldföring handlar om att använda skölden som ett precisionsinstrument för att kontrollera stridens flöde. Med perfekt timing och fotarbete kan inkommande hugg ledas bort eller låsas fast, vilket lämnar fienden frustrerad och blottad. Stilen bygger på öga-mot-hand-koordination snarare än råstyrka. Förmågan kräver en sköld utan kvaliteten 'Armfäst' för att fungera.",
@@ -2978,7 +3176,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Jägare",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Träffsäker"
