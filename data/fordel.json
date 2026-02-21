@@ -370,7 +370,7 @@
   {
     "id": "ford25",
     "namn": "Imitatör",
-    "beskrivning": "Rollpersonen är en skicklig imitatör, vare sig det gäller att föreställa en kategori av personer inom sitt eget släkte eller i direkt imitation av en specifik person. Rollpersonen får +1 på slag mot Diskret eller Övertygande i syfte att imitera andra. Om rollpersonen enbart försöker spela en generell kategori ur sitt eget släkte (exempelvis stadsvakt) snarare än en viss person får denne dessutom en andra chans att lyckas med slaget. Att föreställa en specifik representant för ett annat släkte är svårare; imitatören får försöka, dock då med en andra chans att misslyckas på slaget istället. Specifika individer ur andra släkten kan inte imiteras trovärdigt. Imitatör kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "beskrivning": "Rollpersonen är en skicklig imitatör, vare sig det gäller att föreställa en kategori av personer inom sitt eget släkte eller i direkt imitation av en specifik person. Rollpersonen får +1 på slag mot Diskret eller Övertygande i syfte att imitera andra. Imitatör kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": [
@@ -382,7 +382,7 @@
         "Övertygande"
       ]
     },
-    "effekt": "+1 Diskret/Övertygande för imitation; lättare för generiska roller i eget släkte (andra chans), svårare över släktgränser (upp till +3)."
+    "effekt": "+1 Diskret/Övertygande för imitation (upp till +3)."
   },
   {
     "id": "ford26",
