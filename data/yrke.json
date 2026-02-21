@@ -17,7 +17,13 @@
       "Bärsärk",
       "Järnnäve",
       "Tvåhandskraft",
-      "Återhämtning"
+      "Återhämtning",
+      "Brottning",
+      "Blodskamp",
+      "Vredesvirvel",
+      "Blodsrus",
+      "Hungerlopp",
+      "Dödsförakt"
     ]
   },
   {
@@ -38,7 +44,13 @@
       "Akrobatik",
       "Fint",
       "Rustmästare",
-      "Tvillingattack"
+      "Tvillingattack",
+      "Piskkämpe",
+      "Tvåhandsfiness",
+      "Krigarens skärpa",
+      "Pareringsmästare",
+      "Koreograferad strid",
+      "Sköldföring"
     ]
   },
   {
@@ -56,7 +68,15 @@
       "Dominera",
       "Ledare",
       "Rustmästare",
-      "Sköldkamp"
+      "Sköldkamp",
+      "Pansarbrottning",
+      "Krigarens skärpa",
+      "Målmärkning",
+      "Samlingstecken",
+      "Provokatör",
+      "Inspirerande talare",
+      "Sköldvärn",
+      "Sköldföring"
     ]
   },
   {
@@ -74,7 +94,13 @@
       "Järnnäve",
       "Rustmästare",
       "Sköldkamp",
-      "Stångverkan"
+      "Stångverkan",
+      "Brottning",
+      "Tvåhandsfiness",
+      "Pansarbrottning",
+      "Provokatör",
+      "Sköldvärn",
+      "Samlingstecken"
     ]
   },
   {
@@ -92,7 +118,16 @@
       "Järnnäve",
       "Livvakt",
       "Rustmästare",
-      "Tvåhandskraft"
+      "Tvåhandskraft",
+      "Brottning",
+      "Bepansrad mystiker",
+      "Reningskraft",
+      "Tvåhandsfiness",
+      "Pansarbrottning",
+      "Pareringsmästare",
+      "Sköldvärn",
+      "Sköldföring",
+      "Samlingstecken"
     ]
   },
   {
@@ -131,7 +166,8 @@
       "Alkemi",
       "Mystisk kraft",
       "Ritualist",
-      "Svartkonst"
+      "Svartkonst",
+      "Alkemist"
     ]
   },
   {
@@ -149,7 +185,9 @@
       "Mystisk kraft",
       "Medicus",
       "Ritualist",
-      "Teurgi"
+      "Teurgi",
+      "Bepansrad mystiker",
+      "Inspirerande talare"
     ]
   },
   {
@@ -167,7 +205,10 @@
       "Mystisk kraft",
       "Lärd",
       "Ordensmagi",
-      "Ritualist"
+      "Ritualist",
+      "Artefaktmakande",
+      "Resonanskraft",
+      "Kallsinne"
     ]
   },
   {
@@ -187,7 +228,8 @@
     "lampliga_formagor": [
       "Häxsyn",
       "Mystisk kraft (två stycken)",
-      "Ritualist"
+      "Ritualist",
+      "Resonanskraft"
     ]
   },
   {
@@ -208,7 +250,12 @@
       "Akrobatik",
       "Fint",
       "Lönnstöt",
-      "Tvillingattack"
+      "Tvillingattack",
+      "Manteldans",
+      "Tjuvknep",
+      "Pareringsmästare",
+      "Kallsinne",
+      "Oljudsverkare"
     ]
   },
   {
@@ -226,7 +273,15 @@
       "Monsterlärd",
       "Prickskytt",
       "Ritualist",
-      "Ståndaktig"
+      "Ståndaktig",
+      "Snabbskytte",
+      "Trickskytte",
+      "Reningskraft",
+      "Piskkämpe",
+      "Närstridsskytte",
+      "Sköldvärn",
+      "Sköldföring",
+      "Samlingstecken"
     ]
   },
   {
@@ -248,7 +303,13 @@
       "Akrobatik",
       "Giftbrukare",
       "Stryparkonst",
-      "Tvillingattack"
+      "Tvillingattack",
+      "Tjuvknep",
+      "Vinkelskytte",
+      "Provokatör",
+      "Oljudsverkare",
+      "Närstridsskytte",
+      "Trickskytte"
     ]
   },
   {
@@ -270,7 +331,10 @@
       "Akrobatik",
       "Alkemi",
       "Stålkast",
-      "Taktiker"
+      "Taktiker",
+      "Alkemist",
+      "Kallsinne",
+      "Trickskytte"
     ]
   },
   {
@@ -291,7 +355,12 @@
       "Akrobatik",
       "Monsterlärd",
       "Prickskytt",
-      "Sjätte sinne"
+      "Sjätte sinne",
+      "Rörlig strid",
+      "Snabbskytte",
+      "Trickskytte",
+      "Målmärkning",
+      "Vinkelskytte"
     ]
   },
   {
@@ -342,7 +411,20 @@
       "Ritualist",
       "Rustmästare",
       "Ryttarkonst",
-      "Återhämtning"
+      "Återhämtning",
+      "Alkemist",
+      "Snabbskytte",
+      "Trickskytte",
+      "Samlingstecken",
+      "Jaktinstinkt",
+      "Snärjande strid",
+      "Tjuvknep",
+      "Reningskraft",
+      "Piskkämpe",
+      "Målmärkning",
+      "Vinkelskytte",
+      "Sköldvärn",
+      "Sköldföring"
     ]
   },
   {
@@ -370,7 +452,15 @@
       "Kontaktnät",
       "Vildmarksvana",
       "Hederskod",
-      "Impulsiv"
+      "Impulsiv",
+      "Snabbskytte",
+      "Tjuvknep",
+      "Trickskytte",
+      "Piskkämpe",
+      "Målmärkning",
+      "Vinkelskytte",
+      "Samlingstecken",
+      "Närstridsskytte"
     ]
   },
   {
@@ -399,7 +489,17 @@
       "Priviligierad",
       "Vildmarksvana",
       "Drogberoende",
-      "Ärkefiende"
+      "Ärkefiende",
+      "Rörlig strid",
+      "Snabbskytte",
+      "Trickskytte",
+      "Reningskraft",
+      "Blodsrus",
+      "Hungerlopp",
+      "Samlingstecken",
+      "Närstridsskytte",
+      "Sköldvärn",
+      "Sköldföring"
     ],
     "monsterjägarsällskap": "I Tistla Fäste har monsterjägarna samlats i en rad sällskap, där Röda klon utgör den mest kända sammanslutningen men inte alls den enda. Andra namnkunniga sällskap är de skrytsamma uppkomlingarna Markas pålspetsare och de mer allvarsamma teratologerna i Nikanors taxidermiska gille, vilka försöker samla in monsterkadaver i bästa skick i lärdomssyfte. Flera av dessa har mer eller mindre öppet etablerat utposter nära Karvosti och är frekventa kunder i den nyöppnade handelsboden Grymkäfts fällor, där den pensionerade rese som givit boden dess namn säljer snillrika fångstmedel till hugade spekulanter."
   },
@@ -442,7 +542,27 @@
       "Stridsgisslare",
       "Svärdshelgon",
       "Yxkonstnär",
-      "Återhämtning"
+      "Återhämtning",
+      "Brottning",
+      "Reningskraft",
+      "Pansarbrottning",
+      "Krigarens skärpa",
+      "Målmärkning",
+      "Samlingstecken",
+      "Provokatör",
+      "Sköldvärn",
+      "Närstridsskytte",
+      "Fint",
+      "Belägringskonst",
+      "Kraftprov",
+      "Smideskonst",
+      "Snärjande strid",
+      "Stavkamp",
+      "Piskkämpe",
+      "Tvåhandsfiness",
+      "Pareringsmästare",
+      "Inspirerande talare",
+      "Sköldföring"
     ]
   },
   {
@@ -470,7 +590,10 @@
       "Skräckinjagande",
       "Vildmarksvana",
       "Impulsiv",
-      "Mörk hemlighet"
+      "Mörk hemlighet",
+      "Blodskamp",
+      "Vredesvirvel",
+      "Dödsförakt"
     ]
   },
   {
@@ -498,7 +621,8 @@
       "Marschvana",
       "Packåsna",
       "Mystiskt tecken",
-      "Protegé"
+      "Protegé",
+      "Artefaktmakande"
     ]
   },
   {
@@ -530,7 +654,13 @@
       "Seglivad",
       "Taktisk spelare",
       "Hederskod",
-      "Ärkefiende"
+      "Ärkefiende",
+      "Rörlig strid",
+      "Tvåhandsfiness",
+      "Krigarens skärpa",
+      "Pareringsmästare",
+      "Koreograferad strid",
+      "Sköldföring"
     ]
   },
   {
@@ -551,22 +681,13 @@
     ],
     "lampliga_formagor": [
       "Stark gåva (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
-      "Akrobatik",
       "Alkemi",
+      "Alkemist",
       "Lärd",
       "Medicus",
       "Monsterlärd",
-      "Smideskonst",
-      "Ståndaktig",
-      "Naturlig krigare",
-      "Stångverkan",
       "Häxsyn",
-      "Sjätte sinne",
       "Mystisk kraft",
-      "Dominera",
-      "Ledare",
-      "Bärsärk",
-      "Exceptionellt karaktärsdrag",
       "Häxkonster",
       "Ordensmagi",
       "Ritualist",
@@ -574,7 +695,8 @@
       "Symbolism",
       "Teurgi",
       "Trollsång",
-      "Återhämtning"
+      "Resonanskraft",
+      "Kallsinne"
     ]
   },
   {
@@ -602,7 +724,9 @@
       "Kontaktnät",
       "Teckentydare",
       "Mystiskt tecken",
-      "Åldrad"
+      "Åldrad",
+      "Artefaktmakande",
+      "Resonanskraft"
     ]
   },
   {
@@ -632,7 +756,9 @@
       "Kontaktnät",
       "Musikant",
       "Mystiskt tecken",
-      "Mörk hemlighet"
+      "Mörk hemlighet",
+      "Inspirerande talare",
+      "Oljudsverkare"
     ]
   },
   {
@@ -681,7 +807,22 @@
       "Opportunist",
       "Ritualist",
       "Ryttarkonst",
-      "Återhämtning"
+      "Återhämtning",
+      "Alkemist",
+      "Tjuvknep",
+      "Rustmästare",
+      "Närstridsskytte",
+      "Brottning",
+      "Tvåhandskraft",
+      "Belägringskonst",
+      "Blixtsnabba reflexer",
+      "Kanalisering",
+      "Trickskytte",
+      "Pareringsmästare",
+      "Kallsinne",
+      "Vinkelskytte",
+      "Provokatör",
+      "Oljudsverkare"
     ]
   },
   {
@@ -710,7 +851,8 @@
       "Gömställen",
       "Kontaktnät",
       "Drogberoende",
-      "Efterlyst"
+      "Efterlyst",
+      "Alkemist"
     ]
   },
   {
@@ -739,7 +881,14 @@
       "Inbrottstjuv",
       "Kontaktnät",
       "Impulsiv",
-      "Protegé"
+      "Protegé",
+      "Manteldans",
+      "Tjuvknep",
+      "Kallsinne",
+      "Vinkelskytte",
+      "Oljudsverkare",
+      "Närstridsskytte",
+      "Trickskytte"
     ]
   },
   {
@@ -765,7 +914,8 @@
       "Marschvana",
       "Packåsna",
       "Drogberoende",
-      "Sävlig"
+      "Sävlig",
+      "Alkemist"
     ]
   }
 ]
