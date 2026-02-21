@@ -382,14 +382,12 @@
       "dvärgar"
     ],
     "lampliga_formagor": [
-      "Jaktinstinkt (kräver minst tre andra förmågor från denna lista för att kunna väljas)",
+      "Jaktinstinkt",
       "Akrobatik",
       "Snabbdrag",
       "Snabbeld",
-      "Alkemi",
       "Försåtsgillrare",
       "Giftbrukare",
-      "Lärd",
       "Medicus",
       "Monsterlärd",
       "Smideskonst",
@@ -412,7 +410,6 @@
       "Rustmästare",
       "Ryttarkonst",
       "Återhämtning",
-      "Alkemist",
       "Snabbskytte",
       "Trickskytte",
       "Samlingstecken",
@@ -422,9 +419,7 @@
       "Reningskraft",
       "Piskkämpe",
       "Målmärkning",
-      "Vinkelskytte",
-      "Sköldvärn",
-      "Sköldföring"
+      "Vinkelskytte"
     ]
   },
   {
