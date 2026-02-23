@@ -2745,9 +2745,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen låter intellektet styra över driften av mystik och parerar sinnespåverkan med kylig rationalitet. Rollpersonen får alltså använda Listig i stället för Viljestark, exempelvis vid användandet av mystiska krafter, koncentrationsslag och motstånd mot sinnes- och viljepåverkan; dock inte som grund för korruptionströskel.",
-      "Gesäll": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett slag i Listig-slag under en scen får hen en kumulativ +1 på kommande Listig-slag riktade mot just den effekten. Bonusen varar till scenens slut.",
-      "Mästare": "Handling: Reaktiv. Den kalla rationaliteten biter i själen och skärper fokuset till perfektion; men ibland kan det vara nödvändigt att växla en liten dos korruption mot ett ännu skarpare fokus. Varje gång rollpersonen slår ett slag mot Listig får hen samtidigt slå 1T4 och subtrahera utfallet från framgångsslaget. Rollpersonen tar dock temporär Korruption lika med hälften av utfallet, avrundat uppåt. Denna effekt kan dock inte användas för att hindra kritiskt misslyckande."
-    }
+      "Gesäll": "Handling: Passiv. Rollpersonens logik kan appliceras på det övernaturliga. Rollpersonen får använda Listig i stället för andra attribut för att aktivera och använda Artefakter och Mystiska skatter.",
+      "Mästare": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett slag i Listig under en scen får hen slå ett omodifierat slag på [Listig]. Om slaget lyckas identifieras felkällan och nästa försök mot samma effekt lyckas automatiskt."}
   },
   {
     "id": "form77",
