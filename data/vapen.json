@@ -318,13 +318,13 @@
   {
     "id": "v15",
     "namn": "Bucklare",
-    "beskrivning": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och pikenerare, då den är smidig nog att bära på armen, redo för parader, samtidigt som man använder båda händerna till sitt vapen. Bucklaren är för lätt för att kunna användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
+    "beskrivning": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och duellanter. Den fästs på underarmen och ger +1 försvar, samtidigt som handen kan användas till annat, men är för nätt för att användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
     "taggar": {
       "typ": [
         "Sköld"
       ],
       "kvalitet": [
-        "Smidig"
+        "Armfäst"
       ]
     },
     "stat": {
@@ -1322,14 +1322,14 @@
   {
     "id": "v59",
     "namn": "Precisionspil",
-    "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precis.",
+    "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precist.",
     "taggar": {
       "typ": [
         "Pil/Lod",
         "Projektilvapen"
       ],
       "kvalitet": [
-        "Precis"
+        "Precist"
       ]
     },
     "stat": {

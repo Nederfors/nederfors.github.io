@@ -1,11 +1,384 @@
 (function(window){
+const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+
+const quoteName = (value) => {
+  const str = String(value ?? '').trim();
+  return str ? `“${str}”` : '';
+};
+
+function formatQuotedList(values) {
+  if (!Array.isArray(values) || !values.length) return '';
+  return values
+    .map(val => quoteName(val))
+    .filter(Boolean)
+    .join(', ');
+}
+
+  function getGrundritualRequirements(entry) {
+  const raw = entry?.taggar?.grundritual;
+  if (Array.isArray(raw)) {
+    return raw
+      .map(val => (typeof val === 'string' ? val.trim() : ''))
+      .filter(Boolean);
+  }
+  if (typeof raw === 'string') {
+    const trimmed = raw.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  return [];
+}
+
+async function enforceGrundritualRequirement(entry, list) {
+  const required = getGrundritualRequirements(entry);
+  if (!required.length) return { allowed: true, autoAdd: [] };
+  const current = Array.isArray(list) ? list : [];
+  const missing = required.filter(name => !current.some(item => item?.namn === name));
+  if (!missing.length) return { allowed: true, autoAdd: [] };
+  const entryLabel = quoteName(entry?.namn) || 'Denna ritual';
+  const requirementText = missing.length === 1 ? 'grundritualen' : 'grundritualerna';
+  const missingText = formatQuotedList(missing) || 'den angivna ritualen';
+  const baseMessage = `${entryLabel} kräver ${requirementText} ${missingText}.`;
+  if (typeof window.openDialog === 'function') {
+    const extraLabel = missing.length === 1 ? `Lägg till ${missingText}` : 'Lägg till alla';
+    const response = await window.openDialog(`${baseMessage} Lägg till grundritual nu, hoppa över kravet eller avbryt.`, {
+      cancel: true,
+      okText: 'Hoppa över kravet',
+      cancelText: 'Avbryt',
+      extraText: extraLabel
+    });
+    if (response === false) return { allowed: false, autoAdd: [] };
+    if (response === 'extra') return { allowed: true, autoAdd: missing };
+    return { allowed: true, autoAdd: [] };
+  }
+  const fallback = await confirmPopup(`${baseMessage}\nHoppa över kravet?`);
+  return { allowed: !!fallback, autoAdd: [] };
+}
+
+function computeIndexEntryXP(entry, list, options = {}) {
+  const defaults = {
+    allowInventory: true,
+    allowEmployment: true,
+    allowService: true,
+    forceDisplay: true,
+    label: 'Erf'
+  };
+  const xpOptions = { ...defaults, ...(options || {}) };
+  const baseList = Array.isArray(list) ? list.filter(Boolean) : [];
+  const workingList = baseList.slice();
+
+  const hasLevelOverride = Object.prototype.hasOwnProperty.call(xpOptions, 'level')
+    && xpOptions.level !== undefined
+    && xpOptions.level !== null
+    && xpOptions.level !== '';
+  const levelOverride = hasLevelOverride
+    ? xpOptions.level
+    : (entry && Object.prototype.hasOwnProperty.call(entry, 'nivå') ? entry.nivå : undefined);
+
+  const cloneEntryWithLevel = (src) => {
+    if (!src || typeof src !== 'object') return {};
+    const clone = { ...src };
+    if (hasLevelOverride) clone.nivå = levelOverride;
+    else if (levelOverride !== undefined && levelOverride !== null) clone.nivå = levelOverride;
+    return clone;
+  };
+
+  const ensureOrderValue = (listRef) => {
+    const orders = listRef
+      .map(item => Number(item?.__order))
+      .filter(value => Number.isFinite(value));
+    if (!orders.length) return listRef.length;
+    return Math.max(...orders) + 1;
+  };
+
+  const baseSource = xpOptions.xpSource || null;
+  let targetEntry = null;
+
+  if (baseSource && workingList.includes(baseSource)) {
+    if (hasLevelOverride && baseSource.nivå !== levelOverride) {
+      targetEntry = cloneEntryWithLevel(baseSource);
+      const idx = workingList.indexOf(baseSource);
+      if (idx !== -1) workingList[idx] = targetEntry;
+    } else {
+      targetEntry = baseSource;
+    }
+  } else if (baseSource && !workingList.includes(baseSource)) {
+    targetEntry = cloneEntryWithLevel(baseSource);
+    if (targetEntry.__order === undefined) {
+      targetEntry.__order = ensureOrderValue(workingList);
+    }
+    workingList.push(targetEntry);
+  } else {
+    targetEntry = cloneEntryWithLevel(entry || {});
+    if (targetEntry.__order === undefined) {
+      targetEntry.__order = ensureOrderValue(workingList);
+    }
+    workingList.push(targetEntry);
+  }
+
+  const helperOptions = {
+    ...xpOptions,
+    xpSource: targetEntry
+  };
+  if (hasLevelOverride) helperOptions.level = levelOverride;
+  else delete helperOptions.level;
+
+  const xpHelper = window.entryXp?.buildDisplay || window.entryXp?.compute;
+  if (typeof xpHelper === 'function') {
+    const result = xpHelper(targetEntry, workingList, helperOptions) || {};
+    return {
+      ...result,
+      label: result.label ?? helperOptions.label
+    };
+  }
+
+  if (window.storeHelper && typeof window.storeHelper.calcEntryDisplayXP === 'function') {
+    const calcOpts = {};
+    if (hasLevelOverride) calcOpts.level = levelOverride;
+    const rawValue = window.storeHelper.calcEntryDisplayXP(
+      targetEntry,
+      workingList,
+      Object.keys(calcOpts).length ? calcOpts : undefined
+    );
+    const rawText = window.storeHelper.formatEntryXPText(targetEntry, rawValue);
+    const shouldShow = helperOptions.forceDisplay || !!(rawText && String(rawText).trim());
+    const prefix = `${helperOptions.label}: `;
+    return {
+      value: rawValue,
+      text: rawText,
+      tagHtml: shouldShow ? `<span class="tag xp-cost">${prefix}${rawText}</span>` : '',
+      headerHtml: shouldShow ? `<span class="entry-xp-value">${prefix}${rawText}</span>` : '',
+      label: helperOptions.label,
+      shouldShow
+    };
+  }
+
+  return {
+    value: null,
+    text: '',
+    tagHtml: '',
+    headerHtml: '',
+    label: helperOptions.label,
+    shouldShow: false
+  };
+}
+
+function getActiveHandlingKeys(p){
+  const isActiveHandling = (value) => {
+    const values = Array.isArray(value) ? value : [value];
+    return values.some(item => {
+      const raw = String(item ?? '').trim();
+      if (!raw) return false;
+      return raw
+        .split(/[;,/|]+/)
+        .map(part => part.trim().replace(/[.!?]$/g, '').toLowerCase())
+        .some(part => part === 'aktiv');
+    });
+  };
+
+  const meta = typeof window.getEntryLevelMeta === 'function'
+    ? window.getEntryLevelMeta(p)
+    : (p?.taggar?.nivå_data || {});
+  const source = Object.keys(meta || {}).length ? meta : (p?.taggar?.handling || {});
+
+  const availableLevels = LVL.filter(l => p?.nivåer?.[l]);
+  const currentLevel = LVL.includes(p?.nivå || '')
+    ? p.nivå
+    : (availableLevels.length === 1 ? availableLevels[0] : null);
+  const currentIdx = currentLevel ? LVL.indexOf(currentLevel) : -1;
+
+  return Object.entries(source)
+    .filter(([levelKey, v]) => {
+      if (LVL.includes(levelKey)) {
+        if (currentIdx < 0 || LVL.indexOf(levelKey) > currentIdx) return false;
+      }
+
+      const handlingVal = v && typeof v === 'object' && !Array.isArray(v) && Object.prototype.hasOwnProperty.call(v, 'handling')
+        ? v.handling
+        : v;
+      return isActiveHandling(handlingVal);
+    })
+    .map(([k]) => k);
+}
+
+function handlingName(p, key){
+  if (!LVL.includes(key)) {
+    const txt = p?.nivåer?.[key];
+    if (typeof txt === 'string') {
+      const idx = txt.indexOf(';');
+      return idx >= 0 ? txt.slice(0, idx) : txt;
+    }
+  }
+  return key;
+}
+
+function findConflictingEntries(entry, list){
+  const hasActiveHandling = getActiveHandlingKeys(entry).length > 0;
+  if (!hasActiveHandling) return [];
+  return (Array.isArray(list) ? list : [])
+    .filter(item => {
+      if (!item || item === entry) return false;
+      if ((item.namn || '') === (entry?.namn || '')
+        && (item.trait ?? null) === (entry?.trait ?? null)
+        && (item.nivå ?? null) === (entry?.nivå ?? null)) {
+        return false;
+      }
+      return getActiveHandlingKeys(item).length > 0;
+    });
+}
+
+const charCategory = (entry, { allowFallback = true } = {}) => {
+  const rawTypes = Array.isArray(entry?.taggar?.typ)
+    ? entry.taggar.typ
+    : [];
+  const normalized = rawTypes
+    .map(t => typeof t === 'string' ? t.trim() : '')
+    .filter(Boolean);
+  if (!normalized.length) {
+    return allowFallback ? 'Övrigt' : undefined;
+  }
+
+  const primaryType = normalized[0];
+  const firstNonCustomIdx = normalized.findIndex(t => t.toLowerCase() !== 'hemmagjort');
+  const artifactIdx = normalized.findIndex(t => t.toLowerCase() === 'artefakt');
+
+  if (artifactIdx > 0 && artifactIdx === firstNonCustomIdx && primaryType) {
+    return primaryType;
+  }
+
+  if (firstNonCustomIdx >= 0) {
+    return normalized[firstNonCustomIdx];
+  }
+
+  if (primaryType) return primaryType;
+  return allowFallback ? 'Övrigt' : undefined;
+};
+
+function renderConflictTabButton(){
+  return '<button class="info-tab" data-tab="conflict" type="button">Konflikter</button>';
+}
+
+function conflictEntryHtml(p){
+  const activeKeys = getActiveHandlingKeys(p);
+  const activeNames = activeKeys.map(k => handlingName(p, k));
+  const lvlHtml = activeKeys
+    .map(k => {
+      const name = handlingName(p, k);
+      let desc = p.nivåer?.[k] || '';
+      if (!LVL.includes(k) && typeof desc === 'string') {
+        const idx = desc.indexOf(';');
+        desc = idx >= 0 ? desc.slice(idx + 1) : '';
+      }
+      if (!desc) return '';
+      const body = formatText(desc);
+      if (!body) return '';
+      return `
+        <details class="level-block">
+          <summary>${name}</summary>
+          <div class="level-content">${body}</div>
+        </details>
+      `.trim();
+    })
+    .filter(Boolean)
+    .join('');
+  const desc = lvlHtml
+    ? `<div class="card-desc"><div class="levels">${lvlHtml}</div></div>`
+    : '';
+  const titleName = (!LVL.includes(p.nivå || '') && p.nivå)
+    ? `${p.namn}: ${handlingName(p, p.nivå)}`
+    : p.namn;
+  return `<li class="card entry-card"><div class="card-title"><span>${titleName}</span></div>${desc}</li>`;
+}
+
+function buildConflictsHtml(list, { wrap = true } = {}){
+  if(!list.length){
+    const emptyLi = '<li class="card entry-card">Inga konflikter.</li>';
+    return wrap
+      ? `<ul class="card-list entry-card-list" data-entry-page="conflict">${emptyLi}</ul>`
+      : emptyLi;
+  }
+
+  const cats = {};
+  list.forEach(p=>{
+    const cat = charCategory(p);
+    (cats[cat] ||= []).push(p);
+  });
+
+  const catKeys = Object.keys(cats).sort(catComparator);
+  const html = catKeys.map(cat => {
+    const items = cats[cat].map(conflictEntryHtml).join('');
+    return `
+      <li class="cat-group">
+        <details open>
+          <summary>${catName(cat)}</summary>
+          <ul class="card-list entry-card-list" data-entry-page="conflict">${items}</ul>
+        </details>
+      </li>`;
+  }).join('');
+
+  if (!wrap) return html;
+  return `<ul class="card-list entry-card-list" data-entry-page="conflict">${html}</ul>`;
+}
+
+function ensureToolbarControls(onReady) {
+  const toolbar = document.querySelector('shared-toolbar');
+  if (!toolbar) {
+    return false;
+  }
+
+  const rerun = () => {
+    toolbar.__indexControlsPending = false;
+    if (ensureToolbarControls(onReady) && typeof onReady === 'function') {
+      onReady();
+    }
+  };
+
+  const registerRerun = () => {
+    if (toolbar.__indexControlsPending) return;
+    toolbar.__indexControlsPending = true;
+    toolbar.addEventListener('toolbar-rendered', rerun, { once: true });
+  };
+
+  const { shadowRoot } = toolbar;
+  if (!shadowRoot) {
+    registerRerun();
+    return false;
+  }
+
+  const filterUnion = shadowRoot.getElementById('filterUnion');
+  const entryViewToggle = shadowRoot.getElementById('entryViewToggle');
+  if (filterUnion && entryViewToggle) {
+    dom.filterUnion = filterUnion;
+    dom.entryViewToggle = entryViewToggle;
+    return true;
+  }
+
+  registerRerun();
+  return false;
+}
+
 function initIndex() {
+  if (!ensureToolbarControls(() => initIndex())) {
+    return;
+  }
+  const createEntryCard = window.entryCardFactory.create;
   if (dom.cName) {
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
   }
-   const F = { search:[], typ:[], ark:[], test:[] };
-   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
-   let sTemp = '';
+  const F = { search:[], typ:[], ark:[], test:[] };
+  const INTERNAL_SEARCH_TERMS = new Set(['lol','molly<3']);
+  const scrubInternalSearchTerms = () => {
+    const filtered = F.search.filter(term => {
+      const lower = String(term || '').toLowerCase();
+      return !INTERNAL_SEARCH_TERMS.has(lower);
+    });
+    const changed = filtered.length !== F.search.length;
+    if (changed) {
+      F.search = filtered;
+    }
+    return changed;
+  };
+  const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+  let sTemp = '';
   let union = storeHelper.getFilterUnion(store);
   dom.filterUnion.classList.toggle('active', union);
   let compact = storeHelper.getCompactEntries(store);
@@ -13,8 +386,11 @@ function initIndex() {
   let catsMinimized = false;
   let showArtifacts = false;
   let revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
+  let revealedArtifactsVersion = 0;
   const SECRET_SEARCH = { 'pajkastare': 'ar86' };
   const SECRET_IDS = new Set(Object.values(SECRET_SEARCH));
+  const ONLY_SELECTED_VALUE = '__onlySelected';
+  const ONLY_SELECTED_LABEL = 'Endast valda';
   // Open matching categories once after certain actions (search/type select)
   let openCatsOnce = new Set();
   // (Removed) Hoppsan no longer auto-syncs with other categories
@@ -37,22 +413,201 @@ function initIndex() {
       ['search','typ','ark','test'].forEach(k => {
         if (Array.isArray(saved.filters[k])) F[k] = saved.filters[k];
       });
+      scrubInternalSearchTerms();
     }
     catState = saved.cats || {};
   }
 
-  const getEntries = () => {
-    const base = DB
-      .concat(window.TABELLER || [])
-      .concat(storeHelper.getCustomEntries(store));
-    if (showArtifacts) return base.filter(p => !SECRET_IDS.has(p.id));
-    return base.filter(p => (!isHidden(p) || revealedArtifacts.has(p.id)) && !SECRET_IDS.has(p.id));
+  const ENTRY_META_FIELD = '__entryMeta';
+  const toArray = (value) => (Array.isArray(value) ? value : []);
+
+  const fallbackEnsureEntryMeta = (entry) => {
+    if (!entry || typeof entry !== 'object') return null;
+    if (entry[ENTRY_META_FIELD]) return entry[ENTRY_META_FIELD];
+    const safeString = (value) => String(value ?? '').trim();
+    const toLower = (value) => safeString(value).toLowerCase();
+    const normFn = typeof searchNormalize === 'function'
+      ? searchNormalize
+      : (value) => value;
+
+    const lowerName = toLower(entry.namn);
+    const normName = normFn(lowerName);
+    const levelText = Object.values(entry.nivåer || {})
+      .map(toLower)
+      .join(' ');
+    const descText = toLower(entry.beskrivning);
+    const combined = `${lowerName} ${descText} ${levelText}`.trim();
+    const normText = normFn(combined);
+
+    const normalizeList = (list) => toArray(list)
+      .map(safeString)
+      .filter(Boolean);
+
+    const tags = entry.taggar || {};
+    const typList = normalizeList(tags.typ);
+    let arkList = [];
+    try {
+      const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
+      arkList = normalizeList(exploded);
+    } catch {
+      arkList = [];
+    }
+    if (!arkList.length && Array.isArray(tags.ark_trad)) {
+      arkList = ['Traditionslös'];
+    }
+    const testList = normalizeList(tags.test);
+    const secondaryTags = [...arkList, ...testList];
+    const allTagsNormalized = new Set(
+      [...typList, ...secondaryTags].map(tag => normFn(tag.toLowerCase()))
+    );
+    const allTags = new Set([...typList, ...secondaryTags]);
+
+    const meta = {
+      normName,
+      normText,
+      typList,
+      primaryType: typList[0] || 'Övrigt',
+      primaryTypeLower: (typList[0] || 'Övrigt').toLowerCase(),
+      arkList,
+      testList,
+      secondaryTags,
+      secondaryLookup: new Set(secondaryTags.map(tag => normFn(tag.toLowerCase()))),
+      allTagsNormalized,
+      allTags
+    };
+
+    Object.defineProperty(entry, ENTRY_META_FIELD, {
+      value: meta,
+      enumerable: false,
+      configurable: true
+    });
+    return meta;
   };
-  const isArtifact = p => (p.taggar?.typ || []).includes('Artefakt');
-  const isHidden = p => {
-    const types = p.taggar?.typ || [];
-    const primary = types[0] ? String(types[0]).toLowerCase() : '';
-    return ['artefakt','kuriositet','skatt'].includes(primary);
+
+  const ensureEntryMeta = (entry) => {
+    if (typeof window.ensureEntryMeta === 'function') {
+      return window.ensureEntryMeta(entry);
+    }
+    return fallbackEnsureEntryMeta(entry);
+  };
+
+  const ensureEntryMetaList = (list) => {
+    if (typeof window.ensureEntryMetaList === 'function') {
+      return window.ensureEntryMetaList(list);
+    }
+    toArray(list).forEach(fallbackEnsureEntryMeta);
+    return list;
+  };
+
+  const entryCache = {
+    baseKey: '',
+    baseEntries: [],
+    filteredKey: '',
+    filteredEntries: []
+  };
+
+  const filteredResultCache = {
+    key: '',
+    entries: null
+  };
+
+  const invalidateFilteredResults = () => {
+    filteredResultCache.key = '';
+    filteredResultCache.entries = null;
+  };
+
+  const touchFilteredCache = () => {
+    entryCache.filteredKey = '';
+    invalidateFilteredResults();
+  };
+
+  const bumpRevealedArtifactsVersion = () => {
+    revealedArtifactsVersion += 1;
+    touchFilteredCache();
+  };
+
+  const hiddenPrimaryTypes = new Set(['artefakt', 'kuriositet', 'skatt']);
+
+  const buildBaseEntries = () => {
+    const versions = window.__entryDataVersions || { db: 0, tables: 0 };
+    const customVersion = typeof storeHelper.getCustomEntriesVersion === 'function'
+      ? storeHelper.getCustomEntriesVersion(store)
+      : 0;
+    const key = [
+      versions.db,
+      versions.tables,
+      customVersion,
+      store.current || ''
+    ].join('|');
+    if (entryCache.baseKey !== key) {
+      const customEntries = storeHelper.getCustomEntries(store) || [];
+      ensureEntryMetaList(customEntries);
+      const base = [
+        ...(Array.isArray(DB) ? DB : []),
+        ...(Array.isArray(window.TABELLER) ? window.TABELLER : []),
+        ...customEntries
+      ];
+      ensureEntryMetaList(base);
+      entryCache.baseEntries = base;
+      entryCache.baseKey = key;
+      entryCache.filteredKey = '';
+      hiddenNameIndex = null;
+    }
+    return entryCache.baseEntries;
+  };
+
+  const isHidden = (entry) => {
+    const meta = ensureEntryMeta(entry);
+    const primary = meta?.primaryTypeLower || '';
+    return hiddenPrimaryTypes.has(primary);
+  };
+
+  const buildFilteredEntries = () => {
+    const base = buildBaseEntries();
+    const revealedVersion = typeof storeHelper.getRevealedArtifactsVersion === 'function'
+      ? storeHelper.getRevealedArtifactsVersion(store)
+      : 0;
+    const key = [
+      entryCache.baseKey,
+      showArtifacts ? '1' : '0',
+      revealedVersion,
+      revealedArtifactsVersion
+    ].join('|');
+    if (entryCache.filteredKey !== key) {
+      const filtered = base.filter(entry => {
+        if (!entry || SECRET_IDS.has(entry.id)) return false;
+        if (showArtifacts) return true;
+        return !isHidden(entry) || revealedArtifacts.has(entry.id);
+      });
+      entryCache.filteredEntries = filtered;
+      entryCache.filteredKey = key;
+      invalidateFilteredResults();
+    }
+    return entryCache.filteredEntries;
+  };
+
+  const getEntries = () => buildFilteredEntries();
+
+  const hasArtifactTag = entry => {
+    const meta = ensureEntryMeta(entry);
+    return (meta?.typList || []).some(t => t.toLowerCase() === 'artefakt');
+  };
+
+  let hiddenNameIndex = null;
+  const getHiddenNameIndex = () => {
+    const dbArr = Array.isArray(DB) ? DB : [];
+    if (hiddenNameIndex && hiddenNameIndex.size === dbArr.length) {
+      return hiddenNameIndex.map;
+    }
+    const map = new Map();
+    dbArr.forEach(ent => {
+      if (!isHidden(ent) || SECRET_IDS.has(ent.id)) return;
+      const key = searchNormalize(String(ent.namn || '').toLowerCase());
+      if (!key) return;
+      if (!map.has(key)) map.set(key, ent.id);
+    });
+    hiddenNameIndex = { map, size: dbArr.length };
+    return map;
   };
 
   const FALT_BUNDLE = ['di10','di11','di12','di13','di14','di15'];
@@ -65,6 +620,99 @@ function initIndex() {
     'Allmän kvalitet': 'Allmänt'
   };
   const QUAL_TYPE_KEYS = Object.keys(QUAL_TYPE_MAP);
+  const DOCK_TAG_TYPES = new Set(['Fördel','Nackdel','Särdrag','Monstruöst särdrag','Ritual','Mystisk kraft','Förmåga']);
+
+  const levelLetter = (lvl) => {
+    const text = String(lvl || '').trim();
+    if (!text) return '';
+    if (text === 'Mästare') return 'M';
+    if (text === 'Gesäll') return 'G';
+    if (text === 'Novis') return 'N';
+    return text.charAt(0).toUpperCase();
+  };
+
+  const normalizeMatchValue = (val) => {
+    if (val === undefined || val === null) return null;
+    if (typeof val === 'string') return val.trim();
+    if (typeof val === 'number') return String(val);
+    return val;
+  };
+
+  const normalizeId = (val) => {
+    if (val === undefined || val === null) return null;
+    if (typeof val === 'number') return String(val);
+    return String(val).trim();
+  };
+
+  const entrySignature = (ent) => {
+    if (!ent || typeof ent !== 'object') return '';
+    const norm = value => String(value ?? '').trim().toLowerCase();
+    const parts = [];
+    if (ent.id !== undefined && ent.id !== null && String(ent.id).trim() !== '') {
+      parts.push(`id:${norm(ent.id)}`);
+    } else if (ent.namn !== undefined && ent.namn !== null) {
+      parts.push(`name:${norm(ent.namn)}`);
+    }
+    if (ent.trait !== undefined && ent.trait !== null && String(ent.trait).trim() !== '') {
+      parts.push(`trait:${norm(ent.trait)}`);
+    }
+    if (ent.race !== undefined && ent.race !== null && String(ent.race).trim() !== '') {
+      parts.push(`race:${norm(ent.race)}`);
+    }
+    if (ent.form !== undefined && ent.form !== null && String(ent.form).trim() !== '') {
+      parts.push(`form:${norm(ent.form)}`);
+    }
+    if (ent.nivå !== undefined && ent.nivå !== null && String(ent.nivå).trim() !== '') {
+      parts.push(`level:${norm(ent.nivå)}`);
+    }
+    return parts.join('|');
+  };
+
+  const findMatchingListEntry = (list, entry, options = {}) => {
+    if (!Array.isArray(list) || !entry || typeof entry !== 'object') return null;
+    const wantsLevel = Object.prototype.hasOwnProperty.call(options, 'level')
+      || Object.prototype.hasOwnProperty.call(entry, 'nivå');
+    const wantsTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
+      || Object.prototype.hasOwnProperty.call(entry, 'trait');
+    const desiredLevel = Object.prototype.hasOwnProperty.call(options, 'level')
+      ? normalizeMatchValue(options.level)
+      : normalizeMatchValue(entry.nivå);
+    const desiredTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
+      ? normalizeMatchValue(options.trait)
+      : normalizeMatchValue(entry.trait);
+    const targetSig = entrySignature({
+      ...entry,
+      trait: Object.prototype.hasOwnProperty.call(options, 'trait') ? options.trait : entry.trait,
+      nivå: Object.prototype.hasOwnProperty.call(options, 'level') ? options.level : entry.nivå
+    });
+    let fallbackById = null;
+    let fallbackByName = null;
+    let fallbackBySig = null;
+    for (const item of list) {
+      if (!item || typeof item !== 'object') continue;
+      if (item === entry) return item;
+      const sameId = entry.id != null && item.id != null
+        && normalizeId(item.id) === normalizeId(entry.id);
+      const sameName = item.namn && entry.namn
+        && String(item.namn).trim() === String(entry.namn).trim();
+      const levelMatches = !wantsLevel || normalizeMatchValue(item.nivå) === desiredLevel;
+      const traitMatches = !wantsTrait || normalizeMatchValue(item.trait) === desiredTrait;
+      if ((sameId || sameName) && levelMatches && traitMatches) {
+        return item;
+      }
+      if (sameId && !fallbackById) {
+        fallbackById = item;
+        continue;
+      }
+      if (sameName && !fallbackByName) {
+        fallbackByName = item;
+      }
+      if (!fallbackBySig && targetSig && targetSig === entrySignature(item)) {
+        fallbackBySig = item;
+      }
+    }
+    return fallbackById || fallbackByName || fallbackBySig || null;
+  };
 
   const flashAdded = (name, trait) => {
     const selector = `li[data-name="${CSS.escape(name)}"]${trait ? `[data-trait="${CSS.escape(trait)}"]` : ''}`;
@@ -75,6 +723,19 @@ function initIndex() {
       li.classList.add('inv-flash');
       setTimeout(() => li.classList.remove('inv-flash'), 1000);
     }
+  };
+
+  const getMonsterLoreSpecs = () => {
+    const list = window.monsterLore?.SPECS;
+    if (Array.isArray(list) && list.length) return list;
+    return ['Bestar','Kulturvarelser','Odöda','Styggelser'];
+  };
+
+  const usedMonsterLoreSpecs = (list) => {
+    if (!Array.isArray(list)) return [];
+    return list
+      .filter(x => x?.namn === 'Monsterlärd' && x.trait)
+      .map(x => x.trait);
   };
 
   const flashRemoved = (name, trait) => {
@@ -175,122 +836,351 @@ function initIndex() {
   };
 
   /* fyll dropdowns */
+  const dropdownCache = {
+    key: '',
+    typ: [],
+    ark: [],
+    test: []
+  };
+
+  const categoryCache = {
+    key: '',
+    map: new Map(),
+    list: []
+  };
+
+  const getCategoryIndex = () => {
+    const entries = getEntries();
+    const key = entryCache.filteredKey;
+    if (categoryCache.key !== key) {
+      const map = new Map();
+      const set = new Set();
+      entries.forEach(entry => {
+        const meta = ensureEntryMeta(entry) || {};
+        (meta.typList || []).forEach(tag => {
+          const norm = searchNormalize(String(tag || '').toLowerCase());
+          if (norm && !map.has(norm)) map.set(norm, tag);
+          if (tag) set.add(tag);
+        });
+      });
+      categoryCache.key = key;
+      categoryCache.map = map;
+      categoryCache.list = Array.from(set).sort((a,b) => (typeof compareSv === 'function'
+        ? compareSv(a, b)
+        : a.localeCompare(b, 'sv')));
+    }
+    return categoryCache.map;
+  };
+
+  const getCategoryList = () => {
+    getCategoryIndex();
+    return categoryCache.list;
+  };
+
   const fillDropdowns = ()=>{
-    const set = { typ:new Set(), ark:new Set(), test:new Set() };
-    getEntries().forEach(p=>{
-      (p.taggar.typ||[])
-        .filter(Boolean)
-        .forEach(v=>set.typ.add(v));
-      const arkTags = explodeTags(p.taggar.ark_trad);
-      if (arkTags.length) {
-        arkTags.forEach(v => set.ark.add(v));
-      } else if (Array.isArray(p.taggar?.ark_trad)) {
-        set.ark.add('Traditionslös');
+    const entries = getEntries();
+    const cacheKey = entryCache.filteredKey;
+    if (dropdownCache.key !== cacheKey) {
+      const sets = { typ: new Set(), ark: new Set(), test: new Set() };
+      entries.forEach(entry => {
+        const meta = ensureEntryMeta(entry) || {};
+        (meta.typList || []).forEach(tag => sets.typ.add(tag));
+        (meta.arkList || []).forEach(tag => sets.ark.add(tag));
+        (meta.testList || []).forEach(tag => sets.test.add(tag));
+      });
+      dropdownCache.key = cacheKey;
+      dropdownCache.typ = Array.from(sets.typ).sort((a,b) => a.localeCompare(b));
+      dropdownCache.ark = Array.from(sets.ark).sort((a,b) => a.localeCompare(b));
+      dropdownCache.test = Array.from(sets.test).sort((a,b) => a.localeCompare(b));
+    }
+    const fill = (sel, values, label, extra = []) => {
+      if (!sel) return;
+      const opts = [`<option value="">${label} (alla)</option>`];
+      extra.forEach(opt => {
+        const text = String(opt?.label || '').trim();
+        if (!text) return;
+        const value = String(opt?.value ?? '');
+        opts.push(`<option value="${value}">${text}</option>`);
+      });
+      values.forEach(value => {
+        const text = String(value || '').trim();
+        if (text) opts.push(`<option>${text}</option>`);
+      });
+      const markup = opts.join('');
+      if (sel.dataset.optionCache !== markup) {
+        sel.innerHTML = markup;
+        sel.dataset.optionCache = markup;
       }
-      (p.taggar.test||[])
-        .filter(Boolean)
-        .forEach(v=>set.test.add(v));
-    });
-    const fill=(sel,s,l)=>sel.innerHTML =
-      `<option value="">${l} (alla)</option>` + [...s].sort().map(v=>`<option>${v}</option>`).join('');
-    fill(dom.typSel , set.typ ,'Typ');
-    fill(dom.arkSel , set.ark ,'Arketyp');
-    fill(dom.tstSel , set.test,'Test');
+    };
+    fill(dom.typSel , dropdownCache.typ ,'Typ', [{ value: ONLY_SELECTED_VALUE, label: ONLY_SELECTED_LABEL }]);
+    fill(dom.arkSel , dropdownCache.ark ,'Arketyp');
+    fill(dom.tstSel , dropdownCache.test,'Test');
   };
   fillDropdowns();
 
-  /* custom suggestions above search (entries only, min 2 chars) */
-  let sugIdx = -1;
   const updateSearchDatalist = () => {
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    if (!sugEl) return;
-    const q = (dom.sIn?.value || '').trim();
-    if (q.length < 2) {
-      sugEl.innerHTML = '';
-      sugEl.hidden = true;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
-    const nq = searchNormalize(q.toLowerCase());
-    const esc = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/"/g,'&quot;');
-    // Special suggestions for "[N] random: <kategori>" or "[N] slump: <kategori>"
-    {
-      const m = q.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.*)$/i);
-      if (m) {
-        const num = (m[1] || '').trim();
-        const prefix = m[2];
-        const part = searchNormalize((m[3] || '').toLowerCase());
-        const seenCat = new Set();
-        const cats = [];
-        for (const p of getEntries()) {
-          for (const t of (p.taggar?.typ || [])) {
-            const key = searchNormalize(String(t).toLowerCase());
-            if (part && !key.includes(part)) continue;
-            if (seenCat.has(t)) continue;
-            seenCat.add(t);
-            cats.push(t);
-          }
-        }
-        cats.sort((a,b)=>String(a).localeCompare(String(b)));
-        if (cats.length) {
-          sugEl.innerHTML = cats.map((cat,i)=>{
-            const base = prefix.charAt(0).toUpperCase()+prefix.slice(1).toLowerCase();
-            const text = `${num ? (num + ' ') : ''}${base}: ${cat}`;
-            const disp = text.charAt(0).toUpperCase() + text.slice(1);
-            return `<div class="item" data-idx="${i}" data-val="${esc(text)}" data-cat="${esc(cat)}" data-count="${esc(num || '1')}" data-cmd="random">${disp}</div>`;
-          }).join('');
-          sugEl.hidden = false;
-          sugIdx = -1;
-          window.updateScrollLock?.();
-          return;
-        }
-        // Fall back to default behavior if no categories matched
-      }
-    }
-    const seen = new Set();
-    const MAX = 50;
-    const items = [];
-    for (const p of getEntries()) {
-      const name = String(p.namn || '').trim();
-      if (!name) continue;
-      const nname = searchNormalize(name.toLowerCase());
-      if (!nname.includes(nq)) continue;
-      if (seen.has(name)) continue;
-      seen.add(name);
-      items.push(name);
-      if (items.length >= MAX) break;
-    }
-    // UI-kommandoförslag
-    let uiHtml = '';
-    try {
-      if (window.getUICommandSuggestions) {
-        const cmds = window.getUICommandSuggestions(q) || [];
-        if (cmds.length) {
-          const escTxt = v => v.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/\"/g,'&quot;');
-          uiHtml = cmds.map((c,i)=>`<div class="item" data-ui="${escTxt(c.id)}" data-idx="ui-${i}">${escTxt((c.emoji||'') + ' ' + c.label)}</div>`).join('');
-        }
-      }
-    } catch {}
-    if (!items.length && !uiHtml) {
-      sugEl.innerHTML = '';
-      sugEl.hidden = true;
-      sugIdx = -1;
-      window.updateScrollLock?.();
-      return;
-    }
-    const listHtml = items.map((v,i)=>{
-      const disp = v.charAt(0).toUpperCase() + v.slice(1);
-      return `<div class="item" data-idx="${i}" data-val="${esc(v)}">${disp}</div>`;
+    window.globalSearch?.refreshSuggestions?.();
+  };
+
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+
+  const buildRandomSuggestionHtml = (query) => {
+    const q = String(query || '');
+    const match = q.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.*)$/i);
+    if (!match) return '';
+    const num = (match[1] || '').trim();
+    const prefix = match[2];
+    const part = searchNormalize((match[3] || '').toLowerCase());
+    const cats = getCategoryList()
+      .filter(cat => {
+        const key = searchNormalize(String(cat || '').toLowerCase());
+        return part ? key.includes(part) : true;
+      });
+    if (!cats.length) return '';
+    return cats.map((cat, i) => {
+      const base = prefix.charAt(0).toUpperCase() + prefix.slice(1).toLowerCase();
+      const text = `${num ? (num + ' ') : ''}${base}: ${cat}`;
+      const disp = text.charAt(0).toUpperCase() + text.slice(1);
+      return `<div class="item" data-idx="rand-${i}" data-val="${escapeHtml(text)}" data-cat="${escapeHtml(cat)}" data-count="${escapeHtml(num || '1')}" data-cmd="random">${escapeHtml(disp)}</div>`;
     }).join('');
-    sugEl.innerHTML = `${uiHtml}${listHtml}`;
-    sugEl.hidden = false;
-    sugIdx = -1;
-    window.updateScrollLock?.();
+  };
+
+  const clearSearchInput = ({ blur = true } = {}) => {
+    if (dom.sIn) dom.sIn.value = '';
+    sTemp = '';
+    window.globalSearch?.hideSuggestions?.();
+    if (blur && dom.sIn) {
+      window.__searchBlurGuard = true;
+      try { dom.sIn.blur(); } catch {}
+    }
+  };
+
+  const takePendingIndexSearch = () => {
+    try {
+      const stored = sessionStorage.getItem('__pendingIndexSearch');
+      if (stored !== null) sessionStorage.removeItem('__pendingIndexSearch');
+      return String(stored || '').trim();
+    } catch {
+      return '';
+    }
+  };
+
+  const applyIndexSearchTerm = (value, { scroll = true } = {}) => {
+    const term = String(value || '').trim();
+    const union = storeHelper.getFilterUnion(store);
+    if (term) {
+      if (union) {
+        if (!F.search.includes(term)) F.search.push(term);
+      } else {
+        F.search = [term];
+      }
+    } else {
+      F.search = [];
+    }
+    scrubInternalSearchTerms();
+    invalidateFilteredResults();
+    if (term) {
+      const norm = searchNormalize(term.toLowerCase());
+      const aliasTarget = typeof window.resolveSearchAliasTarget === 'function'
+        ? window.resolveSearchAliasTarget(term)
+        : '';
+      const targetNorm = aliasTarget || norm;
+      const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === targetNorm);
+      const cat = match?.taggar?.typ?.[0];
+      if (cat) openCatsOnce.add(cat);
+      if (window.storeHelper?.addRecentSearch) {
+        storeHelper.addRecentSearch(store, term);
+      }
+    }
+    clearSearchInput();
+    activeTags();
+    scheduleRenderList();
+    if (scroll) {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
+  const handleRandomSuggestion = (dataset) => {
+    const cat = dataset.cat || '';
+    const count = Math.max(1, parseInt(dataset.count || '1', 10) || 1);
+    const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
+    if (!pool.length) {
+      if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
+      clearSearchInput();
+      return true;
+    }
+    const picks = [];
+    const indices = pool.map((_, idx) => idx);
+    const drawCount = Math.min(count, pool.length);
+    for (let i = 0; i < drawCount; i++) {
+      const index = Math.floor(Math.random() * indices.length);
+      const [pickedIdx] = indices.splice(index, 1);
+      picks.push(pool[pickedIdx]);
+    }
+    fixedRandomEntries = picks;
+    fixedRandomInfo = { cat, count: picks.length };
+    invalidateFilteredResults();
+    const catName = cat || picks[0]?.taggar?.typ?.[0];
+    if (catName) openCatsOnce.add(catName);
+    clearSearchInput();
+    activeTags();
+    scheduleRenderList();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    return true;
+  };
+
+  const handleIndexSearchSubmit = (term, opts = {}) => {
+    const raw = String(term || '').trim();
+    if (!raw) {
+      F.search = [];
+      invalidateFilteredResults();
+      clearSearchInput(opts);
+      activeTags();
+      scheduleRenderList();
+      return true;
+    }
+    const lower = raw.toLowerCase();
+    if (lower === 'webapp') {
+      const ua = navigator.userAgent.toLowerCase();
+      let anchor = 'general';
+      if (/iphone|ipad|ipod/.test(ua)) anchor = 'ios';
+      else if (/android/.test(ua)) anchor = 'android';
+      else if (/edg|edge/.test(ua)) anchor = 'edge';
+      else if (/firefox/.test(ua)) anchor = 'firefox';
+      else if (/chrome/.test(ua)) anchor = 'chrome';
+      window.open(`webapp.html#${anchor}`, '_blank');
+      clearSearchInput(opts);
+      return true;
+    }
+    if (lower === 'lol') {
+      F.search = [];
+      F.typ = [];
+      F.ark = [];
+      F.test = [];
+      fixedRandomEntries = null;
+      fixedRandomInfo = null;
+      invalidateFilteredResults();
+      clearSearchInput(opts);
+      if (dom.typSel) dom.typSel.value = '';
+      if (dom.arkSel) dom.arkSel.value = '';
+      if (dom.tstSel) dom.tstSel.value = '';
+      storeHelper.setOnlySelected(store, false);
+      storeHelper.clearRevealedArtifacts(store);
+      revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
+      bumpRevealedArtifactsVersion();
+      if (showArtifacts) {
+        showArtifacts = false;
+        touchFilteredCache();
+      }
+      fillDropdowns();
+      activeTags();
+      scheduleRenderList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+    if (lower === 'molly<3') {
+      const removed = scrubInternalSearchTerms();
+      if (removed) invalidateFilteredResults();
+      showArtifacts = true;
+      touchFilteredCache();
+      clearSearchInput(opts);
+      fillDropdowns();
+      activeTags();
+      scheduleRenderList();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return true;
+    }
+    const randomMatch = raw.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
+    if (randomMatch) {
+      const requested = Math.max(1, parseInt(randomMatch[1] || '1', 10) || 1);
+      const catInput = (randomMatch[3] || '').trim();
+      if (catInput) {
+        const normalizedCat = searchNormalize(catInput.toLowerCase());
+        const categoryIndex = getCategoryIndex();
+        const canonical = categoryIndex.get(normalizedCat);
+        if (!canonical) {
+          if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
+          clearSearchInput(opts);
+          return true;
+        }
+        const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
+        if (!pool.length) {
+          if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
+          clearSearchInput(opts);
+          return true;
+        }
+        const picks = [];
+        const idxs = pool.map((_, idx) => idx);
+        const drawCount = Math.min(requested, pool.length);
+        for (let i = 0; i < drawCount; i++) {
+          const index = Math.floor(Math.random() * idxs.length);
+          const [pickedIdx] = idxs.splice(index, 1);
+          picks.push(pool[pickedIdx]);
+        }
+        fixedRandomEntries = picks;
+        fixedRandomInfo = { cat: canonical, count: picks.length };
+        invalidateFilteredResults();
+        const catName = canonical || picks[0]?.taggar?.typ?.[0];
+        if (catName) openCatsOnce.add(catName);
+        clearSearchInput(opts);
+        activeTags();
+        scheduleRenderList();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        return true;
+      }
+    }
+    if (tryBomb(raw)) {
+      clearSearchInput();
+      return true;
+    }
+    if (tryNilasPopup(raw)) {
+      clearSearchInput();
+      return true;
+    }
+    applyIndexSearchTerm(raw, opts);
+    return true;
+  };
+
+  if (window.globalSearch) {
+    window.globalSearch.setContext({
+      name: 'index',
+      getEntrySource: () => getEntries(),
+      buildExtraSuggestions: (query) => buildRandomSuggestionHtml(query),
+      handleDataset: (dataset) => {
+        if (dataset.cmd === 'random') return handleRandomSuggestion(dataset);
+        if (dataset.entry) {
+          applyIndexSearchTerm(dataset.entry);
+          return true;
+        }
+        return false;
+      },
+      handleSubmit: (term) => handleIndexSearchSubmit(term),
+      onQueryChanged: (value) => {
+        sTemp = String(value || '').trim();
+      }
+    });
+  }
+  window.handleIndexSearchTerm = (term, opts) => {
+    handleIndexSearchSubmit(term, opts);
   };
   updateSearchDatalist();
 
+  const pendingSearch = takePendingIndexSearch();
+
   /* render helpers */
+  const tagSectionPriority = (section) => {
+    if (section === 'test') return 0;
+    if (section === 'typ') return 1;
+    if (section === 'ark') return 2;
+    return 9;
+  };
+  const sortTagsForDisplay = (tags) => [...tags].sort((a, b) => {
+    const prio = tagSectionPriority(a?.section) - tagSectionPriority(b?.section);
+    if (prio !== 0) return prio;
+    return String(a?.label || '').localeCompare(String(b?.label || ''), 'sv');
+  });
   const activeTags =()=>{
     dom.active.innerHTML='';
     const push=t=>dom.active.insertAdjacentHTML('beforeend',t);
@@ -305,10 +1195,28 @@ function initIndex() {
       push(`<span class="tag removable" data-type="random" data-cat="${fixedRandomInfo?.cat || ''}" data-count="${cnt}">${label} ✕</span>`);
     }
     F.search.forEach(v=>push(`<span class="tag removable" data-type="search" data-val="${v}">${v} ✕</span>`));
+    F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
     F.typ .forEach(v=>push(`<span class="tag removable" data-type="typ" data-val="${v}">${v} ✕</span>`));
     F.ark .forEach(v=>push(`<span class="tag removable" data-type="ark" data-val="${v}">${v} ✕</span>`));
-    F.test.forEach(v=>push(`<span class="tag removable" data-type="test" data-val="${v}">${v} ✕</span>`));
   };
+
+  const buildFilterCacheKey = ({
+    baseKey,
+    unionFlag,
+    onlySelected,
+    selectedNames,
+    terms,
+    combinedFilters,
+    randomNames
+  }) => [
+    baseKey,
+    unionFlag,
+    onlySelected,
+    selectedNames,
+    terms.join('\u0001'),
+    combinedFilters.join('\u0001'),
+    randomNames.join('\u0001')
+  ].join('||');
 
   const filtered = () => {
     union = storeHelper.getFilterUnion(store);
@@ -316,77 +1224,118 @@ function initIndex() {
     const terms = F.search
       .map(t => searchNormalize(t.toLowerCase()));
     let baseEntries = getEntries();
+    let randomNames = [];
     if (fixedRandomEntries && fixedRandomEntries.length) {
-      const allowed = new Set(fixedRandomEntries.map(e => e.namn));
+      randomNames = fixedRandomEntries.map(e => e.namn || '').filter(Boolean);
+      const allowed = new Set(randomNames);
       baseEntries = baseEntries.filter(p => allowed.has(p.namn));
     }
-    const nameSet = onlySel
-      ? new Set(storeHelper.getCurrentList(store).map(x => x.namn))
-      : null;
-    if (!fixedRandomEntries && F.typ.length === 0 && F.ark.length === 0 && F.test.length === 0 && F.search.length === 1) {
+    let selectedNamesKey = '';
+    let nameSet = null;
+    if (onlySel) {
+      const currentList = storeHelper.getCurrentList(store);
+      const names = currentList
+        .map(x => x?.namn || '')
+        .filter(Boolean);
+      nameSet = new Set(names);
+      selectedNamesKey = names.slice().sort().join('\u0001');
+    }
+    const combinedFilters = [...F.typ, ...F.ark, ...F.test];
+    const cacheKey = buildFilterCacheKey({
+      baseKey: entryCache.filteredKey,
+      unionFlag: union ? '1' : '0',
+      onlySelected: onlySel ? '1' : '0',
+      selectedNames: selectedNamesKey,
+      terms,
+      combinedFilters,
+      randomNames
+    });
+    if (filteredResultCache.key === cacheKey && filteredResultCache.entries) {
+      return filteredResultCache.entries;
+    }
+    if (!fixedRandomEntries && combinedFilters.length === 0 && F.search.length === 1) {
       const term = terms[0];
       const specialId = SECRET_SEARCH[term];
       if (specialId) {
-        const hid = DB.find(p => p.id === specialId);
+        const hid = lookupEntry({ id: specialId });
         if (hid) {
           const cat = hid.taggar?.typ?.[0];
           if (cat) openCatsOnce.add(cat);
-          return [hid];
+          filteredResultCache.entries = [hid];
+          filteredResultCache.key = cacheKey;
+          return filteredResultCache.entries;
         }
       }
       if (!showArtifacts) {
-        const hid = DB.find(p => isHidden(p) && !SECRET_IDS.has(p.id) && searchNormalize((p.namn || '').toLowerCase()) === term);
+        const hiddenIndex = getHiddenNameIndex();
+        const hiddenId = hiddenIndex.get(term);
+        const hid = hiddenId !== undefined ? lookupEntry({ id: hiddenId }) : null;
         if (hid) {
           if (!revealedArtifacts.has(hid.id)) {
             revealedArtifacts.add(hid.id);
             storeHelper.addRevealedArtifact(store, hid.id);
+            bumpRevealedArtifactsVersion();
             fillDropdowns();
           }
           const cat = hid.taggar?.typ?.[0];
           if (cat) openCatsOnce.add(cat);
-          return [hid];
+          filteredResultCache.entries = [hid];
+          filteredResultCache.key = cacheKey;
+          return filteredResultCache.entries;
         }
       }
     }
-    return baseEntries.filter(p=>{
-      const levelText = Object.values(p.nivåer || {}).join(' ');
-      const text = searchNormalize(`${p.namn} ${(p.beskrivning||'')} ${levelText}`.toLowerCase());
+    const hasFilterTags = combinedFilters.length > 0;
+    const result = baseEntries.filter(entry => {
+      const meta = ensureEntryMeta(entry) || {};
+      const text = meta.normText || '';
       const hasTerms = terms.length > 0;
       const txtHit = hasTerms && (
         union ? terms.some(q => text.includes(q))
-              : terms.every(q => text.includes(q))
+               : terms.every(q => text.includes(q))
       );
-      const tags = p.taggar || {};
-      const selTags = [...F.typ, ...F.ark, ...F.test];
-      const hasTags = selTags.length > 0;
-      const arkTags = explodeTags(tags.ark_trad);
-      const itmTags = [
-        ...(tags.typ ?? []),
-        ...(arkTags.length ? arkTags : (Array.isArray(tags.ark_trad) ? ['Traditionslös'] : [])),
-        ...(tags.test ?? [])
-      ];
-      const tagHit = hasTags && (
-        union ? selTags.some(t => itmTags.includes(t))
-              : selTags.every(t => itmTags.includes(t))
+      const tagSet = meta.allTags || new Set();
+      const tagHit = hasFilterTags && (
+        union
+          ? combinedFilters.some(tag => tagSet.has(tag))
+          : combinedFilters.every(tag => tagSet.has(tag))
       );
-      const tagOk = !hasTags || tagHit;
+      const tagOk = !hasFilterTags || tagHit;
       const txtOk  = !hasTerms || txtHit;
-      const selOk = !onlySel || nameSet.has(p.namn);
-      // In utvidgad (union) läge: tillåt träff om texten ELLER taggarna matchar
-      // även om de andra filtret pekar på annan kategori.
+      const selOk = !onlySel || nameSet.has(entry.namn);
       const combinedOk = union
-        ? ((hasTags || hasTerms) ? (tagHit || txtHit) : true)
+        ? ((hasFilterTags || hasTerms) ? (tagHit || txtHit) : true)
         : (tagOk && txtOk);
       return combinedOk && selOk;
     }).sort(createSearchSorter(terms));
+    filteredResultCache.entries = result;
+    filteredResultCache.key = cacheKey;
+    return filteredResultCache.entries;
   };
 
   const renderList = arr=>{
+    const sortMode = storeHelper.getEntrySort
+      ? storeHelper.getEntrySort(store)
+      : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
+    const entrySorter = typeof entrySortComparator === 'function'
+      ? entrySortComparator(sortMode)
+      : ((a, b) => (typeof compareSv === 'function'
+          ? compareSv(a?.namn || '', b?.namn || '')
+          : String(a?.namn || '').localeCompare(String(b?.namn || ''), 'sv')));
+    const cardKeyFromEl = el => {
+      const id = el.dataset.id || el.dataset.name || '';
+      const level = el.dataset.level || '';
+      const trait = el.dataset.trait || '';
+      return `${id}|${level}|${trait}`;
+    };
+    const prevCards = [...dom.lista.querySelectorAll('li.card.entry-card')];
+    const openCardKeys = new Set(prevCards.filter(li => !li.classList.contains('compact')).map(cardKeyFromEl));
+    const compactCardKeys = new Set(prevCards.filter(li => li.classList.contains('compact')).map(cardKeyFromEl));
     const openCats = new Set(
       [...dom.lista.querySelectorAll('.cat-group > details[open]')]
         .map(d => d.dataset.cat)
     );
-    dom.lista.innerHTML = '';
+    const fragment = document.createDocumentFragment();
     // Always render list; a fallback "Hoppsan" category is appended last.
     const charList = storeHelper.getCurrentList(store);
     const invList  = storeHelper.getInventory(store);
@@ -397,10 +1346,11 @@ function initIndex() {
     const searchActive = terms.length > 0;
     const catNameMatch = {};
     arr.forEach(p=>{
-      const cat = p.taggar?.typ?.[0] || 'Övrigt';
+      const meta = ensureEntryMeta(p) || {};
+      const cat = meta.primaryType || p.taggar?.typ?.[0] || 'Övrigt';
       (cats[cat] ||= []).push(p);
       if (searchActive) {
-        const name = searchNormalize((p.namn || '').toLowerCase());
+        const name = meta.normName || searchNormalize((p.namn || '').toLowerCase());
         const union = storeHelper.getFilterUnion(store);
         const nameOk = union ? terms.some(q => name.includes(q))
                              : terms.every(q => name.includes(q));
@@ -419,11 +1369,12 @@ function initIndex() {
       return catComparator(a,b);
     });
     catKeys.forEach(cat=>{
+      cats[cat].sort(entrySorter);
       const catLi=document.createElement('li');
       catLi.className='cat-group';
       // Allow temporary "open once" categories to override saved state
       const shouldOpen = openCatsOnce.has(cat) || (catState[cat] !== undefined ? catState[cat] : openCats.has(cat));
-      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list"></ul></details>`;
+      catLi.innerHTML=`<details data-cat="${cat}"${shouldOpen ? ' open' : ''}><summary>${catName(cat)}</summary><ul class="card-list entry-card-list"></ul></details>`;
       const detailsEl = catLi.querySelector('details');
       const listEl=catLi.querySelector('ul');
       detailsEl.addEventListener('toggle', (ev) => {
@@ -433,48 +1384,80 @@ function initIndex() {
         saveState();
       });
       cats[cat].forEach(p=>{
+        const meta = ensureEntryMeta(p) || {};
         if (p.kolumner && p.rader) {
           const infoHtml = tabellInfoHtml(p);
-          const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1">Info</button>`;
-          const tagsHtml = (p.taggar?.typ || [])
-            .map(t => `<span class="tag">${t}</span>`)
-            .join(' ');
-          const tagsDiv = tagsHtml ? `<div class="tags">${tagsHtml}</div>` : '';
-        const li = document.createElement('li');
-        li.className = 'card';
-        li.dataset.name = p.namn;
-        li.innerHTML = `
-            <div class="card-title"><span>${p.namn}</span></div>
-            ${tagsDiv}
-            <div class="inv-controls">${infoBtn}</div>`;
-        listEl.appendChild(li);
-        if (searchActive && terms.length) {
-          const titleSpan = li.querySelector('.card-title > span');
-          if (titleSpan) highlightInElement(titleSpan, terms);
+          const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoHtml)}" data-tabell="1" aria-label="Visa info">${icon('info')}</button>`;
+          const dataset = { name: p.namn };
+          if (p.id) dataset.id = p.id;
+          const visibleTags = (meta.typList || [])
+            .filter(t => t && !/^tabell(er)?$/i.test(t));
+          const tagsHtml = visibleTags.length
+            ? visibleTags.map(t => `<span class="tag">${t}</span>`).join(' ')
+            : '';
+          const li = createEntryCard({
+            compact,
+            dataset,
+            nameHtml: p.namn,
+            tagsHtml,
+            titleActions: [infoBtn],
+            collapsible: true
+          });
+          listEl.appendChild(li);
+          const entryKey = cardKeyFromEl(li);
+          if (openCardKeys.has(entryKey)) li.classList.remove('compact');
+          else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
+          if (searchActive && terms.length) {
+            const titleSpan = li.querySelector('.card-title .entry-title-main');
+            if (titleSpan) highlightInElement(titleSpan, terms);
+          }
+          return;
         }
-        return;
-        }
+        let charEntry = findMatchingListEntry(charList, p) || null;
+        const levelStr = typeof charEntry?.nivå === 'string' ? charEntry.nivå.trim() : '';
         const isEx = p.namn === 'Exceptionellt karakt\u00e4rsdrag';
-        const inChar = isEx ? false : charList.some(c=>c.namn===p.namn);
-        const curLvl = charList.find(c=>c.namn===p.namn)?.nivå
+        const charLevel = !isEx && levelStr ? levelStr : null;
+        const curLvl = charLevel
           || LVL.find(l => p.nivåer?.[l]) || 'Novis';
         const availLvls = LVL.filter(l => p.nivåer?.[l]);
-        const lvlSel = availLvls.length > 1
-          ? `<select class="level" data-name="${p.namn}">
-              ${availLvls.map(l=>`<option${l===curLvl?' selected':''}>${l}</option>`).join('')}
+        const hasAnyLevel = availLvls.length > 0;
+        const hasLevelSelect = availLvls.length > 1;
+        if (curLvl != null) {
+          const matchOpts = { level: curLvl };
+          const traitSource = charEntry && Object.prototype.hasOwnProperty.call(charEntry, 'trait')
+            ? charEntry.trait
+            : (Object.prototype.hasOwnProperty.call(p, 'trait') ? p.trait : undefined);
+          if (traitSource !== undefined) matchOpts.trait = traitSource;
+          const refinedEntry = findMatchingListEntry(charList, p, matchOpts);
+          if (refinedEntry) charEntry = refinedEntry;
+        }
+        const inChar = isEx ? false : !!charEntry;
+        const levelOptionsHtml = hasLevelSelect
+          ? availLvls.map(l => {
+              const short = levelLetter(l);
+              const selected = l === curLvl ? ' selected' : '';
+              const shortAttr = short ? ` data-short="${short}"` : '';
+              return `<option value="${l}"${shortAttr}${selected}>${l}</option>`;
+            }).join('')
+          : '';
+        const lvlSel = hasLevelSelect
+          ? `<select class="level" data-name="${p.namn}" aria-label="Välj nivå för ${p.namn}">
+              ${levelOptionsHtml}
             </select>`
           : '';
         const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
-        let desc = abilityHtml(p);
+        let desc = abilityHtml(p, charLevel || undefined);
+        let cardDesc = desc;
+        const infoMeta = [];
         let priceText = '';
-        let weightText = '';
         let weightVal = null;
         let capacityVal = null;
-        let capacityText = '';
-        const isVehicle = (p.taggar?.typ || []).includes('Färdmedel');
+        const isVehicle = (meta.typList || []).includes('Färdmedel');
         let priceLabel = '';
         if (isInv(p)) {
-          desc += itemStatHtml(p);
+          const statsHtml = itemStatHtml(p);
+          desc += statsHtml;
+          cardDesc += statsHtml;
           const baseQuals = [
             ...(p.taggar?.kvalitet ?? []),
             ...splitQuals(p.kvalitet)
@@ -483,7 +1466,9 @@ function initIndex() {
             const qhtml = baseQuals
               .map(q => `<span class="tag">${q}</span>`)
               .join(' ');
-            desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+            const qualBlock = `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+            desc += qualBlock;
+            cardDesc += qualBlock;
           }
           if (p.grundpris) {
             priceText = formatMoney(invUtil.calcEntryCost(p));
@@ -494,13 +1479,11 @@ function initIndex() {
           if (baseW || massCnt) {
             const w = baseW + massCnt;
             weightVal = formatWeight(w);
-            weightText = `<br>Vikt: ${weightVal}`;
           }
           if (isVehicle) {
             const cap = p.stat?.bärkapacitet ?? null;
             if (cap != null) {
               capacityVal = cap;
-              capacityText = ` BK: ${cap}`;
             }
           }
         } else if (isEmployment(p)) {
@@ -514,58 +1497,151 @@ function initIndex() {
             priceLabel = 'Pris:';
           }
         }
-        let infoHtml = priceText ? `${desc}<br>${priceLabel} ${priceText}${capacityText}${weightText}` : `${desc}${weightText}`;
+        if (priceText) {
+          infoMeta.push({ label: priceLabel.replace(/:$/, ''), value: priceText });
+        }
+        if (capacityVal != null) {
+          infoMeta.push({ label: 'Bärkapacitet', value: capacityVal });
+        }
+        if (weightVal != null) {
+          infoMeta.push({ label: 'Vikt', value: weightVal });
+        }
+        const infoBodyExtras = [];
         if (isRas(p) || isYrke(p) || isElityrke(p)) {
           const extra = yrkeInfoHtml(p);
-          if (extra) infoHtml += `<br>${extra}`;
+          if (extra) infoBodyExtras.push(extra);
         }
         if (p.namn === 'Blodsband') {
           const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
           if (races.length) {
             const str = races.join(', ');
-            desc += `<br><strong>Raser:</strong> ${str}`;
-            infoHtml += `<br><strong>Raser:</strong> ${str}`;
+            const block = `<p><strong>Raser:</strong> ${str}</p>`;
+            cardDesc += block;
+            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
           }
         }
         let spec = null;
         if (p.namn === 'Monsterlärd') {
-          spec = charList.find(c => c.namn === 'Monsterlärd')?.trait || null;
+          spec = charEntry?.trait || null;
           if (spec) {
-            const t = `<br><strong>Specialisering:</strong> ${spec}`;
-            desc += t;
-            infoHtml += t;
+            const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
+            cardDesc += block;
+            infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
           }
         }
-        const charEntry = charList.find(c => c.namn === p.namn);
-        const xpSource = charEntry ? charEntry : { ...p, nivå: curLvl };
-        const xpVal = (isInv(p) || isEmployment(p) || isService(p)) ? null : storeHelper.calcEntryXP(xpSource, charList);
-        let xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
-        if (isElityrke(p)) xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, charList) : 50}`;
-        const xpTag = (xpVal != null || isElityrke(p)) ? `<span class="tag xp-cost">Erf: ${xpText}</span>` : '';
-        const typeTags = (p.taggar?.typ || []).map(t => `<span class="tag filter-tag" data-section="typ" data-val="${t}">${QUAL_TYPE_MAP[t] || t}</span>`);
-        const trTags = explodeTags(p.taggar?.ark_trad);
-        const arkTags = (trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []))
-          .map(t => `<span class="tag filter-tag" data-section="ark" data-val="${t}">${t}</span>`);
-        const testTags = (p.taggar?.test || []).map(t => `<span class="tag filter-tag" data-section="test" data-val="${t}">${t}</span>`);
-        const infoTagsHtml = [xpTag]
-          .concat(typeTags)
-          .concat(arkTags)
-          .concat(testTags)
-          .filter(Boolean)
-          .join(' ');
-        const tagsHtml = []
-          .concat(typeTags)
-          .concat(arkTags)
-          .concat(testTags)
-          .filter(Boolean)
-          .join(' ');
-        const xpHtml = (xpVal != null || isElityrke(p)) ? `<span class="xp-cost">Erf: ${xpText}</span>` : '';
+        let infoBodyHtml = desc;
+        if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
+        const levelCapable = hasAnyLevel
+          || Object.prototype.hasOwnProperty.call(charEntry || {}, 'nivå')
+          || Object.prototype.hasOwnProperty.call(p, 'nivå');
+        let xpInfo = null;
+        if (!(isInv(p) || isEmployment(p) || isService(p))) {
+          const xpOptions = {};
+          if (charEntry) xpOptions.xpSource = charEntry;
+          if (levelCapable) xpOptions.level = curLvl;
+          xpInfo = computeIndexEntryXP(p, charList, xpOptions);
+        }
+        const xpVal = xpInfo?.value ?? null;
+        const xpTag = xpInfo?.tagHtml || '';
+        const renderFilterTag = (tag, extra = '') => `<span class="tag filter-tag" data-section="${tag.section}" data-val="${tag.value}"${extra}>${tag.label}</span>`;
+        const filterTagData = [];
+        const primaryTagParts = [];
+        (meta.typList || []).forEach((t, idx) => {
+          if (!t) return;
+          const tag = { section: 'typ', value: t, label: QUAL_TYPE_MAP[t] || t, hidden: idx === 0 };
+          filterTagData.push(tag);
+          if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+        });
+        (meta.arkList || []).forEach(t => {
+          if (!t) return;
+          const tag = { section: 'ark', value: t, label: t, hidden: t === 'Traditionslös' };
+          filterTagData.push(tag);
+          if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
+        });
+        (meta.testList || []).forEach(t => {
+          if (!t) return;
+          filterTagData.push({ section: 'test', value: t, label: t });
+        });
+        const primaryTagsHtml = primaryTagParts.join(' ');
+        const visibleTagData = sortTagsForDisplay(filterTagData.filter(tag => !tag.hidden));
+        const dockableTagData = sortTagsForDisplay(visibleTagData.filter(tag => tag.section !== 'typ' && tag.section !== 'ark'));
+        const filterTagHtml = dockableTagData.map(tag => renderFilterTag(tag));
+        const infoFilterTagHtml = visibleTagData.map(tag => renderFilterTag(tag));
+        let tagsHtml = filterTagHtml.join(' ');
+        const lvlBadgeVal = hasAnyLevel ? curLvl : '';
+        const lvlShort = levelLetter(lvlBadgeVal);
+        const singleLevelTagHtml = (!hasLevelSelect && lvlShort && lvlBadgeVal)
+          ? `<span class="tag level-tag" title="${lvlBadgeVal}">${lvlShort}</span>`
+          : '';
+        const infoTagParts = [xpTag].concat(infoFilterTagHtml).filter(Boolean);
+        if (singleLevelTagHtml) infoTagParts.push(singleLevelTagHtml);
+        const infoBoxTagParts = infoFilterTagHtml.filter(Boolean);
+        if (singleLevelTagHtml) infoBoxTagParts.push(singleLevelTagHtml);
+        const activeKeys = getActiveHandlingKeys(p);
+        const currentChars = storeHelper.getCurrentList(store);
+        const conflictPool = findConflictingEntries(p, currentChars);
+        const conflictsHtml = (activeKeys.length && conflictPool.length)
+          ? buildConflictsHtml(conflictPool)
+          : '';
+        const conflictWarn = conflictsHtml
+          ? `<span class="tag filter-tag conflict-flag" title="Har konflikter med valda förmågor">${icon('active', { className: 'btn-icon conflict-icon', alt: 'Konflikt' }) || '⚠️'}</span>`
+          : '';
+        if (conflictWarn) infoBoxTagParts.unshift(conflictWarn);
+        const infoBoxFacts = infoMeta.filter(meta => {
+          if (!meta) return false;
+          const value = meta.value;
+          if (value === undefined || value === null || value === '') return false;
+          const label = String(meta.label || '').toLowerCase();
+          return label.includes('pris') || label.includes('dagslön') || label.includes('vikt');
+        });
+        const infoBoxFactParts = infoBoxFacts
+          .map(f => {
+            const label = String(f.label ?? '').trim();
+            const value = String(f.value ?? '').trim();
+            if (!label || !value) return '';
+            return `<div class="card-info-fact"><span class="card-info-fact-label">${label}</span><span class="card-info-fact-value">${value}</span></div>`;
+          })
+          .filter(Boolean);
+        let infoBoxContentHtml = '';
+        if (isInv(p) && (infoBoxTagParts.length || infoBoxFactParts.length)) {
+          const inlineTagsHtml = infoBoxTagParts.length
+            ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
+            : '';
+          const inlineFactsHtml = infoBoxFactParts.length
+            ? `<div class="card-info-facts">${infoBoxFactParts.join('')}</div>`
+            : '';
+          const inlineParts = [inlineTagsHtml, inlineFactsHtml]
+            .filter(Boolean)
+            .join('');
+          infoBoxContentHtml = inlineParts
+            ? `<div class="card-info-inline">${inlineParts}</div>`
+            : '';
+        } else {
+          const infoBoxTagsHtml = infoBoxTagParts.length
+            ? `<div class="card-info-tags tags">${infoBoxTagParts.join(' ')}</div>`
+            : '';
+          const infoBoxFactsHtml = infoBoxFactParts.length
+            ? `<div class="card-info-facts">${infoBoxFactParts.join('')}</div>`
+            : '';
+          infoBoxContentHtml = `${infoBoxTagsHtml}${infoBoxFactsHtml}`;
+        }
+        const infoBoxHtml = infoBoxContentHtml
+          ? `<div class="card-info-box">${infoBoxContentHtml}</div>`
+          : '';
+        const dockPrimary = (p.taggar?.typ || [])[0] || '';
+        const shouldDockTags = DOCK_TAG_TYPES.has(dockPrimary);
+        const renderDockedTags = (tags, extraClass = '') => {
+          if (!tags.length) return '';
+          const cls = ['entry-tags', extraClass].filter(Boolean).join(' ');
+          return `<div class="${cls}">${tags.map(tag => renderFilterTag(tag)).join('')}</div>`;
+        };
+        const dockedTagsHtml = shouldDockTags ? renderDockedTags(dockableTagData) : '';
+        const mobileTagsHtml = (!compact && !shouldDockTags && dockableTagData.length)
+          ? renderDockedTags(dockableTagData, 'entry-tags-mobile')
+          : '';
+        const xpHtml = xpInfo?.headerHtml || '';
+        const levelHtml = hideDetails ? '' : (hasLevelSelect ? lvlSel : '');
         // Compact meta badges (P/V/level) using short labels for mobile space
-        const lvlBadgeVal = (availLvls.length > 0) ? curLvl : '';
-        const lvlShort =
-          lvlBadgeVal === 'Mästare' ? 'M'
-          : (lvlBadgeVal === 'Gesäll' ? 'G'
-          : (lvlBadgeVal === 'Novis' ? 'N' : ''));
         const priceBadgeLabel = (priceLabel || 'Pris').replace(':','');
         const priceBadgeText = priceLabel === 'Dagslön:' ? 'Dagslön' : 'P';
         const badgeParts = [];
@@ -580,11 +1656,29 @@ function initIndex() {
         if (weightVal != null) badgeParts.push(`<span class="meta-badge weight-badge" title="Vikt">V: ${weightVal}</span>`);
         if (isInv(p) && lvlShort) badgeParts.push(`<span class="meta-badge level-badge" title="${lvlBadgeVal}">${lvlShort}</span>`);
         const metaBadges = badgeParts.length ? `<div class="meta-badges">${badgeParts.join('')}</div>` : '';
-        if (infoTagsHtml) {
-          infoHtml = `<div class="tags">${infoTagsHtml}</div><br>${infoHtml}`;
-        }
-        const infoBtn = `<button class="char-btn" data-info="${encodeURIComponent(infoHtml)}">Info</button>`;
-        const multi = isInv(p) || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+        const infoSections = (isElityrke(p) && typeof buildElityrkeInfoSections === 'function')
+          ? buildElityrkeInfoSections(p)
+          : [];
+        const skadeTabHtml = (typeof buildSkadetypPanelHtml === 'function' && typeof entryHasDamageType === 'function' && entryHasDamageType(p))
+          ? buildSkadetypPanelHtml(p, { level: curLvl, tables: window.TABELLER })
+          : '';
+        const conflictTabHtml = conflictsHtml ? renderConflictTabButton() : '';
+        const infoTagsHtml = infoTagParts.join(' ');
+        const infoPanelHtml = buildInfoPanelHtml({
+          tagsHtml: infoTagsHtml,
+          bodyHtml: infoBodyHtml,
+          meta: infoMeta,
+          sections: infoSections,
+          skadetypHtml: skadeTabHtml,
+          conflictTabHtml,
+          conflictContentHtml: conflictsHtml
+        });
+        const infoBtn = `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
+        const isInventoryEntry = isInv(p);
+        const isMonsterLore = p.namn === 'Monsterlärd';
+        const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
+        const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
+        const multi = isInventoryEntry || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t))) || monsterLoreMulti;
         let count;
         if (isInv(p)) {
           if (p.id === 'di79') {
@@ -594,93 +1688,147 @@ function initIndex() {
             count = invList.filter(c => c.id === p.id).reduce((sum,c)=>sum+(c.qty||1),0);
           }
         } else {
-          count = charList.filter(c => c.id === p.id && !c.trait).length;
+          if (isMonsterLore) {
+            count = charList.filter(c => c.namn === p.namn && c.trait).length;
+          } else {
+            count = charList.filter(c => c.id === p.id && !c.trait).length;
+          }
         }
-        const limit = isInv(p) ? Infinity : storeHelper.monsterStackLimit(charList, p.namn);
-        const badge = multi && count>0 ? ` <span class="count-badge">×${count}</span>` : '';
+        const limit = isInv(p)
+          ? Infinity
+          : isMonsterLore
+            ? getMonsterLoreSpecs().length
+            : storeHelper.monsterStackLimit(charList, p.namn);
+        const badge = multi && count > 0 ? `<span class="count-badge">×${count}</span>` : '';
         const showInfo = compact || hideDetails;
+        const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
+        const idAttr = p.id ? ` data-id="${p.id}"` : '';
+        const editBtn = canEdit
+          ? `<button data-act="editCustom" class="char-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+          : '';
         const eliteBtn = isElityrke(p)
-          ? `<button class="char-btn" data-elite-req="${p.namn}">🏋🏻‍♂️</button>`
+          ? `<button class="char-btn icon icon-only" data-elite-req="${p.namn}" aria-label="Lägg till elityrke med krav">${icon('elityrke')}</button>`
           : '';
         const allowAdd = !(isService(p) || isEmployment(p));
-        let btn = '';
+        const titleActions = [];
+        const actionButtons = [];
+        if (showInfo) titleActions.push(infoBtn);
+        if (editBtn) actionButtons.push(editBtn);
         if (allowAdd) {
-          if(multi){
-            if(count>0){
-              const delBtn = `<button data-act="del" class="char-btn danger" data-name="${p.namn}">🗑</button>`;
-              const subBtn = `<button data-act="sub" class="char-btn" data-name="${p.namn}">–</button>`;
-              const addBtn = count < limit ? `<button data-act="add" class="char-btn" data-name="${p.namn}">+</button>` : '';
-              btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${delBtn}${subBtn}${addBtn}${eliteBtn}</div>`;
-            }else{
-              const addBtn = `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-              btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${addBtn}${eliteBtn}</div>`;
+          if (multi) {
+            const buyMultiButton = `<button data-act="buyMulti" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Köp flera">${icon('buymultiple')}</button>`;
+            if (count > 0) {
+              actionButtons.push(`<button data-act="del" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`);
+              actionButtons.push(`<button data-act="sub" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`);
+              if (isInventoryEntry) actionButtons.push(buyMultiButton);
+              if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
+            } else {
+              if (count < limit) actionButtons.push(`<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
+              if (isInventoryEntry) actionButtons.push(buyMultiButton);
             }
-          }else{
+          } else {
             const mainBtn = inChar
-              ? `<button data-act="rem" class="char-btn danger icon" data-name="${p.namn}">🗑</button>`
-              : `<button data-act="add" class="char-btn" data-name="${p.namn}">Lägg till</button>`;
-            btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}${mainBtn}${eliteBtn}</div>`;
+              ? `<button data-act="rem" class="char-btn danger icon icon-only" data-name="${p.namn}">${icon('remove')}</button>`
+              : `<button data-act="add" class="char-btn icon icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`;
+            actionButtons.push(mainBtn);
           }
-        } else {
-          btn = `<div class="inv-controls">${metaBadges}${showInfo ? infoBtn : ''}</div>`;
         }
-        const li=document.createElement('li');
-        li.className='card' + (compact ? ' compact' : '');
-        li.dataset.name = p.namn;
-        if (spec) li.dataset.trait = spec;
-        if (xpVal != null) li.dataset.xp = xpVal;
-        const tagsDiv = (!compact && tagsHtml)
-          ? `<div class="tags">${tagsHtml}</div>`
+        if (eliteBtn) actionButtons.push(eliteBtn);
+        const leftSections = [];
+        if (metaBadges) leftSections.push(metaBadges);
+        if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
+        else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
+        const dataset = { name: p.namn };
+        if (spec) dataset.trait = spec;
+        if (xpVal != null) dataset.xp = xpVal;
+        if (p.id) dataset.id = p.id;
+        const descBlock = cardDesc
+          ? `<div class="card-desc">${cardDesc}</div>`
           : '';
-        const levelHtml = hideDetails ? '' : lvlSel;
-        const descHtml = (!compact && !hideDetails) ? `<div class="card-desc">${desc}</div>` : '';
-        li.innerHTML = `
-          <div class="card-title"><span>${p.namn}${badge}</span>${xpHtml}</div>
-          ${tagsDiv}
-          ${levelHtml}
-          ${descHtml}
-          ${btn}`;
+        const li = createEntryCard({
+          compact,
+          dataset,
+          nameHtml: p.namn,
+          titleSuffixHtml: badge,
+          xpHtml,
+          primaryTagsHtml,
+          tagsHtml: (!compact && !shouldDockTags && tagsHtml) ? tagsHtml : '',
+          infoBox: infoBoxHtml,
+          hasLevels: hasLevelSelect,
+          levelHtml,
+          levelShort: hasLevelSelect ? lvlShort : '',
+          levelShortLabel: hasLevelSelect ? lvlBadgeVal : '',
+          descHtml: descBlock,
+          leftSections,
+          titleActions,
+          buttonSections: actionButtons,
+          collapsible: true
+        });
         listEl.appendChild(li);
+        const entryKey = cardKeyFromEl(li);
+        if (openCardKeys.has(entryKey)) li.classList.remove('compact');
+        else if (compactCardKeys.has(entryKey)) li.classList.add('compact');
         if (searchActive && terms.length) {
-          const titleSpan = li.querySelector('.card-title > span');
+          const titleSpan = li.querySelector('.card-title .entry-title-main');
           if (titleSpan) highlightInElement(titleSpan, terms);
           const descEl = li.querySelector('.card-desc');
           if (descEl) highlightInElement(descEl, terms);
         }
       });
-      dom.lista.appendChild(catLi);
+      fragment.appendChild(catLi);
     });
     // Append special "Hoppsan" category with a clear-filters action
     {
       const hopLi = document.createElement('li');
       hopLi.className = 'cat-group';
-      const hopOpen = catState['Hoppsan'] !== undefined ? catState['Hoppsan'] : openCats.has('Hoppsan');
       hopLi.innerHTML = `
-        <details data-cat="Hoppsan"${hopOpen ? ' open' : ''}>
+        <details class="hoppsan-group" data-cat="Hoppsan" open>
           <summary>Hoppsan</summary>
-          <ul class="card-list"></ul>
+          <ul class="card-list entry-card-list" data-entry-page="hoppsan"></ul>
         </details>`;
       const listEl = hopLi.querySelector('ul');
-      const li = document.createElement('li');
-      li.className = 'card compact hoppsan-card';
-      li.dataset.name = 'Hoppsan';
-      li.innerHTML = `
-<div class="card-title"><span>Hoppsan, här tog det slut.</span></div>
-        <div class="inv-controls"><button class="char-btn" data-clear-filters="1">Börja om?</button></div>`;
-      listEl.appendChild(li);
+      const hopCard = createEntryCard({
+        compact: true,
+        classes: ['hoppsan-card'],
+        dataset: { name: 'Hoppsan' },
+        nameHtml: 'Hoppsan, här tog det slut.',
+        buttonSections: ['<button class="char-btn" data-clear-filters="1">Börja om?</button>'],
+        collapsible: false
+      });
+      listEl.appendChild(hopCard);
       const detailsEl = hopLi.querySelector('details');
       detailsEl.addEventListener('toggle', (ev) => {
         updateCatToggle();
+        if (!detailsEl.open) {
+          detailsEl.open = true;
+          return;
+        }
         if (!ev.isTrusted) return;
-        catState['Hoppsan'] = detailsEl.open;
+        catState['Hoppsan'] = true;
         saveState();
       });
-      dom.lista.appendChild(hopLi);
+      catState['Hoppsan'] = true;
+      fragment.appendChild(hopLi);
     }
+    dom.lista.replaceChildren(fragment);
     updateCatToggle();
     // Only auto-open once per triggering action
     openCatsOnce.clear();
     saveState();
+  };
+
+  let renderListFrame = null;
+  const scheduleRenderList = () => {
+    if (renderListFrame !== null) return;
+    const run = () => {
+      renderListFrame = null;
+      renderList(filtered());
+    };
+    if (typeof requestAnimationFrame === 'function') {
+      renderListFrame = requestAnimationFrame(run);
+    } else {
+      renderListFrame = setTimeout(run, 0);
+    }
   };
 
   const updateCatToggle = () => {
@@ -694,267 +1842,340 @@ function initIndex() {
       : 'Minimera alla kategorier';
   };
 
+  const escapeSelectorValue = (value) => {
+    if (value === null || value === undefined) return '';
+    const str = String(value);
+    if (window.CSS?.escape) return CSS.escape(str);
+    return str.replace(/"/g, '\\"').replace(/\\/g, '\\\\');
+  };
+
+  const findEntryCards = (entry) => {
+    if (!entry || !dom.lista) return [];
+    const cards = [];
+    const id = entry.id !== undefined && entry.id !== null ? String(entry.id) : '';
+    const name = entry.namn ? String(entry.namn) : '';
+    if (id) {
+      cards.push(...dom.lista.querySelectorAll(
+        `li.entry-card[data-id="${escapeSelectorValue(id)}"]`
+      ));
+    }
+    if (!cards.length && name) {
+      cards.push(...dom.lista.querySelectorAll(
+        `li.entry-card[data-name="${escapeSelectorValue(name)}"]`
+      ));
+    }
+    return cards;
+  };
+
+  const syncActionRowState = (card) => {
+    if (!card) return;
+    const actionsRow = card.querySelector('.entry-row.entry-row-actions');
+    if (!actionsRow) return;
+    const dynamicGroup = actionsRow.querySelector('.entry-action-group-dynamic');
+    const standardGroup = actionsRow.querySelector('.entry-action-group-standard');
+    const levelControl = actionsRow.querySelector('.entry-level-control');
+    const hasDynamic = !!(dynamicGroup && dynamicGroup.children.length);
+    const hasStandard = !!(standardGroup && standardGroup.children.length);
+    const hasLevel = !!(levelControl && levelControl.children.length);
+    if (!hasDynamic && hasStandard && !hasLevel) actionsRow.classList.add('only-standard');
+    else actionsRow.classList.remove('only-standard');
+  };
+
+  const updateEntryCardUI = (entry) => {
+    const cards = findEntryCards(entry);
+    if (!cards.length) return false;
+    const charList = storeHelper.getCurrentList(store);
+    const invList  = storeHelper.getInventory(store);
+    const entryTypes = entry?.taggar?.typ || [];
+    const isInventory = isInv(entry);
+    const isMonsterLore = entry.namn === 'Monsterlärd';
+    const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
+    const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
+    const multi = isInventory || (entry.kan_införskaffas_flera_gånger && entryTypes.some(t => ["Fördel","Nackdel"].includes(t))) || monsterLoreMulti;
+    let count = 0;
+    if (isInventory) {
+      if (entry.id === 'di79') {
+        const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
+        count = qtys.length ? Math.min(...qtys) : 0;
+      } else {
+        count = invList
+          .filter(c => c.id === entry.id)
+          .reduce((sum, c) => sum + (c.qty || 1), 0);
+      }
+    } else {
+      if (isMonsterLore) {
+        count = charList.filter(c => c?.namn === entry.namn && c.trait).length;
+      } else {
+        count = charList
+          .filter(c => {
+            if (!c || c.namn !== entry.namn) return false;
+            if (entry.id !== undefined && entry.id !== null && c.id !== entry.id) return false;
+            return !c.trait;
+          })
+          .length;
+      }
+    }
+    const limit = isInventory
+      ? Infinity
+      : isMonsterLore
+        ? getMonsterLoreSpecs().length
+        : storeHelper.monsterStackLimit(charList, entry.namn);
+    const allowAdd = !(isService(entry) || isEmployment(entry));
+
+    cards.forEach(card => {
+      const traitKey = card.dataset.trait || null;
+      const baseMatchOpts = {};
+      if (traitKey !== null) baseMatchOpts.trait = traitKey;
+      let cardCharEntry = isInventory ? null : findMatchingListEntry(charList, entry, baseMatchOpts) || null;
+      const isException = entry.namn === 'Exceptionellt karaktärsdrag';
+      let curLvl = null;
+      if (cardCharEntry?.nivå) curLvl = String(cardCharEntry.nivå);
+      if (!curLvl) {
+        const select = card.querySelector('select.level');
+        if (select?.value) curLvl = select.value;
+      }
+      if (!curLvl) {
+        curLvl = LVL.find(l => entry.nivåer?.[l]) || 'Novis';
+      }
+      if (!isInventory) {
+        const refineOpts = { ...baseMatchOpts };
+        if (curLvl != null) refineOpts.level = curLvl;
+        const refinedEntry = findMatchingListEntry(charList, entry, refineOpts);
+        if (refinedEntry) cardCharEntry = refinedEntry;
+      }
+      const inChar = isException ? false : !!cardCharEntry;
+      let xpInfo = null;
+      if (!isInventory && !isEmployment(entry) && !isService(entry)) {
+        const xpOptions = {};
+        if (cardCharEntry) xpOptions.xpSource = cardCharEntry;
+        if (curLvl != null) xpOptions.level = curLvl;
+        xpInfo = computeIndexEntryXP(entry, charList, xpOptions);
+      }
+      if (xpInfo && xpInfo.value != null) card.dataset.xp = xpInfo.value;
+      else delete card.dataset.xp;
+      const xpSpan = card.querySelector('.entry-header-xp .entry-xp-value');
+      if (xpSpan) {
+        if (xpInfo && xpInfo.headerHtml) {
+          xpSpan.textContent = `${xpInfo.label}: ${xpInfo.text}`;
+        } else {
+          xpSpan.textContent = '';
+        }
+      }
+      const infoBtn = card.querySelector('button[data-info]');
+      if (infoBtn?.dataset.info) {
+        const infoHtml = decodeURIComponent(infoBtn.dataset.info);
+        const xpTagHtml = xpInfo?.tagHtml || '';
+        let newInfo = infoHtml;
+        if (xpTagHtml) {
+          if (infoHtml.includes('class="tag xp-cost"')) {
+            newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>/, xpTagHtml);
+          } else {
+            newInfo = infoHtml.replace(/(<div class="tags">)/, `$1${xpTagHtml}`);
+          }
+        } else {
+          newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>\s*/g, '');
+        }
+        infoBtn.dataset.info = encodeURIComponent(newInfo);
+      }
+
+      const titleEl = card.querySelector('.card-title');
+      if (titleEl) {
+        let suffix = titleEl.querySelector('.entry-title-suffix');
+        const ensureSuffix = () => {
+          if (suffix) return suffix;
+          suffix = document.createElement('span');
+          suffix.className = 'entry-title-suffix';
+          titleEl.appendChild(suffix);
+          return suffix;
+        };
+        const badge = suffix?.querySelector('.count-badge');
+        if (multi && count > 0) {
+          const host = ensureSuffix();
+          if (badge) {
+            badge.textContent = `×${count}`;
+          } else {
+            const badgeEl = document.createElement('span');
+            badgeEl.className = 'count-badge';
+            badgeEl.textContent = `×${count}`;
+            host.appendChild(badgeEl);
+          }
+        } else if (badge) {
+          badge.remove();
+          if (suffix && !suffix.children.length && !suffix.textContent.trim()) {
+            suffix.remove();
+          }
+        }
+      }
+
+      const standardGroup = card.querySelector('.entry-action-group-standard');
+      if (standardGroup) {
+        const buttonName = card.dataset.name || entry.namn || '';
+        const buttonId = card.dataset.id || (entry.id !== undefined && entry.id !== null ? String(entry.id) : '');
+        const buttons = [];
+        const createButton = (act, classes, iconName, ariaLabel = '', highlight = false) => {
+          const btn = document.createElement('button');
+          btn.className = highlight ? `${classes} add-btn` : classes;
+          btn.dataset.act = act;
+          if (buttonName) btn.dataset.name = buttonName;
+          if (buttonId) btn.dataset.id = buttonId;
+          if (ariaLabel) btn.setAttribute('aria-label', ariaLabel);
+          btn.innerHTML = icon(iconName);
+          return btn;
+        };
+
+        if (allowAdd) {
+          if (multi) {
+            if (count > 0) {
+              buttons.push(createButton('del', 'char-btn danger icon icon-only', 'remove'));
+              buttons.push(createButton('sub', 'char-btn icon icon-only', 'minus', 'Minska'));
+              if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
+              if (count < limit) {
+                buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till'));
+              }
+            } else {
+              buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
+              if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
+            }
+          } else {
+            if (inChar) {
+              buttons.push(createButton('rem', 'char-btn danger icon icon-only', 'remove'));
+            } else {
+              buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
+            }
+          }
+        }
+
+        standardGroup.replaceChildren(...buttons);
+        syncActionRowState(card);
+      }
+    });
+
+    return true;
+  };
+
   /* första render */
-  renderList(filtered()); activeTags(); updateXP();
+  if (pendingSearch) {
+    handleIndexSearchSubmit(pendingSearch);
+  } else {
+    scheduleRenderList();
+    activeTags();
+  }
+  updateXP();
 
   /* expose update function for party toggles */
-  window.indexViewUpdate = () => { renderList(filtered()); activeTags(); };
+  window.indexViewUpdate = () => { scheduleRenderList(); activeTags(); };
   window.indexViewRefreshFilters = () => { fillDropdowns(); updateSearchDatalist(); };
 
   /* -------- events -------- */
   dom.sIn.addEventListener('input', () => {
     sTemp = dom.sIn.value.trim();
-    updateSearchDatalist();
   });
-  {
-    const sugEl = document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest');
-    if (sugEl) {
-      sugEl.addEventListener('mousedown', e => {
-        const it = e.target.closest('.item');
-        if (!it) return;
-        e.preventDefault();
-        // UI-kommando via förslag
-        if (it.dataset.ui && window.executeUICommand) {
-          window.__searchBlurGuard = true;
-          dom.sIn.blur();
-          window.executeUICommand(it.dataset.ui);
-          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          return;
-        }
-        if (it.dataset.cmd === 'random') {
-          const cat = it.dataset.cat || '';
-          const cnt = Math.max(1, parseInt(it.dataset.count || '1', 10) || 1);
-          const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(cat));
-          if (!pool.length) {
-            if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${cat}`);
-          } else {
-            const n = Math.min(cnt, pool.length);
-            const picks = [];
-            const idxs = pool.map((_,i)=>i);
-            for (let i = 0; i < n; i++) {
-              const k = Math.floor(Math.random() * idxs.length);
-              const [idx] = idxs.splice(k, 1);
-              picks.push(pool[idx]);
-            }
-            fixedRandomEntries = picks;
-            fixedRandomInfo = { cat, count: picks.length };
-            const c = cat || picks[0]?.taggar?.typ?.[0];
-            if (c) openCatsOnce.add(c);
-          }
-          dom.sIn.value=''; sTemp=''; updateSearchDatalist();
-          activeTags(); renderList(filtered());
-          dom.sIn.blur();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-          return;
-        } else {
-          const val = (it.dataset.val || '').trim();
-          if (val) {
-            const union = storeHelper.getFilterUnion(store);
-            if (union) {
-              if (!F.search.includes(val)) F.search.push(val);
-            } else {
-              F.search = [val];
-            }
-          } else {
-            F.search = [];
-          }
-          // If exact name match, open that category once
-          if (val) {
-            const nval = searchNormalize(val.toLowerCase());
-            const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-            const cat = match?.taggar?.typ?.[0];
-            if (cat) openCatsOnce.add(cat);
-          }
-          if (val && window.storeHelper?.addRecentSearch) {
-            storeHelper.addRecentSearch(store, val);
-          }
-          dom.sIn.value = '';
-          sTemp = '';
-          updateSearchDatalist();
-          activeTags();
-          renderList(filtered());
-          dom.sIn.blur();
-          window.scrollTo({ top: 0, behavior: 'smooth' });
-        }
+
+  const DROPDOWN_CONFIG = [
+    ['typSel', 'typ'],
+    ['arkSel', 'ark'],
+    ['tstSel', 'test']
+  ];
+  const DROPDOWN_ID_MAP = {
+    typSel: 'typFilter',
+    arkSel: 'arkFilter',
+    tstSel: 'testFilter'
+  };
+
+  const handleDropdownChange = (sel, key) => (event) => {
+    const el = event?.currentTarget;
+    if (!el) return;
+    dom[sel] = el;
+    const v = el.value;
+    if (sel === 'tstSel' && !v) {
+      F[key] = [];
+      storeHelper.setOnlySelected(store, false);
+      invalidateFilteredResults();
+      activeTags(); scheduleRenderList();
+      return;
+    }
+    if (sel === 'typSel' && v === ONLY_SELECTED_VALUE) {
+      storeHelper.setOnlySelected(store, true);
+      invalidateFilteredResults();
+      el.value = '';
+      activeTags(); scheduleRenderList();
+      return;
+    }
+    if (v && !F[key].includes(v)) F[key].push(v);
+    if (v) invalidateFilteredResults();
+    if (sel === 'typSel' && v) {
+      openCatsOnce.add(v);
+    }
+    el.value = '';
+    activeTags(); scheduleRenderList();
+  };
+
+  const ensureDropdownChangeHandlers = () => {
+    const toolbar = document.querySelector('shared-toolbar');
+    if (toolbar && toolbar.dataset.indexDropdownWatcher !== '1') {
+      toolbar.addEventListener('toolbar-rendered', () => {
+        ensureDropdownChangeHandlers();
       });
+      toolbar.dataset.indexDropdownWatcher = '1';
     }
-  }
-  dom.sIn.addEventListener('keydown',e=>{
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    const items = sugEl && !sugEl.hidden ? [...sugEl.querySelectorAll('.item')] : [];
-    if (e.key==='ArrowDown' && items.length) {
-      e.preventDefault();
-      sugIdx = Math.min(items.length - 1, sugIdx + 1);
-      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
-      return;
-    }
-    if (e.key==='ArrowUp' && items.length) {
-      e.preventDefault();
-      sugIdx = Math.max(-1, sugIdx - 1);
-      items.forEach((el,i)=>el.classList.toggle('active', i===sugIdx));
-      return;
-    }
-    if(e.key==='Enter'){
-      e.preventDefault();
-      window.__searchBlurGuard = true;
-      dom.sIn.blur();
-      const termTry = (sTemp || '').trim();
-      const term = sTemp.toLowerCase();
-        // Ignorera sökförslag på Enter; hantera bara skriven text
-        // Command: [N] random: <kategori> — pick N random entries in category
-        {
-          const m = sTemp.match(/^\s*(\d+)?\s*(random|slump)\s*:\s*(.+)$/i);
-        if (m) {
-          const cnt = Math.max(1, parseInt((m[1] || '1'), 10) || 1);
-          const catInput = (m[3] || '').trim();
-          if (catInput) {
-            const ncat = searchNormalize(catInput.toLowerCase());
-            // Build normalized -> canonical category map from current entries
-            const catMap = new Map();
-            for (const p of getEntries()) {
-              for (const t of (p.taggar?.typ || [])) {
-                const nt = searchNormalize(String(t).toLowerCase());
-                if (!catMap.has(nt)) catMap.set(nt, t);
-              }
-            }
-            const canonical = catMap.get(ncat);
-            if (!canonical) {
-              if (window.alertPopup) alertPopup(`Okänd kategori: ${catInput}`);
-              dom.sIn.value = ''; sTemp = '';
-              updateSearchDatalist();
-              return;
-            }
-            const pool = getEntries().filter(p => (p.taggar?.typ || []).includes(canonical));
-            if (!pool.length) {
-              if (window.alertPopup) alertPopup(`Hittade inga poster i kategorin: ${catInput}`);
-              dom.sIn.value = ''; sTemp = '';
-              updateSearchDatalist();
-              return;
-            }
-            const n = Math.min(cnt, pool.length);
-            const picks = [];
-            const idxs = pool.map((_,i)=>i);
-            for (let i = 0; i < n; i++) {
-              const k = Math.floor(Math.random() * idxs.length);
-              const [idx] = idxs.splice(k, 1);
-              picks.push(pool[idx]);
-            }
-            fixedRandomEntries = picks;
-            fixedRandomInfo = { cat: canonical, count: picks.length };
-            const cat = canonical || picks[0]?.taggar?.typ?.[0];
-            if (cat) openCatsOnce.add(cat);
-            dom.sIn.value=''; sTemp='';
-            updateSearchDatalist();
-            activeTags(); renderList(filtered());
-            window.scrollTo({ top: 0, behavior: 'smooth' });
-            return;
-          }
-        }
+    const root = toolbar?.shadowRoot || null;
+    let missing = false;
+    DROPDOWN_CONFIG.forEach(([sel, key]) => {
+      let el = dom[sel];
+      if (!el || !el.isConnected) {
+        const resolvedId = DROPDOWN_ID_MAP[sel] || sel;
+        el = root?.getElementById(resolvedId) || document.getElementById(resolvedId) || null;
       }
-      // Ignorera aktivt förslag på Enter – välj endast via klick
-      if (term === 'webapp') {
-        const ua = navigator.userAgent.toLowerCase();
-        let anchor = 'general';
-        if (/iphone|ipad|ipod/.test(ua)) anchor = 'ios';
-        else if (/android/.test(ua)) anchor = 'android';
-        else if (/edg|edge/.test(ua)) anchor = 'edge';
-        else if (/firefox/.test(ua)) anchor = 'firefox';
-        else if (/chrome/.test(ua)) anchor = 'chrome';
-        window.open(`webapp.html#${anchor}`, '_blank');
-        dom.sIn.value = ''; sTemp = '';
+      if (!el) {
+        missing = true;
         return;
       }
-      if (term === 'lol') {
-        F.search=[]; F.typ=[];F.ark=[];F.test=[]; sTemp=''; fixedRandomEntries = null; fixedRandomInfo = null;
-        dom.sIn.value=''; dom.typSel.value=dom.arkSel.value=dom.tstSel.value='';
-        storeHelper.setOnlySelected(store, false);
-        storeHelper.clearRevealedArtifacts(store);
-        revealedArtifacts = new Set(storeHelper.getRevealedArtifacts(store));
-        fillDropdowns();
-        activeTags(); renderList(filtered());
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      if (term === 'molly<3') {
-        showArtifacts = true;
-        dom.sIn.value=''; sTemp='';
-        fillDropdowns();
-        activeTags(); renderList(filtered());
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-        return;
-      }
-      if (tryBomb(sTemp)) {
-        dom.sIn.value=''; sTemp='';
-        return;
-      }
-      if (tryNilasPopup(sTemp)) {
-        dom.sIn.value=''; sTemp='';
-        return;
-      }
-      if (sTemp) {
-        const union = storeHelper.getFilterUnion(store);
-        if (union) {
-          if (!F.search.includes(sTemp)) F.search.push(sTemp);
-        } else {
-          F.search = [sTemp];
-        }
-        // If exact name match, open that category once
-        const nval = searchNormalize(sTemp.toLowerCase());
-        const match = getEntries().find(p => searchNormalize(String(p.namn || '').toLowerCase()) === nval);
-        const cat = match?.taggar?.typ?.[0];
-        if (cat) openCatsOnce.add(cat);
-        if (window.storeHelper?.addRecentSearch) storeHelper.addRecentSearch(store, sTemp);
-      } else {
-        F.search = [];
-      }
-      dom.sIn.value=''; sTemp='';
-      activeTags(); renderList(filtered());
-      updateSearchDatalist();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
-  });
+      dom[sel] = el;
+      if (el.dataset.indexDropdownBound === '1') return;
+      el.addEventListener('change', handleDropdownChange(sel, key));
+      el.dataset.indexDropdownBound = '1';
+    });
+    return !missing;
+  };
+
+  ensureDropdownChangeHandlers();
 
   dom.catToggle.addEventListener('click', () => {
     const details = document.querySelectorAll('.cat-group > details');
     if (catsMinimized) {
       details.forEach(d => { d.open = true; });
     } else {
-      details.forEach(d => { d.open = false; });
+      details.forEach(d => {
+        if (d.dataset.cat === 'Hoppsan') return;
+        d.open = false;
+      });
     }
     updateCatToggle();
   });
-  [ ['typSel','typ'], ['arkSel','ark'], ['tstSel','test'] ].forEach(([sel,key])=>{
-    dom[sel].addEventListener('change',()=>{
-      const v = dom[sel].value;
-      if (sel === 'tstSel' && !v) {
-        F[key] = [];
-        storeHelper.setOnlySelected(store, false);
-        activeTags(); renderList(filtered());
-        return;
-      }
-      if(v && !F[key].includes(v)) F[key].push(v);
-      // If selecting a type filter, open that category once
-      if (sel === 'typSel' && v) {
-        openCatsOnce.add(v);
-      }
-      dom[sel].value=''; activeTags(); renderList(filtered());
-    });
-  });
+  // Dropdown handlers are bound via ensureDropdownChangeHandlers().
   dom.active.addEventListener('click',e=>{
     const t=e.target.closest('.tag.removable'); if(!t) return;
     const section=t.dataset.type, val=t.dataset.val;
-    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; activeTags(); renderList(filtered()); return; }
+    if (section==='random') { fixedRandomEntries = null; fixedRandomInfo = null; invalidateFilteredResults(); activeTags(); scheduleRenderList(); return; }
     if(section==='search'){ F.search = F.search.filter(x=>x!==val); }
     else if(section==='onlySel'){ storeHelper.setOnlySelected(store,false); }
     else F[section] = (F[section] || []).filter(x=>x!==val);
     if(section==='test'){ storeHelper.setOnlySelected(store,false); dom.tstSel.value=''; }
-    activeTags(); renderList(filtered());
+    invalidateFilteredResults();
+    activeTags(); scheduleRenderList();
   });
+
+  if (dom.lista && !dom.lista.dataset.entryToggleBound) {
+    dom.lista.dataset.entryToggleBound = '1';
+    dom.lista.addEventListener('entry-card-toggle', () => {
+      updateCatToggle();
+    });
+  }
 
   // Treat clicks on tags anywhere as filter selections
   document.addEventListener('click', e => {
     const tag = e.target.closest('.filter-tag');
+    if (tag && tag.classList.contains('conflict-flag')) return;
     if (!tag) return;
     const sectionMap = { ark_trad: 'ark', ark: 'ark', typ: 'typ', test: 'test' };
     const section = sectionMap[tag.dataset.section];
@@ -962,11 +2183,25 @@ function initIndex() {
     const val = tag.dataset.val;
     if (!F[section].includes(val)) F[section].push(val);
     if (section === 'typ') openCatsOnce.add(val);
-    activeTags(); renderList(filtered());
+    invalidateFilteredResults();
+    activeTags(); scheduleRenderList();
   });
 
   /* lista-knappar */
   dom.lista.addEventListener('click', async e=>{
+    const conflictFlag = e.target.closest('.conflict-flag');
+    if (conflictFlag) {
+      const liEl = conflictFlag.closest('li');
+      const infoBtn = liEl?.querySelector('button[data-info]');
+      if (infoBtn?.dataset.info) {
+        let html = decodeURIComponent(infoBtn.dataset.info || '');
+        const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
+        yrkePanel.open(title, html, { initialTab: 'conflict' });
+      }
+      e.preventDefault();
+      e.stopPropagation();
+      return;
+    }
     if (e.target.closest('.filter-tag')) return;
     // Special clear-filters action inside the Hoppsan category
     const clearBtn = e.target.closest('button[data-clear-filters]');
@@ -984,7 +2219,7 @@ function initIndex() {
     if(infoBtn){
       let html=decodeURIComponent(infoBtn.dataset.info||'');
       const liEl = infoBtn.closest('li');
-      const title=liEl?.querySelector('.card-title > span')?.textContent||'';
+      const title = liEl?.querySelector('.card-title .entry-title-main')?.textContent || '';
       if(infoBtn.dataset.tabell!=null){
         const terms = F.search.map(t => searchNormalize(t.toLowerCase())).filter(Boolean);
         if (terms.length) {
@@ -1008,16 +2243,34 @@ function initIndex() {
       yrkePanel.open(title, html);
       return;
     }
-    const btn=e.target.closest('button[data-act]');
+    const btn = e.target.closest('button[data-act]');
     if (!btn) return;
     if (!store.current && !(await requireCharacter())) return;
-    const name = btn.dataset.name;
-    const tr = btn.closest('li').dataset.trait || null;
-    let p  = getEntries().find(x=>x.namn===name);
-    if (!p) p = DB.find(x => x.namn === name);
-    if (!p) return;
     const act = btn.dataset.act;
-    const lvlSel = btn.closest('li').querySelector('select.level');
+    const li = btn.closest('li');
+    if (!li) return;
+    const name = btn.dataset.name || li.dataset.name;
+    const tr = li.dataset.trait || null;
+    const idAttr = btn.dataset.id || li.dataset.id || null;
+    const ref = { id: idAttr || undefined, name };
+    const entries = getEntries();
+    let p = idAttr ? entries.find(x => String(x.id) === String(idAttr)) : null;
+    if (!p && name) p = entries.find(x => x.namn === name);
+    if (!p) p = lookupEntry(ref);
+    if (!p) return;
+    if (act === 'editCustom') {
+      if (!window.invUtil || typeof window.invUtil.editCustomEntry !== 'function') return;
+      window.invUtil.editCustomEntry(p, () => {
+        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+        if (window.invUtil && typeof window.invUtil.renderInventory === 'function') {
+          window.invUtil.renderInventory();
+        }
+        if (window.updateXP) updateXP();
+      });
+      return;
+    }
+    const lvlSel = li.querySelector('select.level');
     let   lvl = lvlSel ? lvlSel.value : null;
     if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || null;
 
@@ -1026,6 +2279,21 @@ function initIndex() {
       if (isQual(p)) {
         const inv = storeHelper.getInventory(store);
         if (!inv.length) { await alertPopup('Ingen utrustning i inventariet.'); return; }
+        const qualityAllowedForRow = (entry, row, qualityName) => {
+          const sanitizer = window.enforceArmorQualityExclusion;
+          if (typeof sanitizer !== 'function') return true;
+          if (!entry || !qualityName) return true;
+          const removed = Array.isArray(row?.removedKval) ? row.removedKval : [];
+          const baseQuals = [
+            ...(entry.taggar?.kvalitet ?? []),
+            ...splitQuals(entry.kvalitet)
+          ];
+          const baseQ = baseQuals.filter(q => !removed.includes(q));
+          const addedQ = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
+          if ([...baseQ, ...addedQ].includes(qualityName)) return true;
+          const next = sanitizer(entry, [...baseQ, ...addedQ, qualityName]);
+          return next.includes(qualityName);
+        };
         const qTypes = p.taggar?.typ || [];
         const TYPE_MAP = {
           'Vapenkvalitet': 'Vapen',
@@ -1045,21 +2313,34 @@ function initIndex() {
           if (window.canApplyQuality) return canApplyQuality(entry, p);
           const types = entry?.taggar?.typ || [];
           return types.some(t => allowed.has(t));
+        }).filter(it => {
+          const entry = invUtil.getEntry(it.id || it.name);
+          return qualityAllowedForRow(entry, it, p.namn);
         });
         if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
-        invUtil.openQualPopup(elig, iIdx => {
+        invUtil.openQualPopup(elig, async iIdx => {
           const row   = elig[iIdx];
           const entry = invUtil.getEntry(row.id || row.name);
           if (window.canApplyQuality && !canApplyQuality(entry, p)) return;
+          if (!qualityAllowedForRow(entry, row, p.namn)) {
+            await alertPopup('En sköld med kvaliteten "Armfäst" kan inte ha fler positiva kvaliteter.');
+            return;
+          }
           row.kvaliteter = row.kvaliteter || [];
           const qn = p.namn;
           if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
           invUtil.saveInventory(inv); invUtil.renderInventory();
           activeTags();
-          renderList(filtered());
+          scheduleRenderList();
         });
         return;
       }
+
+    const pendingUpdates = new Set();
+    let needsFullRefresh = false;
+    const queueUpdate = (entry) => {
+      if (entry) pendingUpdates.add(entry);
+    };
 
     if (act==='add') {
       if (isInv(p)) {
@@ -1079,7 +2360,7 @@ function initIndex() {
             }
           });
           invUtil.saveInventory(inv); invUtil.renderInventory();
-          renderList(filtered());
+          queueUpdate(p);
           FALT_BUNDLE.forEach(id => {
             const ent = invUtil.getEntry(id);
             const i = inv.findIndex(r => r.id === id);
@@ -1092,68 +2373,97 @@ function initIndex() {
         } else {
           const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
             .some(t=>p.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(p.id);
-          const rowBase = { id:p.id, name:p.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-          const tagTyp = p.taggar?.typ || [];
-          if (tagTyp.includes('L\u00e4gre Artefakt')) {
-            const reqYrken = explodeTags(p.taggar?.ark_trad);
-            if (reqYrken.length) {
-              const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-              const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
-              const artLevel = Math.max(partyArt, skillArt);
-              const lvlName = Object.keys(p.niv\u00e5er || {}).find(l=>l) || '';
-              const itemLevel = LEVEL_IDX[lvlName] || 0;
-              let hasYrke = reqYrken.some(req =>
-                list.some(it =>
-                  (isYrke(it) || isElityrke(it)) && explodeTags([it.namn]).includes(req)
-                )
-              );
-              if (!hasYrke && artLevel >= itemLevel) {
-                hasYrke = true;
-              }
-              if (!hasYrke) {
-                const reqTxt = reqYrken.join(', ');
-                const msg = `Du har inte r\u00e4tt yrke (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${p.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
-                const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
-                if (!ok) return;
-                rowBase.priceMult = 10;
-              }
-            }
+          const rowTemplate = await invUtil.buildInventoryRow({ entry: p, list });
+          if (!rowTemplate) return;
+          const liveEnabled = typeof storeHelper?.getLiveMode === 'function'
+            && storeHelper.getLiveMode(store)
+            && window.invUtil
+            && typeof window.invUtil.openLiveBuyPopup === 'function'
+            && typeof window.invUtil.applyLiveModePayment === 'function';
+          const cloneInvRow = obj => JSON.parse(JSON.stringify(obj));
+          let desiredQty = 1;
+          let priceMoney = null;
+          let overrideO = null;
+          const livePairs = liveEnabled ? [] : null;
+          if (liveEnabled) {
+            const existingRow = indiv ? null : inv.find(x => x.id === p.id);
+            const purchase = await window.invUtil.openLiveBuyPopup(p, existingRow || null);
+            if (!purchase) return;
+            desiredQty = Math.max(1, Math.floor(Number(purchase.qty) || 0));
+            priceMoney = purchase.pricePerUnit || null;
+            overrideO = Number.isFinite(purchase.totalO) ? Math.max(0, Math.floor(purchase.totalO)) : null;
           }
-          if (tagTyp.includes('Artefakt')) {
-            const val = await selectArtifactPayment();
-            if (val === null) return;
-            if (val) rowBase.artifactEffect = val;
-          } else if (p.artifactEffect) {
-            rowBase.artifactEffect = p.artifactEffect;
-          }
+          const assignPrice = target => {
+            if (!priceMoney || !target) return;
+            target.basePrice = {
+              daler: Number(priceMoney.daler) || 0,
+              skilling: Number(priceMoney.skilling) || 0,
+              'örtegar': Number(priceMoney['örtegar']) || 0
+            };
+            target.basePriceSource = 'live';
+          };
+          const finalizeLivePayment = () => {
+            if (!livePairs || !livePairs.length) return;
+            window.invUtil.applyLiveModePayment(
+              livePairs,
+              overrideO != null ? { overrideO } : undefined
+            );
+            livePairs.length = 0;
+          };
           const addRow = trait => {
-            if (trait) rowBase.trait = trait;
             let flashIdx;
+            const qtyToAdd = desiredQty;
             if (indiv) {
-              inv.push(rowBase);
-              flashIdx = inv.length - 1;
-            } else {
-              const match = inv.find(x => x.id===p.id && (!trait || x.trait===trait));
-              if (match) {
-                match.qty++;
-                flashIdx = inv.indexOf(match);
-              } else {
-                inv.push(rowBase);
+              for (let i = 0; i < qtyToAdd; i++) {
+                const instance = cloneInvRow(rowTemplate);
+                instance.qty = 1;
+                if (trait) instance.trait = trait;
+                assignPrice(instance);
+                inv.push(instance);
                 flashIdx = inv.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: instance });
+              }
+            } else {
+              const match = inv.find(x => x.id === p.id && (!trait || x.trait === trait));
+              if (match) {
+                const prevState = livePairs ? cloneInvRow(match) : null;
+                match.qty = (Number(match.qty) || 0) + qtyToAdd;
+                if (trait) match.trait = trait;
+                assignPrice(match);
+                flashIdx = inv.indexOf(match);
+                if (livePairs) livePairs.push({ prev: prevState, next: match });
+              } else {
+                const instance = cloneInvRow(rowTemplate);
+                instance.qty = qtyToAdd;
+                if (trait) instance.trait = trait;
+                assignPrice(instance);
+                inv.push(instance);
+                flashIdx = inv.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: instance });
               }
             }
+            finalizeLivePayment();
             invUtil.saveInventory(inv); invUtil.renderInventory();
-            if (isHidden(p)) {
+            const hidden = isHidden(p);
+            const artifactTagged = hasArtifactTag(p);
+            let addedToList = false;
+            if (hidden || artifactTagged) {
               const list = storeHelper.getCurrentList(store);
-              if ((p.taggar?.typ || []).includes('Artefakt') && !list.some(x => x.id === p.id && x.noInv)) {
+              if (artifactTagged && !list.some(x => x.id === p.id && x.noInv)) {
                 list.push({ ...p, noInv: true });
                 storeHelper.setCurrentList(store, list);
+                addedToList = true;
               }
-              if (window.updateXP) updateXP();
-              if (window.renderTraits) renderTraits();
-              storeHelper.addRevealedArtifact(store, p.id);
+              if (addedToList || hidden) {
+                if (window.updateXP) updateXP();
+                if (window.renderTraits) renderTraits();
+              }
+              if (hidden && p.id) {
+                storeHelper.addRevealedArtifact(store, p.id);
+              }
             }
-            renderList(filtered());
+            queueUpdate(p);
+            if (hidden || addedToList) needsFullRefresh = true;
             const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(p.namn)}"][data-idx="${flashIdx}"]`);
             if (li) {
               li.classList.add('inv-flash');
@@ -1198,8 +2508,7 @@ function initIndex() {
           return;
         }
         if (isRas(p) && list.some(isRas)) {
-          await alertPopup('Du kan bara välja en ras.');
-          return;
+          if (!(await confirmPopup('Du kan bara välja en ras. Lägga till ändå?'))) return;
         }
         if (p.namn === 'Dvärg') {
           const hasKorrupt = list.some(x => x.namn === 'Korruptionskänslig');
@@ -1251,6 +2560,7 @@ function initIndex() {
             (list.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
             (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
             (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
+            (baseRace === 'Djur/Bjära' || bloodRaces.includes('Djur/Bjära')) ||
             (baseRace === 'Rese' && baseName === 'Robust') ||
             (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
             ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && baseName === 'Diminutiv') ||
@@ -1298,29 +2608,35 @@ function initIndex() {
             list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            renderList(filtered());
+            scheduleRenderList();
             renderTraits();
             flashAdded(added.namn, added.trait);
           });
           return;
         }
         if (p.namn === 'Monsterlärd' && ['Gesäll','Mästare'].includes(lvl) && window.monsterLore) {
-          monsterLore.pickSpec(async spec => {
-            if(!spec) return;
+          const usedSpecs = usedMonsterLoreSpecs(list);
+          const availableSpecs = getMonsterLoreSpecs();
+          if (usedSpecs.length >= availableSpecs.length) {
+            await alertPopup('Alla specialiseringar är redan valda.');
+            return;
+          }
+          monsterLore.pickSpec(usedSpecs, async spec => {
+            if(!spec || usedSpecs.includes(spec)) return;
             const added = { ...p, nivå: lvl, trait: spec };
             list.push(added);
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            renderList(filtered());
+            scheduleRenderList();
             renderTraits();
             flashAdded(added.namn, added.trait);
           });
           return;
         }
-        if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
-          const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
-          exceptionSkill.pickTrait(used, async trait => {
-            if(!trait) return;
+          if (p.namn === 'Exceptionellt karakt\u00e4rsdrag' && window.exceptionSkill) {
+            const used=list.filter(x=>x.namn===p.namn).map(x=>x.trait).filter(Boolean);
+            exceptionSkill.pickTrait(used, async trait => {
+              if(!trait) return;
             const existing=list.find(x=>x.namn===p.namn && x.trait===trait);
             let added;
             if(existing){
@@ -1332,15 +2648,38 @@ function initIndex() {
             }
             await checkDisadvWarning();
             storeHelper.setCurrentList(store,list); updateXP();
-            renderList(filtered());
+            scheduleRenderList();
             renderTraits();
             flashAdded(added.namn, added.trait);
-          });
-          return;
-        }
-        const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
-        if(multi){
-          const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
+            });
+            return;
+          }
+          const grundCheck = await enforceGrundritualRequirement(p, list);
+          if (!grundCheck.allowed) return;
+          if (grundCheck.autoAdd.length) {
+            const autoAdded = [];
+            const missingBases = [];
+            grundCheck.autoAdd.forEach(baseName => {
+              if (list.some(item => item?.namn === baseName)) return;
+              const baseEntry = lookupEntry({ name: baseName });
+              if (baseEntry) {
+                list.push({ ...baseEntry });
+                autoAdded.push(baseName);
+              } else {
+                missingBases.push(baseName);
+              }
+            });
+            if (autoAdded.length && typeof window.toast === 'function') {
+              window.toast(`La till ${formatQuotedList(autoAdded)}.`);
+            }
+            if (missingBases.length && typeof alertPopup === 'function') {
+              const plural = missingBases.length === 1 ? 'grundritualen' : 'grundritualerna';
+              await alertPopup(`Hittar inte ${plural} ${formatQuotedList(missingBases)} i databasen. Lägg till manuellt.`);
+            }
+          }
+          const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel","Nackdel"].includes(t)));
+          if(multi){
+            const cnt = list.filter(x=>x.namn===p.namn && !x.trait).length;
           const limit = storeHelper.monsterStackLimit(list, p.namn);
           if(p.namn !== 'Blodsband' && cnt >= limit){
             await alertPopup(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
@@ -1367,7 +2706,7 @@ function initIndex() {
             invUtil.addWellEquippedItems(inv);
             invUtil.saveInventory(inv); invUtil.renderInventory();
           }
-          renderList(filtered());
+          needsFullRefresh = true;
           renderTraits();
           flashAdded(added.namn, added.trait);
         };
@@ -1387,6 +2726,50 @@ function initIndex() {
         list.push(added);
         await finishAdd(added);
       }
+      needsFullRefresh = true;
+    } else if (act==='buyMulti') {
+      if (!isInv(p)) return;
+      if (!window.invUtil || typeof window.invUtil.openBuyMultiplePopup !== 'function') return;
+      const inv = storeHelper.getInventory(store);
+      let idxInv = inv.findIndex(x => x.id === p.id);
+      let row = idxInv >= 0 ? inv[idxInv] : null;
+      let isNewRow = false;
+      if (idxInv < 0) {
+        if (typeof invUtil.buildInventoryRow !== 'function') return;
+        const list = storeHelper.getCurrentList(store);
+        const newRow = await invUtil.buildInventoryRow({ entry: p, list });
+        if (!newRow) return;
+        newRow.qty = 0;
+        inv.push(newRow);
+        row = newRow;
+        idxInv = inv.length - 1;
+        isNewRow = true;
+      }
+      const safeName = escapeSelectorValue(p.namn);
+      let invLi = null;
+      if (!isNewRow && safeName) {
+        invLi = dom.invList?.querySelector(`li[data-name="${safeName}"][data-idx="${idxInv}"]`) || null;
+      }
+      const cancelTempRow = () => {
+        if (!isNewRow) return;
+        const curIdx = inv.indexOf(row);
+        if (curIdx >= 0) inv.splice(curIdx, 1);
+      };
+      const confirmTempRow = () => {
+        if (isNewRow) queueUpdate(p);
+      };
+      window.invUtil.openBuyMultiplePopup({
+        row,
+        entry: p,
+        inv,
+        li: invLi,
+        parentArr: inv,
+        idx: idxInv,
+        onCancel: isNewRow ? cancelTempRow : undefined,
+        onConfirm: confirmTempRow,
+        isNewRow
+      });
+      return;
     } else if (act==='sub' || act==='del' || act==='rem') {
       if (isInv(p)) {
         const inv = storeHelper.getInventory(store);
@@ -1415,18 +2798,22 @@ function initIndex() {
           }
         }
         invUtil.saveInventory(inv); invUtil.renderInventory();
-        if (isHidden(p)) {
+        const hidden = isHidden(p);
+        const artifactTagged = hasArtifactTag(p);
+        if (hidden || artifactTagged) {
           const still = inv.some(r => r.id === p.id);
           if (!still) {
             let list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
             storeHelper.setCurrentList(store, list);
             if (window.updateXP) updateXP();
             if (window.renderTraits) renderTraits();
-            storeHelper.removeRevealedArtifact(store, p.id);
+            if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
           }
         }
-        renderList(filtered());
+        queueUpdate(p);
+        if (hidden || artifactTagged) needsFullRefresh = true;
       } else {
+        needsFullRefresh = true;
         const tr = btn.closest('li').dataset.trait || null;
         const before = storeHelper.getCurrentList(store);
         if(p.namn==='Mörkt förflutet' && before.some(x=>x.namn==='Mörkt blod')){
@@ -1488,6 +2875,11 @@ function initIndex() {
             return;
         }
         storeHelper.setCurrentList(store,list); updateXP();
+        const affected = new Set([p.namn, ...remDeps]);
+        affected.forEach(name => {
+          const depEntry = entries.find(x => x.namn === name);
+          if (depEntry) pendingUpdates.add(depEntry);
+        });
         if (p.namn === 'Privilegierad') {
           invUtil.renderInventory();
         }
@@ -1520,7 +2912,9 @@ function initIndex() {
           invUtil.removeWellEquippedItems(inv);
           invUtil.saveInventory(inv); invUtil.renderInventory();
         }
-        if (isHidden(p)) {
+        const hidden = isHidden(p);
+        const artifactTagged = hasArtifactTag(p);
+        if (hidden || artifactTagged) {
           const inv = storeHelper.getInventory(store);
           const removeItem = arr => {
             for (let i = arr.length - 1; i >= 0; i--) {
@@ -1530,12 +2924,16 @@ function initIndex() {
           };
           removeItem(inv);
           invUtil.saveInventory(inv); invUtil.renderInventory();
-          storeHelper.removeRevealedArtifact(store, p.id);
+          if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
         }
       }
     }
+    pendingUpdates.add(p);
+    pendingUpdates.forEach(entry => {
+      if (!updateEntryCardUI(entry)) needsFullRefresh = true;
+    });
     activeTags();
-    renderList(filtered());
+    if (needsFullRefresh) scheduleRenderList();
     renderTraits();
     if (act==='add') {
       flashAdded(name, tr);
@@ -1547,41 +2945,59 @@ function initIndex() {
   /* level-byte i listan */
   dom.lista.addEventListener('change', async e=>{
     if(!e.target.matches('select.level')) return;
-    const name = e.target.dataset.name;
-    const tr = e.target.closest('li').dataset.trait || null;
+    const select = e.target;
+    window.entryCardFactory?.syncLevelControl?.(select);
+    const name = select.dataset.name;
+    const tr = select.closest('li').dataset.trait || null;
     const list = storeHelper.getCurrentList(store);
     const ent  = list.find(x=>x.namn===name && (tr?x.trait===tr:!x.trait));
     if (ent){
       const before = list.map(x => ({...x}));
       const old = ent.nivå;
-      ent.nivå = e.target.value;
+      ent.nivå = select.value;
       if(eliteReq.canChange(before) && !eliteReq.canChange(list)){
         await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
         ent.nivå = old;
-        e.target.value = old;
+        select.value = old;
+        window.entryCardFactory?.syncLevelControl?.(select);
         return;
       }
       if (storeHelper.hamnskifteNoviceLimit(list, ent, ent.nivå)) {
         await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
         ent.nivå = old;
-        e.target.value = old;
+        select.value = old;
+        window.entryCardFactory?.syncLevelControl?.(select);
         return;
       }
       if(name==='Monsterlärd'){
         if(['Gesäll','Mästare'].includes(ent.nivå)){
           if(!ent.trait && window.monsterLore){
-            monsterLore.pickSpec(spec=>{
-              if(!spec){ ent.nivå=old; e.target.value=old; return; }
+            const usedSpecs = usedMonsterLoreSpecs(list);
+            if (usedSpecs.length >= getMonsterLoreSpecs().length) {
+              ent.nivå=old;
+              select.value=old;
+              window.entryCardFactory?.syncLevelControl?.(select);
+              await alertPopup('Alla specialiseringar är redan valda.');
+              return;
+            }
+            monsterLore.pickSpec(usedSpecs, spec=>{
+              if(!spec){
+                ent.nivå=old;
+                select.value=old;
+                window.entryCardFactory?.syncLevelControl?.(select);
+                return;
+              }
               ent.trait=spec;
               storeHelper.setCurrentList(store,list); updateXP();
-              renderList(filtered()); renderTraits();
+              scheduleRenderList(); renderTraits();
             });
             return;
           }
         }else if(ent.trait){
           delete ent.trait;
           storeHelper.setCurrentList(store,list); updateXP();
-          renderList(filtered()); renderTraits();
+          scheduleRenderList(); renderTraits();
+          updateSearchDatalist();
           return;
         }
       }
@@ -1596,7 +3012,10 @@ function initIndex() {
         if(toRemove.length){
           const dispNames=toRemove.map(n=>storeHelper.HAMNSKIFTE_NAMES[n]);
           if(!(await confirmPopup(`Ta bort även: ${dispNames.join(', ')}?`))){
-            ent.nivå=old; e.target.value=old; return;
+            ent.nivå=old;
+            select.value=old;
+            window.entryCardFactory?.syncLevelControl?.(select);
+            return;
           }
           for(let i=list.length-1;i>=0;i--){
             const base=storeHelper.HAMNSKIFTE_BASE[list[i].namn];
@@ -1612,7 +3031,7 @@ function initIndex() {
         toAdd.forEach(n=>{
           const hamName=storeHelper.HAMNSKIFTE_NAMES[n];
           if(!list.some(x=>x.namn===hamName) && !rem.includes(n)){
-            const entry=window.DBIndex?.[n];
+            const entry=lookupEntry({ id: n, name: n });
             if(entry) list.push({ ...entry, namn:hamName, form:'beast' });
           }
           rem=rem.filter(x=>x!==n);
@@ -1620,7 +3039,7 @@ function initIndex() {
         storeHelper.setHamnskifteRemoved(store, rem);
       }
       storeHelper.setCurrentList(store,list); updateXP();
-      renderList(filtered()); renderTraits();
+      scheduleRenderList(); renderTraits();
       flashAdded(name, tr);
       return;
     }
@@ -1628,21 +3047,38 @@ function initIndex() {
     /* uppdatera pris om förmågan inte lagts till */
     const p = getEntries().find(x=>x.namn===name);
     if(!p) return;
-    const lvl = e.target.value;
-    const xpVal = (isInv(p) || isEmployment(p) || isService(p))
+    const lvl = select.value;
+    const xpInfo = (isInv(p) || isEmployment(p) || isService(p))
       ? null
-      : storeHelper.calcEntryXP({ ...p, nivå:lvl }, list);
-    const xpText = xpVal != null ? (xpVal < 0 ? `+${-xpVal}` : xpVal) : '';
-    const liEl = e.target.closest('li');
+      : computeIndexEntryXP(p, list, { level: lvl });
+    const xpVal = xpInfo?.value ?? null;
+    const liEl = select.closest('li');
     if (xpVal != null) liEl.dataset.xp = xpVal; else delete liEl.dataset.xp;
-    const xpSpan = liEl.querySelector('.card-title .xp-cost');
-    if (xpSpan) xpSpan.textContent = `Erf: ${xpText}`;
+    const xpSpan = liEl.querySelector('.entry-header-xp .entry-xp-value');
+    if (xpSpan) {
+      if (xpInfo && xpInfo.headerHtml) {
+        xpSpan.textContent = `${xpInfo.label}: ${xpInfo.text}`;
+      } else {
+        xpSpan.textContent = '';
+      }
+    }
     const infoBtn = liEl.querySelector('button[data-info]');
     if (infoBtn?.dataset.info) {
       const infoHtml = decodeURIComponent(infoBtn.dataset.info);
-      const newInfo = infoHtml.replace(/(<span class="tag xp-cost">Erf: )[^<]*/, `$1${xpText}`);
+      const xpTagHtml = xpInfo?.tagHtml || '';
+      let newInfo = infoHtml;
+      if (xpTagHtml) {
+        if (infoHtml.includes('class="tag xp-cost"')) {
+          newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>/, xpTagHtml);
+        } else {
+          newInfo = infoHtml.replace(/(<div class="tags">)/, `$1${xpTagHtml}`);
+        }
+      } else {
+        newInfo = infoHtml.replace(/<span class="tag xp-cost">[\s\S]*?<\/span>\s*/g, '');
+      }
       infoBtn.dataset.info = encodeURIComponent(newInfo);
     }
+    window.entryCardFactory?.syncLevelControl?.(select);
   });
 }
 

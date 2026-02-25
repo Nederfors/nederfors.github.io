@@ -6,9 +6,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "+1t4 skada mot vald familj; +1 Vaksamhet för att ana dem."
   },
   {
     "id": "mystiskkv2",
@@ -17,9 +19,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Efter träff: 1t4 eldskada i 1t4 rundor; släckning tar en hel runda (Kvick)."
   },
   {
     "id": "mystiskkv3",
@@ -28,9 +32,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "+1t8 dundrande skada; går skadan igenom krävs Stark eller en handling förloras."
   },
   {
     "id": "mystiskkv4",
@@ -39,9 +45,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Levande tar +1t4 extra; vandöda/genomkorrumperade helas lika mycket."
   },
   {
     "id": "mystiskkv5",
@@ -50,9 +58,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Efter skada: 1t4 giftskada i 1t4 rundor."
   },
   {
     "id": "mystiskkv6",
@@ -62,9 +72,11 @@
       "typ": [
         "Mystisk kvalitet",
         "Vapenkvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Misslyckat 1t20 över korruption ger +1t4; helig rustning ger +1t4 skydd om angriparen slår under sin korruption."
   },
   {
     "id": "mystiskkv7",
@@ -74,9 +86,11 @@
       "typ": [
         "Mystisk kvalitet",
         "Vapenkvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Misslyckat 1t20 under korruption ger +1t4; ohelig rustning ger +1t4 skydd om angriparen slår över sin korruption."
   },
   {
     "id": "mystiskkv8",
@@ -85,9 +99,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Efter träff: 1t4 syraskada i 1t4 rundor som separata träffar; fummel kan skada bäraren."
   },
   {
     "id": "mystiskkv9",
@@ -96,9 +112,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Närstridsanfallare som misslyckas med Kvick tar 1t4 syraskada i 1t4 rundor."
   },
   {
     "id": "mystiskkv10",
@@ -107,9 +125,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Träffdifferens ≥5 gör att motståndaren förlorar sin nästa stridshandling."
   },
   {
     "id": "mystiskkv11",
@@ -118,9 +138,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Sänker rustnings Bepansring −1 per träff; sköld kan bli obrukbar [1–5 på 1t20]."
   },
   {
     "id": "mystiskkv12",
@@ -129,9 +151,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Vid skadande träff helas bäraren 1 Tålighet."
   },
   {
     "id": "mystiskkv13",
@@ -140,19 +164,24 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Åter i handen som fri handling efter kast eller avväpning."
   },
   {
     "id": "mystiskkv14",
     "namn": "Vindkraft",
     "beskrivning": "Avståndsattacker med detta vapen tycks styras mot fiendernas svaga punkter av vinden själv. Denna dödliga precission gör att projektilerna ignorerar 1t4 i Bepansring när de träffar sin måltavla.",
     "taggar": {
-      "typ": [        "Mystisk kvalitet",
-        "Vapenkvalitet"
+      "typ": [
+        "Mystisk kvalitet",
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Avståndsträffar ignorerar 1t4 i Bepansring."
   },
   {
     "id": "mystiskkv15",
@@ -161,9 +190,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Ta valfri skada före en handling: få + halva värdet på Träffsäker nästa anfall."
   },
   {
     "id": "mystiskkv16",
@@ -172,9 +203,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Kan inte tappas eller stjälas och finns alltid till hands; kan inte lämnas bort."
   },
   {
     "id": "mystiskkv17",
@@ -183,20 +216,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Kvalitet"
       ]
-    }
-  },
-{
-    "id": "mystiskkv17",
-    "namn": "Skuggsköld",
-    "beskrivning": "I rustningens väv slumrar en mörk skyddsformel som växer sig starkare i stillhet. När skyddsformeln väcks med en fri handling pulserar en dov kraft genom rustningen, men priset blir genast 1T4 temporär korruption. Så länge bäraren undgår att träffas av fysiska attacker växer energin stilla för varje runda, och rustningens pansar tjocknar stegvis, ett skyddslager i taget. När en fysisk attack till slut träffar frigörs all samlad styrka i samma ögonblick, och bonusen förbrukas i slaget. Därefter faller rustningen tillbaka till sitt ursprungliga tillstånd, och skyddsformeln måste aktiveras på nytt om dess kraft åter ska samlas.",
-    "taggar": {
-      "typ": [
-        "Mystisk kvalitet",
-        "Rustningskvalitet"
-      ]
-    }
+    },
+    "effekt": "Laddar +1 Bepansring per lyckat slag mot försvar i rad (max +5); förbrukas vid nästa träff."
   },
   {
     "id": "mystiskkv18",
@@ -205,9 +229,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "En gång per strid: slå om all skada för en lyckad attack och välj bästa."
   },
   {
     "id": "mystiskkv19",
@@ -216,20 +242,24 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Upp till 4 opåverkade bepansringspoäng bärs över som bonus i en runda."
   },
   {
     "id": "mystiskkv20",
     "namn": "Vredesband",
-    "beskrivning": "Bandet kring vapnets skaft är spänt av obändig kraft och bryter i samma stund som det frigörs. När bäraren släpper lös dess vrede flammar styrkan till, men skyddet faller undan. Den runda det aktiveras får bärarens anfall +1t6 skada. Samma runda kan bäraren inte göra försvarsslag om hen blir attackerad, då vredens hetta driver bort allt fokus från att värja sig.",
+    "beskrivning": "Bandet kring vapnets skaft är spänt av obändig kraft och bryter i samma stund som det frigörs. När bäraren släpper lös dess vrede flammar styrkan till, men skyddet faller undan. Den runda det aktiveras får ett av bärarens anfall +1t6 skada. Samma runda kan bäraren inte göra försvarsslag om hen blir attackerad, då vredens hetta driver bort allt fokus från att värja sig.",
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-         "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Aktiveringsrundan ger +1t6 skada; inga försvarsslag möjliga den rundan."
   },
   {
     "id": "mystiskkv21",
@@ -238,9 +268,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "+1 basskada per träff på samma mål, max +5; nollställs vid stridsslut eller målbyte."
   },
   {
     "id": "mystiskkv22",
@@ -249,9 +281,11 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Utlöser pågående gift en extra gång en nivå svagare; ignorerar rustning."
   },
   {
     "id": "mystiskkv23",
@@ -261,19 +295,24 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Vapenkvalitet"
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Temporär korruption höjer effekttärningen ett steg för nästa användning."
   },
   {
     "id": "mystiskkv24",
     "namn": "Dödshungrigt",
-    "beskrivning": "När ett vapen smids med denna kvalitet väcks en hunger som närs av strid. Varje gång ett anfall fäller en motståndare slukar vapnet segern och matar sin bärare med segeryra. Denna glöd ger omedelbart en extra aktiv handling under samma runda. Handlingen måste användas på plats – kraften falnar om den inte tas i bruk direkt.",
+    "beskrivning": "När ett vapen smids med denna kvalitet väcks en hunger som närs av strid. Varje gång ett anfall fäller en motståndare slukar vapnet segern och matar sin bärare med segeryra. Denna glöd ger omedelbart ett extra frislag mot en fiende inom räckvidd. Handlingen måste användas på plats – kraften falnar om den inte tas i bruk direkt.",
     "taggar": {
       "typ": [
-        "Mystisk kvalitet"
+        "Mystisk kvalitet",
+        "Vapenkvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "När ett anfall fäller en fiende fås en extra aktiv handling omedelbart."
   },
   {
     "id": "mystiskkv25",
@@ -283,9 +322,10 @@
       "typ": [
         "Mystisk kvalitet",
         "Rustningskvalitet",
-        "Vapenkvalitet"
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Begränsning −4 ej reducerbar men +1t6 i Bepansring; kräver minst medeltung rustning."
   },
   {
     "id": "mystiskkv26",
@@ -294,9 +334,36 @@
     "taggar": {
       "typ": [
         "Mystisk kvalitet",
-        "Rustningskvalitet"
+        "Rustningskvalitet",
+        "Kvalitet"
       ]
-    }
+    },
+    "effekt": "Byt förestående korruption mot lika mycket skada; skadan läks endast naturligt."
+  },
+   {
+    "id": "mystiskkv27",
+    "namn": "Skuggsköld",
+    "beskrivning": "I rustningens väv slumrar en mörk skyddsformel som växer sig starkare i stillhet. När skyddsformeln väcks med en fri handling pulserar en dov kraft genom rustningen, men priset blir genast 1T4 temporär korruption. Så länge bäraren undgår att träffas av fysiska attacker växer energin stilla för varje runda, och rustningens pansar tjocknar stegvis och ökar bepansringen med +1 varje runda. När en fysisk attack till slut träffar frigörs all samlad styrka i samma ögonblick, och bonusen förbrukas i slaget. Därefter faller rustningen tillbaka till sitt ursprungliga tillstånd, och skyddsformeln måste aktiveras på nytt om dess kraft åter ska samlas.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Rustningskvalitet",
+        "Kvalitet"
+      ]
+    },
+    "effekt": "Aktivera för 1t4 temporär korruption; skydd växer per runda tills träff och förbrukas då."
+  },
+  {
+    "id": "mystiskkv28",
+    "namn": "Blodsvultet",
+    "beskrivning": "I strid måste vapnet få känna fiendens blod. Varje runda det gör skada ökar skadan på nästa anfall med +1, kumulativt, då vapnet ivrar efter mer. Men om vapnet missar, inte biter genom pansar eller träffar ett blodlöst mål nollställs bonusen direkt av dess besvikelse, varpå vapnet tar ut besvikelsen på sin bärare och rollpersonen tar lika mycket intern skada som vapnet byggt upp.",
+    "taggar": {
+      "typ": [
+        "Mystisk kvalitet",
+        "Vapenkvalitet",
+        "Kvalitet"
+      ]
+    },
+    "effekt": "Skadan ökar med +1 kumulativt för varje runda vapnet orsakar skada; nollställs och skadar bärare vid miss, ingen skada eller blodlöst mål."
   }
-
 ]

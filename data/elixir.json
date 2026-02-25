@@ -669,12 +669,12 @@
       ]
     },
     "nivåer": {
-      "Novis": "En kaka av det mustiga långfärdsbrödet motsvarar en veckas mat för en person, men de säljes oftast per portion."
+      "Novis": "En portion av det mustiga långfärdsbrödet motsvarar en hel dags mat för en person. De tillverkas oftast per veckoportion."
     },
     "grundpris": {
       "daler": 0,
-      "skilling": 2,
-      "örtegar": 9
+      "skilling": 1,
+      "örtegar": 5
     },
     "stat": {
       "vikt": 0.15
@@ -1192,7 +1192,7 @@
 },
 {
 "id": "elix61",
-"namn": "Örnsynstinktur",
+"namn": "Örnsynsdestillat",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
 "Gesäll": "Ett mörktonat destillat i svart glas, använt av spejare och fältskådare. Efter intag kan rollpersonen se detaljer upp till hundra meter bort som om hen stod på platsen. Effekten varar i 1T6 + 3 rundor."
@@ -1315,7 +1315,7 @@
 "namn": "Viljesnara",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "En färglös dryck som lämnar nästan ingen smak. Den som dricker blir ovetande och medgörlig på ett sätt som hen annars inte hade varit; personen kan inte förmås skada sig själv eller andra, men kommer svara sanningsenligt på 1T6 frågor eller utföra 1T6 aktiva handlingar. Efteråt är personen förvirrad men anar inte att hen blivit förgiftad."
+"Mästare": "En färglös dryck som lämnar nästan ingen smak. Den som dricker blir ovetande och medgörlig på ett sätt som hen annars inte hade varit; personen kan inte förmås skada sig själv eller andra, men kommer villigt utföra 1T4 aktiva handlingar. Efteråt är personen förvirrad men anar inte att hen blivit förgiftad."
 },
 "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
@@ -1325,7 +1325,7 @@
 "namn": "Pysslingblod",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Novis": "En prilligt söt brygd som får världen att växa. Drickaren krymper till halv storlek under en scen, får +5 Diskret och +5 Kvick, men –5 Stark vilket även påverkar Tålighet. Förvandlingen river i själen och ger 1T4 temporär korruption."
+"Novis": "En prilligt söt brygd som får världen att växa. Drickaren krymper till halv storlek under en scen, får +5 Diskret och +5 Kvick, men –5 Stark och -5 i maximal Tålighet (kan gå under 10). Förvandlingen river i själen och ger 1T4 temporär korruption."
 },
 "grundpris": { "daler": 4, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 0.5 }
@@ -1352,10 +1352,10 @@
 },
 {
 "id": "elix77",
-"namn": "Hastbrygd",
+"namn": "Kvickblod",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "Ett kvicksilverlikt elixir som bultar under tungan. Drickaren får en extra aktiv handling var och en av de kommande två rundorna och rör sig som om tiden själv sackade efter."
+"Mästare": "Ett kvicksilverlikt elixir som bultar under tungan. Drickaren får en extra aktiv handling var och en av de kommande två rundorna och rör sig som om tiden själv sackade efter. Nackdelen är att i början av båda rundorna drabbas rollpersonen av 1T4 korruption."
 },
 "grundpris": { "daler": 16, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
@@ -1402,7 +1402,7 @@
 },
 {
 "id": "elix82",
-"namn": "Vindsjäl",
+"namn": "Ulvamage",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
 "Gesäll": "En karg, klar brygd som bränner som frost i bröstet. Den låter drickaren ignorera sömn, mat och törst i upp till sju dagar; när tiden är över måste all utebliven vila, dryck och näring tas igen, och det illa kvickt, annars dör personen omedelbart."
@@ -1445,7 +1445,7 @@
 "namn": "Väderolja",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "En klar, kornig olja som doftar som efter en storm. Den ger total immunitet mot vädrets effekter i en dag: hetta, kyla, stormvindar och piskande regn blir som en mild bris."
+"Mästare": "En klar, kornig olja som doftar som efter en storm. Den tar en timme att smörja in sig i, men när det är klart ger den total immunitet mot vädrets effekter under en scen: hetta, kyla, stormvindar och piskande regn blir som en mild bris."
 },
 "grundpris": { "daler": 12, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
@@ -1495,7 +1495,7 @@
 "namn": "Gravskänk",
 "taggar": { "typ": ["Elixir"] },
 "nivåer": {
-"Mästare": "Gravskänk är en kolsvart tinktur som känns tyngre än sitt eget glas. Dess innehåll kan väcka den döde till liv, men endast om kroppen inte förmultnat under längre tid än tre dygn. När vätskan används avgörs ödet med ett slag 1T20: vid resultat 1–15 reser sig den döde åter, men drabbas genast 1T6 + 4 permanent korruption som en brännmärkning från det mörka djup som slitit hen tillbaka. Vid resultat 16–20 sker i stället en snabb och grotesk förvridning av köttet, en förstyggelse som lämnar inget kvar av den människa som en gång var. Den som för flaskan till användning slipper inte undan dess förbannelse, utan drabbas själv av 1T4 permanent korruption."
+"Mästare": "Gravskänk är en kolsvart tinktur som känns tyngre än sitt eget glas. Dess innehåll kan väcka den döde till liv, men endast om kroppen inte förmultnat under längre tid än tre dygn. När vätskan används avgörs ödet med ett slag 1T20: vid resultat 1–10 reser sig den döde åter, men drabbas genast 1T12 + 4 permanent korruption som en brännmärkning från det mörka djup som slitit honom tillbaka. Vid resultat 11–20 sker i stället en snabb och grotesk förvridning av köttet, en förstyggelse som lämnar intet kvar av den människa som en gång var. Den som för flaskan till användning slipper inte undan dess förbannelse, utan drabbas själv av 1T6 permanent korruption."
 },
 "grundpris": { "daler": 24, "skilling": 0, "örtegar": 0 },
 "stat": { "vikt": 1 }
@@ -1512,12 +1512,43 @@
 },
 {
 "id": "elix93",
-"namn": "Varselljus",
-"taggar": { "typ": ["Elixir"] },
-"nivåer": {
-"Novis": "Ett vaxljus med blågrön låga som avger en svag kyla medan det brinner. Dess sken gör osynliga ting synliga i rummet under scenen."
+"namn": "Tjudringsbrygd",
+"taggar": {
+"typ": [
+"Elixir"
+]
 },
-"grundpris": { "daler": 3, "skilling": 0, "örtegar": 0 },
-"stat": { "vikt": 0.5 }
+"nivåer": {
+"Novis": "En mild, besk tinktur som binder köttets drift. Den som dricker en dos en inför en studnande transformation får ignorera eller häva transformationens effekter (från elixir, sjukdomar, mystiska krafter eller förbannelser). En pågående transformation upphör inom 1T4 rundor när brygden sväljs. Brygden dämpar endast tvång; frivilliga, självvalda förvandlingar påverkas inte."
+},
+"grundpris": {
+"daler": 0,
+"skilling": 1,
+"örtegar": 0
+},
+"stat": {
+"vikt": 0.5
 }
+},
+{
+  "id": "elix94",
+  "namn": "Fjärdningbrygd",
+  "taggar": {
+    "typ": [
+      "Elixir"
+    ]
+  },
+  "nivåer": {
+    "Novis": "En stickande, varm brygd som väcker köttets drift. Den som dricker en dos låter transformationer ta fäste och flöda fritt. Pågående eller vilande förvandlingar (från elixir, sjukdomar, mystiska krafter eller förbannelser) tilltar omedelbart och fullbordas som en förflyttningshandling."
+  },
+  "grundpris": {
+    "daler": 0,
+    "skilling": 2,
+    "örtegar": 0
+  },
+  "stat": {
+    "vikt": 0.5
+  }
+}
+
 ]

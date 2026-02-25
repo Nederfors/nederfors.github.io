@@ -41,6 +41,7 @@
 
   function showEdit(){
     const notes = storeHelper.getNotes(store);
+    const textareas = [];
     fields.forEach(id=>{
       const el=form.querySelector('#'+id);
       if(!el) return;
@@ -48,9 +49,22 @@
       el.disabled=false;
       const box=el.parentElement.querySelector('.note-box');
       if(box) box.remove();
-      if(typeof autoResize === 'function') autoResize(el);
+      textareas.push(el);
     });
     form.classList.remove('view-mode');
+    const runResize = () => {
+      textareas.forEach(el=>{
+        if(typeof autoResize === 'function') autoResize(el);
+      });
+      if(typeof autoResizeAll === 'function') autoResizeAll(form);
+    };
+    if(typeof requestAnimationFrame === 'function'){
+      requestAnimationFrame(()=>{
+        requestAnimationFrame(runResize);
+      });
+    } else {
+      setTimeout(runResize, 0);
+    }
     isEditing=true;
     if(editBtn){
       editBtn.textContent='❌';

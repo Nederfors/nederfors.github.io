@@ -1,82 +1,84 @@
 (function(window){
-  function splitComma(str){
+  const utils = window.eliteUtils || {};
+
+  const fallbackSplitComma = (str) => {
     const out = [];
     let buf = '';
     let depth = 0;
-    for(let i=0;i<str.length;i++){
-      const ch = str[i];
-      if(ch==='(') depth++;
-      if(ch===')') depth--;
-      if(ch===',' && depth===0){
-        if(buf.trim()) out.push(buf.trim());
+    const input = String(str || '');
+    for (let i = 0; i < input.length; i++) {
+      const ch = input[i];
+      if (ch === '(') depth++;
+      if (ch === ')') depth = Math.max(0, depth - 1);
+      if (ch === ',' && depth === 0) {
+        if (buf.trim()) out.push(buf.trim());
         buf = '';
         continue;
       }
       buf += ch;
     }
-    if(buf.trim()) out.push(buf.trim());
+    if (buf.trim()) out.push(buf.trim());
     return out;
-  }
+  };
 
-  function splitOr(str){
+  const fallbackSplitOr = (str) => {
     const out = [];
     let buf = '';
     let depth = 0;
-    const lower = str.toLowerCase();
-    for(let i=0;i<str.length;){
-      if(lower.startsWith(' eller ', i) && depth===0){
-        if(buf.trim()) out.push(buf.trim());
+    const input = String(str || '');
+    const lower = input.toLowerCase();
+    for (let i = 0; i < input.length;) {
+      if (lower.startsWith(' eller ', i) && depth === 0) {
+        if (buf.trim()) out.push(buf.trim());
         buf = '';
-        i += 7; // length of ' eller '
+        i += 7;
         continue;
       }
-      const ch = str[i];
-      if(ch==='(') depth++;
-      if(ch===')') depth--;
+      const ch = input[i];
+      if (ch === '(') depth++;
+      if (ch === ')') depth = Math.max(0, depth - 1);
       buf += ch;
       i++;
     }
-    if(buf.trim()) out.push(buf.trim());
+    if (buf.trim()) out.push(buf.trim());
     return out;
-  }
+  };
 
-  function parse(str){
-    const groups = splitComma(str);
-    return groups.map(g => {
-      let arr = splitOr(g);
-      return arr;
-    });
-  }
+  const splitComma = utils.splitComma || fallbackSplitComma;
+  const splitOr = utils.splitOr || fallbackSplitOr;
 
-  // Expand a requirement into one or more variants.
-  // Returned objects either specify a set of names that must all exist
-  // or the special flags `anyMystic` / `anyRitual` for generic matches.
-  function normalize(name){
-    const m2 = name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
-    if(m2){
+  const parse = (str) => {
+    if (typeof utils.parseRequirements === 'function') {
+      return utils.parseRequirements(str);
+    }
+    const groups = splitComma(str || '');
+    return groups.map(g => splitOr(g));
+  };
+
+  const normalize = (name) => {
+    if (typeof utils.expandRequirement === 'function') {
+      return utils.expandRequirement(name);
+    }
+    if (typeof utils.normalizeRequirement === 'function') {
+      return utils.normalizeRequirement(name);
+    }
+    const m2 = String(name || '').match(/^Mystisk kraft\s*\(([^)]+)\)/i);
+    if (m2) {
       const inner = m2[1].trim();
-      if(inner.toLowerCase()==='valfri')
-        return [{anyMystic:true}];
-      // Stöd både kommatecken och "eller" inne i parenteser
+      if (inner.toLowerCase() === 'valfri') return [{ anyMystic: true }];
       const opts = [].concat(...splitComma(inner).map(h => splitOr(h)));
-      return opts.map(o => ({names:[o]}));
+      return opts.map(o => ({ names: [o] }));
     }
-
-    const r = name.match(/^Ritualist\s*\(([^)]+)\)/i);
-    if(r){
+    const r = String(name || '').match(/^Ritualist\s*\(([^)]+)\)/i);
+    if (r) {
       const inner = r[1].trim();
-      if(inner.toLowerCase()==='valfri')
-        return [{anyRitual:true}];
-      // Stöd både kommatecken och "eller" inne i parenteser
+      if (inner.toLowerCase() === 'valfri') return [{ anyRitual: true }];
       const opts = [].concat(...splitComma(inner).map(h => splitOr(h)));
-      return opts.map(o => ({names:[o]}));
+      return opts.map(o => ({ names: [o] }));
     }
-
-    if(/^Ritualist$/i.test(name.trim()))
-      return [{anyRitual:true}];
-
-    return [{names:[name]}];
-  }
+    if (/^Ritualist$/i.test(String(name || '').trim())) return [{ anyRitual: true }];
+    return [{ names: [name] }];
+  };
 
   function check(entry, list){
     const req = parse(entry.krav_formagor||'');

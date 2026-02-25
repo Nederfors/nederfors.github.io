@@ -53,7 +53,7 @@ Verktygsraden innehåller:
 - Ett sökfält. Skriv ett ord och tryck Enter för att lägga till det som filter.
 - `XP:` visar hur mycket erfarenhet du har använt. Detta uppdateras automatiskt.
 - `🎒` öppnar inventariet.
-- `📊` öppnar egenskapspanelen.
+- `📊` öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter).
 - `📜` öppnar anteckningspanelen.
 - Skriv `lol` i sökfältet och tryck Enter för att rensa alla filter.
 - `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
@@ -64,22 +64,22 @@ I panelen som öppnas med `⚙️` finns flera viktiga knappar:
 - **Ta bort rollperson** raderar den aktuella karaktären.
 - **Export** öppnar en meny där du kan ladda ner alla rollpersoner eller välja en specifik att exportera som JSON-fil.
 - **Import** återställer en eller flera karaktärer från sparade filer.
-- **⚒️**, **⚗️** och **🏺** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
-- **🔭** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
-- **↕️ Expandera vy** växlar till vanliga vyn.
+- **<img src="icons/smithing.svg" alt="Smed" width="18">**, **<img src="icons/alkemi.svg" alt="Alkemist" width="18">** och **<img src="icons/artefakt.svg" alt="Artefakt" width="18">** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
+- **<img src="icons/extend.svg" alt="Utvidga sökning" width="18">** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
+- **<img src="icons/expand.svg" alt="Expandera vy" width="18"> Expandera vy** växlar till vanliga vyn.
 - **ℹ️** visar en snabböversikt av alla knappar.
 
 ### 5. Inventariepanelen
 Via `🎒` kommer du åt allt du har samlat på dig.
 - **Kategori** låter dig filtrera inventarielistan på typ av utrustning.
-- Under **Verktyg** hittar du knappar för **🆕**, **💰**, **🧹** och **x²** för att lägga till flera av samma föremål. Om föremålet inte kan staplas skapas nya fält.
+- Under **Verktyg** hittar du knappar för **🆕**, **<img src="icons/basket.svg" alt="Pengar" width="18" height="18">**, **🧹** och **x²** för att lägga till flera av samma föremål. Om föremålet inte kan staplas skapas nya fält.
 I listan för varje föremål finns knappar för att öka/minska antal, markera som gratis, redigera kvaliteter och mer.
 
-### 6. Egenskapspanelen
-`📊` visar en summering av karaktärens förmågor och särdrag.
-- Här fyller du i totala erfarenhetspoäng.
-- Panelen räknar ut använd XP, kostnader från artefakter samt eventuell korruption.
-- Du kan även se en lista över uppnådda totala poäng i olika kategorier.
+### 6. Egenskapssidorna
+`📊` öppnar en samlad sektion med tre flikar:
+- **Karaktärsdrag**: nuvarande vy för att justera drag, XP och bonusar.
+- **Översikt**: visar bärkapacitet, försvar, ekonomi och sammanfattande listor.
+- **Effekter**: listar alla aktiva effekter från förmågor och inventarie.
 
 ### 7. Anteckningspanelen
 `📜` låter dig skriva fria anteckningar om rollpersonen. Dessa sparas tillsammans med karaktären och följer med vid export och import om något fält innehåller text.

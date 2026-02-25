@@ -9,12 +9,18 @@
     document.body.appendChild(div);
   }
 
-  function openPopup(cb){
+  function openPopup(used, cb){
+    const usedSet = new Set((used || []).map(x => String(x || '').trim()));
     createPopup();
     const pop=document.getElementById('monsterPopup');
     const box=pop.querySelector('#monsterOpts');
     const cls=pop.querySelector('#monsterCancel');
-    box.innerHTML=SPECS.map((n,i)=>`<button data-i="${i}" class="char-btn">${n}</button>`).join('');
+    box.innerHTML=SPECS.map((n,i)=>{
+      const taken = usedSet.has(n);
+      const disabled = taken ? ' disabled aria-disabled="true"' : '';
+      const cls = taken ? 'char-btn disabled' : 'char-btn';
+      return `<button data-i="${i}" class="${cls}"${disabled}>${n}</button>`;
+    }).join('');
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
     function close(){
@@ -26,7 +32,7 @@
     }
     function onClick(e){
       const b=e.target.closest('button[data-i]');
-      if(!b) return;
+      if(!b || b.disabled) return;
       const idx=Number(b.dataset.i);
       close();
       cb(SPECS[idx]);
@@ -43,9 +49,12 @@
     pop.addEventListener('click',onOutside);
   }
 
-  function pickSpec(cb){
-    openPopup(res=>cb(res));
+  function pickSpec(used, cb){
+    const hasUsed = Array.isArray(used);
+    const finalCb = hasUsed ? cb : used;
+    const usedList = hasUsed ? used : [];
+    openPopup(usedList, res=>finalCb(res));
   }
 
-  window.monsterLore={pickSpec};
+  window.monsterLore={pickSpec, SPECS: [...SPECS]};
 })(window);

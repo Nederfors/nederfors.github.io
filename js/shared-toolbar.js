@@ -2,11 +2,19 @@
    js/shared-toolbar.js
    Web Component som innehåller:
      • Verktygsrad
-     • Off-canvas-paneler: Inventarie, Egenskaper, Filter
+     • Off-canvas-paneler: Filter, Info
      • Popup för kvaliteter
    =========================================================== */
 const FILTER_TOOLS_KEY = 'filterToolsOpen';
 const FILTER_SETTINGS_KEY = 'filterSettingsOpen';
+// Dessa kort ska alltid starta kollapsade och inte minnas sitt läge.
+const NON_PERSISTENT_FILTER_CARDS = new Set(['filterFormalCard', 'filterSettingsCard']);
+const FILTER_CARD_KEY_MAP = Object.freeze({
+  filterFormalCard: FILTER_TOOLS_KEY,
+  filterSettingsCard: FILTER_SETTINGS_KEY
+});
+
+const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -14,31 +22,200 @@ class SharedToolbar extends HTMLElement {
     this.attachShadow({ mode: 'open' });
     // One-time flag: ensure filter cards restore state on first open
     this._filterFirstOpenHandled = false;
+    this._keyboardLikelyVisible = false;
+    this._keyboardVisibilityTimer = null;
   }
 
   /* ------------------------------------------------------- */
   connectedCallback() {
     this.render();
+    window.autoResizeAll?.(this.shadowRoot);
+    this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
-    if (window.visualViewport) {
-      this._vvHandler = () => {
-        /*
-          Lås verktygsraden precis ovanför tangentbordet. När tangent-
-          bordet inte är öppet blir offset noll och raden placeras mot
-          skärmens nederkant.
-        */
-        const vv = window.visualViewport;
-        let offset = Math.max(0, window.innerHeight - (vv.height + vv.offsetTop));
-        if (offset < 50) {
-          toolbar.style.bottom = 'env(safe-area-inset-bottom)';
-        } else {
-          toolbar.style.bottom = `calc(env(safe-area-inset-bottom) + ${offset}px)`;
+    if (window.visualViewport && toolbar) {
+      this._toolbarElement = toolbar;
+      this._largeViewportHeight = null;
+
+      const measureLayoutViewport = () =>
+        Math.max(window.innerHeight || 0, document.documentElement?.clientHeight || 0);
+
+      const refreshLargeViewportHeight = (reset = false) => {
+        const measurement = measureLayoutViewport();
+        const shouldForceBaseline = reset || !this._keyboardLikelyVisible || this._largeViewportHeight == null;
+        if (shouldForceBaseline) {
+          this._largeViewportHeight = measurement;
+          return;
+        }
+        if (measurement > this._largeViewportHeight) {
+          this._largeViewportHeight = measurement;
         }
       };
-      window.visualViewport.addEventListener('resize', this._vvHandler);
-      window.visualViewport.addEventListener('scroll', this._vvHandler);
-      this._vvHandler();
+
+      const updateToolbarLift = ({ resetLargeViewport } = {}) => {
+        const vv = window.visualViewport;
+        if (!vv || !this._toolbarElement) {
+          return;
+        }
+
+        refreshLargeViewportHeight(resetLargeViewport);
+
+        let lift = 0;
+        const virtualKeyboard = navigator.virtualKeyboard;
+        const keyboardRect = virtualKeyboard?.boundingRect;
+        if (keyboardRect && typeof keyboardRect.height === 'number') {
+          lift = Math.max(0, keyboardRect.height);
+        }
+
+        if (!lift) {
+          const vvHeight = vv.height ?? 0;
+          const vvOffsetTop = vv.offsetTop ?? 0;
+          let layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
+          // Use offsetTop instead of pageTop so the toolbar lift stays stable while scrolling.
+          lift = Math.max(0, layoutViewportHeight - (vvHeight + vvOffsetTop));
+          const offsetTop = vvOffsetTop;
+
+          if (lift > 0 && offsetTop === 0) {
+            refreshLargeViewportHeight(true);
+            layoutViewportHeight = this._largeViewportHeight ?? measureLayoutViewport();
+            lift = Math.max(0, layoutViewportHeight - (vvHeight + vvOffsetTop));
+          }
+
+          if (!lift) {
+            const offsetLift = offsetTop > 0 ? offsetTop : 0;
+            const minOffset = 8;
+            if (this._keyboardLikelyVisible && offsetLift > minOffset) {
+              lift = offsetLift;
+            }
+          }
+        }
+
+        if (!this._keyboardLikelyVisible && lift > 0) {
+          const minResidualLift = 12; // ignore tiny offsets caused by viewport chrome jitter
+          if (lift < minResidualLift) {
+            lift = 0;
+          }
+        }
+
+        if (lift > 0) {
+          this._toolbarElement.style.setProperty('--toolbar-lift', `${lift}px`);
+        } else {
+          this._toolbarElement.style.removeProperty('--toolbar-lift');
+        }
+      };
+
+      this._updateToolbarLift = updateToolbarLift;
+
+      const scheduleToolbarLiftUpdate = opts => {
+        window.requestAnimationFrame(() => this._updateToolbarLift?.(opts));
+      };
+      this._scheduleToolbarLiftUpdate = scheduleToolbarLiftUpdate;
+
+      const setKeyboardLikelyVisible = visible => {
+        if (this._keyboardLikelyVisible === visible) {
+          return;
+        }
+        this._keyboardLikelyVisible = visible;
+        if (this._toolbarElement) {
+          this._toolbarElement.classList.toggle('keyboard-open', visible);
+        }
+        if (visible) {
+          scheduleToolbarLiftUpdate();
+        } else {
+          this._toolbarElement?.style.removeProperty('--toolbar-lift');
+          scheduleToolbarLiftUpdate({ resetLargeViewport: true });
+        }
+      };
+
+      if (!navigator.virtualKeyboard) {
+        const textInputTypes = new Set(['text', 'search', 'email', 'url', 'password', 'tel', 'number']);
+        const isTextInput = el => {
+          if (!el) {
+            return false;
+          }
+          if (el.isContentEditable) {
+            return true;
+          }
+          const tag = el.tagName;
+          if (!tag) {
+            return false;
+          }
+          const tagName = tag.toUpperCase();
+          if (tagName === 'TEXTAREA') {
+            return true;
+          }
+          if (tagName === 'INPUT') {
+            const type = (el.getAttribute('type') || '').toLowerCase();
+            return !type || textInputTypes.has(type);
+          }
+          return tagName === 'SELECT';
+        };
+
+        const handleFocusIn = event => {
+          if (isTextInput(event.target)) {
+            if (this._keyboardVisibilityTimer) {
+              clearTimeout(this._keyboardVisibilityTimer);
+              this._keyboardVisibilityTimer = null;
+            }
+            setKeyboardLikelyVisible(true);
+          }
+        };
+
+        const handleFocusOut = () => {
+          if (this._keyboardVisibilityTimer) {
+            clearTimeout(this._keyboardVisibilityTimer);
+          }
+          this._keyboardVisibilityTimer = setTimeout(() => {
+            const active = document.activeElement;
+            if (isTextInput(active)) {
+              setKeyboardLikelyVisible(true);
+            } else {
+              setKeyboardLikelyVisible(false);
+            }
+            this._keyboardVisibilityTimer = null;
+          }, 150);
+        };
+
+        document.addEventListener('focusin', handleFocusIn);
+        document.addEventListener('focusout', handleFocusOut);
+        this._keyboardVisibilityCleanup = () => {
+          document.removeEventListener('focusin', handleFocusIn);
+          document.removeEventListener('focusout', handleFocusOut);
+        };
+      }
+
+      const vvEvents = 'ongeometrychange' in window.visualViewport
+        ? ['geometrychange']
+        : ['resize', 'scroll'];
+
+      this._vvCleanup = vvEvents.map(type => {
+        const handler = () => scheduleToolbarLiftUpdate();
+        window.visualViewport.addEventListener(type, handler);
+        return () => window.visualViewport?.removeEventListener(type, handler);
+      });
+
+      const fallbackEvents = [
+        { target: window, type: 'focusout' },
+        { target: window, type: 'touchend' },
+        { target: window, type: 'orientationchange', reset: true },
+        { target: window, type: 'resize', reset: true }
+      ];
+
+      this._vvFallbackCleanup = fallbackEvents.map(({ target, type, reset }) => {
+        const fallbackHandler = () => {
+          const opts = reset ? { resetLargeViewport: true } : undefined;
+          scheduleToolbarLiftUpdate(opts);
+        };
+        target.addEventListener(type, fallbackHandler, { passive: true });
+        return () => target.removeEventListener(type, fallbackHandler, { passive: true });
+      });
+
+      if (navigator.virtualKeyboard?.addEventListener) {
+        this._vkHandler = () => scheduleToolbarLiftUpdate();
+        navigator.virtualKeyboard.addEventListener('geometrychange', this._vkHandler);
+      }
+
+      scheduleToolbarLiftUpdate({ resetLargeViewport: true });
     }
 
     this.cache();
@@ -80,8 +257,27 @@ class SharedToolbar extends HTMLElement {
   }
 
   disconnectedCallback() {
-    window.visualViewport?.removeEventListener('resize', this._vvHandler);
-    window.visualViewport?.removeEventListener('scroll', this._vvHandler);
+    this._vvCleanup?.forEach(cleanup => cleanup());
+    this._vvCleanup = null;
+    this._vvFallbackCleanup?.forEach(cleanup => cleanup());
+    this._vvFallbackCleanup = null;
+    if (this._keyboardVisibilityTimer) {
+      clearTimeout(this._keyboardVisibilityTimer);
+      this._keyboardVisibilityTimer = null;
+    }
+    this._keyboardVisibilityCleanup?.();
+    this._keyboardVisibilityCleanup = null;
+    this._keyboardLikelyVisible = false;
+    this._toolbarElement?.classList.remove('keyboard-open');
+    if (navigator.virtualKeyboard?.removeEventListener && this._vkHandler) {
+      navigator.virtualKeyboard.removeEventListener('geometrychange', this._vkHandler);
+    }
+    this._vkHandler = null;
+    this._toolbarElement?.style.removeProperty('--toolbar-lift');
+    this._updateToolbarLift = null;
+    this._scheduleToolbarLiftUpdate = null;
+    this._toolbarElement = null;
+    this._largeViewportHeight = null;
     document.removeEventListener('click', this._outsideHandler);
   }
 
@@ -93,7 +289,7 @@ class SharedToolbar extends HTMLElement {
 
         .toolbar {
           position: fixed;
-          bottom: 0;
+          bottom: calc(env(safe-area-inset-bottom) + var(--toolbar-lift, 0px));
           left: 0;
           right: 0;
           width: 100%;
@@ -131,6 +327,25 @@ class SharedToolbar extends HTMLElement {
           padding: .4rem .6rem;
           border-radius: .4rem;
           cursor: pointer;
+          display: flex;
+          align-items: center;
+          gap: .45rem;
+        }
+        .toolbar-top .suggestions .item .suggest-icon .btn-icon {
+          width: 1.4rem;
+          height: 1.4rem;
+        }
+        .toolbar-top .suggestions .item .suggest-emoji {
+          font-size: 1.1rem;
+          line-height: 1;
+        }
+        .toolbar-top .suggestions .item .suggest-label {
+          flex: 1;
+        }
+        .emoji-fallback {
+          display: inline-block;
+          font-size: 1.2rem;
+          line-height: 1;
         }
         .toolbar-top .suggestions .item:hover,
         .toolbar-top .suggestions .item.active {
@@ -140,17 +355,73 @@ class SharedToolbar extends HTMLElement {
           display: flex;
           gap: .6rem;
         }
+        @media (pointer: coarse) {
+          .toolbar.keyboard-open .button-row {
+            pointer-events: none;
+          }
+        }
         .button-row > a,
         .button-row > button {
           flex: 1;
           min-width: 0;
         }
-        #invBadge {
-          background: var(--danger);
-          border-radius: 50%;
-          padding: 0 .45rem;
-          font-size: .75rem;
-          margin-left: .25rem;
+        .button-row .char-btn {
+          padding: .55rem 1.1rem;
+          min-height: 3rem;
+        }
+        .button-row .char-btn.icon-only {
+          padding: .55rem 1.1rem;
+        }
+        .generator-popup .popup-desc {
+          margin-bottom: .5rem;
+          color: var(--txt-muted, var(--txt));
+          opacity: .85;
+        }
+        .generator-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+          gap: .9rem;
+        }
+        .generator-grid .filter-group {
+          margin-bottom: 0;
+        }
+        .generator-popup .filter-group + .generator-grid,
+        .generator-grid + .generator-grid {
+          margin-top: .9rem;
+        }
+        .generator-popup .field-hint {
+          margin-top: .35rem;
+          font-size: .85rem;
+          color: var(--txt-muted, #c7c7c7);
+        }
+        .btn-icon {
+          width: 1.8rem;
+          height: 1.8rem;
+          max-width: 100%;
+          max-height: 100%;
+          display: block;
+          pointer-events: none;
+          object-fit: contain;
+        }
+        .char-btn.icon .btn-icon {
+          width: 1.8rem;
+          height: 1.8rem;
+        }
+        .char-btn.icon-only .btn-icon {
+          width: 2rem;
+          height: 2rem;
+        }
+        .party-toggle .btn-icon {
+          width: 1.85rem;
+          height: 1.85rem;
+        }
+        .button-row .nav-link.active {
+          background: var(--neutral);
+          color: #1d2118;
+          font-weight: 600;
+        }
+        .button-row .nav-link.active:hover {
+          opacity: 1;
         }
         .toolbar .exp-counter {
           display: flex;
@@ -167,6 +438,96 @@ class SharedToolbar extends HTMLElement {
         .toolbar .exp-counter span {
           color: var(--accent);
           font-variant-numeric: tabular-nums;
+        }
+        #entrySortPopup .popup-inner {
+          align-items: stretch;
+          text-align: left;
+        }
+        .sort-grid {
+          display: flex;
+          flex-direction: column;
+          gap: .5rem;
+          margin-bottom: .2rem;
+        }
+        .sort-btn {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: .75rem;
+          padding: .9rem 1rem;
+          width: 100%;
+          background: var(--card);
+          color: var(--txt);
+          border-radius: .8rem;
+          border: 2px solid var(--card-border);
+          cursor: pointer;
+          text-align: left;
+          transition: background .14s ease, transform .08s ease, border-color .14s ease, color .14s ease, box-shadow .14s ease;
+        }
+        .sort-btn .sort-label-wrap {
+          display: flex;
+          flex-direction: column;
+          gap: .2rem;
+          align-items: flex-start;
+          min-width: 0;
+          flex: 1;
+        }
+        .sort-btn .sort-label {
+          display: flex;
+          align-items: center;
+          gap: .65rem;
+          font-weight: 700;
+        }
+        .sort-btn .sort-label .btn-icon {
+          width: 1.45rem;
+          height: 1.45rem;
+          flex-shrink: 0;
+        }
+        .sort-btn .sort-hint {
+          color: var(--txt-muted, var(--txt));
+          font-size: .92rem;
+        }
+        .sort-btn .sort-check {
+          width: 1.2rem;
+          height: 1.2rem;
+          border-radius: .35rem;
+          border: 2px solid var(--card-border);
+          display: grid;
+          place-items: center;
+          background: var(--bg);
+          color: transparent;
+          flex-shrink: 0;
+          box-shadow: 0 2px 6px rgba(0,0,0,.12) inset;
+        }
+        .sort-btn:hover {
+          border-color: var(--accent);
+          box-shadow: 0 10px 24px rgba(0,0,0,.18);
+        }
+        .sort-btn:focus-visible {
+          outline: 2px solid var(--accent);
+          outline-offset: 2px;
+        }
+        .sort-btn.active {
+          background: var(--accent);
+          border-color: var(--accent);
+          color: #fff;
+        }
+        .sort-btn.active .sort-hint {
+          color: rgba(255,255,255,.85);
+        }
+        .sort-btn.active .sort-check {
+          background: #fff;
+          border-color: #fff;
+          color: var(--accent);
+        }
+        .sort-btn.active .sort-check::after {
+          content: '✓';
+          font-weight: 800;
+        }
+        .sort-meta {
+          color: var(--txt-muted, var(--txt));
+          font-size: .9rem;
+          margin: .15rem 0 .35rem;
         }
         .char-btn,
         .toolbar button,
@@ -188,28 +549,17 @@ class SharedToolbar extends HTMLElement {
         .char-btn.icon   { font-size: 1.1rem; }
         .char-btn:hover  { opacity: .85; }
         .char-btn:active { transform: scale(.95); opacity: .7; }
-        /* Hold solid green, tiny pulses, then smooth fade to blue */
-        .focus-highlight {
-          position: relative;
-          animation: focusGreenHold 3s cubic-bezier(.25,.8,.25,1) 1;
-          outline: 2px solid transparent; /* avoid layout shift */
-          animation-fill-mode: both;
-        }
-        @keyframes focusGreenHold {
-          /* Immediately switch to green and stay green */
-          0%   { background-color: var(--neutral); transform: none; }
-          20%  { background-color: var(--neutral); transform: scale(1.0035); }
-          40%  { background-color: var(--neutral); transform: none; }
-          60%  { background-color: var(--neutral); transform: scale(1.0035); }
-          /* Hold green until near the end */
-          86%  { background-color: var(--neutral); transform: none; }
-          /* Smoothly interpolate color to blue by 100% */
-          100% { background-color: var(--accent);  transform: none; }
-        }
         /* Ensure help card and search filter cards can never be collapsed */
         .help-card.compact .card-desc { display: block !important; }
         #searchFiltersCard.compact .card-desc { display: block !important; }
-        #invSearchFilters.compact .card-desc { display: block !important; }
+        /* Inline ikoner i hjälplistan så de inte bryter rader */
+        .help-content .btn-icon {
+          display: inline-block;
+          vertical-align: text-bottom;
+          width: 1.15em;
+          height: 1.15em;
+          margin: 0 .25em 0 0;
+        }
       </style>
       <link rel="stylesheet" href="css/style.css">
 
@@ -218,82 +568,19 @@ class SharedToolbar extends HTMLElement {
         <div class="toolbar-top">
           <button id="catToggle" class="char-btn icon" title="Minimera alla kategorier">▼</button>
           <div class="search-wrap">
-            <input id="searchField" placeholder="Sök…" autocomplete="off">
+            <input id="searchField" placeholder="T.ex 'Pajkastare'" autocomplete="off">
             <div id="searchSuggest" class="suggestions" hidden></div>
           </div>
           <span class="exp-counter">XP: <span id="xpOut">0</span></span>
         </div>
         <div class="button-row">
-          <button  id="traitsToggle" class="char-btn icon" title="Egenskaper">📊</button>
-          <button  id="invToggle"    class="char-btn icon" title="Inventarie">
-            🎒 <span id="invBadge">0</span>
-          </button>
-          <a       id="switchRole" class="char-btn icon" title="Byt vy">🔄</a>
-          <button  id="filterToggle" class="char-btn icon" title="Filter">⚙️</button>
+          <a       id="traitsLink" class="char-btn icon icon-only nav-link" title="Egenskaper" href="traits.html">${icon('egenskaper')}</a>
+          <a       id="inventoryLink" class="char-btn icon nav-link" title="Inventarievy" href="inventory.html">${icon('inventarie')}</a>
+          <a       id="indexLink" class="char-btn icon icon-only nav-link" title="Index" href="index.html">${icon('index')}</a>
+          <a       id="characterLink" class="char-btn icon icon-only nav-link" title="Rollperson" href="character.html">${icon('character')}</a>
+          <button  id="filterToggle" class="char-btn icon icon-only" title="Filter">${icon('settings')}</button>
         </div>
       </footer>
-
-      <!-- ---------- Inventarie ---------- -->
-      <aside id="invPanel" class="offcanvas">
-        <header class="inv-header">
-          <h2>Inventarie</h2>
-
-          <div class="inv-actions">
-            <button id="collapseAllInv" class="char-btn icon" title="Öppna alla">▶</button>
-            <button class="char-btn icon" data-close="invPanel">✕</button>
-          </div>
-        </header>
-        <!-- Formaliteter överst -->
-        <ul id="invFormal" class="card-list"></ul>
-        <!-- Sökfilter-kort i inventariepanelen -->
-        <div class="card" id="invSearchFilters">
-          <div class="card-title">Sökfilter</div>
-          <div class="card-desc">
-            <div class="filter-group">
-              <label for="invSearch">Sök i inventarie</label>
-              <input id="invSearch" type="text" placeholder="T.ex 'Pajkastare'" autocomplete="off">
-            </div>
-            <div class="filter-group">
-              <label for="invTypeFilter">Kategori</label>
-              <select id="invTypeFilter"></select>
-            </div>
-          </div>
-        </div>
-        <ul id="invList" class="card-list"></ul>
-      </aside>
-
-      <!-- ---------- Egenskaper ---------- -->
-      <aside id="traitsPanel" class="offcanvas">
-        <header class="inv-header">
-          <h2>Egenskaper</h2>
-          <div class="inv-actions">
-            <button id="resetTraits" class="char-btn icon danger" title="Återställ basegenskaper">🧹</button>
-            <button class="char-btn icon" data-close="traitsPanel">✕</button>
-          </div>
-        </header>
-
-        <!-- Erfarenhetspoäng -->
-        <div class="filter-group">
-          <div class="xp-control">
-            <button id="xpMinus" class="char-btn icon" type="button">&minus;</button>
-            <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-            <button id="xpPlus" class="char-btn icon" type="button">+</button>
-          </div>
-          <div id="xpSummary" class="card exp-counter">
-            <div class="card-title">Erfarenhetspoäng</div>
-            <div class="card-desc">
-              Totalt: <span id="xpTotal">0</span><br>
-              Använt: <span id="xpUsed">0</span><br>
-              Oanvänt: <span id="xpFree">0</span>
-            </div>
-          </div>
-        </div>
-        <div class="exp-counter traits-total" style="text-align:center;">
-          Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
-        </div>
-        <div id="traits" class="traits"></div>
-        <div id="traitStats" class="exp-counter"></div>
-      </aside>
 
       <!-- ---------- Filter ---------- -->
       <aside id="filterPanel" class="offcanvas">
@@ -307,7 +594,7 @@ class SharedToolbar extends HTMLElement {
 
         <ul class="card-list">
           <li class="card" data-special="__formal__" id="filterFormalCard">
-            <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
+            <div class="card-title"><span><span class="collapse-btn"></span>Verktyg ${icon('tool-box', { className: 'title-icon', alt: 'Verktyg' })}</span></div>
             <div class="card-desc">
               <!-- Välj rollperson och Aktiv mapp -->
               <div class="filter-group">
@@ -324,22 +611,16 @@ class SharedToolbar extends HTMLElement {
                 <button id="newCharBtn" class="char-btn">Ny rollperson</button>
               </div>
               <div class="char-btn-row">
-                <button id="duplicateChar" class="char-btn">Kopiera rollperson</button>
+                <button id="characterToolsBtn" class="char-btn">Rollpersonshantering</button>
               </div>
               <div class="char-btn-row">
-                <button id="renameChar" class="char-btn">Byt namn</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="manageFolders" class="char-btn">Mapphantering</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="exportChar" class="char-btn">Exportera</button>
-              </div>
-              <div class="char-btn-row">
-                <button id="importChar" class="char-btn">Importera</button>
+                <button id="driveStorageBtn" class="char-btn">Lagring</button>
               </div>
               <div class="char-btn-row">
                 <button id="pdfLibraryBtn" class="char-btn">PDF-bank</button>
+              </div>
+              <div class="char-btn-row">
+                <button id="checkForUpdates" class="char-btn">Uppdatera appen</button>
               </div>
               <div class="char-btn-row">
                 <button id="deleteChar" class="char-btn danger">Radera rollperson</button>
@@ -347,7 +628,7 @@ class SharedToolbar extends HTMLElement {
             </div>
           </li>
           <li class="card" data-special="__formal__" id="filterSettingsCard">
-            <div class="card-title"><span><span class="collapse-btn"></span>Inställningar 💡</span></div>
+            <div class="card-title"><span><span class="collapse-btn"></span>Inställningar ${icon('lamp', { className: 'title-icon', alt: 'Inställningar' })}</span></div>
             <div class="card-desc">
               <!-- Grupp med partymedlemmar och vy-knappar -->
               <div class="filter-group party-toggles">
@@ -356,37 +637,51 @@ class SharedToolbar extends HTMLElement {
                     <span class="toggle-desc">
                       <span class="toggle-question">Smed i partyt?</span>
                     </span>
-                    <button id="partySmith" class="party-toggle">⚒️</button>
+                    <button id="partySmith" class="party-toggle icon-only">${icon('smithing')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Alkemist i partyt?</span>
                     </span>
-                    <button id="partyAlchemist" class="party-toggle">⚗️</button>
+                    <button id="partyAlchemist" class="party-toggle icon-only">${icon('alkemi')}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Artefaktmakare i partyt?</span>
                     </span>
-                    <button id="partyArtefacter" class="party-toggle">🏺</button>
+                    <button id="partyArtefacter" class="party-toggle icon-only">${icon('artefakt') || '<span class="emoji-fallback">🏺</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Utvidgad sökning?</span>
                     </span>
-                    <button id="filterUnion" class="party-toggle" title="Matcha någon tag (OR)">🔭</button>
+                    <button id="filterUnion" class="party-toggle icon-only" title="Matcha någon tag (OR)">${icon('extend') || '<span class="emoji-fallback">🔭</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
                       <span class="toggle-question">Expandera vy?</span>
                     </span>
-                    <button id="entryViewToggle" class="party-toggle" title="Expandera vy">↕️</button>
+                    <button id="entryViewToggle" class="party-toggle icon-only" title="Expandera vy">${icon('expand') || '<span class="emoji-fallback">↕️</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
-                      <span class="toggle-question">Tvinga försvar?</span>
+                      <span class="toggle-question">Beräkna försvar?</span>
                     </span>
-                    <button id="forceDefense" class="party-toggle" title="Välj försvarskaraktärsdrag">🏃</button>
+                    <button id="forceDefense" class="party-toggle icon-only" title="Öppna försvarsberäkning">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Manuella justeringar?</span>
+                    </span>
+                    <button id="manualAdjustBtn" class="party-toggle icon-only" title="Hantera manuella justeringar">${icon('adjust')}</button>
+                  </li>
+                  <li>
+                    <span class="toggle-desc">
+                      <span class="toggle-question">Sortering?</span>
+                    </span>
+                    <button id="entrySortBtn" class="party-toggle icon-only" title="Välj sorteringsordning">
+                      ${icon('sort', { className: 'btn-icon', alt: 'Sortering' })}
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -420,7 +715,7 @@ class SharedToolbar extends HTMLElement {
                   <span class="toggle-desc">
                     <span class="toggle-question">Behöver du hjälp?</span>
                   </span>
-                  <button id="infoToggle" class="party-toggle" title="Visa hjälp">ℹ️</button>
+                  <button id="infoToggle" class="party-toggle icon-only" title="Visa hjälp">${icon('info')}</button>
                 </li>
               </ul>
             </div>
@@ -440,10 +735,16 @@ class SharedToolbar extends HTMLElement {
       <!-- ---------- Popup Custom ---------- -->
       <div id="customPopup" class="popup popup-bottom">
         <div class="popup-inner">
-          <h3>Nytt föremål</h3>
+          <h3 id="customTitle">Nytt föremål</h3>
           <input id="customName" placeholder="Namn">
-          <select id="customType"></select>
-          <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt">
+          <div id="customTypeGroup" class="filter-group">
+            <label for="customType">Typ</label>
+            <div class="custom-type-row">
+              <select id="customType"></select>
+              <button id="customTypeAdd" class="char-btn icon icon-only" type="button" aria-label="Lägg till typ" title="Lägg till typ">${icon('plus')}</button>
+            </div>
+            <div id="customTypeTags" class="tags"></div>
+          </div>
           <div id="customArtifactEffect" class="filter-group" style="display:none">
             <label for="artifactEffect">Effekt</label>
             <select id="artifactEffect">
@@ -452,14 +753,59 @@ class SharedToolbar extends HTMLElement {
               <option value="corruption">+1 permanent korruption</option>
             </select>
           </div>
+          <div id="customWeaponFields" class="filter-group" style="display:none">
+            <label for="customDamage">Skada</label>
+            <input id="customDamage" placeholder="Skada">
+          </div>
+          <div id="customVehicleFields" class="filter-group" style="display:none">
+            <label for="customCapacity">Bärkapacitet</label>
+            <input id="customCapacity" type="number" min="0" step="1" placeholder="Bärkapacitet">
+          </div>
+          <div id="customLevelFields" class="filter-group" style="display:none">
+            <label for="customLevelMode">Nivåtyp</label>
+            <select id="customLevelMode">
+              <option value="novis">Novis</option>
+              <option value="gesall">Gesäll</option>
+              <option value="mastare">Mästare</option>
+              <option value="triple">Novis/Gesäll/Mästare</option>
+            </select>
+            <textarea id="customLevelNovis" class="auto-resize" placeholder="Novis"></textarea>
+            <textarea id="customLevelGesall" class="auto-resize" placeholder="Gesäll"></textarea>
+            <textarea id="customLevelMastare" class="auto-resize" placeholder="Mästare"></textarea>
+          </div>
+          <div id="customPowerFields" class="filter-group" style="display:none">
+            <label>Förmågor</label>
+            <div id="customPowerList"></div>
+            <button id="customPowerAdd" class="char-btn icon icon-only" type="button" aria-label="Lägg till förmåga" title="Lägg till förmåga">${icon('plus')}</button>
+          </div>
+          <div id="customBoundFields" class="filter-group" style="display:none">
+            <label for="customBoundType">Bundet till</label>
+            <select id="customBoundType">
+              <option value="">Obundet</option>
+              <option value="kraft">Mystisk kraft</option>
+              <option value="ritual">Ritual</option>
+            </select>
+            <input id="customBoundLabel" placeholder="Etikett (t.ex. Formel)">
+          </div>
+          <div id="customArmorFields" class="filter-group" style="display:none">
+            <label for="customProtection">Skydd</label>
+            <input id="customProtection" placeholder="Skydd">
+            <label for="customRestriction">Begränsning</label>
+            <input id="customRestriction" type="number" step="1" placeholder="Begränsning">
+          </div>
+          <div class="filter-group">
+            <label for="customWeight">Vikt</label>
+            <input id="customWeight" type="number" min="0" step="0.01" placeholder="Vikt">
+          </div>
           <div class="money-row">
             <input id="customDaler" type="number" min="0" placeholder="Daler">
             <input id="customSkilling" type="number" min="0" placeholder="Skilling">
             <input id="customOrtegar" type="number" min="0" placeholder="Örtegar">
           </div>
-          <textarea id="customDesc" placeholder="Beskrivning"></textarea>
-          <button id="customAdd" class="char-btn">Spara</button>
-          <button id="customCancel" class="char-btn danger">Avbryt</button>
+          <textarea id="customDesc" class="auto-resize" placeholder="Beskrivning"></textarea>
+          <button id="customAdd" class="char-btn" type="button">Spara</button>
+          <button id="customDelete" class="char-btn danger" type="button" style="display:none">Radera</button>
+          <button id="customCancel" class="char-btn danger" type="button">Avbryt</button>
         </div>
       </div>
 
@@ -467,15 +813,104 @@ class SharedToolbar extends HTMLElement {
       <div id="moneyPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Hantera pengar</h3>
-          <div class="money-row">
-            <input id="moneyDaler" type="number" min="0" placeholder="Daler">
-            <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
-            <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
+          <div class="money-wrapper">
+            <section class="money-section card money-section-fast">
+              <header class="money-header">
+                <h4>Snabbspendera</h4>
+                <p>Kostnader som inte ska sparas i inventariet.</p>
+              </header>
+              <div class="money-row">
+                <input id="moneyDaler" type="number" min="0" placeholder="Daler">
+                <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
+                <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
+              </div>
+              <div class="money-button-row">
+                <button id="moneySpendBtn" class="char-btn">Betala</button>
+              </div>
+            </section>
+            <section class="money-section card money-section-balance">
+              <header class="money-header">
+                <h4>Saldo</h4>
+                <p>Justera kontanterna när ditt lager har ändrats.</p>
+              </header>
+              <div class="money-row">
+                <input id="moneyBalanceDaler" type="number" min="0" placeholder="Daler">
+                <input id="moneyBalanceSkilling" type="number" min="0" placeholder="Skilling">
+                <input id="moneyBalanceOrtegar" type="number" min="0" placeholder="Örtegar">
+              </div>
+              <div class="money-button-row">
+                <button id="moneySetBtn" class="char-btn">Spara som totalen</button>
+                <button id="moneyAddBtn" class="char-btn">Addera till totalen</button>
+              </div>
+              <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
+            </section>
+            <p id="moneyStatus" class="money-status"></p>
+            <button id="moneyCancel" class="char-btn danger">Stäng</button>
           </div>
-          <button id="moneySetBtn" class="char-btn">Spara som totalen</button>
-          <button id="moneyAddBtn" class="char-btn">Addera till totalen</button>
-          <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
-          <button id="moneyCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Manuella justeringar ---------- -->
+      <div id="manualAdjustPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Manuella justeringar</h3>
+          <p class="manual-adjust-hint">Använd knapparna för att lägga till eller ta bort manuella ändringar. Erf påverkar endast spenderad erfarenhet.</p>
+          <div class="manual-adjust-groups" id="manualAdjustGroups">
+            <div class="manual-adjust-card card">
+              <div class="manual-adjust-label">
+                <span>Korruption</span>
+                <span id="manualCorruptionDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons">
+                <button class="char-btn" type="button" data-type="corruption" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="corruption" data-direction="increase">+1</button>
+              </div>
+            </div>
+            <div class="manual-adjust-card card">
+              <div class="manual-adjust-label">
+                <span>Spenderad erf</span>
+                <span id="manualXpDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons">
+                <button class="char-btn" type="button" data-type="xp" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="xp" data-direction="increase">+1</button>
+              </div>
+            </div>
+            <div class="manual-adjust-card card">
+              <div class="manual-adjust-label">
+                <span>Tålighet</span>
+                <span id="manualToughnessDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons">
+                <button class="char-btn" type="button" data-type="toughness" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="toughness" data-direction="increase">+1</button>
+              </div>
+            </div>
+            <div class="manual-adjust-card card">
+              <div class="manual-adjust-label">
+                <span>Smärtgräns</span>
+                <span id="manualPainDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons">
+                <button class="char-btn" type="button" data-type="pain" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="pain" data-direction="increase">+1</button>
+              </div>
+            </div>
+            <div class="manual-adjust-card card">
+              <div class="manual-adjust-label">
+                <span>Bärkapacitet</span>
+                <span id="manualCapacityDisplay" class="manual-adjust-current">0</span>
+              </div>
+              <div class="manual-adjust-buttons">
+                <button class="char-btn" type="button" data-type="capacity" data-direction="decrease">-1</button>
+                <button class="char-btn" type="button" data-type="capacity" data-direction="increase">+1</button>
+              </div>
+            </div>
+          </div>
+          <div class="manual-adjust-footer">
+            <button id="manualAdjustReset" class="char-btn danger" type="button">Återställ</button>
+            <button id="manualAdjustClose" class="char-btn" type="button">Stäng</button>
+          </div>
         </div>
       </div>
 
@@ -508,6 +943,42 @@ class SharedToolbar extends HTMLElement {
           <input id="qtyInput" type="number" min="1" step="1" placeholder="Antal">
           <div id="qtyItemList"></div>
           <button id="qtyCancel" class="char-btn danger">Avbryt</button>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Köp Flera ---------- -->
+      <div id="buyMultiplePopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Köp flera</h3>
+          <p id="buyMultipleItemName" class="popup-item-name" hidden></p>
+          <input id="buyMultipleInput" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
+          <div class="confirm-row">
+            <button id="buyMultipleCancel" class="char-btn danger">Avbryt</button>
+            <button id="buyMultipleRemove" class="char-btn">Ta bort</button>
+            <button id="buyMultipleConfirm" class="char-btn">Lägg till</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Live-köp ---------- -->
+      <div id="liveBuyPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Köp i live-läge</h3>
+          <p id="liveBuyItemName" class="popup-item-name" hidden></p>
+          <label class="live-buy-label" for="liveBuyQty">Antal</label>
+          <input id="liveBuyQty" type="number" min="1" step="1" placeholder="Antal" aria-label="Antal att köpa">
+          <fieldset class="live-buy-fieldset">
+            <legend>Pris per enhet</legend>
+            <div class="money-row">
+              <input id="liveBuyPriceDaler" type="number" min="0" step="1" placeholder="Daler" aria-label="Pris i daler">
+              <input id="liveBuyPriceSkilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Pris i skilling">
+              <input id="liveBuyPriceOrtegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Pris i örtegar">
+            </div>
+          </fieldset>
+          <div class="confirm-row">
+            <button id="liveBuyCancel" class="char-btn danger">Avbryt</button>
+            <button id="liveBuyConfirm" class="char-btn">Köp</button>
+          </div>
         </div>
       </div>
 
@@ -582,10 +1053,83 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Antal för färdmedel ---------- -->
+      <div id="vehicleQtyPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3 id="vehicleQtyTitle">Välj antal</h3>
+          <p id="vehicleQtyMessage"></p>
+          <p id="vehicleQtyHint"></p>
+          <input id="vehicleQtyInput" type="number" min="1" step="1" placeholder="Antal">
+          <div class="confirm-row">
+            <button id="vehicleQtyCancel" class="char-btn danger">Avbryt</button>
+            <button id="vehicleQtyConfirm" class="char-btn">Verkställ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Pengar i färdmedel ---------- -->
+      <div id="vehicleMoneyPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3 id="vehicleMoneyTitle">Ta ut pengar</h3>
+          <p id="vehicleMoneyMessage"></p>
+          <p id="vehicleMoneyHint"></p>
+          <div class="vehicle-money-inputs">
+            <input id="vehicleMoneyDalerRemove" type="number" min="0" step="1" placeholder="Daler">
+            <input id="vehicleMoneySkillingRemove" type="number" min="0" step="1" placeholder="Skilling">
+            <input id="vehicleMoneyOrtegarRemove" type="number" min="0" step="1" placeholder="Örtegar">
+          </div>
+          <p id="vehicleMoneyError" class="popup-error"></p>
+          <div class="confirm-row">
+            <button id="vehicleMoneyCancel" class="char-btn danger">Avbryt</button>
+            <button id="vehicleMoneyConfirm" class="char-btn">Verkställ</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Beräkna försvar ---------- -->
+      <div id="defenseCalcPopup" class="popup popup-bottom">
+        <div class="popup-inner">
+          <h3>Beräkna försvar</h3>
+          <div class="defense-calc-card">
+            <div class="defense-calc-heading">Grundval</div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcTrait">Karaktärsdrag</label>
+              <select id="defenseCalcTrait"></select>
+            </div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcArmor">Rustning</label>
+              <select id="defenseCalcArmor"></select>
+            </div>
+          </div>
+          <div class="defense-calc-card defense-calc-group">
+            <div class="defense-calc-heading">Vapen & sköldar</div>
+            <p id="defenseCalcEmpty" class="popup-desc" hidden></p>
+            <div id="defenseCalcWeaponList" class="defense-item-list"></div>
+          </div>
+          <div id="defenseCalcDancingCard" class="defense-calc-card defense-calc-card-dancing">
+            <div class="defense-calc-heading">Dansande vapen</div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcDancingTrait">Karaktärsdrag</label>
+              <select id="defenseCalcDancingTrait"></select>
+            </div>
+            <div class="defense-calc-field">
+              <label for="defenseCalcDancingWeapon">Vapen</label>
+              <select id="defenseCalcDancingWeapon"></select>
+            </div>
+            <p class="popup-desc">Om inget vapen väljs används inget vapen för dansande vapen.</p>
+          </div>
+          <div class="confirm-row">
+            <button id="defenseCalcReset" class="char-btn danger" type="button">Återställ</button>
+            <button id="defenseCalcCancel" class="char-btn danger" type="button">Avbryt</button>
+            <button id="defenseCalcApply" class="char-btn" type="button">Verkställ</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Popup Ta bort föremål med innehåll ---------- -->
       <div id="deleteContainerPopup" class="popup popup-bottom">
         <div class="popup-inner">
-          <p>Du håller på att ta bort ett föremål som innehåller föremål. Vill du ta bort föremålen i föremålet?</p>
+          <p id="deleteContainerText">Du håller på att ta bort ett föremål som innehåller föremål. Vill du ta bort föremålen i föremålet?</p>
           <button id="deleteContainerAll" class="char-btn danger">Ja, ta bort allt</button>
           <button id="deleteContainerOnly" class="char-btn">Ta bara bort föremålet</button>
           <button id="deleteContainerCancel" class="char-btn danger">Avbryt</button>
@@ -634,22 +1178,58 @@ class SharedToolbar extends HTMLElement {
       </div>
       </div>
 
-      <!-- ---------- Popup Försvarskaraktärsdrag ---------- -->
-      <div id="defensePopup" class="popup popup-bottom">
+      <!-- ---------- Popup Sortering ---------- -->
+      <div id="entrySortPopup" class="popup popup-bottom">
         <div class="popup-inner">
-          <h3>Försvarskaraktärsdrag</h3>
-          <div id="defenseOptions">
-            <button data-trait="" class="char-btn">Automatiskt</button>
-            <button data-trait="Diskret" class="char-btn">Diskret</button>
-            <button data-trait="Kvick" class="char-btn">Kvick</button>
-            <button data-trait="Listig" class="char-btn">Listig</button>
-            <button data-trait="Stark" class="char-btn">Stark</button>
-            <button data-trait="Träffsäker" class="char-btn">Träffsäker</button>
-            <button data-trait="Vaksam" class="char-btn">Vaksam</button>
-            <button data-trait="Viljestark" class="char-btn">Viljestark</button>
-            <button data-trait="Övertygande" class="char-btn">Övertygande</button>
+          <h3>Sortera poster</h3>
+          <p class="popup-desc">Välj hur posterna i varje kategori ska ordnas.</p>
+          <div id="entrySortOptions" class="sort-grid">
+            <button class="sort-btn" type="button" data-mode="alpha-asc">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Alfabetisk (A → Ö)</span>
+                <span class="sort-hint">Standardordning</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="alpha-desc">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Alfabetisk (Ö → A)</span>
+                <span class="sort-hint">Omvänd alfabetisk ordning</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="newest">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Nyast först</span>
+                <span class="sort-hint">Senast tillagda hamnar överst</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="oldest">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Äldst först</span>
+                <span class="sort-hint">Äldre poster visas före nya</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="test">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Efter test</span>
+                <span class="sort-hint">Sorterar på test-taggen</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
+            <button class="sort-btn" type="button" data-mode="ark">
+              <span class="sort-label-wrap">
+                <span class="sort-label">${icon('sort')} Efter arketyp</span>
+                <span class="sort-hint">Sorterar på arketyp/tradition</span>
+              </span>
+              <span class="sort-check" aria-hidden="true"></span>
+            </button>
           </div>
-          <button id="defenseCancel" class="char-btn danger">Avbryt</button>
+          <p class="sort-meta">Standard: Alfabetisk (A → Ö)</p>
+          <button id="entrySortSave" class="char-btn">Spara</button>
+          <button id="entrySortCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
@@ -662,56 +1242,21 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- ---------- Popup Export ---------- -->
-      <div id="exportPopup" class="popup">
-        <div class="popup-inner">
-          <h3>Export</h3>
-          <div id="exportOptions"></div>
-          <button id="exportCancel" class="char-btn danger">Avbryt</button>
+      <!-- ---------- Popup Drivelagring ---------- -->
+      <div id="driveStoragePopup" class="popup">
+        <div class="popup-inner drive-storage-ui">
+          <h3>Lagring</h3>
+          <div id="driveStorageOptions"></div>
+          <button id="driveStorageCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
-      <!-- ---------- Popup Import ---------- -->
-      <div id="importPopup" class="popup">
-        <div class="popup-inner">
-          <h3>Importera</h3>
-          <div class="export-sections">
-            <div class="card export-card">
-              <div class="card-title">Aktiv mapp</div>
-              <div class="card-desc">
-                <p>Importera till din aktiva mapp: <strong id="importActiveNameInline"></strong></p>
-                <button id="importBtnActive" class="char-btn">Importera</button>
-              </div>
-            </div>
-            <div class="card export-card">
-              <div class="card-title">Vald mapp</div>
-              <div class="card-desc">
-                <label for="importFolderSelect">Mapp</label>
-                <div class="inline-controls">
-                  <select id="importFolderSelect"></select>
-                </div>
-                <button id="importBtnChoose" class="char-btn">Importera</button>
-                <label class="price-item import-check">
-                  <input type="checkbox" id="importMakeActiveChoose">
-                  <span>Gör målmappen aktiv efter import</span>
-                </label>
-              </div>
-            </div>
-            <div class="card export-card">
-              <div class="card-title">Mappar i fil</div>
-              <div class="card-desc">
-                <p>Importera en hel mapp</p>
-                <button id="importBtnFromFile" class="char-btn">Importera</button>
-                <label class="price-item import-check">
-                  <input type="checkbox" id="importMakeActiveFromDir">
-                  <span>Gör målmappen aktiv efter import</span>
-                </label>
-              </div>
-            </div>
-          </div>
-          <div class="confirm-row">
-            <button id="importCancel" class="char-btn danger">Avbryt</button>
-          </div>
+      <!-- ---------- Popup Rollpersonshantering ---------- -->
+      <div id="characterToolsPopup" class="popup">
+        <div class="popup-inner character-tools-ui">
+          <h3>Rollpersonshantering</h3>
+          <div id="characterToolsOptions"></div>
+          <button id="characterToolsCancel" class="char-btn danger">Avbryt</button>
         </div>
       </div>
 
@@ -742,7 +1287,7 @@ class SharedToolbar extends HTMLElement {
               <label for="newFolderName">+ Ny mapp:</label>
               <div class="inline-controls">
                 <input id="newFolderName" placeholder="Mappnamn">
-                <button id="addFolderBtn" class="char-btn">Lägg till</button>
+                <button id="addFolderBtn" class="char-btn icon icon-only" aria-label="Lägg till mapp" title="Lägg till mapp">${icon('plus')}</button>
               </div>
             </div>
           </section>
@@ -774,6 +1319,21 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Popup Byt namn på mapp ---------- -->
+      <div id="renameFolderPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Byt namn på mapp</h3>
+          <div class="filter-group">
+            <label for="renameFolderName">Nytt namn:</label>
+            <input id="renameFolderName" type="text" placeholder="Ny mapp" autocomplete="off">
+          </div>
+          <div class="confirm-row">
+            <button id="renameFolderCancel" class="char-btn danger">Avbryt</button>
+            <button id="renameFolderApply" class="char-btn">Spara</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Popup Ny rollperson (med mappval) ---------- -->
       <div id="newCharPopup" class="popup">
         <div class="popup-inner">
@@ -796,6 +1356,66 @@ class SharedToolbar extends HTMLElement {
             <button id="newCharCancel" class="char-btn danger">Avbryt</button>
             <button id="newCharCreate" class="char-btn">Skapa</button>
           </div>
+        </div>
+      </div>
+
+      <!-- ---------- Popup Generera rollperson ---------- -->
+      <div id="generatorPopup" class="popup">
+        <div class="popup-inner generator-popup">
+          <h3>Generera rollperson</h3>
+          <p class="popup-desc">Välj startvärden och låt generatorn plocka förmågor automatiskt.</p>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharName">Namn</label>
+              <input id="genCharName" type="text" placeholder="Rollpersonens namn" autocomplete="off">
+            </div>
+            <div class="filter-group">
+              <label for="genCharFolder">Mapp</label>
+              <select id="genCharFolder"></select>
+            </div>
+          </div>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharXp">Erfarenhetspoäng</label>
+              <div class="xp-control">
+                <input id="genCharXp" type="number" min="0" step="10" value="100" aria-label="Erfarenhetspoäng">
+              </div>
+            </div>
+            <div class="filter-group">
+              <label for="genCharAttr">Karaktärsdrag</label>
+              <select id="genCharAttr">
+                <option value="">Balanserade (slump)</option>
+                <option value="specialist">Spetskompetens (ett drag pressas till 15)</option>
+                <option value="minmax">Ytterligheter (en max, tre höga och ett svagt)</option>
+              </select>
+            </div>
+          </div>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharTrait">Fokusera drag</label>
+              <select id="genCharTrait"></select>
+            </div>
+          </div>
+          <div class="generator-grid">
+            <div class="filter-group">
+              <label for="genCharRace">Ras</label>
+              <select id="genCharRace"></select>
+            </div>
+            <div class="filter-group">
+              <label for="genCharYrke">Yrke</label>
+              <select id="genCharYrke"></select>
+            </div>
+          </div>
+          <div class="filter-group">
+            <label for="genCharElityrke">Elityrke</label>
+            <select id="genCharElityrke"></select>
+            <p class="field-hint">Elityrket lägger automatiskt in sina krav och minst en elityrkesförmåga.</p>
+          </div>
+          <div class="confirm-row">
+            <button id="genCharCancel" class="char-btn danger">Avbryt</button>
+            <button id="genCharCreate" class="char-btn">Generera</button>
+          </div>
+          <p id="genCharDataWarning" class="field-hint" hidden>Databasen laddas – vänta tills den är klar innan du genererar.</p>
         </div>
       </div>
 
@@ -849,126 +1469,169 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Hemlig Daniel-popup ---------- -->
+      <div id="danielPopup" class="popup">
+        <div class="popup-inner">
+          <h3>Vilken kille!</h3>
+          <div class="confirm-row">
+            <button id="danielPopupClose" class="char-btn">Visst?!</button>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Hj\u00e4lp ---------- -->
       <aside id="infoPanel" class="offcanvas">
         <header class="inv-header">
           <h2>Hjälp</h2>
           <button class="char-btn icon" data-close="infoPanel">✕</button>
         </header>
-        <div class="help-content">
-          <h3>Kom igång</h3>
-          <ul>
-            <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
-            <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-            <li>Öppna panelerna längst ned: 📊 Egenskaper, 🎒 Inventarie, ⚙️ Filter.</li>
-          </ul>
+        <div class="help-content summary-content">
+          <section class="summary-section">
+            <h3>Kom igång</h3>
+            <ul class="summary-list">
+              <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
+              <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
+              <li>Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Filter.</li>
+            </ul>
+          </section>
 
-          <h3>Verktygsrad</h3>
-          <ul>
-            <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
-            <li>🧝 / 📇: Växlar mellan rollperson och index (ikonen ändras per sida).</li>
-            <li>📜: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-            <li>🎒: Öppnar inventariepanelen. 📊: Öppnar egenskapspanelen. ⚙️: Öppnar filter.</li>
-            <li>XP: Visar dina totala erfarenhetspoäng.</li>
-            <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
-            <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
-            <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Verktygsrad</h3>
+            <ul class="summary-list">
+              <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
+              <li>${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.</li>
+              <li>${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.</li>
+              <li>${icon('anteckningar')}: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
+              <li>XP: Visar dina totala erfarenhetspoäng.</li>
+              <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
+              <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
+              <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
+            </ul>
+          </section>
 
-          <h3>Kortkommandon</h3>
-          <ul>
-            <li>Enter: Lägg till skriven term.</li>
-            <li>Esc: Stäng öppna paneler/popup (desktop).</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Kortkommandon</h3>
+            <ul class="summary-list">
+              <li>Enter: Lägg till skriven term.</li>
+              <li>Esc: Stäng öppna paneler/popup (desktop).</li>
+            </ul>
+          </section>
 
-          <h3>Filtermeny</h3>
-          <ul>
-            <li>Välj rollperson: Byter aktiv rollperson.</li>
-            <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
-            <li>Typ, Arketyp, Test: Filtrerar listor.</li>
-            <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
-            <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
-            <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-            <li>⚒️/⚗️/🏺: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
-            <li>🔭 Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
-            <li>↕️ Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
-            <li>🏃 Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-            <li>ℹ️ Hjälp: Visar denna panel.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Filtermeny</h3>
+            <ul class="summary-list">
+              <li>Välj rollperson: Byter aktiv rollperson.</li>
+              <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
+              <li>Typ, Arketyp, Test: Filtrerar listor.</li>
+              <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
+              <li>Generera rollperson: Skapar en rollperson automatiskt.</li>
+              <li>PDF-bank: Öppnar samlingen med regel-PDF:er.</li>
+              <li>Uppdatera appen: Söker efter ny version och uppdaterar.</li>
+              <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
+              <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
+              <li>${icon('smithing')}/${icon('alkemi')}/${icon('artefakt') || '🏺'}: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
+              <li>${icon('extend') || '🔭'} Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
+              <li>${icon('expand') || '↕️'} Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
+              <li>${icon('forsvar') || '🏃'} Försvar: Välj försvarskaraktärsdrag manuellt.</li>
+              <li>${icon('adjust')} Manuella justeringar: Hantera egna modifieringar.</li>
+              <li>${icon('sort')} Sortering: Välj ordning för listor.</li>
+              <li>${icon('info')} Hjälp: Visar denna panel.</li>
+            </ul>
+          </section>
 
-          <h3>Inventarie</h3>
-          <ul>
-            <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
-            <li>▶/▼ Öppna eller kollapsa alla.</li>
-            <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
-            <li>🆕 Eget föremål. 💰 Pengar (Spara/Addera/Nollställ; −/+ justerar 1 daler).</li>
-            <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
-            <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. 🧹 Töm inventariet.</li>
-            <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
-            <li>Kategori: Filtrera på föremålstyp.</li>
-            <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Inventarie</h3>
+            <ul class="summary-list">
+              <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
+              <li>▶/▼ Öppna eller kollapsa alla.</li>
+              <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
+              <li>🆕 Eget föremål. ${icon('basket', { className: 'title-icon', alt: 'Pengar' })} Pengar (Spara/Addera/Nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).</li>
+              <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
+              <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. ${icon('broom')} Töm inventariet.</li>
+              <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
+              <li>Kategori: Filtrera på föremålstyp.</li>
+              <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
+            </ul>
+          </section>
 
-          <h3>Egenskaper</h3>
-          <ul>
-            <li>Ange total XP via −/+ eller genom att skriva värdet.</li>
-            <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
-            <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
-            <li>🧹 Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Egenskaper</h3>
+            <ul class="summary-list">
+              <li>Ange total XP via ${icon('minus')}/${icon('plus')} eller genom att skriva värdet.</li>
+              <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
+              <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
+              <li>${icon('broom')} Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
+            </ul>
+          </section>
 
-          <h3>Rollperson</h3>
-          <ul>
-            <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Rollperson</h3>
+            <ul class="summary-list">
+              <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
+              <li>${icon('effects')} Effekter: Öppnar aktiv effektöversikt.</li>
+              <li>${icon('overview')} Översikt: Snabb sammanställning av värden och modifikationer.</li>
+            </ul>
+          </section>
 
-          <h3>Anteckningar</h3>
-          <ul>
-            <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
-            <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
-            <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
-            <li>📇/🧝 i sidhuvudet: Till index respektive rollperson.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Anteckningar</h3>
+            <ul class="summary-list">
+              <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
+              <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
+              <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
+              <li>${icon('index')}/${icon('character')} i sidhuvudet: Till index respektive rollperson.</li>
+            </ul>
+          </section>
 
-          <h3>Listor och rader</h3>
-          <ul>
-            <li>Lägg till / +: Lägg till posten. −: Minska antal eller ta bort.</li>
-            <li>Info: Visa detaljer.</li>
-            <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
-            <li>🔨 Lägg till kvalitet. ☭ Markera kostsam kvalitet som gratis.</li>
-            <li>🆓 Gör föremål gratis. 💔 Visa konflikter.</li>
-            <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
-            <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
-            <li>🗑 Ta bort posten helt.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Listor och rader</h3>
+            <ul class="summary-list">
+              <li>Lägg till / ${icon('plus')}: Lägg till posten. ${icon('minus')}: Minska antal eller ta bort.</li>
+              <li>Info: Visa detaljer.</li>
+              <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
+              <li>${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.</li>
+              <li>${icon('free')} Gör föremål gratis (Shift-klick tar bort gratis). ${(icon('active') || '💔')} Visa konflikter.</li>
+              <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
+              <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
+              <li>${icon('remove')} Ta bort posten helt.</li>
+            </ul>
+          </section>
 
-          <h3>Tabeller</h3>
-          <ul>
-            <li>↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad. Inaktiverar mobilens staplade vy och möjliggör horisontell scroll. Knappen är röd när funktionen är avstängd.</li>
-            <li>⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller. Knappen är röd när bred vy är avstängd.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Tabeller</h3>
+            <ul class="summary-list">
+              <li>↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad. Inaktiverar mobilens staplade vy och möjliggör horisontell scroll. Knappen är röd när funktionen är avstängd.</li>
+              <li>⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller. Knappen är röd när bred vy är avstängd.</li>
+            </ul>
+          </section>
 
-          <h3>Tips</h3>
-          <ul>
-            <li>Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
-            <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.</li>
-            <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.</li>
-            <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
-            <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Tips</h3>
+            <ul class="summary-list">
+              <li>Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
+              <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.</li>
+              <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.</li>
+              <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
+              <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
+            </ul>
+          </section>
 
-          <h3>Data & lagring</h3>
-          <ul>
-            <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
-            <li>Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.</li>
-            <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
-          </ul>
+          <section class="summary-section">
+            <h3>Data & lagring</h3>
+            <ul class="summary-list">
+              <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
+              <li>Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.</li>
+              <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
+            </ul>
+          </section>
 
-          <h3>Installera som webapp</h3>
-          <p>
-            Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
-            Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
-          </p>
+          <section class="summary-section">
+            <h3>Installera som webapp</h3>
+            <p>
+              Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
+              Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
+            </p>
+          </section>
         </div>
       </aside>
 
@@ -979,8 +1642,6 @@ class SharedToolbar extends HTMLElement {
   cache() {
     const $ = id => this.shadowRoot.getElementById(id);
     this.panels = {
-      invPanel   : $('invPanel'),
-      traitsPanel: $('traitsPanel'),
       filterPanel: $('filterPanel'),
       infoPanel  : $('infoPanel')
     };
@@ -988,17 +1649,22 @@ class SharedToolbar extends HTMLElement {
     this.filterCollapseBtn = $('collapseAllFilters');
   }
 
+  collapseNonPersistentCards() {
+    const ids = Array.from(NON_PERSISTENT_FILTER_CARDS);
+    ids.forEach(id => {
+      const el = this.shadowRoot.getElementById(id);
+      if (!el) return;
+      el.classList.add('compact');
+      window.entryCardFactory?.syncCollapse?.(el);
+    });
+    try {
+      localStorage.removeItem(FILTER_TOOLS_KEY);
+      localStorage.removeItem(FILTER_SETTINGS_KEY);
+    } catch {}
+  }
+
   restoreFilterCollapse() {
-    const toolsCard = this.shadowRoot.getElementById('filterFormalCard');
-    const settingsCard = this.shadowRoot.getElementById('filterSettingsCard');
-    const toolsVal = localStorage.getItem(FILTER_TOOLS_KEY);
-    const settingsVal = localStorage.getItem(FILTER_SETTINGS_KEY);
-    const toolsOpen = toolsVal === '1';
-    const settingsOpen = settingsVal === '1';
-    if (toolsCard) toolsCard.classList.toggle('compact', !toolsOpen);
-    if (settingsCard) settingsCard.classList.toggle('compact', !settingsOpen);
-    if (toolsVal === null) localStorage.setItem(FILTER_TOOLS_KEY, toolsOpen ? '1' : '0');
-    if (settingsVal === null) localStorage.setItem(FILTER_SETTINGS_KEY, settingsOpen ? '1' : '0');
+    this.collapseNonPersistentCards();
   }
 
   updateFilterCollapseBtn() {
@@ -1014,78 +1680,244 @@ class SharedToolbar extends HTMLElement {
     const btn = e.target.closest('button, a');
     if (!btn) {
       // Support toggling special cards in Filter via title click
-      const title = e.target.closest('#filterFormalCard .card-title, #filterSettingsCard .card-title');
+      const title = e.target.closest('#filterPanel .card-title');
       if (title) {
         const card = title.closest('.card');
+        const key = FILTER_CARD_KEY_MAP[card?.id];
         if (card) {
           const isCompact = card.classList.toggle('compact');
-          const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
-          localStorage.setItem(key, isCompact ? '0' : '1');
+          if (key && !NON_PERSISTENT_FILTER_CARDS.has(card.id)) {
+            localStorage.setItem(key, isCompact ? '0' : '1');
+          }
           this.updateFilterCollapseBtn();
+          window.entryCardFactory?.syncCollapse?.(card);
         }
       }
       return;
     }
 
     /* öppna/stäng (toggle) */
-    if (btn.id === 'invToggle')    return this.toggle('invPanel');
-    if (btn.id === 'traitsToggle') return this.toggle('traitsPanel');
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
     if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
+
+    if (btn.id === 'checkForUpdates') {
+      if (typeof window.requestPwaUpdate !== 'function') {
+        window.toast?.('Uppdateringsfunktionen är inte tillgänglig.');
+        return;
+      }
+
+      const runUpdate = async () => {
+        const originalText = btn.textContent;
+        let cacheTextTimer;
+        let shouldReloadNow = false;
+        const queuePostUpdateSync = () => {
+          try {
+            sessionStorage.setItem('pwa-post-update-sync', '1');
+          } catch {}
+        };
+        btn.disabled = true;
+        btn.textContent = 'Kontrollerar…';
+
+        try {
+          cacheTextTimer = setTimeout(() => {
+            btn.textContent = 'Cachen uppdateras…';
+          }, 150);
+
+          const result = await window.requestPwaUpdate({ forceReload: true });
+          if (cacheTextTimer) {
+            clearTimeout(cacheTextTimer);
+            cacheTextTimer = null;
+          }
+
+          switch (result?.status) {
+            case 'applied':
+              queuePostUpdateSync();
+              if (!navigator.serviceWorker?.controller) {
+                shouldReloadNow = true;
+              }
+              window.toast?.('Uppdaterar appen…');
+              break;
+            case 'up-to-date':
+              window.toast?.('Appen är redan uppdaterad.');
+              break;
+            case 'missing':
+              window.toast?.('Ingen installerad webapp hittades.');
+              break;
+            case 'error':
+              window.toast?.('Kunde inte söka efter uppdatering.');
+              break;
+            default:
+              window.toast?.('Kunde inte söka efter uppdatering.');
+              break;
+          }
+
+          if (result?.cacheRefresh) {
+            switch (result.cacheRefresh.status) {
+              case 'refreshed':
+                queuePostUpdateSync();
+                if (result?.status !== 'applied') {
+                  shouldReloadNow = true;
+                }
+                window.toast?.('Cachen uppdaterades.');
+                break;
+              case 'unavailable':
+                window.toast?.('Ingen aktiv service worker kunde uppdatera cachen.');
+                break;
+              case 'failed':
+                window.toast?.('Kunde inte uppdatera cachen.');
+                break;
+              default:
+                break;
+            }
+          }
+
+          if (shouldReloadNow) {
+            window.toast?.('Laddar om för att slutföra uppdateringen…');
+            setTimeout(() => {
+              try { window.location.reload(); } catch {}
+            }, 120);
+          }
+        } catch (error) {
+          if (cacheTextTimer) {
+            clearTimeout(cacheTextTimer);
+            cacheTextTimer = null;
+          }
+          console.error('PWA update failed', error);
+          window.toast?.('Kunde inte söka efter uppdatering.');
+        } finally {
+          if (cacheTextTimer) {
+            clearTimeout(cacheTextTimer);
+          }
+          btn.disabled = false;
+          btn.textContent = originalText;
+        }
+      };
+
+      runUpdate();
+      return;
+    }
 
     if (btn.id === 'collapseAllFilters') {
       const cards = [...this.shadowRoot.querySelectorAll('#filterPanel .card:not(#searchFiltersCard):not(.help-card)')];
       const anyOpen = cards.some(c => !c.classList.contains('compact'));
       cards.forEach(c => {
         c.classList.toggle('compact', anyOpen);
-        if (c.id === 'filterFormalCard') {
-          localStorage.setItem(FILTER_TOOLS_KEY, c.classList.contains('compact') ? '0' : '1');
-        } else if (c.id === 'filterSettingsCard') {
-          localStorage.setItem(FILTER_SETTINGS_KEY, c.classList.contains('compact') ? '0' : '1');
+        const key = FILTER_CARD_KEY_MAP[c.id];
+        if (key && !NON_PERSISTENT_FILTER_CARDS.has(c.id)) {
+          localStorage.setItem(key, c.classList.contains('compact') ? '0' : '1');
         }
+        window.entryCardFactory?.syncCollapse?.(c);
       });
       // Ensure non-collapsible cards remain open
       const alwaysOpen = this.shadowRoot.querySelectorAll('#searchFiltersCard, .help-card');
-      alwaysOpen.forEach(c => c.classList.remove('compact'));
+      alwaysOpen.forEach(c => {
+        c.classList.remove('compact');
+        window.entryCardFactory?.syncCollapse?.(c);
+      });
       this.updateFilterCollapseBtn();
       return;
     }
 
     // Collapse/expand specialkorten i filterpanelen
     if (btn.classList.contains('collapse-btn')) {
-      const card = btn.closest('#filterFormalCard, #filterSettingsCard');
+      const card = btn.closest('#filterPanel .card');
+      const key = FILTER_CARD_KEY_MAP[card?.id];
       if (card) {
         const isCompact = card.classList.toggle('compact');
-        const key = card.id === 'filterFormalCard' ? FILTER_TOOLS_KEY : FILTER_SETTINGS_KEY;
-        localStorage.setItem(key, isCompact ? '0' : '1');
+        if (key && !NON_PERSISTENT_FILTER_CARDS.has(card.id)) {
+          localStorage.setItem(key, isCompact ? '0' : '1');
+        }
         this.updateFilterCollapseBtn();
+        window.entryCardFactory?.syncCollapse?.(card);
       }
     }
   }
 
   handleOutsideClick(e) {
-    const path = e.composedPath();
-    const toggles = ['invToggle','traitsToggle','filterToggle','infoToggle'];
-    if (path.some(el => toggles.includes(el.id))) return;
+    const buildFallbackPath = start => {
+      if (!start) return [];
+      const path = [];
+      let current = start;
+      const seen = new Set();
+
+      while (current && !seen.has(current)) {
+        path.push(current);
+        seen.add(current);
+
+        if (current === document) {
+          path.push(window);
+          break;
+        }
+
+        if (current instanceof Element) {
+          const slot = current.assignedSlot;
+          if (slot) {
+            current = slot;
+            continue;
+          }
+        }
+
+        if (current.parentNode) {
+          current = current.parentNode;
+          continue;
+        }
+
+        if (current.host) {
+          current = current.host;
+          continue;
+        }
+
+        if (current.defaultView) {
+          path.push(current.defaultView);
+        }
+        break;
+      }
+
+      return path;
+    };
+
+    const rawPath = typeof e.composedPath === 'function'
+      ? e.composedPath()
+      : (e.path || buildFallbackPath(e.target));
+    const path = Array.isArray(rawPath) ? [...rawPath] : [];
+    if (!path.length && e.target) path.push(e.target);
+
+    const containsInPath = target => {
+      if (!target) return false;
+      return path.some(node => {
+        if (!node) return false;
+        if (node === target) return true;
+        if (typeof target.contains === 'function' && node instanceof Node) {
+          return target.contains(node);
+        }
+        return false;
+      });
+    };
+
+    const toggleButtons = ['filterToggle','infoToggle']
+      .map(id => this.shadowRoot.getElementById(id))
+      .filter(Boolean);
+    const isToggleClick = toggleButtons.some(btn => containsInPath(btn));
+    if (isToggleClick) return;
 
     // Hide search suggestions when clicking outside search UI
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
     const sIn   = this.shadowRoot.getElementById('searchField');
     if (sugEl && !sugEl.hidden) {
-      const insideSearch = path.includes(sugEl) || path.includes(sIn);
+      const insideSearch = containsInPath(sugEl) || containsInPath(sIn);
       if (!insideSearch) {
         sugEl.hidden = true;
       }
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','masterPopup','alcPopup','smithPopup','artPopup','defensePopup','exportPopup','importPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','folderManagerPopup','newCharPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup'];
-    if (path.some(el => popups.includes(el.id))) return;
+      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','driveStoragePopup','characterToolsPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
+    if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
-    if (openPanel && !path.includes(openPanel)) {
+    if (openPanel && !containsInPath(openPanel)) {
       openPanel.classList.remove('open');
     }
   }
@@ -1093,27 +1925,56 @@ class SharedToolbar extends HTMLElement {
   toggle(id) {
     const panel = this.panels[id];
     if (!panel) return;
+
+    // 1. 🛡️ DEBOUNCE: Ignore rapid-fire clicks (Ghost Clicks)
+    // If we just toggled this panel <300ms ago, ignore this click.
+    const now = Date.now();
+    if (this._lastToggle && (now - this._lastToggle < 300)) {
+        console.log("🚫 Ghost click blocked.");
+        return;
+    }
+    this._lastToggle = now;
+
+    // 2. CHECK STATE
     const isOpen = panel.classList.contains('open');
-    Object.values(this.panels).forEach(p=>p.classList.remove('open'));
+
+    // 3. SYNCHRONOUS CLOSE
+    // Always close other panels immediately.
+    Object.values(this.panels).forEach(p => p.classList.remove('open'));
+
+    // 4. ASYNC OPEN
+    // If we need to open, we WAIT 50ms.
+    // This allows the 'click' event to finish bubbling up to the document
+    // and for 'handleOutsideClick' to run and finish BEFORE the menu actually opens.
     if (!isOpen) {
-      if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        this.restoreFilterCollapse();
-        this._filterFirstOpenHandled = true;
+      if (id === 'filterPanel') {
+        this.collapseNonPersistentCards();
+        if (!this._filterFirstOpenHandled) {
+          this.restoreFilterCollapse();
+          this._filterFirstOpenHandled = true;
+        }
+        this.updateFilterCollapseBtn();
       }
-      if (id === 'filterPanel') this.updateFilterCollapseBtn();
-      panel.classList.add('open');
-      panel.scrollTop = 0;
+      
+      // The Magic Delay
+      setTimeout(() => {
+          panel.classList.add('open');
+          panel.scrollTop = 0;
+      }, 50); 
     }
   }
   open(id)  {
     Object.values(this.panels).forEach(p=>p.classList.remove('open'));
     const panel = this.panels[id];
     if (panel) {
-      if (id === 'filterPanel' && !this._filterFirstOpenHandled) {
-        this.restoreFilterCollapse();
-        this._filterFirstOpenHandled = true;
+      if (id === 'filterPanel') {
+        this.collapseNonPersistentCards();
+        if (!this._filterFirstOpenHandled) {
+          this.restoreFilterCollapse();
+          this._filterFirstOpenHandled = true;
+        }
+        this.updateFilterCollapseBtn();
       }
-      if (id === 'filterPanel') this.updateFilterCollapseBtn();
       panel.classList.add('open');
       panel.scrollTop = 0;
     }
@@ -1168,17 +2029,21 @@ class SharedToolbar extends HTMLElement {
 
   updateToolbarLinks() {
     const role = document.body.dataset.role;
-    const switchLink = this.shadowRoot.getElementById('switchRole');
+    const setLinkState = (id, href, activeRoles) => {
+      const link = this.shadowRoot.getElementById(id);
+      if (!link) return;
+      if (href) link.href = href;
+      const act = Array.isArray(activeRoles) ? activeRoles : [activeRoles];
+      const isActive = act.includes(role);
+      link.classList.toggle('active', isActive);
+      if (isActive) link.setAttribute('aria-current', 'page');
+      else link.removeAttribute('aria-current');
+    };
 
-    if (role === 'character' || role === 'notes') {
-      switchLink.href = 'index.html';
-      switchLink.textContent = '📇';
-      switchLink.title = 'Till index';
-    } else {
-      switchLink.href = 'character.html';
-      switchLink.textContent = '🧝';
-      switchLink.title = 'Till rollperson';
-    }
+    setLinkState('traitsLink', 'traits.html', ['traits','summary','effects']);
+    setLinkState('inventoryLink', 'inventory.html', ['inventory']);
+    setLinkState('indexLink', 'index.html', ['index']);
+    setLinkState('characterLink', 'character.html', ['character', 'notes']);
   }
 }
 

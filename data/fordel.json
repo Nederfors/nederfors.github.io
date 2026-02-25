@@ -12,7 +12,8 @@
       "test": [
         "Listig"
       ]
-    }
+    },
+    "effekt": "+1 Listig vid efterforskningar i arkiv och bibliotek (upp till +3)."
   },
   {
     "id": "ford2",
@@ -25,7 +26,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Får ett arvegods: valfritt vapen/rustning med två icke-mystiska kvaliteter (eller motsvarande enligt SL)."
   },
   {
     "id": "ford3",
@@ -40,7 +42,8 @@
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 Övertygande för att imponera en grupp med berättelser (upp till +3). Kan även ge inkomst enligt reglerna."
   },
   {
     "id": "ford4",
@@ -56,7 +59,8 @@
         "Listig",
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "En gång per äventyr ger ett slag på Listig/Övertygande vinst om 1t10+10 daler."
   },
   {
     "id": "ford5",
@@ -68,8 +72,11 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": ["Övertygande"]
-    }
+      "test": [
+        "Övertygande"
+      ]
+    },
+    "effekt": "Kan samtala med bestar; med lyckat Övertygande få enkel info om närvaro och antal, utan att de utför tjänster."
   },
   {
     "id": "ford6",
@@ -82,10 +89,11 @@
       ],
       "ark_trad": [],
       "test": [
-        "Övertygande",
-        "Vaksam"
+        "Vaksam",
+        "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 Övertygande och Vaksam i samband med lögner; effekten är kortvarig (upp till +3)."
   },
   {
     "id": "ford7",
@@ -98,10 +106,11 @@
       ],
       "ark_trad": [],
       "test": [
-        "Vaksam",
-        "Listig"
+        "Listig",
+        "Vaksam"
       ]
-    }
+    },
+    "effekt": "+1 Vaksam och Listig för att finna/följa spår eller lista ut gömställen (upp till +3)."
   },
   {
     "id": "ford8",
@@ -112,27 +121,26 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Kan använda erfarenhet för att köpa ett valt släktes särdrag."
   },
   {
     "id": "ford9",
     "namn": "Bländverk",
-    "beskrivning": "Rollpersonen har en mindre mystisk gåva och kan väva momentära bländverk ur tomma luften – eldsflammor som inte bränner kan hoppa mellan dennes händer, små figurer av ljus kan dansa i luften där rollpersonen dragit sin hand, rollpersonen tycks omgiven av hotfulla skuggor och liknande. Dessutom kan rollpersonen väva falska bilder över grus och till synes förvandla dem till skinande mynt. Bländverket lurar ingen över tid då effekten tynar bort efter scenens slut. Med Bländverk kan rollpersonen slå ett Övertygande för att lura någon att acceptera en falsk vara eller betalning med illusoriska mynt, till ett maximalt ”värde” av hundra daler. Dessutom ger Bländverk +1 på Övertygande när rollpersonen hotar eller försöker imponera på någon med sin ”mäktiga magi”.",
+    "beskrivning": "Rollpersonen har en mindre mystisk gåva och kan väva momentära bländverk ur tomma luften – eldsflammor som inte bränner kan hoppa mellan dennes händer, små figurer av ljus kan dansa i luften där rollpersonen dragit sin hand, rollpersonen tycks omgiven av hotfulla skuggor och liknande. Dessutom kan rollpersonen väva falska bilder över grus och till synes förvandla dem till skinande mynt. Bländverket lurar ingen över tid då effekten tynar bort efter scenens slut. Med Bländverk kan rollpersonen slå ett Övertygande för att lura någon att acceptera en falsk vara eller betalning med illusoriska mynt, till ett maximalt ”värde” av tio daler. Dessutom ger Bländverk +1 på Övertygande när rollpersonen hotar eller försöker imponera på någon med sin ”mäktiga magi”.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "Skapar kortlivade illusioner; kan via Övertygande lura med illusoriska mynt (max 10 daler) och ger +1 Övertygande vid hot/imponera."
   },
   {
     "id": "ford10",
@@ -145,7 +153,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Behärskar ett kodspråk som låter dig prata om hemligheter öppet utan att utomstående förstår."
   },
   {
     "id": "ford11",
@@ -156,11 +165,10 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Eldskydd 1 samt +1 på eldrelaterade framgångsslag."
   },
   {
     "id": "ford12",
@@ -173,7 +181,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Har en trovärdig falsk identitet med papper; kan inte genomskådas utan särskild bevisning, magi eller eget misstag."
   },
   {
     "id": "ford13",
@@ -186,11 +195,11 @@
       ],
       "ark_trad": [],
       "test": [
-        "Listig",
         "Diskret",
-        "Vaksam"
+        "Listig"
       ]
-    }
+    },
+    "effekt": "+1 Listig i spel och extra chans att undvika upptäckt via [Diskret←Vaksam] (upp till +3)."
   },
   {
     "id": "ford14",
@@ -205,7 +214,8 @@
       "test": [
         "Diskret"
       ]
-    }
+    },
+    "effekt": "+1 Diskret för ficktjuveri eller för att gömma föremål (upp till +3)."
   },
   {
     "id": "ford15",
@@ -220,7 +230,8 @@
       "test": [
         "Stark"
       ]
-    }
+    },
+    "effekt": "Tar en nivå lägre skada av gifter och får ny chans på Stark mot icke-skadande gifters effekter."
   },
   {
     "id": "ford16",
@@ -231,11 +242,10 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 på natur- och alkemislag i skog/mark (orientering, föda, skydd, fällor; upp till +3)."
   },
   {
     "id": "ford17",
@@ -250,7 +260,8 @@
       "test": [
         "Listig"
       ]
-    }
+    },
+    "effekt": "Med lyckat Listig minns du ett närbeläget gömställe med dold trygg plats och utrustning värd 10 daler."
   },
   {
     "id": "ford18",
@@ -263,7 +274,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Får ett lojalt husdjur (svagt) som du styr; kan ersättas efter död."
   },
   {
     "id": "ford19",
@@ -276,7 +288,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Ignorerar krav för dödsmarschtempo och läker naturligt under forcerad marsch; följet får extra chans att lyckas med räddningar mot negativa matcheffekter."
   },
   {
     "id": "ford20",
@@ -287,15 +300,14 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Vaksam",
         "Viljestark",
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 på anderelaterade Vaksam/Viljestark/Övertygande och mot andars påverkan (upp till +3)."
   },
   {
     "id": "ford21",
@@ -308,7 +320,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Perfekt minne; spelaren får fråga SL om detaljer RP har upplevt."
   },
   {
     "id": "ford22",
@@ -323,7 +336,8 @@
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "Ger sig själv eller gruppen +1 på kommande Övertygande och kan lugna bestar för reträtt (upp till +3)."
   },
   {
     "id": "ford23",
@@ -334,31 +348,29 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Ger tillgång till monstruösa särdrag (Naturligt vapen, Pansar, Robust, Regeneration, Vingar) men medför nackdelen Mörkt förflutet."
   },
   {
     "id": "ford24",
     "namn": "Packåsna",
-      "beskrivning": "Rollpersonen är van att bära mycket, tungt och långt. Beräkningen av rollpersonens bärförmåga görs med dennes Stark ×1,5 + 3. Se regeln för Bärkapacitet på sidan 100 i Spelarens handbok.",
+    "beskrivning": "Rollpersonen är van att bära mycket, tungt och långt. Beräkningen av rollpersonens bärförmåga görs med dennes Stark ×1,5 + 3. Se regeln för Bärkapacitet på sidan 100 i Spelarens handbok.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-        "Stark"
-      ]
-    }
+      "test": []
+    },
+    "effekt": "Bärkapacitet = Stark×1,5 + 3."
   },
   {
     "id": "ford25",
     "namn": "Imitatör",
-    "beskrivning": "Rollpersonen är en skicklig imitatör, vare sig det gäller att föreställa en kategori av personer inom sitt eget släkte eller i direkt imitation av en specifik person. Rollpersonen får +1 på slag mot Diskret eller Övertygande i syfte att imitera andra. Om rollpersonen enbart försöker spela en generell kategori ur sitt eget släkte (exempelvis stadsvakt) snarare än en viss person får denne dessutom en andra chans att lyckas med slaget. Att föreställa en specifik representant för ett annat släkte är svårare; imitatören får försöka, dock då med en andra chans att misslyckas på slaget istället. Specifika individer ur andra släkten kan inte imiteras trovärdigt. Imitatör kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "beskrivning": "Rollpersonen är en skicklig imitatör, vare sig det gäller att föreställa en kategori av personer inom sitt eget släkte eller i direkt imitation av en specifik person. Rollpersonen får +1 på slag mot Diskret eller Övertygande i syfte att imitera andra. Imitatör kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
       "typ": [
@@ -366,9 +378,11 @@
       ],
       "ark_trad": [],
       "test": [
-        "Diskret", "Övertygande"
+        "Diskret",
+        "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 Diskret/Övertygande för imitation (upp till +3)."
   },
   {
     "id": "ford26",
@@ -381,10 +395,11 @@
       ],
       "ark_trad": [],
       "test": [
-        "Kvick",
-        "Diskret"
+        "Diskret",
+        "Kvick"
       ]
-    }
+    },
+    "effekt": "+1 vid låsdyrkning (Kvick vid brådska, Diskret för smyg/dölja spår), upp till +3."
   },
   {
     "id": "ford27",
@@ -397,7 +412,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 på orientering över och under jord (upp till +3)."
   },
   {
     "id": "ford28",
@@ -412,13 +428,14 @@
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 Övertygande när du ger direkta order (upp till +3)."
   },
   {
     "id": "ford29",
     "namn": "Manipulatör",
-    "beskrivning": "Rollpersonen är skicklig på att spela på folks känslor medelst smicker, hot eller en kombination därav. Rollpersonen får +1 i Övertygande mot en utvald person under scenen. Manipulationer tar tid att genomföra effektivt, de kräver en scen av känslospel för att nå avsedd verkan. Å andra sidan är de manipulationerna verksamma över en längre tid, den manipulerade anser att känslorna och åsikterna är dess egna och kommer försvara dem långt efter att manipulatören lämnat platsen. Manipulatör kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
-    "kan_införskaffas_flera_gånger": true,
+    "beskrivning": "Rollpersonen är skicklig på att spela på folks känslor medelst smicker, hot eller en kombination därav. Rollpersonen får en gång per äventyr, med ett lyckat Övertygande -5 mot en utvald person, manipulera denna till ett känslotillstånd mot rollpersonen. Det kräver en scen av känslospel för att nå avsedd verkan. Å andra sidan är de manipulationerna verksamma över en längre tid, den manipulerade anser att känslorna och åsikterna är dess egna och kommer försvara dem långt efter att manipulatören lämnat platsen.",
+    "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
         "Fördel"
@@ -427,7 +444,8 @@
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "Får en gång per äventyr med Övertygande -5 manipulera en person till ett känslotillstånd mot rollpersonen."
   },
   {
     "id": "ford30",
@@ -440,7 +458,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Får en lojal men svag tjänare som sköter enkla uppgifter och undviker farliga situationer."
   },
   {
     "id": "ford31",
@@ -453,7 +472,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Slår Dödsslag med två tärningar och väljer bästa."
   },
   {
     "id": "ford32",
@@ -468,12 +488,13 @@
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 Övertygande för hot, förhör och tvång; effekten är kortvarig och skadar ryktet."
   },
   {
     "id": "ford33",
     "namn": "Snabbfotad",
-    "beskrivning": "Varelsen förflyttar sig osedvanligt snabbt. I sammanhang där en mer exakt angivelse är relevant förflyttar sig varelsen 13 meter per handling. Och i anslutning till regeln om Flykt & jakt (sidan 102) ger särdraget +3 på Kvick.",
+    "beskrivning": "Varelsen förflyttar sig osedvanligt snabbt. I sammanhang där en mer exakt angivelse är relevant förflyttar sig varelsen 12 meter per handling. Och i anslutning till regeln om Flykt & jakt (sidan 102) ger särdraget +3 på Kvick.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
@@ -483,7 +504,8 @@
       "test": [
         "Kvick"
       ]
-    }
+    },
+    "effekt": "Förflyttas 12 m per handling och får +3 Kvick vid Flykt & jakt."
   },
   {
     "id": "ford34",
@@ -496,7 +518,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 för att höra, sprida och bedöma rykten (upp till +3)."
   },
   {
     "id": "ford35",
@@ -507,13 +530,12 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Diskret"
       ]
-    }
+    },
+    "effekt": "+1 Diskret för att smyga och gömma sig (upp till +3)."
   },
   {
     "id": "ford36",
@@ -528,7 +550,8 @@
       "test": [
         "Vaksam"
       ]
-    }
+    },
+    "effekt": "Får en andra chans på Vaksam för spårning och för att hitta fram/tillbaka."
   },
   {
     "id": "ford37",
@@ -544,7 +567,8 @@
         "Listig",
         "Vaksam"
       ]
-    }
+    },
+    "effekt": "+1 Listig i spel samt +1 Vaksam för att upptäcka falskspelare (upp till +3)."
   },
   {
     "id": "ford38",
@@ -555,11 +579,10 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 på ritualerna Spådomskonst, Offerrök och Orakelkonst (upp till +3)."
   },
   {
     "id": "ford39",
@@ -572,7 +595,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Telepatisk kontakt för enkla budskap samt känsla för läge och fara hos tvillingsjälen."
   },
   {
     "id": "ford40",
@@ -585,7 +609,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Får en andra chans att ta sig loss ur grepp/fällor eller genom trånga passager."
   },
   {
     "id": "ford41",
@@ -597,9 +622,9 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": [
-      ]
-    }
+      "test": []
+    },
+    "effekt": "Dubbelrull på socialt inom egen grupp (välj bäst) men dubbelslag med sämsta utfallet mot främlingar; startar med 50 daler."
   },
   {
     "id": "ford42",
@@ -614,7 +639,8 @@
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "Med lyckat Övertygande kan du åberopa en passande kontakt i en relevant fraktion."
   },
   {
     "id": "ford43",
@@ -629,7 +655,8 @@
       "test": [
         "Vaksam"
       ]
-    }
+    },
+    "effekt": "Skördar 1t6 ransoner/dygn i fält (1t10 om du enbart söker) och skalar upp för tuffare miljöer (upp till nivå III)."
   },
   {
     "id": "ford44",
@@ -640,11 +667,10 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 försvar per nivå mot genomkorrumperade; vid avfall blir fördelen till nackdelen Prios Förtappad av samma grad."
   },
   {
     "id": "ford45",
@@ -655,13 +681,12 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 Övertygande i religiösa samtal med troende eller tvivlare; vid avfall ersätts med nackdelen Fallen Stjärna."
   },
   {
     "id": "ford46",
@@ -676,12 +701,13 @@
       "test": [
         "Övertygande"
       ]
-    }
+    },
+    "effekt": "+1 Övertygande vid prisförhandlingar (upp till +3)."
   },
   {
     "id": "ford47",
     "namn": "Asketisk",
-    "beskrivning": "Karaktären och dess kropp är som ett tempel. Genom ett liv som kretsat kring överlevnad och förnödenheterna som möjliggör det, vare sig det är i stadens slum eller långt ute i skogen har karaktären lärt sig att mat är en resurs som används sparsamt. Karaktären behöver bara hälften så mycket mat i dagligt intag. Undantaget om rollpersonen är skadad eller har nedsatt förmåga på något sätt.",
+    "beskrivning": "Genom ett liv präglat av överlevnad, vare sig i stadens slum eller vildmarkens ensamhet, har rollpersonen lärt sig att betrakta kroppen som ett tempel och maten som en resurs att hushålla med. Den dagliga ransonen är hälften av vad andra behöver. Vid långa dagsmarscher eller annan hård ansträngning krävs dock samma mängd näring som för alla andra.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
       "typ": [
@@ -689,7 +715,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Halverat dagligt matbehov, utom efter långa dagsmarscher eller annan hård ansträngning."
   },
   {
     "id": "ford48",
@@ -702,7 +729,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "En gång per äventyr får du slå om ett slag och välja bästa utfallet."
   },
   {
     "id": "ford49",
@@ -715,7 +743,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 på utfall på fyndtabellen (upp till +3)."
   },
   {
     "id": "ford50",
@@ -728,7 +757,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Börjar varje äventyr med extra utrustning: 3×10 m rep, papper, kritor, 3 facklor och ett signalhorn."
   },
   {
     "id": "ford51",
@@ -743,7 +773,8 @@
       "test": [
         "Stark"
       ]
-    }
+    },
+    "effekt": "Med Robust får du +2 på Stark utanför strid per Robust-nivå."
   },
   {
     "id": "ford52",
@@ -756,7 +787,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Talar ett extra språk av enklare typ utan avancerade studier."
   },
   {
     "id": "ford53",
@@ -769,7 +801,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Kan kommunicera tyst och diskret på avstånd med andra som kan teckenspråk."
   },
   {
     "id": "ford54",
@@ -782,7 +815,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 i försvar mot närstridsattacker med tunga vapen."
   },
   {
     "id": "ford55",
@@ -795,7 +829,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 i försvar mot närstridsattacker med vapen som har kvaliteten långt."
   },
   {
     "id": "ford56",
@@ -808,7 +843,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 i försvar mot distansattacker."
   },
   {
     "id": "ford57",
@@ -821,7 +857,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 i försvar mot närstridsattacker med enhandsvapen."
   },
   {
     "id": "ford58",
@@ -834,7 +871,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 i försvar mot närstridsattacker från motståndare som använder två vapen."
   },
   {
     "id": "ford59",
@@ -845,13 +883,12 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": [
         "Viljestark"
       ]
-    }
+    },
+    "effekt": "+1 på Viljestark för att stå emot magi, ritualer och andra övernaturliga effekter."
   },
   {
     "id": "ford60",
@@ -864,7 +901,8 @@
       ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 i försvar mot angripare som har övertag (position, överraskning, numerärt m.m.)."
   },
   {
     "id": "ford61",
@@ -875,11 +913,10 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Korruptionströskeln ökar med +1 varje gång (max +3)."
   },
   {
     "id": "ford62",
@@ -890,11 +927,10 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Krigare"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Smärtgränsen ökar med +1 varje gång (max +3)."
   },
   {
     "id": "ford63",
@@ -905,11 +941,10 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Krigare"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Total Tålighet ökar med +1."
   },
   {
     "id": "ford64",
@@ -920,22 +955,24 @@
       "typ": [
         "Fördel"
       ],
-      "ark_trad": [
-        "Mystiker"
-      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Max korruption ökar med +1; tröskeln ändras inte."
   },
   {
     "id": "ford65",
     "namn": "Lagspelare",
-    "beskrivning": "Rollpersonen läser sina lagkamraters rytm och kliver in precis när öppningen finns. Om två allierade innan rollpersonen i ordningen lyckades med anfall mot samma måltavla rider rollpersonen på momentumet och får +1 på sin nästa aktiva handling mot den måltavlan.",
+    "beskrivning": "Rollpersonen läser sina lagkamraters rytm och kliver in precis när öppningen finns. Om två allierade innan rollpersonen i ordningen lyckades med aktiva handlingar mot samma måltavla rider rollpersonen på momentumet och får +1 på sin nästa aktiva handling mot den måltavlan.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "+1 på nästa aktiva handling mot ett mål om två allierade nyss lyckats med aktiva handlingar mot samma mål."
   },
   {
     "id": "ford66",
@@ -943,22 +980,29 @@
     "beskrivning": "När blodet rinner och blicken smalnar pressar du kroppen över gränsen. Så länge din Tålighet är lika med eller lägre än halva ditt maximum får du +1 på alla slag mot Stark.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Stark"]
-    }
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "När Tålighet är ≤ halva max får du +1 på alla Stark-slag."
   },
-
   {
     "id": "ford67",
     "namn": "Vandrarsinne",
     "beskrivning": "År på vandringsstigar har slipat rollpersonens omdöme för färd och framkomlighet. När resan löper från punkt A till punkt B, och ett avgörande val eller handgrepp kräver ett slag – att finna vadställe, läsa terräng, välja led, undvika snår, förkorta marsch eller säkra transport – får rollpersonen en gång per etapp en andra chans att lyckas. Fördelen får inte användas i strid.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "En gång per etapp under resa får du en andra chans på avgörande färdslag; gäller inte i strid."
   },
   {
     "id": "ford68",
@@ -966,10 +1010,13 @@
     "beskrivning": "När månen stiger och visar sin skiva ser rollpersonen världen som dag. Så länge månen syns på himlen uppfattar rollpersonen detaljer, rörelser och färdvägar utan de vanliga svårigheterna i nattmörker; effekten gäller under bar himmel eller där månljus faktiskt faller, men inte i slutna rum eller djupa gångar utan månens ljus.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Under synligt månljus agerar du utan vanliga nattmörkerhinder där ljuset faktiskt faller."
   },
   {
     "id": "ford69",
@@ -977,10 +1024,13 @@
     "beskrivning": "Blicken fastnar på bleka läppar och svagt andetag; händerna arbetar innan tvekan hinner fram. En gång per strid får rollpersonen ett andra slag att lyckas med ett försök att återuppliva en allierad som ligger inför döden och får således slå två tärningar och välja det bästa resultatet",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "En gång per strid får du slå två tärningar och välja bästa vid återupplivning av allierad."
   },
   {
     "id": "ford70",
@@ -988,10 +1038,13 @@
     "beskrivning": "Vakenblicken falnar inte trots kalla timmar vid eldens kant. Rollpersonen kan hålla upp till två vakter per natt utan att påverkas negativt av sömnbrist under följande dag; rytm och disciplin bär kroppen när andra gäspningar tar över.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Kan hålla två vakter per natt utan sömnbrist dagen efter."
   },
   {
     "id": "ford71",
@@ -999,10 +1052,15 @@
     "beskrivning": "Fötter hittar fäste, tyngdpunkten sitter lågt och greppet svarar när kraft möter kraft. Rollpersonen får +1 på Stark för att stå emot knuffar, nedslag och fasthållning.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Stark"]
-    }
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "+1 på Stark för att stå emot knuffar, nedslag och fasthållning."
   },
   {
     "id": "ford72",
@@ -1010,10 +1068,15 @@
     "beskrivning": "Ett ord, en blick, och tyngden i luften lättar runt truppens axlar. I början av en strid kan rollpersonen med ett lyckat Övertygande bära hoppet genom leden; alla allierade får då +1 på sitt första slag i scenen.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Övertygande"]
-    }
+      "test": [
+        "Övertygande"
+      ]
+    },
+    "effekt": "I stridens början kan du med lyckat Övertygande ge alla allierade +1 på sitt första slag."
   },
   {
     "id": "ford73",
@@ -1021,10 +1084,13 @@
     "beskrivning": "Mörkret letar vägar in men möts av ett tunt, tåligt hinnskydd kring själen. Varje gång tillfällig korruption tilldelas tar rollpersonen alltid 1 mindre än tärningsutfallet visar, men aldrig mindre än 1. Denna fördel går bara att ha så länge karaktären inte har någon permanent korruption. Om karaktären skulle drabbas av permanent korruption så omvandlas denna fördel till nackdelen 'Korruptionsmagnet'",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
-      "ark_trad": ["Mystiker"],
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "Tar alltid 1 mindre tillfällig korruption (minst 1); gäller bara utan permanent korruption, annars blir det nackdelen Korruptionsmagnet."
   },
   {
     "id": "ford74",
@@ -1032,32 +1098,43 @@
     "beskrivning": "Grenar viskar riktning och marken talar i tecken som andra missar. Rollpersonen tycks se stigar där andra bara ser snår och vet hur en hittar de mest väldolda lederna i skog och mark. När rollpersonen leder färden i skog får hela sällskapet +1 på Diskret för att undvika upptäckt. Denna fördel kan införskaffas upp till tre gånger för att ge en kumulativ effekt.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Diskret"]
-    }
+      "test": [
+        "Diskret"
+      ]
+    },
+    "effekt": "Ger hela gruppen +1 Diskret mot upptäckt när du leder i skog (upp till +3)."
   },
- {
-  "id": "ford75",
-  "namn": "Orädd",
-  "beskrivning": "Rollpersonen möter hot, tvång och skräck utan att rygga. Hen får alltså +1 på alla slag som syftar på att motstå skräck, hot och försök till tvingande påverkan.",
-  "kan_införskaffas_flera_gånger": false,
-  "taggar": {
-    "typ": ["Fördel"],
-    "ark_trad": [],
-    "test": []
-  }
-},
+  {
+    "id": "ford75",
+    "namn": "Orädd",
+    "beskrivning": "Rollpersonen möter hot, tvång och skräck utan att rygga. Hen får alltså +1 på alla slag som syftar på att motstå skräck, hot och försök till tvingande påverkan.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "+1 på motstånd mot skräck, hot och tvång."
+  },
   {
     "id": "ford76",
     "namn": "Betvingande röst",
     "beskrivning": "Tränad andning och kalibrerad stämma ger rollpersonen en ton som bär mer än ord; en klang som krokar i lyssnarens inre när en mystisk kraft läggs på. Blicken fokuserar, rytmen saktar ned, och instruktionen faller som en säck över viljan hos den som hör. En gång per dag får rollpersonen slå ett extra slag och välja det bästa utfallet när en mystisk kraft används för att påverka någons sinne.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
-      "ark_trad": ["Mystiker"],
-      "test": ["Viljestark"]
-    }
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "En gång per dag får du slå extra och välja bästa när en mystisk kraft används för att påverka någons sinne."
   },
   {
     "id": "ford77",
@@ -1065,10 +1142,15 @@
     "beskrivning": "Foten landar där marken ger fart, höften följer och axeln svänger bort från hotet; rollpersonens rörelsemönster växlar tempo utan att bryta flödet och varje steg blir till en liten fördel i trängsel och stök. Rollpersonen får +1 på Kvick när vid genomförande av förflyttningsmanövrer i strid. Fördelen kan införskaffas upp till tre gånger för en kumulativ effekt.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Kvick"]
-    }
+      "test": [
+        "Kvick"
+      ]
+    },
+    "effekt": "+1 Kvick vid förflyttningsmanövrer i strid (upp till +3)."
   },
   {
     "id": "ford78",
@@ -1076,10 +1158,13 @@
     "beskrivning": "Rollpersonen har hållit på med elixir sedan barnsben, varje nyans i smaken viftar med varningsflaggor och de behagliga dofterna verkar som bekännelser. Rollpersonen som lärt kroppen och näsan vad brygder gör kan namnge dem på lukt och reaktion. Fördelen kan bara väljas av rollpersoner med förmågan Giftbrukare, Medicus eller Alkemist och låter rollpersonen identifiera gifter, elixir och symptom av dessa utan att behöva slå mot Listig för att lyckas.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Listig", "Stark"]
-    }
+      "test": []
+    },
+    "effekt": "Identifierar gifter/elixir och deras symptom utan Listig-slag (kräver Giftbrukare, Medicus eller Alkemist)."
   },
   {
     "id": "ford79",
@@ -1087,10 +1172,16 @@
     "beskrivning": "Ett stick av föraning sveper över sinnet; vägarna fram träder fram en blinkning innan beslutet tas. Priset känns som ett kort brännmärke på själen, ett märke som snart bleknar men aldrig helt glöms. En gång per dag vid ett Listig- eller Vaksam-slag, får rollpersonen slå två tärningar och välja det bästa, men tar 1 tillfällig korruption.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
-      "ark_trad": ["Mystiker"],
-      "test": ["Listig", "Vaksam"]
-    }
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Listig",
+        "Vaksam"
+      ]
+    },
+    "effekt": "En gång per dag får du fördel på ett Listig- eller Vaksam-slag mot priset 1 tillfällig korruption."
   },
   {
     "id": "ford80",
@@ -1098,10 +1189,15 @@
     "beskrivning": "Bröstkorgen rör sig knappt, luftens väg är jämn och lukt späs ut med tålamod; rollpersonens närvaro blir svår att läsa för rovdjur och väsen som litar på öron och nos.  Mot varelser som förlitar sig på hörsel eller lukt får rollpersonen +1 på Diskret. Detsamma gäller även i kompakt mörker. Fördelen kan skaffas upp till tre gånger för en kumulativ effekt",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Diskret"]
-    }
+      "test": [
+        "Diskret"
+      ]
+    },
+    "effekt": "+1 Diskret mot hörsel/luktbaserad upptäckt och i kompakt mörker (upp till +3)."
   },
   {
     "id": "ford81",
@@ -1109,10 +1205,15 @@
     "beskrivning": "Rummen sorteras i lager: vem ser, vem låtsas inte se och vem döljer en tvekan med handen för nära bältet. Rollpersonen läser flödet kring portar, marknadsstånd och salar och noterar var stål och bakhåll väntar. I befolkade miljöer får rollpersonen +1 på Vaksam för att upptäcka bevakning, bakhåll eller dolda vapen. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Vaksam"]
-    }
+      "test": [
+        "Vaksam"
+      ]
+    },
+    "effekt": "+1 Vaksam i befolkade miljöer för att upptäcka bevakning, bakhåll eller dolda vapen (upp till +3)."
   },
   {
     "id": "ford82",
@@ -1120,10 +1221,13 @@
     "beskrivning": "Brygder som vrider andras inälvor rinner som varmt vatten genom rollpersonens system; lång vana vid bägare med bismak har byggt en sköld som inte syns men märks när gifterna biter dåligt. En gång per dag får rollpersonen ignorera en negativ effekt av ett elixir.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
       "test": []
-    }
+    },
+    "effekt": "En gång per dag kan du ignorera en elixirs negativa effekt."
   },
   {
     "id": "ford83",
@@ -1131,10 +1235,15 @@
     "beskrivning": "Vid bål, bardiskar och rastplatser flätar rollpersonen lösryckta ord till helheter; en felaktig betoning, ett namn i förbifarten, en felställd dryck och mönstret faller på plats. Här väger list tyngre än vaksam blick. Rollpersonen får använda Listig i stället för Vaksam för att lyssna efter rykten.",
     "kan_införskaffas_flera_gånger": false,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Listig"]
-    }
+      "test": [
+        "Listig"
+      ]
+    },
+    "effekt": "Använd Listig i stället för Vaksam för att snappa upp rykten."
   },
   {
     "id": "ford84",
@@ -1142,9 +1251,272 @@
     "beskrivning": "Tecken ropas kort, händer visar riktning och avstånd hålls utan att sällskapet spricker i svår terräng. Rollpersonen binder ihop leden med vana ögon och kroppsspråk som alla förstår när marken vill splittra gruppen. En gång per etapp, när rollpersonen leder ett spritt sällskap i svår terräng, får alla allierade inom synhåll +1 på sitt första Vaksam för att hålla formation och undvika att tappas bort. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
     "kan_införskaffas_flera_gånger": true,
     "taggar": {
-      "typ": ["Fördel"],
+      "typ": [
+        "Fördel"
+      ],
       "ark_trad": [],
-      "test": ["Vaksam"]
-    }
+      "test": [
+        "Vaksam"
+      ]
+    },
+    "effekt": "En gång per etapp, när du leder i svår terräng, får alla allierade inom synhåll +1 på sitt första Vaksam för att hålla ihop (upp till +3)."
+  },
+  {
+    "id": "ford85",
+    "namn": "Stridsreflexer",
+    "beskrivning": "Rollpersonen har tränat upp en blixtsnabb reaktionsförmåga som svarar innan tanken hinner med. Rollpersonen får +1 på alla slag som avser att lyckas med reaktiva handlingar (ej försvar)",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "+1 på alla slag för reaktiva handlingar."
+  },
+  {
+    "id": "ford86",
+    "namn": "Sjövan",
+    "beskrivning": "Ett liv på däck har gett rollpersonen sjöben och en instinktiv förståelse för vind och vågor. Rollpersonen får +1 på alla slag som avser att hantera eller navigera med båtar. Sjövan kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "+1 på slag för att hantera och navigera båtar (upp till +3)."
+  },
+  {
+    "id": "ford87",
+    "namn": "Falköga",
+    "beskrivning": "Blicken sveper över omgivningen och fastnar där andra blickar glider förbi. Rollpersonen får +1 i slag som avser att finna dolda ting, vare sig det är lönnfack eller gömda fiender. Falkblick kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Vaksam"
+      ]
+    },
+    "effekt": "+1 Vaksam för att finna dolda ting (upp till +3)."
+  },
+  {
+    "id": "ford88",
+    "namn": "Väderbiten",
+    "beskrivning": "Kyla, hetta och piskande regn bekommer inte rollpersonen lika illa som andra. Hen får +1 i slag som avser att tolerera vädereffekter och uthärda elementens raseri. Väderbiten kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "+1 för att tolerera vädereffekter (upp till +3)."
+  },
+  {
+    "id": "ford89",
+    "namn": "Grodbent",
+    "beskrivning": "Rollpersonen besitter en explosiv styrka i benen. Hen får +1 i slag som avser att lyckas med ett hopp, oavsett om det är över klyftor eller upp på avsatser. Spänstig kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Stark"
+      ]
+    },
+    "effekt": "+1 på slag för att lyckas med hopp (upp till +3)."
+  },
+  {
+    "id": "ford90",
+    "namn": "Järnhälsa",
+    "beskrivning": "Sår sluter sig snabbare och blåmärken bleknar fortare på rollpersonen. Denna robusta fysik gör att rollpersonen läker 1 extra Tålighet per natt vid vila.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "Läker 1 extra Tålighet per natt."
+  },
+  {
+    "id": "ford91",
+    "namn": "Lagvrängare",
+    "beskrivning": "Genom studier eller bitter erfarenhet kan rollpersonen den ambriska lagen och dess kryphål. Hen får +1 i Övertygande gentemot ambriska tjänstemän. Lagvrängare kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Övertygande"
+      ]
+    },
+    "effekt": "+1 Övertygande mot ambriska tjänstemän (upp till +3)."
+  },
+  {
+    "id": "ford92",
+    "namn": "Klanvän",
+    "beskrivning": "Rollpersonen förstår de oskrivna lagarna och traditionerna hos klanfolket. Hen får +1 i Övertygande gentemot barbarättade häxor, hövdingar och gardister. Klanvän kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Övertygande"
+      ]
+    },
+    "effekt": "+1 Övertygande mot barbarättade häxor, hövdingar och gardister (upp till +3)."
+  },
+  {
+    "id": "ford93",
+    "namn": "Måttöga",
+    "beskrivning": "Rollpersonen kan avgöra nära nog exakt storlek på varelser och föremål även på distans; om det kan ses kan det mätas. Detta ger en fördel vid bedömning av avstånd, höjder och volymer som andra bara kan gissa sig till.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "Kan avgöra exakt storlek och avstånd på allt som är synligt."
+  },
+  {
+    "id": "ford94",
+    "namn": "Kirurgisk precision",
+    "beskrivning": "Med en fältskärs säkerhet kan rollpersonen justera sin attack i sista sekund. Fördelen låter rollpersonen lägga till +1 eller ta bort -1 på tärningsutfallet för träfftabellen vid en lyckad siktad attack, för att maximera skadan.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Träffsäker"
+      ]
+    },
+    "effekt": "+1/-1 på träfftabellen vid lyckad siktad attack."
+  },
+  {
+    "id": "ford95",
+    "namn": "Rännstensfostran",
+    "beskrivning": "Rollpersonen är van vid rännstenens hederskodex där knytnävarna talar. Hen får +1 i Träffsäker så länge inga vapen av något slag förekommer i striden på någon sida (observera att naturliga vapen, knogvapen och dylikt räknas som vapen i detta sammanhang). Rännstensfostran kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Träffsäker"
+      ]
+    },
+    "effekt": "+1 Träffsäker i strid helt utan vapen (upp till +3)."
+  },
+  {
+    "id": "ford96",
+    "namn": "Styckmästare",
+    "beskrivning": "Rollpersonen ser potentialen i varje villebråd och vet hur man tar vara på allt. Kunskapen gör att det går att lägga till +1T10 ransoner vid styckning av större villebråd.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "+1T6 extra ransoner vid styckning av större villebråd."
+  },
+  {
+    "id": "ford97",
+    "namn": "Stridsberedd",
+    "beskrivning": "Rollpersonen är alltid först på tårna när faran hotar. Hen får lägga till +1 på sitt initiativvärde. Stridsberedd kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Kvick"
+      ]
+    },
+    "effekt": "+1 på initiativ (upp till +3)."
+  },
+  {
+    "id": "ford98",
+    "namn": "Obruten Skärpa",
+    "beskrivning": "Rollpersonen har en perfekt stridsteknik som är beroende av total balans och hälsa. Så länge kroppen är helt oskadd och Tåligheten är på sitt maximum, rör sig rollpersonen med en övernaturlig precision och får +1 i karaktärsdraget Träffsäker på alla attacker.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Träffsäker"
+      ]
+    },
+    "effekt": "Så länge du har din maximala Tålighet i behåll får du +1 i Träffsäker på alla attacker."
+  },
+  {
+    "id": "ford99",
+    "namn": "Klippvandrare",
+    "beskrivning": "Vare sig det är Davokars raviner eller Titanernas bergväggar ser rollpersonen fäste där andra ser slät sten. Rollpersonen rör sig obehindrat vertikalt och tröttas knappt inte ut av klättring. Rollpersonen får +1 på alla slag för att klättra och förflytta sig i brant terräng per nivå av fördelen. Denna fördel kan väljas flera gånger för att representera en närmast onaturlig vighet i bergen (upp till +3).",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Kvick"
+      ]
+    },
+    "effekt": "+1 på alla slag för att klättra och förflytta sig i brant terräng per nivå (upp till +3)."
+  },
+  {
+    "id": "ford100",
+    "namn": "Ljusvakt",
+    "beskrivning": "Rollpersonens skråmor har alltid läkt snabbare än andras och när hen vilar är sömnen djupare och återhämtningen starkare än för andra, som om köttet lyftade på hens uppmaning att läka. Vid en timmes aktiv meditation läker rollpersonen alltid +1 Tålighet utöver den normala läkningstakten.",
+    "kan_införskaffas_flera_gånger": false,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": []
+    },
+    "effekt": "Vid en timmes vila (kort vila) läker du alltid +1 Tålighet utöver den normala läkningstakten."
+  },
+  {
+    "id": "ford101",
+    "namn": "Stäppfödd",
+    "beskrivning": "Rollpersonen är mer eller mindre född i sadeln, likt västerns klanryttare eller de ambriska pansar-riddarna. Ryttare och riddjur rör sig som en enda varelse. Rollpersonen får +1 på alla slag som rör ridning. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
+    "kan_införskaffas_flera_gånger": true,
+    "taggar": {
+      "typ": [
+        "Fördel"
+      ],
+      "ark_trad": [],
+      "test": [
+        "Kvick"
+      ]
+    },
+    "effekt": "+1 på alla slag som rör ridning"
   }
 ]

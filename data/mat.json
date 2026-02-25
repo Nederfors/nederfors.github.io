@@ -1,8 +1,8 @@
 [
   {
     "id": "ma1",
-    "namn": "Bröd (landet)",
-    "beskrivning": "Färskt bröd bakat i stenugn, basföda vid varje måltid.",
+    "namn": "Lantbröd",
+    "beskrivning": "Färskt bröd bakat i stenugn, basföda vid varje måltid men säljs bara på landet.",
     "taggar": {
       "typ": [
         "Mat"
@@ -19,7 +19,7 @@
   },
   {
     "id": "ma2",
-    "namn": "Bröd (stad)",
+    "namn": "Borgarbröd",
     "beskrivning": "Färskt stenugnsbakat bröd från stadens bagerier.",
     "taggar": {
       "typ": [
@@ -37,8 +37,8 @@
   },
   {
     "id": "ma3",
-    "namn": "Gryta (landet)",
-    "beskrivning": "Mustig gryta med lokalt kött, rotfrukter och örter.",
+    "namn": "Lantgryta",
+    "beskrivning": "Mustig gryta med lokalt kött, rotfrukter och örter. Vanlig basföda på landet.",
     "taggar": {
       "typ": [
         "Mat"
@@ -55,7 +55,7 @@
   },
   {
     "id": "ma4",
-    "namn": "Gryta (stad)",
+    "namn": "Statargryta",
     "beskrivning": "Stadskockens gryta med förstklassigt kött och exotiska kryddor.",
     "taggar": {
       "typ": [
@@ -73,8 +73,8 @@
   },
   {
     "id": "ma5",
-    "namn": "Kött (landet)",
-    "beskrivning": "Nykött från gårdens slakt, tillagas över öppen eld.",
+    "namn": "Lantkött",
+    "beskrivning": "Nykött från den lokala gårdens slakt, tillagas över öppen eld.",
     "taggar": {
       "typ": [
         "Mat"
@@ -91,7 +91,7 @@
   },
   {
     "id": "ma6",
-    "namn": "Kött (stad)",
+    "namn": "Finkött",
     "beskrivning": "Finstyckat kött från stadens slaktare, serveras färskt eller rökt.",
     "taggar": {
       "typ": [
@@ -109,8 +109,8 @@
   },
   {
     "id": "ma7",
-    "namn": "Ost (landet)",
-    "beskrivning": "Hantverksost av gårdsmjölk, mild och krämig.",
+    "namn": "Lantost",
+    "beskrivning": "Hantverksost av den lokala gårdsmjölken, mild och krämig.",
     "taggar": {
       "typ": [
         "Mat"
@@ -127,8 +127,8 @@
   },
   {
     "id": "ma8",
-    "namn": "Ost (stad)",
-    "beskrivning": "Lagrad ost från stadens ostehandel, mer smakrik och fast.",
+    "namn": "Teurgost",
+    "beskrivning": "Lagrad ost från stadens tempel, mer smakrik och fast.",
     "taggar": {
       "typ": [
         "Mat"
@@ -145,8 +145,8 @@
   },
   {
     "id": "ma9",
-    "namn": "Stuvning (landet)",
-    "beskrivning": "Lätt grönsaksstuvning med smör och örter från åkern.",
+    "namn": "Lantstuvning",
+    "beskrivning": "Lätt grönsaksstuvning med smör och örter direkt från åkern.",
     "taggar": {
       "typ": [
         "Mat"
@@ -163,7 +163,7 @@
   },
   {
     "id": "ma10",
-    "namn": "Stuvning (stad)",
+    "namn": "Stadstuvning",
     "beskrivning": "Exotisk stuvning med importerade grönsaker och kryddor.",
     "taggar": {
       "typ": [
@@ -181,7 +181,7 @@
   },
   {
     "id": "ma11",
-    "namn": "Hackebricka (ost & korv)",
+    "namn": "Charkbricka",
     "beskrivning": "Litet fat med lagrad ost och rökt korv – perfekt som aptitretare.",
     "taggar": {
       "typ": [
@@ -1027,7 +1027,7 @@
 },
   {
     "id": "ma57",
-    "namn": "Grön curry från Alberetor",
+    "namn": "Grön curry",
     "beskrivning": "En gryta av grön curry från Alberetors sydliga trädgårdar, rik på bambuskott, söt basilika och den lokala alberitiska basilikan. Paprika och äggplanta från Alberitisländerna ger kroppen, limeblad skärper tonen och kokosmjölken mjukar upp helheten. Serveras med ris och tofu. Chilins brännande kraft dröjer sig kvar som ett minne från hettans källor.",
     "taggar": { "typ": ["Mat"] },
     "stat": { "vikt": 0.9 },
@@ -1035,7 +1035,7 @@
   },
   {
     "id": "ma58",
-    "namn": "Vegetariska vårrullar från Alberetors kök",
+    "namn": "Vegetariska vårrullar",
     "beskrivning": "Små rullar fyllda med grönt från Alberetors bördiga åkrar. Serveras med ris, sötsur sås och tofu. Kryddningen är mild och stillsam, avsedd för den som söker ett mjukt möte snarare än hetta.",
     "taggar": { "typ": ["Mat"] },
     "stat": { "vikt": 0.6 },
@@ -1043,34 +1043,52 @@
   },
   {
     "id": "ma59",
-    "namn": "Stekta breda nudlar från södra Alberetor",
-    "beskrivning": "Breda risnudlar wokade med ägg, broccoli, vitkål och morot, avrundade med jordnötter i sojasås. Serveras med tofu. Smaken bär en mjuk rundhet, utan chilins eld men med en jordnära mättnad.",
+    "namn": "Stekta breda nudlar & Grönsaker ",
+    "beskrivning": "Breda risnudlar från det gamla Alberetor, wokade med ägg, broccoli, vitkål och morot, avrundade med jordnötter i sojasås. Serveras med tofu. Smaken bär en mjuk rundhet, utan chilins eld men med en jordnära mättnad.",
     "taggar": { "typ": ["Mat"] },
     "stat": { "vikt": 0.8 },
     "grundpris": { "daler": 1, "skilling": 2, "örtegar": 0 }
   },
   {
     "id": "ma60",
-    "namn": "Stekta äggnudlar från Alberetors härdar",
-    "beskrivning": "Äggnudlar stekta med broccoli, vitkål och morot, förädlade med jordnötter i sojasås. Serveras med tofu. Smaken är balanserad och behaglig, utan någon brännande stickning.",
+    "namn": "Stekta äggnudlar & Grönsaker",
+    "beskrivning": "Äggnudlar från det gamla Alberetor, stekta med broccoli, vitkål och morot, förädlade med jordnötter i sojasås. Serveras med tofu. Smaken är balanserad och behaglig, utan någon brännande stickning.",
     "taggar": { "typ": ["Mat"] },
     "stat": { "vikt": 0.8 },
     "grundpris": { "daler": 1, "skilling": 2, "örtegar": 0 }
   },
   {
     "id": "ma61",
-    "namn": "Röd curry med ananas från Alberetor",
-    "beskrivning": "En röd curry kokad på ananas, paprika och limeblad, förädlad med lök och rundad av kokosmjölk. Serveras med ris och tofu. Chilins hetta gör sig tydlig men balanseras av ananasens fruktiga sötma.",
+    "namn": "Röd curry",
+    "beskrivning": "En röd curry från det gamla Alberetor, kokad på ananas, paprika och limeblad, förädlad med lök och rundad av kokosmjölk. Serveras med ris och tofu. Chilins hetta gör sig tydlig men balanseras av ananasens fruktiga sötma.",
     "taggar": { "typ": ["Mat"] },
     "stat": { "vikt": 0.9 },
     "grundpris": { "daler": 1, "skilling": 4, "örtegar": 0 }
   },
   {
     "id": "ma62",
-    "namn": "Panangcurry från Alberetor",
-    "beskrivning": "En panangcurry där paprika och limeblad förenas i kokosmjölkens rika kropp. Serveras med ris och tofu. Värmen är kryddig men behagligt återhållsam, skapad för att mätta utan att överväldiga.",
+    "namn": "Panangcurry",
+    "beskrivning": "En panangcurry från det gamla Alberetor, där paprika och limeblad förenas i kokosmjölkens rika kropp. Serveras med ris och tofu. Värmen är kryddig men behagligt återhållsam, skapad för att mätta utan att överväldiga.",
     "taggar": { "typ": ["Mat"] },
     "stat": { "vikt": 0.9 },
     "grundpris": { "daler": 1, "skilling": 4, "örtegar": 0 }
-  }
+  },
+  {
+"id": "ma63",
+"namn": "Pad Alberetor",
+"beskrivning": "Risnudlar stekta i söt-syrlig tamarindlag från Alberetors trädgårdar, med ägg, krispig kål och rovor. Toppas med rostad jordnöt och örter; serveras med klyfta av syrligt skogscitrus. Välj rökt forell eller tofu – smaken bär ekon av vägkrogarna vid Tempelvall och röken från härdarna i söder.",
+"taggar": {
+"typ": [
+"Mat"
+]
+},
+"stat": {
+"vikt": 0.8
+},
+"grundpris": {
+"daler": 1,
+"skilling": 3,
+"örtegar": 0
+}
+}
 ]

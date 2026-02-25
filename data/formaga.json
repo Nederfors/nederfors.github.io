@@ -8,25 +8,36 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Krigare",
+        "Duellant",
+        "Vapenmästare",
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Skattletare",
+        "Jägare",
+        "Utbygdsjägare"
       ],
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Förflyttning"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Handling: Förflyttning. Rollpersonen får slå mot Kvick för att undvika att dra på sig frislag från fiender i närstrid. Slaget måste slås för varje fiende som rollpersonen passerar. Det gäller både vid passage av fiender eller för att dra sig ur en närstrid med en fiende. Om slaget misslyckas kan spelaren välja att antingen bli kvar eller att förflytta sig i alla fall, och då ådra sig ett frislag på vanligt vis.",
+      "Novis": "Handling: Reaktiv. Rollpersonen kan slå mot Kvick för att undvika frislag vid rörelse i närstrid. Detta kan användas för att passera fiender, positionera sig för ett övertag eller dra sig ur en strid. Ett slag krävs för varje fiende som passeras eller lämnas. Vid misslyckande väljer spelaren att antingen stanna kvar eller genomföra förflyttningen och då ta ett frislag.",
       "Gesäll": "Handling: Fri. Rollpersonen studsar spänstigt upp på fötter med ett lyckat Kvick direkt den har fällts eller ramlat omkull, detta som en fri handling. Om slaget misslyckas måste rollpersonen spendera en förflyttning på att ställa sig upp.",
       "Mästare": "Handling: Reaktiv. Rollpersonen kan utnyttja sina fiender som sköldar. I strid mot fler än en fiende kan rollpersonen en gång per runda använda en fiende som sköld och låta denne ta en träff istället för rollpersonen. Fienden i fråga får inte försvara sig mot sin allierades attack, men mästerakrobaten måste lyckas med ett Kvick för att fienden ska överta träffen."
     }
@@ -40,21 +51,29 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Mystiker",
+        "Svartkonstnär",
+        "Tjuv",
+        "Skattletare",
+        "Före detta kultist",
+        "Sappör"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -72,18 +91,22 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Bärsärkare"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -101,21 +124,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Krigare",
+        "Kapten",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Övertygande"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -133,18 +162,23 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Krigare",
+        "Tjuv",
+        "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -162,21 +196,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Krigare",
+        "Duellant",
+        "Tjuv",
+        "Bedragare"
       ],
       "test": [
         "Diskret"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -194,21 +234,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Tjuv",
+        "Ligist",
+        "Före detta kultist",
+        "Jägare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Gift"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Gift"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Gift"
+        }
       }
     },
     "nivåer": {
@@ -226,18 +272,22 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Häxkonst"
+        "Mystiker",
+        "Häxa"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -255,21 +305,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Mystiker",
+        "Självlärd besvärjare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Vaksam"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -287,21 +343,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Jägare"
       ],
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -319,26 +379,34 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Krigare",
+        "Kapten",
+        "Mystiker",
+        "Trollsångare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Övertygande"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonens starka personlighet gör att denne får använda Övertygande istället för Viljestark, exempelvis vid användandet av mystiska krafter, dock inte som grund för korruptionströskel.",
-      "Gesäll": "Handling: Fri. Med ett lyckat slag mot Övertygande kan rollpersonen kan under en scen utse en varelse eller ett objekt till gemensam måltavla för sin grupp av allierade. Alla allierade som attackerar målet får +1T4 i skada mot målet. Att byta mål kräver en ny handling från ledaren, bara ett mål kan vara aktivt åt gången. Kan användas som aktiv handling för att lyckas utan slag mot Övertygande.",
+      "Gesäll": "Handling: Fri. Med ett lyckat slag mot Övertygande kan rollpersonen kan under en scen utse en varelse eller ett objekt till gemensam måltavla för sin grupp av allierade. Alla allierade som riktar en aktiv handling specifikt mot målet får +1T4 effekttärning mot det, så länge effekten inte gör alternativ skada. Att byta mål kräver en ny handling från ledaren, bara ett mål kan vara aktivt åt gången. Kan användas som aktiv handling för att lyckas utan slag mot Övertygande.",
       "Mästare": "Handling: Fri. Med ett lyckat slag mot Övertygande kan ledaren hålla ett brandtal till sina allierade, vilket innebär att de allierade får använda ledarens Övertygande istället för sin egen Viljestark under scenen. Kan användas som aktiv handling för att lyckas utan slag mot Övertygande."
     }
   },
@@ -351,21 +419,26 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Riddare",
+        "Jägare"
       ],
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -383,21 +456,29 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker, Tjuv"
+        "Mystiker",
+        "Jägare",
+        "Ordensmagiker",
+        "Tjuv",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -415,21 +496,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Bedragare"
       ],
       "test": [
         "Diskret"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk & Inre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk & Inre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk & Inre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -447,29 +532,35 @@
         "Förmåga"
       ],
       "ark_trad": [
+        "Mystiker",
+        "Teurg",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
-  "Novis": "Handling: Aktiv. Rollpersonen är en skicklig fältskär. Ett lyckat slag i Listig återställer 1T4 Tålighet hos patienten. Vid användning av en örtkur lyckas slaget automatiskt och återställer istället 1T6. Omvårdnad kan dessutom stoppa blödningar eller läka kritiska skador som uppstått genom överskriden smärtgräns. Förmågan kan användas med lyckat resultat högst två gånger per patient och dag.",
-  "Gesäll": "Handling: Aktiv. Som Novis, men slaget återställer 1T6 istället för 1T4. Med örtkur läks 1T8 istället för 1T6. Ett misslyckat slag på Listig återställer 1T4 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat högst tre gånger per patient och dag.",
-  "Mästare": "Handling: Aktiv. Gesäll, men slaget återställer 1T8 istället för 1T6. Med örtkur läks 1T10 istället för 1T8. Ett misslyckat slag på Listig återställer 1T6 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat helt obegränsat. Vidare så får patienter som vårdas av mästaren dessutom använda mästarens värde i Listig när de slår sina dödsslag."
-}
-
-    },
+      "Novis": "Handling: Aktiv. Rollpersonen är en skicklig fältskär. Ett lyckat slag i Listig återställer 1T4 Tålighet hos patienten. Vid användning av en örtkur lyckas slaget automatiskt och återställer istället 1T6. Omvårdnad kan dessutom stoppa blödningar eller läka kritiska skador som uppstått genom överskriden smärtgräns. Förmågan kan användas med lyckat resultat högst två gånger per patient och dag.",
+      "Gesäll": "Handling: Aktiv. Som Novis, men slaget återställer 1T6 istället för 1T4. Med örtkur läks 1T8 istället för 1T6. Ett misslyckat slag på Listig återställer 1T4 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat högst tre gånger per patient och dag.",
+      "Mästare": "Handling: Aktiv. Gesäll, men slaget återställer 1T8 istället för 1T6. Med örtkur läks 1T10 istället för 1T8. Ett misslyckat slag på Listig återställer 1T6 tålighet, men stoppar inte blödningar och läker inga kritiska skador. Förmågan kan användas med lyckat resultat helt obegränsat. Vidare så får patienter som vårdas av mästaren dessutom använda mästarens värde i Listig när de slår sina dödsslag."
+    }
+  },
   {
     "id": "form16",
     "namn": "Monsterlärd",
@@ -479,27 +570,35 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker"
+        "Mystiker",
+        "Tjuv",
+        "Jägare",
+        "Utbygdsjägare",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Handling: Fri. Rollpersonen har studerat monster och kan med ett lyckat slag i Listig känna igen och dra sig till minnes styrkor och svagheter för ett monster per runda. Spelledaren berättar för spelaren om varelsens beskrivning och värden.",
-      "Gesäll": "Handling: Fri. Rollpersonen är en erkänd monsterkännare som noga studerat en viss undergrupp av monster (välj en av Bestar, Kulturvarelser, Odöda eller Styggelser). Rollpersonen gör +1T4 extra skada mot monster ur den valda kategorin. Bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bäst bekämpar varelsen.",
-      "Mästare": "Handling: Fri. Rollpersonen gör +1T6 extra skada mot varelser ur den kategori hen har specialiserat sig på. Den bonusen gäller också rollpersonens allierade, om dessa instrueras i hur man bekämpar varelsen."
+      "Novis": "Handling: Fri. Rollpersonen studerar en fiende och söker efter blottor i dess försvar. Med ett lyckat slag mot Listig identifierar rollpersonen en sårbarhet, vilket ger +1T4 i skada på rollpersonens nästa attack mot målet. Dessutom avslöjar spelledaren ett av monstrets särdrag och dess nivå. Alternativt kan rollpersonen välja att slå ett slag mot Listig −5 för att identifiera en tydlig svaghet (t.ex. oförmögen att regenerera skada från eld). Dessa svagheter återfinns oftast hos mäktigare varelser.",
+      "Gesäll": "Handling: Fri. Rollpersonen specialiserar sig på en kategori av monster (Bestar, Kulturvarelser, Odöda eller Styggelser) och identifierar automatiskt deras särdrag. Mot denna kategori utgår alltid +1T4 i skada på alla attacker. Dessutom kan rollpersonen med ett rop och ett lyckat slag mot Listig dela sin taktiska analys med sina allierade; de får då +1T4 i skada på sina attacker mot varelser av den valda kategorin under resten av rundan.",
+      "Mästare": "Handling: Speciell. Som gesäll, men rollpersonens skadebonus mot specialkategorin höjs till +1T6. Att dela analysen med allierade (som ger dem +1T4 skada) kräver inte längre något tärningsslag. Mästaren besitter dessutom så pass bred kunskap att hen med ett lyckat Listig −5 kan använda gesällnivåns effekt även mot monster utanför sin specialisering; vid lyckat slag får hela gruppen skadebonusen."
     }
   },
   {
@@ -511,18 +610,23 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Mystiker",
+        "Häxa",
+        "Tjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -540,18 +644,22 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Ordensmagi"
+        "Mystiker",
+        "Ordensmagiker"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -569,21 +677,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -601,21 +713,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Sappör",
+        "Jägare"
       ],
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -633,24 +751,29 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. Rollpersonen är van att rida och strida uppsutten på ett riddjur. Rollpersonen vet hur man utnyttjar riddjurets tyngd i en kavallerichock och får +1T6 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken.",
       "Gesäll": "Handling: Aktiv. Samklang mellan riddjur och ryttare öppnar för att ekipaget kan göra svepande attacker, det vill säga utnyttja en del av sin förflyttning innan en attack och resten efter. På så sätt fastnar ekipaget inte i närstrid men kan ändå utföra en närstridsattack. Fienden kan endast slå tillbaka med reaktioner, alternativt spendera förflyttning på att hinna ikapp ekipaget.",
-      "Mästare": "Handling: Reaktiv. Mästerryttaren kan utnyttja kavallerichock ännu bättre och får +1T10 i skada på en närstridsattack när riddjuret förflyttar sig innan attacken."
+      "Mästare": "Handling: Speciell. Mästerryttaren är med sitt riddjur som en enda varelse. Rollpersonen kan rida helt obehindrat genom de tätaste skogar och den svåraste terrängen utan att hindras avsevärt. I öppen terräng utnyttjar mästerryttaren dessutom djurets smidighet för att genomföra defensiva manövrar och kan med ett lyckat [Kvick] helt undvika frislag mot sitt riddjur när det passerar fiender i närstrid. Vidare så ökar skadebonusen om riddjuret förflyttar sig innan en närstrids attack till +1T10."
     }
   },
   {
@@ -662,59 +785,69 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Jägare",
+        "Utbygdsjägare"
       ],
       "test": [
         "Vaksam"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen har en stark intuition vilket låter denne slå Vaksam istället för Träffsäker vid attacker med avståndsvapen.",
       "Gesäll": "Handling: Passiv. Rollpersonens intuition har utökats och rollpersonen får beräkna sitt initiativ och Försvar med Vaksam istället för med Kvick.",
-      "Mästare": "Handling: Passiv. Rollpersonen kan röra sig och strida obehindrat, förblindad eller i kolmörker."
+      "Mästare": "Handling: Passiv. Rollpersonen kan röra sig och strida obehindrat, förblindad eller i kolmörker. Vidare så får rollpersonen använda Vaksam istället för träffsäker även vid attacker i närstrid."
     }
   },
   {
     "id": "form23",
     "namn": "Sköldkamp",
-    "beskrivning": "Rollpersonen är tränad i att utnyttja sin sköld på bästa sätt, och även i att slåss med en sköld på ett aktivt sätt. Bakom sköldens skydd kan rollpersonen generera stor kraft till sina hugg och med skölden kan anfall göras. Kombinationen är effektiv och en av anledningarna till att det är så vanligt med just denna beväpning bland både barbarer och ambriska krigare. Den så kallade bucklaren, den lätta sköld som vanligen nyttjas av bågskyttar, är för lätt för att kunna användas tillsammans med förmågan Sköldkamp. För sköldkampen måste krigaren bära rejäl sköld i trä eller stål, med vilken erforderlig kraft kan genereras.",
+    "beskrivning": "Rollpersonen är tränad i att utnyttja sin sköld på bästa sätt, och även i att slåss med en sköld på ett aktivt sätt. Bakom sköldens skydd kan rollpersonen generera stor kraft till sina hugg och med skölden kan anfall göras. Kombinationen är effektiv och en av anledningarna till att det är så vanligt med just denna beväpning bland både barbarer och ambriska krigare. Sköldar med kvaliteten 'Armfäst', som vanligen nyttjas av bågskyttar, är för lätt för att kunna användas tillsammans med förmågan Sköldkamp. För sköldkampen måste krigaren bära rejäl sköld i trä eller stål, med vilken erforderlig kraft kan genereras.",
     "taggar": {
       "typ": [
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Kapten",
+        "Säljsvärd"
       ],
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Skadan för vapenhandens attacker ökar med ett steg, alltså till 1T10 om rollpersonen slåss med ett enhandsvapen eller till 1T8 om attackerna sker med ett Kort vapen. Sköldkampsnovisen hanterar också sin sköld effektivare som defensivt verktyg, och får +2 i Försvar istället för det vanliga +1.",
       "Gesäll": "Handling: Reaktiv. Rollpersonen har lärt sig att kombinera vapen och sköld så väl att denne kan följa upp varje lyckat vapenangrepp med en sköldstöt mot målet. Attackslaget slås separat. Skadan för sköldstöten är 1T4 och fienden faller omkull om rollpersonen lyckas med [Stark←Stark].",
-      "Mästare": "Handling: Reaktiv. Skadan för sköldstöten ökas till 1T8, fienden faller omkull om rollpersonen lyckas med [Stark←Stark]."
+      "Mästare": "Handling: Reaktiv. Skölden blir en förlängning av kroppen. Rollpersonen hanterar nu sin sköld så väl att denne kan följa upp varje lyckat försvar med en sköldstöt mot målet. Stöten är nu också så pass kraftig att skadan ökar till 1T6."
     }
   },
   {
@@ -727,18 +860,27 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv"
+        "Tjuv",
+        "Ligist",
+        "Gillestjuv",
+        "Jägare",
+        "Häxjägare",
+        "Prisjägare",
+        "Monsterjägare"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -756,18 +898,23 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Gillestjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -782,7 +929,8 @@
     "beskrivning": "Endast tillgänglig för Drottningspion. Alkemins framsteg har i Ambria lett till stridstekniker baserade på alkemiska produkter. Särskilt drottningens hemliga agenter är kända för att utnyttja sådana taktiker för att slå ut rikets fiender eller för att fly från en knivig situation. Rollpersonen kan använda särskilda elixir för att förblinda och på andra sätt försvaga fiender. Notera att förmågan Sjätte sinne på mästarnivå gör att man kan agera normalt trots förblindningen. Sjätte sinne påverkar inte andra effekter av pyrotekniken.",
     "taggar": {
       "typ": [
-        "Förmåga"
+        "Förmåga",
+        "Elityrkesförmåga"
       ],
       "ark_trad": [
         "Drottningspion"
@@ -790,16 +938,19 @@
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Elementär"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Inre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Elementär"
+        }
       }
     },
     "nivåer": {
@@ -817,21 +968,26 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv"
       ],
       "test": [
-        "Stark", "Kvick"
+        "Stark",
+        "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Fallskada"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Fallskada"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Fallskada"
+        }
       }
     },
     "nivåer": {
@@ -849,21 +1005,26 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Krigare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Fri"
-        ],
-        "Gesäll": [
-          "Fri"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -881,21 +1042,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Ligist"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -913,22 +1078,28 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker"
+        "Krigare",
+        "Tjuv",
+        "Jägare",
+        "Häxjägare"
       ],
       "test": [
         "Stark",
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Inre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -946,18 +1117,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Säljsvärd",
+        "Ristad krigare",
+        "Vapenmästare",
+        "Tjuv",
+        "Jägare",
+        "Monsterjägare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -975,18 +1155,23 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Tjuv"
+        "Tjuv",
+        "Skattletare",
+        "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1004,21 +1189,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Svartkonst"
+        "Mystiker",
+        "Svartkonstnär"
       ],
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1036,21 +1225,26 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare, Mystiker, Tjuv"
+        "Tjuv",
+        "Skattletare",
+        "Jägare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1068,24 +1262,28 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Teurgi"
+        "Mystiker",
+        "Teurg"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Teurgen får ingen permanent Korruption av att lära sig teurgins krafter till novisnivå, och inte heller av att lära sig teurgins ritualer. Däremot har novisen inget skydd mot den temporära Korruption som följer av att använda krafter och ritualer.",
       "Gesäll": "Handling: Speciell. Teurgen får ingen permanent Korruption av att lära sig teurgins krafter till gesällnivå. Gesällen har också lärt sig att vila teurgins krafter och ritualer mot trons fundament så pass väl att de inte ger någon temporär Korruption då de kastas.",
-      "Mästare": "Handling: Speciell. Teurgen har nått insikt i det heligas väsen och gör 1T4 extra i effekt vid användandet av alla helande och heliga krafter, inklusive när dessa skadar styggelser och vandöda. Teurgen får ingen Korruption av att lära sig teurgins krafter till mästarnivå."
+      "Mästare": "Handling: Speciell. Teurgen har nått insikt i det heligas väsen, tärningsslag får 1T4 extra i effekt vid användandet av alla helande och heliga krafter, inklusive när dessa skadar styggelser och vandöda. Teurgen får ingen Korruption av att lära sig teurgins krafter till mästarnivå."
     }
   },
   {
@@ -1097,24 +1295,33 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Duellant",
+        "Vapenmästare",
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Rollpersonen hanterar säkert två vapen, ett i varje hand. Novisen slåss med ett enhandsvapen i huvudhanden och ett Kort vapen i andra handen. Rollpersonen gör två anfall mot samma mål, skada 1T8 respektive 1T6. Fienden försvarar sig separat mot de båda anfallen. Som passiv förmåga får novisen också en defensiv bonus på +1 till sitt Försvar, såklart endast då denne hanterar ett vapen i varje hand.",
-      "Gesäll": "Handling: Aktiv. Gesällen kan använda två enhandsvapen och då gör attackerna 1T8 vardera i skada.",
-      "Mästare": "Handling: Aktiv. Skadan för huvudhandens vapen är i mästarens hand 1T10 och andra handens vapen gör 1T8 i skada."
+      "Novis": "Handling: Aktiv. Rollpersonen hanterar skickligt två enhandsvapen samtidigt, ett i varje hand. Detta tillåter rollpersonen att slåss obehindrat med den sekundära handen utan de vanliga avdragen för ovana.",
+      "Gesäll": "Handling: Passiv. Gesällen är en veteran när det kommer till att strida med dubbla vapen. Den virvel av stål som rollpersonen skapar gör det svårt för fienden att försvara sig. Ett av anfallen varje runda gör +1T4 extra i skada.",
+      "Mästare": "Handling: Aktiv. Rollpersonen är så pass koordinerad i sina hugg att hen kan välja taktik i ögonblicket: låt skadan för tvillingattackerna räknas **separat** eller **summeras** som ett enda massivt anfall. Ett slag på Träffsäkerhet slås för varje attack. Om båda attackerna träffar gäller bonusskadan från Gesällnivån för **båda** attackerna, oavsett om skadan räknas separat eller summeras."
     }
   },
   {
@@ -1126,18 +1333,23 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Tjuv",
+        "Sappör"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -1155,21 +1367,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker"
+        "Krigare",
+        "Bärsärkare",
+        "Tjuv",
+        "Jägare"
       ],
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1193,16 +1411,19 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1219,16 +1440,25 @@
       "typ": [
         "Förmåga"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "ark_trad": [
+        "Krigare",
+        "Tjuv",
+        "Sappör"
+      ],
+      "test": [],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1249,16 +1479,19 @@
       "ark_trad": [
         "Templár"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1273,22 +1506,24 @@
     "beskrivning": "Tjuvar har inte mycket gemensamt mer än att de alla är rädda om sina skinn – antingen för att de gillar det som det är eller för att de med dårens envishet vill fortsätta mot sina mål. Denna vilja att leva vidare har resulterat i utvecklandet av olika sätt att undgå skada.",
     "taggar": {
       "typ": [
-        "Förmåga",
-        "Elityrkesförmåga"
+        "Förmåga"
       ],
       "ark_trad": [
         "Tjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Fri"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1309,22 +1544,25 @@
       "ark_trad": [
         "Vredesgardist"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
       "Novis": "Reaktiv. Rollpersonen drar kraft ur sitt eget spillda blod. När Tålighet når hälften får rollpersonen en andra chans att lyckas med alla anfallsslag i närstrid.",
       "Gesäll": "Reaktiv. Blodkämpens hugg blir värre i takt med egna skador; när Tåligheten går ner under hälften ökar skadan på alla rollpersonens attacker med 1T8.",
-      "Mästare": "Reaktiv. Blodkämpen helas av fiendens spillda blod, hälften av den skada som rollpersonen åsamkar fiender i närstrid återfås som läkt Tålighet, avrundat nedåt."
+      "Mästare": "Reaktiv. Blodkämpen helas av fiendens spillda blod, hälften av den skada som rollpersonen åsamkar fiender i närstrid återfås som läkt Tålighet, avrundat uppåt."
     }
   },
   {
@@ -1336,21 +1574,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Gillestjuv",
+        "Jägare",
+        "Monsterjägare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1368,21 +1612,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Runsmed"
       ],
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1402,16 +1650,19 @@
       "ark_trad": [
         "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1429,21 +1680,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Svartkonst"
+        "Tjuv",
+        "Före detta kultist"
       ],
       "test": [
         "Viljestark"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1461,21 +1716,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Gillestjuv"
       ],
       "test": [
         "Kvick"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1498,16 +1757,19 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1519,7 +1781,7 @@
   {
     "id": "form50",
     "namn": "Manteldans",
-    "beskrivning": "Endast tillgänglig för Gentlemannatjuv. Bland Ambrias fäktare ses sköldar som klumpiga och barbariska, vilket gjort parerdolken till ett mer fashionabelt försvarsverktyg. En annan skola har tagit det förfinade försvaret ett steg längre och utvecklat eleganta tekniker som förvandlar fäktarens mantel till en dansande sköld. Rollpersonen kan utnyttja sin fria hand och sin mantel eller liknande tygstycke för att effektivt försvara sig. Tygstycket blir i rollpersonens händer en svepande och hypnotisk sköld som till och med kan förvirra eller tillfälligt förblinda en fiende.",
+    "beskrivning": "Endast tillgänglig för Gentlemannatjuv. I de fina salongernas skuggor och grändernas mörker är en mantel inte bara ett plagg, utan ett redskap för vilseledning. Gentlemannatjuven använder tyget för att dölja sina avsikter, förvilla blicken och dölja stålet tills det är för sent. Genom att röra sig med beräknad diskretion blir manteln en danspartner som skyddar bäraren och förblindar fienden.",
     "taggar": {
       "typ": [
         "Förmåga",
@@ -1528,22 +1790,28 @@
       "ark_trad": [
         "Gentlemannatjuv"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "test": [
+        "Diskret"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Passiv. Rollpersonens mantel, eller improviserat tygstycke hållet i en hand, ger +1 Försvar.",
-      "Gesäll": "Aktiv. Manteln slås över fiendens ögon vilket gör att målet tillfälligt förblindas om rollpersonen lyckas med attacken. Rollpersonen får direkt ett frislag mot den förblindade fienden, en attack som fienden förblindad måste försvara sig mot. Även andra i offrets närhet har fördel av att målet är förblindat under resten av rundan.",
-      "Mästare": "Aktiv. Manteln blir i mästarens händer en piska med snärjande kvaliteter, vilket gör att den kan nyttjas som ett fångstmedel; för detaljer se kvaliteten Snärjande på sidan 118."
+      "Novis": "Passiv. Rollpersonen sveper manteln omkring sig för att sudda ut sin siluett och förvirra fientliga mystiker. När rollpersonen har en mantel eller liknande tygstycke i ena handen kan denne använda Diskret i stället för Viljestark vid försvar mot mystiska krafter.",
+      "Gesäll": "Aktiv. Rollpersonen använder manteln för att skapa en ridå framför fiendens ögon. Med ett lyckat slag mot [Diskret←Vaksam] skyms fiendens sikt i det avgörande ögonblicket. Fienden räknas som förblindad under resten av rundan och rollpersonen får omedelbart utföra ett frislag mot målet (attacken görs med övertag som följd av förblindningen).",
+      "Mästare": "Reaktiv. Rollpersonen låter manteln leva sitt eget liv, snärjande och bindande likt en orm i händerna på en mästare. När en fiende missar en närstridsattack mot rollpersonen kan denne som en reaktion kasta manteln för att låsa fiendens vapen eller lemmar. Ett lyckat slag mot [Diskret←Kvick] innebär att fienden blir Snärjd (se kvaliteten Snärjande, s. 118) av tyget."
     }
   },
   {
@@ -1555,23 +1823,29 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Symbolism, Krigare"
+        "Krigare",
+        "Ristad krigare",
+        "Mystiker",
+        "Symbolist"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
       "Novis": "Reaktiv. Runtatueringen ger 1T4 i extra Bepansring mot en träffande attack – närhelst runkrigaren så önskar. Rustningseffekten ger nämligen en temporär Korruption per användande. Runkrigaren måste bestämma sig för att aktivera tatueringen samtidigt som eventuellt annat skydd slås. Dessutom skyddar tecknen bäraren mot väder och vind som om de var rejäla kläder.",
-      "Gesäll": "Reaktiv. Runtatueringen dras till skador på bäraren kropp och glöder läkande kring såren. Regenereringen läker ett Tålighet varje runda; varje läkt Tålighet genom tatueringen ger också en temporär Korruption. Den tatuerade krigaren kan avbryta regenereringen närhelst denne så önskar.",
+      "Gesäll": "Fri. Runtatueringen dras till skador på bäraren kropp och glöder läkande kring såren. Rollpersonen kan som fri handling låta tatueringen läka Tålighet; men varje läkt Tålighet genom tatueringen ger också en temporär Korruption.",
       "Mästare": "Reaktiv. Runtatueringen ger krigarens attacker extra kraft. När krigaren träffar en fiende och så önskar flyter tatueringen glödande ut över vapnet och ger offret 1T4 extra i skada, för samma mängd temporär Korruption till den tatuerade krigaren."
     }
   },
@@ -1587,22 +1861,25 @@
       "ark_trad": [
         "Järnsvuren"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
       "Novis": "Passiv. Rollpersonen kan dela upp sin förflyttning och göra en del av sin förflyttning före sin stridshandling och en del efter – detta i syfte att utnyttja terrängens skottfält och skydd maximalt. Rollpersonen drar fortfarande på sig frislag av fiender om den uppdelade förflyttningen leder in den järnsvurne på närstridsavstånd.",
       "Gesäll": "Reaktiv. Rollpersonen kan fritt växla vapen som en del av sin stridshandling. Detta gäller enbart byte av vapen, det är inte en extra förflyttningshandling som kan användas till annat. Den järnsvurne kan exempelvis starta med två vapen i händerna, förflytta sig en del av sin förflyttning, och som stridshandling byta till pilbåge och anfalla med den samt därefter byta tillbaka till två vapen. Slutligen görs resten av förflyttningen.",
-      "Mästare": "Reaktiv. Rollpersonen får nu en andra chans att lyckas med alla Försvar mot frislag som kommer av att dra sig ur närstrid. Varje sådant frislag mot rollpersonen låter dessutom den järnsvurne göra ett frislag mot anfallaren. Den järnsvurne får fritt byta vapen för dessa riposter, dvs. välja det eller de vapen som är lämpligast att göra kontringen med."
+      "Mästare": "Reaktiv. Rollpersonen växlar sömlöst mellan avståndsvapen och närstrid. Om den järnsvurne under sin runda har genomfört ett anfall med antingen avståndsvapen eller närstridsvapen får hen utföra en extra aktiv handling för ett anfall med den andra vapentypen. Den extra aktiva handlingen får inte användas till något annat än detta anfall i närstrid eller på avstånd."
     }
   },
   {
@@ -1616,17 +1893,27 @@
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
-      }
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
+      },
+      "ark_trad": [
+        "Krigare",
+        "Runsmed",
+        "Tjuv",
+        "Sappör",
+        "Jägare"
+      ]
     },
     "nivåer": {
       "Novis": "Handling: Speciell. Rollpersonen kan med ett lyckat Listig göra ett novissmide. Rollpersonen kan också med ett lyckat Listig laga en skadad rustning eller anpassa en rustning för större och mindre varelser. Novissmiden omfattar alla vanliga vapen och rustningar, inklusive dem med kvaliteterna Kort och Långt. Inga andra kvaliteter kan smidas av novissmeden.",
@@ -1645,16 +1932,19 @@
       "ark_trad": [
         "Jägare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1672,18 +1962,24 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare",
+        "Jägare",
+        "Prisjägare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Inre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -1703,22 +1999,25 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften kostar enbart en temporär Korruption att använda. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där; en gåva knuten till Ritualist (alltså då samtliga ritualer) eller till Häxsyn gör att dessa istället kostar en temporär Korruption att använda. Även särdrag som Eonernas visdom eller Spökvandring kan väljas. Signaturkraften påverkar inte eventuell kostnad i permanent Korruption för att lära sig en kraft utanför en mystisk tradition, enbart mängden temporär Korruption som ges vid dess användande.",
-      "Gesäll": "Aktiv. Den som har odlat sin starka gåva till gesällnivå använder hela sin Viljestark som Korruptionströskel, istället för halva som annars är brukligt. Total förstyggelse infaller i så fall inte förrän den totala korruptionen uppgår till Viljestark ×2",
-      "Mästare": "Speciell. Mästarens starka gåva låter rollpersonen använda valfri mystisk kraft, dock enbart på novisnivå. Framgångsslagen har en andra chans att misslyckas och användandet ger 1T8 temporär Korruption. Alla mystiska krafter kan användas, oavsett vilken tradition de tillhör."
+      "Novis": "Speciell. Redan på novisnivå låter den starka gåvan rollpersonen använda hela sin Viljestark som korruptionströskel i stället för halva. Total förstyggelse infaller först när den totala korruptionen uppgår till Viljestark +5",
+      "Gesäll": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften får sin korruptionstärning höjd med en nivå (till minst 1T4), men får också lägga till extra 1T4 till kraftens effekt. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där.",
+      "Mästare": "Speciell. Mästarens starka gåva låter rollpersonen använda valfri mystisk kraft, dock enbart på novisnivå. Användandet ger dock 1T8 temporär Korruption. Alla mystiska krafter kan användas, oavsett vilken tradition de tillhör (exklusive elityrkesförmågor)."
     }
   },
   {
@@ -1730,21 +2029,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1765,16 +2068,19 @@
       "ark_trad": [
         "Stavmagiker"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Elementär"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1786,59 +2092,67 @@
   {
     "id": "form59",
     "namn": "Stridsgisslare",
-    "beskrivning": "Bland ambriska riddare och deras vapendragare har kättingvapens effektivitet länge varit känd. På slagfältet har nya sätt att utnyttja de ledade vapnen framkommit, och dessa lärdomar har sedan förts vidare till andra krigare. Rollpersonen har studerat de snärjande kättingvapnens hemligheter och har lärt sig att utnyttja deras styrkor på bästa sätt.",
+    "beskrivning": "Bland ambriska riddare och deras vapendragare har kättingvapens effektivitet länge varit känd, men på slagfältet har nya, dödliga tekniker vuxit fram. Rollpersonen har studerat de ledade vapnens oförutsägbara rörelser och lärt sig att utnyttja centrifugalkraften för att krossa och snärja sina fiender.",
     "taggar": {
       "typ": [
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Passiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Förflyttning",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Passiv. I rollpersonens händer får ett ledat vapen också kvaliteten Snärjande och kan därmed användas för att snärja en fiende istället för att låta det slå runt försvaret.",
-      "Gesäll": "Passiv. Stridsgisslaren kan lägga tryck också i ledade vapens sekundära skada och dessa kringgående attacker gör 1T8 i skada istället för 1T6.",
-      "Mästare": "Aktiv. Gisselmästaren kan låta gisslet vina och fortsätta göra det även om den träffar ett mål. Den svepande attacken kan slå mot varje fiende som mästaren möter i närstrid. Varje attack slås separat."
+      "Novis": "Handling: Passiv. Rollpersonen vet hur kedjan ska svingas för att låsa fiendens lemmar. Vapen med kvaliteten Ledat får i rollpersonens händer även kvaliteten Snärjande och kan därmed användas för att fånga in en fiende istället för att bara slå runt dennes försvar.",
+      "Gesäll": "Handling: Förflyttning. Rollpersonen svingar upp en våldsam fart på sitt vapen innan anfallet. Om rollpersonen spenderar sin förflyttningshandling till att veva igång sitt ledade vapen gör den efterföljande attacken +1T6 i skada. Attacken måste ske i samma runda som förflyttningshandlingen offras.",
+      "Mästare": "Handling: Passiv. Rollpersonen är så van vid stridsgisslets nyckfullhet att även parerade anfall kan tränga igenom. Om en fiende lyckas med sitt försvarsslag mot ett ledat vapen, men försvarstärningen visar ett udda resultat (vilket aktiverar kvaliteten Ledat), räknas attacken ändå som en träff. Vid en sådan träff sänks dock effekten på alla bonustärningar för skada (från förmågor eller särdrag) till 1T4."
     }
   },
   {
     "id": "form60",
     "namn": "Svärdshelgon",
-    "beskrivning": "Bland Ambrias duellister finns det vissa som uppnått en nästa mystisk symbios med sitt duellsvärd och hanterar det som om det var en förlängning av fäktarens kropp och själ. Svärdshelgonets tekniker kan endast användas med duellsvärd (eller annat svärd med kvaliteten Balanserad), ensamt eller tillsammans med parerdolk. Förmågan Manteldans kan också användas parallellt med svärdet, då istället för parerdolk. Förmågan kan inte kombineras med Tvillingattack för ytterligare ökad skada.",
+    "beskrivning": "Vare sig de skolats i Yndaros förnäma fäktningssalar eller härdats under Davokars mörka trädkronor, finns det krigare som blivit ett med sitt stål. För dessa svärdshelgon är klingan inte ett verktyg, utan en förlängning av kroppen – en lem av kallt järn. Med en dödlig elegans rör de sig genom slagfältets kaos, där barbarernas yxor och ridderskapets tunga hammare framstår som klumpiga redskap för slakt. I deras händer sjunger enhandssvärdet en egen sång, oavsett om det förs ensamt, pareras med sköld eller understöds av en dolk.",
     "taggar": {
       "typ": [
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Passiv. Rollpersonen har börjat inse fördelarna med att slåss med ett balanserat svärd i ena handen och en parerdolk i andra. Skadan för duellsvärdet ökar till 1T10 istället för normala 1T8.",
-      "Gesäll": "Reaktiv. Rollpersonen kan utföra en blixtsnabb ripost. Vid ett lyckat försvar per runda får rollpersonen ett frislag mot anfallaren.",
-      "Mästare": "Reaktiv. Mästaren kan utföra en rad blixtsnabb riposter. Rollpersonen får göra ett frislag mot anfallaren vid varje lyckat försvar, ingen begränsning i antal per runda. Som ett passivt tillägg ökar också skadan för det balanserade svärdet till 1T12."
+      "Novis": "Handling: Reaktiv.\nSvärdsmästarens klinga flyter som vatten mellan fienderna. En gång per runda, om rollpersonen träffar en fiende med en attack får hen omedelbart göra en fri attack mot en annan fiende inom räckvidd.",
+      "Gesäll": "Handling: Passiv.\nRollpersonen har lärt sig att utnyttja svärdets balans och skärpa till fullo för att hitta blottor i fiendens gard. Anfall utförda med ett enhandssvärd gör +1T4 i skada. Dock bara ett anfall per runda.",
+      "Mästare": "Handling: Aktiv.\nRollpersonen utför en blixtsnabb kombination, en 'dubbelstöt', mot en och samma fiende. Om rollpersonen träffar med två anfalsslag har svärdet med första anfallet öppnat en blotta i fiendens bepansring. Varpå det andra slaget kan slå djupt i en vital del och ignorera målets bepansring. Extraskadan från gesällnivån ökar till 1T6 för det andra slaget."
     }
   },
   {
@@ -1850,18 +2164,22 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker"
+        "Mystiker",
+        "Symbolist"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1879,21 +2197,29 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv"
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Gillestjuv",
+        "Jägare",
+        "Prisjägare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -1911,21 +2237,28 @@
         "Förmåga"
       ],
       "ark_trad": [
+        "Tjuv",
+        "Ligist",
+        "Skattletare",
+        "Gillestjuv",
         "Jägare"
       ],
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1944,18 +2277,22 @@
         "Mystisk tradition"
       ],
       "ark_trad": [
-        "Trollsång"
+        "Mystiker",
+        "Trollsångare"
       ],
-      "handling": {
-        "Novis": [
-          "Speciell"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -1973,53 +2310,64 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Vapenmästare"
       ],
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Passiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Aktiv. Det allra första en yxkonstnär lär sig är att stöta med yxans kortända, för att med smärta distrahera motståndare inför kommande krafthugg. Stöten gör 1T6 i skada och ett lyckat [Träffsäker←Viljestark] bedövar den fienden; om fienden bedövas får yxkonstnären direkt ett frislag mot målet.",
-      "Gesäll": "Aktiv. Det andra yxkonstnären utvecklar är det mäktiga dubbelhugget: att slå med yxans ena sida och sedan omedelbart följa upp det med ett hugg med andra sidan. Rollpersonen gör två attacker med en stridshandling, båda med en nivå lägre skadetärning än annars.",
-      "Mästare": "Passiv. Yxmästaren återvänder till yxandets kärna, det mäktiga hugget. Varje hugg med yxans egg gör 1T4 extra i skada, dock maximalt ett hugg per stridshandling."
+      "Novis": "Passiv. Yxans tyngd krossar allt motstånd. Varje gång karaktären träffar en fiende med en yxa och gör skada som överstiger målets Smärtgräns, slår målet två slag på smärtgränstabellen.",
+      "Gesäll": "Passiv. Yxmästaren återvänder till yxandets kärna, hugget. Varje hugg med yxans egg gör 1T4 extra i skada. Dock bara ett hugg per runda.",
+      "Mästare": "Reaktiv. Det första yxkonstnären utvecklar är dubbelhugget: att slå med yxans ena sida och sedan omedelbart följa upp det med ett hugg med andra sidan. En gång per runda får rollpersonen gör två attacker med en stridshandling, båda med en nivå lägre skadetärning än annars."
     }
   },
   {
     "id": "form66",
     "namn": "Reningskraft",
-    "beskrivning": "Krigare som tränat sina kroppar till det yttersta kan använda rå styrka för att driva undan korruption från sitt inre. Genom disciplin och fysisk kraft renar rollpersonen sin kropp även mitt i stridens hetta.",
+    "beskrivning": "Krigare som tränat sina kroppar till det yttersta kan använda rå styrka för att driva undan korruption från sitt inre. Genom disciplin och fysisk kraft renar rollpersonen sin kropp även mitt i stridens hetta. Förmågan kommer dock med ett pris, för varje nivå av kraften som karaktären har får den 1 permanent korruption.",
     "taggar": {
       "typ": [
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Riddare",
+        "Jägare",
+        "Häxjägare",
+        "Monsterjägare"
       ],
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -2039,22 +2387,25 @@
       "ark_trad": [
         "Mystiker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. När effekten av en mystisk kraft har bestämts, får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om effekttärningarna och välja det mest gynnsamma resultatet.",
-      "Gesäll": "Handling: Reaktiv. Efter ett misslyckat försök att aktivera en mystisk kraft, kan rollpersonen ta emot 1T4 temporär Korruption och genast försöka på nytt.",
-      "Mästare": "Handling: Reaktiv. När en mystisk kraft har aktiverats kan rollpersonen välja att förstärka den bortom det normala genom att släppa in mer av världens råa och fördärvade energi. Effekten av kraften ökar med en tärning (valfri mellan 1T4 och 1T12). Samtidigt drabbas rollpersonen av temporär korruption motsvarande hälften av tärningskastet, avrundat uppåt."
+      "Novis": "Handling: Reaktiv. En gång per runda, efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet.",
+      "Gesäll": "Handling: Reaktiv. När mystikern har påverkat ett enskilt mål med en mystisk kraft kan mystikern välja att ådra sig en temporär korruption för att slå om alla effekttärningar och välja det högsta resultatet.",
+      "Mästare": "Handling: Reaktiv.  När mystikern har påverkat ett enskilt mål med en mystisk kraft kan denne med ett lyckat [Viljestark] välja att ådra sig 1T4 temporär korruption igen för att låta magin eka. Kraften slår omedelbart till mot samma mål igen, men med halverade tärningar (avrundat uppåt)."
     }
   },
   {
@@ -2066,18 +2417,25 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Duellant",
+        "Jägare",
+        "Häxjägare",
+        "Prisjägare"
       ],
-      "handling": {
-        "Novis": [
-          "Aktiv"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -2087,41 +2445,9 @@
     }
   },
   {
-  "id": "form69",
-  "namn": "Tvåhandsfiness",
-  "beskrivning": "Många som slåss med tvåhandsvapen förlitar sig på redskapets tyngd men det finns också de som övar upp förmågan att manövrera väldiga tvåhandssvärd med verklig finess. Den som behärskar denna förmåga tillhör den kategorin och kan nyttja vapnets längd för att bättre bekämpa alla sorters motståndare.",
-  "taggar": {
-    "typ": [
-      "Förmåga"
-    ],
-    "ark_trad": [
-      "Krigare"
-    ],
-    "test": [
-      "Stark"
-    ],
-    "handling": {
-      "Novis": [
-        "Passiv"
-      ],
-      "Gesäll": [
-        "Reaktiv"
-      ],
-      "Mästare": [
-        "Aktiv"
-      ]
-    }
-  },
-  "nivåer": {
-    "Novis": "Handling: Passiv. Tvåhandssvärd får kvaliteten Långt i novisens händer, och kan därmed användas tillsammans med förmågan Stångverkan.",
-    "Gesäll": "Handling: Reaktiv. Efter ett lyckat Försvar per runda, slå [Stark←Stark] för att med svärdet trycka bort fienden ur närstrid. Fienden tar 1T6 i skada, pressas ett par meter bakåt och måste återigen möta kvaliteten Långt.",
-    "Mästare": "Handling: Aktiv. Mästarens flödande hugg räknas som en kedja av attacker mot fiender på närstridsavstånd – om en fiende träffas görs en attack mot nästa, och så vidare tills en attack misslyckas."
-  }
-},
-  {
-    "id": "form70",
-    "namn": "Pansarbrottning",
-    "beskrivning": "Rollpersonen har övat upp förmågan att utnyttja sin rustning på bästa sätt. Förmågan kräver minst medeltung rustning för att kunna användas men kan vara mycket effektiv, inte minst mot bepansrade motståndare samt när användaren förflyttar sig över stridsskådeplatsen.",
+    "id": "form69",
+    "namn": "Tvåhandsfiness",
+    "beskrivning": "Många som slåss med tvåhandsvapen förlitar sig på redskapets tyngd men det finns också de som övar upp förmågan att manövrera väldiga tvåhandssvärd med verklig finess. Den som behärskar denna förmåga tillhör den kategorin och kan nyttja vapnets längd för att bättre bekämpa alla sorters motståndare.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -2132,16 +2458,57 @@
       "test": [
         "Stark"
       ],
-      "handling": {
-        "Novis": [
-          "Förflyttning"
-        ],
-        "Gesäll": [
-          "Aktiv"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Tvåhandssvärd får kvaliteten Långt i novisens händer, och kan därmed användas tillsammans med förmågan Stångverkan.",
+      "Gesäll": "Handling: Reaktiv. Efter ett lyckat Försvar per runda, slå [Stark←Stark] för att med svärdet trycka bort fienden ur närstrid. Fienden tar 1T6 i skada, pressas ett par meter bakåt och måste återigen möta kvaliteten Långt.",
+      "Mästare": "Handling: Aktiv. Mästarens flödande hugg räknas som en kedja av attacker mot fiender på närstridsavstånd – om en fiende träffas görs en attack mot nästa, och så vidare tills en attack misslyckas."
+    }
+  },
+  {
+    "id": "form70",
+    "namn": "Pansarbrottning",
+    "beskrivning": "Rollpersonen har övat upp förmågan att utnyttja sin rustning på bästa sätt. Förmågan kräver minst medeltung rustning för att kunna användas men kan vara mycket effektiv, inte minst mot bepansrade motståndare samt när användaren förflyttar sig över stridsskådeplatsen.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Riddare"
+      ],
+      "test": [
+        "Stark"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Förflyttning",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -2159,21 +2526,27 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Krigare",
+        "Duellant",
+        "Kapten",
+        "Vapenmästare"
       ],
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Speciell"
-        ],
-        "Mästare": [
-          "Aktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
       }
     },
     "nivåer": {
@@ -2192,21 +2565,28 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv"
+        "Duellant",
+        "Riddare",
+        "Vapenmästare",
+        "Tjuv",
+        "Bedragare"
       ],
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
@@ -2225,21 +2605,27 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv"
+        "Kapten",
+        "Jägare",
+        "Utbygdsjägare",
+        "Prisjägare"
       ],
       "test": [
         "Träffsäker"
       ],
-      "handling": {
-        "Novis": [
-          "Reaktiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Speciell"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Yttre fysisk"
+        }
       }
     },
     "nivåer": {
@@ -2248,58 +2634,84 @@
       "Mästare": "Handling: Speciell. Rollpersonens målmärkning är så effektiv att effekterna för novis och gesällnivå gäller även för dess allierade, novisnivåns bonusskada ökar med varje allierad som lyckas som lyckats med en attack mot målet medans målmärket är aktivt."
     }
   },
-{
-  "id": "form74",
-  "namn": "Samlingstecken",
-  "beskrivning": "På slagfältet krävs tydliga signaler – en kort fras, en handrörelse eller ett hornstöt som samlar splittrade kämpar mot samma mål. Rollpersonen har lärt sig att känna igen och använda dessa tecken för att samordna angrepp och förvandla en rad enskilda attacker till en samlad, mer dödlig offensiv. Krigare memorerar mönster, mystiker binder rytm och tjuvar läser öppningar. Tecknet styr fokus, stärker efterföljande slag och gör kombinerade attacker farligare än isolerade.",
-  "taggar": {
-    "typ": [
-      "Förmåga"
-    ],
-    "ark_trad": [
-      "Krigare"
-    ],
-    "test": [
-      "Övertygande"
-    ],
-    "handling": {
-      "Novis": [
-        "Aktiv"
+  {
+    "id": "form74",
+    "namn": "Samlingstecken",
+    "beskrivning": "På slagfältet krävs tydliga signaler – en kort fras, en handrörelse eller ett hornstöt som samlar splittrade kämpar mot samma mål. Rollpersonen har lärt sig att känna igen och använda dessa tecken för att samordna angrepp och förvandla en rad enskilda attacker till en samlad, mer dödlig offensiv. Krigare memorerar mönster, mystiker binder rytm och tjuvar läser öppningar. Tecknet styr fokus, stärker efterföljande slag och gör kombinerade attacker farligare än isolerade.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
       ],
-      "Gesäll": [
-        "Reaktiv"
+      "ark_trad": [
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Riddare",
+        "Jägare",
+        "Häxjägare",
+        "Prisjägare",
+        "Monsterjägare"
       ],
-      "Mästare": [
-        "Reaktiv"
-      ]
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande ← Försvar göra ett anfall som dirigerar handlingar mot ett samlingsmål. När två andra allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
+      "Gesäll": "Handling: Reaktiv. Om den andra aktiva handlingen av en allierad denna runda lyckas mot samlingsmålet får du utse en allierad inom räckvidd som får göra ett frislag mot samma mål (närstrid om inom närstridsavstånd, annars avståndsvapen om laddat).",
+      "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets Bepansring."
     }
   },
-  "nivåer": {
-    "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat slag mot Övertygande ← Försvar göra ett anfall som dirigerar handlingar mot ett samlingsmål. När två andra allierade riktar sina aktiva handlingar mot samlingsmålet under samma runda får den andra handlingen +5 på sitt framgångsslag.",
-    "Gesäll": "Handling: Reaktiv. Om den andra aktiva handlingen av en allierad denna runda lyckas mot samlingsmålet får du utse en allierad inom räckvidd som får göra ett frislag mot samma mål (närstrid om inom närstridsavstånd, annars avståndsvapen om laddat).",
-    "Mästare": "Handling: Reaktiv. Om frislaget från gesällnivån av denna förmåga träffar målet så ignorerar nästa aktiva anfall målets Bepansring."
-  }
-},
-{
-  "id": "form75",
-  "namn": "Koreograferad strid",
-  "beskrivning": "Striden följer ett nummer: steg, sväng, snitt. Rollpersonen tränar fotarbete och rytmisk tajming; kroppen sätter tempot och klingan följer takten.",
-  "taggar": {
-    "typ": ["Förmåga"],
-    "ark_trad": ["Krigare", "Tjuv"],
-    "test": ["Kvick"],
-    "handling": {
-      "Novis": ["Speciell"],
-      "Gesäll": ["Reaktiv"],
-      "Mästare": ["Reaktiv"]
+  {
+    "id": "form75",
+    "namn": "Koreograferad strid",
+    "beskrivning": "Striden följer ett nummer: steg, sväng, snitt. Rollpersonen tränar fotarbete och rytmisk tajming; kroppen sätter tempot och klingan följer takten.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Järnsvuren"
+      ],
+      "test": [
+        "Kvick"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ignorerar bepansring"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
+      "Gesäll": "Handling: Reaktiv. En gång per runda, när en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
+      "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
     }
   },
-  "nivåer": {
-    "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
-    "Gesäll": "Handling: Reaktiv. När en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
-    "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
-  }
-},
   {
     "id": "form76",
     "namn": "Kallsinne",
@@ -2310,28 +2722,479 @@
       ],
       "ark_trad": [
         "Mystiker",
-        "Tjuv"
+        "Ordensmagiker",
+        "Skattletare"
       ],
       "test": [
         "Listig"
       ],
-      "handling": {
-        "Novis": [
-          "Passiv"
-        ],
-        "Gesäll": [
-          "Reaktiv"
-        ],
-        "Mästare": [
-          "Reaktiv"
-        ]
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
       }
     },
     "nivåer": {
       "Novis": "Handling: Passiv. Rollpersonen låter intellektet styra över driften av mystik och parerar sinnespåverkan med kylig rationalitet. Rollpersonen får alltså använda Listig i stället för Viljestark, exempelvis vid användandet av mystiska krafter, koncentrationsslag och motstånd mot sinnes- och viljepåverkan; dock inte som grund för korruptionströskel.",
-      "Gesäll": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett slag i Listig-slag under en scen får hen en kumulativ +1 på kommande Listig-slag riktade mot just den effekten. Bonusen varar till scenens slut.",
-      "Mästare": "Handling: Reaktiv. Den kalla rationaliteten biter i själen och skärper fokuset till perfektion; men ibland kan det vara nödvändigt att växla en liten dos korruption mot ett ännu skarpare fokus. Varje gång rollpersonen slår ett slag mot Listig får hen samtidigt slå 1T4 och subtrahera utfallet från framgångsslaget. Tärningsutfallet kan ökas genom att rollpersonen frivilligt tar lika mycket temporär Korruption. Denna effekt kan dock inte användas för att hindra kritiskt misslyckande."
+      "Gesäll": "Handling: Passiv. Rollpersonens logik kan appliceras på det övernaturliga. Rollpersonen får använda Listig i stället för andra attribut för att aktivera och använda Artefakter och Mystiska skatter.",
+      "Mästare": "Handling: Reaktiv. När logiken spricker, slår sinnet om till ett torrt, metodiskt felsökande; ritualer, texter, språk och illusioner bryts ned till mer hanterbara delar. Varje gång rollpersonen misslyckas med ett slag i Listig under en scen får hen slå ett omodifierat slag på [Listig]. Om slaget lyckas identifieras felkällan och nästa försök mot samma effekt lyckas automatiskt."}
+  },
+  {
+    "id": "form77",
+    "namn": "Miljökämpe",
+    "beskrivning": "Där andra ser hinder ser rollpersonen möjligheter. En nedfallen stam, en lös gatsten, en pelare eller en svajande ljuskrona är lika mycket vapen som svärd och sköld. Rollpersonen är tränad i att blixtsnabbt läsa sin omgivning och utnyttja den för att förvirra, skydda sig mot eller nedgöra sina fiender med oväntade manövrar. Notera att denna förmåga använder karaktärsdraget Diskret om rollpersonen är Gentlemannatjuv, och Kvick om rollpersonen är Järnsvuren.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Gentlemannatjuv",
+        "Järnsvuren"
+      ],
+      "test": [
+        "Kvick",
+        "Diskret"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Rollpersonen är van vid att strida med miljön som hjälpmedel och kan använda lösa föremål eller terräng (grenar, krukor, möbler) för att störa en fiende i närstrid. Genom ett lyckat slag mot [Kvick/Diskret←Vaksam] skapar rollpersonen ett momentant hinder som ger fienden två chanser att misslyckas med sitt nästa försvar.",
+      "Gesäll": "Handling: Reaktiv. Rollpersonen är expert på att placera hinder mellan sig själv och fienden i sista sekunden. När rollpersonen blir mål för en projektilbaserad mystisk kraft eller avståndsanfall och det finns objekt eller terräng inom räckvidd, kan hen slå ett slag mot [Kvick/Diskret←Vaksam]. Vid lyckat slag manövrerar rollpersonen så att attacken träffar miljön istället för rollpersonen. Misslyckas slaget får rollpersonen försvara sig mot anfallet som vanligt.",
+      "Mästare": "Handling: Aktiv. Rollpersonen använder miljön för att skapa dödligt momentum i sina anfall—springer längs väggar, svingar sig i grenar eller studsar mot pelare för att anfalla från oväntade vinklar. Rollpersonen får med ett lyckat slag i Kvick/Diskret utföra en förflyttning inom närstrid, utan att dra på sig frislag, och en närstridsattack i samma handling. Anfallet får +1T6 i skada utöver eventuellt övertag som skapas."
+    }
+  },
+  {
+    "id": "form78",
+    "namn": "Vinkelskytte",
+    "beskrivning": "I de täta skogarna kring Karvosti och i Tistla Fästes trånga gränder är en rak siktlinje sällan en garanti för träff. Rollpersonen har lärt sig att utnyttja vinklar, distraktioner och fiendens fokus på annat för att placera sina pilar där de gör mest skada. Det är en stridskonst som premierar tålamod och list framför rå styrka eller hastighet, och som ofta utövas av jägare som fäller byten långt större än de själva.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Tjuv",
+        "Ligist",
+        "Gillestjuv",
+        "Jägare",
+        "Utbygdsjägare",
+        "Prisjägare"
+      ],
+      "test": [
+        "Träffsäker"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ignorerar bepansring"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Yttre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Rollpersonen vet att utnyttja fiendens blinda vinklar. Skytten räknas ha Övertag vid attacker med avståndsvapen så länge hen befinner sig i fiendens flank eller rygg. Denna positionering räknas dock inte som att skytten flankerar fienden i syfte att ge allierade Övertag.",
+      "Gesäll": "Handling: Passiv. Skytten siktar mot mjuka delar och blottor som uppstår när fienden är distraherad. Avståndsattacker som görs med Övertag ignorerar 1T4 av fiendens bepansring.",
+      "Mästare": "Handling: Passiv. Skytten läser stridens kaos och hittar öppningar där inga borde finnas. Skytten räknas alltid ha Övertag mot fiender som är engagerade i närstrid med skyttens allierade, oavsett positionering. Dessutom ökar skadebonusen vid Övertag till +1T6."
+    }
+  },
+  {
+    "id": "form79",
+    "namn": "Spjutdans",
+    "beskrivning": "Spjutet är mer än en spetsig påk; i händerna på en spjutdansare är det en förlängning av kroppen, en balansstång och en dödlig huggorm i ett. Denna stridskonst, som sägs ha sitt ursprung bland de smidiga alverna i Davokars djup och de akrobatiska krigarna som fortfarande vandrar ökenområdena till öster om Ravennerna. Spjutdansen betonar rölighet och precision framför råstyrka. En spjutdansare står aldrig stilla; de flyter runt sina motståndare, använder vapnets längd för att hålla fienden på avstånd och dess skaft för att svinga sig ur farans väg.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare",
+        "Vapenmästare",
+        "Jägare"
+      ],
+      "test": [
+        "Kvick"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Yttre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv.\n Rollpersonen rör sig som vatten runt sitt spjut och använder dess räckvidd och flöde för att styra sina attacker med en dödlig precision. \n Rollpersonen får använda sig av “Kvick” istället för “Träffsäker” för att styra sina attacker. ",
+      "Gesäll": "Handling: Aktiv\n Rollpersonen virvlar sitt vapen i dödliga bågar och slår med en otrolig hastighet \n Rollpersonen kan innan ett anfall slå [Kvick←Kvick] för att med spjutet tvinga fiender bort fienden ur närstrid. Fienden pressas ett par meter bakåt och måste återigen möta kvaliteten Långt. Om slaget lyckas får rollpersonen välja att antingen dra sig ut ur striden, eller engagera fienden på nytt varpå hen får slå ett frislag och sen anfalla som vanligt.",
+      "Mästare": "Handling: Speciell .\n Rollpersonen är en så pass van spjutdansare att hens frislag med kvaliteten “Långt” räknas som aktiva handlingar. Dessutom så slåss spjutdansaren med en så förblindande hastighet att hen lätt träffar offrets svaga punkter och gör 1T6 i skada så länge fienden befinner sig på spjutlängds avstånd."
+    }
+  },
+  {
+    "id": "form80",
+    "namn": "Vredesvirvel",
+    "beskrivning": "Inspirerad av legenderna om spindelguden Oroke har Vredesgardisten lärt sig att svinga sitt vapen i vida, ohejdbara bågar. Denna teknik kräver total avsaknad av precision men tillåter i gengäld krigaren att ensam hålla en hel armé på tårna.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Vredesgardist"
+      ],
+      "test": [
+        "Träffsäker",
+        "Stark"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Yttre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Vredesgardisten offrar precision för räckvidd och rå kraft. Karaktären kan utföra en svepande attack som riktas mot samtliga fiender i närstrid. Karaktären slår ett anfallsslag per fiende. Skadan vid träff är 1T6, oavsett vilket vapen som används, men andra tärningseffekter går att addera till slaget.",
+      "Gesäll": "Handling: Aktiv. Virveln är nu en orkan av stål och vrede. Utöver effekten för Novis måste varje fiende som träffas dessutom lyckas med ett test mot [Stark←Stark] för att inte kastas omkull.",
+      "Mästare": "Handling: Aktiv. Tekniken är förfinad till brutal effektivitet. Det krävs nu endast ett enda lyckat test mot Träffsäker för att attacken ska träffa samtliga fiender inom räckhåll för närstrid. Skada och eventuell nedslagning hanteras som tidigare."
+    }
+  },
+  {
+    "id": "form81",
+    "namn": "Blodsrus",
+    "beskrivning": "För en Ulvahedna är stridens hetta oskiljaktig från jaktens extas. Likt en Jakaar som vädrar svaghet hos sitt byte, finner krigaren ny styrka i fiendens blod. Döden är bara en måltid som livnär nästa attack.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Ulvahedna"
+      ],
+      "test": [],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Ulvahednan livnär sig på stridens utgång. Varje gång karaktären reducerar en fiende till 0 i Tålighet eller dödar denne, läker hen 1T4 Tålighet och får omedelbart en fri förflyttning riktad mot närmaste möjliga fiende.",
+      "Gesäll": "Handling: Passiv. Ruset av våldet är mer potent. Ulvahednan återfår 1T6 i Tålighet vid en fiendes fall och gör dessutom 1T6 extra i skada med nästa stridshandling innan scenens slut.",
+      "Mästare": "Handling: Passiv. Krigaren är en outtröttlig dödsmaskin och får utöver novis- och gesälleffekterna utföra en extra närstridsattack denna runda när effekten triggas."
+    }
+  },
+  {
+    "id": "form82",
+    "namn": "Hungerlopp",
+    "beskrivning": "En Ulvahedna rör sig inte genom slagfältet, den jagar genom det. Genom att kanalisera hungerulvens desperata och våldsamma framfart kan krigaren kasta sig in i fiendens led med en kraft som krossar ben och skingrar formationer.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Ulvahedna"
+      ],
+      "test": [
+        "Stark"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Fysisk"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Fysisk"
+        },
+        "Mästare": {
+          "handling": "Aktiv",
+          "skadetyp": "Fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Om Ulvahednan rör sig minst halva sin förflyttning i en rät linje och avslutar med en närstridsattack, räknas attacken dessutom som en tackling. Vid träff gör anfallet normal skada och fienden måste slå [Stark←Stark] eller ramla till marken.",
+      "Gesäll": "Handling: Passiv. Som Novis, men kraften i anloppet är förödande. Anfall efter förflyttning gör 1T4 extra i skada och vid en lyckad tackling (enligt Novis) tar offret dessutom 1T4 i fallskada.",
+      "Mästare": "Handling: Aktiv. Ingen kan stoppa flockens ledare. Under en rusning kan Ulvahednan passera genom flera fienders närstridszoner. Alla som står i rollpersonens väg under förflyttningen måste klara [Stark←Stark] eller ta 1T8 i skada (rustning skyddar som vanligt) och ramla omkull där de står. När rollpersonen kommer fram till sitt mål får hen anfalla enligt gesällnivån. Om någon av fienderna lyckas med motståndsslaget innebär dock detta att denne har lyckats stoppa hungerloppet, vilket avslutar förflyttningen omedelbart och ger den fienden ett frislag."
+    }
+  },
+  {
+    "id": "form83",
+    "namn": "Dödsförakt",
+    "beskrivning": "Det sägs att en sann Ulvahedna inte dör förrän bytet är fällt. Genom att omfamna sin inre best kan krigaren ignorera kroppens varningssignaler och fortsätta slita och riva långt efter att en vanlig krigare borde ha fallit.",
+    "taggar": {
+      "typ": [
+        "Förmåga",
+        "Elityrkesförmåga"
+      ],
+      "ark_trad": [
+        "Ulvahedna"
+      ],
+      "test": [],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Speciell. Vreden är starkare än rädslan för döden. Om Tåligheten når noll eller lägre fortsätter rollpersonen slå dödsslag som vanligt, men kan välja att fortsätta agera som om hen vore oskadd. Att pressa sig själv på detta vis sliter dock på kroppen; medan rollpersonen är under noll Tålighet räknas alla helande effekter som hälften av sin vanliga effekt, avrundat uppåt.",
+      "Gesäll": "Handling: Passiv. Om Ulvahednan ligger på eller under 0 Tålighet är det förblindande raseriet totalt. Varje anfall gör ytterligare 1T6 i skada.",
+      "Mästare": "Handling: Speciell. Döden måste vänta. Om Ulvahednan slår ett slag som leder till döden, dör hen inte omedelbart. Istället fortsätter karaktären strida i 3 rundor till, utan att behöva slå dödsslag. Rollpersonens kropp är dock i dåligt skick och tar i slutet av varje runda 1T6 intern skada. Rollpersonen dör omedelbart om tiden löper ut och Tåligheten är under noll, men hinner göra ett sista anfall mot en fiende inom räckvidd som gör ytterligare 1T12 skada."
+    }
+  },
+  {
+    "id": "form84",
+    "namn": "Provokatör",
+    "beskrivning": "Vare sig det rör sig om gycklarens giftiga tungomål, krigarens dånande utmaning eller vilddjurets avgrundsvrål, vet rollpersonen hur man tränger innanför huden på sina fiender. Genom att projicera en överväldigande närvaro eller utslunga välriktade hån kan rollpersonen styra slagfältets fokus. För en person med förmågan Provokatör är striden lika mycket en kamp om psykologiskt övertag som en utväxling av stål.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Tjuv",
+        "Ligist"
+      ],
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Aktiv. Rollpersonen använder sin röst och sitt kroppsspråk för att tvinga till sig en fiendes uppmärksamhet. Med ett lyckat slag på [Övertygande ← Viljestark] tappar fienden fattningen och måste rikta sin nästa aktiva handling mot rollpersonen om möjligt.",
+      "Gesäll": "Handling: Passiv. Rollpersonens utstrålning är så pass distraherande och provocerande att anfallare tvekar i det avgörande ögonblicket. Rollpersonen får beräkna sitt Försvar med Övertygande istället för med Kvick.",
+      "Mästare": "Handling: Reaktiv. Rollpersonen kan med ett kraftfullt utrop eller en skräckinjagande gest avbryta en fiendes påbörjade handling. När en fiende påbörjar en aktiv handling mot rollpersonen eller dennes allierade får rollpersonen slå ett slag mot [Övertygande ← Viljestark]. Om slaget lyckas tappar fienden fokus och handlingen avbryts omedelbart. Denna effekt kan användas en gång per runda, men varje enskild fiende kan endast utsättas för detta en gång per scen."
+    }
+  },
+  {
+    "id": "form85",
+    "namn": "Inspirerande talare",
+    "beskrivning": "Där Ledaren styr med kall auktoritet, verkar denna förmåga genom rena känslor och okuvlig vilja. Rollpersonen är en mästare på att finna ljus i mörkret; med rop, sång eller passionerad retorik kan denne väcka nytt hopp i sina allierade när mörkret tätnar. Det är en förmåga vanlig bland skaldar som sett krigets fasa och veteraner som vet att stridsmoral är det enda som skiljer en armé från en flyende mobb.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare",
+        "Kapten",
+        "Mystiker",
+        "Teurg",
+        "Trollsångare"
+      ],
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Fri",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Fri. Även i stridens hetta når rollpersonens röst fram. En gång per runda kan rollpersonen ropa stärkande ord till en allierad inom synhåll. Med ett lyckat slag för Övertygande får den allierade +1T4 på sitt nästa framgångsslag innan rundans slut. Denna effekt kan endast appliceras en gång per scen för varje unik allierad.",
+      "Gesäll": "Handling: Aktiv. En gång per dag kan rollpersonen hålla ett brandtal som stärker själen inför en stundande prövning. Detta tar cirka femton minuter att utföra och kan endast ske utanför strid. Alla allierade som hör talet får under den kommande scenen ersätta sitt eget värde i ett av rollpersonen valt karaktärsdrag med dennes värde i Övertygande för att överkomma en specifik prövning.",
+      "Mästare": "Handling: Reaktiv. Rollpersonen vägrar låta sina kamrater falla. När en allierad inom hörhåll misslyckas med ett slag kan rollpersonen omedelbart ingripa. Rollpersonen slår ett slag mot Övertygande; om det lyckas får den allierade slå om sitt tärningsslag och använder då rollpersonens Övertygande som värde istället för sitt eget karaktärsdrag. Denna inspiration kan endast utföras en gång per scen för varje unik allierad."
+    }
+  },
+  {
+    "id": "form86",
+    "namn": "Oljudsverkare",
+    "beskrivning": "Genom att skapa ett infernaliskt oväsen kan rollpersonen slita sönder koncentrationen hos såväl mystiker som strateger. Det är ingen vacker konst – en skärande, atonal matta av ljud som tränger igenom tankar och gör det omöjligt att finna det inre lugn som magins flöden eller taktiska beslut kräver. Bland tjuvar kallas det att ”skramla”, medan mystiker fruktar det som den grå dissonansen.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Mystiker",
+        "Trollsångare",
+        "Tjuv",
+        "Bedragare",
+        "Ligist",
+        "Gillestjuv"
+      ],
+      "test": [
+        "Övertygande"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Förflyttning",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Inre fysisk"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Förflyttning. Rollpersonen kan offra sin förflyttning för att aktivt föra ett sådant oväsen att brukandet av mystiska krafter försvåras. Med ett lyckat slag mot Övertygande får alla fientliga mystiker inom hörhåll modifikationen -1T4 på sitt nästa slag för att aktivera mystiska krafter.",
+      "Gesäll": "Handling: Aktiv. Rollpersonen riktar ett skärande, fokuserat oljud mot en enskild fiende inom syn- och hörhåll. Om rollpersonen lyckas med ett slag mot [Övertygande ← Viljestark] bryts fiendens koncentration omedelbart. Detta avbryter alla pågående effekter som kräver koncentration av målet.",
+      "Mästare": "Handling: Passiv. Rollpersonen skapar en så skärande dissonans att den blir fysiskt smärtsam för dem som är öppna för magins flöden. Varje gång en fientlig mystiker inom hörhåll får sin koncentration bruten av gesällnivån, eller misslyckas med ett kraftslag på grund av novisnivåns störning, tar denne omedelbart 1T6 i skada (ignorerar Rustning)."
+    }
+  },
+  {
+    "id": "form87",
+    "namn": "Sköldvärn",
+    "beskrivning": "Där andra ser skölden som ett hinder för rörlighet ser denna krigare en flyttbar fästningsmur. Genom att vinkla skölden, ta spjärn mot marken och möta kraft med kraft kan krigaren låta plåt och trä ta smällen istället för rustning och kött. Tekniken är vanlig bland tempelväktare och tungt infanteri som förväntas hålla linjen till varje pris. Förmågan kräver en sköld utan kvaliteten 'Armfäst' för att fungera.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare",
+        "Kapten",
+        "Säljsvärd",
+        "Riddare",
+        "Häxjägare",
+        "Monsterjägare"
+      ],
+      "test": [],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Aktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Rollpersonen använder skölden så tätt inpå kroppen att den fungerar som ett extra lager pansar. Så länge skölden bärs får rollpersonen +1T4 i Bepansring mot alla fysiska attacker.",
+      "Gesäll": "Handling: Aktiv. Rollpersonen kan som aktiv handling välja att dra ihop sig bakom sin sköld och på så vis öka bepansringen från den upp till 1T12.",
+      "Mästare": "Handling: Passiv. Rollpersonen har lärt sig att maximera sin profil för att täcka upp för andra. Allierade som befinner sig inom närstridsavstånd får tillgodoräkna sig sköldbärarens bepansringsbonus."
+    }
+  },
+  {
+    "id": "form88",
+    "namn": "Sköldföring",
+    "beskrivning": "Att bara blockera är passivt; Sköldföring handlar om att använda skölden som ett precisionsinstrument för att kontrollera stridens flöde. Med perfekt timing och fotarbete kan inkommande hugg ledas bort eller låsas fast, vilket lämnar fienden frustrerad och blottad. Stilen bygger på öga-mot-hand-koordination snarare än råstyrka. Förmågan kräver en sköld utan kvaliteten 'Armfäst' för att fungera.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Krigare",
+        "Häxjägare",
+        "Monsterjägare"
+      ],
+      "test": [
+        "Träffsäker"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Passiv",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Reaktiv",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Rollpersonen läser fiendens kroppsspråk och placerar skölden exakt där den behövs. När rollpersonen bär sköld får denne använda karaktärsdraget Träffsäker istället för Kvick för att beräkna sitt värde i Försvar.",
+      "Gesäll": "Handling: Reaktiv. Rollpersonen rör sig alltid med skölden höjd för att täcka sig mot pilar och hugg. Rollpersonen får slå mot [Träffsäker] för att undvika att dra på sig frislag från fiender i närstrid. Detta gäller alla frislag som utlöses av förflyttning, långa vapen eller förmågor som normalt orsakar frislag. Om slaget misslyckas får hen försvara sig mot frislaget på vanligt vis.",
+      "Mästare": "Handling: Reaktiv. En gång per runda när rollpersonen träffas av ett anfall, kan hen aktivt möta och styra undan anfallet. När rollpersonen träffas av en närstridsattack kan denne försöka blockera slaget helt med skölden genom att slå [Träffsäker]. Om slaget lyckas styrs attacken bort mot sköldens tåligaste delar och orsakar ingen skada."
     }
   }
-
 ]

@@ -22,7 +22,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Aktiverar en bunden novisformel; förbrukas och ger temporär Korruption."
   },
   {
     "id": "l2",
@@ -43,7 +44,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Ställ in kriterium; kväker högt när det kriteriumet möts."
   },
   {
     "id": "l3",
@@ -64,7 +66,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Beröring visar instinktivt var ägaren väntar; kräver mystisk kraft."
   },
   {
     "id": "l4",
@@ -87,7 +90,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Visar bärarens ordensgrad och kan fungera som nyckel/krav för ordensfunktioner."
   },
   {
     "id": "l5",
@@ -110,7 +114,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Använder Viljestark istället för Stark mot sjukdomar och gifter."
   },
   {
     "id": "l6",
@@ -133,7 +138,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Ger tillgång till en ritual du inte kan; förbrukas vid användning."
   },
   {
     "id": "l7",
@@ -154,7 +160,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Läker 1T12 Tålighet på ett dygn; ger 1T4 temporär Korruption och kan återanvändas."
   },
   {
     "id": "l8",
@@ -177,7 +184,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "1 omslag per scen för växtrelaterade krafter (användning eller motstånd)."
   },
   {
     "id": "l9",
@@ -207,7 +215,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 till ett associerat drag (Diskret, Kvick, Listig, Stark eller Vaksam)."
   },
   {
     "id": "l10",
@@ -230,7 +239,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på krafter/ritualer som påverkar eller motstår döden."
   },
   {
     "id": "l11",
@@ -255,7 +265,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Aktiverar en bunden gesällformel; förbrukas och ger temporär Korruption."
   },
   {
     "id": "l12",
@@ -278,7 +289,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Bryt sigillet för att utlösa en gesällformel; engångs och ger temporär Korruption."
   },
   {
     "id": "l13",
@@ -301,7 +313,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Bryt sigillet för att utlösa en novisformel; engångs och ger temporär Korruption."
   },
   {
     "id": "l14",
@@ -324,7 +337,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på effekttärning för eldeffekter när stenen hålls eller sitter på staven."
   },
   {
     "id": "l15",
@@ -347,7 +361,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 Stark på Dödsslag; gäller även SLP."
   },
   {
     "id": "l16",
@@ -370,7 +385,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på ordensmagins viljeböjande krafter/ritualer och motstånd mot dem."
   },
   {
     "id": "l17",
@@ -393,7 +409,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på slag som manipulerar ramarna (Förvisning, Teleportering, Frammana daemon)."
   },
   {
     "id": "l18",
@@ -405,7 +422,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "Ett guldmynt som har tursamma energier bundna till sig. Myntet bärs i fickan och ger +1 på ett framgångsslag, användbart en gång per scen. Den som leker med sådana krafter riskerar dock att drabbas av dess motsats; om slaget som myntet modifierar blir 20 kommer bäraren att ha otur under resten av scenen, motsvarat av att alla framgångsslag får en andra chans att misslyckas."
+      "Gesäll": "Ett guldmynt som har tursamma energier bundna till sig. Myntet bärs i fickan och ger +3 på ett framgångsslag, användbart en gång per scen. Den som leker med sådana krafter riskerar dock att drabbas av dess motsats; om slaget som myntet modifierar blir 16-20 kommer bäraren att ha otur under resten av scenen, motsvarat av att alla framgångsslag får en andra chans att misslyckas."
     },
     "grundpris": {
       "daler": 8,
@@ -414,7 +431,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+3 på ett framgångsslag per scen; vid 16-20 drabbas du av otur resten av scenen och får en andra chans att misslyckas med alla framgånsslag."
   },
   {
     "id": "l19",
@@ -435,7 +453,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 Diskret för smyga och gömma sig."
   },
   {
     "id": "l20",
@@ -456,7 +475,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på alla framgångsslag för ritualer i en vald tradition."
   },
   {
     "id": "l21",
@@ -479,7 +499,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Ger fackelljus; heliga/fördrivande krafter får +1 på effekttärning."
   },
   {
     "id": "l22",
@@ -502,7 +523,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på effekttärning med staven som vapen och krafter som slår med staven."
   },
   {
     "id": "l23",
@@ -525,7 +547,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på slag för krafter som inte nyttjar staven som vapen."
   },
   {
     "id": "l24",
@@ -548,7 +571,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på Viljestark vid hantering av andar ."
   },
   {
     "id": "l25",
@@ -571,7 +595,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "+1 på slag för illusioner."
   },
   {
     "id": "l26",
@@ -593,7 +618,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Närstridsangrepp kan verka på avstånd; aktiva förmågor sänks ett steg och noviser kan inte använda dem."
   },
   {
     "id": "l27",
@@ -618,7 +644,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Aktiverar en bunden mästarformel; förbrukas och ger temporär Korruption."
   },
   {
     "id": "l28",
@@ -641,14 +668,16 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Bryt sigillet för att utlösa en mästarformel; engångs och ger temporär Korruption."
   },
   {
     "id": "l29",
     "namn": "Mystiskt fokus",
     "taggar": {
       "typ": [
-        "Lägre Artefakt","Artefakt"
+        "Lägre Artefakt",
+        "Artefakt"
       ],
       "ark_trad": []
     },
@@ -662,7 +691,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "1 garanterat lyckat slag per dag för en traditions kraft; binds via XP eller permanent Korruption."
   },
   {
     "id": "l30",
@@ -685,7 +715,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Bryt sigillet för att utlösa en bunden ritual; skapandet kräver ritualist/kodex; ger temporär Korruption."
   },
   {
     "id": "l31",
@@ -714,7 +745,8 @@
       "daler": 12,
       "skilling": 0,
       "örtegar": 0
-    }
+    },
+    "effekt": "Ger skydd 1T4 i ägarens hand och fungerar som stavvapen (1T8, Balanserat, Långt)."
   },
   {
     "id": "l32",
@@ -735,9 +767,10 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Nödvändig komponent för ritualen Själssten."
   },
-{
+  {
     "id": "l33",
     "namn": "Blodskärva",
     "taggar": {
@@ -758,7 +791,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Ta 1T4 temporär Korruption för att återfå lika mycket Tålighet när du skadas."
   },
   {
     "id": "l34",
@@ -772,7 +806,7 @@
       ]
     },
     "nivåer": {
-      "Gesäll": "Ett flätat smycke med ett sprucket glasöga som sägs ha fångat en rubbad sekund. Mentalister använder den för att tvinga ögonblicket att upprepa sig, med risk för stel tid. En gång per scen får bäraren slå om ett helt misslyckat slag. Om det nya resultatet blir över 15 förlorar rollpersonen sin nästa handling då tiden hakar upp sig."
+      "Gesäll": "Ett flätat smycke med ett sprucket glasöga som sägs ha fångat en rubbad sekund. Mentalister använder den för att tvinga ögonblicket att upprepa sig, med risk för stel tid. En gång per scen får bäraren slå om ett helt misslyckat slag. Om det nya resultatet blir över 15 förlorar rollpersonen sin nästa handling då tiden hakar upp sig, ger 1T4 korruption vid användning."
     },
     "grundpris": {
       "daler": 12,
@@ -781,7 +815,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Slå om ett misslyckat slag en gång per scen; vid >15 förloras nästa handling. Användning ger 1T4 korruption."
   },
   {
     "id": "l35",
@@ -804,7 +839,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Dubblera en kraft en gång per scen; andra aktiveringen kostar +1T4 temporär Korruption."
   },
   {
     "id": "l36",
@@ -827,7 +863,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "För varje fiende som dör av din eld får du +1 på nästa eldangrepp samma strid."
   },
   {
     "id": "l37",
@@ -848,7 +885,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Perfekt lyckat på 1–2; fatalt misslyckat på 19–20 (18–20 med Otursförföljd)."
   },
   {
     "id": "l38",
@@ -860,7 +898,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "En tung, kantstött runskiva som bärs nära kroppen. När runorna berörs känns marken ge med sig och stegen pressas fram, som om stigen dömts fri. En gång per scen får bäraren ta en extra förflyttningshandling. Aktiveringen kostar 1T4 temporär Korruption. "
+      "Gesäll": "En tung, kantstött runskiva som bärs nära kroppen. När runorna berörs känns marken ge med sig och stegen pressas fram, som om stigen dömts fri. En gång per scen får bäraren ta en extra förflyttningshandling. Aktiveringen kostar 1T4 temporär Korruption och runskivan konsumeras när magin frigörs. "
     },
     "grundpris": {
       "daler": 10,
@@ -869,7 +907,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "En extra förflyttningshandling per scen; kostar 1T4 temporär Korruption."
   },
   {
     "id": "l39",
@@ -892,7 +931,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Allierade inom en förflyttning får +1 i bepansring varje runda i eldens sken."
   },
   {
     "id": "l40",
@@ -913,7 +953,8 @@
     },
     "stat": {
       "vikt": 1
-    }
+    },
+    "effekt": "Skyddet växer +1 per runda du tar skada; nollställs om du undgår skada."
   },
   {
     "id": "l41",
@@ -936,7 +977,8 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Aktivera för att ge alla fiender i närstrid 3 elementarskada."
   },
   {
     "id": "l42",
@@ -957,7 +999,8 @@
     },
     "stat": {
       "vikt": 1
-    }
+    },
+    "effekt": "Återfå 1 Tålighet en gång per runda vid lyckad mystisk kraft."
   },
   {
     "id": "l43",
@@ -978,7 +1021,8 @@
     },
     "stat": {
       "vikt": 1
-    }
+    },
+    "effekt": "Reducerar elementarskada med 1 (lägst 1)."
   },
   {
     "id": "l44",
@@ -990,7 +1034,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "Ett par skosnören flätade av mjuk pilbark, tillverkade av kringvandrande häxor. De som lär sig nyttja deras kraft kan samla sina steg och frigöra dem som en plötslig språngmarsch. Om bäraren avstår från förflyttning under en runda kan denne under nästa runda förflytta sig tre meter extra vid en förflyttningshandling."
+      "Gesäll": "Ett par skosnören flätade av mjuk pilbark, tillverkade av kringvandrande häxor. De som lär sig nyttja deras kraft kan samla sina steg och frigöra dem som en plötslig språngmarsch. Om bäraren avstår från förflyttning under en runda kan denne under nästa runda förflytta sig en tredjedels förflyttning extra vid en förflyttningshandling. Skosnörena konsumeras dock när deras förhastande energi frigörs."
     },
     "grundpris": {
       "daler": 6,
@@ -999,7 +1043,8 @@
     },
     "stat": {
       "vikt": 1
-    }
+    },
+    "effekt": "Avstå förflyttning en runda för +3 m extra nästa runda."
   },
   {
     "id": "l45",
@@ -1011,7 +1056,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "En lantärna vars flamma aldrig falnar, oavsett vind eller regn. Den ger tryggt ljus för resande, men dess ständiga sken gör det svårt att hålla sig undan fiendens blickar. Den fungerar som en fackla som brinner utan slut, men bäraren får –1 på Diskret när det gäller att smyga och gömma sig."
+      "Gesäll": "En lantärna vars flamma aldrig falnar, oavsett vind eller regn. Den ger tryggt ljus för resande, men dess ständiga sken gör det svårt att hålla sig undan fiendens blickar. Den fungerar som en fackla som brinner utan slut, men bäraren och dess allierade inom synhåll får –1 på Diskret när det gäller att smyga och gömma sig."
     },
     "grundpris": {
       "daler": 7,
@@ -1020,28 +1065,27 @@
     },
     "stat": {
       "vikt": 1.0
-    }
+    },
+    "effekt": "Ger evigt fackelljus; –1 Diskret för allierade inom synhåll på att smyga och gömma sig."
   },
   {
     "id": "l46",
     "namn": "Mumifierad hartass",
+    "beskrivning": "En torkad hartass insvept i bandage och täckt av små vaxsigill, preparerad för att kanalisera och stärka magins flöde. Genom att krama tassen hårt under den långa ritualen skänker den mystikern fokus och kraft och ger således +1 vid utförandet av mystiska ritualer.",
     "taggar": {
       "typ": [
-        "Lägre Artefakt"
-      ],
-      "ark_trad": []
-    },
-    "nivåer": {
-      "Gesäll": "En torkad hartass insvept i bandage och sigill som påskyndar magins långsamma verk. Ritualer som normalt tar en timme att utföra tar 30 minuter."
+        "Specialverktyg"
+      ]
     },
     "grundpris": {
-      "daler": 8,
+      "daler": 5,
       "skilling": 0,
       "örtegar": 0
     },
     "stat": {
-      "vikt": 1
-    }
+      "vikt": 0.1
+    },
+    "effekt": "Ger +1 på [Viljestark] vid utförandet av ritualer."
   },
   {
     "id": "l47",
@@ -1053,7 +1097,7 @@
       "ark_trad": []
     },
     "nivåer": {
-      "Gesäll": "Ett ljus av mörkblått vax vars låga flämtar när korruptionen närmar sig. En gång per dygn kan bäraren välja att förlora Tålighet istället för att ta temporär Korruption."
+      "Gesäll": "Ett ljus av mörkblått vax vars låga flämtar när korruptionen närmar sig. En gång per dygn kan bäraren välja att förlora Tålighet istället för att ta temporär Korruption. Ljuset konsumeras efter användning."
     },
     "grundpris": {
       "daler": 7,
@@ -1062,7 +1106,8 @@
     },
     "stat": {
       "vikt": 1
-    }
+    },
+    "effekt": "En gång per dygn: byt temporär Korruption mot lika mycket Tålighet. Engångsanvändning."
   },
   {
     "id": "l48",
@@ -1083,7 +1128,8 @@
     },
     "stat": {
       "vikt": 1
-    }
+    },
+    "effekt": "+1 Träffsäker."
   },
   {
     "id": "l49",
@@ -1104,6 +1150,78 @@
     },
     "stat": {
       "vikt": 1
-    }
+    },
+    "effekt": "+1 skada mot genomkorrumperade varelser."
+  },
+  {
+    "id": "l50",
+    "namn": "Katalysatorpärla",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Novis": "En liten pärla av frostad orikalkum som löses i en dos strax före bruk. När pärlan löses i ett Novis- eller Gesällelixir höjs en förekommande effekttärning i elixiret ett steg (1T4→1T6, 1T6→1T8, 1T8→1T10). Effekten gäller endast den dosen. Att sedan dricka elixiret ger bäraren 1 temporär Korruption. Pärlan förbrukas vid användning."
+    },
+    "grundpris": {
+      "daler": 4,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 0.2
+    },
+    "effekt": "Höjer en effekttärning i ett Novis/Gesällelixir ett steg; ger 1 temporär Korruption; förbrukas."
+  },
+  {
+    "id": "l51",
+    "namn": "Reagensspegel",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ],
+      "ark_trad": []
+    },
+    "nivåer": {
+      "Novis": "En polerad skiva av mörksilver som visar en vätskas 'skugga'. Vid analys av okänd dryck, tinktur eller gift får en skolad alkemist en andra chans att lyckas om det första slaget misslyckas. En lyckad analys avslöjar om vätskan är elixir eller gift, dess nivå (Novis/Gesäll/Mästare) och huvudverkan."
+    },
+    "grundpris": {
+      "daler": 6,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 0.5
+    },
+    "effekt": "Analys av elixir får en andra chans att identifiera typ, nivå och huvudverkan."
+  },
+  {
+    "id": "l52",
+    "namn": "Jakaarsärk",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt",
+        "Rustning",
+        "Lätt Rustning"
+      ],
+"kvalitet": [ "Otymplig", "Förstärkt" ],
+      "ark_trad": ["Ulvahedna"]
+    },
+    "nivåer": {
+      "Gesäll": "Denna massiva väst är sydd av dubbla lager jakaarhud, förstärkt med grova nitar av svärtat järn och benplattor från bestens bröstkorg. Den tjocka pälsen och de tunga förstärkningarna gör rustningen klumpig att röra sig i, men den erbjuder ett skydd som få andra lätta rustningar kan mäta sig med. Precis som med enklare varianter pulserar särken av en dov värme när bärarens vrede stiger, och de inbundna andarna tycks hårdna till en ogenomtränglig barriär vid strid. I vanliga fall skyddar rustningen 1T4 +1, men när användaren är i aktiv Bärsärkargång så skyddar den 1T6 +1."
+    },
+    "grundpris": {
+      "daler": 12,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "skydd": "1T4",
+      "vikt": 2.5,
+      "begränsning": -2
+    },
+    "effekt": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
   }
 ]

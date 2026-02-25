@@ -3,7 +3,8 @@
    =========================================================== */
 
 (function(window){
-  const F = { typ: '', invTxt: '' };
+  const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+  const F = { invTxt: '', typ: [], ark: [], test: [] };
   // Bring shared currency bases into local scope
   const SBASE = window.SBASE;
   const OBASE = window.OBASE;
@@ -11,7 +12,10 @@
   const oToMoney = window.oToMoney;
   const INV_TOOLS_KEY = 'invToolsOpen';
   const INV_INFO_KEY  = 'invInfoOpen';
+  const INV_CAT_STATE_PREFIX = 'invCatState:';
+  let cachedCatState = { key: '', state: {} };
   const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
+  const INDIVIDUAL_TYPES = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'];
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -22,6 +26,7 @@
     const root = getToolbarRoot();
     return root ? root.getElementById(id) : null;
   };
+  const getEl = (id) => document.getElementById(id) || $T(id);
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
@@ -35,19 +40,245 @@
     'Galär': '⛵',
     'Flodbåt': '🛥️'
   };
-  let dragIdx = null;
-  let dragEl = null;
-  let dragEnabled = false;
+  const cloneRow = (row) => (row ? JSON.parse(JSON.stringify(row)) : null);
+  const sanitizeArmorQualities = (entry, qualities) => {
+    const fn = window.enforceArmorQualityExclusion;
+    if (typeof fn === 'function') return fn(entry, qualities);
+    return Array.isArray(qualities) ? qualities.filter(Boolean) : [];
+  };
+  const normalizeShieldQualityName = (entry, qualityName) => {
+    const isShield = Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Sköld');
+    if (!isShield) return qualityName;
+    const txt = String(qualityName || '').toLowerCase();
+    if (txt.startsWith('smidig')) return 'Armfäst';
+    return qualityName;
+  };
+  const mapRowQualityArray = (entry, list) => {
+    if (!Array.isArray(list)) return list;
+    const out = [];
+    const seen = new Set();
+    list.forEach(q => {
+      const mapped = normalizeShieldQualityName(entry, q);
+      if (!mapped) return;
+      const key = String(mapped);
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(mapped);
+    });
+    return out;
+  };
+  const getRowQualityState = (entry, row) => {
+    const removed = Array.isArray(row?.removedKval) ? row.removedKval : [];
+    const baseQuals = [
+      ...(entry?.taggar?.kvalitet ?? []),
+      ...splitQuals(entry?.kvalitet)
+    ];
+    const baseQ = baseQuals.filter(q => !removed.includes(q));
+    const addedQ = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
+    return { baseQ, addedQ };
+  };
+  const isQualityAllowedByRules = (entry, row, qualityName) => {
+    if (!entry || !qualityName) return true;
+    const { baseQ, addedQ } = getRowQualityState(entry, row);
+    if ([...baseQ, ...addedQ].includes(qualityName)) return true;
+    const next = sanitizeArmorQualities(entry, [...baseQ, ...addedQ, qualityName]);
+    return next.includes(qualityName);
+  };
+  const normalizeRowQualities = (row) => {
+    if (!row || typeof row !== 'object') return;
+    const entry = getEntry(row.id || row.name);
+    if (entry) {
+      if (Array.isArray(row.kvaliteter)) row.kvaliteter = mapRowQualityArray(entry, row.kvaliteter);
+      if (Array.isArray(row.gratisKval)) row.gratisKval = mapRowQualityArray(entry, row.gratisKval);
+      if (Array.isArray(row.removedKval)) row.removedKval = mapRowQualityArray(entry, row.removedKval);
+      const { baseQ, addedQ } = getRowQualityState(entry, row);
+      const allowedAll = sanitizeArmorQualities(entry, [...baseQ, ...addedQ]);
+      const allowance = new Map();
+      allowedAll.forEach(q => allowance.set(q, (allowance.get(q) || 0) + 1));
+      baseQ.forEach(q => {
+        const count = allowance.get(q) || 0;
+        if (count > 0) allowance.set(q, count - 1);
+      });
+      if (Array.isArray(row.kvaliteter)) {
+        row.kvaliteter = addedQ.filter(q => {
+          const count = allowance.get(q) || 0;
+          if (count <= 0) return false;
+          allowance.set(q, count - 1);
+          return true;
+        });
+      }
+      if (Array.isArray(row.gratisKval)) {
+        const allowedSet = new Set(allowedAll);
+        row.gratisKval = row.gratisKval.filter(q => allowedSet.has(q));
+      }
+    }
+    if (Array.isArray(row.contains)) {
+      row.contains.forEach(child => normalizeRowQualities(child));
+    }
+  };
+  const normalizeInventoryQualities = (inv) => {
+    if (!Array.isArray(inv)) return;
+    inv.forEach(row => normalizeRowQualities(row));
+  };
+
+  function getCraftLevels() {
+    const list = storeHelper.getCurrentList(store);
+    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
+    const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
+    const forgeLvl = Math.max(partyForge, skillForge);
+    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
+    const skillAlc = storeHelper.abilityLevel(list, 'Alkemist');
+    const alcLevel = Math.max(partyAlc, skillAlc);
+    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+    const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
+    const artLevel = Math.max(partyArt, skillArt);
+    return { forgeLvl, alcLevel, artLevel };
+  }
+
+  function calcRowCostOWithLevels(row, levels) {
+    if (!row) return 0;
+    return moneyToO(calcRowCost(row, levels.forgeLvl, levels.alcLevel, levels.artLevel));
+  }
+
+  function markRowFree(row) {
+    if (!row) return;
+    const qty = Math.max(0, Number(row.qty) || 0);
+    row.gratis = qty;
+    const entry = getEntry(row.id || row.name);
+    const removed = Array.isArray(row.removedKval) ? row.removedKval : [];
+    const baseQuals = [
+      ...(entry.taggar?.kvalitet ?? []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const baseQ = baseQuals.filter(q => !removed.includes(q));
+    const extraQ = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
+    const allQ = sanitizeArmorQualities(entry, [...baseQ, ...extraQ]);
+    const positives = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+    row.gratisKval = [...new Set(positives)];
+  }
+
+  function applyLiveModePayment(pairs, opts) {
+    if (!Array.isArray(pairs) || !pairs.length) return;
+    if (typeof storeHelper?.getLiveMode !== 'function') return;
+    if (!storeHelper.getLiveMode(store)) return;
+    const levels = getCraftLevels();
+    const override = opts && Number.isFinite(opts.overrideO) ? Math.max(0, Math.floor(opts.overrideO)) : null;
+    let deltaO = 0;
+    if (override != null) {
+      deltaO = override;
+    } else {
+      pairs.forEach(({ prev, next }) => {
+        if (!next) return;
+        const prevO = prev ? calcRowCostOWithLevels(prev, levels) : 0;
+        const nextO = calcRowCostOWithLevels(next, levels);
+        const diff = Math.max(0, nextO - prevO);
+        if (diff > 0) deltaO += diff;
+      });
+    }
+    if (deltaO > 0) {
+      const money = storeHelper.getMoney(store);
+      const remainingO = Math.max(0, moneyToO(money) - deltaO);
+      storeHelper.setMoney(store, oToMoney(remainingO));
+    }
+    pairs.forEach(({ next }) => {
+      if (next) markRowFree(next);
+    });
+  }
+  const createEntryCard = (options) => {
+    const factory = window.entryCardFactory?.create;
+    if (typeof factory !== 'function') {
+      throw new Error('entryCardFactory not initialized');
+    }
+    return factory(options);
+  };
+  function getCatStateKey() {
+    const charId = store?.current || 'default';
+    return `${INV_CAT_STATE_PREFIX}${charId}`;
+  }
+
+  function loadInvCatState() {
+    const key = getCatStateKey();
+    if (cachedCatState.key === key) return cachedCatState.state;
+    let state = {};
+    try {
+      const raw = localStorage.getItem(key);
+      if (raw) state = JSON.parse(raw) || {};
+    } catch {}
+    cachedCatState = { key, state };
+    return state;
+  }
+
+  function saveInvCatState(state) {
+    const key = getCatStateKey();
+    cachedCatState = { key, state };
+    try {
+      localStorage.setItem(key, JSON.stringify(state));
+    } catch {}
+  }
+
+  const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, m => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[m]);
+
+  function renderActiveFilters() {
+    if (!dom.active) return;
+    const tags = [];
+    const text = (F.invTxt || '').trim();
+    if (text) {
+      tags.push(`<span class="tag removable" data-type="text">${escapeHtml(text)} ✕</span>`);
+    }
+    F.test.forEach(val => {
+      tags.push(`<span class="tag removable" data-type="test" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+    });
+    F.typ.forEach(val => {
+      tags.push(`<span class="tag removable" data-type="typ" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+    });
+    F.ark.forEach(val => {
+      tags.push(`<span class="tag removable" data-type="ark" data-val="${escapeHtml(val)}">${escapeHtml(val)} ✕</span>`);
+    });
+    dom.active.innerHTML = tags.join('');
+  }
 
   const dividePrice = (amt, divisor) => {
     const o = typeof amt === 'number' ? amt : moneyToO(amt || {});
     return Math.floor(o / divisor);
   };
 
+  function parseRef(ref) {
+    if (ref && typeof ref === 'object') {
+      const id = ref.id !== undefined && ref.id !== null ? String(ref.id).trim() : undefined;
+      const name = typeof ref.namn === 'string' && ref.namn.trim()
+        ? ref.namn.trim()
+        : (typeof ref.name === 'string' && ref.name.trim() ? ref.name.trim() : undefined);
+      return { id: id || undefined, name };
+    }
+    if (ref === undefined || ref === null) return { id: undefined, name: undefined };
+    if (typeof ref === 'string') {
+      const trimmed = ref.trim();
+      if (!trimmed) return { id: undefined, name: undefined };
+      return { id: trimmed, name: trimmed };
+    }
+    if (typeof ref === 'number') {
+      return { id: String(ref), name: undefined };
+    }
+    return { id: undefined, name: undefined };
+  }
+
   function getEntry(ref) {
+    const { id, name } = parseRef(ref);
     const custom = storeHelper.getCustomEntries(store);
-    const own = custom.find(x => x.id === ref || x.namn === ref);
-    return own || DB[ref] || DB.find(x => x.namn === ref) || {};
+    const own = custom.find(x => (id && x.id === id) || (name && x.namn === name));
+    if (own) return own;
+    if (typeof window.lookupEntry === 'function') {
+      const hit = window.lookupEntry({ id, name }, { explicitName: name });
+      if (hit) return hit;
+    }
+    if (id !== undefined && DB && DB[id]) return DB[id];
+    if (Array.isArray(DB) && id !== undefined) {
+      const byId = DB.find(ent => String(ent?.id ?? '') === id);
+      if (byId) return byId;
+    }
+    return {};
   }
 
   function isHiddenType(tagTyp) {
@@ -55,6 +286,38 @@
     const primary = arr[0] ? String(arr[0]).toLowerCase() : '';
     return ['artefakt','kuriositet','skatt'].includes(primary);
   }
+
+  function hasArtifactTag(tagTyp) {
+    return (Array.isArray(tagTyp) ? tagTyp : [])
+      .some(t => String(t || '').trim().toLowerCase() === 'artefakt');
+  }
+
+  function needsArtifactListSync(tagTyp) {
+    return isHiddenType(tagTyp) || hasArtifactTag(tagTyp);
+  }
+
+  const LEVEL_MARKERS = new Map([
+    ['Novis', 'N'],
+    ['Ges\u00e4ll', 'G'],
+    ['M\u00e4stare', 'M']
+  ]);
+
+  const levelMarker = (level) => {
+    if (!level) return '';
+    const key = String(level).trim();
+    if (!key) return '';
+    if (LEVEL_MARKERS.has(key)) return LEVEL_MARKERS.get(key);
+    const first = key[0];
+    return first ? first.toUpperCase() : '';
+  };
+
+  const hasSingleLevel = (entry) => {
+    if (!entry || typeof entry !== 'object') return false;
+    const keys = Object.keys(entry.nivåer || {})
+      .map(k => String(k || '').trim())
+      .filter(Boolean);
+    return keys.length === 1;
+  };
 
   function sortInvEntry(a, b) {
     const entA = getEntry(a.id || a.name);
@@ -67,6 +330,7 @@
   }
 
   function saveInventory(inv) {
+    normalizeInventoryQualities(inv);
     const nonVeh = [];
     const veh = [];
     inv.forEach(row => {
@@ -155,6 +419,169 @@
     return { row, parentArr: arr, idx: path[path.length - 1] };
   }
 
+  function splitStackRow(row, qty) {
+    if (!row) return { movedRow: null, remainingQty: 0 };
+    const currentQtyRaw = Number(row.qty);
+    const currentQty = Number.isFinite(currentQtyRaw) && currentQtyRaw > 0
+      ? Math.floor(currentQtyRaw)
+      : 0;
+    const amountRaw = Number(qty);
+    const amount = Math.min(
+      currentQty,
+      Math.max(1, Number.isFinite(amountRaw) ? Math.floor(amountRaw) : 0)
+    );
+    if (!currentQty || !amount) {
+      return { movedRow: null, remainingQty: currentQty };
+    }
+    const movedRow = cloneRow(row);
+    if (!movedRow) return { movedRow: null, remainingQty: currentQty };
+    movedRow.qty = amount;
+    const adjustCountField = field => {
+      const originalRaw = Number(row[field]);
+      const original = Number.isFinite(originalRaw) && originalRaw > 0
+        ? Math.floor(originalRaw)
+        : 0;
+      if (!original) {
+        delete movedRow[field];
+        delete row[field];
+        return;
+      }
+      const moveVal = Math.min(original, amount);
+      if (moveVal > 0) movedRow[field] = moveVal;
+      else delete movedRow[field];
+      const remain = original - moveVal;
+      if (remain > 0) {
+        row[field] = remain;
+      } else {
+        delete row[field];
+      }
+    };
+    adjustCountField('gratis');
+    adjustCountField('perkGratis');
+    row.qty = currentQty - amount;
+    if (row.qty <= 0) {
+      delete row.qty;
+      delete row.gratis;
+      delete row.perkGratis;
+    } else {
+      if (Number(row.gratis) > row.qty) row.gratis = row.qty;
+      if (Number(row.perkGratis) > row.qty) row.perkGratis = row.qty;
+    }
+    if (Number(movedRow.gratis) > movedRow.qty) movedRow.gratis = movedRow.qty;
+    if (Number(movedRow.perkGratis) > movedRow.qty) movedRow.perkGratis = movedRow.qty;
+    return { movedRow, remainingQty: row.qty || 0 };
+  }
+
+  function isIndividualItem(entry) {
+    if (!entry) return false;
+    const tagTyp = entry.taggar?.typ || [];
+    const indivType = INDIVIDUAL_TYPES.some(t => tagTyp.includes(t));
+    if (!indivType) return false;
+    if (STACKABLE_IDS.includes(entry.id)) return false;
+    if (['kraft', 'ritual'].includes(entry.bound)) return false;
+    return true;
+  }
+
+  function mergeStackRows(target, source) {
+    if (!target || !source) return;
+    const addCount = (field) => {
+      const srcRaw = Number(source[field]);
+      const srcVal = Number.isFinite(srcRaw) && srcRaw > 0 ? Math.floor(srcRaw) : 0;
+      if (!srcVal) return;
+      const tgtRaw = Number(target[field]);
+      const tgtVal = Number.isFinite(tgtRaw) && tgtRaw > 0 ? Math.floor(tgtRaw) : 0;
+      target[field] = tgtVal + srcVal;
+    };
+
+    const qtyRaw = Number(source.qty);
+    const qtyVal = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 0;
+    if (qtyVal) {
+      const tgtQtyRaw = Number(target.qty);
+      const tgtQtyVal = Number.isFinite(tgtQtyRaw) && tgtQtyRaw > 0 ? Math.floor(tgtQtyRaw) : 0;
+      target.qty = tgtQtyVal + qtyVal;
+    }
+
+    addCount('gratis');
+    addCount('perkGratis');
+
+    if (Array.isArray(source.gratisKval) && source.gratisKval.length) {
+      const set = new Set([...(target.gratisKval || []), ...source.gratisKval]);
+      target.gratisKval = [...set];
+    }
+    if (Array.isArray(source.removedKval) && source.removedKval.length) {
+      const set = new Set([...(target.removedKval || []), ...source.removedKval]);
+      target.removedKval = [...set];
+    }
+
+    if (!target.basePrice && source.basePrice) {
+      target.basePrice = { ...source.basePrice };
+    }
+    if (!target.basePriceSource && source.basePriceSource) {
+      target.basePriceSource = source.basePriceSource;
+    }
+    if (source.priceMult && !target.priceMult) {
+      target.priceMult = source.priceMult;
+    }
+
+    if (Number(target.gratis) > Number(target.qty)) target.gratis = Number(target.qty) || 0;
+    if (Number(target.perkGratis) > Number(target.qty)) target.perkGratis = Number(target.qty) || 0;
+  }
+
+  function canStackRows(target, source, entry) {
+    if (!target || !source) return false;
+    if (Array.isArray(target.contains)) return false;
+    if (Array.isArray(source.contains)) return false;
+
+    const entryName = entry?.namn || '';
+    const targetEntry = getEntry(target.id || target.name);
+    const targetEntryName = targetEntry?.namn || '';
+    if (source.id) {
+      if (target.id !== source.id) return false;
+    } else if (target.id) {
+      return false;
+    } else {
+      const sourceName = entryName || source.name || '';
+      const targetName = targetEntryName || target.name || '';
+      if (sourceName !== targetName) {
+        if (!entryName && !targetEntryName) return false;
+        const normalize = val => String(val || '').replace(/\s+\d+$/, '');
+        if (normalize(sourceName) !== normalize(targetName)) return false;
+      }
+    }
+
+    const targetTrait = target.trait || '';
+    const sourceTrait = source.trait || '';
+    if (targetTrait !== sourceTrait) return false;
+
+    const targetEffect = target.artifactEffect || '';
+    const sourceEffect = source.artifactEffect || '';
+    if (targetEffect !== sourceEffect) return false;
+
+    return true;
+  }
+
+  function addToInventory(inv, row) {
+    if (!row || !Array.isArray(inv)) return;
+    const entry = getEntry(row.id || row.name);
+    if (isIndividualItem(entry)) {
+      inv.push(row);
+      return;
+    }
+    const target = inv.find(existing => canStackRows(existing, row, entry));
+    if (target) {
+      mergeStackRows(target, row);
+    } else {
+      if (!Number.isFinite(Number(row.qty)) || Number(row.qty) <= 0) {
+        row.qty = 1;
+      }
+      if (!Array.isArray(row.gratisKval)) row.gratisKval = row.gratisKval ? [row.gratisKval] : [];
+      if (!Array.isArray(row.removedKval)) row.removedKval = row.removedKval ? [row.removedKval] : [];
+      if (Number(row.gratis) > Number(row.qty)) row.gratis = Number(row.qty) || 0;
+      if (Number(row.perkGratis) > Number(row.qty)) row.perkGratis = Number(row.qty) || 0;
+      inv.push(row);
+    }
+  }
+
   function parsePathStr(str) {
     return str.split('.').map(n => Number(n)).filter(n => !Number.isNaN(n));
   }
@@ -225,7 +652,7 @@
       const arr = store.data[id]?.inventory;
       sortRec(arr);
     });
-    storeHelper.save(store);
+    storeHelper.save(store, { allCharacters: true });
   }
 
   function rowMatchesText(row, txt) {
@@ -296,8 +723,11 @@
     }).join('');
 
     /* öppna */
+    const popInner = pop.querySelector('.popup-inner');
+
     pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    window.autoResizeAll?.(pop);
+    if (popInner) popInner.scrollTop = 0;
 
     /* local helpers */
     const close = () => {
@@ -326,21 +756,53 @@
     pop.addEventListener('click', onOutside);
   }
 
-  function openCustomPopup(callback) {
+  function openCustomPopup(arg1, arg2) {
+    let existing = null;
+    let callback = typeof arg1 === 'function' ? arg1 : arg2;
+    if (typeof arg1 === 'object' && arg1) {
+      existing = arg1;
+    }
+    if (typeof callback !== 'function') callback = () => {};
+
     const root = getToolbarRoot();
     if (!root) return;
-    const pop   = root.getElementById('customPopup');
-    const name  = root.getElementById('customName');
-    const type  = root.getElementById('customType');
-    const wIn   = root.getElementById('customWeight');
-    const effBox= root.getElementById('customArtifactEffect');
-    const effSel= effBox ? effBox.querySelector('select') : null;
-    const dIn   = root.getElementById('customDaler');
-    const sIn   = root.getElementById('customSkilling');
-    const oIn   = root.getElementById('customOrtegar');
-    const desc  = root.getElementById('customDesc');
-    const add   = root.getElementById('customAdd');
-    const cancel= root.getElementById('customCancel');
+    const pop    = root.getElementById('customPopup');
+    const popInner = pop ? pop.querySelector('.popup-inner') : null;
+    const title  = root.getElementById('customTitle');
+    const name   = root.getElementById('customName');
+    const typeSel= root.getElementById('customType');
+    const typeAdd= root.getElementById('customTypeAdd');
+    const typeTags = root.getElementById('customTypeTags');
+    const wIn    = root.getElementById('customWeight');
+    const effBox = root.getElementById('customArtifactEffect');
+    const effSel = effBox ? effBox.querySelector('select') : null;
+    const weaponBox = root.getElementById('customWeaponFields');
+    const vehicleBox = root.getElementById('customVehicleFields');
+    const armorBox  = root.getElementById('customArmorFields');
+    const levelBox = root.getElementById('customLevelFields');
+    const lvlNovis = root.getElementById('customLevelNovis');
+    const lvlGes   = root.getElementById('customLevelGesall');
+    const lvlMas   = root.getElementById('customLevelMastare');
+    const lvlMode  = root.getElementById('customLevelMode');
+    const powerBox = root.getElementById('customPowerFields');
+    const powerList = root.getElementById('customPowerList');
+    const powerAdd  = root.getElementById('customPowerAdd');
+    const boundBox  = root.getElementById('customBoundFields');
+    const boundSel  = root.getElementById('customBoundType');
+    const boundLbl  = root.getElementById('customBoundLabel');
+    const dmgIn  = root.getElementById('customDamage');
+    const capIn  = root.getElementById('customCapacity');
+    const protIn = root.getElementById('customProtection');
+    const restIn = root.getElementById('customRestriction');
+    const dIn    = root.getElementById('customDaler');
+    const sIn    = root.getElementById('customSkilling');
+    const oIn    = root.getElementById('customOrtegar');
+    const desc   = root.getElementById('customDesc');
+    const add    = root.getElementById('customAdd');
+    const del    = root.getElementById('customDelete');
+    const cancel = root.getElementById('customCancel');
+
+    let originalDesc = '';
 
     // Hämta vapentyper och rustningssubtyper från DB (fallback till hårdkodade)
     const deriveSubtypes = () => {
@@ -348,13 +810,24 @@
         const db = window.DB || [];
         const wSet = new Set();
         const rSet = new Set();
+        const skip = new Set(['artefakt','lägre artefakt','kuriositet','skatt','hemmagjort']);
         for (const e of db) {
           const typs = (e.taggar?.typ) || [];
           if (typs.includes('Vapen')) {
-            for (const t of typs) if (t !== 'Vapen' && t !== 'Sköld') wSet.add(t);
+            for (const t of typs) {
+              if (t === 'Vapen' || t === 'Sköld') continue;
+              const key = typeof t === 'string' ? t.trim().toLowerCase() : '';
+              if (!key || skip.has(key)) continue;
+              wSet.add(t);
+            }
           }
           if (typs.includes('Rustning')) {
-            for (const t of typs) if (t !== 'Rustning') rSet.add(t);
+            for (const t of typs) {
+              if (t === 'Rustning') continue;
+              const key = typeof t === 'string' ? t.trim().toLowerCase() : '';
+              if (!key || skip.has(key)) continue;
+              rSet.add(t);
+            }
           }
         }
         return {
@@ -370,79 +843,427 @@
     };
     const SUB = deriveSubtypes();
 
-    // Alla valbara typer för custom: basutrustning + vapen- och rustningssubtyper
     const allTypes = Array.from(new Set([
+      'Hemmagjort',
       ...EQUIP,
       ...SUB.weapon,
       ...SUB.armor
     ]));
-
     const equipOptions = allTypes
       .slice()
       .sort((a, b) => catName(a).localeCompare(catName(b)))
       .map(t => `<option value="${t}">${catName(t)}</option>`)
       .join('');
-    type.innerHTML = equipOptions;
+    typeSel.innerHTML = equipOptions;
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-    if (effSel) effSel.value = 'corruption';
-    if(effBox) effBox.style.display = type.value === 'Artefakt' ? '' : 'none';
+    const selectedTypes = new Set(['Hemmagjort']);
 
-    const onType = () => {
-      if (effBox) effBox.style.display = type.value === 'Artefakt' ? '' : 'none';
+    const ensureBaseTypes = (val) => {
+      if (SUB.weapon.includes(val)) selectedTypes.add('Vapen');
+      if (SUB.armor.includes(val)) selectedTypes.add('Rustning');
     };
-    type.addEventListener('change', onType);
 
-    const close = () => {
-      pop.classList.remove('open');
-      add.removeEventListener('click', onAdd);
-      cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
+    const addType = (raw) => {
+      const val = String(raw || '').trim();
+      if (!val) return;
+      if (val === 'Hemmagjort') {
+        selectedTypes.add('Hemmagjort');
+        return;
+      }
+      ensureBaseTypes(val);
+      selectedTypes.add(val);
+    };
+
+    const removeType = (raw) => {
+      const val = String(raw || '').trim();
+      if (!val || val === 'Hemmagjort') return;
+      selectedTypes.delete(val);
+    };
+
+    const orderedTypes = () => {
+      const arr = Array.from(selectedTypes).filter(Boolean);
+      if (!arr.includes('Hemmagjort')) arr.unshift('Hemmagjort');
+      const rest = arr.filter(t => t !== 'Hemmagjort');
+      return ['Hemmagjort', ...rest];
+    };
+
+    const renderTypeTags = () => {
+      if (!typeTags) return;
+      const tags = orderedTypes().map(t => {
+        const label = catName(t);
+        if (t === 'Hemmagjort') {
+          return `<span class="tag">${label}</span>`;
+        }
+        return `<span class="tag removable" data-type="${t}">${label} ✕</span>`;
+      }).join('');
+      typeTags.innerHTML = tags;
+    };
+
+    const hasType = t => orderedTypes().includes(t);
+    const getLevelMode = () => {
+      const val = lvlMode?.value || 'novis';
+      return ['novis', 'gesall', 'mastare', 'triple'].includes(val) ? val : 'novis';
+    };
+
+    const toggleLevelField = (el, show) => {
+      if (!el) return;
+      el.style.display = show ? '' : 'none';
+    };
+
+    const applyLevelMode = () => {
+      const mode = getLevelMode();
+      const showNovis = mode === 'novis' || mode === 'triple';
+      const showGes   = mode === 'gesall' || mode === 'triple';
+      const showMas   = mode === 'mastare' || mode === 'triple';
+      toggleLevelField(lvlNovis, showNovis);
+      toggleLevelField(lvlGes, showGes);
+      toggleLevelField(lvlMas, showMas);
+    };
+
+    const updateTypeFields = () => {
+      const selected = orderedTypes();
+      const hasArtifact = selected.includes('Artefakt');
+      const hasWeapon = selected.includes('Vapen') || selected.includes('Sköld') || selected.includes('Pil/Lod') || selected.some(t => SUB.weapon.includes(t));
+      const hasArmor = selected.includes('Rustning') || selected.some(t => SUB.armor.includes(t));
+      const hasVehicle = selected.includes('F\u00e4rdmedel');
+      const hasLevels = selected.includes('Elixir') || selected.includes('L\u00e4gre Artefakt') || selected.includes('F\u00e4lla');
+      const hasPowers = selected.includes('Artefakt');
+      const hasBound = selected.includes('L\u00e4gre Artefakt');
+      if (effBox) effBox.style.display = hasArtifact ? '' : 'none';
+      if (weaponBox) weaponBox.style.display = hasWeapon ? '' : 'none';
+      if (vehicleBox) vehicleBox.style.display = hasVehicle ? '' : 'none';
+      if (armorBox) armorBox.style.display = hasArmor ? '' : 'none';
+      if (levelBox) {
+        levelBox.style.display = hasLevels ? '' : 'none';
+        if (hasLevels) applyLevelMode();
+      }
+      if (powerBox) powerBox.style.display = hasPowers ? '' : 'none';
+      if (boundBox) {
+        boundBox.style.display = hasBound ? '' : 'none';
+        if (!hasBound) {
+          if (boundSel) boundSel.value = '';
+          if (boundLbl) boundLbl.value = '';
+        }
+      }
+      renderTypeTags();
+    };
+
+    const resetFields = () => {
       name.value = '';
-      dIn.value = sIn.value = oIn.value = '';
       wIn.value = '';
-      desc.value = '';
-      if (effSel) effSel.value = 'corruption';
-      if (effBox) effBox.style.display = 'none';
-      type.removeEventListener('change', onType);
-    };
-    const onAdd = () => {
-      // Om användaren väljer en specifik vapentyp eller rustningssubtyp,
-      // lägg automatiskt till primärtagn "Vapen" respektive "Rustning".
-      const tVal = (type.value || '').trim();
-      const isWeaponSub = SUB.weapon.includes(tVal);
-      const isArmorSub  = SUB.armor.includes(tVal);
-      const typTags = isWeaponSub ? ['Vapen', tVal]
-                    : isArmorSub  ? ['Rustning', tVal]
-                    : [tVal];
-      const entry = {
-        id: storeHelper.genId ? storeHelper.genId() : Date.now().toString(36) + Math.random().toString(36).slice(2),
-        namn: name.value.trim(),
-        taggar: { typ: typTags },
-        vikt: Number(wIn.value)||0,
-        grundpris: {
-          daler: Math.max(0, Number(dIn.value)||0),
-          skilling: Math.max(0, Number(sIn.value)||0),
-          'örtegar': Math.max(0, Number(oIn.value)||0)
-        },
-        beskrivning: desc.value.trim(),
-        artifactEffect: effSel ? effSel.value : ''
-      };
-      close();
-      callback(entry);
-    };
-    const onCancel = () => { close(); callback(null); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)){
-        close();
-        callback(null);
+      if (wIn) {
+        wIn.readOnly = false;
+        wIn.title = '';
+      }
+      dIn.value = sIn.value = oIn.value = '';
+      if (desc) {
+        desc.value = '';
+        delete desc.dataset.touched;
+      }
+      originalDesc = '';
+      if (effSel) effSel.value = '';
+      if (dmgIn) dmgIn.value = '';
+      if (lvlNovis) lvlNovis.value = '';
+      if (lvlGes)   lvlGes.value = '';
+      if (lvlMas)   lvlMas.value = '';
+      if (lvlMode) lvlMode.value = 'novis';
+      if (powerList) powerList.innerHTML = '';
+      if (capIn) capIn.value = '';
+      if (protIn) protIn.value = '';
+      if (restIn) restIn.value = '';
+      if (boundSel) boundSel.value = '';
+      if (boundLbl) boundLbl.value = '';
+      selectedTypes.clear();
+      selectedTypes.add('Hemmagjort');
+      updateTypeFields();
+      applyLevelMode();
+      if (del) {
+        del.style.display = 'none';
+        del.disabled = true;
       }
     };
 
+    resetFields();
+
+    let isEditing = false;
+
+    if (existing) {
+      isEditing = true;
+      if (title) title.textContent = 'Redigera föremål';
+      add.textContent = 'Uppdatera';
+      name.value = existing.namn || '';
+      const price = existing.grundpris || {};
+      dIn.value = price.daler ?? '';
+      sIn.value = price.skilling ?? '';
+      oIn.value = price['örtegar'] ?? '';
+      wIn.value = existing.vikt ?? '';
+      const legacyDesc = existing.beskrivning
+        || existing.beskrivningHtml
+        || existing.text
+        || existing.description
+        || '';
+      if (desc) {
+        desc.value = legacyDesc;
+        desc.dataset.touched = '';
+      }
+      originalDesc = legacyDesc;
+      if (effSel) effSel.value = existing.artifactEffect || '';
+      if (Array.isArray(existing.taggar?.typ)) {
+        existing.taggar.typ.forEach(t => addType(t));
+      }
+      if (existing.niv\u00e5er) {
+        const keys = Object.keys(existing.niv\u00e5er || {});
+        const std = ['Novis','Ges\u00e4ll','M\u00e4stare'];
+        const recognized = keys.filter(k => std.includes(k));
+        if (recognized.length) {
+          if (lvlNovis) lvlNovis.value = existing.niv\u00e5er['Novis'] || '';
+          if (lvlGes)   lvlGes.value   = existing.niv\u00e5er['Ges\u00e4ll'] || '';
+          if (lvlMas)   lvlMas.value   = existing.niv\u00e5er['M\u00e4stare'] || '';
+          if (lvlMode) {
+            if (recognized.length === 1) {
+              const key = recognized[0];
+              if (key === 'Novis') lvlMode.value = 'novis';
+              else if (key === 'Ges\u00e4ll') lvlMode.value = 'gesall';
+              else if (key === 'M\u00e4stare') lvlMode.value = 'mastare';
+            } else {
+              lvlMode.value = 'triple';
+            }
+          }
+          if (levelBox) levelBox.style.display = '';
+          applyLevelMode();
+        } else if (powerBox && powerList) {
+          powerList.innerHTML = '';
+          keys.forEach(k => {
+            const row = document.createElement('div');
+            row.className = 'power-row';
+            row.innerHTML = `
+              <input class=\"power-name\" placeholder=\"Förmågans namn\" value=\"${k.replace(/\"/g,'&quot;')}\">\n              <textarea class=\"power-desc auto-resize\" placeholder=\"Beskrivning\">${existing.niv\u00e5er[k] ? String(existing.niv\u00e5er[k]) : ''}</textarea>\n              <button class=\"char-btn danger power-del\" type=\"button\">✕</button>
+            `;
+            powerList.appendChild(row);
+            const descField = row.querySelector('.power-desc');
+            if (descField) window.autoResize?.(descField);
+            row.querySelector('.power-del').addEventListener('click', ev => {
+              ev.preventDefault();
+              ev.stopPropagation();
+              row.remove();
+            });
+          });
+        powerBox.style.display = '';
+      }
+      }
+      if (existing.stat) {
+        if (dmgIn && existing.stat.skada !== undefined) dmgIn.value = existing.stat.skada;
+        if (capIn && existing.stat['b\u00e4rkapacitet'] !== undefined) capIn.value = existing.stat['b\u00e4rkapacitet'];
+        if (protIn && existing.stat.skydd !== undefined) protIn.value = existing.stat.skydd;
+        if (restIn && existing.stat['begränsning'] !== undefined) {
+          restIn.value = existing.stat['begränsning'];
+        }
+      }
+      if (boundSel) boundSel.value = (existing.bound === 'kraft' || existing.bound === 'ritual') ? existing.bound : '';
+      if (boundLbl) boundLbl.value = existing.boundLabel || '';
+    } else {
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
+      if (effSel) effSel.value = 'corruption';
+    }
+
+    updateTypeFields();
+    if (lvlMode) lvlMode.addEventListener('change', applyLevelMode);
+
+    const onAddType = e => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      addType(typeSel.value);
+      updateTypeFields();
+    };
+
+    const onTagsClick = e => {
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+      const tag = e.target.closest('.tag.removable');
+      if (!tag) return;
+      const t = tag.dataset.type;
+      removeType(t);
+      updateTypeFields();
+    };
+
+    const onAdd = () => {
+      const nameVal = name.value.trim();
+      const types = orderedTypes();
+      const hasWeapon = types.includes('Vapen') || types.includes('Sköld') || types.includes('Pil/Lod') || types.some(t => SUB.weapon.includes(t));
+      const hasArmor = types.includes('Rustning') || types.some(t => SUB.armor.includes(t));
+      const hasVehicle = types.includes('F\u00e4rdmedel');
+      const hasBound = types.includes('L\u00e4gre Artefakt');
+      const entry = {
+        id: existing?.id || (storeHelper.genId ? storeHelper.genId() : Date.now().toString(36) + Math.random().toString(36).slice(2)),
+        namn: nameVal,
+        taggar: { typ: types },
+        grundpris: {
+          daler: Math.max(0, Number(dIn.value) || 0),
+          skilling: Math.max(0, Number(sIn.value) || 0),
+          'örtegar': Math.max(0, Number(oIn.value) || 0)
+        },
+        beskrivning: '',
+        artifactEffect: (effSel && types.includes('Artefakt')) ? effSel.value : ''
+      };
+      const rawDesc = desc ? desc.value : '';
+      const trimmedDesc = rawDesc.trim();
+      const keepLegacyDesc = Boolean(isEditing && originalDesc && (!desc || !desc.dataset.touched) && !trimmedDesc);
+      entry.beskrivning = keepLegacyDesc ? originalDesc : trimmedDesc;
+      entry.vikt = Math.max(0, Number(wIn.value) || 0);
+      const stat = {};
+      if (hasWeapon && dmgIn) {
+        const dmgVal = dmgIn.value.trim();
+        if (dmgVal) stat.skada = dmgVal;
+      }
+      if (hasVehicle && capIn) {
+        const capVal = Number(capIn.value);
+        if (Number.isFinite(capVal) && capVal > 0) stat['b\u00e4rkapacitet'] = Math.floor(capVal);
+      }
+      if (hasArmor && protIn) {
+        const protVal = protIn.value.trim();
+        if (protVal) stat.skydd = protVal;
+      }
+      if (restIn && restIn.value !== '') {
+        const restVal = Number(restIn.value);
+        if (Number.isFinite(restVal)) stat['begränsning'] = restVal;
+      }
+      if (Object.keys(stat).length) entry.stat = stat;
+
+      // Spara nivåer om angivna
+      const niv = {};
+      if (levelBox && levelBox.style.display !== 'none') {
+        const mode = getLevelMode();
+        const novisTxt = (lvlNovis?.value || '').trim();
+        const gesTxt   = (lvlGes?.value   || '').trim();
+        const masTxt   = (lvlMas?.value   || '').trim();
+        if (mode === 'triple') {
+          if (novisTxt) niv['Novis'] = novisTxt;
+          if (gesTxt)   niv['Ges\u00e4ll'] = gesTxt;
+          if (masTxt)   niv['M\u00e4stare'] = masTxt;
+        } else if (mode === 'novis') {
+          if (novisTxt) niv['Novis'] = novisTxt;
+        } else if (mode === 'gesall') {
+          if (gesTxt) niv['Ges\u00e4ll'] = gesTxt;
+        } else if (mode === 'mastare') {
+          if (masTxt) niv['M\u00e4stare'] = masTxt;
+        }
+      }
+      if (powerBox && powerBox.style.display !== 'none' && powerList) {
+        [...powerList.querySelectorAll('.power-row')].forEach(r => {
+          const nm = r.querySelector('.power-name')?.value?.trim();
+          const ds = r.querySelector('.power-desc')?.value?.trim();
+          if (nm && ds) niv[nm] = ds;
+        });
+      }
+      if (Object.keys(niv).length) entry.nivåer = niv; else delete entry.nivåer;
+
+      if (hasBound && boundSel) {
+        const boundType = boundSel.value === 'kraft' || boundSel.value === 'ritual' ? boundSel.value : '';
+        if (boundType) {
+          entry.bound = boundType;
+          const rawLabel = (boundLbl?.value || '').trim();
+          entry.boundLabel = rawLabel || (boundType === 'kraft' ? 'Formel' : 'Ritual');
+        }
+      }
+
+      close();
+      callback(entry);
+    };
+
+    const onCancel = () => {
+      close();
+      callback(null);
+    };
+
+    const onDelete = () => {
+      if (!isEditing) {
+        close();
+        callback(null);
+        return;
+      }
+      const payload = {
+        __delete: true,
+        id: existing?.id || '',
+        namn: existing?.namn || ''
+      };
+      close();
+      callback(payload);
+    };
+
+    const onOutside = e => {
+      if (!popInner) return;
+      const path = typeof e.composedPath === 'function' ? e.composedPath() : e.path;
+      if (Array.isArray(path) && path.includes(popInner)) return;
+      if (popInner.contains(e.target)) return;
+      close();
+      callback(null);
+    };
+
+    function close() {
+      pop.classList.remove('open');
+      add.removeEventListener('click', onAdd);
+      if (del) del.removeEventListener('click', onDelete);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      if (typeAdd) typeAdd.removeEventListener('click', onAddType);
+      if (typeTags) typeTags.removeEventListener('click', onTagsClick);
+      if (powerAdd) powerAdd.removeEventListener('click', onAddPower);
+      if (lvlMode) lvlMode.removeEventListener('change', applyLevelMode);
+      if (desc) desc.removeEventListener('input', markDescTouched);
+      resetFields();
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
+      if (effBox) effBox.style.display = 'none';
+      if (weaponBox) weaponBox.style.display = 'none';
+      if (armorBox) armorBox.style.display = 'none';
+    }
+
+    pop.classList.add('open');
+    window.autoResizeAll?.(pop);
+    if (popInner) popInner.scrollTop = 0;
+    const markDescTouched = () => {
+      if (desc) desc.dataset.touched = '1';
+    };
+    if (desc) desc.addEventListener('input', markDescTouched);
+    if (typeAdd) typeAdd.addEventListener('click', onAddType);
+    if (typeTags) typeTags.addEventListener('click', onTagsClick);
     add.addEventListener('click', onAdd);
+    if (del) {
+      if (isEditing) {
+        del.style.display = '';
+        del.disabled = false;
+        del.addEventListener('click', onDelete);
+      } else {
+        del.style.display = 'none';
+        del.disabled = true;
+      }
+    }
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
+    const onAddPower = e => {
+      e?.preventDefault();
+      const row = document.createElement('div');
+      row.className = 'power-row';
+      row.innerHTML = `
+        <input class="power-name" placeholder="Förmågans namn">
+        <textarea class="power-desc auto-resize" placeholder="Beskrivning"></textarea>
+        <button class="char-btn danger power-del" type="button">✕</button>
+      `;
+      powerList.appendChild(row);
+      const descField = row.querySelector('.power-desc');
+      if (descField) window.autoResize?.(descField);
+      row.querySelector('.power-del').addEventListener('click', ev => {
+        ev.preventDefault();
+        ev.stopPropagation();
+        row.remove();
+      });
+    };
+    if (powerAdd) powerAdd.addEventListener('click', onAddPower);
   }
 
   function openMoneyPopup() {
@@ -452,28 +1273,56 @@
     const dIn   = root.getElementById('moneyDaler');
     const sIn   = root.getElementById('moneySkilling');
     const oIn   = root.getElementById('moneyOrtegar');
+    const balDIn = root.getElementById('moneyBalanceDaler');
+    const balSIn = root.getElementById('moneyBalanceSkilling');
+    const balOIn = root.getElementById('moneyBalanceOrtegar');
     const setBtn= root.getElementById('moneySetBtn');
     const addBtn= root.getElementById('moneyAddBtn');
-    const cancel= root.getElementById('moneyCancel');
+    const spendBtn = root.getElementById('moneySpendBtn');
+    const cancel = root.getElementById('moneyCancel');
+    const statusEl = root.getElementById('moneyStatus');
 
     // Fälten ska börja tomma oavsett aktuell summa pengar
-    dIn.value = sIn.value = oIn.value = '';
+    [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
+
+    const updateStatus = () => {
+      if (!statusEl || typeof formatMoney !== 'function') return;
+      const cash = storeHelper.normalizeMoney(storeHelper.getMoney(store));
+      const allInv = storeHelper.getInventory(store) || [];
+      const flat = flattenInventory(allInv);
+      const levels = getCraftLevels();
+      const totalCostO = flat.reduce((sum, row) => sum + calcRowCostOWithLevels(row, levels), 0);
+      const totalMoney = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+      const diffO = moneyToO(totalMoney) - totalCostO;
+      const diff = oToMoney(Math.abs(diffO));
+      const diffText = `${diffO < 0 ? '-' : ''}${formatMoney(diff)}`;
+      statusEl.textContent = `Kontant: ${formatMoney(cash)} · Oanvänt: ${diffText}`;
+    };
+
+    updateStatus();
 
     const close = () => {
       pop.classList.remove('open');
       setBtn.removeEventListener('click', onSet);
       addBtn.removeEventListener('click', onAdd);
+      if (spendBtn) spendBtn.removeEventListener('click', onSpend);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
-      dIn.value = sIn.value = oIn.value = '';
+      [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+      if (statusEl) statusEl.textContent = '';
     };
-    const getInputMoney = () => storeHelper.normalizeMoney({
-      daler: Number(dIn.value)||0,
-      skilling: Number(sIn.value)||0,
-      'örtegar': Number(oIn.value)||0
+    const getSpendMoney = () => storeHelper.normalizeMoney({
+      daler: Number(dIn?.value) || 0,
+      skilling: Number(sIn?.value) || 0,
+      'örtegar': Number(oIn?.value) || 0
+    });
+    const getBalanceMoney = () => storeHelper.normalizeMoney({
+      daler: Number(balDIn?.value) || 0,
+      skilling: Number(balSIn?.value) || 0,
+      'örtegar': Number(balOIn?.value) || 0
     });
     const maybeAdv = fn => {
       const priv = storeHelper.getPrivMoney(store);
@@ -492,14 +1341,14 @@
       }
     };
     const onSet = () => {
-      const money = getInputMoney();
+      const money = getBalanceMoney();
       maybeAdv(() => {
         storeHelper.setMoney(store, money);
         renderInventory();
       });
     };
     const onAdd = () => {
-      const addMoney = getInputMoney();
+      const addMoney = getBalanceMoney();
       const curMoney = storeHelper.getMoney(store);
       const total = storeHelper.normalizeMoney({
         daler: curMoney.daler + addMoney.daler,
@@ -511,15 +1360,127 @@
         renderInventory();
       });
     };
+    const onSpend = () => {
+      const spendMoney = getSpendMoney();
+      const spendO = moneyToO(spendMoney);
+      if (spendO <= 0) {
+        if (dIn) dIn.focus();
+        return;
+      }
+      const pay = () => {
+        const curMoney = storeHelper.getMoney(store);
+        const remainingO = Math.max(0, moneyToO(curMoney) - spendO);
+        storeHelper.setMoney(store, oToMoney(remainingO));
+        renderInventory();
+      };
+      if (typeof maybeAdv === 'function') {
+        maybeAdv(pay);
+      } else {
+        close();
+        pay();
+      }
+    };
     const onCancel = () => { close(); };
     const onOutside = e => {
       if(!pop.querySelector('.popup-inner').contains(e.target)) close();
     };
-
     setBtn.addEventListener('click', onSet);
     addBtn.addEventListener('click', onAdd);
+    if (spendBtn) spendBtn.addEventListener('click', onSpend);
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
+  }
+
+  function removeCustomEntryFromInventory(arr, targetId, targetName) {
+    if (!Array.isArray(arr)) return false;
+    let changed = false;
+    for (let i = arr.length - 1; i >= 0; i--) {
+      const row = arr[i];
+      if (!row || typeof row !== 'object') continue;
+      const nestedChanged = removeCustomEntryFromInventory(row.contains, targetId, targetName);
+      if (nestedChanged && Array.isArray(row.contains) && !row.contains.length) {
+        delete row.contains;
+      }
+      const rowId = row.id ?? row.i;
+      const rowName = row.name ?? row.n ?? row.namn;
+      const idMatch = targetId != null && rowId === targetId;
+      const nameMatch = targetName ? rowName === targetName : false;
+      if (idMatch || nameMatch) {
+        arr.splice(i, 1);
+        changed = true;
+        continue;
+      }
+      if (nestedChanged) changed = true;
+    }
+    return changed;
+  }
+
+  function editCustomEntry(entry, onSave) {
+    if (!entry || !(entry.taggar?.typ || []).includes('Hemmagjort')) return false;
+    if (!getToolbarRoot()) return false;
+    const customs = storeHelper.getCustomEntries(store);
+    const original = (entry.id && customs.find(c => c.id === entry.id))
+      || customs.find(c => c.namn === entry.namn);
+    if (!original) return false;
+    const originalId = original.id;
+    openCustomPopup({ ...original }, updated => {
+      if (!updated) return;
+      const list = storeHelper.getCustomEntries(store);
+      const idx = list.findIndex(c => c.id === originalId || (!originalId && c.namn === original.namn));
+      if (idx < 0) return;
+      if (updated.__delete) {
+        list.splice(idx, 1);
+        storeHelper.setCustomEntries(store, list);
+        const inv = storeHelper.getInventory(store);
+        const removed = removeCustomEntryFromInventory(inv, originalId, original.namn);
+        if (removed) {
+          saveInventory(inv);
+        } else {
+          renderInventory();
+        }
+        if (typeof onSave === 'function') onSave();
+        return;
+      }
+      const merged = { ...list[idx], ...updated };
+      merged.id = merged.id || list[idx].id;
+      list[idx] = merged;
+      storeHelper.setCustomEntries(store, list);
+      if (typeof onSave === 'function') onSave();
+    });
+    return true;
+  }
+
+  async function editArtifactEntry(entry, opts, onSave) {
+    if (!entry || typeof selectArtifactPayment !== 'function') return false;
+    const options = opts && typeof opts === 'object' ? opts : {};
+    const trait = options.trait ?? null;
+    const inv = storeHelper.getInventory(store);
+    const flat = flattenInventoryWithPath(inv);
+    const entryId = entry.id;
+    const entryName = entry.namn || entry.name || '';
+    const matches = flat.filter(({ row }) => {
+      if (!row) return false;
+      const idMatch = entryId !== undefined && entryId !== null
+        ? row.id === entryId
+        : row.name === entryName;
+      if (!idMatch) return false;
+      if (trait != null) return row.trait === trait;
+      return true;
+    });
+    if (!matches.length) return false;
+    let target = matches[0];
+    if (trait == null && matches.length > 1) {
+      const withoutTrait = matches.find(({ row }) => row && !row.trait);
+      if (withoutTrait) target = withoutTrait;
+    }
+    const current = target.row.artifactEffect || '';
+    const chosen = await selectArtifactPayment(current);
+    if (chosen === null) return true;
+    target.row.artifactEffect = chosen;
+    saveInventory(inv);
+    renderInventory();
+    if (typeof onSave === 'function') onSave();
+    return true;
   }
 
   function openQtyPopup() {
@@ -582,16 +1543,23 @@
         !STACKABLE_IDS.includes(entry.id) &&
         !['kraft','ritual'].includes(entry.bound);
 
+      const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+      const livePairs = liveEnabled ? [] : null;
+
       if (indiv) {
         for (let i = 0; i < qty; i++) {
           const clone = JSON.parse(JSON.stringify(row));
           clone.qty = 1;
           parentArr.push(clone);
+          if (livePairs) livePairs.push({ prev: null, next: clone });
         }
       } else {
+        const prevState = livePairs ? cloneRow(row) : null;
         row.qty += qty;
+        if (livePairs) livePairs.push({ prev: prevState, next: row });
       }
 
+      if (livePairs && livePairs.length) applyLiveModePayment(livePairs);
       saveInventory(inv);
       renderInventory();
       close();
@@ -604,6 +1572,456 @@
     list.addEventListener('click', onBtn);
     cancel.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
+  }
+
+  async function buildInventoryRow({ entry, list } = {}) {
+    if (!entry) return null;
+    const row = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
+    const tagTyp = entry.taggar?.typ || [];
+    const explode = typeof window.explodeTags === 'function' ? window.explodeTags : () => [];
+    const curList = Array.isArray(list) ? list : storeHelper.getCurrentList(store);
+    if (tagTyp.includes('L\u00e4gre Artefakt')) {
+      const reqYrken = explode(entry.taggar?.ark_trad);
+      if (reqYrken.length) {
+        const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
+        const skillArt = storeHelper.abilityLevel(curList, 'Artefaktmakande');
+        const artLevel = Math.max(partyArt, skillArt);
+        const lvlName = Object.keys(entry.niv\u00e5er || {}).find(l => l) || '';
+        const itemLevel = LEVEL_IDX[lvlName] || 0;
+        const hasYrke = reqYrken.some(req => curList.some(it => {
+          const nameTags = explode([it.namn]);
+          const isJob = typeof window.isYrke === 'function' ? window.isYrke(it) : false;
+          const isElite = typeof window.isElityrke === 'function' ? window.isElityrke(it) : false;
+          return (isJob || isElite) && nameTags.includes(req);
+        }));
+        let allowPurchase = hasYrke;
+        if (!allowPurchase && artLevel >= itemLevel) {
+          allowPurchase = true;
+        }
+        if (!allowPurchase) {
+          const reqTxt = reqYrken.join(', ');
+          const msg = `Du har inte r\u00e4tt yrke (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${entry.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
+          if (typeof openDialog === 'function') {
+            const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
+            if (!ok) return null;
+          } else {
+            return null;
+          }
+          row.priceMult = 10;
+        }
+      }
+    }
+    if (tagTyp.includes('Artefakt')) {
+      if (typeof selectArtifactPayment === 'function') {
+        const val = await selectArtifactPayment();
+        if (val === null) return null;
+        if (val) row.artifactEffect = val;
+      }
+    } else if (entry.artifactEffect) {
+      row.artifactEffect = entry.artifactEffect;
+    }
+    return row;
+  }
+
+  function openLiveBuyPopup(entry, existingRow) {
+    const root = getToolbarRoot();
+    if (!root) return null;
+    const pop    = root.getElementById('liveBuyPopup');
+    const inner  = pop ? pop.querySelector('.popup-inner') : null;
+    const nameEl = root.getElementById('liveBuyItemName');
+    const qtyEl  = root.getElementById('liveBuyQty');
+    const dEl    = root.getElementById('liveBuyPriceDaler');
+    const sEl    = root.getElementById('liveBuyPriceSkilling');
+    const oEl    = root.getElementById('liveBuyPriceOrtegar');
+    const confirm= root.getElementById('liveBuyConfirm');
+    const cancel = root.getElementById('liveBuyCancel');
+    if (!pop || !qtyEl || !dEl || !sEl || !oEl || !confirm || !cancel) return null;
+
+    const resolveName = () => {
+      if (existingRow?.name) return existingRow.name;
+      if (entry?.namn) return entry.namn;
+      if (entry?.name) return entry.name;
+      return '';
+    };
+
+    const defaultPrice = () => {
+      const src = (existingRow?.basePriceSource || '').toLowerCase();
+      if (existingRow?.basePrice && src === 'live') {
+        return storeHelper.normalizeMoney(existingRow.basePrice);
+      }
+      const cost = entry ? calcEntryCost(entry) : { daler: 0, skilling: 0, 'örtegar': 0 };
+      return storeHelper.normalizeMoney(cost);
+    };
+
+    const fillPriceFields = money => {
+      dEl.value = money.daler ? String(money.daler) : '';
+      sEl.value = money.skilling ? String(money.skilling) : '';
+      oEl.value = money['örtegar'] ? String(money['örtegar']) : '';
+    };
+
+    qtyEl.value = '1';
+    fillPriceFields(defaultPrice());
+    const label = resolveName();
+    if (nameEl) {
+      if (label) {
+        nameEl.textContent = label;
+        nameEl.hidden = false;
+      } else {
+        nameEl.hidden = true;
+        nameEl.textContent = '';
+      }
+    }
+
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => qtyEl.focus(), 50);
+
+    return new Promise(resolve => {
+      let closed = false;
+      const cleanup = () => {
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        qtyEl.removeEventListener('keydown', onKey);
+        dEl.removeEventListener('keydown', onKey);
+        sEl.removeEventListener('keydown', onKey);
+        oEl.removeEventListener('keydown', onKey);
+      };
+      const close = result => {
+        if (closed) return;
+        closed = true;
+        cleanup();
+        qtyEl.value = '';
+        dEl.value = '';
+        sEl.value = '';
+        oEl.value = '';
+        if (nameEl) {
+          nameEl.textContent = '';
+          nameEl.hidden = true;
+        }
+        pop.classList.remove('open');
+        resolve(result);
+      };
+
+      const parseMoney = () => {
+        const daler = parseInt(dEl.value, 10) || 0;
+        const skilling = parseInt(sEl.value, 10) || 0;
+        const ort = parseInt(oEl.value, 10) || 0;
+        return storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ort });
+      };
+
+      const onConfirm = e => {
+        e?.preventDefault();
+        const qty = parseInt(qtyEl.value, 10);
+        if (!Number.isFinite(qty) || qty <= 0) {
+          qtyEl.focus();
+          return;
+        }
+        const pricePerUnit = parseMoney();
+        const pricePerUnitO = Math.max(0, moneyToO(pricePerUnit));
+        const totalO = pricePerUnitO * qty;
+        close({ qty, pricePerUnit, pricePerUnitO, totalO });
+      };
+      const onCancel = e => {
+        e?.preventDefault();
+        close(null);
+      };
+      const onOutside = e => {
+        if (!inner || inner.contains(e.target)) return;
+        close(null);
+      };
+      const onKey = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onConfirm(e);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          onCancel(e);
+        }
+      };
+
+      confirm.addEventListener('click', onConfirm);
+      cancel.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+      qtyEl.addEventListener('keydown', onKey);
+      dEl.addEventListener('keydown', onKey);
+      sEl.addEventListener('keydown', onKey);
+      oEl.addEventListener('keydown', onKey);
+    });
+  }
+
+  async function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx, onCancel: cancelCb, onConfirm: confirmCb, isNewRow = false }) {
+    const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+    const tagTyp = entry.taggar?.typ || [];
+    const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+      .some(t => tagTyp.includes(t)) &&
+      !STACKABLE_IDS.includes(entry.id) &&
+      !['kraft','ritual'].includes(entry.bound);
+
+    const referenceId = row.id || entry?.id || null;
+    const referenceName = row.name || entry?.namn || null;
+    const isSameItem = other => {
+      if (!other) return false;
+      if (referenceId && other.id) {
+        return other.id === referenceId;
+      }
+      if (referenceName && other.name) {
+        return other.name === referenceName;
+      }
+      return other === row;
+    };
+
+    const processQty = ({ qty, purchase, mode = 'add' }) => {
+      const remove = mode === 'remove';
+      const result = { qty, highlightIdx: idx, indiv, isNewRow, mode };
+      const livePairs = !remove && liveEnabled ? [] : null;
+      const overrideO = !remove && purchase ? purchase.totalO : null;
+      const priceMoney = !remove && purchase ? purchase.pricePerUnit : null;
+      const assignPrice = target => {
+        if (!priceMoney || !target) return;
+        target.basePrice = { daler: priceMoney.daler, skilling: priceMoney.skilling, 'örtegar': priceMoney['örtegar'] };
+        target.basePriceSource = 'live';
+      };
+
+      if (remove) {
+        if (indiv && parentArr) {
+          const matching = parentArr
+            .map((item, index) => ({ item, index }))
+            .filter(({ item }) => isSameItem(item));
+          const removeCount = Math.min(qty, matching.length);
+          const removeTargets = matching.slice(-removeCount).map(obj => obj.index).sort((a, b) => b - a);
+          removeTargets.forEach(i => parentArr.splice(i, 1));
+          const remaining = parentArr
+            .map((item, index) => ({ item, index }))
+            .filter(({ item }) => isSameItem(item));
+          if (remaining.length) {
+            result.highlightIdx = remaining[remaining.length - 1].index;
+          } else if (parentArr.length) {
+            const fallbackIdx = Math.min(idx, parentArr.length - 1);
+            result.highlightIdx = fallbackIdx >= 0 ? fallbackIdx : null;
+          } else {
+            result.highlightIdx = null;
+          }
+        } else {
+          const currentQty = Number(row.qty) || 0;
+          const newQty = currentQty - qty;
+          if (newQty > 0) {
+            row.qty = newQty;
+            if (parentArr) {
+              const indexInParent = parentArr.indexOf(row);
+              if (indexInParent >= 0) result.highlightIdx = indexInParent;
+            }
+          } else {
+            if (parentArr) {
+              const indexInParent = parentArr.indexOf(row);
+              if (indexInParent >= 0) {
+                parentArr.splice(indexInParent, 1);
+                const fallbackIdx = Math.min(indexInParent, parentArr.length - 1);
+                result.highlightIdx = fallbackIdx >= 0 ? fallbackIdx : null;
+              } else {
+                result.highlightIdx = null;
+              }
+            } else {
+              row.qty = 0;
+              result.highlightIdx = null;
+            }
+          }
+        }
+      } else if (indiv && parentArr) {
+        if (isNewRow) {
+          let baseIndex = parentArr.indexOf(row);
+          if (baseIndex < 0) {
+            parentArr.push(row);
+            baseIndex = parentArr.length - 1;
+          }
+          if (qty >= 1) {
+            row.qty = 1;
+            if (priceMoney) assignPrice(row);
+            if (livePairs) livePairs.push({ prev: null, next: row });
+          }
+          result.highlightIdx = baseIndex;
+          for (let i = 1; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            if (priceMoney) assignPrice(clone);
+            parentArr.push(clone);
+            result.highlightIdx = parentArr.length - 1;
+            if (livePairs) livePairs.push({ prev: null, next: clone });
+          }
+        } else {
+          for (let i = 0; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            if (priceMoney) assignPrice(clone);
+            parentArr.push(clone);
+            if (livePairs) livePairs.push({ prev: null, next: clone });
+          }
+          result.highlightIdx = parentArr.length - 1;
+        }
+      } else {
+        if (isNewRow) {
+          row.qty = qty;
+          if (priceMoney) assignPrice(row);
+          if (parentArr) result.highlightIdx = parentArr.indexOf(row);
+          if (livePairs) livePairs.push({ prev: null, next: row });
+        } else {
+          const prevState = livePairs ? cloneRow(row) : null;
+          row.qty = (Number(row.qty) || 0) + qty;
+          if (priceMoney) assignPrice(row);
+          if (livePairs) livePairs.push({ prev: prevState, next: row });
+        }
+      }
+
+      if (livePairs && livePairs.length) {
+        applyLiveModePayment(livePairs, overrideO != null ? { overrideO } : undefined);
+      }
+      saveInventory(inv);
+      renderInventory();
+      if (typeof confirmCb === 'function') {
+        confirmCb(result);
+      }
+      const parentIdx = Number(li?.dataset.parent);
+      const baseName = row.name || entry?.namn || '';
+      const flashIdx = typeof result.highlightIdx === 'number' && result.highlightIdx >= 0
+        ? result.highlightIdx
+        : null;
+      if (li && baseName && flashIdx != null) {
+        const selector = !Number.isNaN(parentIdx)
+          ? `li[data-name="${CSS.escape(baseName)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
+          : `li[data-name="${CSS.escape(baseName)}"][data-idx="${flashIdx}"]`;
+        const flashEl = dom.invList?.querySelector(selector);
+        if (flashEl) {
+          flashEl.classList.add('inv-flash');
+          setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
+        }
+      }
+    };
+
+    if (liveEnabled) {
+      const purchase = await openLiveBuyPopup(entry, row);
+      if (!purchase) {
+        if (typeof cancelCb === 'function') cancelCb();
+        return;
+      }
+      processQty({ qty: purchase.qty, purchase });
+      return;
+    }
+
+    const root = getToolbarRoot();
+    if (!root) return;
+    const pop       = root.getElementById('buyMultiplePopup');
+    const inner     = pop ? pop.querySelector('.popup-inner') : null;
+    const labelEl   = root.getElementById('buyMultipleItemName');
+    const input     = root.getElementById('buyMultipleInput');
+    const confirm   = root.getElementById('buyMultipleConfirm');
+    const cancelBtn = root.getElementById('buyMultipleCancel');
+    const removeBtn = root.getElementById('buyMultipleRemove');
+    if (!pop || !input || !confirm || !cancelBtn || !removeBtn) return;
+
+    const nameMap = makeNameMap(flattenInventory(inv));
+    const displayName = nameMap.get(row) || row.name || entry?.namn || '';
+    if (labelEl) {
+      labelEl.textContent = displayName;
+      labelEl.hidden = !displayName;
+    }
+
+    const getAvailableQty = () => {
+      if (indiv && parentArr) {
+        return parentArr.reduce((count, item) => count + (isSameItem(item) ? 1 : 0), 0);
+      }
+      const current = Number(row.qty) || 0;
+      return current > 0 ? current : 0;
+    };
+
+    const clearInputValidity = () => {
+      if (typeof input.setCustomValidity === 'function') {
+        input.setCustomValidity('');
+      }
+    };
+
+    input.value = '';
+    clearInputValidity();
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => input.focus(), 50);
+
+    let closed = false;
+    const close = (reason = 'cancel') => {
+      if (closed) return;
+      closed = true;
+      pop.classList.remove('open');
+      confirm.removeEventListener('click', apply);
+      cancelBtn.removeEventListener('click', handleCancel);
+      removeBtn.removeEventListener('click', handleRemove);
+      pop.removeEventListener('click', onOutside);
+      input.removeEventListener('keydown', onKey);
+      input.removeEventListener('input', onInput);
+      input.value = '';
+      clearInputValidity();
+      if (reason !== 'confirm' && typeof cancelCb === 'function') {
+        cancelCb();
+      }
+    };
+
+    const apply = () => {
+      clearInputValidity();
+      const qty = parseInt(input.value, 10);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        input.focus();
+        return;
+      }
+      processQty({ qty });
+      close('confirm');
+    };
+
+    const handleRemove = () => {
+      clearInputValidity();
+      const qty = parseInt(input.value, 10);
+      if (!Number.isFinite(qty) || qty <= 0) {
+        input.focus();
+        return;
+      }
+      const available = getAvailableQty();
+      if (qty > available) {
+        if (typeof input.setCustomValidity === 'function') {
+          const message = available <= 0
+            ? 'Det finns inget att ta bort.'
+            : `Du kan som mest ta bort ${available}.`;
+          input.setCustomValidity(message);
+          input.reportValidity();
+        }
+        input.focus();
+        if (typeof input.select === 'function') input.select();
+        return;
+      }
+      processQty({ qty, mode: 'remove' });
+      close('confirm');
+    };
+
+    const onOutside = e => {
+      if (!inner || inner.contains(e.target)) return;
+      close('cancel');
+    };
+
+    const onKey = e => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        apply();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        close('cancel');
+      }
+    };
+
+    const onInput = () => clearInputValidity();
+
+    confirm.addEventListener('click', apply);
+    const handleCancel = () => close('cancel');
+    cancelBtn.addEventListener('click', handleCancel);
+    removeBtn.addEventListener('click', handleRemove);
+    pop.addEventListener('click', onOutside);
+    input.addEventListener('keydown', onKey);
+    input.addEventListener('input', onInput);
   }
 
   function openPricePopup() {
@@ -768,8 +2186,10 @@
       const o = parseInt(oEl?.value || '0', 10) || 0;
       if (d === 0 && s === 0 && o === 0) {
         delete row.basePrice;
+        delete row.basePriceSource;
       } else {
         row.basePrice = { daler: d, skilling: s, 'örtegar': o };
+        row.basePriceSource = 'manual';
       }
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
@@ -792,7 +2212,303 @@
     pop.addEventListener('click', onOutside);
   }
 
-function openVehiclePopup(preselectId, precheckedPaths) {
+  function openVehicleQtyPrompt({ maxQty, itemName, mode, vehicleName }) {
+    const maxRaw = Number(maxQty);
+    const max = Number.isFinite(maxRaw) && maxRaw > 0 ? Math.floor(maxRaw) : 0;
+    const fallback = max > 0 ? max : 1;
+    if (max <= 1) return Promise.resolve(fallback);
+    const root = getToolbarRoot();
+    if (!root) return Promise.resolve(fallback);
+    const pop     = root.getElementById('vehicleQtyPopup');
+    const input   = root.getElementById('vehicleQtyInput');
+    const confirm = root.getElementById('vehicleQtyConfirm');
+    const cancel  = root.getElementById('vehicleQtyCancel');
+    const message = root.getElementById('vehicleQtyMessage');
+    const hint    = root.getElementById('vehicleQtyHint');
+    const title   = root.getElementById('vehicleQtyTitle');
+    if (!pop || !input || !confirm || !cancel) return Promise.resolve(fallback);
+    const inner   = pop.querySelector('.popup-inner');
+    const safeName = itemName || 'föremål';
+    const actionText = mode === 'unload' ? 'lasta ur' : 'lasta i';
+    const vehiclePreposition = mode === 'unload' ? 'från' : 'i';
+    if (title) title.textContent = vehicleName ? `Välj antal (${vehicleName})` : 'Välj antal';
+    if (message) {
+      const vehiclePart = vehicleName ? ` ${vehiclePreposition} ${vehicleName}` : '';
+      message.textContent = `Hur många ”${safeName}” vill du ${actionText}${vehiclePart}?`;
+    }
+    if (hint) hint.textContent = max ? `Max: ${max}` : '';
+    input.value = String(max);
+    input.min = '1';
+    input.step = '1';
+    input.max = String(max);
+    if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => { if (typeof input.focus === 'function') input.focus(); if (typeof input.select === 'function') input.select(); }, 40);
+    return new Promise(resolve => {
+      let closed = false;
+      const clearValidity = () => {
+        if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
+      };
+      const close = result => {
+        if (closed) return;
+        closed = true;
+        pop.classList.remove('open');
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        input.removeEventListener('keydown', onKey);
+        input.removeEventListener('input', clearValidity);
+        if (hint) hint.textContent = '';
+        if (message) message.textContent = '';
+        input.value = '';
+        clearValidity();
+        resolve(result);
+      };
+      const onConfirm = () => {
+        clearValidity();
+        const value = parseInt(input.value, 10);
+        if (!Number.isFinite(value) || value <= 0) {
+          input.focus();
+          return;
+        }
+        if (value > max) {
+          if (typeof input.setCustomValidity === 'function') {
+            input.setCustomValidity(`Du kan som mest välja ${max}.`);
+            input.reportValidity();
+          }
+          input.focus();
+          return;
+        }
+        close(value);
+      };
+      const onCancel = () => close(null);
+      const onOutside = e => {
+        if (!inner || inner.contains(e.target)) return;
+        close(null);
+      };
+      const onKey = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          onConfirm();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          onCancel();
+        }
+      };
+      confirm.addEventListener('click', onConfirm);
+      cancel.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+      input.addEventListener('keydown', onKey);
+      input.addEventListener('input', clearValidity);
+    });
+  }
+
+  function openVehicleMoneyPrompt({ maxMoney, vehicleName, itemName }) {
+    const maxNormalized = storeHelper.normalizeMoney(maxMoney || {});
+    const maxTotalO = moneyToO(maxNormalized);
+    if (!maxTotalO) return Promise.resolve(null);
+    const root = getToolbarRoot();
+    if (!root) return Promise.resolve(null);
+    const pop      = root.getElementById('vehicleMoneyPopup');
+    const title    = root.getElementById('vehicleMoneyTitle');
+    const message  = root.getElementById('vehicleMoneyMessage');
+    const hint     = root.getElementById('vehicleMoneyHint');
+    const errorEl  = root.getElementById('vehicleMoneyError');
+    const dInput   = root.getElementById('vehicleMoneyDalerRemove');
+    const sInput   = root.getElementById('vehicleMoneySkillingRemove');
+    const oInput   = root.getElementById('vehicleMoneyOrtegarRemove');
+    const confirm  = root.getElementById('vehicleMoneyConfirm');
+    const cancel   = root.getElementById('vehicleMoneyCancel');
+    if (!pop || !confirm || !cancel) return Promise.resolve(null);
+    const inner    = pop.querySelector('.popup-inner');
+    const displayName = itemName || 'Pengar';
+    if (title) title.textContent = 'Ta ut pengar';
+    if (message) {
+      const vehiclePart = vehicleName ? ` från ${vehicleName}` : '';
+      message.textContent = `Hur mycket av ”${displayName}” vill du ta ut${vehiclePart}?`;
+    }
+    if (hint && typeof formatMoney === 'function') {
+      hint.textContent = `Max: ${formatMoney(maxNormalized)}`;
+    }
+    [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; });
+    if (errorEl) errorEl.textContent = '';
+    pop.classList.add('open');
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => { if (typeof dInput?.focus === 'function') dInput.focus(); }, 40);
+
+    return new Promise(resolve => {
+      let closed = false;
+      const close = result => {
+        if (closed) return;
+        closed = true;
+        pop.classList.remove('open');
+        confirm.removeEventListener('click', onConfirm);
+        cancel.removeEventListener('click', onCancel);
+        pop.removeEventListener('click', onOutside);
+        [dInput, sInput, oInput].forEach(inp => { if (inp) inp.removeEventListener('keydown', onKey); });
+        if (hint) hint.textContent = '';
+        if (message) message.textContent = '';
+        [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; if (typeof inp?.setCustomValidity === 'function') inp.setCustomValidity(''); });
+        if (errorEl) errorEl.textContent = '';
+        resolve(result);
+      };
+      const parseNonNegInt = input => {
+        if (!input) return 0;
+        const val = input.value;
+        if (val === undefined || val === null || val === '') return 0;
+        const num = Number(val);
+        if (!Number.isFinite(num) || num < 0 || !Number.isInteger(num)) return null;
+        if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
+        return num;
+      };
+      const showError = msg => { if (errorEl) errorEl.textContent = msg || ''; };
+      const onConfirm = () => {
+        const d = parseNonNegInt(dInput);
+        const s = parseNonNegInt(sInput);
+        const o = parseNonNegInt(oInput);
+        if (d === null || s === null || o === null) {
+          showError('Beloppen måste vara heltal och får inte vara negativa.');
+          return;
+        }
+        const bundle = storeHelper.normalizeMoney({ daler: d, skilling: s, 'örtegar': o });
+        const total = moneyToO(bundle);
+        if (total <= 0) {
+          showError('Ange ett belopp att ta ut.');
+          (dInput || sInput || oInput)?.focus();
+          return;
+        }
+        if (total > maxTotalO) {
+          showError('Beloppet överskrider summan i färdmedlet.');
+          return;
+        }
+        showError('');
+        close(bundle);
+      };
+      const onCancel = () => close(null);
+      const onOutside = e => { if (!inner || inner.contains(e.target)) return; close(null); };
+      const onKey = e => {
+        if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
+        else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
+      };
+      confirm.addEventListener('click', onConfirm);
+      cancel.addEventListener('click', onCancel);
+      pop.addEventListener('click', onOutside);
+      [dInput, sInput, oInput].forEach(inp => inp?.addEventListener('keydown', onKey));
+    });
+  }
+
+  function addMoneyToVehicle(vehicle, moneyBundle, opts = {}) {
+    const {
+      skipSave = false,
+      skipRender = false,
+      deductFromWallet = true
+    } = opts || {};
+    const inv = storeHelper.getInventory(store);
+    if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
+      return { success: false, error: 'Ogiltigt färdmedel.' };
+    }
+    const parseNonNegInt = (val) => {
+      if (val === undefined || val === null || val === '') return 0;
+      const num = Number(val);
+      if (!Number.isFinite(num) || num < 0 || !Number.isInteger(num)) return null;
+      return num;
+    };
+    const daler = parseNonNegInt(moneyBundle?.daler ?? moneyBundle?.d);
+    const skilling = parseNonNegInt(moneyBundle?.skilling ?? moneyBundle?.s);
+    const ortegar = parseNonNegInt(
+      moneyBundle?.ortegar ?? moneyBundle?.['örtegar'] ?? moneyBundle?.o
+    );
+    if (daler === null || skilling === null || ortegar === null) {
+      return { success: false, error: 'Beloppet måste vara ett heltal och får inte vara negativt.' };
+    }
+    const money = storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ortegar });
+    const moneyO = moneyToO(money);
+    if (moneyO <= 0) {
+      return { success: false, error: 'Beloppet måste vara större än noll.' };
+    }
+    if (deductFromWallet) {
+      const wallet = storeHelper.normalizeMoney(storeHelper.getMoney(store));
+      const walletO = moneyToO(wallet);
+      if (moneyO > walletO) {
+        return { success: false, error: 'Du har inte så mycket pengar i bältesbörsen.' };
+      }
+      const remainingWallet = oToMoney(walletO - moneyO);
+      storeHelper.setMoney(store, remainingWallet);
+    }
+    vehicle.contains = vehicle.contains || [];
+    const existing = vehicle.contains.find(r => r?.typ === 'currency' && r.money);
+    let row = existing;
+    if (existing) {
+      const currentO = moneyToO(storeHelper.normalizeMoney(existing.money));
+      row.money = storeHelper.normalizeMoney(oToMoney(currentO + moneyO));
+      row.qty = 1;
+      row.typ = 'currency';
+    } else {
+      row = {
+        name: 'Pengar',
+        typ: 'currency',
+        money,
+        qty: 1
+      };
+      vehicle.contains.push(row);
+    }
+    vehicle.contains.sort(sortInvEntry);
+    if (!skipSave) saveInventory(inv);
+    if (!skipRender) renderInventory();
+    return { success: true, row, added: money, total: row.money || money };
+  }
+
+  function removeMoneyFromVehicle(vehicle, path, removeBundle, opts = {}) {
+    const { addToWallet = true } = opts || {};
+    const inv = storeHelper.getInventory(store);
+    if (!vehicle || !Array.isArray(inv) || !inv.includes(vehicle)) {
+      return { success: false, error: 'Ogiltigt färdmedel.' };
+    }
+    const { row, parentArr, idx } = getRowByPath(inv, path);
+    if (!row || !Array.isArray(parentArr) || idx < 0) {
+      return { success: false, error: 'Kunde inte hitta pengarna i färdmedlet.' };
+    }
+    const parseNonNegInt = val => {
+      if (val === undefined || val === null || val === '') return 0;
+      const num = Number(val);
+      if (!Number.isFinite(num) || num < 0) return null;
+      return Math.floor(num);
+    };
+    const daler = parseNonNegInt(removeBundle?.daler);
+    const skilling = parseNonNegInt(removeBundle?.skilling);
+    const ortegar = parseNonNegInt(removeBundle?.ortegar ?? removeBundle?.['örtegar']);
+    if (daler === null || skilling === null || ortegar === null) {
+      return { success: false, error: 'Beloppet måste vara ett heltal och får inte vara negativt.' };
+    }
+    const toRemove = storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ortegar });
+    const removeTotalO = moneyToO(toRemove);
+    if (removeTotalO <= 0) {
+      return { success: false, error: 'Beloppet måste vara större än noll.' };
+    }
+    const current = storeHelper.normalizeMoney(row.money || {});
+    const currentO = moneyToO(current);
+    if (removeTotalO > currentO) {
+      return { success: false, error: 'Beloppet är större än summan i färdmedlet.' };
+    }
+    const remaining = oToMoney(currentO - removeTotalO);
+    if (addToWallet) {
+      const wallet = storeHelper.normalizeMoney(storeHelper.getMoney(store));
+      const walletO = moneyToO(wallet);
+      storeHelper.setMoney(store, oToMoney(walletO + removeTotalO));
+    }
+    if (moneyToO(remaining) <= 0) {
+      parentArr.splice(idx, 1);
+    } else {
+      row.money = remaining;
+      row.qty = 1;
+    }
+    saveInventory(inv);
+    renderInventory();
+    return { success: true, remaining };
+  }
+
+  function openVehiclePopup(preselectValue, precheckedPaths) {
     const root = getToolbarRoot();
     if (!root) return;
     const pop    = root.getElementById('vehiclePopup');
@@ -807,19 +2523,39 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     if (!vehicles.length) return;
 
+    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
+    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
+
     sel.innerHTML = vehicles
-      .map(v => `<option value="${v.idx}">${v.entry.namn}</option>`)
+      .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
       .join('');
-    if (preselectId) {
-      const found = vehicles.find(v => v.entry.id === preselectId);
-      if (found) sel.value = String(found.idx);
-    }
+
+    const resolvePreselectIdx = value => {
+      if (value === undefined || value === null) return null;
+      if (typeof value === 'number' && !Number.isNaN(value) && inv[value]) return value;
+      const asNum = Number(value);
+      if (!Number.isNaN(asNum) && inv[asNum]) return asNum;
+      const found = vehicles.find(v => v.entry.id === value || v.entry.namn === value);
+      return found ? found.idx : null;
+    };
+
+    const initialIdx = resolvePreselectIdx(preselectValue);
+    if (initialIdx !== null) sel.value = String(initialIdx);
 
     const flat = flattenInventoryWithPath(inv);
     const nameMap = makeNameMap(flat.map(f => f.row));
     const vehIdx = vehicles.map(v => v.idx);
     const movable = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length === 1));
     const outside = movable.filter(obj => !vehIdx.includes(obj.path[0]));
+    const moneyRowHtml = `
+      <div class="vehicle-money-row">
+        <span>Lägg till pengar</span>
+        <div class="vehicle-money-inputs">
+          <input id="vehicleMoneyDaler" type="number" min="0" step="1" placeholder="Daler">
+          <input id="vehicleMoneySkilling" type="number" min="0" step="1" placeholder="Skilling">
+          <input id="vehicleMoneyOrtegar" type="number" min="0" step="1" placeholder="Örtegar">
+        </div>
+      </div>`;
     const vehicleHtml = vehicles.map(v => {
       const items = movable.filter(o => o.path[0] === v.idx);
       if (!items.length) return '';
@@ -827,9 +2563,12 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       const inner = items.map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`).join('');
       return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
     }).join('');
-    list.innerHTML = outside
+    list.innerHTML = moneyRowHtml + outside
       .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`)
       .join('') + vehicleHtml;
+    const dalerInput = root.getElementById('vehicleMoneyDaler');
+    const skillingInput = root.getElementById('vehicleMoneySkilling');
+    const ortegarInput = root.getElementById('vehicleMoneyOrtegar');
     if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
       const set = new Set(precheckedPaths.map(String));
       [...list.querySelectorAll('input[type="checkbox"][data-path]')]
@@ -839,38 +2578,108 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
 
+    const clearMoneyInputs = () => {
+      [dalerInput, skillingInput, ortegarInput].forEach(inp => {
+        if (inp) {
+          inp.value = '';
+          inp.setCustomValidity('');
+        }
+      });
+    };
     const close = () => {
       pop.classList.remove('open');
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
+      clearMoneyInputs();
       sel.innerHTML = '';
       list.innerHTML = '';
     };
-    const onApply = () => {
+    const onApply = async () => {
       const vIdx = Number(sel.value);
       if (Number.isNaN(vIdx)) return;
       const vehicle = inv[vIdx];
+      if (!vehicle) return;
       vehicle.contains = vehicle.contains || [];
+      const vehicleName = vehicleNames.get(vIdx);
+      const parseNonNegInt = (input) => {
+        if (!input) return 0;
+        const val = input.value;
+        if (val === undefined || val === null || val === '') {
+          input.setCustomValidity('');
+          return 0;
+        }
+        const num = Number(val);
+        if (!Number.isFinite(num) || num < 0 || !Number.isInteger(num)) {
+          input.setCustomValidity('Beloppet måste vara ett heltal och får inte vara negativt.');
+          return null;
+        }
+        input.setCustomValidity('');
+        return num;
+      };
+      const amounts = [
+        { key: 'daler', input: dalerInput },
+        { key: 'skilling', input: skillingInput },
+        { key: 'örtegar', input: ortegarInput }
+      ];
+      const moneyBundle = {};
+      for (const { key, input } of amounts) {
+        const parsed = parseNonNegInt(input);
+        if (parsed === null) {
+          input?.reportValidity();
+          return;
+        }
+        moneyBundle[key] = parsed;
+      }
+      const normalizedMoney = storeHelper.normalizeMoney(moneyBundle);
+      const totalMoneyO = moneyToO(normalizedMoney);
+      if (totalMoneyO > 0) {
+        const addResult = addMoneyToVehicle(vehicle, normalizedMoney, { skipSave: true, skipRender: true });
+        if (!addResult?.success) {
+          if (addResult?.error) alert(addResult.error);
+          return;
+        }
+      }
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
-        .sort((a,b)=>{
-          for (let i=0; i<Math.max(a.length,b.length); i++) {
-            const av=a[i], bv=b[i];
-            if (av===undefined) return 1;
-            if (bv===undefined) return -1;
-            if (av!==bv) return bv-av;
+        .sort((a, b) => {
+          for (let i = 0; i < Math.max(a.length, b.length); i++) {
+            const av = a[i], bv = b[i];
+            if (av === undefined) return 1;
+            if (bv === undefined) return -1;
+            if (av !== bv) return bv - av;
           }
           return 0;
         });
-      checks.forEach(path => {
-        if (path[0] === vIdx) return;
-        let arr = inv;
-        for (let i = 0; i < path.length - 1; i++) {
-          arr = arr[path[i]].contains || [];
+      const operations = [];
+      for (const path of checks) {
+        if (!Array.isArray(path) || !path.length) continue;
+        if (path[0] === vIdx && path.length === 1) continue;
+        const { row, parentArr, idx } = getRowByPath(inv, path);
+        if (!row || !Array.isArray(parentArr) || idx < 0) continue;
+        const qtyRaw = Number(row.qty);
+        const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+        let moveQty = totalQty;
+        if (totalQty > 1) {
+          const entry = getEntry(row.id || row.name) || {};
+          const displayName = nameMap.get(row) || row.name || entry.namn || 'föremål';
+          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'load', vehicleName });
+          if (!chosen) return;
+          moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
         }
-        const item = arr.splice(path[path.length - 1], 1)[0];
-        vehicle.contains.push(item);
+        operations.push({ parentArr, idx, row, moveQty, totalQty });
+      }
+      operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
+        if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
+        if (totalQty > 1 && moveQty < totalQty) {
+          const { movedRow } = splitStackRow(row, moveQty);
+          if (movedRow) vehicle.contains.push(movedRow);
+          const remaining = Number(row.qty);
+          if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
+        } else {
+          const [item] = parentArr.splice(idx, 1);
+          if (item) vehicle.contains.push(item);
+        }
       });
       vehicle.contains.sort(sortInvEntry);
       saveInventory(inv);
@@ -902,28 +2711,58 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
     if (!vehicles.length) return;
 
+    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
+    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
+
     sel.innerHTML = vehicles
-      .map(v => `<option value="${v.idx}">${v.entry.namn}</option>`)
+      .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
       .join('');
     if (typeof preselectIdx === 'number') sel.value = String(preselectIdx);
 
+    const isMoneyRow = row => row && row.typ === 'currency' && row.money;
     const fillList = () => {
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
+      const vehicleName = vehicleNames.get(vIdx);
       if (!vehicle || !Array.isArray(vehicle.contains)) {
         list.innerHTML = '';
         return;
       }
       const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
       const nameMap = makeNameMap(items.map(i => i.row));
-      list.innerHTML = items
-        .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`)
-        .join('');
+      const parts = items.map(o => {
+        const pathStr = o.path.join('.');
+        if (isMoneyRow(o.row)) {
+          const normalized = storeHelper.normalizeMoney(o.row.money || {});
+          const amountText = typeof formatMoney === 'function' ? formatMoney(normalized) : nameMap.get(o.row);
+          const label = nameMap.get(o.row) || 'Pengar';
+          return `<div class="price-item vehicle-money-action-row"><span>${label}: ${amountText}</span><button type="button" class="char-btn vehicle-money-action" data-path="${pathStr}">Ta ut pengar</button></div>`;
+        }
+        return `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${pathStr}"></label>`;
+      });
+      list.innerHTML = parts.join('');
       if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
         const set = new Set(precheckedPaths.map(String));
         [...list.querySelectorAll('input[type="checkbox"][data-path]')]
           .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
       }
+      [...list.querySelectorAll('.vehicle-money-action[data-path]')].forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const path = btn.dataset.path?.split('.').map(Number);
+          const { row } = getRowByPath(inv, path || []);
+          if (!row || !isMoneyRow(row)) return;
+          const maxMoney = storeHelper.normalizeMoney(row.money || {});
+          if (moneyToO(maxMoney) <= 0) return;
+          const promptRes = await openVehicleMoneyPrompt({ maxMoney, vehicleName, itemName: nameMap.get(row) });
+          if (!promptRes) return;
+          const result = removeMoneyFromVehicle(vehicle, path, promptRes);
+          if (!result?.success) {
+            if (result?.error) alert(result.error);
+            return;
+          }
+          fillList();
+        });
+      });
     };
 
     fillList();
@@ -940,28 +2779,52 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       sel.innerHTML = '';
       list.innerHTML = '';
     };
-    const onApply = () => {
+    const onApply = async () => {
       const vIdx = Number(sel.value);
       const vehicle = inv[vIdx];
       if (!vehicle) return;
+      const vehicleName = vehicleNames.get(vIdx);
       const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
         .map(ch => ch.dataset.path.split('.').map(Number))
-        .sort((a,b)=>{
-          for (let i=0;i<Math.max(a.length,b.length);i++) {
-            const av=a[i], bv=b[i];
-            if (av===undefined) return 1;
-            if (bv===undefined) return -1;
-            if (av!==bv) return bv-av;
+        .sort((a, b) => {
+          for (let i = 0; i < Math.max(a.length, b.length); i++) {
+            const av = a[i], bv = b[i];
+            if (av === undefined) return 1;
+            if (bv === undefined) return -1;
+            if (av !== bv) return bv - av;
           }
           return 0;
         });
-      checks.forEach(path => {
-        let arr = inv;
-        for (let i=0; i<path.length-1; i++) {
-          arr = arr[path[i]].contains || [];
+      const nameMapAll = makeNameMap(flattenInventoryWithPath(inv).map(f => f.row));
+      const operations = [];
+      for (const path of checks) {
+        if (!Array.isArray(path) || !path.length) continue;
+        if (path[0] !== vIdx) continue;
+        const { row, parentArr, idx } = getRowByPath(inv, path);
+        if (!row || !Array.isArray(parentArr) || idx < 0) continue;
+        const qtyRaw = Number(row.qty);
+        const totalQty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? Math.floor(qtyRaw) : 1;
+        let moveQty = totalQty;
+        if (totalQty > 1) {
+          const entry = getEntry(row.id || row.name) || {};
+          const displayName = nameMapAll.get(row) || row.name || entry.namn || 'föremål';
+          const chosen = await openVehicleQtyPrompt({ maxQty: totalQty, itemName: displayName, mode: 'unload', vehicleName });
+          if (!chosen) return;
+          moveQty = Math.min(totalQty, Math.max(1, Math.floor(chosen)));
         }
-        const item = arr.splice(path[path.length-1],1)[0];
-        if (item) inv.push(item);
+        operations.push({ parentArr, idx, row, moveQty, totalQty });
+      }
+      operations.forEach(({ parentArr, idx, row, moveQty, totalQty }) => {
+        if (!Array.isArray(parentArr) || !row || !Number.isFinite(moveQty) || moveQty <= 0) return;
+        if (totalQty > 1 && moveQty < totalQty) {
+          const { movedRow } = splitStackRow(row, moveQty);
+          if (movedRow) addToInventory(inv, movedRow);
+          const remaining = Number(row.qty);
+          if (!Number.isFinite(remaining) || remaining <= 0) parentArr.splice(idx, 1);
+        } else {
+          const [item] = parentArr.splice(idx, 1);
+          if (item) addToInventory(inv, item);
+        }
       });
       saveInventory(inv);
       renderInventory();
@@ -978,13 +2841,24 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     pop.addEventListener('click', onOutside);
   }
 
-  function openDeleteContainerPopup(removeAll, removeOnly) {
+  function openDeleteContainerPopup(removeAll, removeOnly, options = {}) {
     const root = getToolbarRoot();
     if (!root) return;
     const pop    = root.getElementById('deleteContainerPopup');
     const allBtn = root.getElementById('deleteContainerAll');
     const onlyBtn= root.getElementById('deleteContainerOnly');
     const cancel = root.getElementById('deleteContainerCancel');
+    const textEl = root.getElementById('deleteContainerText');
+
+    const defaultText = textEl ? textEl.textContent : '';
+    const defaultAll  = allBtn ? allBtn.textContent : '';
+    const defaultOnly = onlyBtn ? onlyBtn.textContent : '';
+
+    const { message, allLabel, onlyLabel } = options || {};
+
+    if (textEl && message) textEl.textContent = message;
+    if (allBtn && allLabel) allBtn.textContent = allLabel;
+    if (onlyBtn && onlyLabel) onlyBtn.textContent = onlyLabel;
 
     pop.classList.add('open');
     pop.querySelector('.popup-inner').scrollTop = 0;
@@ -995,6 +2869,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       onlyBtn.removeEventListener('click', onOnly);
       cancel.removeEventListener('click', onCancel);
       pop.removeEventListener('click', onOutside);
+      if (textEl) textEl.textContent = defaultText;
+      if (allBtn) allBtn.textContent = defaultAll;
+      if (onlyBtn) onlyBtn.textContent = defaultOnly;
     };
     const onAll = () => { removeAll(); close(); };
     const onOnly = () => { removeOnly(); close(); };
@@ -1101,6 +2978,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.max(0, diffO));
+    storeHelper.setSavedUnusedMoney(store, diff);
     storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
     storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
     storeHelper.setMoney(store, {
@@ -1110,6 +2988,8 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     });
 
     flat.forEach(row => {
+      row.basePrice = { daler: 0, skilling: 0, 'örtegar': 0 };
+      row.basePriceSource = 'manual';
       row.gratis = row.qty;
       const entry = getEntry(row.id || row.name);
       const removed = row.removedKval ?? [];
@@ -1118,7 +2998,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         ...splitQuals(entry.kvalitet)
       ];
       const baseQ = baseQuals.filter(q => !removed.includes(q));
-      const allQ = [...baseQ, ...(row.kvaliteter || [])];
+      const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter || [])]);
       row.gratisKval = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
       // remove any price multiplier when everything is made free
       delete row.priceMult;
@@ -1132,17 +3012,28 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const entry  = getEntry(row.id || row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
-    let base = moneyToO(row.basePrice || entry.grundpris || {});
+    const entryBase = moneyToO(entry.grundpris || {});
+    const qtyNum = Math.max(0, Number(row.qty) || 0);
+    const gratisNum = Math.max(0, Number(row.gratis) || 0);
+    const srcRaw = typeof row.basePriceSource === 'string' ? row.basePriceSource.toLowerCase() : '';
+    let baseSource = srcRaw;
+    if (!baseSource && row.basePrice != null && qtyNum > 0 && gratisNum >= qtyNum) {
+      baseSource = 'live';
+    }
+    const hasBaseOverride = row.basePrice != null && baseSource !== 'live';
+    const overrideBase = hasBaseOverride ? moneyToO(row.basePrice || {}) : null;
+    let base = hasBaseOverride ? overrideBase : entryBase;
+    let fallbackBase = entryBase;
     const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
     ];
     const removedQ = row.removedKval ?? [];
-    const allQuals = [
+    const allQuals = sanitizeArmorQualities(entry, [
       ...baseQuals.filter(q => !removedQ.includes(q)),
       ...(row.kvaliteter || [])
-    ];
+    ]);
     if (forgeLvl && forgeable) {
       const posCnt = countPositiveQuals(allQuals);
       const mystCnt = allQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
@@ -1152,25 +3043,33 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         (forgeLvl >= 3 && posCnt === 2 && mystCnt <= 1);
       if (qualifies) {
         base = dividePrice(base, 2);
+        fallbackBase = dividePrice(fallbackBase, 2);
       }
     }
     if (tagTyp.includes('Elixir')) {
       const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) base = dividePrice(base, 2);
+      if (alcLevel >= req) {
+        base = dividePrice(base, 2);
+        fallbackBase = dividePrice(fallbackBase, 2);
+      }
     }
     if (tagTyp.includes('L\u00e4gre Artefakt')) {
       const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
       const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) base = dividePrice(base, 2);
+      if (artLevel >= req) {
+        base = dividePrice(base, 2);
+        fallbackBase = dividePrice(fallbackBase, 2);
+      }
     }
     // Build price chain and track before/after for each quality
-    let price = base;
+    const priceBase = base > 0 ? base : fallbackBase; // ensures qualities still cost after mark-free flows
+    let price = priceBase;
     const steps = [];
     const posQuals = allQuals.filter(q => !isNegativeQual(q));
     const negQuals = allQuals.filter(q => isNegativeQual(q));
     posQuals.forEach(q => {
-      const qEntry = DB.find(x => x.namn === q) || {};
+      const qEntry = getEntry(q);
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const negat = false;
       const neut  = Boolean(qEntry.neutral);
@@ -1182,19 +3081,21 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     });
 
     const mult = row.priceMult || 1;
-    const qty = row.qty || 1;
-    const freeBase = Math.min(Number(row.gratis || 0), qty);
+    const qty = qtyNum || 1;
+    const baseOverrideZero = hasBaseOverride && overrideBase === 0;
+    const rawFreeBase = Math.min(gratisNum, qty);
+    const freeBase = baseOverrideZero ? qty : rawFreeBase;
 
     // Full price before adjustments
     const fullPerUnit = price * mult;
     let total = fullPerUnit * qty;
 
     // Adjustment for free base price
-    total -= base * mult * freeBase;
+    total -= priceBase * mult * freeBase;
 
     // Adjustment for free qualities (left to right)
     const freeNames = (row.gratisKval || []).filter(q => {
-      const qEntry = DB.find(x => x.namn === q) || {};
+      const qEntry = getEntry(q);
       return !qEntry.negativ && !qEntry.neutral;
     });
     const remaining = [...freeNames];
@@ -1217,16 +3118,19 @@ function openVehiclePopup(preselectId, precheckedPaths) {
 
   function calcRowWeight(row) {
     const entry  = getEntry(row.id || row.name);
+    if (row.typ === 'currency' && row.money) {
+      return calcMoneyWeight(storeHelper.normalizeMoney(row.money));
+    }
     const base   = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
     const removed = row.removedKval ?? [];
     const baseQuals = [
       ...(entry.taggar?.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
     ];
-    const allQuals = [
+    const allQuals = sanitizeArmorQualities(entry, [
       ...baseQuals.filter(q => !removed.includes(q)),
       ...(row.kvaliteter || [])
-    ];
+    ]);
     const massCnt = allQuals.filter(q => q === 'Massivt').length;
     const sub = Array.isArray(row.contains)
       ? row.contains.reduce((s, r) => s + calcRowWeight(r), 0)
@@ -1289,7 +3193,7 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const posBaseQuals = baseQuals.filter(q => !isNegativeQual(q));
     const negBaseQuals = baseQuals.filter(q => isNegativeQual(q));
     posBaseQuals.forEach(q => {
-      const qEntry = DB.find(x => x.namn === q) || {};
+      const qEntry = getEntry(q);
       const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
       const neut  = Boolean(qEntry.neutral);
       if (neut) price *= 1;
@@ -1300,45 +3204,118 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     return oToMoney(price);
   }
 
+  function buildQualityInfoSections(qualities, freeQualities) {
+    const list = Array.isArray(qualities) ? qualities : [];
+    if (!list.length) return [];
+    const freeSet = new Set(Array.isArray(freeQualities) ? freeQualities.filter(Boolean) : []);
+    const blocks = list.map(({ q, base }) => {
+      const name = String(q || '').trim();
+      if (!name) return '';
+      const qEntry = getEntry(name) || {};
+      const tagParts = [`<span class="tag">${base ? 'Grund' : 'Tillagd'}</span>`];
+      if (freeSet.has(name)) tagParts.push('<span class="tag free">Gratis</span>');
+      if (isMysticQual(name)) tagParts.push('<span class="tag mystic">Mystisk</span>');
+      if (isNegativeQual(name)) tagParts.push('<span class="tag negative">Negativ</span>');
+      else if (isNeutralQual(name)) tagParts.push('<span class="tag neutral">Neutral</span>');
+
+      const descHtml = abilityHtml(qEntry);
+      const effectText = typeof qEntry.effekt === 'string' ? qEntry.effekt.trim() : '';
+      const effectHtml = effectText
+        ? `<p><strong>Effekt:</strong> ${escapeHtml(effectText)}</p>`
+        : '';
+      const bodyHtml = `${descHtml || ''}${effectHtml}`;
+      const tagsHtml = tagParts.length ? `<div class="tags">${tagParts.join(' ')}</div>` : '';
+      return `
+        <div class="info-block">
+          <p><strong>${escapeHtml(name)}</strong></p>
+          ${tagsHtml}
+          ${bodyHtml}
+        </div>
+      `;
+    }).filter(Boolean);
+    if (!blocks.length) return [];
+    return [{
+      title: 'Kvaliteter',
+      className: 'info-panel-qualities',
+      content: blocks.join('')
+    }];
+  }
+
   function buildRowDesc(entry, row) {
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
     const isArtifact = tagTyp.includes('Artefakt');
     const isLArtifact = tagTyp.includes('L\u00e4gre Artefakt');
     const freeCnt = Number(row.gratis || 0);
-    const rowLevel = row.nivå || (
-      ['Elixir','L\u00e4gre Artefakt','F\u00e4lla'].some(t => tagTyp.includes(t))
-        ? Object.keys(entry.nivåer || {}).find(l => l) || null
-        : null
-    );
+    const levelKeys = Object.keys(entry.nivåer || {});
+    const rowLevel = row.nivå || (levelKeys.length ? levelKeys[0] : null);
     let desc = '';
+    let infoBody = '';
+    const infoTagParts = [];
+    const typeTagParts = [];
+    (tagger.typ ?? []).forEach(t => {
+      const txt = String(t || '').trim();
+      if (txt) typeTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
+    });
     if (!isArtifact || isLArtifact) {
-      desc += abilityHtml(entry, rowLevel);
+      const ability = abilityHtml(entry, rowLevel);
+      if (ability) {
+        desc += ability;
+        infoBody += ability;
+      }
     }
     const arkTags = explodeTags(tagger.ark_trad);
-    const tagList = (tagger.typ || [])
-      .concat(arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : []), tagger.test || [])
-      .map(t => `<span class="tag">${t}</span>`);
-    if (rowLevel) tagList.push(`<span class="tag level">${rowLevel}</span>`);
-    if (freeCnt) tagList.push(`<span class="tag free removable" data-free="1">Gratis${freeCnt>1?`×${freeCnt}`:''} ✕</span>`);
+    const testTags = Array.isArray(tagger.test) ? tagger.test : [];
+    const infoTags = testTags.concat(
+      arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : [])
+    );
+    const tagList = infoTags.map(t => `<span class="tag">${t}</span>`);
+    infoTags.forEach(t => {
+      const txt = String(t || '').trim();
+      if (txt) infoTagParts.push(`<span class="tag">${escapeHtml(txt)}</span>`);
+    });
+    infoTagParts.push(...typeTagParts);
+    if (rowLevel) {
+      tagList.push(`<span class="tag level">${rowLevel}</span>`);
+      infoTagParts.push(`<span class="tag level">${escapeHtml(rowLevel)}</span>`);
+    }
+    if (freeCnt) {
+      const freeTxt = `Gratis${freeCnt>1?`×${freeCnt}`:''}`;
+      tagList.push(`<span class="tag free removable" data-free="1">${freeTxt} ✕</span>`);
+      infoTagParts.push(`<span class="tag free">${escapeHtml(freeTxt)}</span>`);
+    }
     const priceMult = row.priceMult;
+    let priceMultTag = '';
     if (priceMult && Math.abs(priceMult - 1) > 0.001) {
       const mTxt = Number.isInteger(priceMult)
         ? priceMult
         : priceMult.toFixed(2).replace(/\.?0+$/, '');
-      tagList.push(`<span class="tag price-mult removable" data-mult="1">×${mTxt} ✕</span>`);
+      const safeMult = escapeHtml(String(mTxt));
+      priceMultTag = `<span class="tag price-mult removable" data-mult="1">×${safeMult} ✕</span>`;
+      infoTagParts.push(`<span class="tag price-mult">×${safeMult}</span>`);
     }
     if (row.basePrice) {
-      const t = formatMoney(row.basePrice);
-      tagList.push(`<span class="tag price-base removable" data-price="1">Grundpris: ${t} ✕</span>`);
+      const basePriceTxt = formatMoney(row.basePrice);
+      const baseLabelRaw = (row.basePriceSource || '').toLowerCase() === 'live'
+        ? 'Köpt för'
+        : 'Grundpris';
+      const baseLabel = escapeHtml(baseLabelRaw);
+      tagList.push(`<span class="tag price-base removable" data-price="1">${baseLabelRaw}: ${basePriceTxt} ✕</span>`);
+      infoTagParts.push(`<span class="tag price-base">${baseLabel}: ${escapeHtml(basePriceTxt)}</span>`);
     }
     if (tagList.length) {
-      desc += `<div class="tags">${tagList.join(' ')}</div>`;
+      desc += `<div class="tags info-tags">${tagList.join(' ')}</div>`;
     }
-    desc += itemStatHtml(entry, row);
+    const statsHtml = itemStatHtml(entry, row);
+    if (statsHtml) {
+      desc += statsHtml;
+      infoBody += statsHtml;
+    }
     if (row.trait && !entry.bound && row.id !== 'l9') {
-      const label = entry.boundLabel || 'Karakt\u00e4rsdrag';
-      desc += `<br><strong>${label}:</strong> ${row.trait}`;
+      const label = entry.boundLabel || 'Karaktärsdrag';
+      const traitHtml = `<br><strong>${label}:</strong> ${row.trait}`;
+      desc += traitHtml;
+      infoBody += traitHtml;
     }
 
     const removedQ = row.removedKval ?? [];
@@ -1348,11 +3325,26 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     ];
     const baseQ = baseQuals.filter(q => !removedQ.includes(q));
     const addQ  = row.kvaliteter ?? [];
-    const freeQ = (row.gratisKval ?? []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+    const allowedQuals = sanitizeArmorQualities(entry, [...baseQ, ...addQ]);
+    const allowance = new Map();
+    allowedQuals.forEach(q => allowance.set(q, (allowance.get(q) || 0) + 1));
+    const consumeAllowed = q => {
+      const count = allowance.get(q) || 0;
+      if (count <= 0) return false;
+      allowance.set(q, count - 1);
+      return true;
+    };
+    const visibleBaseQ = baseQ.filter(consumeAllowed);
+    const visibleAddQ = addQ.filter(consumeAllowed);
+    const allowedSet = new Set(allowedQuals);
+    const freeQ = (row.gratisKval ?? [])
+      .filter(q => !isNegativeQual(q) && !isNeutralQual(q))
+      .filter(q => allowedSet.has(q));
     const all = [
-      ...baseQ.map(q => ({ q, base: true })),
-      ...addQ.map(q => ({ q, base: false }))
+      ...visibleBaseQ.map(q => ({ q, base: true })),
+      ...visibleAddQ.map(q => ({ q, base: false }))
     ];
+    let qualityHtml = '';
     if (all.length) {
       const qhtml = all.map(obj => {
         const q = obj.q;
@@ -1360,8 +3352,9 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         const baseAttr = obj.base ? ' data-base="1"' : '';
         return `<span class="${cls}" data-qual="${q}"${baseAttr}>${q} ✕</span>`;
       }).join('');
-      desc += `<br>Kvalitet:<div class="tags">${qhtml}</div>`;
+      qualityHtml = `<div class="quality-tags tags">${qhtml}</div>`;
     }
+    const qualityInfoSections = buildQualityInfoSections(all, freeQ);
 
     const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
     if (isArtifact) {
@@ -1369,30 +3362,113 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       if (effectVal === 'corruption') {
         txt = '+1 Permanent korruption';
       } else if (effectVal === 'xp') {
-        txt = '\u20131 Erfarenhetspo\u00e4ng';
+        txt = '–1 Erfarenhetspoäng';
       } else {
         txt = 'Obunden';
         cls += ' unbound';
       }
-      desc += `<br><span class="${cls}">${txt}</span>`;
+      const effectHtml = `<br><span class="${cls}">${txt}</span>`;
+      desc += effectHtml;
+      infoBody += effectHtml;
     }
-    return { desc, rowLevel, freeCnt };
+    return { desc, rowLevel, freeCnt, qualityHtml, qualityInfoSections, infoBody, infoTagParts, priceMultTag };
   }
 
   function renderInventory () {
-    if (!dom.invList) return;                        // index-sidan saknar listan
+    const listEl = dom.invList;
     const openKeys = new Set(
-      [...dom.invList.querySelectorAll('li.card:not(.compact)')]
-        .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+      listEl
+        ? [...listEl.querySelectorAll('li.card.entry-card:not(.compact)')]
+            .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+        : []
     );
-    // Preserve open state for Formaliteter cards (now split into tools/info)
+    const compactKeys = new Set(
+      listEl
+        ? [...listEl.querySelectorAll('li.card.entry-card.compact')]
+            .map(li => li.dataset.special || `${li.dataset.id || ''}|${li.dataset.trait || ''}|${li.dataset.level || ''}`)
+        : []
+    );
     if (dom.invFormal) {
       [...dom.invFormal.querySelectorAll('li.card')].forEach(li => {
         if (!li.classList.contains('compact') && li.dataset.special) {
           openKeys.add(li.dataset.special);
         }
       });
+
+      dom.invFormal.onclick = async e => {
+        if (e.target.closest('.entry-collapse-btn')) return;
+        const header = e.target.closest('.card-header');
+        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
+          return;
+        }
+
+        // Handle money +/- inside formal card
+        const btn = e.target.closest('button[data-act]');
+        if (!btn) return;
+        const act = btn.dataset.act;
+        if (act === 'moneyPlus' || act === 'moneyMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneyPlus' ? 1 : -1;
+          const newD = (cur.daler || 0) + delta;
+          if (newD < 0) {
+            storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, daler: newD });
+          }
+          renderInventory();
+          return;
+        }
+        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneySkillingPlus' ? 1 : -1;
+          const newS = (cur.skilling || 0) + delta;
+          if (newS < 0) {
+            const newD = Math.max(0, (cur.daler || 0) - 1);
+            const newSkilling = 3 + newS;
+            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
+          } else if (newS >= 4) {
+            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, skilling: newS });
+          }
+          renderInventory();
+          return;
+        }
+        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
+          const newO = (cur['örtegar'] || 0) + delta;
+          if (newO < 0) {
+            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
+            const newOrtegar = 8 + newO;
+            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
+            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
+          } else if (newO >= 8) {
+            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
+          }
+          renderInventory();
+          return;
+        }
+      };
+
+      if (!dom.invFormal.dataset.toggleBound) {
+        dom.invFormal.addEventListener('entry-card-toggle', e => {
+          updateCollapseBtnState();
+          const card = e.detail?.card;
+          if (!card) return;
+          const expanded = Boolean(e.detail?.expanded);
+          if (card.dataset.special === '__info__') {
+            localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+          } else if (card.dataset.special === '__invfunc__') {
+            localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
+          }
+        });
+        dom.invFormal.dataset.toggleBound = '1';
+      }
     }
+
     const allInv = storeHelper.getInventory(store);
     const flatInv = flattenInventory(allInv);
     const nameMap = makeNameMap(allInv);
@@ -1401,18 +3477,14 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const cash = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
     const list = storeHelper.getCurrentList(store);
 
-    /* ---------- summa i pengar ---------- */
     const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
-    const skillForge = storeHelper.abilityLevel(
-      list, 'Smideskonst');
+    const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
     const forgeLvl = Math.max(partyForge, skillForge);
     const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
-    const skillAlc = storeHelper.abilityLevel(
-      list, 'Alkemist');
+    const skillAlc = storeHelper.abilityLevel(list, 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
     const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-    const skillArt = storeHelper.abilityLevel(
-      list, 'Artefaktmakande');
+    const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
 
     const tot = flatInv.reduce((t, row) => {
@@ -1422,10 +3494,10 @@ function openVehiclePopup(preselectId, precheckedPaths) {
         ...splitQuals(entry.kvalitet)
       ];
       const removedQ = row.removedKval ?? [];
-      const allQualsRow = [
+      const allQualsRow = sanitizeArmorQualities(entry, [
         ...baseQuals.filter(q => !removedQ.includes(q)),
         ...(row.kvaliteter || [])
-      ];
+      ]);
       row.posQualCnt = countPositiveQuals(allQualsRow);
       const m = calcRowCost(row, forgeLvl, alcLevel, artLevel);
       t.d += m.d; t.s += m.s; t.o += m.o;
@@ -1442,25 +3514,26 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const moneyWeight = calcMoneyWeight(unusedMoney);
 
     const usedWeight = allInv.reduce((s, r) => {
-      const entry = getEntry(r.name);
+      const entry = getEntry(r.id || r.name);
       const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
       return s + (isVeh ? 0 : calcRowWeight(r));
     }, 0) + moneyWeight;
     const traits = storeHelper.getTraits(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store) || {};
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
     const valStark = (traits['Stark']||0) + (bonus['Stark']||0) + (maskBonus['Stark']||0);
+    const manualCapacity = Number(manualAdjust.capacity || 0);
     const baseCap = storeHelper.calcCarryCapacity(valStark, list);
-    const maxCapacity = baseCap;
+    const maxCapacity = baseCap + manualCapacity;
     const remainingCap = maxCapacity - usedWeight;
 
-    // Capacity color helper: based on used/max ratio
     const capClassOf = (used, max) => {
       if (!max || max <= 0) return '';
       const ratio = used / max;
-      if (ratio > 1.0) return 'cap-neg';    // överlast: över maxkapacitet
-      if (ratio >= 0.95) return 'cap-crit'; // nära max
-      if (ratio >= 0.80) return 'cap-warn'; // närmar sig
+      if (ratio > 1.0) return 'cap-neg';
+      if (ratio >= 0.95) return 'cap-crit';
+      if (ratio >= 0.80) return 'cap-warn';
       return '';
     };
     const charCapClass = capClassOf(usedWeight, maxCapacity);
@@ -1468,33 +3541,66 @@ function openVehiclePopup(preselectId, precheckedPaths) {
     const vehicles = allInv
       .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
       .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
-
-    if (dom.invTypeSel) {
-      const types = new Set();
-      allInv.forEach(row => {
-        const entry = getEntry(row.id || row.name);
-        (entry.taggar?.typ || [])
-          .filter(Boolean)
-          .forEach(t => types.add(t));
-      });
-      dom.invTypeSel.innerHTML =
-        '<option value="">Kategori (alla)</option>' +
-        [...types]
-          .sort((a, b) => catName(a).localeCompare(catName(b)))
-          .map(t =>
-            `<option value="${t}"${t===F.typ?' selected':''}>${catName(t)}</option>`)
-          .join('');
-    }
-
-    const inv = allInv
-      .filter(row => {
-        if (F.typ) {
-          const entry = getEntry(row.id || row.name);
-          if (!(entry.taggar?.typ || []).includes(F.typ)) return false;
+    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
+    const sumVehicleMoneyO = (vehRow) => {
+      let totalO = 0;
+      const stack = Array.isArray(vehRow?.contains) ? [...vehRow.contains] : [];
+      while (stack.length) {
+        const node = stack.pop();
+        if (!node || typeof node !== 'object') continue;
+        if (node.typ === 'currency' && node.money) {
+          totalO += moneyToO(storeHelper.normalizeMoney(node.money));
         }
-        if (F.invTxt && !rowMatchesText(row, F.invTxt)) return false;
-        return true;
-      });
+        if (Array.isArray(node.contains)) stack.push(...node.contains);
+      }
+      return totalO;
+    };
+    const vehicleMoneyLines = vehicles
+      .map(v => {
+        const moneyO = sumVehicleMoneyO(v.row);
+        return moneyO > 0 ? { name: vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel', money: formatMoney(oToMoney(moneyO)) } : null;
+      })
+      .filter(Boolean);
+
+    const searchTerm = (F.invTxt || '').trim().toLowerCase();
+    const hasSearch = Boolean(searchTerm);
+    const union = storeHelper.getFilterUnion(store);
+    const selectedTags = Array.from(new Set([...F.typ, ...F.ark, ...F.test]));
+    const hasTagFilters = selectedTags.length > 0;
+    const forcedCatOpen = new Set(F.typ);
+    const compactDefault = storeHelper.getCompactEntries(store);
+    const filteredRows = [];
+    for (let idx = 0; idx < allInv.length; idx++) {
+      const row = allInv[idx];
+      const entry = getEntry(row.id || row.name);
+      const typTags = entry.taggar?.typ || [];
+      const arkRaw = entry.taggar?.ark_trad;
+      const arkTags = explodeTags(arkRaw);
+      const arkList = arkTags.length ? arkTags : (Array.isArray(arkRaw) ? ['Traditionslös'] : []);
+      const testTags = entry.taggar?.test || [];
+      const itemTags = [...typTags, ...arkList, ...testTags];
+
+      const tagHit = hasTagFilters && (
+        union
+          ? selectedTags.some(tag => itemTags.includes(tag))
+          : selectedTags.every(tag => itemTags.includes(tag))
+      );
+
+      const textHit = hasSearch ? rowMatchesText(row, searchTerm) : false;
+
+      let passes = true;
+      if (hasTagFilters || hasSearch) {
+        if (union) {
+          passes = (hasTagFilters && tagHit) || (hasSearch && textHit);
+        } else {
+          if (hasTagFilters && !tagHit) passes = false;
+          if (hasSearch && !textHit) passes = false;
+        }
+      }
+
+      if (!passes) continue;
+      filteredRows.push({ row, idx, entry });
+    }
 
     const foodCount = flatInv
       .filter(row => {
@@ -1504,197 +3610,478 @@ function openVehiclePopup(preselectId, precheckedPaths) {
       .reduce((sum, row) => sum + (row.qty || 0), 0);
 
     const moneyRow = moneyWeight
-      ? `            <div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
+      ? `<div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
       : '';
 
-    /* ---------- kort för formaliteter (uppdelat: verktyg & information) ---------- */
-    const toolsKey = '__tools__';
-    const infoKey  = '__info__';
-    const toolsLS = localStorage.getItem(INV_TOOLS_KEY) === '1';
-    const infoLS  = localStorage.getItem(INV_INFO_KEY) === '1';
-    if (toolsLS) openKeys.add(toolsKey); else openKeys.delete(toolsKey);
-    if (infoLS)  openKeys.add(infoKey);  else openKeys.delete(infoKey);
-    const vehicleBtns = vehicles
-      .map(v => `<button id="vehicleBtn-${v.entry.id}" class="char-btn">Lasta i ${v.entry.namn}</button>`)
-      .join('');
-
-    const toolsCard = `
-      <li class="card${openKeys.has(toolsKey) ? '' : ' compact'}" data-special="${toolsKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Verktyg 🧰</span></div>
-        <div class="card-desc">
-          <div class="inv-buttons">
-            <button id="addCustomBtn" class="char-btn">Nytt föremål</button>
-            <button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>
-            <button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>
-            <button id="squareBtn" class="char-btn">Lägg till antal</button>
-            ${vehicleBtns}
-            <button id="dragToggle" class="char-btn">Dra & Släpp</button>
-            <button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>
-            <button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>
+    const baseFunctionButtons = [
+      '<button id="addCustomBtn" class="char-btn">Nytt föremål</button>',
+      '<button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>',
+      '<button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>',
+      '<button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>'
+    ];
+    const vehicleButtons = vehicles.length
+      ? ['<button id="vehicleBtn" class="char-btn">Lasta i färdmedel</button>']
+      : [];
+    const trailingFunctionButtons = [
+      '<button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>',
+      '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
+    ];
+    const allFunctionButtons = [...baseFunctionButtons, ...vehicleButtons, ...trailingFunctionButtons];
+    const functionsState = localStorage.getItem(INV_TOOLS_KEY);
+    const functionsOpen = functionsState === null ? true : functionsState === '1';
+    if (functionsState === null) localStorage.setItem(INV_TOOLS_KEY, '1');
+    const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+    const liveToggleHtml = `
+      <div class="inv-live-toggle">
+        <label class="toggle-switch">
+          <input id="inventoryLiveToggle" type="checkbox" aria-label="Slå på eller av live-läge"${liveModeEnabled ? ' checked' : ''}>
+          <span class="toggle-switch-track" aria-hidden="true"></span>
+          <div class="toggle-switch-copy">
+            <span class="toggle-switch-title">Live-läge</span>
+            <span class="toggle-switch-sub">Dra pengar direkt och markera inköp som gratis</span>
           </div>
-        </div>
-      </li>`;
+        </label>
+      </div>`;
+    const functionsCard = createEntryCard({
+      compact: !functionsOpen,
+      dataset: { special: '__invfunc__' },
+      nameHtml: 'Inventarie',
+      titleSuffixHtml: icon('basket', { className: 'title-icon', alt: 'Inventarie' }),
+      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div>${liveToggleHtml}</div>`,
+      collapsible: true
+    });
 
-    const infoCard = `
-      <li class="card${openKeys.has(infoKey) ? '' : ' compact'}" data-special="${infoKey}">
-        <div class="card-title"><span><span class="collapse-btn"></span>Information 🔎</span></div>
-        <div class="card-desc">
+    const infoKey  = '__info__';
+    const infoState = localStorage.getItem(INV_INFO_KEY);
+    const infoOpen  = infoState === null ? true : infoState === '1';
+    if (infoState === null) localStorage.setItem(INV_INFO_KEY, '1');
+
+    const infoCardDesc = `
           <div class="formal-section">
             <div class="formal-title">Pengar
               <div class="money-control">
-                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon">&minus;</button>
-                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon">+</button>
+                <button id="moneyMinusBtn" data-act="moneyMinus" class="char-btn icon icon-only" aria-label="Minska mynt" title="Minska mynt">${icon('minus')}</button>
+                <button id="moneyPlusBtn" data-act="moneyPlus" class="char-btn icon icon-only" aria-label="Öka mynt" title="Öka mynt">${icon('plus')}</button>
               </div>
             </div>
             <div class="money-line"><span class="label">Kontant:</span><span class="value">${cash.daler}D ${cash.skilling}S ${cash['örtegar']}Ö</span></div>
             <div class="money-line"><span class="label">Oanvänt:</span><span class="value" id="unusedOut">0D 0S 0Ö</span></div>
-${moneyRow}
+            ${moneyRow}
+            ${vehicleMoneyLines.map(v => `<div class="money-line"><span class="label">Pengar på ${escapeHtml(v.name)}:</span><span class="value">${v.money}</span></div>`).join('')}
           </div>
           <div class="formal-section ${charCapClass}">
             <div class="formal-title">Bärkapacitet</div>
             <div class="cap-row"><span class="label">Max:</span><span class="value">${formatWeight(maxCapacity)}</span></div>
             <div class="cap-row"><span class="label">Återstående:</span><span class="value">${formatWeight(remainingCap)}</span></div>
             <div class="cap-row cap-food"><span class="label">Proviant:</span><span class="value">${foodCount}</span></div>
-          </div>
-        </div>
-      </li>`;
+          </div>`;
+    const infoCard = createEntryCard({
+      compact: !infoOpen,
+      dataset: { special: infoKey },
+      nameHtml: 'Information',
+      titleSuffixHtml: icon('money-bag', { className: 'title-icon', alt: 'Information' }),
+      descHtml: `<div class="card-desc">${infoCardDesc}</div>`,
+      collapsible: true
+    });
 
-    /* ---------- kort för varje föremål ---------- */
-    const itemCards = inv.length
-      ? inv.map((row) => {
-          const realIdx = allInv.indexOf(row);
-          const entry   = getEntry(row.id || row.name);
-          const tagTyp  = entry.taggar?.typ ?? [];
-          const isVehicle = tagTyp.includes('F\u00e4rdmedel');
-          const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
-          const rowWeight = calcRowWeight(row);
-          const loadWeight = rowWeight - baseWeight * row.qty;
-          const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
-          const remaining = capacity - loadWeight;
+    const renderRowCard = (row, realIdx, entryOverride) => {
+      const entry = entryOverride || getEntry(row.id || row.name);
+      const tagTyp = entry.taggar?.typ ?? [];
+      const isVehicle = tagTyp.includes('F\u00e4rdmedel');
+      const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
+      const rowWeight = calcRowWeight(row);
+      const loadWeight = rowWeight - baseWeight * (row.qty || 0);
+      const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
+      const remaining = capacity - loadWeight;
 
-          const { desc, rowLevel, freeCnt } = buildRowDesc(entry, row);
-          const dataLevel = rowLevel ? ` data-level="${rowLevel}"` : '';
+      const { desc, rowLevel, freeCnt, qualityHtml, qualityInfoSections, infoBody, infoTagParts, priceMultTag } = buildRowDesc(entry, row);
+      const dataset = {
+        idx: String(realIdx),
+        id: row.id || row.name,
+        name: row.name
+      };
+      if (row.trait) dataset.trait = row.trait;
+      if (rowLevel) dataset.level = rowLevel;
 
-          const isArtifact = tagTyp.includes('Artefakt');
+      const isArtifact = tagTyp.includes('Artefakt');
+      const isCustom = tagTyp.includes('Hemmagjort');
+      const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+      const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
+      const canStack = ['kraft','ritual'].includes(entry.bound);
+      const isCurrency = row.typ === 'currency' && row.money;
+      const moneyAmount = (isCurrency && typeof formatMoney === 'function')
+        ? formatMoney(storeHelper.normalizeMoney(row.money))
+        : '';
+      const buttonParts = [];
+      if (isGear && !canStack) {
+        buttonParts.push(`<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`);
+      } else {
+        buttonParts.push(
+          `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
+          `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
+          `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
+          `<button data-act="buyMulti" class="char-btn icon icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
+        );
+      }
+      if (isCustom) buttonParts.push('<button data-act="editCustom" class="char-btn">✏️</button>');
+      if (allowQual) buttonParts.push(`<button data-act="addQual" class="char-btn">${icon('addqual')}</button>`);
+      if (allowQual) buttonParts.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
+      if (isArtifact) buttonParts.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
+      buttonParts.push(`<button data-act="free" class="char-btn${freeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
+      if (isVehicle) {
+        buttonParts.push(
+          `<button data-act="vehicleLoad" class="char-btn icon icon-only" aria-label="Lasta i fordon">${icon('arrow-down')}</button>`,
+          `<button data-act="vehicleUnload" class="char-btn icon icon-only" aria-label="Ta ur fordon">${icon('arrow-up')}</button>`
+        );
+      }
 
-          /* — knappar — */
-          const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
-          const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
-          const canStack = ['kraft','ritual'].includes(entry.bound);
-          const btnRow = (isGear && !canStack)
-            ? `<button data-act="del" class="char-btn danger">🗑</button>`
-            : `<button data-act="del" class="char-btn danger">🗑</button>
-               <button data-act="sub" class="char-btn">–</button>
-               <button data-act="add" class="char-btn">+</button>`;
-          const freeBtn = `<button data-act="free" class="char-btn${freeCnt? ' danger':''}">🆓</button>`;
-          const freeQBtn = allowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
-          const toggleBtn = isArtifact ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-          const badge = row.qty > 1 ? ` <span class="count-badge">×${row.qty}</span>` : '';
+      const badge = row.qty > 1 ? `<span class="count-badge">×${row.qty}</span>` : '';
+      const priceText = isCurrency
+        ? moneyAmount
+        : formatMoney(calcRowCost(row, forgeLvl, alcLevel, artLevel));
+      const priceLabel = isCurrency
+        ? 'Belopp'
+        : (tagTyp.includes('Anställning') ? 'Dagslön' : 'Pris');
+      const priceDisplay = `${priceLabel}: ${priceText}`.trim();
+      const weightText = formatWeight(rowWeight);
+      const weightClass = isVehicle ? capClassOf(loadWeight, capacity) : charCapClass;
+      const cardKey = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
+      const children = Array.isArray(row.contains) ? row.contains : [];
+      const vehicleMoneyO = isVehicle
+        ? children.reduce((sum, child) => {
+            if (child?.typ === 'currency' && child.money) {
+              return sum + moneyToO(storeHelper.normalizeMoney(child.money));
+            }
+            return sum;
+          }, 0)
+        : 0;
+      const vehicleMoneyText = vehicleMoneyO > 0 && typeof formatMoney === 'function'
+        ? formatMoney(oToMoney(vehicleMoneyO))
+        : '';
 
-          // rowLevel och dataLevel beräknades tidigare
-          const priceText = formatMoney(
-            calcRowCost(row, forgeLvl, alcLevel, artLevel)
+      let isCompact = compactDefault;
+      if (openKeys.has(cardKey)) isCompact = false;
+      else if (compactKeys.has(cardKey)) isCompact = true;
+
+      const infoFacts = [];
+
+      const singleLevel = hasSingleLevel(entry);
+      const levelMark = singleLevel && rowLevel ? levelMarker(rowLevel) : '';
+      if (levelMark) {
+        const levelTitle = escapeHtml(rowLevel);
+        infoFacts.push(`<div class="card-info-fact level-marker" title="${levelTitle}"><span class="card-info-fact-value" aria-label="${levelTitle}">${levelMark}</span></div>`);
+      }
+
+      infoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Vikt</span><span class="card-info-fact-value">${weightText}</span></div>`);
+      if (isVehicle && vehicleMoneyText) {
+        infoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Pengar</span><span class="card-info-fact-value">${vehicleMoneyText}</span></div>`);
+      }
+
+      const priceTitle = escapeHtml(priceLabel);
+      const priceValue = escapeHtml(priceDisplay);
+      const priceBtnHtml = `<button type="button" class="price-click" data-act="priceQuick" title="${priceTitle}" aria-label="${priceValue}">${priceValue}</button>`;
+      const priceFactParts = [
+        '<div class="card-info-fact card-info-price">',
+        `<span class="card-info-fact-value">${priceBtnHtml}</span>`
+      ];
+      if (priceMultTag) priceFactParts.push(priceMultTag);
+      priceFactParts.push('</div>');
+      const priceFactHtml = priceFactParts.join('');
+      if (isVehicle) {
+        infoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Kapacitet</span><span class="card-info-fact-value"><span class="${capClassOf(loadWeight, capacity)}">${formatWeight(remaining)}</span></span></div>`);
+      }
+      infoFacts.push(priceFactHtml);
+      const infoBoxHtml = `<div class="card-info-box"><div class="card-info-inline"><div class="card-info-facts">${infoFacts.join('')}</div></div></div>`;
+
+      const infoMeta = [];
+      if (priceText) infoMeta.push({ label: priceLabel, value: priceText });
+      if (weightText) infoMeta.push({ label: 'Vikt', value: weightText });
+      if (isVehicle) {
+        if (vehicleMoneyText) infoMeta.push({ label: 'Pengar', value: vehicleMoneyText });
+        infoMeta.push({ label: 'Bärkapacitet', value: formatWeight(capacity) });
+        infoMeta.push({ label: 'Återstående kapacitet', value: formatWeight(remaining) });
+      }
+
+      const buildInfoButton = ({ bodyHtml = '', tags = [], meta = [], sections = [] } = {}) => {
+        const tagsHtml = Array.isArray(tags) ? tags.filter(Boolean).join(' ') : String(tags || '');
+        const metaItems = Array.isArray(meta)
+          ? meta.filter(item => {
+              if (!item) return false;
+              const value = item.value;
+              return !(value === undefined || value === null || value === '');
+            })
+          : [];
+        const sectionItems = Array.isArray(sections)
+          ? sections.filter(item => item && String(item.content || '').trim())
+          : [];
+        const bodyStr = typeof bodyHtml === 'string' ? bodyHtml : String(bodyHtml || '');
+        if (!tagsHtml.trim() && !metaItems.length && !bodyStr.trim() && !sectionItems.length) return '';
+        const infoPanelHtml = buildInfoPanelHtml({ tagsHtml, bodyHtml: bodyStr, meta: metaItems, sections: sectionItems });
+        return `<button class="char-btn icon icon-only info-btn" data-info="${encodeURIComponent(infoPanelHtml)}" aria-label="Visa info">${icon('info')}</button>`;
+      };
+
+      const infoBtnHtml = buildInfoButton({
+        bodyHtml: infoBody,
+        tags: infoTagParts,
+        meta: infoMeta,
+        sections: qualityInfoSections
+      });
+
+      const badgeParts = [];
+      badgeParts.push(`<span class="meta-badge weight-badge${weightClass ? ` ${weightClass}` : ''}" title="Vikt">V: ${weightText}</span>`);
+      if (isVehicle) {
+        badgeParts.push(`<span class="meta-badge capacity-badge" title="Bärkapacitet">BK: ${formatWeight(capacity)}</span>`);
+        badgeParts.push(`<span class="meta-badge remaining-badge${remaining < 0 ? ' cap-neg' : ''}" title="Återstående">ÅK: ${formatWeight(remaining)}</span>`);
+      }
+      const leftSections = badgeParts.length ? [`<div class="meta-badges">${badgeParts.join('')}</div>`] : [];
+
+      const descHtml = desc ? `<div class="card-desc">${desc}</div>` : '';
+      const classes = [];
+      if (isVehicle && remaining < 0) classes.push('vehicle-over');
+
+      const displayName = nameMap.get(row) || row.name;
+      const baseName = (row.id === 'l9' && row.trait)
+        ? `${displayName}: ${row.trait}`
+        : `${displayName}`;
+
+      const li = createEntryCard({
+        compact: isCompact,
+        classes,
+        dataset,
+        nameHtml: baseName,
+        titleSuffixHtml: badge,
+        infoBox: infoBoxHtml,
+        descHtml,
+        qualityHtml,
+        leftSections,
+        titleActions: infoBtnHtml ? [infoBtnHtml] : [],
+        buttonSections: buttonParts,
+        collapsible: true
+      });
+
+      const txt = (F.invTxt || '').toLowerCase();
+      const filteredChildren = (() => {
+        if (!children.length) return [];
+        if (!isVehicle) return children.map((c, j) => ({ c, j }));
+        const pairs = children.map((c, j) => ({ c, j }));
+        if (!txt) return pairs;
+        const selfMatch = String(row.name || '').toLowerCase().includes(txt);
+        if (selfMatch) return pairs;
+        return pairs.filter(({ c }) => rowMatchesText(c, txt));
+      })();
+
+      const renderChildCard = (childRow, childIdx) => {
+        const centry = getEntry(childRow.name);
+        const cTagTyp = centry.taggar?.typ ?? [];
+        const cIsArtifact = cTagTyp.includes('Artefakt');
+        const cIsCustom = cTagTyp.includes('Hemmagjort');
+        const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => cTagTyp.includes(t));
+        const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => cTagTyp.includes(t));
+        const cCanStack = ['kraft','ritual'].includes(centry.bound);
+        const cButtons = [];
+        if (cIsGear && !cCanStack) {
+          cButtons.push(`<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`);
+        } else {
+          cButtons.push(
+            `<button data-act="del" class="char-btn danger icon icon-only">${icon('remove')}</button>`,
+            `<button data-act="sub" class="char-btn icon icon-only" aria-label="Minska">${icon('minus')}</button>`,
+            `<button data-act="add" class="char-btn icon icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
+            `<button data-act="buyMulti" class="char-btn icon icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
           );
-          const priceLabel = tagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-          const weightText = formatWeight(rowWeight);
-          const key = `${row.id || row.name}|${row.trait || ''}|${rowLevel || ''}`;
-          let vehicleInfo = '';
-          let cardClass = '';
-          if (isVehicle) {
-            const vClass = capClassOf(loadWeight, capacity);
-            vehicleInfo = `<br><span class="${vClass}">B\u00e4rkapacitet: ${formatWeight(capacity)}<br>\u00c5terst\u00e5ende: ${formatWeight(remaining)}</span>`;
-            if (remaining < 0) cardClass = ' vehicle-over';
-          }
+        }
+        if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="char-btn">✏️</button>');
+        if (cAllowQual) cButtons.push(`<button data-act="addQual" class="char-btn">${icon('addqual')}</button>`);
+        if (cAllowQual) cButtons.push(`<button data-act="freeQual" class="char-btn">${icon('qualfree')}</button>`);
+        if (cIsArtifact) cButtons.push('<button data-act="toggleEffect" class="char-btn">↔</button>');
 
-          const txt = (F.invTxt || '').toLowerCase();
-          const showChildrenPairs = (() => {
-            const children = (row.contains || []).map((c,j)=>({ c, j }));
-            if (!isVehicle) return children;
-            if (!txt) return children;
-            const selfMatch = String(row.name || '').toLowerCase().includes(txt);
-            if (selfMatch) return children;
-            return children.filter(({c}) => rowMatchesText(c, txt));
-          })();
+        const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt, qualityHtml: cQualityHtml, qualityInfoSections: cQualityInfoSections, infoBody: cInfoBody, infoTagParts: cInfoTagParts } = buildRowDesc(centry, childRow);
+        cButtons.push(`<button data-act="free" class="char-btn${cFreeCnt ? ' danger' : ''}" title="Gör föremål gratis (Shift-klick rensar)">${icon('free')}</button>`);
 
-          const sublist = (row.contains && row.contains.length)
-            ? `<ul class="card-list vehicle-items">${showChildrenPairs.map(({c,j})=>{
-                const centry = getEntry(c.name);
-                const ctagTyp = centry.taggar?.typ ?? [];
-                const cPrice = formatMoney(calcRowCost(c, forgeLvl, alcLevel, artLevel));
-                const cPriceLabel = ctagTyp.includes('Anställning') ? 'Dagslön:' : 'Pris:';
-                const cWeight = formatWeight(calcRowWeight(c));
-                const vClass = capClassOf(loadWeight, capacity);
-                const cBadge = c.qty > 1 ? ` <span class="count-badge">×${c.qty}</span>` : '';
-                const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => ctagTyp.includes(t));
-                const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => ctagTyp.includes(t));
-                const cCanStack = ['kraft','ritual'].includes(centry.bound);
-                const cBtnRow = (cIsGear && !cCanStack)
-                  ? `<button data-act="del" class="char-btn danger">🗑</button>`
-                  : `<button data-act="del" class="char-btn danger">🗑</button>
-                     <button data-act="sub" class="char-btn">–</button>
-                     <button data-act="add" class="char-btn">+</button>`;
-                const { desc: cDesc, rowLevel: cRowLevel, freeCnt: cFreeCnt } = buildRowDesc(centry, c);
-                const cDataLevel = cRowLevel ? ` data-level="${cRowLevel}"` : '';
-                const cKey = `${c.id || c.name}|${c.trait || ''}|${cRowLevel || ''}`;
-                const cFreeBtn = `<button data-act="free" class="char-btn${cFreeCnt? ' danger':''}">🆓</button>`;
-                const cFreeQBtn = cAllowQual ? `<button data-act="freeQual" class="char-btn">☭</button>` : '';
-                const cToggleBtn = ctagTyp.includes('Artefakt') ? `<button data-act="toggleEffect" class="char-btn">↔</button>` : '';
-                const cPath = `${realIdx}.${j}`;
-                const cTitle = nameMap.get(c) || c.name;
-                return `<li class="card${remaining < 0 ? ' vehicle-over' : ''}${openKeys.has(cKey) ? '' : ' compact'}" data-parent="${realIdx}" data-child="${j}" data-id="${c.id || c.name}" data-name="${c.name}"${c.trait?` data-trait="${c.trait}"`:''}${cDataLevel}>
-                  <div class="card-title"><span><span class="collapse-btn"></span>${(c.id === 'l9' && c.trait) ? `${cTitle}: ${c.trait}` : cTitle}${cBadge}</span></div>
-                  <div class="card-desc">${cDesc}<br>Antal: ${c.qty}<br><span class="price-click" data-act="priceQuick">${cPriceLabel} ${cPrice}</span><br><span class="${vClass}">Vikt: ${cWeight}</span></div>
-                  <div class="inv-controls">
-                    ${cBtnRow}
-                    ${cAllowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
-                    ${cFreeQBtn}
-                    ${cToggleBtn}
-                    ${cFreeBtn}
-                  </div>
-                </li>`;}).join('')}</ul>`
-            : '';
+        const cIsCurrency = childRow.typ === 'currency' && childRow.money;
+        const cMoneyAmount = cIsCurrency && typeof formatMoney === 'function'
+          ? formatMoney(storeHelper.normalizeMoney(childRow.money))
+          : '';
+        const cBadge = childRow.qty > 1 ? `<span class="count-badge">×${childRow.qty}</span>` : '';
+        const cPriceText = cIsCurrency && cMoneyAmount
+          ? cMoneyAmount
+          : formatMoney(calcRowCost(childRow, forgeLvl, alcLevel, artLevel));
+        const cPriceLabel = cIsCurrency
+          ? 'Belopp'
+          : (cTagTyp.includes('Anställning') ? 'Dagslön' : 'Pris');
+        const cPriceDisplay = `${cPriceLabel}: ${cPriceText}`.trim();
+        const cWeightText = formatWeight(calcRowWeight(childRow));
+        const cWeightClass = capClassOf(loadWeight, capacity);
+        const cKey = `${childRow.id || childRow.name}|${childRow.trait || ''}|${cRowLevel || ''}`;
 
-          return `
-            <li class="card${cardClass}${openKeys.has(key) ? '' : ' compact'}"
-                data-idx="${realIdx}"
-                data-id="${row.id || row.name}"
-                data-name="${row.name}"${row.trait?` data-trait="${row.trait}"`:''}${dataLevel}>
-              <div class="card-title"><span><span class="collapse-btn"></span>${(row.id === 'l9' && row.trait) ? `${nameMap.get(row)}: ${row.trait}` : nameMap.get(row)}${badge}</span></div>
-              <div class="card-desc">
-                ${desc}<br>Antal: ${row.qty}<br><span class="price-click" data-act="priceQuick">${priceLabel} ${priceText}</span><br><span class="${isVehicle ? capClassOf(loadWeight, capacity) : charCapClass}">Vikt: ${weightText}</span>${vehicleInfo}
-              </div>
-              <div class="inv-controls">
-                ${btnRow}
-                ${allowQual ? `<button data-act="addQual" class="char-btn">🔨</button>` : ''}
-                ${freeQBtn}
-                ${toggleBtn}
-                ${freeBtn}
-                ${isVehicle ? `<button data-act="vehicleLoad" class="char-btn">⬇️</button><button data-act="vehicleUnload" class="char-btn">⬆️</button>` : ''}
-              </div>
-              ${sublist}
-            </li>`;
-      }).join('')
-    : '<li class="card">Inga föremål.</li>';
+        let childCompact = compactDefault;
+        if (openKeys.has(cKey)) childCompact = false;
+        else if (compactKeys.has(cKey)) childCompact = true;
 
-    /* ---------- skriv ut ---------- */
+        const cInfoFacts = [];
+
+        const cSingleLevel = hasSingleLevel(centry);
+        const cLevelMark = cSingleLevel && cRowLevel ? levelMarker(cRowLevel) : '';
+        if (cLevelMark) {
+          const cLevelTitle = escapeHtml(cRowLevel);
+          cInfoFacts.push(`<div class="card-info-fact level-marker" title="${cLevelTitle}"><span class="card-info-fact-value" aria-label="${cLevelTitle}">${cLevelMark}</span></div>`);
+        }
+
+        cInfoFacts.push(`<div class="card-info-fact"><span class="card-info-fact-label">Vikt</span><span class="card-info-fact-value">${cWeightText}</span></div>`);
+
+        const cPriceTitle = escapeHtml(cPriceLabel);
+        const cPriceValue = escapeHtml(cPriceDisplay);
+        cInfoFacts.push(`<div class="card-info-fact card-info-price"><span class="card-info-fact-value"><button type="button" class="price-click" data-act="priceQuick" title="${cPriceTitle}" aria-label="${cPriceValue}">${cPriceValue}</button></span></div>`);
+        const cInfoBox = `<div class="card-info-box"><div class="card-info-inline"><div class="card-info-facts">${cInfoFacts.join('')}</div></div></div>`;
+
+        const cInfoMeta = [];
+        if (cPriceText) cInfoMeta.push({ label: cPriceLabel, value: cPriceText });
+        if (cWeightText) cInfoMeta.push({ label: 'Vikt', value: cWeightText });
+
+        const cInfoBtnHtml = buildInfoButton({
+          bodyHtml: cInfoBody,
+          tags: cInfoTagParts,
+          meta: cInfoMeta,
+          sections: cQualityInfoSections
+        });
+
+        const cBadgeParts = [
+          `<span class="meta-badge weight-badge${cWeightClass ? ` ${cWeightClass}` : ''}" title="Vikt">V: ${cWeightText}</span>`
+        ];
+        const cLeftSections = cBadgeParts.length ? [`<div class="meta-badges">${cBadgeParts.join('')}</div>`] : [];
+
+        const childDataset = {
+          parent: String(realIdx),
+          child: String(childIdx),
+          id: childRow.id || childRow.name,
+          name: childRow.name
+        };
+        if (childRow.trait) childDataset.trait = childRow.trait;
+        if (cRowLevel) childDataset.level = cRowLevel;
+
+        const childClasses = [];
+        if (remaining < 0) childClasses.push('vehicle-over');
+
+        const childName = nameMap.get(childRow) || childRow.name;
+        const childDisplayName = (cIsCurrency && cPriceText)
+          ? `${childName} (${cPriceText})`
+          : childName;
+        const childBaseName = (childRow.id === 'l9' && childRow.trait)
+          ? `${childDisplayName}: ${childRow.trait}`
+          : childDisplayName;
+
+        const childLi = createEntryCard({
+          compact: childCompact,
+          classes: childClasses,
+          dataset: childDataset,
+          nameHtml: childBaseName,
+          titleSuffixHtml: cBadge,
+          infoBox: cInfoBox,
+          descHtml: cDesc ? `<div class="card-desc">${cDesc}</div>` : '',
+          qualityHtml: cQualityHtml,
+          leftSections: cLeftSections,
+          titleActions: cInfoBtnHtml ? [cInfoBtnHtml] : [],
+          buttonSections: cButtons,
+          collapsible: true
+        });
+
+        return childLi;
+      };
+
+      if (filteredChildren.length) {
+        const sublistEl = document.createElement('ul');
+        sublistEl.className = 'card-list vehicle-items entry-card-list';
+        filteredChildren.forEach(({ c, j }) => {
+          const childLi = renderChildCard(c, j);
+          if (childLi) sublistEl.appendChild(childLi);
+        });
+        if (sublistEl.childElementCount) {
+          const detailsHost = li.querySelector('.entry-card-details') || li;
+          detailsHost.appendChild(sublistEl);
+        }
+      }
+
+      return li;
+    };
     if (dom.invFormal) {
-      dom.invFormal.innerHTML = toolsCard + infoCard;
-      localStorage.setItem(INV_TOOLS_KEY, openKeys.has(toolsKey) ? '1' : '0');
-      localStorage.setItem(INV_INFO_KEY,  openKeys.has(infoKey) ? '1' : '0');
+      dom.invFormal.innerHTML = '';
+      dom.invFormal.appendChild(functionsCard);
+      dom.invFormal.appendChild(infoCard);
     }
-    dom.invList.innerHTML       = itemCards;
+
+    if (listEl) {
+      listEl.innerHTML = '';
+      if (filteredRows.length) {
+        const categories = new Map();
+        filteredRows.forEach(({ row, idx, entry }) => {
+          const cat = (entry.taggar?.typ || [])[0] || 'Övrigt';
+          const cardEl = renderRowCard(row, idx, entry);
+          if (!categories.has(cat)) categories.set(cat, []);
+          categories.get(cat).push(cardEl);
+        });
+        const catState = loadInvCatState();
+        const catKeys = [...categories.keys()].sort(catComparator);
+        const fragment = document.createDocumentFragment();
+        catKeys.forEach(cat => {
+          const shouldOpen = hasSearch
+            ? true
+            : (forcedCatOpen.has(cat)
+                ? true
+                : (catState[cat] !== undefined ? catState[cat] : true));
+          const catLi = document.createElement('li');
+          catLi.className = 'cat-group';
+          const detailsEl = document.createElement('details');
+          detailsEl.dataset.cat = cat;
+          if (shouldOpen) detailsEl.open = true;
+          const summaryEl = document.createElement('summary');
+          summaryEl.textContent = catName(cat);
+          detailsEl.appendChild(summaryEl);
+          const innerUl = document.createElement('ul');
+          innerUl.className = 'card-list entry-card-list';
+          innerUl.dataset.cat = cat;
+          categories.get(cat).forEach(card => innerUl.appendChild(card));
+          detailsEl.appendChild(innerUl);
+          catLi.appendChild(detailsEl);
+          fragment.appendChild(catLi);
+        });
+        listEl.appendChild(fragment);
+
+        listEl.querySelectorAll('.cat-group > details').forEach(detailsEl => {
+          detailsEl.addEventListener('toggle', ev => {
+            if (!ev.isTrusted) return;
+            const cat = detailsEl.dataset.cat;
+            catState[cat] = detailsEl.open;
+            saveInvCatState(catState);
+            if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+          });
+        });
+        if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+      } else {
+        const emptyCard = createEntryCard({
+          classes: ['empty'],
+          nameHtml: 'Inga föremål.',
+          collapsible: false
+        });
+        listEl.appendChild(emptyCard);
+        if (typeof window.inventorySyncCats === 'function') window.inventorySyncCats();
+      }
+    } else if (typeof window.inventorySyncCats === 'function') {
+      window.inventorySyncCats();
+    }
+
+
+    renderActiveFilters();
+
     if (dom.wtOut) dom.wtOut.textContent = formatWeight(usedWeight);
     if (dom.slOut) dom.slOut.textContent = formatWeight(maxCapacity);
-    dom.invBadge.textContent    = flatInv.reduce((s, r) => s + r.qty, 0);
-    dom.invBadge.classList.add('badge-pulse');
-    setTimeout(() => dom.invBadge.classList.remove('badge-pulse'), 600);
-    dom.unusedOut = $T('unusedOut');
-    dom.dragToggle = $T('dragToggle');
+    dom.unusedOut = getEl('unusedOut');
     if (dom.unusedOut) dom.unusedOut.textContent = diffText;
-    if (dom.collapseAllBtn) updateCollapseBtnState();
     bindInv();
     bindMoney();
+    if (typeof window.refreshEffectsPanel === 'function') {
+      window.refreshEffectsPanel();
+    }
   }
+
 
   function getInvCards() {
     const formalCards = dom.invFormal ? [...dom.invFormal.querySelectorAll('li.card')] : [];
@@ -1713,29 +4100,68 @@ ${moneyRow}
   }
 
   function bindInv() {
-    if (dom.invTypeSel) {
-      dom.invTypeSel.onchange = () => {
-        F.typ = dom.invTypeSel.value;
-        renderInventory();
-      };
+    const role = document.body?.dataset?.role;
+    if (role !== 'inventory') {
+      // Shared toolbar exists on every page; avoid binding inventory-only filters elsewhere.
+      return;
     }
-    const invSearch = $T('invSearch');
-    if (invSearch) {
-      invSearch.value = F.invTxt || '';
-      invSearch.oninput = () => {
-        F.invTxt = (invSearch.value || '').trim().toLowerCase();
+
+    const listEl = dom.invList;
+    const searchEl = dom.sIn || getEl('searchField');
+    const bindFilterSelect = (el, key) => {
+      if (!el || el.dataset.invBound) return;
+      el.dataset.invBound = '1';
+      el.addEventListener('change', () => {
+        const val = el.value;
+        if (!val) return;
+        if (key === 'typ' && val === '__onlySelected') {
+          el.value = '';
+          return;
+        }
+        if (!F[key].includes(val)) F[key].push(val);
+        el.value = '';
         renderInventory();
-      };
+      });
+    };
+    bindFilterSelect(dom.typSel, 'typ');
+    bindFilterSelect(dom.arkSel, 'ark');
+    bindFilterSelect(dom.tstSel, 'test');
+    if (dom.active && !dom.active.dataset.invBound) {
+      dom.active.dataset.invBound = '1';
+      dom.active.addEventListener('click', e => {
+        const tag = e.target.closest('.tag.removable');
+        if (!tag) return;
+        const type = tag.dataset.type;
+        if (type === 'text') {
+          F.invTxt = '';
+          if (searchEl) searchEl.value = '';
+        } else if (type === 'typ' || type === 'ark' || type === 'test') {
+          const val = tag.dataset.val;
+          F[type] = F[type].filter(item => item !== val);
+        }
+        renderInventory();
+      });
     }
-    const squareBtn = $T('squareBtn');
+    const squareBtn = getEl('squareBtn');
     if (squareBtn) squareBtn.onclick = openQtyPopup;
-    const customBtn = $T('addCustomBtn');
+    const customBtn = getEl('addCustomBtn');
     if (customBtn) customBtn.onclick = () => {
       openCustomPopup(entry => {
         if (!entry) return;
         const list = storeHelper.getCustomEntries(store);
         list.push(entry);
-        storeHelper.setCustomEntries(store, list);
+        const result = storeHelper.setCustomEntries(store, list);
+        if (result && result.idMap) {
+          const mappedId = result.idMap.get(entry.id);
+          if (mappedId) entry.id = mappedId;
+        }
+        if (result && Array.isArray(result.entries)) {
+          const persisted = result.entries.find(e => e.id === entry.id);
+          if (persisted) {
+            entry.namn = persisted.namn;
+            entry.artifactEffect = persisted.artifactEffect;
+          }
+        }
         const inv = storeHelper.getInventory(store);
         inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
         saveInventory(inv);
@@ -1750,7 +4176,8 @@ ${moneyRow}
         const anyOpen = cards.some(li => !li.classList.contains('compact'));
         cards.forEach(li => {
           li.classList.toggle('compact', anyOpen);
-          if (li.dataset.special === '__tools__') {
+          window.entryCardFactory?.syncCollapse?.(li);
+          if (li.dataset.special === '__invfunc__') {
             localStorage.setItem(INV_TOOLS_KEY, anyOpen ? '0' : '1');
           } else if (li.dataset.special === '__info__') {
             localStorage.setItem(INV_INFO_KEY, anyOpen ? '0' : '1');
@@ -1758,15 +4185,19 @@ ${moneyRow}
         });
         updateCollapseBtnState();
       };
-    }
-    if (dom.dragToggle) {
-      dom.dragToggle.classList.toggle('danger', dragEnabled);
-      if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
-      dom.dragToggle.onclick = () => {
-        dragEnabled = !dragEnabled;
-        dom.dragToggle.classList.toggle('danger', dragEnabled);
-        if (dom.invList) dom.invList.classList.toggle('drag-mode', dragEnabled);
-      };
+
+      listEl.addEventListener('entry-card-toggle', e => {
+        updateCollapseBtnState();
+        const detail = e.detail || {};
+        const card = detail.card;
+        if (!card) return;
+        const expanded = Boolean(detail.expanded);
+        if (card.dataset.special === '__invfunc__') {
+          localStorage.setItem(INV_TOOLS_KEY, expanded ? '1' : '0');
+        } else if (card.dataset.special === '__info__') {
+          localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+        }
+      });
     }
     const getRowInfo = (inv, li) => {
       const idx = Number(li.dataset.idx);
@@ -1779,63 +4210,77 @@ ${moneyRow}
       }
       return { row: null, parentArr: inv, idx: -1 };
     };
-    dom.invList.onclick = async e => {
-      // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
-      const removeTagBtn = e.target.closest('.tag.removable');
-      if (removeTagBtn) {
-        const li   = removeTagBtn.closest('li');
-        const inv  = storeHelper.getInventory(store);
-        const { row } = getRowInfo(inv, li);
-        if (!row) return;
-        if (removeTagBtn.dataset.free) {
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
-          const pg = row.perkGratis || 0;
-          if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+    if (listEl) {
+      listEl.onclick = async e => {
+        const infoBtn = e.target.closest('button[data-info]');
+        if (infoBtn) {
+          let infoHtml = infoBtn.dataset.info || '';
+          try {
+            infoHtml = decodeURIComponent(infoHtml);
+          } catch {}
+          const li = infoBtn.closest('li');
+          const title = li?.querySelector('.card-title .entry-title-main')?.textContent || '';
+          if (typeof window.yrkePanel?.open === 'function') {
+            window.yrkePanel.open(title, infoHtml);
           }
-          row.gratis = 0;
-          if (pg > 0) row.perkGratis = 0;
-        } else if (removeTagBtn.dataset.qual) {
-          const q    = removeTagBtn.dataset.qual;
-          const isBase = removeTagBtn.dataset.base === '1';
-          if (removeTagBtn.classList.contains('free')) {
-            row.gratisKval = (row.gratisKval || []).filter(x => x !== q);
-            row.kvaliteter = row.kvaliteter || [];
-            if (isBase) {
-              row.removedKval = row.removedKval || [];
-              if (!row.removedKval.includes(q)) row.removedKval.push(q);
-            } else {
-              row.kvaliteter = row.kvaliteter.filter(x => x !== q);
-            }
-            row.kvaliteter.push(q);
-          } else {
-            if (isBase) {
-              row.removedKval = row.removedKval || [];
-              if (!row.removedKval.includes(q)) row.removedKval.push(q);
-            } else if (row?.kvaliteter) {
-              row.kvaliteter = row.kvaliteter.filter(x => x !== q);
-            }
-            if (row.gratisKval) {
-              row.gratisKval = row.gratisKval.filter(x => x !== q);
-            }
-          }
-        } else if (removeTagBtn.dataset.mult) {
-          delete row.priceMult;
-        } else if (removeTagBtn.dataset.price) {
-          delete row.basePrice;
+          return;
         }
-        saveInventory(inv);
-        renderInventory();
-        return;
-      }
+        // 1) Klick på kryss för att ta bort en enskild kvalitet eller gratisstatus
+        const removeTagBtn = e.target.closest('.tag.removable');
+        if (removeTagBtn) {
+          const li   = removeTagBtn.closest('li');
+          const inv  = storeHelper.getInventory(store);
+          const { row } = getRowInfo(inv, li);
+          if (!row) return;
+          if (removeTagBtn.dataset.free) {
+            const perkActive = storeHelper.getCurrentList(store)
+              .some(x => x.namn === 'Välutrustad');
+            const pg = row.perkGratis || 0;
+            if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
+              if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+            }
+            row.gratis = 0;
+            if (pg > 0) row.perkGratis = 0;
+          } else if (removeTagBtn.dataset.qual) {
+            const q    = removeTagBtn.dataset.qual;
+            const isBase = removeTagBtn.dataset.base === '1';
+            if (removeTagBtn.classList.contains('free')) {
+              row.gratisKval = (row.gratisKval || []).filter(x => x !== q);
+              row.kvaliteter = row.kvaliteter || [];
+              if (isBase) {
+                row.removedKval = row.removedKval || [];
+                if (!row.removedKval.includes(q)) row.removedKval.push(q);
+              } else {
+                row.kvaliteter = row.kvaliteter.filter(x => x !== q);
+              }
+              row.kvaliteter.push(q);
+            } else {
+              if (isBase) {
+                row.removedKval = row.removedKval || [];
+                if (!row.removedKval.includes(q)) row.removedKval.push(q);
+              } else if (row?.kvaliteter) {
+                row.kvaliteter = row.kvaliteter.filter(x => x !== q);
+              }
+              if (row.gratisKval) {
+                row.gratisKval = row.gratisKval.filter(x => x !== q);
+              }
+            }
+          } else if (removeTagBtn.dataset.mult) {
+            delete row.priceMult;
+          } else if (removeTagBtn.dataset.price) {
+            delete row.basePrice;
+            delete row.basePriceSource;
+          }
+          saveInventory(inv);
+          renderInventory();
+          return;
+        }
 
-      // 2) Klick på titeln för att expandera/kollapsa posten
-      const cardTitle = e.target.closest('.card-title');
-      if (cardTitle) {
-        const li = cardTitle.closest('li.card');
-        li.classList.toggle('compact');
-        updateCollapseBtnState();
+      const collapseBtn = e.target.closest('.entry-collapse-btn');
+      if (collapseBtn) return;
+
+      const header = e.target.closest('.card-header');
+      if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
         return;
       }
 
@@ -1849,6 +4294,25 @@ ${moneyRow}
         return;
       }
 
+      // 2c) Klick på nivåtaggen: cykla mellan tillgängliga nivåer
+      const lvlTag = e.target.closest('.tag.level');
+      if (lvlTag) {
+        const li = lvlTag.closest('li');
+        const inv = storeHelper.getInventory(store);
+        const { row } = getRowInfo(inv, li);
+        if (!row) return;
+        const entry = getEntry(row.id || row.name);
+        const levels = Object.keys(entry.nivåer || {});
+        if (!levels.length) return;
+        const cur = row.nivå || '';
+        const idx = levels.indexOf(cur);
+        const next = idx === -1 ? levels[0] : (idx < levels.length - 1 ? levels[idx+1] : levels[0]);
+        row.nivå = next;
+        saveInventory(inv);
+        renderInventory();
+        return;
+      }
+
       // 3) Klick på knapp i inventarielistan
       const btn = e.target.closest('button[data-act]');
       if (!btn) return;
@@ -1857,9 +4321,23 @@ ${moneyRow}
       const li  = btn.closest('li');
       const inv = storeHelper.getInventory(store);
       const { row, parentArr, idx } = getRowInfo(inv, li);
+      if (act === 'editCustom') {
+        if (!row) return;
+        const entry = getEntry(row.id || row.name);
+        if (!entry) return;
+        editCustomEntry(entry, () => {
+          renderInventory();
+          if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+          if (window.indexViewUpdate) window.indexViewUpdate();
+        });
+        return;
+      }
       if (act === 'vehicleLoad') {
         const entry = getEntry(row.id || row.name);
-        if (entry?.id) openVehiclePopup(entry.id);
+        const rootIdx = Number(li?.dataset?.idx);
+        if (!Number.isNaN(rootIdx)) openVehiclePopup(rootIdx);
+        else if (entry?.id) openVehiclePopup(entry.id);
+        else openVehiclePopup();
         return;
       }
       if (act === 'vehicleUnload') {
@@ -1905,20 +4383,25 @@ ${moneyRow}
                 parentArr.splice(idx, 1, ...(row.contains || []));
                 saveInventory(inv);
                 renderInventory();
+              },
+              {
+                message: 'Du håller på att ta bort ett färdmedel som innehåller föremål. Vill du ta bort föremålen i färdmedlet?',
+                onlyLabel: 'Ta bara bort färdmedlet'
               }
             );
           } else {
             parentArr.splice(idx, 1);
             saveInventory(inv);
             renderInventory();
-            if (isHiddenType(tagTyp)) {
+            const hidden = isHiddenType(tagTyp);
+            if (needsArtifactListSync(tagTyp)) {
               const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
               if (!still) {
                 let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
                 storeHelper.setCurrentList(store, list);
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                storeHelper.removeRevealedArtifact(store, row.id || row.name);
+                if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
               }
             }
           }
@@ -1931,8 +4414,17 @@ ${moneyRow}
       const entry    = getEntry(itemName);
       const tagTyp   = entry.taggar?.typ || [];
 
+      if (act === 'buyMulti') {
+        if (!row || !entry) return;
+        openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx });
+        return;
+      }
+
         // "+" lägger till qty eller en ny instans
         if (act === 'add') {
+          const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+          const livePairs = liveEnabled ? [] : null;
+          let purchase = null;
           if (entry.id === 'di79') {
             const bundle = ['di10','di11','di12','di13','di14','di15'];
             bundle.forEach(id => {
@@ -1944,11 +4436,20 @@ ${moneyRow}
                 !['kraft','ritual'].includes(ent.bound);
               const existing = inv.findIndex(r => r.id === ent.id);
               if (indivItem || existing === -1) {
-                inv.push({ id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] });
+                const obj = { id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
+                inv.push(obj);
+                if (livePairs) livePairs.push({ prev: null, next: obj });
               } else {
-                inv[existing].qty++;
+                const target = inv[existing];
+                const prevState = livePairs ? cloneRow(target) : null;
+                target.qty++;
+                if (livePairs) livePairs.push({ prev: prevState, next: target });
               }
             });
+            if (livePairs && livePairs.length) {
+              applyLiveModePayment(livePairs);
+              livePairs.length = 0;
+            }
             saveInventory(inv);
             renderInventory();
             bundle.forEach(id => {
@@ -1961,6 +4462,10 @@ ${moneyRow}
               }
             });
           } else {
+            if (liveEnabled) {
+              purchase = await openLiveBuyPopup(entry, row);
+              if (!purchase) return;
+            }
             const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
               .some(t => entry.taggar.typ.includes(t)) &&
               !STACKABLE_IDS.includes(entry.id) &&
@@ -1973,46 +4478,94 @@ ${moneyRow}
               artifactEffect = val;
             }
             const addRow = trait => {
-              const obj = { id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-              if (artifactEffect) obj.artifactEffect = artifactEffect;
-              if (trait) obj.trait = trait;
+              const qtyToAdd = Math.max(1, purchase?.qty || 1);
+              const priceMoney = purchase ? purchase.pricePerUnit : null;
+              const applyLiveBase = target => {
+                if (!priceMoney || !target) return;
+                target.basePrice = {
+                  daler: priceMoney.daler,
+                  skilling: priceMoney.skilling,
+                  'örtegar': priceMoney['örtegar']
+                };
+                target.basePriceSource = 'live';
+              };
               let flashIdx;
               if (indiv) {
-                parentArr.push(obj);
-                flashIdx = parentArr.length - 1;
+                for (let iAdd = 0; iAdd < qtyToAdd; iAdd++) {
+                  const obj = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
+                  if (artifactEffect) obj.artifactEffect = artifactEffect;
+                  if (trait) obj.trait = trait;
+                  applyLiveBase(obj);
+                  parentArr.push(obj);
+                  flashIdx = parentArr.length - 1;
+                  if (livePairs) livePairs.push({ prev: null, next: obj });
+                }
               } else if (row && (!trait || row.trait === trait)) {
-                row.qty++;
+                const prevState = livePairs ? cloneRow(row) : null;
+                row.qty = (Number(row.qty) || 0) + qtyToAdd;
+                applyLiveBase(row);
                 flashIdx = idx;
+                if (livePairs) livePairs.push({ prev: prevState, next: row });
               } else if (row && trait && row.trait !== trait) {
+                const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
+                if (artifactEffect) obj.artifactEffect = artifactEffect;
+                obj.trait = trait;
+                applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: obj });
               } else {
+                const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
+                if (artifactEffect) obj.artifactEffect = artifactEffect;
+                if (trait) obj.trait = trait;
+                applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
+                if (livePairs) livePairs.push({ prev: null, next: obj });
+              }
+              if (livePairs && livePairs.length) {
+                applyLiveModePayment(livePairs, purchase ? { overrideO: purchase.totalO } : undefined);
+                livePairs.length = 0;
               }
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
               renderInventory();
-              if (isHiddenType(tagTyp)) {
+              const hidden = isHiddenType(tagTyp);
+              let addedToList = false;
+              if (needsArtifactListSync(tagTyp)) {
                 const list = storeHelper.getCurrentList(store);
                 if ((entry.taggar?.typ || []).includes('Artefakt')) {
                   if (!entry.id && storeHelper.genId) {
-                    entry.id = storeHelper.genId();
+                    const provisionalId = storeHelper.genId();
+                    entry.id = provisionalId;
                     const customs = storeHelper.getCustomEntries(store);
                     const cIdx = customs.findIndex(c => c.namn === entry.namn && !c.id);
                     if (cIdx >= 0) {
-                      customs[cIdx].id = entry.id;
-                      storeHelper.setCustomEntries(store, customs);
+                      customs[cIdx].id = provisionalId;
+                      const result = storeHelper.setCustomEntries(store, customs);
+                      if (result && result.idMap) {
+                        const mapped = result.idMap.get(provisionalId);
+                        if (mapped) entry.id = mapped;
+                      }
+                      if (result && Array.isArray(result.entries)) {
+                        const persisted = result.entries.find(e => e.id === entry.id);
+                        if (persisted) entry.namn = persisted.namn;
+                      }
                     }
                   }
                   if (entry.id && !list.some(x => x.id === entry.id && x.noInv)) {
                     list.push({ ...entry, noInv: true });
                     storeHelper.setCurrentList(store, list);
+                    addedToList = true;
                   }
                 }
+              }
+              if ((addedToList || hidden)) {
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                if (entry.id) storeHelper.addRevealedArtifact(store, entry.id);
+              }
+              if (hidden && entry.id) {
+                storeHelper.addRevealedArtifact(store, entry.id);
               }
               const selector = !Number.isNaN(parentIdx)
                 ? `li[data-name="${CSS.escape(entry.namn)}"][data-parent="${parentIdx}"][data-child="${flashIdx}"]`
@@ -2072,14 +4625,15 @@ ${moneyRow}
           const parentIdx = Number(li.dataset.parent);
           saveInventory(inv);
           renderInventory();
-          if (isHiddenType(tagTyp)) {
+          const hidden = isHiddenType(tagTyp);
+          if (needsArtifactListSync(tagTyp)) {
             const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
             if (!still) {
               let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
               storeHelper.setCurrentList(store, list);
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
-              storeHelper.removeRevealedArtifact(store, row.id || row.name);
+              if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
             }
           }
           const selector = !Number.isNaN(parentIdx)
@@ -2098,15 +4652,24 @@ ${moneyRow}
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
         if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t))) return;
-        const qualities = DB.filter(isQual).filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true);
+        const qualities = DB
+          .filter(isQual)
+          .filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true)
+          .filter(q => isQualityAllowedByRules(entry, row, q.namn || q.name));
         if (!qualities.length) {
           if (window.alertPopup) await alertPopup('Inga passande kvaliteter för detta föremål.');
           return;
         }
-        openQualPopup(qualities, qIdx => {
+        openQualPopup(qualities, async qIdx => {
           if (row && qualities[qIdx]) {
             row.kvaliteter = row.kvaliteter || [];
             const qn = qualities[qIdx].namn;
+            if (!isQualityAllowedByRules(entry, row, qn)) {
+              if (window.alertPopup) {
+                await alertPopup('En sköld med kvaliteten "Armfäst" kan inte ha fler positiva kvaliteter.');
+              }
+              return;
+            }
             const removed = row.removedKval ?? [];
             const baseQuals = [
               ...(entry.taggar?.kvalitet ?? []),
@@ -2132,7 +4695,7 @@ ${moneyRow}
           ...splitQuals(entry.kvalitet)
         ];
         const baseQ = baseQuals.filter(q => !removed.includes(q));
-        const allQ = [...baseQ, ...(row.kvaliteter ?? [])];
+        const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter ?? [])]);
         if (!allQ.length) return;
 
         // Behåll endast positiva/mystiska gratis-kvaliteter
@@ -2160,15 +4723,24 @@ ${moneyRow}
       // "free" ökar gratis-räknaren (loopar när den nått max)
       if (act === 'free') {
         if (row) {
-          let newGratis = Number(row.gratis || 0) + 1;
-          if (newGratis > row.qty) newGratis = 0;
+          const shouldClearGratis = e.shiftKey || e.ctrlKey || e.metaKey || e.altKey;
+          const currentGratis = Number(row.gratis || 0);
+          let newGratis;
+
+          if (shouldClearGratis) {
+            if (!currentGratis) return;
+            newGratis = 0;
+          } else {
+            newGratis = currentGratis + 1;
+            if (newGratis > row.qty) newGratis = 0;
+          }
 
           const perkActive = storeHelper.getCurrentList(store)
             .some(x => x.namn === 'Välutrustad');
           if (
             perkActive &&
             row.perk === 'Välutrustad' &&
-            newGratis < (row.gratis || 0) &&
+            newGratis < currentGratis &&
             newGratis < (row.perkGratis || 0)
           ) {
             if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) {
@@ -2183,20 +4755,14 @@ ${moneyRow}
         return;
       }
     };
+    }
 
     // Bind clicks within the Formaliteter card when it is outside invList
     if (dom.invFormal) {
       dom.invFormal.onclick = async e => {
-        // Toggle expand/collapse on title
-        const cardTitle = e.target.closest('.card-title');
-        if (cardTitle) {
-          const li = cardTitle.closest('li.card');
-          if (li) {
-            const isCompact = li.classList.toggle('compact');
-            updateCollapseBtnState();
-            const key = li.dataset.special === '__tools__' ? INV_TOOLS_KEY : INV_INFO_KEY;
-            localStorage.setItem(key, isCompact ? '0' : '1');
-          }
+        if (e.target.closest('.entry-collapse-btn')) return;
+        const header = e.target.closest('.card-header');
+        if (header && !e.target.closest('button, a, select, input, textarea, [contenteditable="true"], [role="button"]')) {
           return;
         }
 
@@ -2216,88 +4782,56 @@ ${moneyRow}
           renderInventory();
           return;
         }
+        if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneySkillingPlus' ? 1 : -1;
+          const newS = (cur.skilling || 0) + delta;
+          if (newS < 0) {
+            const newD = Math.max(0, (cur.daler || 0) - 1);
+            const newSkilling = 3 + newS;
+            storeHelper.setMoney(store, { daler: newD, skilling: newSkilling, 'örtegar': 0 });
+          } else if (newS >= 4) {
+            storeHelper.setMoney(store, { ...cur, daler: (cur.daler || 0) + 1, skilling: newS - 4 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, skilling: newS });
+          }
+          renderInventory();
+          return;
+        }
+        if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
+          const cur = storeHelper.getMoney(store);
+          const delta = act === 'moneyOrtegarPlus' ? 1 : -1;
+          const newO = (cur['örtegar'] || 0) + delta;
+          if (newO < 0) {
+            const newSkilling = Math.max(0, (cur.skilling || 0) - 1);
+            const newOrtegar = 8 + newO;
+            const newDaler = newSkilling < (cur.skilling || 0) ? Math.max(0, (cur.daler || 0) - 1) : (cur.daler || 0);
+            storeHelper.setMoney(store, { daler: newDaler, skilling: newSkilling, 'örtegar': newOrtegar });
+          } else if (newO >= 8) {
+            storeHelper.setMoney(store, { ...cur, skilling: (cur.skilling || 0) + 1, 'örtegar': newO - 8 });
+          } else {
+            storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
+          }
+          renderInventory();
+          return;
+        }
       };
+
+      dom.invFormal.addEventListener('entry-card-toggle', e => {
+        updateCollapseBtnState();
+        const expanded = Boolean(e.detail?.expanded);
+        localStorage.setItem(INV_INFO_KEY, expanded ? '1' : '0');
+      });
     }
 
-    if (dom.invList) {
-      dom.invList.removeEventListener('pointerdown', handlePointerDown);
-      dom.invList.addEventListener('pointerdown', handlePointerDown);
-    }
-  }
-
-  function getDragAfterElement(container, y) {
-    const els = [...container.querySelectorAll('li[data-idx]:not(.dragging)')];
-    return els.reduce((closest, child) => {
-      const box = child.getBoundingClientRect();
-      const offset = y - box.top - box.height / 2;
-      return offset < 0 && offset > closest.offset ? { offset, element: child } : closest;
-    }, { offset: Number.NEGATIVE_INFINITY }).element;
-  }
-
-  function handlePointerDown(e) {
-    if (!dragEnabled) return;
-    const li = e.target.closest('li[data-idx]');
-    if (!li || e.target.closest('button')) return;
-
-    let pressTimer;
-
-    const onMove = ev => {
-      if (!dragEl) return;
-      ev.preventDefault();
-      const after = getDragAfterElement(dom.invList, ev.clientY);
-      if (after == null) {
-        dom.invList.appendChild(dragEl);
-      } else {
-        dom.invList.insertBefore(dragEl, after);
-      }
-    };
-
-    const startDrag = () => {
-      dragIdx = Number(li.dataset.idx);
-      dragEl = li;
-      li.classList.add('dragging');
-      li.setPointerCapture(e.pointerId);
-      window.addEventListener('pointermove', onMove);
-    };
-
-    const onUp = ev => {
-      clearTimeout(pressTimer);
-      if (!dragEl) {
-        window.removeEventListener('pointermove', onMove);
-        window.removeEventListener('pointerup', onUp);
-        return;
-      }
-      onMove(ev);
-      dragEl.classList.remove('dragging');
-      dragEl.releasePointerCapture(ev.pointerId);
-      const inv = storeHelper.getInventory(store);
-      if (dragIdx !== null && inv) {
-        const items = [...dom.invList.querySelectorAll('li[data-idx]')];
-        const dropIdx = items.indexOf(dragEl);
-        const [moved] = inv.splice(dragIdx, 1);
-        inv.splice(dropIdx, 0, moved);
-        saveInventory(inv);
-        renderInventory();
-      }
-      dragIdx = null;
-      dragEl = null;
-      window.removeEventListener('pointermove', onMove);
-      window.removeEventListener('pointerup', onUp);
-    };
-
-    // Require a slightly longer press before drag to avoid
-    // accidental drags when scrolling on touch devices
-    pressTimer = setTimeout(startDrag, 400);
-
-    window.addEventListener('pointerup', onUp);
   }
 
   function bindMoney() {
-    const manageBtn = $T('manageMoneyBtn');
-    const multiBtn  = $T('multiPriceBtn');
-    const resetBtn  = $T('moneyResetBtn');
-    const clearBtn  = $T('clearInvBtn');
-    const saveFreeBtn = $T('saveFreeBtn');
+    const manageBtn = getEl('manageMoneyBtn');
+    const multiBtn  = getEl('multiPriceBtn');
+    const resetBtn  = getEl('moneyResetBtn');
+    const clearBtn  = getEl('clearInvBtn');
+    const saveFreeBtn = getEl('saveFreeBtn');
     // Bind existing buttons if present
     if (manageBtn) manageBtn.onclick = openMoneyPopup;
     if (multiBtn)  multiBtn.onclick  = openPricePopup;
@@ -2321,15 +4855,28 @@ ${moneyRow}
       }
     };
 
+    const liveToggle = getEl('inventoryLiveToggle');
+    if (liveToggle) {
+      const current = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
+      liveToggle.checked = Boolean(current);
+      liveToggle.onchange = () => {
+        if (typeof storeHelper?.setLiveMode === 'function') {
+          storeHelper.setLiveMode(store, Boolean(liveToggle.checked));
+          renderInventory();
+        }
+      };
+    }
+
 
     const inv = storeHelper.getInventory(store);
-    inv
-      .map(row => ({row, entry:getEntry(row.id || row.name)}))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'))
-      .forEach(v => {
-        const b = $T(`vehicleBtn-${v.entry.id}`);
-        if (b) b.onclick = () => openVehiclePopup(v.entry.id);
-      });
+    const hasVehicle = Array.isArray(inv) && inv.some(row => {
+      const entry = getEntry(row.id || row.name);
+      return (entry?.taggar?.typ || []).includes('Färdmedel');
+    });
+    const vehicleBtn = getEl('vehicleBtn');
+    if (vehicleBtn && hasVehicle) {
+      vehicleBtn.onclick = () => openVehiclePopup();
+    }
   }
 
   window.invUtil = {
@@ -2347,13 +4894,22 @@ ${moneyRow}
     sortQualsForDisplay,
     openQualPopup,
     openCustomPopup,
+    editCustomEntry,
+    editArtifactEntry,
     openMoneyPopup,
     openQtyPopup,
+    applyLiveModePayment,
+    openLiveBuyPopup,
     openPricePopup,
+    addMoneyToVehicle,
     openVehiclePopup,
     openVehicleRemovePopup,
+    openVehicleMoneyPrompt,
+    removeMoneyFromVehicle,
     openRowPricePopup,
     openSaveFreePopup,
+    buildInventoryRow,
+    openBuyMultiplePopup,
     massFreeAndSave,
     recalcArtifactEffects,
     addWellEquippedItems,

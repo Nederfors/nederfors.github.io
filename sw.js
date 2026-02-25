@@ -1,9 +1,13 @@
-const CACHE_NAME = 'symbaroum-pwa-v8';
+const CACHE_NAME = 'symbaroum-pwa-v14';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
   'character.html',
   'notes.html',
+  'inventory.html',
+  'traits.html',
+  'summary.html',
+  'effects.html',
   'webapp.html',
   'css/style.css',
   'manifest.json',
@@ -17,11 +21,15 @@ const URLS_TO_CACHE = [
   'js/character-view.js',
   'js/djurmask.js',
   'js/elite-add.js',
+  'js/elite-utils.js',
   'js/elite-req.js',
+  'js/entry-card.js',
   'js/exceptionellt.js',
   'js/index-view.js',
+  'js/inventory-view.js',
   'js/jszip.min.js',
   'js/inventory-utils.js',
+  'js/summary-effects.js',
   'js/main.js',
   'js/monsterlard.js',
   'js/notes-view.js',
@@ -73,41 +81,147 @@ const URLS_TO_CACHE = [
   'data/yrke.json'
 ];
 
+async function precacheResources(cache) {
+  const precacheRequests = URLS_TO_CACHE
+    .filter(Boolean)
+    .map(url => new Request(url, { cache: 'reload' }));
+  await cache.addAll(precacheRequests);
+
+  const response = await cache.match('data/pdf-list.json');
+  if (!response) {
+    return;
+  }
+
+  try {
+    const pdfs = await response.json();
+    const fileRequests = [];
+    (Array.isArray(pdfs) ? pdfs : []).forEach(collection => {
+      if (!collection || !Array.isArray(collection.items)) return;
+      collection.items.forEach(item => {
+        if (!item || !item.file) return;
+        fileRequests.push(new Request(item.file, { cache: 'reload' }));
+      });
+    });
+    if (fileRequests.length) {
+      await Promise.allSettled(
+        fileRequests.map(request => cache.add(request))
+      );
+    }
+  } catch (error) {
+    // Ignore invalid PDF list entries; they will be fetched on demand.
+  }
+}
+
+async function forceRefreshCaches() {
+  const cache = await caches.open(CACHE_NAME);
+  await precacheResources(cache);
+
+  const keys = await caches.keys();
+  await Promise.all(
+    keys
+      .filter(key => key !== CACHE_NAME)
+      .map(key => caches.delete(key))
+  );
+}
+
 self.addEventListener('install', event => {
   event.waitUntil(
     (async () => {
       const cache = await caches.open(CACHE_NAME);
-      await cache.addAll(URLS_TO_CACHE);
-      const response = await cache.match('data/pdf-list.json');
-      if (response) {
-        const pdfs = await response.json();
-        const files = pdfs.flatMap(c => c.items.map(p => p.file));
-        await cache.addAll(files);
+      await precacheResources(cache);
+    })()
+  );
+});
+
+const isNavigationRequest = request =>
+  request.mode === 'navigate' ||
+  request.destination === 'document' ||
+  (request.headers.get('accept') || '').includes('text/html');
+
+const isJsonRequest = request => {
+  const acceptHeader = request.headers.get('accept') || '';
+  if (acceptHeader.includes('application/json')) {
+    return true;
+  }
+  try {
+    const { pathname } = new URL(request.url);
+    return pathname.endsWith('.json');
+  } catch (error) {
+    return false;
+  }
+};
+
+const shouldNetworkFirst = request =>
+  isNavigationRequest(request) ||
+  request.destination === 'style' ||
+  request.destination === 'script' ||
+  isJsonRequest(request);
+
+self.addEventListener('fetch', event => {
+  const { request } = event;
+  if (
+    request.method !== 'GET' ||
+    !request.url.startsWith(self.location.origin)
+  ) {
+    event.respondWith(fetch(request));
+    return;
+  }
+
+  if (shouldNetworkFirst(request)) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  event.respondWith(
+    (async () => {
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) {
+        event.waitUntil(refreshCache(request));
+        return cachedResponse;
+      }
+
+      try {
+        const networkResponse = await fetch(request, { cache: 'reload' });
+        const cache = await caches.open(CACHE_NAME);
+        if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+          await cache.put(request, networkResponse.clone());
+        }
+        return networkResponse;
+      } catch (error) {
+        throw error;
       }
     })()
   );
 });
 
-self.addEventListener('fetch', event => {
-  if (
-    event.request.method !== 'GET' ||
-    !event.request.url.startsWith(self.location.origin)
-  ) {
-    event.respondWith(fetch(event.request));
-    return;
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const networkResponse = await fetch(request, { cache: 'reload' });
+    if (networkResponse && (networkResponse.ok || networkResponse.type === 'opaque')) {
+      await cache.put(request, networkResponse.clone());
+    }
+    return networkResponse;
+  } catch (error) {
+    const cachedResponse = await cache.match(request);
+    if (cachedResponse) {
+      return cachedResponse;
+    }
+    throw error;
   }
+}
 
-  event.respondWith(
-    fetch(event.request)
-      .then(fetchResponse =>
-        caches.open(CACHE_NAME).then(cache => {
-          cache.put(event.request, fetchResponse.clone());
-          return fetchResponse;
-        })
-      )
-      .catch(() => caches.match(event.request))
-  );
-});
+async function refreshCache(request) {
+  try {
+    const response = await fetch(request, { cache: 'reload' });
+    if (response && (response.ok || response.type === 'opaque')) {
+      const cache = await caches.open(CACHE_NAME);
+      await cache.put(request, response.clone());
+    }
+  } catch (error) {
+    // Ignore refresh errors; the cached response has already been served.
+  }
+}
 
 self.addEventListener('activate', event => {
   const cacheWhitelist = [CACHE_NAME];
@@ -132,5 +246,32 @@ self.addEventListener('message', event => {
   if (!event.data) return;
   if (event.data === 'SKIP_WAITING' || (event.data.type && event.data.type === 'SKIP_WAITING')) {
     self.skipWaiting();
+    return;
+  }
+
+  if (event.data.type === 'FORCE_REFRESH_CACHE') {
+    const respond = message => {
+      if (event.ports && event.ports[0]) {
+        try {
+          event.ports[0].postMessage(message);
+        } catch (error) {
+          // Unable to communicate back to the page; ignore.
+        }
+      }
+    };
+
+    event.waitUntil(
+      (async () => {
+        try {
+          await forceRefreshCaches();
+          respond({ ok: true });
+        } catch (error) {
+          respond({
+            ok: false,
+            error: error instanceof Error ? error.message : String(error)
+          });
+        }
+      })()
+    );
   }
 });

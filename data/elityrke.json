@@ -13,7 +13,7 @@
     "krav_formagor": "Lärd, Monsterlärd, Prickskytt, Stångverkan eller Tvillingattack",
     "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
     "Elityrkesförmågor": [
-      "Rörlig strid"
+      "Rörlig strid", "Koreograferad Strid", "Miljökämpe"
     ],
     "mojliga_fordelar": [
       "Bestars tunga",
@@ -41,7 +41,7 @@
         "Templár"
       ]
     },
-    "krav_formagor": "Järnnäve, Mystisk kraft (Häxhammare) eller Mystisk kraft (Helig aura), Rustmästare, Teurgi",
+    "krav_formagor": "Tvåhandskraft eller Sköldkamp, Mystisk kraft (Häxhammare) eller Mystisk kraft (Helig aura), Rustmästare, Teurgi",
     "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
     "Elityrkesförmågor": [
       "Bepansrad mystiker"
@@ -74,7 +74,7 @@
     "krav_formagor": "Järnnäve, Rustmästare, Sköldkamp eller Tvillingattack, Återhämtning; Andra krav: Barbarättad människa",
     "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
     "Elityrkesförmågor": [
-      "Blodskamp"
+      "Blodskamp", "Vredesvirvel"
     ],
     "mojliga_fordelar": [
       "Arvegods",
@@ -134,7 +134,8 @@
     "Elityrkesförmågor": [
       "Mystisk kraft (Stavprojektil)",
       "Stavmagi",
-      "Ritualist (Blodsregn och Jordstöt)"
+      "Ritualist (Blodsregn)",
+      "Ritualist (Jordstöt)"
     ],
     "mojliga_fordelar": [
       "Arkivarie",
@@ -294,7 +295,7 @@
     "Elityrkesförmågor": [
       "Illusionskopia",
       "Fata morgana (ritual)",
-      "Förhäxad terräng (ritual)"
+      "Förhäxande landskap (ritual)"
     ],
     "mojliga_fordelar": [
       "Bländverk",
@@ -355,7 +356,7 @@
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
       "Formeltunnel (ritual)",
-      "Sinesstöt"
+      "Sinnesstöt"
     ],
     "mojliga_fordelar": [
       "Arkivarie",
@@ -504,10 +505,10 @@
         "Gentlemannatjuv"
       ]
     },
-    "krav_formagor": "Akrobatik, Dominera, Försåtsgillrare, Svärdshelgon eller Tvillingattack",
-    "viktiga_karaktarsdrag": "Övertygande 13+, Listig 11+",
+    "krav_formagor": "Lönnstöt, Fint, Tvillingattack, Svärdshelgon eller Knivgöra",
+    "viktiga_karaktarsdrag": "Diskret 13+, Övertygande 11+",
     "Elityrkesförmågor": [
-      "Manteldans"
+      "Manteldans", "Miljökämpe"
     ],
     "mojliga_fordelar": [
       "Arvegods",
@@ -522,5 +523,102 @@
       "Ärkefiende"
     ],
     "id": "elit17"
+  },
+  {
+    "id": "elit18",
+    "namn": "Stormbringare",
+    "beskrivning": "*”Himlen är mitt städ, blixten min hammare.”*\n\nÅsktornet i Yndaros var från början ett enkelt duvslag varifrån korrespondens hölls med de olika ordensmästarna. Från en dag till en annan blev duvornas värv ett minne blott då den magiska cirkeln gjorde deras idoga flygande till ett osäkert och föråldrat sätt att förmedla information de olika ordenshusen emellan.\n\nLänge stod tornet tomt tills den första blixten slog ned i dess spira och den följande elden härjade byggnaden. Två hängivna inom orden, Heldonmei och Simnon, tog det på sig att utforska möjligheten att snärja kraften given från himlen. De två experimenterade med bärnsten och järn, och utvecklade allt eftersom det vi idag känner som Stormbringare – de med kunskapen att tämja åskan till sin vilja. Tornet förseddes med en skulptur av järn och ögon av bärnsten; en lindorm vars kropp slingrar sig ner längs tornet och försvinner ner i marken, ledande himlens vrede dit magikern önskar.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": [
+        "Stormbringare"
+      ]
+    },
+    "krav_formagor": "Lärd, Mystisk kraft (Blixtfrämjande) eller Mystisk kraft (Åskvärn),Ritualist (Blixtfång) , Ordensmagi",
+    "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
+    "Elityrkesförmågor": [
+      "Klotblixt",
+      "Fokuserad Urladdning",
+      "Himmelsbrand"
+    ],
+    "mojliga_fordelar": [
+      "Arkivarie",
+      "Arvegods",
+      "Elixirkännare",
+      "Kontaktnät",
+      "Privilegierad"
+    ],
+    "tankbara_nackdelar": [
+      "Sensoriskt känslig",
+      "Övermod"
+    ]
+  },
+  
+    {
+    "id": "elit19",
+    "namn": "Skald",
+    "beskrivning": "*”Berget sjunger. Och jag är dess röst.”*\n\n Trollsångarna har länge vandrat i Davokars utkanter och de djupa dalarna, men Skalderna är de som gått djupare, in i bergets hjärta och historiens mörker. De är inte bara sångare utan väktare av de gamla sanningarna, de som kan sjunga så att urberget spricker och viljor krossas. En Skald söker ofta efter de glömda verser som sades ha format världen, och deras röst bär en tyngd som får både kungar och bestar att darra.\nSkalden är ofta knuten till trollens kultursfär men även människor med tillräckligt djup röst och stark vilja kan vandra denna väg, ofta efter att ha skolats av en urgammal läromästare i någon av Ravennernas grottor.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": [
+        "Skald"
+      ]
+    },
+    "krav_formagor": "Trollsång, Ledare, Mystisk Kraft (Bergasång), Ritualist (Stensång)",
+    "viktiga_karaktarsdrag": "Övertygande 13+, Viljestark 11+",
+    "Elityrkesförmågor": [
+      "Bergatroll",
+      "Urbergskammare (ritual)",
+      "Tvångslockelse (ritual)"
+    ],
+    "mojliga_fordelar": [
+      "Kommenderande stämma",
+      "Kontaktnät",
+      "Marschvana",
+      "Musikalisk",
+      "Skräckinjagande"
+    ],
+    "tankbara_nackdelar": [
+      "Hävdningsproblem",
+      "Mörkt förflutet"
+    ]
+  },
+    {
+    "id": "elit20",
+    "namn": "Ulvahedna",
+    "beskrivning": "*”Björnen slår i blindo, vargen väljer var bettet ska ta.”*\n\n”Han är älskad av månen” väste häxan Grindock och ryggade tillbaka inför den väldige krigaren. Jakaarskinnet över hans axlar var styvt av koagulerat blod och svärdet i hans hand vilade tungt men stadigt, trots den stridens hetta som fortfarande ångade från hans kropp.\n\nEn Ulvahedna är bärsärkagångens förädlade form; skogens främsta rovdjur och en levande mardröm för både ambriernas disciplinerade led och de vilda klanernas otyglade slagskämpar. Där en vanlig bärsärk förlorar sig i en röd dimma av vansinne, finner Ulvahednan en skrämmande klarhet i sitt raseri. Vreden är inte en eld som förtär förståndet, utan en slipsten som skärper sinnena till det yttersta. Likt vargflockens ledare som med skoningslös precision urskiljer svagheten i bytet, kanaliserar Ulvahednan sin inre storm till ett enda, dödligt fokus. Häxorna viskar om att en sådan mordlystnad inte är mänsklig; det är ett ursinne tvingat till lydnad, ett sätt att binda naturens vildhet i kedjor av vilja och rikta den med tvärsäker precision. Det farligaste odjuret är inte det som vrålar av smärta, utan det som mördar med blicken fäst vid strupen oavsett vad. Ulvahedna, det riktade raseriet.",
+    "taggar": {
+      "typ": [
+        "Elityrke"
+      ],
+      "ark_trad": [
+        "Ulvahedna"
+      ]
+    },
+    "krav_formagor": "Bärsärk, Tvåhandskraft eller Tvillingattack eller Naturlig Krigare, Järnnäve eller Dominera, Kraftprov",
+    "viktiga_karaktarsdrag": "Stark 15+, Viljestark 13+",
+    "Elityrkesförmågor": [
+      "Hungerlopp",
+      "Blodsrus",
+      "Dödsförakt"
+    ],
+    "mojliga_fordelar": [
+      "Blodhund",
+      "Seglivad",
+      "Skräckinjagande",
+      "Snabbfotad",
+      "Stigfinnare",
+      "Stridsraseri",
+      "Vildmarksvana"
+    ],
+    "tankbara_nackdelar": [
+      "Bestialisk",
+      "Blodtörstig",
+      "Mardrömmar"
+    ]
   }
 ]

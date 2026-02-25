@@ -4,10 +4,16 @@
    2025-06-20
    =========================================================== */
 
+window.addEventListener('load', () => {
+  document.documentElement.classList.add('is-ready');
+  document.documentElement.removeAttribute('data-preload');
+});
+
 /* ---------- Back-navigering för menyer & popups ---------- */
 (function() {
   const overlayStack = [];
   const openMap = new Map();
+  const overlayCleanupMap = new Map();
   let isPop = false;
   // Count how many history.back() calls we have triggered manually.
   // Using a counter (instead of a boolean) makes rapid open/close
@@ -34,46 +40,74 @@
     scrollLocked = false;
   }
 
-  function isOverlay(el) {
-    if (!(el instanceof HTMLElement)) return false;
-    if (el.classList.contains('popup') || el.classList.contains('offcanvas')) return true;
-    return /Popup$/.test(el.id) || /Panel$/.test(el.id);
+  function updateScrollLock() {
+    const requiresLock = overlayStack.some(el => el && !el.classList.contains('offcanvas'));
+    if (requiresLock) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
   }
 
-  function observe(root) {
-    const obs = new MutationObserver(muts => {
-      for (const m of muts) {
-        const el = m.target;
-        if (!isOverlay(el)) continue;
-        const isOpen = el.classList.contains('open');
-        const wasOpen = openMap.get(el) || false;
-        if (isOpen && !wasOpen) {
-          openMap.set(el, true);
-          overlayStack.push(el);
-          history.pushState({ overlay: el.id }, '');
-        } else if (!isOpen && wasOpen) {
-          openMap.set(el, false);
-          const idx = overlayStack.lastIndexOf(el);
-          if (idx >= 0) overlayStack.splice(idx, 1);
-          if (!isPop) {
-            manualCloseCount++;
-            history.back();
-          }
+  const overlayTargets = new Set();
+  const overlayObserver = new MutationObserver(muts => {
+    for (const m of muts) {
+      const el = m.target;
+      const isOpen = el.classList.contains('open');
+      const wasOpen = openMap.get(el) || false;
+      if (isOpen && !wasOpen) {
+        openMap.set(el, true);
+        overlayStack.push(el);
+       history.pushState({ overlay: el.id }, '');
+      } else if (!isOpen && wasOpen) {
+        openMap.set(el, false);
+        const idx = overlayStack.lastIndexOf(el);
+        if (idx >= 0) overlayStack.splice(idx, 1);
+        if (!isPop) {
+          manualCloseCount++;
+          history.back();
         }
       }
-      if (overlayStack.length > 0) {
-        lockScroll();
-      } else {
-        unlockScroll();
-      }
-    });
-    obs.observe(root, { attributes: true, attributeFilter: ['class'], subtree: true });
+    }
+    updateScrollLock();
+  });
+
+  const OVERLAY_SELECTOR = '.popup, .offcanvas';
+
+  function observeOverlay(el) {
+    if (!el || overlayTargets.has(el)) return;
+    overlayTargets.add(el);
+    overlayObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  window.registerOverlayElement = function(el) {
+    if (!el) return;
+    observeOverlay(el);
+  };
+
+  window.registerOverlayCleanup = function(el, cleanup) {
+    if (!el) return;
+    if (typeof cleanup === 'function') {
+      overlayCleanupMap.set(el, cleanup);
+    } else {
+      overlayCleanupMap.delete(el);
+    }
+  };
+
+  function registerOverlays(root) {
+    if (!root) return;
+    const list = root.querySelectorAll ? root.querySelectorAll(OVERLAY_SELECTOR) : [];
+    list.forEach(observeOverlay);
   }
 
   function initObservers() {
-    observe(document.body);
+    registerOverlays(document);
     const bar = document.querySelector('shared-toolbar');
-    if (bar && bar.shadowRoot) observe(bar.shadowRoot);
+    const registerToolbarOverlays = () => registerOverlays(bar?.shadowRoot);
+    registerToolbarOverlays();
+    if (bar) {
+      bar.addEventListener('toolbar-rendered', registerToolbarOverlays);
+    }
   }
 
   if (document.readyState === 'loading') {
@@ -83,13 +117,54 @@
   }
 
   window.addEventListener('popstate', (ev) => {
-    if (manualCloseCount > 0) { manualCloseCount--; return; }
+    if (manualCloseCount > 0) {
+      manualCloseCount--;
+      const topOverlay = overlayStack[overlayStack.length - 1];
+      if (!topOverlay || ev?.state?.overlay === topOverlay.id) {
+        return;
+      }
+    }
     const el = overlayStack[overlayStack.length - 1];
     if (el) {
       isPop = true;
-      el.classList.remove('open');
-      // Vänta tills MutationObserver hunnit reagera innan flaggan återställs
-      setTimeout(() => { isPop = false; });
+      const cleanup = overlayCleanupMap.get(el);
+      
+      // --- SPÖK-FIXEN BÖRJAR HÄR ---
+      // 1. Ta bort klassen omedelbart
+      el.classList.remove('open'); 
+      
+      // 2. "Hack" för att tvinga webbläsaren att fatta att rutan är borta:
+      // Vi gömmer den helt (display: none) en millisekund.
+      // Detta dödar alla pågående animationer och spöken direkt.
+      const originalDisplay = el.style.display;
+      el.style.display = 'none';
+      
+      // 3. Tvinga webbläsaren att räkna om layouten (Reflow)
+      void el.offsetHeight; 
+      
+      // 4. Återställ ordningen efter en blinkning
+      setTimeout(() => {
+          el.style.display = originalDisplay; 
+          // Rensa allt skräp som swipen kan ha lämnat kvar
+          el.style.transform = '';
+          el.style.transition = '';
+      }, 50);
+      // --- SPÖK-FIXEN SLUT ---
+
+      if (typeof cleanup === 'function') {
+        try {
+          cleanup();
+        } finally {
+          if (overlayCleanupMap.get(el) === cleanup) {
+            overlayCleanupMap.delete(el);
+          }
+        }
+      } else {
+        // Fallback om ingen cleanup-funktion fanns
+        el.classList.remove('open');
+      }
+      
+      setTimeout(() => { isPop = false; }, 50);
     }
   });
 
@@ -116,64 +191,374 @@ try {
 } catch {}
 
 /* ---------- Grunddata & konstanter ---------- */
-const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes'
+const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes' | 'inventory'
 let   store  = storeHelper.load();                   // Lokal lagring
 let   lastActiveChar = store.current || '';
+let   outdatedPromptInFlight = false;
+const PWA_POST_UPDATE_SYNC_KEY = 'pwa-post-update-sync';
+
+const ENTRY_META_FIELD = '__entryMeta';
+const entryDataVersions = window.__entryDataVersions || { db: 0, tables: 0 };
+window.__entryDataVersions = entryDataVersions;
+
+const toArray = (value) => (Array.isArray(value) ? value : []);
+
+// Search aliases: typing these terms should surface the target entry.
+const SEARCH_ENTRY_ALIASES = new Map([
+  ['felicia', 'pestvind'],
+  ['isak', 'pestvind']
+]);
+
+function normalizeSearchAliasTerm(value) {
+  const lower = String(value ?? '').trim().toLowerCase();
+  if (!lower) return '';
+  if (typeof searchNormalize === 'function') {
+    try { return searchNormalize(lower); }
+    catch { return lower; }
+  }
+  return lower;
+}
+
+function resolveSearchAliasTarget(value) {
+  const key = normalizeSearchAliasTerm(value);
+  if (!key) return '';
+  return SEARCH_ENTRY_ALIASES.get(key) || '';
+}
+
+function getAliasesForEntryName(name) {
+  const target = normalizeSearchAliasTerm(name);
+  if (!target) return [];
+  const aliases = [];
+  for (const [alias, mappedTarget] of SEARCH_ENTRY_ALIASES.entries()) {
+    if (mappedTarget === target) aliases.push(alias);
+  }
+  return aliases;
+}
+
+window.resolveSearchAliasTarget = resolveSearchAliasTarget;
+
+function ensureEntryMeta(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  if (entry[ENTRY_META_FIELD]) return entry[ENTRY_META_FIELD];
+
+  const safeString = (value) => String(value ?? '').trim();
+  const toLower = (value) => safeString(value).toLowerCase();
+
+  const lowerName = toLower(entry.namn);
+  const normName = typeof searchNormalize === 'function'
+    ? searchNormalize(lowerName)
+    : lowerName;
+
+  const levelText = Object.values(entry.nivåer || {})
+    .map(toLower)
+    .join(' ');
+  const descText = toLower(entry.beskrivning);
+  const aliasTerms = getAliasesForEntryName(entry.namn);
+  const combined = `${lowerName} ${descText} ${levelText} ${aliasTerms.join(' ')}`.trim();
+  const normText = typeof searchNormalize === 'function'
+    ? searchNormalize(combined)
+    : combined;
+
+  const normalizeList = (list) => toArray(list)
+    .map(safeString)
+    .filter(Boolean);
+
+  const tags = entry.taggar || {};
+  const typList = normalizeList(tags.typ);
+  let arkList = [];
+  try {
+    const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
+    arkList = normalizeList(exploded);
+  } catch {
+    arkList = [];
+  }
+  if (!arkList.length && Array.isArray(tags.ark_trad)) {
+    arkList = ['Traditionslös'];
+  }
+  const testList = normalizeList(tags.test);
+
+  const secondaryTags = [...arkList, ...testList];
+  const secondaryLookup = new Set(
+    secondaryTags.map(tag => {
+      const lower = tag.toLowerCase();
+      return typeof searchNormalize === 'function' ? searchNormalize(lower) : lower;
+    })
+  );
+
+  const allTagsNormalized = new Set(
+    [...typList, ...secondaryTags].map(tag => {
+      const lower = tag.toLowerCase();
+      return typeof searchNormalize === 'function' ? searchNormalize(lower) : lower;
+    })
+  );
+  const allTags = new Set([...typList, ...secondaryTags]);
+
+  const meta = {
+    normName,
+    normText,
+    typList,
+    primaryType: typList[0] || 'Övrigt',
+    primaryTypeLower: (typList[0] || 'Övrigt').toLowerCase(),
+    arkList,
+    testList,
+    secondaryTags,
+    secondaryLookup,
+    allTagsNormalized,
+    allTags
+  };
+
+  Object.defineProperty(entry, ENTRY_META_FIELD, {
+    value: meta,
+    enumerable: false,
+    configurable: true
+  });
+
+  return meta;
+}
+
+function ensureEntryMetaList(list) {
+  toArray(list).forEach(ensureEntryMeta);
+  return list;
+}
+
+window.ensureEntryMeta = ensureEntryMeta;
+window.ensureEntryMetaList = ensureEntryMetaList;
 
 /* ---------- Snabb DOM-access ---------- */
 const bar  = document.querySelector('shared-toolbar');
-const $T   = id => bar.shadowRoot.getElementById(id);        // shadow-DOM
+const $T   = id => (bar && bar.shadowRoot) ? bar.shadowRoot.getElementById(id) : null;        // shadow-DOM
+const getDom = id => document.getElementById(id) || $T(id);
 const dom  = {
   /* toolbar / panel */
-  charSel : $T('charSelect'),   delBtn : $T('deleteChar'),
-  newBtn  : $T('newCharBtn'),   dupBtn : $T('duplicateChar'),   xpOut  : $T('xpOut'),
-  exportBtn: $T('exportChar'),  importBtn: $T('importChar'),
-  xpIn    : $T('xpInput'),      xpSum  : $T('xpSummary'),
-  xpMinus : $T('xpMinus'),      xpPlus : $T('xpPlus'),
-  xpTotal : $T('xpTotal'),      xpUsed : $T('xpUsed'),       xpFree : $T('xpFree'),
+  charSel : getDom('charSelect'),   delBtn : getDom('deleteChar'),
+  newBtn  : getDom('newCharBtn'),   toolsBtn: getDom('characterToolsBtn'),   xpOut  : getDom('xpOut'),
+  storageBtn: getDom('driveStorageBtn'),
+  xpIn    : getDom('xpInput'),      xpSum  : getDom('xpSummary'),
+  xpMinus : getDom('xpMinus'),      xpPlus : getDom('xpPlus'),
+  xpTotal : getDom('xpTotal'),      xpUsed : getDom('xpUsed'),       xpFree : getDom('xpFree'),
 
   /* inventarie */
-  invFormal: $T('invFormal'),   invList : $T('invList'),      invBadge  : $T('invBadge'),
-  wtOut   : $T('weightOut'),    slOut     : $T('slotOut'),
-  invSearch: $T('invSearch'),
-  moneyD  : $T('moneyDaler'),
-  moneyS  : $T('moneySkilling'),
-  moneyO  : $T('moneyOrtegar'),
-  moneySetBtn: $T('moneySetBtn'),
-  moneyAddBtn: $T('moneyAddBtn'),
-  invTypeSel : $T('invTypeFilter'),
-  collapseAllBtn: $T('collapseAllInv'),
-  dragToggle: $T('dragToggle'),
-  unusedOut: $T('unusedOut'),
+  invFormal: getDom('invFormal'),   invList : getDom('invList'),
+  wtOut   : getDom('weightOut'),    slOut     : getDom('slotOut'),
+  moneyD  : getDom('moneyDaler'),
+  moneyS  : getDom('moneySkilling'),
+  moneyO  : getDom('moneyOrtegar'),
+  moneySetBtn: getDom('moneySetBtn'),
+  moneyAddBtn: getDom('moneyAddBtn'),
+  collapseAllBtn: getDom('collapseAllInv'),
+  unusedOut: getDom('unusedOut'),
 
   /* smith filter */
-  forgeBtn : $T('partySmith'),
-  alcBtn  : $T('partyAlchemist'),
-  artBtn  : $T('partyArtefacter'),
-  defBtn  : $T('forceDefense'),
+  forgeBtn : getDom('partySmith'),
+  alcBtn  : getDom('partyAlchemist'),
+  artBtn  : getDom('partyArtefacter'),
+  defBtn  : getDom('forceDefense'),
 
   /* traits */
-  traits  : $T('traits'),       traitsTot: $T('traitsTotal'),
-  traitsMax: $T('traitsMax'),
-  traitStats: $T('traitStats'),
+  traits  : getDom('traits'),       traitsTot: getDom('traitsTotal'),
+  traitsMax: getDom('traitsMax'),
+  traitStats: getDom('traitStats'),
+  defenseCalcBtn: getDom('defenseCalcBtn'),
 
   /* filterfält */
-  catToggle: $T('catToggle'),
-  sIn   : $T('searchField'),  typSel : $T('typFilter'),
-  searchList: $T('searchAutocomplete'),
-  searchSug: $T('searchSuggest'),
-  arkSel: $T('arkFilter'),    tstSel : $T('testFilter'),
-  folderSel: $T('folderFilter'),
-  filterUnion: $T('filterUnion'),
-  entryViewToggle: $T('entryViewToggle'),
-  infoToggle: $T('infoToggle'),
+  catToggle: getDom('catToggle'),
+  sIn   : getDom('searchField'),  typSel : getDom('typFilter'),
+  searchList: getDom('searchAutocomplete'),
+  searchSug: getDom('searchSuggest'),
+  arkSel: getDom('arkFilter'),    tstSel : getDom('testFilter'),
+  folderSel: getDom('folderFilter'),
+  filterUnion: getDom('filterUnion'),
+  entryViewToggle: getDom('entryViewToggle'),
+  infoToggle: getDom('infoToggle'),
+  manualBtn: getDom('manualAdjustBtn'),
+  entrySortBtn: getDom('entrySortBtn'),
 
   /* element i main-DOM */
-  active : document.getElementById('activeFilters'),
-  lista  : document.getElementById('lista'),       // index-vy
-  valda  : document.getElementById('valda'),       // character-vy
-  cName  : document.getElementById('charName')
+  active : getDom('activeFilters'),
+  lista  : getDom('lista'),       // index-vy
+  valda  : getDom('valda'),       // character-vy
+  cName  : getDom('charName'),
+
+  /* hemlig popup */
+  danielPopup: getDom('danielPopup'),
+  danielClose: getDom('danielPopupClose')
 };
+
+function isSecretDanielTerm(term) {
+  if (!term) return false;
+  const lower = String(term).toLowerCase();
+  const normalized = typeof searchNormalize === 'function'
+    ? searchNormalize(lower)
+    : lower;
+  return normalized === 'daniel';
+}
+
+function openDanielPopup() {
+  const root = bar && bar.shadowRoot ? bar.shadowRoot : null;
+  const pop = (root && root.getElementById('danielPopup')) || dom.danielPopup;
+  if (!pop) return;
+  if (pop.classList.contains('open')) return;
+  const closeBtn = (root && root.getElementById('danielPopupClose')) || dom.danielClose;
+  const inner = pop.querySelector('.popup-inner');
+
+  function close() {
+    pop.classList.remove('open');
+    closeBtn?.removeEventListener('click', onClose);
+    pop.removeEventListener('click', onBackdrop);
+    window.registerOverlayCleanup?.(pop, null);
+    if (dom.sIn && typeof dom.sIn.focus === 'function') {
+      try { dom.sIn.focus(); }
+      catch {}
+    }
+  }
+
+  function onClose(event) {
+    if (event) event.preventDefault();
+    close();
+  }
+
+  function onBackdrop(event) {
+    if (event?.target === pop) {
+      event.preventDefault();
+      close();
+    }
+  }
+
+  window.registerOverlayCleanup?.(pop, close);
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+  closeBtn?.addEventListener('click', onClose);
+  pop.addEventListener('click', onBackdrop);
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    setTimeout(() => {
+      try { closeBtn.focus(); }
+      catch {}
+    }, 0);
+  }
+}
+
+// Safari/WebKit exposes showOpenFilePicker but only allows selecting a single file.
+// Detect such browsers so we can fall back to the <input type="file" multiple> path.
+const shouldBypassShowOpenFilePickerMulti = (() => {
+  let cached;
+  return () => {
+    if (cached !== undefined) return cached;
+    let bypass = false;
+    try {
+      if (typeof navigator !== 'undefined') {
+        const nav = navigator;
+        if (nav.userAgentData && Array.isArray(nav.userAgentData.brands)) {
+          const safariBrand = nav.userAgentData.brands.some(entry => {
+            const brand = String((entry && entry.brand) || '').toLowerCase();
+            if (!brand) return false;
+            const hasSafari = brand.includes('safari');
+            const hasChrome = brand.includes('chrome') || brand.includes('chromium');
+            return hasSafari && !hasChrome;
+          });
+          if (safariBrand) bypass = true;
+        }
+        if (!bypass) {
+          const ua = String(nav.userAgent || '');
+          const vendor = String(nav.vendor || '');
+          const isAppleVendor = /apple/i.test(vendor);
+          const hasSafari = /\bSafari\//.test(ua);
+          const hasExclude = /\b(Chrome|Chromium|CriOS|FxiOS|OPR|OPiOS|Edg|EdgiOS)\//.test(ua);
+          if (isAppleVendor && hasSafari && !hasExclude) bypass = true;
+        }
+      }
+    } catch {}
+    cached = bypass;
+    return bypass;
+  };
+})();
+
+function makeAbortError() {
+  try {
+    return new DOMException('Operation aborted', 'AbortError');
+  } catch {
+    const err = new Error('Operation aborted');
+    err.name = 'AbortError';
+    return err;
+  }
+}
+
+async function pickJsonFilesWithInput() {
+  return await new Promise((resolve, reject) => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+   inp.accept = '.json,application/json';
+    inp.multiple = true;
+    inp.style.position = 'fixed';
+    inp.style.left = '-9999px';
+    inp.style.opacity = '0';
+    inp.style.pointerEvents = 'none';
+    inp.tabIndex = -1;
+    let settled = false;
+    const cleanup = () => {
+      inp.removeEventListener('change', onChange);
+      inp.removeEventListener('cancel', abort);
+      window.removeEventListener('focus', onFocus, true);
+      if (inp.parentNode) inp.parentNode.removeChild(inp);
+      settled = true;
+    };
+    const abort = () => {
+      if (settled) return;
+      cleanup();
+      reject(makeAbortError());
+    };
+    const onChange = () => {
+      if (settled) return;
+      const list = (inp.files && inp.files.length) ? Array.from(inp.files) : null;
+      cleanup();
+      if (list) resolve(list);
+      else abort();
+    };
+    const onFocus = () => {
+      // If the dialog closes without a selection, treat it as an abort so callers can bail cleanly.
+      setTimeout(() => abort(), 50);
+    };
+    inp.addEventListener('change', onChange, { once: true });
+    inp.addEventListener('cancel', abort, { once: true });
+    document.body.appendChild(inp);
+    inp.click();
+  });
+}
+
+async function pickJsonFilesWithFallback() {
+  const useInput = () => pickJsonFilesWithInput();
+  const canUseNativePicker = !!(window.showOpenFilePicker && !shouldBypassShowOpenFilePickerMulti());
+  if (canUseNativePicker) {
+    try {
+      const handles = await window.showOpenFilePicker({
+        multiple: true,
+        types: [{
+          description: 'JSON',
+          accept: { 'application/json': ['.json'] }
+        }]
+      });
+      return await Promise.all(handles.map(h => h.getFile()));
+    } catch (err) {
+      if (err && (err.name === 'AbortError')) throw err;
+      if (err && err.name === 'NotAllowedError') return await useInput();
+      throw err;
+    }
+  }
+  return await useInput();
+}
+
+async function pickJsonFilesFromDirectoryWithFallback() {
+  if (window.showDirectoryPicker) {
+    try {
+      const dir = await window.showDirectoryPicker({ mode: 'read' });
+      return await getFilesFromDirectory(dir);
+    } catch (err) {
+      if (err && err.name === 'AbortError') throw err;
+      if (err && err.name === 'NotAllowedError') return await pickJsonFilesWithFallback();
+      throw err;
+    }
+  }
+  return await pickJsonFilesWithFallback();
+}
 
 /* ===========================================================
    UI-KOMMANDON (sök efter menyknappar och lyft fram dem)
@@ -185,48 +570,69 @@ const dom  = {
   const norm = s => searchNormalize(String(s||'').toLowerCase());
 
   // Hjälpare för att highlighta ett element i toolbarens shadow DOM
+  const highlightTimers = new WeakMap();
+
+  function scheduleHighlight(el) {
+    const prev = highlightTimers.get(el);
+    if (prev) {
+      if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(prev);
+      else clearTimeout(prev);
+    }
+    const schedule = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (cb) => setTimeout(cb, 16);
+    const rafId = schedule(() => {
+      el.classList.add('focus-highlight');
+      highlightTimers.delete(el);
+    });
+    highlightTimers.set(el, rafId);
+  }
+
   function highlightToolbarEl(sel, panelId){
     try {
       if (!bar || !bar.shadowRoot) return false;
       if (panelId && typeof bar.open === 'function') bar.open(panelId);
       let el = bar.shadowRoot.querySelector(sel);
-      // For dynamic inventory vehicle buttons, fall back to first matching
-      if (!el && panelId === 'invPanel' && sel === '[id^="vehicleBtn-"]') {
-        el = bar.shadowRoot.querySelector('#invPanel [id^="vehicleBtn-"]');
-      }
       // Fallback: allow selecting elements in the main document (outside the toolbar)
       if (!el) {
         el = document.querySelector(sel);
       }
       // Collapse all cards except the one containing the target element (within its panel)
-      const isInToolbar = !!(el && bar.shadowRoot && bar.shadowRoot.contains(el));
+      let collapseStateChanged = false;
       if (panelId && el) {
         const panel = bar.shadowRoot.getElementById(panelId);
         const card = el.closest('.card');
         if (panel && card) {
-          const allCards = panel.querySelectorAll('.card');
-          allCards.forEach(c => {
+          const cards = panel.querySelectorAll('.card');
+          cards.forEach(c => {
             const cid = c.id || '';
-            const isAlwaysOpen = cid === 'searchFiltersCard' || cid === 'invSearchFilters' || c.classList.contains('help-card');
-            if (isAlwaysOpen || c === card) c.classList.remove('compact');
-            else c.classList.add('compact');
+            const isAlwaysOpen = cid === 'searchFiltersCard' || c.classList.contains('help-card');
+            const isTarget = c === card;
+            const shouldCompact = !isTarget && !isAlwaysOpen;
+            const currentlyCompact = c.classList.contains('compact');
+            if (shouldCompact && !currentlyCompact) {
+              c.classList.add('compact');
+              window.entryCardFactory?.syncCollapse?.(c);
+              collapseStateChanged = true;
+            } else if (!shouldCompact && currentlyCompact) {
+              c.classList.remove('compact');
+              window.entryCardFactory?.syncCollapse?.(c);
+              collapseStateChanged = true;
+            }
           });
-          // Special handling for inventory entries: also collapse all item cards
-          if (panelId === 'invPanel') {
-            const invCards = panel.querySelectorAll('#invList .card');
-            invCards.forEach(c => { if (c !== card) c.classList.add('compact'); });
-          }
-          if (panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
-            bar.updateFilterCollapseBtn();
-          }
         }
       }
       if (!el) return false;
+      const card = el.closest('li.entry-card');
+      if (card && card.dataset.collapsible === '1' && card.classList.contains('compact')) {
+        window.entryCardFactory?.toggle?.(card, true);
+      }
       // Blink-animera, fokusera och scrolla in elementet
       el.classList.remove('focus-highlight');
-      // Force reflow to restart animation
-      void el.offsetWidth;
-      el.classList.add('focus-highlight');
+      scheduleHighlight(el);
+      if (collapseStateChanged && panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
+        bar.updateFilterCollapseBtn();
+      }
       // Global CSS now styles .focus-highlight consistently across toolbar and page
       try { el.focus?.(); } catch {}
       try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
@@ -237,51 +643,47 @@ const dom  = {
   // Katalog med UI-kommandon: id, visningsnamn, panel och CSS-selector
   const UI_CMDS = [
     // Toppknappar
-    { id: 'open-inventory',  label: 'Inventarie',   sel: '#invToggle',    panel: 'invPanel',    emoji: '🎒',
-      syn: ['inventarie','inventory','ryggsäck','ryggsack','rygga','inv'] },
-    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsToggle', panel: 'traitsPanel', emoji: '📊',
+    { id: 'open-inventory',  label: 'Inventarie',   sel: '#inventoryLink', panel: null,          emoji: '🎒',
+      syn: ['inventarie','inventarievy','inventory','ryggsäck','ryggsack','rygga','inv'] },
+    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsLink', panel: null,            emoji: '📊',
       syn: ['egenskaper','traits','drag','karaktärsdrag','karaktarsdrag'] },
     { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '⚙️',
       syn: ['filter','verktyg'] },
     // Huvudvyns knappar utanför toolbaren (rollpersonssidan)
     { id: 'open-notes',      label: 'Anteckningar', sel: '#notesLink',    panel: null,          emoji: '📜',
       syn: ['anteckningar','anteckning','notes','noteringar'] },
-    { id: 'open-summary',    label: 'Översikt',     sel: '#summaryToggle', panel: null,         emoji: '📋',
+    { id: 'open-summary',    label: 'Översikt',     sel: '#summaryToggle, #traitsTabSummary', panel: null,         emoji: '📋',
       syn: ['översikt','oversikt','sammanfattning','visa översikt','visa oversikt'] },
+    { id: 'open-effects',    label: 'Effekter',     sel: '#effectsToggle, #traitsTabEffects', panel: null,         emoji: '📚',
+      syn: ['effekter','visa effekter','sammanställning effekter','sammanstallning effekter'] },
 
-    // Inställningar 💡 (Filter → Inställningar)
+    // Inställningar (Filter → Inställningar, lamp-ikon)
     { id: 'settings-smith',   label: 'Smed i partyt',        sel: '#partySmith',      panel: 'filterPanel', emoji: '⚒️', syn: ['smed','smed i partyt','smed nivå'] },
     { id: 'settings-alch',    label: 'Alkemist i partyt',    sel: '#partyAlchemist',  panel: 'filterPanel', emoji: '⚗️', syn: ['alkemist','alkemist i partyt'] },
-    { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', syn: ['artefaktmakare','artefaktare'] },
-    { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', syn: ['utvidga sökning','or-sökning','union','OR'] },
-    { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', syn: ['expandera vy','vy','detaljer','expand'] },
-    { id: 'settings-defense', label: 'Tvinga försvar',       sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', syn: ['försvar','tvinga försvar','försvarskaraktärsdrag'] },
+    { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', icon: 'artefakt', syn: ['artefaktmakare','artefaktare'] },
+    { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', icon: 'extend', syn: ['utvidga sökning','or-sökning','union','OR'] },
+    { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', icon: 'expand', syn: ['expandera vy','vy','detaljer','expand'] },
+    { id: 'settings-defense', label: 'Beräkna försvar',      sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', icon: 'forsvar', syn: ['försvar','beräkna försvar','försvarskaraktärsdrag','tvinga försvar'] },
+    { id: 'settings-manual',  label: 'Manuella justeringar', sel: '#manualAdjustBtn', panel: 'filterPanel', emoji: '🧮', syn: ['manuell justering','korruption','erf','erfarenhet','xp'] },
     { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
-    // Inventarie → Verktyg 🧰
-    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: 'invPanel', emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
-    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: 'invPanel', emoji: '💰', syn: ['pengar','hantera pengar','money'] },
-    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: 'invPanel', emoji: '💸', syn: ['multiplicera pris','pris'] },
-    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: 'invPanel', emoji: 'x²', syn: ['antal','lägg till antal'] },
-    { id: 'inv-vehicle', label: 'Lasta i',              sel: '[id^="vehicleBtn-"]', panel: 'invPanel', emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
-    { id: 'inv-drag',    label: 'Dra & Släpp',          sel: '#dragToggle',     panel: 'invPanel', emoji: '🔀', syn: ['dra och släpp','drag','drag & drop'] },
-    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: 'invPanel', emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
-    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: 'invPanel', emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
+    // Inventarie → Verktyg (verktygslåda-ikon)
+    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: null, emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
+    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: null, emoji: '', icon: 'basket', syn: ['pengar','hantera pengar','money'] },
+    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: null, emoji: '💸', syn: ['multiplicera pris','pris'] },
+    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: null, emoji: 'x²', syn: ['antal','lägg till antal'] },
+    { id: 'inv-vehicle', label: 'Lasta i',              sel: '#vehicleBtn', panel: null, emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
+    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: null, emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
+    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: null, emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
 
     // Verktyg inne i Filter → Verktyg
     { id: 'new-character',   label: 'Ny rollperson',       sel: '#newCharBtn',      panel: 'filterPanel', emoji: '➕',
       syn: ['ny rollperson','skapa rollperson','ny','skapa'] },
-    { id: 'duplicate-char',  label: 'Kopiera rollperson',  sel: '#duplicateChar',   panel: 'filterPanel', emoji: '🧬',
-      syn: ['kopiera rollperson','kopiera','duplicera','dup'] },
-    { id: 'rename-char',     label: 'Byt namn',            sel: '#renameChar',      panel: 'filterPanel', emoji: '✏️',
-      syn: ['byt namn','byta namn','rename','namn'] },
-    { id: 'manage-folders',  label: 'Mapphantering',       sel: '#manageFolders',   panel: 'filterPanel', emoji: '🗂️',
-      syn: ['mapphantering','mappar','mapp','hantera mappar','mapphanterare','folder'] },
-    { id: 'export-char',     label: 'Exportera',           sel: '#exportChar',      panel: 'filterPanel', emoji: '⬇️',
-      syn: ['export','exportera'] },
-    { id: 'import-char',     label: 'Importera',           sel: '#importChar',      panel: 'filterPanel', emoji: '⬆️',
-      syn: ['import','importera'] },
+    { id: 'character-tools', label: 'Rollpersonshantering', sel: '#characterToolsBtn', panel: 'filterPanel', emoji: '🧩',
+      syn: ['rollpersonshantering','rollpersonsverktyg','hantera rollperson','generera rollperson','kopiera rollperson','byt namn','mapphantering','mapphanterare','mappar'] },
+    { id: 'storage-hub',     label: 'Lagring',             sel: '#driveStorageBtn', panel: 'filterPanel', emoji: '💾',
+      syn: ['lagring','drivelagring','drive','import','importera','export','exportera'] },
     { id: 'pdf-library',     label: 'PDF-bank',            sel: '#pdfLibraryBtn',   panel: 'filterPanel', emoji: '📄',
       syn: ['pdf-bank','pdf bank','pdf'] },
     { id: 'delete-char',     label: 'Radera rollperson',   sel: '#deleteChar',      panel: 'filterPanel', emoji: '🗑️',
@@ -313,8 +715,18 @@ const dom  = {
   function executeUICommand(id){
     const cmd = UI_CMDS.find(c => c.id === id);
     if (!cmd) return false;
+    if (cmd.id === 'open-inventory' && ROLE !== 'inventory') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'inventory.html'; } catch {}
+      return true;
+    }
+    if (cmd.id.startsWith('inv-') && ROLE !== 'inventory') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'inventory.html'; } catch {}
+      return true;
+    }
     // If this command belongs to character view but we are elsewhere, navigate
-    if ((cmd.id === 'open-summary' || cmd.id === 'open-notes') && ROLE !== 'character') {
+    if ((cmd.id === 'open-summary' || cmd.id === 'open-notes' || cmd.id === 'open-effects') && ROLE !== 'character') {
       try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
       try { window.location.href = 'character.html'; } catch {}
       return true;
@@ -342,9 +754,9 @@ const dom  = {
       return UI_CMDS
         .slice()
         .sort((a,b)=> String(a.label||'').localeCompare(String(b.label||''), 'sv'))
-        .map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '' }));
+        .map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '', icon: c.icon || '' }));
     }
-    return searchUICommands(q).map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '' }));
+    return searchUICommands(q).map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '', icon: c.icon || '' }));
   };
   window.executeUICommand = executeUICommand;
   window.tryUICommand = tryUICommand;
@@ -359,28 +771,381 @@ const dom  = {
     }
   } catch {}
 
-  // Liten quality-of-life: i Notes-vyn finns ingen egen söklogik,
-  // så låt Enter köra UI-kommandon globalt där.
-  if (ROLE === 'notes' && dom.sIn) {
-    dom.sIn.addEventListener('keydown', e => {
-      if (e.key !== 'Enter') return;
-      const term = (dom.sIn.value || '').trim();
-      if (!term) return;
-      if (tryUICommand(term)) {
-        e.preventDefault();
-        const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-        if (sugEl) { sugEl.innerHTML = ''; sugEl.hidden = true; }
-        window.__searchBlurGuard = true;
-        dom.sIn.value = '';
-        dom.sIn.blur();
-      }
+})();
+
+const INDEX_VIEW_STATE_KEY = 'indexViewState';
+
+function persistIndexSearchTerm(term) {
+  try {
+    const raw = localStorage.getItem(INDEX_VIEW_STATE_KEY);
+    const state = raw ? JSON.parse(raw) : {};
+    const filters = (state && typeof state === 'object' && state.filters && typeof state.filters === 'object')
+      ? state.filters
+      : {};
+    filters.search = term ? [term] : [];
+    state.filters = filters;
+    localStorage.setItem(INDEX_VIEW_STATE_KEY, JSON.stringify(state));
+  } catch {}
+  if (term && window.storeHelper?.addRecentSearch) {
+    try { storeHelper.addRecentSearch(store, term); } catch {}
+  }
+}
+
+function navigateToIndexWithFilter(rawTerm, options = {}) {
+  const term = String(rawTerm || '').trim();
+  persistIndexSearchTerm(term);
+  try { sessionStorage.setItem('__pendingIndexSearch', term); } catch {}
+  if (ROLE === 'index') {
+    if (typeof window.handleIndexSearchTerm === 'function') {
+      try { window.handleIndexSearchTerm(term, options); } catch {}
+    }
+    try { sessionStorage.removeItem('__pendingIndexSearch'); } catch {}
+    return;
+  }
+  try { window.location.href = 'index.html'; }
+  catch {}
+}
+
+window.navigateToIndexWithFilter = navigateToIndexWithFilter;
+
+const globalSearch = (() => {
+  const SEARCH_MIN_CHARS = 2;
+  const ENTRY_LIMIT = 50;
+
+  let context = {};
+  let activeIndex = -1;
+  let lastQuery = '';
+  let suggestionEl = null;
+
+  const defaultContext = {
+    name: 'default',
+    minLength: SEARCH_MIN_CHARS,
+    maxEntries: ENTRY_LIMIT,
+    getEntrySource: () => Array.isArray(window.DB) ? window.DB : [],
+    buildExtraSuggestions: null,
+    handleDataset: null,
+    handleSubmit: null,
+    onQueryChanged: null
+  };
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+
+  const normalizeTerm = (value) => {
+    const lower = String(value || '').toLowerCase();
+    if (typeof searchNormalize === 'function') {
+      try { return searchNormalize(lower); }
+      catch { return lower; }
+    }
+    return lower;
+  };
+
+  const capitalize = (value) => {
+    const text = String(value || '');
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+
+  const getInput = () => dom.sIn || null;
+
+  function ensureSuggestionEl() {
+    let el = dom.searchSug;
+    if (!el || !el.isConnected) {
+      const root = document.querySelector('shared-toolbar')?.shadowRoot || null;
+      if (root) el = root.getElementById('searchSuggest');
+    }
+    if (el && el !== suggestionEl) {
+      if (suggestionEl) suggestionEl.removeEventListener('mousedown', onSuggestionMouseDown);
+      el.addEventListener('mousedown', onSuggestionMouseDown);
+      suggestionEl = el;
+    }
+    return suggestionEl;
+  }
+
+  function onSuggestionMouseDown(event) {
+    const target = event.target?.closest('.item');
+    if (!target) return;
+    event.preventDefault();
+    handleSuggestionElement(target, { event, reason: 'click' });
+  }
+
+  function setContext(custom = {}) {
+    context = { ...defaultContext, ...(custom || {}) };
+    activeIndex = -1;
+    refreshSuggestions();
+  }
+
+  function refreshSuggestions() {
+    const input = getInput();
+    if (!input) return;
+    updateSuggestions(input.value || '');
+  }
+
+  function updateSuggestions(rawQuery) {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl) return;
+    lastQuery = String(rawQuery || '');
+    if (typeof context.onQueryChanged === 'function') {
+      try { context.onQueryChanged(lastQuery); }
+      catch {}
+    }
+    const trimmed = lastQuery.trim();
+    const minLen = context.minLength ?? SEARCH_MIN_CHARS;
+    if (!trimmed || trimmed.length < minLen) {
+      hideSuggestions();
+      return;
+    }
+
+    const blocks = [];
+
+    if (typeof context.buildExtraSuggestions === 'function') {
+      try {
+        const extra = context.buildExtraSuggestions(trimmed, { query: lastQuery });
+        if (extra) blocks.push(extra);
+      } catch {}
+    }
+
+    const uiHtml = buildUiSuggestionHtml(trimmed);
+    if (uiHtml) blocks.push(uiHtml);
+
+    const entryHtml = buildEntrySuggestionHtml(trimmed);
+    if (entryHtml) blocks.push(entryHtml);
+
+    if (!blocks.length) {
+      hideSuggestions();
+      return;
+    }
+
+    sugEl.innerHTML = blocks.join('');
+    sugEl.hidden = false;
+    activeIndex = -1;
+    window.updateScrollLock?.();
+  }
+
+  function buildUiSuggestionHtml(query) {
+    if (typeof window.getUICommandSuggestions !== 'function') return '';
+    let suggestions = [];
+    try { suggestions = window.getUICommandSuggestions(query) || []; }
+    catch { suggestions = []; }
+    if (!suggestions.length) return '';
+    return suggestions.map((cmd, idx) => {
+      const iconPart = (() => {
+        if (cmd.icon && typeof window.iconHtml === 'function') {
+          try {
+            const html = window.iconHtml(cmd.icon, { className: 'suggest-icon-img' });
+            if (html) return `<span class="suggest-icon">${html}</span>`;
+          } catch {}
+        }
+        const emoji = String(cmd.emoji || '').trim();
+        return emoji ? `<span class="suggest-emoji">${escapeHtml(emoji)}</span>` : '';
+      })();
+      const label = `<span class="suggest-label">${escapeHtml(cmd.label || '')}</span>`;
+      return `<div class="item" data-ui="${escapeHtml(cmd.id || '')}" data-idx="ui-${idx}">${iconPart}${label}</div>`;
+    }).join('');
+  }
+
+  function getEntrySource() {
+    if (typeof context.getEntrySource === 'function') {
+      try {
+        const result = context.getEntrySource();
+        if (Array.isArray(result)) return result;
+        return Array.from(result || []);
+      } catch {}
+    }
+    return Array.isArray(window.DB) ? window.DB : [];
+  }
+
+  function buildEntrySuggestionHtml(query) {
+    const entries = getEntrySource();
+    if (!entries.length) return '';
+    const limit = context.maxEntries ?? ENTRY_LIMIT;
+    const normQuery = normalizeTerm(query);
+    const aliasTarget = resolveSearchAliasTarget(query);
+    if (!normQuery) return '';
+    const seen = new Set();
+    const items = [];
+    for (const entry of entries) {
+      const rawName = typeof entry === 'string'
+        ? entry
+        : (entry && typeof entry === 'object' ? (entry.namn ?? entry.name ?? '') : '');
+      const name = String(rawName || '').trim();
+      if (!name || seen.has(name)) continue;
+      const normName = normalizeTerm(name);
+      const aliasMatch = aliasTarget && normName === aliasTarget;
+      if (!normName.includes(normQuery) && !aliasMatch) continue;
+      seen.add(name);
+      items.push({ name, display: capitalize(name) });
+      if (items.length >= limit) break;
+    }
+    if (!items.length) return '';
+    return items.map((item, idx) =>
+      `<div class="item" data-entry="${escapeHtml(item.name)}" data-idx="entry-${idx}">${escapeHtml(item.display)}</div>`
+    ).join('');
+  }
+
+  function hideSuggestions() {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl) return;
+    sugEl.innerHTML = '';
+    sugEl.hidden = true;
+    activeIndex = -1;
+    window.updateScrollLock?.();
+  }
+
+  function getSuggestionItems() {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl || sugEl.hidden) return [];
+    return Array.from(sugEl.querySelectorAll('.item'));
+  }
+
+  function updateActiveHighlight() {
+    const items = getSuggestionItems();
+    items.forEach((el, idx) => {
+      el.classList.toggle('active', idx === activeIndex);
     });
   }
+
+  function moveSelection(delta) {
+    const items = getSuggestionItems();
+    if (!items.length) return false;
+    const nextIndex = Math.max(-1, Math.min(items.length - 1, activeIndex + delta));
+    if (nextIndex === activeIndex) return false;
+    activeIndex = nextIndex;
+    updateActiveHighlight();
+    if (activeIndex >= 0 && items[activeIndex]) {
+      try { items[activeIndex].scrollIntoView({ block: 'nearest' }); } catch {}
+    }
+    return true;
+  }
+
+  function selectActiveSuggestion() {
+    if (activeIndex < 0) return false;
+    const items = getSuggestionItems();
+    const current = items[activeIndex];
+    if (!current) return false;
+    return handleSuggestionElement(current, { reason: 'keyboard' });
+  }
+
+  function handleSuggestionElement(el, meta = {}) {
+    const dataset = el?.dataset || {};
+    if (dataset.ui) {
+      safeBlurInput();
+      let executed = false;
+      try { executed = typeof window.executeUICommand === 'function' ? window.executeUICommand(dataset.ui) : false; }
+      catch { executed = false; }
+      if (executed && dom.sIn) dom.sIn.value = '';
+      hideSuggestions();
+      return true;
+    }
+    if (typeof context.handleDataset === 'function') {
+      try {
+        if (context.handleDataset(dataset, { ...meta, query: lastQuery })) {
+          hideSuggestions();
+          return true;
+        }
+      } catch {}
+    }
+    if (dataset.entry || dataset.val) {
+      applyTermAndNavigate(dataset.entry || dataset.val || '');
+      return true;
+    }
+    return false;
+  }
+
+  function handleInput(event) {
+    updateSuggestions(event?.target?.value || '');
+  }
+
+  function handleKeydown(event) {
+    const key = event.key;
+    if (key === 'ArrowDown') {
+      const hadItems = getSuggestionItems().length > 0;
+      if (!hadItems) {
+        const val = String(getInput()?.value || '');
+        if (val.trim().length >= (context.minLength ?? SEARCH_MIN_CHARS)) {
+          updateSuggestions(val);
+        }
+      }
+      if (moveSelection(1)) event.preventDefault();
+      return;
+    }
+    if (key === 'ArrowUp') {
+      if (moveSelection(-1)) event.preventDefault();
+      return;
+    }
+    if (key === 'Enter') {
+      const input = getInput();
+      const term = String(input?.value || '').trim();
+      if (!term) {
+        hideSuggestions();
+        safeBlurInput();
+        event.preventDefault();
+        return;
+      }
+      if (isSecretDanielTerm(term)) {
+        if (dom.sIn) dom.sIn.value = '';
+        hideSuggestions();
+        safeBlurInput();
+        openDanielPopup();
+        event.preventDefault();
+        return;
+      }
+      applyTermAndNavigate(term);
+      event.preventDefault();
+      return;
+    }
+    if (key === 'Escape' && window.matchMedia('(pointer: fine)').matches) {
+      if (dom.sIn) dom.sIn.value = '';
+      hideSuggestions();
+      safeBlurInput();
+      event.preventDefault();
+    }
+  }
+
+  function applyTermAndNavigate(term) {
+    if (dom.sIn) dom.sIn.value = '';
+    hideSuggestions();
+    safeBlurInput();
+    navigateToIndexWithFilter(term);
+  }
+
+  function safeBlurInput() {
+    const input = getInput();
+    if (!input) return;
+    window.__searchBlurGuard = true;
+    try { input.blur(); }
+    catch {}
+  }
+
+  const toolbar = document.querySelector('shared-toolbar');
+  if (toolbar) {
+    toolbar.addEventListener('toolbar-rendered', () => {
+      suggestionEl = null;
+      ensureSuggestionEl();
+      refreshSuggestions();
+    });
+  }
+  ensureSuggestionEl();
+
+  return {
+    setContext,
+    refreshSuggestions,
+    hideSuggestions,
+    handleInput,
+    handleKeydown,
+    updateSuggestions,
+    moveSelection,
+    selectActiveSuggestion,
+    lastQuery: () => lastQuery
+  };
 })();
+
+window.globalSearch = globalSearch;
+globalSearch.setContext();
 
 /* ----- Hantera back-navigering för sökfältet ----- */
 let searchFocus = false;
-// Guard to prevent blur() from triggering history.back() when a UI command is running
 window.__searchBlurGuard = false;
 if (dom.sIn) {
   dom.sIn.addEventListener('focus', () => {
@@ -389,11 +1154,9 @@ if (dom.sIn) {
   });
   dom.sIn.addEventListener('blur', () => {
     setTimeout(() => {
-      const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-      if (sugEl) sugEl.hidden = true;
+      globalSearch.hideSuggestions();
       if (searchFocus) {
         searchFocus = false;
-        // Skip history.back when a UI command triggered this blur
         if (window.__searchBlurGuard) {
           window.__searchBlurGuard = false;
           return;
@@ -402,20 +1165,14 @@ if (dom.sIn) {
       }
     }, 0);
   });
-  dom.sIn.addEventListener('keydown', e => {
-    if (e.key === 'Enter') dom.sIn.blur();
-    else if (e.key === 'Escape' && window.matchMedia('(pointer: fine)').matches) {
-      e.preventDefault();
-      dom.sIn.blur();
-    }
-  });
+  dom.sIn.addEventListener('input', globalSearch.handleInput);
+  dom.sIn.addEventListener('keydown', globalSearch.handleKeydown);
 }
 
 window.addEventListener('popstate', () => {
   if (searchFocus && document.activeElement === dom.sIn) {
     searchFocus = false;
-    const sugEl = dom.searchSug || (document.querySelector('shared-toolbar')?.shadowRoot?.getElementById('searchSuggest'));
-    if (sugEl) sugEl.hidden = true;
+    globalSearch.hideSuggestions();
     dom.sIn.blur();
   }
 });
@@ -467,7 +1224,9 @@ let TABELLER = [];
 fetch(TABELLER_FILE)
   .then(r => r.json())
   .then(arr => {
-    TABELLER = arr;
+    TABELLER = Array.isArray(arr) ? arr : [];
+    ensureEntryMetaList(TABELLER);
+    entryDataVersions.tables += 1;
     window.TABELLER = TABELLER;
     if (typeof window.indexViewUpdate === 'function') {
       window.indexViewUpdate();
@@ -477,13 +1236,21 @@ fetch(TABELLER_FILE)
     }
   });
 
-Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
-  .then(arrays => {
-    DB = arrays.flat().sort(sortByType);
+function loadDatabaseData() {
+  return Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
+    .then(arrays => ({ entries: arrays.flat(), meta: null }));
+}
+
+loadDatabaseData()
+  .then(({ entries }) => {
+    DB = Array.isArray(entries) ? entries.slice() : [];
+    ensureEntryMetaList(DB);
+    DB = DB.sort(sortByType);
     DB.forEach((ent, idx) => {
       if (ent.id === undefined) ent.id = idx;
       DB[ent.id] = ent;
     });
+    entryDataVersions.db += 1;
     window.DB = DB;
     DBIndex = {};
     DB.forEach(ent => { DBIndex[ent.namn] = ent; });
@@ -493,6 +1260,14 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
       store = storeHelper.load();
     }
     boot();
+    runQueuedPostUpdateEntrySync();
+    try { window.globalSearch?.refreshSuggestions?.(); } catch {}
+    try {
+      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', { detail: { entries: DB.length } }));
+    } catch {}
+  })
+  .catch(err => {
+    console.error('Kunde inte läsa databasen', err);
   });
 
 /* ===========================================================
@@ -502,46 +1277,237 @@ Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
 
 function yrkeInfoHtml(p) {
   const extra = p.extra ? formatText(p.extra) : '';
+  const wrapBlocks = (parts) => parts
+    .map(part => String(part || '').trim())
+    .filter(Boolean)
+    .map(part => `<div class="info-block info-block-extra">${part}</div>`)
+    .join('');
   if (isRas(p)) {
-    const trait = p.särdrag
-      ? `<strong>Särdrag:</strong> ${p.särdrag}`
-      : '';
-    const male = (p.namn_man || []).length
-      ? `<strong>Mansnamn:</strong> ${p.namn_man.join(', ')}`
-      : '';
-    const female = (p.namn_kvinna || []).length
-      ? `<strong>Kvinnonamn:</strong> ${p.namn_kvinna.join(', ')}`
-      : '';
-    return [extra, trait, male, female].filter(Boolean).join('<br>');
+    const parts = [];
+    if (extra) parts.push(extra);
+    if (p.särdrag) parts.push(`<p><strong>Särdrag:</strong> ${p.särdrag}</p>`);
+    if ((p.namn_man || []).length) parts.push(`<p><strong>Mansnamn:</strong> ${p.namn_man.join(', ')}</p>`);
+    if ((p.namn_kvinna || []).length) parts.push(`<p><strong>Kvinnonamn:</strong> ${p.namn_kvinna.join(', ')}</p>`);
+    return wrapBlocks(parts);
   }
   if (isElityrke(p)) {
-    const req = p.krav_formagor
-      ? `<strong>Krav på förmågor (varav minst en på mästarnivå):</strong> ${p.krav_formagor}`
-      : '';
-    const abil = (p.Elityrkesförmågor || []).length
-      ? `<strong>Elityrkesförmågor:</strong> ${p.Elityrkesförmågor.join(', ')}`
-      : '';
-    const perks = (p.mojliga_fordelar || []).length
-      ? `<strong>Möjliga fördelar:</strong> ${p.mojliga_fordelar.join(', ')}`
-      : '';
-    const cons = (p.tankbara_nackdelar || []).length
-      ? `<strong>Tänkbara nackdelar:</strong> ${p.tankbara_nackdelar.join(', ')}`
-      : '';
-    const attr = p.viktiga_karaktarsdrag
-      ? `<strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}`
-      : '';
-    return [extra, req, abil, perks, cons, attr].filter(Boolean).join('<br>');
+    const parts = [];
+    if (extra) parts.push(extra);
+    if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
+    return wrapBlocks(parts);
   }
-  const v = p.viktiga_karaktarsdrag
-    ? `<strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}`
-    : '';
-  const s = p.forslag_pa_slakte
-    ? `<strong>Förslag på släkte:</strong> ${Array.isArray(p.forslag_pa_slakte) ? p.forslag_pa_slakte.join(', ') : p.forslag_pa_slakte}`
-    : '';
-  const f = p.lampliga_formagor
-    ? `<strong>Lämpliga förmågor:</strong> ${(p.lampliga_formagor || []).join(', ')}`
-    : '';
-  return [extra, v, s, f].filter(Boolean).join('<br>');
+  const parts = [];
+  if (extra) parts.push(extra);
+  if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
+  if (p.forslag_pa_slakte) {
+    const val = Array.isArray(p.forslag_pa_slakte) ? p.forslag_pa_slakte.join(', ') : p.forslag_pa_slakte;
+    parts.push(`<p><strong>Förslag på släkte:</strong> ${val}</p>`);
+  }
+  if ((p.lampliga_formagor || []).length) parts.push(`<p><strong>Lämpliga förmågor:</strong> ${(p.lampliga_formagor || []).join(', ')}</p>`);
+  return wrapBlocks(parts);
+}
+
+function buildElityrkeInfoSections(p) {
+  if (!p || !isElityrke(p)) return [];
+
+  const utils = window.eliteUtils || {};
+  const DBIndex = window.DBIndex || {};
+  const DBList = Array.isArray(window.DB) ? window.DB : [];
+  const abilityRenderer = typeof abilityHtml === 'function' ? abilityHtml : null;
+
+  const safe = (value) => String(value ?? '')
+    .replace(/[&<>"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[m] || m))
+    .replace(/'/g, '&#39;');
+
+  const renderTagList = (arr) => {
+    const list = Array.isArray(arr) ? arr : [];
+    if (!list.length) return '';
+    const items = list
+      .map(item => safe(item))
+      .filter(Boolean)
+      .map(item => `<span class="tag">${item}</span>`);
+    return items.length ? `<div class="tags elite-tag-list">${items.join('')}</div>` : '';
+  };
+
+  const findEntry = (name) => {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) return null;
+    if (DBIndex && DBIndex[trimmed]) return DBIndex[trimmed];
+    const withoutSuffix = trimmed.replace(/\s*\(([^)]+)\)$/u, '').trim();
+    if (withoutSuffix && DBIndex[withoutSuffix]) return DBIndex[withoutSuffix];
+    const lower = trimmed.toLowerCase();
+    const match = DBList.find(ent => String(ent?.namn || '').toLowerCase() === lower);
+    if (match) return match;
+    if (withoutSuffix) {
+      const match2 = DBList.find(ent => String(ent?.namn || '').toLowerCase() === withoutSuffix.toLowerCase());
+      if (match2) return match2;
+    }
+    return null;
+  };
+
+  const renderAbilityDetails = (lookupName, options = {}) => {
+    if (!lookupName) return '';
+    const displayName = options.displayName ? String(options.displayName).trim() : lookupName;
+    const collapseAbility = options.collapseAbility !== false;
+    const entry = findEntry(lookupName);
+    const tags = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ
+          .map(tag => safe(tag))
+          .filter(Boolean)
+          .map(tag => `<span class="tag">${tag}</span>`)
+      : [];
+    const tagsHtml = tags.length ? `<div class="tags elite-ability-tags">${tags.join('')}</div>` : '';
+    const body = entry && abilityRenderer
+      ? abilityRenderer(entry, undefined, { collapseLevels: true })
+      : `<p class="elite-ability-missing-text">Kan inte hitta beskrivning för <em>${safe(displayName)}</em> i databasen.</p>`;
+    const missingClass = entry ? '' : ' missing';
+    const isOpen = options.defaultOpen && !collapseAbility;
+    const openAttr = isOpen ? ' open' : '';
+    return `
+      <details class="elite-ability-details${missingClass}"${openAttr}>
+        <summary>${safe(displayName)}</summary>
+        <div class="elite-ability-body">
+          ${tagsHtml}
+          ${body}
+        </div>
+      </details>
+    `.trim();
+  };
+
+  const extractGroupMeta = (group) => {
+    const names = [];
+    const displayMap = new Map();
+    const seen = new Set();
+    let anyMystic = false;
+    let anyRitual = false;
+    const expand = typeof utils.expandRequirement === 'function'
+      ? utils.expandRequirement
+      : (raw) => [{ names: [raw] }];
+    group.forEach(raw => {
+      const abilityPart = String(raw || '').split(';')[0].trim();
+      const target = abilityPart || raw;
+      expand(target).forEach(variant => {
+        if (variant?.anyMystic) {
+          anyMystic = true;
+          return;
+        }
+        if (variant?.anyRitual) {
+          anyRitual = true;
+          return;
+        }
+        (variant?.names || []).forEach(nm => {
+          const trimmed = String(nm || '').trim();
+          if (!trimmed || seen.has(trimmed)) return;
+          seen.add(trimmed);
+          names.push(trimmed);
+          if (!displayMap.has(trimmed)) {
+            displayMap.set(trimmed, abilityPart || raw);
+          }
+        });
+      });
+    });
+    return { names, anyMystic, anyRitual, displayMap };
+  };
+
+  const groups = (p.krav_formagor && typeof utils.parseElityrkeRequirements === 'function')
+    ? utils.parseElityrkeRequirements(p.krav_formagor)
+    : [];
+
+  const blocks = [];
+
+  if (p.krav_formagor) {
+    if (groups.length) {
+      const groupHtml = groups.map((group, idx) => {
+        const optionsList = (Array.isArray(group) ? group : [])
+          .map(opt => String(opt || '').trim())
+          .filter(Boolean);
+        if (!optionsList.length) return '';
+        const { names, anyMystic, anyRitual, displayMap } = extractGroupMeta(optionsList);
+        const notes = [];
+        if (anyMystic) notes.push('Valfri mystisk kraft – öppna listan över Mystiska krafter för detaljer.');
+        if (anyRitual) notes.push('Valfri ritual – öppna listan över Ritualer för detaljer.');
+        const abilityBlocks = names.map((name, idx) => renderAbilityDetails(name, {
+          displayName: displayMap.get(name) || name,
+          defaultOpen: names.length === 1 && idx === 0
+        })).filter(Boolean);
+        const abilitySection = abilityBlocks.length
+          ? `<div class="elite-ability-stack">${abilityBlocks.join('')}</div>`
+          : '';
+        const notesHtml = notes.length
+          ? notes.map(text => `<p class="elite-req-note">${safe(text)}</p>`).join('')
+          : '';
+        let hintText = '';
+        if (abilityBlocks.length > 1) {
+          hintText = '<p class="elite-req-hint">Välj minst en av alternativen nedan:</p>';
+        } else if (abilityBlocks.length === 1) {
+          hintText = '<p class="elite-req-hint">Obligatorisk förmåga:</p>';
+        }
+        return `
+          <section class="elite-req-group">
+            ${hintText}
+            ${abilitySection}
+            ${notesHtml}
+          </section>
+        `.trim();
+      }).filter(Boolean);
+
+      const requirementsContent = [
+        ...groupHtml,
+        '<p class="elite-req-note elite-req-master">Minst en vald förmåga måste vara på mästarnivå.</p>'
+      ].join('');
+
+      blocks.push(`<details class="elite-info-details"><summary>Krav på förmågor</summary>${requirementsContent}</details>`);
+    } else {
+      const fallback = `<p class="elite-req-text">${safe(p.krav_formagor)}</p><p class="elite-req-note elite-req-master">Minst en vald förmåga måste vara på mästarnivå.</p>`;
+      blocks.push(`<details class="elite-info-details"><summary>Krav på förmågor</summary>${fallback}</details>`);
+    }
+  }
+
+  const eliteAbilities = Array.isArray(p.Elityrkesförmågor) ? p.Elityrkesförmågor : [];
+  if (eliteAbilities.length) {
+    const abilityBlocks = eliteAbilities
+      .map(raw => {
+        const display = String(raw || '').trim();
+        if (!display) return '';
+        const lookup = display.replace(/\s*\(([^)]+)\)$/u, '').trim() || display;
+        let block = renderAbilityDetails(lookup, { displayName: display, defaultOpen: eliteAbilities.length === 1 });
+        if (block.includes('elite-ability-missing-text')) {
+          const inner = display.includes('(') ? display.slice(display.indexOf('(') + 1, display.lastIndexOf(')')).trim() : '';
+          if (inner) {
+            block = renderAbilityDetails(inner, { displayName: display, defaultOpen: eliteAbilities.length === 1 });
+          }
+        }
+        return block;
+      })
+      .filter(Boolean);
+    const listHtml = abilityBlocks.length
+      ? `<div class="elite-ability-stack">${abilityBlocks.join('')}</div>`
+      : renderTagList(eliteAbilities);
+    blocks.push(`<details class="elite-info-details"><summary>Elityrkesförmågor</summary>${listHtml}</details>`);
+  }
+
+  if ((p.mojliga_fordelar || []).length) {
+    const listHtml = renderTagList(p.mojliga_fordelar);
+    blocks.push(`<details class="elite-info-details"><summary>Möjliga fördelar</summary>${listHtml}</details>`);
+  }
+
+  if ((p.tankbara_nackdelar || []).length) {
+    const listHtml = renderTagList(p.tankbara_nackdelar);
+    blocks.push(`<details class="elite-info-details"><summary>Tänkbara nackdelar</summary>${listHtml}</details>`);
+  }
+
+  if (!blocks.length) return [];
+
+  return [{
+    title: 'Elityrkesdetaljer',
+    className: 'info-panel-elite',
+    content: `<div class="elite-info-sections">${blocks.join('')}</div>`
+  }];
 }
 
 /* ---------- Popup för kvaliteter ---------- */
@@ -562,9 +1528,16 @@ function boot() {
     renderTraits();
     if (typeof bindTraits === 'function') bindTraits();
   }
-  if (ROLE === 'index')     initIndex();
-  if (ROLE === 'character') initCharacter();
-  if (ROLE === 'notes')     initNotes();
+  if (ROLE === 'index')      initIndex();
+  if (ROLE === 'character')  { initCharacter(); promptOutdatedEntriesIfNeeded(); }
+  if (ROLE === 'notes')      initNotes();
+  if (ROLE === 'inventory')  initInventory();
+  if (ROLE === 'summary' && window.summaryEffects?.initSummaryPage) {
+    window.summaryEffects.initSummaryPage();
+  }
+  if (ROLE === 'effects' && window.summaryEffects?.initEffectsPage) {
+    window.summaryEffects.initEffectsPage();
+  }
 }
 
 /* ===========================================================
@@ -598,7 +1571,9 @@ function applyCharacterChange() {
     if (dom.forgeBtn) dom.forgeBtn.classList.toggle('active', Boolean(storeHelper.getPartySmith(store)));
     if (dom.alcBtn)   dom.alcBtn.classList.toggle('active',   Boolean(storeHelper.getPartyAlchemist(store)));
     if (dom.artBtn)   dom.artBtn.classList.toggle('active',   Boolean(storeHelper.getPartyArtefacter(store)));
-    if (dom.defBtn)   dom.defBtn.classList.toggle('active',   Boolean(storeHelper.getDefenseTrait(store)));
+    syncDefenseButtons();
+
+    updateCharacterIconVariant();
 
     // Re-render inventory (includes recalculating traits/XP side-effects)
     if (window.invUtil && typeof invUtil.renderInventory === 'function') {
@@ -615,6 +1590,10 @@ function applyCharacterChange() {
     if (typeof window.indexViewRefreshFilters === 'function') window.indexViewRefreshFilters();
     if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
     if (typeof window.notesUpdate === 'function') window.notesUpdate();
+    if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+    if (ROLE === 'character') promptOutdatedEntriesIfNeeded();
   } catch (err) {
     // As a last resort, fall back to reload to avoid a broken UI
     try { location.reload(); } catch {}
@@ -622,6 +1601,141 @@ function applyCharacterChange() {
 }
 // Expose for other modules that want to trigger a full UI sync
 window.applyCharacterChange = applyCharacterChange;
+
+function syncEntriesAfterAppUpdate(options = {}) {
+  if (!store || typeof store !== 'object') return { updated: 0, characters: 0, charIds: [] };
+  if (!Array.isArray(window.DB) || !window.DB.length) return { updated: 0, characters: 0, charIds: [] };
+  if (typeof storeHelper?.syncEntriesWithDb !== 'function') return { updated: 0, characters: 0, charIds: [] };
+
+  const includePinned = options.includePinned !== false;
+  const allCharacters = options.allCharacters !== false;
+  const ids = new Set();
+
+  if (Array.isArray(options.charIds) && options.charIds.length) {
+    options.charIds.forEach(id => {
+      if (id) ids.add(String(id));
+    });
+  } else if (allCharacters) {
+    (store.characters || []).forEach(char => {
+      if (char?.id) ids.add(char.id);
+    });
+  }
+
+  if (store.current) ids.add(store.current);
+  const charIds = [...ids];
+  if (!charIds.length) return { updated: 0, characters: 0, charIds: [] };
+
+  let updated = 0;
+  let characters = 0;
+  const touched = [];
+
+  charIds.forEach(charId => {
+    const res = storeHelper.syncEntriesWithDb(store, {
+      charId,
+      mode: 'update',
+      includePinned
+    });
+    const updatedForChar = Number(res?.updated) || 0;
+    if (updatedForChar > 0) {
+      updated += updatedForChar;
+      characters += 1;
+      touched.push(charId);
+    }
+  });
+
+  if (updated > 0) {
+    try { store = storeHelper.load(); } catch {}
+    applyCharacterChange();
+  }
+
+  return { updated, characters, charIds: touched };
+}
+
+window.syncEntriesAfterAppUpdate = syncEntriesAfterAppUpdate;
+
+function consumePostUpdateSyncFlag() {
+  try {
+    const flagged = sessionStorage.getItem(PWA_POST_UPDATE_SYNC_KEY) === '1';
+    if (flagged) sessionStorage.removeItem(PWA_POST_UPDATE_SYNC_KEY);
+    return flagged;
+  } catch {
+    return false;
+  }
+}
+
+function runQueuedPostUpdateEntrySync() {
+  if (!consumePostUpdateSyncFlag()) return { queued: false, updated: 0, characters: 0 };
+  const result = syncEntriesAfterAppUpdate({ includePinned: true, allCharacters: true });
+  if (result.updated > 0) {
+    const charLabel = result.characters === 1 ? 'rollperson' : 'rollpersoner';
+    window.toast?.(`Uppdaterade ${result.updated} sparade val i ${result.characters} ${charLabel}.`);
+  }
+  return { queued: true, ...result };
+}
+
+async function promptOutdatedEntriesIfNeeded() {
+  if (outdatedPromptInFlight) return;
+  if (ROLE !== 'character') return;
+  if (!store || !store.current) return;
+  try {
+    if (sessionStorage.getItem(PWA_POST_UPDATE_SYNC_KEY) === '1') return;
+  } catch {}
+  if (typeof window.openDialog !== 'function') return;
+  if (!Array.isArray(window.DB) || !window.DB.length) return;
+  if (typeof storeHelper?.findOutdatedEntries !== 'function' || typeof storeHelper?.syncEntriesWithDb !== 'function') {
+    return;
+  }
+  const { outdated } = storeHelper.findOutdatedEntries(store, { charId: store.current });
+  if (!Array.isArray(outdated) || !outdated.length) return;
+
+  outdatedPromptInFlight = true;
+  try {
+    const names = outdated
+      .map(item => item?.entry?.namn || item?.dbEntry?.namn)
+      .filter(Boolean);
+    const bulletList = names.map(n => `• ${n}`).join('\n');
+    const message = names.length === 1
+      ? `${names[0]} har ändrats i databasen. Uppdatera den sparade versionen?`
+      : `Följande val har ändrats i databasen:\n${bulletList}\nUppdatera de sparade versionerna?`;
+    const res = await openDialog(message, {
+      cancel: true,
+      okText: 'Uppdatera',
+      cancelText: 'Behåll nuvarande'
+    });
+    if (res === true) {
+      storeHelper.syncEntriesWithDb(store, { charId: store.current, mode: 'update' });
+      applyCharacterChange();
+    } else {
+      storeHelper.syncEntriesWithDb(store, { charId: store.current, mode: 'pin' });
+    }
+  } catch {
+    // ignore prompt errors
+  } finally {
+    outdatedPromptInFlight = false;
+  }
+}
+
+function updateCharacterIconVariant() {
+  if (typeof window.setCharacterIconVariant !== 'function') return;
+  try {
+    if (!store || !store.current || typeof storeHelper.getCharacterRaces !== 'function') {
+      window.setCharacterIconVariant('');
+      return;
+    }
+    const races = storeHelper.getCharacterRaces(store) || {};
+    const base = String(races.base || '').trim().toLowerCase();
+    const blood = Array.isArray(races.blood) ? races.blood : [];
+    const hasAndrik = base === 'andrik'
+      || blood.some(r => String(r || '').trim().toLowerCase() === 'andrik');
+    window.setCharacterIconVariant(hasAndrik ? 'andrik' : '');
+  } catch {
+    try { window.setCharacterIconVariant(''); } catch {}
+  }
+}
+
+window.updateCharacterIconVariant = updateCharacterIconVariant;
+
+updateCharacterIconVariant();
 
 function refreshCharSelect() {
   const folders = (storeHelper.getFolders(store) || []).slice()
@@ -734,7 +1848,7 @@ function bindToolbar() {
       const { name, folderId, xp } = res;
       if (!name) return;
       store.characters.push({ id: charId, name, folderId: folderId || '' });
-      store.data[charId] = { baseXp: Number(xp) || 0, custom: [] };
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
       store.current = charId;
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);
@@ -745,279 +1859,32 @@ function bindToolbar() {
       applyCharacterChange();
     }
 
-    /* Kopiera rollperson ----------------------------------- */
+    /* Rollpersonsverktyg ---------------------------------- */
+    if (id === 'generateCharBtn') {
+      openCharacterToolsPopup('generate');
+      return;
+    }
     if (id === 'duplicateChar') {
-      if (!store.current && !(await requireCharacter())) return;
-      const src = (store.characters || []).find(c => c.id === store.current);
-      if (!src) return;
-      const defaultName = `${src.name} (kopia)`;
-      const defaultFolder = storeHelper.getCharacterFolder(store, store.current);
-      const res = await openDuplicateCharPopupWithFolder(defaultFolder, defaultName);
-      if (!res) return; // avbrutet
-      const { name, folderId } = res;
-      if (!name) return;
-      const newId = storeHelper.duplicateCharacter(store, store.current);
-      if (newId) {
-        // Sätt namn och mapp enligt användarens val
-        try { storeHelper.renameCharacter(store, newId, name); } catch {}
-        try { if (folderId) storeHelper.setCharacterFolder(store, newId, folderId); } catch {}
-        // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
-        const prevActive = storeHelper.getActiveFolder(store);
-        if (folderId && prevActive !== folderId) {
-          storeHelper.setActiveFolder(store, folderId);
-        }
-        store.current = newId;
-        storeHelper.save(store);
-        applyCharacterChange();
-      }
+      openCharacterToolsPopup('duplicate');
+      return;
     }
-
-    /* Byt namn på rollperson -------------------------------- */
     if (id === 'renameChar') {
-      if (!store.current && !(await requireCharacter())) return;
-      const char = store.characters.find(c => c.id === store.current);
-      if (!char) return;
-      const curFolder = storeHelper.getCharacterFolder(store, store.current);
-      const res = await openRenameCharPopupWithFolder(curFolder, char.name || '');
-      if (!res) return;
-      const { name, folderId } = res;
-      if (!name) return;
-      const oldFolder = curFolder || '';
-      storeHelper.renameCharacter(store, store.current, name);
-      if (folderId && folderId !== oldFolder) {
-        storeHelper.setCharacterFolder(store, store.current, folderId);
-        // Växla aktiv mapp till den nya
-        const prevActive = storeHelper.getActiveFolder(store);
-        if (prevActive !== folderId) storeHelper.setActiveFolder(store, folderId);
-        storeHelper.save(store);
-        applyCharacterChange();
-      } else {
-        // Endast namn ändrat – uppdatera UI utan reload
-        storeHelper.save(store);
-        refreshCharSelect();
-        if (dom.cName) dom.cName.textContent = name;
-        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
-      }
+      openCharacterToolsPopup('rename');
+      return;
     }
-
-    /* Export rollperson --------------------------------- */
-    if (id === 'exportChar') {
-      if (!store.characters.length) { await alertPopup('Inga rollpersoner att exportera.'); return; }
-      openExportPopup(async choice => {
-        if (choice === 'all-one') {
-          await exportAllCharacters();
-        } else if (choice === 'all-separate') {
-          await exportAllCharactersSeparate();
-        } else if (choice === 'all-zip') {
-          await exportAllCharactersZipped();
-        } else if (choice === 'folder-active') {
-          await exportActiveFolder();
-        } else if (choice === 'folder-separate') {
-          await exportActiveFolderSeparate();
-        } else if (choice === 'folder-zip') {
-          await exportActiveFolderZipped();
-        } else if (choice) {
-          await exportCharacterFile(choice);
-        }
-      });
-    }
-
-    /* Mapphanterare --------------------------------------- */
     if (id === 'manageFolders') {
-      openFolderManagerPopup();
+      openCharacterToolsPopup('folders');
+      return;
+    }
+    if (id === 'characterToolsBtn') {
+      openCharacterToolsPopup('generate');
+      return;
     }
 
-    /* Import rollperson -------------------------------- */
-    if (id === 'importChar') {
-      (async () => {
-        try {
-          // Steg 1: Välj importmål
-          const settings = await openImportPopup();
-          if (!settings) return;
-
-          // Steg 2: Välj filer eller mapp
-          let files;
-          if (window.showDirectoryPicker) {
-            const pick = await openDialog('Vad vill du importera?', {
-              cancel: true,
-              okText: 'Filer',
-              extraText: 'Mapp',
-              cancelText: 'Avbryt'
-            });
-            if (pick === 'extra') {
-              try {
-                const dir = await window.showDirectoryPicker({ mode: 'read' });
-                files = await getFilesFromDirectory(dir);
-              } catch (err) {
-                if (err && err.name === 'AbortError') return;
-                throw err;
-              }
-            } else if (pick === true) {
-              if (window.showOpenFilePicker) {
-                const handles = await window.showOpenFilePicker({
-                  multiple: true,
-                  types: [{
-                    description: 'JSON',
-                    accept: { 'application/json': ['.json'] }
-                  }]
-                });
-                files = await Promise.all(handles.map(h => h.getFile()));
-              } else {
-                const inp = document.createElement('input');
-                inp.type = 'file';
-                inp.accept = 'application/json';
-                inp.multiple = true;
-                files = await new Promise((resolve, reject) => {
-                  inp.addEventListener('change', () => {
-                    const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
-                    if (!list) return reject(new Error('Ingen fil vald'));
-                    resolve(list);
-                  });
-                  inp.click();
-                });
-              }
-            } else {
-              return;
-            }
-          } else {
-            const inp = document.createElement('input');
-            inp.type = 'file';
-            inp.accept = 'application/json';
-            inp.multiple = true;
-            files = await new Promise((resolve, reject) => {
-              inp.addEventListener('change', () => {
-                const list = inp.files && inp.files.length ? Array.from(inp.files) : null;
-                if (!list) return reject(new Error('Ingen fil vald'));
-                resolve(list);
-              });
-              inp.click();
-            });
-          }
-          // Mappningslogik för mål
-          const override = settings.mode !== 'fromFile';
-          let targetFolderId = '';
-          let targetFolderName = '';
-          if (override) {
-            try {
-              const folders = (storeHelper.getFolders(store) || []);
-              if (settings.mode === 'active') {
-                let active = storeHelper.getActiveFolder(store);
-                if (!active || active === 'ALL') {
-                  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
-                  if (std) active = std.id;
-                }
-                targetFolderId = active || '';
-                const f = folders.find(x => x.id === targetFolderId);
-                targetFolderName = f ? (f.name || '') : '';
-              } else if (settings.mode === 'choose') {
-                targetFolderId = settings.folderId || '';
-                const f = folders.find(x => x.id === targetFolderId);
-                targetFolderName = f ? (f.name || '') : '';
-              }
-            } catch {}
-          }
-
-          let imported = 0;
-          const usedFolderIds = new Set();
-          for (const file of files) {
-            if (!file.name.toLowerCase().endsWith('.json')) continue;
-            try {
-              const text = await file.text();
-              const obj = JSON.parse(text);
-              if (Array.isArray(obj)) {
-                for (const item of obj) {
-                  try {
-                    const id = storeHelper.importCharacterJSON(
-                      store,
-                      override ? { ...item, folder: targetFolderName } : item
-                    );
-                    if (id) {
-                      imported++;
-                      try {
-                        const rec = (store.characters || []).find(c => c && c.id === id);
-                        if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
-                      } catch {}
-                      toast(`${item.name || 'Ny rollperson'} är importerad`);
-                    }
-                  } catch {}
-                }
-              } else if (obj && Array.isArray(obj.folders)) {
-                for (const folder of obj.folders) {
-                  const fname = override ? targetFolderName : (folder.folder || folder.name || '');
-                  if (Array.isArray(folder.characters)) {
-                    for (const item of folder.characters) {
-                      try {
-                        const id = storeHelper.importCharacterJSON(store, { ...item, folder: fname });
-                        if (id) {
-                          imported++;
-                          try {
-                            const rec = (store.characters || []).find(c => c && c.id === id);
-                            if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
-                          } catch {}
-                          toast(`${item.name || 'Ny rollperson'} är importerad`);
-                        }
-                      } catch {}
-                    }
-                  }
-                }
-              } else if (obj && Array.isArray(obj.characters)) {
-                for (const item of obj.characters) {
-                  try {
-                    const id = storeHelper.importCharacterJSON(
-                      store,
-                      override ? { ...item, folder: targetFolderName } : item
-                    );
-                    if (id) {
-                      imported++;
-                      try {
-                        const rec = (store.characters || []).find(c => c && c.id === id);
-                        if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
-                      } catch {}
-                      toast(`${item.name || 'Ny rollperson'} är importerad`);
-                    }
-                  } catch {}
-                }
-              } else {
-                const res = storeHelper.importCharacterJSON(
-                  store,
-                  override ? { ...obj, folder: targetFolderName } : obj
-                );
-                if (res) {
-                  imported++;
-                  try {
-                    const rec = (store.characters || []).find(c => c && c.id === res);
-                    if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
-                  } catch {}
-                  toast(`${obj.name || 'Ny rollperson'} är importerad`);
-                }
-              }
-            } catch {
-              // ignore and continue to next file
-            }
-          }
-          if (imported > 0) {
-            // Växla aktiv mapp om användaren önskat och ett tydligt mål finns
-            if (override && settings.makeActive && targetFolderId) {
-              try { storeHelper.setActiveFolder(store, targetFolderId); } catch {}
-            } else if (!override && settings.makeActive) {
-              // Endast för Mappar i fil: välj aktiv mapp om exakt en mapp använts
-              try {
-                const arr = Array.from(usedFolderIds);
-                if (arr.length === 1 && arr[0]) {
-                  storeHelper.setActiveFolder(store, arr[0]);
-                }
-              } catch {}
-            }
-            applyCharacterChange();
-          } else {
-            await alertPopup('Felaktig fil.');
-          }
-        } catch (err) {
-          if (err && err.name !== 'AbortError') {
-            await alertPopup('Felaktig fil.');
-          }
-        }
-      })();
+    /* Lagring (Drive / Import / Export) ---------------- */
+    if (id === 'driveStorageBtn') {
+      openDriveStoragePopup('drive');
+      return;
     }
 
     /* Ta bort rollperson ----------------------------------- */
@@ -1046,26 +1913,30 @@ function bindToolbar() {
       applyCharacterChange();
     }
 
-    /* Återställ basegenskaper till 10 ---------------------- */
-    if (id === 'resetTraits') {
-      if (!store.current && !(await requireCharacter())) return;
-      const ok = await confirmPopup('Detta nollställer alla karaktärsdrag till 10. Karaktärsdrag från förmågor och inventarier påverkas inte. Åtgärden kan inte ångras. Vill du fortsätta?');
-      if (!ok) return;
-      const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
-      const t = storeHelper.getTraits(store);
-      const next = { ...t };
-      KEYS.forEach(k => { next[k] = 10; });
-      storeHelper.setTraits(store, next);
-      if (window.renderTraits) renderTraits();
-    }
+  });
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('#resetTraits');
+    if (!btn) return;
+    if (!store.current && !(await requireCharacter())) return;
+    const ok = await confirmPopup('Detta nollställer alla karaktärsdrag till 10. Karaktärsdrag från förmågor och inventarier påverkas inte. Åtgärden kan inte ångras. Vill du fortsätta?');
+    if (!ok) return;
+    const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+    const t = storeHelper.getTraits(store);
+    const next = { ...t };
+    KEYS.forEach(k => { next[k] = 10; });
+    storeHelper.setTraits(store, next);
+    if (typeof renderTraits === 'function') renderTraits();
   });
 
   /* Ändra total erf direkt när värdet byts */
-  dom.xpIn.addEventListener('change', () => {
-    const xp = Number(dom.xpIn.value) || 0;
-    storeHelper.setBaseXP(store, xp);
-    updateXP();
-  });
+  if (dom.xpIn) {
+    dom.xpIn.addEventListener('change', () => {
+      const xp = Number(dom.xpIn.value) || 0;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
 
   if (dom.xpPlus) {
     dom.xpPlus.addEventListener('click', () => {
@@ -1119,13 +1990,34 @@ function bindToolbar() {
     });
   }
   if (dom.defBtn) {
-    if (storeHelper.getDefenseTrait(store)) dom.defBtn.classList.add('active');
     dom.defBtn.addEventListener('click', () => {
-      openDefensePopup(trait => {
-        if (trait === null) return;
-        dom.defBtn.classList.toggle('active', Boolean(trait));
-        storeHelper.setDefenseTrait(store, trait);
-        if (window.renderTraits) renderTraits();
+      openDefenseCalcPopup();
+    });
+  }
+  if (dom.manualBtn) {
+    dom.manualBtn.addEventListener('click', async () => {
+      if (!store.current) {
+        const ok = await requireCharacter();
+        if (!ok) return;
+      }
+      openManualAdjustPopup();
+    });
+  }
+  if (dom.entrySortBtn) {
+    dom.entrySortBtn.addEventListener('click', () => {
+      openEntrySortPopup(mode => {
+        if (!mode) return;
+        const normalized = typeof normalizeEntrySortMode === 'function'
+          ? normalizeEntrySortMode(mode)
+          : mode;
+        const current = storeHelper.getEntrySort(store);
+        if (normalized === current) return;
+        storeHelper.setEntrySort(store, normalized);
+        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+        if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
+        if (typeof window.notesUpdate === 'function') window.notesUpdate();
+        if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+        if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
       });
     });
   }
@@ -1135,6 +2027,7 @@ function bindToolbar() {
       const val = dom.filterUnion.classList.toggle('active');
       storeHelper.setFilterUnion(store, val);
       if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.inventoryViewUpdate) window.inventoryViewUpdate();
     });
   }
   if (dom.entryViewToggle) {
@@ -1144,8 +2037,901 @@ function bindToolbar() {
       // "active" betyder nu expanderad/vanlig vy; compact = !active
       storeHelper.setCompactEntries(store, !val);
       if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.inventoryViewUpdate) window.inventoryViewUpdate();
     });
   }
+  syncManualAdjustButton();
+}
+
+async function generateCharacterFromSettings(settings) {
+  if (!window.symbaroumGenerator || typeof window.symbaroumGenerator.generate !== 'function') {
+    await alertPopup('Generatorn kunde inte laddas.');
+    return false;
+  }
+
+  const payload = {
+    name: String(settings?.name || '').trim() || 'Slumpad rollperson',
+    xp: Math.max(0, Math.floor(Number(settings?.xp || 0) / 10) * 10),
+    attributeMode: settings?.attrMode || '',
+    traitFocus: settings?.traitFocus || '',
+    race: settings?.race || '',
+    yrke: settings?.yrke || '',
+    elityrke: settings?.elityrke || '',
+    folderId: settings?.folderId || ''
+  };
+
+  let generated = null;
+  try {
+    generated = window.symbaroumGenerator.generate({
+      name: payload.name,
+      xp: payload.xp,
+      attributeMode: payload.attributeMode,
+      traitFocus: payload.traitFocus,
+      race: payload.race,
+      yrke: payload.yrke,
+      elityrke: payload.elityrke
+    });
+  } catch (err) {
+    console.error('Generator error', err);
+  }
+  if (!generated) {
+    await alertPopup('Generatorn misslyckades. Försök igen.');
+    return false;
+  }
+
+  const charId = storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now());
+  store.characters.push({ id: charId, name: payload.name, folderId: payload.folderId });
+  store.data[charId] = { baseXp: Number(payload.xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
+  store.current = charId;
+
+  const prevActive = storeHelper.getActiveFolder(store);
+  if (payload.folderId && prevActive !== payload.folderId) {
+    storeHelper.setActiveFolder(store, payload.folderId);
+  }
+
+  try {
+    storeHelper.setTraits(store, generated.traits || {});
+  } catch (err) {
+    console.warn('Kunde inte sätta karaktärsdrag', err);
+  }
+  try {
+    storeHelper.setCurrentList(store, Array.isArray(generated.list) ? generated.list : []);
+  } catch (err) {
+    console.warn('Kunde inte sätta förmågor', err);
+  }
+
+  storeHelper.setBaseXP(store, Math.max(0, Number(payload.xp) || 0));
+  storeHelper.save(store);
+  applyCharacterChange();
+  return true;
+}
+
+function duplicateCharacterWithSettings(settings) {
+  const sourceId = settings?.sourceId || store.current || '';
+  if (!sourceId) return '';
+  const src = (store.characters || []).find(c => c.id === sourceId);
+  if (!src) return '';
+
+  const name = String(settings?.name || '').trim();
+  if (!name) return '';
+  const folderId = settings?.folderId || '';
+
+  const newId = storeHelper.duplicateCharacter(store, sourceId);
+  if (!newId) return '';
+
+  try { storeHelper.renameCharacter(store, newId, name); } catch {}
+  try { if (folderId) storeHelper.setCharacterFolder(store, newId, folderId); } catch {}
+  const prevActive = storeHelper.getActiveFolder(store);
+  if (folderId && prevActive !== folderId) {
+    storeHelper.setActiveFolder(store, folderId);
+  }
+  store.current = newId;
+  storeHelper.save(store);
+  applyCharacterChange();
+  return newId;
+}
+
+function renameCharacterWithSettings(settings) {
+  const charId = settings?.charId || store.current || '';
+  if (!charId) return false;
+  const char = (store.characters || []).find(c => c.id === charId);
+  if (!char) return false;
+
+  const name = String(settings?.name || '').trim();
+  if (!name) return false;
+  const folderId = settings?.folderId || '';
+  const oldFolder = storeHelper.getCharacterFolder(store, charId) || '';
+
+  storeHelper.renameCharacter(store, charId, name);
+  if (folderId && folderId !== oldFolder) {
+    storeHelper.setCharacterFolder(store, charId, folderId);
+    if (charId === store.current) {
+      const prevActive = storeHelper.getActiveFolder(store);
+      if (prevActive !== folderId) storeHelper.setActiveFolder(store, folderId);
+      storeHelper.save(store);
+      applyCharacterChange();
+      return true;
+    }
+  }
+
+  storeHelper.save(store);
+  refreshCharSelect();
+  if (charId === store.current && dom.cName) dom.cName.textContent = name;
+  if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+  return true;
+}
+
+async function runGenerateCharacterFlow() {
+  const active = storeHelper.getActiveFolder(store);
+  const res = await openGeneratorPopup(active);
+  if (!res) return;
+  await generateCharacterFromSettings(res);
+}
+
+async function runDuplicateCharacterFlow() {
+  if (!store.current && !(await requireCharacter())) return;
+  const src = (store.characters || []).find(c => c.id === store.current);
+  if (!src) return;
+  const defaultName = `${src.name} (kopia)`;
+  const defaultFolder = storeHelper.getCharacterFolder(store, store.current);
+  const res = await openDuplicateCharPopupWithFolder(defaultFolder, defaultName);
+  if (!res) return;
+  duplicateCharacterWithSettings({
+    sourceId: store.current,
+    name: res.name,
+    folderId: res.folderId
+  });
+}
+
+async function runRenameCharacterFlow() {
+  if (!store.current && !(await requireCharacter())) return;
+  const char = store.characters.find(c => c.id === store.current);
+  if (!char) return;
+  const curFolder = storeHelper.getCharacterFolder(store, store.current);
+  const res = await openRenameCharPopupWithFolder(curFolder, char.name || '');
+  if (!res) return;
+  renameCharacterWithSettings({
+    charId: store.current,
+    name: res.name,
+    folderId: res.folderId
+  });
+}
+
+function openCharacterToolsPopup(initialTab = 'generate') {
+  openChoicePopup((opts) => {
+    const make = (tag, cls, text) => {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (text != null) el.textContent = text;
+      return el;
+    };
+    const escapeHtml = s => String(s || '').replace(/[&<>"]/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[m]));
+
+    const getSortedFolders = () => (storeHelper.getFolders(store) || []).slice()
+      .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+
+    const getDefaultFolderId = (preferredId = '') => {
+      const folders = getSortedFolders();
+      if (!folders.length) return '';
+      if (preferredId && preferredId !== 'ALL' && folders.some(f => f.id === preferredId)) return preferredId;
+      const active = storeHelper.getActiveFolder(store);
+      if (active && active !== 'ALL' && folders.some(f => f.id === active)) return active;
+      const std = folders.find(f => f.system) || folders.find(f => (f.name || '') === 'Standard') || folders[0];
+      return std ? std.id : folders[0].id;
+    };
+
+    const getCharacterEntries = () => {
+      const folders = getSortedFolders();
+      const folderNameById = new Map(folders.map(f => [f.id, f.name || 'Mapp']));
+      return (store.characters || [])
+        .map(c => ({
+          id: c.id,
+          name: c.name || 'Namnlös',
+          folderId: c.folderId || '',
+          folderName: folderNameById.get(c.folderId || '') || 'Övrigt'
+        }))
+        .sort((a, b) =>
+          String(a.folderName).localeCompare(String(b.folderName), 'sv') ||
+          String(a.name).localeCompare(String(b.name), 'sv')
+        );
+    };
+
+    const fillFolderSelect = (select, preferredId = '') => {
+      const folders = getSortedFolders();
+      const prev = select.value;
+      select.innerHTML = '';
+      folders.forEach(folder => {
+        const opt = document.createElement('option');
+        opt.value = folder.id;
+        opt.textContent = folder.name || 'Mapp';
+        select.appendChild(opt);
+      });
+      const chosen = folders.some(f => f.id === prev) ? prev : getDefaultFolderId(preferredId);
+      if (chosen) select.value = chosen;
+      return folders;
+    };
+
+    const fillCharacterSelect = (select, preferredId = '') => {
+      const entries = getCharacterEntries();
+      const prev = select.value;
+      select.innerHTML = '';
+      if (!entries.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Inga rollpersoner';
+        select.appendChild(opt);
+        select.disabled = true;
+        return { entries, selectedId: '' };
+      }
+      select.disabled = false;
+      const groups = new Map();
+      entries.forEach(entry => {
+        if (!groups.has(entry.folderName)) groups.set(entry.folderName, []);
+        groups.get(entry.folderName).push(entry);
+      });
+      for (const [groupName, groupEntries] of groups.entries()) {
+        const group = document.createElement('optgroup');
+        group.label = groupName;
+        groupEntries.forEach(entry => {
+          const opt = document.createElement('option');
+          opt.value = entry.id;
+          opt.textContent = entry.name;
+          group.appendChild(opt);
+        });
+        select.appendChild(group);
+      }
+      const current = store.current || '';
+      const selectedId = entries.some(e => e.id === prev)
+        ? prev
+        : (entries.some(e => e.id === preferredId)
+          ? preferredId
+          : (entries.some(e => e.id === current) ? current : entries[0].id));
+      select.value = selectedId;
+      return { entries, selectedId };
+    };
+
+    const tabs = [
+      { id: 'generate', label: 'Generera' },
+      { id: 'duplicate', label: 'Kopiera' },
+      { id: 'rename', label: 'Byt namn' },
+      { id: 'folders', label: 'Mappar' }
+    ];
+    const tabsEl = make('div', 'tools-tabs');
+    const panelsEl = make('div', 'tools-panels');
+    const tabButtons = new Map();
+    const tabPanels = new Map();
+
+    const refreshers = new Set();
+    const registerRefresh = fn => {
+      if (typeof fn === 'function') refreshers.add(fn);
+    };
+    const refreshAll = () => {
+      refreshers.forEach(fn => {
+        try { fn(); } catch {}
+      });
+    };
+
+    const buildGeneratePanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Generera rollperson'));
+      card.appendChild(make('p', 'tools-intro', 'Skapa rollperson direkt här med namn, mapp, erfarenhet, ras, yrke och elityrke.'));
+
+      const stats = make('div', 'tools-meta');
+      card.appendChild(stats);
+
+      const form = make('div', 'tools-form');
+
+      const topGrid = make('div', 'tools-grid two-col');
+      const nameWrap = make('label', 'tools-field');
+      nameWrap.appendChild(make('span', 'tools-label', 'Namn'));
+      const nameIn = document.createElement('input');
+      nameIn.type = 'text';
+      nameIn.placeholder = 'Rollpersonens namn';
+      nameIn.autocomplete = 'off';
+      nameWrap.appendChild(nameIn);
+      topGrid.appendChild(nameWrap);
+
+      const folderWrap = make('label', 'tools-field');
+      folderWrap.appendChild(make('span', 'tools-label', 'Mapp'));
+      const folderSel = document.createElement('select');
+      folderWrap.appendChild(folderSel);
+      topGrid.appendChild(folderWrap);
+      form.appendChild(topGrid);
+
+      const xpGrid = make('div', 'tools-grid two-col');
+      const xpWrap = make('label', 'tools-field');
+      xpWrap.appendChild(make('span', 'tools-label', 'Erfarenhetspoäng'));
+      const xpIn = document.createElement('input');
+      xpIn.type = 'number';
+      xpIn.min = '0';
+      xpIn.step = '10';
+      xpIn.value = '100';
+      xpWrap.appendChild(xpIn);
+      xpGrid.appendChild(xpWrap);
+
+      const attrWrap = make('label', 'tools-field');
+      attrWrap.appendChild(make('span', 'tools-label', 'Karaktärsdrag'));
+      const attrSel = document.createElement('select');
+      attrSel.innerHTML = [
+        '<option value="">Balanserade (slump)</option>',
+        '<option value="specialist">Spetskompetens (ett drag pressas till 15)</option>',
+        '<option value="minmax">Ytterligheter (en max, tre höga och ett svagt)</option>'
+      ].join('');
+      attrWrap.appendChild(attrSel);
+      xpGrid.appendChild(attrWrap);
+      form.appendChild(xpGrid);
+
+      const traitWrap = make('label', 'tools-field');
+      traitWrap.appendChild(make('span', 'tools-label', 'Fokusera drag'));
+      const traitSel = document.createElement('select');
+      traitWrap.appendChild(traitSel);
+      form.appendChild(traitWrap);
+
+      const entryGrid = make('div', 'tools-grid two-col');
+      const raceWrap = make('label', 'tools-field');
+      raceWrap.appendChild(make('span', 'tools-label', 'Ras'));
+      const raceSel = document.createElement('select');
+      raceWrap.appendChild(raceSel);
+      entryGrid.appendChild(raceWrap);
+
+      const yrkeWrap = make('label', 'tools-field');
+      yrkeWrap.appendChild(make('span', 'tools-label', 'Yrke'));
+      const yrkeSel = document.createElement('select');
+      yrkeWrap.appendChild(yrkeSel);
+      entryGrid.appendChild(yrkeWrap);
+      form.appendChild(entryGrid);
+
+      const eliteWrap = make('label', 'tools-field');
+      eliteWrap.appendChild(make('span', 'tools-label', 'Elityrke'));
+      const eliteSel = document.createElement('select');
+      eliteWrap.appendChild(eliteSel);
+      const eliteHint = make('p', 'tools-meta', 'Elityrket lägger in krav och minst en elityrkesförmåga.');
+      eliteWrap.appendChild(eliteHint);
+      form.appendChild(eliteWrap);
+
+      const warning = make('p', 'tools-meta tools-warning', 'Databasen laddas fortfarande. Vänta tills listorna är tillgängliga.');
+      form.appendChild(warning);
+
+      const submitBtn = make('button', 'char-btn tools-action', 'Generera rollperson');
+      form.appendChild(submitBtn);
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      const applyEntryOptions = (select, type, placeholder) => {
+        const db = Array.isArray(window.DB) ? window.DB : [];
+        const names = db
+          .filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type))
+          .map(entry => String(entry.namn || '').trim())
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b, 'sv'));
+        select.innerHTML = '';
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = placeholder;
+        select.appendChild(first);
+        names.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          select.appendChild(opt);
+        });
+      };
+
+      const sync = () => {
+        fillFolderSelect(folderSel, getDefaultFolderId());
+        const attrKeys = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
+        traitSel.innerHTML = '';
+        const autoOpt = document.createElement('option');
+        autoOpt.value = '';
+        autoOpt.textContent = 'Auto (matchar bästa drag)';
+        traitSel.appendChild(autoOpt);
+        attrKeys.forEach(attr => {
+          const opt = document.createElement('option');
+          opt.value = attr;
+          opt.textContent = attr;
+          traitSel.appendChild(opt);
+        });
+        applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
+        applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
+        applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
+
+        const db = Array.isArray(window.DB) ? window.DB : [];
+        const ready = db.some(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Förmåga'));
+        warning.hidden = ready;
+        submitBtn.disabled = !ready;
+        stats.textContent = `${(store.characters || []).length} rollpersoner finns just nu.`;
+      };
+
+      submitBtn.addEventListener('click', async () => {
+        const previous = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Genererar...';
+        try {
+          const ok = await generateCharacterFromSettings({
+            name: nameIn.value,
+            folderId: folderSel.value || '',
+            xp: xpIn.value,
+            attrMode: attrSel.value || '',
+            traitFocus: traitSel.value || '',
+            race: raceSel.value || '',
+            yrke: yrkeSel.value || '',
+            elityrke: eliteSel.value || ''
+          });
+          if (ok) {
+            window.toast?.('Rollperson genererad.');
+            nameIn.value = '';
+            xpIn.value = '100';
+            attrSel.value = '';
+            traitSel.value = '';
+            raceSel.value = '';
+            yrkeSel.value = '';
+            eliteSel.value = '';
+            refreshAll();
+          }
+        } finally {
+          submitBtn.textContent = previous;
+          sync();
+        }
+      });
+
+      registerRefresh(sync);
+      sync();
+      window.addEventListener('symbaroum-db-ready', () => {
+        try { sync(); } catch {}
+      }, { once: true });
+    };
+
+    const buildDuplicatePanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Kopiera rollperson'));
+      card.appendChild(make('p', 'tools-intro', 'Välj vilken rollperson som ska kopieras, nytt namn och målmapp.'));
+
+      const form = make('div', 'tools-form');
+
+      const sourceWrap = make('label', 'tools-field');
+      sourceWrap.appendChild(make('span', 'tools-label', 'Kopiera från'));
+      const sourceSel = document.createElement('select');
+      sourceWrap.appendChild(sourceSel);
+      form.appendChild(sourceWrap);
+
+      const nameWrap = make('label', 'tools-field');
+      nameWrap.appendChild(make('span', 'tools-label', 'Namn på kopia'));
+      const nameIn = document.createElement('input');
+      nameIn.type = 'text';
+      nameIn.autocomplete = 'off';
+      nameWrap.appendChild(nameIn);
+      form.appendChild(nameWrap);
+
+      const folderWrap = make('label', 'tools-field');
+      folderWrap.appendChild(make('span', 'tools-label', 'Målmapp'));
+      const folderSel = document.createElement('select');
+      folderWrap.appendChild(folderSel);
+      form.appendChild(folderWrap);
+
+      const submitBtn = make('button', 'char-btn tools-action', 'Kopiera rollperson');
+      form.appendChild(submitBtn);
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      const syncFromSource = entries => {
+        const src = entries.find(e => e.id === sourceSel.value);
+        const defaultName = src ? `${src.name} (kopia)` : '';
+        nameIn.value = defaultName;
+        fillFolderSelect(folderSel, src?.folderId || '');
+      };
+
+      const sync = () => {
+        const { entries } = fillCharacterSelect(sourceSel, store.current || '');
+        syncFromSource(entries);
+        submitBtn.disabled = !entries.length;
+      };
+
+      sourceSel.addEventListener('change', () => {
+        const entries = getCharacterEntries();
+        syncFromSource(entries);
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        const sourceId = sourceSel.value || '';
+        const name = String(nameIn.value || '').trim();
+        if (!sourceId) {
+          await alertPopup('Ingen rollperson att kopiera.');
+          return;
+        }
+        if (!name) {
+          nameIn.focus();
+          return;
+        }
+        const newId = duplicateCharacterWithSettings({
+          sourceId,
+          name,
+          folderId: folderSel.value || ''
+        });
+        if (newId) {
+          window.toast?.('Rollperson kopierad.');
+          refreshAll();
+        }
+      });
+
+      registerRefresh(sync);
+      sync();
+    };
+
+    const buildRenamePanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Byt namn / flytta rollperson'));
+      card.appendChild(make('p', 'tools-intro', 'Välj rollperson, ange nytt namn och valfri målmapp.'));
+
+      const form = make('div', 'tools-form');
+
+      const sourceWrap = make('label', 'tools-field');
+      sourceWrap.appendChild(make('span', 'tools-label', 'Rollperson'));
+      const sourceSel = document.createElement('select');
+      sourceWrap.appendChild(sourceSel);
+      form.appendChild(sourceWrap);
+
+      const nameWrap = make('label', 'tools-field');
+      nameWrap.appendChild(make('span', 'tools-label', 'Nytt namn'));
+      const nameIn = document.createElement('input');
+      nameIn.type = 'text';
+      nameIn.autocomplete = 'off';
+      nameWrap.appendChild(nameIn);
+      form.appendChild(nameWrap);
+
+      const folderWrap = make('label', 'tools-field');
+      folderWrap.appendChild(make('span', 'tools-label', 'Målmapp'));
+      const folderSel = document.createElement('select');
+      folderWrap.appendChild(folderSel);
+      form.appendChild(folderWrap);
+
+      const submitBtn = make('button', 'char-btn tools-action', 'Spara ändringar');
+      form.appendChild(submitBtn);
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      const syncFromSource = entries => {
+        const src = entries.find(e => e.id === sourceSel.value);
+        nameIn.value = src ? src.name : '';
+        fillFolderSelect(folderSel, src?.folderId || '');
+      };
+
+      const sync = () => {
+        const { entries } = fillCharacterSelect(sourceSel, store.current || '');
+        syncFromSource(entries);
+        submitBtn.disabled = !entries.length;
+      };
+
+      sourceSel.addEventListener('change', () => {
+        const entries = getCharacterEntries();
+        syncFromSource(entries);
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        const charId = sourceSel.value || '';
+        const name = String(nameIn.value || '').trim();
+        if (!charId) {
+          await alertPopup('Ingen rollperson vald.');
+          return;
+        }
+        if (!name) {
+          nameIn.focus();
+          return;
+        }
+        const ok = renameCharacterWithSettings({
+          charId,
+          name,
+          folderId: folderSel.value || ''
+        });
+        if (ok) {
+          window.toast?.('Rollperson uppdaterad.');
+          refreshAll();
+        }
+      });
+
+      registerRefresh(sync);
+      sync();
+    };
+
+    const buildFoldersPanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Mapphantering'));
+      card.appendChild(make('p', 'tools-intro', 'Skapa mappar, flytta rollpersoner mellan mappar och hantera ordning direkt här.'));
+
+      const form = make('div', 'tools-form');
+
+      const addRow = make('div', 'tools-inline-row');
+      const addInput = document.createElement('input');
+      addInput.type = 'text';
+      addInput.placeholder = 'Ny mapp...';
+      addInput.autocomplete = 'off';
+      addInput.className = 'tools-inline-input';
+      const addBtn = make('button', 'char-btn tools-inline-btn', 'Lägg till');
+      addRow.appendChild(addInput);
+      addRow.appendChild(addBtn);
+      form.appendChild(addRow);
+
+      const moveTitle = make('div', 'tools-label', 'Flytta markerade rollpersoner');
+      form.appendChild(moveTitle);
+      const charList = make('div', 'tools-char-list');
+      form.appendChild(charList);
+
+      const moveRow = make('div', 'tools-inline-row');
+      const moveSel = document.createElement('select');
+      moveSel.className = 'tools-inline-input';
+      const moveBtn = make('button', 'char-btn tools-inline-btn', 'Flytta');
+      moveRow.appendChild(moveSel);
+      moveRow.appendChild(moveBtn);
+      form.appendChild(moveRow);
+
+      const folderTitle = make('div', 'tools-label', 'Mappar');
+      form.appendChild(folderTitle);
+      const folderList = make('div', 'tools-folder-list');
+      form.appendChild(folderList);
+
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      let editingFolderId = '';
+
+      const render = () => {
+        const folders = getSortedFolders();
+        const chars = getCharacterEntries();
+        const charMap = new Map();
+        chars.forEach(c => {
+          if (!c.folderId) return;
+          charMap.set(c.folderId, (charMap.get(c.folderId) || 0) + 1);
+        });
+
+        if (!chars.length) {
+          charList.innerHTML = '<p class="tools-empty">Inga rollpersoner att flytta.</p>';
+        } else {
+          charList.innerHTML = [
+            '<label class="tools-check-item"><span>Välj alla</span><input type="checkbox" data-action="select-all"></label>',
+            ...chars.map(c => (
+              `<label class="tools-check-item">
+                <span>${escapeHtml(c.name)} <span class="tools-sub">(${escapeHtml(c.folderName)})</span></span>
+                <input type="checkbox" data-charid="${escapeHtml(c.id)}">
+              </label>`
+            ))
+          ].join('');
+        }
+
+        moveSel.innerHTML = folders.map(f => `<option value="${escapeHtml(f.id)}">${escapeHtml(f.name || 'Mapp')}</option>`).join('');
+        const preferredDest = getDefaultFolderId('');
+        if (preferredDest) moveSel.value = preferredDest;
+
+        if (!folders.length) {
+          folderList.innerHTML = '<p class="tools-empty">Inga mappar ännu.</p>';
+          return;
+        }
+
+        folderList.innerHTML = folders.map((f, idx) => {
+          const cnt = charMap.get(f.id) || 0;
+          if (editingFolderId === f.id) {
+            return (
+              `<div class="tools-folder-row" data-id="${escapeHtml(f.id)}">
+                <div class="tools-folder-name">
+                  <input class="tools-folder-input" data-action="rename-input" type="text" value="${escapeHtml(f.name || '')}">
+                  <span class="count-badge">${cnt}</span>
+                </div>
+                <div class="tools-folder-actions">
+                  <button class="tools-mini-btn" data-action="rename-save">Spara</button>
+                  <button class="tools-mini-btn" data-action="rename-cancel">Avbryt</button>
+                </div>
+              </div>`
+            );
+          }
+          const upDisabled = idx === 0 ? ' disabled' : '';
+          const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
+          const delBtn = f.system
+            ? ''
+            : '<button class="tools-mini-btn danger" data-action="delete">Ta bort</button>';
+          return (
+            `<div class="tools-folder-row" data-id="${escapeHtml(f.id)}">
+              <div class="tools-folder-name">${escapeHtml(f.name)} <span class="count-badge">${cnt}</span></div>
+              <div class="tools-folder-actions">
+                <button class="tools-mini-btn" data-action="move-up"${upDisabled}>▲</button>
+                <button class="tools-mini-btn" data-action="move-down"${downDisabled}>▼</button>
+                <button class="tools-mini-btn" data-action="rename">Byt namn</button>
+                <button class="tools-mini-btn danger" data-action="clear">Töm</button>
+                ${delBtn}
+              </div>
+            </div>`
+          );
+        }).join('');
+      };
+
+      addBtn.addEventListener('click', () => {
+        const name = String(addInput.value || '').trim();
+        if (!name) return;
+        storeHelper.addFolder(store, name);
+        addInput.value = '';
+        refreshCharSelect();
+        editingFolderId = '';
+        refreshAll();
+      });
+
+      addInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') addBtn.click();
+      });
+
+      charList.addEventListener('change', e => {
+        const target = e.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.matches('input[type="checkbox"][data-action="select-all"]')) {
+          const checked = target.checked;
+          charList.querySelectorAll('input[type="checkbox"][data-charid]').forEach(cb => {
+            cb.checked = checked;
+          });
+          return;
+        }
+        if (target.matches('input[type="checkbox"][data-charid]')) {
+          const allBox = charList.querySelector('input[type="checkbox"][data-action="select-all"]');
+          if (!allBox) return;
+          const allChecked = [...charList.querySelectorAll('input[type="checkbox"][data-charid]')]
+            .every(cb => cb.checked);
+          allBox.checked = allChecked;
+        }
+      });
+
+      moveBtn.addEventListener('click', async () => {
+        const ids = [...charList.querySelectorAll('input[type="checkbox"][data-charid]:checked')]
+          .map(ch => ch.dataset.charid)
+          .filter(Boolean);
+        if (!ids.length) {
+          await alertPopup('Markera minst en rollperson.');
+          return;
+        }
+        const dest = moveSel.value || '';
+        if (storeHelper.setCharactersFolderBulk) {
+          storeHelper.setCharactersFolderBulk(store, ids, dest);
+        } else {
+          ids.forEach(id => storeHelper.setCharacterFolder(store, id, dest));
+        }
+        refreshCharSelect();
+        refreshAll();
+      });
+
+      folderList.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn || btn.disabled) return;
+        const row = btn.closest('[data-id]');
+        if (!row) return;
+        const folderId = row.getAttribute('data-id') || '';
+        const action = btn.getAttribute('data-action') || '';
+        if (!folderId || !action) return;
+
+        if (action === 'rename') {
+          editingFolderId = folderId;
+          render();
+          const targetRow = [...folderList.querySelectorAll('[data-id]')]
+            .find(el => el.getAttribute('data-id') === folderId);
+          const input = targetRow?.querySelector('input[data-action="rename-input"]');
+          if (input) input.focus();
+          return;
+        }
+        if (action === 'rename-cancel') {
+          editingFolderId = '';
+          render();
+          return;
+        }
+        if (action === 'rename-save') {
+          const input = row.querySelector('input[data-action="rename-input"]');
+          const name = String(input?.value || '').trim();
+          if (!name) {
+            input?.focus();
+            return;
+          }
+          storeHelper.renameFolder(store, folderId, name);
+          editingFolderId = '';
+          refreshCharSelect();
+          refreshAll();
+          return;
+        }
+
+        if (action === 'clear') {
+          const folders = storeHelper.getFolders(store) || [];
+          const folder = folders.find(f => f.id === folderId);
+          const count = (store.characters || []).filter(c => (c.folderId || '') === folderId).length;
+          if (!count) {
+            await alertPopup('Mappen är tom.');
+            return;
+          }
+          const ok = await confirmPopup(`Töm mapp “${folder?.name || 'Mapp'}”? Detta raderar ${count} karaktärer permanent.`);
+          if (!ok) return;
+          if (storeHelper.deleteCharactersInFolder) {
+            storeHelper.deleteCharactersInFolder(store, folderId);
+          } else {
+            const ids = (store.characters || []).filter(c => (c.folderId || '') === folderId).map(c => c.id);
+            ids.forEach(cid => storeHelper.deleteCharacter(store, cid));
+          }
+          refreshCharSelect();
+          applyCharacterChange();
+          refreshAll();
+          return;
+        }
+
+        if (action === 'delete') {
+          const folders = storeHelper.getFolders(store) || [];
+          const folder = folders.find(f => f.id === folderId);
+          if (folder?.system) {
+            await alertPopup('Systemmappen “Standard” kan inte tas bort.');
+            return;
+          }
+          const ok = await confirmPopup('Ta bort mapp? Karaktärer flyttas till “Standard”.');
+          if (!ok) return;
+          storeHelper.deleteFolder(store, folderId);
+          refreshCharSelect();
+          refreshAll();
+          return;
+        }
+
+        if (action === 'move-up' || action === 'move-down') {
+          storeHelper.moveFolder(store, folderId, action === 'move-up' ? -1 : 1);
+          refreshCharSelect();
+          refreshAll();
+        }
+      });
+
+      registerRefresh(render);
+      render();
+    };
+
+    tabs.forEach(tab => {
+      const btn = make('button', 'char-btn tools-tab', tab.label);
+      btn.type = 'button';
+      btn.dataset.tab = tab.id;
+      tabsEl.appendChild(btn);
+      tabButtons.set(tab.id, btn);
+
+      const panel = make('section', 'tools-panel');
+      panel.dataset.tab = tab.id;
+      panelsEl.appendChild(panel);
+      tabPanels.set(tab.id, panel);
+    });
+
+    buildGeneratePanel(tabPanels.get('generate'));
+    buildDuplicatePanel(tabPanels.get('duplicate'));
+    buildRenamePanel(tabPanels.get('rename'));
+    buildFoldersPanel(tabPanels.get('folders'));
+
+    const setActiveTab = tabId => {
+      tabButtons.forEach((btn, id) => {
+        const active = id === tabId;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      tabPanels.forEach((panel, id) => {
+        panel.classList.toggle('active', id === tabId);
+      });
+    };
+
+    tabButtons.forEach((btn, id) => {
+      btn.addEventListener('click', () => setActiveTab(id));
+    });
+
+    const wantedTab = tabs.some(tab => tab.id === initialTab) ? initialTab : 'generate';
+    setActiveTab(wantedTab);
+    opts.appendChild(tabsEl);
+    opts.appendChild(panelsEl);
+  }, () => {}, {
+    popupId: 'characterToolsPopup',
+    optsId: 'characterToolsOptions',
+    cancelId: 'characterToolsCancel'
+  });
 }
 
 // ---------- Popup: Mapphanterare ----------
@@ -1160,6 +2946,13 @@ function openFolderManagerPopup() {
   const moveSel   = bar.shadowRoot.getElementById('folderMoveSelect');
   const moveApply = bar.shadowRoot.getElementById('folderMoveApply');
   const charList  = bar.shadowRoot.getElementById('folderCharList');
+  const renamePop    = bar.shadowRoot.getElementById('renameFolderPopup');
+  const renameInput  = bar.shadowRoot.getElementById('renameFolderName');
+  const renameCancel = bar.shadowRoot.getElementById('renameFolderCancel');
+  const renameApply  = bar.shadowRoot.getElementById('renameFolderApply');
+  const inner        = pop.querySelector('.popup-inner');
+  let cancelRename = null;
+  let innerClickStop = null;
 
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"]/g, m => ({
@@ -1206,17 +2999,20 @@ function openFolderManagerPopup() {
       list.innerHTML = '<p>Inga mappar ännu.</p>';
       return;
     }
-    list.innerHTML = folders.map(f => {
+    list.innerHTML = folders.map((f, idx) => {
       const cnt = charMap.get(f.id) || 0;
       const esc = s => String(s || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
-      const delBtn = f.system ? '' : `<button class="mini-btn danger" data-action="delete" title="Ta bort">🗑</button>`;
+      const delBtn = f.system ? '' : `<button class="mini-btn danger icon-only" data-action="delete" title="Ta bort">${window.iconHtml ? window.iconHtml('remove') : '🗑'}</button>`;
+      const upDisabled = idx === 0 ? ' disabled' : '';
+      const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
       return (
         `<div class="folder-row" data-id="${f.id}">
           <div class="folder-name">${esc(f.name)} <span class="count-badge">${cnt}</span></div>
           <div class="folder-actions">
-            <button class="mini-btn" data-action="open" title="Öppna">⬆️</button>
+            <button class="mini-btn" data-action="move-up" title="Flytta upp"${upDisabled}>▲</button>
+            <button class="mini-btn" data-action="move-down" title="Flytta ned"${downDisabled}>▼</button>
             <button class="mini-btn" data-action="rename" title="Byt namn">✏️</button>
-            <button class="mini-btn danger" data-action="clear" title="Töm mapp">🧹</button>
+            <button class="mini-btn danger icon-only" data-action="clear" title="Töm mapp">${window.iconHtml ? window.iconHtml('broom') : '🧹'}</button>
             ${delBtn}
           </div>
         </div>`
@@ -1224,42 +3020,72 @@ function openFolderManagerPopup() {
     }).join('');
   }
 
+  async function showRenamePopup(currentName) {
+    if (!renamePop || !renameInput || !renameApply || !renameCancel) {
+      const fallback = prompt('Nytt mappnamn?', currentName || '');
+      const trimmed = String(fallback || '').trim();
+      return trimmed || null;
+    }
+    renameInput.value = String(currentName || '').trim();
+    renamePop.classList.add('open');
+    renamePop.querySelector('.popup-inner').scrollTop = 0;
+    setTimeout(() => renameInput.focus(), 0);
+
+    return await new Promise(resolve => {
+      let done = false;
+      const renameInner = renamePop.querySelector('.popup-inner');
+      const stopBubble = e => e.stopPropagation();
+      renameInner?.addEventListener('click', stopBubble);
+      function finish(result) {
+        if (done) return;
+        done = true;
+        renamePop.classList.remove('open');
+        renameApply.removeEventListener('click', onApply);
+        renameCancel.removeEventListener('click', onCancel);
+        renamePop.removeEventListener('click', onOutside);
+        document.removeEventListener('keydown', onKey);
+        renameInner?.removeEventListener('click', stopBubble);
+        cancelRename = null;
+        resolve(result);
+      }
+      function onApply() {
+        const val = String(renameInput.value || '').trim();
+        if (!val) { renameInput.focus(); return; }
+        finish(val);
+      }
+      function onCancel() { finish(null); }
+      function onOutside(e) {
+        if (!renamePop.querySelector('.popup-inner').contains(e.target)) finish(null);
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') finish(null);
+        else if (e.key === 'Enter') onApply();
+      }
+      renameApply.addEventListener('click', onApply);
+      renameCancel.addEventListener('click', onCancel);
+      renamePop.addEventListener('click', onOutside);
+      document.addEventListener('keydown', onKey);
+      cancelRename = () => finish(null);
+    });
+  }
+
   async function onListClick(e) {
     const el = e.target.closest('[data-action]');
     if (!el) return;
     const row = e.target.closest('[data-id]');
     if (!row) return;
+    if (el.disabled || el.matches('[disabled]')) return;
+    e.stopPropagation();
     const id = row.getAttribute('data-id');
     const action = el.getAttribute('data-action');
     if (action === 'rename') {
       const folders = storeHelper.getFolders(store) || [];
       const f = folders.find(x=>x.id===id);
-      const nm = prompt('Nytt mappnamn?', f ? f.name : '');
+      const nm = await showRenamePopup(f ? f.name : '');
       if (!nm) return;
       storeHelper.renameFolder(store, id, nm);
       render();
       refreshCharSelect();
-    } else if (action === 'open') {
-      // Open first character in this folder (alphabetically). If none, inform user.
-      const chars = (store.characters || [])
-        .filter(c => (c.folderId || '') === id)
-        .slice()
-        .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-      if (!chars.length) {
-        await alertPopup('Mappen är tom.');
-        return;
-      }
-      // Set active folder to this folder
-      storeHelper.setActiveFolder(store, id);
-      const target = chars[0];
-      store.current = target.id;
-      storeHelper.save(store);
-      // Ensure character view
-      if (document.body?.dataset?.role !== 'character') {
-        location.href = 'character.html';
-      } else {
-        applyCharacterChange();
-      }
     } else if (action === 'clear') {
       const folders = storeHelper.getFolders(store) || [];
       const f = folders.find(x=>x.id===id);
@@ -1285,6 +3111,11 @@ function openFolderManagerPopup() {
       storeHelper.deleteFolder(store, id);
       render();
       refreshCharSelect();
+    } else if (action === 'move-up' || action === 'move-down') {
+      const offset = action === 'move-up' ? -1 : 1;
+      storeHelper.moveFolder(store, id, offset);
+      render();
+      refreshCharSelect();
     }
   }
 
@@ -1305,18 +3136,27 @@ function openFolderManagerPopup() {
     addBtn.removeEventListener('click', onAdd);
     moveApply?.removeEventListener('click', onMoveApply);
     charList?.removeEventListener('change', onCharListChange);
+    cancelRename?.();
     pop.removeEventListener('click', onOutside);
+    if (inner && innerClickStop) inner.removeEventListener('click', innerClickStop);
+    innerClickStop = null;
   }
   function onClose() { close(); }
   function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)) close();
+    const inner = pop.querySelector('.popup-inner');
+    if (inner?.contains(e.target)) return;
+    if (renamePop?.classList.contains('open')) {
+      const renameInner = renamePop.querySelector('.popup-inner');
+      if (renameInner?.contains(e.target)) return;
+    }
+    close();
   }
   function onMoveApply() {
     const dest = (moveSel && moveSel.value) || '';
-    if (!charList) { close(); return; }
+    if (!charList) return;
     const ids = [...charList.querySelectorAll('input[type="checkbox"][data-charid]:checked')]
       .map(ch => ch.dataset.charid);
-    if (!ids.length) { close(); return; }
+    if (!ids.length) return;
     if (storeHelper.setCharactersFolderBulk) {
       storeHelper.setCharactersFolderBulk(store, ids, dest || '');
     } else {
@@ -1356,6 +3196,10 @@ function openFolderManagerPopup() {
   moveApply?.addEventListener('click', onMoveApply);
   charList?.addEventListener('change', onCharListChange);
   pop.addEventListener('click', onOutside);
+  if (inner) {
+    innerClickStop = e => e.stopPropagation();
+    inner.addEventListener('click', innerClickStop);
+  }
 }
 
 function openAlchemistPopup(cb) {
@@ -1451,38 +3295,540 @@ function openArtefacterPopup(cb) {
   pop.addEventListener('click', onOutside);
 }
 
-function openDefensePopup(cb) {
-  const pop  = bar.shadowRoot.getElementById('defensePopup');
-  const box  = bar.shadowRoot.getElementById('defenseOptions');
-  const cls  = bar.shadowRoot.getElementById('defenseCancel');
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
-    box.removeEventListener('click', onBtn);
-    cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
-  }
-  function onBtn(e) {
-    const b = e.target.closest('button[data-trait]');
-    if (!b) return;
-    const tr = b.dataset.trait;
-    close();
-    cb(tr);
-  }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
-      close();
-      cb(null);
+function openDefenseCalcPopup() {
+  const root = bar?.shadowRoot;
+  if (!root) return;
+  const pop = root.getElementById('defenseCalcPopup');
+  const traitSel = root.getElementById('defenseCalcTrait');
+  const armorSel = root.getElementById('defenseCalcArmor');
+  const weaponList = root.getElementById('defenseCalcWeaponList');
+  const danceTraitSel = root.getElementById('defenseCalcDancingTrait');
+  const danceWeaponSel = root.getElementById('defenseCalcDancingWeapon');
+  const danceCard = root.getElementById('defenseCalcDancingCard');
+  const emptyMsg = root.getElementById('defenseCalcEmpty');
+  const applyBtn = root.getElementById('defenseCalcApply');
+  const cancelBtn = root.getElementById('defenseCalcCancel');
+  const resetBtn = root.getElementById('defenseCalcReset');
+  const inner = pop?.querySelector('.popup-inner');
+  if (!pop || !traitSel || !armorSel || !weaponList || !applyBtn || !cancelBtn || !resetBtn || !inner || !danceTraitSel || !danceWeaponSel) return;
+
+  const list = typeof storeHelper.getCurrentList === 'function'
+    ? storeHelper.getCurrentList(store)
+    : [];
+  const hasDancingAbility = typeof storeHelper.abilityLevel === 'function'
+    ? storeHelper.abilityLevel(list, 'Dansande vapen') >= 1
+    : false;
+  const setDancingVisibility = (visible) => {
+    pop.classList.toggle('defense-calc-has-dancing', visible);
+    if (danceCard) {
+      danceCard.hidden = !visible;
+      danceCard.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
+    danceTraitSel.disabled = !visible;
+    danceWeaponSel.disabled = !visible;
+  };
+
+  const flatten = (arr, prefix = []) => (Array.isArray(arr) ? arr : []).reduce((acc, row, idx) => {
+    const path = [...prefix, idx];
+    acc.push({ row, path });
+    if (Array.isArray(row?.contains)) {
+      acc.push(...flatten(row.contains, path));
+    }
+    return acc;
+  }, []);
+  const escapeAttrLocal = (val) => String(val ?? '').replace(/"/g, '&quot;');
+  const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+  const isBalancedQuality = (q) => String(q || '').toLowerCase().startsWith('balanser');
+  const isArmMountedShieldQuality = q => {
+    const txt = String(q || '').toLowerCase();
+    return txt.startsWith('armf\u00e4st') || txt.startsWith('armfast') || txt.startsWith('smidig');
+  };
+  const isTwoHandedWeaponType = typeName => {
+    if (typeof window.isTwoHandedWeaponType === 'function') {
+      return window.isTwoHandedWeaponType(typeName);
+    }
+    const txt = String(typeName || '').toLowerCase();
+    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tunga vapen';
+  };
+
+  const inv = storeHelper.getInventory(store) || [];
+  const flat = typeof invUtil?.flattenInventoryWithPath === 'function'
+    ? invUtil.flattenInventoryWithPath(inv)
+    : flatten(inv);
+  const nameMap = typeof invUtil?.makeNameMap === 'function'
+    ? invUtil.makeNameMap(flat.map(f => f.row))
+    : new Map(flat.map(f => [f.row, f.row?.name || '']));
+  const getQualities = (row, entry) => {
+    if (!row || !entry) return [];
+    const tagger = entry.taggar || {};
+    const baseQ = [
+      ...(tagger.kvalitet || []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const removed = Array.isArray(row.removedKval) ? row.removedKval : [];
+    const extra = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
+    const combined = [
+      ...baseQ.filter(q => !removed.includes(q)),
+      ...extra
+    ];
+    return typeof window.enforceArmorQualityExclusion === 'function'
+      ? window.enforceArmorQualityExclusion(entry, combined)
+      : combined;
+  };
+
+  const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
+    ? storeHelper.getDefenseSetup(store)
+    : null;
+  const forcedTrait = typeof storeHelper.getDefenseTrait === 'function'
+    ? storeHelper.getDefenseTrait(store)
+    : '';
+  const selectedTrait = defenseSetup?.trait || forcedTrait || '';
+  const selectedArmorPath = Array.isArray(defenseSetup?.armor?.path) ? defenseSetup.armor.path.join('.') : '';
+  const selectedDanceTrait = defenseSetup?.dancingTrait || '';
+  const selectedDanceWeaponPath = Array.isArray(defenseSetup?.dancingWeapon?.path) ? defenseSetup.dancingWeapon.path.join('.') : '';
+  const selectedWeaponPaths = new Set(
+    (defenseSetup?.weapons || [])
+      .map(w => Array.isArray(w.path) ? w.path.join('.') : '')
+      .filter(Boolean)
+  );
+
+  const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+  traitSel.innerHTML = ['<option value="">Automatiskt</option>']
+    .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
+    .join('');
+  traitSel.value = selectedTrait;
+  danceTraitSel.innerHTML = ['<option value="">Viljestark (standard)</option>']
+    .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
+    .join('');
+  danceTraitSel.value = selectedDanceTrait;
+
+  const armorMeta = new Map();
+  const armorOptions = flat
+    .map(obj => {
+      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+      if (!entry || !((entry.taggar?.typ || []).includes('Rustning'))) return null;
+      const value = obj.path.join('.');
+      const label = nameMap.get(obj.row) || entry.namn || obj.row.name || 'Rustning';
+      armorMeta.set(value, { path: obj.path, id: obj.row.id, name: obj.row.name || entry.namn || '' });
+      return `<option value="${escapeAttrLocal(value)}">${escapeText(label)}</option>`;
+    })
+    .filter(Boolean);
+  armorSel.innerHTML = ['<option value="">Ingen rustning</option>', ...armorOptions].join('');
+  armorSel.value = selectedArmorPath;
+
+  const weaponMeta = new Map();
+  const weaponHtml = flat
+    .map(obj => {
+      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+      const types = entry?.taggar?.typ || [];
+      if (!entry || (!types.includes('Vapen') && !types.includes('Sköld'))) return '';
+      const value = obj.path.join('.');
+      const name = nameMap.get(obj.row) || entry.namn || obj.row.name || 'Vapen';
+      const quals = getQualities(obj.row, entry);
+      const chips = [];
+      if (quals.some(isBalancedQuality)) chips.push('<span class="defense-chip balanced">Balanserat</span>');
+      if (quals.includes('L\u00e5ngt')) chips.push('<span class="defense-chip long">Långt</span>');
+      if (types.includes('Sköld')) chips.push('<span class="defense-chip shield">Sköld</span>');
+      const isArmMountedShield = types.includes('Sköld') && quals.some(isArmMountedShieldQuality);
+      const isTwoHandedWeapon = !types.includes('Sköld') && types.some(isTwoHandedWeaponType);
+      const metaHtml = chips.length ? `<span class="defense-item-meta">${chips.join('')}</span>` : '';
+      const checked = selectedWeaponPaths.has(value) ? ' checked' : '';
+      weaponMeta.set(value, {
+        path: obj.path,
+        id: obj.row.id,
+        name: obj.row.name || entry.namn || '',
+        isArmMountedShield,
+        isTwoHandedWeapon
+      });
+      return `<label class="price-item defense-item"><span>${escapeText(name)}${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(value)}"${checked}></label>`;
+    })
+    .filter(Boolean)
+    .join('');
+  weaponList.innerHTML = weaponHtml;
+  const getWeaponCheckboxes = () => [...weaponList.querySelectorAll('input[type="checkbox"][data-path]')];
+  const isArmMountedShieldPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isArmMountedShield);
+  const isTwoHandedWeaponPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isTwoHandedWeapon);
+  const sanitizeWeaponPathSelection = (paths, preferredPath = '') => {
+    const unique = [];
+    const seen = new Set();
+    (Array.isArray(paths) ? paths : []).forEach(pathStr => {
+      if (!pathStr || seen.has(pathStr) || !weaponMeta.has(pathStr)) return;
+      seen.add(pathStr);
+      unique.push(pathStr);
+    });
+    const hasArmMountedShield = unique.some(isArmMountedShieldPath);
+    const hasTwoHandedWeapon = unique.some(isTwoHandedWeaponPath);
+    if (!hasArmMountedShield || !hasTwoHandedWeapon) return unique;
+    if (isTwoHandedWeaponPath(preferredPath)) {
+      return unique.filter(pathStr => !isArmMountedShieldPath(pathStr));
+    }
+    return unique.filter(pathStr => !isTwoHandedWeaponPath(pathStr));
+  };
+  const syncWeaponSelectionUi = (preferredPath = '') => {
+    const checkboxes = getWeaponCheckboxes();
+    const selectedPaths = sanitizeWeaponPathSelection(
+      checkboxes.filter(ch => ch.checked).map(ch => ch.dataset.path || ''),
+      preferredPath
+    );
+    const selectedSet = new Set(selectedPaths);
+    const hasArmMountedShield = selectedPaths.some(isArmMountedShieldPath);
+    const hasTwoHandedWeapon = selectedPaths.some(isTwoHandedWeaponPath);
+    checkboxes.forEach(ch => {
+      const pathStr = ch.dataset.path || '';
+      const isSelected = selectedSet.has(pathStr);
+      ch.checked = isSelected;
+      const disable = !isSelected && (
+        (hasArmMountedShield && isTwoHandedWeaponPath(pathStr)) ||
+        (hasTwoHandedWeapon && isArmMountedShieldPath(pathStr))
+      );
+      ch.disabled = disable;
+      if (disable) {
+        ch.title = 'Kan inte kombineras med Armfäst/Tvåhandsvapen.';
+      } else {
+        ch.removeAttribute('title');
+      }
+    });
+    return selectedPaths;
+  };
+  syncWeaponSelectionUi();
+  getWeaponCheckboxes().forEach(ch => {
+    ch.addEventListener('change', () => {
+      syncWeaponSelectionUi(ch.dataset.path || '');
+    });
+  });
+  const weaponOptions = ['<option value="">Inget vapen</option>'].concat(
+    [...weaponMeta.entries()].map(([pathStr, meta]) => {
+      const label = escapeText(meta.name || meta.id || pathStr || 'Vapen');
+      return `<option value="${escapeAttrLocal(pathStr)}">${label}</option>`;
+    })
+  ).join('');
+  danceWeaponSel.innerHTML = weaponOptions;
+  danceWeaponSel.value = selectedDanceWeaponPath;
+  setDancingVisibility(hasDancingAbility);
+  if (emptyMsg) {
+    const hasWeapons = Boolean(weaponHtml);
+    emptyMsg.hidden = hasWeapons;
+    if (!hasWeapons) {
+      emptyMsg.textContent = 'Inga vapen eller sköldar hittades i inventariet.';
     }
   }
-  box.addEventListener('click', onBtn);
-  cls.addEventListener('click', onCancel);
+
+  pop.classList.add('open');
+  inner.scrollTop = 0;
+
+  const cleanup = () => {
+    applyBtn.removeEventListener('click', onApply);
+    cancelBtn.removeEventListener('click', onCancel);
+    resetBtn.removeEventListener('click', onReset);
+    pop.removeEventListener('click', onOutside);
+    inner.removeEventListener('keydown', onKey);
+  };
+
+  const close = () => {
+    pop.classList.remove('open');
+    cleanup();
+  };
+
+  const refreshUI = () => {
+    if (typeof window.renderTraits === 'function') renderTraits();
+    if (typeof renderSummary === 'function') renderSummary();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    syncDefenseButtons();
+  };
+
+  const onApply = () => {
+    const armorVal = armorSel.value;
+    const armorRef = armorMeta.get(armorVal) || null;
+    const dancingEnabled = hasDancingAbility;
+    const danceWeaponVal = dancingEnabled ? danceWeaponSel.value : '';
+    const danceWeaponRef = dancingEnabled ? (weaponMeta.get(danceWeaponVal) || null) : null;
+    const selectedWeaponPathsNext = syncWeaponSelectionUi();
+    const selectedWeaponsNext = selectedWeaponPathsNext
+      .map(pathStr => weaponMeta.get(pathStr))
+      .filter(Boolean);
+    const nextSetup = {
+      enabled: true,
+      trait: traitSel.value || '',
+      armor: armorRef ? { path: armorRef.path, id: armorRef.id, name: armorRef.name } : null,
+      weapons: selectedWeaponsNext.map(w => ({ path: w.path, id: w.id, name: w.name })),
+      dancingTrait: dancingEnabled ? (danceTraitSel.value || '') : '',
+      dancingWeapon: dancingEnabled && danceWeaponRef ? { path: danceWeaponRef.path, id: danceWeaponRef.id, name: danceWeaponRef.name } : null
+    };
+    if (typeof storeHelper.setDefenseSetup === 'function') {
+      storeHelper.setDefenseSetup(store, nextSetup);
+    }
+    if (typeof storeHelper.setDefenseTrait === 'function') {
+      storeHelper.setDefenseTrait(store, '');
+    }
+    close();
+    refreshUI();
+  };
+
+  const onReset = () => {
+    if (typeof storeHelper.setDefenseSetup === 'function') {
+      storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
+    }
+    if (typeof storeHelper.setDefenseTrait === 'function') {
+      storeHelper.setDefenseTrait(store, '');
+    }
+    close();
+    refreshUI();
+  };
+
+  const onCancel = () => {
+    close();
+  };
+
+  const onOutside = e => {
+    if (!inner.contains(e.target)) {
+      close();
+    }
+  };
+
+  const onKey = e => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      onApply();
+    }
+  };
+
+  applyBtn.addEventListener('click', onApply);
+  cancelBtn.addEventListener('click', onCancel);
+  resetBtn.addEventListener('click', onReset);
+  pop.addEventListener('click', onOutside);
+  inner.addEventListener('keydown', onKey);
+}
+
+function openEntrySortPopup(cb) {
+  const pop = bar.shadowRoot?.getElementById('entrySortPopup');
+  if (!pop) return;
+  const inner = pop.querySelector('.popup-inner');
+  const buttons = [...pop.querySelectorAll('.sort-btn[data-mode]')];
+  const saveBtn = pop.querySelector('#entrySortSave');
+  const cancelBtn = pop.querySelector('#entrySortCancel');
+  const current = storeHelper.getEntrySort ? storeHelper.getEntrySort(store) : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
+  let selected = current;
+
+  const setActive = (mode) => {
+    selected = mode;
+    buttons.forEach(btn => {
+      const isActive = btn.dataset.mode === mode;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  };
+
+  setActive(current);
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+
+  const close = () => {
+    pop.classList.remove('open');
+    buttons.forEach(btn => btn.removeEventListener('click', onSelect));
+    saveBtn?.removeEventListener('click', onSave);
+    cancelBtn?.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  };
+
+  const onSelect = (e) => {
+    const btn = e.currentTarget;
+    if (!btn) return;
+    setActive(btn.dataset.mode);
+  };
+
+  const onSave = () => {
+    close();
+    cb?.(selected);
+  };
+
+  const onCancel = () => { close(); cb?.(null); };
+
+  const onOutside = e => {
+    if (inner && !inner.contains(e.target)) {
+      close();
+      cb?.(null);
+    }
+  };
+
+  buttons.forEach(btn => btn.addEventListener('click', onSelect));
+  saveBtn?.addEventListener('click', onSave);
+  cancelBtn?.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
 }
 
+function openManualAdjustPopup() {
+  const pop = bar.shadowRoot?.getElementById('manualAdjustPopup');
+  if (!pop) return;
+  const inner = pop.querySelector('.popup-inner');
+  const groups = pop.querySelector('#manualAdjustGroups');
+  const closeBtn = pop.querySelector('#manualAdjustClose');
+  const resetBtn = pop.querySelector('#manualAdjustReset');
+  const corOut = pop.querySelector('#manualCorruptionDisplay');
+  const xpOut = pop.querySelector('#manualXpDisplay');
+  const toughOut = pop.querySelector('#manualToughnessDisplay');
+  const painOut = pop.querySelector('#manualPainDisplay');
+  const capOut = pop.querySelector('#manualCapacityDisplay');
+
+  const refresh = () => {
+    const manual = getManualAdjustmentsSafe();
+    if (corOut) corOut.textContent = formatSignedNumber(manual.corruption);
+    if (xpOut)  xpOut.textContent  = formatSignedNumber(-manual.xp);
+    if (toughOut) toughOut.textContent = formatSignedNumber(manual.toughness);
+    if (painOut) painOut.textContent = formatSignedNumber(manual.pain);
+    if (capOut) capOut.textContent = formatSignedNumber(manual.capacity);
+    syncManualAdjustButton();
+  };
+
+  refresh();
+
+  if (pop.classList.contains('open')) {
+    return;
+  }
+
+  const applyUpdate = (updater) => {
+    if (!store || !store.current) return;
+    const manual = getManualAdjustmentsSafe();
+    const next = { ...manual };
+    updater(next);
+    storeHelper.setManualAdjustments(store, next);
+    updateXP();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+      invUtil.renderInventory();
+    }
+    syncManualAdjustButton();
+  };
+
+  function close() {
+    pop.classList.remove('open');
+    groups?.removeEventListener('click', onAction);
+    closeBtn?.removeEventListener('click', onClose);
+    resetBtn?.removeEventListener('click', onReset);
+    window.registerOverlayCleanup?.(pop, null);
+  }
+
+  function onClose() {
+    close();
+  }
+
+  function onReset() {
+    applyUpdate(next => {
+      next.corruption = 0;
+      next.xp = 0;
+      next.toughness = 0;
+      next.pain = 0;
+      next.capacity = 0;
+    });
+    refresh();
+  }
+
+  function onAction(e) {
+    const btn = e.target.closest('button[data-type][data-direction]');
+    if (!btn) return;
+    e.preventDefault();
+    const type = btn.dataset.type;
+    const dir = btn.dataset.direction;
+    const delta = dir === 'increase' ? 1 : dir === 'decrease' ? -1 : 0;
+    if (!type || delta === 0 || !store || !store.current) return;
+    applyUpdate(next => {
+      if (!Object.prototype.hasOwnProperty.call(next, type)) {
+        return;
+      }
+      const current = Number(next[type]);
+      const base = Number.isFinite(current) ? current : 0;
+      next[type] = base + delta;
+    });
+    refresh();
+  }
+
+  window.registerOverlayCleanup?.(pop, close);
+
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+  groups?.addEventListener('click', onAction);
+  closeBtn?.addEventListener('click', onClose);
+  resetBtn?.addEventListener('click', onReset);
+}
+
+function isIosDevice() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const touchMac = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iPad|iPhone|iPod/.test(ua) || touchMac;
+}
+
+function isStandaloneDisplayMode() {
+  try {
+    if (window.matchMedia?.('(display-mode: standalone)').matches) return true;
+  } catch {}
+  return window.navigator?.standalone === true;
+}
+
+function shouldUseShareFallbackForExport() {
+  return isIosDevice() && isStandaloneDisplayMode();
+}
+
+function inferMimeType(fileName, fallback = '') {
+  const name = String(fileName || '').toLowerCase();
+  if (name.endsWith('.json')) return 'application/json';
+  if (name.endsWith('.zip')) return 'application/zip';
+  return fallback || 'application/octet-stream';
+}
+
+async function shareBlobAsFile(blob, suggested) {
+  if (!navigator.share || typeof File === 'undefined') return null;
+  try {
+    const file = new File(
+      [blob],
+      suggested || 'export.dat',
+      { type: inferMimeType(suggested, blob?.type || '') }
+    );
+    if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+      return null;
+    }
+    await navigator.share({
+      files: [file],
+      title: suggested || 'Export'
+    });
+    return true;
+  } catch (err) {
+    if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+      return false;
+    }
+    console.warn('Share export failed', err);
+    return null;
+  }
+}
+
+async function downloadBlob(blob, suggested) {
+  if (shouldUseShareFallbackForExport()) {
+    const shared = await shareBlobAsFile(blob, suggested);
+    if (shared === true) return true;
+    if (shared === false) return false;
+    if (typeof alertPopup === 'function') {
+      await alertPopup('Export stöds inte i den här vyn. Öppna sidan i Safari och exportera där.');
+    }
+    return false;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = suggested;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  return true;
+}
+
 async function saveJsonFile(jsonText, suggested) {
+  const blob = new Blob([jsonText], { type: 'application/json' });
   if (window.showSaveFilePicker) {
     try {
       const handle = await window.showSaveFilePicker({
@@ -1493,21 +3839,16 @@ async function saveJsonFile(jsonText, suggested) {
         }]
       });
       const writable = await handle.createWritable();
-      await writable.write(jsonText);
+      await writable.write(blob);
       await writable.close();
+      return;
     } catch (err) {
-      if (err && err.name !== 'AbortError') {
+      if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
         await alertPopup('Sparande misslyckades');
       }
     }
-  } else {
-    const blob = new Blob([jsonText], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = suggested;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
+  await downloadBlob(blob, suggested);
 }
 
 function sanitizeFilename(name) {
@@ -1529,6 +3870,1287 @@ function sanitizeFilename(name) {
   } catch {
     return 'fil';
   }
+}
+
+// --- Google Drive (manuell lagring, en fil per rollperson) ---
+const DRIVE_CONFIG = {
+  clientId: '618760628907-j5pdjhke84shln3sadl5t61e2sskav0s.apps.googleusercontent.com',
+  apiKey: 'AIzaSyB5f67LBlMssggG7SREFbCZD43YzDESW5Q',
+  // Full Drive access so all users with access to the shared folder can see each other's files.
+  scope: 'https://www.googleapis.com/auth/drive',
+  rootFolderName: 'Symbapedia_Backups',
+  // Shared folder ID (all users must have access to this folder)
+  rootFolderId: '1AxuJ4DAb_Ao7wgidQMy4QxlBnYu4gojX',
+  subfolders: ['Alla','Daniel','David','Elias','Elin','Isak','Leo','Nilas','Victor']
+};
+
+function driveEscapeQuery(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function driveDefaultFolderName() {
+  try {
+    const saved = localStorage.getItem('symbapediaDriveFolder');
+    if (DRIVE_CONFIG.subfolders.includes(saved)) return saved;
+
+    const activeId = storeHelper.getActiveFolder(store);
+    const folders = storeHelper.getFolders(store) || [];
+    const activeFolder = folders.find(f => f.id === activeId);
+    if (activeFolder && DRIVE_CONFIG.subfolders.includes(activeFolder.name)) {
+      return activeFolder.name;
+    }
+  } catch {}
+  return 'Alla';
+}
+
+let driveTokenClient = null;
+let driveGisPromise = null;
+let driveAccessToken = '';
+let driveAccessTokenExpiresAt = 0;
+const DRIVE_SCOPE_KEY = 'symbapediaDriveScope';
+
+function cacheDriveToken(resp) {
+  const token = resp?.access_token;
+  if (!token) return null;
+  driveAccessToken = token;
+  const expiresIn = Number(resp.expires_in) || 0;
+  const skewMs = 60 * 1000;
+  driveAccessTokenExpiresAt = Date.now() + (expiresIn * 1000) - skewMs;
+  return token;
+}
+
+function getCachedDriveToken() {
+  if (driveAccessToken && Date.now() < driveAccessTokenExpiresAt) {
+    return driveAccessToken;
+  }
+  return null;
+}
+
+function loadDriveGis() {
+  if (driveGisPromise) return driveGisPromise;
+  driveGisPromise = new Promise((resolve, reject) => {
+    if (window.google?.accounts?.oauth2) {
+      resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('GIS load failed'));
+    document.head.appendChild(s);
+  });
+  return driveGisPromise;
+}
+
+function initDriveTokenClient() {
+  if (!driveTokenClient) {
+    driveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CONFIG.clientId,
+      scope: DRIVE_CONFIG.scope,
+      callback: () => {}
+    });
+  }
+  return driveTokenClient;
+}
+
+function requestDriveTokenInteractive() {
+  const cached = getCachedDriveToken();
+  if (cached) return Promise.resolve(cached);
+  if (!window.google?.accounts?.oauth2) {
+    return Promise.reject(new Error('GIS not loaded'));
+  }
+  initDriveTokenClient();
+  return new Promise((resolve, reject) => {
+    let prompt = '';
+    let shouldStoreScope = false;
+    try {
+      const prevScope = localStorage.getItem(DRIVE_SCOPE_KEY);
+      if (prevScope !== DRIVE_CONFIG.scope) {
+        prompt = 'consent';
+        shouldStoreScope = true;
+      }
+    } catch {}
+    driveTokenClient.callback = (resp) => {
+      const token = cacheDriveToken(resp);
+      if (token) {
+        if (shouldStoreScope) {
+          try { localStorage.setItem(DRIVE_SCOPE_KEY, DRIVE_CONFIG.scope); } catch {}
+        }
+        resolve(token);
+      }
+      else reject(resp);
+    };
+    // Måste ske via användarklick
+    driveTokenClient.requestAccessToken({ prompt });
+  });
+}
+
+function isDriveGisNotLoaded(err) {
+  return String(err?.message || err || '').includes('GIS not loaded');
+}
+
+async function requestDriveTokenFromClick() {
+  const cached = getCachedDriveToken();
+  if (cached) return cached;
+  if (!window.google?.accounts?.oauth2) {
+    loadDriveGis().catch(() => {});
+    throw new Error('GIS not loaded');
+  }
+  return await requestDriveTokenInteractive();
+}
+
+async function ensureDriveToken() {
+  const cached = getCachedDriveToken();
+  if (cached) return cached;
+  throw new Error('Drive auth required');
+}
+
+async function driveApiFetch(path, { method = 'GET', params = {}, body, headers = {} } = {}) {
+  const token = await ensureDriveToken();
+  const url = new URL(`https://www.googleapis.com/drive/v3/${path}`);
+  const finalParams = { ...(params || {}) };
+  if (DRIVE_CONFIG.rootFolderId) {
+    if (finalParams.supportsAllDrives === undefined) finalParams.supportsAllDrives = true;
+    if (finalParams.includeItemsFromAllDrives === undefined) finalParams.includeItemsFromAllDrives = true;
+  }
+  Object.entries(finalParams).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+  });
+  const res = await fetch(url.toString(), {
+    method,
+    headers: { Authorization: `Bearer ${token}`, ...headers },
+    body
+  });
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  const data = isJson ? await res.json() : await res.text();
+  if (!res.ok) throw new Error(data?.error?.message || data || 'Drive request failed');
+  return data;
+}
+
+async function driveFindFolderByName(name, parentId = null) {
+  const q = [
+    `name='${driveEscapeQuery(name)}'`,
+    `mimeType='application/vnd.google-apps.folder'`,
+    `trashed=false`
+  ];
+  if (parentId) q.push(`'${parentId}' in parents`);
+  const res = await driveApiFetch('files', {
+    params: {
+      q: q.join(' and '),
+      fields: 'files(id,name)',
+      spaces: 'drive',
+      pageSize: 1
+    }
+  });
+  return res.files?.[0] || null;
+}
+
+async function driveEnsureFolder(name, parentId = null) {
+  const existing = await driveFindFolderByName(name, parentId);
+  if (existing) return existing.id;
+
+  const metadata = {
+    name,
+    mimeType: 'application/vnd.google-apps.folder'
+  };
+  if (parentId) metadata.parents = [parentId];
+
+  const created = await driveApiFetch('files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(metadata),
+    params: { fields: 'id' }
+  });
+  return created.id;
+}
+
+async function driveEnsureRootFolder() {
+  if (DRIVE_CONFIG.rootFolderId) {
+    const info = await driveApiFetch(`files/${DRIVE_CONFIG.rootFolderId}`, {
+      params: { fields: 'id,name,mimeType' }
+    });
+    if (info?.mimeType !== 'application/vnd.google-apps.folder') {
+      throw new Error('Drive root folder is not a folder');
+    }
+    return info.id;
+  }
+  return await driveEnsureFolder(DRIVE_CONFIG.rootFolderName);
+}
+
+async function driveEnsureSubfolder(name) {
+  const rootId = await driveEnsureRootFolder();
+  return await driveEnsureFolder(name, rootId);
+}
+
+async function driveFindCharacterFile(folderId, fileName) {
+  const q = [
+    `name='${driveEscapeQuery(fileName)}'`,
+    `trashed=false`,
+    `'${folderId}' in parents`,
+    `appProperties has { key='symbapediaType' and value='character' }`
+  ];
+  const res = await driveApiFetch('files', {
+    params: { q: q.join(' and '), fields: 'files(id,name,modifiedTime)', spaces: 'drive', pageSize: 1 }
+  });
+  return res.files?.[0] || null;
+}
+
+async function driveUploadCharacterFile(charId, driveFolderName, opts = {}) {
+  const { silent = false } = opts;
+  const data = storeHelper.exportCharacterJSON(store, charId, true);
+  if (!data) return false;
+
+  const jsonText = JSON.stringify(data, null, 2);
+  const fileName = `${sanitizeFilename(data.name || 'rollperson')}.json`;
+
+  const folderId = await driveEnsureSubfolder(driveFolderName);
+  const existing = await driveFindCharacterFile(folderId, fileName);
+
+  const token = await ensureDriveToken();
+  const boundary = `symbapedia_${Date.now()}`;
+
+  const metadata = {
+    name: fileName,
+    mimeType: 'application/json',
+    appProperties: { symbapediaType: 'character' }
+  };
+  if (!existing) {
+    metadata.parents = [folderId];
+  }
+
+  const body =
+    `--${boundary}\r\n` +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    JSON.stringify(metadata) + '\r\n' +
+    `--${boundary}\r\n` +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    jsonText + '\r\n' +
+    `--${boundary}--`;
+
+  const url = existing
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart&supportsAllDrives=true`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true`;
+
+  const res = await fetch(url, {
+    method: existing ? 'PATCH' : 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`
+    },
+    body
+  });
+
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error?.message || 'Drive upload failed');
+  if (!silent) {
+    window.toast?.(`Sparad i Drive: ${data.name || 'rollperson'}`);
+  }
+  return true;
+}
+
+async function driveUploadAllCharacters(driveFolderName) {
+  const chars = (store.characters || []).slice()
+    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+  let saved = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const c of chars) {
+    try {
+      const ok = await driveUploadCharacterFile(c.id, driveFolderName, { silent: true });
+      if (ok) saved++;
+      else skipped++;
+    } catch (err) {
+      console.error('Drive upload failed', c, err);
+      failed++;
+    }
+  }
+
+  return { saved, skipped, failed, total: chars.length };
+}
+
+async function driveListCharacterFiles(driveFolderName) {
+  const folderId = await driveEnsureSubfolder(driveFolderName);
+  const q = [
+    `'${folderId}' in parents`,
+    `trashed=false`,
+    `appProperties has { key='symbapediaType' and value='character' }`
+  ];
+  const res = await driveApiFetch('files', {
+    params: {
+      q: q.join(' and '),
+      fields: 'files(id,name,modifiedTime)',
+      spaces: 'drive',
+      pageSize: 200
+    }
+  });
+  return (res.files || []).sort((a, b) => String(a.name).localeCompare(String(b.name), 'sv'));
+}
+
+async function driveDownloadFile(fileId) {
+  const token = await ensureDriveToken();
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error('Drive download failed');
+  return await res.text();
+}
+
+async function driveImportFile(fileId) {
+  const text = await driveDownloadFile(fileId);
+  const obj = JSON.parse(text);
+  let imported = 0;
+
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const id = storeHelper.importCharacterJSON(store, item);
+      if (id) imported++;
+    }
+  } else if (obj && Array.isArray(obj.characters)) {
+    for (const item of obj.characters) {
+      const id = storeHelper.importCharacterJSON(store, item);
+      if (id) imported++;
+    }
+  } else if (obj && typeof obj === 'object') {
+    const id = storeHelper.importCharacterJSON(store, obj);
+    if (id) imported++;
+  }
+
+  if (imported > 0) {
+    applyCharacterChange();
+    window.toast?.('Import från Drive klar.');
+  } else {
+    await alertPopup('Kunde inte importera filen.');
+  }
+}
+
+async function driveImportFiles(fileIds) {
+  const ids = Array.isArray(fileIds) ? fileIds.filter(Boolean) : [];
+  let importedTotal = 0;
+  let successFiles = 0;
+  let failedFiles = 0;
+  let emptyFiles = 0;
+
+  for (const fileId of ids) {
+    try {
+      const text = await driveDownloadFile(fileId);
+      const obj = JSON.parse(text);
+      let imported = 0;
+
+      if (Array.isArray(obj)) {
+        for (const item of obj) {
+          const id = storeHelper.importCharacterJSON(store, item);
+          if (id) imported++;
+        }
+      } else if (obj && Array.isArray(obj.characters)) {
+        for (const item of obj.characters) {
+          const id = storeHelper.importCharacterJSON(store, item);
+          if (id) imported++;
+        }
+      } else if (obj && typeof obj === 'object') {
+        const id = storeHelper.importCharacterJSON(store, obj);
+        if (id) imported++;
+      }
+
+      if (imported > 0) {
+        importedTotal += imported;
+        successFiles++;
+      } else {
+        emptyFiles++;
+      }
+    } catch (err) {
+      failedFiles++;
+      console.error('Drive bulk import failed', err);
+    }
+  }
+
+  if (importedTotal > 0) {
+    applyCharacterChange();
+  }
+
+  return {
+    totalFiles: ids.length,
+    successFiles,
+    failedFiles,
+    emptyFiles,
+    importedTotal
+  };
+}
+
+async function importCharactersFromLocal(settings) {
+  if (!settings) return;
+  try {
+    let files;
+    if (window.showDirectoryPicker) {
+      const pick = await openDialog('Vad vill du importera?', {
+        cancel: true,
+        okText: 'Filer',
+        extraText: 'Mapp',
+        cancelText: 'Avbryt'
+      });
+      if (pick === 'extra') {
+        files = await pickJsonFilesFromDirectoryWithFallback();
+      } else if (pick === true) {
+        files = await pickJsonFilesWithFallback();
+      } else {
+        return;
+      }
+    } else {
+      files = await pickJsonFilesWithFallback();
+    }
+
+    const override = settings.mode === 'choose';
+    let targetFolderId = '';
+    let targetFolderName = '';
+    if (override) {
+      try {
+        const folders = (storeHelper.getFolders(store) || []);
+        targetFolderId = settings.folderId || '';
+        let folderRec = folders.find(x => x.id === targetFolderId);
+        if (!folderRec) {
+          let fallback = '';
+          try { fallback = storeHelper.getActiveFolder(store); } catch {}
+          if (!fallback || fallback === 'ALL') {
+            const std = folders.find(f => f.system) || folders.find(f => (f.name || '') === 'Standard') || folders[0];
+            if (std) fallback = std.id;
+          }
+          targetFolderId = fallback || '';
+          folderRec = folders.find(x => x.id === targetFolderId);
+        }
+        targetFolderName = folderRec ? (folderRec.name || '') : '';
+      } catch {}
+    }
+
+    let imported = 0;
+    const usedFolderIds = new Set();
+    for (const file of files) {
+      if (!file.name.toLowerCase().endsWith('.json')) continue;
+      try {
+        const text = await file.text();
+        const obj = JSON.parse(text);
+        if (Array.isArray(obj)) {
+          for (const item of obj) {
+            try {
+              const payload = override
+                ? { ...item, folder: targetFolderName, folderId: targetFolderId }
+                : item;
+              const id = storeHelper.importCharacterJSON(store, payload);
+              if (id) {
+                imported++;
+                try {
+                  const rec = (store.characters || []).find(c => c && c.id === id);
+                  if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                } catch {}
+                window.toast?.(`${item.name || 'Ny rollperson'} är importerad`);
+              }
+            } catch {}
+          }
+        } else if (obj && Array.isArray(obj.folders)) {
+          for (const folder of obj.folders) {
+            const fname = override ? targetFolderName : (folder.folder || folder.name || '');
+            const fid = override ? targetFolderId : (folder.id || folder.folderId || '');
+            if (Array.isArray(folder.characters)) {
+              for (const item of folder.characters) {
+                try {
+                  let payload;
+                  if (override) {
+                    payload = { ...item, folder: targetFolderName, folderId: targetFolderId };
+                  } else {
+                    payload = { ...item, folder: fname };
+                    if (fid) payload.folderId = fid;
+                  }
+                  const id = storeHelper.importCharacterJSON(store, payload);
+                  if (id) {
+                    imported++;
+                    try {
+                      const rec = (store.characters || []).find(c => c && c.id === id);
+                      if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                    } catch {}
+                    window.toast?.(`${item.name || 'Ny rollperson'} är importerad`);
+                  }
+                } catch {}
+              }
+            }
+          }
+        } else if (obj && Array.isArray(obj.characters)) {
+          for (const item of obj.characters) {
+            try {
+              const payload = override
+                ? { ...item, folder: targetFolderName, folderId: targetFolderId }
+                : item;
+              const id = storeHelper.importCharacterJSON(store, payload);
+              if (id) {
+                imported++;
+                try {
+                  const rec = (store.characters || []).find(c => c && c.id === id);
+                  if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                } catch {}
+                window.toast?.(`${item.name || 'Ny rollperson'} är importerad`);
+              }
+            } catch {}
+          }
+        } else {
+          const payload = override
+            ? { ...obj, folder: targetFolderName, folderId: targetFolderId }
+            : obj;
+          const res = storeHelper.importCharacterJSON(store, payload);
+          if (res) {
+            imported++;
+            try {
+              const rec = (store.characters || []).find(c => c && c.id === res);
+              if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+            } catch {}
+            window.toast?.(`${obj.name || 'Ny rollperson'} är importerad`);
+          }
+        }
+      } catch {
+        // Ignore single-file parse errors and continue
+      }
+    }
+
+    if (imported > 0) {
+      if (override && settings.makeActive && targetFolderId) {
+        try { storeHelper.setActiveFolder(store, targetFolderId); } catch {}
+      } else if (!override && settings.makeActive) {
+        try {
+          const arr = Array.from(usedFolderIds);
+          if (arr.length === 1 && arr[0]) {
+            storeHelper.setActiveFolder(store, arr[0]);
+          }
+        } catch {}
+      }
+      applyCharacterChange();
+    } else {
+      await alertPopup('Felaktig fil.');
+    }
+  } catch (err) {
+    if (err && err.name !== 'AbortError') {
+      await alertPopup('Felaktig fil.');
+    }
+  }
+}
+
+function openDriveStoragePopup(initialTab = 'drive') {
+  loadDriveGis().catch(() => {});
+  openChoicePopup((opts, select) => {
+    const make = (tag, cls, text) => {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (text != null) el.textContent = text;
+      return el;
+    };
+    const normalize = value => String(value || '').toLocaleLowerCase('sv');
+
+    const buildDrivePanel = (root, choose) => {
+      const characterCount = (store.characters || []).length;
+      const folderCount = DRIVE_CONFIG.subfolders.length;
+      const wrap = make('div', 'export-sections drive-storage-sections');
+      let importFolderSelect;
+
+      const hero = make('div', 'drive-storage-hero');
+      hero.appendChild(make('div', 'drive-storage-kicker', 'Google Drive'));
+      hero.appendChild(make('div', 'drive-storage-title', 'Synka rollpersoner'));
+      hero.appendChild(make('div', 'drive-storage-meta', `${characterCount} rollpersoner • ${folderCount} mappar`));
+      wrap.appendChild(hero);
+
+      const saveCard = make('div', 'card export-card');
+      saveCard.appendChild(make('div', 'card-title drive-card-title', 'Spara till Google Drive'));
+      const saveSection = make('div', 'export-section');
+      saveSection.appendChild(make('p', 'drive-section-intro', 'Välj Drive-mapp och spara alla eller enskilda rollpersoner.'));
+
+      const saveFolderWrap = make('div', 'filter-group drive-folder-group');
+      const saveLabel = make('label', 'drive-field-label', 'Drive-mapp');
+      saveLabel.setAttribute('for', 'driveExportFolderSelect');
+      saveFolderWrap.appendChild(saveLabel);
+
+      const saveFolderSelect = document.createElement('select');
+      saveFolderSelect.id = 'driveExportFolderSelect';
+      saveFolderSelect.className = 'drive-folder-select';
+      DRIVE_CONFIG.subfolders.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        saveFolderSelect.appendChild(opt);
+      });
+      saveFolderSelect.value = driveDefaultFolderName();
+      saveFolderSelect.addEventListener('change', () => {
+        localStorage.setItem('symbapediaDriveFolder', saveFolderSelect.value);
+        if (importFolderSelect) importFolderSelect.value = saveFolderSelect.value;
+      });
+      saveFolderWrap.appendChild(saveFolderSelect);
+      saveSection.appendChild(saveFolderWrap);
+
+      const saveAllBtn = make('button', 'char-btn drive-primary-action', 'Spara alla (separata filer)');
+      saveAllBtn.addEventListener('click', async () => {
+        if (!store.characters?.length) {
+          await alertPopup('Inga rollpersoner att spara.');
+          return;
+        }
+        const originalText = saveAllBtn.textContent;
+        saveAllBtn.disabled = true;
+        saveAllBtn.textContent = 'Ansluter till Drive…';
+        try {
+          await requestDriveTokenFromClick();
+          choose({
+            mode: 'drive-save-all',
+            driveFolder: saveFolderSelect.value || 'Alla'
+          });
+        } catch (err) {
+          console.error(err);
+          if (isDriveGisNotLoaded(err)) {
+            await alertPopup('Drive laddas… klicka igen.');
+          } else {
+            await alertPopup('Kunde inte ansluta till Google Drive.');
+          }
+          saveAllBtn.disabled = false;
+          saveAllBtn.textContent = originalText;
+        }
+      });
+      saveSection.appendChild(saveAllBtn);
+
+      const folders = (storeHelper.getFolders(store) || []).slice()
+        .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const folderNameById = new Map(folders.map(f => [f.id, f.name || 'Mapp']));
+      const charEntries = (store.characters || [])
+        .map(c => ({
+          id: c.id,
+          name: c.name || 'Namnlös',
+          folderName: folderNameById.get(c.folderId || '') || 'Övrigt'
+        }))
+        .sort((a, b) =>
+          String(a.folderName).localeCompare(String(b.folderName), 'sv') ||
+          String(a.name).localeCompare(String(b.name), 'sv')
+        );
+
+      const saveListHeader = make('div', 'drive-list-header');
+      saveListHeader.appendChild(make('span', 'drive-list-title', 'Spara enskild rollperson'));
+      saveListHeader.appendChild(make('span', 'drive-count-pill', `${charEntries.length} st`));
+      saveSection.appendChild(saveListHeader);
+
+      const saveSingleWrap = make('div', 'drive-select-panel');
+      const saveSearchWrap = make('div', 'drive-search');
+      const saveSearch = document.createElement('input');
+      saveSearch.type = 'text';
+      saveSearch.className = 'drive-search-input';
+      saveSearch.placeholder = 'Filtrera rollperson…';
+      saveSearch.autocomplete = 'off';
+      saveSearchWrap.appendChild(saveSearch);
+      saveSingleWrap.appendChild(saveSearchWrap);
+
+      const saveCharSelect = document.createElement('select');
+      saveCharSelect.className = 'drive-folder-select drive-char-select';
+      saveSingleWrap.appendChild(saveCharSelect);
+
+      const saveSingleBtn = make('button', 'char-btn drive-secondary-action', 'Spara vald rollperson');
+      saveSingleWrap.appendChild(saveSingleBtn);
+      const saveMeta = make('div', 'drive-inline-meta');
+      saveSingleWrap.appendChild(saveMeta);
+
+      function renderSaveCharacterSelect() {
+        const q = normalize(saveSearch.value);
+        const previousValue = saveCharSelect.value;
+        const filtered = charEntries.filter(entry => {
+          const hay = normalize(`${entry.name} ${entry.folderName}`);
+          return !q || hay.includes(q);
+        });
+
+        saveCharSelect.innerHTML = '';
+        if (!filtered.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = charEntries.length ? 'Inga träffar' : 'Inga rollpersoner';
+          saveCharSelect.appendChild(opt);
+          saveCharSelect.disabled = true;
+          saveSingleBtn.disabled = true;
+          saveMeta.textContent = charEntries.length
+            ? 'Ingen rollperson matchar filtret.'
+            : 'Skapa en rollperson för att kunna spara till Drive.';
+          return;
+        }
+
+        const groups = new Map();
+        filtered.forEach(entry => {
+          if (!groups.has(entry.folderName)) groups.set(entry.folderName, []);
+          groups.get(entry.folderName).push(entry);
+        });
+
+        for (const [folderName, entries] of groups.entries()) {
+          const group = document.createElement('optgroup');
+          group.label = folderName;
+          entries.forEach(entry => {
+            const opt = document.createElement('option');
+            opt.value = entry.id;
+            opt.textContent = entry.name;
+            group.appendChild(opt);
+          });
+          saveCharSelect.appendChild(group);
+        }
+
+        const preferred = filtered.some(entry => entry.id === previousValue)
+          ? previousValue
+          : (filtered.some(entry => entry.id === store.current) ? store.current : filtered[0].id);
+        saveCharSelect.value = preferred;
+        saveCharSelect.disabled = false;
+        saveSingleBtn.disabled = false;
+        saveMeta.textContent = filtered.length === charEntries.length
+          ? `${charEntries.length} rollpersoner tillgängliga.`
+          : `${filtered.length} av ${charEntries.length} visas.`;
+      }
+
+      saveSearch.addEventListener('input', renderSaveCharacterSelect);
+      saveSingleBtn.addEventListener('click', async () => {
+        const charId = saveCharSelect.value;
+        if (!charId) return;
+        try {
+          await requestDriveTokenFromClick();
+          choose({
+            mode: 'drive-save',
+            charId,
+            driveFolder: saveFolderSelect.value || 'Alla'
+          });
+        } catch (err) {
+          console.error(err);
+          if (isDriveGisNotLoaded(err)) {
+            await alertPopup('Drive laddas… klicka igen.');
+          } else {
+            await alertPopup('Kunde inte ansluta till Google Drive.');
+          }
+        }
+      });
+
+      renderSaveCharacterSelect();
+      saveSection.appendChild(saveSingleWrap);
+      saveCard.appendChild(saveSection);
+      wrap.appendChild(saveCard);
+
+      const importCard = make('div', 'card export-card');
+      importCard.appendChild(make('div', 'card-title drive-card-title', 'Importera från Google Drive'));
+      const importSection = make('div', 'export-section');
+      importSection.appendChild(make('p', 'drive-section-intro', 'Läs filer från vald Drive-mapp och importera vald fil eller alla på en gång.'));
+
+      const importFolderWrap = make('div', 'filter-group drive-folder-group');
+      const importLabel = make('label', 'drive-field-label', 'Drive-mapp');
+      importLabel.setAttribute('for', 'driveImportFolderSelect');
+      importFolderWrap.appendChild(importLabel);
+
+      importFolderSelect = document.createElement('select');
+      importFolderSelect.id = 'driveImportFolderSelect';
+      importFolderSelect.className = 'drive-folder-select';
+      DRIVE_CONFIG.subfolders.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        importFolderSelect.appendChild(opt);
+      });
+      importFolderSelect.value = driveDefaultFolderName();
+      importFolderSelect.addEventListener('change', () => {
+        localStorage.setItem('symbapediaDriveFolder', importFolderSelect.value);
+        if (saveFolderSelect) saveFolderSelect.value = importFolderSelect.value;
+      });
+      importFolderWrap.appendChild(importFolderSelect);
+      importSection.appendChild(importFolderWrap);
+
+      const loadBtn = make('button', 'char-btn drive-secondary-action', 'Hämta fillista');
+      importSection.appendChild(loadBtn);
+
+      const searchWrap = make('div', 'drive-search');
+      const search = document.createElement('input');
+      search.type = 'text';
+      search.className = 'drive-search-input';
+      search.placeholder = 'Filtrera namn…';
+      search.autocomplete = 'off';
+      searchWrap.appendChild(search);
+      importSection.appendChild(searchWrap);
+
+      const importListHeader = make('div', 'drive-list-header');
+      importListHeader.appendChild(make('span', 'drive-list-title', 'Filer i vald Drive-mapp'));
+      const importCount = make('span', 'drive-count-pill', '0 st');
+      importListHeader.appendChild(importCount);
+      importSection.appendChild(importListHeader);
+
+      const importSelectPanel = make('div', 'drive-select-panel');
+      const importFileSelect = document.createElement('select');
+      importFileSelect.className = 'drive-folder-select drive-file-select';
+      importSelectPanel.appendChild(importFileSelect);
+
+      const importActionRow = make('div', 'drive-action-row');
+      const importSelectedBtn = make('button', 'char-btn drive-primary-action', 'Importera vald fil');
+      const importAllBtn = make('button', 'char-btn drive-secondary-action', 'Importera alla filer i mapp');
+      importActionRow.appendChild(importSelectedBtn);
+      importActionRow.appendChild(importAllBtn);
+      importSelectPanel.appendChild(importActionRow);
+
+      const importMeta = make('div', 'drive-inline-meta', 'Hämta fillista för att börja.');
+      importSelectPanel.appendChild(importMeta);
+      importSection.appendChild(importSelectPanel);
+
+      let allFiles = [];
+
+      function renderImportFileSelect() {
+        const q = String(search.value || '').toLocaleLowerCase('sv');
+        const files = allFiles.filter(f => !q || String(f.name).toLocaleLowerCase('sv').includes(q));
+
+        importFileSelect.innerHTML = '';
+        if (!files.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = allFiles.length ? 'Inga träffar' : 'Inga filer laddade';
+          importFileSelect.appendChild(opt);
+          importFileSelect.disabled = true;
+          importSelectedBtn.disabled = true;
+          importAllBtn.disabled = !allFiles.length;
+          importCount.textContent = allFiles.length ? `0 / ${allFiles.length}` : '0 st';
+          importMeta.textContent = allFiles.length
+            ? 'Justera filter eller importera alla i mappen.'
+            : 'Hämta fillista för att börja.';
+          return;
+        }
+
+        for (const f of files) {
+          const label = String(f.name || '').replace(/\.json$/i, '');
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          opt.textContent = label || f.name;
+          importFileSelect.appendChild(opt);
+        }
+
+        importFileSelect.disabled = false;
+        importSelectedBtn.disabled = false;
+        importAllBtn.disabled = false;
+        importCount.textContent = files.length === allFiles.length
+          ? `${allFiles.length} st`
+          : `${files.length} / ${allFiles.length}`;
+        importMeta.textContent = files.length === allFiles.length
+          ? 'Välj en fil eller importera alla i mappen.'
+          : 'Filtret påverkar bara listan för vald fil.';
+      }
+
+      loadBtn.addEventListener('click', async () => {
+        importMeta.textContent = 'Laddar filer från Drive…';
+        loadBtn.disabled = true;
+        try {
+          await requestDriveTokenFromClick();
+          allFiles = (await driveListCharacterFiles(importFolderSelect.value || 'Alla'))
+            .slice()
+            .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+          renderImportFileSelect();
+        } catch (err) {
+          console.error(err);
+          if (isDriveGisNotLoaded(err)) {
+            importMeta.textContent = 'Drive laddas… klicka igen.';
+          } else {
+            importMeta.textContent = 'Kunde inte läsa Drive.';
+          }
+        } finally {
+          loadBtn.disabled = false;
+        }
+      });
+
+      importFolderSelect.addEventListener('change', () => {
+        allFiles = [];
+        search.value = '';
+        renderImportFileSelect();
+      });
+
+      search.addEventListener('input', renderImportFileSelect);
+      importSelectedBtn.addEventListener('click', () => {
+        const fileId = importFileSelect.value;
+        if (!fileId) return;
+        choose({
+          mode: 'drive-import',
+          fileId
+        });
+      });
+      importAllBtn.addEventListener('click', () => {
+        if (!allFiles.length) return;
+        choose({
+          mode: 'drive-import-all',
+          fileIds: allFiles.map(file => file.id)
+        });
+      });
+
+      renderImportFileSelect();
+      importCard.appendChild(importSection);
+      wrap.appendChild(importCard);
+      root.appendChild(wrap);
+    };
+
+    const buildExportPanel = (root, choose) => {
+      const wrap = make('div', 'export-sections drive-storage-sections');
+
+      const backupsCard = make('div', 'card export-card');
+      backupsCard.appendChild(make('div', 'card-title drive-card-title', 'Säkerhetskopior'));
+      const backups = make('div', 'export-section');
+      backups.appendChild(make('p', 'drive-section-intro', 'Exportera alla rollpersoner eller aktiv mapp i valt format.'));
+
+      const addScope = (label, values) => {
+        const block = make('div', 'drive-select-panel export-mode-block');
+        const header = make('div', 'drive-list-header');
+        header.appendChild(make('span', 'drive-list-title', label));
+        block.appendChild(header);
+
+        const actions = make('div', 'drive-export-actions');
+        const oneBtn = make('button', 'char-btn drive-secondary-action', 'En fil');
+        oneBtn.addEventListener('click', () => choose({ mode: 'export', action: values.one }));
+        const splitBtn = make('button', 'char-btn drive-secondary-action', 'Isär');
+        splitBtn.addEventListener('click', () => choose({ mode: 'export', action: values.split }));
+        const zipBtn = make('button', 'char-btn drive-secondary-action', 'Zip');
+        zipBtn.addEventListener('click', () => choose({ mode: 'export', action: values.zip }));
+        actions.appendChild(oneBtn);
+        actions.appendChild(splitBtn);
+        actions.appendChild(zipBtn);
+        block.appendChild(actions);
+        backups.appendChild(block);
+      };
+
+      addScope('Alla rollpersoner', {
+        one: 'all-one',
+        split: 'all-separate',
+        zip: 'all-zip'
+      });
+
+      try {
+        const activeId = storeHelper.getActiveFolder(store);
+        if (activeId && activeId !== 'ALL') {
+          const folders = storeHelper.getFolders(store) || [];
+          const folder = folders.find(f => f.id === activeId);
+          if (folder) {
+            addScope(`Aktiv mapp: ${folder.name}`, {
+              one: 'folder-active',
+              split: 'folder-separate',
+              zip: 'folder-zip'
+            });
+          }
+        }
+      } catch {}
+
+      backupsCard.appendChild(backups);
+      wrap.appendChild(backupsCard);
+
+      const singlesCard = make('div', 'card export-card');
+      singlesCard.appendChild(make('div', 'card-title drive-card-title', 'Enskild rollperson'));
+      const singles = make('div', 'export-section');
+      singles.appendChild(make('p', 'drive-section-intro', 'Filtrera och exportera en vald rollperson.'));
+
+      const folders = (storeHelper.getFolders(store) || []).slice()
+        .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const folderNameById = new Map(folders.map(f => [f.id, f.name || 'Mapp']));
+      const charEntries = (store.characters || [])
+        .map(c => ({
+          id: c.id,
+          name: c.name || 'Namnlös',
+          folderName: folderNameById.get(c.folderId || '') || 'Övrigt'
+        }))
+        .sort((a, b) =>
+          String(a.folderName).localeCompare(String(b.folderName), 'sv') ||
+          String(a.name).localeCompare(String(b.name), 'sv')
+        );
+
+      const panel = make('div', 'drive-select-panel');
+      const searchWrap = make('div', 'drive-search');
+      const search = document.createElement('input');
+      search.type = 'text';
+      search.className = 'drive-search-input';
+      search.placeholder = 'Sök rollperson eller mapp…';
+      search.autocomplete = 'off';
+      searchWrap.appendChild(search);
+      panel.appendChild(searchWrap);
+
+      const charSelect = document.createElement('select');
+      charSelect.className = 'drive-folder-select drive-char-select';
+      panel.appendChild(charSelect);
+
+      const exportBtn = make('button', 'char-btn drive-primary-action', 'Exportera rollperson');
+      panel.appendChild(exportBtn);
+      const meta = make('div', 'drive-inline-meta');
+      panel.appendChild(meta);
+
+      function renderCharacterSelect() {
+        const q = normalize(search.value);
+        const previousValue = charSelect.value;
+        const filtered = charEntries.filter(entry => {
+          const hay = normalize(`${entry.name} ${entry.folderName}`);
+          return !q || hay.includes(q);
+        });
+
+        charSelect.innerHTML = '';
+        if (!filtered.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = charEntries.length ? 'Inga träffar' : 'Inga rollpersoner';
+          charSelect.appendChild(opt);
+          charSelect.disabled = true;
+          exportBtn.disabled = true;
+          meta.textContent = charEntries.length
+            ? 'Ingen rollperson matchar filtret.'
+            : 'Skapa en rollperson för att exportera.';
+          return;
+        }
+
+        const groups = new Map();
+        filtered.forEach(entry => {
+          if (!groups.has(entry.folderName)) groups.set(entry.folderName, []);
+          groups.get(entry.folderName).push(entry);
+        });
+
+        for (const [folderName, entries] of groups.entries()) {
+          const group = document.createElement('optgroup');
+          group.label = folderName;
+          entries.forEach(entry => {
+            const opt = document.createElement('option');
+            opt.value = entry.id;
+            opt.textContent = entry.name;
+            group.appendChild(opt);
+          });
+          charSelect.appendChild(group);
+        }
+
+        const preferred = filtered.some(entry => entry.id === previousValue)
+          ? previousValue
+          : (filtered.some(entry => entry.id === store.current) ? store.current : filtered[0].id);
+        charSelect.value = preferred;
+        charSelect.disabled = false;
+        exportBtn.disabled = false;
+        meta.textContent = filtered.length === charEntries.length
+          ? `${charEntries.length} rollpersoner tillgängliga.`
+          : `${filtered.length} av ${charEntries.length} visas.`;
+      }
+
+      search.addEventListener('input', renderCharacterSelect);
+      exportBtn.addEventListener('click', () => {
+        const charId = charSelect.value;
+        if (!charId) return;
+        choose({ mode: 'export', charId });
+      });
+
+      renderCharacterSelect();
+      singles.appendChild(panel);
+      singlesCard.appendChild(singles);
+      wrap.appendChild(singlesCard);
+      root.appendChild(wrap);
+    };
+
+    const buildLocalImportPanel = (root, choose) => {
+      const wrap = make('div', 'export-sections drive-storage-sections');
+      const importCard = make('div', 'card export-card');
+      importCard.appendChild(make('div', 'card-title drive-card-title', 'Importera från fil'));
+      const importSection = make('div', 'export-section');
+      importSection.appendChild(make('p', 'drive-section-intro', 'Importera lokala JSON-filer till vald mapp eller enligt mappinformation i filerna.'));
+
+      const folders = (storeHelper.getFolders(store) || []).slice()
+        .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const folderSelect = document.createElement('select');
+      folderSelect.className = 'drive-folder-select';
+      folderSelect.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+
+      let activeId = 'ALL';
+      try { activeId = storeHelper.getActiveFolder(store); } catch {}
+      const activeFolder = folders.find(f => f.id === activeId);
+      const stdFolder = folders.find(f => f.system) || folders.find(f => (f.name || '') === 'Standard') || folders[0];
+      if (activeFolder && activeId !== 'ALL') folderSelect.value = activeFolder.id;
+      else if (stdFolder) folderSelect.value = stdFolder.id;
+
+      const chooseLabel = make('label', 'drive-field-label', 'Importera till mapp');
+      importSection.appendChild(chooseLabel);
+      importSection.appendChild(folderSelect);
+
+      const makeActiveChoose = make('label', 'price-item import-check');
+      const chooseCheck = document.createElement('input');
+      chooseCheck.type = 'checkbox';
+      makeActiveChoose.appendChild(chooseCheck);
+      makeActiveChoose.appendChild(make('span', null, 'Gör målmappen aktiv efter import'));
+      importSection.appendChild(makeActiveChoose);
+
+      const chooseBtn = make('button', 'char-btn drive-primary-action', 'Importera till vald mapp');
+      chooseBtn.addEventListener('click', () => {
+        const folderId = folderSelect.value || '';
+        if (!folderId) return;
+        choose({
+          mode: 'local-import',
+          settings: {
+            mode: 'choose',
+            folderId,
+            makeActive: !!chooseCheck.checked
+          }
+        });
+      });
+      importSection.appendChild(chooseBtn);
+
+      importSection.appendChild(make('p', 'drive-section-intro', 'Eller använd mapparna som finns definierade i filerna.'));
+      const makeActiveFrom = make('label', 'price-item import-check');
+      const fromCheck = document.createElement('input');
+      fromCheck.type = 'checkbox';
+      makeActiveFrom.appendChild(fromCheck);
+      makeActiveFrom.appendChild(make('span', null, 'Gör målmapp aktiv när exakt en mapp importeras'));
+      importSection.appendChild(makeActiveFrom);
+
+      const fromBtn = make('button', 'char-btn drive-secondary-action', 'Importera enligt filens mappar');
+      fromBtn.addEventListener('click', () => {
+        choose({
+          mode: 'local-import',
+          settings: {
+            mode: 'fromFile',
+            makeActive: !!fromCheck.checked
+          }
+        });
+      });
+      importSection.appendChild(fromBtn);
+
+      importCard.appendChild(importSection);
+      wrap.appendChild(importCard);
+      root.appendChild(wrap);
+    };
+
+    const tabs = [
+      { id: 'drive', label: 'Drivelagring' },
+      { id: 'export', label: 'Export' },
+      { id: 'import', label: 'Import' }
+    ];
+    const tabsEl = make('div', 'storage-tabs');
+    const panelsEl = make('div', 'storage-panels');
+    const tabButtons = new Map();
+    const tabPanels = new Map();
+
+    tabs.forEach(tab => {
+      const btn = make('button', 'char-btn storage-tab', tab.label);
+      btn.type = 'button';
+      btn.dataset.tab = tab.id;
+      tabsEl.appendChild(btn);
+      tabButtons.set(tab.id, btn);
+
+      const panel = make('section', 'storage-panel');
+      panel.dataset.tab = tab.id;
+      panelsEl.appendChild(panel);
+      tabPanels.set(tab.id, panel);
+    });
+
+    buildDrivePanel(tabPanels.get('drive'), select);
+    buildExportPanel(tabPanels.get('export'), select);
+    buildLocalImportPanel(tabPanels.get('import'), select);
+
+    const setActiveTab = tabId => {
+      tabButtons.forEach((btn, id) => {
+        const active = id === tabId;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      tabPanels.forEach((panel, id) => {
+        panel.classList.toggle('active', id === tabId);
+      });
+    };
+
+    tabButtons.forEach((btn, id) => {
+      btn.addEventListener('click', () => setActiveTab(id));
+    });
+
+    const wantedTab = tabs.some(tab => tab.id === initialTab) ? initialTab : 'drive';
+    setActiveTab(wantedTab);
+    opts.appendChild(tabsEl);
+    opts.appendChild(panelsEl);
+  }, async choice => {
+    if (!choice) return;
+
+    if (choice.mode === 'export') {
+      try {
+        const action = choice.action || '';
+        if (action === 'all-one') {
+          await exportAllCharacters();
+        } else if (action === 'all-separate') {
+          await exportAllCharactersSeparate();
+        } else if (action === 'all-zip') {
+          await exportAllCharactersZipped();
+        } else if (action === 'folder-active') {
+          await exportActiveFolder();
+        } else if (action === 'folder-separate') {
+          await exportActiveFolderSeparate();
+        } else if (action === 'folder-zip') {
+          await exportActiveFolderZipped();
+        } else if (choice.charId) {
+          await exportCharacterFile(choice.charId);
+        }
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Export misslyckades.');
+      }
+      return;
+    }
+
+    if (choice.mode === 'local-import') {
+      await importCharactersFromLocal(choice.settings);
+      return;
+    }
+
+    if (choice.mode === 'drive-save-all') {
+      try {
+        const result = await driveUploadAllCharacters(choice.driveFolder || 'Alla');
+        if (!result.total) {
+          await alertPopup('Inga rollpersoner att spara.');
+          return;
+        }
+        if (result.failed > 0) {
+          await alertPopup(`Sparade ${result.saved} av ${result.total}. ${result.failed} misslyckades.`);
+        } else if (result.skipped > 0) {
+          window.toast?.(`Sparade ${result.saved}. ${result.skipped} hoppades över.`);
+        } else {
+          window.toast?.(`Sparade ${result.saved} rollpersoner i Drive.`);
+        }
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte spara alla till Drive.');
+      }
+      return;
+    }
+    if (choice.mode === 'drive-save') {
+      try {
+        await driveUploadCharacterFile(choice.charId, choice.driveFolder || 'Alla');
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte spara till Drive.');
+      }
+      return;
+    }
+    if (choice.mode === 'drive-import') {
+      try {
+        await driveImportFile(choice.fileId);
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte importera från Drive.');
+      }
+      return;
+    }
+    if (choice.mode === 'drive-import-all') {
+      try {
+        const fileIds = Array.isArray(choice.fileIds) ? choice.fileIds : [];
+        if (!fileIds.length) {
+          await alertPopup('Inga filer att importera.');
+          return;
+        }
+        const result = await driveImportFiles(fileIds);
+        if (result.importedTotal > 0) {
+          if (result.failedFiles > 0) {
+            await alertPopup(`Importerade ${result.importedTotal} rollpersoner från ${result.successFiles} av ${result.totalFiles} filer. ${result.failedFiles} misslyckades.`);
+          } else if (result.emptyFiles > 0) {
+            window.toast?.(`Importerade ${result.importedTotal} rollpersoner. ${result.emptyFiles} filer saknade importerbara data.`);
+          } else {
+            window.toast?.(`Importerade ${result.importedTotal} rollpersoner från ${result.successFiles} filer.`);
+          }
+        } else if (result.failedFiles > 0) {
+          await alertPopup('Kunde inte importera några filer från Drive.');
+        } else {
+          await alertPopup('Inga importerbara rollpersoner hittades i filerna.');
+        }
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte importera alla filer från Drive.');
+      }
+    }
+  }, {
+    popupId: 'driveStoragePopup',
+    optsId: 'driveStorageOptions',
+    cancelId: 'driveStorageCancel'
+  });
 }
 
 async function exportCharacterFile(id) {
@@ -1583,13 +5205,8 @@ async function exportAllCharactersSeparate() {
     const name = (data && data.name) ? data.name : 'rollperson';
     const jsonText = JSON.stringify(data, null, 2);
     const blob = new Blob([jsonText], { type: 'application/json' });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob);
-    a.download = `${sanitizeFilename(name)}.json`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+    const ok = await downloadBlob(blob, `${sanitizeFilename(name)}.json`);
+    if (!ok) break;
     await new Promise(r => setTimeout(r, 100));
   }
 }
@@ -1606,38 +5223,70 @@ async function exportAllCharactersZipped() {
     return;
   }
 
+  const suggested = 'Rollpersoner.zip';
+  let saveHandle = null;
+  let requestedHandle = false;
+  if (window.showSaveFilePicker) {
+    requestedHandle = true;
+    try {
+      saveHandle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+      });
+    } catch (err) {
+      if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+        console.warn('Save picker failed', err);
+      }
+    }
+  }
+
   const zip = new JSZip();
   for (const data of all) {
     const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
     zip.file(`${name}.json`, JSON.stringify(data, null, 2));
   }
   const blob = await zip.generateAsync({ type: 'blob' });
-  await saveBlobFile(blob, 'Rollpersoner.zip');
+  await saveBlobFile(blob, suggested, { handle: saveHandle, skipNativeDialog: requestedHandle });
 }
 
 
-async function saveBlobFile(blob, suggested) {
-  if (window.showSaveFilePicker) {
+async function writeBlobToHandle(handle, blob) {
+  try {
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return true;
+  } catch (err) {
+    if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+      console.warn('Write to file handle failed', err);
+    }
+    return false;
+  }
+}
+
+async function saveBlobFile(blob, suggested, opts = {}) {
+  const { handle: existingHandle, skipNativeDialog = false } = opts || {};
+  if (existingHandle) {
+    const wrote = await writeBlobToHandle(existingHandle, blob);
+    if (wrote) return;
+  }
+  if (!skipNativeDialog && window.showSaveFilePicker) {
     try {
       const handle = await window.showSaveFilePicker({
         suggestedName: suggested,
         types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
       });
-      const writable = await handle.createWritable();
-      await writable.write(blob);
-      await writable.close();
-      return;
+      const wrote = await writeBlobToHandle(handle, blob);
+      if (wrote) return;
     } catch (err) {
-      if (err && err.name === 'AbortError') return;
+      if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+        // Fall back to download path below
+      } else {
+        await alertPopup('Sparande misslyckades');
+      }
     }
   }
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = suggested;
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  await downloadBlob(blob, suggested);
 }
 
 async function exportActiveFolder() {
@@ -1665,7 +5314,12 @@ async function exportActiveFolder() {
       .filter(Boolean);
     const payload = {
       folders: [
-        { folder: folder.name || 'Mapp', characters: exported }
+        {
+          folder: folder.name || 'Mapp',
+          folderId: folder.id,
+          id: folder.id,
+          characters: exported
+        }
       ]
     };
     const jsonText = JSON.stringify(payload, null, 2);
@@ -1718,13 +5372,8 @@ async function exportActiveFolderSeparate() {
       const name = (data && data.name) ? data.name : 'rollperson';
       const jsonText = JSON.stringify(data, null, 2);
       const blob = new Blob([jsonText], { type: 'application/json' });
-      const a = document.createElement('a');
-      a.href = URL.createObjectURL(blob);
-      a.download = `${sanitizeFilename(name)}.json`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+      const ok = await downloadBlob(blob, `${sanitizeFilename(name)}.json`);
+      if (!ok) break;
       await new Promise(r => setTimeout(r, 100));
     }
   } catch {
@@ -1747,6 +5396,23 @@ async function exportActiveFolderZipped() {
 
     if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
 
+    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.zip`;
+    let saveHandle = null;
+    let requestedHandle = false;
+    if (window.showSaveFilePicker) {
+      requestedHandle = true;
+      try {
+        saveHandle = await window.showSaveFilePicker({
+          suggestedName: suggested,
+          types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+        });
+      } catch (err) {
+        if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+          console.warn('Save picker failed', err);
+        }
+      }
+    }
+
     const zip = new JSZip();
     for (const c of chars) {
       const data = storeHelper.exportCharacterJSON(store, c.id, true);
@@ -1755,18 +5421,25 @@ async function exportActiveFolderZipped() {
       zip.file(`${name}.json`, JSON.stringify(data, null, 2));
     }
     const blob = await zip.generateAsync({ type: 'blob' });
-    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.zip`;
-    await saveBlobFile(blob, suggested);
+    await saveBlobFile(blob, suggested, { handle: saveHandle, skipNativeDialog: requestedHandle });
   } catch {
     await alertPopup('Export av mapp misslyckades.');
   }
 }
-function openChoicePopup(build, cb) {
-  const pop  = bar.shadowRoot.getElementById('exportPopup');
-  const opts = bar.shadowRoot.getElementById('exportOptions');
-  const cls  = bar.shadowRoot.getElementById('exportCancel');
+function openChoicePopup(build, cb, config = {}) {
+  const popupId = config.popupId || 'driveStoragePopup';
+  const optsId = config.optsId || 'driveStorageOptions';
+  const cancelId = config.cancelId || 'driveStorageCancel';
+  const pop  = bar.shadowRoot.getElementById(popupId);
+  const opts = bar.shadowRoot.getElementById(optsId);
+  const cls  = bar.shadowRoot.getElementById(cancelId);
+  if (!pop || !opts || !cls) return;
+  let outsideArmed = false;
   pop.classList.add('open');
   pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(() => {
+    outsideArmed = true;
+  }, 150);
   function close() {
     pop.classList.remove('open');
     cls.removeEventListener('click', onCancel);
@@ -1775,6 +5448,7 @@ function openChoicePopup(build, cb) {
   }
   function onCancel() { close(); cb(null); }
   function onOutside(e) {
+    if (!outsideArmed) return;
     if (!pop.querySelector('.popup-inner').contains(e.target)) {
       close();
       cb(null);
@@ -1785,251 +5459,6 @@ function openChoicePopup(build, cb) {
   build(opts, select);
   cls.addEventListener('click', onCancel);
   pop.addEventListener('click', onOutside);
-}
-
-function openExportPopup(cb) {
-  openChoicePopup((opts, select) => {
-    const make = (tag, cls, text) => {
-      const el = document.createElement(tag);
-      if (cls) el.className = cls;
-      if (text != null) el.textContent = text;
-      return el;
-    };
-
-    // Wrapper for sections
-    const wrap = make('div', 'export-sections');
-
-    // Section: Backups (All / Active folder)
-    const backupsCard = make('div', 'card export-card');
-    backupsCard.appendChild(make('div', 'card-title', 'Säkerhetskopior'));
-    const backups = make('div', 'export-section');
-
-    const addRow = (label, scope, enabled = true) => {
-      const row = make('div', 'export-row');
-      row.appendChild(make('div', 'row-title', label));
-      const actions = make('div', 'row-actions');
-      const addMini = (txt, value) => {
-        const b = make('button', 'char-btn mini', txt);
-        if (enabled) {
-          b.addEventListener('click', () => select(value));
-        } else {
-          b.disabled = true;
-          b.title = 'Välj aktiv mapp i Filter-menyn först';
-        }
-        actions.appendChild(b);
-      };
-      if (scope === 'all') {
-        addMini('En fil', 'all-one');
-        addMini('Isär', 'all-separate');
-        addMini('Zip', 'all-zip');
-      } else if (scope === 'folder') {
-        addMini('En fil', 'folder-active');
-        addMini('Isär', 'folder-separate');
-        addMini('Zip', 'folder-zip');
-      }
-      row.appendChild(actions);
-      backups.appendChild(row);
-    };
-    addRow('Alla rollpersoner', 'all', true);
-
-    // Active folder actions (if any)
-    try {
-      const activeId = storeHelper.getActiveFolder(store);
-      if (activeId && activeId !== 'ALL') {
-        const folders = storeHelper.getFolders(store) || [];
-        const folder = folders.find(f => f.id === activeId);
-        if (folder) {
-          addRow(`Aktiv mapp: ${folder.name}`, 'folder', true);
-        }
-      }
-      // If no active folder is selected, do not render the row
-    } catch {}
-
-    backupsCard.appendChild(backups);
-    wrap.appendChild(backupsCard);
-
-    // Section: Single character export
-    const singlesCard = make('div', 'card export-card');
-    singlesCard.appendChild(make('div', 'card-title', 'Enskild rollperson'));
-    const singles = make('div', 'export-section');
-
-    // Current character shortcut
-    const currentId = store.current;
-    if (currentId) {
-      const curChar = store.characters.find(c => c.id === currentId);
-      if (curChar) {
-        const btn = make('button', 'char-btn primary', `Aktuell: ${curChar.name || 'Namnlös'}`);
-        btn.addEventListener('click', () => select(curChar.id));
-        singles.appendChild(btn);
-      }
-    }
-
-    // Search field
-    const searchWrap = make('div', 'export-search');
-    const search = document.createElement('input');
-    search.type = 'text';
-    search.placeholder = 'Filtrera namn…';
-    search.autocomplete = 'off';
-    searchWrap.appendChild(search);
-    singles.appendChild(searchWrap);
-
-    // Character list grouped by folder
-    const listWrap = make('div', 'export-list');
-
-    const folders = (storeHelper.getFolders(store) || []).slice()
-      .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-    const map = new Map();
-    for (const c of (store.characters || [])) {
-      const fid = c.folderId || '';
-      if (!map.has(fid)) map.set(fid, []);
-      map.get(fid).push(c);
-    }
-
-    const groupEls = [];
-    const seen = new Set();
-    for (const f of folders) {
-      const arr = (map.get(f.id) || []).slice()
-        .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-      if (!arr.length) continue;
-      const grp = make('div', 'export-group');
-      grp.appendChild(make('div', 'group-title', f.name || 'Mapp'));
-      const gl = make('div', 'group-list');
-      for (const c of arr) {
-        const b = make('button', 'char-btn small', c.name || 'Namnlös');
-        b.dataset.value = c.id;
-        b.addEventListener('click', () => select(c.id));
-        gl.appendChild(b);
-      }
-      grp.appendChild(gl);
-      listWrap.appendChild(grp);
-      groupEls.push(grp);
-      seen.add(f.id);
-    }
-
-    // Any characters in unknown/no folder
-    const rest = [];
-    for (const [fid, arr] of map.entries()) {
-      if (seen.has(fid)) continue;
-      rest.push(...arr);
-    }
-    if (rest.length) {
-      const arr = rest.slice().sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-      const grp = make('div', 'export-group');
-      grp.appendChild(make('div', 'group-title', 'Övrigt'));
-      const gl = make('div', 'group-list');
-      for (const c of arr) {
-        const b = make('button', 'char-btn small', c.name || 'Namnlös');
-        b.dataset.value = c.id;
-        b.addEventListener('click', () => select(c.id));
-        gl.appendChild(b);
-      }
-      grp.appendChild(gl);
-      listWrap.appendChild(grp);
-      groupEls.push(grp);
-    }
-
-    singles.appendChild(listWrap);
-    singlesCard.appendChild(singles);
-    wrap.appendChild(singlesCard);
-    opts.appendChild(wrap);
-
-    // Filtering
-    const normalize = s => String(s || '').toLocaleLowerCase('sv');
-    search.addEventListener('input', () => {
-      const q = normalize(search.value);
-      for (const grp of groupEls) {
-        let visibleCount = 0;
-        const buttons = grp.querySelectorAll('.group-list .char-btn');
-        buttons.forEach(b => {
-          const show = !q || normalize(b.textContent).includes(q);
-          b.style.display = show ? '' : 'none';
-          if (show) visibleCount++;
-        });
-        grp.style.display = visibleCount ? '' : 'none';
-      }
-    });
-  }, cb);
-}
-
-// Popup: Importera – välj mål för import via tre knappar
-// Returnerar { mode: 'active'|'choose'|'fromFile', folderId?: string, makeActive: boolean }
-async function openImportPopup() {
-  const pop = bar?.shadowRoot?.getElementById('importPopup');
-  if (!pop) return null;
-
-  const btnActive= bar.shadowRoot.getElementById('importBtnActive');
-  const btnChoose= bar.shadowRoot.getElementById('importBtnChoose');
-  const btnFrom  = bar.shadowRoot.getElementById('importBtnFromFile');
-  const folderEl = bar.shadowRoot.getElementById('importFolderSelect');
-  const makeActChoose = bar.shadowRoot.getElementById('importMakeActiveChoose');
-  const makeActFrom   = bar.shadowRoot.getElementById('importMakeActiveFromDir');
-  const cancel   = bar.shadowRoot.getElementById('importCancel');
-
-  // Fyll mapp-listan
-  const folders = (storeHelper.getFolders(store) || []).slice()
-    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
-  folderEl.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
-
-  // Aktiv mapp – sätt knapptext och tillgänglighet
-  let activeId = 'ALL';
-  try { activeId = storeHelper.getActiveFolder(store); } catch {}
-  const activeFolder = folders.find(f => f.id === activeId);
-  const activeName = activeFolder ? (activeFolder.name || '') : 'Alla';
-  const activeNameInline = bar.shadowRoot.getElementById('importActiveNameInline');
-  if (activeNameInline) activeNameInline.textContent = activeName || '';
-  const hasActive = !!(activeFolder && activeId && activeId !== 'ALL');
-  btnActive.disabled = !hasActive;
-  if (!hasActive) btnActive.title = 'Välj aktiv mapp i Filter-menyn först';
-
-  // Förvälj Standard eller första mappen i dropdown
-  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard') || folders[0];
-  if (std) folderEl.value = std.id;
-
-  // Återställ kryssrutor (standard: av)
-  if (makeActChoose) makeActChoose.checked = false;
-  if (makeActFrom)   makeActFrom.checked = false;
-
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-
-  return await new Promise(resolve => {
-    function close(res) {
-      pop.classList.remove('open');
-      cancel.removeEventListener('click', onCancel);
-      btnActive.removeEventListener('click', onActive);
-      btnChoose.removeEventListener('click', onChoose);
-      btnFrom.removeEventListener('click', onFrom);
-      pop.removeEventListener('click', onOutside);
-      document.removeEventListener('keydown', onKey);
-      resolve(res);
-    }
-    function onCancel() { close(null); }
-    function onOutside(e) {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
-    }
-    function onKey(e) {
-      if (e.key === 'Escape') close(null);
-    }
-    function onActive() {
-      if (btnActive.disabled) return;
-      const folderId = activeFolder?.id || '';
-      close({ mode: 'active', folderId, makeActive: false });
-    }
-    function onChoose() {
-      const folderId = folderEl.value || '';
-      if (!folderId) return;
-      close({ mode: 'choose', folderId, makeActive: !!makeActChoose?.checked });
-    }
-    function onFrom() {
-      close({ mode: 'fromFile', makeActive: !!makeActFrom?.checked });
-    }
-    cancel.addEventListener('click', onCancel);
-    btnActive.addEventListener('click', onActive);
-    btnChoose.addEventListener('click', onChoose);
-    btnFrom.addEventListener('click', onFrom);
-    pop.addEventListener('click', onOutside);
-    document.addEventListener('keydown', onKey);
-  });
 }
 
 async function chooseSeparateExportMode() {
@@ -2164,6 +5593,159 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
     }
     create.addEventListener('click', onCreate);
     cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// Popup: Generera rollperson
+async function openGeneratorPopup(preferredFolderId) {
+  const pop = bar?.shadowRoot?.getElementById('generatorPopup');
+  if (!pop) return null;
+  const nameIn = bar.shadowRoot.getElementById('genCharName');
+  const folderEl = bar.shadowRoot.getElementById('genCharFolder');
+  const xpIn = bar.shadowRoot.getElementById('genCharXp');
+  const attrSel = bar.shadowRoot.getElementById('genCharAttr');
+  const traitSel = bar.shadowRoot.getElementById('genCharTrait');
+  const raceSel = bar.shadowRoot.getElementById('genCharRace');
+  const yrkeSel = bar.shadowRoot.getElementById('genCharYrke');
+  const eliteSel = bar.shadowRoot.getElementById('genCharElityrke');
+  const createBtn = bar.shadowRoot.getElementById('genCharCreate');
+  const cancelBtn = bar.shadowRoot.getElementById('genCharCancel');
+  const warning = bar.shadowRoot.getElementById('genCharDataWarning');
+  const defaultCreateLabel = createBtn?.textContent || 'Generera';
+
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  folderEl.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = '';
+  if (xpIn) xpIn.value = 100;
+  if (attrSel) attrSel.value = '';
+  if (traitSel) {
+    const attrs = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
+    const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const traitHtml = ['<option value="">Auto (matchar bästa drag)</option>']
+      .concat(attrs.map(attr => `<option value="${escapeOpt(attr)}">${attr}</option>`))
+      .join('');
+    traitSel.innerHTML = traitHtml;
+    traitSel.value = '';
+  }
+
+  const getEntriesByType = (type) => {
+    const db = Array.isArray(window.DB) ? window.DB : [];
+    return db
+      .filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type))
+      .map(entry => String(entry.namn || '').trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'sv'));
+  };
+
+  const applyEntryOptions = (select, type, placeholder) => {
+    if (!select) return;
+    const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const names = getEntriesByType(type);
+    const options = [`<option value="">${placeholder}</option>`];
+    names.forEach(name => options.push(`<option value="${escapeOpt(name)}">${name}</option>`));
+    select.innerHTML = options.join('');
+    select.value = '';
+  };
+
+  const generatorDataReady = () => {
+    const db = Array.isArray(window.DB) ? window.DB : [];
+    if (!db.length) return false;
+    return db.some(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Förmåga'));
+  };
+
+  const syncGeneratorReadyState = () => {
+    const ready = generatorDataReady();
+    if (createBtn) {
+      createBtn.disabled = !ready;
+      createBtn.textContent = ready ? defaultCreateLabel : 'Laddar databasen...';
+      createBtn.title = ready ? '' : 'Generatorn behöver databasen innan den kan köras.';
+    }
+    if (warning) {
+      warning.hidden = ready;
+    }
+    return ready;
+  };
+
+  const refreshEntryOptions = () => {
+    applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
+    applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
+    applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
+    if (eliteSel && eliteSel.options.length <= 1) {
+      eliteSel.disabled = true;
+      eliteSel.title = 'Databasen laddas ... öppna generatorn igen när listorna finns.';
+    } else if (eliteSel) {
+      eliteSel.disabled = false;
+      eliteSel.title = '';
+    }
+    if (raceSel && raceSel.options.length <= 1) raceSel.title = 'Databasen laddas ...';
+    else if (raceSel) raceSel.title = '';
+    if (yrkeSel && yrkeSel.options.length <= 1) yrkeSel.title = 'Databasen laddas ...';
+    else if (yrkeSel) yrkeSel.title = '';
+  };
+
+  refreshEntryOptions();
+  const readyOnOpen = syncGeneratorReadyState();
+  let removeDbListener = null;
+  if (!readyOnOpen) {
+    const onDbReady = () => {
+      refreshEntryOptions();
+      if (syncGeneratorReadyState() && removeDbListener) {
+        removeDbListener();
+        removeDbListener = null;
+      }
+    };
+    window.addEventListener('symbaroum-db-ready', onDbReady);
+    removeDbListener = () => window.removeEventListener('symbaroum-db-ready', onDbReady);
+  }
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      createBtn.removeEventListener('click', onCreate);
+      cancelBtn.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      if (removeDbListener) {
+        removeDbListener();
+        removeDbListener = null;
+      }
+      resolve(res);
+    }
+    function onCreate() {
+      if (!syncGeneratorReadyState()) return;
+      const name = String(nameIn.value || '').trim() || 'Slumpad rollperson';
+      const folderId = folderEl.value || '';
+      const xp = Math.max(0, Math.floor(Number(xpIn?.value || 0) / 10) * 10);
+      const attrMode = attrSel?.value || '';
+      const traitFocus = traitSel?.value || '';
+      const race = raceSel?.value || '';
+      const yrke = yrkeSel?.value || '';
+      const elityrke = eliteSel?.value || '';
+      close({ name, folderId, xp, attrMode, traitFocus, race, yrke, elityrke });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onCreate();
+    }
+    createBtn.addEventListener('click', onCreate);
+    cancelBtn.addEventListener('click', onCancel);
     pop.addEventListener('click', onOutside);
     document.addEventListener('keydown', onKey);
   });
@@ -2316,12 +5898,13 @@ async function requireCharacter() {
   const btnChoose = pop.querySelector('#charReqChoose');
   const btnNew    = pop.querySelector('#charReqNew');
   const btnCancel = pop.querySelector('#charReqCancel');
+  const inner  = pop.querySelector('.popup-inner');
 
   renderCharOptions(select);
   wrap.style.display = 'none';
 
   pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
+  inner.scrollTop = 0;
 
   return await new Promise(resolve => {
     function close(res) {
@@ -2355,14 +5938,23 @@ async function requireCharacter() {
       applyCharacterChange();
     }
     async function onNew() {
+      const wasOpen = pop.classList.contains('open');
+      const restorePopup = () => {
+        wrap.style.display = 'none';
+        if (wasOpen) {
+          pop.classList.add('open');
+          inner.scrollTop = 0;
+        }
+      };
+      if (wasOpen) pop.classList.remove('open');
       const active = storeHelper.getActiveFolder(store);
       const res = await openNewCharPopupWithFolder(active);
-      if (!res) return;
+      if (!res) { restorePopup(); return; }
       const { name, folderId, xp } = res;
-      if (!name) return;
+      if (!name) { restorePopup(); return; }
       const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
       store.characters.push({ id: charId, name, folderId: folderId || '' });
-      store.data[charId] = { baseXp: Number(xp) || 0, custom: [] };
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
       store.current = charId;
       // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
       const prevActive = storeHelper.getActiveFolder(store);
@@ -2411,21 +6003,127 @@ function renderCharOptions(sel) {
 
 
 
+function formatSignedNumber(value) {
+  const num = Number(value || 0);
+  if (!Number.isFinite(num) || num === 0) return '0';
+  return num > 0 ? `+${num}` : `${num}`;
+}
+
+function getManualAdjustmentsSafe() {
+  if (!store || !store.current) {
+    return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
+  }
+  try {
+    if (typeof storeHelper.getManualAdjustments !== 'function') {
+      return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
+    }
+    const res = storeHelper.getManualAdjustments(store) || {};
+    return {
+      xp: Number(res.xp || 0),
+      corruption: Number(res.corruption || 0),
+      toughness: Number(res.toughness || 0),
+      pain: Number(res.pain || 0),
+      capacity: Number(res.capacity || 0)
+    };
+  } catch {
+    return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
+  }
+}
+
+function manualAdjustmentSummaryText(manual) {
+  if (!manual) return '';
+  const parts = [];
+  const cor = Number(manual.corruption || 0);
+  const xpStore = Number(manual.xp || 0);
+  if (cor) parts.push(`Kor ${cor > 0 ? `+${cor}` : `${cor}`}`);
+  if (xpStore) {
+    const xpVisible = -xpStore;
+    parts.push(`Erf ${xpVisible > 0 ? `+${xpVisible}` : `${xpVisible}`}`);
+  }
+  const tough = Number(manual.toughness || 0);
+  if (tough) parts.push(`Tålighet ${tough > 0 ? `+${tough}` : `${tough}`}`);
+  const pain = Number(manual.pain || 0);
+  if (pain) parts.push(`Smärtgräns ${pain > 0 ? `+${pain}` : `${pain}`}`);
+  const capacity = Number(manual.capacity || 0);
+  if (capacity) parts.push(`Bärkapacitet ${capacity > 0 ? `+${capacity}` : `${capacity}`}`);
+  return parts.join(', ');
+}
+
+function syncDefenseButtons() {
+  const btn = dom.defBtn;
+  const baseTitle = 'Öppna försvarsberäkning';
+  if (!btn) return;
+  if (!store || !store.current) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+    btn.title = baseTitle;
+    return;
+  }
+  const setup = typeof storeHelper.getDefenseSetup === 'function'
+    ? storeHelper.getDefenseSetup(store)
+    : null;
+  const forced = typeof storeHelper.getDefenseTrait === 'function'
+    ? storeHelper.getDefenseTrait(store)
+    : '';
+  const isActive = Boolean(setup?.enabled || forced);
+  btn.classList.toggle('active', isActive);
+  btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  if (setup?.enabled && setup.trait) {
+    btn.title = `${baseTitle} (${setup.trait})`;
+  } else if (setup?.enabled) {
+    btn.title = `${baseTitle} (aktiv)`;
+  } else if (forced) {
+    btn.title = `${baseTitle} (forcerat: ${forced})`;
+  } else {
+    btn.title = baseTitle;
+  }
+}
+
+function syncManualAdjustButton() {
+  const baseTitle = 'Hantera manuella justeringar för korruption, erfarenhet, tålighet, smärtgräns och bärkapacitet';
+  if (!dom.manualBtn) return;
+  if (!store || !store.current) {
+    dom.manualBtn.classList.remove('active');
+    dom.manualBtn.title = baseTitle;
+    return;
+  }
+  const manual = getManualAdjustmentsSafe();
+  const hasAdjustments = Boolean(
+    (manual.corruption || 0) ||
+    (manual.xp || 0) ||
+    (manual.toughness || 0) ||
+    (manual.pain || 0) ||
+    (manual.capacity || 0)
+  );
+  const summary = hasAdjustments ? manualAdjustmentSummaryText(manual) : '';
+  dom.manualBtn.classList.toggle('active', hasAdjustments);
+  dom.manualBtn.title = summary ? `${baseTitle} (${summary})` : baseTitle;
+}
+
 function updateXP() {
   const list  = storeHelper.getCurrentList(store);
   const base  = storeHelper.getBaseXP(store);
-  const effects = storeHelper.getArtifactEffects(store);
-  const used  = storeHelper.calcUsedXP(list, effects);
+  const artifactEffects = storeHelper.getArtifactEffects(store);
+  const manualAdjust = storeHelper.getManualAdjustments(store);
+  const combinedEffects = {
+    xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+    corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0)
+  };
+  const used  = storeHelper.calcUsedXP(list, combinedEffects);
   const total = storeHelper.calcTotalXP(base, list);
   const free  = total - used;
-  dom.xpOut.textContent = free;
-  dom.xpIn.value = base;
-  const xpContainer = dom.xpOut.closest('.exp-counter');
-  if (xpContainer) xpContainer.classList.toggle('under', free < 0);
+  if (dom.xpOut) {
+    dom.xpOut.textContent = free;
+    const xpContainer = dom.xpOut.closest('.exp-counter');
+    if (xpContainer) xpContainer.classList.toggle('under', free < 0);
+  }
+  if (dom.xpIn) dom.xpIn.value = base;
   if (dom.xpTotal) dom.xpTotal.textContent = total;
   if (dom.xpUsed)  dom.xpUsed.textContent  = used;
   if (dom.xpFree)  dom.xpFree.textContent  = free;
   if (dom.xpSum)   dom.xpSum.classList.toggle('under', free < 0);
+  updateCharacterIconVariant();
+  syncManualAdjustButton();
 }
 /* -----------------------------------------------------------
    Synk mellan flikar – endast när AKTUELLA rollpersonen ändras
@@ -2471,4 +6169,11 @@ window.addEventListener('storage', (e)=>{
     // Vid minsta fel, falla tillbaka till tidigare beteende för säkerhet
     try { store = storeHelper.load(); applyCharacterChange(); } catch {}
   }
+});
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action="open-defense-calc"]');
+  if (!btn) return;
+  e.preventDefault();
+  openDefenseCalcPopup();
 });

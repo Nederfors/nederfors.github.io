@@ -9,7 +9,8 @@
         "Vapenkvalitet"
       ]
     },
-    "neutral": true
+    "neutral": true,
+    "effekt": "Dras som fri handling; fungerar med Fint."
   },
   {
     "id": "neu2",
@@ -21,18 +22,20 @@
         "Vapenkvalitet"
       ]
     },
-    "neutral": true
+    "neutral": true,
+    "effekt": "1 frislag per runda mot ny närstridsmotståndare utan långt vapen."
   },
   {
     "id": "neu3",
     "namn": "Bastardvapen",
-    "beskrivning": "Vapnet kan användas i både en och två händer, även om vapnet främst kommer till sin rätt när det används med båda händerna. Bastardvapnet tappar sina kvaliteter om det används med en hand, men då kan användaren också använda sköld vilket i vissa lägen är att föredra. En annan fördel är att vapnet kan användas till häst, hållet i en hand tills ryttaren sitter av och då kan nyttja dess fulla tvåhandskraft.",
+    "beskrivning": "Vapnet kan användas i både en och två händer, även om vapnet främst kommer till sin rätt när det används med båda händerna. Bastardvapnet tappar av SL bestämda kvaliteter om det används med en hand, men då kan användaren också använda sköld vilket i vissa lägen är att föredra. En annan fördel är att vapnet kan användas till häst, hållet i en hand tills ryttaren sitter av och då kan nyttja dess fulla tvåhandskraft.",
     "taggar": {
       "typ": [
         "Kvalitet",
         "Vapenkvalitet"
       ]
     },
-    "neutral": true
+    "neutral": true,
+    "effekt": "Kan brukas en- eller tvåhandat; enhandat tappar kvaliteter men tillåter sköld och ridbruk."
   }
 ]

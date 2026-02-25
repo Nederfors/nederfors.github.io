@@ -6,6 +6,89 @@
    =========================================================== */
 (function (global) {
   const STORAGE_KEY = 'rpall';
+  const STORAGE_META_KEY = 'rpall-meta';
+  const STORAGE_CHAR_PREFIX = 'rpall-char-';
+  const ENTRY_SORT_DEFAULT = (global.ENTRY_SORT_DEFAULT || 'alpha-asc');
+
+  const charStorageKey = (id) => `${STORAGE_CHAR_PREFIX}${id}`;
+
+  const runtimeVersions = {
+    custom: 0,
+    revealed: 0
+  };
+
+  const normalizeEntrySort = (mode) => {
+    if (typeof global.normalizeEntrySortMode === 'function') {
+      return global.normalizeEntrySortMode(mode);
+    }
+    const val = typeof mode === 'string' ? mode : '';
+    const allowed = new Set(['alpha-asc', 'alpha-desc', 'newest', 'oldest', 'test', 'ark']);
+    return allowed.has(val) ? val : ENTRY_SORT_DEFAULT;
+  };
+
+  const bumpRuntimeVersion = (key) => {
+    if (!Object.prototype.hasOwnProperty.call(runtimeVersions, key)) {
+      runtimeVersions[key] = 0;
+    }
+    runtimeVersions[key] += 1;
+  };
+
+  const getRuntimeVersion = (key) => runtimeVersions[key] || 0;
+
+  const getCustomEntriesVersionMeta = () => getRuntimeVersion('custom');
+  const getRevealedArtifactsVersionMeta = () => getRuntimeVersion('revealed');
+
+  const extractMeta = (store) => ({
+    current: store.current || '',
+    characters: Array.isArray(store.characters) ? store.characters : [],
+    folders: Array.isArray(store.folders) ? store.folders : [],
+    activeFolder: store.activeFolder || 'ALL',
+    filterUnion: Boolean(store.filterUnion),
+    compactEntries: Boolean(store.compactEntries),
+    onlySelected: Boolean(store.onlySelected),
+    recentSearches: Array.isArray(store.recentSearches) ? store.recentSearches.slice(0, MAX_RECENT_SEARCHES) : [],
+    liveMode: Boolean(store.liveMode),
+    entrySort: normalizeEntrySort(store.entrySort)
+  });
+
+  function persistMeta(store) {
+    try {
+      localStorage.setItem(STORAGE_META_KEY, JSON.stringify(extractMeta(store)));
+    } catch {}
+  }
+
+  function persistCharacter(store, charId) {
+    if (!charId) return;
+    const data = store.data?.[charId];
+    const key = charStorageKey(charId);
+    try {
+      if (!data) {
+        localStorage.removeItem(key);
+        return;
+      }
+      localStorage.setItem(key, JSON.stringify(data));
+    } catch {}
+  }
+
+  const persistCurrentCharacter = (store) => {
+    if (store.current) persistCharacter(store, store.current);
+  };
+
+  const MAX_RECENT_SEARCHES = 10;
+
+  function save(store, options = {}) {
+    const { meta = true, charIds, allCharacters = false } = options || {};
+    if (meta) persistMeta(store);
+    if (allCharacters) {
+      Object.keys(store?.data || {}).forEach(id => persistCharacter(store, id));
+      return;
+    }
+    if (Array.isArray(charIds) && charIds.length) {
+      charIds.forEach(id => persistCharacter(store, id));
+      return;
+    }
+    persistCurrentCharacter(store);
+  }
 
   const HAMNSKIFTE_NAMES = {
     'Naturligt vapen': 'Naturligt vapen: Hamnskifte',
@@ -19,6 +102,320 @@
   );
 
   const DARK_BLOOD_TRAITS = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
+
+  let entryUidCounter = 0;
+
+  function nextEntryUid() {
+    entryUidCounter += 1;
+    const counterPart = entryUidCounter.toString(36);
+    const timePart = Date.now().toString(36);
+    return `ent-${timePart}-${counterPart}`;
+  }
+
+  function coerceOrderValue(value) {
+    if (value === undefined || value === null) return null;
+    const num = Number(value);
+    return Number.isFinite(num) ? num : null;
+  }
+
+  function entrySignature(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const parts = [];
+    const id = entry.id !== undefined ? String(entry.id).trim() : '';
+    const name = entry.namn !== undefined ? String(entry.namn).trim() : '';
+    if (id) parts.push(`id:${id.toLowerCase()}`);
+    if (name) parts.push(`name:${name.toLowerCase()}`);
+    if (entry.trait !== undefined && entry.trait !== null) {
+      parts.push(`trait:${String(entry.trait).trim().toLowerCase()}`);
+    }
+    if (entry.race !== undefined && entry.race !== null) {
+      parts.push(`race:${String(entry.race).trim().toLowerCase()}`);
+    }
+    if (entry.form !== undefined && entry.form !== null) {
+      parts.push(`form:${String(entry.form).trim().toLowerCase()}`);
+    }
+    if (entry.nivå !== undefined && entry.nivå !== null) {
+      parts.push(`level:${String(entry.nivå).trim().toLowerCase()}`);
+    }
+    return parts.join('|');
+  }
+
+  const ENTRY_DIGEST_IGNORE_KEYS = new Set([
+    '__uid',
+    '__order',
+    '__entryMeta',
+    '__appliedDigest',
+    '__dbPinnedDigest',
+    'nivå',
+    'trait',
+    'form',
+    'race',
+    'noInv'
+  ]);
+
+  const ENTRY_PRESERVE_KEYS = new Set([
+    '__uid',
+    '__order',
+    '__dbPinnedDigest',
+    'nivå',
+    'trait',
+    'form',
+    'race',
+    'noInv'
+  ]);
+
+  const stableClone = (value) => {
+    if (value === null || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(stableClone);
+    const out = {};
+    Object.keys(value).sort().forEach(key => {
+      if (ENTRY_DIGEST_IGNORE_KEYS.has(key)) return;
+      const v = value[key];
+      if (v === undefined) return;
+      out[key] = stableClone(v);
+    });
+    return out;
+  };
+
+  const computeEntryDigest = (entry) => {
+    if (!entry || typeof entry !== 'object') return '';
+    try {
+      return JSON.stringify(stableClone(entry));
+    } catch {
+      return '';
+    }
+  };
+
+  const computeComparableDigest = (entry) => {
+    if (!entry || typeof entry !== 'object') return '';
+    const name = typeof entry.namn === 'string' ? entry.namn : '';
+    const hamBase = name && HAMNSKIFTE_BASE[name];
+    if (hamBase) {
+      return computeEntryDigest({ ...entry, namn: hamBase });
+    }
+    return computeEntryDigest(entry);
+  };
+
+  function ensureAppliedDigest(entry, dbDigest = '') {
+    if (!entry || typeof entry !== 'object') return '';
+    const current = typeof entry.__appliedDigest === 'string' ? entry.__appliedDigest : '';
+    if (current) return current;
+    const digest = (typeof dbDigest === 'string' && dbDigest)
+      ? dbDigest
+      : computeEntryDigest(entry);
+    if (digest) entry.__appliedDigest = digest;
+    return digest;
+  }
+
+  function lookupDbEntryInfo(entry) {
+    try {
+      if (typeof global.lookupEntry !== 'function') return { dbEntry: null, dbDigest: '' };
+      const dbEntry = global.lookupEntry(entry);
+      if (!dbEntry) return { dbEntry: null, dbDigest: '' };
+      const dbDigest = computeEntryDigest(dbEntry);
+      return { dbEntry, dbDigest };
+    } catch {
+      return { dbEntry: null, dbDigest: '' };
+    }
+  }
+
+  function mergeEntryWithDb(entry, dbEntry, dbDigest) {
+    if (!dbEntry || typeof dbEntry !== 'object') return entry;
+    const merged = { ...dbEntry };
+    Object.keys(entry || {}).forEach(key => {
+      if (ENTRY_PRESERVE_KEYS.has(key)) merged[key] = entry[key];
+    });
+    if (entry && typeof entry.namn === 'string' && HAMNSKIFTE_BASE[entry.namn]) {
+      merged.namn = entry.namn;
+    }
+    const digest = dbDigest || computeEntryDigest(merged);
+    if (digest) merged.__appliedDigest = digest;
+    if (merged.__dbPinnedDigest) delete merged.__dbPinnedDigest;
+    return merged;
+  }
+
+  function ensureListAppliedDigests(list) {
+    let mutated = false;
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const before = entry.__appliedDigest;
+      if (before) return;
+      const { dbDigest } = lookupDbEntryInfo(entry);
+      const digest = ensureAppliedDigest(entry, dbDigest);
+      if (!before && digest) mutated = true;
+    });
+    return mutated;
+  }
+
+  function findOutdatedEntries(store, options = {}) {
+    const charId = options.charId || (store && store.current) || '';
+    const includePinned = Boolean(options.includePinned);
+    const res = { charId, outdated: [], pinned: [], mutated: false };
+    if (!charId || !store?.data?.[charId]) return res;
+    const list = Array.isArray(store.data[charId].list) ? store.data[charId].list : [];
+    list.forEach((entry, index) => {
+      if (!entry || typeof entry !== 'object') return;
+      const { dbEntry, dbDigest } = lookupDbEntryInfo(entry);
+      const before = entry.__appliedDigest;
+      let appliedDigest = ensureAppliedDigest(entry, dbDigest);
+      if (!before && appliedDigest) res.mutated = true;
+      if (!dbDigest) return;
+      let pinnedDigest = entry.__dbPinnedDigest;
+      if (appliedDigest && appliedDigest !== dbDigest) {
+        const comparable = computeComparableDigest(entry);
+        if (comparable && comparable === dbDigest) {
+          entry.__appliedDigest = dbDigest;
+          appliedDigest = dbDigest;
+          if (pinnedDigest && pinnedDigest !== dbDigest) {
+            entry.__dbPinnedDigest = dbDigest;
+            pinnedDigest = dbDigest;
+          }
+          res.mutated = true;
+        }
+      }
+      const stale = appliedDigest !== dbDigest && (!pinnedDigest || pinnedDigest !== dbDigest);
+      const info = { index, entry, dbEntry, dbDigest, appliedDigest, pinnedDigest };
+      if (stale) res.outdated.push(info);
+      else if (includePinned && pinnedDigest) res.pinned.push(info);
+    });
+    if (res.mutated) persistCharacter(store, charId);
+    return res;
+  }
+
+  function syncEntriesWithDb(store, options = {}) {
+    const charId = options.charId || (store && store.current) || '';
+    const mode = options.mode === 'pin' ? 'pin' : 'update';
+    const includePinned = Boolean(options.includePinned);
+    const targetIndexes = Array.isArray(options.targetIndexes)
+      ? new Set(options.targetIndexes.map(idx => Number(idx)).filter(n => Number.isInteger(n) && n >= 0))
+      : null;
+    const res = { charId, updated: 0, pinned: 0 };
+    if (!charId || !store?.data?.[charId]) return res;
+    const list = Array.isArray(store.data[charId].list) ? store.data[charId].list : [];
+    let mutated = false;
+
+    list.forEach((entry, index) => {
+      if (!entry || typeof entry !== 'object') return;
+      if (targetIndexes && !targetIndexes.has(index)) return;
+      const { dbEntry, dbDigest } = lookupDbEntryInfo(entry);
+      const before = entry.__appliedDigest;
+      const appliedDigest = ensureAppliedDigest(entry, dbDigest);
+      if (!before && appliedDigest) mutated = true;
+      if (!dbDigest) {
+        return;
+      }
+      const pinnedDigest = entry.__dbPinnedDigest;
+      const pinnedCurrentVersion = Boolean(pinnedDigest && pinnedDigest === dbDigest);
+      const stale = appliedDigest !== dbDigest && !pinnedCurrentVersion;
+      const shouldForcePinnedUpdate = mode === 'update'
+        && includePinned
+        && pinnedCurrentVersion
+        && appliedDigest !== dbDigest;
+      if (!stale && !shouldForcePinnedUpdate) return;
+      if (mode === 'pin') {
+        entry.__dbPinnedDigest = dbDigest;
+        mutated = true;
+        res.pinned += 1;
+        return;
+      }
+      const merged = mergeEntryWithDb(entry, dbEntry, dbDigest);
+      list[index] = merged;
+      mutated = true;
+      res.updated += 1;
+    });
+
+    if (mutated) {
+      store.data[charId].list = list;
+      persistCharacter(store, charId);
+    }
+    return res;
+  }
+
+  function ensureListEntryMetadata(store, list) {
+    if (!store?.current) return;
+    const data = store.data?.[store.current];
+    if (!data) return;
+    let counter = coerceOrderValue(data.entryOrderCounter) || 0;
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (!entry.__uid) entry.__uid = nextEntryUid();
+      const coerced = coerceOrderValue(entry.__order);
+      if (coerced === null) {
+        counter += 1;
+        entry.__order = counter;
+      } else {
+        entry.__order = coerced;
+        if (coerced > counter) counter = coerced;
+      }
+    });
+    data.entryOrderCounter = counter;
+  }
+
+  function syncEntryMetadataFromPrev(store, prevList, nextList) {
+    if (!store?.current) return;
+    const data = store.data?.[store.current];
+    if (!data) return;
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const next = Array.isArray(nextList) ? nextList : [];
+
+    const queueBySig = new Map();
+    prev.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const sig = entrySignature(entry);
+      if (!queueBySig.has(sig)) queueBySig.set(sig, []);
+      queueBySig.get(sig).push(entry);
+    });
+    queueBySig.forEach(arr => arr.sort((a, b) => {
+      const aOrder = coerceOrderValue(a.__order) || 0;
+      const bOrder = coerceOrderValue(b.__order) || 0;
+      return aOrder - bOrder;
+    }));
+
+    let counter = coerceOrderValue(data.entryOrderCounter) || 0;
+    next.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      const sig = entrySignature(entry);
+      let matched = null;
+      const queue = queueBySig.get(sig);
+      if (queue && queue.length) {
+        matched = queue.shift();
+      }
+      if (matched) {
+        if (matched.__uid && entry.__uid !== matched.__uid) entry.__uid = matched.__uid;
+        const matchedOrder = coerceOrderValue(matched.__order);
+        if (matchedOrder !== null) entry.__order = matchedOrder;
+      }
+      if (!entry.__uid) entry.__uid = nextEntryUid();
+      const coerced = coerceOrderValue(entry.__order);
+      if (coerced === null) {
+        counter += 1;
+        entry.__order = counter;
+      } else {
+        entry.__order = coerced;
+        if (coerced > counter) counter = coerced;
+      }
+    });
+    data.entryOrderCounter = counter;
+  }
+
+  function initializeEntryMetadata(data) {
+    if (!data || typeof data !== 'object') return;
+    const list = Array.isArray(data.list) ? data.list : [];
+    let counter = coerceOrderValue(data.entryOrderCounter) || 0;
+    list.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (!entry.__uid) entry.__uid = nextEntryUid();
+      const coerced = coerceOrderValue(entry.__order);
+      if (coerced === null) {
+        counter += 1;
+        entry.__order = counter;
+      } else {
+        entry.__order = coerced;
+        if (coerced > counter) counter = coerced;
+      }
+    });
+    data.entryOrderCounter = counter;
+  }
 
   function moneyToO(...args) {
     const fn = global.moneyToO;
@@ -36,6 +433,303 @@
     return fn(...args);
   }
 
+  function toNumber(value, fallback = 0) {
+    const num = Number(value);
+    return Number.isFinite(num) ? num : fallback;
+  }
+
+  function sanitizeMoneyStruct(obj) {
+    const src = (obj && typeof obj === 'object') ? obj : {};
+    const base = defaultMoney();
+    return {
+      daler: Math.max(0, Math.floor(toNumber(src.daler, base.daler))),
+      skilling: Math.max(0, Math.floor(toNumber(src.skilling, base.skilling))),
+      'örtegar': Math.max(0, Math.floor(toNumber(src['örtegar'], base['örtegar'])))
+    };
+  }
+
+  function makeCustomIdPrefix(name, fallback = '') {
+    const primary = typeof name === 'string' ? name.trim() : '';
+    const fallbackStr = String(fallback || '').trim();
+    const cleaned = (primary || fallbackStr || 'Custom')
+      .replace(/\s+/g, '');
+    return `Custom${cleaned || 'Unnamed'}`;
+  }
+
+  const FALLBACK_WEAPON_TYPES = ['Enhandsvapen','Korta vapen','Långa vapen','Tunga vapen','Obeväpnad attack','Projektilvapen','Belägringsvapen'];
+  const FALLBACK_ARMOR_TYPES  = ['Lätt Rustning','Medeltung Rustning','Tung Rustning'];
+
+  function getSubtypeSets() {
+    const weapon = new Set();
+    const armor  = new Set();
+    const skip = new Set(['artefakt','lägre artefakt','kuriositet','skatt','hemmagjort']);
+    const normalize = (value) => {
+      if (typeof value !== 'string') return '';
+      return value.trim().toLowerCase();
+    };
+    try {
+      const db = global.DB || [];
+      db.forEach(e => {
+        const typs = e?.taggar?.typ || [];
+        if (typs.includes('Vapen')) {
+          typs.forEach(t => {
+            const key = normalize(t);
+            if (!key || key === 'vapen' || key === 'sköld' || skip.has(key)) return;
+            const label = String(t).trim();
+            if (label) weapon.add(label);
+          });
+        }
+        if (typs.includes('Rustning')) {
+          typs.forEach(t => {
+            const key = normalize(t);
+            if (!key || key === 'rustning' || skip.has(key)) return;
+            const label = String(t).trim();
+            if (label) armor.add(label);
+          });
+        }
+      });
+    } catch {}
+    if (!weapon.size) FALLBACK_WEAPON_TYPES.forEach(t => weapon.add(t));
+    if (!armor.size) FALLBACK_ARMOR_TYPES.forEach(t => armor.add(t));
+    return { weapon, armor };
+  }
+
+  function sanitizeCustomEntries(list, options = {}) {
+    const arr = Array.isArray(list) ? list : [];
+    const { usedIds, prefix } = options || {};
+    const basePrefix = typeof prefix === 'string' && prefix.trim() ? prefix.trim() : 'Custom';
+    const globalIds = usedIds instanceof Set ? usedIds : null;
+    const localIds = new Set();
+    const idMap = new Map();
+    const { weapon: weaponSubs, armor: armorSubs } = getSubtypeSets();
+    let counter = 1;
+
+    const isTaken = (id) => localIds.has(id) || (globalIds && globalIds.has(id));
+    const nextId = () => {
+      let id;
+      do { id = `${basePrefix}${counter++}`; } while (isTaken(id));
+      return id;
+    };
+
+    const sanitized = arr.map(raw => {
+      const entry = (raw && typeof raw === 'object') ? { ...raw } : {};
+
+      // Preserve stable, unique IDs; only generate when missing/colliding
+      const originalId = typeof entry.id === 'string' && entry.id.trim() ? entry.id.trim() : undefined;
+      let finalId = originalId;
+      if (!finalId || isTaken(finalId)) {
+        finalId = nextId();
+        if (originalId && originalId !== finalId) idMap.set(originalId, finalId);
+      }
+      entry.id = finalId;
+      localIds.add(finalId);
+      if (globalIds) globalIds.add(finalId);
+
+      // Core fields
+      entry.namn = typeof entry.namn === 'string' ? entry.namn.trim() : '';
+      const weight = toNumber(entry.vikt, 0);
+      entry.vikt = Number.isFinite(weight) && weight >= 0 ? weight : 0;
+      entry.grundpris = sanitizeMoneyStruct(entry.grundpris);
+
+      // Tags: ensure Hemmagjort baseline; inject base types for subtypes; treat Sköld as weapon
+      const taggar = (entry.taggar && typeof entry.taggar === 'object') ? { ...entry.taggar } : {};
+      const normalizeTypes = (vals) => {
+        const extras = new Set((vals || []).map(v => String(v).trim()).filter(Boolean));
+        extras.delete('Hemmagjort');
+        const hasWeapon = extras.has('Vapen') || extras.has('Sköld') || [...extras].some(t => weaponSubs.has(t));
+        const hasArmor  = extras.has('Rustning') || [...extras].some(t => armorSubs.has(t));
+        if (hasWeapon) extras.add('Vapen');
+        if (hasArmor) extras.add('Rustning');
+        const ordered = ['Hemmagjort'];
+        if (extras.has('Vapen')) ordered.push('Vapen');
+        if (extras.has('Rustning')) ordered.push('Rustning');
+        extras.forEach(t => { if (t !== 'Vapen' && t !== 'Rustning') ordered.push(t); });
+        return ordered;
+      };
+      if (Array.isArray(taggar.typ)) {
+        taggar.typ = normalizeTypes(taggar.typ);
+      } else if (typeof taggar.typ === 'string' && taggar.typ.trim()) {
+        taggar.typ = normalizeTypes([taggar.typ.trim()]);
+      } else {
+        taggar.typ = ['Hemmagjort'];
+      }
+      entry.taggar = taggar;
+
+      entry.beskrivning = typeof entry.beskrivning === 'string' ? entry.beskrivning.trim() : '';
+      entry.artifactEffect = entry.artifactEffect === 'xp' || entry.artifactEffect === 'corruption' ? entry.artifactEffect : '';
+
+      if (entry.bound === 'kraft' || entry.bound === 'ritual') {
+        const rawLabel = typeof entry.boundLabel === 'string' ? entry.boundLabel.trim() : '';
+        entry.boundLabel = rawLabel || (entry.bound === 'kraft' ? 'Formel' : 'Ritual');
+      } else {
+        delete entry.bound;
+        delete entry.boundLabel;
+      }
+
+      // Stats
+      const rawStat = entry.stat && typeof entry.stat === 'object' ? entry.stat : {};
+      const stat = {};
+      if (rawStat.skada !== undefined) {
+        const val = String(rawStat.skada).trim();
+        if (val) stat.skada = val;
+      }
+      if (rawStat['b\u00e4rkapacitet'] !== undefined) {
+        const num = Number(rawStat['b\u00e4rkapacitet']);
+        if (Number.isFinite(num) && num >= 0) stat['b\u00e4rkapacitet'] = Math.floor(num);
+      }
+      if (rawStat.skydd !== undefined) {
+        const val = String(rawStat.skydd).trim();
+        if (val) stat.skydd = val;
+      }
+      const rawRestr = rawStat['begränsning'] ?? rawStat.begränsning;
+      if (rawRestr !== undefined && rawRestr !== null && rawRestr !== '') {
+        const num = Number(rawRestr);
+        if (Number.isFinite(num)) stat['begränsning'] = num;
+      }
+      if (Object.keys(stat).length) entry.stat = stat; else delete entry.stat;
+
+      return entry;
+    });
+
+    return { entries: sanitized, idMap };
+  }
+
+  function collectUsedCustomIds(store, excludeId) {
+    const set = new Set();
+    if (!store || !store.data || typeof store.data !== 'object') return set;
+    Object.keys(store.data).forEach(id => {
+      if (excludeId && id === excludeId) return;
+      const customs = store.data[id]?.custom || [];
+      customs.forEach(ent => {
+        if (ent && typeof ent.id === 'string') set.add(ent.id);
+      });
+    });
+    return set;
+  }
+
+  function normalizeCharacterData(store, id, source, charMeta, usedCustomIds) {
+    const base = (source && typeof source === 'object') ? { ...source } : {};
+    if (typeof base.partyAlchemist === 'boolean') {
+      base.partyAlchemist = base.partyAlchemist ? 'Mästare' : '';
+    }
+    if (typeof base.partySmith === 'boolean') {
+      base.partySmith = base.partySmith ? 'Mästare' : '';
+    }
+    if (typeof base.partyArtefacter === 'boolean') {
+      base.partyArtefacter = base.partyArtefacter ? 'Mästare' : '';
+    }
+
+    const data = {
+      custom: [],
+      artifactEffects: { xp: 0, corruption: 0 },
+      bonusMoney: defaultMoney(),
+      savedUnusedMoney: defaultMoney(),
+      privMoney: defaultMoney(),
+      possessionMoney: defaultMoney(),
+      possessionRemoved: 0,
+      hamnskifteRemoved: [],
+      forcedDefense: '',
+      defenseSetup: defaultDefenseSetup(),
+      notes: defaultNotes(),
+      darkPastSuppressed: false,
+      nilasPopupShown: false,
+      liveMode: false,
+      ...base
+    };
+
+    let mutated = false;
+
+    if (!data.artifactEffects) {
+      data.artifactEffects = { xp: 0, corruption: 0 };
+      mutated = true;
+    }
+    if (!data.manualAdjustments) {
+      data.manualAdjustments = defaultManualAdjustments();
+      mutated = true;
+    }
+    if (data.manualAdjustments) {
+      data.manualAdjustments = { ...defaultManualAdjustments(), ...(data.manualAdjustments || {}) };
+    }
+    if (!data.bonusMoney) {
+      data.bonusMoney = defaultMoney();
+      mutated = true;
+    }
+    if (!data.savedUnusedMoney) {
+      data.savedUnusedMoney = defaultMoney();
+      mutated = true;
+    }
+    if (!data.privMoney) {
+      data.privMoney = defaultMoney();
+      mutated = true;
+    }
+    if (!data.possessionMoney) {
+      data.possessionMoney = defaultMoney();
+      mutated = true;
+    }
+    if (typeof data.liveMode !== 'boolean') {
+      data.liveMode = false;
+      mutated = true;
+    }
+    if (!data.possessionRemoved) {
+      data.possessionRemoved = 0;
+    }
+    if (!Array.isArray(data.hamnskifteRemoved)) {
+      data.hamnskifteRemoved = [];
+      mutated = true;
+    }
+    if (data.darkPastSuppressed === undefined) {
+      data.darkPastSuppressed = false;
+      mutated = true;
+    }
+    if (!data.notes) {
+      data.notes = defaultNotes();
+      mutated = true;
+    }
+    if (data.forcedDefense === undefined) {
+      data.forcedDefense = '';
+      mutated = true;
+    }
+    if (!data.defenseSetup) {
+      data.defenseSetup = defaultDefenseSetup();
+      mutated = true;
+    } else {
+      data.defenseSetup = normalizeDefenseSetup(data.defenseSetup);
+    }
+    if (data.nilasPopupShown === undefined) {
+      data.nilasPopupShown = false;
+      mutated = true;
+    }
+
+    const chars = Array.isArray(store.characters) ? store.characters : [];
+    const charInfo = charMeta || chars.find(c => c && c.id === id) || null;
+    const prefix = makeCustomIdPrefix(charInfo?.name, id);
+    const beforeCustom = JSON.stringify(data.custom || []);
+    const { entries: sanitizedCustom, idMap } = sanitizeCustomEntries(data.custom, { usedIds: usedCustomIds, prefix });
+    if (JSON.stringify(sanitizedCustom) !== beforeCustom) {
+      mutated = true;
+    }
+    data.custom = sanitizedCustom;
+
+    const beforeInventory = JSON.stringify(data.inventory || []);
+    const expandedInventory = expandInventory(data.inventory, data.custom, idMap);
+    if (JSON.stringify(expandedInventory) !== beforeInventory) {
+      mutated = true;
+    }
+    data.inventory = expandedInventory;
+
+      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+        const updatedArtifacts = data.revealedArtifacts.map(n => idMap.get(n) || n);
+        if (JSON.stringify(updatedArtifacts) !== JSON.stringify(data.revealedArtifacts)) {
+          data.revealedArtifacts = [...new Set(updatedArtifacts)];
+          mutated = true;
+        }
+      }
+
+      initializeEntryMetadata(data);
+
+      return { data, mutated };
+    }
+
   /* ---------- 1. Grund­struktur ---------- */
   function emptyStore() {
     return {
@@ -47,78 +741,106 @@
       filterUnion: false,
       compactEntries: true,
       onlySelected: false,
-      recentSearches: []
+      recentSearches: [],
+      liveMode: false,
+      entrySort: ENTRY_SORT_DEFAULT
     };
   }
 
   /* ---------- 2. Load / Save ---------- */
   function load() {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      const parsed = raw ? JSON.parse(raw) : emptyStore();
-      const store = { ...emptyStore(), ...parsed };
-      // Säkerställ att folders alltid finns
-      if (!Array.isArray(store.folders)) store.folders = [];
-      // Säkerställ systemmapp "Standard" och migrera ev. karaktärer
-      ensureSystemFolderAndMigrate(store);
-      // default aktiv mapp
-      if (!store.activeFolder || store.activeFolder === '') store.activeFolder = 'ALL';
-      if (store.data && typeof store.data === 'object') {
+      const metaRaw = localStorage.getItem(STORAGE_META_KEY);
+      const legacyRaw = localStorage.getItem(STORAGE_KEY);
+
+      if (metaRaw) {
+        const metaParsed = JSON.parse(metaRaw);
+        const metaHasLiveMode = Object.prototype.hasOwnProperty.call(metaParsed || {}, 'liveMode');
+        const store = { ...emptyStore(), ...metaParsed };
+        store.data = {};
+        const chars = Array.isArray(store.characters) ? store.characters : [];
+        const usedCustomIds = new Set();
+        const mutatedIds = new Set();
+        chars.forEach(char => {
+          if (!char || !char.id) return;
+          let charData = {};
+          try {
+            const raw = localStorage.getItem(charStorageKey(char.id));
+            charData = raw ? JSON.parse(raw) : {};
+          } catch {}
+          const { data, mutated } = normalizeCharacterData(store, char.id, charData, char, usedCustomIds);
+          store.data[char.id] = data;
+          if (mutated) mutatedIds.add(char.id);
+        });
+
+        let metaMutated = false;
+        if (!Array.isArray(store.folders)) {
+          store.folders = [];
+          metaMutated = true;
+        }
+        if (!store.activeFolder || store.activeFolder === '') {
+          store.activeFolder = 'ALL';
+          metaMutated = true;
+        }
+        metaMutated = ensureSystemFolderAndMigrate(store) || metaMutated;
+
+        const hasCurrent = Boolean(store.current);
+        const currentLive = hasCurrent
+          ? Boolean(store.data?.[store.current]?.liveMode)
+          : Boolean(store.liveMode);
+
+        if (!metaHasLiveMode) {
+          const normalized = Boolean(store.liveMode);
+          store.liveMode = hasCurrent ? currentLive : normalized;
+          metaMutated = true;
+        } else {
+          const metaLive = Boolean(store.liveMode);
+          if (hasCurrent && metaLive !== currentLive) {
+            store.liveMode = currentLive;
+            metaMutated = true;
+          } else {
+            store.liveMode = metaLive;
+          }
+        }
+
+        store.entrySort = normalizeEntrySort(store.entrySort);
+
+        if (metaMutated) persistMeta(store);
+        mutatedIds.forEach(id => persistCharacter(store, id));
+        return store;
+      }
+
+      if (legacyRaw) {
+        const parsed = JSON.parse(legacyRaw) || emptyStore();
+        const store = { ...emptyStore(), ...parsed };
+        if (!store.data || typeof store.data !== 'object') store.data = {};
+        const chars = Array.isArray(store.characters) ? store.characters : [];
+        const usedCustomIds = new Set();
         Object.keys(store.data).forEach(id => {
-          const cur = store.data[id] || {};
-          if (typeof cur.partyAlchemist === 'boolean') {
-            cur.partyAlchemist = cur.partyAlchemist ? 'Mästare' : '';
-          }
-          if (typeof cur.partySmith === 'boolean') {
-            cur.partySmith = cur.partySmith ? 'Mästare' : '';
-          }
-          if (typeof cur.partyArtefacter === 'boolean') {
-            cur.partyArtefacter = cur.partyArtefacter ? 'Mästare' : '';
-          }
-          store.data[id] = {
-            custom: [],
-            artifactEffects: { xp:0, corruption:0 },
-            bonusMoney: defaultMoney(),
-            privMoney: defaultMoney(),
-            possessionMoney: defaultMoney(),
-            possessionRemoved: 0,
-            hamnskifteRemoved: [],
-            forcedDefense: '',
-            notes: defaultNotes(),
-            ...cur
-          };
-          if(!store.data[id].artifactEffects){
-            store.data[id].artifactEffects = { xp:0, corruption:0 };
-          }
-          if(!store.data[id].bonusMoney){
-            store.data[id].bonusMoney = defaultMoney();
-          }
-          if(!store.data[id].privMoney){
-            store.data[id].privMoney = defaultMoney();
-          }
-          if(!store.data[id].possessionMoney){
-            store.data[id].possessionMoney = defaultMoney();
-          }
-          if(!store.data[id].possessionRemoved){
-            store.data[id].possessionRemoved = 0;
-          }
-          if(!Array.isArray(store.data[id].hamnskifteRemoved)){
-            store.data[id].hamnskifteRemoved = [];
-          }
-          if(store.data[id].darkPastSuppressed === undefined){
-            store.data[id].darkPastSuppressed = false;
-          }
-          if(!store.data[id].notes){
-            store.data[id].notes = defaultNotes();
-          }
-          if(store.data[id].forcedDefense === undefined){
-            store.data[id].forcedDefense = '';
-          }
-          if(store.data[id].nilasPopupShown === undefined){
-            store.data[id].nilasPopupShown = false;
+          const meta = chars.find(c => c && c.id === id) || null;
+          const { data } = normalizeCharacterData(store, id, store.data[id] || {}, meta, usedCustomIds);
+          store.data[id] = data;
+        });
+        if (!Array.isArray(store.folders)) store.folders = [];
+        if (!store.activeFolder || store.activeFolder === '') store.activeFolder = 'ALL';
+        ensureSystemFolderAndMigrate(store);
+        const legacyCharIds = Object.keys(store.data || {});
+        const anyLegacyLive = legacyCharIds.some(id => Boolean(store.data[id]?.liveMode));
+        store.liveMode = anyLegacyLive;
+        store.entrySort = normalizeEntrySort(store.entrySort);
+        legacyCharIds.forEach(id => {
+          if (store.data[id]) {
+            store.data[id].liveMode = Boolean(store.liveMode);
           }
         });
+        persistMeta(store);
+        Object.keys(store.data).forEach(id => persistCharacter(store, id));
+        try { localStorage.removeItem(STORAGE_KEY); } catch {}
+        return store;
       }
+
+      const store = emptyStore();
+      persistMeta(store);
       return store;
     } catch {
       return emptyStore();
@@ -127,39 +849,45 @@
 
   // Skapa/finn systemmappen "Standard" och migrera karaktärer utan giltig mapp
   function ensureSystemFolderAndMigrate(store){
+    let mutated = false;
     try {
-      store.folders = Array.isArray(store.folders) ? store.folders : [];
-      // Hitta befintlig systemmapp eller mapp med namnet "Standard"
+      const beforeFolders = JSON.stringify(Array.isArray(store.folders) ? store.folders : []);
+      const beforeChars = JSON.stringify(Array.isArray(store.characters) ? store.characters : []);
+
+      store.folders = Array.isArray(store.folders) ? [...store.folders] : [];
+
       let standard = store.folders.find(f => f && (f.system === true));
       if (!standard) {
         standard = store.folders.find(f => (f?.name === 'Standard'));
       }
       if (!standard) {
-        // Skapa ny systemmapp
-        const id = 'fd-standard-' + Math.floor(Math.random()*1000000);
+        const id = 'fd-standard-' + Math.floor(Math.random() * 1000000);
         standard = { id, name: 'Standard', order: 0, system: true };
         store.folders.unshift(standard);
       } else {
-        // Markera som systemmapp om den inte redan är det
-        standard.system = true;
+        if (!standard.system) {
+          standard.system = true;
+        }
         if (standard.order === undefined) standard.order = 0;
       }
-      // Migrera karaktärer som saknar giltig mapp till Standard
+
       const folderIds = new Set(store.folders.map(f => f.id));
-      store.characters = (store.characters || []).map(c => {
-        const fid = c?.folderId || '';
+      const chars = Array.isArray(store.characters) ? store.characters : [];
+      const migratedChars = chars.map(c => {
+        if (!c || !c.id) return c;
+        const fid = c.folderId || '';
         if (!fid || !folderIds.has(fid)) {
           return { ...c, folderId: standard.id };
         }
         return c;
       });
-      // Spara direkt så att UI ser korrekta data
-      save(store);
-    } catch {}
-  }
+      store.characters = migratedChars;
 
-  function save(store) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(store));
+      const afterFolders = JSON.stringify(store.folders);
+      const afterChars = JSON.stringify(store.characters);
+      mutated = mutated || afterFolders !== beforeFolders || afterChars !== beforeChars;
+    } catch {}
+    return mutated;
   }
 
   function genId() {
@@ -174,17 +902,24 @@
   function migrateInventoryIds(store) {
     try {
       if (!store.data || typeof store.data !== 'object') return;
-      let changed = false;
-      Object.values(store.data).forEach(data => {
+      const changedIds = new Set();
+      Object.entries(store.data).forEach(([id, data]) => {
         const custom = data.custom || [];
-        custom.forEach(c => { if (!c.id) { c.id = genId(); changed = true; } });
+        custom.forEach(c => {
+          if (!c.id) {
+            c.id = genId();
+            changedIds.add(id);
+          }
+        });
         const migrateRow = row => {
           if (!row || typeof row !== 'object') return;
           const entry = custom.find(e => e.id === row.id || e.namn === row.name)
-            || (global.DB || []).find(e => e.id === row.id || e.namn === row.name);
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: row.id, name: row.name })
+              : null);
           if (entry) {
-            if (row.id !== entry.id) { row.id = entry.id; changed = true; }
-            if (row.name !== entry.namn) { row.name = entry.namn; changed = true; }
+            if (row.id !== entry.id) { row.id = entry.id; changedIds.add(id); }
+            if (row.name !== entry.namn) { row.name = entry.namn; changedIds.add(id); }
           }
           if (Array.isArray(row.contains)) row.contains.forEach(migrateRow);
         };
@@ -192,23 +927,22 @@
         if (Array.isArray(data.revealedArtifacts)) {
           const updated = data.revealedArtifacts.map(n => {
             const ent = custom.find(e => e.id === n || e.namn === n)
-              || (global.DBIndex && global.DBIndex[n])
-              || (global.DB && global.DB[n]);
+              || (typeof global.lookupEntry === 'function'
+                ? global.lookupEntry({ id: n, name: n })
+                : null);
             return ent?.id || n;
           });
           if (JSON.stringify(updated) !== JSON.stringify(data.revealedArtifacts)) {
             data.revealedArtifacts = [...new Set(updated)];
-            changed = true;
+            changedIds.add(id);
           }
         }
       });
-      if (changed) save(store);
+      changedIds.forEach(charId => persistCharacter(store, charId));
     } catch {}
   }
 
   /* ---------- 2b. Senaste sökningar ---------- */
-  const MAX_RECENT_SEARCHES = 10;
-
   function getRecentSearches(store) {
     try {
       const arr = Array.isArray(store.recentSearches) ? store.recentSearches : [];
@@ -228,7 +962,7 @@
     const filtered = cur.filter(x => String(x || '').toLowerCase() !== t.toLowerCase());
     filtered.unshift(t);
     store.recentSearches = filtered.slice(0, MAX_RECENT_SEARCHES);
-    save(store);
+    persistMeta(store);
   }
 
   /* ---------- 3. Förmåge­lista per karaktär ---------- */
@@ -236,6 +970,26 @@
     if (!store.current) return [];
     const list = store.data[store.current]?.list || [];
     return list.map(x => ({ ...x }));
+  }
+
+  function normalizeRaceName(value) {
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    return trimmed || '';
+  }
+
+  function getCharacterRaces(store) {
+    if (!store || !store.current) return { base: '', blood: [] };
+    const data = store.data?.[store.current] || {};
+    const list = Array.isArray(data.list) ? data.list : [];
+    const baseEntry = list.find(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Ras'));
+    const base = normalizeRaceName(baseEntry?.namn);
+    const blood = Array.from(new Set(list
+      .filter(entry => entry && entry.namn === 'Blodsband' && entry.race)
+      .map(entry => normalizeRaceName(entry.race))
+      .filter(Boolean)
+    ));
+    return { base, blood };
   }
 
   function applyDarkBloodEffects(store, list) {
@@ -246,7 +1000,7 @@
 
     if (hasDark) {
       if (idxBest < 0 && !suppressed) {
-        const entry = DB.find(x => x.namn === 'Mörkt förflutet');
+        const entry = lookupEntry({ name: 'Mörkt förflutet' });
         if (entry) list.push({ ...entry });
       }
     }
@@ -332,7 +1086,7 @@
     needed.forEach(base => {
       const hamName = hamNames[base];
       if (!customs.some(c => c.namn === hamName)) {
-        const entry = DB.find(e => e.namn === base);
+        const entry = lookupEntry({ id: base, name: base });
         if (entry) customs.push({ ...entry, namn: hamName, form: 'beast' });
       }
       const idx = list.findIndex(it => it.namn === hamName);
@@ -350,7 +1104,7 @@
     if (!entry) return [];
     let name = entry.namn || entry;
     name = HAMNSKIFTE_BASE[name] || name;
-    const ent = typeof entry === 'string' ? DB.find(x => x.namn === name) : entry;
+    const ent = typeof entry === 'string' ? lookupEntry({ id: entry, name }) : entry;
     if (!ent) return [];
     const out = [];
 
@@ -405,7 +1159,9 @@
 
   function setCurrentList(store, list) {
     if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
     const prev = store.data[store.current]?.list || [];
+    ensureListEntryMetadata(store, prev);
     // Hantera undertryckning av Mörkt förflutet när Mörkt blod finns kvar
     try {
       const hadDark = prev.some(x => x.namn === 'Mörkt blod');
@@ -428,7 +1184,7 @@
     enforceDwarf(list);
     enforcePackAnimal(list);
     applyHamnskifteTraits(store, list);
-    store.data[store.current] = store.data[store.current] || {};
+    syncEntryMetadataFromPrev(store, prev, list);
     store.data[store.current].list = list;
     const hadPriv = prev.some(x => x.namn === 'Privilegierad');
     const hasPriv = list.some(x => x.namn === 'Privilegierad');
@@ -454,8 +1210,9 @@
       'örtegar': store.data[store.current].privMoney['örtegar'] + store.data[store.current].possessionMoney['örtegar']
     });
     store.data[store.current].bonusMoney = total;
+    ensureListAppliedDigests(list);
 
-   save(store);
+    persistCurrentCharacter(store);
   }
 
   /* ---------- 4. Inventarie­funktioner ---------- */
@@ -469,7 +1226,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].inventory = inv;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getCustomEntries(store) {
@@ -481,8 +1238,25 @@
   function setCustomEntries(store, list) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].custom = list;
-    save(store);
+    const usedIds = collectUsedCustomIds(store, store.current);
+    const char = (store.characters || []).find(c => c.id === store.current);
+    const prefix = makeCustomIdPrefix(char?.name, store.current);
+    const { entries: sanitized, idMap } = sanitizeCustomEntries(list, { usedIds, prefix });
+    store.data[store.current].custom = sanitized;
+    bumpRuntimeVersion('custom');
+    store.data[store.current].inventory = expandInventory(
+      store.data[store.current].inventory,
+      sanitized,
+      idMap
+    );
+    if (idMap.size && Array.isArray(store.data[store.current].revealedArtifacts)) {
+      store.data[store.current].revealedArtifacts = [...new Set(
+        store.data[store.current].revealedArtifacts.map(n => idMap.get(n) || n)
+      )];
+    }
+    if (idMap.size) bumpRuntimeVersion('revealed');
+    persistCurrentCharacter(store);
+    return { entries: sanitized, idMap };
   }
 
   /* ---------- 5. Pengahantering ---------- */
@@ -492,6 +1266,61 @@
 
   function defaultArtifactEffects() {
     return { xp: 0, corruption: 0 };
+  }
+
+  function defaultManualAdjustments() {
+    return {
+      xp: 0,
+      corruption: 0,
+      toughness: 0,
+      pain: 0,
+      capacity: 0
+    };
+  }
+
+  function defaultDefenseSetup() {
+    return {
+      enabled: false,
+      trait: '',
+      armor: null,
+      weapons: [],
+      dancingTrait: '',
+      dancingWeapon: null
+    };
+  }
+
+  function normalizeDefensePath(path) {
+    if (!Array.isArray(path)) return [];
+    const nums = path.map(n => Number(n)).filter(n => Number.isInteger(n) && n >= 0);
+    return nums.length ? nums : [];
+  }
+
+  function normalizeDefenseItem(item) {
+    if (!item || typeof item !== 'object') return null;
+    const normalizedPath = normalizeDefensePath(item.path);
+    const id = typeof item.id === 'string' ? item.id : undefined;
+    const name = typeof item.name === 'string' ? item.name : undefined;
+    if (!normalizedPath.length && !id && !name) return null;
+    return {
+      path: normalizedPath,
+      id,
+      name
+    };
+  }
+
+  function normalizeDefenseSetup(setup) {
+    const base = { ...defaultDefenseSetup(), ...(setup || {}) };
+    const weapons = Array.isArray(base.weapons)
+      ? base.weapons.map(normalizeDefenseItem).filter(Boolean)
+      : [];
+    return {
+      enabled: Boolean(base.enabled),
+      trait: typeof base.trait === 'string' ? base.trait : '',
+      armor: normalizeDefenseItem(base.armor),
+      weapons,
+      dancingTrait: typeof base.dancingTrait === 'string' ? base.dancingTrait : '',
+      dancingWeapon: normalizeDefenseItem(base.dancingWeapon)
+    };
   }
 
   function getMoney(store) {
@@ -504,7 +1333,49 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].money = { ...defaultMoney(), ...money };
-    save(store);
+    persistCurrentCharacter(store);
+  }
+
+  function getSavedUnusedMoney(store) {
+    if (!store.current) return defaultMoney();
+    const data = store.data[store.current] || {};
+    return { ...defaultMoney(), ...(data.savedUnusedMoney || {}) };
+  }
+
+  function setSavedUnusedMoney(store, money) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    const normalized = normalizeMoney(money);
+    store.data[store.current].savedUnusedMoney = { ...defaultMoney(), ...normalized };
+    persistCurrentCharacter(store);
+  }
+
+  function getLiveMode(store) {
+    if (!store || typeof store !== 'object') return false;
+    if (store.current && store.data && typeof store.data === 'object') {
+      const currentData = store.data[store.current];
+      if (currentData && typeof currentData.liveMode === 'boolean') {
+        return currentData.liveMode;
+      }
+    }
+    return typeof store.liveMode === 'boolean' ? store.liveMode : false;
+  }
+
+  function setLiveMode(store, value) {
+    if (!store || typeof store !== 'object') return;
+    const next = Boolean(value);
+    if (store.current) {
+      store.data = store.data || {};
+      const currentData = store.data[store.current] = store.data[store.current] || {};
+      if (currentData.liveMode !== next) {
+        currentData.liveMode = next;
+        persistCurrentCharacter(store);
+      }
+    }
+    if (store.liveMode !== next) {
+      store.liveMode = next;
+    }
+    persistMeta(store);
   }
 
   function getBonusMoney(store) {
@@ -517,7 +1388,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].bonusMoney = { ...defaultMoney(), ...money };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPrivMoney(store) {
@@ -536,7 +1407,7 @@
       'örtegar': (money['örtegar'] || 0) + ((store.data[store.current].possessionMoney || {})['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPossessionMoney(store) {
@@ -555,7 +1426,7 @@
       'örtegar': (store.data[store.current].privMoney || {})['örtegar'] + (money['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function incrementPossessionRemoved(store) {
@@ -563,7 +1434,7 @@
     store.data[store.current] = store.data[store.current] || {};
     const cur = Number(store.data[store.current].possessionRemoved || 0) + 1;
     store.data[store.current].possessionRemoved = cur;
-    save(store);
+    persistCurrentCharacter(store);
     return cur;
   }
 
@@ -571,7 +1442,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].possessionRemoved = 0;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getHamnskifteRemoved(store) {
@@ -584,7 +1455,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].hamnskifteRemoved = arr;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function duplicateCharacter(store, sourceId) {
@@ -592,10 +1463,20 @@
     const char = store.characters.find(c => c.id === sourceId);
     if (!char) return null;
     const newId = makeCharId(store);
-    store.characters.push({ id: newId, name: `${char.name} (kopia)`, folderId: char.folderId || '' });
+    const newName = `${char.name} (kopia)`;
+    store.characters.push({ id: newId, name: newName, folderId: char.folderId || '' });
     const data = store.data[sourceId] ? JSON.parse(JSON.stringify(store.data[sourceId])) : {};
+    const usedIds = collectUsedCustomIds(store, newId);
+    const prefix = makeCustomIdPrefix(newName, newId);
+    const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
+    data.custom = custom;
+    data.inventory = expandInventory(data.inventory, custom, idMap);
+    if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+      data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
+    }
     store.data[newId] = data;
-    save(store);
+    persistMeta(store);
+    persistCharacter(store, newId);
     return newId;
   }
 
@@ -604,7 +1485,19 @@
     const char = store.characters.find(c => c.id === charId);
     if (!char) return;
     char.name = newName;
-    save(store);
+    const data = store.data?.[charId];
+    if (data) {
+      const usedIds = collectUsedCustomIds(store, charId);
+      const prefix = makeCustomIdPrefix(newName, charId);
+      const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
+      data.custom = custom;
+      data.inventory = expandInventory(data.inventory, custom, idMap);
+      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+        data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
+      }
+    }
+    persistMeta(store);
+    if (store.data[charId]) persistCharacter(store, charId);
   }
 
   function deleteCharacter(store, charId) {
@@ -612,14 +1505,17 @@
     store.characters = store.characters.filter(c => c.id !== charId);
     delete store.data[charId];
     if (store.current === charId) store.current = '';
-    save(store);
+    persistMeta(store);
+    persistCharacter(store, charId);
   }
 
   function deleteAllCharacters(store) {
+    const prevIds = Array.isArray(store.characters) ? store.characters.map(c => c.id).filter(Boolean) : [];
     store.characters = [];
     store.data = {};
     store.current = '';
-    save(store);
+    persistMeta(store);
+    prevIds.forEach(id => persistCharacter(store, id));
   }
 
   // Radera alla karaktärer i en specifik mapp
@@ -635,7 +1531,8 @@
       store.characters = (store.characters || []).filter(c => c && !idSet.has(c.id));
       toDelete.forEach(id => { try { delete store.data[id]; } catch {} });
       if (store.current && idSet.has(store.current)) store.current = '';
-      save(store);
+      persistMeta(store);
+      toDelete.forEach(id => persistCharacter(store, id));
       return toDelete.length;
     } catch {
       return 0;
@@ -664,7 +1561,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partySmith = level || '';
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPartyAlchemist(store) {
@@ -679,7 +1576,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyAlchemist = level || '';
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getPartyArtefacter(store) {
@@ -694,7 +1591,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyArtefacter = level || '';
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function getDefenseTrait(store) {
@@ -707,20 +1604,63 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].forcedDefense = trait || '';
-    save(store);
+    persistCurrentCharacter(store);
+  }
+
+  function getDefenseSetup(store) {
+    if (!store.current) return defaultDefenseSetup();
+    const data = store.data[store.current] || {};
+    return normalizeDefenseSetup(data.defenseSetup);
+  }
+
+  function setDefenseSetup(store, setup) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    store.data[store.current].defenseSetup = normalizeDefenseSetup(setup);
+    persistCurrentCharacter(store);
   }
 
   function getArtifactEffects(store) {
     if (!store.current) return defaultArtifactEffects();
     const data = store.data[store.current] || {};
-    return { ...defaultArtifactEffects(), ...(data.artifactEffects || {}) };
+    const auto = { ...defaultArtifactEffects(), ...(data.artifactEffects || {}) };
+    return {
+      xp: Number(auto.xp || 0),
+      corruption: Number(auto.corruption || 0)
+    };
   }
 
   function setArtifactEffects(store, eff) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].artifactEffects = { ...defaultArtifactEffects(), ...(eff || {}) };
-    save(store);
+    persistCurrentCharacter(store);
+  }
+
+  function getManualAdjustments(store) {
+    if (!store.current) return defaultManualAdjustments();
+    const data = store.data[store.current] || {};
+    const manual = { ...defaultManualAdjustments(), ...(data.manualAdjustments || {}) };
+    return {
+      xp: Number(manual.xp || 0),
+      corruption: Number(manual.corruption || 0),
+      toughness: Number(manual.toughness || 0),
+      pain: Number(manual.pain || 0),
+      capacity: Number(manual.capacity || 0)
+    };
+  }
+
+  function setManualAdjustments(store, adj) {
+    if (!store.current) return;
+    store.data[store.current] = store.data[store.current] || {};
+    const next = { ...defaultManualAdjustments(), ...(adj || {}) };
+    next.xp = Number(next.xp || 0);
+    next.corruption = Number(next.corruption || 0);
+    next.toughness = Number(next.toughness || 0);
+    next.pain = Number(next.pain || 0);
+    next.capacity = Number(next.capacity || 0);
+    store.data[store.current].manualAdjustments = next;
+    persistCurrentCharacter(store);
   }
 
   function getFilterUnion(store) {
@@ -729,7 +1669,7 @@
 
   function setFilterUnion(store, val) {
     store.filterUnion = Boolean(val);
-    save(store);
+    persistMeta(store);
   }
 
   function getCompactEntries(store) {
@@ -738,7 +1678,16 @@
 
   function setCompactEntries(store, val) {
     store.compactEntries = Boolean(val);
-    save(store);
+    persistMeta(store);
+  }
+
+  function getEntrySort(store) {
+    return normalizeEntrySort(store?.entrySort);
+  }
+
+  function setEntrySort(store, val) {
+    store.entrySort = normalizeEntrySort(val);
+    persistMeta(store);
   }
 
   function getOnlySelected(store) {
@@ -747,7 +1696,7 @@
 
   function setOnlySelected(store, val) {
     store.onlySelected = Boolean(val);
-    save(store);
+    persistMeta(store);
   }
 
   function getRevealedArtifacts(store) {
@@ -762,7 +1711,8 @@
     const set = new Set(store.data[store.current].revealedArtifacts || []);
     set.add(id);
     store.data[store.current].revealedArtifacts = [...set];
-    save(store);
+    persistCurrentCharacter(store);
+    bumpRuntimeVersion('revealed');
   }
 
   function removeRevealedArtifact(store, id) {
@@ -770,7 +1720,8 @@
     store.data[store.current] = store.data[store.current] || {};
     const list = store.data[store.current].revealedArtifacts || [];
     store.data[store.current].revealedArtifacts = list.filter(n => n !== id);
-    save(store);
+    persistCurrentCharacter(store);
+    bumpRuntimeVersion('revealed');
   }
 
   function clearRevealedArtifacts(store) {
@@ -794,17 +1745,20 @@
     const collect = arr => {
         arr.forEach(row => {
           const entry = (getCustomEntries(store).find(e => e.id === row.id || e.namn === row.name))
-            || (global.DB || []).find(e => e.id === row.id || e.namn === row.name) || {};
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: row.id, name: row.name })
+              : {})
+            || {};
           const tagTyp = entry.taggar?.typ || [];
           if (isHiddenTags(tagTyp) && entry.id) keep.add(entry.id);
           if (Array.isArray(row.contains)) collect(row.contains);
         });
       };
     collect(getInventory(store));
-
     const cur = getRevealedArtifacts(store);
     store.data[store.current].revealedArtifacts = cur.filter(n => keep.has(n));
-    save(store);
+    bumpRuntimeVersion('revealed');
+    persistCurrentCharacter(store);
   }
 
   function getNilasPopupSeen(store) {
@@ -817,7 +1771,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].nilasPopupShown = Boolean(val);
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   function normalizeMoney(m) {
@@ -848,7 +1802,7 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].traits = { ...defaultTraits(), ...traits };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   /* ---------- 6b. Anteckningar ---------- */
@@ -879,7 +1833,7 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].notes = { ...defaultNotes(), ...notes };
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   /* ---------- 6. XP-hantering ---------- */
@@ -895,10 +1849,26 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].baseXp = Number(xp) || 0;
-    save(store);
+    persistCurrentCharacter(store);
   }
 
   const RITUAL_COST = 10;
+  const ADVANTAGE_STEP_COST = 5;
+
+  const ELITE_TO_BASE_MAGIC = {
+    'Templár': 'Teurgi',
+    'Stavmagiker': 'Stavmagiker',
+    'Andebesvärjare': 'Häxkonst',
+    'Blodvadare': 'Häxkonst',
+    'Demonolog': 'Svartkonst',
+    'Grönvävare': 'Häxkonst',
+    'Illusionist': 'Ordensmagi',
+    'Inkvisitor': 'Teurgi',
+    'Mentalist': 'Ordensmagi',
+    'Nekromantiker': 'Svartkonst',
+    'Pyromantiker': 'Ordensmagi',
+    'Själasörjare': 'Teurgi'
+  };
 
   const TRAD_TO_SKILL = {
     'Häxkonst': 'Häxkonster',
@@ -973,7 +1943,9 @@ function defaultTraits() {
 
   function monsterStackLimit(list, name) {
     const base = HAMNSKIFTE_BASE[name] || name;
-    const entry = window.DBIndex?.[base];
+    const entry = typeof global.lookupEntry === 'function'
+      ? global.lookupEntry({ id: base, name: base })
+      : null;
     if (!entry || !isMonstrousTrait(entry)) return 3;
     return 1;
   }
@@ -982,17 +1954,25 @@ function defaultTraits() {
     let cor = 0;
     const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
     list.forEach(it => {
+      const levelValue = LEVEL_IDX[it.nivå || 'Novis'] || 0;
+      if (it.namn === 'Reningskraft') {
+        cor += levelValue;
+        return;
+      }
       const types = it.taggar?.typ || [];
       if (!['Mystisk kraft', 'Ritual'].some(t => types.includes(t))) return;
       if (isDwarf && types.includes('Mystisk kraft') && it.namn === 'Vedergällning') return;
       const trads = explodeTags(it.taggar?.ark_trad);
       let lvl = 0;
       trads.forEach(tr => {
-        const a = TRAD_TO_SKILL[tr];
-        if (a) lvl = Math.max(lvl, abilityLevel(list, a));
+        const baseTrad = ELITE_TO_BASE_MAGIC[tr] || tr;
+        const abilityName = TRAD_TO_SKILL[baseTrad] || TRAD_TO_SKILL[tr];
+        if (abilityName) {
+          lvl = Math.max(lvl, abilityLevel(list, abilityName));
+        }
       });
       if (types.includes('Mystisk kraft')) {
-        const plvl = LEVEL_IDX[it.nivå || 'Novis'] || 1;
+        const plvl = levelValue || 1;
         if (plvl > lvl) cor += (plvl - lvl);
       } else if (types.includes('Ritual')) {
         if (lvl < 1) cor++;
@@ -1010,25 +1990,37 @@ function defaultTraits() {
 
   function calcUsedXP(list, extra) {
     let xp = 0;
+    const entries = Array.isArray(list) ? list : [];
+    const advantageCounts = new Map();
 
-    list.forEach(item => {
+    entries.forEach(item => {
+      if (!item || typeof item !== 'object') return;
       const types = (item.taggar?.typ || []).map(t => t.toLowerCase());
 
       if (item.nivåer && ['mystisk kraft','förmåga','särdrag','monstruöst särdrag']
           .some(t => types.includes(t))) {
-        let cost = isFreeMonsterTrait(list, item)
+        let cost = isFreeMonsterTrait(entries, item)
           ? 0
           : (XP_LADDER[item.nivå || 'Novis'] || 0);
-        cost = Math.max(0, cost - monsterTraitDiscount(list, item));
+        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
         xp += cost;
 
       } else if (types.includes('monstruöst särdrag')) {
-        let cost = isFreeMonsterTrait(list, item) ? 0 : RITUAL_COST;
-        cost = Math.max(0, cost - monsterTraitDiscount(list, item));
+        let cost = isFreeMonsterTrait(entries, item) ? 0 : RITUAL_COST;
+        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
         xp += cost;
       }
-      if (types.includes('fördel')) xp += 5;
+
+      const advKey = getAdvantageKey(item, types);
+      if (advKey) {
+        advantageCounts.set(advKey, (advantageCounts.get(advKey) || 0) + 1);
+      }
+
       if (types.includes('ritual')) xp += RITUAL_COST;
+    });
+
+    advantageCounts.forEach(count => {
+      xp += advantageTotalCost(count);
     });
 
     xp += extra?.xp || 0;
@@ -1051,8 +2043,82 @@ function defaultTraits() {
     return getDisadvantages(list).length;
   }
 
+  function entryMembershipKey(entry) {
+    const sig = entrySignature(entry);
+    if (sig) return sig;
+    if (entry && entry.__uid) return `uid:${entry.__uid}`;
+    return null;
+  }
+
   function disadvantagesWithXP(list) {
-    return getDisadvantages(list).slice(0,5);
+    const disadvantages = getDisadvantages(list);
+    if (disadvantages.length <= 5) return disadvantages;
+    const sorted = disadvantages
+      .map((entry, index) => ({ entry, index }))
+      .sort((a, b) => {
+        const aOrder = coerceOrderValue(a.entry?.__order);
+        const bOrder = coerceOrderValue(b.entry?.__order);
+        if (aOrder !== null && bOrder !== null && aOrder !== bOrder) {
+          return aOrder - bOrder;
+        }
+        if (aOrder !== null && bOrder === null) return -1;
+        if (bOrder !== null && aOrder === null) return 1;
+        return a.index - b.index;
+      })
+      .map(item => item.entry);
+    return sorted.slice(0, 5);
+  }
+
+  function getAdvantageKey(entry, types) {
+    if (!entry || typeof entry !== 'object') return null;
+    const rawTypes = Array.isArray(types)
+      ? types
+      : (Array.isArray(entry?.taggar?.typ)
+        ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
+        : []);
+    if (!rawTypes.some(t => t === 'fördel')) return null;
+    const idStr = typeof entry.id === 'string' ? entry.id.trim() : '';
+    const nameStr = typeof entry.namn === 'string' ? entry.namn.trim() : '';
+    const id = idStr ? idStr.toLowerCase() : '';
+    const name = nameStr ? nameStr.toLowerCase() : '';
+    const extras = ['trait', 'race']
+      .map(key => {
+        const value = entry[key];
+        if (value === undefined || value === null) return '';
+        const str = String(value).trim();
+        return str ? `${key}:${str.toLowerCase()}` : '';
+      })
+      .filter(Boolean);
+    if (!id && !name && !extras.length) return null;
+    const parts = [];
+    if (id) parts.push(id);
+    if (name) parts.push(name);
+    if (extras.length) parts.push(...extras);
+    return parts.join('#');
+  }
+
+  function advantageTotalCost(count) {
+    const qty = Number(count) || 0;
+    if (qty <= 0) return 0;
+    if (qty <= 1) return ADVANTAGE_STEP_COST;
+    if (qty === 2) return ADVANTAGE_STEP_COST * 2;
+    return ADVANTAGE_STEP_COST * 3;
+  }
+
+  function resolveAdvantageCount(entry, list, types) {
+    const key = getAdvantageKey(entry, types);
+    if (!key) return null;
+    const arr = Array.isArray(list) ? list : [];
+    let count = 0;
+    let includesEntry = false;
+    arr.forEach(item => {
+      if (getAdvantageKey(item) === key) {
+        count += 1;
+        if (!includesEntry && item === entry) includesEntry = true;
+      }
+    });
+    const effectiveCount = includesEntry ? count : count + 1;
+    return { key, count, effectiveCount };
   }
 
   function calcEntryXP(entry, list) {
@@ -1061,10 +2127,12 @@ function defaultTraits() {
       const hasDark = (list || []).some(x => x.namn === 'Mörkt blod');
       if (entry.namn === 'Mörkt förflutet' && hasDark) return 0;
       const disXp = disadvantagesWithXP(list || []);
-      if ((list || []).includes(entry)) {
-        return disXp.includes(entry) ? -5 : 0;
+      const entries = Array.isArray(list) ? list : [];
+      if (entries.includes(entry)) {
+        if (disXp.includes(entry)) return -ADVANTAGE_STEP_COST;
+        return 0;
       }
-      return disXp.length < 5 ? -5 : 0;
+      return disXp.length < 5 ? -ADVANTAGE_STEP_COST : 0;
     }
     let xp = 0;
     if (
@@ -1081,9 +2149,107 @@ function defaultTraits() {
       cost = Math.max(0, cost - monsterTraitDiscount(list || [], entry));
       xp += cost;
     }
-    if (types.includes('fördel')) xp += 5;
+    if (types.includes('fördel')) {
+      const advantageInfo = resolveAdvantageCount(entry, list, types);
+      if (advantageInfo) {
+        xp += advantageTotalCost(advantageInfo.effectiveCount);
+      } else {
+        xp += ADVANTAGE_STEP_COST;
+      }
+    }
     if (types.includes('ritual')) xp += RITUAL_COST;
     return xp;
+  }
+
+  function stackableDisplayKey(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (!entry.kan_införskaffas_flera_gånger) return null;
+    if (entry.trait) return null;
+    const types = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
+      : [];
+    if (!types.length) return null;
+    const hasAdvantage = types.includes('fördel');
+    const hasDisadvantage = types.includes('nackdel');
+    if (!hasAdvantage && !hasDisadvantage) return null;
+    const name = typeof entry.namn === 'string' ? entry.namn.trim().toLowerCase() : '';
+    if (!name) return null;
+    if (hasAdvantage) {
+      const advKey = getAdvantageKey(entry, types);
+      if (advKey) return `adv:${advKey}`;
+      return `adv:${name}`;
+    }
+    return `dis:${name}`;
+  }
+
+  function calcEntryDisplayXP(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    const baseList = Array.isArray(list) ? list.filter(Boolean) : [];
+    const { xpSource: providedSource, level } = options || {};
+    const baseSource = providedSource || entry;
+    const xpSource = (level && (!baseSource || baseSource.nivå !== level))
+      ? { ...baseSource, nivå: level }
+      : baseSource;
+    const stackKey = stackableDisplayKey(entry);
+    if (stackKey) {
+      const stackEntries = baseList.filter(item => stackableDisplayKey(item) === stackKey);
+      const actualCount = stackEntries.length;
+      const previewBonus = actualCount === 0 ? 1 : 0;
+      if (stackKey.startsWith('adv:')) {
+        const targetCount = actualCount + previewBonus;
+        return advantageTotalCost(targetCount);
+      }
+      if (stackKey.startsWith('dis:')) {
+        const eligible = disadvantagesWithXP(baseList);
+        const eligibleSet = new Set(
+          eligible
+            .map(entryMembershipKey)
+            .filter(Boolean)
+        );
+        const eligibleCount = stackEntries.reduce((count, item) => {
+          const key = entryMembershipKey(item);
+          if (!key) return count;
+          return count + (eligibleSet.has(key) ? 1 : 0);
+        }, 0);
+        const totalEligible = eligible.length;
+        const extra = previewBonus && totalEligible < 5 ? 1 : 0;
+        return (eligibleCount + extra) * -ADVANTAGE_STEP_COST;
+      }
+    }
+    const workingList = baseList.slice();
+    if (xpSource && !workingList.includes(xpSource)) {
+      workingList.push(xpSource);
+    }
+    return calcEntryXP(xpSource, workingList);
+  }
+
+  function singlePickAdvantageInfo(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (entry.kan_införskaffas_flera_gånger) return null;
+    const types = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
+      : [];
+    if (!types.length) return null;
+    const isAdv = types.includes('fördel');
+    const isDis = types.includes('nackdel');
+    if (!isAdv && !isDis) return null;
+    return { isAdv, isDis };
+  }
+
+  function formatEntryXPText(entry, xpVal) {
+    if (xpVal === undefined || xpVal === null) return '';
+    if (typeof xpVal === 'number') {
+      const singleInfo = singlePickAdvantageInfo(entry);
+      if (singleInfo) {
+        if (singleInfo.isDis) {
+          const disXp = Math.max(0, -xpVal);
+          return `+${disXp}`;
+        }
+        return `${Math.max(0, xpVal)}`;
+      }
+      return xpVal < 0 ? `+${-xpVal}` : String(xpVal);
+    }
+    return String(xpVal);
   }
 
   function calcTotalXP(baseXp, list) {
@@ -1126,13 +2292,15 @@ function defaultTraits() {
     const obj = { ...(data || {}) };
     const emptyMoney = defaultMoney();
     const emptyEff = defaultArtifactEffects();
+    const emptyManual = defaultManualAdjustments();
 
-    ['money','bonusMoney','privMoney','possessionMoney'].forEach(k => {
+    ['money','bonusMoney','privMoney','possessionMoney','savedUnusedMoney'].forEach(k => {
       if (obj[k] && JSON.stringify(obj[k]) === JSON.stringify(emptyMoney)) delete obj[k];
     });
     if (obj.possessionRemoved === 0) delete obj.possessionRemoved;
     if (Array.isArray(obj.hamnskifteRemoved) && obj.hamnskifteRemoved.length === 0) delete obj.hamnskifteRemoved;
     if (obj.artifactEffects && JSON.stringify(obj.artifactEffects) === JSON.stringify(emptyEff)) delete obj.artifactEffects;
+    if (obj.manualAdjustments && JSON.stringify(obj.manualAdjustments) === JSON.stringify(emptyManual)) delete obj.manualAdjustments;
     ['inventory','list','custom'].forEach(k => {
       if (Array.isArray(obj[k]) && obj[k].length === 0) delete obj[k];
     });
@@ -1162,53 +2330,156 @@ function defaultTraits() {
 
   function compressList(list) {
     return (list || []).map(it => {
-      if (it && it.namn && window.DBIndex && window.DBIndex[it.namn]) {
-        const entry = window.DBIndex[it.namn];
-        const row = entry.id !== undefined ? { i: entry.id } : { n: it.namn };
-        if (it.nivå) row.l = it.nivå;
-        if (it.trait) row.t = it.trait;
-        if (it.race) row.r = it.race;
-        if (it.form) row.f = it.form;
-        return row;
+      if (it && (it.id !== undefined || it.namn)) {
+        const entry = typeof global.lookupEntry === 'function'
+          ? global.lookupEntry({ id: it.id, name: it.namn })
+          : null;
+        if (entry) {
+          const row = entry.id !== undefined ? { i: entry.id } : { n: entry.namn };
+          if (it.namn && it.namn !== entry.namn) row.n = it.namn;
+          if (it.nivå) row.l = it.nivå;
+          if (it.trait) row.t = it.trait;
+          if (it.race) row.r = it.race;
+          if (it.form) row.f = it.form;
+          if (it.__uid) row.u = it.__uid;
+          const orderVal = coerceOrderValue(it.__order);
+          if (orderVal !== null) row.o = orderVal;
+          return row;
+        }
       }
       return it;
     });
   }
 
-  function expandList(list) {
+  function expandList(list, customEntries = [], idMap = null) {
+    const customs = Array.isArray(customEntries) ? customEntries : [];
+    const customById = new Map();
+    const customByName = new Map();
+    customs.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (entry.id !== undefined) customById.set(entry.id, entry);
+      if (entry.namn) customByName.set(entry.namn, entry);
+    });
+
+    const remapId = (value) => {
+      if (value === undefined || value === null) return value;
+      if (idMap instanceof Map) {
+        const mapped = idMap.get(value);
+        if (mapped !== undefined) return mapped;
+        const asString = typeof value === 'string' ? value : String(value);
+        const mappedString = idMap.get(asString);
+        if (mappedString !== undefined) return mappedString;
+      }
+      return value;
+    };
+
+    const cloneWithOrder = (base, src) => {
+      if (src.n && typeof src.n === 'string' && src.n !== base.namn) base.namn = src.n;
+      if (src.l) base.nivå = src.l;
+      if (src.t) base.trait = src.t;
+      if (src.r) base.race = src.r;
+      if (src.f) base.form = src.f;
+      if (src.u) base.__uid = src.u;
+      const orderVal = coerceOrderValue(src.o);
+      if (orderVal !== null) base.__order = orderVal;
+      return base;
+    };
+
     return (list || []).map(it => {
-      if (it && it.i !== undefined && window.DB && window.DB[it.i]) {
-        const base = { ...window.DB[it.i] };
-        if (it.l) base.nivå = it.l;
-        if (it.t) base.trait = it.t;
-        if (it.r) base.race = it.r;
-        if (it.f) base.form = it.f;
-        return base;
+      if (!it || typeof it !== 'object') return it;
+
+      if (Object.prototype.hasOwnProperty.call(it, 'i')) {
+        const rawId = it.i;
+        const mappedId = remapId(rawId);
+        const hit = customById.get(mappedId)
+          || (typeof global.lookupEntry === 'function'
+            ? global.lookupEntry({ id: mappedId })
+            : null);
+        if (hit) {
+          const base = { ...hit };
+          if (mappedId !== undefined && mappedId !== null) base.id = mappedId;
+          return cloneWithOrder(base, { ...it, i: mappedId });
+        }
+        if (mappedId !== rawId) {
+          return { ...it, i: mappedId };
+        }
+        return it;
       }
-      if (it && it.n && window.DBIndex && window.DBIndex[it.n]) {
-        const base = { ...window.DBIndex[it.n] };
-        if (it.l) base.nivå = it.l;
-        if (it.t) base.trait = it.t;
-        if (it.r) base.race = it.r;
-        if (it.f) base.form = it.f;
-        return base;
+
+      if (Object.prototype.hasOwnProperty.call(it, 'id')) {
+        const rawId = it.id;
+        const mappedId = remapId(rawId);
+        const hit = customById.get(mappedId)
+          || (typeof global.lookupEntry === 'function'
+            ? global.lookupEntry({ id: mappedId })
+            : null);
+        if (hit) {
+          const base = { ...hit, ...it };
+          base.id = mappedId;
+          return cloneWithOrder(base, { ...it, id: mappedId });
+        }
+        if (mappedId !== rawId) {
+          return { ...it, id: mappedId };
+        }
+        return it;
       }
+
+      if (Object.prototype.hasOwnProperty.call(it, 'n')) {
+        const hitByName = customByName.get(it.n)
+          || (typeof global.lookupEntry === 'function'
+            ? global.lookupEntry({ id: it.n, name: it.n })
+            : null);
+        if (hitByName) {
+          const base = { ...hitByName };
+          return cloneWithOrder(base, it);
+        }
+      }
+
       return it;
     });
   }
 
   function compressInventory(inv) {
-    return (inv || []).map(row => {
+    if (!Array.isArray(inv)) return [];
+    return inv.map(row => {
       if (!row || typeof row !== 'object') return row;
-      let res;
-      if (row.id !== undefined) {
-        res = { i: row.id };
-      } else if (row.name && window.DBIndex && window.DBIndex[row.name]) {
-        const entry = window.DBIndex[row.name];
-        res = entry.id !== undefined ? { i: entry.id } : { n: row.name };
-      } else {
-        res = { n: row.name };
+      const typeRaw = row.typ ?? row.t;
+      const moneyRaw = row.money ?? row.m;
+      if (typeRaw === 'currency' || moneyRaw) {
+        const res = { t: 'currency' };
+        const src = (moneyRaw && typeof moneyRaw === 'object') ? moneyRaw : {};
+        res.m = sanitizeMoneyStruct({
+          daler: src.daler ?? src.d,
+          skilling: src.skilling ?? src.s,
+          'örtegar': src['örtegar'] ?? src.o
+        });
+        const qty = row.qty ?? row.q;
+        if (qty && qty !== 1) res.q = qty;
+        const name = row.name || row.n;
+        if (name) res.n = name;
+        const weightRaw = row.vikt ?? row.w;
+        if (weightRaw !== undefined) {
+          const weightNum = Number(weightRaw);
+          if (Number.isFinite(weightNum)) res.w = weightNum;
+        }
+        return res;
       }
+      const res = {};
+      if (row.id !== undefined) res.i = row.id;
+      const canonical = row.id !== undefined && typeof global.lookupEntry === 'function'
+        ? global.lookupEntry({ id: row.id })
+        : null;
+      let entryName = row.name || canonical?.namn || '';
+      if (entryName && row.trait) {
+        const traitLabel = String(row.trait).trim();
+        if (traitLabel) {
+          const suffix = `: ${traitLabel}`;
+          if (String(entryName).trim().endsWith(suffix)) {
+            entryName = String(entryName).slice(0, -suffix.length).trimEnd();
+          }
+        }
+      }
+      if (entryName) res.n = entryName;
       if (row.qty && row.qty !== 1) res.q = row.qty;
       if (row.gratis) res.g = row.gratis;
       if (row.kvaliteter && row.kvaliteter.length) res.k = row.kvaliteter;
@@ -1217,44 +2488,191 @@ function defaultTraits() {
       if (row.artifactEffect === 'xp' || row.artifactEffect === 'corruption') res.e = row.artifactEffect;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
+      if (row.perk) res.pk = row.perk;
+      if (row.perkGratis) res.pg = row.perkGratis;
+      if (row.vikt !== undefined) {
+        const weight = Number(row.vikt);
+        if (Number.isFinite(weight)) res.w = weight;
+      }
+      if (row.basePrice && typeof row.basePrice === 'object') {
+        const src = {
+          daler: row.basePrice.daler ?? row.basePrice.d,
+          skilling: row.basePrice.skilling ?? row.basePrice.s,
+          'örtegar': row.basePrice['örtegar'] ?? row.basePrice.o
+        };
+        if (['daler','skilling','örtegar','d','s','o'].some(k => row.basePrice[k] !== undefined)) {
+          res.bp = sanitizeMoneyStruct(src);
+        }
+      }
+      if (row.basePriceSource) {
+        const src = String(row.basePriceSource).toLowerCase();
+        if (src === 'live' || src === 'manual') {
+          res.bps = src;
+        }
+      }
+      if (row.priceMult !== undefined) {
+        const mult = Number(row.priceMult);
+        if (Number.isFinite(mult) && mult !== 1) res.pm = mult;
+      }
+      if (Array.isArray(row.contains) && row.contains.length) {
+        res.c = compressInventory(row.contains);
+      }
       return res;
     });
   }
 
-  function expandInventory(inv) {
-    return (inv || []).map(row => {
-      if (row && row.i !== undefined && window.DB && window.DB[row.i]) {
-        const name = window.DB[row.i].namn;
-        return {
-          id: row.i,
-          name,
-          qty: row.q || 1,
-          gratis: row.g || 0,
-          kvaliteter: row.k || [],
-          gratisKval: row.gk || [],
-          removedKval: row.rk || [],
-          artifactEffect: row.e === 'xp' || row.e === 'corruption' ? row.e : '',
-          nivå: row.l,
-          trait: row.t
-        };
-      }
-      if (row && row.n) {
-        const ent = window.DBIndex && window.DBIndex[row.n];
-        return {
-          id: ent?.id,
-          name: ent?.namn || row.n,
-          qty: row.q || 1,
-          gratis: row.g || 0,
-          kvaliteter: row.k || [],
-          gratisKval: row.gk || [],
-          removedKval: row.rk || [],
-          artifactEffect: row.e === 'xp' || row.e === 'corruption' ? row.e : '',
-          nivå: row.l,
-          trait: row.t
-        };
-      }
-      return row;
+  function expandInventory(inv, customEntries = [], idMap = null) {
+    const customs = Array.isArray(customEntries) ? customEntries : [];
+    const customById = new Map();
+    const customByName = new Map();
+    customs.forEach(ent => {
+      if (!ent || typeof ent !== 'object') return;
+      if (ent.id) customById.set(ent.id, ent);
+      if (ent.namn) customByName.set(ent.namn, ent);
     });
+    const sanitizeCount = (value, fallback) => {
+      const num = Math.floor(Number(value));
+      if (!Number.isFinite(num)) return fallback;
+      if (fallback === 1) return num > 0 ? num : 1;
+      return num >= 0 ? num : fallback;
+    };
+    const expandRows = rows => {
+      if (!Array.isArray(rows)) return [];
+      return rows.map(row => {
+        if (!row || typeof row !== 'object') {
+          return { id: undefined, name: '', qty: 1, gratis: 0, kvaliteter: [], gratisKval: [], removedKval: [] };
+        }
+        const typeRaw = row.typ ?? row.t;
+        const moneyRaw = row.money ?? row.m;
+        if (typeRaw === 'currency' || moneyRaw) {
+          const qty = sanitizeCount(row.qty ?? row.q, 1);
+          const src = (moneyRaw && typeof moneyRaw === 'object') ? moneyRaw : {};
+          const money = sanitizeMoneyStruct({
+            daler: src.daler ?? src.d,
+            skilling: src.skilling ?? src.s,
+            'örtegar': src['örtegar'] ?? src.o
+          });
+          const expanded = {
+            typ: 'currency',
+            name: row.name ?? row.n ?? 'Pengar',
+            qty,
+            money
+          };
+          const weightRaw = row.vikt ?? row.w;
+          if (weightRaw !== undefined) {
+            const weightNum = Number(weightRaw);
+            if (Number.isFinite(weightNum)) expanded.vikt = weightNum;
+          }
+          const contains = row.contains ?? row.c;
+          if (Array.isArray(contains) && contains.length) {
+            expanded.contains = expandRows(contains);
+          }
+          return expanded;
+        }
+        // Determine matching entry from DB or custom definitions
+        const rawId = row.id !== undefined ? row.id : row.i;
+        const mappedId = (idMap && rawId !== undefined) ? idMap.get(rawId) : undefined;
+        const effectiveId = mappedId !== undefined ? mappedId : rawId;
+        const rawName = row.name || row.n || '';
+        let entry = null;
+        if (effectiveId !== undefined) {
+          entry = customById.get(effectiveId)
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: effectiveId })
+              : null);
+        }
+        if (!entry && rawName) {
+          entry = customByName.get(rawName)
+            || (typeof global.lookupEntry === 'function'
+              ? global.lookupEntry({ id: rawName, name: rawName })
+              : null);
+        }
+        const resolvedId = entry?.id !== undefined ? entry.id : (effectiveId !== undefined ? effectiveId : undefined);
+        let resolvedName = entry?.namn || rawName || '';
+        const rowTrait = row.trait ?? row.t;
+        if (resolvedName && rowTrait) {
+          const traitLabel = String(rowTrait).trim();
+          if (traitLabel) {
+            const suffix = `: ${traitLabel}`;
+            if (String(resolvedName).trim().endsWith(suffix)) {
+              resolvedName = String(resolvedName).slice(0, -suffix.length).trimEnd();
+            }
+          }
+        }
+        const qty = sanitizeCount(row.qty ?? row.q, 1);
+        const gratis = sanitizeCount(row.gratis ?? row.g, 0);
+        const kvaliteter = Array.isArray(row.kvaliteter ?? row.k)
+          ? [...(row.kvaliteter ?? row.k)]
+          : [];
+        const gratisKval = Array.isArray(row.gratisKval ?? row.gk)
+          ? [...(row.gratisKval ?? row.gk)]
+          : [];
+        const removedKval = Array.isArray(row.removedKval ?? row.rk)
+          ? [...(row.removedKval ?? row.rk)]
+          : [];
+        const artifactEffectRaw = row.artifactEffect ?? row.e ?? entry?.artifactEffect ?? '';
+        const artifactEffect = artifactEffectRaw === 'xp' || artifactEffectRaw === 'corruption'
+          ? artifactEffectRaw
+          : '';
+        const expanded = {
+          id: resolvedId,
+          name: resolvedName,
+          qty,
+          gratis,
+          kvaliteter,
+          gratisKval,
+          removedKval,
+          artifactEffect
+        };
+        const nivå = row.nivå ?? row.l;
+        if (nivå !== undefined) expanded.nivå = nivå;
+        const trait = row.trait ?? row.t;
+        if (trait !== undefined) expanded.trait = trait;
+        const perk = row.perk ?? row.pk;
+        if (perk) expanded.perk = perk;
+        const perkGratis = sanitizeCount(row.perkGratis ?? row.pg, 0);
+        if (perkGratis) expanded.perkGratis = perkGratis;
+        const weightRaw = row.vikt ?? row.w;
+        if (weightRaw !== undefined) {
+          const weightNum = Number(weightRaw);
+          if (Number.isFinite(weightNum)) expanded.vikt = weightNum;
+        }
+        const basePriceRaw = row.basePrice ?? row.bp;
+        const baseSourceRaw = row.basePriceSource ?? row.bps;
+        let baseSource = typeof baseSourceRaw === 'string' ? baseSourceRaw.toLowerCase() : '';
+        if (basePriceRaw && typeof basePriceRaw === 'object') {
+          const src = {
+            daler: basePriceRaw.daler ?? basePriceRaw.d,
+            skilling: basePriceRaw.skilling ?? basePriceRaw.s,
+            'örtegar': basePriceRaw['örtegar'] ?? basePriceRaw.o
+          };
+          if (['daler','skilling','örtegar','d','s','o'].some(k => basePriceRaw[k] !== undefined)) {
+            expanded.basePrice = sanitizeMoneyStruct(src);
+          }
+        }
+        if (!baseSource && expanded.basePrice) {
+          if (qty > 0 && gratis >= qty) {
+            baseSource = 'live';
+          }
+        }
+        if (baseSource === 'live' || baseSource === 'manual') {
+          expanded.basePriceSource = baseSource;
+        }
+        const priceMultRaw = row.priceMult ?? row.pm;
+        if (priceMultRaw !== undefined) {
+          const mult = Number(priceMultRaw);
+          if (Number.isFinite(mult) && mult !== 1) {
+            expanded.priceMult = mult;
+          }
+        }
+        const contains = row.contains ?? row.c;
+        if (Array.isArray(contains) && contains.length) {
+          expanded.contains = expandRows(contains);
+        }
+        return expanded;
+      });
+    };
+    return expandRows(inv);
   }
 
   /* ---------- 7. Export / Import av karaktärer ---------- */
@@ -1265,17 +2683,26 @@ function defaultTraits() {
     if (!char) return null;
     const data = store.data[charId] || {};
     // Hitta mappnamn om karaktären ligger i mapp
-    let folderName;
+    let folderMeta;
     try {
       const fid = char.folderId || '';
       if (fid) {
         const f = (store.folders || []).find(x => x.id === fid);
-        folderName = f ? f.name : undefined;
+        if (f) {
+          folderMeta = { id: f.id, name: f.name };
+        }
       }
     } catch {}
+    const folderPayload = {};
+    if (folderMeta) {
+      folderPayload.folderId = folderMeta.id;
+      if (includeFolder && folderMeta.name) {
+        folderPayload.folder = folderMeta.name;
+      }
+    }
     return {
       name: char.name,
-      ...(includeFolder && folderName ? { folder: folderName } : {}),
+      ...folderPayload,
       data: stripDefaults({
         ...data,
         list: compressList(data.list),
@@ -1291,43 +2718,66 @@ function defaultTraits() {
       // Mapp: skapa eller återanvänd efter namn om finns
       let folderId = '';
       try {
+        const folders = Array.isArray(store.folders) ? store.folders : (store.folders = []);
+        const folderHintId = typeof obj.folderId === 'string' ? obj.folderId.trim() : '';
         const folderName = String(obj.folder || '').trim();
-        if (folderName) {
-          const existing = (store.folders || []).find(f => f.name === folderName);
-          if (existing) {
-            folderId = existing.id;
+
+        if (folderHintId) {
+          const byId = folders.find(f => f.id === folderHintId);
+          if (byId) folderId = byId.id;
+        }
+
+        if (!folderId && folderName) {
+          const byName = folders.find(f => f.name === folderName);
+          if (byName) {
+            folderId = byName.id;
           } else {
-            // skapa ny mapp med sekvensordning sist
-            const order = Array.isArray(store.folders) ? store.folders.length : 0;
-            const newId = 'fd' + Date.now();
-            (store.folders ||= []).push({ id: newId, name: folderName, order });
-            folderId = newId;
+            const order = folders.length;
+            const generatedId = folderHintId && !folders.some(f => f.id === folderHintId)
+              ? folderHintId
+              : 'fd' + Date.now() + '-' + Math.floor(Math.random() * 1000000);
+            folders.push({ id: generatedId, name: folderName, order });
+            folderId = generatedId;
           }
-        } else {
+        }
+
+        if (!folderId) {
           // Ingen mapp i filen: lägg i systemmappen "Standard"
-          const standard = (store.folders || []).find(f => f.system) || (store.folders || []).find(f => f.name === 'Standard');
+          const standard = folders.find(f => f.system) || folders.find(f => f.name === 'Standard');
           if (standard) folderId = standard.id;
         }
       } catch {}
       store.characters.push({ id, name: obj.name || 'Ny rollperson', folderId });
       const data = obj.data || {};
-      data.list = expandList(data.list);
-      data.inventory = expandInventory(data.inventory);
+      const usedIds = collectUsedCustomIds(store);
+      const prefix = makeCustomIdPrefix(obj.name || '', id);
+      const { entries: custom, idMap } = sanitizeCustomEntries(data.custom, { usedIds, prefix });
+      data.list = expandList(data.list, custom, idMap);
+      data.inventory = expandInventory(data.inventory, custom, idMap);
+      if (idMap.size && Array.isArray(data.revealedArtifacts)) {
+        data.revealedArtifacts = [...new Set(data.revealedArtifacts.map(n => idMap.get(n) || n))];
+      }
       store.data[id] = {
         custom: [],
         artifactEffects: defaultArtifactEffects(),
         bonusMoney: defaultMoney(),
+        savedUnusedMoney: defaultMoney(),
         privMoney: defaultMoney(),
         possessionMoney: defaultMoney(),
         possessionRemoved: 0,
         notes: defaultNotes(),
-        ...data
+        liveMode: false,
+        ...data,
+        custom,
+        inventory: data.inventory
       };
       if (!store.data[id].notes) {
         store.data[id].notes = defaultNotes();
       }
+      initializeEntryMetadata(store.data[id]);
       store.current = id;
-      save(store);
+      persistMeta(store);
+      persistCharacter(store, id);
       return id;
     } catch {
       return null;
@@ -1355,11 +2805,20 @@ function defaultTraits() {
     }
   }
 
+  function sortFoldersForOrder(folders) {
+    return (Array.isArray(folders) ? folders.slice() : [])
+      .sort((a, b) => (a.order ?? 0) - (b.order ?? 0) || String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+  }
+
   /* ---------- 7. Export ---------- */
   global.storeHelper = {
     load,
     save,
     makeCharId,
+    persistMeta,
+    persistCharacter: (store, id) => persistCharacter(store, id),
+    persistCurrent: persistCurrentCharacter,
+    persistAllCharacters: (store) => save(store, { allCharacters: true }),
     // Aktiv mapp
     getActiveFolder: (store) => {
       try {
@@ -1375,7 +2834,7 @@ function defaultTraits() {
       try {
         const val = (folderId === '' || folderId === 'ALL') ? folderId : String(folderId || 'ALL');
         store.activeFolder = val;
-        save(store);
+        persistMeta(store);
       } catch {}
     },
     // Mapphantering
@@ -1388,7 +2847,7 @@ function defaultTraits() {
       const order = store.folders.length;
       const id = 'fd' + Date.now() + '-' + Math.floor(Math.random()*10000);
       store.folders.push({ id, name: nm, order });
-      save(store);
+      persistMeta(store);
       return id;
     },
     renameFolder: (store, id, name) => {
@@ -1398,7 +2857,7 @@ function defaultTraits() {
       const f = (store.folders || []).find(x => x.id === id);
       if (!f) return;
       f.name = nm;
-      save(store);
+      persistMeta(store);
     },
     deleteFolder: (store, id) => {
       if (!id) return;
@@ -1410,13 +2869,35 @@ function defaultTraits() {
       if (target && target.system) return;
       // Hitta systemmapp för att flytta karaktärer
       const standard = folders.find(f => f.system) || folders.find(f => f.name === 'Standard');
-      store.folders = folders.filter(f => f.id !== id);
+      const remaining = folders.filter(f => f.id !== id);
+      const normalized = sortFoldersForOrder(remaining);
+      normalized.forEach((f, idx) => { f.order = idx; });
+      store.folders = normalized;
       // flytta karaktärer till systemmappen "Standard"
       const destId = standard ? standard.id : '';
       store.characters = (store.characters || []).map(c => (
         c && c.folderId === id ? { ...c, folderId: destId } : c
       ));
-      save(store);
+      persistMeta(store);
+    },
+    moveFolder: (store, id, offset) => {
+      try {
+        if (!id) return;
+        const step = Number(offset) || 0;
+        if (!step) return;
+        const folders = Array.isArray(store.folders) ? store.folders : [];
+        if (!folders.length) return;
+        const ordered = sortFoldersForOrder(folders);
+        const index = ordered.findIndex(f => f.id === id);
+        if (index < 0) return;
+        const targetIndex = index + step;
+        if (targetIndex < 0 || targetIndex >= ordered.length) return;
+        const [item] = ordered.splice(index, 1);
+        ordered.splice(targetIndex, 0, item);
+        ordered.forEach((f, idx) => { f.order = idx; });
+        store.folders = ordered;
+        persistMeta(store);
+      } catch {}
     },
     getCharacterFolder: (store, charId) => {
       if (!charId) return '';
@@ -1435,7 +2916,7 @@ function defaultTraits() {
         if (standard) dest = standard.id;
       }
       c.folderId = dest;
-      save(store);
+      persistMeta(store);
     },
     // Flytta flera karaktärer på en gång (sparar endast en gång)
     setCharactersFolderBulk: (store, charIds, folderId) => {
@@ -1453,13 +2934,16 @@ function defaultTraits() {
         (store.characters || []).forEach(c => {
           if (c && idSet.has(c.id)) c.folderId = dest;
         });
-        save(store);
+        persistMeta(store);
       } catch {}
     },
     getRecentSearches,
     addRecentSearch,
     getCurrentList,
+    getCharacterRaces,
     setCurrentList,
+    findOutdatedEntries,
+    syncEntriesWithDb,
     getInventory,
     setInventory,
     getCustomEntries,
@@ -1468,6 +2952,10 @@ function defaultTraits() {
     setNotes,
     getMoney,
     setMoney,
+    getSavedUnusedMoney,
+    setSavedUnusedMoney,
+    getLiveMode,
+    setLiveMode,
     getBonusMoney,
     setBonusMoney,
     getPrivMoney,
@@ -1481,12 +2969,18 @@ function defaultTraits() {
     setPartyArtefacter,
     getDefenseTrait,
     setDefenseTrait,
+    getDefenseSetup,
+    setDefenseSetup,
     getArtifactEffects,
     setArtifactEffects,
+    getManualAdjustments,
+    setManualAdjustments,
     getFilterUnion,
     setFilterUnion,
     getCompactEntries,
     setCompactEntries,
+    getEntrySort,
+    setEntrySort,
     getOnlySelected,
     setOnlySelected,
     getRevealedArtifacts,
@@ -1504,6 +2998,8 @@ function defaultTraits() {
     setBaseXP,
     calcUsedXP,
     calcEntryXP,
+    calcEntryDisplayXP,
+    formatEntryXPText,
     calcTotalXP,
     countDisadvantages,
     calcPermanentCorruption,
@@ -1531,6 +3027,8 @@ function defaultTraits() {
     getDependents,
     HAMNSKIFTE_NAMES,
     HAMNSKIFTE_BASE,
-    DARK_BLOOD_TRAITS
+    DARK_BLOOD_TRAITS,
+    getCustomEntriesVersion: getCustomEntriesVersionMeta,
+    getRevealedArtifactsVersion: getRevealedArtifactsVersionMeta
   };
 })(window);

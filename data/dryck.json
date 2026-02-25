@@ -1,6 +1,6 @@
 [
   {
-    "namn": "Vin (Landet)",
+    "namn": "Lantvin",
     "beskrivning": "Husets bordsvin, lätt och fruktigt från lokala vingårdar.",
     "taggar": {
       "typ": [
@@ -18,7 +18,7 @@
     "id": "dr1"
   },
   {
-    "namn": "Vin (Stad)",
+    "namn": "Statarvin",
     "beskrivning": "Förnämare stadsvin, lagrat och serverat i glas från hyllad vinkällare.",
     "taggar": {
       "typ": [
@@ -36,7 +36,7 @@
     "id": "dr2"
   },
   {
-    "namn": "Öl (Landet)",
+    "namn": "Lantöl",
     "beskrivning": "Rustikt bondöl bryggt med korn från närområdet.",
     "taggar": {
       "typ": [
@@ -54,7 +54,7 @@
     "id": "dr3"
   },
   {
-    "namn": "Öl (Stad)",
+    "namn": "Kungöl",
     "beskrivning": "Finstämt stadsöl från bryggeri med flera humlesorter.",
     "taggar": {
       "typ": [
@@ -72,8 +72,8 @@
     "id": "dr4"
   },
   {
-    "namn": "Bordsdricka (svag stut)",
-    "beskrivning": "Lättare variant av stut – mild maltig smak till vardagsmat.",
+    "namn": "Bordsstut",
+    "beskrivning": "Lättare variant av stut med lägre alkoholhalt – mild maltig smak till vardagsmat.",
     "taggar": {
       "typ": [
         "Dryck"
@@ -90,7 +90,7 @@
     "id": "dr5"
   },
   {
-    "namn": "Flaska Blot (glödgat vin)",
+    "namn": "Flaska Blot",
     "beskrivning": "Kryddat, värmt rödvin som serveras ångande under kyliga kvällar.",
     "taggar": {
       "typ": [
@@ -108,7 +108,7 @@
     "id": "dr6"
   },
   {
-    "namn": "Flaska Ludendrank (glödgat vin)",
+    "namn": "Flaska Ludendrank",
     "beskrivning": "Sötare glödgat vin smaksatt med kanel och honung.",
     "taggar": {
       "typ": [
@@ -252,8 +252,8 @@
     "id": "dr14"
   },
   {
-    "namn": "Stop Adersel (trippeljäst öl)",
-    "beskrivning": "Starkt trippeljäsning ger fyllig maltighet och lång eftersmak.",
+    "namn": "Stop Adersel",
+    "beskrivning": "Starkt trippeljäst öl med fyllig maltighet och lång eftersmak.",
     "taggar": {
       "typ": [
         "Dryck"
@@ -270,7 +270,7 @@
     "id": "dr15"
   },
   {
-    "namn": "Stop Argona (fin stut)",
+    "namn": "Stop Argona",
     "beskrivning": "Stut av högre klass bryggd av ätten Argona – klar, rund smak.",
     "taggar": {
       "typ": [
@@ -306,8 +306,8 @@
     "id": "dr17"
   },
   {
-    "namn": "Stop Kuruns ära (trippeljäst)",
-    "beskrivning": "Kraftig trippeljäsning med fyllig karamellton.",
+    "namn": "Stop Kuruns ära",
+    "beskrivning": "Kraftig trippeljäst öl med fyllig karamellton.",
     "taggar": {
       "typ": [
         "Dryck"
@@ -324,7 +324,7 @@
     "id": "dr18"
   },
   {
-    "namn": "Stop Urtal (trippeljäst rödöl)",
+    "namn": "Stop Urtal",
     "beskrivning": "Rödskimrande öl med kraftfull maltprofil och tre jäsningar.",
     "taggar": {
       "typ": [
@@ -342,8 +342,8 @@
     "id": "dr19"
   },
   {
-    "namn": "Stop Veloum (barbarmust)",
-    "beskrivning": "Ljusare öl sort från norr om Karvosti – svagare än beckjom men smakrik.",
+    "namn": "Stop Veloum",
+    "beskrivning": "Ljusare mustad öl från norr om Karvosti – svagare än beckjom men smakrik.",
     "taggar": {
       "typ": [
         "Dryck"

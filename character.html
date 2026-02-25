@@ -3,12 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <meta name="apple-mobile-web-app-title" content="Symbapedia">
   <link rel="manifest" href="manifest.json">
   <link rel="icon" href="icons/icon_DA">
   <meta name="theme-color" content="#121416">
   <title>Symbapedia - Rollperson</title>
 
+  <style>html[data-preload] body { visibility:hidden; opacity:0; } html.is-ready body { visibility:visible; opacity:1; transition:opacity .2s; }</style>
+  <script>document.documentElement.dataset.preload = "true";</script>
   <link rel="stylesheet" href="css/style.css">
+  <script src="js/auto-resize.js" defer></script>
   <script src="js/text-format.js" defer></script>
   <script src="js/utils.js"          defer></script>
   <script src="js/store.js"          defer></script>
@@ -18,9 +24,13 @@
   <script src="js/yrke-panel.js"  defer></script>
   <script src="js/tabell-popup.js" defer></script>
   <script src="js/pdf-library.js" defer></script>
+  <script src="js/elite-utils.js" defer></script>
   <script src="js/elite-req.js"   defer></script>
+  <script src="js/entry-card.js" defer></script>
+  <script src="js/entry-xp.js" defer></script>
   <script src="js/character-view.js" defer></script>
   <script src="js/jszip.min.js"     defer></script>
+  <script src="js/character-generator.js" defer></script>
   <script src="js/main.js"            defer></script>
   <script src="js/exceptionellt.js" defer></script>
   <script src="js/djurmask.js" defer></script>
@@ -42,30 +52,22 @@
     <div class="panel-header">
       <h2 id="charName" style="margin:0;"></h2>
       <div class="header-actions">
-        <button id="clearNonInv" class="char-btn icon danger" title="Rensa allt utom inventariet">🧹</button>
-        <a href="notes.html" id="notesLink" class="char-btn icon" title="Anteckningar">📜</a>
-        <button id="summaryToggle" class="char-btn icon summary-btn" title="Visa översikt">📋</button>
+        <button id="clearNonInv" class="char-btn icon danger" title="Rensa allt utom inventariet"><img src="icons/broom.svg" alt="" class="btn-icon" width="32" height="32"></button>
+        <a href="notes.html" id="notesLink" class="char-btn icon" title="Anteckningar"><img src="icons/anteckningar.svg" alt="" class="btn-icon" width="32" height="32"></a>
+        <a id="effectsToggle" class="char-btn icon" href="effects.html" title="Visa effekter"><img src="icons/effects.svg" alt="" class="btn-icon" width="32" height="32"></a>
+        <a id="summaryToggle" class="char-btn icon summary-btn" href="summary.html" title="Visa översikt"><img src="icons/overview.svg" alt="" class="btn-icon" width="32" height="32"></a>
       </div>
     </div>
-    <ul id="valda" class="card-list"></ul>
+    <ul id="valda" class="card-list entry-card-list" data-entry-page="character"></ul>
   </div>
 
-  <!-- Slide-in översiktspanel -->
-  <aside id="summaryPanel">
-    <header class="inv-header">
-      <h2>Översikt</h2>
-      <button class="char-btn icon" id="summaryClose">✕</button>
-    </header>
-    <div id="summaryContent" class="summary-content"></div>
-  </aside>
-
   <!-- Konfliktpanel för aktiva handlingar -->
-  <aside id="conflictPanel">
+  <aside id="conflictPanel" class="offcanvas">
     <header class="inv-header">
       <h2 id="conflictTitle">Kan ej användas samtidigt som</h2>
       <button class="char-btn icon" id="conflictClose">✕</button>
     </header>
-    <ul id="conflictList" class="card-list"></ul>
+    <ul id="conflictList" class="card-list entry-card-list" data-entry-page="conflict"></ul>
   </aside>
 
   <!-- Gemensam toolbar + paneler (inventarie, egenskaper, filter) -->

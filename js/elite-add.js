@@ -1,4 +1,91 @@
 (function(window){
+  const utils = window.eliteUtils || {};
+
+  const fallbackSplitComma = (str) => {
+    const out = [];
+    let buf = '';
+    let depth = 0;
+    const input = String(str || '');
+    for (let i = 0; i < input.length; i++) {
+      const ch = input[i];
+      if (ch === '(') depth++;
+      if (ch === ')') depth = Math.max(0, depth - 1);
+      if (ch === ',' && depth === 0) {
+        if (buf.trim()) out.push(buf.trim());
+        buf = '';
+        continue;
+      }
+      buf += ch;
+    }
+    if (buf.trim()) out.push(buf.trim());
+    return out;
+  };
+
+  const fallbackSplitOr = (str) => {
+    const out = [];
+    let buf = '';
+    let depth = 0;
+    const input = String(str || '');
+    const lower = input.toLowerCase();
+    for (let i = 0; i < input.length;) {
+      if (lower.startsWith(' eller ', i) && depth === 0) {
+        if (buf.trim()) out.push(buf.trim());
+        buf = '';
+        i += 7;
+        continue;
+      }
+      const ch = input[i];
+      if (ch === '(') depth++;
+      if (ch === ')') depth = Math.max(0, depth - 1);
+      buf += ch;
+      i++;
+    }
+    if (buf.trim()) out.push(buf.trim());
+    return out;
+  };
+
+  const splitComma = utils.splitComma || fallbackSplitComma;
+  const splitOr = utils.splitOr || fallbackSplitOr;
+
+  const expandRequirement = utils.expandRequirement
+    || utils.normalizeRequirement
+    || function (raw) {
+      const name = String(raw || '').trim();
+      if (!name) return [];
+      const mysticMatch = name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
+      if (mysticMatch) {
+        const inner = mysticMatch[1].trim();
+        if (inner.toLowerCase() === 'valfri') return [{ anyMystic: true }];
+        const variants = [].concat(...splitComma(inner).map(segment => splitOr(segment)));
+        return variants
+          .map(nm => nm.trim())
+          .filter(Boolean)
+          .map(nm => ({ names: [nm] }));
+      }
+      const ritualMatch = name.match(/^Ritualist\s*\(([^)]+)\)/i);
+      if (ritualMatch) {
+        const inner = ritualMatch[1].trim();
+        if (inner.toLowerCase() === 'valfri') return [{ anyRitual: true }];
+        const variants = [].concat(...splitComma(inner).map(segment => splitOr(segment)));
+        return variants
+          .map(nm => nm.trim())
+          .filter(Boolean)
+          .map(nm => ({ names: [nm] }));
+      }
+      if (/^Ritualist$/i.test(name)) return [{ anyRitual: true }];
+      return [{ names: [name] }];
+    };
+
+  const parseRequirementGroups = (str) => {
+    if (typeof utils.parseRequirements === 'function') {
+      return utils.parseRequirements(str);
+    }
+    const raw = String(str || '');
+    if (typeof window.eliteReq?.parse === 'function') {
+      return window.eliteReq.parse(raw);
+    }
+    return splitComma(raw).map(seg => splitOr(seg));
+  };
   function createPopup(){
     if(document.getElementById('masterPopup')) return;
     const div=document.createElement('div');
@@ -167,27 +254,6 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
     pop.addEventListener('click',onOutside);
   }
 
-  function splitComma(str){
-    const out=[]; let buf=''; let depth=0;
-    for(let i=0;i<str.length;i++){
-      const ch=str[i];
-      if(ch==='(') depth++;
-      if(ch===')') depth--;
-      if(ch===',' && depth===0){ if(buf.trim()) out.push(buf.trim()); buf=''; continue; }
-      buf+=ch;
-    }
-    if(buf.trim()) out.push(buf.trim());
-    return out;
-  }
-  function splitOr(str){
-    const out=[]; let buf=''; let depth=0; const lower=str.toLowerCase();
-    for(let i=0;i<str.length;){
-      if(lower.startsWith(' eller ', i) && depth===0){ if(buf.trim()) out.push(buf.trim()); buf=''; i+=7; continue; }
-      const ch=str[i]; if(ch==='(') depth++; if(ch===')') depth--; buf+=ch; i++; }
-    if(buf.trim()) out.push(buf.trim());
-    return out;
-  }
-
   function allMystic(){
     return DB.filter(x =>
       (x.taggar?.typ || []).includes('Mystisk kraft') &&
@@ -200,72 +266,56 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
       !isEliteSkill(x));
   }
   function parseNames(str){
-    const groups=splitComma(str||'');
-    const arr=[];
-    groups.forEach(g=>{ splitOr(g).forEach(n=>arr.push(n)); });
-    const out=[];
-    arr.forEach(name=>{
-      const m=name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
-      if(m){
-        const inner=m[1].trim();
-        if(inner.toLowerCase()==='valfri') return;
-        splitComma(inner).forEach(g=>splitOr(g).forEach(n=>out.push(n.trim())));
-      } else {
-        const r=name.match(/^Ritualist\s*\(([^)]+)\)/i);
-        if(r){
-          const inner=r[1].trim();
-          if(inner.toLowerCase()==='valfri') return;
-          splitComma(inner).forEach(g=>splitOr(g).forEach(n=>out.push(n.trim())));
-        } else if(!/^Ritualist$/i.test(name.trim())) {
-          out.push(name.trim());
-        }
-      }
+    const groups = parseRequirementGroups(str || '');
+    const names = new Set();
+    groups.forEach(group => {
+      group.forEach(raw => {
+        expandRequirement(raw).forEach(v => {
+          if (v.anyMystic || v.anyRitual) return;
+          (Array.isArray(v.names) ? v.names : []).forEach(nm => {
+            const trimmed = String(nm || '').trim();
+            if (!trimmed) return;
+            names.add(trimmed);
+          });
+        });
+      });
     });
-    return Array.from(new Set(out));
+    return Array.from(names);
   }
 
   function parseGroupRequirements(str){
-    const raw = eliteReq.parse(str||'');
+    const raw = parseRequirementGroups(str || '');
     const out = [];
     raw.forEach(g => {
-      // Check for single-name groups that signal any mystic power/ritual.
-      if(g.length===1){
-        const name = g[0].trim();
-        const mm = name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
-        if(mm && mm[1].trim().toLowerCase()==='valfri'){
-          out.push({anyMystic:true});
-          return;
-        }
-        const rr = name.match(/^Ritualist\s*\(([^)]+)\)/i);
-        if(rr && rr[1].trim().toLowerCase()==='valfri'){
-          out.push({anyRitual:true});
-          return;
-        }
-        if(/^Ritualist$/i.test(name)){
-          out.push({anyRitual:true});
-          return;
-        }
-      }
-
-      let names = [];
+      let hasAnyMystic = false;
+      let hasAnyRitual = false;
+      const set = new Set();
       g.forEach(name => {
-        const m=name.match(/^Mystisk kraft\s*\(([^)]+)\)/i);
-        if(m){
-          const inner=m[1].trim();
-          if(inner.toLowerCase()==='valfri') return;
-          eliteReq.splitComma(inner).forEach(h=>eliteReq.splitOr(h).forEach(n=>names.push(n.trim())));
-        }else{
-          const r=name.match(/^Ritualist\s*\(([^)]+)\)/i);
-          if(r){
-            const inner=r[1].trim();
-            if(inner.toLowerCase()==='valfri') return;
-            eliteReq.splitComma(inner).forEach(h=>eliteReq.splitOr(h).forEach(n=>names.push(n.trim())));
-          }else if(!/^Ritualist$/i.test(name.trim())){
-            names.push(name.trim());
+        expandRequirement(name).forEach(v => {
+          if (v.anyMystic) {
+            hasAnyMystic = true;
+            return;
           }
-        }
+          if (v.anyRitual) {
+            hasAnyRitual = true;
+            return;
+          }
+          (Array.isArray(v.names) ? v.names : []).forEach(nm => {
+            const trimmed = String(nm || '').trim();
+            if (!trimmed) return;
+            set.add(trimmed);
+          });
+        });
       });
-      names = Array.from(new Set(names));
+      if (hasAnyMystic) {
+        out.push({ anyMystic: true });
+        return;
+      }
+      if (hasAnyRitual && set.size === 0) {
+        out.push({ anyRitual: true });
+        return;
+      }
+      let names = Array.from(set);
       if(!names.length) return;
       const allRitual = names.every(isRitual);
       out.push({ names, allRitual });
@@ -279,7 +329,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
   }
 
   function isRitual(name){
-    const entry=DB.find(x=>x.namn===name);
+    const entry=lookupEntry({ id: name, name });
     return (entry?.taggar?.typ||[]).includes('Ritual');
   }
 
@@ -297,7 +347,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
       if(isMap && !(nm in levels)) return;
       const lvl = isMap ? levels[nm] : (nm===levels ? 'Mästare' : 'Novis');
       if(!lvl || lvl==='skip') return;
-      const item=DB.find(x=>x.namn===nm);
+      const item=lookupEntry({ id: nm, name: nm });
       if(!item) return;
       const cur=list.find(x=>x.namn===nm);
       if(cur){ cur.nivå=lvl; }
@@ -330,7 +380,7 @@ div.innerHTML=`<div class="popup-inner"><h3 id="masterTitle">L\u00e4gg till elit
 
   async function handle(btn){
     const name=btn.dataset.eliteReq;
-    const entry=DB.find(x=>x.namn===name);
+    const entry=lookupEntry({ id: name, name });
     if(!entry) return;
     if(!store.current && !(await requireCharacter())) return;
     const listPre = storeHelper.getCurrentList(store);
