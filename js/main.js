@@ -1,0 +1,6341 @@
+/* ===========================================================
+   js/main.js – gemensam logik för index-, character- och notes-vy
+   Fungerar ihop med Web Component <shared-toolbar>
+   2025-06-20
+   =========================================================== */
+
+window.addEventListener('load', () => {
+  document.documentElement.classList.add('is-ready');
+  document.documentElement.removeAttribute('data-preload');
+});
+
+/* ---------- Back-navigering för menyer & popups ---------- */
+(function() {
+  const overlayStack = [];
+  const openMap = new Map();
+  const overlayCleanupMap = new Map();
+  let isPop = false;
+  // Count how many history.back() calls we have triggered manually.
+  // Using a counter (instead of a boolean) makes rapid open/close
+  // sequences robust and prevents desync when multiple popstate
+  // events arrive after fast clicks.
+  let manualCloseCount = 0;
+
+  let scrollLocked = false;
+  let scrollY = 0;
+
+  function lockScroll() {
+    if (scrollLocked) return;
+    scrollY = window.scrollY || window.pageYOffset;
+    document.body.style.top = `-${scrollY}px`;
+    document.body.classList.add('no-scroll');
+    scrollLocked = true;
+  }
+
+  function unlockScroll() {
+    if (!scrollLocked) return;
+    document.body.classList.remove('no-scroll');
+    document.body.style.top = '';
+    window.scrollTo(0, scrollY);
+    scrollLocked = false;
+  }
+
+  function updateScrollLock() {
+    const requiresLock = overlayStack.some(el => el && !el.classList.contains('offcanvas'));
+    if (requiresLock) {
+      lockScroll();
+    } else {
+      unlockScroll();
+    }
+  }
+
+  const overlayTargets = new Set();
+  const overlayObserver = new MutationObserver(muts => {
+    for (const m of muts) {
+      const el = m.target;
+      const isOpen = el.classList.contains('open');
+      const wasOpen = openMap.get(el) || false;
+      if (isOpen && !wasOpen) {
+        openMap.set(el, true);
+        overlayStack.push(el);
+       history.pushState({ overlay: el.id }, '');
+      } else if (!isOpen && wasOpen) {
+        openMap.set(el, false);
+        const idx = overlayStack.lastIndexOf(el);
+        if (idx >= 0) overlayStack.splice(idx, 1);
+        if (!isPop) {
+          manualCloseCount++;
+          history.back();
+        }
+      }
+    }
+    updateScrollLock();
+  });
+
+  const OVERLAY_SELECTOR = '.popup, .offcanvas';
+
+  function observeOverlay(el) {
+    if (!el || overlayTargets.has(el)) return;
+    overlayTargets.add(el);
+    overlayObserver.observe(el, { attributes: true, attributeFilter: ['class'] });
+  }
+
+  window.registerOverlayElement = function(el) {
+    if (!el) return;
+    observeOverlay(el);
+  };
+
+  window.registerOverlayCleanup = function(el, cleanup) {
+    if (!el) return;
+    if (typeof cleanup === 'function') {
+      overlayCleanupMap.set(el, cleanup);
+    } else {
+      overlayCleanupMap.delete(el);
+    }
+  };
+
+  function registerOverlays(root) {
+    if (!root) return;
+    const list = root.querySelectorAll ? root.querySelectorAll(OVERLAY_SELECTOR) : [];
+    list.forEach(observeOverlay);
+  }
+
+  function initObservers() {
+    registerOverlays(document);
+    const bar = document.querySelector('shared-toolbar');
+    const registerToolbarOverlays = () => registerOverlays(bar?.shadowRoot);
+    registerToolbarOverlays();
+    if (bar) {
+      bar.addEventListener('toolbar-rendered', registerToolbarOverlays);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initObservers);
+  } else {
+    initObservers();
+  }
+
+  window.addEventListener('popstate', (ev) => {
+    if (manualCloseCount > 0) {
+      manualCloseCount--;
+      const topOverlay = overlayStack[overlayStack.length - 1];
+      if (!topOverlay || ev?.state?.overlay === topOverlay.id) {
+        return;
+      }
+    }
+    const el = overlayStack[overlayStack.length - 1];
+    if (el) {
+      isPop = true;
+      const cleanup = overlayCleanupMap.get(el);
+      
+      // --- SPÖK-FIXEN BÖRJAR HÄR ---
+      // 1. Ta bort klassen omedelbart
+      el.classList.remove('open'); 
+      
+      // 2. "Hack" för att tvinga webbläsaren att fatta att rutan är borta:
+      // Vi gömmer den helt (display: none) en millisekund.
+      // Detta dödar alla pågående animationer och spöken direkt.
+      const originalDisplay = el.style.display;
+      el.style.display = 'none';
+      
+      // 3. Tvinga webbläsaren att räkna om layouten (Reflow)
+      void el.offsetHeight; 
+      
+      // 4. Återställ ordningen efter en blinkning
+      setTimeout(() => {
+          el.style.display = originalDisplay; 
+          // Rensa allt skräp som swipen kan ha lämnat kvar
+          el.style.transform = '';
+          el.style.transition = '';
+      }, 50);
+      // --- SPÖK-FIXEN SLUT ---
+
+      if (typeof cleanup === 'function') {
+        try {
+          cleanup();
+        } finally {
+          if (overlayCleanupMap.get(el) === cleanup) {
+            overlayCleanupMap.delete(el);
+          }
+        }
+      } else {
+        // Fallback om ingen cleanup-funktion fanns
+        el.classList.remove('open');
+      }
+      
+      setTimeout(() => { isPop = false; }, 50);
+    }
+  });
+
+  // Close open menus/panels with Escape on desktop devices
+  window.addEventListener('keydown', e => {
+    if (e.key !== 'Escape') return;
+    // Detect desktop by fine pointer (e.g. mouse)
+    if (!window.matchMedia('(pointer: fine)').matches) return;
+    if (overlayStack.length > 0) {
+      e.preventDefault();
+      history.back();
+    }
+  });
+})();
+
+// Ensure we are at top after a Hoppsan reset reload
+try {
+  if (sessionStorage.getItem('hoppsanReset')) {
+    sessionStorage.removeItem('hoppsanReset');
+    if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+    // Scroll on next tick to win over any pending layout
+    setTimeout(() => window.scrollTo(0, 0), 0);
+  }
+} catch {}
+
+/* ---------- Grunddata & konstanter ---------- */
+const ROLE   = document.body.dataset.role;           // 'index' | 'character' | 'notes' | 'inventory'
+let   store  = storeHelper.load();                   // Lokal lagring
+let   lastActiveChar = store.current || '';
+let   outdatedPromptInFlight = false;
+const PWA_POST_UPDATE_SYNC_KEY = 'pwa-post-update-sync';
+
+const ENTRY_META_FIELD = '__entryMeta';
+const entryDataVersions = window.__entryDataVersions || { db: 0, tables: 0 };
+window.__entryDataVersions = entryDataVersions;
+
+const toArray = (value) => (Array.isArray(value) ? value : []);
+
+// Search aliases: typing these terms should surface the target entry.
+const SEARCH_ENTRY_ALIASES = new Map([
+  ['felicia', 'pestvind'],
+  ['isak', 'pestvind']
+]);
+
+function normalizeSearchAliasTerm(value) {
+  const lower = String(value ?? '').trim().toLowerCase();
+  if (!lower) return '';
+  if (typeof searchNormalize === 'function') {
+    try { return searchNormalize(lower); }
+    catch { return lower; }
+  }
+  return lower;
+}
+
+function resolveSearchAliasTarget(value) {
+  const key = normalizeSearchAliasTerm(value);
+  if (!key) return '';
+  return SEARCH_ENTRY_ALIASES.get(key) || '';
+}
+
+function getAliasesForEntryName(name) {
+  const target = normalizeSearchAliasTerm(name);
+  if (!target) return [];
+  const aliases = [];
+  for (const [alias, mappedTarget] of SEARCH_ENTRY_ALIASES.entries()) {
+    if (mappedTarget === target) aliases.push(alias);
+  }
+  return aliases;
+}
+
+window.resolveSearchAliasTarget = resolveSearchAliasTarget;
+
+function ensureEntryMeta(entry) {
+  if (!entry || typeof entry !== 'object') return null;
+  if (entry[ENTRY_META_FIELD]) return entry[ENTRY_META_FIELD];
+
+  const safeString = (value) => String(value ?? '').trim();
+  const toLower = (value) => safeString(value).toLowerCase();
+
+  const lowerName = toLower(entry.namn);
+  const normName = typeof searchNormalize === 'function'
+    ? searchNormalize(lowerName)
+    : lowerName;
+
+  const levelText = Object.values(entry.nivåer || {})
+    .map(toLower)
+    .join(' ');
+  const descText = toLower(entry.beskrivning);
+  const aliasTerms = getAliasesForEntryName(entry.namn);
+  const combined = `${lowerName} ${descText} ${levelText} ${aliasTerms.join(' ')}`.trim();
+  const normText = typeof searchNormalize === 'function'
+    ? searchNormalize(combined)
+    : combined;
+
+  const normalizeList = (list) => toArray(list)
+    .map(safeString)
+    .filter(Boolean);
+
+  const tags = entry.taggar || {};
+  const typList = normalizeList(tags.typ);
+  let arkList = [];
+  try {
+    const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
+    arkList = normalizeList(exploded);
+  } catch {
+    arkList = [];
+  }
+  if (!arkList.length && Array.isArray(tags.ark_trad)) {
+    arkList = ['Traditionslös'];
+  }
+  const testList = normalizeList(tags.test);
+
+  const secondaryTags = [...arkList, ...testList];
+  const secondaryLookup = new Set(
+    secondaryTags.map(tag => {
+      const lower = tag.toLowerCase();
+      return typeof searchNormalize === 'function' ? searchNormalize(lower) : lower;
+    })
+  );
+
+  const allTagsNormalized = new Set(
+    [...typList, ...secondaryTags].map(tag => {
+      const lower = tag.toLowerCase();
+      return typeof searchNormalize === 'function' ? searchNormalize(lower) : lower;
+    })
+  );
+  const allTags = new Set([...typList, ...secondaryTags]);
+
+  const meta = {
+    normName,
+    normText,
+    typList,
+    primaryType: typList[0] || 'Övrigt',
+    primaryTypeLower: (typList[0] || 'Övrigt').toLowerCase(),
+    arkList,
+    testList,
+    secondaryTags,
+    secondaryLookup,
+    allTagsNormalized,
+    allTags
+  };
+
+  Object.defineProperty(entry, ENTRY_META_FIELD, {
+    value: meta,
+    enumerable: false,
+    configurable: true
+  });
+
+  return meta;
+}
+
+function ensureEntryMetaList(list) {
+  toArray(list).forEach(ensureEntryMeta);
+  return list;
+}
+
+window.ensureEntryMeta = ensureEntryMeta;
+window.ensureEntryMetaList = ensureEntryMetaList;
+
+/* ---------- Snabb DOM-access ---------- */
+const bar  = document.querySelector('shared-toolbar');
+const $T   = id => (bar && bar.shadowRoot) ? bar.shadowRoot.getElementById(id) : null;        // shadow-DOM
+const getDom = id => document.getElementById(id) || $T(id);
+const dom  = {
+  /* toolbar / panel */
+  charSel : getDom('charSelect'),   delBtn : getDom('deleteChar'),
+  newBtn  : getDom('newCharBtn'),   toolsBtn: getDom('characterToolsBtn'),   xpOut  : getDom('xpOut'),
+  storageBtn: getDom('driveStorageBtn'),
+  xpIn    : getDom('xpInput'),      xpSum  : getDom('xpSummary'),
+  xpMinus : getDom('xpMinus'),      xpPlus : getDom('xpPlus'),
+  xpTotal : getDom('xpTotal'),      xpUsed : getDom('xpUsed'),       xpFree : getDom('xpFree'),
+
+  /* inventarie */
+  invFormal: getDom('invFormal'),   invList : getDom('invList'),
+  wtOut   : getDom('weightOut'),    slOut     : getDom('slotOut'),
+  moneyD  : getDom('moneyDaler'),
+  moneyS  : getDom('moneySkilling'),
+  moneyO  : getDom('moneyOrtegar'),
+  moneySetBtn: getDom('moneySetBtn'),
+  moneyAddBtn: getDom('moneyAddBtn'),
+  collapseAllBtn: getDom('collapseAllInv'),
+  unusedOut: getDom('unusedOut'),
+
+  /* smith filter */
+  forgeBtn : getDom('partySmith'),
+  alcBtn  : getDom('partyAlchemist'),
+  artBtn  : getDom('partyArtefacter'),
+  defBtn  : getDom('forceDefense'),
+
+  /* traits */
+  traits  : getDom('traits'),       traitsTot: getDom('traitsTotal'),
+  traitsMax: getDom('traitsMax'),
+  traitStats: getDom('traitStats'),
+  defenseCalcBtn: getDom('defenseCalcBtn'),
+
+  /* filterfält */
+  catToggle: getDom('catToggle'),
+  sIn   : getDom('searchField'),  typSel : getDom('typFilter'),
+  searchList: getDom('searchAutocomplete'),
+  searchSug: getDom('searchSuggest'),
+  arkSel: getDom('arkFilter'),    tstSel : getDom('testFilter'),
+  folderSel: getDom('folderFilter'),
+  filterUnion: getDom('filterUnion'),
+  entryViewToggle: getDom('entryViewToggle'),
+  infoToggle: getDom('infoToggle'),
+  manualBtn: getDom('manualAdjustBtn'),
+  entrySortBtn: getDom('entrySortBtn'),
+
+  /* element i main-DOM */
+  active : getDom('activeFilters'),
+  lista  : getDom('lista'),       // index-vy
+  valda  : getDom('valda'),       // character-vy
+  cName  : getDom('charName'),
+
+  /* hemlig popup */
+  danielPopup: getDom('danielPopup'),
+  danielClose: getDom('danielPopupClose')
+};
+
+function isSecretDanielTerm(term) {
+  if (!term) return false;
+  const lower = String(term).toLowerCase();
+  const normalized = typeof searchNormalize === 'function'
+    ? searchNormalize(lower)
+    : lower;
+  return normalized === 'daniel';
+}
+
+function openDanielPopup() {
+  const root = bar && bar.shadowRoot ? bar.shadowRoot : null;
+  const pop = (root && root.getElementById('danielPopup')) || dom.danielPopup;
+  if (!pop) return;
+  if (pop.classList.contains('open')) return;
+  const closeBtn = (root && root.getElementById('danielPopupClose')) || dom.danielClose;
+  const inner = pop.querySelector('.popup-inner');
+
+  function close() {
+    pop.classList.remove('open');
+    closeBtn?.removeEventListener('click', onClose);
+    pop.removeEventListener('click', onBackdrop);
+    window.registerOverlayCleanup?.(pop, null);
+    if (dom.sIn && typeof dom.sIn.focus === 'function') {
+      try { dom.sIn.focus(); }
+      catch {}
+    }
+  }
+
+  function onClose(event) {
+    if (event) event.preventDefault();
+    close();
+  }
+
+  function onBackdrop(event) {
+    if (event?.target === pop) {
+      event.preventDefault();
+      close();
+    }
+  }
+
+  window.registerOverlayCleanup?.(pop, close);
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+  closeBtn?.addEventListener('click', onClose);
+  pop.addEventListener('click', onBackdrop);
+  if (closeBtn && typeof closeBtn.focus === 'function') {
+    setTimeout(() => {
+      try { closeBtn.focus(); }
+      catch {}
+    }, 0);
+  }
+}
+
+// Safari/WebKit exposes showOpenFilePicker but only allows selecting a single file.
+// Detect such browsers so we can fall back to the <input type="file" multiple> path.
+const shouldBypassShowOpenFilePickerMulti = (() => {
+  let cached;
+  return () => {
+    if (cached !== undefined) return cached;
+    let bypass = false;
+    try {
+      if (typeof navigator !== 'undefined') {
+        const nav = navigator;
+        if (nav.userAgentData && Array.isArray(nav.userAgentData.brands)) {
+          const safariBrand = nav.userAgentData.brands.some(entry => {
+            const brand = String((entry && entry.brand) || '').toLowerCase();
+            if (!brand) return false;
+            const hasSafari = brand.includes('safari');
+            const hasChrome = brand.includes('chrome') || brand.includes('chromium');
+            return hasSafari && !hasChrome;
+          });
+          if (safariBrand) bypass = true;
+        }
+        if (!bypass) {
+          const ua = String(nav.userAgent || '');
+          const vendor = String(nav.vendor || '');
+          const isAppleVendor = /apple/i.test(vendor);
+          const hasSafari = /\bSafari\//.test(ua);
+          const hasExclude = /\b(Chrome|Chromium|CriOS|FxiOS|OPR|OPiOS|Edg|EdgiOS)\//.test(ua);
+          if (isAppleVendor && hasSafari && !hasExclude) bypass = true;
+        }
+      }
+    } catch {}
+    cached = bypass;
+    return bypass;
+  };
+})();
+
+function makeAbortError() {
+  try {
+    return new DOMException('Operation aborted', 'AbortError');
+  } catch {
+    const err = new Error('Operation aborted');
+    err.name = 'AbortError';
+    return err;
+  }
+}
+
+async function pickJsonFilesWithInput() {
+  return await new Promise((resolve, reject) => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+   inp.accept = '.json,application/json';
+    inp.multiple = true;
+    inp.style.position = 'fixed';
+    inp.style.left = '-9999px';
+    inp.style.opacity = '0';
+    inp.style.pointerEvents = 'none';
+    inp.tabIndex = -1;
+    let settled = false;
+    const cleanup = () => {
+      inp.removeEventListener('change', onChange);
+      inp.removeEventListener('cancel', abort);
+      window.removeEventListener('focus', onFocus, true);
+      if (inp.parentNode) inp.parentNode.removeChild(inp);
+      settled = true;
+    };
+    const abort = () => {
+      if (settled) return;
+      cleanup();
+      reject(makeAbortError());
+    };
+    const onChange = () => {
+      if (settled) return;
+      const list = (inp.files && inp.files.length) ? Array.from(inp.files) : null;
+      cleanup();
+      if (list) resolve(list);
+      else abort();
+    };
+    const onFocus = () => {
+      // If the dialog closes without a selection, treat it as an abort so callers can bail cleanly.
+      setTimeout(() => abort(), 50);
+    };
+    inp.addEventListener('change', onChange, { once: true });
+    inp.addEventListener('cancel', abort, { once: true });
+    document.body.appendChild(inp);
+    inp.click();
+  });
+}
+
+async function pickJsonFilesWithFallback() {
+  const useInput = () => pickJsonFilesWithInput();
+  const canUseNativePicker = !!(window.showOpenFilePicker && !shouldBypassShowOpenFilePickerMulti());
+  if (canUseNativePicker) {
+    try {
+      const handles = await window.showOpenFilePicker({
+        multiple: true,
+        types: [{
+          description: 'JSON',
+          accept: { 'application/json': ['.json'] }
+        }]
+      });
+      return await Promise.all(handles.map(h => h.getFile()));
+    } catch (err) {
+      if (err && (err.name === 'AbortError')) throw err;
+      if (err && err.name === 'NotAllowedError') return await useInput();
+      throw err;
+    }
+  }
+  return await useInput();
+}
+
+async function pickJsonFilesFromDirectoryWithFallback() {
+  if (window.showDirectoryPicker) {
+    try {
+      const dir = await window.showDirectoryPicker({ mode: 'read' });
+      return await getFilesFromDirectory(dir);
+    } catch (err) {
+      if (err && err.name === 'AbortError') throw err;
+      if (err && err.name === 'NotAllowedError') return await pickJsonFilesWithFallback();
+      throw err;
+    }
+  }
+  return await pickJsonFilesWithFallback();
+}
+
+/* ===========================================================
+   UI-KOMMANDON (sök efter menyknappar och lyft fram dem)
+   =========================================================== */
+// Bygg upp en liten kommandokatalog för knappar i toolbar/paneler
+// så att sökfältet kan hitta dem oavsett vy.
+(function initUICommandSearch(){
+  // Normalisera för sökning (gemensam helper finns i utils.js)
+  const norm = s => searchNormalize(String(s||'').toLowerCase());
+
+  // Hjälpare för att highlighta ett element i toolbarens shadow DOM
+  const highlightTimers = new WeakMap();
+
+  function scheduleHighlight(el) {
+    const prev = highlightTimers.get(el);
+    if (prev) {
+      if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(prev);
+      else clearTimeout(prev);
+    }
+    const schedule = typeof requestAnimationFrame === 'function'
+      ? requestAnimationFrame
+      : (cb) => setTimeout(cb, 16);
+    const rafId = schedule(() => {
+      el.classList.add('focus-highlight');
+      highlightTimers.delete(el);
+    });
+    highlightTimers.set(el, rafId);
+  }
+
+  function highlightToolbarEl(sel, panelId){
+    try {
+      if (!bar || !bar.shadowRoot) return false;
+      if (panelId && typeof bar.open === 'function') bar.open(panelId);
+      let el = bar.shadowRoot.querySelector(sel);
+      // Fallback: allow selecting elements in the main document (outside the toolbar)
+      if (!el) {
+        el = document.querySelector(sel);
+      }
+      // Collapse all cards except the one containing the target element (within its panel)
+      let collapseStateChanged = false;
+      if (panelId && el) {
+        const panel = bar.shadowRoot.getElementById(panelId);
+        const card = el.closest('.card');
+        if (panel && card) {
+          const cards = panel.querySelectorAll('.card');
+          cards.forEach(c => {
+            const cid = c.id || '';
+            const isAlwaysOpen = cid === 'searchFiltersCard' || c.classList.contains('help-card');
+            const isTarget = c === card;
+            const shouldCompact = !isTarget && !isAlwaysOpen;
+            const currentlyCompact = c.classList.contains('compact');
+            if (shouldCompact && !currentlyCompact) {
+              c.classList.add('compact');
+              window.entryCardFactory?.syncCollapse?.(c);
+              collapseStateChanged = true;
+            } else if (!shouldCompact && currentlyCompact) {
+              c.classList.remove('compact');
+              window.entryCardFactory?.syncCollapse?.(c);
+              collapseStateChanged = true;
+            }
+          });
+        }
+      }
+      if (!el) return false;
+      const card = el.closest('li.entry-card');
+      if (card && card.dataset.collapsible === '1' && card.classList.contains('compact')) {
+        window.entryCardFactory?.toggle?.(card, true);
+      }
+      // Blink-animera, fokusera och scrolla in elementet
+      el.classList.remove('focus-highlight');
+      scheduleHighlight(el);
+      if (collapseStateChanged && panelId === 'filterPanel' && typeof bar.updateFilterCollapseBtn === 'function') {
+        bar.updateFilterCollapseBtn();
+      }
+      // Global CSS now styles .focus-highlight consistently across toolbar and page
+      try { el.focus?.(); } catch {}
+      try { el.scrollIntoView({ behavior: 'smooth', block: 'center' }); } catch {}
+      return true;
+    } catch { return false; }
+  }
+
+  // Katalog med UI-kommandon: id, visningsnamn, panel och CSS-selector
+  const UI_CMDS = [
+    // Toppknappar
+    { id: 'open-inventory',  label: 'Inventarie',   sel: '#inventoryLink', panel: null,          emoji: '🎒',
+      syn: ['inventarie','inventarievy','inventory','ryggsäck','ryggsack','rygga','inv'] },
+    { id: 'open-traits',     label: 'Egenskaper',   sel: '#traitsLink', panel: null,            emoji: '📊',
+      syn: ['egenskaper','traits','drag','karaktärsdrag','karaktarsdrag'] },
+    { id: 'open-filter',     label: 'Filter',       sel: '#filterToggle', panel: 'filterPanel', emoji: '⚙️',
+      syn: ['filter','verktyg'] },
+    // Huvudvyns knappar utanför toolbaren (rollpersonssidan)
+    { id: 'open-notes',      label: 'Anteckningar', sel: '#notesLink',    panel: null,          emoji: '📜',
+      syn: ['anteckningar','anteckning','notes','noteringar'] },
+    { id: 'open-summary',    label: 'Översikt',     sel: '#summaryToggle, #traitsTabSummary', panel: null,         emoji: '📋',
+      syn: ['översikt','oversikt','sammanfattning','visa översikt','visa oversikt'] },
+    { id: 'open-effects',    label: 'Effekter',     sel: '#effectsToggle, #traitsTabEffects', panel: null,         emoji: '📚',
+      syn: ['effekter','visa effekter','sammanställning effekter','sammanstallning effekter'] },
+
+    // Inställningar (Filter → Inställningar, lamp-ikon)
+    { id: 'settings-smith',   label: 'Smed i partyt',        sel: '#partySmith',      panel: 'filterPanel', emoji: '⚒️', syn: ['smed','smed i partyt','smed nivå'] },
+    { id: 'settings-alch',    label: 'Alkemist i partyt',    sel: '#partyAlchemist',  panel: 'filterPanel', emoji: '⚗️', syn: ['alkemist','alkemist i partyt'] },
+    { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', icon: 'artefakt', syn: ['artefaktmakare','artefaktare'] },
+    { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', icon: 'extend', syn: ['utvidga sökning','or-sökning','union','OR'] },
+    { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', icon: 'expand', syn: ['expandera vy','vy','detaljer','expand'] },
+    { id: 'settings-defense', label: 'Beräkna försvar',      sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', icon: 'forsvar', syn: ['försvar','beräkna försvar','försvarskaraktärsdrag','tvinga försvar'] },
+    { id: 'settings-manual',  label: 'Manuella justeringar', sel: '#manualAdjustBtn', panel: 'filterPanel', emoji: '🧮', syn: ['manuell justering','korruption','erf','erfarenhet','xp'] },
+    { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
+      syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
+
+    // Inventarie → Verktyg (verktygslåda-ikon)
+    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: null, emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
+    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: null, emoji: '', icon: 'basket', syn: ['pengar','hantera pengar','money'] },
+    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: null, emoji: '💸', syn: ['multiplicera pris','pris'] },
+    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: null, emoji: 'x²', syn: ['antal','lägg till antal'] },
+    { id: 'inv-vehicle', label: 'Lasta i',              sel: '#vehicleBtn', panel: null, emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
+    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: null, emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
+    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: null, emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
+
+    // Verktyg inne i Filter → Verktyg
+    { id: 'new-character',   label: 'Ny rollperson',       sel: '#newCharBtn',      panel: 'filterPanel', emoji: '➕',
+      syn: ['ny rollperson','skapa rollperson','ny','skapa'] },
+    { id: 'character-tools', label: 'Rollpersonshantering', sel: '#characterToolsBtn', panel: 'filterPanel', emoji: '🧩',
+      syn: ['rollpersonshantering','rollpersonsverktyg','hantera rollperson','generera rollperson','kopiera rollperson','byt namn','mapphantering','mapphanterare','mappar'] },
+    { id: 'storage-hub',     label: 'Lagring',             sel: '#driveStorageBtn', panel: 'filterPanel', emoji: '💾',
+      syn: ['lagring','drivelagring','drive','import','importera','export','exportera'] },
+    { id: 'pdf-library',     label: 'PDF-bank',            sel: '#pdfLibraryBtn',   panel: 'filterPanel', emoji: '📄',
+      syn: ['pdf-bank','pdf bank','pdf'] },
+    { id: 'delete-char',     label: 'Radera rollperson',   sel: '#deleteChar',      panel: 'filterPanel', emoji: '🗑️',
+      syn: ['radera','ta bort','delete','radera rollperson'] },
+  ];
+
+  const PHRASE_MAP = new Map(); // norm(str) -> cmd
+  for (const c of UI_CMDS) {
+    const all = [c.label, ...(c.syn || [])];
+    for (const s of all) {
+      const n = norm(s);
+      if (!PHRASE_MAP.has(n)) PHRASE_MAP.set(n, c);
+    }
+  }
+
+  function searchUICommands(q){
+    const nq = norm(q);
+    if (!nq) return [];
+    const out = [];
+    for (const c of UI_CMDS) {
+      const hay = [c.label, ...(c.syn || [])].map(norm).join('\n');
+      if (hay.includes(nq)) out.push(c);
+    }
+    // Sort by label length then label for stable, compact hits
+    out.sort((a,b)=> a.label.length - b.label.length || a.label.localeCompare(b.label, 'sv'));
+    return out.slice(0, 15);
+  }
+
+  function executeUICommand(id){
+    const cmd = UI_CMDS.find(c => c.id === id);
+    if (!cmd) return false;
+    if (cmd.id === 'open-inventory' && ROLE !== 'inventory') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'inventory.html'; } catch {}
+      return true;
+    }
+    if (cmd.id.startsWith('inv-') && ROLE !== 'inventory') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'inventory.html'; } catch {}
+      return true;
+    }
+    // If this command belongs to character view but we are elsewhere, navigate
+    if ((cmd.id === 'open-summary' || cmd.id === 'open-notes' || cmd.id === 'open-effects') && ROLE !== 'character') {
+      try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
+      try { window.location.href = 'character.html'; } catch {}
+      return true;
+    }
+    return highlightToolbarEl(cmd.sel, cmd.panel);
+  }
+
+  function tryUICommand(term){
+    const t = norm(term);
+    if (!t) return false;
+    // Exact phrase match first
+    const exact = PHRASE_MAP.get(t);
+    if (exact) return executeUICommand(exact.id);
+    // Otherwise, if only one fuzzy match, execute
+    const hits = searchUICommands(t);
+    if (hits.length === 1) return executeUICommand(hits[0].id);
+    return false;
+  }
+
+  // Exponera globalt så vyerna kan använda detta
+  window.getUICommandSuggestions = function(q){
+    const nq = norm(q || '');
+    // Special case: typing "Funktioner" should list all available UI buttons
+    if (nq === 'funktioner') {
+      return UI_CMDS
+        .slice()
+        .sort((a,b)=> String(a.label||'').localeCompare(String(b.label||''), 'sv'))
+        .map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '', icon: c.icon || '' }));
+    }
+    return searchUICommands(q).map(c => ({ id: c.id, label: c.label, emoji: c.emoji || '', icon: c.icon || '' }));
+  };
+  window.executeUICommand = executeUICommand;
+  window.tryUICommand = tryUICommand;
+
+  // If we were redirected here to run a command, execute once on load
+  try {
+    const pending = sessionStorage.getItem('__pendingUICommand');
+    if (pending) {
+      sessionStorage.removeItem('__pendingUICommand');
+      // Run after a short delay to allow layout to settle
+      setTimeout(() => { try { executeUICommand(pending); } catch {} }, 50);
+    }
+  } catch {}
+
+})();
+
+const INDEX_VIEW_STATE_KEY = 'indexViewState';
+
+function persistIndexSearchTerm(term) {
+  try {
+    const raw = localStorage.getItem(INDEX_VIEW_STATE_KEY);
+    const state = raw ? JSON.parse(raw) : {};
+    const filters = (state && typeof state === 'object' && state.filters && typeof state.filters === 'object')
+      ? state.filters
+      : {};
+    filters.search = term ? [term] : [];
+    state.filters = filters;
+    localStorage.setItem(INDEX_VIEW_STATE_KEY, JSON.stringify(state));
+  } catch {}
+  if (term && window.storeHelper?.addRecentSearch) {
+    try { storeHelper.addRecentSearch(store, term); } catch {}
+  }
+}
+
+function navigateToIndexWithFilter(rawTerm, options = {}) {
+  const term = String(rawTerm || '').trim();
+  persistIndexSearchTerm(term);
+  try { sessionStorage.setItem('__pendingIndexSearch', term); } catch {}
+  if (ROLE === 'index') {
+    if (typeof window.handleIndexSearchTerm === 'function') {
+      try { window.handleIndexSearchTerm(term, options); } catch {}
+    }
+    try { sessionStorage.removeItem('__pendingIndexSearch'); } catch {}
+    return;
+  }
+  try { window.location.href = 'index.html'; }
+  catch {}
+}
+
+window.navigateToIndexWithFilter = navigateToIndexWithFilter;
+
+const globalSearch = (() => {
+  const SEARCH_MIN_CHARS = 2;
+  const ENTRY_LIMIT = 50;
+
+  let context = {};
+  let activeIndex = -1;
+  let lastQuery = '';
+  let suggestionEl = null;
+
+  const defaultContext = {
+    name: 'default',
+    minLength: SEARCH_MIN_CHARS,
+    maxEntries: ENTRY_LIMIT,
+    getEntrySource: () => Array.isArray(window.DB) ? window.DB : [],
+    buildExtraSuggestions: null,
+    handleDataset: null,
+    handleSubmit: null,
+    onQueryChanged: null
+  };
+
+  const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+
+  const normalizeTerm = (value) => {
+    const lower = String(value || '').toLowerCase();
+    if (typeof searchNormalize === 'function') {
+      try { return searchNormalize(lower); }
+      catch { return lower; }
+    }
+    return lower;
+  };
+
+  const capitalize = (value) => {
+    const text = String(value || '');
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+
+  const getInput = () => dom.sIn || null;
+
+  function ensureSuggestionEl() {
+    let el = dom.searchSug;
+    if (!el || !el.isConnected) {
+      const root = document.querySelector('shared-toolbar')?.shadowRoot || null;
+      if (root) el = root.getElementById('searchSuggest');
+    }
+    if (el && el !== suggestionEl) {
+      if (suggestionEl) suggestionEl.removeEventListener('mousedown', onSuggestionMouseDown);
+      el.addEventListener('mousedown', onSuggestionMouseDown);
+      suggestionEl = el;
+    }
+    return suggestionEl;
+  }
+
+  function onSuggestionMouseDown(event) {
+    const target = event.target?.closest('.item');
+    if (!target) return;
+    event.preventDefault();
+    handleSuggestionElement(target, { event, reason: 'click' });
+  }
+
+  function setContext(custom = {}) {
+    context = { ...defaultContext, ...(custom || {}) };
+    activeIndex = -1;
+    refreshSuggestions();
+  }
+
+  function refreshSuggestions() {
+    const input = getInput();
+    if (!input) return;
+    updateSuggestions(input.value || '');
+  }
+
+  function updateSuggestions(rawQuery) {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl) return;
+    lastQuery = String(rawQuery || '');
+    if (typeof context.onQueryChanged === 'function') {
+      try { context.onQueryChanged(lastQuery); }
+      catch {}
+    }
+    const trimmed = lastQuery.trim();
+    const minLen = context.minLength ?? SEARCH_MIN_CHARS;
+    if (!trimmed || trimmed.length < minLen) {
+      hideSuggestions();
+      return;
+    }
+
+    const blocks = [];
+
+    if (typeof context.buildExtraSuggestions === 'function') {
+      try {
+        const extra = context.buildExtraSuggestions(trimmed, { query: lastQuery });
+        if (extra) blocks.push(extra);
+      } catch {}
+    }
+
+    const uiHtml = buildUiSuggestionHtml(trimmed);
+    if (uiHtml) blocks.push(uiHtml);
+
+    const entryHtml = buildEntrySuggestionHtml(trimmed);
+    if (entryHtml) blocks.push(entryHtml);
+
+    if (!blocks.length) {
+      hideSuggestions();
+      return;
+    }
+
+    sugEl.innerHTML = blocks.join('');
+    sugEl.hidden = false;
+    activeIndex = -1;
+    window.updateScrollLock?.();
+  }
+
+  function buildUiSuggestionHtml(query) {
+    if (typeof window.getUICommandSuggestions !== 'function') return '';
+    let suggestions = [];
+    try { suggestions = window.getUICommandSuggestions(query) || []; }
+    catch { suggestions = []; }
+    if (!suggestions.length) return '';
+    return suggestions.map((cmd, idx) => {
+      const iconPart = (() => {
+        if (cmd.icon && typeof window.iconHtml === 'function') {
+          try {
+            const html = window.iconHtml(cmd.icon, { className: 'suggest-icon-img' });
+            if (html) return `<span class="suggest-icon">${html}</span>`;
+          } catch {}
+        }
+        const emoji = String(cmd.emoji || '').trim();
+        return emoji ? `<span class="suggest-emoji">${escapeHtml(emoji)}</span>` : '';
+      })();
+      const label = `<span class="suggest-label">${escapeHtml(cmd.label || '')}</span>`;
+      return `<div class="item" data-ui="${escapeHtml(cmd.id || '')}" data-idx="ui-${idx}">${iconPart}${label}</div>`;
+    }).join('');
+  }
+
+  function getEntrySource() {
+    if (typeof context.getEntrySource === 'function') {
+      try {
+        const result = context.getEntrySource();
+        if (Array.isArray(result)) return result;
+        return Array.from(result || []);
+      } catch {}
+    }
+    return Array.isArray(window.DB) ? window.DB : [];
+  }
+
+  function buildEntrySuggestionHtml(query) {
+    const entries = getEntrySource();
+    if (!entries.length) return '';
+    const limit = context.maxEntries ?? ENTRY_LIMIT;
+    const normQuery = normalizeTerm(query);
+    const aliasTarget = resolveSearchAliasTarget(query);
+    if (!normQuery) return '';
+    const seen = new Set();
+    const items = [];
+    for (const entry of entries) {
+      const rawName = typeof entry === 'string'
+        ? entry
+        : (entry && typeof entry === 'object' ? (entry.namn ?? entry.name ?? '') : '');
+      const name = String(rawName || '').trim();
+      if (!name || seen.has(name)) continue;
+      const normName = normalizeTerm(name);
+      const aliasMatch = aliasTarget && normName === aliasTarget;
+      if (!normName.includes(normQuery) && !aliasMatch) continue;
+      seen.add(name);
+      items.push({ name, display: capitalize(name) });
+      if (items.length >= limit) break;
+    }
+    if (!items.length) return '';
+    return items.map((item, idx) =>
+      `<div class="item" data-entry="${escapeHtml(item.name)}" data-idx="entry-${idx}">${escapeHtml(item.display)}</div>`
+    ).join('');
+  }
+
+  function hideSuggestions() {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl) return;
+    sugEl.innerHTML = '';
+    sugEl.hidden = true;
+    activeIndex = -1;
+    window.updateScrollLock?.();
+  }
+
+  function getSuggestionItems() {
+    const sugEl = ensureSuggestionEl();
+    if (!sugEl || sugEl.hidden) return [];
+    return Array.from(sugEl.querySelectorAll('.item'));
+  }
+
+  function updateActiveHighlight() {
+    const items = getSuggestionItems();
+    items.forEach((el, idx) => {
+      el.classList.toggle('active', idx === activeIndex);
+    });
+  }
+
+  function moveSelection(delta) {
+    const items = getSuggestionItems();
+    if (!items.length) return false;
+    const nextIndex = Math.max(-1, Math.min(items.length - 1, activeIndex + delta));
+    if (nextIndex === activeIndex) return false;
+    activeIndex = nextIndex;
+    updateActiveHighlight();
+    if (activeIndex >= 0 && items[activeIndex]) {
+      try { items[activeIndex].scrollIntoView({ block: 'nearest' }); } catch {}
+    }
+    return true;
+  }
+
+  function selectActiveSuggestion() {
+    if (activeIndex < 0) return false;
+    const items = getSuggestionItems();
+    const current = items[activeIndex];
+    if (!current) return false;
+    return handleSuggestionElement(current, { reason: 'keyboard' });
+  }
+
+  function handleSuggestionElement(el, meta = {}) {
+    const dataset = el?.dataset || {};
+    if (dataset.ui) {
+      safeBlurInput();
+      let executed = false;
+      try { executed = typeof window.executeUICommand === 'function' ? window.executeUICommand(dataset.ui) : false; }
+      catch { executed = false; }
+      if (executed && dom.sIn) dom.sIn.value = '';
+      hideSuggestions();
+      return true;
+    }
+    if (typeof context.handleDataset === 'function') {
+      try {
+        if (context.handleDataset(dataset, { ...meta, query: lastQuery })) {
+          hideSuggestions();
+          return true;
+        }
+      } catch {}
+    }
+    if (dataset.entry || dataset.val) {
+      applyTermAndNavigate(dataset.entry || dataset.val || '');
+      return true;
+    }
+    return false;
+  }
+
+  function handleInput(event) {
+    updateSuggestions(event?.target?.value || '');
+  }
+
+  function handleKeydown(event) {
+    const key = event.key;
+    if (key === 'ArrowDown') {
+      const hadItems = getSuggestionItems().length > 0;
+      if (!hadItems) {
+        const val = String(getInput()?.value || '');
+        if (val.trim().length >= (context.minLength ?? SEARCH_MIN_CHARS)) {
+          updateSuggestions(val);
+        }
+      }
+      if (moveSelection(1)) event.preventDefault();
+      return;
+    }
+    if (key === 'ArrowUp') {
+      if (moveSelection(-1)) event.preventDefault();
+      return;
+    }
+    if (key === 'Enter') {
+      const input = getInput();
+      const term = String(input?.value || '').trim();
+      if (!term) {
+        hideSuggestions();
+        safeBlurInput();
+        event.preventDefault();
+        return;
+      }
+      if (isSecretDanielTerm(term)) {
+        if (dom.sIn) dom.sIn.value = '';
+        hideSuggestions();
+        safeBlurInput();
+        openDanielPopup();
+        event.preventDefault();
+        return;
+      }
+      applyTermAndNavigate(term);
+      event.preventDefault();
+      return;
+    }
+    if (key === 'Escape' && window.matchMedia('(pointer: fine)').matches) {
+      if (dom.sIn) dom.sIn.value = '';
+      hideSuggestions();
+      safeBlurInput();
+      event.preventDefault();
+    }
+  }
+
+  function applyTermAndNavigate(term) {
+    if (dom.sIn) dom.sIn.value = '';
+    hideSuggestions();
+    safeBlurInput();
+    navigateToIndexWithFilter(term);
+  }
+
+  function safeBlurInput() {
+    const input = getInput();
+    if (!input) return;
+    window.__searchBlurGuard = true;
+    try { input.blur(); }
+    catch {}
+  }
+
+  const toolbar = document.querySelector('shared-toolbar');
+  if (toolbar) {
+    toolbar.addEventListener('toolbar-rendered', () => {
+      suggestionEl = null;
+      ensureSuggestionEl();
+      refreshSuggestions();
+    });
+  }
+  ensureSuggestionEl();
+
+  return {
+    setContext,
+    refreshSuggestions,
+    hideSuggestions,
+    handleInput,
+    handleKeydown,
+    updateSuggestions,
+    moveSelection,
+    selectActiveSuggestion,
+    lastQuery: () => lastQuery
+  };
+})();
+
+window.globalSearch = globalSearch;
+globalSearch.setContext();
+
+/* ----- Hantera back-navigering för sökfältet ----- */
+let searchFocus = false;
+window.__searchBlurGuard = false;
+if (dom.sIn) {
+  dom.sIn.addEventListener('focus', () => {
+    history.pushState({ search: true }, '');
+    searchFocus = true;
+  });
+  dom.sIn.addEventListener('blur', () => {
+    setTimeout(() => {
+      globalSearch.hideSuggestions();
+      if (searchFocus) {
+        searchFocus = false;
+        if (window.__searchBlurGuard) {
+          window.__searchBlurGuard = false;
+          return;
+        }
+        history.back();
+      }
+    }, 0);
+  });
+  dom.sIn.addEventListener('input', globalSearch.handleInput);
+  dom.sIn.addEventListener('keydown', globalSearch.handleKeydown);
+}
+
+window.addEventListener('popstate', () => {
+  if (searchFocus && document.activeElement === dom.sIn) {
+    searchFocus = false;
+    globalSearch.hideSuggestions();
+    dom.sIn.blur();
+  }
+});
+
+/* ---------- Ladda databasen ---------- */
+let DB = [];
+let DBIndex = {};
+window.DB = DB;
+window.DBIndex = DBIndex;
+const DATA_FILES = [
+  'diverse.json',
+  'kuriositeter.json',
+  'skatter.json',
+  'elixir.json',
+  'fordel.json',
+  'formaga.json',
+  'kvalitet.json',
+  'mystisk-kraft.json',
+  'mystisk-kvalitet.json',
+  'neutral-kvalitet.json',
+  'negativ-kvalitet.json',
+  'nackdel.json',
+  'anstallning.json',
+  'byggnader.json',
+  'yrke.json',
+  'ras.json',
+  'elityrke.json',
+  'fardmedel.json',
+  'forvaring.json',
+  'gardsdjur.json',
+  'instrument.json',
+  'klader.json',
+  'specialverktyg.json',
+  'tjanster.json',
+  'ritual.json',
+  'rustning.json',
+  'vapen.json',
+  'mat.json',
+  'dryck.json',
+  'sardrag.json',
+  'monstruost-sardrag.json',
+  'artefakter.json',
+  'lagre-artefakter.json',
+  'fallor.json'
+].map(f => `data/${f}`);
+
+const TABELLER_FILE = 'data/tabeller.json';
+let TABELLER = [];
+fetch(TABELLER_FILE)
+  .then(r => r.json())
+  .then(arr => {
+    TABELLER = Array.isArray(arr) ? arr : [];
+    ensureEntryMetaList(TABELLER);
+    entryDataVersions.tables += 1;
+    window.TABELLER = TABELLER;
+    if (typeof window.indexViewUpdate === 'function') {
+      window.indexViewUpdate();
+      if (typeof window.indexViewRefreshFilters === 'function') {
+        window.indexViewRefreshFilters();
+      }
+    }
+  });
+
+function loadDatabaseData() {
+  return Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
+    .then(arrays => ({ entries: arrays.flat(), meta: null }));
+}
+
+loadDatabaseData()
+  .then(({ entries }) => {
+    DB = Array.isArray(entries) ? entries.slice() : [];
+    ensureEntryMetaList(DB);
+    DB = DB.sort(sortByType);
+    DB.forEach((ent, idx) => {
+      if (ent.id === undefined) ent.id = idx;
+      DB[ent.id] = ent;
+    });
+    entryDataVersions.db += 1;
+    window.DB = DB;
+    DBIndex = {};
+    DB.forEach(ent => { DBIndex[ent.namn] = ent; });
+    window.DBIndex = DBIndex;
+    if (storeHelper.migrateInventoryIds) {
+      storeHelper.migrateInventoryIds(store);
+      store = storeHelper.load();
+    }
+    boot();
+    runQueuedPostUpdateEntrySync();
+    try { window.globalSearch?.refreshSuggestions?.(); } catch {}
+    try {
+      window.dispatchEvent(new CustomEvent('symbaroum-db-ready', { detail: { entries: DB.length } }));
+    } catch {}
+  })
+  .catch(err => {
+    console.error('Kunde inte läsa databasen', err);
+  });
+
+/* ===========================================================
+   HJÄLPFUNKTIONER
+   =========================================================== */
+
+
+function yrkeInfoHtml(p) {
+  const extra = p.extra ? formatText(p.extra) : '';
+  const rawArkTrad = p?.taggar?.ark_trad;
+  const arkTradList = (() => {
+    if (!rawArkTrad) return [];
+    const exploded = typeof explodeTags === 'function'
+      ? explodeTags(rawArkTrad)
+      : (Array.isArray(rawArkTrad) ? rawArkTrad : [rawArkTrad]);
+    return [...new Set(
+      (Array.isArray(exploded) ? exploded : [])
+        .map(v => String(v ?? '').trim())
+        .filter(Boolean)
+    )];
+  })();
+  const wrapBlocks = (parts) => parts
+    .map(part => String(part || '').trim())
+    .filter(Boolean)
+    .map(part => `<div class="info-block info-block-extra">${part}</div>`)
+    .join('');
+  if (isRas(p)) {
+    const parts = [];
+    if (extra) parts.push(extra);
+    if (p.särdrag) parts.push(`<p><strong>Särdrag:</strong> ${p.särdrag}</p>`);
+    if ((p.namn_man || []).length) parts.push(`<p><strong>Mansnamn:</strong> ${p.namn_man.join(', ')}</p>`);
+    if ((p.namn_kvinna || []).length) parts.push(`<p><strong>Kvinnonamn:</strong> ${p.namn_kvinna.join(', ')}</p>`);
+    return wrapBlocks(parts);
+  }
+  if (isElityrke(p)) {
+    const parts = [];
+    if (extra) parts.push(extra);
+    if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
+    if (arkTradList.length) parts.push(`<p><strong>Ark_trad:</strong> ${arkTradList.join(', ')}</p>`);
+    return wrapBlocks(parts);
+  }
+  const parts = [];
+  if (extra) parts.push(extra);
+  if (arkTradList.length) parts.push(`<p><strong>Ark_trad:</strong> ${arkTradList.join(', ')}</p>`);
+  if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
+  if (p.forslag_pa_slakte) {
+    const val = Array.isArray(p.forslag_pa_slakte) ? p.forslag_pa_slakte.join(', ') : p.forslag_pa_slakte;
+    parts.push(`<p><strong>Förslag på släkte:</strong> ${val}</p>`);
+  }
+  if ((p.lampliga_formagor || []).length) parts.push(`<p><strong>Lämpliga förmågor:</strong> ${(p.lampliga_formagor || []).join(', ')}</p>`);
+  return wrapBlocks(parts);
+}
+
+function buildElityrkeInfoSections(p) {
+  if (!p || !isElityrke(p)) return [];
+
+  const utils = window.eliteUtils || {};
+  const DBIndex = window.DBIndex || {};
+  const DBList = Array.isArray(window.DB) ? window.DB : [];
+  const abilityRenderer = typeof abilityHtml === 'function' ? abilityHtml : null;
+  const normalizedKrav = typeof utils.normalizeKrav === 'function'
+    ? utils.normalizeKrav(p.krav || {})
+    : (p.krav || {});
+
+  const safe = (value) => String(value ?? '')
+    .replace(/[&<>"']/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[m] || m))
+    .replace(/'/g, '&#39;');
+  const toArray = (value) => (Array.isArray(value) ? value : []);
+
+  const renderTagList = (arr) => {
+    const list = Array.isArray(arr) ? arr : [];
+    if (!list.length) return '';
+    const items = list
+      .map(item => safe(item))
+      .filter(Boolean)
+      .map(item => `<span class="tag">${item}</span>`);
+    return items.length ? `<div class="tags elite-tag-list">${items.join('')}</div>` : '';
+  };
+
+  const findEntry = (name) => {
+    const trimmed = String(name || '').trim();
+    if (!trimmed) return null;
+    if (DBIndex && DBIndex[trimmed]) return DBIndex[trimmed];
+    const withoutSuffix = trimmed.replace(/\s*\(([^)]+)\)$/u, '').trim();
+    if (withoutSuffix && DBIndex[withoutSuffix]) return DBIndex[withoutSuffix];
+    const lower = trimmed.toLowerCase();
+    const match = DBList.find(ent => String(ent?.namn || '').toLowerCase() === lower);
+    if (match) return match;
+    if (withoutSuffix) {
+      const match2 = DBList.find(ent => String(ent?.namn || '').toLowerCase() === withoutSuffix.toLowerCase());
+      if (match2) return match2;
+    }
+    return null;
+  };
+
+  const renderAbilityDetails = (lookupName, options = {}) => {
+    if (!lookupName) return '';
+    const displayName = options.displayName ? String(options.displayName).trim() : lookupName;
+    const collapseAbility = options.collapseAbility !== false;
+    const entry = findEntry(lookupName);
+    const tags = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ
+          .map(tag => safe(tag))
+          .filter(Boolean)
+          .map(tag => `<span class="tag">${tag}</span>`)
+      : [];
+    const tagsHtml = tags.length ? `<div class="tags elite-ability-tags">${tags.join('')}</div>` : '';
+    const body = entry && abilityRenderer
+      ? abilityRenderer(entry, undefined, { collapseLevels: true })
+      : `<p class="elite-ability-missing-text">Kan inte hitta beskrivning för <em>${safe(displayName)}</em> i databasen.</p>`;
+    const missingClass = entry ? '' : ' missing';
+    const isOpen = options.defaultOpen && !collapseAbility;
+    const openAttr = isOpen ? ' open' : '';
+    return `
+      <details class="elite-ability-details${missingClass}"${openAttr}>
+        <summary>${safe(displayName)}</summary>
+        <div class="elite-ability-body">
+          ${tagsHtml}
+          ${body}
+        </div>
+      </details>
+    `.trim();
+  };
+
+  const normalizeType = (type) => (typeof utils.normalizeType === 'function'
+    ? utils.normalizeType(type)
+    : String(type || '').trim());
+  const normalizeLevel = (level, fallback = 'Novis') => (typeof utils.normalizeLevel === 'function'
+    ? utils.normalizeLevel(level, fallback)
+    : String(level || '').trim() || fallback);
+  const TYPE_SORT_ORDER = ['Fördel', 'Nackdel', 'Förmåga', 'Ritual', 'Mystisk kraft', 'Monstruöst särdrag', 'Särdrag'];
+  const typeSortRank = (type) => {
+    const normalized = normalizeType(type);
+    const idx = TYPE_SORT_ORDER.indexOf(normalized);
+    return idx >= 0 ? idx : TYPE_SORT_ORDER.length + 1;
+  };
+  const resolveEntryType = (entry) => {
+    const rawTypes = toArray(entry?.taggar?.typ).map(type => normalizeType(type)).filter(Boolean);
+    if (!rawTypes.length) return '';
+    const hit = TYPE_SORT_ORDER.find(type => rawTypes.includes(type));
+    return hit || rawTypes[0];
+  };
+  const isNoLevelGroup = (group) => {
+    const type = normalizeType(group?.type);
+    return type === 'Ritual' || type === 'Fördel' || type === 'Nackdel' || group?.allRitual || group?.anyRitual;
+  };
+  const groupTagLabel = (group) => toArray(group?.tagRule?.taggar)
+    .map(tag => String(tag || '').trim())
+    .filter(Boolean)
+    .join(', ');
+  const groupHeading = (group, idx) => {
+    if (group?.isPrimary) return 'Primärförmåga';
+    if (group?.anyMystic) return 'Valfri mystisk kraft';
+    if (group?.anyRitual) return 'Valfri ritual';
+    const source = String(group?.source || '');
+    if (source === 'specifika_formagor') return 'Specifika förmågor';
+    if (source === 'specifika_mystiska_krafter') return 'Specifika mystiska krafter';
+    if (source === 'specifika_ritualer') return 'Specifika ritualer';
+    if (source === 'specifika_fordelar') return 'Specifika fördelar';
+    if (source === 'specifika_nackdelar') return 'Specifika nackdelar';
+    if (source === 'primartagg') return `Primärt taggkrav: ${groupTagLabel(group) || 'Tagg'}`;
+    if (source === 'sekundartagg') return `Sekundärt taggkrav: ${groupTagLabel(group) || 'Tagg'}`;
+    if (source.startsWith('valfri_inom_tagg')) return `Valfritt inom: ${groupTagLabel(group) || 'Tagg'}`;
+    return `Kravgrupp ${idx + 1}`;
+  };
+  const groupMeta = (group, names) => {
+    if (group?.isPrimary) {
+      const primaryType = normalizeType(group?.type) || 'Förmåga';
+      return `${primaryType} · Minst ${normalizeLevel(group?.min_niva || 'Mästare', 'Mästare')} · 1 krav`;
+    }
+    const minErf = Math.max(0, Number(group?.min_erf) || 0);
+    if (minErf > 0) {
+      const parts = [`Minst ${minErf} ERF`];
+      const sources = toArray(group?.tagRule?.xp_kallor)
+        .map(type => normalizeType(type))
+        .filter(Boolean);
+      if (sources.length) parts.push(`Källor: ${sources.join(', ')}`);
+      if (names.length) parts.push(`${names.length} alternativ`);
+      return parts.join(' · ');
+    }
+    const parts = [];
+    const minCount = Math.max(1, Number(group?.min_antal) || 1);
+    const type = normalizeType(group?.type);
+    if (type) parts.push(type);
+    if (!isNoLevelGroup(group)) parts.push(`Minst ${normalizeLevel(group?.min_niva || 'Novis', 'Novis')}`);
+    parts.push(`Kräver ${minCount} val`);
+    if (names.length) parts.push(`${names.length} alternativ`);
+    return parts.join(' · ');
+  };
+  const renderSimpleRow = (label, pill, opts = {}) => {
+    const rowClass = opts.muted ? ' elite-profile-row-muted' : '';
+    return `
+      <div class="elite-profile-row${rowClass}">
+        <span class="elite-profile-row-name">${safe(label)}</span>
+        <span class="elite-profile-pill">${safe(pill)}</span>
+      </div>
+    `.trim();
+  };
+  const renderEntryBody = (item) => {
+    const entry = item?.entry || null;
+    const label = String(item?.name || '').trim();
+    const tags = Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ
+          .map(tag => safe(tag))
+          .filter(Boolean)
+          .map(tag => `<span class="tag">${tag}</span>`)
+      : [];
+    const tagsHtml = tags.length ? `<div class="tags elite-ability-tags">${tags.join('')}</div>` : '';
+    const body = entry && abilityRenderer
+      ? abilityRenderer(entry, undefined, { collapseLevels: true })
+      : `<p class="elite-ability-missing-text">Kan inte hitta beskrivning för <em>${safe(label)}</em> i databasen.</p>`;
+    return `
+      <div class="elite-profile-entry-body-wrap">
+        <div class="elite-profile-entry-body">
+          ${tagsHtml}
+          ${body}
+        </div>
+      </div>
+    `.trim();
+  };
+  const renderEntryRow = (item, pill, opts = {}) => {
+    const name = String(item?.name || '').trim();
+    if (!name) return '';
+    const rowClass = opts.muted ? ' elite-profile-row-muted' : '';
+    const type = String(item?.type || '').trim();
+    const typeHtml = opts.showType && type
+      ? `<span class="elite-profile-type-pill">${safe(type)}</span>`
+      : '';
+    return `
+      <details class="elite-profile-entry">
+        <summary class="elite-profile-row${rowClass}">
+          <span class="elite-profile-row-name">
+            <span>${safe(name)}</span>
+            ${typeHtml}
+          </span>
+          <span class="elite-profile-pill">${safe(pill)}</span>
+        </summary>
+        ${renderEntryBody(item)}
+      </details>
+    `.trim();
+  };
+  const renderGroupBody = (group, items) => {
+    const minCount = Math.max(1, Number(group?.min_antal) || 1);
+    const minLevel = normalizeLevel(group?.min_niva || 'Novis', 'Novis');
+    const noLevel = isNoLevelGroup(group);
+    const list = toArray(items);
+    const typeSet = new Set(list.map(item => String(item?.type || '').trim()).filter(Boolean));
+    const showType = typeSet.size > 1;
+    const staticGroup = Boolean(group?.isPrimary) || (!group?.dynamic_select && list.length > 0 && list.length <= minCount);
+    if (!list.length) {
+      if (group?.anyMystic) return renderSimpleRow('Valfri mystisk kraft', `Minst ${minLevel}`);
+      if (group?.anyRitual) return renderSimpleRow('Valfri ritual', 'Obligatorisk');
+      return renderSimpleRow('Inga valbara entries hittades', 'Saknas i databas', { muted: true });
+    }
+    if (staticGroup) {
+      const staticPill = noLevel
+        ? 'Obligatorisk'
+        : (group?.isPrimary ? 'Måste vara Mästare' : `Minst ${minLevel}`);
+      return list.map(item => renderEntryRow(item, staticPill, { showType })).join('');
+    }
+    const basePill = noLevel ? 'Valbar' : `Minst ${minLevel}`;
+    const previewLimit = 3;
+    const preview = list.slice(0, previewLimit).map(item => renderEntryRow(item, basePill, { showType })).join('');
+    if (list.length <= previewLimit) return preview;
+    const hiddenRows = list.slice(previewLimit).map(item => renderEntryRow(item, basePill, { showType })).join('');
+    return `
+      ${preview}
+      <details class="elite-profile-options">
+        <summary>Visa fler alternativ (${list.length})</summary>
+        <div class="elite-profile-options-body">
+          ${hiddenRows}
+        </div>
+      </details>
+    `;
+  };
+
+  const getKravGroups = () => {
+    if (typeof utils.getKravGroups !== 'function') return [];
+    try {
+      return utils.getKravGroups(p.krav || {}, {
+        dbList: DBList,
+        lookupEntry: window.lookupEntry
+      });
+    } catch {
+      return [];
+    }
+  };
+  const groups = getKravGroups();
+
+  const sections = [];
+
+  if (groups.length) {
+    const minTotalErf = Math.max(0, Number(normalizedKrav?.min_total_erf) || 0);
+    const profileCards = groups.map((group, idx) => {
+      const items = toArray(group?.names)
+        .map(name => String(name || '').trim())
+        .filter(Boolean)
+        .map(name => {
+          const entry = findEntry(name);
+          const type = resolveEntryType(entry);
+          return { name, entry, type };
+        })
+        .sort((a, b) => {
+          const typeDiff = typeSortRank(a.type) - typeSortRank(b.type);
+          if (typeDiff !== 0) return typeDiff;
+          return String(a.name || '').localeCompare(String(b.name || ''), 'sv');
+        });
+      const names = items.map(item => item.name);
+      const title = groupHeading(group, idx);
+      const meta = groupMeta(group, names);
+      const body = renderGroupBody(group, items);
+      const source = String(group?.source || '');
+      const sourceAttr = safe(source || `group-${idx}`);
+
+      return `
+        <section class="elite-profile-group" data-elite-group-source="${sourceAttr}">
+          <div class="elite-profile-head">
+            <div class="elite-profile-title-wrap">
+              <h4 class="elite-profile-title">${safe(title)}</h4>
+              <p class="elite-profile-meta">${safe(meta)}</p>
+            </div>
+          </div>
+          <div class="elite-profile-body">
+            ${body}
+          </div>
+        </section>
+      `.trim();
+    }).filter(Boolean);
+    if (minTotalErf > 0) {
+      profileCards.unshift(`
+        <section class="elite-profile-group elite-profile-group-total" data-elite-group-source="min_total_erf">
+          <div class="elite-profile-head">
+            <div class="elite-profile-title-wrap">
+              <h4 class="elite-profile-title">Total erfarenhet</h4>
+              <p class="elite-profile-meta">Minimikrav för rollpersonen</p>
+            </div>
+          </div>
+          <div class="elite-profile-body">
+            ${renderSimpleRow('Total erfarenhetspoäng', `Minst ${minTotalErf} ERF`)}
+          </div>
+        </section>
+      `.trim());
+    }
+
+    sections.push({
+      title: 'Kravprofil',
+      className: 'info-panel-elite',
+      content: `<div class="elite-profile-grid">${profileCards.join('')}</div>`
+    });
+  }
+
+  const eliteAbilities = Array.isArray(p.Elityrkesförmågor) ? p.Elityrkesförmågor : [];
+  if (eliteAbilities.length) {
+    const abilityBlocks = eliteAbilities
+      .map(raw => {
+        const display = String(raw || '').trim();
+        if (!display) return '';
+        const lookup = display.replace(/\s*\(([^)]+)\)$/u, '').trim() || display;
+        let block = renderAbilityDetails(lookup, { displayName: display, defaultOpen: eliteAbilities.length === 1 });
+        if (block.includes('elite-ability-missing-text')) {
+          const inner = display.includes('(') ? display.slice(display.indexOf('(') + 1, display.lastIndexOf(')')).trim() : '';
+          if (inner) {
+            block = renderAbilityDetails(inner, { displayName: display, defaultOpen: eliteAbilities.length === 1 });
+          }
+        }
+        return block;
+      })
+      .filter(Boolean);
+    const listHtml = abilityBlocks.length
+      ? `<div class="elite-ability-stack">${abilityBlocks.join('')}</div>`
+      : renderTagList(eliteAbilities);
+    sections.push({
+      title: 'Elityrkesförmågor',
+      className: 'info-panel-elite',
+      content: `<div class="elite-profile-grid"><section class="elite-profile-group elite-profile-group-support">${listHtml}</section></div>`
+    });
+  }
+
+  if ((p.mojliga_fordelar || []).length) {
+    const listHtml = renderTagList(p.mojliga_fordelar);
+    sections.push({
+      title: 'Möjliga fördelar',
+      className: 'info-panel-elite',
+      content: `<div class="elite-profile-grid"><section class="elite-profile-group elite-profile-group-support">${listHtml}</section></div>`
+    });
+  }
+
+  if ((p.tankbara_nackdelar || []).length) {
+    const listHtml = renderTagList(p.tankbara_nackdelar);
+    sections.push({
+      title: 'Tänkbara nackdelar',
+      className: 'info-panel-elite',
+      content: `<div class="elite-profile-grid"><section class="elite-profile-group elite-profile-group-support">${listHtml}</section></div>`
+    });
+  }
+
+  return sections;
+}
+
+/* ---------- Popup för kvaliteter ---------- */
+
+/* ===========================================================
+   GEMENSAM INIT
+   =========================================================== */
+function boot() {
+  if (window.invUtil) {
+    invUtil.renderInventory();
+    invUtil.bindInv();
+    invUtil.bindMoney();
+  }
+  refreshCharSelect();
+  bindToolbar();
+
+  if (dom.traits && typeof renderTraits === 'function') {
+    renderTraits();
+    if (typeof bindTraits === 'function') bindTraits();
+  }
+  if (ROLE === 'index')      initIndex();
+  if (ROLE === 'character')  { initCharacter(); promptOutdatedEntriesIfNeeded(); }
+  if (ROLE === 'notes')      initNotes();
+  if (ROLE === 'inventory')  initInventory();
+  if (ROLE === 'summary' && window.summaryEffects?.initSummaryPage) {
+    window.summaryEffects.initSummaryPage();
+  }
+  if (ROLE === 'effects' && window.summaryEffects?.initEffectsPage) {
+    window.summaryEffects.initEffectsPage();
+  }
+}
+
+/* ===========================================================
+   TOOLBAR-LOGIK
+   =========================================================== */
+/*
+  Central helper to re-sync all character-bound UI without a full reload.
+  - Keeps current filters/search UI state intact
+  - Re-renders inventory, traits, XP counters, lists, and toolbar widgets
+*/
+function applyCharacterChange() {
+  try {
+    // Make sure global store is the latest (in case caller updated localStorage elsewhere)
+    try { store = storeHelper.load(); } catch {}
+
+    // Refresh select menus and folder filter + XP counters
+    refreshCharSelect();
+    const nm = (store.characters || []).find(c => c.id === store.current)?.name || '';
+
+    // Update visible character name (character and notes views)
+    if (dom.cName) {
+      dom.cName.textContent = nm;
+    }
+
+    if (store.current && store.current !== lastActiveChar) {
+      if (nm) toast(`${nm} är aktiv`);
+      lastActiveChar = store.current;
+    }
+
+    // Update toolbar toggles visual state based on current character
+    if (dom.forgeBtn) dom.forgeBtn.classList.toggle('active', Boolean(storeHelper.getPartySmith(store)));
+    if (dom.alcBtn)   dom.alcBtn.classList.toggle('active',   Boolean(storeHelper.getPartyAlchemist(store)));
+    if (dom.artBtn)   dom.artBtn.classList.toggle('active',   Boolean(storeHelper.getPartyArtefacter(store)));
+    syncDefenseButtons();
+
+    updateCharacterIconVariant();
+
+    // Re-render inventory (includes recalculating traits/XP side-effects)
+    if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+      invUtil.renderInventory();
+    }
+
+    // Update XP counters explicitly (safe no-op if already handled above)
+    if (typeof window.updateXP === 'function') updateXP();
+
+    // Ensure traits panel reflects the new character regardless of inventory path
+    if (typeof window.renderTraits === 'function') renderTraits();
+
+    // Re-render main content depending on view
+    if (typeof window.indexViewRefreshFilters === 'function') window.indexViewRefreshFilters();
+    if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+    if (typeof window.notesUpdate === 'function') window.notesUpdate();
+    if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+    if (ROLE === 'character') promptOutdatedEntriesIfNeeded();
+  } catch (err) {
+    // As a last resort, fall back to reload to avoid a broken UI
+    try { location.reload(); } catch {}
+  }
+}
+// Expose for other modules that want to trigger a full UI sync
+window.applyCharacterChange = applyCharacterChange;
+
+function syncEntriesAfterAppUpdate(options = {}) {
+  if (!store || typeof store !== 'object') return { updated: 0, characters: 0, charIds: [] };
+  if (!Array.isArray(window.DB) || !window.DB.length) return { updated: 0, characters: 0, charIds: [] };
+  if (typeof storeHelper?.syncEntriesWithDb !== 'function') return { updated: 0, characters: 0, charIds: [] };
+
+  const includePinned = options.includePinned !== false;
+  const allCharacters = options.allCharacters !== false;
+  const ids = new Set();
+
+  if (Array.isArray(options.charIds) && options.charIds.length) {
+    options.charIds.forEach(id => {
+      if (id) ids.add(String(id));
+    });
+  } else if (allCharacters) {
+    (store.characters || []).forEach(char => {
+      if (char?.id) ids.add(char.id);
+    });
+  }
+
+  if (store.current) ids.add(store.current);
+  const charIds = [...ids];
+  if (!charIds.length) return { updated: 0, characters: 0, charIds: [] };
+
+  let updated = 0;
+  let characters = 0;
+  const touched = [];
+
+  charIds.forEach(charId => {
+    const res = storeHelper.syncEntriesWithDb(store, {
+      charId,
+      mode: 'update',
+      includePinned
+    });
+    const updatedForChar = Number(res?.updated) || 0;
+    if (updatedForChar > 0) {
+      updated += updatedForChar;
+      characters += 1;
+      touched.push(charId);
+    }
+  });
+
+  if (updated > 0) {
+    try { store = storeHelper.load(); } catch {}
+    applyCharacterChange();
+  }
+
+  return { updated, characters, charIds: touched };
+}
+
+window.syncEntriesAfterAppUpdate = syncEntriesAfterAppUpdate;
+
+function consumePostUpdateSyncFlag() {
+  try {
+    const flagged = sessionStorage.getItem(PWA_POST_UPDATE_SYNC_KEY) === '1';
+    if (flagged) sessionStorage.removeItem(PWA_POST_UPDATE_SYNC_KEY);
+    return flagged;
+  } catch {
+    return false;
+  }
+}
+
+function runQueuedPostUpdateEntrySync() {
+  if (!consumePostUpdateSyncFlag()) return { queued: false, updated: 0, characters: 0 };
+  const result = syncEntriesAfterAppUpdate({ includePinned: true, allCharacters: true });
+  if (result.updated > 0) {
+    const charLabel = result.characters === 1 ? 'rollperson' : 'rollpersoner';
+    window.toast?.(`Uppdaterade ${result.updated} sparade val i ${result.characters} ${charLabel}.`);
+  }
+  return { queued: true, ...result };
+}
+
+async function promptOutdatedEntriesIfNeeded() {
+  if (outdatedPromptInFlight) return;
+  if (ROLE !== 'character') return;
+  if (!store || !store.current) return;
+  try {
+    if (sessionStorage.getItem(PWA_POST_UPDATE_SYNC_KEY) === '1') return;
+  } catch {}
+  if (typeof window.openDialog !== 'function') return;
+  if (!Array.isArray(window.DB) || !window.DB.length) return;
+  if (typeof storeHelper?.findOutdatedEntries !== 'function' || typeof storeHelper?.syncEntriesWithDb !== 'function') {
+    return;
+  }
+  const { outdated } = storeHelper.findOutdatedEntries(store, { charId: store.current });
+  if (!Array.isArray(outdated) || !outdated.length) return;
+
+  outdatedPromptInFlight = true;
+  try {
+    const names = outdated
+      .map(item => item?.entry?.namn || item?.dbEntry?.namn)
+      .filter(Boolean);
+    const bulletList = names.map(n => `• ${n}`).join('\n');
+    const message = names.length === 1
+      ? `${names[0]} har ändrats i databasen. Uppdatera den sparade versionen?`
+      : `Följande val har ändrats i databasen:\n${bulletList}\nUppdatera de sparade versionerna?`;
+    const res = await openDialog(message, {
+      cancel: true,
+      okText: 'Uppdatera',
+      cancelText: 'Behåll nuvarande'
+    });
+    if (res === true) {
+      storeHelper.syncEntriesWithDb(store, { charId: store.current, mode: 'update' });
+      applyCharacterChange();
+    } else {
+      storeHelper.syncEntriesWithDb(store, { charId: store.current, mode: 'pin' });
+    }
+  } catch {
+    // ignore prompt errors
+  } finally {
+    outdatedPromptInFlight = false;
+  }
+}
+
+function updateCharacterIconVariant() {
+  if (typeof window.setCharacterIconVariant !== 'function') return;
+  try {
+    if (!store || !store.current || typeof storeHelper.getCharacterRaces !== 'function') {
+      window.setCharacterIconVariant('');
+      return;
+    }
+    const races = storeHelper.getCharacterRaces(store) || {};
+    const base = String(races.base || '').trim().toLowerCase();
+    const blood = Array.isArray(races.blood) ? races.blood : [];
+    const hasAndrik = base === 'andrik'
+      || blood.some(r => String(r || '').trim().toLowerCase() === 'andrik');
+    window.setCharacterIconVariant(hasAndrik ? 'andrik' : '');
+  } catch {
+    try { window.setCharacterIconVariant(''); } catch {}
+  }
+}
+
+window.updateCharacterIconVariant = updateCharacterIconVariant;
+
+updateCharacterIconVariant();
+
+function refreshCharSelect() {
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  const map = new Map(); // folderId -> chars
+  const none = [];
+  for (const c of (store.characters || [])) {
+    const fid = c.folderId || '';
+    if (!fid || !folders.some(f=>f.id===fid)) none.push(c);
+    else {
+      if (!map.has(fid)) map.set(fid, []);
+      map.get(fid).push(c);
+    }
+  }
+  const renderOpts = (arr) => (arr||[])
+    .slice()
+    .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'))
+    .map(c => `<option value="${c.id}"${c.id===store.current?' selected':''}>${c.name}</option>`)
+    .join('');
+  const active = storeHelper.getActiveFolder(store);
+  let html = '<option value="">Välj rollperson …</option>';
+  if (active === 'ALL') {
+    for (const f of folders) {
+      const arr = map.get(f.id) || [];
+      if (!arr.length) continue; // hoppa över tomma mappar
+      html += `<optgroup label="${(f.name||'Mapp')}">${renderOpts(arr)}</optgroup>`;
+    }
+  } else {
+    const f = folders.find(x => x.id === active);
+    const arr = map.get(active) || [];
+    if (f && arr.length) {
+      html += `<optgroup label="${(f.name||'Mapp')}">${renderOpts(arr)}</optgroup>`;
+    }
+  }
+  dom.charSel.innerHTML = html;
+  updateXP();
+  refreshFolderFilter();
+}
+
+function refreshFolderFilter() {
+  if (!dom.folderSel) return;
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  const active = storeHelper.getActiveFolder(store);
+  let html = '';
+  html += `<option value="ALL"${active==='ALL'?' selected':''}>Alla</option>`;
+  html += folders.map(f => `<option value="${f.id}"${active===f.id?' selected':''}>${f.name}</option>`).join('');
+  dom.folderSel.innerHTML = html;
+}
+
+/* -----------------------------------------------------------
+   TOOLBAR – bindas först när knapparna existerar
+----------------------------------------------------------- */
+/* -----------------------------------------------------------
+   TOOLBAR – delegation inne i shadow-DOM
+----------------------------------------------------------- */
+function bindToolbar() {
+  /* charSelect ligger också i shadow-DOM men går fint att nå direkt */
+  dom.charSel.addEventListener('change', () => {
+    store.current = dom.charSel.value;
+    storeHelper.save(store);
+    applyCharacterChange();
+  });
+
+  /* Aktiv mapp (folderFilter) */
+  if (dom.folderSel) {
+    dom.folderSel.addEventListener('change', () => {
+      const val = dom.folderSel.value;
+      // Sätt aktiv mapp i lagringen
+      storeHelper.setActiveFolder(store, val);
+
+      // Om en specifik mapp valts (ej "Alla"), välj första karaktären i den mappen
+      if (val && val !== 'ALL') {
+        const firstInFolder = (store.characters || [])
+          .filter(c => (c.folderId || '') === val)
+          .slice()
+          .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'))[0];
+        if (firstInFolder && store.current !== firstInFolder.id) {
+          store.current = firstInFolder.id;
+          storeHelper.save(store);
+          // Uppdatera visat namn om det finns i denna vy
+          if (dom.cName) dom.cName.textContent = firstInFolder.name || '';
+          // Uppdatera vyer utan omladdning
+          if (ROLE === 'character' || ROLE === 'notes') {
+            applyCharacterChange();
+            return;
+          }
+        }
+      }
+
+      // Uppdatera menyer och index-vy utan omladdning
+      refreshCharSelect();
+      if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+    });
+  }
+
+  /* one–time delegation för alla knappar i toolbar + paneler */
+  bar.shadowRoot.addEventListener('click', async e => {
+    const id = e.target.closest('button, a')?.id;
+    if (!id) return;
+
+    /* Ny rollperson ---------------------------------------- */
+    if (id === 'newCharBtn') {
+      const active = storeHelper.getActiveFolder(store);
+      const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
+
+      // Visa alltid popupen; förvalt val = aktiv mapp (eller Standard om Alla)
+      const res = await openNewCharPopupWithFolder(active);
+      if (!res) return; // avbrutet
+      const { name, folderId, xp } = res;
+      if (!name) return;
+      store.characters.push({ id: charId, name, folderId: folderId || '' });
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
+      store.current = charId;
+      // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
+      const prevActive = storeHelper.getActiveFolder(store);
+      if (folderId && prevActive !== folderId) {
+        storeHelper.setActiveFolder(store, folderId);
+      }
+      storeHelper.save(store);
+      applyCharacterChange();
+    }
+
+    /* Rollpersonsverktyg ---------------------------------- */
+    if (id === 'generateCharBtn') {
+      openCharacterToolsPopup('generate');
+      return;
+    }
+    if (id === 'duplicateChar') {
+      openCharacterToolsPopup('duplicate');
+      return;
+    }
+    if (id === 'renameChar') {
+      openCharacterToolsPopup('rename');
+      return;
+    }
+    if (id === 'manageFolders') {
+      openCharacterToolsPopup('folders');
+      return;
+    }
+    if (id === 'characterToolsBtn') {
+      openCharacterToolsPopup('generate');
+      return;
+    }
+
+    /* Lagring (Drive / Import / Export) ---------------- */
+    if (id === 'driveStorageBtn') {
+      openDriveStoragePopup('drive');
+      return;
+    }
+
+    /* Ta bort rollperson ----------------------------------- */
+    if (id === 'deleteChar') {
+      if (!store.current && !(await requireCharacter())) return;
+      const char = store.characters.find(c => c.id === store.current);
+      if (!(await confirmPopup(`Ta bort “${char.name}”?`))) return;
+
+      const idToDel = store.current;
+      const deletedName = char.name;
+      storeHelper.deleteCharacter(store, idToDel);
+      // Pick a sensible next current character (first in active folder), or none
+      let newActiveName = '';
+      try {
+        const active = storeHelper.getActiveFolder(store);
+        const remaining = (store.characters || [])
+          .filter(c => !active || active === 'ALL' || (c.folderId || '') === active)
+          .slice()
+          .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+        store.current = remaining[0]?.id || '';
+        newActiveName = remaining[0]?.name || '';
+        storeHelper.save(store);
+      } catch {}
+      lastActiveChar = store.current;
+      toast(newActiveName ? `${deletedName} är raderad. ${newActiveName} är aktiv` : `${deletedName} är raderad`);
+      applyCharacterChange();
+    }
+
+  });
+
+  document.addEventListener('click', async e => {
+    const btn = e.target.closest('#resetTraits');
+    if (!btn) return;
+    if (!store.current && !(await requireCharacter())) return;
+    const ok = await confirmPopup('Detta nollställer alla karaktärsdrag till 10. Karaktärsdrag från förmågor och inventarier påverkas inte. Åtgärden kan inte ångras. Vill du fortsätta?');
+    if (!ok) return;
+    const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+    const t = storeHelper.getTraits(store);
+    const next = { ...t };
+    KEYS.forEach(k => { next[k] = 10; });
+    storeHelper.setTraits(store, next);
+    if (typeof renderTraits === 'function') renderTraits();
+  });
+
+  /* Ändra total erf direkt när värdet byts */
+  if (dom.xpIn) {
+    dom.xpIn.addEventListener('change', () => {
+      const xp = Number(dom.xpIn.value) || 0;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
+
+  if (dom.xpPlus) {
+    dom.xpPlus.addEventListener('click', () => {
+      const xp = storeHelper.getBaseXP(store) + 1;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
+  if (dom.xpMinus) {
+    dom.xpMinus.addEventListener('click', () => {
+      const xp = Math.max(0, storeHelper.getBaseXP(store) - 1);
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    });
+  }
+
+  if (dom.forgeBtn) {
+    if (storeHelper.getPartySmith(store)) dom.forgeBtn.classList.add('active');
+    dom.forgeBtn.addEventListener('click', () => {
+      openSmithPopup(level => {
+        if (level === null) return;
+        dom.forgeBtn.classList.toggle('active', Boolean(level));
+        storeHelper.setPartySmith(store, level);
+        invUtil.renderInventory();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+      });
+    });
+  }
+  if (dom.alcBtn) {
+    if (storeHelper.getPartyAlchemist(store)) dom.alcBtn.classList.add('active');
+    dom.alcBtn.addEventListener('click', () => {
+      openAlchemistPopup(level => {
+        if (level === null) return;
+        dom.alcBtn.classList.toggle('active', Boolean(level));
+        storeHelper.setPartyAlchemist(store, level);
+        invUtil.renderInventory();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+      });
+    });
+  }
+  if (dom.artBtn) {
+    if (storeHelper.getPartyArtefacter(store)) dom.artBtn.classList.add('active');
+    dom.artBtn.addEventListener('click', () => {
+      openArtefacterPopup(level => {
+        if (level === null) return;
+        dom.artBtn.classList.toggle('active', Boolean(level));
+        storeHelper.setPartyArtefacter(store, level);
+        invUtil.renderInventory();
+        if (window.indexViewUpdate) window.indexViewUpdate();
+      });
+    });
+  }
+  if (dom.defBtn) {
+    dom.defBtn.addEventListener('click', () => {
+      openDefenseCalcPopup();
+    });
+  }
+  if (dom.manualBtn) {
+    dom.manualBtn.addEventListener('click', async () => {
+      if (!store.current) {
+        const ok = await requireCharacter();
+        if (!ok) return;
+      }
+      openManualAdjustPopup();
+    });
+  }
+  if (dom.entrySortBtn) {
+    dom.entrySortBtn.addEventListener('click', () => {
+      openEntrySortPopup(mode => {
+        if (!mode) return;
+        const normalized = typeof normalizeEntrySortMode === 'function'
+          ? normalizeEntrySortMode(mode)
+          : mode;
+        const current = storeHelper.getEntrySort(store);
+        if (normalized === current) return;
+        storeHelper.setEntrySort(store, normalized);
+        if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+        if (typeof window.inventoryViewUpdate === 'function') window.inventoryViewUpdate();
+        if (typeof window.notesUpdate === 'function') window.notesUpdate();
+        if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+        if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+      });
+    });
+  }
+  if (dom.filterUnion) {
+    if (storeHelper.getFilterUnion(store)) dom.filterUnion.classList.add('active');
+    dom.filterUnion.addEventListener('click', () => {
+      const val = dom.filterUnion.classList.toggle('active');
+      storeHelper.setFilterUnion(store, val);
+      if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.inventoryViewUpdate) window.inventoryViewUpdate();
+    });
+  }
+  if (dom.entryViewToggle) {
+    if (!storeHelper.getCompactEntries(store)) dom.entryViewToggle.classList.add('active');
+    dom.entryViewToggle.addEventListener('click', () => {
+      const val = dom.entryViewToggle.classList.toggle('active');
+      // "active" betyder nu expanderad/vanlig vy; compact = !active
+      storeHelper.setCompactEntries(store, !val);
+      if (window.indexViewUpdate) window.indexViewUpdate();
+      if (window.inventoryViewUpdate) window.inventoryViewUpdate();
+    });
+  }
+  syncManualAdjustButton();
+}
+
+async function generateCharacterFromSettings(settings) {
+  if (!window.symbaroumGenerator || typeof window.symbaroumGenerator.generate !== 'function') {
+    await alertPopup('Generatorn kunde inte laddas.');
+    return false;
+  }
+
+  const payload = {
+    name: String(settings?.name || '').trim() || 'Slumpad rollperson',
+    xp: Math.max(0, Math.floor(Number(settings?.xp || 0) / 10) * 10),
+    attributeMode: settings?.attrMode || '',
+    traitFocus: settings?.traitFocus || '',
+    race: settings?.race || '',
+    yrke: settings?.yrke || '',
+    elityrke: settings?.elityrke || '',
+    folderId: settings?.folderId || ''
+  };
+
+  let generated = null;
+  try {
+    generated = window.symbaroumGenerator.generate({
+      name: payload.name,
+      xp: payload.xp,
+      attributeMode: payload.attributeMode,
+      traitFocus: payload.traitFocus,
+      race: payload.race,
+      yrke: payload.yrke,
+      elityrke: payload.elityrke
+    });
+  } catch (err) {
+    console.error('Generator error', err);
+  }
+  if (!generated) {
+    await alertPopup('Generatorn misslyckades. Försök igen.');
+    return false;
+  }
+
+  const charId = storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now());
+  store.characters.push({ id: charId, name: payload.name, folderId: payload.folderId });
+  store.data[charId] = { baseXp: Number(payload.xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
+  store.current = charId;
+
+  const prevActive = storeHelper.getActiveFolder(store);
+  if (payload.folderId && prevActive !== payload.folderId) {
+    storeHelper.setActiveFolder(store, payload.folderId);
+  }
+
+  try {
+    storeHelper.setTraits(store, generated.traits || {});
+  } catch (err) {
+    console.warn('Kunde inte sätta karaktärsdrag', err);
+  }
+  try {
+    storeHelper.setCurrentList(store, Array.isArray(generated.list) ? generated.list : []);
+  } catch (err) {
+    console.warn('Kunde inte sätta förmågor', err);
+  }
+
+  storeHelper.setBaseXP(store, Math.max(0, Number(payload.xp) || 0));
+  storeHelper.save(store);
+  applyCharacterChange();
+  return true;
+}
+
+function duplicateCharacterWithSettings(settings) {
+  const sourceId = settings?.sourceId || store.current || '';
+  if (!sourceId) return '';
+  const src = (store.characters || []).find(c => c.id === sourceId);
+  if (!src) return '';
+
+  const name = String(settings?.name || '').trim();
+  if (!name) return '';
+  const folderId = settings?.folderId || '';
+
+  const newId = storeHelper.duplicateCharacter(store, sourceId);
+  if (!newId) return '';
+
+  try { storeHelper.renameCharacter(store, newId, name); } catch {}
+  try { if (folderId) storeHelper.setCharacterFolder(store, newId, folderId); } catch {}
+  const prevActive = storeHelper.getActiveFolder(store);
+  if (folderId && prevActive !== folderId) {
+    storeHelper.setActiveFolder(store, folderId);
+  }
+  store.current = newId;
+  storeHelper.save(store);
+  applyCharacterChange();
+  return newId;
+}
+
+function renameCharacterWithSettings(settings) {
+  const charId = settings?.charId || store.current || '';
+  if (!charId) return false;
+  const char = (store.characters || []).find(c => c.id === charId);
+  if (!char) return false;
+
+  const name = String(settings?.name || '').trim();
+  if (!name) return false;
+  const folderId = settings?.folderId || '';
+  const oldFolder = storeHelper.getCharacterFolder(store, charId) || '';
+
+  storeHelper.renameCharacter(store, charId, name);
+  if (folderId && folderId !== oldFolder) {
+    storeHelper.setCharacterFolder(store, charId, folderId);
+    if (charId === store.current) {
+      const prevActive = storeHelper.getActiveFolder(store);
+      if (prevActive !== folderId) storeHelper.setActiveFolder(store, folderId);
+      storeHelper.save(store);
+      applyCharacterChange();
+      return true;
+    }
+  }
+
+  storeHelper.save(store);
+  refreshCharSelect();
+  if (charId === store.current && dom.cName) dom.cName.textContent = name;
+  if (typeof window.indexViewUpdate === 'function') window.indexViewUpdate();
+  return true;
+}
+
+async function runGenerateCharacterFlow() {
+  const active = storeHelper.getActiveFolder(store);
+  const res = await openGeneratorPopup(active);
+  if (!res) return;
+  await generateCharacterFromSettings(res);
+}
+
+async function runDuplicateCharacterFlow() {
+  if (!store.current && !(await requireCharacter())) return;
+  const src = (store.characters || []).find(c => c.id === store.current);
+  if (!src) return;
+  const defaultName = `${src.name} (kopia)`;
+  const defaultFolder = storeHelper.getCharacterFolder(store, store.current);
+  const res = await openDuplicateCharPopupWithFolder(defaultFolder, defaultName);
+  if (!res) return;
+  duplicateCharacterWithSettings({
+    sourceId: store.current,
+    name: res.name,
+    folderId: res.folderId
+  });
+}
+
+async function runRenameCharacterFlow() {
+  if (!store.current && !(await requireCharacter())) return;
+  const char = store.characters.find(c => c.id === store.current);
+  if (!char) return;
+  const curFolder = storeHelper.getCharacterFolder(store, store.current);
+  const res = await openRenameCharPopupWithFolder(curFolder, char.name || '');
+  if (!res) return;
+  renameCharacterWithSettings({
+    charId: store.current,
+    name: res.name,
+    folderId: res.folderId
+  });
+}
+
+function openCharacterToolsPopup(initialTab = 'generate') {
+  openChoicePopup((opts) => {
+    const make = (tag, cls, text) => {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (text != null) el.textContent = text;
+      return el;
+    };
+    const escapeHtml = s => String(s || '').replace(/[&<>"]/g, m => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;'
+    }[m]));
+
+    const getSortedFolders = () => (storeHelper.getFolders(store) || []).slice()
+      .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+
+    const getDefaultFolderId = (preferredId = '') => {
+      const folders = getSortedFolders();
+      if (!folders.length) return '';
+      if (preferredId && preferredId !== 'ALL' && folders.some(f => f.id === preferredId)) return preferredId;
+      const active = storeHelper.getActiveFolder(store);
+      if (active && active !== 'ALL' && folders.some(f => f.id === active)) return active;
+      const std = folders.find(f => f.system) || folders.find(f => (f.name || '') === 'Standard') || folders[0];
+      return std ? std.id : folders[0].id;
+    };
+
+    const getCharacterEntries = () => {
+      const folders = getSortedFolders();
+      const folderNameById = new Map(folders.map(f => [f.id, f.name || 'Mapp']));
+      return (store.characters || [])
+        .map(c => ({
+          id: c.id,
+          name: c.name || 'Namnlös',
+          folderId: c.folderId || '',
+          folderName: folderNameById.get(c.folderId || '') || 'Övrigt'
+        }))
+        .sort((a, b) =>
+          String(a.folderName).localeCompare(String(b.folderName), 'sv') ||
+          String(a.name).localeCompare(String(b.name), 'sv')
+        );
+    };
+
+    const fillFolderSelect = (select, preferredId = '') => {
+      const folders = getSortedFolders();
+      const prev = select.value;
+      select.innerHTML = '';
+      folders.forEach(folder => {
+        const opt = document.createElement('option');
+        opt.value = folder.id;
+        opt.textContent = folder.name || 'Mapp';
+        select.appendChild(opt);
+      });
+      const chosen = folders.some(f => f.id === prev) ? prev : getDefaultFolderId(preferredId);
+      if (chosen) select.value = chosen;
+      return folders;
+    };
+
+    const fillCharacterSelect = (select, preferredId = '') => {
+      const entries = getCharacterEntries();
+      const prev = select.value;
+      select.innerHTML = '';
+      if (!entries.length) {
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Inga rollpersoner';
+        select.appendChild(opt);
+        select.disabled = true;
+        return { entries, selectedId: '' };
+      }
+      select.disabled = false;
+      const groups = new Map();
+      entries.forEach(entry => {
+        if (!groups.has(entry.folderName)) groups.set(entry.folderName, []);
+        groups.get(entry.folderName).push(entry);
+      });
+      for (const [groupName, groupEntries] of groups.entries()) {
+        const group = document.createElement('optgroup');
+        group.label = groupName;
+        groupEntries.forEach(entry => {
+          const opt = document.createElement('option');
+          opt.value = entry.id;
+          opt.textContent = entry.name;
+          group.appendChild(opt);
+        });
+        select.appendChild(group);
+      }
+      const current = store.current || '';
+      const selectedId = entries.some(e => e.id === prev)
+        ? prev
+        : (entries.some(e => e.id === preferredId)
+          ? preferredId
+          : (entries.some(e => e.id === current) ? current : entries[0].id));
+      select.value = selectedId;
+      return { entries, selectedId };
+    };
+
+    const tabs = [
+      { id: 'generate', label: 'Generera' },
+      { id: 'duplicate', label: 'Kopiera' },
+      { id: 'rename', label: 'Byt namn' },
+      { id: 'folders', label: 'Mappar' }
+    ];
+    const tabsEl = make('div', 'tools-tabs');
+    const panelsEl = make('div', 'tools-panels');
+    const tabButtons = new Map();
+    const tabPanels = new Map();
+
+    const refreshers = new Set();
+    const registerRefresh = fn => {
+      if (typeof fn === 'function') refreshers.add(fn);
+    };
+    const refreshAll = () => {
+      refreshers.forEach(fn => {
+        try { fn(); } catch {}
+      });
+    };
+
+    const buildGeneratePanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Generera rollperson'));
+      card.appendChild(make('p', 'tools-intro', 'Skapa rollperson direkt här med namn, mapp, erfarenhet, ras, yrke och elityrke.'));
+
+      const stats = make('div', 'tools-meta');
+      card.appendChild(stats);
+
+      const form = make('div', 'tools-form');
+
+      const topGrid = make('div', 'tools-grid two-col');
+      const nameWrap = make('label', 'tools-field');
+      nameWrap.appendChild(make('span', 'tools-label', 'Namn'));
+      const nameIn = document.createElement('input');
+      nameIn.type = 'text';
+      nameIn.placeholder = 'Rollpersonens namn';
+      nameIn.autocomplete = 'off';
+      nameWrap.appendChild(nameIn);
+      topGrid.appendChild(nameWrap);
+
+      const folderWrap = make('label', 'tools-field');
+      folderWrap.appendChild(make('span', 'tools-label', 'Mapp'));
+      const folderSel = document.createElement('select');
+      folderWrap.appendChild(folderSel);
+      topGrid.appendChild(folderWrap);
+      form.appendChild(topGrid);
+
+      const xpGrid = make('div', 'tools-grid two-col');
+      const xpWrap = make('label', 'tools-field');
+      xpWrap.appendChild(make('span', 'tools-label', 'Erfarenhetspoäng'));
+      const xpIn = document.createElement('input');
+      xpIn.type = 'number';
+      xpIn.min = '0';
+      xpIn.step = '10';
+      xpIn.value = '100';
+      xpWrap.appendChild(xpIn);
+      xpGrid.appendChild(xpWrap);
+
+      const attrWrap = make('label', 'tools-field');
+      attrWrap.appendChild(make('span', 'tools-label', 'Karaktärsdrag'));
+      const attrSel = document.createElement('select');
+      attrSel.innerHTML = [
+        '<option value="">Balanserade (slump)</option>',
+        '<option value="specialist">Spetskompetens (ett drag pressas till 15)</option>',
+        '<option value="minmax">Ytterligheter (en max, tre höga och ett svagt)</option>'
+      ].join('');
+      attrWrap.appendChild(attrSel);
+      xpGrid.appendChild(attrWrap);
+      form.appendChild(xpGrid);
+
+      const traitWrap = make('label', 'tools-field');
+      traitWrap.appendChild(make('span', 'tools-label', 'Fokusera drag'));
+      const traitSel = document.createElement('select');
+      traitWrap.appendChild(traitSel);
+      form.appendChild(traitWrap);
+
+      const entryGrid = make('div', 'tools-grid two-col');
+      const raceWrap = make('label', 'tools-field');
+      raceWrap.appendChild(make('span', 'tools-label', 'Ras'));
+      const raceSel = document.createElement('select');
+      raceWrap.appendChild(raceSel);
+      entryGrid.appendChild(raceWrap);
+
+      const yrkeWrap = make('label', 'tools-field');
+      yrkeWrap.appendChild(make('span', 'tools-label', 'Yrke'));
+      const yrkeSel = document.createElement('select');
+      yrkeWrap.appendChild(yrkeSel);
+      entryGrid.appendChild(yrkeWrap);
+      form.appendChild(entryGrid);
+
+      const eliteWrap = make('label', 'tools-field');
+      eliteWrap.appendChild(make('span', 'tools-label', 'Elityrke'));
+      const eliteSel = document.createElement('select');
+      eliteWrap.appendChild(eliteSel);
+      const eliteHint = make('p', 'tools-meta', 'Elityrket lägger in krav och minst en elityrkesförmåga.');
+      eliteWrap.appendChild(eliteHint);
+      form.appendChild(eliteWrap);
+
+      const warning = make('p', 'tools-meta tools-warning', 'Databasen laddas fortfarande. Vänta tills listorna är tillgängliga.');
+      form.appendChild(warning);
+
+      const submitBtn = make('button', 'char-btn tools-action', 'Generera rollperson');
+      form.appendChild(submitBtn);
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      const applyEntryOptions = (select, type, placeholder) => {
+        const db = Array.isArray(window.DB) ? window.DB : [];
+        const names = db
+          .filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type))
+          .map(entry => String(entry.namn || '').trim())
+          .filter(Boolean)
+          .sort((a, b) => a.localeCompare(b, 'sv'));
+        select.innerHTML = '';
+        const first = document.createElement('option');
+        first.value = '';
+        first.textContent = placeholder;
+        select.appendChild(first);
+        names.forEach(name => {
+          const opt = document.createElement('option');
+          opt.value = name;
+          opt.textContent = name;
+          select.appendChild(opt);
+        });
+      };
+
+      const sync = () => {
+        fillFolderSelect(folderSel, getDefaultFolderId());
+        const attrKeys = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
+        traitSel.innerHTML = '';
+        const autoOpt = document.createElement('option');
+        autoOpt.value = '';
+        autoOpt.textContent = 'Auto (matchar bästa drag)';
+        traitSel.appendChild(autoOpt);
+        attrKeys.forEach(attr => {
+          const opt = document.createElement('option');
+          opt.value = attr;
+          opt.textContent = attr;
+          traitSel.appendChild(opt);
+        });
+        applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
+        applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
+        applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
+
+        const db = Array.isArray(window.DB) ? window.DB : [];
+        const ready = db.some(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Förmåga'));
+        warning.hidden = ready;
+        submitBtn.disabled = !ready;
+        stats.textContent = `${(store.characters || []).length} rollpersoner finns just nu.`;
+      };
+
+      submitBtn.addEventListener('click', async () => {
+        const previous = submitBtn.textContent;
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Genererar...';
+        try {
+          const ok = await generateCharacterFromSettings({
+            name: nameIn.value,
+            folderId: folderSel.value || '',
+            xp: xpIn.value,
+            attrMode: attrSel.value || '',
+            traitFocus: traitSel.value || '',
+            race: raceSel.value || '',
+            yrke: yrkeSel.value || '',
+            elityrke: eliteSel.value || ''
+          });
+          if (ok) {
+            window.toast?.('Rollperson genererad.');
+            nameIn.value = '';
+            xpIn.value = '100';
+            attrSel.value = '';
+            traitSel.value = '';
+            raceSel.value = '';
+            yrkeSel.value = '';
+            eliteSel.value = '';
+            refreshAll();
+          }
+        } finally {
+          submitBtn.textContent = previous;
+          sync();
+        }
+      });
+
+      registerRefresh(sync);
+      sync();
+      window.addEventListener('symbaroum-db-ready', () => {
+        try { sync(); } catch {}
+      }, { once: true });
+    };
+
+    const buildDuplicatePanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Kopiera rollperson'));
+      card.appendChild(make('p', 'tools-intro', 'Välj vilken rollperson som ska kopieras, nytt namn och målmapp.'));
+
+      const form = make('div', 'tools-form');
+
+      const sourceWrap = make('label', 'tools-field');
+      sourceWrap.appendChild(make('span', 'tools-label', 'Kopiera från'));
+      const sourceSel = document.createElement('select');
+      sourceWrap.appendChild(sourceSel);
+      form.appendChild(sourceWrap);
+
+      const nameWrap = make('label', 'tools-field');
+      nameWrap.appendChild(make('span', 'tools-label', 'Namn på kopia'));
+      const nameIn = document.createElement('input');
+      nameIn.type = 'text';
+      nameIn.autocomplete = 'off';
+      nameWrap.appendChild(nameIn);
+      form.appendChild(nameWrap);
+
+      const folderWrap = make('label', 'tools-field');
+      folderWrap.appendChild(make('span', 'tools-label', 'Målmapp'));
+      const folderSel = document.createElement('select');
+      folderWrap.appendChild(folderSel);
+      form.appendChild(folderWrap);
+
+      const submitBtn = make('button', 'char-btn tools-action', 'Kopiera rollperson');
+      form.appendChild(submitBtn);
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      const syncFromSource = entries => {
+        const src = entries.find(e => e.id === sourceSel.value);
+        const defaultName = src ? `${src.name} (kopia)` : '';
+        nameIn.value = defaultName;
+        fillFolderSelect(folderSel, src?.folderId || '');
+      };
+
+      const sync = () => {
+        const { entries } = fillCharacterSelect(sourceSel, store.current || '');
+        syncFromSource(entries);
+        submitBtn.disabled = !entries.length;
+      };
+
+      sourceSel.addEventListener('change', () => {
+        const entries = getCharacterEntries();
+        syncFromSource(entries);
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        const sourceId = sourceSel.value || '';
+        const name = String(nameIn.value || '').trim();
+        if (!sourceId) {
+          await alertPopup('Ingen rollperson att kopiera.');
+          return;
+        }
+        if (!name) {
+          nameIn.focus();
+          return;
+        }
+        const newId = duplicateCharacterWithSettings({
+          sourceId,
+          name,
+          folderId: folderSel.value || ''
+        });
+        if (newId) {
+          window.toast?.('Rollperson kopierad.');
+          refreshAll();
+        }
+      });
+
+      registerRefresh(sync);
+      sync();
+    };
+
+    const buildRenamePanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Byt namn / flytta rollperson'));
+      card.appendChild(make('p', 'tools-intro', 'Välj rollperson, ange nytt namn och valfri målmapp.'));
+
+      const form = make('div', 'tools-form');
+
+      const sourceWrap = make('label', 'tools-field');
+      sourceWrap.appendChild(make('span', 'tools-label', 'Rollperson'));
+      const sourceSel = document.createElement('select');
+      sourceWrap.appendChild(sourceSel);
+      form.appendChild(sourceWrap);
+
+      const nameWrap = make('label', 'tools-field');
+      nameWrap.appendChild(make('span', 'tools-label', 'Nytt namn'));
+      const nameIn = document.createElement('input');
+      nameIn.type = 'text';
+      nameIn.autocomplete = 'off';
+      nameWrap.appendChild(nameIn);
+      form.appendChild(nameWrap);
+
+      const folderWrap = make('label', 'tools-field');
+      folderWrap.appendChild(make('span', 'tools-label', 'Målmapp'));
+      const folderSel = document.createElement('select');
+      folderWrap.appendChild(folderSel);
+      form.appendChild(folderWrap);
+
+      const submitBtn = make('button', 'char-btn tools-action', 'Spara ändringar');
+      form.appendChild(submitBtn);
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      const syncFromSource = entries => {
+        const src = entries.find(e => e.id === sourceSel.value);
+        nameIn.value = src ? src.name : '';
+        fillFolderSelect(folderSel, src?.folderId || '');
+      };
+
+      const sync = () => {
+        const { entries } = fillCharacterSelect(sourceSel, store.current || '');
+        syncFromSource(entries);
+        submitBtn.disabled = !entries.length;
+      };
+
+      sourceSel.addEventListener('change', () => {
+        const entries = getCharacterEntries();
+        syncFromSource(entries);
+      });
+
+      submitBtn.addEventListener('click', async () => {
+        const charId = sourceSel.value || '';
+        const name = String(nameIn.value || '').trim();
+        if (!charId) {
+          await alertPopup('Ingen rollperson vald.');
+          return;
+        }
+        if (!name) {
+          nameIn.focus();
+          return;
+        }
+        const ok = renameCharacterWithSettings({
+          charId,
+          name,
+          folderId: folderSel.value || ''
+        });
+        if (ok) {
+          window.toast?.('Rollperson uppdaterad.');
+          refreshAll();
+        }
+      });
+
+      registerRefresh(sync);
+      sync();
+    };
+
+    const buildFoldersPanel = root => {
+      const wrap = make('div', 'tools-sections');
+      const card = make('div', 'card tools-card');
+      card.appendChild(make('div', 'card-title tools-card-title', 'Mapphantering'));
+      card.appendChild(make('p', 'tools-intro', 'Skapa mappar, flytta rollpersoner mellan mappar och hantera ordning direkt här.'));
+
+      const form = make('div', 'tools-form');
+
+      const addRow = make('div', 'tools-inline-row');
+      const addInput = document.createElement('input');
+      addInput.type = 'text';
+      addInput.placeholder = 'Ny mapp...';
+      addInput.autocomplete = 'off';
+      addInput.className = 'tools-inline-input';
+      const addBtn = make('button', 'char-btn tools-inline-btn', 'Lägg till');
+      addRow.appendChild(addInput);
+      addRow.appendChild(addBtn);
+      form.appendChild(addRow);
+
+      const moveTitle = make('div', 'tools-label', 'Flytta markerade rollpersoner');
+      form.appendChild(moveTitle);
+      const charList = make('div', 'tools-char-list');
+      form.appendChild(charList);
+
+      const moveRow = make('div', 'tools-inline-row');
+      const moveSel = document.createElement('select');
+      moveSel.className = 'tools-inline-input';
+      const moveBtn = make('button', 'char-btn tools-inline-btn', 'Flytta');
+      moveRow.appendChild(moveSel);
+      moveRow.appendChild(moveBtn);
+      form.appendChild(moveRow);
+
+      const folderTitle = make('div', 'tools-label', 'Mappar');
+      form.appendChild(folderTitle);
+      const folderList = make('div', 'tools-folder-list');
+      form.appendChild(folderList);
+
+      card.appendChild(form);
+      wrap.appendChild(card);
+      root.appendChild(wrap);
+
+      let editingFolderId = '';
+
+      const render = () => {
+        const folders = getSortedFolders();
+        const chars = getCharacterEntries();
+        const charMap = new Map();
+        chars.forEach(c => {
+          if (!c.folderId) return;
+          charMap.set(c.folderId, (charMap.get(c.folderId) || 0) + 1);
+        });
+
+        if (!chars.length) {
+          charList.innerHTML = '<p class="tools-empty">Inga rollpersoner att flytta.</p>';
+        } else {
+          charList.innerHTML = [
+            '<label class="tools-check-item"><span>Välj alla</span><input type="checkbox" data-action="select-all"></label>',
+            ...chars.map(c => (
+              `<label class="tools-check-item">
+                <span>${escapeHtml(c.name)} <span class="tools-sub">(${escapeHtml(c.folderName)})</span></span>
+                <input type="checkbox" data-charid="${escapeHtml(c.id)}">
+              </label>`
+            ))
+          ].join('');
+        }
+
+        moveSel.innerHTML = folders.map(f => `<option value="${escapeHtml(f.id)}">${escapeHtml(f.name || 'Mapp')}</option>`).join('');
+        const preferredDest = getDefaultFolderId('');
+        if (preferredDest) moveSel.value = preferredDest;
+
+        if (!folders.length) {
+          folderList.innerHTML = '<p class="tools-empty">Inga mappar ännu.</p>';
+          return;
+        }
+
+        folderList.innerHTML = folders.map((f, idx) => {
+          const cnt = charMap.get(f.id) || 0;
+          if (editingFolderId === f.id) {
+            return (
+              `<div class="tools-folder-row" data-id="${escapeHtml(f.id)}">
+                <div class="tools-folder-name">
+                  <input class="tools-folder-input" data-action="rename-input" type="text" value="${escapeHtml(f.name || '')}">
+                  <span class="count-badge">${cnt}</span>
+                </div>
+                <div class="tools-folder-actions">
+                  <button class="tools-mini-btn" data-action="rename-save">Spara</button>
+                  <button class="tools-mini-btn" data-action="rename-cancel">Avbryt</button>
+                </div>
+              </div>`
+            );
+          }
+          const upDisabled = idx === 0 ? ' disabled' : '';
+          const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
+          const delBtn = f.system
+            ? ''
+            : '<button class="tools-mini-btn danger" data-action="delete">Ta bort</button>';
+          return (
+            `<div class="tools-folder-row" data-id="${escapeHtml(f.id)}">
+              <div class="tools-folder-name">${escapeHtml(f.name)} <span class="count-badge">${cnt}</span></div>
+              <div class="tools-folder-actions">
+                <button class="tools-mini-btn" data-action="move-up"${upDisabled}>▲</button>
+                <button class="tools-mini-btn" data-action="move-down"${downDisabled}>▼</button>
+                <button class="tools-mini-btn" data-action="rename">Byt namn</button>
+                <button class="tools-mini-btn danger" data-action="clear">Töm</button>
+                ${delBtn}
+              </div>
+            </div>`
+          );
+        }).join('');
+      };
+
+      addBtn.addEventListener('click', () => {
+        const name = String(addInput.value || '').trim();
+        if (!name) return;
+        storeHelper.addFolder(store, name);
+        addInput.value = '';
+        refreshCharSelect();
+        editingFolderId = '';
+        refreshAll();
+      });
+
+      addInput.addEventListener('keydown', e => {
+        if (e.key === 'Enter') addBtn.click();
+      });
+
+      charList.addEventListener('change', e => {
+        const target = e.target;
+        if (!(target instanceof HTMLInputElement)) return;
+        if (target.matches('input[type="checkbox"][data-action="select-all"]')) {
+          const checked = target.checked;
+          charList.querySelectorAll('input[type="checkbox"][data-charid]').forEach(cb => {
+            cb.checked = checked;
+          });
+          return;
+        }
+        if (target.matches('input[type="checkbox"][data-charid]')) {
+          const allBox = charList.querySelector('input[type="checkbox"][data-action="select-all"]');
+          if (!allBox) return;
+          const allChecked = [...charList.querySelectorAll('input[type="checkbox"][data-charid]')]
+            .every(cb => cb.checked);
+          allBox.checked = allChecked;
+        }
+      });
+
+      moveBtn.addEventListener('click', async () => {
+        const ids = [...charList.querySelectorAll('input[type="checkbox"][data-charid]:checked')]
+          .map(ch => ch.dataset.charid)
+          .filter(Boolean);
+        if (!ids.length) {
+          await alertPopup('Markera minst en rollperson.');
+          return;
+        }
+        const dest = moveSel.value || '';
+        if (storeHelper.setCharactersFolderBulk) {
+          storeHelper.setCharactersFolderBulk(store, ids, dest);
+        } else {
+          ids.forEach(id => storeHelper.setCharacterFolder(store, id, dest));
+        }
+        refreshCharSelect();
+        refreshAll();
+      });
+
+      folderList.addEventListener('click', async e => {
+        const btn = e.target.closest('[data-action]');
+        if (!btn || btn.disabled) return;
+        const row = btn.closest('[data-id]');
+        if (!row) return;
+        const folderId = row.getAttribute('data-id') || '';
+        const action = btn.getAttribute('data-action') || '';
+        if (!folderId || !action) return;
+
+        if (action === 'rename') {
+          editingFolderId = folderId;
+          render();
+          const targetRow = [...folderList.querySelectorAll('[data-id]')]
+            .find(el => el.getAttribute('data-id') === folderId);
+          const input = targetRow?.querySelector('input[data-action="rename-input"]');
+          if (input) input.focus();
+          return;
+        }
+        if (action === 'rename-cancel') {
+          editingFolderId = '';
+          render();
+          return;
+        }
+        if (action === 'rename-save') {
+          const input = row.querySelector('input[data-action="rename-input"]');
+          const name = String(input?.value || '').trim();
+          if (!name) {
+            input?.focus();
+            return;
+          }
+          storeHelper.renameFolder(store, folderId, name);
+          editingFolderId = '';
+          refreshCharSelect();
+          refreshAll();
+          return;
+        }
+
+        if (action === 'clear') {
+          const folders = storeHelper.getFolders(store) || [];
+          const folder = folders.find(f => f.id === folderId);
+          const count = (store.characters || []).filter(c => (c.folderId || '') === folderId).length;
+          if (!count) {
+            await alertPopup('Mappen är tom.');
+            return;
+          }
+          const ok = await confirmPopup(`Töm mapp “${folder?.name || 'Mapp'}”? Detta raderar ${count} karaktärer permanent.`);
+          if (!ok) return;
+          if (storeHelper.deleteCharactersInFolder) {
+            storeHelper.deleteCharactersInFolder(store, folderId);
+          } else {
+            const ids = (store.characters || []).filter(c => (c.folderId || '') === folderId).map(c => c.id);
+            ids.forEach(cid => storeHelper.deleteCharacter(store, cid));
+          }
+          refreshCharSelect();
+          applyCharacterChange();
+          refreshAll();
+          return;
+        }
+
+        if (action === 'delete') {
+          const folders = storeHelper.getFolders(store) || [];
+          const folder = folders.find(f => f.id === folderId);
+          if (folder?.system) {
+            await alertPopup('Systemmappen “Standard” kan inte tas bort.');
+            return;
+          }
+          const ok = await confirmPopup('Ta bort mapp? Karaktärer flyttas till “Standard”.');
+          if (!ok) return;
+          storeHelper.deleteFolder(store, folderId);
+          refreshCharSelect();
+          refreshAll();
+          return;
+        }
+
+        if (action === 'move-up' || action === 'move-down') {
+          storeHelper.moveFolder(store, folderId, action === 'move-up' ? -1 : 1);
+          refreshCharSelect();
+          refreshAll();
+        }
+      });
+
+      registerRefresh(render);
+      render();
+    };
+
+    tabs.forEach(tab => {
+      const btn = make('button', 'char-btn tools-tab', tab.label);
+      btn.type = 'button';
+      btn.dataset.tab = tab.id;
+      tabsEl.appendChild(btn);
+      tabButtons.set(tab.id, btn);
+
+      const panel = make('section', 'tools-panel');
+      panel.dataset.tab = tab.id;
+      panelsEl.appendChild(panel);
+      tabPanels.set(tab.id, panel);
+    });
+
+    buildGeneratePanel(tabPanels.get('generate'));
+    buildDuplicatePanel(tabPanels.get('duplicate'));
+    buildRenamePanel(tabPanels.get('rename'));
+    buildFoldersPanel(tabPanels.get('folders'));
+
+    const setActiveTab = tabId => {
+      tabButtons.forEach((btn, id) => {
+        const active = id === tabId;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      tabPanels.forEach((panel, id) => {
+        panel.classList.toggle('active', id === tabId);
+      });
+    };
+
+    tabButtons.forEach((btn, id) => {
+      btn.addEventListener('click', () => setActiveTab(id));
+    });
+
+    const wantedTab = tabs.some(tab => tab.id === initialTab) ? initialTab : 'generate';
+    setActiveTab(wantedTab);
+    opts.appendChild(tabsEl);
+    opts.appendChild(panelsEl);
+  }, () => {}, {
+    popupId: 'characterToolsPopup',
+    optsId: 'characterToolsOptions',
+    cancelId: 'characterToolsCancel'
+  });
+}
+
+// ---------- Popup: Mapphanterare ----------
+function openFolderManagerPopup() {
+  const pop  = bar.shadowRoot.getElementById('folderManagerPopup');
+  const list = bar.shadowRoot.getElementById('folderList');
+  const closeBtn = bar.shadowRoot.getElementById('folderManagerDone');
+  const closeX   = bar.shadowRoot.getElementById('folderManagerCloseX');
+  const addBtn = bar.shadowRoot.getElementById('addFolderBtn');
+  const nameIn = bar.shadowRoot.getElementById('newFolderName');
+  const moveGroup = bar.shadowRoot.getElementById('folderMoveGroup');
+  const moveSel   = bar.shadowRoot.getElementById('folderMoveSelect');
+  const moveApply = bar.shadowRoot.getElementById('folderMoveApply');
+  const charList  = bar.shadowRoot.getElementById('folderCharList');
+  const renamePop    = bar.shadowRoot.getElementById('renameFolderPopup');
+  const renameInput  = bar.shadowRoot.getElementById('renameFolderName');
+  const renameCancel = bar.shadowRoot.getElementById('renameFolderCancel');
+  const renameApply  = bar.shadowRoot.getElementById('renameFolderApply');
+  const inner        = pop.querySelector('.popup-inner');
+  let cancelRename = null;
+  let innerClickStop = null;
+
+  function escapeHtml(s) {
+    return String(s || '').replace(/[&<>"]/g, m => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;'
+    }[m]));
+  }
+
+  function render() {
+    const folders = (storeHelper.getFolders(store) || []).slice()
+      .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    // build character count per folder
+    const charMap = new Map(); // folderId -> count
+    for (const c of (store.characters || [])) {
+      const fid = c.folderId || '';
+      if (!fid) continue;
+      charMap.set(fid, (charMap.get(fid) || 0) + 1);
+    }
+    // Character multi-select list
+    const chars = (store.characters || []).slice()
+      .sort((a,b)=>{
+        const fa = (store.folders || []).find(f=>f.id===(a.folderId||''))?.name || '';
+        const fb = (store.folders || []).find(f=>f.id===(b.folderId||''))?.name || '';
+        return fa.localeCompare(fb,'sv') || String(a.name||'').localeCompare(String(b.name||''),'sv');
+      });
+    if (charList) {
+      const selectAll = '<label class="price-item"><span>Välj alla</span><input type="checkbox" data-action="select-all"></label>';
+      charList.innerHTML = selectAll + chars.map(c => {
+        const fid = c.folderId || '';
+        const fname = fid ? ((store.folders||[]).find(f=>f.id===fid)?.name || '') : '';
+        const suffix = fname ? ` <span class="sub">(${escapeHtml(fname)})</span>` : '';
+        // Ingen karaktär ska vara förvald i Mappar-menyn
+        return `<label class="price-item"><span>${escapeHtml(c.name)}${suffix}</span><input type="checkbox" data-charid="${c.id}"></label>`;
+      }).join('');
+    }
+    // Destination folder select
+    if (moveSel) {
+      const curFolder = store.current ? (storeHelper.getCharacterFolder(store, store.current) || '') : '';
+      moveSel.innerHTML = folders.map(f=>`<option value="${f.id}"${f.id===curFolder?' selected':''}>${f.name}</option>`).join('');
+    }
+    if (!folders.length) {
+      list.innerHTML = '<p>Inga mappar ännu.</p>';
+      return;
+    }
+    list.innerHTML = folders.map((f, idx) => {
+      const cnt = charMap.get(f.id) || 0;
+      const esc = s => String(s || '').replace(/[&<>"]/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[m]));
+      const delBtn = f.system ? '' : `<button class="mini-btn danger icon-only" data-action="delete" title="Ta bort">${window.iconHtml ? window.iconHtml('remove') : '🗑'}</button>`;
+      const upDisabled = idx === 0 ? ' disabled' : '';
+      const downDisabled = idx === folders.length - 1 ? ' disabled' : '';
+      return (
+        `<div class="folder-row" data-id="${f.id}">
+          <div class="folder-name">${esc(f.name)} <span class="count-badge">${cnt}</span></div>
+          <div class="folder-actions">
+            <button class="mini-btn" data-action="move-up" title="Flytta upp"${upDisabled}>▲</button>
+            <button class="mini-btn" data-action="move-down" title="Flytta ned"${downDisabled}>▼</button>
+            <button class="mini-btn" data-action="rename" title="Byt namn">✏️</button>
+            <button class="mini-btn danger icon-only" data-action="clear" title="Töm mapp">${window.iconHtml ? window.iconHtml('broom') : '🧹'}</button>
+            ${delBtn}
+          </div>
+        </div>`
+      );
+    }).join('');
+  }
+
+  async function showRenamePopup(currentName) {
+    if (!renamePop || !renameInput || !renameApply || !renameCancel) {
+      const fallback = prompt('Nytt mappnamn?', currentName || '');
+      const trimmed = String(fallback || '').trim();
+      return trimmed || null;
+    }
+    renameInput.value = String(currentName || '').trim();
+    renamePop.classList.add('open');
+    renamePop.querySelector('.popup-inner').scrollTop = 0;
+    setTimeout(() => renameInput.focus(), 0);
+
+    return await new Promise(resolve => {
+      let done = false;
+      const renameInner = renamePop.querySelector('.popup-inner');
+      const stopBubble = e => e.stopPropagation();
+      renameInner?.addEventListener('click', stopBubble);
+      function finish(result) {
+        if (done) return;
+        done = true;
+        renamePop.classList.remove('open');
+        renameApply.removeEventListener('click', onApply);
+        renameCancel.removeEventListener('click', onCancel);
+        renamePop.removeEventListener('click', onOutside);
+        document.removeEventListener('keydown', onKey);
+        renameInner?.removeEventListener('click', stopBubble);
+        cancelRename = null;
+        resolve(result);
+      }
+      function onApply() {
+        const val = String(renameInput.value || '').trim();
+        if (!val) { renameInput.focus(); return; }
+        finish(val);
+      }
+      function onCancel() { finish(null); }
+      function onOutside(e) {
+        if (!renamePop.querySelector('.popup-inner').contains(e.target)) finish(null);
+      }
+      function onKey(e) {
+        if (e.key === 'Escape') finish(null);
+        else if (e.key === 'Enter') onApply();
+      }
+      renameApply.addEventListener('click', onApply);
+      renameCancel.addEventListener('click', onCancel);
+      renamePop.addEventListener('click', onOutside);
+      document.addEventListener('keydown', onKey);
+      cancelRename = () => finish(null);
+    });
+  }
+
+  async function onListClick(e) {
+    const el = e.target.closest('[data-action]');
+    if (!el) return;
+    const row = e.target.closest('[data-id]');
+    if (!row) return;
+    if (el.disabled || el.matches('[disabled]')) return;
+    e.stopPropagation();
+    const id = row.getAttribute('data-id');
+    const action = el.getAttribute('data-action');
+    if (action === 'rename') {
+      const folders = storeHelper.getFolders(store) || [];
+      const f = folders.find(x=>x.id===id);
+      const nm = await showRenamePopup(f ? f.name : '');
+      if (!nm) return;
+      storeHelper.renameFolder(store, id, nm);
+      render();
+      refreshCharSelect();
+    } else if (action === 'clear') {
+      const folders = storeHelper.getFolders(store) || [];
+      const f = folders.find(x=>x.id===id);
+      const cnt = (store.characters || []).filter(c => (c.folderId || '') === id).length;
+      if (!cnt) { await alertPopup('Mappen är tom.'); return; }
+      const name = f ? (f.name || 'Mapp') : 'Mapp';
+      const ok = await confirmPopup(`Töm mapp “${name}”? Detta raderar ${cnt} karaktärer permanent.`);
+      if (!ok) return;
+      if (storeHelper.deleteCharactersInFolder) {
+        storeHelper.deleteCharactersInFolder(store, id);
+      } else {
+        const ids = (store.characters || []).filter(c => (c.folderId || '') === id).map(c => c.id);
+        ids.forEach(cid => storeHelper.deleteCharacter(store, cid));
+      }
+      refreshCharSelect();
+      render();
+      applyCharacterChange();
+    } else if (action === 'delete') {
+      const folders = storeHelper.getFolders(store) || [];
+      const f = folders.find(x=>x.id===id);
+      if (f && f.system) { await alertPopup('Systemmappen “Standard” kan inte tas bort.'); return; }
+      if (!(await confirmPopup('Ta bort mapp? Karaktärer flyttas till “Standard”.'))) return;
+      storeHelper.deleteFolder(store, id);
+      render();
+      refreshCharSelect();
+    } else if (action === 'move-up' || action === 'move-down') {
+      const offset = action === 'move-up' ? -1 : 1;
+      storeHelper.moveFolder(store, id, offset);
+      render();
+      refreshCharSelect();
+    }
+  }
+
+  function onAdd() {
+    const nm = String(nameIn.value || '').trim();
+    if (!nm) return;
+    storeHelper.addFolder(store, nm);
+    nameIn.value = '';
+    render();
+    refreshCharSelect();
+  }
+
+  function close() {
+    pop.classList.remove('open');
+    list.removeEventListener('click', onListClick);
+    closeBtn?.removeEventListener('click', onClose);
+    closeX?.removeEventListener('click', onClose);
+    addBtn.removeEventListener('click', onAdd);
+    moveApply?.removeEventListener('click', onMoveApply);
+    charList?.removeEventListener('change', onCharListChange);
+    cancelRename?.();
+    pop.removeEventListener('click', onOutside);
+    if (inner && innerClickStop) inner.removeEventListener('click', innerClickStop);
+    innerClickStop = null;
+  }
+  function onClose() { close(); }
+  function onOutside(e) {
+    const inner = pop.querySelector('.popup-inner');
+    if (inner?.contains(e.target)) return;
+    if (renamePop?.classList.contains('open')) {
+      const renameInner = renamePop.querySelector('.popup-inner');
+      if (renameInner?.contains(e.target)) return;
+    }
+    close();
+  }
+  function onMoveApply() {
+    const dest = (moveSel && moveSel.value) || '';
+    if (!charList) return;
+    const ids = [...charList.querySelectorAll('input[type="checkbox"][data-charid]:checked')]
+      .map(ch => ch.dataset.charid);
+    if (!ids.length) return;
+    if (storeHelper.setCharactersFolderBulk) {
+      storeHelper.setCharactersFolderBulk(store, ids, dest || '');
+    } else {
+      ids.forEach(id => storeHelper.setCharacterFolder(store, id, dest || ''));
+    }
+    refreshCharSelect();
+    render();
+    // Keep popup open after moving characters
+  }
+
+  function onCharListChange(e) {
+    const el = e.target;
+    if (el.matches('input[type="checkbox"][data-action="select-all"]')) {
+      const checked = el.checked;
+      charList.querySelectorAll('input[type="checkbox"][data-charid]').forEach(cb => {
+        cb.checked = checked;
+      });
+    } else if (el.matches('input[type="checkbox"][data-charid]')) {
+      const allBox = charList.querySelector('input[type="checkbox"][data-action="select-all"]');
+      if (!allBox) return;
+      if (!el.checked) {
+        allBox.checked = false;
+      } else {
+        const allChecked = [...charList.querySelectorAll('input[type="checkbox"][data-charid]')].every(cb => cb.checked);
+        allBox.checked = allChecked;
+      }
+    }
+  }
+
+  render();
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  list.addEventListener('click', onListClick);
+  closeBtn?.addEventListener('click', onClose);
+  closeX?.addEventListener('click', onClose);
+  addBtn.addEventListener('click', onAdd);
+  moveApply?.addEventListener('click', onMoveApply);
+  charList?.addEventListener('change', onCharListChange);
+  pop.addEventListener('click', onOutside);
+  if (inner) {
+    innerClickStop = e => e.stopPropagation();
+    inner.addEventListener('click', innerClickStop);
+  }
+}
+
+function openAlchemistPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('alcPopup');
+  const box  = bar.shadowRoot.getElementById('alcOptions');
+  const cls  = bar.shadowRoot.getElementById('alcCancel');
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    box.removeEventListener('click', onBtn);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onBtn(e) {
+    const b = e.target.closest('button[data-level]');
+    if (!b) return;
+    const lvl = b.dataset.level;
+    close();
+    cb(lvl);
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openSmithPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('smithPopup');
+  const box  = bar.shadowRoot.getElementById('smithOptions');
+  const cls  = bar.shadowRoot.getElementById('smithCancel');
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    box.removeEventListener('click', onBtn);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onBtn(e) {
+    const b = e.target.closest('button[data-level]');
+    if (!b) return;
+    const lvl = b.dataset.level;
+    close();
+    cb(lvl);
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openArtefacterPopup(cb) {
+  const pop  = bar.shadowRoot.getElementById('artPopup');
+  const box  = bar.shadowRoot.getElementById('artOptions');
+  const cls  = bar.shadowRoot.getElementById('artCancel');
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    box.removeEventListener('click', onBtn);
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onBtn(e) {
+    const b = e.target.closest('button[data-level]');
+    if (!b) return;
+    const lvl = b.dataset.level;
+    close();
+    cb(lvl);
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if(!pop.querySelector('.popup-inner').contains(e.target)){
+      close();
+      cb(null);
+    }
+  }
+  box.addEventListener('click', onBtn);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openDefenseCalcPopup() {
+  const root = bar?.shadowRoot;
+  if (!root) return;
+  const pop = root.getElementById('defenseCalcPopup');
+  const traitSel = root.getElementById('defenseCalcTrait');
+  const armorSel = root.getElementById('defenseCalcArmor');
+  const weaponList = root.getElementById('defenseCalcWeaponList');
+  const danceTraitSel = root.getElementById('defenseCalcDancingTrait');
+  const danceWeaponSel = root.getElementById('defenseCalcDancingWeapon');
+  const danceCard = root.getElementById('defenseCalcDancingCard');
+  const emptyMsg = root.getElementById('defenseCalcEmpty');
+  const applyBtn = root.getElementById('defenseCalcApply');
+  const cancelBtn = root.getElementById('defenseCalcCancel');
+  const resetBtn = root.getElementById('defenseCalcReset');
+  const inner = pop?.querySelector('.popup-inner');
+  if (!pop || !traitSel || !armorSel || !weaponList || !applyBtn || !cancelBtn || !resetBtn || !inner || !danceTraitSel || !danceWeaponSel) return;
+
+  const list = typeof storeHelper.getCurrentList === 'function'
+    ? storeHelper.getCurrentList(store)
+    : [];
+  const hasDancingAbility = typeof storeHelper.abilityLevel === 'function'
+    ? storeHelper.abilityLevel(list, 'Dansande vapen') >= 1
+    : false;
+  const setDancingVisibility = (visible) => {
+    pop.classList.toggle('defense-calc-has-dancing', visible);
+    if (danceCard) {
+      danceCard.hidden = !visible;
+      danceCard.setAttribute('aria-hidden', visible ? 'false' : 'true');
+    }
+    danceTraitSel.disabled = !visible;
+    danceWeaponSel.disabled = !visible;
+  };
+
+  const flatten = (arr, prefix = []) => (Array.isArray(arr) ? arr : []).reduce((acc, row, idx) => {
+    const path = [...prefix, idx];
+    acc.push({ row, path });
+    if (Array.isArray(row?.contains)) {
+      acc.push(...flatten(row.contains, path));
+    }
+    return acc;
+  }, []);
+  const escapeAttrLocal = (val) => String(val ?? '').replace(/"/g, '&quot;');
+  const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  })[ch]);
+  const isBalancedQuality = (q) => String(q || '').toLowerCase().startsWith('balanser');
+  const isArmMountedShieldQuality = q => {
+    const txt = String(q || '').toLowerCase();
+    return txt.startsWith('armf\u00e4st') || txt.startsWith('armfast') || txt.startsWith('smidig');
+  };
+  const isTwoHandedWeaponType = typeName => {
+    if (typeof window.isTwoHandedWeaponType === 'function') {
+      return window.isTwoHandedWeaponType(typeName);
+    }
+    const txt = String(typeName || '').toLowerCase();
+    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tunga vapen';
+  };
+
+  const inv = storeHelper.getInventory(store) || [];
+  const flat = typeof invUtil?.flattenInventoryWithPath === 'function'
+    ? invUtil.flattenInventoryWithPath(inv)
+    : flatten(inv);
+  const nameMap = typeof invUtil?.makeNameMap === 'function'
+    ? invUtil.makeNameMap(flat.map(f => f.row))
+    : new Map(flat.map(f => [f.row, f.row?.name || '']));
+  const getQualities = (row, entry) => {
+    if (!row || !entry) return [];
+    const tagger = entry.taggar || {};
+    const baseQ = [
+      ...(tagger.kvalitet || []),
+      ...splitQuals(entry.kvalitet)
+    ];
+    const removed = Array.isArray(row.removedKval) ? row.removedKval : [];
+    const extra = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
+    const combined = [
+      ...baseQ.filter(q => !removed.includes(q)),
+      ...extra
+    ];
+    return typeof window.enforceArmorQualityExclusion === 'function'
+      ? window.enforceArmorQualityExclusion(entry, combined)
+      : combined;
+  };
+
+  const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
+    ? storeHelper.getDefenseSetup(store)
+    : null;
+  const forcedTrait = typeof storeHelper.getDefenseTrait === 'function'
+    ? storeHelper.getDefenseTrait(store)
+    : '';
+  const selectedTrait = defenseSetup?.trait || forcedTrait || '';
+  const selectedArmorPath = Array.isArray(defenseSetup?.armor?.path) ? defenseSetup.armor.path.join('.') : '';
+  const selectedDanceTrait = defenseSetup?.dancingTrait || '';
+  const selectedDanceWeaponPath = Array.isArray(defenseSetup?.dancingWeapon?.path) ? defenseSetup.dancingWeapon.path.join('.') : '';
+  const selectedWeaponPaths = new Set(
+    (defenseSetup?.weapons || [])
+      .map(w => Array.isArray(w.path) ? w.path.join('.') : '')
+      .filter(Boolean)
+  );
+
+  const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
+  traitSel.innerHTML = ['<option value="">Automatiskt</option>']
+    .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
+    .join('');
+  traitSel.value = selectedTrait;
+  danceTraitSel.innerHTML = ['<option value="">Viljestark (standard)</option>']
+    .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
+    .join('');
+  danceTraitSel.value = selectedDanceTrait;
+
+  const armorMeta = new Map();
+  const armorOptions = flat
+    .map(obj => {
+      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+      if (!entry || !((entry.taggar?.typ || []).includes('Rustning'))) return null;
+      const value = obj.path.join('.');
+      const label = nameMap.get(obj.row) || entry.namn || obj.row.name || 'Rustning';
+      armorMeta.set(value, { path: obj.path, id: obj.row.id, name: obj.row.name || entry.namn || '' });
+      return `<option value="${escapeAttrLocal(value)}">${escapeText(label)}</option>`;
+    })
+    .filter(Boolean);
+  armorSel.innerHTML = ['<option value="">Ingen rustning</option>', ...armorOptions].join('');
+  armorSel.value = selectedArmorPath;
+
+  const weaponMeta = new Map();
+  const weaponHtml = flat
+    .map(obj => {
+      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+      const types = entry?.taggar?.typ || [];
+      if (!entry || (!types.includes('Vapen') && !types.includes('Sköld'))) return '';
+      const value = obj.path.join('.');
+      const name = nameMap.get(obj.row) || entry.namn || obj.row.name || 'Vapen';
+      const quals = getQualities(obj.row, entry);
+      const chips = [];
+      if (quals.some(isBalancedQuality)) chips.push('<span class="defense-chip balanced">Balanserat</span>');
+      if (quals.includes('L\u00e5ngt')) chips.push('<span class="defense-chip long">Långt</span>');
+      if (types.includes('Sköld')) chips.push('<span class="defense-chip shield">Sköld</span>');
+      const isArmMountedShield = types.includes('Sköld') && quals.some(isArmMountedShieldQuality);
+      const isTwoHandedWeapon = !types.includes('Sköld') && types.some(isTwoHandedWeaponType);
+      const metaHtml = chips.length ? `<span class="defense-item-meta">${chips.join('')}</span>` : '';
+      const checked = selectedWeaponPaths.has(value) ? ' checked' : '';
+      weaponMeta.set(value, {
+        path: obj.path,
+        id: obj.row.id,
+        name: obj.row.name || entry.namn || '',
+        isArmMountedShield,
+        isTwoHandedWeapon
+      });
+      return `<label class="price-item defense-item"><span>${escapeText(name)}${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(value)}"${checked}></label>`;
+    })
+    .filter(Boolean)
+    .join('');
+  weaponList.innerHTML = weaponHtml;
+  const getWeaponCheckboxes = () => [...weaponList.querySelectorAll('input[type="checkbox"][data-path]')];
+  const isArmMountedShieldPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isArmMountedShield);
+  const isTwoHandedWeaponPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isTwoHandedWeapon);
+  const sanitizeWeaponPathSelection = (paths, preferredPath = '') => {
+    const unique = [];
+    const seen = new Set();
+    (Array.isArray(paths) ? paths : []).forEach(pathStr => {
+      if (!pathStr || seen.has(pathStr) || !weaponMeta.has(pathStr)) return;
+      seen.add(pathStr);
+      unique.push(pathStr);
+    });
+    const hasArmMountedShield = unique.some(isArmMountedShieldPath);
+    const hasTwoHandedWeapon = unique.some(isTwoHandedWeaponPath);
+    if (!hasArmMountedShield || !hasTwoHandedWeapon) return unique;
+    if (isTwoHandedWeaponPath(preferredPath)) {
+      return unique.filter(pathStr => !isArmMountedShieldPath(pathStr));
+    }
+    return unique.filter(pathStr => !isTwoHandedWeaponPath(pathStr));
+  };
+  const syncWeaponSelectionUi = (preferredPath = '') => {
+    const checkboxes = getWeaponCheckboxes();
+    const selectedPaths = sanitizeWeaponPathSelection(
+      checkboxes.filter(ch => ch.checked).map(ch => ch.dataset.path || ''),
+      preferredPath
+    );
+    const selectedSet = new Set(selectedPaths);
+    const hasArmMountedShield = selectedPaths.some(isArmMountedShieldPath);
+    const hasTwoHandedWeapon = selectedPaths.some(isTwoHandedWeaponPath);
+    checkboxes.forEach(ch => {
+      const pathStr = ch.dataset.path || '';
+      const isSelected = selectedSet.has(pathStr);
+      ch.checked = isSelected;
+      const disable = !isSelected && (
+        (hasArmMountedShield && isTwoHandedWeaponPath(pathStr)) ||
+        (hasTwoHandedWeapon && isArmMountedShieldPath(pathStr))
+      );
+      ch.disabled = disable;
+      if (disable) {
+        ch.title = 'Kan inte kombineras med Armfäst/Tvåhandsvapen.';
+      } else {
+        ch.removeAttribute('title');
+      }
+    });
+    return selectedPaths;
+  };
+  syncWeaponSelectionUi();
+  getWeaponCheckboxes().forEach(ch => {
+    ch.addEventListener('change', () => {
+      syncWeaponSelectionUi(ch.dataset.path || '');
+    });
+  });
+  const weaponOptions = ['<option value="">Inget vapen</option>'].concat(
+    [...weaponMeta.entries()].map(([pathStr, meta]) => {
+      const label = escapeText(meta.name || meta.id || pathStr || 'Vapen');
+      return `<option value="${escapeAttrLocal(pathStr)}">${label}</option>`;
+    })
+  ).join('');
+  danceWeaponSel.innerHTML = weaponOptions;
+  danceWeaponSel.value = selectedDanceWeaponPath;
+  setDancingVisibility(hasDancingAbility);
+  if (emptyMsg) {
+    const hasWeapons = Boolean(weaponHtml);
+    emptyMsg.hidden = hasWeapons;
+    if (!hasWeapons) {
+      emptyMsg.textContent = 'Inga vapen eller sköldar hittades i inventariet.';
+    }
+  }
+
+  pop.classList.add('open');
+  inner.scrollTop = 0;
+
+  const cleanup = () => {
+    applyBtn.removeEventListener('click', onApply);
+    cancelBtn.removeEventListener('click', onCancel);
+    resetBtn.removeEventListener('click', onReset);
+    pop.removeEventListener('click', onOutside);
+    inner.removeEventListener('keydown', onKey);
+  };
+
+  const close = () => {
+    pop.classList.remove('open');
+    cleanup();
+  };
+
+  const refreshUI = () => {
+    if (typeof window.renderTraits === 'function') renderTraits();
+    if (typeof renderSummary === 'function') renderSummary();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    syncDefenseButtons();
+  };
+
+  const onApply = () => {
+    const armorVal = armorSel.value;
+    const armorRef = armorMeta.get(armorVal) || null;
+    const dancingEnabled = hasDancingAbility;
+    const danceWeaponVal = dancingEnabled ? danceWeaponSel.value : '';
+    const danceWeaponRef = dancingEnabled ? (weaponMeta.get(danceWeaponVal) || null) : null;
+    const selectedWeaponPathsNext = syncWeaponSelectionUi();
+    const selectedWeaponsNext = selectedWeaponPathsNext
+      .map(pathStr => weaponMeta.get(pathStr))
+      .filter(Boolean);
+    const nextSetup = {
+      enabled: true,
+      trait: traitSel.value || '',
+      armor: armorRef ? { path: armorRef.path, id: armorRef.id, name: armorRef.name } : null,
+      weapons: selectedWeaponsNext.map(w => ({ path: w.path, id: w.id, name: w.name })),
+      dancingTrait: dancingEnabled ? (danceTraitSel.value || '') : '',
+      dancingWeapon: dancingEnabled && danceWeaponRef ? { path: danceWeaponRef.path, id: danceWeaponRef.id, name: danceWeaponRef.name } : null
+    };
+    if (typeof storeHelper.setDefenseSetup === 'function') {
+      storeHelper.setDefenseSetup(store, nextSetup);
+    }
+    if (typeof storeHelper.setDefenseTrait === 'function') {
+      storeHelper.setDefenseTrait(store, '');
+    }
+    close();
+    refreshUI();
+  };
+
+  const onReset = () => {
+    if (typeof storeHelper.setDefenseSetup === 'function') {
+      storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
+    }
+    if (typeof storeHelper.setDefenseTrait === 'function') {
+      storeHelper.setDefenseTrait(store, '');
+    }
+    close();
+    refreshUI();
+  };
+
+  const onCancel = () => {
+    close();
+  };
+
+  const onOutside = e => {
+    if (!inner.contains(e.target)) {
+      close();
+    }
+  };
+
+  const onKey = e => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      onApply();
+    }
+  };
+
+  applyBtn.addEventListener('click', onApply);
+  cancelBtn.addEventListener('click', onCancel);
+  resetBtn.addEventListener('click', onReset);
+  pop.addEventListener('click', onOutside);
+  inner.addEventListener('keydown', onKey);
+}
+
+function openEntrySortPopup(cb) {
+  const pop = bar.shadowRoot?.getElementById('entrySortPopup');
+  if (!pop) return;
+  const inner = pop.querySelector('.popup-inner');
+  const buttons = [...pop.querySelectorAll('.sort-btn[data-mode]')];
+  const saveBtn = pop.querySelector('#entrySortSave');
+  const cancelBtn = pop.querySelector('#entrySortCancel');
+  const current = storeHelper.getEntrySort ? storeHelper.getEntrySort(store) : (typeof ENTRY_SORT_DEFAULT !== 'undefined' ? ENTRY_SORT_DEFAULT : 'alpha-asc');
+  let selected = current;
+
+  const setActive = (mode) => {
+    selected = mode;
+    buttons.forEach(btn => {
+      const isActive = btn.dataset.mode === mode;
+      btn.classList.toggle('active', isActive);
+      btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+    });
+  };
+
+  setActive(current);
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+
+  const close = () => {
+    pop.classList.remove('open');
+    buttons.forEach(btn => btn.removeEventListener('click', onSelect));
+    saveBtn?.removeEventListener('click', onSave);
+    cancelBtn?.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+  };
+
+  const onSelect = (e) => {
+    const btn = e.currentTarget;
+    if (!btn) return;
+    setActive(btn.dataset.mode);
+  };
+
+  const onSave = () => {
+    close();
+    cb?.(selected);
+  };
+
+  const onCancel = () => { close(); cb?.(null); };
+
+  const onOutside = e => {
+    if (inner && !inner.contains(e.target)) {
+      close();
+      cb?.(null);
+    }
+  };
+
+  buttons.forEach(btn => btn.addEventListener('click', onSelect));
+  saveBtn?.addEventListener('click', onSave);
+  cancelBtn?.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+function openManualAdjustPopup() {
+  const pop = bar.shadowRoot?.getElementById('manualAdjustPopup');
+  if (!pop) return;
+  const inner = pop.querySelector('.popup-inner');
+  const groups = pop.querySelector('#manualAdjustGroups');
+  const closeBtn = pop.querySelector('#manualAdjustClose');
+  const resetBtn = pop.querySelector('#manualAdjustReset');
+  const corOut = pop.querySelector('#manualCorruptionDisplay');
+  const xpOut = pop.querySelector('#manualXpDisplay');
+  const toughOut = pop.querySelector('#manualToughnessDisplay');
+  const painOut = pop.querySelector('#manualPainDisplay');
+  const capOut = pop.querySelector('#manualCapacityDisplay');
+
+  const refresh = () => {
+    const manual = getManualAdjustmentsSafe();
+    if (corOut) corOut.textContent = formatSignedNumber(manual.corruption);
+    if (xpOut)  xpOut.textContent  = formatSignedNumber(-manual.xp);
+    if (toughOut) toughOut.textContent = formatSignedNumber(manual.toughness);
+    if (painOut) painOut.textContent = formatSignedNumber(manual.pain);
+    if (capOut) capOut.textContent = formatSignedNumber(manual.capacity);
+    syncManualAdjustButton();
+  };
+
+  refresh();
+
+  if (pop.classList.contains('open')) {
+    return;
+  }
+
+  const applyUpdate = (updater) => {
+    if (!store || !store.current) return;
+    const manual = getManualAdjustmentsSafe();
+    const next = { ...manual };
+    updater(next);
+    storeHelper.setManualAdjustments(store, next);
+    updateXP();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    if (typeof window.refreshEffectsPanel === 'function') window.refreshEffectsPanel();
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    if (window.invUtil && typeof invUtil.renderInventory === 'function') {
+      invUtil.renderInventory();
+    }
+    syncManualAdjustButton();
+  };
+
+  function close() {
+    pop.classList.remove('open');
+    groups?.removeEventListener('click', onAction);
+    closeBtn?.removeEventListener('click', onClose);
+    resetBtn?.removeEventListener('click', onReset);
+    window.registerOverlayCleanup?.(pop, null);
+  }
+
+  function onClose() {
+    close();
+  }
+
+  function onReset() {
+    applyUpdate(next => {
+      next.corruption = 0;
+      next.xp = 0;
+      next.toughness = 0;
+      next.pain = 0;
+      next.capacity = 0;
+    });
+    refresh();
+  }
+
+  function onAction(e) {
+    const btn = e.target.closest('button[data-type][data-direction]');
+    if (!btn) return;
+    e.preventDefault();
+    const type = btn.dataset.type;
+    const dir = btn.dataset.direction;
+    const delta = dir === 'increase' ? 1 : dir === 'decrease' ? -1 : 0;
+    if (!type || delta === 0 || !store || !store.current) return;
+    applyUpdate(next => {
+      if (!Object.prototype.hasOwnProperty.call(next, type)) {
+        return;
+      }
+      const current = Number(next[type]);
+      const base = Number.isFinite(current) ? current : 0;
+      next[type] = base + delta;
+    });
+    refresh();
+  }
+
+  window.registerOverlayCleanup?.(pop, close);
+
+  pop.classList.add('open');
+  if (inner) inner.scrollTop = 0;
+  groups?.addEventListener('click', onAction);
+  closeBtn?.addEventListener('click', onClose);
+  resetBtn?.addEventListener('click', onReset);
+}
+
+function isIosDevice() {
+  const ua = navigator.userAgent || '';
+  const platform = navigator.platform || '';
+  const touchMac = platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+  return /iPad|iPhone|iPod/.test(ua) || touchMac;
+}
+
+function isStandaloneDisplayMode() {
+  try {
+    if (window.matchMedia?.('(display-mode: standalone)').matches) return true;
+  } catch {}
+  return window.navigator?.standalone === true;
+}
+
+function shouldUseShareFallbackForExport() {
+  return isIosDevice() && isStandaloneDisplayMode();
+}
+
+function inferMimeType(fileName, fallback = '') {
+  const name = String(fileName || '').toLowerCase();
+  if (name.endsWith('.json')) return 'application/json';
+  if (name.endsWith('.zip')) return 'application/zip';
+  return fallback || 'application/octet-stream';
+}
+
+async function shareBlobAsFile(blob, suggested) {
+  if (!navigator.share || typeof File === 'undefined') return null;
+  try {
+    const file = new File(
+      [blob],
+      suggested || 'export.dat',
+      { type: inferMimeType(suggested, blob?.type || '') }
+    );
+    if (navigator.canShare && !navigator.canShare({ files: [file] })) {
+      return null;
+    }
+    await navigator.share({
+      files: [file],
+      title: suggested || 'Export'
+    });
+    return true;
+  } catch (err) {
+    if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+      return false;
+    }
+    console.warn('Share export failed', err);
+    return null;
+  }
+}
+
+async function downloadBlob(blob, suggested) {
+  if (shouldUseShareFallbackForExport()) {
+    const shared = await shareBlobAsFile(blob, suggested);
+    if (shared === true) return true;
+    if (shared === false) return false;
+    if (typeof alertPopup === 'function') {
+      await alertPopup('Export stöds inte i den här vyn. Öppna sidan i Safari och exportera där.');
+    }
+    return false;
+  }
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = suggested;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  return true;
+}
+
+async function saveJsonFile(jsonText, suggested) {
+  const blob = new Blob([jsonText], { type: 'application/json' });
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{
+          description: 'JSON',
+          accept: { 'application/json': ['.json'] }
+        }]
+      });
+      const writable = await handle.createWritable();
+      await writable.write(blob);
+      await writable.close();
+      return;
+    } catch (err) {
+      if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+        await alertPopup('Sparande misslyckades');
+      }
+    }
+  }
+  await downloadBlob(blob, suggested);
+}
+
+function sanitizeFilename(name) {
+  try {
+    let s = String(name || '').normalize('NFC');
+    // Replace invalid characters for Windows/macOS/Linux
+    s = s.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_');
+    // Collapse whitespace
+    s = s.replace(/\s+/g, ' ').trim();
+    // Remove trailing dots and spaces (Windows)
+    s = s.replace(/[\.\s]+$/g, '');
+    // Avoid reserved device names on Windows
+    const reserved = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])$/i;
+    if (reserved.test(s)) s = '_' + s;
+    if (!s) s = 'fil';
+    // Guard length
+    if (s.length > 150) s = s.slice(0, 150);
+    return s;
+  } catch {
+    return 'fil';
+  }
+}
+
+// --- Google Drive (manuell lagring, en fil per rollperson) ---
+const DRIVE_CONFIG = {
+  clientId: '618760628907-j5pdjhke84shln3sadl5t61e2sskav0s.apps.googleusercontent.com',
+  apiKey: 'AIzaSyB5f67LBlMssggG7SREFbCZD43YzDESW5Q',
+  // Full Drive access so all users with access to the shared folder can see each other's files.
+  scope: 'https://www.googleapis.com/auth/drive',
+  rootFolderName: 'Symbapedia_Backups',
+  // Shared folder ID (all users must have access to this folder)
+  rootFolderId: '1AxuJ4DAb_Ao7wgidQMy4QxlBnYu4gojX',
+  subfolders: ['Alla','Daniel','David','Elias','Elin','Isak','Leo','Nilas','Victor']
+};
+
+function driveEscapeQuery(value) {
+  return String(value || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+}
+
+function driveDefaultFolderName() {
+  try {
+    const saved = localStorage.getItem('symbapediaDriveFolder');
+    if (DRIVE_CONFIG.subfolders.includes(saved)) return saved;
+
+    const activeId = storeHelper.getActiveFolder(store);
+    const folders = storeHelper.getFolders(store) || [];
+    const activeFolder = folders.find(f => f.id === activeId);
+    if (activeFolder && DRIVE_CONFIG.subfolders.includes(activeFolder.name)) {
+      return activeFolder.name;
+    }
+  } catch {}
+  return 'Alla';
+}
+
+let driveTokenClient = null;
+let driveGisPromise = null;
+let driveAccessToken = '';
+let driveAccessTokenExpiresAt = 0;
+const DRIVE_SCOPE_KEY = 'symbapediaDriveScope';
+
+function cacheDriveToken(resp) {
+  const token = resp?.access_token;
+  if (!token) return null;
+  driveAccessToken = token;
+  const expiresIn = Number(resp.expires_in) || 0;
+  const skewMs = 60 * 1000;
+  driveAccessTokenExpiresAt = Date.now() + (expiresIn * 1000) - skewMs;
+  return token;
+}
+
+function getCachedDriveToken() {
+  if (driveAccessToken && Date.now() < driveAccessTokenExpiresAt) {
+    return driveAccessToken;
+  }
+  return null;
+}
+
+function loadDriveGis() {
+  if (driveGisPromise) return driveGisPromise;
+  driveGisPromise = new Promise((resolve, reject) => {
+    if (window.google?.accounts?.oauth2) {
+      resolve();
+      return;
+    }
+    const s = document.createElement('script');
+    s.src = 'https://accounts.google.com/gsi/client';
+    s.async = true;
+    s.defer = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject(new Error('GIS load failed'));
+    document.head.appendChild(s);
+  });
+  return driveGisPromise;
+}
+
+function initDriveTokenClient() {
+  if (!driveTokenClient) {
+    driveTokenClient = google.accounts.oauth2.initTokenClient({
+      client_id: DRIVE_CONFIG.clientId,
+      scope: DRIVE_CONFIG.scope,
+      callback: () => {}
+    });
+  }
+  return driveTokenClient;
+}
+
+function requestDriveTokenInteractive() {
+  const cached = getCachedDriveToken();
+  if (cached) return Promise.resolve(cached);
+  if (!window.google?.accounts?.oauth2) {
+    return Promise.reject(new Error('GIS not loaded'));
+  }
+  initDriveTokenClient();
+  return new Promise((resolve, reject) => {
+    let prompt = '';
+    let shouldStoreScope = false;
+    try {
+      const prevScope = localStorage.getItem(DRIVE_SCOPE_KEY);
+      if (prevScope !== DRIVE_CONFIG.scope) {
+        prompt = 'consent';
+        shouldStoreScope = true;
+      }
+    } catch {}
+    driveTokenClient.callback = (resp) => {
+      const token = cacheDriveToken(resp);
+      if (token) {
+        if (shouldStoreScope) {
+          try { localStorage.setItem(DRIVE_SCOPE_KEY, DRIVE_CONFIG.scope); } catch {}
+        }
+        resolve(token);
+      }
+      else reject(resp);
+    };
+    // Måste ske via användarklick
+    driveTokenClient.requestAccessToken({ prompt });
+  });
+}
+
+function isDriveGisNotLoaded(err) {
+  return String(err?.message || err || '').includes('GIS not loaded');
+}
+
+async function requestDriveTokenFromClick() {
+  const cached = getCachedDriveToken();
+  if (cached) return cached;
+  if (!window.google?.accounts?.oauth2) {
+    loadDriveGis().catch(() => {});
+    throw new Error('GIS not loaded');
+  }
+  return await requestDriveTokenInteractive();
+}
+
+async function ensureDriveToken() {
+  const cached = getCachedDriveToken();
+  if (cached) return cached;
+  throw new Error('Drive auth required');
+}
+
+async function driveApiFetch(path, { method = 'GET', params = {}, body, headers = {} } = {}) {
+  const token = await ensureDriveToken();
+  const url = new URL(`https://www.googleapis.com/drive/v3/${path}`);
+  const finalParams = { ...(params || {}) };
+  if (DRIVE_CONFIG.rootFolderId) {
+    if (finalParams.supportsAllDrives === undefined) finalParams.supportsAllDrives = true;
+    if (finalParams.includeItemsFromAllDrives === undefined) finalParams.includeItemsFromAllDrives = true;
+  }
+  Object.entries(finalParams).forEach(([k, v]) => {
+    if (v !== undefined && v !== null && v !== '') url.searchParams.set(k, v);
+  });
+  const res = await fetch(url.toString(), {
+    method,
+    headers: { Authorization: `Bearer ${token}`, ...headers },
+    body
+  });
+  const isJson = res.headers.get('content-type')?.includes('application/json');
+  const data = isJson ? await res.json() : await res.text();
+  if (!res.ok) throw new Error(data?.error?.message || data || 'Drive request failed');
+  return data;
+}
+
+async function driveFindFolderByName(name, parentId = null) {
+  const q = [
+    `name='${driveEscapeQuery(name)}'`,
+    `mimeType='application/vnd.google-apps.folder'`,
+    `trashed=false`
+  ];
+  if (parentId) q.push(`'${parentId}' in parents`);
+  const res = await driveApiFetch('files', {
+    params: {
+      q: q.join(' and '),
+      fields: 'files(id,name)',
+      spaces: 'drive',
+      pageSize: 1
+    }
+  });
+  return res.files?.[0] || null;
+}
+
+async function driveEnsureFolder(name, parentId = null) {
+  const existing = await driveFindFolderByName(name, parentId);
+  if (existing) return existing.id;
+
+  const metadata = {
+    name,
+    mimeType: 'application/vnd.google-apps.folder'
+  };
+  if (parentId) metadata.parents = [parentId];
+
+  const created = await driveApiFetch('files', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(metadata),
+    params: { fields: 'id' }
+  });
+  return created.id;
+}
+
+async function driveEnsureRootFolder() {
+  if (DRIVE_CONFIG.rootFolderId) {
+    const info = await driveApiFetch(`files/${DRIVE_CONFIG.rootFolderId}`, {
+      params: { fields: 'id,name,mimeType' }
+    });
+    if (info?.mimeType !== 'application/vnd.google-apps.folder') {
+      throw new Error('Drive root folder is not a folder');
+    }
+    return info.id;
+  }
+  return await driveEnsureFolder(DRIVE_CONFIG.rootFolderName);
+}
+
+async function driveEnsureSubfolder(name) {
+  const rootId = await driveEnsureRootFolder();
+  return await driveEnsureFolder(name, rootId);
+}
+
+async function driveFindCharacterFile(folderId, fileName) {
+  const q = [
+    `name='${driveEscapeQuery(fileName)}'`,
+    `trashed=false`,
+    `'${folderId}' in parents`,
+    `appProperties has { key='symbapediaType' and value='character' }`
+  ];
+  const res = await driveApiFetch('files', {
+    params: { q: q.join(' and '), fields: 'files(id,name,modifiedTime)', spaces: 'drive', pageSize: 1 }
+  });
+  return res.files?.[0] || null;
+}
+
+async function driveUploadCharacterFile(charId, driveFolderName, opts = {}) {
+  const { silent = false } = opts;
+  const data = storeHelper.exportCharacterJSON(store, charId, true);
+  if (!data) return false;
+
+  const jsonText = JSON.stringify(data, null, 2);
+  const fileName = `${sanitizeFilename(data.name || 'rollperson')}.json`;
+
+  const folderId = await driveEnsureSubfolder(driveFolderName);
+  const existing = await driveFindCharacterFile(folderId, fileName);
+
+  const token = await ensureDriveToken();
+  const boundary = `symbapedia_${Date.now()}`;
+
+  const metadata = {
+    name: fileName,
+    mimeType: 'application/json',
+    appProperties: { symbapediaType: 'character' }
+  };
+  if (!existing) {
+    metadata.parents = [folderId];
+  }
+
+  const body =
+    `--${boundary}\r\n` +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    JSON.stringify(metadata) + '\r\n' +
+    `--${boundary}\r\n` +
+    'Content-Type: application/json; charset=UTF-8\r\n\r\n' +
+    jsonText + '\r\n' +
+    `--${boundary}--`;
+
+  const url = existing
+    ? `https://www.googleapis.com/upload/drive/v3/files/${existing.id}?uploadType=multipart&supportsAllDrives=true`
+    : `https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&supportsAllDrives=true`;
+
+  const res = await fetch(url, {
+    method: existing ? 'PATCH' : 'POST',
+    headers: {
+      Authorization: `Bearer ${token}`,
+      'Content-Type': `multipart/related; boundary=${boundary}`
+    },
+    body
+  });
+
+  const payload = await res.json();
+  if (!res.ok) throw new Error(payload?.error?.message || 'Drive upload failed');
+  if (!silent) {
+    window.toast?.(`Sparad i Drive: ${data.name || 'rollperson'}`);
+  }
+  return true;
+}
+
+async function driveUploadAllCharacters(driveFolderName) {
+  const chars = (store.characters || []).slice()
+    .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+  let saved = 0;
+  let skipped = 0;
+  let failed = 0;
+
+  for (const c of chars) {
+    try {
+      const ok = await driveUploadCharacterFile(c.id, driveFolderName, { silent: true });
+      if (ok) saved++;
+      else skipped++;
+    } catch (err) {
+      console.error('Drive upload failed', c, err);
+      failed++;
+    }
+  }
+
+  return { saved, skipped, failed, total: chars.length };
+}
+
+async function driveListCharacterFiles(driveFolderName) {
+  const folderId = await driveEnsureSubfolder(driveFolderName);
+  const q = [
+    `'${folderId}' in parents`,
+    `trashed=false`,
+    `appProperties has { key='symbapediaType' and value='character' }`
+  ];
+  const res = await driveApiFetch('files', {
+    params: {
+      q: q.join(' and '),
+      fields: 'files(id,name,modifiedTime)',
+      spaces: 'drive',
+      pageSize: 200
+    }
+  });
+  return (res.files || []).sort((a, b) => String(a.name).localeCompare(String(b.name), 'sv'));
+}
+
+async function driveDownloadFile(fileId) {
+  const token = await ensureDriveToken();
+  const res = await fetch(`https://www.googleapis.com/drive/v3/files/${fileId}?alt=media&supportsAllDrives=true`, {
+    headers: { Authorization: `Bearer ${token}` }
+  });
+  if (!res.ok) throw new Error('Drive download failed');
+  return await res.text();
+}
+
+async function driveImportFile(fileId) {
+  const text = await driveDownloadFile(fileId);
+  const obj = JSON.parse(text);
+  let imported = 0;
+
+  if (Array.isArray(obj)) {
+    for (const item of obj) {
+      const id = storeHelper.importCharacterJSON(store, item);
+      if (id) imported++;
+    }
+  } else if (obj && Array.isArray(obj.characters)) {
+    for (const item of obj.characters) {
+      const id = storeHelper.importCharacterJSON(store, item);
+      if (id) imported++;
+    }
+  } else if (obj && typeof obj === 'object') {
+    const id = storeHelper.importCharacterJSON(store, obj);
+    if (id) imported++;
+  }
+
+  if (imported > 0) {
+    applyCharacterChange();
+    window.toast?.('Import från Drive klar.');
+  } else {
+    await alertPopup('Kunde inte importera filen.');
+  }
+}
+
+async function driveImportFiles(fileIds) {
+  const ids = Array.isArray(fileIds) ? fileIds.filter(Boolean) : [];
+  let importedTotal = 0;
+  let successFiles = 0;
+  let failedFiles = 0;
+  let emptyFiles = 0;
+
+  for (const fileId of ids) {
+    try {
+      const text = await driveDownloadFile(fileId);
+      const obj = JSON.parse(text);
+      let imported = 0;
+
+      if (Array.isArray(obj)) {
+        for (const item of obj) {
+          const id = storeHelper.importCharacterJSON(store, item);
+          if (id) imported++;
+        }
+      } else if (obj && Array.isArray(obj.characters)) {
+        for (const item of obj.characters) {
+          const id = storeHelper.importCharacterJSON(store, item);
+          if (id) imported++;
+        }
+      } else if (obj && typeof obj === 'object') {
+        const id = storeHelper.importCharacterJSON(store, obj);
+        if (id) imported++;
+      }
+
+      if (imported > 0) {
+        importedTotal += imported;
+        successFiles++;
+      } else {
+        emptyFiles++;
+      }
+    } catch (err) {
+      failedFiles++;
+      console.error('Drive bulk import failed', err);
+    }
+  }
+
+  if (importedTotal > 0) {
+    applyCharacterChange();
+  }
+
+  return {
+    totalFiles: ids.length,
+    successFiles,
+    failedFiles,
+    emptyFiles,
+    importedTotal
+  };
+}
+
+async function importCharactersFromLocal(settings) {
+  if (!settings) return;
+  try {
+    let files;
+    if (window.showDirectoryPicker) {
+      const pick = await openDialog('Vad vill du importera?', {
+        cancel: true,
+        okText: 'Filer',
+        extraText: 'Mapp',
+        cancelText: 'Avbryt'
+      });
+      if (pick === 'extra') {
+        files = await pickJsonFilesFromDirectoryWithFallback();
+      } else if (pick === true) {
+        files = await pickJsonFilesWithFallback();
+      } else {
+        return;
+      }
+    } else {
+      files = await pickJsonFilesWithFallback();
+    }
+
+    const override = settings.mode === 'choose';
+    let targetFolderId = '';
+    let targetFolderName = '';
+    if (override) {
+      try {
+        const folders = (storeHelper.getFolders(store) || []);
+        targetFolderId = settings.folderId || '';
+        let folderRec = folders.find(x => x.id === targetFolderId);
+        if (!folderRec) {
+          let fallback = '';
+          try { fallback = storeHelper.getActiveFolder(store); } catch {}
+          if (!fallback || fallback === 'ALL') {
+            const std = folders.find(f => f.system) || folders.find(f => (f.name || '') === 'Standard') || folders[0];
+            if (std) fallback = std.id;
+          }
+          targetFolderId = fallback || '';
+          folderRec = folders.find(x => x.id === targetFolderId);
+        }
+        targetFolderName = folderRec ? (folderRec.name || '') : '';
+      } catch {}
+    }
+
+    let imported = 0;
+    const usedFolderIds = new Set();
+    for (const file of files) {
+      if (!file.name.toLowerCase().endsWith('.json')) continue;
+      try {
+        const text = await file.text();
+        const obj = JSON.parse(text);
+        if (Array.isArray(obj)) {
+          for (const item of obj) {
+            try {
+              const payload = override
+                ? { ...item, folder: targetFolderName, folderId: targetFolderId }
+                : item;
+              const id = storeHelper.importCharacterJSON(store, payload);
+              if (id) {
+                imported++;
+                try {
+                  const rec = (store.characters || []).find(c => c && c.id === id);
+                  if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                } catch {}
+                window.toast?.(`${item.name || 'Ny rollperson'} är importerad`);
+              }
+            } catch {}
+          }
+        } else if (obj && Array.isArray(obj.folders)) {
+          for (const folder of obj.folders) {
+            const fname = override ? targetFolderName : (folder.folder || folder.name || '');
+            const fid = override ? targetFolderId : (folder.id || folder.folderId || '');
+            if (Array.isArray(folder.characters)) {
+              for (const item of folder.characters) {
+                try {
+                  let payload;
+                  if (override) {
+                    payload = { ...item, folder: targetFolderName, folderId: targetFolderId };
+                  } else {
+                    payload = { ...item, folder: fname };
+                    if (fid) payload.folderId = fid;
+                  }
+                  const id = storeHelper.importCharacterJSON(store, payload);
+                  if (id) {
+                    imported++;
+                    try {
+                      const rec = (store.characters || []).find(c => c && c.id === id);
+                      if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                    } catch {}
+                    window.toast?.(`${item.name || 'Ny rollperson'} är importerad`);
+                  }
+                } catch {}
+              }
+            }
+          }
+        } else if (obj && Array.isArray(obj.characters)) {
+          for (const item of obj.characters) {
+            try {
+              const payload = override
+                ? { ...item, folder: targetFolderName, folderId: targetFolderId }
+                : item;
+              const id = storeHelper.importCharacterJSON(store, payload);
+              if (id) {
+                imported++;
+                try {
+                  const rec = (store.characters || []).find(c => c && c.id === id);
+                  if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+                } catch {}
+                window.toast?.(`${item.name || 'Ny rollperson'} är importerad`);
+              }
+            } catch {}
+          }
+        } else {
+          const payload = override
+            ? { ...obj, folder: targetFolderName, folderId: targetFolderId }
+            : obj;
+          const res = storeHelper.importCharacterJSON(store, payload);
+          if (res) {
+            imported++;
+            try {
+              const rec = (store.characters || []).find(c => c && c.id === res);
+              if (rec && rec.folderId) usedFolderIds.add(rec.folderId);
+            } catch {}
+            window.toast?.(`${obj.name || 'Ny rollperson'} är importerad`);
+          }
+        }
+      } catch {
+        // Ignore single-file parse errors and continue
+      }
+    }
+
+    if (imported > 0) {
+      if (override && settings.makeActive && targetFolderId) {
+        try { storeHelper.setActiveFolder(store, targetFolderId); } catch {}
+      } else if (!override && settings.makeActive) {
+        try {
+          const arr = Array.from(usedFolderIds);
+          if (arr.length === 1 && arr[0]) {
+            storeHelper.setActiveFolder(store, arr[0]);
+          }
+        } catch {}
+      }
+      applyCharacterChange();
+    } else {
+      await alertPopup('Felaktig fil.');
+    }
+  } catch (err) {
+    if (err && err.name !== 'AbortError') {
+      await alertPopup('Felaktig fil.');
+    }
+  }
+}
+
+function openDriveStoragePopup(initialTab = 'drive') {
+  loadDriveGis().catch(() => {});
+  openChoicePopup((opts, select) => {
+    const make = (tag, cls, text) => {
+      const el = document.createElement(tag);
+      if (cls) el.className = cls;
+      if (text != null) el.textContent = text;
+      return el;
+    };
+    const normalize = value => String(value || '').toLocaleLowerCase('sv');
+
+    const buildDrivePanel = (root, choose) => {
+      const characterCount = (store.characters || []).length;
+      const folderCount = DRIVE_CONFIG.subfolders.length;
+      const wrap = make('div', 'export-sections drive-storage-sections');
+      let importFolderSelect;
+
+      const hero = make('div', 'drive-storage-hero');
+      hero.appendChild(make('div', 'drive-storage-kicker', 'Google Drive'));
+      hero.appendChild(make('div', 'drive-storage-title', 'Synka rollpersoner'));
+      hero.appendChild(make('div', 'drive-storage-meta', `${characterCount} rollpersoner • ${folderCount} mappar`));
+      wrap.appendChild(hero);
+
+      const saveCard = make('div', 'card export-card');
+      saveCard.appendChild(make('div', 'card-title drive-card-title', 'Spara till Google Drive'));
+      const saveSection = make('div', 'export-section');
+      saveSection.appendChild(make('p', 'drive-section-intro', 'Välj Drive-mapp och spara alla eller enskilda rollpersoner.'));
+
+      const saveFolderWrap = make('div', 'filter-group drive-folder-group');
+      const saveLabel = make('label', 'drive-field-label', 'Drive-mapp');
+      saveLabel.setAttribute('for', 'driveExportFolderSelect');
+      saveFolderWrap.appendChild(saveLabel);
+
+      const saveFolderSelect = document.createElement('select');
+      saveFolderSelect.id = 'driveExportFolderSelect';
+      saveFolderSelect.className = 'drive-folder-select';
+      DRIVE_CONFIG.subfolders.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        saveFolderSelect.appendChild(opt);
+      });
+      saveFolderSelect.value = driveDefaultFolderName();
+      saveFolderSelect.addEventListener('change', () => {
+        localStorage.setItem('symbapediaDriveFolder', saveFolderSelect.value);
+        if (importFolderSelect) importFolderSelect.value = saveFolderSelect.value;
+      });
+      saveFolderWrap.appendChild(saveFolderSelect);
+      saveSection.appendChild(saveFolderWrap);
+
+      const saveAllBtn = make('button', 'char-btn drive-primary-action', 'Spara alla (separata filer)');
+      saveAllBtn.addEventListener('click', async () => {
+        if (!store.characters?.length) {
+          await alertPopup('Inga rollpersoner att spara.');
+          return;
+        }
+        const originalText = saveAllBtn.textContent;
+        saveAllBtn.disabled = true;
+        saveAllBtn.textContent = 'Ansluter till Drive…';
+        try {
+          await requestDriveTokenFromClick();
+          choose({
+            mode: 'drive-save-all',
+            driveFolder: saveFolderSelect.value || 'Alla'
+          });
+        } catch (err) {
+          console.error(err);
+          if (isDriveGisNotLoaded(err)) {
+            await alertPopup('Drive laddas… klicka igen.');
+          } else {
+            await alertPopup('Kunde inte ansluta till Google Drive.');
+          }
+          saveAllBtn.disabled = false;
+          saveAllBtn.textContent = originalText;
+        }
+      });
+      saveSection.appendChild(saveAllBtn);
+
+      const folders = (storeHelper.getFolders(store) || []).slice()
+        .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const folderNameById = new Map(folders.map(f => [f.id, f.name || 'Mapp']));
+      const charEntries = (store.characters || [])
+        .map(c => ({
+          id: c.id,
+          name: c.name || 'Namnlös',
+          folderName: folderNameById.get(c.folderId || '') || 'Övrigt'
+        }))
+        .sort((a, b) =>
+          String(a.folderName).localeCompare(String(b.folderName), 'sv') ||
+          String(a.name).localeCompare(String(b.name), 'sv')
+        );
+
+      const saveListHeader = make('div', 'drive-list-header');
+      saveListHeader.appendChild(make('span', 'drive-list-title', 'Spara enskild rollperson'));
+      saveListHeader.appendChild(make('span', 'drive-count-pill', `${charEntries.length} st`));
+      saveSection.appendChild(saveListHeader);
+
+      const saveSingleWrap = make('div', 'drive-select-panel');
+      const saveSearchWrap = make('div', 'drive-search');
+      const saveSearch = document.createElement('input');
+      saveSearch.type = 'text';
+      saveSearch.className = 'drive-search-input';
+      saveSearch.placeholder = 'Filtrera rollperson…';
+      saveSearch.autocomplete = 'off';
+      saveSearchWrap.appendChild(saveSearch);
+      saveSingleWrap.appendChild(saveSearchWrap);
+
+      const saveCharSelect = document.createElement('select');
+      saveCharSelect.className = 'drive-folder-select drive-char-select';
+      saveSingleWrap.appendChild(saveCharSelect);
+
+      const saveSingleBtn = make('button', 'char-btn drive-secondary-action', 'Spara vald rollperson');
+      saveSingleWrap.appendChild(saveSingleBtn);
+      const saveMeta = make('div', 'drive-inline-meta');
+      saveSingleWrap.appendChild(saveMeta);
+
+      function renderSaveCharacterSelect() {
+        const q = normalize(saveSearch.value);
+        const previousValue = saveCharSelect.value;
+        const filtered = charEntries.filter(entry => {
+          const hay = normalize(`${entry.name} ${entry.folderName}`);
+          return !q || hay.includes(q);
+        });
+
+        saveCharSelect.innerHTML = '';
+        if (!filtered.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = charEntries.length ? 'Inga träffar' : 'Inga rollpersoner';
+          saveCharSelect.appendChild(opt);
+          saveCharSelect.disabled = true;
+          saveSingleBtn.disabled = true;
+          saveMeta.textContent = charEntries.length
+            ? 'Ingen rollperson matchar filtret.'
+            : 'Skapa en rollperson för att kunna spara till Drive.';
+          return;
+        }
+
+        const groups = new Map();
+        filtered.forEach(entry => {
+          if (!groups.has(entry.folderName)) groups.set(entry.folderName, []);
+          groups.get(entry.folderName).push(entry);
+        });
+
+        for (const [folderName, entries] of groups.entries()) {
+          const group = document.createElement('optgroup');
+          group.label = folderName;
+          entries.forEach(entry => {
+            const opt = document.createElement('option');
+            opt.value = entry.id;
+            opt.textContent = entry.name;
+            group.appendChild(opt);
+          });
+          saveCharSelect.appendChild(group);
+        }
+
+        const preferred = filtered.some(entry => entry.id === previousValue)
+          ? previousValue
+          : (filtered.some(entry => entry.id === store.current) ? store.current : filtered[0].id);
+        saveCharSelect.value = preferred;
+        saveCharSelect.disabled = false;
+        saveSingleBtn.disabled = false;
+        saveMeta.textContent = filtered.length === charEntries.length
+          ? `${charEntries.length} rollpersoner tillgängliga.`
+          : `${filtered.length} av ${charEntries.length} visas.`;
+      }
+
+      saveSearch.addEventListener('input', renderSaveCharacterSelect);
+      saveSingleBtn.addEventListener('click', async () => {
+        const charId = saveCharSelect.value;
+        if (!charId) return;
+        try {
+          await requestDriveTokenFromClick();
+          choose({
+            mode: 'drive-save',
+            charId,
+            driveFolder: saveFolderSelect.value || 'Alla'
+          });
+        } catch (err) {
+          console.error(err);
+          if (isDriveGisNotLoaded(err)) {
+            await alertPopup('Drive laddas… klicka igen.');
+          } else {
+            await alertPopup('Kunde inte ansluta till Google Drive.');
+          }
+        }
+      });
+
+      renderSaveCharacterSelect();
+      saveSection.appendChild(saveSingleWrap);
+      saveCard.appendChild(saveSection);
+      wrap.appendChild(saveCard);
+
+      const importCard = make('div', 'card export-card');
+      importCard.appendChild(make('div', 'card-title drive-card-title', 'Importera från Google Drive'));
+      const importSection = make('div', 'export-section');
+      importSection.appendChild(make('p', 'drive-section-intro', 'Läs filer från vald Drive-mapp och importera vald fil eller alla på en gång.'));
+
+      const importFolderWrap = make('div', 'filter-group drive-folder-group');
+      const importLabel = make('label', 'drive-field-label', 'Drive-mapp');
+      importLabel.setAttribute('for', 'driveImportFolderSelect');
+      importFolderWrap.appendChild(importLabel);
+
+      importFolderSelect = document.createElement('select');
+      importFolderSelect.id = 'driveImportFolderSelect';
+      importFolderSelect.className = 'drive-folder-select';
+      DRIVE_CONFIG.subfolders.forEach(name => {
+        const opt = document.createElement('option');
+        opt.value = name;
+        opt.textContent = name;
+        importFolderSelect.appendChild(opt);
+      });
+      importFolderSelect.value = driveDefaultFolderName();
+      importFolderSelect.addEventListener('change', () => {
+        localStorage.setItem('symbapediaDriveFolder', importFolderSelect.value);
+        if (saveFolderSelect) saveFolderSelect.value = importFolderSelect.value;
+      });
+      importFolderWrap.appendChild(importFolderSelect);
+      importSection.appendChild(importFolderWrap);
+
+      const loadBtn = make('button', 'char-btn drive-secondary-action', 'Hämta fillista');
+      importSection.appendChild(loadBtn);
+
+      const searchWrap = make('div', 'drive-search');
+      const search = document.createElement('input');
+      search.type = 'text';
+      search.className = 'drive-search-input';
+      search.placeholder = 'Filtrera namn…';
+      search.autocomplete = 'off';
+      searchWrap.appendChild(search);
+      importSection.appendChild(searchWrap);
+
+      const importListHeader = make('div', 'drive-list-header');
+      importListHeader.appendChild(make('span', 'drive-list-title', 'Filer i vald Drive-mapp'));
+      const importCount = make('span', 'drive-count-pill', '0 st');
+      importListHeader.appendChild(importCount);
+      importSection.appendChild(importListHeader);
+
+      const importSelectPanel = make('div', 'drive-select-panel');
+      const importFileSelect = document.createElement('select');
+      importFileSelect.className = 'drive-folder-select drive-file-select';
+      importSelectPanel.appendChild(importFileSelect);
+
+      const importActionRow = make('div', 'drive-action-row');
+      const importSelectedBtn = make('button', 'char-btn drive-primary-action', 'Importera vald fil');
+      const importAllBtn = make('button', 'char-btn drive-secondary-action', 'Importera alla filer i mapp');
+      importActionRow.appendChild(importSelectedBtn);
+      importActionRow.appendChild(importAllBtn);
+      importSelectPanel.appendChild(importActionRow);
+
+      const importMeta = make('div', 'drive-inline-meta', 'Hämta fillista för att börja.');
+      importSelectPanel.appendChild(importMeta);
+      importSection.appendChild(importSelectPanel);
+
+      let allFiles = [];
+
+      function renderImportFileSelect() {
+        const q = String(search.value || '').toLocaleLowerCase('sv');
+        const files = allFiles.filter(f => !q || String(f.name).toLocaleLowerCase('sv').includes(q));
+
+        importFileSelect.innerHTML = '';
+        if (!files.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = allFiles.length ? 'Inga träffar' : 'Inga filer laddade';
+          importFileSelect.appendChild(opt);
+          importFileSelect.disabled = true;
+          importSelectedBtn.disabled = true;
+          importAllBtn.disabled = !allFiles.length;
+          importCount.textContent = allFiles.length ? `0 / ${allFiles.length}` : '0 st';
+          importMeta.textContent = allFiles.length
+            ? 'Justera filter eller importera alla i mappen.'
+            : 'Hämta fillista för att börja.';
+          return;
+        }
+
+        for (const f of files) {
+          const label = String(f.name || '').replace(/\.json$/i, '');
+          const opt = document.createElement('option');
+          opt.value = f.id;
+          opt.textContent = label || f.name;
+          importFileSelect.appendChild(opt);
+        }
+
+        importFileSelect.disabled = false;
+        importSelectedBtn.disabled = false;
+        importAllBtn.disabled = false;
+        importCount.textContent = files.length === allFiles.length
+          ? `${allFiles.length} st`
+          : `${files.length} / ${allFiles.length}`;
+        importMeta.textContent = files.length === allFiles.length
+          ? 'Välj en fil eller importera alla i mappen.'
+          : 'Filtret påverkar bara listan för vald fil.';
+      }
+
+      loadBtn.addEventListener('click', async () => {
+        importMeta.textContent = 'Laddar filer från Drive…';
+        loadBtn.disabled = true;
+        try {
+          await requestDriveTokenFromClick();
+          allFiles = (await driveListCharacterFiles(importFolderSelect.value || 'Alla'))
+            .slice()
+            .sort((a, b) => String(a.name || '').localeCompare(String(b.name || ''), 'sv'));
+          renderImportFileSelect();
+        } catch (err) {
+          console.error(err);
+          if (isDriveGisNotLoaded(err)) {
+            importMeta.textContent = 'Drive laddas… klicka igen.';
+          } else {
+            importMeta.textContent = 'Kunde inte läsa Drive.';
+          }
+        } finally {
+          loadBtn.disabled = false;
+        }
+      });
+
+      importFolderSelect.addEventListener('change', () => {
+        allFiles = [];
+        search.value = '';
+        renderImportFileSelect();
+      });
+
+      search.addEventListener('input', renderImportFileSelect);
+      importSelectedBtn.addEventListener('click', () => {
+        const fileId = importFileSelect.value;
+        if (!fileId) return;
+        choose({
+          mode: 'drive-import',
+          fileId
+        });
+      });
+      importAllBtn.addEventListener('click', () => {
+        if (!allFiles.length) return;
+        choose({
+          mode: 'drive-import-all',
+          fileIds: allFiles.map(file => file.id)
+        });
+      });
+
+      renderImportFileSelect();
+      importCard.appendChild(importSection);
+      wrap.appendChild(importCard);
+      root.appendChild(wrap);
+    };
+
+    const buildExportPanel = (root, choose) => {
+      const wrap = make('div', 'export-sections drive-storage-sections');
+
+      const backupsCard = make('div', 'card export-card');
+      backupsCard.appendChild(make('div', 'card-title drive-card-title', 'Säkerhetskopior'));
+      const backups = make('div', 'export-section');
+      backups.appendChild(make('p', 'drive-section-intro', 'Exportera alla rollpersoner eller aktiv mapp i valt format.'));
+
+      const addScope = (label, values) => {
+        const block = make('div', 'drive-select-panel export-mode-block');
+        const header = make('div', 'drive-list-header');
+        header.appendChild(make('span', 'drive-list-title', label));
+        block.appendChild(header);
+
+        const actions = make('div', 'drive-export-actions');
+        const oneBtn = make('button', 'char-btn drive-secondary-action', 'En fil');
+        oneBtn.addEventListener('click', () => choose({ mode: 'export', action: values.one }));
+        const splitBtn = make('button', 'char-btn drive-secondary-action', 'Isär');
+        splitBtn.addEventListener('click', () => choose({ mode: 'export', action: values.split }));
+        const zipBtn = make('button', 'char-btn drive-secondary-action', 'Zip');
+        zipBtn.addEventListener('click', () => choose({ mode: 'export', action: values.zip }));
+        actions.appendChild(oneBtn);
+        actions.appendChild(splitBtn);
+        actions.appendChild(zipBtn);
+        block.appendChild(actions);
+        backups.appendChild(block);
+      };
+
+      addScope('Alla rollpersoner', {
+        one: 'all-one',
+        split: 'all-separate',
+        zip: 'all-zip'
+      });
+
+      try {
+        const activeId = storeHelper.getActiveFolder(store);
+        if (activeId && activeId !== 'ALL') {
+          const folders = storeHelper.getFolders(store) || [];
+          const folder = folders.find(f => f.id === activeId);
+          if (folder) {
+            addScope(`Aktiv mapp: ${folder.name}`, {
+              one: 'folder-active',
+              split: 'folder-separate',
+              zip: 'folder-zip'
+            });
+          }
+        }
+      } catch {}
+
+      backupsCard.appendChild(backups);
+      wrap.appendChild(backupsCard);
+
+      const singlesCard = make('div', 'card export-card');
+      singlesCard.appendChild(make('div', 'card-title drive-card-title', 'Enskild rollperson'));
+      const singles = make('div', 'export-section');
+      singles.appendChild(make('p', 'drive-section-intro', 'Filtrera och exportera en vald rollperson.'));
+
+      const folders = (storeHelper.getFolders(store) || []).slice()
+        .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const folderNameById = new Map(folders.map(f => [f.id, f.name || 'Mapp']));
+      const charEntries = (store.characters || [])
+        .map(c => ({
+          id: c.id,
+          name: c.name || 'Namnlös',
+          folderName: folderNameById.get(c.folderId || '') || 'Övrigt'
+        }))
+        .sort((a, b) =>
+          String(a.folderName).localeCompare(String(b.folderName), 'sv') ||
+          String(a.name).localeCompare(String(b.name), 'sv')
+        );
+
+      const panel = make('div', 'drive-select-panel');
+      const searchWrap = make('div', 'drive-search');
+      const search = document.createElement('input');
+      search.type = 'text';
+      search.className = 'drive-search-input';
+      search.placeholder = 'Sök rollperson eller mapp…';
+      search.autocomplete = 'off';
+      searchWrap.appendChild(search);
+      panel.appendChild(searchWrap);
+
+      const charSelect = document.createElement('select');
+      charSelect.className = 'drive-folder-select drive-char-select';
+      panel.appendChild(charSelect);
+
+      const exportBtn = make('button', 'char-btn drive-primary-action', 'Exportera rollperson');
+      panel.appendChild(exportBtn);
+      const meta = make('div', 'drive-inline-meta');
+      panel.appendChild(meta);
+
+      function renderCharacterSelect() {
+        const q = normalize(search.value);
+        const previousValue = charSelect.value;
+        const filtered = charEntries.filter(entry => {
+          const hay = normalize(`${entry.name} ${entry.folderName}`);
+          return !q || hay.includes(q);
+        });
+
+        charSelect.innerHTML = '';
+        if (!filtered.length) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = charEntries.length ? 'Inga träffar' : 'Inga rollpersoner';
+          charSelect.appendChild(opt);
+          charSelect.disabled = true;
+          exportBtn.disabled = true;
+          meta.textContent = charEntries.length
+            ? 'Ingen rollperson matchar filtret.'
+            : 'Skapa en rollperson för att exportera.';
+          return;
+        }
+
+        const groups = new Map();
+        filtered.forEach(entry => {
+          if (!groups.has(entry.folderName)) groups.set(entry.folderName, []);
+          groups.get(entry.folderName).push(entry);
+        });
+
+        for (const [folderName, entries] of groups.entries()) {
+          const group = document.createElement('optgroup');
+          group.label = folderName;
+          entries.forEach(entry => {
+            const opt = document.createElement('option');
+            opt.value = entry.id;
+            opt.textContent = entry.name;
+            group.appendChild(opt);
+          });
+          charSelect.appendChild(group);
+        }
+
+        const preferred = filtered.some(entry => entry.id === previousValue)
+          ? previousValue
+          : (filtered.some(entry => entry.id === store.current) ? store.current : filtered[0].id);
+        charSelect.value = preferred;
+        charSelect.disabled = false;
+        exportBtn.disabled = false;
+        meta.textContent = filtered.length === charEntries.length
+          ? `${charEntries.length} rollpersoner tillgängliga.`
+          : `${filtered.length} av ${charEntries.length} visas.`;
+      }
+
+      search.addEventListener('input', renderCharacterSelect);
+      exportBtn.addEventListener('click', () => {
+        const charId = charSelect.value;
+        if (!charId) return;
+        choose({ mode: 'export', charId });
+      });
+
+      renderCharacterSelect();
+      singles.appendChild(panel);
+      singlesCard.appendChild(singles);
+      wrap.appendChild(singlesCard);
+      root.appendChild(wrap);
+    };
+
+    const buildLocalImportPanel = (root, choose) => {
+      const wrap = make('div', 'export-sections drive-storage-sections');
+      const importCard = make('div', 'card export-card');
+      importCard.appendChild(make('div', 'card-title drive-card-title', 'Importera från fil'));
+      const importSection = make('div', 'export-section');
+      importSection.appendChild(make('p', 'drive-section-intro', 'Importera lokala JSON-filer till vald mapp eller enligt mappinformation i filerna.'));
+
+      const folders = (storeHelper.getFolders(store) || []).slice()
+        .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+      const folderSelect = document.createElement('select');
+      folderSelect.className = 'drive-folder-select';
+      folderSelect.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+
+      let activeId = 'ALL';
+      try { activeId = storeHelper.getActiveFolder(store); } catch {}
+      const activeFolder = folders.find(f => f.id === activeId);
+      const stdFolder = folders.find(f => f.system) || folders.find(f => (f.name || '') === 'Standard') || folders[0];
+      if (activeFolder && activeId !== 'ALL') folderSelect.value = activeFolder.id;
+      else if (stdFolder) folderSelect.value = stdFolder.id;
+
+      const chooseLabel = make('label', 'drive-field-label', 'Importera till mapp');
+      importSection.appendChild(chooseLabel);
+      importSection.appendChild(folderSelect);
+
+      const makeActiveChoose = make('label', 'price-item import-check');
+      const chooseCheck = document.createElement('input');
+      chooseCheck.type = 'checkbox';
+      makeActiveChoose.appendChild(chooseCheck);
+      makeActiveChoose.appendChild(make('span', null, 'Gör målmappen aktiv efter import'));
+      importSection.appendChild(makeActiveChoose);
+
+      const chooseBtn = make('button', 'char-btn drive-primary-action', 'Importera till vald mapp');
+      chooseBtn.addEventListener('click', () => {
+        const folderId = folderSelect.value || '';
+        if (!folderId) return;
+        choose({
+          mode: 'local-import',
+          settings: {
+            mode: 'choose',
+            folderId,
+            makeActive: !!chooseCheck.checked
+          }
+        });
+      });
+      importSection.appendChild(chooseBtn);
+
+      importSection.appendChild(make('p', 'drive-section-intro', 'Eller använd mapparna som finns definierade i filerna.'));
+      const makeActiveFrom = make('label', 'price-item import-check');
+      const fromCheck = document.createElement('input');
+      fromCheck.type = 'checkbox';
+      makeActiveFrom.appendChild(fromCheck);
+      makeActiveFrom.appendChild(make('span', null, 'Gör målmapp aktiv när exakt en mapp importeras'));
+      importSection.appendChild(makeActiveFrom);
+
+      const fromBtn = make('button', 'char-btn drive-secondary-action', 'Importera enligt filens mappar');
+      fromBtn.addEventListener('click', () => {
+        choose({
+          mode: 'local-import',
+          settings: {
+            mode: 'fromFile',
+            makeActive: !!fromCheck.checked
+          }
+        });
+      });
+      importSection.appendChild(fromBtn);
+
+      importCard.appendChild(importSection);
+      wrap.appendChild(importCard);
+      root.appendChild(wrap);
+    };
+
+    const tabs = [
+      { id: 'drive', label: 'Drivelagring' },
+      { id: 'export', label: 'Export' },
+      { id: 'import', label: 'Import' }
+    ];
+    const tabsEl = make('div', 'storage-tabs');
+    const panelsEl = make('div', 'storage-panels');
+    const tabButtons = new Map();
+    const tabPanels = new Map();
+
+    tabs.forEach(tab => {
+      const btn = make('button', 'char-btn storage-tab', tab.label);
+      btn.type = 'button';
+      btn.dataset.tab = tab.id;
+      tabsEl.appendChild(btn);
+      tabButtons.set(tab.id, btn);
+
+      const panel = make('section', 'storage-panel');
+      panel.dataset.tab = tab.id;
+      panelsEl.appendChild(panel);
+      tabPanels.set(tab.id, panel);
+    });
+
+    buildDrivePanel(tabPanels.get('drive'), select);
+    buildExportPanel(tabPanels.get('export'), select);
+    buildLocalImportPanel(tabPanels.get('import'), select);
+
+    const setActiveTab = tabId => {
+      tabButtons.forEach((btn, id) => {
+        const active = id === tabId;
+        btn.classList.toggle('active', active);
+        btn.setAttribute('aria-pressed', active ? 'true' : 'false');
+      });
+      tabPanels.forEach((panel, id) => {
+        panel.classList.toggle('active', id === tabId);
+      });
+    };
+
+    tabButtons.forEach((btn, id) => {
+      btn.addEventListener('click', () => setActiveTab(id));
+    });
+
+    const wantedTab = tabs.some(tab => tab.id === initialTab) ? initialTab : 'drive';
+    setActiveTab(wantedTab);
+    opts.appendChild(tabsEl);
+    opts.appendChild(panelsEl);
+  }, async choice => {
+    if (!choice) return;
+
+    if (choice.mode === 'export') {
+      try {
+        const action = choice.action || '';
+        if (action === 'all-one') {
+          await exportAllCharacters();
+        } else if (action === 'all-separate') {
+          await exportAllCharactersSeparate();
+        } else if (action === 'all-zip') {
+          await exportAllCharactersZipped();
+        } else if (action === 'folder-active') {
+          await exportActiveFolder();
+        } else if (action === 'folder-separate') {
+          await exportActiveFolderSeparate();
+        } else if (action === 'folder-zip') {
+          await exportActiveFolderZipped();
+        } else if (choice.charId) {
+          await exportCharacterFile(choice.charId);
+        }
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Export misslyckades.');
+      }
+      return;
+    }
+
+    if (choice.mode === 'local-import') {
+      await importCharactersFromLocal(choice.settings);
+      return;
+    }
+
+    if (choice.mode === 'drive-save-all') {
+      try {
+        const result = await driveUploadAllCharacters(choice.driveFolder || 'Alla');
+        if (!result.total) {
+          await alertPopup('Inga rollpersoner att spara.');
+          return;
+        }
+        if (result.failed > 0) {
+          await alertPopup(`Sparade ${result.saved} av ${result.total}. ${result.failed} misslyckades.`);
+        } else if (result.skipped > 0) {
+          window.toast?.(`Sparade ${result.saved}. ${result.skipped} hoppades över.`);
+        } else {
+          window.toast?.(`Sparade ${result.saved} rollpersoner i Drive.`);
+        }
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte spara alla till Drive.');
+      }
+      return;
+    }
+    if (choice.mode === 'drive-save') {
+      try {
+        await driveUploadCharacterFile(choice.charId, choice.driveFolder || 'Alla');
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte spara till Drive.');
+      }
+      return;
+    }
+    if (choice.mode === 'drive-import') {
+      try {
+        await driveImportFile(choice.fileId);
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte importera från Drive.');
+      }
+      return;
+    }
+    if (choice.mode === 'drive-import-all') {
+      try {
+        const fileIds = Array.isArray(choice.fileIds) ? choice.fileIds : [];
+        if (!fileIds.length) {
+          await alertPopup('Inga filer att importera.');
+          return;
+        }
+        const result = await driveImportFiles(fileIds);
+        if (result.importedTotal > 0) {
+          if (result.failedFiles > 0) {
+            await alertPopup(`Importerade ${result.importedTotal} rollpersoner från ${result.successFiles} av ${result.totalFiles} filer. ${result.failedFiles} misslyckades.`);
+          } else if (result.emptyFiles > 0) {
+            window.toast?.(`Importerade ${result.importedTotal} rollpersoner. ${result.emptyFiles} filer saknade importerbara data.`);
+          } else {
+            window.toast?.(`Importerade ${result.importedTotal} rollpersoner från ${result.successFiles} filer.`);
+          }
+        } else if (result.failedFiles > 0) {
+          await alertPopup('Kunde inte importera några filer från Drive.');
+        } else {
+          await alertPopup('Inga importerbara rollpersoner hittades i filerna.');
+        }
+      } catch (err) {
+        console.error(err);
+        await alertPopup('Kunde inte importera alla filer från Drive.');
+      }
+    }
+  }, {
+    popupId: 'driveStoragePopup',
+    optsId: 'driveStorageOptions',
+    cancelId: 'driveStorageCancel'
+  });
+}
+
+async function exportCharacterFile(id) {
+  const data = storeHelper.exportCharacterJSON(store, id);
+  if (!data) return;
+  const jsonText = JSON.stringify(data, null, 2);
+  const suggested = `${sanitizeFilename(data.name || 'rollperson')}.json`;
+  await saveJsonFile(jsonText, suggested);
+}
+
+async function exportAllCharacters() {
+  // Export all characters into a single JSON file
+  const all = store.characters
+    .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
+    .filter(Boolean);
+  const jsonText = JSON.stringify(all, null, 2);
+  const suggested = 'Rollpersoner.json';
+  await saveJsonFile(jsonText, suggested);
+}
+
+async function exportAllCharactersSeparate() {
+  const all = store.characters
+    .map(c => storeHelper.exportCharacterJSON(store, c.id))
+    .filter(Boolean);
+  if (!all.length) return;
+
+  // Prefer directory picker when available for a nicer UX
+  if (window.showDirectoryPicker) {
+    try {
+      const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+      for (const data of all) {
+        const name = (data && data.name) ? data.name : 'rollperson';
+        const fileName = `${sanitizeFilename(name)}.json`;
+        try {
+          const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+          const writable = await fileHandle.createWritable();
+          await writable.write(JSON.stringify(data, null, 2));
+          await writable.close();
+        } catch (err) {
+          // Skip file on error (e.g., permission denied for overwrite)
+        }
+      }
+      return;
+    } catch (err) {
+      // If user cancels or API fails, fall back to download approach
+      if (err && err.name === 'AbortError') return;
+    }
+  }
+
+  // Fallback: trigger one download per character
+  for (const data of all) {
+    const name = (data && data.name) ? data.name : 'rollperson';
+    const jsonText = JSON.stringify(data, null, 2);
+    const blob = new Blob([jsonText], { type: 'application/json' });
+    const ok = await downloadBlob(blob, `${sanitizeFilename(name)}.json`);
+    if (!ok) break;
+    await new Promise(r => setTimeout(r, 100));
+  }
+}
+
+async function exportAllCharactersZipped() {
+  const all = store.characters
+    .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
+    .filter(Boolean);
+  if (!all.length) return;
+
+  if (!window.JSZip) {
+    // Fallback to separate if JSZip not loaded
+    await exportAllCharactersSeparate();
+    return;
+  }
+
+  const suggested = 'Rollpersoner.zip';
+  let saveHandle = null;
+  let requestedHandle = false;
+  if (window.showSaveFilePicker) {
+    requestedHandle = true;
+    try {
+      saveHandle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+      });
+    } catch (err) {
+      if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+        console.warn('Save picker failed', err);
+      }
+    }
+  }
+
+  const zip = new JSZip();
+  for (const data of all) {
+    const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+    zip.file(`${name}.json`, JSON.stringify(data, null, 2));
+  }
+  const blob = await zip.generateAsync({ type: 'blob' });
+  await saveBlobFile(blob, suggested, { handle: saveHandle, skipNativeDialog: requestedHandle });
+}
+
+
+async function writeBlobToHandle(handle, blob) {
+  try {
+    const writable = await handle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return true;
+  } catch (err) {
+    if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+      console.warn('Write to file handle failed', err);
+    }
+    return false;
+  }
+}
+
+async function saveBlobFile(blob, suggested, opts = {}) {
+  const { handle: existingHandle, skipNativeDialog = false } = opts || {};
+  if (existingHandle) {
+    const wrote = await writeBlobToHandle(existingHandle, blob);
+    if (wrote) return;
+  }
+  if (!skipNativeDialog && window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: suggested,
+        types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+      });
+      const wrote = await writeBlobToHandle(handle, blob);
+      if (wrote) return;
+    } catch (err) {
+      if (err && (err.name === 'AbortError' || err.name === 'NotAllowedError')) {
+        // Fall back to download path below
+      } else {
+        await alertPopup('Sparande misslyckades');
+      }
+    }
+  }
+  await downloadBlob(blob, suggested);
+}
+
+async function exportActiveFolder() {
+  try {
+    const activeId = storeHelper.getActiveFolder(store);
+    if (!activeId || activeId === 'ALL') {
+      await alertPopup('Ingen aktiv mapp vald.');
+      return;
+    }
+    const folders = storeHelper.getFolders(store) || [];
+    const folder = folders.find(f => f.id === activeId);
+    if (!folder) {
+      await alertPopup('Kunde inte hitta aktiv mapp.');
+      return;
+    }
+    const chars = (store.characters || [])
+      .filter(c => (c.folderId || '') === activeId)
+      .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    if (!chars.length) {
+      await alertPopup('Mappen är tom.');
+      return;
+    }
+    const exported = chars
+      .map(c => storeHelper.exportCharacterJSON(store, c.id, false))
+      .filter(Boolean);
+    const payload = {
+      folders: [
+        {
+          folder: folder.name || 'Mapp',
+          folderId: folder.id,
+          id: folder.id,
+          characters: exported
+        }
+      ]
+    };
+    const jsonText = JSON.stringify(payload, null, 2);
+    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.json`;
+    await saveJsonFile(jsonText, suggested);
+  } catch (err) {
+    await alertPopup('Export av mapp misslyckades.');
+  }
+}
+
+async function exportActiveFolderSeparate() {
+  try {
+    const activeId = storeHelper.getActiveFolder(store);
+    if (!activeId || activeId === 'ALL') { await alertPopup('Ingen aktiv mapp vald.'); return; }
+    const folders = storeHelper.getFolders(store) || [];
+    const folder = folders.find(f => f.id === activeId);
+    if (!folder) { await alertPopup('Kunde inte hitta aktiv mapp.'); return; }
+
+    const chars = (store.characters || [])
+      .filter(c => (c.folderId || '') === activeId)
+      .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
+
+    const all = chars
+      .map(c => storeHelper.exportCharacterJSON(store, c.id, true))
+      .filter(Boolean);
+
+    // Prefer directory picker
+    if (window.showDirectoryPicker) {
+      try {
+        const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' });
+        for (const data of all) {
+          const name = (data && data.name) ? data.name : 'rollperson';
+          const fileName = `${sanitizeFilename(name)}.json`;
+          try {
+            const fileHandle = await dirHandle.getFileHandle(fileName, { create: true });
+            const writable = await fileHandle.createWritable();
+            await writable.write(JSON.stringify(data, null, 2));
+            await writable.close();
+          } catch {}
+        }
+        return;
+      } catch (err) {
+        if (err && err.name === 'AbortError') return;
+      }
+    }
+
+    // Fallback: one download per character
+    for (const data of all) {
+      const name = (data && data.name) ? data.name : 'rollperson';
+      const jsonText = JSON.stringify(data, null, 2);
+      const blob = new Blob([jsonText], { type: 'application/json' });
+      const ok = await downloadBlob(blob, `${sanitizeFilename(name)}.json`);
+      if (!ok) break;
+      await new Promise(r => setTimeout(r, 100));
+    }
+  } catch {
+    await alertPopup('Export av mapp misslyckades.');
+  }
+}
+
+async function exportActiveFolderZipped() {
+  try {
+    const activeId = storeHelper.getActiveFolder(store);
+    if (!activeId || activeId === 'ALL') { await alertPopup('Ingen aktiv mapp vald.'); return; }
+    const folders = storeHelper.getFolders(store) || [];
+    const folder = folders.find(f => f.id === activeId);
+    if (!folder) { await alertPopup('Kunde inte hitta aktiv mapp.'); return; }
+
+    const chars = (store.characters || [])
+      .filter(c => (c.folderId || '') === activeId)
+      .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+    if (!chars.length) { await alertPopup('Mappen är tom.'); return; }
+
+    if (!window.JSZip) { await exportActiveFolderSeparate(); return; }
+
+    const suggested = `Mapp - ${sanitizeFilename(folder.name || 'Mapp')}.zip`;
+    let saveHandle = null;
+    let requestedHandle = false;
+    if (window.showSaveFilePicker) {
+      requestedHandle = true;
+      try {
+        saveHandle = await window.showSaveFilePicker({
+          suggestedName: suggested,
+          types: [{ description: 'Zip', accept: { 'application/zip': ['.zip'] } }]
+        });
+      } catch (err) {
+        if (err && err.name !== 'AbortError' && err.name !== 'NotAllowedError') {
+          console.warn('Save picker failed', err);
+        }
+      }
+    }
+
+    const zip = new JSZip();
+    for (const c of chars) {
+      const data = storeHelper.exportCharacterJSON(store, c.id, true);
+      if (!data) continue;
+      const name = sanitizeFilename((data && data.name) ? data.name : 'rollperson');
+      zip.file(`${name}.json`, JSON.stringify(data, null, 2));
+    }
+    const blob = await zip.generateAsync({ type: 'blob' });
+    await saveBlobFile(blob, suggested, { handle: saveHandle, skipNativeDialog: requestedHandle });
+  } catch {
+    await alertPopup('Export av mapp misslyckades.');
+  }
+}
+function openChoicePopup(build, cb, config = {}) {
+  const popupId = config.popupId || 'driveStoragePopup';
+  const optsId = config.optsId || 'driveStorageOptions';
+  const cancelId = config.cancelId || 'driveStorageCancel';
+  const pop  = bar.shadowRoot.getElementById(popupId);
+  const opts = bar.shadowRoot.getElementById(optsId);
+  const cls  = bar.shadowRoot.getElementById(cancelId);
+  if (!pop || !opts || !cls) return;
+  let outsideArmed = false;
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(() => {
+    outsideArmed = true;
+  }, 150);
+  function close() {
+    pop.classList.remove('open');
+    cls.removeEventListener('click', onCancel);
+    pop.removeEventListener('click', onOutside);
+    opts.innerHTML = '';
+  }
+  function onCancel() { close(); cb(null); }
+  function onOutside(e) {
+    if (!outsideArmed) return;
+    if (!pop.querySelector('.popup-inner').contains(e.target)) {
+      close();
+      cb(null);
+    }
+  }
+  opts.innerHTML = '';
+  const select = value => { close(); cb(value); };
+  build(opts, select);
+  cls.addEventListener('click', onCancel);
+  pop.addEventListener('click', onOutside);
+}
+
+async function chooseSeparateExportMode() {
+  const res = await openDialog('Välj exportformat', {
+    cancel: true,
+    okText: 'Separat',
+    extraText: 'Zippade',
+    cancelText: 'Avbryt'
+  });
+  if (res === 'extra') return 'zip';
+  if (res === true) return 'separate';
+  return null;
+}
+
+async function getFilesFromDirectory(dirHandle) {
+  const files = [];
+  for await (const [name, handle] of dirHandle.entries()) {
+    if (handle.kind === 'file') {
+      if (name.toLowerCase().endsWith('.json')) {
+        try { files.push(await handle.getFile()); } catch {}
+      }
+    } else if (handle.kind === 'directory') {
+      try {
+        const nested = await getFilesFromDirectory(handle);
+        files.push(...nested);
+      } catch {}
+    }
+  }
+  return files;
+}
+
+function openNilasPopup(cb) {
+  const pop = bar.shadowRoot.getElementById('nilasPopup');
+  const yes = bar.shadowRoot.getElementById('nilasYes');
+  const no  = bar.shadowRoot.getElementById('nilasNo');
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  function close() {
+    pop.classList.remove('open');
+    yes.removeEventListener('click', onYes);
+    no.removeEventListener('click', onNo);
+    pop.removeEventListener('click', onOutside);
+  }
+  function onYes() { close(); cb(true); }
+  function onNo()  { close(); cb(false); }
+  function onOutside(e) {
+    if (!pop.querySelector('.popup-inner').contains(e.target)) {
+      close();
+      cb(false);
+    }
+  }
+  yes.addEventListener('click', onYes);
+  no.addEventListener('click', onNo);
+  pop.addEventListener('click', onOutside);
+}
+
+function tryNilasPopup(term) {
+  if (term.toLowerCase() !== 'nilas') return false;
+  if (storeHelper.getNilasPopupSeen(store)) return false;
+  openNilasPopup(agree => {
+    if (agree) {
+      const xp = storeHelper.getBaseXP(store) + 1;
+      storeHelper.setBaseXP(store, xp);
+      updateXP();
+    }
+    storeHelper.setNilasPopupSeen(store, true);
+  });
+  return true;
+}
+
+function tryBomb(term) {
+  if (term !== 'BOMB!') return false;
+  storeHelper.deleteAllCharacters(store);
+  location.reload();
+  return true;
+}
+
+// Popup: Ny rollperson med mappval
+// preferredFolderId: välj denna som default om giltig; om 'ALL' → Standard
+async function openNewCharPopupWithFolder(preferredFolderId) {
+  const pop = bar?.shadowRoot?.getElementById('newCharPopup');
+  if (!pop) return null;
+  const nameIn   = bar.shadowRoot.getElementById('newCharName');
+  const folderEl = bar.shadowRoot.getElementById('newCharFolder');
+  const xpIn     = bar.shadowRoot.getElementById('newCharXp');
+  const create   = bar.shadowRoot.getElementById('newCharCreate');
+  const cancel   = bar.shadowRoot.getElementById('newCharCancel');
+
+  // Fyll mapp-listan
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  let html = '';
+  for (const f of folders) html += `<option value="${f.id}">${f.name}</option>`;
+  folderEl.innerHTML = html;
+  // Förvald mapp: aktuell aktiv om satt och giltig; annars system (Standard)
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = '';
+  if (xpIn) xpIn.value = 0;
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      create.removeEventListener('click', onCreate);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onCreate() {
+      const name = String(nameIn.value||'').trim();
+      if (!name) { nameIn.focus(); return; }
+      const folderId = folderEl.value || '';
+      const xp = Number(xpIn?.value || 0) || 0;
+      close({ name, folderId, xp });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onCreate();
+    }
+    create.addEventListener('click', onCreate);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// Popup: Generera rollperson
+async function openGeneratorPopup(preferredFolderId) {
+  const pop = bar?.shadowRoot?.getElementById('generatorPopup');
+  if (!pop) return null;
+  const nameIn = bar.shadowRoot.getElementById('genCharName');
+  const folderEl = bar.shadowRoot.getElementById('genCharFolder');
+  const xpIn = bar.shadowRoot.getElementById('genCharXp');
+  const attrSel = bar.shadowRoot.getElementById('genCharAttr');
+  const traitSel = bar.shadowRoot.getElementById('genCharTrait');
+  const raceSel = bar.shadowRoot.getElementById('genCharRace');
+  const yrkeSel = bar.shadowRoot.getElementById('genCharYrke');
+  const eliteSel = bar.shadowRoot.getElementById('genCharElityrke');
+  const createBtn = bar.shadowRoot.getElementById('genCharCreate');
+  const cancelBtn = bar.shadowRoot.getElementById('genCharCancel');
+  const warning = bar.shadowRoot.getElementById('genCharDataWarning');
+  const defaultCreateLabel = createBtn?.textContent || 'Generera';
+
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  folderEl.innerHTML = folders.map(f => `<option value="${f.id}">${f.name}</option>`).join('');
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = '';
+  if (xpIn) xpIn.value = 100;
+  if (attrSel) attrSel.value = '';
+  if (traitSel) {
+    const attrs = (window.symbaroumGenerator?.ATTR_KEYS || []).slice();
+    const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const traitHtml = ['<option value="">Auto (matchar bästa drag)</option>']
+      .concat(attrs.map(attr => `<option value="${escapeOpt(attr)}">${attr}</option>`))
+      .join('');
+    traitSel.innerHTML = traitHtml;
+    traitSel.value = '';
+  }
+
+  const getEntriesByType = (type) => {
+    const db = Array.isArray(window.DB) ? window.DB : [];
+    return db
+      .filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type))
+      .map(entry => String(entry.namn || '').trim())
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b, 'sv'));
+  };
+
+  const applyEntryOptions = (select, type, placeholder) => {
+    if (!select) return;
+    const escapeOpt = (value) => String(value || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;');
+    const names = getEntriesByType(type);
+    const options = [`<option value="">${placeholder}</option>`];
+    names.forEach(name => options.push(`<option value="${escapeOpt(name)}">${name}</option>`));
+    select.innerHTML = options.join('');
+    select.value = '';
+  };
+
+  const generatorDataReady = () => {
+    const db = Array.isArray(window.DB) ? window.DB : [];
+    if (!db.length) return false;
+    return db.some(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Förmåga'));
+  };
+
+  const syncGeneratorReadyState = () => {
+    const ready = generatorDataReady();
+    if (createBtn) {
+      createBtn.disabled = !ready;
+      createBtn.textContent = ready ? defaultCreateLabel : 'Laddar databasen...';
+      createBtn.title = ready ? '' : 'Generatorn behöver databasen innan den kan köras.';
+    }
+    if (warning) {
+      warning.hidden = ready;
+    }
+    return ready;
+  };
+
+  const refreshEntryOptions = () => {
+    applyEntryOptions(raceSel, 'Ras', 'Slumpa ras');
+    applyEntryOptions(yrkeSel, 'Yrke', 'Slumpa yrke');
+    applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
+    if (eliteSel && eliteSel.options.length <= 1) {
+      eliteSel.disabled = true;
+      eliteSel.title = 'Databasen laddas ... öppna generatorn igen när listorna finns.';
+    } else if (eliteSel) {
+      eliteSel.disabled = false;
+      eliteSel.title = '';
+    }
+    if (raceSel && raceSel.options.length <= 1) raceSel.title = 'Databasen laddas ...';
+    else if (raceSel) raceSel.title = '';
+    if (yrkeSel && yrkeSel.options.length <= 1) yrkeSel.title = 'Databasen laddas ...';
+    else if (yrkeSel) yrkeSel.title = '';
+  };
+
+  refreshEntryOptions();
+  const readyOnOpen = syncGeneratorReadyState();
+  let removeDbListener = null;
+  if (!readyOnOpen) {
+    const onDbReady = () => {
+      refreshEntryOptions();
+      if (syncGeneratorReadyState() && removeDbListener) {
+        removeDbListener();
+        removeDbListener = null;
+      }
+    };
+    window.addEventListener('symbaroum-db-ready', onDbReady);
+    removeDbListener = () => window.removeEventListener('symbaroum-db-ready', onDbReady);
+  }
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      createBtn.removeEventListener('click', onCreate);
+      cancelBtn.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      if (removeDbListener) {
+        removeDbListener();
+        removeDbListener = null;
+      }
+      resolve(res);
+    }
+    function onCreate() {
+      if (!syncGeneratorReadyState()) return;
+      const name = String(nameIn.value || '').trim() || 'Slumpad rollperson';
+      const folderId = folderEl.value || '';
+      const xp = Math.max(0, Math.floor(Number(xpIn?.value || 0) / 10) * 10);
+      const attrMode = attrSel?.value || '';
+      const traitFocus = traitSel?.value || '';
+      const race = raceSel?.value || '';
+      const yrke = yrkeSel?.value || '';
+      const elityrke = eliteSel?.value || '';
+      close({ name, folderId, xp, attrMode, traitFocus, race, yrke, elityrke });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onCreate();
+    }
+    createBtn.addEventListener('click', onCreate);
+    cancelBtn.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// Popup: Byt namn med mappval
+// preferredFolderId: välj denna som default om giltig; om 'ALL' → Standard
+// defaultName: förifyllt namn
+async function openRenameCharPopupWithFolder(preferredFolderId, defaultName) {
+  const pop = bar?.shadowRoot?.getElementById('renameCharPopup');
+  if (!pop) return null;
+  const nameIn   = bar.shadowRoot.getElementById('renameCharName');
+  const folderEl = bar.shadowRoot.getElementById('renameCharFolder');
+  const applyBtn = bar.shadowRoot.getElementById('renameCharApply');
+  const cancel   = bar.shadowRoot.getElementById('renameCharCancel');
+
+  // Fyll mapp-listan
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  let html = '';
+  for (const f of folders) html += `<option value="${f.id}">${f.name}</option>`;
+  folderEl.innerHTML = html;
+  // Förvald mapp
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = String(defaultName || '').trim();
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      applyBtn.removeEventListener('click', onApply);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onApply() {
+      const name = String(nameIn.value||'').trim();
+      if (!name) { nameIn.focus(); return; }
+      const folderId = folderEl.value || '';
+      close({ name, folderId });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onApply();
+    }
+    applyBtn.addEventListener('click', onApply);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+// Popup: Kopiera rollperson med mappval
+// preferredFolderId: välj denna som default om giltig; om 'ALL' → Standard
+// defaultName: förifyllt namn (t.ex. "<namn> (kopia)")
+async function openDuplicateCharPopupWithFolder(preferredFolderId, defaultName) {
+  const pop = bar?.shadowRoot?.getElementById('dupCharPopup');
+  if (!pop) return null;
+  const nameIn   = bar.shadowRoot.getElementById('dupCharName');
+  const folderEl = bar.shadowRoot.getElementById('dupCharFolder');
+  const create   = bar.shadowRoot.getElementById('dupCharCreate');
+  const cancel   = bar.shadowRoot.getElementById('dupCharCancel');
+
+  // Fyll mapp-listan
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  let html = '';
+  for (const f of folders) html += `<option value="${f.id}">${f.name}</option>`;
+  folderEl.innerHTML = html;
+  // Förvald mapp
+  const std = folders.find(f => f.system) || folders.find(f => (f.name||'') === 'Standard');
+  const validPref = preferredFolderId && preferredFolderId !== 'ALL' && folders.some(f => f.id === preferredFolderId);
+  if (validPref) folderEl.value = preferredFolderId;
+  else if (std) folderEl.value = std.id;
+  else if (folders[0]) folderEl.value = folders[0].id;
+
+  nameIn.value = String(defaultName || '').trim();
+
+  pop.classList.add('open');
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      create.removeEventListener('click', onCreate);
+      cancel.removeEventListener('click', onCancel);
+      pop.removeEventListener('click', onOutside);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onCreate() {
+      const name = String(nameIn.value||'').trim();
+      if (!name) { nameIn.focus(); return; }
+      const folderId = folderEl.value || '';
+      close({ name, folderId });
+    }
+    function onCancel() { close(null); }
+    function onOutside(e) {
+      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(null);
+      if (e.key === 'Enter') onCreate();
+    }
+    create.addEventListener('click', onCreate);
+    cancel.addEventListener('click', onCancel);
+    pop.addEventListener('click', onOutside);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+async function requireCharacter() {
+  if (store.current) return true;
+  let pop = document.getElementById('charPopup');
+  if (!pop) {
+    pop = document.createElement('div');
+    pop.id = 'charPopup';
+    pop.className = 'popup';
+    pop.innerHTML = `
+      <div class="popup-inner">
+        <p>Handlingen kräver att du har en aktiv karaktär</p>
+        <div class="button-row">
+          <button id="charReqCancel" class="char-btn danger">Avbryt</button>
+          <button id="charReqChoose" class="char-btn">Välj karaktär</button>
+          <button id="charReqNew" class="char-btn">Skapa karaktär?</button>
+        </div>
+        <div id="charPopupContent" style="display:none;">
+          <select id="charReqSelect"></select>
+        </div>
+      </div>`;
+    document.body.appendChild(pop);
+  }
+
+  const wrap   = pop.querySelector('#charPopupContent');
+  const select = pop.querySelector('#charReqSelect');
+  const btnChoose = pop.querySelector('#charReqChoose');
+  const btnNew    = pop.querySelector('#charReqNew');
+  const btnCancel = pop.querySelector('#charReqCancel');
+  const inner  = pop.querySelector('.popup-inner');
+
+  renderCharOptions(select);
+  wrap.style.display = 'none';
+
+  pop.classList.add('open');
+  inner.scrollTop = 0;
+
+  return await new Promise(resolve => {
+    function close(res) {
+      pop.classList.remove('open');
+      btnChoose.removeEventListener('click', onChoose);
+      btnNew.removeEventListener('click', onNew);
+      btnCancel.removeEventListener('click', onCancel);
+      select.removeEventListener('change', onSelect);
+      pop.removeEventListener('click', onClickOut);
+      document.removeEventListener('keydown', onKey);
+      resolve(res);
+    }
+    function onClickOut(e) {
+      if (e.target === pop) close(false);
+    }
+    function onKey(e) {
+      if (e.key === 'Escape') close(false);
+    }
+    function onChoose() {
+      wrap.style.display = '';
+      select.focus();
+    }
+    function onSelect() {
+      const val = select.value;
+      if (!val) return;
+      store.current = val;
+      storeHelper.save(store);
+      refreshCharSelect();
+      if (dom.cName) dom.cName.textContent = store.characters.find(c=>c.id===val)?.name||'';
+      close(true);
+      applyCharacterChange();
+    }
+    async function onNew() {
+      const wasOpen = pop.classList.contains('open');
+      const restorePopup = () => {
+        wrap.style.display = 'none';
+        if (wasOpen) {
+          pop.classList.add('open');
+          inner.scrollTop = 0;
+        }
+      };
+      if (wasOpen) pop.classList.remove('open');
+      const active = storeHelper.getActiveFolder(store);
+      const res = await openNewCharPopupWithFolder(active);
+      if (!res) { restorePopup(); return; }
+      const { name, folderId, xp } = res;
+      if (!name) { restorePopup(); return; }
+      const charId = (storeHelper.makeCharId ? storeHelper.makeCharId(store) : ('rp' + Date.now()));
+      store.characters.push({ id: charId, name, folderId: folderId || '' });
+      store.data[charId] = { baseXp: Number(xp) || 0, custom: [], liveMode: Boolean(store.liveMode) };
+      store.current = charId;
+      // Om vald mapp skiljer sig från aktiv – växla aktiv mapp till den nya
+      const prevActive = storeHelper.getActiveFolder(store);
+      if (folderId && prevActive !== folderId) {
+        storeHelper.setActiveFolder(store, folderId);
+      }
+      storeHelper.save(store);
+      refreshCharSelect();
+      if (dom.cName) dom.cName.textContent = name;
+      close(true);
+      applyCharacterChange();
+    }
+    function onCancel() { close(false); }
+
+    btnChoose.addEventListener('click', onChoose);
+    btnNew.addEventListener('click', onNew);
+    btnCancel.addEventListener('click', onCancel);
+    select.addEventListener('change', onSelect);
+    pop.addEventListener('click', onClickOut);
+    document.addEventListener('keydown', onKey);
+  });
+}
+
+function renderCharOptions(sel) {
+  const folders = (storeHelper.getFolders(store) || []).slice()
+    .sort((a,b)=> (a.order ?? 0) - (b.order ?? 0) || String(a.name||'').localeCompare(String(b.name||''), 'sv'));
+  const map = new Map();
+  for (const c of (store.characters || [])) {
+    const fid = c.folderId || '';
+    if (!map.has(fid)) map.set(fid, []);
+    map.get(fid).push(c);
+  }
+  const renderOpts = arr => (arr||[])
+    .slice()
+    .sort((a,b)=> String(a.name||'').localeCompare(String(b.name||''), 'sv'))
+    .map(c => `<option value="${c.id}">${c.name}</option>`)
+    .join('');
+  let html = '<option value="">Välj rollperson …</option>';
+  for (const f of folders) {
+    const arr = map.get(f.id) || [];
+    if (!arr.length) continue;
+    html += `<optgroup label="${f.name}">${renderOpts(arr)}</optgroup>`;
+  }
+  sel.innerHTML = html;
+}
+
+
+
+function formatSignedNumber(value) {
+  const num = Number(value || 0);
+  if (!Number.isFinite(num) || num === 0) return '0';
+  return num > 0 ? `+${num}` : `${num}`;
+}
+
+function getManualAdjustmentsSafe() {
+  if (!store || !store.current) {
+    return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
+  }
+  try {
+    if (typeof storeHelper.getManualAdjustments !== 'function') {
+      return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
+    }
+    const res = storeHelper.getManualAdjustments(store) || {};
+    return {
+      xp: Number(res.xp || 0),
+      corruption: Number(res.corruption || 0),
+      toughness: Number(res.toughness || 0),
+      pain: Number(res.pain || 0),
+      capacity: Number(res.capacity || 0)
+    };
+  } catch {
+    return { xp: 0, corruption: 0, toughness: 0, pain: 0, capacity: 0 };
+  }
+}
+
+function manualAdjustmentSummaryText(manual) {
+  if (!manual) return '';
+  const parts = [];
+  const cor = Number(manual.corruption || 0);
+  const xpStore = Number(manual.xp || 0);
+  if (cor) parts.push(`Kor ${cor > 0 ? `+${cor}` : `${cor}`}`);
+  if (xpStore) {
+    const xpVisible = -xpStore;
+    parts.push(`Erf ${xpVisible > 0 ? `+${xpVisible}` : `${xpVisible}`}`);
+  }
+  const tough = Number(manual.toughness || 0);
+  if (tough) parts.push(`Tålighet ${tough > 0 ? `+${tough}` : `${tough}`}`);
+  const pain = Number(manual.pain || 0);
+  if (pain) parts.push(`Smärtgräns ${pain > 0 ? `+${pain}` : `${pain}`}`);
+  const capacity = Number(manual.capacity || 0);
+  if (capacity) parts.push(`Bärkapacitet ${capacity > 0 ? `+${capacity}` : `${capacity}`}`);
+  return parts.join(', ');
+}
+
+function syncDefenseButtons() {
+  const btn = dom.defBtn;
+  const baseTitle = 'Öppna försvarsberäkning';
+  if (!btn) return;
+  if (!store || !store.current) {
+    btn.classList.remove('active');
+    btn.setAttribute('aria-pressed', 'false');
+    btn.title = baseTitle;
+    return;
+  }
+  const setup = typeof storeHelper.getDefenseSetup === 'function'
+    ? storeHelper.getDefenseSetup(store)
+    : null;
+  const forced = typeof storeHelper.getDefenseTrait === 'function'
+    ? storeHelper.getDefenseTrait(store)
+    : '';
+  const isActive = Boolean(setup?.enabled || forced);
+  btn.classList.toggle('active', isActive);
+  btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+  if (setup?.enabled && setup.trait) {
+    btn.title = `${baseTitle} (${setup.trait})`;
+  } else if (setup?.enabled) {
+    btn.title = `${baseTitle} (aktiv)`;
+  } else if (forced) {
+    btn.title = `${baseTitle} (forcerat: ${forced})`;
+  } else {
+    btn.title = baseTitle;
+  }
+}
+
+function syncManualAdjustButton() {
+  const baseTitle = 'Hantera manuella justeringar för korruption, erfarenhet, tålighet, smärtgräns och bärkapacitet';
+  if (!dom.manualBtn) return;
+  if (!store || !store.current) {
+    dom.manualBtn.classList.remove('active');
+    dom.manualBtn.title = baseTitle;
+    return;
+  }
+  const manual = getManualAdjustmentsSafe();
+  const hasAdjustments = Boolean(
+    (manual.corruption || 0) ||
+    (manual.xp || 0) ||
+    (manual.toughness || 0) ||
+    (manual.pain || 0) ||
+    (manual.capacity || 0)
+  );
+  const summary = hasAdjustments ? manualAdjustmentSummaryText(manual) : '';
+  dom.manualBtn.classList.toggle('active', hasAdjustments);
+  dom.manualBtn.title = summary ? `${baseTitle} (${summary})` : baseTitle;
+}
+
+function updateXP() {
+  const list  = storeHelper.getCurrentList(store);
+  const base  = storeHelper.getBaseXP(store);
+  const artifactEffects = storeHelper.getArtifactEffects(store);
+  const manualAdjust = storeHelper.getManualAdjustments(store);
+  const combinedEffects = {
+    xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
+    corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0)
+  };
+  const used  = storeHelper.calcUsedXP(list, combinedEffects);
+  const total = storeHelper.calcTotalXP(base, list);
+  const free  = total - used;
+  if (dom.xpOut) {
+    dom.xpOut.textContent = free;
+    const xpContainer = dom.xpOut.closest('.exp-counter');
+    if (xpContainer) xpContainer.classList.toggle('under', free < 0);
+  }
+  if (dom.xpIn) dom.xpIn.value = base;
+  if (dom.xpTotal) dom.xpTotal.textContent = total;
+  if (dom.xpUsed)  dom.xpUsed.textContent  = used;
+  if (dom.xpFree)  dom.xpFree.textContent  = free;
+  if (dom.xpSum)   dom.xpSum.classList.toggle('under', free < 0);
+  updateCharacterIconVariant();
+  syncManualAdjustButton();
+}
+/* -----------------------------------------------------------
+   Synk mellan flikar – endast när AKTUELLA rollpersonen ändras
+   Detta låter två flikar ha olika rollpersoner öppna samtidigt
+   utan att tvinga varandra att reloada.
+------------------------------------------------------------ */
+window.addEventListener('storage', (e)=>{
+  try {
+    if (e && e.key && e.key !== 'rpall') return; // vi bryr oss bara om vår store
+
+    // Om ingen rollperson är vald i denna flik – följ med på ändringar
+    if (!store || !store.current) {
+      store = storeHelper.load();
+      applyCharacterChange();
+      return;
+    }
+
+    // Jämför bara data för den rollperson som är aktiv i denna flik
+    const incoming = e && typeof e.newValue === 'string' ? JSON.parse(e.newValue) : storeHelper.load();
+    const curId = store.current;
+
+    const curDataOld = (store.data && store.data[curId]) || null;
+    const curDataNew = (incoming && incoming.data && incoming.data[curId]) || null;
+
+    // Ändrat namn på aktuell rollperson?
+    const findName = (s) => {
+      try { return (s.characters || []).find(c => c.id === curId)?.name || null; } catch { return null; }
+    };
+    const nameOld = findName(store);
+    const nameNew = findName(incoming);
+
+  const changedCurrent = (
+      JSON.stringify(curDataOld ?? null) !== JSON.stringify(curDataNew ?? null)
+    ) || (nameOld !== nameNew);
+
+    if (changedCurrent) {
+      store = storeHelper.load();
+      applyCharacterChange();
+    }
+    // I övriga fall (t.ex. annan flik byter current, eller ändrar annan rollperson)
+    // gör vi inget – denna flik fortsätter ostört.
+  } catch {
+    // Vid minsta fel, falla tillbaka till tidigare beteende för säkerhet
+    try { store = storeHelper.load(); applyCharacterChange(); } catch {}
+  }
+});
+
+document.addEventListener('click', e => {
+  const btn = e.target.closest('[data-action="open-defense-calc"]');
+  if (!btn) return;
+  e.preventDefault();
+  openDefenseCalcPopup();
+});
