@@ -1,4 +1,4 @@
-(function(window){
+(function (window) {
   let renderHooked = false;
   let catListenerBound = false;
   let sTemp = '';
@@ -24,7 +24,7 @@
     }
     const cards = [];
     if (dom?.invFormal) cards.push(...dom.invFormal.querySelectorAll('li.card'));
-    if (dom?.invList)   cards.push(...dom.invList.querySelectorAll('li.card'));
+    if (dom?.invList) cards.push(...dom.invList.querySelectorAll('li.card'));
     const allCollapsed = cards.length > 0 && cards.every(card => card.classList.contains('compact'));
     dom.catToggle.textContent = allCollapsed ? '▶' : '▼';
     dom.catToggle.title = allCollapsed
@@ -42,7 +42,7 @@
     }
     const cards = [];
     if (dom?.invFormal) cards.push(...dom.invFormal.querySelectorAll('li.card'));
-    if (dom?.invList)   cards.push(...dom.invList.querySelectorAll('li.card'));
+    if (dom?.invList) cards.push(...dom.invList.querySelectorAll('li.card'));
     if (!cards.length) return;
     const shouldOpen = cards.every(card => card.classList.contains('compact'));
     cards.forEach(card => {
@@ -116,8 +116,8 @@
       : [];
     const inventory = Array.isArray(baseInventory) ? baseInventory : [];
     const sets = {
-      typ : new Set(),
-      ark : new Set(),
+      typ: new Set(),
+      ark: new Set(),
       test: new Set()
     };
     if (typeof getEntry === 'function') {
@@ -147,7 +147,7 @@
 
     const fill = (sel, values, label) => {
       if (!sel) return;
-      const opts = [`<option value="">${label} (alla)</option>`];
+      const opts = [`<option value="">Lägg till filter</option>`];
       const sorted = Array.from(values)
         .map(val => String(val || ''))
         .filter(Boolean)
@@ -158,7 +158,7 @@
 
     fill(dom?.typSel, sets.typ, 'Typ');
     fill(dom?.arkSel, sets.ark, 'Arketyp');
-    fill(dom?.tstSel, sets.test, 'Test');
+    fill(dom?.tstSel, sets.test, 'Karaktärsdrag');
   }
 
   function hookRender() {

@@ -97,7 +97,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Templár"
+        "Templár",
+        "Teurgi"
       ]
     },
     "krav_formagor": "",
@@ -470,7 +471,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Andebesvärjare"
+        "Andebesvärjare",
+        "Häxkonst"
       ]
     },
     "krav_formagor": "",
@@ -555,7 +557,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Blodvadare"
+        "Blodvadare",
+        "Häxkonst"
       ]
     },
     "krav_formagor": "",
@@ -641,7 +644,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Demonolog"
+        "Demonolog",
+        "Svartkonst"
       ]
     },
     "krav_formagor": "",
@@ -735,7 +739,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Grönvävare"
+        "Grönvävare",
+        "Häxkonst"
       ]
     },
     "krav_formagor": "",
@@ -818,7 +823,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Illusionist"
+        "Illusionist",
+        "Ordensmagi"
       ]
     },
     "krav_formagor": "",
@@ -912,7 +918,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Inkvisitor"
+        "Inkvisitor",
+        "Teurgi"
       ]
     },
     "krav_formagor": "",
@@ -1013,7 +1020,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Mentalist"
+        "Mentalist",
+        "Ordensmagi"
       ]
     },
     "krav_formagor": "",
@@ -1108,7 +1116,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Nekromantiker"
+        "Nekromantiker",
+        "Svartkonst"
       ]
     },
     "krav_formagor": "",
@@ -1192,7 +1201,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Pyromantiker"
+        "Pyromantiker",
+        "Ordensmagi"
       ]
     },
     "krav_formagor": "",
@@ -1285,7 +1295,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Själasörjare"
+        "Själasörjare",
+        "Teurgi"
       ]
     },
     "krav_formagor": "",
@@ -1571,7 +1582,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Stormbringare"
+        "Stormbringare",
+        "Ordensmagi"
       ]
     },
     "krav_formagor": "",
@@ -1664,7 +1676,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Skald"
+        "Skald",
+        "Trollsång"
       ]
     },
     "krav_formagor": "",

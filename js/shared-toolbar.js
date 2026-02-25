@@ -231,8 +231,8 @@ class SharedToolbar extends HTMLElement {
     document.getElementById = id =>
       nativeGetElementById(id) || this.shadowRoot.getElementById(id);
 
-    window.openDialog  = (msg, opts) => this.openDialog(msg, opts);
-    window.alertPopup  = msg => this.openDialog(msg);
+    window.openDialog = (msg, opts) => this.openDialog(msg, opts);
+    window.alertPopup = msg => this.openDialog(msg);
     window.confirmPopup = msg => this.openDialog(msg, { cancel: true });
     let toastTimer;
     window.toast = msg => {
@@ -251,7 +251,7 @@ class SharedToolbar extends HTMLElement {
 
     // Allow search suggestions to scroll without affecting the page
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
-    ['touchmove','wheel'].forEach(ev =>
+    ['touchmove', 'wheel'].forEach(ev =>
       sugEl.addEventListener(ev, e => e.stopPropagation())
     );
   }
@@ -701,7 +701,7 @@ class SharedToolbar extends HTMLElement {
               <select id="arkFilter"></select>
             </div>
             <div class="filter-group">
-              <label for="testFilter">Test</label>
+              <label for="testFilter">Karaktärsdrag</label>
               <select id="testFilter"></select>
             </div>
           </div>
@@ -1522,7 +1522,7 @@ class SharedToolbar extends HTMLElement {
             <ul class="summary-list">
               <li>Välj rollperson: Byter aktiv rollperson.</li>
               <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
-              <li>Typ, Arketyp, Test: Filtrerar listor.</li>
+              <li>Typ, Arketyp, Karaktärsdrag: Filtrerar listor.</li>
               <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
               <li>Generera rollperson: Skapar en rollperson automatiskt.</li>
               <li>PDF-bank: Öppnar samlingen med regel-PDF:er.</li>
@@ -1643,7 +1643,7 @@ class SharedToolbar extends HTMLElement {
     const $ = id => this.shadowRoot.getElementById(id);
     this.panels = {
       filterPanel: $('filterPanel'),
-      infoPanel  : $('infoPanel')
+      infoPanel: $('infoPanel')
     };
     this.entryViewToggle = $('entryViewToggle');
     this.filterCollapseBtn = $('collapseAllFilters');
@@ -1660,7 +1660,7 @@ class SharedToolbar extends HTMLElement {
     try {
       localStorage.removeItem(FILTER_TOOLS_KEY);
       localStorage.removeItem(FILTER_SETTINGS_KEY);
-    } catch {}
+    } catch { }
   }
 
   restoreFilterCollapse() {
@@ -1698,7 +1698,7 @@ class SharedToolbar extends HTMLElement {
 
     /* öppna/stäng (toggle) */
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
-    if (btn.id === 'infoToggle')   return this.toggle('infoPanel');
+    if (btn.id === 'infoToggle') return this.toggle('infoPanel');
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
 
@@ -1715,7 +1715,7 @@ class SharedToolbar extends HTMLElement {
         const queuePostUpdateSync = () => {
           try {
             sessionStorage.setItem('pwa-post-update-sync', '1');
-          } catch {}
+          } catch { }
         };
         btn.disabled = true;
         btn.textContent = 'Kontrollerar…';
@@ -1776,7 +1776,7 @@ class SharedToolbar extends HTMLElement {
           if (shouldReloadNow) {
             window.toast?.('Laddar om för att slutföra uppdateringen…');
             setTimeout(() => {
-              try { window.location.reload(); } catch {}
+              try { window.location.reload(); } catch { }
             }, 120);
           }
         } catch (error) {
@@ -1896,7 +1896,7 @@ class SharedToolbar extends HTMLElement {
       });
     };
 
-    const toggleButtons = ['filterToggle','infoToggle']
+    const toggleButtons = ['filterToggle', 'infoToggle']
       .map(id => this.shadowRoot.getElementById(id))
       .filter(Boolean);
     const isToggleClick = toggleButtons.some(btn => containsInPath(btn));
@@ -1904,7 +1904,7 @@ class SharedToolbar extends HTMLElement {
 
     // Hide search suggestions when clicking outside search UI
     const sugEl = this.shadowRoot.getElementById('searchSuggest');
-    const sIn   = this.shadowRoot.getElementById('searchField');
+    const sIn = this.shadowRoot.getElementById('searchField');
     if (sugEl && !sugEl.hidden) {
       const insideSearch = containsInPath(sugEl) || containsInPath(sIn);
       if (!insideSearch) {
@@ -1913,7 +1913,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-      const popups = ['qualPopup','customPopup','moneyPopup','saveFreePopup','advMoneyPopup','qtyPopup','buyMultiplePopup','liveBuyPopup','pricePopup','rowPricePopup','vehiclePopup','vehicleRemovePopup','vehicleQtyPopup','vehicleMoneyPopup','defenseCalcPopup','masterPopup','alcPopup','smithPopup','artPopup','driveStoragePopup','characterToolsPopup','pdfPopup','nilasPopup','tabellPopup','dialogPopup','danielPopup','folderManagerPopup','newCharPopup','generatorPopup','dupCharPopup','renameCharPopup','artifactPaymentPopup','manualAdjustPopup','entrySortPopup'];
+    const popups = ['qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
@@ -1930,8 +1930,8 @@ class SharedToolbar extends HTMLElement {
     // If we just toggled this panel <300ms ago, ignore this click.
     const now = Date.now();
     if (this._lastToggle && (now - this._lastToggle < 300)) {
-        console.log("🚫 Ghost click blocked.");
-        return;
+      console.log("🚫 Ghost click blocked.");
+      return;
     }
     this._lastToggle = now;
 
@@ -1955,16 +1955,16 @@ class SharedToolbar extends HTMLElement {
         }
         this.updateFilterCollapseBtn();
       }
-      
+
       // The Magic Delay
       setTimeout(() => {
-          panel.classList.add('open');
-          panel.scrollTop = 0;
-      }, 50); 
+        panel.classList.add('open');
+        panel.scrollTop = 0;
+      }, 50);
     }
   }
-  open(id)  {
-    Object.values(this.panels).forEach(p=>p.classList.remove('open'));
+  open(id) {
+    Object.values(this.panels).forEach(p => p.classList.remove('open'));
     const panel = this.panels[id];
     if (panel) {
       if (id === 'filterPanel') {
@@ -1989,10 +1989,10 @@ class SharedToolbar extends HTMLElement {
       extraText
     } = opts;
     return new Promise(resolve => {
-      const pop      = this.shadowRoot.getElementById('dialogPopup');
-      const msgEl    = this.shadowRoot.getElementById('dialogMessage');
-      const okBtn    = this.shadowRoot.getElementById('dialogOk');
-      const cancelBtn= this.shadowRoot.getElementById('dialogCancel');
+      const pop = this.shadowRoot.getElementById('dialogPopup');
+      const msgEl = this.shadowRoot.getElementById('dialogMessage');
+      const okBtn = this.shadowRoot.getElementById('dialogOk');
+      const cancelBtn = this.shadowRoot.getElementById('dialogCancel');
       const extraBtn = this.shadowRoot.getElementById('dialogExtra');
       msgEl.textContent = message;
       cancelBtn.style.display = cancel ? '' : 'none';
@@ -2040,7 +2040,7 @@ class SharedToolbar extends HTMLElement {
       else link.removeAttribute('aria-current');
     };
 
-    setLinkState('traitsLink', 'traits.html', ['traits','summary','effects']);
+    setLinkState('traitsLink', 'traits.html', ['traits', 'summary', 'effects']);
     setLinkState('inventoryLink', 'inventory.html', ['inventory']);
     setLinkState('indexLink', 'index.html', ['index']);
     setLinkState('characterLink', 'character.html', ['character', 'notes']);

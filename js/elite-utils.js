@@ -194,7 +194,7 @@
       try {
         const hit = lookup({ id: name, name }) || lookup(name);
         if (hit) return hit;
-      } catch {}
+      } catch { }
     }
     return getDBList(options).find(entry => normalizeKey(entry?.namn) === key) || null;
   }
