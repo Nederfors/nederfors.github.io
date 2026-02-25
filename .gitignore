@@ -404,3 +404,6 @@ FodyWeavers.xsd
 
 # JetBrains Rider
 *.sln.iml
+
+#MacOS tmp files
+.DS_Store
