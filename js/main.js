@@ -1306,12 +1306,10 @@ function yrkeInfoHtml(p) {
     const parts = [];
     if (extra) parts.push(extra);
     if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
-    if (arkTradList.length) parts.push(`<p><strong>Ark_trad:</strong> ${arkTradList.join(', ')}</p>`);
     return wrapBlocks(parts);
   }
   const parts = [];
   if (extra) parts.push(extra);
-  if (arkTradList.length) parts.push(`<p><strong>Ark_trad:</strong> ${arkTradList.join(', ')}</p>`);
   if (p.viktiga_karaktarsdrag) parts.push(`<p><strong>Viktiga karaktärsdrag:</strong> ${p.viktiga_karaktarsdrag}</p>`);
   if (p.forslag_pa_slakte) {
     const val = Array.isArray(p.forslag_pa_slakte) ? p.forslag_pa_slakte.join(', ') : p.forslag_pa_slakte;
