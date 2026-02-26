@@ -110,7 +110,15 @@
           }
         })
         : null);
-    const explode = typeof window.explodeTags === 'function' ? window.explodeTags : null;
+    const splitArkTags = (value) => {
+      if (typeof window.splitTags === 'function') return window.splitTags(value);
+      const source = Array.isArray(value)
+        ? value
+        : ((value === undefined || value === null) ? [] : [value]);
+      return source
+        .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
+        .filter(Boolean);
+    };
     const baseInventory = typeof storeHelper?.getInventory === 'function'
       ? storeHelper.getInventory(store)
       : [];
@@ -130,10 +138,8 @@
         typTags.filter(Boolean).forEach(val => sets.typ.add(val));
         const arkSource = tags.ark_trad;
         let arkTags = [];
-        if (explode) {
-          try { arkTags = explode(arkSource); }
-          catch { arkTags = []; }
-        }
+        try { arkTags = splitArkTags(arkSource); }
+        catch { arkTags = []; }
         if (arkTags.length) {
           arkTags.filter(Boolean).forEach(val => sets.ark.add(val));
         } else if (Array.isArray(arkSource)) {

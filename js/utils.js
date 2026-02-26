@@ -392,6 +392,15 @@
     return compareSv(a.namn || '', b.namn || '');
   }
 
+  function splitTags(arr){
+    const source = Array.isArray(arr)
+      ? arr
+      : ((arr === undefined || arr === null) ? [] : [arr]);
+    return source
+      .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
+      .filter(Boolean);
+  }
+
   function explodeTags(arr){
     const map = {
       'H\u00e4xa': 'H\u00e4xkonst',
@@ -402,9 +411,7 @@
       'Teurg': 'Teurgi',
       'Teurgi': 'Teurgi'
     };
-    return (arr || [])
-      .flatMap(v => v.split(',').map(t => t.trim()))
-      .filter(Boolean)
+    return splitTags(arr)
       .map(t => map[t] || t);
   }
 
@@ -624,7 +631,7 @@
       if (!ent || typeof ent !== 'object') return '';
       const tags = ent.taggar || {};
       if (Array.isArray(tags.ark_trad) && tags.ark_trad.length) {
-        const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : tags.ark_trad;
+        const exploded = typeof splitTags === 'function' ? splitTags(tags.ark_trad) : tags.ark_trad;
         if (Array.isArray(exploded) && exploded.length) return exploded[0];
         return tags.ark_trad[0] || '';
       }
@@ -1035,6 +1042,7 @@
   window.isNegativeQual = isNegativeQual;
   window.isNeutralQual = isNeutralQual;
   window.sortByType = sortByType;
+  window.splitTags = splitTags;
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
   window.TWO_HANDED_WEAPON_TYPES = TWO_HANDED_WEAPON_TYPES;

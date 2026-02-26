@@ -267,8 +267,11 @@ function ensureEntryMeta(entry) {
   const typList = normalizeList(tags.typ);
   let arkList = [];
   try {
-    const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
-    arkList = normalizeList(exploded);
+    const split = typeof window.splitTags === 'function' ? window.splitTags : null;
+    const rawTags = split
+      ? split(tags.ark_trad)
+      : (Array.isArray(tags.ark_trad) ? tags.ark_trad : ((tags.ark_trad === undefined || tags.ark_trad === null) ? [] : [tags.ark_trad]));
+    arkList = normalizeList(rawTags);
   } catch {
     arkList = [];
   }
@@ -1280,8 +1283,8 @@ function yrkeInfoHtml(p) {
   const rawArkTrad = p?.taggar?.ark_trad;
   const arkTradList = (() => {
     if (!rawArkTrad) return [];
-    const exploded = typeof explodeTags === 'function'
-      ? explodeTags(rawArkTrad)
+    const exploded = typeof window.splitTags === 'function'
+      ? window.splitTags(rawArkTrad)
       : (Array.isArray(rawArkTrad) ? rawArkTrad : [rawArkTrad]);
     return [...new Set(
       (Array.isArray(exploded) ? exploded : [])
