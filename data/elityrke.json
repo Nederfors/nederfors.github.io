@@ -7,7 +7,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Järnsvuren"
+        "Järnsvuren",
+         "Jägare"
       ]
     },
     "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
@@ -198,7 +199,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Vredesgardist"
+        "Vredesgardist", 
+        "Krigare"
       ]
     },
     "krav_formagor": "",
@@ -290,7 +292,9 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Artefaktmakare"
+        "Artefaktmakare", 
+        "Ordensmagi", 
+        "Trollsång"
       ]
     },
     "krav_formagor": "",
@@ -381,7 +385,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Stavmagiker"
+        "Stavmagiker", 
+        "Mystiker"
       ]
     },
     "krav_formagor": "",
@@ -1397,7 +1402,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Drottningspion"
+        "Drottningspion", 
+        "Tjuv"
       ]
     },
     "krav_formagor": "",
@@ -1489,7 +1495,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Gentlemannatjuv"
+        "Gentlemannatjuv", 
+        "Tjuv"
       ]
     },
     "krav_formagor": "",
@@ -1761,7 +1768,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Ulvahedna"
+        "Ulvahedna", 
+        "Krigare"
       ]
     },
     "krav_formagor": "",
