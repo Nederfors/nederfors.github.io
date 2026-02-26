@@ -46,7 +46,7 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [
-          "Jägare"
+          "Monsterjägare"
         ],
         "krav_erf": 30
       },
@@ -54,15 +54,17 @@
         "aktiv": true,
         "taggfalt": "ark_trad",
         "taggar": [
-          "Häxkonst"
+          "Häxa"
         ],
-        "krav_erf": 10
+        "krav_erf": 20
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
         "namn": [
           "Sjätte sinne",
-          "Spjutdans"
+          "Spjutdans",
+          "Snabbskytte",
+          "Prickskytt"
         ],
         "min_niva": "Gesäll",
         "min_antal": 1
