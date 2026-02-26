@@ -33,15 +33,8 @@
     ],
     "id": "elit1",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Ritual",
-        "Fördel",
-        "Mystisk kraft"
-      ],
       "primarformaga": {
-        "namn": "Akrobatik",
-        "min_niva": "Mästare"
+        "namn": "Akrobatik"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -123,15 +116,8 @@
     ],
     "id": "elit2",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Teurgi",
-        "min_niva": "Mästare"
+        "namn": "Teurgi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -189,8 +175,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -225,15 +210,8 @@
     ],
     "id": "elit3",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Järnnäve",
-        "min_niva": "Mästare"
+        "namn": "Järnnäve"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -282,8 +260,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -316,15 +293,8 @@
     ],
     "id": "elit4",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Smideskonst",
-        "min_niva": "Mästare"
+        "namn": "Smideskonst"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -375,8 +345,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -412,15 +381,8 @@
     ],
     "id": "elit5",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Stavkamp",
-        "min_niva": "Mästare"
+        "namn": "Stavkamp"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -466,8 +428,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -503,15 +464,8 @@
     ],
     "id": "elit6",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Häxkonster",
-        "min_niva": "Mästare"
+        "namn": "Häxkonster"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -552,8 +506,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -591,15 +544,8 @@
     ],
     "id": "elit7",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Häxkonster",
-        "min_niva": "Mästare"
+        "namn": "Häxkonster"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -639,8 +585,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -676,15 +621,8 @@
     ],
     "id": "elit8",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Svartkonst",
-        "min_niva": "Mästare"
+        "namn": "Svartkonst"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -734,8 +672,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -769,15 +706,8 @@
     ],
     "id": "elit9",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Alkemi",
-        "min_niva": "Mästare"
+        "namn": "Alkemi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -818,8 +748,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -854,15 +783,8 @@
     ],
     "id": "elit10",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
+        "namn": "Ordensmagi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -913,8 +835,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -949,15 +870,8 @@
     ],
     "id": "elit11",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Teurgi",
-        "min_niva": "Mästare"
+        "namn": "Teurgi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1015,8 +929,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1051,15 +964,8 @@
     ],
     "id": "elit12",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
+        "namn": "Ordensmagi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1111,8 +1017,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1147,15 +1052,8 @@
     ],
     "id": "elit13",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Svartkonst",
-        "min_niva": "Mästare"
+        "namn": "Svartkonst"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1196,8 +1094,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1231,15 +1128,8 @@
     ],
     "id": "elit14",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
+        "namn": "Ordensmagi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1290,8 +1180,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1325,15 +1214,8 @@
     ],
     "id": "elit15",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Teurgi",
-        "min_niva": "Mästare"
+        "namn": "Teurgi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1392,8 +1274,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1428,15 +1309,8 @@
     ],
     "id": "elit16",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Fint",
-        "min_niva": "Mästare"
+        "namn": "Fint"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1485,8 +1359,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1521,15 +1394,8 @@
     ],
     "id": "elit17",
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Lönnstöt",
-        "min_niva": "Mästare"
+        "namn": "Lönnstöt"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1578,8 +1444,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1614,15 +1479,8 @@
       "Övermod"
     ],
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Ordensmagi",
-        "min_niva": "Mästare"
+        "namn": "Ordensmagi"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1672,8 +1530,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1708,15 +1565,8 @@
       "Mörkt förflutet"
     ],
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Trollsång",
-        "min_niva": "Mästare"
+        "namn": "Trollsång"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1757,8 +1607,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1796,15 +1645,8 @@
       "Mardrömmar"
     ],
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Bärsärk",
-        "min_niva": "Mästare"
+        "namn": "Bärsärk"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1863,8 +1705,7 @@
       "specifika_nackdelar": {
         "namn": [],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   },
   {
@@ -1893,15 +1734,8 @@
       "Nackdel B"
     ],
     "krav": {
-      "xp_kallor": [
-        "Förmåga",
-        "Mystisk kraft",
-        "Ritual",
-        "Fördel"
-      ],
       "primarformaga": {
-        "namn": "Primärförmåga",
-        "min_niva": "Mästare"
+        "namn": "Primärförmåga"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -1980,8 +1814,7 @@
           "Nackdelkrav B"
         ],
         "min_antal": 0
-      },
-      "min_total_erf": 0
+      }
     }
   }
 ]

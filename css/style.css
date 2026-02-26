@@ -3495,6 +3495,33 @@ select.level {
 #masterPopup .master-group[data-group-source="specifika_nackdelar"] .master-row-controls.single {
   width: min(100%, 320px);
 }
+@media (min-width: 761px) {
+  #masterPopup .master-row {
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 620px);
+  }
+  #masterPopup .master-row-controls,
+  #masterPopup .master-row-controls.single,
+  #masterPopup .master-row-controls.benefit,
+  #masterPopup .master-row-controls.triple {
+    grid-template-columns: minmax(150px, 190px) minmax(0, 1fr) minmax(140px, 170px);
+    width: 100%;
+  }
+  #masterPopup .master-row-controls > select[data-choice-type] { grid-column: 1; }
+  #masterPopup .master-row-controls > select[data-ability] { grid-column: 2; }
+  #masterPopup .master-row-controls > select[data-choice-extra],
+  #masterPopup .master-row-controls > select[data-benefit-qty],
+  #masterPopup .master-row-controls > select[data-name][data-dynamic="1"] { grid-column: 3; }
+  #masterPopup .master-row-controls > select[data-name]:not([data-dynamic="1"]),
+  #masterPopup .master-row-controls > select[data-extra-pick],
+  #masterPopup .master-row-controls > .master-static-value,
+  #masterPopup .master-row-controls.single > select[data-ability] {
+    grid-column: 2 / 4;
+  }
+  #masterPopup .master-group[data-group-source="specifika_nackdelar"] .master-row-controls.single {
+    width: 100%;
+  }
+}
+
 #masterPopup #masterBtns {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

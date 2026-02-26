@@ -47,6 +47,31 @@
     return String(value || '').trim().toLowerCase();
   }
 
+  const POPUP_SOURCE_ORDER = Object.freeze([
+    'primarformaga',
+    'primartagg',
+    'sekundartagg',
+    'valfri_inom_tagg',
+    'specifika_formagor',
+    'specifika_mystiska_krafter',
+    'specifika_ritualer',
+    'specifika_fordelar',
+    'specifika_nackdelar'
+  ]);
+
+  function sourceOrderRank(source) {
+    const normalized = String(source || '').trim();
+    const key = normalized.startsWith('valfri_inom_tagg') ? 'valfri_inom_tagg' : normalized;
+    const idx = POPUP_SOURCE_ORDER.indexOf(key);
+    return idx >= 0 ? idx : POPUP_SOURCE_ORDER.length;
+  }
+
+  function valfriOrderIndex(source) {
+    const match = String(source || '').trim().match(/^valfri_inom_tagg\[(\d+)\]$/);
+    if (!match) return 0;
+    return Number(match[1]) || 0;
+  }
+
   function groupMinErf(group) {
     return Math.max(0, Number(group?.min_erf) || 0);
   }
@@ -177,24 +202,36 @@
     pushBenefitGroup('specifika_nackdelar', 'Nackdel');
 
     const seen = new Set();
-    return out.filter(group => {
-      const sig = JSON.stringify({
-        source: group?.source || '',
-        type: normalizeType(group?.type),
-        names: getGroupNames(group),
-        anyMystic: Boolean(group?.anyMystic),
-        anyRitual: Boolean(group?.anyRitual),
-        min: Math.max(0, Number(group?.min_antal) || 0),
-        minLevel: normalizeLevel(group?.min_niva || 'Novis', 'Novis'),
-        minErf: groupMinErf(group),
-        slotCount: Math.max(0, Number(group?.slot_count) || 0),
-        dynamic: Boolean(group?.dynamic_select),
-        allowRepeat: Boolean(group?.allow_repeat)
-      });
-      if (seen.has(sig)) return false;
-      seen.add(sig);
-      return true;
-    });
+    return out
+      .filter(group => {
+        const sig = JSON.stringify({
+          source: group?.source || '',
+          type: normalizeType(group?.type),
+          names: getGroupNames(group),
+          anyMystic: Boolean(group?.anyMystic),
+          anyRitual: Boolean(group?.anyRitual),
+          min: Math.max(0, Number(group?.min_antal) || 0),
+          minLevel: normalizeLevel(group?.min_niva || 'Novis', 'Novis'),
+          minErf: groupMinErf(group),
+          slotCount: Math.max(0, Number(group?.slot_count) || 0),
+          dynamic: Boolean(group?.dynamic_select),
+          allowRepeat: Boolean(group?.allow_repeat)
+        });
+        if (seen.has(sig)) return false;
+        seen.add(sig);
+        return true;
+      })
+      .map((group, pos) => ({ group, pos }))
+      .sort((a, b) => {
+        const aSource = groupSource(a.group);
+        const bSource = groupSource(b.group);
+        const rankDiff = sourceOrderRank(aSource) - sourceOrderRank(bSource);
+        if (rankDiff !== 0) return rankDiff;
+        const valfriDiff = valfriOrderIndex(aSource) - valfriOrderIndex(bSource);
+        if (valfriDiff !== 0) return valfriDiff;
+        return a.pos - b.pos;
+      })
+      .map(row => row.group);
   }
 
   function parseNames(krav){

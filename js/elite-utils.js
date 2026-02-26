@@ -152,10 +152,8 @@
     const raw = rawKrav && typeof rawKrav === 'object' ? rawKrav : {};
     const primaryRaw = raw.primarformaga || {};
     return {
-      xp_kallor: uniqStrings(raw.xp_kallor).length ? uniqStrings(raw.xp_kallor) : DEFAULT_XP_KALLOR.slice(),
       primarformaga: {
-        namn: String(primaryRaw.namn || '').trim(),
-        min_niva: 'Mästare'
+        namn: String(primaryRaw.namn || '').trim()
       },
       primartagg: normalizeTagRule(raw.primartagg, false),
       sekundartagg: normalizeTagRule(raw.sekundartagg, true),
@@ -164,8 +162,7 @@
       specifika_mystiska_krafter: normalizeSpecific(raw.specifika_mystiska_krafter, 'Mystisk kraft'),
       specifika_ritualer: normalizeSpecific(raw.specifika_ritualer, 'Ritual'),
       specifika_fordelar: normalizeSpecific(raw.specifika_fordelar, 'Fördel'),
-      specifika_nackdelar: normalizeSpecific(raw.specifika_nackdelar, 'Nackdel'),
-      min_total_erf: toInt(raw.min_total_erf, 0)
+      specifika_nackdelar: normalizeSpecific(raw.specifika_nackdelar, 'Nackdel')
     };
   }
 
@@ -359,7 +356,7 @@
   function getKravGroups(rawKrav, options = {}) {
     const krav = normalizeKrav(rawKrav);
     const groups = [];
-    const xpSources = normalizeXpSources(krav.xp_kallor);
+    const xpSources = DEFAULT_XP_KALLOR.slice();
 
     const pushTagXpGroup = (source, rawRule = {}) => {
       const tagRule = normalizeTagRule(rawRule, source === 'sekundartagg');
@@ -399,35 +396,11 @@
         type,
         names: [primaryName],
         min_antal: 1,
-        min_niva: type === 'Ritual' ? 'Novis' : normalizeLevel(krav.primarformaga.min_niva || 'Mästare', 'Mästare'),
+        min_niva: type === 'Ritual' ? 'Novis' : 'Mästare',
         allRitual: type === 'Ritual',
         isPrimary: true
       });
     }
-
-    groups.push(...buildNameGroups(
-      'specifika_formagor',
-      'Förmåga',
-      krav.specifika_formagor.namn,
-      krav.specifika_formagor.min_niva,
-      krav.specifika_formagor.min_antal
-    ));
-
-    groups.push(...buildNameGroups(
-      'specifika_mystiska_krafter',
-      'Mystisk kraft',
-      krav.specifika_mystiska_krafter.namn,
-      krav.specifika_mystiska_krafter.min_niva,
-      krav.specifika_mystiska_krafter.min_antal
-    ));
-
-    groups.push(...buildNameGroups(
-      'specifika_ritualer',
-      'Ritual',
-      krav.specifika_ritualer.namn,
-      'Novis',
-      krav.specifika_ritualer.min_antal
-    ));
 
     pushTagXpGroup('primartagg', krav.primartagg);
     pushTagXpGroup('sekundartagg', krav.sekundartagg);
@@ -482,6 +455,30 @@
         tagRule: rule
       });
     });
+
+    groups.push(...buildNameGroups(
+      'specifika_formagor',
+      'Förmåga',
+      krav.specifika_formagor.namn,
+      krav.specifika_formagor.min_niva,
+      krav.specifika_formagor.min_antal
+    ));
+
+    groups.push(...buildNameGroups(
+      'specifika_mystiska_krafter',
+      'Mystisk kraft',
+      krav.specifika_mystiska_krafter.namn,
+      krav.specifika_mystiska_krafter.min_niva,
+      krav.specifika_mystiska_krafter.min_antal
+    ));
+
+    groups.push(...buildNameGroups(
+      'specifika_ritualer',
+      'Ritual',
+      krav.specifika_ritualer.namn,
+      'Novis',
+      krav.specifika_ritualer.min_antal
+    ));
 
     return groups;
   }

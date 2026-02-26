@@ -1326,10 +1326,6 @@ function buildElityrkeInfoSections(p) {
   const DBIndex = window.DBIndex || {};
   const DBList = Array.isArray(window.DB) ? window.DB : [];
   const abilityRenderer = typeof abilityHtml === 'function' ? abilityHtml : null;
-  const normalizedKrav = typeof utils.normalizeKrav === 'function'
-    ? utils.normalizeKrav(p.krav || {})
-    : (p.krav || {});
-
   const safe = (value) => String(value ?? '')
     .replace(/[&<>"']/g, m => ({
       '&': '&amp;',
@@ -1439,15 +1435,11 @@ function buildElityrkeInfoSections(p) {
   const groupMeta = (group, names) => {
     if (group?.isPrimary) {
       const primaryType = normalizeType(group?.type) || 'Förmåga';
-      return `${primaryType} · Minst ${normalizeLevel(group?.min_niva || 'Mästare', 'Mästare')} · 1 krav`;
+      return `${primaryType} · Minst Mästare · 1 krav`;
     }
     const minErf = Math.max(0, Number(group?.min_erf) || 0);
     if (minErf > 0) {
       const parts = [`Minst ${minErf} ERF`];
-      const sources = toArray(group?.tagRule?.xp_kallor)
-        .map(type => normalizeType(type))
-        .filter(Boolean);
-      if (sources.length) parts.push(`Källor: ${sources.join(', ')}`);
       if (names.length) parts.push(`${names.length} alternativ`);
       return parts.join(' · ');
     }
@@ -1563,7 +1555,6 @@ function buildElityrkeInfoSections(p) {
   const sections = [];
 
   if (groups.length) {
-    const minTotalErf = Math.max(0, Number(normalizedKrav?.min_total_erf) || 0);
     const profileCards = groups.map((group, idx) => {
       const items = toArray(group?.names)
         .map(name => String(name || '').trim())
@@ -1599,21 +1590,6 @@ function buildElityrkeInfoSections(p) {
         </section>
       `.trim();
     }).filter(Boolean);
-    if (minTotalErf > 0) {
-      profileCards.unshift(`
-        <section class="elite-profile-group elite-profile-group-total" data-elite-group-source="min_total_erf">
-          <div class="elite-profile-head">
-            <div class="elite-profile-title-wrap">
-              <h4 class="elite-profile-title">Total erfarenhet</h4>
-              <p class="elite-profile-meta">Minimikrav för rollpersonen</p>
-            </div>
-          </div>
-          <div class="elite-profile-body">
-            ${renderSimpleRow('Total erfarenhetspoäng', `Minst ${minTotalErf} ERF`)}
-          </div>
-        </section>
-      `.trim());
-    }
 
     sections.push({
       title: 'Kravprofil',
