@@ -447,8 +447,11 @@
       const typList = normalizeList(tags.typ);
       let arkList = [];
       try {
-        const exploded = typeof explodeTags === 'function' ? explodeTags(tags.ark_trad) : [];
-        arkList = normalizeList(exploded);
+        const split = typeof window.splitTags === 'function' ? window.splitTags : null;
+        const rawTags = split
+          ? split(tags.ark_trad)
+          : (Array.isArray(tags.ark_trad) ? tags.ark_trad : ((tags.ark_trad === undefined || tags.ark_trad === null) ? [] : [tags.ark_trad]));
+        arkList = normalizeList(rawTags);
       } catch {
         arkList = [];
       }

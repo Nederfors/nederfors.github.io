@@ -80,8 +80,8 @@
         "min_antal": 2
       },
       "specifika_nackdelar": {
-        "namn": [],
-        "min_antal": 0
+        "namn": ["Paria", "Edsbunden"],
+        "min_antal": 2
       }
     }
   },
@@ -690,8 +690,9 @@
     "krav_formagor": "",
     "viktiga_karaktarsdrag": "",
     "Elityrkesförmågor": [
-      "Levande fort (ritual)",
-      "Törnemantel"
+      "Levande fästning",
+      "Törnemantel",
+      "Naturens Hämnd"
     ],
     "mojliga_fordelar": [
       "Gifttålig",
@@ -707,12 +708,12 @@
     "id": "elit9",
     "krav": {
       "primarformaga": {
-        "namn": "Alkemi"
+        "namn": "Häxkonster"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
+        "taggar": ["Mystiker", "Häxa"],
+        "krav_erf": 20
       },
       "sekundartagg": {
         "aktiv": false,
@@ -723,26 +724,33 @@
       "valfri_inom_tagg": [],
       "specifika_formagor": {
         "namn": [
-          "Häxkonster"
+          ""
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_niva": "",
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [
-          "Örtrankor"
+          "Örtrankor",
+          "Naturens famn",
+          "Barkhud",
+          "Tvångsförvandling"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_niva": "Gesäll",
+        "min_antal": 2
       },
       "specifika_ritualer": {
         "namn": [
-          "Snabbväxt"
+          "Snabbväxt",
+          "Vädervända",
+          "Vyssja till ro",
+          "Häxcirkel"
+
         ],
         "min_antal": 1
       },
       "specifika_fordelar": {
-        "namn": [],
+        "namn": [""],
         "min_antal": 0
       },
       "specifika_nackdelar": {
@@ -1395,38 +1403,36 @@
     "id": "elit17",
     "krav": {
       "primarformaga": {
-        "namn": "Lönnstöt"
+        "namn": "Fint"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
+        "taggar": ["Tjuv"],
+        "krav_erf": 60
       },
       "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
+        "aktiv": true,
+        "taggfalt": "test",
+        "taggar": ["Övertygande"],
+        "krav_erf": 10
       },
       "valfri_inom_tagg": [
         {
           "typ": "Förmåga",
-          "taggfalt": "namn",
+          "taggfalt": "test",
           "taggar": [
-            "Svärdshelgon",
-            "Knivgöra"
+            ""
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_niva": "",
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
-          "Fint",
-          "Tvillingattack"
+          "Lönnstöt"
         ],
         "min_niva": "Novis",
-        "min_antal": 2
+        "min_antal": 1
       },
       "specifika_mystiska_krafter": {
         "namn": [],
@@ -1438,8 +1444,8 @@
         "min_antal": 0
       },
       "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
+        "namn": ["Kontaktnät","Klanvän","Lagvrängare","Bluffmakare"],
+        "min_antal": 2
       },
       "specifika_nackdelar": {
         "namn": [],

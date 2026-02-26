@@ -53,6 +53,15 @@
     if (txt.startsWith('smidig')) return 'Armfäst';
     return qualityName;
   };
+  const splitArkTags = (value) => {
+    if (typeof window.splitTags === 'function') return window.splitTags(value);
+    const source = Array.isArray(value)
+      ? value
+      : ((value === undefined || value === null) ? [] : [value]);
+    return source
+      .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
+      .filter(Boolean);
+  };
   const mapRowQualityArray = (entry, list) => {
     if (!Array.isArray(list)) return list;
     const out = [];
@@ -3264,7 +3273,7 @@
         infoBody += ability;
       }
     }
-    const arkTags = explodeTags(tagger.ark_trad);
+    const arkTags = splitArkTags(tagger.ark_trad);
     const testTags = Array.isArray(tagger.test) ? tagger.test : [];
     const infoTags = testTags.concat(
       arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : [])
@@ -3575,7 +3584,7 @@
       const entry = getEntry(row.id || row.name);
       const typTags = entry.taggar?.typ || [];
       const arkRaw = entry.taggar?.ark_trad;
-      const arkTags = explodeTags(arkRaw);
+      const arkTags = splitArkTags(arkRaw);
       const arkList = arkTags.length ? arkTags : (Array.isArray(arkRaw) ? ['Traditionslös'] : []);
       const testTags = entry.taggar?.test || [];
       const itemTags = [...typTags, ...arkList, ...testTags];

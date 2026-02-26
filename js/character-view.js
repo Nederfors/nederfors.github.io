@@ -5,6 +5,15 @@
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
 
     const F = { search: [], typ: [], ark: [], test: [] };
+    const splitArkTags = (value) => {
+      if (typeof window.splitTags === 'function') return window.splitTags(value);
+      const source = Array.isArray(value)
+        ? value
+        : ((value === undefined || value === null) ? [] : [value]);
+      return source
+        .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
+        .filter(Boolean);
+    };
     const ONLY_SELECTED_VALUE = '__onlySelected';
     const ONLY_SELECTED_LABEL = 'Endast valda';
     let sTemp = '';
@@ -1160,7 +1169,7 @@
           .filter(Boolean)
           .forEach(v => sets.typ.add(v));
         const arkSource = taggar.ark_trad;
-        const arkTags = explodeTags(arkSource);
+        const arkTags = splitArkTags(arkSource);
         if (arkTags.length) {
           arkTags.forEach(v => sets.ark.add(v));
         } else if (Array.isArray(arkSource)) {
@@ -1241,7 +1250,7 @@
           const tags = p.taggar || {};
           const selTags = [...F.typ, ...F.ark, ...F.test];
           const hasTags = selTags.length > 0;
-          const arkTags = explodeTags(tags.ark_trad);
+          const arkTags = splitArkTags(tags.ark_trad);
           const itmTags = [
             ...(tags.typ ?? []),
             ...(arkTags.length ? arkTags : (Array.isArray(tags.ark_trad) ? ['Traditionslös'] : [])),
@@ -1417,7 +1426,7 @@
               filterTagData.push(tag);
               if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
             });
-          const trTags = explodeTags(p.taggar?.ark_trad);
+          const trTags = splitArkTags(p.taggar?.ark_trad);
           const arkList = trTags.length ? trTags : (Array.isArray(p.taggar?.ark_trad) ? ['Traditionslös'] : []);
           arkList.forEach(t => {
             const tag = { section: 'ark', value: t, label: t, hidden: t === 'Traditionslös' };

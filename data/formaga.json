@@ -186,7 +186,7 @@
   {
     "id": "form6",
     "namn": "Fint",
-    "beskrivning": "För personer och varelser som inte har viljan eller styrkan att bära tunga närstridsvapen har stridstekniken att finta växt fram. Förmågan kräver ett vapen med någon av kvaliteterna Kort eller Precist. Sådana vapen kan tack vare rollpersonens skicklighet hanteras på ett diskret och förvirrande vis, och på så sätt ge varje anfall samma fördel som om motståndaren var överraskad.",
+    "beskrivning": "För personer och varelser som inte har viljan eller styrkan att bära tunga närstridsvapen har stridstekniken att finta växt fram. Förmågan kräver ett vapen med någon av kvaliteterna Kort eller Precist.",
     "taggar": {
       "typ": [
         "Förmåga"
@@ -202,7 +202,7 @@
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
-          "skadetyp": "Ingen"
+          "skadetyp": "Yttre fysisk"
         },
         "Gesäll": {
           "handling": "Reaktiv",
@@ -215,7 +215,7 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Passiv. Rollpersonen kan välja att anfalla med Diskret istället för med Träffsäker, när anfallet sker med ett Kort eller Precist närstridsvapen.",
+      "Novis": "Handling: Passiv. Rollpersonen kan välja att anfalla med Diskret istället för med Träffsäker, när anfallet sker med ett Kort eller Precist närstridsvapen. Sådana vapen kan tack vare rollpersonens skicklighet också hanteras på ett diskret och förvirrande vis, och på så sätt ge varje anfall ett övertag och möjliggör till exempel anfall med Lönnstöt.",
       "Gesäll": "Handling: Reaktiv. Rollpersonen visar upp en falsk blotta i sitt försvar och lurar fienden att anfalla den blottan. Rollpersonen kan välja att försvara sig med Diskret istället för med Kvick.",
       "Mästare": "Handling: Aktiv. Rollpersonen kan med ett lyckat [Diskret←Vaksam] lura en fiende under pågående strid. Ett lyckat slag ger rollpersonen ett frislag mot fienden utöver den vanliga attacken. Även om finten misslyckas får den vanliga attacken göras."
     }
@@ -506,8 +506,8 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Reaktiv. En attack per runda som görs i Övertag gör 1T4 extra skada, utöver den extra skada som övertaget redan ger. Rollpersonen kan välja att använda Diskret i stället för Träffsäker för attacker i Övertag. Lönnstöt kan endast göras en gång per runda, oavsett andra förhållanden.",
-      "Gesäll": "Handling: Reaktiv. Rollpersonens lönnstöt gör extra skada (+1T4) och åderlåter dessutom fienden. Attacken ger ett ymnigt blödande sår som ger 1T4 i skada varje runda efter träffen. Blodflödet fortsätter tills offret helas med en örtkur, förmågan Medicus eller på annat sätt.",
+      "Novis": "Handling: Reaktiv. En attack per runda som görs i Övertag gör 1T4 extra skada, utöver den extra skada som övertaget redan ger. Lönnstöt kan endast göras en gång per runda, oavsett andra förhållanden.",
+      "Gesäll": "Handling: Reaktiv. Om lönnstöten drar blod får rollpersonen slås [Diskret <- Stark] som om det lyckas orsakar ymnigt blödande sår som ger 1T4 i inre fysisk skada varje runda efter träffen. Blodflödet fortsätter tills offret helas med en Örtkur, förmågan Medicus, Ärva skada eller Helbrägdagörelse.",
       "Mästare": "Handling: Reaktiv. Rollpersonens lönnstöt gör +1T8 extra skada och åderlåter sitt offer som på gesällnivån. Mästaren har heller ingen begränsning i antalet attacker per runda som kan vara en lönnstöt; så länge villkoret Övertag uppfylls så är alla attacker lönnstötar."
     }
   },
@@ -3160,6 +3160,42 @@
       "Novis": "Handling: Passiv. Rollpersonen läser fiendens kroppsspråk och placerar skölden exakt där den behövs. När rollpersonen bär sköld får denne använda karaktärsdraget Träffsäker istället för Kvick för att beräkna sitt värde i Försvar.",
       "Gesäll": "Handling: Reaktiv. Rollpersonen rör sig alltid med skölden höjd för att täcka sig mot pilar och hugg. Rollpersonen får slå mot [Träffsäker] för att undvika att dra på sig frislag från fiender i närstrid. Detta gäller alla frislag som utlöses av förflyttning, långa vapen eller förmågor som normalt orsakar frislag. Om slaget misslyckas får hen försvara sig mot frislaget på vanligt vis.",
       "Mästare": "Handling: Reaktiv. En gång per runda när rollpersonen träffas av ett anfall, kan hen aktivt möta och styra undan anfallet. När rollpersonen träffas av en närstridsattack kan denne försöka blockera slaget helt med skölden genom att slå [Träffsäker]. Om slaget lyckas styrs attacken bort mot sköldens tåligaste delar och orsakar ingen skada."
+    }
+  },
+  {
+    "id": "form89",
+    "namn": "Formelbindning",
+    "beskrivning": "Det sägs att en sann krönikör inte bara observerar historien, utan fångar den. Genom att studera de mönster som magin lämnar i väven kan rollpersonen binda flyktiga krafter i beständigt bläck. Där andra ser en blixt ser krönikören en ekvation; där andra ser en offerplats ser krönikören en instruktion. Förmågan är vanlig bland Ordo Magicas fältagenter och de skalder som vågar sig in i Davokars djup för att dokumentera det okända.",
+    "taggar": {
+      "typ": [
+        "Förmåga"
+      ],
+      "ark_trad": [
+        "Mystiker",
+        "Häxjägare"
+      ],
+      "test": [
+        "Listig"
+      ],
+      "nivå_data": {
+        "Novis": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Gesäll": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        },
+        "Mästare": {
+          "handling": "Speciell",
+          "skadetyp": "Ingen"
+        }
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Speciell. Krönikören bär alltid penna, bläck och pergament redo. När rollpersonen bevittnar en Mystisk Kraft användas, kan denne efter scenens slut spendera en timme och material för att binda effekten i skrift. Ett lyckat slag mot Listig skapar ett Formelpergament på novis- eller gesällnivå, förutsatt att kraften använts till dessa nivåer eller högre. Rollpersonen kan göra upp till ett pergament av en kraft hen bevittnat under en scen.",
+      "Gesäll": "Handling: Speciell. Krönikörens blick för magins spår har skärpts. Rollpersonen kan nu nedteckna krafter på upp till mästarnivå, förutsatt att förmågan utförts till den nivån. Dessutom kan krönikören genom att undersöka en plats där magi verkat och lämnat tydliga spår försöka rekonstruera händelsen. Genom att spendera en timme på platsen och lyckas med ett slag mot Listig kan rollpersonen skapa en ritualkodex för en på platsen utförd ritual. Rollpersonen kan göra upp till två pergament av krafter hen bevittnat under en scen, men bara ett pergament per kraft.",
+      "Mästare": "Handling: Speciell. Rollpersonen kan nu binda krafter på mästarnivå. Förståelsen för de magiska formlerna är nu så djup att krönikören kan manipulera bläcket i stunden. En gång per scen kan mästaren aktivera en mystisk kraft som hen har bevittnat under scenen för 1T6 temporär korruption. I detta ändamål får rollpersonen använda Listig istället för Viljestark. Vidare så kan formelpergamenten som rollpersonen skapar alltid nå mästarnivå, oavsett vilken nivå de observerades på. Rollpersonen kan göra upp till tre pergament av krafter hen bevittnat under en scen, men bara ett pergament per kraft."
     }
   }
 ]
