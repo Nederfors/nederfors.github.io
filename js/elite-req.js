@@ -447,15 +447,10 @@
     const missing = [];
     let primaryOk = true;
     const primaryName = String(krav?.primarformaga?.namn || '').trim();
-    const primaryLevel = normalizeLevel(krav?.primarformaga?.min_niva || 'Mästare', 'Mästare');
 
     if (!primaryName) {
       primaryOk = false;
       missing.push('Primärförmåga saknas');
-    }
-    if (primaryLevel !== 'Mästare') {
-      primaryOk = false;
-      missing.push('Primärförmåga måste vara Mästare');
     }
 
     groups.forEach((group, idx) => {
@@ -477,13 +472,6 @@
     if (!ford.ok && ford.missing) missing.push(ford.missing);
     const nack = checkNamedSet(pcList, krav.specifika_nackdelar, 'Nackdel');
     if (!nack.ok && nack.missing) missing.push(nack.missing);
-
-    if ((Number(krav.min_total_erf) || 0) > 0) {
-      const total = pcList.reduce((sum, item) => sum + (Number(item?.erf) || 0), 0);
-      if (total < krav.min_total_erf) {
-        missing.push(`Minst ${krav.min_total_erf} total ERF`);
-      }
-    }
 
     const ok = missing.length === 0;
     return { ok, missing, master: primaryOk, primary: primaryOk };
@@ -566,7 +554,7 @@
   function primaryPartialDeduction(krav, list) {
     const name = String(krav?.primarformaga?.namn || '').trim();
     if (!name) return 0;
-    const minLevel = normalizeLevel(krav?.primarformaga?.min_niva || 'Mästare', 'Mästare');
+    const minLevel = 'Mästare';
     const entries = toArray(list).filter(item => normalizeKey(item?.namn) === normalizeKey(name));
     if (!entries.length) return 0;
     if (entries.some(item => levelMeets(item?.nivå, minLevel))) return 0;
