@@ -1436,24 +1436,28 @@ function buildElityrkeInfoSections(p) {
     return `Kravgrupp ${idx + 1}`;
   };
   const groupMeta = (group, names) => {
+    const minErf = Math.max(0, Number(group?.min_erf) || 0);
+    const minCount = Math.max(0, Number(group?.min_antal) || 0);
+    const countFloor = normalizeType(group?.type) === 'Fördel' ? 5 : 10;
     if (group?.isPrimary) {
       const primaryType = normalizeType(group?.type) || 'Förmåga';
-      return `${primaryType} · Minst Mästare · 1 krav`;
+      const parts = [primaryType];
+      if (minErf > 0) parts.push(`Minst ${minErf} ERF`);
+      if (minCount > 0) parts.push(`Minst ${minCount} val (${countFloor}+ ERF/st)`);
+      return parts.join(' · ');
     }
-    const minErf = Math.max(0, Number(group?.min_erf) || 0);
     if (minErf > 0) {
       const parts = [`Minst ${minErf} ERF`];
+      if (minCount > 0) parts.push(`Minst ${minCount} val (${countFloor}+ ERF/st)`);
       if (names.length) parts.push(`${names.length} alternativ`);
       return parts.join(' · ');
     }
     const parts = [];
-    const minCount = Math.max(1, Number(group?.min_antal) || 1);
     const type = normalizeType(group?.type);
     if (type) parts.push(type);
-    if (!isNoLevelGroup(group)) parts.push(`Minst ${normalizeLevel(group?.min_niva || 'Novis', 'Novis')}`);
-    parts.push(`Kräver ${minCount} val`);
+    if (minCount > 0) parts.push(`Kräver ${minCount} val`);
     if (names.length) parts.push(`${names.length} alternativ`);
-    return parts.join(' · ');
+    return parts.join(' · ') || 'Inget minimikrav';
   };
   const renderSimpleRow = (label, pill, opts = {}) => {
     const rowClass = opts.muted ? ' elite-profile-row-muted' : '';
@@ -1508,7 +1512,8 @@ function buildElityrkeInfoSections(p) {
     `.trim();
   };
   const renderGroupBody = (group, items) => {
-    const minCount = Math.max(1, Number(group?.min_antal) || 1);
+    const minCount = Math.max(0, Number(group?.min_antal) || 0);
+    const minErf = Math.max(0, Number(group?.min_erf) || 0);
     const minLevel = normalizeLevel(group?.min_niva || 'Novis', 'Novis');
     const noLevel = isNoLevelGroup(group);
     const list = toArray(items);
@@ -1521,12 +1526,12 @@ function buildElityrkeInfoSections(p) {
       return renderSimpleRow('Inga valbara entries hittades', 'Saknas i databas', { muted: true });
     }
     if (staticGroup) {
-      const staticPill = noLevel
-        ? 'Obligatorisk'
-        : (group?.isPrimary ? 'Måste vara Mästare' : `Minst ${minLevel}`);
+      const staticPill = minErf > 0
+        ? `Minst ${minErf} ERF`
+        : (noLevel ? 'Obligatorisk' : `Minst ${minLevel}`);
       return list.map(item => renderEntryRow(item, staticPill, { showType })).join('');
     }
-    const basePill = noLevel ? 'Valbar' : `Minst ${minLevel}`;
+    const basePill = minErf > 0 ? 'Valbar' : (noLevel ? 'Valbar' : `Minst ${minLevel}`);
     const previewLimit = 3;
     const preview = list.slice(0, previewLimit).map(item => renderEntryRow(item, basePill, { showType })).join('');
     if (list.length <= previewLimit) return preview;

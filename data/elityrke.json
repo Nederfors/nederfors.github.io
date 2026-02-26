@@ -8,7 +8,7 @@
       ],
       "ark_trad": [
         "Järnsvuren",
-         "Jägare"
+        "Jägare"
       ]
     },
     "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
@@ -41,7 +41,8 @@
         "taggar": [
           "Monsterjägare"
         ],
-        "krav_erf": 30
+        "krav_erf": 30,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": true,
@@ -49,7 +50,8 @@
         "taggar": [
           "Häxa"
         ],
-        "krav_erf": 20
+        "krav_erf": 20,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
@@ -59,18 +61,19 @@
           "Snabbskytte",
           "Prickskytt"
         ],
-        "min_niva": "Gesäll",
-        "min_antal": 1
+        "min_erf": 30,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
           ""
         ],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -80,7 +83,10 @@
         "min_antal": 2
       },
       "specifika_nackdelar": {
-        "namn": ["Paria", "Edsbunden"],
+        "namn": [
+          "Paria",
+          "Edsbunden"
+        ],
         "min_antal": 2
       }
     }
@@ -94,7 +100,7 @@
       ],
       "ark_trad": [
         "Templár",
-        "Teurgi"
+        "Teurg"
       ]
     },
     "krav_formagor": "",
@@ -117,18 +123,20 @@
     "id": "elit2",
     "krav": {
       "primarformaga": {
-        "namn": "Teurgi"
+        "namn": "Teurg"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -138,8 +146,8 @@
             "Tvåhandskraft",
             "Sköldkamp"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         },
         {
           "typ": "Mystisk kraft",
@@ -148,24 +156,25 @@
             "Häxhammare",
             "Helig aura"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
           "Rustmästare"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -186,7 +195,7 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Vredesgardist", 
+        "Vredesgardist",
         "Krigare"
       ]
     },
@@ -216,13 +225,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -232,8 +243,8 @@
             "Sköldkamp",
             "Tvillingattack"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
@@ -241,16 +252,17 @@
           "Rustmästare",
           "Återhämtning"
         ],
-        "min_niva": "Novis",
-        "min_antal": 2
+        "min_erf": 20,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -271,8 +283,8 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Artefaktmakare", 
-        "Ordensmagi", 
+        "Artefaktmakare",
+        "Ordensmagi",
         "Trollsång"
       ]
     },
@@ -299,43 +311,47 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
           "typ": "Mystisk kraft",
           "taggfalt": "",
           "taggar": [],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         },
         {
           "typ": "Ritual",
           "taggfalt": "",
           "taggar": [],
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
           "Lärd"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -356,7 +372,7 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Stavmagiker", 
+        "Stavmagiker",
         "Mystiker"
       ]
     },
@@ -387,21 +403,23 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
           "typ": "Mystisk kraft",
           "taggfalt": "",
           "taggar": [],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
@@ -409,16 +427,17 @@
           "Lärd",
           "Stångverkan"
         ],
-        "min_niva": "Novis",
-        "min_antal": 2
+        "min_erf": 20,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -470,34 +489,37 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
         "namn": [
           "Häxsyn"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [
           "Ärva skada"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
           "Andebesvärjelse"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -550,13 +572,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
@@ -564,18 +588,19 @@
           "Medicus",
           "Naturlig krigare"
         ],
-        "min_niva": "Novis",
-        "min_antal": 2
+        "min_erf": 20,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [
           "Hamnskifte"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -627,13 +652,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -643,27 +670,28 @@
             "Häxsyn",
             "Lärd"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [
           "Ohelig aura"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
           "Vanhelgande rit"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -712,21 +740,26 @@
       },
       "primartagg": {
         "taggfalt": "ark_trad",
-        "taggar": ["Mystiker", "Häxa"],
-        "krav_erf": 20
+        "taggar": [
+          "Mystiker",
+          "Häxa"
+        ],
+        "krav_erf": 20,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
         "namn": [
           ""
         ],
-        "min_niva": "",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_mystiska_krafter": {
@@ -736,8 +769,8 @@
           "Barkhud",
           "Tvångsförvandling"
         ],
-        "min_niva": "Gesäll",
-        "min_antal": 2
+        "min_erf": 60,
+        "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
@@ -745,12 +778,14 @@
           "Vädervända",
           "Vyssja till ro",
           "Häxcirkel"
-
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
-        "namn": [""],
+        "namn": [
+          ""
+        ],
         "min_antal": 0
       },
       "specifika_nackdelar": {
@@ -796,37 +831,48 @@
       },
       "primartagg": {
         "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
+        "taggar": [
+          "Ordensmagiker",
+          "Mystiker"
+        ],
+        "krav_erf": 40,
+        "min_antal": 0
       },
       "sekundartagg": {
-        "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
+        "aktiv": true,
+        "taggfalt": "test",
+        "taggar": [
+          "Listig"
+        ],
+        "krav_erf": 30,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
-          "typ": "Mystisk kraft",
-          "taggfalt": "namn",
+          "typ": "Fördel",
+          "taggfalt": "test",
           "taggar": [
-            "Illusorisk korrigering",
-            "Obemärkt"
+            "Diskret",
+            "Övertygande",
+            "Listig"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 0,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
-          "Lärd"
+          ""
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 0,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
+        "namn": [
+          "Illusorisk korrigering",
+          "Obemärkt"
+        ],
+        "min_erf": 30,
         "min_antal": 0
       },
       "specifika_ritualer": {
@@ -834,11 +880,17 @@
           "Falsk terräng",
           "Skenverk"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
-        "namn": [],
-        "min_antal": 0
+        "namn": [
+          "Bländverk",
+          "Bluffmakare",
+          "Falsk identitet",
+          "Imitatör"
+        ],
+        "min_antal": 2
       },
       "specifika_nackdelar": {
         "namn": [],
@@ -855,7 +907,7 @@
       ],
       "ark_trad": [
         "Inkvisitor",
-        "Teurgi"
+        "Teurg"
       ]
     },
     "krav_formagor": "",
@@ -882,53 +934,68 @@
         "namn": "Teurgi"
       },
       "primartagg": {
-        "taggfalt": "ark_trad",
-        "taggar": [],
-        "krav_erf": 0
+        "taggfalt": "test",
+        "taggar": [
+          "Diskret",
+          "Övertygande"
+        ],
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
-        "taggfalt": "",
-        "taggar": [],
-        "krav_erf": 0
+        "taggfalt": "ark_trad",
+        "taggar": [
+          "Mystiker",
+          "Teurg"
+        ],
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
           "typ": "Förmåga",
-          "taggfalt": "namn",
-          "taggar": [
-            "Häxsyn",
-            "Lönnstöt"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "taggfalt": "ark_trad",
+          "taggar": [],
+          "min_erf": 0,
+          "min_antal": 0
         },
         {
           "typ": "Mystisk kraft",
           "taggfalt": "namn",
-          "taggar": [
-            "Anatema",
-            "Obemärkt"
-          ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "taggar": [],
+          "min_erf": 0,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_mystiska_krafter": {
-        "namn": [],
-        "min_niva": "Novis",
+        "namn": [
+          "Anatema",
+          "Obemärkt",
+          "Själens brännglas",
+          "Sannform",
+          "Ljusets bojor"
+        ],
+        "min_erf": 60,
+        "min antal": 2,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
-          "Offerrök"
+          "Offerrök",
+          "Syndabekännelse",
+          "Kättarens spår",
+          "Renande eld",
+          "Exorcism",
+          "Dömande fjättrar"
         ],
-        "min_antal": 1
+        "min_erf": 20,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -978,13 +1045,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -995,20 +1064,20 @@
             "Tankekast",
             "Viljelyft"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
           "Lärd"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
@@ -1016,7 +1085,8 @@
           "Klärvoajans",
           "Telepatiskt förhör"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -1066,34 +1136,37 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
         "namn": [
           "Medicus"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [
           "Vandråp"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
           "Väcka vandöd"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -1142,13 +1215,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -1158,20 +1233,20 @@
             "Brandvägg",
             "Svavelkaskad"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
           "Lärd"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
@@ -1179,7 +1254,8 @@
           "Askans berättelse",
           "Flammande tjänare"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -1200,7 +1276,7 @@
       ],
       "ark_trad": [
         "Själasörjare",
-        "Teurgi"
+        "Teurg"
       ]
     },
     "krav_formagor": "",
@@ -1223,18 +1299,20 @@
     "id": "elit15",
     "krav": {
       "primarformaga": {
-        "namn": "Teurgi"
+        "namn": "Teurg"
       },
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -1244,8 +1322,8 @@
             "Ledare",
             "Medicus"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         },
         {
           "typ": "Mystisk kraft",
@@ -1255,25 +1333,26 @@
             "Helig aura",
             "Sannform"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
           "Exorcism"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -1293,7 +1372,7 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Drottningspion", 
+        "Drottningspion",
         "Tjuv"
       ]
     },
@@ -1323,13 +1402,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -1339,8 +1420,8 @@
             "Giftbrukare",
             "Stryparkonst"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
@@ -1348,16 +1429,17 @@
           "Svärdshelgon",
           "Tvillingattack"
         ],
-        "min_niva": "Novis",
-        "min_antal": 2
+        "min_erf": 20,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -1378,7 +1460,7 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Gentlemannatjuv", 
+        "Gentlemannatjuv",
         "Tjuv"
       ]
     },
@@ -1407,14 +1489,20 @@
       },
       "primartagg": {
         "taggfalt": "ark_trad",
-        "taggar": ["Tjuv"],
-        "krav_erf": 60
+        "taggar": [
+          "Tjuv"
+        ],
+        "krav_erf": 60,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": true,
         "taggfalt": "test",
-        "taggar": ["Övertygande"],
-        "krav_erf": 10
+        "taggar": [
+          "Övertygande"
+        ],
+        "krav_erf": 10,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -1423,7 +1511,7 @@
           "taggar": [
             ""
           ],
-          "min_niva": "",
+          "min_erf": 0,
           "min_antal": 0
         }
       ],
@@ -1431,20 +1519,26 @@
         "namn": [
           "Lönnstöt"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
-        "namn": ["Kontaktnät","Klanvän","Lagvrängare","Bluffmakare"],
+        "namn": [
+          "Kontaktnät",
+          "Klanvän",
+          "Lagvrängare",
+          "Bluffmakare"
+        ],
         "min_antal": 2
       },
       "specifika_nackdelar": {
@@ -1491,13 +1585,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -1507,27 +1603,28 @@
             "Blixtfrämjande",
             "Åskvärn"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
           "Lärd"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
           "Blixtfång"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -1577,34 +1674,37 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
         "namn": [
           "Ledare"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [
           "Bergasång"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [
           "Stensång"
         ],
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_fordelar": {
         "namn": [],
@@ -1625,7 +1725,7 @@
         "Elityrke"
       ],
       "ark_trad": [
-        "Ulvahedna", 
+        "Ulvahedna",
         "Krigare"
       ]
     },
@@ -1657,13 +1757,15 @@
       "primartagg": {
         "taggfalt": "ark_trad",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "",
         "taggar": [],
-        "krav_erf": 0
+        "krav_erf": 0,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -1674,8 +1776,8 @@
             "Tvillingattack",
             "Naturlig krigare"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         },
         {
           "typ": "Förmåga",
@@ -1684,24 +1786,25 @@
             "Järnnäve",
             "Dominera"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         }
       ],
       "specifika_formagor": {
         "namn": [
           "Kraftprov"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
         "namn": [],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {
@@ -1748,13 +1851,15 @@
         "taggar": [
           "PlaceholderPrimartagg"
         ],
-        "krav_erf": 60
+        "krav_erf": 60,
+        "min_antal": 0
       },
       "sekundartagg": {
         "aktiv": false,
         "taggfalt": "test",
         "taggar": [],
-        "krav_erf": 40
+        "krav_erf": 40,
+        "min_antal": 0
       },
       "valfri_inom_tagg": [
         {
@@ -1763,8 +1868,8 @@
           "taggar": [
             "PlaceholderValfriTagg"
           ],
-          "min_niva": "Novis",
-          "min_antal": 1
+          "min_erf": 10,
+          "min_antal": 0
         },
         {
           "typ": "Mystisk kraft",
@@ -1772,7 +1877,7 @@
           "taggar": [
             "PlaceholderValfriMystikTagg"
           ],
-          "min_niva": "Novis",
+          "min_erf": 0,
           "min_antal": 0
         },
         {
@@ -1781,6 +1886,7 @@
           "taggar": [
             "PlaceholderValfriRitualTagg"
           ],
+          "min_erf": 0,
           "min_antal": 0
         }
       ],
@@ -1789,15 +1895,15 @@
           "Kravförmåga A",
           "Kravförmåga B"
         ],
-        "min_niva": "Novis",
-        "min_antal": 1
+        "min_erf": 10,
+        "min_antal": 0
       },
       "specifika_mystiska_krafter": {
         "namn": [
           "Mystisk kraft A",
           "Mystisk kraft B"
         ],
-        "min_niva": "Novis",
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_ritualer": {
@@ -1805,6 +1911,7 @@
           "Ritual A",
           "Ritual B"
         ],
+        "min_erf": 0,
         "min_antal": 0
       },
       "specifika_fordelar": {

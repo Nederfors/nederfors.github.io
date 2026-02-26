@@ -160,6 +160,23 @@
     return 10;
   }
 
+  function countFloorForModel(model) {
+    const type = normalizeType(model?.group?.type || model?.type || '');
+    if (type === 'Nackdel') return 0;
+    if (type === 'Fördel') return 5;
+    return 10;
+  }
+
+  function countCreditForEntry(entry, model, level) {
+    if (!entry) return 0;
+    if (entryHasType(entry, 'Nackdel')) return 0;
+    if (entryHasType(entry, 'Fördel')) {
+      return normalizeType(model?.group?.type || model?.type || '') === 'Fördel' ? 1 : 0;
+    }
+    const cost = estimateRequirementErf(entry, level);
+    return cost >= countFloorForModel(model) ? 1 : 0;
+  }
+
   function matchesTagGroupEntry(group, entry) {
     if (!group?.tagRule || !entry) return false;
     if (typeof utils.matchesTagRule === 'function' && !utils.matchesTagRule(entry, group.tagRule)) {
@@ -185,21 +202,27 @@
       const row = normalized[field] || {};
       const names = toArray(row.namn).map(name => String(name || '').trim()).filter(Boolean);
       const min = Math.max(0, Number(row.min_antal) || 0);
-      if (!names.length || min <= 0) return;
+      const minErf = Math.max(0, Number(row.min_erf) || 0);
+      if (!names.length || (min <= 0 && minErf <= 0)) return;
       const allowRepeat = names.some(name => isRepeatableBenefitName(name));
+      const slotByErf = minErf > 0 ? Math.ceil(minErf / 5) : 0;
       out.push({
         source: field,
         type,
         names,
         min_antal: min,
+        min_erf: minErf,
         min_niva: 'Novis',
-        dynamic_select: allowRepeat || min > names.length,
-        slot_count: Math.max(min, allowRepeat ? min : Math.min(names.length, min)),
+        dynamic_select: allowRepeat || min > names.length || minErf > 0,
+        slot_count: Math.max(
+          min,
+          slotByErf,
+          allowRepeat ? Math.max(min, slotByErf) : Math.min(names.length, Math.max(min, slotByErf))
+        ),
         allow_repeat: allowRepeat
       });
     };
     pushBenefitGroup('specifika_fordelar', 'Fördel');
-    pushBenefitGroup('specifika_nackdelar', 'Nackdel');
 
     const seen = new Set();
     return out
@@ -319,8 +342,10 @@
 
   function groupSummary(group, names, minCount) {
     const minErf = groupMinErf(group);
+    const countFloor = countFloorForModel({ group });
     if (minErf > 0) {
       const parts = [`Minst ${minErf} ERF`];
+      if (minCount > 0) parts.push(`Minst ${minCount} val (${countFloor}+ ERF/st)`);
       if (names.length) parts.push(`${names.length} alternativ`);
       return parts.join(' · ');
     }
@@ -330,9 +355,9 @@
     if (!isNoLevelGroup(group)) {
       parts.push(`Minst ${groupMinLevel(group)}`);
     }
-    parts.push(`Kräver ${minCount} val`);
+    if (minCount > 0) parts.push(`Kräver ${minCount} val`);
     if (names.length) parts.push(`${names.length} alternativ`);
-    return parts.join(' · ');
+    return parts.join(' · ') || 'Inget minimikrav';
   }
 
   function groupHint(group, names, minCount) {
@@ -342,7 +367,8 @@
 
   function isStaticRequirementModel(model) {
     if (!model || model.dynamic) return false;
-    const required = Math.max(1, Number(model.minCount) || 1);
+    const required = Math.max(0, Number(model.minCount) || 0);
+    if (required <= 0) return false;
     return model.names.length > 0 && model.names.length <= required;
   }
 
@@ -532,16 +558,16 @@
     const models = groups.map((group, idx) => {
       const source = groupSource(group);
       const names = uniqueNames(candidateNamesForGroup(group));
-      const minCount = Math.max(1, Number(group?.min_antal) || 1);
+      const minCount = Math.max(0, Number(group?.min_antal) || 0);
       const minErf = groupMinErf(group);
       const isPrimaryTag = source === 'primartagg' || source === 'sekundartagg';
-      const isTagFlow = isPrimaryTag || source.startsWith('valfri_inom_tagg');
       const isTagBased = minErf > 0 && isPrimaryTag;
       const repeatableNames = new Set(names.filter(name => isRepeatableBenefitName(name)));
       const allowRepeat = Boolean(group?.allow_repeat) || repeatableNames.size > 0;
-      const baseSlotCount = Math.max(minCount, Number(group?.slot_count) || minCount);
+      const minSlots = minCount > 0 ? minCount : (minErf > 0 ? 1 : 0);
+      const baseSlotCount = Math.max(minSlots, Number(group?.slot_count) || 0, 1);
       const progressive = minErf > 0 && isPrimaryTag;
-      const adaptiveSlots = Boolean(isTagFlow && usesDynamicPicker(group));
+      const adaptiveSlots = Boolean(usesDynamicPicker(group));
       const rawSlotCount = adaptiveSlots
         ? Math.max(baseSlotCount + 1, minCount + 2, names.length + 1)
         : baseSlotCount;
@@ -584,7 +610,6 @@
         typeOptions,
         dynamicAllowSkip: slotCount > minCount,
         isTagBased,
-        isTagFlow,
         adaptiveSlots,
         hasBenefitQty: source === 'specifika_fordelar',
         noLevel: isNoLevelGroup(group),
@@ -598,9 +623,12 @@
         return model.names.map(name => {
           const rawName = String(name || '').trim();
           const label = escapeHtml(rawName);
+          const inferredLevel = model.minErf >= 50
+            ? 'Mästare'
+            : (model.minErf >= 25 ? 'Gesäll' : (model.minLevel || 'Novis'));
           const levelValue = model.noLevel
             ? 'pick'
-            : (model.group?.isPrimary ? 'Mästare' : (model.minLevel || 'Novis'));
+            : inferredLevel;
           const valueLabel = levelValue === 'pick'
             ? 'Läggs till'
             : `Läggs till (${levelValue})`;
@@ -725,6 +753,15 @@
       }).join('');
     };
 
+    const initialGroupCountLabel = (model) => {
+      if (model.minErf > 0 && model.minCount > 0) {
+        return `0/${model.minErf} ERF · 0/${model.minCount}`;
+      }
+      if (model.minErf > 0) return `0/${model.minErf} ERF`;
+      if (model.minCount > 0) return `0/${model.minCount}`;
+      return '0/0';
+    };
+
     box.innerHTML = models.map(model => {
       const title = groupHeading(model.group, model.idx);
       const summary = groupSummary(model.group, model.names, model.minCount);
@@ -739,7 +776,7 @@
               <p class="master-group-meta">${escapeHtml(summary)}</p>
             </div>
             <div class="master-group-state-wrap">
-              <span class="master-group-count" data-group-count="${model.idx}">0/${model.minErf > 0 ? model.minErf : model.minCount}${model.minErf > 0 ? ' ERF' : ''}</span>
+              <span class="master-group-count" data-group-count="${model.idx}">${initialGroupCountLabel(model)}</span>
               <span class="master-group-state" data-group-state="${model.idx}">Saknas</span>
             </div>
           </div>
@@ -1339,46 +1376,71 @@
           return matchesGroupEntry(model.group, token.entry, token.level);
         }));
 
-        if (model.minErf > 0) {
-          const rows = candidates
-            .map(token => ({ token, cost: estimateRequirementErf(token.entry, token.level) }))
-            .sort((a, b) => (b.cost || 0) - (a.cost || 0));
-          const picked = [];
-          let selected = 0;
-          for (let i = 0; i < rows.length && selected < model.minErf; i += 1) {
-            picked.push(rows[i]);
-            selected += rows[i].cost || 0;
-          }
-          picked.forEach(row => consumed.add(row.token.id));
-          states.set(model.idx, {
-            ok: selected >= model.minErf,
-            selected,
-            required: model.minErf,
-            metric: 'erf',
-            picked: picked.map(row => row.token)
+        const needErf = Math.max(0, Number(model.minErf) || 0);
+        const needCount = Math.max(0, Number(model.minCount) || 0);
+        const hasErfReq = needErf > 0;
+        const hasCountReq = needCount > 0;
+        const rows = candidates
+          .map(token => ({
+            token,
+            cost: estimateRequirementErf(token.entry, token.level),
+            countCredit: countCreditForEntry(token.entry, model, token.level)
+          }))
+          .sort((a, b) => {
+            const countDiff = (b.countCredit || 0) - (a.countCredit || 0);
+            if (countDiff !== 0) return countDiff;
+            return (b.cost || 0) - (a.cost || 0);
           });
-          return;
+        const picked = [];
+        let selectedErf = 0;
+        let selectedCount = 0;
+        const countedNames = new Set();
+        for (let i = 0; i < rows.length; i += 1) {
+          if ((!hasErfReq || selectedErf >= needErf) && (!hasCountReq || selectedCount >= needCount)) break;
+          const row = rows[i];
+          picked.push(row);
+          selectedErf += row.cost || 0;
+          if ((row.countCredit || 0) > 0) {
+            const countKey = normalizeKey(row?.token?.name || row?.token?.entry?.namn || '');
+            if (!countKey || !countedNames.has(countKey)) {
+              if (countKey) countedNames.add(countKey);
+              selectedCount += 1;
+            }
+          }
         }
-
-        const needed = Math.max(1, Number(model.minCount) || 1);
-        const picked = candidates.slice(0, needed);
-        picked.forEach(token => consumed.add(token.id));
+        picked.forEach(row => consumed.add(row.token.id));
+        const metric = hasErfReq && hasCountReq
+          ? 'both'
+          : (hasErfReq ? 'erf' : (hasCountReq ? 'count' : 'none'));
         states.set(model.idx, {
-          ok: picked.length >= needed,
-          selected: picked.length,
-          required: needed,
-          metric: 'count',
-          picked
+          ok: (!hasErfReq || selectedErf >= needErf) && (!hasCountReq || selectedCount >= needCount),
+          selected: metric === 'count' ? selectedCount : selectedErf,
+          required: metric === 'count' ? needCount : needErf,
+          metric,
+          selected_erf: selectedErf,
+          required_erf: needErf,
+          selected_count: selectedCount,
+          required_count: needCount,
+          picked: picked.map(row => row.token)
         });
       });
 
       models.forEach(model => {
         if (states.has(model.idx)) return;
+        const needErf = Math.max(0, Number(model.minErf) || 0);
+        const needCount = Math.max(0, Number(model.minCount) || 0);
+        const metric = needErf > 0 && needCount > 0
+          ? 'both'
+          : (needErf > 0 ? 'erf' : (needCount > 0 ? 'count' : 'none'));
         states.set(model.idx, {
-          ok: false,
+          ok: metric === 'none',
           selected: 0,
-          required: model.minErf > 0 ? model.minErf : model.minCount,
-          metric: model.minErf > 0 ? 'erf' : 'count',
+          required: metric === 'count' ? needCount : needErf,
+          metric,
+          selected_erf: 0,
+          required_erf: needErf,
+          selected_count: 0,
+          required_count: needCount,
           picked: []
         });
       });
@@ -1774,17 +1836,26 @@
           if (value && value !== 'skip') lastFilled = idx;
         });
         let target = Math.max(1, Math.min(model.slotCount, lastFilled + 2));
-        if (target > 0) {
-          const trailingSlot = String(Math.max(0, target - 1));
-          syncDynamicOptions(model.idx);
-          if (!progressiveSlotHasChoices(model, trailingSlot)) {
-            target = Math.max(1, Math.min(model.slotCount, lastFilled + 1));
-          }
-        }
+        let applied = visible;
         if (target !== visible) {
           setVisibleSlots(model, target);
-          syncDynamicOptions(model.idx);
+          applied = target;
           compacted = true;
+        }
+        if (applied > 0) {
+          const trailingSlot = String(Math.max(0, applied - 1));
+          syncDynamicOptions(model.idx);
+          if (!progressiveSlotHasChoices(model, trailingSlot)) {
+            const reduced = Math.max(1, Math.min(model.slotCount, lastFilled + 1));
+            if (reduced !== applied) {
+              setVisibleSlots(model, reduced);
+              syncDynamicOptions(model.idx);
+              compacted = true;
+              applied = reduced;
+            }
+          }
+        } else {
+          syncDynamicOptions(model.idx);
         }
       });
       if (compacted || compactBefore !== selectionSignature()) {
@@ -1795,7 +1866,11 @@
         ok: false,
         selected: 0,
         required: model.minErf > 0 ? model.minErf : model.minCount,
-        metric: model.minErf > 0 ? 'erf' : 'count'
+        metric: (model.minErf > 0 && model.minCount > 0) ? 'both' : (model.minErf > 0 ? 'erf' : (model.minCount > 0 ? 'count' : 'none')),
+        selected_erf: 0,
+        required_erf: model.minErf,
+        selected_count: 0,
+        required_count: model.minCount
       });
 
       stateList.forEach((state, idx) => {
@@ -1809,12 +1884,20 @@
           stateEl.classList.toggle('ok', state.ok);
         }
         if (countEl) {
-          if (state.metric === 'erf') {
+          if (state.metric === 'both') {
+            const shownErf = Math.max(0, Number(state.selected_erf) || 0);
+            const reqErf = Math.max(0, Number(state.required_erf) || 0);
+            const shownCount = Math.max(0, Number(state.selected_count) || 0);
+            const reqCount = Math.max(0, Number(state.required_count) || 0);
+            countEl.textContent = `${shownErf}/${reqErf} ERF · ${shownCount}/${reqCount}`;
+          } else if (state.metric === 'erf') {
             const shown = Math.max(0, Number(state.selected) || 0);
             countEl.textContent = `${shown}/${state.required} ERF`;
-          } else {
+          } else if (state.metric === 'count') {
             const shown = Math.max(0, Math.min(state.selected, state.required));
             countEl.textContent = `${shown}/${state.required}`;
+          } else {
+            countEl.textContent = '0/0';
           }
         }
       });
@@ -2004,7 +2087,7 @@
     if(!res.ok){
       const msg = 'Krav ej uppfyllda:\n' +
         (res.missing.length ? `Saknar: ${res.missing.join(', ')}\n` : '') +
-        (res.primary ? '' : 'Primärförmågan är inte på Mästare-nivå.\n') +
+        (res.primary ? '' : 'Primärförmågan uppfyller inte kravet.\n') +
         'Lägga till ändå?';
       if(!(await confirmPopup(msg))) return;
     }

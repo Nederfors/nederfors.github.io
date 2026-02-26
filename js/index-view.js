@@ -2618,7 +2618,7 @@
             if (!res.ok) {
               const msg = 'Krav ej uppfyllda:\n' +
                 (res.missing.length ? 'Saknar: ' + res.missing.join(', ') + '\n' : '') +
-                (res.master ? '' : 'Ingen av kraven på Mästare-nivå.\n') +
+                (res.master ? '' : 'Primärförmågan uppfyller inte kravet.\n') +
                 'Lägga till ändå?';
               if (!(await confirmPopup(msg))) return;
             }
