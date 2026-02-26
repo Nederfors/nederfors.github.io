@@ -46,6 +46,44 @@
     return fallback;
   }
 
+  function typeBaseErf(type, level = 'Novis') {
+    const normType = normalizeType(type);
+    if (normType === 'Nackdel') return 0;
+    if (normType === 'Fördel') return 5;
+    if (normType === 'Ritual') return 10;
+    if (
+      normType === 'Förmåga' ||
+      normType === 'Mystisk kraft' ||
+      normType === 'Monstruöst särdrag' ||
+      normType === 'Särdrag'
+    ) {
+      const lvl = normalizeLevel(level, 'Novis');
+      if (lvl === 'Mästare') return 60;
+      if (lvl === 'Gesäll') return 30;
+      return 10;
+    }
+    return 10;
+  }
+
+  function normalizeTypeList(input) {
+    const out = [];
+    const addType = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(addType);
+        return;
+      }
+      const raw = String(value || '').trim();
+      if (!raw) return;
+      raw
+        .split(/\s*(?:,|;|\/|\boch\b|\beller\b)\s*/i)
+        .map(part => normalizeType(part))
+        .filter(Boolean)
+        .forEach(part => out.push(part));
+    };
+    addType(input);
+    return uniqStrings(out);
+  }
+
   function levelMeets(actual, required = 'Novis') {
     const cur = LEVEL_VALUE[normalizeLevel(actual, '')] || 0;
     const min = LEVEL_VALUE[normalizeLevel(required, 'Novis')] || 0;
@@ -118,33 +156,46 @@
       aktiv: includeActive ? activeDefault : false,
       taggfalt: String(raw.taggfalt || '').trim(),
       taggar: uniqStrings(raw.taggar),
-      krav_erf: toInt(raw.krav_erf, 0)
+      krav_erf: toInt(raw.krav_erf, 0),
+      min_antal: toInt(raw.min_antal, 0)
     };
   }
 
   function normalizeSpecific(raw = {}, type) {
-    const hasLevel = normalizeType(type) !== 'Ritual';
-    const base = {
-      namn: uniqStrings(raw.namn),
-      min_antal: toInt(raw.min_antal, 0)
-    };
-    if (hasLevel) {
-      base.min_niva = normalizeLevel(raw.min_niva || 'Novis', 'Novis');
+    const normType = normalizeType(type);
+    const minCount = toInt(raw.min_antal, 0);
+    const hasExplicitMinErf = raw.min_erf !== undefined && raw.min_erf !== null && String(raw.min_erf).trim() !== '';
+    let minErf = toInt(raw.min_erf, 0);
+    if (!hasExplicitMinErf && raw.min_niva !== undefined) {
+      const legacyLevel = normalizeLevel(raw.min_niva || 'Novis', 'Novis');
+      minErf = minCount * typeBaseErf(normType, legacyLevel);
     }
-    return base;
+    return {
+      namn: uniqStrings(raw.namn),
+      min_antal: minCount,
+      min_erf: minErf
+    };
   }
 
   function normalizeValfriRule(raw = {}) {
-    const type = normalizeType(raw.typ);
+    const types = normalizeTypeList(raw.typ);
+    const type = types.length === 1 ? types[0] : '';
+    const minCount = toInt(raw.min_antal, 0);
+    const hasExplicitMinErf = raw.min_erf !== undefined && raw.min_erf !== null && String(raw.min_erf).trim() !== '';
+    let minErf = toInt(raw.min_erf, 0);
+    if (!hasExplicitMinErf && raw.min_niva !== undefined) {
+      const legacyLevel = normalizeLevel(raw.min_niva || 'Novis', 'Novis');
+      const legacyType = types[0] || normalizeType(raw.typ);
+      minErf = minCount * typeBaseErf(legacyType || 'Förmåga', legacyLevel);
+    }
     const rule = {
       typ: type,
+      typer: types,
       taggfalt: String(raw.taggfalt || '').trim(),
       taggar: uniqStrings(raw.taggar),
-      min_antal: toInt(raw.min_antal, 0)
+      min_antal: minCount,
+      min_erf: minErf
     };
-    if (type !== 'Ritual') {
-      rule.min_niva = normalizeLevel(raw.min_niva || 'Novis', 'Novis');
-    }
     return rule;
   }
 
@@ -281,12 +332,12 @@
   }
 
   function resolveGroupNamesFromRule(rule, options = {}) {
-    const type = normalizeType(rule.typ);
-    if (!type) return [];
+    const types = normalizeTypeList(rule.typer?.length ? rule.typer : rule.typ);
+    if (!types.length) return [];
     const db = getDBList(options);
     const names = db
       .filter(entry => !isEliteSkillEntry(entry))
-      .filter(entry => entryHasType(entry, type))
+      .filter(entry => types.some(type => entryHasType(entry, type)))
       .filter(entry => matchesTagRule(entry, rule))
       .map(entry => String(entry?.namn || '').trim())
       .filter(Boolean);
@@ -326,31 +377,29 @@
     return uniqStrings(names).sort((a, b) => a.localeCompare(b, 'sv'));
   }
 
-  function buildNameGroups(source, type, names, minLevel, minCount, extra = {}) {
-    const out = [];
+  function buildNameGroups(source, type, config = {}, options = {}, extra = {}) {
     const normType = normalizeType(type);
-    const list = uniqStrings(names);
-    const min = toInt(minCount, 0);
-    if (!normType || min <= 0 || !list.length) return out;
+    const list = uniqStrings(config?.namn);
+    const minCount = toInt(config?.min_antal, 0);
+    const minErf = toInt(config?.min_erf, 0);
+    if (!normType || !list.length || (minCount <= 0 && minErf <= 0)) return [];
     const ritual = normType === 'Ritual';
-    const level = ritual ? 'Novis' : normalizeLevel(minLevel || 'Novis', 'Novis');
-    const base = {
+    const allowRepeat = list.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
+    const slotCost = Math.max(1, typeBaseErf(normType, 'Novis'));
+    const slotByErf = minErf > 0 ? Math.ceil(minErf / slotCost) : 0;
+    return [{
       source,
       type: normType,
-      min_niva: level,
+      names: list,
+      min_niva: 'Novis',
+      min_antal: minCount,
+      min_erf: minErf,
+      slot_count: Math.max(1, minCount, slotByErf),
       allRitual: ritual,
+      dynamic_select: minCount < list.length || minErf > 0,
+      allow_repeat: allowRepeat,
       ...extra
-    };
-    if (min === 1) {
-      out.push({ ...base, names: list, min_antal: 1 });
-      return out;
-    }
-    if (min >= list.length) {
-      list.forEach(name => out.push({ ...base, names: [name], min_antal: 1 }));
-      return out;
-    }
-    out.push({ ...base, names: list, min_antal: min, multi: true });
-    return out;
+    }];
   }
 
   function getKravGroups(rawKrav, options = {}) {
@@ -361,8 +410,9 @@
     const pushTagXpGroup = (source, rawRule = {}) => {
       const tagRule = normalizeTagRule(rawRule, source === 'sekundartagg');
       const minErf = Math.max(0, Number(tagRule.krav_erf) || 0);
+      const minCount = Math.max(0, Number(tagRule.min_antal) || 0);
       if (source === 'sekundartagg' && !tagRule.aktiv) return;
-      if (!tagRule.taggfalt || !tagRule.taggar.length || minErf <= 0) return;
+      if (!tagRule.taggfalt || !tagRule.taggar.length || (minErf <= 0 && minCount <= 0)) return;
       const names = resolveGroupNamesFromTagRule(tagRule, options, xpSources);
       const allowRepeat = names.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
       const minPositiveCost = names
@@ -370,14 +420,15 @@
         .filter(cost => cost > 0)
         .reduce((min, cost) => Math.min(min, cost), Infinity);
       const slotCost = Number.isFinite(minPositiveCost) ? minPositiveCost : 5;
+      const slotByErf = minErf > 0 ? Math.ceil(minErf / Math.max(1, slotCost)) : 0;
       groups.push({
         source,
         type: '',
         names,
-        min_antal: 1,
+        min_antal: minCount,
         min_niva: 'Novis',
         min_erf: minErf,
-        slot_count: Math.max(1, Math.ceil(minErf / Math.max(1, slotCost))),
+        slot_count: Math.max(1, minCount, slotByErf),
         dynamic_select: true,
         allow_repeat: allowRepeat,
         tagRule: {
@@ -391,12 +442,14 @@
     if (primaryName) {
       const entry = findEntryByName(primaryName, options);
       const type = normalizeType(entryTypes(entry)[0] || 'Förmåga');
+      const minErf = typeBaseErf(type, type === 'Ritual' ? 'Novis' : 'Mästare');
       groups.push({
         source: 'primarformaga',
         type,
         names: [primaryName],
         min_antal: 1,
-        min_niva: type === 'Ritual' ? 'Novis' : 'Mästare',
+        min_niva: 'Novis',
+        min_erf: minErf,
         allRitual: type === 'Ritual',
         isPrimary: true
       });
@@ -407,30 +460,36 @@
 
     toArray(krav.valfri_inom_tagg).forEach((rawRule, idx) => {
       const rule = normalizeValfriRule(rawRule);
-      if (!rule.typ || rule.min_antal <= 0) return;
+      const types = normalizeTypeList(rule.typer?.length ? rule.typer : rule.typ);
+      const hasAnyRequirement = (rule.min_antal > 0) || (rule.min_erf > 0);
+      if (!types.length || !hasAnyRequirement) return;
       const source = `valfri_inom_tagg[${idx}]`;
       const isAnyByType = !rule.taggfalt && !rule.taggar.length;
 
-      if (isAnyByType && rule.typ === 'Mystisk kraft') {
+      if (isAnyByType && types.length === 1 && types[0] === 'Mystisk kraft') {
         groups.push({
           source,
           type: 'Mystisk kraft',
+          types,
           anyMystic: true,
           min_antal: rule.min_antal,
-          min_niva: normalizeLevel(rule.min_niva || 'Novis', 'Novis'),
+          min_niva: 'Novis',
+          min_erf: rule.min_erf,
           dynamic_select: true
         });
         return;
       }
 
-      if (isAnyByType && rule.typ === 'Ritual') {
+      if (isAnyByType && types.length === 1 && types[0] === 'Ritual') {
         groups.push({
           source,
           type: 'Ritual',
+          types,
           anyRitual: true,
           allRitual: true,
           min_antal: rule.min_antal,
           min_niva: 'Novis',
+          min_erf: rule.min_erf,
           dynamic_select: true
         });
         return;
@@ -440,44 +499,47 @@
         ? rule.taggar.slice()
         : resolveGroupNamesFromRule(rule, options);
       const allowRepeat = names.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
+      const oneType = types.length === 1 ? types[0] : '';
+      const tagRule = {
+        ...rule,
+        typer: types,
+        xp_kallor: types
+      };
 
       groups.push({
         source,
-        type: normalizeType(rule.typ),
+        type: oneType,
+        types,
         names: uniqStrings(names),
-        min_antal: Math.max(1, Number(rule.min_antal) || 1),
-        min_niva: normalizeType(rule.typ) === 'Ritual'
-          ? 'Novis'
-          : normalizeLevel(rule.min_niva || 'Novis', 'Novis'),
-        allRitual: normalizeType(rule.typ) === 'Ritual',
+        min_antal: Math.max(0, Number(rule.min_antal) || 0),
+        min_niva: 'Novis',
+        min_erf: Math.max(0, Number(rule.min_erf) || 0),
+        allRitual: oneType === 'Ritual',
         dynamic_select: true,
         allow_repeat: allowRepeat,
-        tagRule: rule
+        tagRule
       });
     });
 
     groups.push(...buildNameGroups(
       'specifika_formagor',
       'Förmåga',
-      krav.specifika_formagor.namn,
-      krav.specifika_formagor.min_niva,
-      krav.specifika_formagor.min_antal
+      krav.specifika_formagor,
+      options
     ));
 
     groups.push(...buildNameGroups(
       'specifika_mystiska_krafter',
       'Mystisk kraft',
-      krav.specifika_mystiska_krafter.namn,
-      krav.specifika_mystiska_krafter.min_niva,
-      krav.specifika_mystiska_krafter.min_antal
+      krav.specifika_mystiska_krafter,
+      options
     ));
 
     groups.push(...buildNameGroups(
       'specifika_ritualer',
       'Ritual',
-      krav.specifika_ritualer.namn,
-      'Novis',
-      krav.specifika_ritualer.min_antal
+      krav.specifika_ritualer,
+      options
     ));
 
     return groups;
@@ -493,12 +555,10 @@
 
   function matchesValfriRule(entry, rawRule = {}) {
     const rule = normalizeValfriRule(rawRule);
-    if (!rule.typ) return false;
-    if (!entryHasType(entry, rule.typ)) return false;
+    const types = normalizeTypeList(rule.typer?.length ? rule.typer : rule.typ);
+    if (!types.length) return false;
+    if (!types.some(type => entryHasType(entry, type))) return false;
     if (!matchesTagRule(entry, rule)) return false;
-    if (rule.typ !== 'Ritual') {
-      return levelMeets(entry?.nivå, rule.min_niva || 'Novis');
-    }
     return true;
   }
 
@@ -509,8 +569,10 @@
     parseElityrkeRequirements: getKravGroups,
     formatRequirementGroup,
     normalizeType,
+    normalizeTypeList,
     normalizeLevel,
     levelMeets,
+    typeBaseErf,
     normalizeKrav,
     getKravGroups,
     listRequirementNames,

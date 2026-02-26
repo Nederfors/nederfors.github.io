@@ -556,7 +556,14 @@
       used.add(normalizeName(name));
       const type = this.getRequirementEntryType(entry);
       const minimum = type === 'ritual' ? 'Novis' : (group.min_niva || 'Novis');
-      const targetLevel = (minErf > 10 && type !== 'ritual') ? 'Mästare' : minimum;
+      const minCount = Math.max(1, Number(group?.min_antal) || 1);
+      const perPickErf = minErf > 0 ? (minErf / minCount) : 0;
+      let targetLevel = minimum;
+      if (type !== 'ritual') {
+        if (perPickErf >= 50) targetLevel = 'Mästare';
+        else if (perPickErf >= 25) targetLevel = 'Gesäll';
+        else targetLevel = 'Novis';
+      }
       return {
         name,
         type,

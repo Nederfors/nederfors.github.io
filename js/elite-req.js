@@ -1,6 +1,5 @@
 (function(window){
   const utils = window.eliteUtils || {};
-  const LEVEL_VALUE = utils.LEVEL_VALUE || { '': 0, Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
 
   const toArray = (value) => (Array.isArray(value) ? value : []);
   const normalizeType = (type) => (typeof utils.normalizeType === 'function'
@@ -9,18 +8,9 @@
   const normalizeLevel = (level, fallback = 'Novis') => (typeof utils.normalizeLevel === 'function'
     ? utils.normalizeLevel(level, fallback)
     : String(level || '').trim() || fallback);
-  const levelMeets = (actual, required = 'Novis') => (typeof utils.levelMeets === 'function'
-    ? utils.levelMeets(actual, required)
-    : (LEVEL_VALUE[normalizeLevel(actual, '')] || 0) >= (LEVEL_VALUE[normalizeLevel(required, 'Novis')] || 0));
   const entryHasType = (entry, type) => (typeof utils.entryHasType === 'function'
     ? utils.entryHasType(entry, type)
     : toArray(entry?.taggar?.typ).includes(type));
-  const entryUsesLevel = (entry) => (
-    entryHasType(entry, 'Förmåga') ||
-    entryHasType(entry, 'Mystisk kraft') ||
-    entryHasType(entry, 'Monstruöst särdrag') ||
-    entryHasType(entry, 'Särdrag')
-  );
 
   function getLookupOptions() {
     return {
@@ -108,12 +98,29 @@
     }
   }
 
+  function countFloorForGroup(group) {
+    const type = normalizeType(group?.type);
+    if (type === 'Nackdel') return 0;
+    if (type === 'Fördel') return 5;
+    return 10;
+  }
+
+  function countCreditForItem(item, group) {
+    const ded = deductionForItem(item).ded || 0;
+    if (ded <= 0) return 0;
+    if (entryHasType(item, 'Nackdel')) return 0;
+    if (entryHasType(item, 'Fördel')) {
+      const groupType = normalizeType(group?.type);
+      return groupType === 'Fördel' ? 1 : 0;
+    }
+    return ded >= countFloorForGroup(group) ? 1 : 0;
+  }
+
   function groupSlotCost(group) {
     const type = normalizeType(group?.type);
     if (type === 'Nackdel') return 0;
     if (type === 'Fördel') return 5;
     if (type === 'Ritual' || group?.anyRitual || group?.allRitual) return 10;
-    const min = normalizeLevel(group?.min_niva || 'Novis', 'Novis');
     if (
       group?.isPrimary ||
       group?.anyMystic ||
@@ -122,14 +129,12 @@
       type === 'Monstruöst särdrag' ||
       type === 'Särdrag'
     ) {
-      if (min === 'Mästare') return 60;
-      if (min === 'Gesäll') return 30;
       return 10;
     }
     const candidateMin = toArray(group?.names)
       .map(name => findEntry(name))
       .filter(Boolean)
-      .map(entry => costForEntry(entry, min))
+      .map(entry => costForEntry(entry, 'Novis'))
       .reduce((acc, value) => Math.min(acc, value), Infinity);
     if (Number.isFinite(candidateMin)) return candidateMin;
     return 10;
@@ -137,42 +142,45 @@
 
   function groupBaseCost(group) {
     const minErf = Math.max(0, Number(group?.min_erf) || 0);
+    const minCount = Math.max(0, Number(group?.min_antal) || 0);
+    const countCost = minCount * countFloorForGroup(group);
+    if (minErf > 0 && minCount > 0) return Math.max(minErf, countCost);
     if (minErf > 0) return minErf;
-    const minCount = Math.max(1, Number(group?.min_antal) || 1);
-    return minCount * groupSlotCost(group);
+    if (minCount > 0) return countCost;
+    return 0;
   }
 
   function groupLabel(group) {
-    const min = normalizeLevel(group?.min_niva || 'Novis', 'Novis');
     const source = String(group?.source || '');
     const minErf = Math.max(0, Number(group?.min_erf) || 0);
-    if (minErf > 0) {
-      if (source === 'primartagg') return `Primärt taggkrav (${minErf} ERF)`;
-      if (source === 'sekundartagg') return `Sekundärt taggkrav (${minErf} ERF)`;
-      return `Taggkrav (${minErf} ERF)`;
-    }
+    const minCount = Math.max(0, Number(group?.min_antal) || 0);
+    let label = 'Krav';
     if (group?.isPrimary) {
       const name = String(group?.names?.[0] || 'Primärförmåga');
-      return `${name} (${min})`;
-    }
-    if (group?.anyMystic) return `Valfri mystisk kraft (${min})`;
-    if (group?.anyRitual) return 'Valfri ritual';
-    if (source.startsWith('valfri_inom_tagg')) {
+      label = name;
+    } else if (group?.anyMystic) {
+      label = 'Valfri mystisk kraft';
+    } else if (group?.anyRitual) {
+      label = 'Valfri ritual';
+    } else if (source === 'primartagg') {
+      label = 'Primärt taggkrav';
+    } else if (source === 'sekundartagg') {
+      label = 'Sekundärt taggkrav';
+    } else if (source.startsWith('valfri_inom_tagg')) {
       const type = normalizeType(group?.type);
-      const label = type ? `Valfri ${type.toLowerCase()}` : 'Valfritt val';
-      if ((Number(group?.min_antal) || 1) > 1) return `${group.min_antal} val från ${label}`;
-      return label;
+      label = type ? `Valfri ${type.toLowerCase()}` : 'Valfritt val';
+    } else {
+      const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
+      if (!names.length) return 'Okänt krav';
+      if (names.length > 5) label = `${names.slice(0, 5).join(', ')} och fler`;
+      else label = names.length === 1 ? names[0] : names.join(' eller ');
     }
-    const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
-    if (!names.length) return 'Okänt krav';
-    if (group?.min_antal > 1) {
-      return `${group.min_antal} av: ${names.join(', ')}`;
-    }
-    if (names.length > 5) {
-      return `${names.slice(0, 5).join(', ')} och fler${normalizeType(group?.type) === 'Ritual' ? '' : ` (${min})`}`;
-    }
-    const suffix = normalizeType(group?.type) === 'Ritual' ? '' : ` (${min})`;
-    return names.length === 1 ? `${names[0]}${suffix}` : `${names.join(' eller ')}${suffix}`;
+
+    const reqParts = [];
+    if (minErf > 0) reqParts.push(`${minErf} ERF`);
+    if (minCount > 0) reqParts.push(`minst ${minCount} val (${countFloorForGroup(group)}+ ERF/st)`);
+    if (!reqParts.length) return label;
+    return `${label} (${reqParts.join(' · ')})`;
   }
 
   function matchesNamedGroupEntry(item, group) {
@@ -181,9 +189,6 @@
     if (!names.has(normalizeKey(item?.namn))) return false;
     const type = normalizeType(group?.type);
     if (type && !entryHasType(item, type)) return false;
-    if (type !== 'Ritual' && type !== 'Fördel' && type !== 'Nackdel' && entryUsesLevel(item)) {
-      return levelMeets(item?.nivå, group?.min_niva || 'Novis');
-    }
     return true;
   }
 
@@ -192,7 +197,7 @@
     const type = normalizeType(group?.type);
 
     if (group?.anyMystic) {
-      return uniqueByName(items.filter(item => entryHasType(item, 'Mystisk kraft') && levelMeets(item?.nivå, group?.min_niva || 'Novis')));
+      return uniqueByName(items.filter(item => entryHasType(item, 'Mystisk kraft')));
     }
     if (group?.anyRitual) {
       return uniqueByName(items.filter(item => entryHasType(item, 'Ritual')));
@@ -203,7 +208,7 @@
         .map(normalizeType)
         .filter(Boolean);
       const matcher = (item) => {
-        if (source.startsWith('valfri_inom_tagg') && type && typeof utils.matchesValfriRule === 'function') {
+        if (source.startsWith('valfri_inom_tagg') && typeof utils.matchesValfriRule === 'function') {
           return utils.matchesValfriRule(item, group.tagRule);
         }
         if (typeof utils.matchesTagRule === 'function' && !utils.matchesTagRule(item, group.tagRule)) {
@@ -243,7 +248,6 @@
     toArray(krav?.specifika_mystiska_krafter?.namn).forEach(addName);
     toArray(krav?.specifika_ritualer?.namn).forEach(addName);
     toArray(krav?.specifika_fordelar?.namn).forEach(addName);
-    toArray(krav?.specifika_nackdelar?.namn).forEach(addName);
     toArray(groups).forEach(group => {
       if (!isReservedGroup(group)) return;
       toArray(group?.names).forEach(addName);
@@ -362,52 +366,75 @@
       }));
 
       const minErf = Math.max(0, Number(group?.min_erf) || 0);
-      if (minErf > 0) {
-        const ranked = candidates
-          .map(token => ({ token, ded: deductionForItem(token.item).ded || 0 }))
-          .sort((a, b) => (b.ded || 0) - (a.ded || 0));
-        const picked = [];
-        let total = 0;
-        for (let i = 0; i < ranked.length && total < minErf; i += 1) {
-          picked.push(ranked[i]);
-          total += ranked[i].ded || 0;
-        }
-        picked.forEach(row => consumed.add(row.token.id));
-        states.set(idx, {
-          ok: total >= minErf,
-          selected: total,
-          required: minErf,
-          metric: 'erf',
-          picked: picked.map(row => row.token),
-          deduction: Math.min(total, minErf)
-        });
-        return;
-      }
+      const minCount = Math.max(0, Number(group?.min_antal) || 0);
+      const hasErfReq = minErf > 0;
+      const hasCountReq = minCount > 0;
 
-      const minCount = Math.max(1, Number(group?.min_antal) || 1);
       const ranked = candidates
-        .map(token => ({ token, ded: deductionForItem(token.item).ded || 0 }))
-        .sort((a, b) => (b.ded || 0) - (a.ded || 0));
-      const picked = ranked.slice(0, minCount);
+        .map(token => ({
+          token,
+          ded: deductionForItem(token.item).ded || 0,
+          countCredit: countCreditForItem(token.item, group)
+        }))
+        .sort((a, b) => {
+          const countDiff = (b.countCredit || 0) - (a.countCredit || 0);
+          if (countDiff !== 0) return countDiff;
+          return (b.ded || 0) - (a.ded || 0);
+        });
+
+      const picked = [];
+      let selectedErf = 0;
+      let selectedCount = 0;
+      const countedNames = new Set();
+      for (let i = 0; i < ranked.length; i += 1) {
+        if ((!hasErfReq || selectedErf >= minErf) && (!hasCountReq || selectedCount >= minCount)) break;
+        const row = ranked[i];
+        picked.push(row);
+        selectedErf += row.ded || 0;
+        if ((row.countCredit || 0) > 0) {
+          const countKey = String(row?.token?.key || normalizeKey(row?.token?.item?.namn || '')).trim();
+          if (!countKey || !countedNames.has(countKey)) {
+            if (countKey) countedNames.add(countKey);
+            selectedCount += 1;
+          }
+        }
+      }
       picked.forEach(row => consumed.add(row.token.id));
-      const ded = picked.reduce((sum, row) => sum + (row.ded || 0), 0);
+
+      const metric = hasErfReq && hasCountReq
+        ? 'both'
+        : (hasErfReq ? 'erf' : (hasCountReq ? 'count' : 'none'));
+      const ok = (!hasErfReq || selectedErf >= minErf) && (!hasCountReq || selectedCount >= minCount);
       states.set(idx, {
-        ok: picked.length >= minCount,
-        selected: picked.length,
-        required: minCount,
-        metric: 'count',
+        ok,
+        selected: metric === 'count' ? selectedCount : selectedErf,
+        required: metric === 'count' ? minCount : minErf,
+        metric,
+        selected_erf: selectedErf,
+        required_erf: minErf,
+        selected_count: selectedCount,
+        required_count: minCount,
         picked: picked.map(row => row.token),
-        deduction: Math.min(ded, groupBaseCost(group))
+        deduction: Math.min(selectedErf, groupBaseCost(group))
       });
     });
 
     toArray(groups).forEach((group, idx) => {
       if (states.has(idx)) return;
+      const minErf = Math.max(0, Number(group?.min_erf) || 0);
+      const minCount = Math.max(0, Number(group?.min_antal) || 0);
+      const metric = minErf > 0 && minCount > 0
+        ? 'both'
+        : (minErf > 0 ? 'erf' : (minCount > 0 ? 'count' : 'none'));
       states.set(idx, {
-        ok: false,
+        ok: metric === 'none',
         selected: 0,
-        required: Math.max(0, Number(group?.min_erf) || 0) || Math.max(1, Number(group?.min_antal) || 1),
-        metric: Math.max(0, Number(group?.min_erf) || 0) > 0 ? 'erf' : 'count',
+        required: metric === 'count' ? minCount : minErf,
+        metric,
+        selected_erf: 0,
+        required_erf: minErf,
+        selected_count: 0,
+        required_count: minCount,
         picked: [],
         deduction: 0
       });
@@ -422,19 +449,56 @@
   }
 
   function checkNamedSet(list, config, type) {
+    const normType = normalizeType(type);
+    if (normType === 'Nackdel') {
+      return { ok: true, missing: '' };
+    }
     const names = toArray(config?.namn).map(name => String(name || '').trim()).filter(Boolean);
     const minCount = Math.max(0, Number(config?.min_antal) || 0);
-    if (!names.length || minCount <= 0) return { ok: true, missing: '' };
+    const minErf = Math.max(0, Number(config?.min_erf) || 0);
+    if (!names.length || (minCount <= 0 && minErf <= 0)) return { ok: true, missing: '' };
     const target = new Set(names.map(normalizeKey));
-    const matches = uniqueByName(toArray(list).filter(item => {
+    const rows = uniqueByName(toArray(list).filter(item => {
       if (!target.has(normalizeKey(item?.namn))) return false;
       if (type && !entryHasType(item, type)) return false;
-      if (type !== 'Ritual' && type !== 'Fördel' && type !== 'Nackdel') {
-        return levelMeets(item?.nivå, config?.min_niva || 'Novis');
-      }
       return true;
-    }));
-    if (matches.length >= minCount) return { ok: true, missing: '' };
+    }))
+      .map(item => ({
+        item,
+        ded: deductionForItem(item).ded || 0,
+        countCredit: countCreditForItem(item, { type: normType })
+      }))
+      .sort((a, b) => {
+        const countDiff = (b.countCredit || 0) - (a.countCredit || 0);
+        if (countDiff !== 0) return countDiff;
+        return (b.ded || 0) - (a.ded || 0);
+      });
+
+    let selectedErf = 0;
+    let selectedCount = 0;
+    const countedNames = new Set();
+    for (let i = 0; i < rows.length; i += 1) {
+      if ((minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount)) break;
+      const row = rows[i];
+      selectedErf += row.ded || 0;
+      if ((row.countCredit || 0) > 0) {
+        const countKey = normalizeKey(row?.item?.namn || '');
+        if (!countKey || !countedNames.has(countKey)) {
+          if (countKey) countedNames.add(countKey);
+          selectedCount += 1;
+        }
+      }
+    }
+
+    const ok = (minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount);
+    if (ok) return { ok: true, missing: '' };
+    if (minErf > 0 && minCount > 0) {
+      return {
+        ok: false,
+        missing: `Specifika ${normType.toLowerCase()} (${selectedErf}/${minErf} ERF, ${selectedCount}/${minCount} val)`
+      };
+    }
+    if (minErf > 0) return { ok: false, missing: `Specifika ${normType.toLowerCase()} (${selectedErf}/${minErf} ERF)` };
     if (minCount === 1) return { ok: false, missing: names.join(' eller ') };
     return { ok: false, missing: `${minCount} av: ${names.join(', ')}` };
   }
@@ -454,14 +518,26 @@
     }
 
     groups.forEach((group, idx) => {
-      const state = groupStates.get(idx) || { ok: false, selected: 0, required: 0, metric: 'count' };
+      const state = groupStates.get(idx) || {
+        ok: false,
+        selected_erf: 0,
+        required_erf: 0,
+        selected_count: 0,
+        required_count: 0
+      };
       const minErf = Math.max(0, Number(group?.min_erf) || 0);
+      const minCount = Math.max(0, Number(group?.min_antal) || 0);
       const ok = Boolean(state.ok);
       if (group?.isPrimary) primaryOk = ok;
       if (!ok) {
-        if (minErf > 0) {
-          const total = Math.max(0, Number(state.selected) || 0);
-          missing.push(`${groupLabel(group)} (${total}/${minErf} ERF)`);
+        const selectedErf = Math.max(0, Number(state.selected_erf) || 0);
+        const selectedCount = Math.max(0, Number(state.selected_count) || 0);
+        if (minErf > 0 && minCount > 0) {
+          missing.push(`${groupLabel(group)} (${selectedErf}/${minErf} ERF, ${selectedCount}/${minCount} val)`);
+        } else if (minErf > 0) {
+          missing.push(`${groupLabel(group)} (${selectedErf}/${minErf} ERF)`);
+        } else if (minCount > 0) {
+          missing.push(`${groupLabel(group)} (${selectedCount}/${minCount} val)`);
         } else {
           missing.push(groupLabel(group));
         }
@@ -494,93 +570,73 @@
     return { kind: 'ability', ded: 10 };
   }
 
-  function bestGroupDeduction(group, list) {
-    const matches = collectGroupMatches(group, list).map(deductionForItem);
-    if (!matches.length) return { kind: 'none', ded: 0 };
-    const minErf = Math.max(0, Number(group?.min_erf) || 0);
-    if (minErf > 0) {
-      const sorted = matches.sort((a, b) => (b.ded || 0) - (a.ded || 0));
-      const total = sorted.reduce((sum, row) => sum + (row.ded || 0), 0);
-      const limited = Math.min(total, minErf);
-      const kind = sorted.some(cur => cur.kind === 'ability')
-        ? 'ability'
-        : (sorted.some(cur => cur.kind === 'ritual') ? 'ritual' : 'other');
-      return { kind, ded: limited };
-    }
-    const minCount = Math.max(1, Number(group?.min_antal) || 1);
-    const sorted = matches.sort((a, b) => (b.ded || 0) - (a.ded || 0));
-    const picked = sorted.slice(0, minCount);
-    const ded = picked.reduce((sum, cur) => sum + (cur.ded || 0), 0);
-    const kind = picked.some(cur => cur.kind === 'ability')
-      ? 'ability'
-      : (picked.some(cur => cur.kind === 'ritual') ? 'ritual' : 'other');
-    return { kind, ded: Math.min(ded, groupBaseCost(group)) };
-  }
-
-  function namedSetCost(config, type) {
+  function namedSetRemaining(list, config, type) {
+    const normType = normalizeType(type);
+    if (normType === 'Nackdel') return 0;
     const names = toArray(config?.namn).map(name => String(name || '').trim()).filter(Boolean);
     const minCount = Math.max(0, Number(config?.min_antal) || 0);
-    if (!names.length || minCount <= 0) return 0;
-    if (type === 'Nackdel') return 0;
-    if (type === 'Fördel') return minCount * 5;
-    if (type === 'Ritual') return minCount * 10;
-    const minLevel = normalizeLevel(config?.min_niva || 'Novis', 'Novis');
-    if (minLevel === 'Mästare') return minCount * 60;
-    if (minLevel === 'Gesäll') return minCount * 30;
-    return minCount * 10;
-  }
-
-  function namedSetDeduction(list, config, type) {
-    const names = toArray(config?.namn).map(name => String(name || '').trim()).filter(Boolean);
-    const minCount = Math.max(0, Number(config?.min_antal) || 0);
-    if (!names.length || minCount <= 0) return 0;
+    const minErf = Math.max(0, Number(config?.min_erf) || 0);
+    if (!names.length || (minCount <= 0 && minErf <= 0)) return 0;
     const target = new Set(names.map(normalizeKey));
-    const matches = uniqueByName(toArray(list).filter(item => {
+    const rows = uniqueByName(toArray(list).filter(item => {
       if (!target.has(normalizeKey(item?.namn))) return false;
       if (type && !entryHasType(item, type)) return false;
-      if (type !== 'Ritual' && type !== 'Fördel' && type !== 'Nackdel') {
-        return levelMeets(item?.nivå, config?.min_niva || 'Novis');
-      }
       return true;
-    }));
-    const capped = matches
-      .map(deductionForItem)
-      .sort((a, b) => (b.ded || 0) - (a.ded || 0))
-      .slice(0, minCount);
-    const total = capped.reduce((sum, row) => sum + (row.ded || 0), 0);
-    return Math.min(total, namedSetCost(config, type));
+    }))
+      .map(item => ({
+        ded: deductionForItem(item).ded || 0,
+        countCredit: countCreditForItem(item, { type: normType })
+      }))
+      .sort((a, b) => {
+        const countDiff = (b.countCredit || 0) - (a.countCredit || 0);
+        if (countDiff !== 0) return countDiff;
+        return (b.ded || 0) - (a.ded || 0);
+      });
+
+    let selectedErf = 0;
+    let selectedCount = 0;
+    for (let i = 0; i < rows.length; i += 1) {
+      if ((minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount)) break;
+      selectedErf += rows[i].ded || 0;
+      selectedCount += rows[i].countCredit || 0;
+    }
+
+    const missingErf = Math.max(0, minErf - selectedErf);
+    const missingCount = Math.max(0, minCount - selectedCount);
+    const perItem = normType === 'Fördel' ? 5 : 10;
+    if (minErf > 0 && minCount > 0) return Math.max(missingErf, missingCount * perItem);
+    if (minErf > 0) return missingErf;
+    return missingCount * perItem;
   }
 
-  function primaryPartialDeduction(krav, list) {
-    const name = String(krav?.primarformaga?.namn || '').trim();
-    if (!name) return 0;
-    const minLevel = 'Mästare';
-    const entries = toArray(list).filter(item => normalizeKey(item?.namn) === normalizeKey(name));
-    if (!entries.length) return 0;
-    if (entries.some(item => levelMeets(item?.nivå, minLevel))) return 0;
-    return entries
-      .map(item => costForEntry(item, item?.nivå || 'Novis'))
-      .reduce((best, value) => Math.max(best, value), 0);
+  function groupRemainingXP(group, state = {}) {
+    const minErf = Math.max(0, Number(group?.min_erf) || 0);
+    const minCount = Math.max(0, Number(group?.min_antal) || 0);
+    const selectedErf = Math.max(0, Number(state?.selected_erf) || 0);
+    const selectedCount = Math.max(0, Number(state?.selected_count) || 0);
+    const missingErf = Math.max(0, minErf - selectedErf);
+    const missingCount = Math.max(0, minCount - selectedCount);
+    const countGapCost = missingCount * countFloorForGroup(group);
+    if (minErf > 0 && minCount > 0) return Math.max(missingErf, countGapCost);
+    if (minErf > 0) return missingErf;
+    if (minCount > 0) return countGapCost;
+    return 0;
   }
 
   function minXP(entry, list){
     try {
       const groups = getGroups(entry).filter(group =>
         Math.max(0, Number(group?.min_erf) || 0) > 0 ||
-        Math.max(1, Number(group?.min_antal) || 1) > 0
+        Math.max(0, Number(group?.min_antal) || 0) > 0
       );
       const pcList = toArray(list);
       const krav = getKrav(entry);
       const groupStates = buildGroupStates(groups, pcList, krav);
-      const base = groups.reduce((sum, group) => sum + groupBaseCost(group), 0) +
-        namedSetCost(krav.specifika_fordelar, 'Fördel') +
-        namedSetCost(krav.specifika_nackdelar, 'Nackdel');
-      const totalDed = Array.from(groupStates.values()).reduce((sum, state) => sum + (state?.deduction || 0), 0) +
-        namedSetDeduction(pcList, krav.specifika_fordelar, 'Fördel') +
-        namedSetDeduction(pcList, krav.specifika_nackdelar, 'Nackdel') +
-        primaryPartialDeduction(krav, pcList);
-      const result = base - totalDed;
-      return result > 0 ? result : 0;
+      const missingGroups = groups.reduce((sum, group, idx) =>
+        sum + groupRemainingXP(group, groupStates.get(idx)), 0);
+      const missingBenefits = namedSetRemaining(pcList, krav.specifika_fordelar, 'Fördel');
+      const result = missingGroups + missingBenefits;
+      return Math.max(0, result);
     } catch {
       return 50;
     }
