@@ -8,15 +8,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Duellant",
-        "Vapenmästare",
         "Tjuv",
-        "Bedragare",
-        "Ligist",
-        "Skattletare",
         "Jägare",
-        "Utbygdsjägare"
+        "Utbygdsjägare",
+        "Duellant",
+        "Säljsvärd"
       ],
       "test": [
         "Kvick"
@@ -51,12 +47,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
-        "Svartkonstnär",
-        "Tjuv",
-        "Skattletare",
         "Före detta kultist",
-        "Sappör"
+        "Sappör",
+        "Skattletare",
+        "Mystiker"
       ],
       "test": [
         "Listig"
@@ -91,8 +85,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Bärsärkare"
+        "Bärsärkare",
+        "Ristad krigare",
+        "Säljsvärd"
       ],
       "nivå_data": {
         "Novis": {
@@ -125,9 +120,9 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Kapten",
-        "Tjuv",
-        "Jägare"
+        "Teurg",
+        "Häxjägare",
+        "Trollsångare"
       ],
       "test": [
         "Övertygande"
@@ -164,7 +159,8 @@
       "ark_trad": [
         "Krigare",
         "Tjuv",
-        "Jägare"
+        "Jägare",
+        "Mystiker"
       ],
       "nivå_data": {
         "Novis": {
@@ -196,10 +192,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Duellant",
         "Tjuv",
-        "Bedragare"
+        "Häxjägare",
+        "Prisjägare"
       ],
       "test": [
         "Diskret"
@@ -234,10 +229,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
-        "Ligist",
         "Före detta kultist",
-        "Jägare"
+        "Ligist",
+        "Jägare",
+        "Bedragare"
       ],
       "test": [
         "Listig"
@@ -272,7 +267,6 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
         "Häxa"
       ],
       "nivå_data": {
@@ -306,9 +300,8 @@
       ],
       "ark_trad": [
         "Mystiker",
-        "Självlärd besvärjare",
-        "Tjuv",
-        "Jägare"
+        "Häxjägare",
+        "Skattletare"
       ],
       "test": [
         "Vaksam"
@@ -343,8 +336,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Jägare"
+        "Bärsärkare",
+        "Riddare",
+        "Ristad krigare",
+        "Runsmed",
+        "Säljsvärd"
       ],
       "test": [
         "Stark"
@@ -379,12 +375,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
+        "Jägare",
         "Kapten",
-        "Mystiker",
-        "Trollsångare",
-        "Tjuv",
-        "Jägare"
+        "Trollsångare"
       ],
       "test": [
         "Övertygande"
@@ -419,9 +412,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
         "Riddare",
-        "Jägare"
+        "Säljsvärd"
       ],
       "test": [
         "Viljestark"
@@ -457,10 +449,7 @@
       ],
       "ark_trad": [
         "Mystiker",
-        "Jägare",
-        "Ordensmagiker",
         "Tjuv",
-        "Häxjägare",
         "Monsterjägare"
       ],
       "test": [
@@ -496,8 +485,7 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
-        "Bedragare"
+        "Tjuv"
       ],
       "test": [
         "Diskret"
@@ -532,10 +520,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
-        "Teurg",
         "Tjuv",
-        "Jägare"
+        "Jägare",
+        "Krigare",
+        "Mystiker"
       ],
       "test": [
         "Listig"
@@ -570,12 +558,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
         "Tjuv",
-        "Jägare",
-        "Utbygdsjägare",
         "Häxjägare",
-        "Monsterjägare"
+        "Monsterjägare",
+        "Utbygdsjägare",
+        "Mystiker"
       ],
       "test": [
         "Listig"
@@ -610,9 +597,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
+        "Tjuv",
+        "Duellant",
         "Häxa",
-        "Tjuv"
+        "Trollsångare"
       ],
       "nivå_data": {
         "Novis": {
@@ -644,7 +632,6 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
         "Ordensmagiker"
       ],
       "nivå_data": {
@@ -677,8 +664,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
-        "Jägare"
+        "Jägare",
+        "Skattletare",
+        "Gillestjuv",
+        "Ligist"
       ],
       "test": [
         "Träffsäker"
@@ -713,10 +702,12 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Tjuv",
         "Sappör",
-        "Jägare"
+        "Kapten",
+        "Riddare",
+        "Vapenmästare",
+        "Runsmed",
+        "Säljsvärd"
       ],
       "test": [
         "Kvick"
@@ -751,9 +742,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Tjuv",
-        "Jägare"
+        "Riddare",
+        "Kapten",
+        "Prisjägare",
+        "Teurg"
       ],
       "nivå_data": {
         "Novis": {
@@ -785,9 +777,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
         "Jägare",
-        "Utbygdsjägare"
+        "Skattletare"
       ],
       "test": [
         "Vaksam"
@@ -822,9 +813,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
         "Kapten",
-        "Säljsvärd"
+        "Säljsvärd",
+        "Riddare"
       ],
       "test": [
         "Stark"
@@ -859,14 +850,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Tjuv",
-        "Ligist",
         "Gillestjuv",
-        "Jägare",
+        "Ligist",
         "Häxjägare",
-        "Prisjägare",
-        "Monsterjägare"
+        "Monsterjägare",
+        "Prisjägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -899,8 +887,10 @@
       ],
       "ark_trad": [
         "Krigare",
-        "Tjuv",
-        "Gillestjuv"
+        "Gillestjuv",
+        "Ligist",
+        "Säljsvärd",
+        "Bedragare"
       ],
       "nivå_data": {
         "Novis": {
@@ -968,8 +958,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Tjuv"
+        "Tjuv",
+        "Bärsärkare",
+        "Riddare",
+        "Ristad krigare",
+        "Säljsvärd"
       ],
       "test": [
         "Stark",
@@ -1042,8 +1035,7 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
-        "Ligist"
+        "Tjuv"
       ],
       "test": [
         "Listig"
@@ -1078,9 +1070,8 @@
         "Förmåga"
       ],
       "ark_trad": [
+        "Mystiker",
         "Krigare",
-        "Tjuv",
-        "Jägare",
         "Häxjägare"
       ],
       "test": [
@@ -1117,13 +1108,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Säljsvärd",
-        "Ristad krigare",
-        "Vapenmästare",
-        "Tjuv",
         "Jägare",
-        "Monsterjägare"
+        "Vapenmästare",
+        "Riddare",
+        "Duellant",
+        "Kapten"
       ],
       "nivå_data": {
         "Novis": {
@@ -1156,7 +1145,6 @@
       ],
       "ark_trad": [
         "Tjuv",
-        "Skattletare",
         "Jägare"
       ],
       "nivå_data": {
@@ -1189,7 +1177,6 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
         "Svartkonstnär"
       ],
       "test": [
@@ -1225,9 +1212,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
         "Skattletare",
-        "Jägare"
+        "Jägare",
+        "Kapten",
+        "Duellant"
       ],
       "test": [
         "Listig"
@@ -1262,7 +1250,6 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
         "Teurg"
       ],
       "nivå_data": {
@@ -1295,13 +1282,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
+        "Bärsärkare",
         "Duellant",
-        "Vapenmästare",
+        "Ristad krigare",
         "Tjuv",
-        "Bedragare",
-        "Ligist",
-        "Jägare"
+        "Utbygdsjägare"
       ],
       "nivå_data": {
         "Novis": {
@@ -1333,9 +1318,12 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Tjuv",
-        "Sappör"
+        "Bärsärkare",
+        "Ristad krigare",
+        "Riddare",
+        "Runsmed",
+        "Sappör",
+        "Vapenmästare"
       ],
       "nivå_data": {
         "Novis": {
@@ -1367,10 +1355,7 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Bärsärkare",
-        "Tjuv",
-        "Jägare"
+        "Mystiker"
       ],
       "test": [
         "Viljestark"
@@ -1391,9 +1376,9 @@
       }
     },
     "nivåer": {
-      "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Viljestark återhämta 1T4 Tålighet. Upprepade försök får göras, men endast ett lyckat försök per stridsscen räknas.",
-      "Gesäll": "Handling: Aktiv. Som Novis men återhämtningen är 1T6 Tålighet.",
-      "Mästare": "Handling: Aktiv. Som Gesäll men rollpersonens återhämtning ger 1T8 Tålighet."
+      "Novis": "Handling: Aktiv. Rollpersonen kan med ett lyckat Viljestark återhämta 1T6 Tålighet. Upprepade försök får göras, men endast ett lyckat försök per stridsscen räknas.",
+      "Gesäll": "Handling: Aktiv. Som Novis men återhämtningen är 1T8 Tålighet.",
+      "Mästare": "Handling: Aktiv. Som Gesäll men rollpersonens återhämtning ger 1T10 Tålighet."
     }
   },
   {
@@ -1441,9 +1426,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Tjuv",
-        "Sappör"
+        "Sappör",
+        "Kapten"
       ],
       "test": [],
       "nivå_data": {
@@ -1575,9 +1559,7 @@
       ],
       "ark_trad": [
         "Tjuv",
-        "Gillestjuv",
-        "Jägare",
-        "Monsterjägare"
+        "Jägare"
       ],
       "test": [
         "Listig"
@@ -1612,8 +1594,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Runsmed"
+        "Runsmed",
+        "Vapenmästare",
+        "Riddare"
       ],
       "test": [
         "Stark"
@@ -1680,8 +1663,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
-        "Före detta kultist"
+        "Före detta kultist",
+        "Svartkonstnär"
       ],
       "test": [
         "Viljestark"
@@ -1716,8 +1699,7 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
-        "Gillestjuv"
+        "Tjuv"
       ],
       "test": [
         "Kvick"
@@ -1823,10 +1805,8 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
         "Ristad krigare",
-        "Mystiker",
-        "Symbolist"
+        "Runsmed"
       ],
       "nivå_data": {
         "Novis": {
@@ -1908,11 +1888,8 @@
         }
       },
       "ark_trad": [
-        "Krigare",
-        "Runsmed",
-        "Tjuv",
         "Sappör",
-        "Jägare"
+        "Runsmed"
       ]
     },
     "nivåer": {
@@ -1930,7 +1907,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Jägare"
+        "Prisjägare",
+        "Utbygdsjägare",
+        "Skattletare"
       ],
       "nivå_data": {
         "Novis": {
@@ -1964,7 +1943,9 @@
       "ark_trad": [
         "Krigare",
         "Vapenmästare",
-        "Jägare",
+        "Gillestjuv",
+        "Häxjägare",
+        "Monsterjägare",
         "Prisjägare"
       ],
       "nivå_data": {
@@ -2029,8 +2010,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Vapenmästare"
+        "Vapenmästare",
+        "Tjuv",
+        "Jägare",
+        "Mystiker"
       ],
       "test": [
         "Träffsäker"
@@ -2098,8 +2081,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Vapenmästare"
+        "Vapenmästare",
+        "Riddare",
+        "Duellant"
       ],
       "nivå_data": {
         "Novis": {
@@ -2131,8 +2115,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Vapenmästare"
+        "Vapenmästare",
+        "Riddare",
+        "Duellant",
+        "Säljsvärd"
       ],
       "nivå_data": {
         "Novis": {
@@ -2164,7 +2150,6 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
         "Symbolist"
       ],
       "nivå_data": {
@@ -2198,11 +2183,8 @@
       ],
       "ark_trad": [
         "Tjuv",
-        "Bedragare",
-        "Ligist",
-        "Gillestjuv",
-        "Jägare",
-        "Prisjägare"
+        "Prisjägare",
+        "Säljsvärd"
       ],
       "test": [
         "Listig"
@@ -2237,10 +2219,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Tjuv",
+        "Gillestjuv",
         "Ligist",
         "Skattletare",
-        "Gillestjuv",
         "Jägare"
       ],
       "test": [
@@ -2277,7 +2258,6 @@
         "Mystisk tradition"
       ],
       "ark_trad": [
-        "Mystiker",
         "Trollsångare"
       ],
       "nivå_data": {
@@ -2310,8 +2290,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Vapenmästare"
+        "Vapenmästare",
+        "Bärsärkare",
+        "Ristad krigare",
+        "Säljsvärd"
       ],
       "test": [
         "Träffsäker"
@@ -2346,11 +2328,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Riddare",
-        "Jägare",
         "Häxjägare",
-        "Monsterjägare"
+        "Monsterjägare",
+        "Mystiker",
+        "Krigare"
       ],
       "test": [
         "Stark"
@@ -2404,8 +2385,8 @@
     },
     "nivåer": {
       "Novis": "Handling: Reaktiv. En gång per runda, efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet.",
-      "Gesäll": "Handling: Reaktiv. När mystikern har påverkat ett enskilt mål med en mystisk kraft kan mystikern välja att ådra sig en temporär korruption för att slå om alla effekttärningar och välja det högsta resultatet.",
-      "Mästare": "Handling: Reaktiv.  När mystikern har påverkat ett enskilt mål med en mystisk kraft kan denne med ett lyckat [Viljestark] välja att ådra sig 1T4 temporär korruption igen för att låta magin eka. Kraften slår omedelbart till mot samma mål igen, men med halverade tärningar (avrundat uppåt)."
+      "Gesäll": "Handling: Reaktiv. När mystikern har påverkat ett enskilt mål med en mystisk kraft kan mystikern välja att ådra sig 1 temporär korruption för att slå om alla effekttärningar och välja det högsta resultatet.",
+      "Mästare": "Handling: Reaktiv.  När mystikern har påverkat ett enskilt mål med en mystisk kraft kan denne med ett lyckat [Viljestark] välja att ådra sig 1T4 temporär korruption igen för att låta magin eka. Kraften slår omedelbart till mot samma mål igen, men med halverad effekt (avrundat uppåt)."
     }
   },
   {
@@ -2417,11 +2398,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Duellant",
-        "Jägare",
         "Häxjägare",
-        "Prisjägare"
+        "Prisjägare",
+        "Duellant",
+        "Gillestjuv"
       ],
       "nivå_data": {
         "Novis": {
@@ -2453,7 +2433,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare"
+        "Duellant",
+        "Riddare",
+        "Säljsvärd",
+        "Vapenmästare"
       ],
       "test": [
         "Stark"
@@ -2488,10 +2471,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
         "Kapten",
-        "Säljsvärd",
-        "Riddare"
+        "Riddare",
+        "Runsmed",
+        "Säljsvärd"
       ],
       "test": [
         "Stark"
@@ -2519,17 +2502,15 @@
   },
   {
     "id": "form71",
-    "namn": "Krigarens skärpa",
-    "beskrivning": "En krigare, oavsett om hen slåss med pilbåge eller knytnävar, vet att träffsäkerhet är nyckeln till att hitta fiendens svaga punkter. Genom målmedveten träning och koncentration känner karaktären sitt mål bättre än de flesta.",
+    "namn": "Stridsskärpa",
+    "beskrivning": "I strid, oavsett om en slåss med pilbåge eller knytnävar, vet alla att träffsäkerhet är nyckeln till att hitta fiendens svaga punkter. Genom målmedveten träning och koncentration känner karaktären sitt mål bättre än de flesta.",
     "taggar": {
       "typ": [
         "Förmåga"
       ],
       "ark_trad": [
         "Krigare",
-        "Duellant",
-        "Kapten",
-        "Vapenmästare"
+        "Jägare"
       ],
       "test": [
         "Träffsäker"
@@ -2564,12 +2545,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
+        "Bedragare",
+        "Gillestjuv",
         "Duellant",
-        "Riddare",
-        "Vapenmästare",
-        "Tjuv",
-        "Bedragare"
+        "Riddare"
+
       ],
       "test": [
         "Träffsäker"
@@ -2604,11 +2584,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Kapten",
-        "Jägare",
+        "Prisjägare",
         "Utbygdsjägare",
-        "Prisjägare"
+        "Kapten"
       ],
       "test": [
         "Träffsäker"
@@ -2643,14 +2621,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Kapten",
-        "Säljsvärd",
-        "Riddare",
-        "Jägare",
         "Häxjägare",
+        "Monsterjägare",
         "Prisjägare",
-        "Monsterjägare"
+        "Kapten",
+        "Riddare"
       ],
       "test": [
         "Övertygande"
@@ -2721,9 +2696,7 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
-        "Ordensmagiker",
-        "Skattletare"
+        "Ordensmagiker"
       ],
       "test": [
         "Listig"
@@ -2797,11 +2770,7 @@
       ],
       "ark_trad": [
         "Tjuv",
-        "Ligist",
-        "Gillestjuv",
-        "Jägare",
-        "Utbygdsjägare",
-        "Prisjägare"
+        "Jägare"
       ],
       "test": [
         "Träffsäker"
@@ -2836,9 +2805,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
+        "Monsterjägare",
         "Vapenmästare",
-        "Jägare"
+        "Kapten",
+        "Duellant"
       ],
       "test": [
         "Kvick"
@@ -3014,11 +2984,9 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Kapten",
-        "Säljsvärd",
         "Tjuv",
-        "Ligist"
+        "Kapten",
+        "Säljsvärd"
       ],
       "test": [
         "Övertygande"
@@ -3053,9 +3021,7 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
         "Kapten",
-        "Mystiker",
         "Teurg",
         "Trollsångare"
       ],
@@ -3092,12 +3058,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Mystiker",
-        "Trollsångare",
-        "Tjuv",
         "Bedragare",
+        "Gillestjuv",
         "Ligist",
-        "Gillestjuv"
+        "Trollsångare"
       ],
       "test": [
         "Övertygande"
@@ -3132,12 +3096,10 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
+        "Monsterjägare",
         "Kapten",
-        "Säljsvärd",
         "Riddare",
-        "Häxjägare",
-        "Monsterjägare"
+        "Säljsvärd"
       ],
       "test": [],
       "nivå_data": {
@@ -3170,9 +3132,11 @@
         "Förmåga"
       ],
       "ark_trad": [
-        "Krigare",
-        "Häxjägare",
-        "Monsterjägare"
+        "Monsterjägare",
+        "Duellant",
+        "Kapten",
+        "Riddare",
+        "Vapenmästare"
       ],
       "test": [
         "Träffsäker"
