@@ -2,34 +2,38 @@
 # -*- coding: utf-8 -*-
 """
 Uppdaterar yrke.json -> lampliga_formagor baserat på taggar.ark_trad i:
-- formaga_fixed.json (förmågor)
+- basformagor.json (basförmågor)
+- formaga.json (förmågor)
 - mystisk-kraft.json (mystiska krafter)
 - ritual.json (ritualer)
 
 Regler:
 - Ett yrke (sub-yrke) får alla objekt vars taggar.ark_trad innehåller yrkets namn.
 - För övergripande yrkena Tjuv/Jägare/Krigare/Mystiker ingår även allt som är taggat med deras sub-yrken.
+- Arketyptaggar kan vara lista eller kommaseparerad sträng.
 
 Output:
-- yrke_updated_auto.json
-- skriver även en liten rapport till stdout (räknare + okända ark_trad-taggar)
+- Skriver uppdaterad data direkt till data/yrke.json
+- Skriver en liten rapport till stdout (räknare + okända ark_trad-taggar)
 
 Kör:
-  python update_lampliga_formagor.py
+  python3 scripts/update_lampliga_formagor.py
 """
 
 import json
 from collections import defaultdict
 from pathlib import Path
 
-BASE = Path(".")
+BASE = Path(__file__).resolve().parent.parent
 YRKE_PATH = BASE / "data/yrke.json"
-FORMAGA_PATH = BASE / "data/formaga.json"   # byt till formaga.json om du vill
+BASFORMAGA_PATH = BASE / "data/basformagor.json"
+FORMAGA_PATH = BASE / "data/formaga.json"
 MK_PATH = BASE / "data/mystisk-kraft.json"
 RITUAL_PATH = BASE / "data/ritual.json"
 OUT_PATH = BASE / "data/yrke.json"
 
 TOP_LEVELS = ["Tjuv", "Jägare", "Krigare", "Mystiker"]
+CATEGORY_ORDER = ["Basförmåga", "Förmåga", "Mystisk kraft", "Ritual"]
 SUBS = {
     "Tjuv": {"Bedragare", "Ligist", "Skattletare", "Gillestjuv", "Sappör", "Före detta kultist"},
     "Jägare": {"Utbygdsjägare", "Prisjägare", "Monsterjägare", "Häxjägare"},
@@ -44,9 +48,22 @@ def load_json(path: Path):
 def dump_json(path: Path, data):
     with path.open("w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
+        f.write("\n")
+
+
+def split_tags(value):
+    source = value if isinstance(value, list) else [value]
+    out = []
+    for item in source:
+        for part in str(item or "").split(","):
+            tag = part.strip()
+            if tag:
+                out.append(tag)
+    return out
 
 def main():
     yrke_data = load_json(YRKE_PATH)
+    bas_data = load_json(BASFORMAGA_PATH)
     form_data = load_json(FORMAGA_PATH)
     mk_data = load_json(MK_PATH)
     ritual_data = load_json(RITUAL_PATH)
@@ -54,23 +71,26 @@ def main():
     yrke_names = [y["namn"] for y in yrke_data]
     valid_yrken = set(yrke_names)
 
-    # exact[yrke]["Formåga"/"Mystisk kraft"/"Ritual"] = set(namn)
-    exact = {y: {"Formåga": set(), "Mystisk kraft": set(), "Ritual": set()} for y in yrke_names}
+    # exact[yrke][kategori] = set(namn)
+    exact = {y: {category: set() for category in CATEGORY_ORDER} for y in yrke_names}
     unknown_tags = defaultdict(int)
 
     def process_items(items, type_label):
         for it in items:
-            name = it.get("namn")
-            tags = it.get("taggar", {}).get("ark_trad", [])
-            if not isinstance(tags, list):
+            if not isinstance(it, dict):
                 continue
-            for t in tags:
-                if t in valid_yrken:
-                    exact[t][type_label].add(name)
+            name = it.get("namn")
+            if not name:
+                continue
+            tags = split_tags((it.get("taggar") or {}).get("ark_trad"))
+            for tag in tags:
+                if tag in valid_yrken:
+                    exact[tag][type_label].add(name)
                 else:
-                    unknown_tags[t] += 1
+                    unknown_tags[tag] += 1
 
-    process_items(form_data, "Formåga")
+    process_items(bas_data, "Basförmåga")
+    process_items(form_data, "Förmåga")
     process_items(mk_data, "Mystisk kraft")
     process_items(ritual_data, "Ritual")
 
@@ -79,14 +99,22 @@ def main():
         if yrke_name in TOP_LEVELS:
             targets |= SUBS[yrke_name]
 
-        merged = {"Formåga": set(), "Mystisk kraft": set(), "Ritual": set()}
+        merged = {category: set() for category in CATEGORY_ORDER}
         for t in targets:
             if t in exact:
                 for k in merged:
                     merged[k] |= exact[t][k]
 
-        # Samma ordning varje gång: förmågor, krafter, ritualer (var för sig sorterade)
-        return sorted(merged["Formåga"]) + sorted(merged["Mystisk kraft"]) + sorted(merged["Ritual"])
+        # Samma ordning varje gång: basförmågor, förmågor, krafter, ritualer.
+        out = []
+        seen = set()
+        for category in CATEGORY_ORDER:
+            for name in sorted(merged[category], key=lambda s: s.casefold()):
+                if name in seen:
+                    continue
+                seen.add(name)
+                out.append(name)
+        return out
 
     updated = []
     for y in yrke_data:

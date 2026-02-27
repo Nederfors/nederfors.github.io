@@ -14,6 +14,20 @@
         .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
         .filter(Boolean);
     };
+    const readEntryTests = (entry, level) => {
+      if (!entry) return [];
+      if (typeof window.getEntryTestTags === 'function') {
+        return window.getEntryTestTags(entry, { level });
+      }
+      const tags = entry.taggar || {};
+      const lvlData = tags.nivå_data || tags.niva_data || {};
+      const normalizedLevel = String(level || '').trim();
+      if (normalizedLevel && Array.isArray(lvlData[normalizedLevel]?.test)) {
+        return lvlData[normalizedLevel].test;
+      }
+      if (Array.isArray(lvlData.Enkel?.test)) return lvlData.Enkel.test;
+      return Array.isArray(tags.test) ? tags.test : [];
+    };
     const ONLY_SELECTED_VALUE = '__onlySelected';
     const ONLY_SELECTED_LABEL = 'Endast valda';
     let sTemp = '';
@@ -102,6 +116,7 @@
       ['Fördel', 'Fördelar'],
       ['Nackdel', 'Nackdelar'],
       ['Förmåga', 'Förmågor'],
+      ['Basförmåga', 'Förmågor'],
       ['Mystisk kraft', 'Mystiska krafter'],
       ['Ritual', 'Ritualer'],
       ['Särdrag', 'Särdrag'],
@@ -173,7 +188,7 @@
       'Övrigt'
     ];
 
-    const DOCK_TAG_TYPES = new Set(['Fördel', 'Nackdel', 'Särdrag', 'Monstruöst särdrag', 'Ritual', 'Mystisk kraft', 'Förmåga']);
+    const DOCK_TAG_TYPES = new Set(['Fördel', 'Nackdel', 'Särdrag', 'Monstruöst särdrag', 'Ritual', 'Mystisk kraft', 'Förmåga', 'Basförmåga']);
 
     const levelLetter = (lvl) => {
       const text = String(lvl || '').trim();
@@ -264,8 +279,8 @@
       const base = entry?.namn ? String(entry.namn).trim() : 'Okänd post';
       const parts = [];
       if (entry?.trait) parts.push(String(entry.trait).trim());
-      const lvl = entry?.nivå || '';
-      if (lvl && LVL.includes(lvl)) parts.push(lvl);
+      const lvl = String(entry?.nivå || '').trim();
+      if (lvl) parts.push(lvl);
       if (!parts.length) return base;
       return `${base} (${parts.join(', ')})`;
     };
@@ -910,10 +925,14 @@
       const gatherEntries = (types, options = {}) => {
         const wanted = Array.isArray(types) ? types : [types];
         const { annotateMultiples = false, multipleThreshold = 2 } = options;
+        const matchesType = (entryTypes, type) => {
+          if (entryTypes.includes(type)) return true;
+          return type === 'Förmåga' && entryTypes.includes('Basförmåga');
+        };
         const counts = new Map();
         list.forEach(entry => {
           const entryTypes = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
-          if (!wanted.some(type => entryTypes.includes(type))) return;
+          if (!wanted.some(type => matchesType(entryTypes, type))) return;
           const display = abilityDisplayName(entry);
           if (!display) return;
           const key = display.toLocaleLowerCase('sv');
@@ -1175,7 +1194,7 @@
         } else if (Array.isArray(arkSource)) {
           sets.ark.add('Traditionslös');
         }
-        const testTags = Array.isArray(taggar.test) ? taggar.test : [];
+        const testTags = readEntryTests(p, p?.nivå);
         testTags
           .filter(Boolean)
           .forEach(v => sets.test.add(v));
@@ -1433,7 +1452,7 @@
             filterTagData.push(tag);
             if (!tag.hidden) primaryTagParts.push(renderFilterTag(tag));
           });
-          (p.taggar?.test || [])
+          (readEntryTests(p, curLvl || p?.nivå))
             .filter(Boolean)
             .forEach(t => filterTagData.push({ section: 'test', value: t, label: t }));
           const primaryTagsHtml = primaryTagParts.join(' ');
@@ -1895,6 +1914,15 @@
         const lvlSel = liEl.querySelector('select.level');
         let lvl = lvlSel ? lvlSel.value : null;
         if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
+        if (!lvl) {
+          const xpLevelTypes = new Set(['Förmåga', 'Basförmåga', 'Mystisk kraft', 'Särdrag', 'Monstruöst särdrag']);
+          const types = Array.isArray(p?.taggar?.typ) ? p.taggar.typ : [];
+          const shouldResolveLevel = types.some(type => xpLevelTypes.has(String(type || '').trim()));
+          if (shouldResolveLevel && typeof storeHelper.resolveEntryLevel === 'function') {
+            const resolved = storeHelper.resolveEntryLevel(p);
+            if (resolved) lvl = resolved;
+          }
+        }
         if (isMonstrousTrait(p)) {
           const baseName = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
           const baseRace = before.find(isRas)?.namn;

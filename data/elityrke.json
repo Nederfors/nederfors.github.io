@@ -34,7 +34,7 @@
     "id": "elit1",
     "krav": {
       "primarformaga": {
-        "namn": "Akrobatik"
+        "namn": ["Akrobatik"]
       },
       "primartagg": {
         "taggfalt": "ark_trad",

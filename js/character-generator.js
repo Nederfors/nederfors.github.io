@@ -15,7 +15,7 @@
     elityrke: ''
   };
 
-  const LEVEL_VALUE = { '': 0, Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
+  const LEVEL_VALUE = { '': 0, Novis: 1, Enkel: 1, 'Gesäll': 2, 'Ordinär': 2, 'Mästare': 3, Avancerad: 3 };
   const MELEE_SCHOOLS = [
     'Sköldkamp',
     'Naturlig krigare',
@@ -479,7 +479,7 @@
       if (ignore) return true;
       const entry = lookupEntryByName(name);
       if (!entry) return true;
-      const tests = toNameArray(entry?.taggar?.test);
+      const tests = getEntryTests(entry);
       if (!tests.length) return true;
       const stats = this.Karaktarsdrag || {};
       return tests.every(test => {
@@ -597,6 +597,7 @@
       if (!types.length) return false;
       return types.some(type =>
         type === 'Förmåga' ||
+        type === 'Basförmåga' ||
         type === 'Mystisk kraft' ||
         type === 'Ritual' ||
         type === 'Monstruöst särdrag'
@@ -643,6 +644,25 @@
     forceEnsureAbilityLevel(name, targetLevel) {
       if (!name) return false;
       const desired = LEVEL_VALUE[targetLevel] ? targetLevel : 'Novis';
+      const entry = lookupEntryByName(name);
+      const entryTypes = entry?.taggar?.typ || [];
+      const isBaseAbility = entryTypes.includes('Basförmåga');
+      if (isBaseAbility) {
+        const helper = window.storeHelper || {};
+        const fixedLevel = typeof helper.resolveEntryLevel === 'function'
+          ? helper.resolveEntryLevel(entry, desired)
+          : (entry?.nivå || desired);
+        const fixedCost = typeof helper.entryLevelCost === 'function'
+          ? helper.entryLevelCost(entry, fixedLevel)
+          : (fixedLevel === 'Avancerad' ? 30 : (fixedLevel === 'Ordinär' ? 20 : 10));
+        if (!this.Formagor[name]) {
+          if (this.ERFkvar < fixedCost) return false;
+          const paid = this.spendXP(fixedCost);
+          if (paid < fixedCost) return false;
+        }
+        this.Formagor[name] = fixedLevel;
+        return true;
+      }
       const abilityTrad = getAbilityTraditionName(name);
       if (abilityTrad) {
         const baseAbility = getTraditionBaseAbilityName(abilityTrad);
@@ -803,7 +823,7 @@
             let weight = 1;
             const nameKey = normalizeName(entry?.namn);
             if (preferred.has(nameKey)) weight += 4;
-            const tests = toNameArray(entry?.taggar?.test).map(str => str.toLowerCase());
+            const tests = getEntryTests(entry).map(str => str.toLowerCase());
             if (opts.weightByTrait && traitKey && tests.some(test => test.includes(traitKey))) weight += 2;
             const archetypeMatch = getEntryArchetypes(entry).some(tag => this.archetypePreferences.has(tag));
             if (archetypeMatch) weight += 2;
@@ -1046,7 +1066,7 @@
         const cached = abilityTraitCache.get(key);
         if (cached) return cached.has(trait);
         const entry = lookupEntryByName(name);
-        const tests = new Set(toNameArray(entry?.taggar?.test).map(normalizeAttributeName).filter(Boolean));
+        const tests = new Set(getEntryTests(entry).map(normalizeAttributeName).filter(Boolean));
         abilityTraitCache.set(key, tests);
         return tests.has(trait);
       };
@@ -1551,7 +1571,11 @@
 
   function getEntriesByType(type) {
     const db = Array.isArray(window.DB) ? window.DB : [];
-    return db.filter(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes(type));
+    return db.filter(entry => {
+      const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+      if (types.includes(type)) return true;
+      return type === 'Förmåga' && types.includes('Basförmåga');
+    });
   }
 
   function normalizeName(name) {
@@ -1712,6 +1736,16 @@
     return [];
   }
 
+  function getEntryTests(entry, options = {}) {
+    if (!entry) return [];
+    const level = options?.level;
+    if (typeof window.getEntryTestTags === 'function') {
+      const tests = window.getEntryTestTags(entry, { level });
+      return Array.isArray(tests) ? tests : [];
+    }
+    return toNameArray(entry?.taggar?.test);
+  }
+
   function getYrkeTraditionName(entry) {
     const name = normalizeName(entry?.namn);
     if (!name) return '';
@@ -1761,7 +1795,7 @@
     const key = normalizeName(trait);
     if (!key) return [];
     return getEntriesByType('Förmåga')
-      .filter(entry => toNameArray(entry?.taggar?.test).some(test => normalizeName(test).includes(key)))
+      .filter(entry => getEntryTests(entry).some(test => normalizeName(test).includes(key)))
       .map(entry => entry.namn)
       .filter(Boolean);
   }
@@ -1856,7 +1890,7 @@
       const name = entry?.namn;
       if (!name) return;
       if ((entry?.taggar?.typ || []).includes('Elityrkesförmåga')) return;
-      const tests = toNameArray(entry?.taggar?.test);
+      const tests = getEntryTests(entry);
       const archetypes = getEntryArchetypes(entry);
       pushEntry(name, tests, archetypes);
     });

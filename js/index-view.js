@@ -458,7 +458,11 @@
       if (!arkList.length && Array.isArray(tags.ark_trad)) {
         arkList = ['Traditionslös'];
       }
-      const testList = normalizeList(tags.test);
+      const testList = normalizeList(
+        typeof window.getEntryTestTags === 'function'
+          ? window.getEntryTestTags(entry)
+          : tags.test
+      );
       const secondaryTags = [...arkList, ...testList];
       const allTagsNormalized = new Set(
         [...typList, ...secondaryTags].map(tag => normFn(tag.toLowerCase()))
@@ -623,7 +627,7 @@
       'Allmän kvalitet': 'Allmänt'
     };
     const QUAL_TYPE_KEYS = Object.keys(QUAL_TYPE_MAP);
-    const DOCK_TAG_TYPES = new Set(['Fördel', 'Nackdel', 'Särdrag', 'Monstruöst särdrag', 'Ritual', 'Mystisk kraft', 'Förmåga']);
+    const DOCK_TAG_TYPES = new Set(['Fördel', 'Nackdel', 'Särdrag', 'Monstruöst särdrag', 'Ritual', 'Mystisk kraft', 'Förmåga', 'Basförmåga']);
 
     const levelLetter = (lvl) => {
       const text = String(lvl || '').trim();
@@ -2361,6 +2365,15 @@
       const lvlSel = li.querySelector('select.level');
       let lvl = lvlSel ? lvlSel.value : null;
       if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || null;
+      if (!lvl) {
+        const xpLevelTypes = new Set(['Förmåga', 'Basförmåga', 'Mystisk kraft', 'Särdrag', 'Monstruöst särdrag']);
+        const types = Array.isArray(p?.taggar?.typ) ? p.taggar.typ : [];
+        const shouldResolveLevel = types.some(type => xpLevelTypes.has(String(type || '').trim()));
+        if (shouldResolveLevel && typeof storeHelper.resolveEntryLevel === 'function') {
+          const resolved = storeHelper.resolveEntryLevel(p);
+          if (resolved) lvl = resolved;
+        }
+      }
 
 
       /* Lägg till kvalitet direkt */
@@ -2618,7 +2631,7 @@
             if (!res.ok) {
               const msg = 'Krav ej uppfyllda:\n' +
                 (res.missing.length ? 'Saknar: ' + res.missing.join(', ') + '\n' : '') +
-                (res.master ? '' : 'Primärförmågan uppfyller inte kravet.\n') +
+                (res.master ? '' : 'Primärförmågekravet uppfylls inte.\n') +
                 'Lägga till ändå?';
               if (!(await confirmPopup(msg))) return;
             }

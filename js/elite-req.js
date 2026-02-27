@@ -159,8 +159,9 @@
     const minCount = Math.max(0, Number(group?.min_antal) || 0);
     let label = 'Krav';
     if (group?.isPrimary) {
-      const name = String(group?.names?.[0] || 'Primärförmåga');
-      label = name;
+      const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
+      if (!names.length) label = 'Primärförmåga';
+      else label = names.length === 1 ? names[0] : names.join(' eller ');
     } else if (group?.anyMystic) {
       label = 'Valfri mystisk kraft';
     } else if (group?.anyRitual) {
@@ -181,7 +182,11 @@
 
     const reqParts = [];
     if (minErf > 0) reqParts.push(`${minErf} ERF`);
-    if (minCount > 0) reqParts.push(`minst ${minCount} val (${countFloorForGroup(group)}+ ERF/st)`);
+    if (minCount > 0) {
+      reqParts.push(group?.isPrimary
+        ? `minst ${minCount} val`
+        : `minst ${minCount} val (${countFloorForGroup(group)}+ ERF/st)`);
+    }
     if (!reqParts.length) return label;
     return `${label} (${reqParts.join(' · ')})`;
   }
@@ -237,6 +242,33 @@
     return source.startsWith('specifika_');
   }
 
+  function primaryNamesFromKrav(krav) {
+    const out = [];
+    const seen = new Set();
+    const add = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(add);
+        return;
+      }
+      const text = String(value || '').trim();
+      if (!text) return;
+      text
+        .replace(/\beller\b/gi, ',')
+        .split(/[,;/|]+/)
+        .map(part => part.trim())
+        .filter(Boolean)
+        .forEach(name => {
+          const key = normalizeKey(name);
+          if (!key || seen.has(key)) return;
+          seen.add(key);
+          out.push(name);
+        });
+    };
+    add(krav?.primarformaga?.namn_lista);
+    add(krav?.primarformaga?.namn);
+    return out;
+  }
+
   function reservedNamesFromKrav(krav, groups) {
     const reserved = new Set();
     const addName = (value) => {
@@ -244,8 +276,7 @@
       if (key) reserved.add(key);
     };
 
-    const primary = String(krav?.primarformaga?.namn || '').trim();
-    if (primary) addName(primary);
+    primaryNamesFromKrav(krav).forEach(addName);
 
     toArray(krav?.specifika_formagor?.namn).forEach(addName);
     toArray(krav?.specifika_mystiska_krafter?.namn).forEach(addName);
@@ -370,6 +401,77 @@
 
       const minErf = Math.max(0, Number(group?.min_erf) || 0);
       const minCount = Math.max(0, Number(group?.min_antal) || 0);
+      const primaryOptions = toArray(group?.primary_options);
+      if (group?.isPrimary && primaryOptions.length) {
+        const optionByKey = new Map(primaryOptions
+          .map(opt => {
+            const key = normalizeKey(opt?.name);
+            if (!key) return null;
+            return [key, {
+              minErf: Math.max(0, Number(opt?.min_erf) || 0)
+            }];
+          })
+          .filter(Boolean));
+
+        const rankedPrimary = candidates
+          .map(token => {
+            const option = optionByKey.get(token.key);
+            if (!option) return null;
+            const ded = deductionForItem(token.item).ded || 0;
+            const requiredErf = option.minErf;
+            const countCredit = ded > 0 ? 1 : 0;
+            const progress = requiredErf > 0 ? (ded / requiredErf) : ded;
+            return {
+              token,
+              ded,
+              countCredit,
+              requiredErf,
+              progress,
+              meetsErf: requiredErf <= 0 || ded >= requiredErf
+            };
+          })
+          .filter(Boolean)
+          .sort((a, b) => {
+            const meetsDiff = Number(b.meetsErf) - Number(a.meetsErf);
+            if (meetsDiff !== 0) return meetsDiff;
+            if ((b.progress || 0) !== (a.progress || 0)) return (b.progress || 0) - (a.progress || 0);
+            if ((b.countCredit || 0) !== (a.countCredit || 0)) return (b.countCredit || 0) - (a.countCredit || 0);
+            return (b.ded || 0) - (a.ded || 0);
+          });
+
+        const picked = rankedPrimary.length ? [rankedPrimary[0]] : [];
+        let selectedErf = 0;
+        let selectedCount = 0;
+        let requiredErf = minErf;
+        let requiredCount = minCount;
+        if (picked.length) {
+          selectedErf = picked[0].ded || 0;
+          selectedCount = picked[0].countCredit || 0;
+          requiredErf = Math.max(minErf, picked[0].requiredErf || 0);
+        }
+
+        const hasErfReq = requiredErf > 0;
+        const hasCountReq = requiredCount > 0;
+        const metric = hasErfReq && hasCountReq
+          ? 'both'
+          : (hasErfReq ? 'erf' : (hasCountReq ? 'count' : 'none'));
+        const ok = (!hasErfReq || selectedErf >= requiredErf) && (!hasCountReq || selectedCount >= requiredCount);
+        picked.forEach(row => consumed.add(row.token.id));
+        states.set(idx, {
+          ok,
+          selected: metric === 'count' ? selectedCount : selectedErf,
+          required: metric === 'count' ? requiredCount : requiredErf,
+          metric,
+          selected_erf: selectedErf,
+          required_erf: requiredErf,
+          selected_count: selectedCount,
+          required_count: requiredCount,
+          picked: picked.map(row => row.token),
+          deduction: Math.min(selectedErf, Math.max(groupBaseCost(group), requiredErf))
+        });
+        return;
+      }
+
       const hasErfReq = minErf > 0;
       const hasCountReq = minCount > 0;
 
@@ -499,9 +601,9 @@
     const groupStates = buildGroupStates(groups, pcList, krav);
     const missing = [];
     let primaryOk = true;
-    const primaryName = String(krav?.primarformaga?.namn || '').trim();
+    const primaryNames = primaryNamesFromKrav(krav);
 
-    if (!primaryName) {
+    if (!primaryNames.length) {
       primaryOk = false;
       missing.push('Primärförmåga saknas');
     }
@@ -514,8 +616,8 @@
         selected_count: 0,
         required_count: 0
       };
-      const minErf = Math.max(0, Number(group?.min_erf) || 0);
-      const minCount = Math.max(0, Number(group?.min_antal) || 0);
+      const minErf = Math.max(0, Number(state?.required_erf ?? group?.min_erf) || 0);
+      const minCount = Math.max(0, Number(state?.required_count ?? group?.min_antal) || 0);
       const ok = Boolean(state.ok);
       if (group?.isPrimary) primaryOk = ok;
       if (!ok) {
@@ -553,10 +655,7 @@
       entryHasType(item, 'Monstruöst särdrag') ||
       entryHasType(item, 'Särdrag');
     if (!isAbility) return { kind: 'other', ded: 10 };
-    const lvl = normalizeLevel(item?.nivå, 'Novis');
-    if (lvl === 'Mästare') return { kind: 'ability', ded: 60 };
-    if (lvl === 'Gesäll') return { kind: 'ability', ded: 30 };
-    return { kind: 'ability', ded: 10 };
+    return { kind: 'ability', ded: costForEntry(item, item?.nivå) };
   }
 
   function namedSetRemaining(list, config, type) {
@@ -599,8 +698,8 @@
   }
 
   function groupRemainingXP(group, state = {}) {
-    const minErf = Math.max(0, Number(group?.min_erf) || 0);
-    const minCount = Math.max(0, Number(group?.min_antal) || 0);
+    const minErf = Math.max(0, Number(state?.required_erf ?? group?.min_erf) || 0);
+    const minCount = Math.max(0, Number(state?.required_count ?? group?.min_antal) || 0);
     const selectedErf = Math.max(0, Number(state?.selected_erf) || 0);
     const selectedCount = Math.max(0, Number(state?.selected_count) || 0);
     const missingErf = Math.max(0, minErf - selectedErf);

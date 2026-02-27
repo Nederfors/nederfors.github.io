@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v14';
+const CACHE_NAME = 'symbaroum-pwa-v15';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -56,6 +56,7 @@ const URLS_TO_CACHE = [
   'data/fardmedel.json',
   'data/fordel.json',
   'data/formaga.json',
+  'data/basformagor.json',
   'data/forvaring.json',
   'data/gardsdjur.json',
   'data/instrument.json',

@@ -300,7 +300,16 @@
     const counts = {};
     const vals = {};
     KEYS.forEach(k => {
-      counts[k] = list.filter(p => (p.taggar?.test || []).includes(k)).length;
+      counts[k] = list.filter(p => {
+        const tests = typeof window.getEntryTestTags === 'function'
+          ? window.getEntryTestTags(p, { level: p?.nivå })
+          : (Array.isArray(p?.taggar?.nivå_data?.Enkel?.test)
+            ? p.taggar.nivå_data.Enkel.test
+            : (Array.isArray(p?.taggar?.niva_data?.Enkel?.test)
+              ? p.taggar.niva_data.Enkel.test
+              : (p?.taggar?.test || [])));
+        return tests.includes(k);
+      }).length;
       vals[k] = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
     });
     const hasKraftprov = list.some(p => p.namn === 'Kraftprov');
