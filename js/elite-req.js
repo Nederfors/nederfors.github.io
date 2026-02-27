@@ -106,9 +106,12 @@
   }
 
   function countCreditForItem(item, group) {
+    if (entryHasType(item, 'Nackdel')) {
+      const groupType = normalizeType(group?.type);
+      return groupType === 'Nackdel' ? 1 : 0;
+    }
     const ded = deductionForItem(item).ded || 0;
     if (ded <= 0) return 0;
-    if (entryHasType(item, 'Nackdel')) return 0;
     if (entryHasType(item, 'Fördel')) {
       const groupType = normalizeType(group?.type);
       return groupType === 'Fördel' ? 1 : 0;
@@ -385,19 +388,12 @@
       const picked = [];
       let selectedErf = 0;
       let selectedCount = 0;
-      const countedNames = new Set();
       for (let i = 0; i < ranked.length; i += 1) {
         if ((!hasErfReq || selectedErf >= minErf) && (!hasCountReq || selectedCount >= minCount)) break;
         const row = ranked[i];
         picked.push(row);
         selectedErf += row.ded || 0;
-        if ((row.countCredit || 0) > 0) {
-          const countKey = String(row?.token?.key || normalizeKey(row?.token?.item?.namn || '')).trim();
-          if (!countKey || !countedNames.has(countKey)) {
-            if (countKey) countedNames.add(countKey);
-            selectedCount += 1;
-          }
-        }
+        selectedCount += row.countCredit || 0;
       }
       picked.forEach(row => consumed.add(row.token.id));
 
@@ -476,18 +472,11 @@
 
     let selectedErf = 0;
     let selectedCount = 0;
-    const countedNames = new Set();
     for (let i = 0; i < rows.length; i += 1) {
       if ((minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount)) break;
       const row = rows[i];
       selectedErf += row.ded || 0;
-      if ((row.countCredit || 0) > 0) {
-        const countKey = normalizeKey(row?.item?.namn || '');
-        if (!countKey || !countedNames.has(countKey)) {
-          if (countKey) countedNames.add(countKey);
-          selectedCount += 1;
-        }
-      }
+      selectedCount += row.countCredit || 0;
     }
 
     const ok = (minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount);

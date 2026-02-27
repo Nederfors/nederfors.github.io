@@ -169,7 +169,9 @@
 
   function countCreditForEntry(entry, model, level) {
     if (!entry) return 0;
-    if (entryHasType(entry, 'Nackdel')) return 0;
+    if (entryHasType(entry, 'Nackdel')) {
+      return normalizeType(model?.group?.type || model?.type || '') === 'Nackdel' ? 1 : 0;
+    }
     if (entryHasType(entry, 'Fördel')) {
       return normalizeType(model?.group?.type || model?.type || '') === 'Fördel' ? 1 : 0;
     }
@@ -204,7 +206,8 @@
       const min = Math.max(0, Number(row.min_antal) || 0);
       const minErf = Math.max(0, Number(row.min_erf) || 0);
       if (!names.length || (min <= 0 && minErf <= 0)) return;
-      const allowRepeat = names.some(name => isRepeatableBenefitName(name));
+      const repeatableNames = names.filter(name => isRepeatableBenefitName(name));
+      const allowRepeat = repeatableNames.length > 0;
       const slotByErf = minErf > 0 ? Math.ceil(minErf / 5) : 0;
       out.push({
         source: field,
@@ -213,7 +216,7 @@
         min_antal: min,
         min_erf: minErf,
         min_niva: 'Novis',
-        dynamic_select: allowRepeat || min > names.length || minErf > 0,
+        dynamic_select: true,
         slot_count: Math.max(
           min,
           slotByErf,
@@ -223,6 +226,7 @@
       });
     };
     pushBenefitGroup('specifika_fordelar', 'Fördel');
+    pushBenefitGroup('specifika_nackdelar', 'Nackdel');
 
     const seen = new Set();
     return out
@@ -461,6 +465,138 @@
     return Math.max(1, Number(toArray(model.names).length) || 1);
   }
 
+  function buildBenefitCountPlan(names, minCount) {
+    const list = toArray(names).map(value => String(value || '').trim()).filter(Boolean);
+    const required = Math.max(0, Number(minCount) || 0);
+    const rows = list.map(name => {
+      const entry = findEntry(name);
+      const max = isRepeatableBenefitEntry(entry) ? 3 : 1;
+      return { name, key: normalizeKey(name), max };
+    }).filter(row => row.key);
+    const totalMax = rows.reduce((sum, row) => sum + row.max, 0);
+    const byKey = new Map();
+    rows.forEach(row => {
+      const mandatory = Math.max(0, Math.min(
+        row.max,
+        required - (totalMax - row.max)
+      ));
+      byKey.set(row.key, {
+        name: row.name,
+        max: row.max,
+        mandatory
+      });
+    });
+    return { required, totalMax, byKey };
+  }
+
+  function benefitMandatoryQty(model, name) {
+    if (!model?.hasBenefitQty) return 0;
+    const key = normalizeKey(name);
+    if (!key) return 0;
+    return Math.max(0, Number(model?.benefitPlan?.byKey?.get(key)?.mandatory) || 0);
+  }
+
+  function benefitMaxQty(model, name) {
+    const key = normalizeKey(name);
+    if (!key) return 1;
+    const fromPlan = Math.max(0, Number(model?.benefitPlan?.byKey?.get(key)?.max) || 0);
+    if (fromPlan > 0) return fromPlan;
+    const entry = findEntry(name);
+    return isRepeatableBenefitEntry(entry) ? 3 : 1;
+  }
+
+  function benefitMinQtyFloor(model, name) {
+    const max = Math.max(1, benefitMaxQty(model, name));
+    const mandatory = Math.max(0, benefitMandatoryQty(model, name));
+    if (mandatory <= 0) return 1;
+    return Math.max(1, Math.min(max, mandatory));
+  }
+
+  function buildErfRequirementPlan(names, minErf, minCount, minLevel = 'Novis') {
+    const requiredErf = Math.max(0, Number(minErf) || 0);
+    const requiredCount = Math.max(0, Number(minCount) || 0);
+    const rows = toArray(names).map(raw => {
+      const name = String(raw || '').trim();
+      if (!name) return null;
+      const key = normalizeKey(name);
+      if (!key) return null;
+      const entry = findEntry(name);
+      const noLevel = isNoLevelEntry(entry);
+      let options = [];
+      if (noLevel) {
+        const cost = Math.max(0, estimateRequirementErf(entry, 'pick'));
+        options = [{ value: 'pick', cost }];
+      } else {
+        const levels = ['Novis', 'Gesäll', 'Mästare'].filter(level => levelMeets(level, minLevel || 'Novis'));
+        options = levels.map(level => ({
+          value: level,
+          cost: Math.max(0, estimateRequirementErf(entry, level))
+        }));
+      }
+      if (!options.length) return null;
+      const maxErf = options.reduce((best, opt) => Math.max(best, Number(opt.cost) || 0), 0);
+      return {
+        name,
+        key,
+        noLevel,
+        maxCount: 1,
+        maxErf,
+        options
+      };
+    }).filter(Boolean);
+
+    const totalMaxCount = rows.reduce((sum, row) => sum + row.maxCount, 0);
+    const totalMaxErf = rows.reduce((sum, row) => sum + row.maxErf, 0);
+    const byKey = new Map();
+
+    rows.forEach(row => {
+      const mandatoryCount = Math.max(0, requiredCount - (totalMaxCount - row.maxCount));
+      const mandatoryErf = Math.max(0, requiredErf - (totalMaxErf - row.maxErf));
+      let floorValue = '';
+      let floorCost = 0;
+      if (mandatoryCount > 0 || mandatoryErf > 0) {
+        const floorOption = row.options.find(opt => (Number(opt.cost) || 0) >= mandatoryErf) || row.options[row.options.length - 1];
+        floorValue = String(floorOption?.value || row.options[0]?.value || '').trim();
+        floorCost = Math.max(0, Number(floorOption?.cost) || 0);
+      }
+      byKey.set(row.key, {
+        name: row.name,
+        mandatory: mandatoryCount > 0 || mandatoryErf > 0,
+        mandatoryCount,
+        mandatoryErf,
+        floorValue,
+        floorCost,
+        maxErf: row.maxErf,
+        maxCount: row.maxCount,
+        noLevel: row.noLevel
+      });
+    });
+
+    return {
+      requiredErf,
+      requiredCount,
+      totalMaxErf,
+      totalMaxCount,
+      byKey
+    };
+  }
+
+  function abilityMandatoryInfo(model, name) {
+    const key = normalizeKey(name);
+    if (!key) return null;
+    return model?.erfPlan?.byKey?.get(key) || null;
+  }
+
+  function abilityMandatoryValueFloor(model, name) {
+    const info = abilityMandatoryInfo(model, name);
+    return String(info?.floorValue || '').trim();
+  }
+
+  function setLockedField(node, locked) {
+    if (!node) return;
+    node.classList.toggle('master-locked-field', Boolean(locked));
+  }
+
   function matchesGroupEntry(group, entry, levelOverride) {
     if (!group || !entry) return false;
     if (group?.tagRule) {
@@ -562,12 +698,18 @@
       const minErf = groupMinErf(group);
       const isPrimaryTag = source === 'primartagg' || source === 'sekundartagg';
       const isTagBased = minErf > 0 && isPrimaryTag;
+      const hasBenefitQty = source === 'specifika_fordelar' || source === 'specifika_nackdelar';
       const repeatableNames = new Set(names.filter(name => isRepeatableBenefitName(name)));
       const allowRepeat = Boolean(group?.allow_repeat) || repeatableNames.size > 0;
+      const benefitPlan = hasBenefitQty ? buildBenefitCountPlan(names, minCount) : null;
       const minSlots = minCount > 0 ? minCount : (minErf > 0 ? 1 : 0);
       const baseSlotCount = Math.max(minSlots, Number(group?.slot_count) || 0, 1);
       const progressive = minErf > 0 && isPrimaryTag;
-      const adaptiveSlots = Boolean(usesDynamicPicker(group));
+      const dynamic = Boolean(usesDynamicPicker(group));
+      const erfPlan = (dynamic && !hasBenefitQty)
+        ? buildErfRequirementPlan(names, minErf, minCount, groupMinLevel(group))
+        : null;
+      const adaptiveSlots = dynamic;
       const rawSlotCount = adaptiveSlots
         ? Math.max(baseSlotCount + 1, minCount + 2, names.length + 1)
         : baseSlotCount;
@@ -611,10 +753,12 @@
         dynamicAllowSkip: slotCount > minCount,
         isTagBased,
         adaptiveSlots,
-        hasBenefitQty: source === 'specifika_fordelar',
+        hasBenefitQty,
+        benefitPlan,
         noLevel: isNoLevelGroup(group),
         minLevel: groupMinLevel(group),
-        dynamic: usesDynamicPicker(group)
+        dynamic,
+        erfPlan
       };
     });
 
@@ -833,7 +977,17 @@
           .map(sel => `${String(sel.dataset.name || '').trim()}:${String(sel.value || '').trim()}`)
           .join('|');
         const dyn = Array.from(box.querySelectorAll(`select[data-ability][data-group="${model.idx}"]`))
-          .map(sel => `${String(sel.dataset.slot || '')}:${String(sel.value || '').trim()}`)
+          .map(sel => {
+            const slot = String(sel.dataset.slot || '');
+            const name = String(sel.value || '').trim();
+            const lvlSel = box.querySelector(`select[data-name][data-group="${model.idx}"][data-slot="${slot}"][data-dynamic="1"]`);
+            const lvl = String(lvlSel?.value || '').trim();
+            const choiceExtraSel = box.querySelector(`select[data-choice-extra][data-group="${model.idx}"][data-slot="${slot}"]`);
+            const choiceExtra = String(choiceExtraSel?.value || '').trim();
+            const qtySel = box.querySelector(`select[data-benefit-qty][data-group="${model.idx}"][data-slot="${slot}"]`);
+            const qty = String(qtySel?.value || '').trim();
+            return `${slot}:${name}:${lvl}:${choiceExtra}:${qty}`;
+          })
           .join('|');
         return `${model.idx}#${fixed}#${dyn}`;
       }).join('||');
@@ -1060,6 +1214,7 @@
           const slot = String(row.dataset.slot || '');
           syncProgressiveRow(model, slot);
         });
+        syncProgressiveLocks(model);
         return;
       }
 
@@ -1113,6 +1268,8 @@
           syncBenefitQtyControl(model, slot);
         }
       });
+      syncBenefitLocks(model);
+      syncAbilityLocks(model);
     }
 
     function syncDynamicLevelControl(model, slot) {
@@ -1138,21 +1295,257 @@
         qtySel.innerHTML = '<option value="x1">x1</option>';
         qtySel.value = 'x1';
         qtySel.disabled = true;
+        setLockedField(qtySel, false);
         return;
       }
       const entry = findEntry(picked);
       const max = isRepeatableBenefitEntry(entry) ? 3 : 1;
+      const floor = Math.max(1, Math.min(max, benefitMinQtyFloor(model, picked)));
       const prev = String(qtySel.value || '').trim();
-      qtySel.innerHTML = Array.from({ length: max }, (_, idx) => {
-        const value = `x${idx + 1}`;
+      qtySel.innerHTML = Array.from({ length: Math.max(1, (max - floor) + 1) }, (_, idx) => {
+        const value = `x${floor + idx}`;
         return `<option value="${value}">${value}</option>`;
       }).join('');
       if (prev && [...qtySel.options].some(opt => opt.value === prev)) {
         qtySel.value = prev;
       } else {
-        qtySel.value = 'x1';
+        qtySel.value = `x${floor}`;
       }
-      qtySel.disabled = max <= 1;
+      qtySel.disabled = max <= floor;
+      const qtyHardLocked = benefitMandatoryQty(model, picked) > 0 && max <= floor;
+      setLockedField(qtySel, qtyHardLocked);
+    }
+
+    function syncBenefitLocks(model) {
+      if (!model?.hasBenefitQty) return;
+      const abilitySels = Array.from(box.querySelectorAll(`select[data-ability][data-group="${model.idx}"]`));
+      abilitySels.forEach(sel => {
+        const name = String(sel.value || '').trim();
+        const mandatory = benefitMandatoryQty(model, name);
+        const lock = mandatory > 0;
+        sel.disabled = lock;
+        sel.dataset.lockedMandatory = lock ? '1' : '';
+        setLockedField(sel, lock);
+      });
+    }
+
+    function syncAbilityLocks(model) {
+      if (!model?.dynamic || model?.hasBenefitQty || model?.progressive) return;
+      const abilitySels = Array.from(box.querySelectorAll(`select[data-ability][data-group="${model.idx}"]`));
+      abilitySels.forEach(sel => {
+        const slot = String(sel.dataset.slot || '');
+        const picked = String(sel.value || '').trim();
+        const info = abilityMandatoryInfo(model, picked);
+        const lockName = Boolean(info?.mandatory);
+        sel.disabled = lockName;
+        sel.dataset.lockedMandatory = lockName ? '1' : '';
+        setLockedField(sel, lockName);
+
+        const lvlSel = box.querySelector(`select[data-name][data-group="${model.idx}"][data-slot="${slot}"][data-dynamic="1"]`);
+        if (!lvlSel) return;
+        const entry = picked && picked !== 'skip' ? findEntry(picked) : null;
+        if (!entry || isNoLevelEntry(entry)) {
+          setLockedField(lvlSel, false);
+          return;
+        }
+
+        const floor = abilityMandatoryValueFloor(model, picked);
+        const orderedLevels = ['Novis', 'Gesäll', 'Mästare'];
+        const baseMin = normalizeLevel(model.minLevel || 'Novis', 'Novis');
+        let allowed = orderedLevels.filter(level => levelMeets(level, baseMin));
+        if (floor) allowed = allowed.filter(level => levelMeets(level, floor));
+        if (!allowed.length) allowed = orderedLevels.filter(level => levelMeets(level, baseMin));
+        if (!allowed.length) allowed = ['Novis'];
+
+        const prev = String(lvlSel.value || '').trim();
+        lvlSel.innerHTML = allowed.map(level => `<option value="${escapeHtml(level)}">${escapeHtml(level)}</option>`).join('');
+        if (prev && allowed.includes(prev)) {
+          lvlSel.value = prev;
+        } else if (floor && allowed.includes(floor)) {
+          lvlSel.value = floor;
+        } else {
+          lvlSel.value = allowed[0];
+        }
+
+        const top = allowed[allowed.length - 1] || '';
+        const lockLevel = lockName &&
+          Boolean(floor) &&
+          normalizeLevel(top, '') === normalizeLevel(floor, '');
+        lvlSel.disabled = lockLevel;
+        setLockedField(lvlSel, lockLevel);
+      });
+    }
+
+    function syncProgressiveLocks(model) {
+      if (!model?.progressive) return;
+      const rows = visibleAdaptiveRows(model);
+      if (!rows.length) return;
+
+      const mandatoryByKey = new Map();
+      toArray(model.names).forEach(rawName => {
+        const name = String(rawName || '').trim();
+        const key = normalizeKey(name);
+        if (!name || !key || mandatoryByKey.has(key)) return;
+        const info = abilityMandatoryInfo(model, name);
+        if (!info?.mandatory) return;
+        mandatoryByKey.set(key, { name, info });
+      });
+
+      const resetLock = (sel, canEnable = true) => {
+        if (!sel) return;
+        const wasLocked = sel.dataset.lockedMandatory === '1';
+        if (wasLocked && canEnable) sel.disabled = false;
+        sel.dataset.lockedMandatory = '';
+        setLockedField(sel, false);
+      };
+
+      if (!mandatoryByKey.size) {
+        rows.forEach(row => {
+          const slot = String(row.dataset.slot || '');
+          const typeSel = box.querySelector(`select[data-choice-type][data-group="${model.idx}"][data-slot="${slot}"]`);
+          const nameSel = box.querySelector(`select[data-ability][data-group="${model.idx}"][data-slot="${slot}"]`);
+          const extraSel = box.querySelector(`select[data-choice-extra][data-group="${model.idx}"][data-slot="${slot}"]`);
+          resetLock(typeSel, true);
+          resetLock(nameSel, true);
+          resetLock(extraSel, Boolean(nameSel && String(nameSel.value || '').trim() && extraSel && extraSel.options.length > 1));
+        });
+        return;
+      }
+
+      const alreadyPickedMandatory = new Set();
+      rows.forEach(row => {
+        const slot = String(row.dataset.slot || '');
+        const nameSel = box.querySelector(`select[data-ability][data-group="${model.idx}"][data-slot="${slot}"]`);
+        const key = normalizeKey(nameSel?.value);
+        if (!key || !mandatoryByKey.has(key)) return;
+        alreadyPickedMandatory.add(key);
+      });
+
+      const pendingMandatory = Array.from(mandatoryByKey.entries())
+        .filter(([key]) => !alreadyPickedMandatory.has(key));
+
+      rows.forEach(row => {
+        if (!pendingMandatory.length) return;
+        const slot = String(row.dataset.slot || '');
+        const typeSel = box.querySelector(`select[data-choice-type][data-group="${model.idx}"][data-slot="${slot}"]`);
+        const nameSel = box.querySelector(`select[data-ability][data-group="${model.idx}"][data-slot="${slot}"]`);
+        if (!typeSel || !nameSel) return;
+        if (String(nameSel.value || '').trim()) return;
+
+        const [key, payload] = pendingMandatory[0];
+        const entry = findEntry(payload.name);
+        const typeKey = typeKeyForEntry(entry);
+        if (typeKey && [...typeSel.options].some(opt => opt.value === typeKey && !opt.disabled)) {
+          typeSel.value = typeKey;
+        }
+        syncProgressiveRow(model, slot);
+        if (![...nameSel.options].some(opt => opt.value === payload.name)) return;
+
+        nameSel.value = payload.name;
+        syncProgressiveRow(model, slot);
+
+        const extraSel = box.querySelector(`select[data-choice-extra][data-group="${model.idx}"][data-slot="${slot}"]`);
+        if (extraSel && (typeKey === 'ability' || typeKey === 'mystic')) {
+          const floor = String(payload.info?.floorValue || '').trim();
+          if (floor) {
+            const allowed = Array.from(extraSel.options)
+              .map(opt => String(opt.value || '').trim())
+              .filter(value => levelMeets(value, floor));
+            if (allowed.length) {
+              const prev = String(extraSel.value || '').trim();
+              extraSel.innerHTML = allowed.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+              if (prev && allowed.includes(prev)) {
+                extraSel.value = prev;
+              } else if (allowed.includes(floor)) {
+                extraSel.value = floor;
+              } else {
+                extraSel.value = allowed[0];
+              }
+            }
+          }
+        }
+
+        alreadyPickedMandatory.add(key);
+        pendingMandatory.shift();
+      });
+
+      rows.forEach(row => {
+        const slot = String(row.dataset.slot || '');
+        const typeSel = box.querySelector(`select[data-choice-type][data-group="${model.idx}"][data-slot="${slot}"]`);
+        const nameSel = box.querySelector(`select[data-ability][data-group="${model.idx}"][data-slot="${slot}"]`);
+        const extraSel = box.querySelector(`select[data-choice-extra][data-group="${model.idx}"][data-slot="${slot}"]`);
+        const pickedName = String(nameSel?.value || '').trim();
+        const info = abilityMandatoryInfo(model, pickedName);
+        const lockName = Boolean(info?.mandatory);
+
+        if (typeSel) {
+          const wasLocked = typeSel.dataset.lockedMandatory === '1';
+          if (lockName) {
+            typeSel.disabled = true;
+            typeSel.dataset.lockedMandatory = '1';
+          } else {
+            if (wasLocked) typeSel.disabled = false;
+            typeSel.dataset.lockedMandatory = '';
+          }
+          setLockedField(typeSel, lockName);
+        }
+
+        if (nameSel) {
+          const wasLocked = nameSel.dataset.lockedMandatory === '1';
+          if (lockName) {
+            nameSel.disabled = true;
+            nameSel.dataset.lockedMandatory = '1';
+          } else {
+            if (wasLocked) nameSel.disabled = false;
+            nameSel.dataset.lockedMandatory = '';
+          }
+          setLockedField(nameSel, lockName);
+        }
+
+        if (!extraSel) return;
+        const typeKey = String(typeSel?.value || '').trim();
+        if (lockName && (typeKey === 'ability' || typeKey === 'mystic')) {
+          const floor = String(info?.floorValue || '').trim();
+          if (floor) {
+            const currentValues = Array.from(extraSel.options).map(opt => String(opt.value || '').trim()).filter(Boolean);
+            let allowed = currentValues.filter(value => levelMeets(value, floor));
+            if (!allowed.length) allowed = currentValues;
+            if (allowed.length && allowed.length !== currentValues.length) {
+              const prev = String(extraSel.value || '').trim();
+              extraSel.innerHTML = allowed.map(value => `<option value="${escapeHtml(value)}">${escapeHtml(value)}</option>`).join('');
+              if (prev && allowed.includes(prev)) {
+                extraSel.value = prev;
+              } else if (allowed.includes(floor)) {
+                extraSel.value = floor;
+              } else {
+                extraSel.value = allowed[0];
+              }
+            } else if (!levelMeets(String(extraSel.value || '').trim(), floor) && allowed.length) {
+              extraSel.value = allowed.includes(floor) ? floor : allowed[0];
+            }
+
+            const top = allowed[allowed.length - 1] || '';
+            const lockLevel = normalizeLevel(top, '') === normalizeLevel(floor, '');
+            const wasLocked = extraSel.dataset.lockedMandatory === '1';
+            if (lockLevel) {
+              extraSel.disabled = true;
+              extraSel.dataset.lockedMandatory = '1';
+            } else {
+              if (wasLocked && extraSel.options.length > 1) extraSel.disabled = false;
+              extraSel.dataset.lockedMandatory = '';
+            }
+            setLockedField(extraSel, lockLevel);
+            return;
+          }
+        }
+
+        const wasLocked = extraSel.dataset.lockedMandatory === '1';
+        if (wasLocked && nameSel && String(nameSel.value || '').trim() && extraSel.options.length > 1) {
+          extraSel.disabled = false;
+        }
+        extraSel.dataset.lockedMandatory = '';
+        setLockedField(extraSel, false);
+      });
     }
 
     function collectSelectionsByGroup() {
@@ -1328,7 +1721,7 @@
           if (!repeatable && existingPool.length) {
             const preferred = existingPool.find(token => token.lockedGroup === null || token.lockedGroup === model.idx)
               || existingPool[0];
-            if (preferred.lockedGroup === null) preferred.lockedGroup = model.idx;
+            preferred.lockedGroup = model.idx;
             if (row.level) preferred.level = String(row.level || '').trim() || preferred.level;
             return;
           }
@@ -1369,9 +1762,19 @@
         });
 
       ordered.forEach(model => {
+        const modelSelectedRows = toArray(selectionsByGroup.get(model.idx)).filter(row => {
+          const name = String(row?.name || '').trim();
+          const level = String(row?.level || '').trim();
+          return Boolean(name && level && level !== 'skip');
+        });
+        const hasExplicitSelection = modelSelectedRows.length > 0;
         const candidates = dedupeTokensForModel(model, tokens.filter(token => {
           if (consumed.has(token.id)) return false;
-          if (token.lockedGroup !== null && token.lockedGroup !== model.idx) return false;
+          if (hasExplicitSelection) {
+            if (token.lockedGroup !== model.idx) return false;
+          } else if (token.lockedGroup !== null && token.lockedGroup !== model.idx) {
+            return false;
+          }
           if (!isReservedGroup(model.group) && reservedNames.has(token.key)) return false;
           return matchesGroupEntry(model.group, token.entry, token.level);
         }));
@@ -1394,19 +1797,12 @@
         const picked = [];
         let selectedErf = 0;
         let selectedCount = 0;
-        const countedNames = new Set();
         for (let i = 0; i < rows.length; i += 1) {
           if ((!hasErfReq || selectedErf >= needErf) && (!hasCountReq || selectedCount >= needCount)) break;
           const row = rows[i];
           picked.push(row);
           selectedErf += row.cost || 0;
-          if ((row.countCredit || 0) > 0) {
-            const countKey = normalizeKey(row?.token?.name || row?.token?.entry?.namn || '');
-            if (!countKey || !countedNames.has(countKey)) {
-              if (countKey) countedNames.add(countKey);
-              selectedCount += 1;
-            }
-          }
+          selectedCount += row.countCredit || 0;
         }
         picked.forEach(row => consumed.add(row.token.id));
         const metric = hasErfReq && hasCountReq
@@ -1448,13 +1844,80 @@
       return { states, selectionsByGroup };
     }
 
-    function updateProgress(states) {
+    function collectRowsForPreview() {
+      const byGroup = collectSelectionsByGroup();
+      const rows = [];
+      models.forEach(model => {
+        rows.push(...toArray(byGroup.get(model.idx)));
+      });
+      rows.push(...collectExtraSelections());
+      return rows
+        .map(row => ({
+          name: String(row?.name || '').trim(),
+          level: String(row?.level || '').trim() || 'Novis'
+        }))
+        .filter(row => row.name && row.level && row.level !== 'skip');
+    }
+
+    function projectedInvestmentErf(rows) {
+      const list = toArray(currentList);
+      if (!rows.length) return 0;
+      const grouped = new Map();
+      rows.forEach(row => {
+        const item = findEntry(row.name);
+        if (!item) return;
+        const canonical = String(item?.namn || row.name).trim();
+        if (!canonical) return;
+        const key = normalizeKey(canonical);
+        if (!grouped.has(key)) grouped.set(key, { item, key, levels: [] });
+        grouped.get(key).levels.push(String(row.level || '').trim() || 'Novis');
+      });
+
+      let addedErf = 0;
+      grouped.forEach(({ item, key, levels }) => {
+        const existingRows = list.filter(row => normalizeKey(row?.namn) === key && !row?.trait);
+        const existing = existingRows[0] || null;
+        const ritual = isRitualEntry(item);
+        const noLevel = isNoLevelEntry(item);
+        const repeatable = canStackRequirementEntry(item);
+
+        if (repeatable) {
+          const desiredCount = Math.max(0, levels.length);
+          const toAdd = Math.max(0, desiredCount - existingRows.length);
+          if (toAdd > 0) {
+            const unitCost = estimateRequirementErf(item, 'pick');
+            addedErf += toAdd * unitCost;
+          }
+          return;
+        }
+
+        const chosenLevel = levels.reduce((last, cur) => {
+          const lvl = String(cur || '').trim();
+          if (!lvl || lvl === 'pick') return last;
+          return normalizeLevel(lvl, 'Novis');
+        }, '');
+        const levelValue = chosenLevel || 'Novis';
+        const nextCost = ritual
+          ? estimateRequirementErf(item, 'Novis')
+          : (noLevel ? estimateRequirementErf(item, 'pick') : estimateRequirementErf(item, levelValue));
+        if (!existing) {
+          addedErf += nextCost;
+          return;
+        }
+        const currentCost = estimateRequirementErf(existing, existing?.nivå);
+        addedErf += Math.max(0, nextCost - currentCost);
+      });
+
+      return Math.max(0, addedErf);
+    }
+
+    function updateProgress(states, investmentErf = 0) {
       const total = models.length;
       const done = states.filter(state => state.ok).length;
       const percent = total ? Math.round((done / total) * 100) : 100;
       progress.innerHTML = `
         <div class="master-progress-copy">
-          <strong>${done}/${total}</strong> kravgrupper klara
+          <strong>${done}/${total}</strong> kravgrupper klara · <strong>${Math.max(0, Number(investmentErf) || 0)}</strong> ERF investeras
         </div>
         <div class="master-progress-bar"><span style="width:${percent}%"></span></div>
       `;
@@ -1548,17 +2011,65 @@
             : defaultPicksForGroup(model.group, currentList, abilitySels.length, { fillFallback: false });
           if (model.hasBenefitQty) {
             const countByName = new Map();
-            picks.forEach(row => {
-              const key = String(row?.name || '').trim();
-              if (!key) return;
-              countByName.set(key, (countByName.get(key) || 0) + 1);
+            const canonicalByKey = new Map();
+            toArray(model.names).forEach(name => {
+              const rawName = String(name || '').trim();
+              const key = normalizeKey(rawName);
+              if (!rawName || !key) return;
+              canonicalByKey.set(key, rawName);
+              const mandatory = benefitMandatoryQty(model, rawName);
+              if (mandatory <= 0) return;
+              const current = countByName.get(key) || 0;
+              if (current < mandatory) countByName.set(key, mandatory);
             });
             const compact = [];
-            Array.from(countByName.entries()).forEach(([name, count]) => {
-              const qty = Math.max(1, Math.min(3, Number(count) || 1));
+            const emitted = new Set();
+            toArray(model.names).forEach(name => {
+              const rawName = String(name || '').trim();
+              const key = normalizeKey(rawName);
+              if (!rawName || !key || emitted.has(key)) return;
+              const count = countByName.get(key) || 0;
+              if (count <= 0) return;
+              const max = Math.max(1, benefitMaxQty(model, rawName));
+              const qty = Math.max(1, Math.min(max, Number(count) || 1));
+              compact.push({ name: rawName, level: 'pick', qty });
+              emitted.add(key);
+            });
+            Array.from(countByName.entries()).forEach(([key, count]) => {
+              if (emitted.has(key) || count <= 0) return;
+              const name = canonicalByKey.get(key) || key;
+              const max = Math.max(1, benefitMaxQty(model, name));
+              const qty = Math.max(1, Math.min(max, Number(count) || 1));
               compact.push({ name, level: 'pick', qty });
+              emitted.add(key);
             });
             picks = compact;
+          } else if (model.erfPlan?.byKey) {
+            const mandatoryPicks = [];
+            const used = new Set();
+            model.names.forEach(name => {
+              const rawName = String(name || '').trim();
+              const key = normalizeKey(rawName);
+              if (!rawName || !key || used.has(key)) return;
+              const info = abilityMandatoryInfo(model, rawName);
+              if (!info?.mandatory) return;
+              const existing = picks.find(row => normalizeKey(row?.name) === key);
+              const fallbackLevel = model.noLevel
+                ? 'pick'
+                : (String(info.floorValue || model.minLevel || 'Novis').trim() || 'Novis');
+              mandatoryPicks.push({
+                name: rawName,
+                level: String(existing?.level || fallbackLevel).trim() || fallbackLevel
+              });
+              used.add(key);
+            });
+            if (mandatoryPicks.length) {
+              const rest = picks.filter(row => {
+                const key = normalizeKey(row?.name);
+                return key && !used.has(key);
+              });
+              picks = mandatoryPicks.concat(rest);
+            }
           }
           let assigned = 0;
           abilitySels.forEach((nameSel, slotIdx) => {
@@ -1908,7 +2419,9 @@
         extraSection.hidden = !allReqsOk;
       }
 
-      updateProgress(stateList);
+      const previewRows = collectRowsForPreview();
+      const investmentErf = projectedInvestmentErf(previewRows);
+      updateProgress(stateList, investmentErf);
       add.disabled = stateList.some(state => !state.ok);
     }
 
