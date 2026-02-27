@@ -1837,7 +1837,101 @@ function defaultTraits() {
   }
 
   /* ---------- 6. XP-hantering ---------- */
-  const XP_LADDER = { Novis: 10, Gesäll: 30, Mästare: 60 };
+  const XP_LADDER = Object.freeze({
+    Novis: 10,
+    'Gesäll': 30,
+    'Mästare': 60,
+    Enkel: 10,
+    'Ordinär': 20,
+    Avancerad: 30
+  });
+
+  const LEVEL_ALIASES = Object.freeze({
+    novis: 'Novis',
+    gesall: 'Gesäll',
+    'gesäll': 'Gesäll',
+    mastare: 'Mästare',
+    'mästare': 'Mästare',
+    enkel: 'Enkel',
+    ordinar: 'Ordinär',
+    'ordinär': 'Ordinär',
+    avancerad: 'Avancerad'
+  });
+
+  const LEVEL_PRIORITY = Object.freeze([
+    'Novis',
+    'Enkel',
+    'Gesäll',
+    'Ordinär',
+    'Mästare',
+    'Avancerad'
+  ]);
+
+  const normalizeLevelName = (level) => {
+    const raw = String(level || '').trim();
+    if (!raw) return '';
+    const lower = raw.toLowerCase();
+    return LEVEL_ALIASES[lower] || raw;
+  };
+
+  function entryDefinedLevels(entry) {
+    const out = new Set();
+    const add = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(add);
+        return;
+      }
+      if (!value || typeof value !== 'object') return;
+      Object.keys(value).forEach(key => {
+        const norm = normalizeLevelName(key);
+        if (norm) out.add(norm);
+      });
+    };
+    add(entry?.nivåer);
+    add(entry?.nivaer);
+    add(entry?.taggar?.nivå_data);
+    add(entry?.taggar?.niva_data);
+    return LEVEL_PRIORITY.filter(level => out.has(level)).concat(
+      Array.from(out).filter(level => !LEVEL_PRIORITY.includes(level))
+    );
+  }
+
+  function resolveEntryLevel(entry, preferredLevel) {
+    const preferred = normalizeLevelName(preferredLevel);
+    const selected = normalizeLevelName(entry?.nivå);
+    const defined = entryDefinedLevels(entry);
+
+    if (preferred) {
+      if (!defined.length || defined.includes(preferred)) return preferred;
+      if (defined.length === 1) return defined[0];
+    }
+    if (selected) {
+      if (!defined.length || defined.includes(selected)) return selected;
+      if (defined.length === 1) return defined[0];
+    }
+    if (defined.length) {
+      if (defined.includes('Novis')) return 'Novis';
+      if (defined.includes('Enkel')) return 'Enkel';
+      return defined[0];
+    }
+    return preferred || selected || 'Novis';
+  }
+
+  function levelCost(level) {
+    const norm = normalizeLevelName(level);
+    return XP_LADDER[norm] || 10;
+  }
+
+  function entryLevelCost(entry, preferredLevel) {
+    const resolved = resolveEntryLevel(entry, preferredLevel);
+    return levelCost(resolved);
+  }
+
+  function isLevelCostType(types = []) {
+    const lower = types.map(type => String(type || '').trim().toLowerCase());
+    return ['mystisk kraft', 'förmåga', 'basförmåga', 'särdrag', 'monstruöst särdrag']
+      .some(type => lower.includes(type));
+  }
 
   function getBaseXP(store) {
     if (!store.current) return 0;
@@ -1879,7 +1973,43 @@ function defaultTraits() {
     'Symbolism': 'Symbolism'
   };
 
-  const LEVEL_IDX = { '': 0, Novis: 1, Gesäll: 2, Mästare: 3 };
+  const LEVEL_IDX = {
+    '': 0,
+    Novis: 1,
+    Enkel: 1,
+    'Gesäll': 2,
+    'Ordinär': 2,
+    'Mästare': 3,
+    Avancerad: 3
+  };
+
+  function resolveRitualLevel(entry) {
+    const selected = normalizeLevelName(entry?.nivå);
+    const defined = entryDefinedLevels(entry);
+    const legacyMap = {
+      Novis: 'Enkel',
+      'Gesäll': 'Ordinär',
+      'Mästare': 'Avancerad'
+    };
+    if (selected) {
+      if (!defined.length && legacyMap[selected]) return legacyMap[selected];
+      if (!defined.length || defined.includes(selected)) return selected;
+      if (defined.length === 1) return defined[0];
+    }
+    if (defined.length) {
+      if (defined.includes('Enkel')) return 'Enkel';
+      if (defined.includes('Novis')) return 'Enkel';
+      return defined[0];
+    }
+    return 'Enkel';
+  }
+
+  function ritualTraditionRequirement(level) {
+    const ritualLevel = normalizeLevelName(level);
+    if (ritualLevel === 'Avancerad' || ritualLevel === 'Mästare') return 3;
+    if (ritualLevel === 'Ordinär' || ritualLevel === 'Gesäll') return 2;
+    return 1; // Enkel / Novis / fallback
+  }
 
   function abilityLevel(list, ability) {
     const ent = list.find(x =>
@@ -1975,7 +2105,8 @@ function defaultTraits() {
         const plvl = levelValue || 1;
         if (plvl > lvl) cor += (plvl - lvl);
       } else if (types.includes('Ritual')) {
-        if (lvl < 1) cor++;
+        const reqLevel = ritualTraditionRequirement(resolveRitualLevel(it));
+        if (lvl < reqLevel) cor++;
       }
     });
     cor += extra?.corruption || 0;
@@ -1997,11 +2128,10 @@ function defaultTraits() {
       if (!item || typeof item !== 'object') return;
       const types = (item.taggar?.typ || []).map(t => t.toLowerCase());
 
-      if (item.nivåer && ['mystisk kraft','förmåga','särdrag','monstruöst särdrag']
-          .some(t => types.includes(t))) {
+      if (isLevelCostType(types)) {
         let cost = isFreeMonsterTrait(entries, item)
           ? 0
-          : (XP_LADDER[item.nivå || 'Novis'] || 0);
+          : entryLevelCost(item);
         cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
         xp += cost;
 
@@ -2135,13 +2265,10 @@ function defaultTraits() {
       return disXp.length < 5 ? -ADVANTAGE_STEP_COST : 0;
     }
     let xp = 0;
-    if (
-      entry.nivåer &&
-      ['mystisk kraft', 'förmåga', 'särdrag', 'monstruöst särdrag'].some(t => types.includes(t))
-    ) {
+    if (isLevelCostType(types)) {
       let cost = isFreeMonsterTrait(list || [], entry)
         ? 0
-        : (XP_LADDER[entry.nivå || 'Novis'] || 0);
+        : entryLevelCost(entry);
       cost = Math.max(0, cost - monsterTraitDiscount(list || [], entry));
       xp += cost;
     } else if (types.includes('monstruöst särdrag')) {
@@ -3000,6 +3127,10 @@ function defaultTraits() {
     calcEntryXP,
     calcEntryDisplayXP,
     formatEntryXPText,
+    normalizeLevelName,
+    entryDefinedLevels,
+    resolveEntryLevel,
+    entryLevelCost,
     calcTotalXP,
     countDisadvantages,
     calcPermanentCorruption,

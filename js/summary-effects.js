@@ -1,9 +1,10 @@
 (function(window){
-  const LVL = ['Novis','Gesäll','Mästare'];
+  const LVL = ['Novis', 'Gesäll', 'Mästare', 'Enkel', 'Ordinär', 'Avancerad'];
   const EFFECT_SECTION_LABELS = new Map([
     ['Fördel', 'Fördelar'],
     ['Nackdel', 'Nackdelar'],
     ['Förmåga', 'Förmågor'],
+    ['Basförmåga', 'Förmågor'],
     ['Mystisk kraft', 'Mystiska krafter'],
     ['Ritual', 'Ritualer'],
     ['Särdrag', 'Särdrag'],
@@ -396,10 +397,14 @@
   const gatherEntries = (types, options = {}) => {
     const wanted = Array.isArray(types) ? types : [types];
     const { annotateMultiples = false, multipleThreshold = 2 } = options;
+    const matchesType = (entryTypes, type) => {
+      if (entryTypes.includes(type)) return true;
+      return type === 'Förmåga' && entryTypes.includes('Basförmåga');
+    };
     const counts = new Map();
     (storeHelper.getCurrentList(store) || []).forEach(entry => {
       const entryTypes = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
-      if (!wanted.some(type => entryTypes.includes(type))) return;
+      if (!wanted.some(type => matchesType(entryTypes, type))) return;
       const display = abilityDisplayName(entry);
       if (!display) return;
       const key = display.toLocaleLowerCase('sv');
@@ -810,9 +815,23 @@
       if (t === 'Traditionslös') return;
       tags.push(`<span class="tag filter-tag" data-section="ark" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);
     });
+    const readTests = (src, level) => {
+      if (!src) return [];
+      if (typeof window.getEntryTestTags === 'function') {
+        return window.getEntryTestTags(src, { level });
+      }
+      const tags = src.taggar || {};
+      const lvlData = tags.nivå_data || tags.niva_data || {};
+      const normalizedLevel = String(level || '').trim();
+      if (normalizedLevel && Array.isArray(lvlData[normalizedLevel]?.test)) {
+        return lvlData[normalizedLevel].test;
+      }
+      if (Array.isArray(lvlData.Enkel?.test)) return lvlData.Enkel.test;
+      return Array.isArray(tags.test) ? tags.test : [];
+    };
     const testSet = new Set([
-      ...(baseEntry?.taggar?.test || []),
-      ...(entry?.taggar?.test || [])
+      ...readTests(baseEntry, entry?.nivå || baseEntry?.nivå),
+      ...readTests(entry, entry?.nivå)
     ].filter(Boolean));
     testSet.forEach(t => {
       tags.push(`<span class="tag filter-tag" data-section="test" data-val="${escapeAttr(t)}">${escapeHtml(t)}</span>`);

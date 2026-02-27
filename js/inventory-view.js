@@ -146,7 +146,9 @@
           const hasValue = arkSource.some(v => String(v || '').trim());
           if (hasValue) sets.ark.add('Traditionslös');
         }
-        const testTags = Array.isArray(tags.test) ? tags.test : [];
+        const testTags = typeof window.getEntryTestTags === 'function'
+          ? window.getEntryTestTags(entry)
+          : (Array.isArray(tags.test) ? tags.test : []);
         testTags.filter(Boolean).forEach(val => sets.test.add(val));
       });
     }

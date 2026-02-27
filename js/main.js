@@ -249,7 +249,12 @@ function ensureEntryMeta(entry) {
     ? searchNormalize(lowerName)
     : lowerName;
 
-  const levelText = Object.values(entry.nivåer || {})
+  const levelText = []
+    .concat(Object.keys(entry.nivåer || {}))
+    .concat(Object.keys(entry.nivaer || {}))
+    .concat(Object.keys(entry?.taggar?.nivå_data || {}))
+    .concat(Object.keys(entry?.taggar?.niva_data || {}))
+    .concat(Object.values(entry.nivåer || {}))
     .map(toLower)
     .join(' ');
   const descText = toLower(entry.beskrivning);
@@ -278,7 +283,11 @@ function ensureEntryMeta(entry) {
   if (!arkList.length && Array.isArray(tags.ark_trad)) {
     arkList = ['Traditionslös'];
   }
-  const testList = normalizeList(tags.test);
+  const testList = normalizeList(
+    typeof window.getEntryTestTags === 'function'
+      ? window.getEntryTestTags(entry)
+      : tags.test
+  );
 
   const secondaryTags = [...arkList, ...testList];
   const secondaryLookup = new Set(
@@ -1192,6 +1201,7 @@ const DATA_FILES = [
   'elixir.json',
   'fordel.json',
   'formaga.json',
+  'basformagor.json',
   'kvalitet.json',
   'mystisk-kraft.json',
   'mystisk-kvalitet.json',
@@ -1400,7 +1410,7 @@ function buildElityrkeInfoSections(p) {
   const normalizeLevel = (level, fallback = 'Novis') => (typeof utils.normalizeLevel === 'function'
     ? utils.normalizeLevel(level, fallback)
     : String(level || '').trim() || fallback);
-  const TYPE_SORT_ORDER = ['Fördel', 'Nackdel', 'Förmåga', 'Ritual', 'Mystisk kraft', 'Monstruöst särdrag', 'Särdrag'];
+  const TYPE_SORT_ORDER = ['Fördel', 'Nackdel', 'Förmåga', 'Basförmåga', 'Ritual', 'Mystisk kraft', 'Monstruöst särdrag', 'Särdrag'];
   const typeSortRank = (type) => {
     const normalized = normalizeType(type);
     const idx = TYPE_SORT_ORDER.indexOf(normalized);
@@ -1421,7 +1431,10 @@ function buildElityrkeInfoSections(p) {
     .filter(Boolean)
     .join(', ');
   const groupHeading = (group, idx) => {
-    if (group?.isPrimary) return 'Primärförmåga';
+    if (group?.isPrimary) {
+      const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
+      return names.length > 1 ? 'Primärförmåga (välj en)' : 'Primärförmåga';
+    }
     if (group?.anyMystic) return 'Valfri mystisk kraft';
     if (group?.anyRitual) return 'Valfri ritual';
     const source = String(group?.source || '');
@@ -1443,7 +1456,7 @@ function buildElityrkeInfoSections(p) {
       const primaryType = normalizeType(group?.type) || 'Förmåga';
       const parts = [primaryType];
       if (minErf > 0) parts.push(`Minst ${minErf} ERF`);
-      if (minCount > 0) parts.push(`Minst ${minCount} val (${countFloor}+ ERF/st)`);
+      if (minCount > 0) parts.push(`Minst ${minCount} val`);
       return parts.join(' · ');
     }
     if (minErf > 0) {
@@ -2587,7 +2600,10 @@ function openCharacterToolsPopup(initialTab = 'generate') {
         applyEntryOptions(eliteSel, 'Elityrke', 'Inget elityrke (slump)');
 
         const db = Array.isArray(window.DB) ? window.DB : [];
-        const ready = db.some(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Förmåga'));
+        const ready = db.some(entry => {
+          const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+          return types.includes('Förmåga') || types.includes('Basförmåga');
+        });
         warning.hidden = ready;
         submitBtn.disabled = !ready;
         stats.textContent = `${(store.characters || []).length} rollpersoner finns just nu.`;
@@ -5803,7 +5819,10 @@ async function openGeneratorPopup(preferredFolderId) {
   const generatorDataReady = () => {
     const db = Array.isArray(window.DB) ? window.DB : [];
     if (!db.length) return false;
-    return db.some(entry => Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Förmåga'));
+    return db.some(entry => {
+      const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+      return types.includes('Förmåga') || types.includes('Basförmåga');
+    });
   };
 
   const syncGeneratorReadyState = () => {

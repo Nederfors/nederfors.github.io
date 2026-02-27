@@ -179,6 +179,7 @@
     'Yrke',
     'Elityrke',
     'Förmåga',
+    'Basförmåga',
     'Mystisk kraft',
     'Ritual',
     'Fördel',
@@ -206,6 +207,7 @@
     'Yrke': 'Yrken',
     'Elityrke': 'Elityrken',
     'Förmåga': 'Förmågor',
+    'Basförmåga': 'Basförmågor',
     'Mystisk kraft': 'Mystiska krafter',
     'Ritual': 'Ritualer',
     'Fördel': 'Fördelar',
@@ -399,6 +401,40 @@
     return source
       .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
       .filter(Boolean);
+  }
+
+  function getEntryTestTags(entry, opts = {}){
+    if (!entry || typeof entry !== 'object') return [];
+    const out = [];
+    const seen = new Set();
+    const add = (value) => {
+      if (Array.isArray(value)) {
+        value.forEach(add);
+        return;
+      }
+      const txt = String(value ?? '').trim();
+      if (!txt) return;
+      const key = searchNormalize(txt.toLowerCase());
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(txt);
+    };
+
+    const tags = entry.taggar || {};
+    add(tags.test);
+
+    const levelData = tags.nivå_data || tags.niva_data;
+    if (levelData && typeof levelData === 'object') {
+      const wantedLevel = String(opts.level || '').trim();
+      if (wantedLevel) {
+        const wantedKey = searchNormalize(wantedLevel.toLowerCase());
+        const matchKey = Object.keys(levelData).find(key => searchNormalize(String(key || '').toLowerCase()) === wantedKey);
+        if (matchKey) add(levelData[matchKey]?.test);
+      } else {
+        Object.values(levelData).forEach(meta => add(meta?.test));
+      }
+    }
+    return out;
   }
 
   function explodeTags(arr){
@@ -622,8 +658,7 @@
 
     const primaryTest = (ent) => {
       if (!ent || typeof ent !== 'object') return '';
-      const tags = ent.taggar || {};
-      const list = Array.isArray(tags.test) ? tags.test : [];
+      const list = getEntryTestTags(ent);
       return list[0] || '';
     };
 
@@ -1060,6 +1095,7 @@
   window.createSearchSorter = createSearchSorter;
   window.normalizeEntrySortMode = normalizeEntrySortMode;
   window.entrySortComparator = entrySortComparator;
+  window.getEntryTestTags = getEntryTestTags;
   window.compareSv = compareSv;
   window.ENTRY_SORT_DEFAULT = ENTRY_SORT_DEFAULT;
   window.ENTRY_SORT_MODES = ENTRY_SORT_MODES;

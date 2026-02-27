@@ -173,6 +173,7 @@
       "bortbyting"
     ],
     "lampliga_formagor": [
+      "Djurvän",
       "Häxkonster",
       "Naturlig krigare",
       "Barkhud",
@@ -427,6 +428,7 @@
     "lampliga_formagor": [
       "Dominera",
       "Fint",
+      "Formelbindning",
       "Häxsyn",
       "Monsterlärd",
       "Närstridsskytte",
@@ -539,10 +541,15 @@
       "dvärgar"
     ],
     "lampliga_formagor": [
+      "Fintstepp",
+      "Repmästare",
+      "Stavsprång",
+      "Stärkande Måltid",
       "Akrobatik",
       "Dominera",
       "Exceptionellt karaktärsdrag",
       "Fint",
+      "Formelbindning",
       "Försåtsgillrare",
       "Giftbrukare",
       "Häxsyn",
@@ -654,6 +661,8 @@
       "vandöd"
     ],
     "lampliga_formagor": [
+      "Stavsprång",
+      "Stärkande Måltid",
       "Akrobatik",
       "Belägringskonst",
       "Brottning",
@@ -810,9 +819,13 @@
       "alvtagen människa"
     ],
     "lampliga_formagor": [
+      "Djurvän",
+      "Mental Försegling",
+      "Stärkande Måltid",
       "Alkemist",
       "Dominera",
       "Exceptionellt karaktärsdrag",
+      "Formelbindning",
       "Häxkonster",
       "Häxsyn",
       "Inspirerande talare",
@@ -1083,6 +1096,9 @@
       "vandöd"
     ],
     "lampliga_formagor": [
+      "Fintstepp",
+      "Repmästare",
+      "Stavsprång",
       "Akrobatik",
       "Alkemist",
       "Belägringskonst",

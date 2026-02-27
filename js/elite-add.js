@@ -95,7 +95,10 @@
   function entryHasType(entry, type) {
     const wanted = normalizeType(type);
     if (!wanted) return true;
-    return entryTypes(entry).includes(wanted);
+    const types = entryTypes(entry);
+    if (types.includes(wanted)) return true;
+    if (wanted === 'Förmåga' && types.includes('Basförmåga')) return true;
+    return false;
   }
 
   function entryUsesLevel(entry) {
@@ -323,7 +326,10 @@
   }
 
   function groupHeading(group, idx) {
-    if (group?.isPrimary) return 'Primärförmåga';
+    if (group?.isPrimary) {
+      const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
+      return names.length > 1 ? 'Primärförmåga (välj en)' : 'Primärförmåga';
+    }
     if (group?.anyMystic) return 'Valfri mystisk kraft';
     if (group?.anyRitual) return 'Valfri ritual';
 
@@ -349,7 +355,11 @@
     const countFloor = countFloorForModel({ group });
     if (minErf > 0) {
       const parts = [`Minst ${minErf} ERF`];
-      if (minCount > 0) parts.push(`Minst ${minCount} val (${countFloor}+ ERF/st)`);
+      if (minCount > 0) {
+        parts.push(group?.isPrimary
+          ? `Minst ${minCount} val`
+          : `Minst ${minCount} val (${countFloor}+ ERF/st)`);
+      }
       if (names.length) parts.push(`${names.length} alternativ`);
       return parts.join(' · ');
     }
@@ -2465,7 +2475,8 @@
 
   function isNoLevelEntry(entry) {
     const types = toArray(entry?.taggar?.typ);
-    return types.includes('Ritual') || types.includes('Fördel') || types.includes('Nackdel');
+    if (types.includes('Ritual') || types.includes('Fördel') || types.includes('Nackdel')) return true;
+    return !entryUsesLevel(entry);
   }
 
   function mergeLevel(current, incoming) {
@@ -2600,7 +2611,7 @@
     if(!res.ok){
       const msg = 'Krav ej uppfyllda:\n' +
         (res.missing.length ? `Saknar: ${res.missing.join(', ')}\n` : '') +
-        (res.primary ? '' : 'Primärförmågan uppfyller inte kravet.\n') +
+        (res.primary ? '' : 'Primärförmågekravet uppfylls inte.\n') +
         'Lägga till ändå?';
       if(!(await confirmPopup(msg))) return;
     }

@@ -3274,7 +3274,9 @@
       }
     }
     const arkTags = splitArkTags(tagger.ark_trad);
-    const testTags = Array.isArray(tagger.test) ? tagger.test : [];
+    const testTags = typeof window.getEntryTestTags === 'function'
+      ? window.getEntryTestTags(entry, { level: rowLevel || row?.nivå })
+      : (Array.isArray(tagger.test) ? tagger.test : []);
     const infoTags = testTags.concat(
       arkTags.length ? arkTags : (Array.isArray(tagger.ark_trad) ? ['Traditionslös'] : [])
     );
@@ -3586,7 +3588,13 @@
       const arkRaw = entry.taggar?.ark_trad;
       const arkTags = splitArkTags(arkRaw);
       const arkList = arkTags.length ? arkTags : (Array.isArray(arkRaw) ? ['Traditionslös'] : []);
-      const testTags = entry.taggar?.test || [];
+      const testTags = typeof window.getEntryTestTags === 'function'
+        ? window.getEntryTestTags(entry)
+        : (Array.isArray(entry.taggar?.nivå_data?.Enkel?.test)
+          ? entry.taggar.nivå_data.Enkel.test
+          : (Array.isArray(entry.taggar?.niva_data?.Enkel?.test)
+            ? entry.taggar.niva_data.Enkel.test
+            : (entry.taggar?.test || [])));
       const itemTags = [...typTags, ...arkList, ...testTags];
 
       const tagHit = hasTagFilters && (
