@@ -1,4 +1,13 @@
 (function(window){
+  function applyContentMode(wrap){
+    if (!wrap) return;
+    const inner = wrap.querySelector('.popup-inner');
+    const hasTableView = !!wrap.querySelector('.tabell-view');
+    wrap.classList.toggle('has-table-view', hasTableView);
+    inner?.classList.toggle('has-table-view', hasTableView);
+    if (!hasTableView) inner?.classList.remove('nowrap');
+  }
+
   function create(){
     if(document.getElementById('tabellPopup')) return;
     const wrap = document.createElement('div');
@@ -18,26 +27,16 @@
     `;
     document.body.appendChild(wrap);
     wrap.querySelector('#tabellClose').addEventListener('click', close);
-
-    const actions = wrap.querySelector('#tabellActions');
-    const isMobile = window.matchMedia('(max-width: 600px)').matches;
-
-    if (isMobile) {
-      actions.remove();
-    } else {
-      wrap.querySelector('#tabellWidth').addEventListener('click', (e) => {
-        const inner = wrap.querySelector('.popup-inner');
-        inner.classList.toggle('wide');
-        // Red when OFF
-        e.currentTarget.classList.toggle('danger', !inner.classList.contains('wide'));
-      });
-      wrap.querySelector('#tabellNoWrap').addEventListener('click', (e) => {
-        const inner = wrap.querySelector('.popup-inner');
-        inner.classList.toggle('nowrap');
-        // Red when OFF
-        e.currentTarget.classList.toggle('danger', !inner.classList.contains('nowrap'));
-      });
-    }
+    wrap.querySelector('#tabellWidth').addEventListener('click', (e) => {
+      const inner = wrap.querySelector('.popup-inner');
+      inner.classList.toggle('wide');
+      e.currentTarget.classList.toggle('danger', !inner.classList.contains('wide'));
+    });
+    wrap.querySelector('#tabellNoWrap').addEventListener('click', (e) => {
+      const inner = wrap.querySelector('.popup-inner');
+      inner.classList.toggle('nowrap');
+      e.currentTarget.classList.toggle('danger', !inner.classList.contains('nowrap'));
+    });
     wrap.addEventListener('click', e => {
       if (e.target === wrap) close();
     });
@@ -49,21 +48,20 @@
     document.getElementById('tabellTitle').textContent = title || '';
     const pop = document.getElementById('tabellPopup');
     const inner = pop.querySelector('.popup-inner');
-    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    const content = document.getElementById('tabellContent');
+    const isMobile = window.matchMedia('(max-width: 760px)').matches;
+    const hasTableView = !!pop.querySelector('.tabell-view');
     // Default modes on open: wide + no-wrap on desktop only
     inner.classList.toggle('wide', !isMobile);
-    inner.classList.toggle('nowrap', !isMobile);
+    inner.classList.toggle('nowrap', !isMobile && hasTableView);
     const noWrapBtn = pop.querySelector('#tabellNoWrap');
     const wideBtn   = pop.querySelector('#tabellWidth');
     if (noWrapBtn) noWrapBtn.classList.remove('danger');
     if (wideBtn)   wideBtn.classList.remove('danger');
-    if (isMobile) {
-      // Ensure no toggle actions remain in mobile view
-      const actions = pop.querySelector('#tabellActions');
-      actions?.remove();
-    }
+    applyContentMode(pop);
     pop.classList.add('open');
     inner.scrollTop = 0;
+    if (content) content.scrollTop = 0;
     window.updateScrollLock?.();
   }
 
@@ -71,6 +69,8 @@
     const p = document.getElementById('tabellPopup');
     if(p) {
       p.classList.remove('open');
+      p.classList.remove('has-table-view');
+      p.querySelector('.popup-inner')?.classList.remove('has-table-view');
       window.updateScrollLock?.();
     }
   }

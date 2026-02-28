@@ -65,9 +65,31 @@
   <aside id="conflictPanel" class="offcanvas">
     <header class="inv-header">
       <h2 id="conflictTitle">Kan ej användas samtidigt som</h2>
-      <button class="char-btn icon" id="conflictClose">✕</button>
+      <div class="inv-actions">
+        <button class="char-btn icon" id="conflictClose">✕</button>
+      </div>
     </header>
-    <ul id="conflictList" class="card-list entry-card-list" data-entry-page="conflict"></ul>
+    <div class="conflict-panel-content info-panel-content summary-content">
+      <div class="info-panel-stack">
+        <section class="summary-section info-panel-section info-panel-overview conflict-panel-overview">
+          <div class="info-panel-overview-grid">
+            <div class="info-panel-overview-block">
+              <div class="info-panel-overview-label">Konflikter</div>
+              <p>Poster här blockerar varandra och kan inte vara aktiva samtidigt.</p>
+            </div>
+            <div class="info-panel-overview-block">
+              <div class="info-panel-overview-label">Tips</div>
+              <p>Öppna en post för att läsa varför den krockar med din nuvarande uppsättning.</p>
+            </div>
+          </div>
+        </section>
+
+        <section class="summary-section info-panel-section conflict-panel-section">
+          <h3>Aktiva konflikter</h3>
+          <ul id="conflictList" class="card-list entry-card-list conflict-card-list" data-entry-page="conflict"></ul>
+        </section>
+      </div>
+    </div>
   </aside>
 
   <!-- Gemensam toolbar + paneler (inventarie, egenskaper, filter) -->

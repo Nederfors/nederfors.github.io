@@ -88,7 +88,7 @@
       : '';
 
     const segments = [];
-    if (base) segments.push(`<div class="info-block info-block-desc">${base}</div>`);
+    if (base) segments.push(base);
     if (lvlHtml) segments.push(`<div class="info-block info-block-levels">${lvlHtml}</div>`);
     return segments.join('');
   }
@@ -108,18 +108,29 @@
     const parts = [];
 
     const trimmedTags = String(tagsHtml || '').trim();
+    const metaItems = Array.isArray(meta) ? meta.filter(item => item && (item.value || item.value === 0)) : [];
+    const compactMetaLabels = new Set([
+      'pris',
+      'dagslön',
+      'vikt',
+      'pengar',
+      'bärkapacitet',
+      'återstående kapacitet'
+    ]);
+    const shouldUseCompactMeta = metaItems.length > 0
+      && metaItems.length <= 4
+      && metaItems.every(item => compactMetaLabels.has(String(item?.label || '').trim().toLowerCase()));
+    const overviewBlocks = [];
     if (trimmedTags) {
-      parts.push(`
-        <section class="summary-section info-panel-section info-panel-tags">
-          <h3>Nyckelinfo</h3>
+      overviewBlocks.push(`
+        <div class="info-panel-overview-block info-panel-overview-tags">
+          <div class="info-panel-overview-label">Nyckelinfo</div>
           <div class="info-panel-tagswrap">
             <div class="tags">${trimmedTags}</div>
           </div>
-        </section>
+        </div>
       `);
     }
-
-    const metaItems = Array.isArray(meta) ? meta.filter(item => item && (item.value || item.value === 0)) : [];
     if (metaItems.length) {
       const metaRows = metaItems.map(item => {
         const label = String(item.label || '').trim();
@@ -132,12 +143,22 @@
           </li>
         `;
       }).join('');
-      parts.push(`
-        <section class="summary-section info-panel-section info-panel-meta">
-          <h3>Fakta</h3>
-          <ul class="summary-list summary-pairs">
+      overviewBlocks.push(`
+        <div class="info-panel-overview-block info-panel-overview-meta${shouldUseCompactMeta ? ' is-compact' : ''}">
+          <div class="info-panel-overview-label">Fakta</div>
+          <ul class="summary-list summary-pairs${shouldUseCompactMeta ? ' info-panel-compact-meta' : ''}">
             ${metaRows}
           </ul>
+        </div>
+      `);
+    }
+
+    if (overviewBlocks.length) {
+      parts.push(`
+        <section class="summary-section info-panel-section info-panel-overview${shouldUseCompactMeta ? ' is-compact-meta' : ''}">
+          <div class="info-panel-overview-grid">
+            ${overviewBlocks.join('')}
+          </div>
         </section>
       `);
     }
@@ -145,10 +166,9 @@
     const trimmedBody = String(bodyHtml || '').trim();
     if (trimmedBody) {
       parts.push(`
-        <section class="summary-section info-panel-section info-panel-body">
-          <h3>Beskrivning</h3>
-          <div class="info-panel-body">${trimmedBody}</div>
-        </section>
+        <div class="info-panel-body info-panel-body-inline">
+          ${trimmedBody}
+        </div>
       `);
     }
 
@@ -168,7 +188,7 @@
       `);
     });
 
-    const inner = parts.join('');
+    const inner = `<div class="info-panel-stack">${parts.join('')}</div>`;
     const hasSkadeTab = String(skadetypHtml || '').trim().length > 0;
     const hasConflictTab = String(conflictContentHtml || '').trim().length > 0;
     if (!hasSkadeTab && !hasConflictTab) {
@@ -177,12 +197,12 @@
 
     const tabLabel = String(skadetypLabel || 'Skadetyper').trim() || 'Skadetyper';
     const conflictTabLabel = String(conflictLabel || 'Konflikter').trim() || 'Konflikter';
-    const conflictTab = conflictTabHtml || `<button class="info-tab" data-tab="conflict">${conflictTabLabel}</button>`;
+    const conflictTab = conflictTabHtml || `<button class="info-tab" data-tab="conflict" type="button">${conflictTabLabel}</button>`;
     return `
       <div class="info-panel-content summary-content has-tabs">
         <div class="info-tab-header">
-          <button class="info-tab active" data-tab="info">Info</button>
-          ${hasSkadeTab ? `<button class="info-tab" data-tab="skadetyp">${tabLabel}</button>` : ''}
+          <button class="info-tab active" data-tab="info" type="button">Info</button>
+          ${hasSkadeTab ? `<button class="info-tab" data-tab="skadetyp" type="button">${tabLabel}</button>` : ''}
           ${hasConflictTab ? conflictTab : ''}
         </div>
         <div class="info-tab-panels">

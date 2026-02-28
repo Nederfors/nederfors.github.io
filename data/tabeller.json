@@ -1560,71 +1560,8 @@
   ],
    "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T10 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
 },
-
-{
-  "id": "ta23",
-  "namn": "Bepansring och skydd",
-  "taggar": {
-    "typ": [
-      "Tabell"
-    ]
-  },
-  "kolumner": [
-    "Bepansringstyp",
-    "Yttre fysisk",
-    "Inre fysisk",
-    "Elementär",
-    "Mystisk",
-    "Gift",
-    "Ignorerar bepansring",
-    "Fallskada"
-  ],
-  "rader": [
-    {
-      "Bepansringstyp": "Rustningar",
-      "Yttre fysisk": "Skyddar",
-      "Inre fysisk": "Skyddar inte",
-      "Elementär": "Skyddar inte",
-      "Mystisk": "Skyddar inte",
-      "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar inte",
-      "Fallskada": "Skyddar inte"
-    },
-    {
-      "Bepansringstyp": "Naturligt pansar",
-      "Yttre fysisk": "Skyddar",
-      "Inre fysisk": "Skyddar inte",
-      "Elementär": "Skyddar",
-      "Mystisk": "Skyddar inte",
-      "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar inte",
-      "Fallskada": "Skyddar inte"
-    },
-    {
-      "Bepansringstyp": "Mystisk bepansring",
-      "Yttre fysisk": "Skyddar",
-      "Inre fysisk": "Skyddar inte",
-      "Elementär": "Skyddar",
-      "Mystisk": "Skyddar",
-      "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar",
-      "Fallskada": "Skyddar inte"
-    },
-    {
-      "Bepansringstyp": "Robust/Överlevnadsinstinkt",
-      "Yttre fysisk": "Skyddar",
-      "Inre fysisk": "Skyddar inte",
-      "Elementär": "Skyddar inte",
-      "Mystisk": "Skyddar inte",
-      "Gift": "Skyddar inte",
-      "Ignorerar bepansring": "Skyddar",
-      "Fallskada": "Skyddar inte"
-    }
-  ]
-},
-
   {
-    "id": "ta24",
+    "id": "ta23",
     "namn": "Perfekt slag överskott",
     "taggar": { "typ": ["Tabell"] },
     "kolumner": [
@@ -1688,132 +1625,202 @@
   },
   {
     "id": "ta25",
-    "namn": "Fatalt misslyckat underskott",
-    "taggar": { "typ": ["Tabell"] },
+    "namn": "Bepansring och skydd",
+    "taggar": {
+      "typ": [
+        "Tabell"
+      ]
+    },
     "kolumner": [
-      "effektivt värde",
-      "underskott",
-      "fatalt misslyckande på"
+      "Bepansringstyp",
+      "Yttre fysisk",
+      "Mystiska vapen",
+      "Elementär",
+      "Mystisk",
+      "Ignorerar bepansring",
+      "Inre fysisk",
+      "Gift",
+      "Fallskada"
     ],
     "rader": [
       {
-        "effektivt värde": "0",
-        "underskott": "0",
-        "fatalt misslyckande på": "20 (Normal risk)"
+        "Bepansringstyp": "Rustningar",
+        "Yttre fysisk": "Skyddar",
+        "Mystiska vapen": "Skyddar",
+        "Elementär": "Skyddar inte",
+        "Mystisk": "Skyddar inte",
+        "Ignorerar bepansring": "Skyddar inte",
+        "Inre fysisk": "Skyddar inte",
+        "Gift": "Skyddar inte",
+        "Fallskada": "Skyddar inte"
       },
       {
-        "effektivt värde": "-1",
-        "underskott": "-1",
-        "fatalt misslyckande på": "19–20"
+        "Bepansringstyp": "Naturligt pansar",
+        "Yttre fysisk": "Skyddar",
+        "Mystiska vapen": "Skyddar",
+        "Elementär": "Skyddar inte",
+        "Mystisk": "Skyddar inte",
+        "Ignorerar bepansring": "Skyddar inte",
+        "Inre fysisk": "Skyddar inte",
+        "Gift": "Skyddar inte",
+        "Fallskada": "Skyddar inte"
       },
       {
-        "effektivt värde": "-2",
-        "underskott": "-2",
-        "fatalt misslyckande på": "18–20"
+        "Bepansringstyp": "Mystisk bepansring",
+        "Yttre fysisk": "Skyddar",
+        "Mystiska vapen": "Skyddar",
+        "Elementär": "Skyddar",
+        "Mystisk": "Skyddar",
+        "Ignorerar bepansring": "Skyddar",
+        "Inre fysisk": "Skyddar inte",
+        "Gift": "Skyddar inte",
+        "Fallskada": "Skyddar inte"
       },
       {
-        "effektivt värde": "-3",
-        "underskott": "-3",
-        "fatalt misslyckande på": "17–20"
+        "Bepansringstyp": "Ignorerar skada",
+        "Yttre fysisk": "Skyddar",
+        "Mystiska vapen": "Skyddar",
+        "Elementär": "Skyddar",
+        "Mystisk": "Skyddar",
+        "Ignorerar bepansring": "Skyddar",
+        "Inre fysisk": "Skyddar",
+        "Gift": "Skyddar",
+        "Fallskada": "Skyddar inte"
       },
       {
-        "effektivt värde": "-4",
-        "underskott": "-4",
-        "fatalt misslyckande på": "16–20"
+        "Bepansringstyp": "Väldig",
+        "Yttre fysisk": "100% (N/G), Immun (M)",
+        "Mystiska vapen": "100%",
+        "Elementär": "100% (N/G), Immun (M)",
+        "Mystisk": "100%",
+        "Ignorerar bepansring": "100% (N/G), Immun (M)",
+        "Inre fysisk": "100% (N/G), Immun (M)",
+        "Gift": "100% (N/G), Immun (M)",
+        "Fallskada": "100%"
       },
       {
-        "effektivt värde": "-5",
-        "underskott": "-5",
-        "fatalt misslyckande på": "15–20"
+        "Bepansringstyp": "Vandödhet",
+        "Yttre fysisk": "100% (N), 50% (G/M)",
+        "Mystiska vapen": "100%",
+        "Elementär": "100% (N), 50% (G/M)",
+        "Mystisk": "100% (N/G), 50% (M)",
+        "Ignorerar bepansring": "100% (N), 50% (G/M)",
+        "Inre fysisk": "Immun",
+        "Gift": "Immun",
+        "Fallskada": "100% (N), 50% (G/M)"
       },
       {
-        "effektivt värde": "-6",
-        "underskott": "-6",
-        "fatalt misslyckande på": "14–20"
-      },
-      {
-        "effektivt värde": "-7",
-        "underskott": "-7",
-        "fatalt misslyckande på": "13–20"
-      },
-      {
-        "effektivt värde": "-8",
-        "underskott": "-8",
-        "fatalt misslyckande på": "12–20"
-      },
-      {
-        "effektivt värde": "-9",
-        "underskott": "-9",
-        "fatalt misslyckande på": "11–20"
+        "Bepansringstyp": "Andeform",
+        "Yttre fysisk": "50% (N/G), Immun (M)",
+        "Mystiska vapen": "100% (N), 50% (G/M)",
+        "Elementär": "100% (N), 50% (G/M)",
+        "Mystisk": "100% (N), 50% (G/M)",
+        "Ignorerar bepansring": "50% (N/G), Immun (M)",
+        "Inre fysisk": "Immun",
+        "Gift": "Immun",
+        "Fallskada": "Immun"
       }
-    ],
-    "extra": "När det effektiva värdet (Förmåga + Modifikation) sjunker under 0, ökar risken för fatalt misslyckande. Vid värde 0 är risken fortfarande normal (endast 20), men från och med -1 expanderar intervallet nedåt (19–20)."
-  },
-  {
-  "id": "ta26",
-  "namn": "Skadetyper och penetrering",
-  "taggar": {
-    "typ": [
-      "Tabell"
     ]
   },
-  "kolumner": [
-    "Skadetyp",
-    "Rustningar",
-    "Naturligt pansar",
-    "Mystisk bepansring",
-    "Robust/Överlevnadsinstinkt"
-  ],
-  "rader": [
-    {
-      "Skadetyp": "Yttre fysisk",
-      "Rustningar": "Stoppas",
-      "Naturligt pansar": "Stoppas",
-      "Mystisk bepansring": "Stoppas",
-      "Robust/Överlevnadsinstinkt": "Stoppas"
+  {
+    "id": "ta26",
+    "namn": "Skadetyper och penetrering",
+    "taggar": {
+      "typ": [
+        "Tabell"
+      ]
     },
-    {
-      "Skadetyp": "Inre fysisk",
-      "Rustningar": "Går igenom",
-      "Naturligt pansar": "Går igenom",
-      "Mystisk bepansring": "Går igenom",
-      "Robust/Överlevnadsinstinkt": "Går igenom"
-    },
-    {
-      "Skadetyp": "Elementär",
-      "Rustningar": "Går igenom",
-      "Naturligt pansar": "Stoppas",
-      "Mystisk bepansring": "Stoppas",
-      "Robust/Överlevnadsinstinkt": "Går igenom"
-    },
-    {
-      "Skadetyp": "Mystisk",
-      "Rustningar": "Går igenom",
-      "Naturligt pansar": "Går igenom",
-      "Mystisk bepansring": "Stoppas",
-      "Robust/Överlevnadsinstinkt": "Går igenom"
-    },
-    {
-      "Skadetyp": "Gift",
-      "Rustningar": "Går igenom",
-      "Naturligt pansar": "Går igenom",
-      "Mystisk bepansring": "Går igenom",
-      "Robust/Överlevnadsinstinkt": "Går igenom"
-    },
-    {
-      "Skadetyp": "Ignorerar bepansring",
-      "Rustningar": "Går igenom",
-      "Naturligt pansar": "Går igenom",
-      "Mystisk bepansring": "Stoppas",
-      "Robust/Överlevnadsinstinkt": "Stoppas"
-    },
-    {
-      "Skadetyp": "Fallskada",
-      "Rustningar": "Går igenom",
-      "Naturligt pansar": "Går igenom",
-      "Mystisk bepansring": "Går igenom",
-      "Robust/Överlevnadsinstinkt": "Går igenom"
-    }
-  ]
-}
+    "kolumner": [
+      "Skadetyp",
+      "Rustningar",
+      "Naturligt pansar",
+      "Mystisk bepansring",
+      "Ignorerar skada",
+      "Väldig",
+      "Vandödhet",
+      "Andeform"
+    ],
+    "rader": [
+      {
+        "Skadetyp": "Yttre fysisk",
+        "Rustningar": "Stoppas",
+        "Naturligt pansar": "Stoppas",
+        "Mystisk bepansring": "Stoppas",
+        "Ignorerar skada": "Stoppas",
+        "Väldig": "100% (N/G), Immun (M)",
+        "Vandödhet": "100% (N), 50% (G/M)",
+        "Andeform": "50% (N/G), Immun (M)"
+      },
+      {
+        "Skadetyp": "Mystiska vapen",
+        "Rustningar": "Stoppas",
+        "Naturligt pansar": "Stoppas",
+        "Mystisk bepansring": "Stoppas",
+        "Ignorerar skada": "Stoppas",
+        "Väldig": "100%",
+        "Vandödhet": "100%",
+        "Andeform": "100% (N), 50% (G/M)"
+      },
+      {
+        "Skadetyp": "Elementär",
+        "Rustningar": "Går igenom",
+        "Naturligt pansar": "Går igenom",
+        "Mystisk bepansring": "Stoppas",
+        "Ignorerar skada": "Stoppas",
+        "Väldig": "100% (N/G), Immun (M)",
+        "Vandödhet": "100% (N), 50% (G/M)",
+        "Andeform": "100% (N), 50% (G/M)"
+      },
+      {
+        "Skadetyp": "Mystisk",
+        "Rustningar": "Går igenom",
+        "Naturligt pansar": "Går igenom",
+        "Mystisk bepansring": "Stoppas",
+        "Ignorerar skada": "Stoppas",
+        "Väldig": "100%",
+        "Vandödhet": "100% (N/G), 50% (M)",
+        "Andeform": "100% (N), 50% (G/M)"
+      },
+      {
+        "Skadetyp": "Ignorerar bepansring",
+        "Rustningar": "Går igenom",
+        "Naturligt pansar": "Går igenom",
+        "Mystisk bepansring": "Stoppas",
+        "Ignorerar skada": "Stoppas",
+        "Väldig": "100% (N/G), Immun (M)",
+        "Vandödhet": "100% (N), 50% (G/M)",
+        "Andeform": "50% (N/G), Immun (M)"
+      },
+      {
+        "Skadetyp": "Inre fysisk",
+        "Rustningar": "Går igenom",
+        "Naturligt pansar": "Går igenom",
+        "Mystisk bepansring": "Går igenom",
+        "Ignorerar skada": "Stoppas",
+        "Väldig": "100% (N/G), Immun (M)",
+        "Vandödhet": "Immun",
+        "Andeform": "Immun"
+      },
+      {
+        "Skadetyp": "Gift",
+        "Rustningar": "Går igenom",
+        "Naturligt pansar": "Går igenom",
+        "Mystisk bepansring": "Går igenom",
+        "Ignorerar skada": "Stoppas",
+        "Väldig": "100% (N/G), Immun (M)",
+        "Vandödhet": "Immun",
+        "Andeform": "Immun"
+      },
+      {
+        "Skadetyp": "Fallskada",
+        "Rustningar": "Går igenom",
+        "Naturligt pansar": "Går igenom",
+        "Mystisk bepansring": "Går igenom",
+        "Ignorerar skada": "Går igenom",
+        "Väldig": "100%",
+        "Vandödhet": "100% (N), 50% (G/M)",
+        "Andeform": "Immun"
+      }
+    ]
+  }
 ]

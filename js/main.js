@@ -1559,6 +1559,32 @@ function buildElityrkeInfoSections(p) {
       </details>
     `;
   };
+  const renderSupportGroup = ({ title, meta = '', body = '', extraClass = '' } = {}) => {
+    const content = String(body || '').trim();
+    if (!content) return '';
+    const titleText = String(title || '').trim();
+    const metaText = String(meta || '').trim();
+    const className = extraClass ? ` ${extraClass}` : '';
+    const titleHtml = titleText
+      ? `<h4 class="elite-profile-title">${safe(titleText)}</h4>`
+      : '';
+    const metaHtml = metaText
+      ? `<p class="elite-profile-meta">${safe(metaText)}</p>`
+      : '';
+    return `
+      <section class="elite-profile-group elite-profile-group-support${className}">
+        <div class="elite-profile-head">
+          <div class="elite-profile-title-wrap">
+            ${titleHtml}
+            ${metaHtml}
+          </div>
+        </div>
+        <div class="elite-profile-body elite-profile-body-support">
+          ${content}
+        </div>
+      </section>
+    `.trim();
+  };
 
   const getKravGroups = () => {
     if (typeof utils.getKravGroups !== 'function') return [];
@@ -1639,28 +1665,47 @@ function buildElityrkeInfoSections(p) {
     const listHtml = abilityBlocks.length
       ? `<div class="elite-ability-stack">${abilityBlocks.join('')}</div>`
       : renderTagList(eliteAbilities);
+    const count = abilityBlocks.length || eliteAbilities.length;
+    const groupCard = renderSupportGroup({
+      title: 'Tillhörande förmågor',
+      meta: `${count} ${count === 1 ? 'förmåga' : 'förmågor'}`,
+      body: listHtml,
+      extraClass: 'elite-profile-group-abilities'
+    });
     sections.push({
       title: 'Elityrkesförmågor',
       className: 'info-panel-elite',
-      content: `<div class="elite-profile-grid"><section class="elite-profile-group elite-profile-group-support">${listHtml}</section></div>`
+      content: `<div class="elite-profile-grid">${groupCard}</div>`
     });
   }
 
   if ((p.mojliga_fordelar || []).length) {
     const listHtml = renderTagList(p.mojliga_fordelar);
+    const groupCard = renderSupportGroup({
+      title: 'Valbara fördelar',
+      meta: `${p.mojliga_fordelar.length} ${p.mojliga_fordelar.length === 1 ? 'fördel' : 'fördelar'}`,
+      body: listHtml,
+      extraClass: 'elite-profile-group-tags'
+    });
     sections.push({
       title: 'Möjliga fördelar',
       className: 'info-panel-elite',
-      content: `<div class="elite-profile-grid"><section class="elite-profile-group elite-profile-group-support">${listHtml}</section></div>`
+      content: `<div class="elite-profile-grid">${groupCard}</div>`
     });
   }
 
   if ((p.tankbara_nackdelar || []).length) {
     const listHtml = renderTagList(p.tankbara_nackdelar);
+    const groupCard = renderSupportGroup({
+      title: 'Tänkbara nackdelar',
+      meta: `${p.tankbara_nackdelar.length} ${p.tankbara_nackdelar.length === 1 ? 'nackdel' : 'nackdelar'}`,
+      body: listHtml,
+      extraClass: 'elite-profile-group-tags'
+    });
     sections.push({
       title: 'Tänkbara nackdelar',
       className: 'info-panel-elite',
-      content: `<div class="elite-profile-grid"><section class="elite-profile-group elite-profile-group-support">${listHtml}</section></div>`
+      content: `<div class="elite-profile-grid">${groupCard}</div>`
     });
   }
 

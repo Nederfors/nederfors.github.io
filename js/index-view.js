@@ -758,19 +758,97 @@
 
     const tabellInfoHtml = p => {
       const cap = s => s ? s.charAt(0).toUpperCase() + s.slice(1) : '';
-      const cols = p.kolumner || [];
-      const rows = p.rader || [];
+      const cols = Array.isArray(p.kolumner) ? p.kolumner : [];
+      const rows = Array.isArray(p.rader) ? p.rader : [];
+      const firstCol = cols[0] || '';
+      const isSingleCol = cols.length <= 1;
+      const isWide = cols.length >= 5;
+      const escapeCell = value => escapeHtml(String(value ?? '')).replace(/\n/g, '<br>');
+      const isEmptyCell = value => {
+        const trimmed = String(value ?? '').trim();
+        return !trimmed || trimmed === '—';
+      };
+      const cellHtml = value => {
+        const empty = isEmptyCell(value);
+        const classes = ['tabell-cell'];
+        if (empty) classes.push('is-empty');
+        return `<div class="${classes.join(' ')}">${escapeCell(empty ? '—' : value)}</div>`;
+      };
 
-      const head = `<tr>${cols.map(c => `<th>${cap(c)}</th>`).join('')}</tr>`;
+      const metaBadges = [
+        `<span class="tabell-pill">Tabell</span>`,
+        `<span class="tabell-pill">${rows.length} ${rows.length === 1 ? 'rad' : 'rader'}</span>`,
+        `<span class="tabell-pill">${cols.length} ${cols.length === 1 ? 'kolumn' : 'kolumner'}</span>`
+      ].join('');
+
+      const head = `<tr>${cols.map((c, idx) => `<th scope="col"${idx === 0 ? ' class="is-key-col"' : ''}>${escapeHtml(cap(c))}</th>`).join('')}</tr>`;
       const body = rows
-        .map(r => `<tr>${cols.map(c => {
-          const v = r[c] ?? '';
-          const dl = cap(c);
-          return `<td data-label=\"${dl}\">${v}</td>`;
+        .map(r => `<tr>${cols.map((c, idx) => {
+          const dl = escapeHtml(cap(c));
+          return `<td${idx === 0 ? ' class="is-key-col"' : ''} data-label="${dl}">${cellHtml(r[c])}</td>`;
         }).join('')}</tr>`)
         .join('');
-      const tableHtml = `<div class=\"table-wrap\"><table class=\"stack-mobile\"><thead>${head}</thead><tbody>${body}</tbody></table></div>`;
-      const extraHtml = p.extra ? `<div class=\"table-notes\">${formatText(p.extra)}</div>` : '';
+
+      const mobileCards = rows
+        .map((r, idx) => {
+          if (isSingleCol) {
+            const onlyCol = cols[0] || 'rad';
+            return `
+              <article class="tabell-card tabell-card-single">
+                <div class="tabell-card-head">
+                  <span class="tabell-card-label">${escapeHtml(cap(onlyCol))}</span>
+                  <span class="tabell-card-index">${String(idx + 1).padStart(2, '0')}</span>
+                </div>
+                <div class="tabell-card-body">${cellHtml(r[onlyCol])}</div>
+              </article>
+            `.trim();
+          }
+
+          const titleValue = String(r[firstCol] ?? '').trim();
+          const title = titleValue || `Rad ${idx + 1}`;
+          const details = cols
+            .slice(1)
+            .map(c => `
+              <div class="tabell-card-item${isEmptyCell(r[c]) ? ' is-empty' : ''}">
+                <dt>${escapeHtml(cap(c))}</dt>
+                <dd>${cellHtml(r[c])}</dd>
+              </div>
+            `.trim())
+            .join('');
+
+          return `
+            <article class="tabell-card">
+              <div class="tabell-card-head">
+                <span class="tabell-card-label">${escapeHtml(cap(firstCol))}</span>
+                <h3 class="tabell-card-title">${escapeHtml(title)}</h3>
+              </div>
+              <dl class="tabell-card-details">${details}</dl>
+            </article>
+          `.trim();
+        })
+        .join('');
+
+      const scrollNote = isWide
+        ? `<p class="tabell-scroll-note">Svep sidled i tabellen för att se alla kolumner.</p>`
+        : '';
+      const tableHtml = `
+        <div class="tabell-view${isSingleCol ? ' is-single' : ''}${isWide ? ' is-wide' : ''}">
+          <div class="tabell-hero">
+            <div class="tabell-meta">${metaBadges}</div>
+            ${scrollNote}
+          </div>
+          <div class="tabell-table-shell">
+            <div class="table-wrap">
+              <table class="tabell-grid">
+                <thead>${head}</thead>
+                <tbody>${body}</tbody>
+              </table>
+            </div>
+          </div>
+          <div class="tabell-cards">${mobileCards}</div>
+        </div>
+      `.trim();
+      const extraHtml = p.extra ? `<div class="table-notes">${formatText(p.extra)}</div>` : '';
       return `${tableHtml}${extraHtml}`;
     };
 

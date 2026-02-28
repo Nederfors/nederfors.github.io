@@ -42,7 +42,7 @@
           "Monsterjägare"
         ],
         "krav_erf": 30,
-        "min_antal": 0
+        "min_antal": 1
       },
       "sekundartagg": {
         "aktiv": true,
@@ -51,7 +51,7 @@
           "Häxa"
         ],
         "krav_erf": 20,
-        "min_antal": 0
+        "min_antal": 1
       },
       "valfri_inom_tagg": [],
       "specifika_formagor": {
@@ -62,7 +62,7 @@
           "Prickskytt"
         ],
         "min_erf": 30,
-        "min_antal": 0
+        "min_antal": 1
       },
       "specifika_mystiska_krafter": {
         "namn": [],

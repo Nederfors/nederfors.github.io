@@ -283,6 +283,190 @@ class SharedToolbar extends HTMLElement {
 
   /* ------------------------------------------------------- */
   render() {
+    const helpOverviewCards = [
+      {
+        label: 'Kom igång',
+        value: 'Sök efter poster, öppna detaljer och lägg till dem direkt från listan.'
+      },
+      {
+        label: 'Paneler',
+        value: 'Verktygsraden leder vidare till Egenskaper, Inventarie, Index, Rollperson och Filter.'
+      },
+      {
+        label: 'Lagring',
+        value: 'Allt sparas lokalt i webbläsaren. Export och import används för säkerhetskopior.'
+      }
+    ];
+    const helpSections = [
+      {
+        title: 'Kom igång',
+        items: [
+          'Sök i fältet ovan och tryck Enter för att filtrera.',
+          'Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".',
+          `Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Filter.`
+        ]
+      },
+      {
+        title: 'Verktygsrad',
+        items: [
+          '▼: Minimerar eller expanderar alla kategorier i listor.',
+          `${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.`,
+          `${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.`,
+          `${icon('anteckningar')}: Öppnar anteckningssidan i rollpersonens sidhuvud.`,
+          'XP: Visar dina totala erfarenhetspoäng.',
+          'Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.',
+          'Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.',
+          'Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel eller popup.'
+        ]
+      },
+      {
+        title: 'Kortkommandon',
+        items: [
+          'Enter: Lägg till skriven term.',
+          'Esc: Stäng öppna paneler eller popupfönster på desktop.'
+        ]
+      },
+      {
+        title: 'Filtermeny',
+        items: [
+          'Välj rollperson: Byter aktiv rollperson.',
+          'Aktiv mapp: Begränsar listan "Välj rollperson". "Alla" visar alla mappar.',
+          'Typ, Arketyp, Karaktärsdrag: Filtrerar listor.',
+          'Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.',
+          'Generera rollperson: Skapar en rollperson automatiskt.',
+          'PDF-bank: Öppnar samlingen med regel-PDF:er.',
+          'Uppdatera appen: Söker efter ny version och uppdaterar.',
+          'Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.',
+          'Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.',
+          `${icon('smithing')}/${icon('alkemi')}/${icon('artefakt') || '🏺'}: Välj nivå för smed, alkemist och artefaktmakare.`,
+          `${icon('extend') || '🔭'} Utvidga sökning: Växla till OR-filter och matcha någon tagg.`,
+          `${icon('expand') || '↕️'} Expandera vy: Visar fler detaljer i korten.`,
+          `${icon('forsvar') || '🏃'} Försvar: Välj försvarskaraktärsdrag manuellt.`,
+          `${icon('adjust')} Manuella justeringar: Hantera egna modifieringar.`,
+          `${icon('sort')} Sortering: Välj ordning för listor.`,
+          `${icon('info')} Hjälp: Visar denna panel.`
+        ]
+      },
+      {
+        title: 'Inventarie',
+        items: [
+          'Sök i inventarie: Filtrerar föremål i realtid.',
+          '▶/▼ Öppna eller kollapsa alla.',
+          '🔀 Dra-och-släpp-läge för att ändra ordning.',
+          `🆕 Eget föremål. ${icon('basket', { className: 'title-icon', alt: 'Pengar' })} Pengar (Spara, addera, nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).`,
+          '💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny.',
+          `🔒 Spara inventarie och markera alla befintliga föremål som gratis. ${icon('broom')} Töm inventariet.`,
+          'x² Lägg till flera av samma. Icke-staplingsbara får egna fält.',
+          'Kategori: Filtrera på föremålstyp.',
+          '🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.'
+        ]
+      },
+      {
+        title: 'Egenskaper',
+        items: [
+          `Ange total XP via ${icon('minus')}/${icon('plus')} eller genom att skriva värdet.`,
+          'Summeringen visar Totalt, Använt och Oanvänt.',
+          'Knappen "Förmågor: X" filtrerar till Endast valda.',
+          `${icon('broom')} Återställ basegenskaper: Nollställer grundvärdena utan bonusar från förmågor eller inventarie.`
+        ]
+      },
+      {
+        title: 'Rollperson',
+        items: [
+          '📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.',
+          `${icon('effects')} Effekter: Öppnar aktiv effektöversikt.`,
+          `${icon('overview')} Översikt: Snabb sammanställning av värden och modifikationer.`
+        ]
+      },
+      {
+        title: 'Anteckningar',
+        items: [
+          '✏️ Redigera: Växla mellan läs- och redigeringsläge.',
+          'Sudda: Rensa alla fält. Spara: Spara anteckningar.',
+          '▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.',
+          `${icon('index')}/${icon('character')} i sidhuvudet: Till index respektive rollperson.`
+        ]
+      },
+      {
+        title: 'Listor och rader',
+        items: [
+          `Lägg till / ${icon('plus')}: Lägg till posten. ${icon('minus')}: Minska antal eller ta bort.`,
+          'Info: Visa detaljer.',
+          '🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.',
+          `${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.`,
+          `${icon('free')} Gör föremål gratis. ${(icon('active') || '💔')} Visa konflikter.`,
+          '↔ Växla artefaktens kostnad mellan XP och permanent korruption.',
+          '⬇️/⬆️ Lasta på eller av föremål till eller från färdmedel.',
+          `${icon('remove')} Ta bort posten helt.`
+        ]
+      },
+      {
+        title: 'Tabeller',
+        items: [
+          '↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad och möjliggör horisontell scroll.',
+          '⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller.'
+        ]
+      },
+      {
+        title: 'Tips',
+        items: [
+          'Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.',
+          'Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.',
+          'Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.',
+          'Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.',
+          'Webbapp: Skriv "webapp" i sökfältet för instruktioner och öppna webapp-sidan.'
+        ]
+      },
+      {
+        title: 'Data & lagring',
+        items: [
+          'Allt sparas lokalt i din webbläsare (localStorage).',
+          'Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.',
+          'Rensar du webbläsardata tas lokala rollpersoner bort.'
+        ]
+      },
+      {
+        title: 'Installera som webapp',
+        body: `
+          <p>
+            Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
+            Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
+          </p>
+        `
+      }
+    ];
+    const renderHelpSection = section => {
+      const listHtml = Array.isArray(section.items) && section.items.length
+        ? `<ul class="summary-list">${section.items.map(item => `<li>${item}</li>`).join('')}</ul>`
+        : String(section.body || '').trim();
+      return `
+        <section class="summary-section info-panel-section help-panel-section">
+          <h3>${section.title}</h3>
+          <div class="info-panel-extra">
+            <div class="info-block">
+              ${listHtml}
+            </div>
+          </div>
+        </section>
+      `.trim();
+    };
+    const helpPanelHtml = `
+      <div class="help-content info-panel-content summary-content">
+        <div class="info-panel-stack">
+          <section class="summary-section info-panel-section info-panel-overview help-panel-overview">
+            <div class="info-panel-overview-grid">
+              ${helpOverviewCards.map(card => `
+                <div class="info-panel-overview-block">
+                  <div class="info-panel-overview-label">${card.label}</div>
+                  <p>${card.value}</p>
+                </div>
+              `).join('')}
+            </div>
+          </section>
+          ${helpSections.map(renderHelpSection).join('')}
+        </div>
+      </div>
+    `.trim();
     this.shadowRoot.innerHTML = `
       <style>
         :host { display: block; }
@@ -591,8 +775,9 @@ class SharedToolbar extends HTMLElement {
             <button class="char-btn icon" data-close="filterPanel">✕</button>
           </div>
         </header>
-
-        <ul class="card-list">
+        <div class="filter-panel-content info-panel-content summary-content">
+          <div class="filter-panel-stack">
+        <ul class="card-list filter-card-list">
           <li class="card" data-special="__formal__" id="filterFormalCard">
             <div class="card-title"><span><span class="collapse-btn"></span>Verktyg ${icon('tool-box', { className: 'title-icon', alt: 'Verktyg' })}</span></div>
             <div class="card-desc">
@@ -689,7 +874,7 @@ class SharedToolbar extends HTMLElement {
           </li>
         </ul>
         <!-- Sökfilter-kort som samlar relaterade dropdowns -->
-        <div class="card" id="searchFiltersCard">
+        <div class="card filter-panel-static-card" id="searchFiltersCard">
           <div class="card-title">Sökfilter</div>
           <div class="card-desc">
             <div class="filter-group">
@@ -707,7 +892,8 @@ class SharedToolbar extends HTMLElement {
           </div>
         </div>
         <!-- Hjälp-ruta för att tydliggöra koppling till knappen -->
-        <div class="card help-card">
+        <div class="card help-card filter-panel-static-card">
+          <div class="card-title">Hjälp</div>
           <div class="card-desc">
             <div class="filter-group party-toggles">
               <ul class="toggle-list">
@@ -715,10 +901,12 @@ class SharedToolbar extends HTMLElement {
                   <span class="toggle-desc">
                     <span class="toggle-question">Behöver du hjälp?</span>
                   </span>
-                  <button id="infoToggle" class="party-toggle icon-only" title="Visa hjälp">${icon('info')}</button>
+                  <button id="infoToggle" class="party-toggle icon-only" type="button" title="Visa hjälp">${icon('info')}</button>
                 </li>
               </ul>
             </div>
+          </div>
+        </div>
           </div>
         </div>
       </aside>
@@ -1485,154 +1673,7 @@ class SharedToolbar extends HTMLElement {
           <h2>Hjälp</h2>
           <button class="char-btn icon" data-close="infoPanel">✕</button>
         </header>
-        <div class="help-content summary-content">
-          <section class="summary-section">
-            <h3>Kom igång</h3>
-            <ul class="summary-list">
-              <li>Sök i fältet ovan och tryck Enter för att filtrera.</li>
-              <li>Klicka på en post för detaljer. Lägg till med "Lägg till" eller "+".</li>
-              <li>Använd knapparna längst ned: ${icon('egenskaper')} Egenskaper, ${icon('inventarie')} Inventarie, ${icon('index')} Index, ${icon('character')} Rollperson, ${icon('settings')} Filter.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Verktygsrad</h3>
-            <ul class="summary-list">
-              <li>▼: Minimerar/expanderar alla kategorier i listor.</li>
-              <li>${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.</li>
-              <li>${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.</li>
-              <li>${icon('anteckningar')}: Öppnar anteckningssidan (i rollpersonens sidhuvud).</li>
-              <li>XP: Visar dina totala erfarenhetspoäng.</li>
-              <li>Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.</li>
-              <li>Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.</li>
-              <li>Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel/popup.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Kortkommandon</h3>
-            <ul class="summary-list">
-              <li>Enter: Lägg till skriven term.</li>
-              <li>Esc: Stäng öppna paneler/popup (desktop).</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Filtermeny</h3>
-            <ul class="summary-list">
-              <li>Välj rollperson: Byter aktiv rollperson.</li>
-              <li>Aktiv mapp: Begränsar listan ”Välj rollperson”. ”Alla” visar alla mappar.</li>
-              <li>Typ, Arketyp, Karaktärsdrag: Filtrerar listor.</li>
-              <li>Ny/Kopiera/Byt namn/Ta bort: Hanterar karaktärer.</li>
-              <li>Generera rollperson: Skapar en rollperson automatiskt.</li>
-              <li>PDF-bank: Öppnar samlingen med regel-PDF:er.</li>
-              <li>Uppdatera appen: Söker efter ny version och uppdaterar.</li>
-              <li>Mapphantering: Skapa mappar och flytta rollpersoner mellan mappar.</li>
-              <li>Export/Import: Säkerhetskopiera eller hämta karaktärer som JSON.</li>
-              <li>${icon('smithing')}/${icon('alkemi')}/${icon('artefakt') || '🏺'}: Välj nivå för smed, alkemist och artefaktmakare (påverkar pris och åtkomst).</li>
-              <li>${icon('extend') || '🔭'} Utvidga sökning: Växla till OR-filter (matcha någon tag).</li>
-              <li>${icon('expand') || '↕️'} Expandera vy: Visar fler detaljer i kort (alla utom Ras, Yrken och Elityrken).</li>
-              <li>${icon('forsvar') || '🏃'} Försvar: Välj försvarskaraktärsdrag manuellt.</li>
-              <li>${icon('adjust')} Manuella justeringar: Hantera egna modifieringar.</li>
-              <li>${icon('sort')} Sortering: Välj ordning för listor.</li>
-              <li>${icon('info')} Hjälp: Visar denna panel.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Inventarie</h3>
-            <ul class="summary-list">
-              <li>Sök i inventarie: Filtrerar föremål i realtid.</li>
-              <li>▶/▼ Öppna eller kollapsa alla.</li>
-              <li>🔀 Dra-och-släpp-läge för att ändra ordning.</li>
-              <li>🆕 Eget föremål. ${icon('basket', { className: 'title-icon', alt: 'Pengar' })} Pengar (Spara/Addera/Nollställ; ${icon('minus')}/${icon('plus')} justerar 1 daler).</li>
-              <li>💸 Multiplicera pris på markerade rader; klick på pris öppnar snabbmeny (×0.5, ×1, ×1.5, ×2).</li>
-              <li>🔒 Spara inventarie och markera alla befintliga föremål som gratis. ${icon('broom')} Töm inventariet.</li>
-              <li>x² Lägg till flera av samma. Icke-staplingsbara får egna fält.</li>
-              <li>Kategori: Filtrera på föremålstyp.</li>
-              <li>🛞/🐎 Lasta i: Flytta valda föremål till ett valt färdmedel.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Egenskaper</h3>
-            <ul class="summary-list">
-              <li>Ange total XP via ${icon('minus')}/${icon('plus')} eller genom att skriva värdet.</li>
-              <li>Summeringen visar Totalt/Använt/Oanvänt.</li>
-              <li>Knappen "Förmågor: X" filtrerar till Endast valda (ta bort via taggen).</li>
-              <li>${icon('broom')} Återställ basegenskaper: Nollställer grundvärdena (påverkar inte bonusar från förmågor/inventarie).</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Rollperson</h3>
-            <ul class="summary-list">
-              <li>📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.</li>
-              <li>${icon('effects')} Effekter: Öppnar aktiv effektöversikt.</li>
-              <li>${icon('overview')} Översikt: Snabb sammanställning av värden och modifikationer.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Anteckningar</h3>
-            <ul class="summary-list">
-              <li>✏️ Redigera: Växla läs-/redigeringsläge.</li>
-              <li>Sudda: Rensa alla fält. Spara: Spara anteckningar.</li>
-              <li>▶/▼ i verktygsraden: Öppna eller stäng alla anteckningsfält samtidigt.</li>
-              <li>${icon('index')}/${icon('character')} i sidhuvudet: Till index respektive rollperson.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Listor och rader</h3>
-            <ul class="summary-list">
-              <li>Lägg till / ${icon('plus')}: Lägg till posten. ${icon('minus')}: Minska antal eller ta bort.</li>
-              <li>Info: Visa detaljer.</li>
-              <li>🏋🏻‍♂️ Elityrke: Lägg till elityrket med dess krav på förmågor.</li>
-              <li>${icon('addqual')} Lägg till kvalitet. ${icon('qualfree')} Markera kostsam kvalitet som gratis.</li>
-              <li>${icon('free')} Gör föremål gratis (Shift-klick tar bort gratis). ${(icon('active') || '💔')} Visa konflikter.</li>
-              <li>↔ Växla artefaktens kostnad mellan XP och permanent korruption.</li>
-              <li>⬇️/⬆️ Lasta på/av föremål till/från färdmedel.</li>
-              <li>${icon('remove')} Ta bort posten helt.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Tabeller</h3>
-            <ul class="summary-list">
-              <li>↔︎ Ingen radbrytning: Visar hela cellinnehållet på en rad. Inaktiverar mobilens staplade vy och möjliggör horisontell scroll. Knappen är röd när funktionen är avstängd.</li>
-              <li>⤢ Bred vy: Ökar popupens maxbredd för bredare tabeller. Knappen är röd när bred vy är avstängd.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Tips</h3>
-            <ul class="summary-list">
-              <li>Knappen "Börja om" i kategorin "Hoppsan" rensar alla filter, kollapsar alla kategorier och uppdaterar sidan.</li>
-              <li>Snabb nollställning: Skriv "lol" i sökfältet och tryck Enter för att rensa alla filter.</li>
-              <li>Rensa karaktärer: Skriv "BOMB!" i sökfältet och tryck Enter för att radera samtliga karaktärer i den här webbläsaren.</li>
-              <li>Klicka på taggarna under sökfältet för att snabbt ta bort ett filter.</li>
-              <li>Webbapp: Skriv "webapp" i sökfältet för instruktioner (öppnar webapp-sidan).</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Data & lagring</h3>
-            <ul class="summary-list">
-              <li>Allt sparas lokalt i din webbläsare (localStorage).</li>
-              <li>Använd Export/Import under Filter för säkerhetskopior och flytt mellan enheter.</li>
-              <li>Rensar du webbläsardata tas lokala rollpersoner bort.</li>
-            </ul>
-          </section>
-
-          <section class="summary-section">
-            <h3>Installera som webapp</h3>
-            <p>
-              Instruktioner finns på <a href="webapp.html">webapp-sidan</a>.
-              Sidan kan nås via direktlänk eller genom att skriva "webapp" i sökfältet.
-            </p>
-          </section>
-        </div>
+        ${helpPanelHtml}
       </aside>
 
     `;
