@@ -80,6 +80,23 @@
     summaryRenderer: null,
     effectsRenderer: null
   };
+  const TRAITS_TABS = Object.freeze({
+    traits: {
+      label: 'Karaktärsdrag',
+      tabId: 'traitsTabTraits',
+      panelId: 'traitsTabPanel'
+    },
+    summary: {
+      label: 'Översikt',
+      tabId: 'traitsTabSummary',
+      panelId: 'summaryTabPanel'
+    },
+    effects: {
+      label: 'Effekter',
+      tabId: 'traitsTabEffects',
+      panelId: 'effectsTabPanel'
+    }
+  });
 
   const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -504,7 +521,7 @@
     const tal = talBase + hardy + manualToughness;
     const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
 
-    const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list) : 'Kvick';
+    const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list, vals) : 'Kvick';
     const kvickForDef = vals[defTrait];
     const defenseList = window.calcDefense ? calcDefense(kvickForDef, { mode: 'standard' }) : [];
     const defenseEntries = (Array.isArray(defenseList) ? defenseList : [])
@@ -888,6 +905,90 @@
     container.innerHTML = renderEffectsHtml();
   };
 
+  const getTraitsTabFromHash = (hash = window.location.hash) => {
+    const raw = String(hash || '').replace(/^#/, '').trim().toLowerCase();
+    if (!raw || raw === 'tab-traits' || raw === 'traits' || raw === 'karaktarsdrag' || raw === 'karaktärsdrag') {
+      return 'traits';
+    }
+    if (raw === 'tab-summary' || raw === 'summary' || raw === 'overview' || raw === 'oversikt' || raw === 'översikt') {
+      return 'summary';
+    }
+    if (raw === 'tab-effects' || raw === 'effects' || raw === 'effekter') {
+      return 'effects';
+    }
+    return 'traits';
+  };
+
+  const getHashForTraitsTab = (name) => {
+    if (name === 'summary') return '#tab-summary';
+    if (name === 'effects') return '#tab-effects';
+    return '#tab-traits';
+  };
+
+  const setTraitsViewTitle = (label) => {
+    const titleEl = document.getElementById('traitsViewTitle');
+    if (titleEl) titleEl.textContent = label || TRAITS_TABS.traits.label;
+    if (document.body?.dataset?.role !== 'traits') return;
+    document.title = label && label !== TRAITS_TABS.traits.label
+      ? `Symbapedia - Egenskaper - ${label}`
+      : 'Symbapedia - Egenskaper';
+  };
+
+  const activateTraitsTab = (name, options = {}) => {
+    const tabName = Object.prototype.hasOwnProperty.call(TRAITS_TABS, name) ? name : 'traits';
+    const { updateHash = true, focusTab = false } = options;
+
+    Object.entries(TRAITS_TABS).forEach(([key, config]) => {
+      const tab = document.getElementById(config.tabId);
+      const panel = document.getElementById(config.panelId);
+      const isActive = key === tabName;
+      if (tab) {
+        tab.classList.toggle('active', isActive);
+        tab.setAttribute('aria-selected', isActive ? 'true' : 'false');
+        tab.tabIndex = isActive ? 0 : -1;
+        if (isActive) tab.setAttribute('aria-current', 'page');
+        else tab.removeAttribute('aria-current');
+        if (isActive && focusTab) {
+          try { tab.focus(); } catch {}
+        }
+      }
+      if (panel) {
+        panel.classList.toggle('active', isActive);
+        if (isActive) panel.removeAttribute('hidden');
+        else panel.setAttribute('hidden', '');
+      }
+    });
+
+    setTraitsViewTitle(TRAITS_TABS[tabName].label);
+
+    if (updateHash) {
+      const nextHash = getHashForTraitsTab(tabName);
+      if (window.location.hash !== nextHash) {
+        try {
+          window.history.replaceState(window.history.state, '', nextHash);
+        } catch {
+          window.location.hash = nextHash;
+        }
+      }
+    }
+    return tabName;
+  };
+
+  const bindTraitsTabs = () => {
+    const nav = document.querySelector('.traits-tabs');
+    if (!nav || nav.dataset.bound === '1') return;
+    nav.dataset.bound = '1';
+    nav.addEventListener('click', event => {
+      const tab = event.target.closest('[data-traits-tab]');
+      if (!tab) return;
+      event.preventDefault();
+      activateTraitsTab(tab.dataset.traitsTab || 'traits');
+    });
+    window.addEventListener('hashchange', () => {
+      activateTraitsTab(getTraitsTabFromHash(), { updateHash: false });
+    });
+  };
+
   const initSummaryPage = () => {
     const container = document.getElementById('summaryContent');
     if (!container) return;
@@ -895,6 +996,8 @@
     EFFECT_STATE.summaryRenderer = render;
     window.refreshSummaryPage = () => EFFECT_STATE.summaryRenderer && EFFECT_STATE.summaryRenderer();
     render();
+    if (container.dataset.bound === '1') return;
+    container.dataset.bound = '1';
     container.addEventListener('click', e => {
       const btn = e.target.closest('.summary-chip-btn');
       if (!btn) return;
@@ -935,6 +1038,13 @@
     render();
   };
 
+  const initUnifiedTraitsPage = () => {
+    initSummaryPage();
+    initEffectsPage();
+    bindTraitsTabs();
+    activateTraitsTab(getTraitsTabFromHash(), { updateHash: false });
+  };
+
   // Fallback no-ops so callers can safely invoke even innan init
   if (typeof window.refreshSummaryPage !== 'function') {
     window.refreshSummaryPage = () => {};
@@ -948,6 +1058,8 @@
     renderEffectsInto,
     initSummaryPage,
     initEffectsPage,
+    initUnifiedTraitsPage,
+    activateTraitsTab,
     collectEffectsData,
     renderSummaryHtml,
     renderEffectsHtml

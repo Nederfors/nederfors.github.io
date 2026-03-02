@@ -790,7 +790,7 @@
       const tal = talBase + hardy + manualToughness;
       const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
 
-      const defTrait = getDefenseTraitName(list);
+      const defTrait = getDefenseTraitName(list, vals);
       const kvickForDef = vals[defTrait];
       const defenseListStd = calcDefense(kvickForDef, { mode: 'standard' });
       const dancingTrait = getDancingDefenseTraitName(list);

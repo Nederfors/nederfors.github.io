@@ -53,7 +53,7 @@ Verktygsraden innehåller:
 - Ett sökfält. Skriv ett ord och tryck Enter för att lägga till det som filter.
 - `XP:` visar hur mycket erfarenhet du har använt. Detta uppdateras automatiskt.
 - `🎒` öppnar inventariet.
-- `📊` öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter).
+- `📊` öppnar egenskapsvyn med tabbarna Karaktärsdrag, Översikt och Effekter.
 - `📜` öppnar anteckningspanelen.
 - Skriv `lol` i sökfältet och tryck Enter för att rensa alla filter.
 - `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.

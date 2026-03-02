@@ -311,7 +311,7 @@ class SharedToolbar extends HTMLElement {
         items: [
           '▼: Minimerar eller expanderar alla kategorier i listor.',
           `${icon('index')} Index och ${icon('character')} Rollperson är separata länkar till respektive vy.`,
-          `${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapssidorna (Karaktärsdrag, Översikt, Effekter). ${icon('settings')}: Öppnar filterpanelen.`,
+          `${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapsvyn med tabbarna Karaktärsdrag, Översikt och Effekter. ${icon('settings')}: Öppnar filterpanelen.`,
           `${icon('anteckningar')}: Öppnar anteckningssidan i rollpersonens sidhuvud.`,
           'XP: Visar dina totala erfarenhetspoäng.',
           'Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.',
@@ -374,7 +374,7 @@ class SharedToolbar extends HTMLElement {
         title: 'Rollperson',
         items: [
           '📋 Sammanfattning av försvar, korruption, bärkapacitet, hälsa och träffsäkerhet.',
-          `${icon('effects')} Effekter: Öppnar aktiv effektöversikt.`,
+          `${icon('effects')} Effekter: Öppnar effektfliken i egenskapsvyn.`,
           `${icon('overview')} Översikt: Snabb sammanställning av värden och modifikationer.`
         ]
       },
@@ -920,6 +920,89 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
+      <!-- ---------- Inventariehubb ---------- -->
+      <div id="inventoryItemsPopup" class="popup inventory-hub-popup">
+        <div class="popup-inner inventory-hub-ui">
+          <header class="inventory-hub-header">
+            <div class="inventory-hub-header-copy">
+              <div class="inventory-hub-kicker">Inventarieverktyg</div>
+              <h3>Hantera föremål</h3>
+              <p class="inventory-hub-intro">Skapa egna föremål, gör mängdköp och hantera vad som lastas i eller ur färdmedel utan att lämna inventariet.</p>
+            </div>
+            <button id="inventoryItemsClose" class="char-btn icon inventory-hub-close" type="button" title="Stäng">✕</button>
+          </header>
+          <div class="inventory-hub-tabs" role="tablist" aria-label="Inventarieverktyg">
+            <button id="inventoryItemsTabCustomItem" class="char-btn inventory-hub-tab" type="button" data-tab="custom-item" role="tab">Nytt föremål</button>
+            <button id="inventoryItemsTabBulkQty" class="char-btn inventory-hub-tab" type="button" data-tab="bulk-qty" role="tab">Mängdköp</button>
+            <button id="inventoryItemsTabVehicleLoad" class="char-btn inventory-hub-tab" type="button" data-tab="vehicle-load" role="tab">Lasta i färdmedel</button>
+            <button id="inventoryItemsTabVehicleUnload" class="char-btn inventory-hub-tab" type="button" data-tab="vehicle-unload" role="tab">Lasta ur färdmedel</button>
+          </div>
+          <div class="inventory-hub-panels">
+            <section id="inventoryItemsPanelCustomItem" class="inventory-hub-panel" data-tab-panel="custom-item" role="tabpanel">
+              <div id="inventoryItemsCustomItemStack" class="inventory-hub-stack"></div>
+            </section>
+            <section id="inventoryItemsPanelBulkQty" class="inventory-hub-panel" data-tab-panel="bulk-qty" role="tabpanel">
+              <div id="inventoryItemsBulkQtyStack" class="inventory-hub-stack"></div>
+            </section>
+            <section id="inventoryItemsPanelVehicleLoad" class="inventory-hub-panel" data-tab-panel="vehicle-load" role="tabpanel">
+              <div id="inventoryItemsVehicleLoadStack" class="inventory-hub-stack">
+                <section id="inventoryItemsVehicleLoadEmpty" class="inventory-hub-static-card" hidden>
+                  <div class="inventory-hub-static-copy">
+                    <div class="inventory-hub-static-title">Inga färdmedel ännu</div>
+                    <p>Skapa eller lägg till ett färdmedel under “Nytt föremål” innan du lastar i något här.</p>
+                  </div>
+                </section>
+              </div>
+            </section>
+            <section id="inventoryItemsPanelVehicleUnload" class="inventory-hub-panel" data-tab-panel="vehicle-unload" role="tabpanel">
+              <div id="inventoryItemsVehicleUnloadStack" class="inventory-hub-stack">
+                <section id="inventoryItemsVehicleUnloadEmpty" class="inventory-hub-static-card" hidden>
+                  <div class="inventory-hub-static-copy">
+                    <div class="inventory-hub-static-title">Inga färdmedel att ta ut ur</div>
+                    <p>När du har ett färdmedel med innehåll kan du ta ut både föremål och pengar härifrån.</p>
+                  </div>
+                </section>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+
+      <div id="inventoryEconomyPopup" class="popup inventory-hub-popup">
+        <div class="popup-inner inventory-hub-ui">
+          <header class="inventory-hub-header">
+            <div class="inventory-hub-header-copy">
+              <div class="inventory-hub-kicker">Inventarieverktyg</div>
+              <h3>Hantera ekonomi</h3>
+              <p class="inventory-hub-intro">Justera saldo och multiplicera pris utan att lämna inventariet.</p>
+            </div>
+            <button id="inventoryEconomyClose" class="char-btn icon inventory-hub-close" type="button" title="Stäng">✕</button>
+          </header>
+          <div class="inventory-hub-tabs" role="tablist" aria-label="Inventarieekonomi">
+            <button id="inventoryEconomyTabMoney" class="char-btn inventory-hub-tab" type="button" data-tab="money" role="tab">Saldo</button>
+            <button id="inventoryEconomyTabPrice" class="char-btn inventory-hub-tab" type="button" data-tab="bulk-price" role="tab">Multiplicera pris</button>
+          </div>
+          <div class="inventory-hub-panels">
+            <section id="inventoryEconomyPanelMoney" class="inventory-hub-panel" data-tab-panel="money" role="tabpanel">
+              <div id="inventoryEconomyMoneyStack" class="inventory-hub-stack">
+                <section id="inventoryEconomyMassActions" class="inventory-hub-static-card" data-hub-focus="mass-actions">
+                  <div class="inventory-hub-static-copy">
+                    <div class="inventory-hub-static-title">Massåtgärder</div>
+                    <p>Spara kontanterna som total, markera hela inventariet som gratis eller nollställ vid behov.</p>
+                  </div>
+                  <div class="inventory-hub-static-actions">
+                    <button id="inventoryEconomySaveFreeBtn" class="char-btn" type="button">Spara & gratismarkera</button>
+                  </div>
+                </section>
+              </div>
+            </section>
+            <section id="inventoryEconomyPanelPrice" class="inventory-hub-panel" data-tab-panel="bulk-price" role="tabpanel">
+              <div id="inventoryEconomyPriceStack" class="inventory-hub-stack"></div>
+            </section>
+          </div>
+        </div>
+      </div>
+
       <!-- ---------- Popup Custom ---------- -->
       <div id="customPopup" class="popup popup-bottom">
         <div class="popup-inner">
@@ -993,29 +1076,15 @@ class SharedToolbar extends HTMLElement {
           <textarea id="customDesc" class="auto-resize" placeholder="Beskrivning"></textarea>
           <button id="customAdd" class="char-btn" type="button">Spara</button>
           <button id="customDelete" class="char-btn danger" type="button" style="display:none">Radera</button>
-          <button id="customCancel" class="char-btn danger" type="button">Avbryt</button>
+          <button id="customCancel" class="char-btn danger section-close-btn" type="button">Stäng</button>
         </div>
       </div>
 
       <!-- ---------- Popup Pengar ---------- -->
       <div id="moneyPopup" class="popup popup-bottom">
         <div class="popup-inner">
-          <h3>Hantera pengar</h3>
+          <h3>Saldo</h3>
           <div class="money-wrapper">
-            <section class="money-section card money-section-fast">
-              <header class="money-header">
-                <h4>Snabbspendera</h4>
-                <p>Kostnader som inte ska sparas i inventariet.</p>
-              </header>
-              <div class="money-row">
-                <input id="moneyDaler" type="number" min="0" placeholder="Daler">
-                <input id="moneySkilling" type="number" min="0" placeholder="Skilling">
-                <input id="moneyOrtegar" type="number" min="0" placeholder="Örtegar">
-              </div>
-              <div class="money-button-row">
-                <button id="moneySpendBtn" class="char-btn">Betala</button>
-              </div>
-            </section>
             <section class="money-section card money-section-balance">
               <header class="money-header">
                 <h4>Saldo</h4>
@@ -1033,7 +1102,7 @@ class SharedToolbar extends HTMLElement {
               <button id="moneyResetBtn" class="char-btn danger">Nollställ pengar</button>
             </section>
             <p id="moneyStatus" class="money-status"></p>
-            <button id="moneyCancel" class="char-btn danger">Stäng</button>
+            <button id="moneyCancel" class="char-btn danger section-close-btn">Stäng</button>
           </div>
         </div>
       </div>
@@ -1128,9 +1197,11 @@ class SharedToolbar extends HTMLElement {
       <div id="qtyPopup" class="popup popup-bottom">
         <div class="popup-inner">
           <h3>Lägg till antal</h3>
+          <p class="popup-desc">Välj flera föremål och lägg till samma antal på alla markerade poster.</p>
           <input id="qtyInput" type="number" min="1" step="1" placeholder="Antal">
           <div id="qtyItemList"></div>
-          <button id="qtyCancel" class="char-btn danger">Avbryt</button>
+          <button id="qtyApply" class="char-btn">Verkställ</button>
+          <button id="qtyCancel" class="char-btn danger section-close-btn">Stäng</button>
         </div>
       </div>
 
@@ -1177,7 +1248,7 @@ class SharedToolbar extends HTMLElement {
           <input id="priceFactor" type="number" step="0.1" placeholder="Faktor">
           <div id="priceItemList"></div>
           <button id="priceApply" class="char-btn">Verkställ</button>
-          <button id="priceCancel" class="char-btn danger">Avbryt</button>
+          <button id="priceCancel" class="char-btn danger section-close-btn">Stäng</button>
         </div>
       </div>
 
@@ -1226,7 +1297,7 @@ class SharedToolbar extends HTMLElement {
           <select id="vehicleSelect"></select>
           <div id="vehicleItemList"></div>
           <button id="vehicleApply" class="char-btn">Verkställ</button>
-          <button id="vehicleCancel" class="char-btn danger">Avbryt</button>
+          <button id="vehicleCancel" class="char-btn danger section-close-btn">Stäng</button>
         </div>
       </div>
 
@@ -1237,7 +1308,7 @@ class SharedToolbar extends HTMLElement {
           <select id="vehicleRemoveSelect"></select>
           <div id="vehicleRemoveItemList"></div>
           <button id="vehicleRemoveApply" class="char-btn">Verkställ</button>
-          <button id="vehicleRemoveCancel" class="char-btn danger">Avbryt</button>
+          <button id="vehicleRemoveCancel" class="char-btn danger section-close-btn">Stäng</button>
         </div>
       </div>
 
@@ -1276,37 +1347,78 @@ class SharedToolbar extends HTMLElement {
 
       <!-- ---------- Popup Beräkna försvar ---------- -->
       <div id="defenseCalcPopup" class="popup popup-bottom">
-        <div class="popup-inner">
-          <h3>Beräkna försvar</h3>
-          <div class="defense-calc-card">
-            <div class="defense-calc-heading">Grundval</div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcTrait">Karaktärsdrag</label>
-              <select id="defenseCalcTrait"></select>
+        <div class="popup-inner defense-calc-ui">
+          <header class="defense-calc-header">
+            <div class="defense-calc-header-copy">
+              <div class="defense-calc-kicker">Stridsinställningar</div>
+              <h3>Beräkna försvar</h3>
+              <p class="defense-calc-intro">Välj vad som ska räknas in när försvar beräknas automatiskt för rollpersonen.</p>
             </div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcArmor">Rustning</label>
-              <select id="defenseCalcArmor"></select>
+            <button id="defenseCalcCloseX" class="char-btn defense-calc-close" type="button" title="Stäng">✕</button>
+          </header>
+          <div class="defense-calc-hero">
+            <div class="defense-calc-status-block">
+              <span class="defense-calc-status-label">Status</span>
+              <span id="defenseCalcStatus" class="defense-calc-status-value">Automatisk beräkning</span>
+            </div>
+            <div class="defense-calc-meta">
+              <span id="defenseCalcBasisSummary" class="defense-calc-pill">Automatiskt drag</span>
+              <span id="defenseCalcWeaponSummary" class="defense-calc-pill">Inga vapen valda</span>
+              <span id="defenseCalcDancingSummary" class="defense-calc-pill" hidden></span>
             </div>
           </div>
-          <div class="defense-calc-card defense-calc-group">
-            <div class="defense-calc-heading">Vapen & sköldar</div>
-            <p id="defenseCalcEmpty" class="popup-desc" hidden></p>
-            <div id="defenseCalcWeaponList" class="defense-item-list"></div>
+          <div class="defense-calc-sections">
+            <section class="card defense-calc-card">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">1. Grund</div>
+                  <div class="defense-calc-heading">Grundval</div>
+                </div>
+                <p class="defense-calc-card-note">Välj karaktärsdrag och rustning som ska användas som bas.</p>
+              </div>
+              <div class="defense-calc-field-grid">
+                <div class="defense-calc-field">
+                  <label for="defenseCalcTrait">Karaktärsdrag</label>
+                  <select id="defenseCalcTrait"></select>
+                </div>
+                <div class="defense-calc-field">
+                  <label for="defenseCalcArmor">Rustning</label>
+                  <select id="defenseCalcArmor"></select>
+                </div>
+              </div>
+            </section>
+            <section class="card defense-calc-card defense-calc-group">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">2. Utrustning</div>
+                  <div class="defense-calc-heading">Vapen & sköldar</div>
+                </div>
+                <p class="defense-calc-card-note">Markera det som ska räknas. Tvåhandsvapen kan inte kombineras med armfäst sköld.</p>
+              </div>
+              <p id="defenseCalcEmpty" class="defense-calc-empty" hidden></p>
+              <div id="defenseCalcWeaponList" class="defense-item-list"></div>
+            </section>
+            <section id="defenseCalcDancingCard" class="card defense-calc-card defense-calc-card-dancing">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">3. Specialfall</div>
+                  <div class="defense-calc-heading">Dansande vapen</div>
+                </div>
+                <p class="defense-calc-card-note">Visas när rollpersonen har förmågan. Lämna vapen tomt om inget vapen ska användas.</p>
+              </div>
+              <div class="defense-calc-field-grid">
+                <div class="defense-calc-field">
+                  <label for="defenseCalcDancingTrait">Karaktärsdrag</label>
+                  <select id="defenseCalcDancingTrait"></select>
+                </div>
+                <div class="defense-calc-field">
+                  <label for="defenseCalcDancingWeapon">Vapen</label>
+                  <select id="defenseCalcDancingWeapon"></select>
+                </div>
+              </div>
+            </section>
           </div>
-          <div id="defenseCalcDancingCard" class="defense-calc-card defense-calc-card-dancing">
-            <div class="defense-calc-heading">Dansande vapen</div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcDancingTrait">Karaktärsdrag</label>
-              <select id="defenseCalcDancingTrait"></select>
-            </div>
-            <div class="defense-calc-field">
-              <label for="defenseCalcDancingWeapon">Vapen</label>
-              <select id="defenseCalcDancingWeapon"></select>
-            </div>
-            <p class="popup-desc">Om inget vapen väljs används inget vapen för dansande vapen.</p>
-          </div>
-          <div class="confirm-row">
+          <div class="confirm-row defense-calc-actions">
             <button id="defenseCalcReset" class="char-btn danger" type="button">Återställ</button>
             <button id="defenseCalcCancel" class="char-btn danger" type="button">Avbryt</button>
             <button id="defenseCalcApply" class="char-btn" type="button">Verkställ</button>
@@ -1954,7 +2066,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-    const popups = ['qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup'];
+    const popups = ['inventoryItemsPopup', 'inventoryEconomyPopup', 'qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

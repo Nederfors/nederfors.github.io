@@ -47,67 +47,80 @@
 
   <div id="activeFilters" class="tags"></div>
 
-  <nav class="traits-tabs" aria-label="Egenskapsnavigering">
-    <a id="traitsTabTraits" class="traits-tab active" aria-current="page" href="traits.html">Karaktärsdrag</a>
-    <a id="traitsTabSummary" class="traits-tab" href="summary.html">Översikt</a>
-    <a id="traitsTabEffects" class="traits-tab" href="effects.html">Effekter</a>
-  </nav>
-
-  <div class="panel traits-panel">
-    <div class="panel-header">
-      <h2 id="charName" style="margin:0;"></h2>
+  <div class="panel traits-hub-panel">
+    <div class="panel-header traits-hub-header">
+      <div class="traits-hub-heading">
+        <span id="traitsViewTitle" class="traits-view-title">Karaktärsdrag</span>
+        <h2 id="charName" class="traits-view-name" aria-live="polite"></h2>
+      </div>
       <div class="header-actions"></div>
     </div>
 
-    <div class="traits-content summary-content">
-      <section class="summary-section trait-xp-section">
-        <div id="xpSummary" class="trait-xp-summary">
-          <div class="trait-xp-header">
-            <span class="trait-xp-title">Erfarenhet</span>
-            <div class="xp-control trait-xp-buttons">
-              <button id="xpMinus" class="char-btn icon icon-only" type="button" aria-label="Minska XP" title="Minska XP">
-                <img src="icons/minus.svg" alt="" class="btn-icon" width="32" height="32">
-              </button>
-              <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
-              <button id="xpPlus" class="char-btn icon icon-only" type="button" aria-label="Öka XP" title="Öka XP">
-                <img src="icons/plus.svg" alt="" class="btn-icon" width="32" height="32">
-              </button>
+    <nav class="traits-tabs" aria-label="Egenskapsnavigering" role="tablist">
+      <a id="traitsTabTraits" class="traits-tab active" href="#tab-traits" data-traits-tab="traits" role="tab" aria-controls="traitsTabPanel" aria-selected="true" aria-current="page">Karaktärsdrag</a>
+      <a id="traitsTabSummary" class="traits-tab" href="#tab-summary" data-traits-tab="summary" role="tab" aria-controls="summaryTabPanel" aria-selected="false" tabindex="-1">Översikt</a>
+      <a id="traitsTabEffects" class="traits-tab" href="#tab-effects" data-traits-tab="effects" role="tab" aria-controls="effectsTabPanel" aria-selected="false" tabindex="-1">Effekter</a>
+    </nav>
+
+    <div class="traits-tab-panels">
+      <section id="traitsTabPanel" class="traits-tab-panel traits-content summary-content active" data-tab-panel="traits" role="tabpanel" aria-labelledby="traitsTabTraits">
+        <section class="summary-section trait-xp-section">
+          <div id="xpSummary" class="trait-xp-summary">
+            <div class="trait-xp-header">
+              <span class="trait-xp-title">Erfarenhet</span>
+              <div class="xp-control trait-xp-buttons">
+                <button id="xpMinus" class="char-btn icon icon-only" type="button" aria-label="Minska XP" title="Minska XP">
+                  <img src="icons/minus.svg" alt="" class="btn-icon" width="32" height="32">
+                </button>
+                <input id="xpInput" type="number" min="0" value="0" aria-label="Totala erfarenhetspoäng">
+                <button id="xpPlus" class="char-btn icon icon-only" type="button" aria-label="Öka XP" title="Öka XP">
+                  <img src="icons/plus.svg" alt="" class="btn-icon" width="32" height="32">
+                </button>
+              </div>
+            </div>
+            <div class="trait-xp-row">
+              <span class="trait-xp-item">
+                <span class="trait-xp-label">TOTALT:</span>
+                <span id="xpTotal" class="trait-xp-value">0</span>
+              </span>
+              <span class="trait-xp-item">
+                <span class="trait-xp-label">ANVÄNT:</span>
+                <span id="xpUsed" class="trait-xp-value">0</span>
+              </span>
+              <span class="trait-xp-item">
+                <span class="trait-xp-label">OANVÄNT:</span>
+                <span id="xpFree" class="trait-xp-value">0</span>
+              </span>
             </div>
           </div>
-          <div class="trait-xp-row">
-            <span class="trait-xp-item">
-              <span class="trait-xp-label">TOTALT:</span>
-              <span id="xpTotal" class="trait-xp-value">0</span>
-            </span>
-            <span class="trait-xp-item">
-              <span class="trait-xp-label">ANVÄNT:</span>
-              <span id="xpUsed" class="trait-xp-value">0</span>
-            </span>
-            <span class="trait-xp-item">
-              <span class="trait-xp-label">OANVÄNT:</span>
-              <span id="xpFree" class="trait-xp-value">0</span>
-            </span>
+        </section>
+
+        <section class="summary-section trait-list-section">
+          <div class="trait-meta">
+            <div class="traits-total-row">
+              <button id="defenseCalcBtn" class="char-btn icon defense-action-btn" type="button" data-action="open-defense-calc">
+                <img src="icons/forsvar.svg" alt="" class="btn-icon" width="24" height="24">
+                <span>Beräkna försvar</span>
+              </button>
+              <div class="traits-total" role="status">
+                Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
+              </div>
+              <button id="resetTraits" class="char-btn icon icon-only danger traits-reset-btn" title="Återställ basegenskaper" aria-label="Återställ basegenskaper">
+                <img src="icons/broom.svg" alt="" class="btn-icon" width="32" height="32">
+              </button>
+            </div>
+            <div id="traitStats" class="trait-extra-meta" aria-live="polite"></div>
           </div>
-        </div>
+          <div id="traits" class="traits-grid traits"></div>
+        </section>
       </section>
 
-      <section class="summary-section trait-list-section">
-        <div class="trait-meta">
-          <div class="traits-total-row">
-            <button id="defenseCalcBtn" class="char-btn icon defense-action-btn" type="button" data-action="open-defense-calc">
-              <img src="icons/forsvar.svg" alt="" class="btn-icon" width="24" height="24">
-              <span>Beräkna försvar</span>
-            </button>
-            <div class="traits-total" role="status">
-              Karaktärsdrag: <span id="traitsTotal">0</span> / <span id="traitsMax">0</span>
-            </div>
-            <button id="resetTraits" class="char-btn icon icon-only danger traits-reset-btn" title="Återställ basegenskaper" aria-label="Återställ basegenskaper">
-              <img src="icons/broom.svg" alt="" class="btn-icon" width="32" height="32">
-            </button>
-          </div>
-          <div id="traitStats" class="trait-extra-meta" aria-live="polite"></div>
-        </div>
-        <div id="traits" class="traits-grid traits"></div>
+      <section id="summaryTabPanel" class="traits-tab-panel summary-panel summary-content" data-tab-panel="summary" role="tabpanel" aria-labelledby="traitsTabSummary" hidden>
+        <div id="summaryContent" class="summary-content"></div>
+      </section>
+
+      <section id="effectsTabPanel" class="traits-tab-panel effects-panel summary-content" data-tab-panel="effects" role="tabpanel" aria-labelledby="traitsTabEffects" hidden>
+        <div id="effectsContent" class="summary-content"></div>
       </section>
     </div>
   </div>

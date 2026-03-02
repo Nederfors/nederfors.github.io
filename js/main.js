@@ -681,13 +681,9 @@ async function pickJsonFilesFromDirectoryWithFallback() {
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
 
     // Inventarie → Verktyg (verktygslåda-ikon)
-    { id: 'inv-new',     label: 'Nytt föremål',         sel: '#addCustomBtn',   panel: null, emoji: '🆕', syn: ['nytt föremål','eget föremål','skapa föremål'] },
-    { id: 'inv-money',   label: 'Hantera pengar',       sel: '#manageMoneyBtn', panel: null, emoji: '', icon: 'basket', syn: ['pengar','hantera pengar','money'] },
-    { id: 'inv-multi',   label: 'Multiplicera pris',    sel: '#multiPriceBtn',  panel: null, emoji: '💸', syn: ['multiplicera pris','pris'] },
-    { id: 'inv-qty',     label: 'Lägg till antal',      sel: '#squareBtn',      panel: null, emoji: 'x²', syn: ['antal','lägg till antal'] },
-    { id: 'inv-vehicle', label: 'Lasta i',              sel: '#vehicleBtn', panel: null, emoji: '🛞', syn: ['lasta','lasta i','färdmedel','fordon'] },
-    { id: 'inv-free',    label: 'Spara & gratismarkera',sel: '#saveFreeBtn',    panel: null, emoji: '🔒', syn: ['gratismarkera','spara gratis','gratis'] },
-    { id: 'inv-clear',   label: 'Rensa inventarie',     sel: '#clearInvBtn',    panel: null, emoji: '🧹', syn: ['töm inventarie','rensa','töm'] },
+    { id: 'inv-items',      label: 'Hantera föremål',  sel: '#manageItemsBtn',        panel: null, emoji: '🆕', syn: ['hantera föremål','nytt föremål','eget föremål','skapa föremål','mängdköp','mangdkop','lasta i','lasta ur','färdmedel','fordon'] },
+    { id: 'inv-economy',    label: 'Hantera ekonomi',  sel: '#manageEconomyBtn',      panel: null, emoji: '💸', syn: ['hantera ekonomi','hantera pengar','pengar','saldo','multiplicera pris','pris','spara gratis','gratismarkera'] },
+    { id: 'inv-quickspend', label: 'Snabbspendera',    sel: '#inventoryQuickSpendBtn', panel: null, emoji: '💰', syn: ['snabbspendera','snabb spendera','betala direkt','spendera'] },
 
     // Verktyg inne i Filter → Verktyg
     { id: 'new-character',   label: 'Ny rollperson',       sel: '#newCharBtn',      panel: 'filterPanel', emoji: '➕',
@@ -727,6 +723,32 @@ async function pickJsonFilesFromDirectoryWithFallback() {
   function executeUICommand(id){
     const cmd = UI_CMDS.find(c => c.id === id);
     if (!cmd) return false;
+    const openTraitsView = (tab = 'traits') => {
+      const wantedTab = tab === 'summary' || tab === 'effects' ? tab : 'traits';
+      if (ROLE === 'traits') {
+        if (window.summaryEffects?.activateTraitsTab) {
+          window.summaryEffects.activateTraitsTab(wantedTab);
+          return true;
+        }
+        return highlightToolbarEl(cmd.sel, cmd.panel);
+      }
+      const hash = wantedTab === 'traits'
+        ? '#tab-traits'
+        : wantedTab === 'summary'
+          ? '#tab-summary'
+          : '#tab-effects';
+      try { window.location.href = `traits.html${hash}`; } catch {}
+      return true;
+    };
+    if (cmd.id === 'open-traits') {
+      return openTraitsView('traits');
+    }
+    if (cmd.id === 'open-summary') {
+      return openTraitsView('summary');
+    }
+    if (cmd.id === 'open-effects') {
+      return openTraitsView('effects');
+    }
     if (cmd.id === 'open-inventory' && ROLE !== 'inventory') {
       try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
       try { window.location.href = 'inventory.html'; } catch {}
@@ -738,7 +760,7 @@ async function pickJsonFilesFromDirectoryWithFallback() {
       return true;
     }
     // If this command belongs to character view but we are elsewhere, navigate
-    if ((cmd.id === 'open-summary' || cmd.id === 'open-notes' || cmd.id === 'open-effects') && ROLE !== 'character') {
+    if (cmd.id === 'open-notes' && ROLE !== 'character') {
       try { sessionStorage.setItem('__pendingUICommand', cmd.id); } catch {}
       try { window.location.href = 'character.html'; } catch {}
       return true;
@@ -1734,6 +1756,9 @@ function boot() {
   if (ROLE === 'character')  { initCharacter(); promptOutdatedEntriesIfNeeded(); }
   if (ROLE === 'notes')      initNotes();
   if (ROLE === 'inventory')  initInventory();
+  if (ROLE === 'traits' && window.summaryEffects?.initUnifiedTraitsPage) {
+    window.summaryEffects.initUnifiedTraitsPage();
+  }
   if (ROLE === 'summary' && window.summaryEffects?.initSummaryPage) {
     window.summaryEffects.initSummaryPage();
   }
@@ -3513,9 +3538,14 @@ function openDefenseCalcPopup() {
   const emptyMsg = root.getElementById('defenseCalcEmpty');
   const applyBtn = root.getElementById('defenseCalcApply');
   const cancelBtn = root.getElementById('defenseCalcCancel');
+  const closeBtn = root.getElementById('defenseCalcCloseX');
   const resetBtn = root.getElementById('defenseCalcReset');
+  const statusEl = root.getElementById('defenseCalcStatus');
+  const basisSummaryEl = root.getElementById('defenseCalcBasisSummary');
+  const weaponSummaryEl = root.getElementById('defenseCalcWeaponSummary');
+  const dancingSummaryEl = root.getElementById('defenseCalcDancingSummary');
   const inner = pop?.querySelector('.popup-inner');
-  if (!pop || !traitSel || !armorSel || !weaponList || !applyBtn || !cancelBtn || !resetBtn || !inner || !danceTraitSel || !danceWeaponSel) return;
+  if (!pop || !traitSel || !armorSel || !weaponList || !applyBtn || !cancelBtn || !closeBtn || !resetBtn || !inner || !danceTraitSel || !danceWeaponSel) return;
 
   const list = typeof storeHelper.getCurrentList === 'function'
     ? storeHelper.getCurrentList(store)
@@ -3545,6 +3575,11 @@ function openDefenseCalcPopup() {
   const escapeText = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   })[ch]);
+  const getSelectLabel = (select, emptyLabel) => {
+    const opt = select?.options?.[select.selectedIndex];
+    if (!opt) return emptyLabel;
+    return opt.value === '' ? emptyLabel : String(opt.textContent || '').trim();
+  };
   const isBalancedQuality = (q) => String(q || '').toLowerCase().startsWith('balanser');
   const isArmMountedShieldQuality = q => {
     const txt = String(q || '').toLowerCase();
@@ -3582,19 +3617,24 @@ function openDefenseCalcPopup() {
       ? window.enforceArmorQualityExclusion(entry, combined)
       : combined;
   };
+  const traitValues = typeof window.getCurrentTraitValues === 'function'
+    ? window.getCurrentTraitValues(list, inv)
+    : null;
 
   const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
     ? storeHelper.getDefenseSetup(store)
     : null;
-  const forcedTrait = typeof storeHelper.getDefenseTrait === 'function'
-    ? storeHelper.getDefenseTrait(store)
-    : '';
-  const selectedTrait = defenseSetup?.trait || forcedTrait || '';
-  const selectedArmorPath = Array.isArray(defenseSetup?.armor?.path) ? defenseSetup.armor.path.join('.') : '';
-  const selectedDanceTrait = defenseSetup?.dancingTrait || '';
-  const selectedDanceWeaponPath = Array.isArray(defenseSetup?.dancingWeapon?.path) ? defenseSetup.dancingWeapon.path.join('.') : '';
+  const autoDefenseSetup = typeof window.getAutoDefenseSetup === 'function'
+    ? window.getAutoDefenseSetup({ list, inv, traitValues })
+    : { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null };
+  const initialSetup = defenseSetup?.enabled ? defenseSetup : autoDefenseSetup;
+  const selectedTrait = initialSetup?.trait || '';
+  const selectedArmorPath = Array.isArray(initialSetup?.armor?.path) ? initialSetup.armor.path.join('.') : '';
+  const selectedDanceTrait = initialSetup?.dancingTrait || '';
+  const selectedDanceWeaponPath = Array.isArray(initialSetup?.dancingWeapon?.path) ? initialSetup.dancingWeapon.path.join('.') : '';
+  let manualModeEnabled = Boolean(defenseSetup?.enabled);
   const selectedWeaponPaths = new Set(
-    (defenseSetup?.weapons || [])
+    (initialSetup?.weapons || [])
       .map(w => Array.isArray(w.path) ? w.path.join('.') : '')
       .filter(Boolean)
   );
@@ -3647,7 +3687,7 @@ function openDefenseCalcPopup() {
         isArmMountedShield,
         isTwoHandedWeapon
       });
-      return `<label class="price-item defense-item"><span>${escapeText(name)}${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(value)}"${checked}></label>`;
+      return `<label class="price-item defense-item"><span class="defense-item-copy"><span class="defense-item-name">${escapeText(name)}</span>${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(value)}"${checked}></label>`;
     })
     .filter(Boolean)
     .join('');
@@ -3683,12 +3723,17 @@ function openDefenseCalcPopup() {
     checkboxes.forEach(ch => {
       const pathStr = ch.dataset.path || '';
       const isSelected = selectedSet.has(pathStr);
+      const item = ch.closest('.defense-item');
       ch.checked = isSelected;
       const disable = !isSelected && (
         (hasArmMountedShield && isTwoHandedWeaponPath(pathStr)) ||
         (hasTwoHandedWeapon && isArmMountedShieldPath(pathStr))
       );
       ch.disabled = disable;
+      if (item) {
+        item.classList.toggle('is-selected', isSelected);
+        item.classList.toggle('is-disabled', disable);
+      }
       if (disable) {
         ch.title = 'Kan inte kombineras med Armfäst/Tvåhandsvapen.';
       } else {
@@ -3697,10 +3742,88 @@ function openDefenseCalcPopup() {
     });
     return selectedPaths;
   };
-  syncWeaponSelectionUi();
+  const toStoredRef = meta => meta ? { path: meta.path, id: meta.id, name: meta.name } : null;
+  const buildCurrentSetup = (preferredPath = '') => {
+    const selectedPathsNext = syncWeaponSelectionUi(preferredPath);
+    const armorRef = armorSel.value ? toStoredRef(armorMeta.get(armorSel.value) || null) : null;
+    const danceWeaponRef = hasDancingAbility && danceWeaponSel.value
+      ? toStoredRef(weaponMeta.get(danceWeaponSel.value) || null)
+      : null;
+    return {
+      enabled: manualModeEnabled,
+      trait: traitSel.value || '',
+      armor: armorRef,
+      weapons: selectedPathsNext
+        .map(pathStr => toStoredRef(weaponMeta.get(pathStr) || null))
+        .filter(Boolean),
+      dancingTrait: hasDancingAbility ? (danceTraitSel.value || '') : '',
+      dancingWeapon: hasDancingAbility ? danceWeaponRef : null
+    };
+  };
+  const applySetupToUi = (setup) => {
+    const armorPath = Array.isArray(setup?.armor?.path) ? setup.armor.path.join('.') : '';
+    const dancingWeaponPath = Array.isArray(setup?.dancingWeapon?.path) ? setup.dancingWeapon.path.join('.') : '';
+    const weaponPathSet = new Set(
+      (setup?.weapons || [])
+        .map(item => Array.isArray(item?.path) ? item.path.join('.') : '')
+        .filter(Boolean)
+    );
+    traitSel.value = setup?.trait || '';
+    armorSel.value = armorPath;
+    getWeaponCheckboxes().forEach(ch => {
+      ch.checked = weaponPathSet.has(ch.dataset.path || '');
+    });
+    danceTraitSel.value = setup?.dancingTrait || '';
+    danceWeaponSel.value = dancingWeaponPath;
+    syncWeaponSelectionUi();
+  };
+  const updateSummaryUi = (preferredPath = '') => {
+    const currentSetup = buildCurrentSetup(preferredPath);
+    const selectedPathsNext = currentSetup.weapons
+      .map(item => Array.isArray(item.path) ? item.path.join('.') : '')
+      .filter(Boolean);
+    const preview = typeof window.getDefensePreview === 'function'
+      ? window.getDefensePreview({
+          list,
+          inv,
+          traitValues,
+          setup: currentSetup
+        })
+      : null;
+    const standardValue = Number(preview?.standardValue);
+    if (statusEl) {
+      const label = manualModeEnabled ? 'Manuell beräkning' : 'Automatisk beräkning';
+      statusEl.textContent = Number.isFinite(standardValue)
+        ? `${label} • Försvar ${standardValue}`
+        : label;
+      statusEl.dataset.state = manualModeEnabled ? 'active' : 'inactive';
+    }
+    if (basisSummaryEl) {
+      basisSummaryEl.textContent = `${getSelectLabel(traitSel, 'Automatiskt drag')} • ${getSelectLabel(armorSel, 'Ingen rustning')}`;
+    }
+    if (weaponSummaryEl) {
+      weaponSummaryEl.textContent = selectedPathsNext.length
+        ? `${selectedPathsNext.length} ${selectedPathsNext.length === 1 ? 'vapen/sköld vald' : 'vapen/sköldar valda'}`
+        : 'Inga vapen eller sköldar valda';
+    }
+    if (dancingSummaryEl) {
+      if (!hasDancingAbility) {
+        dancingSummaryEl.hidden = true;
+        dancingSummaryEl.textContent = '';
+      } else {
+        dancingSummaryEl.hidden = false;
+        const dancingValue = Number(preview?.dancingValue);
+        dancingSummaryEl.textContent = Number.isFinite(dancingValue)
+          ? `Dansande vapen • Försvar ${dancingValue} • ${getSelectLabel(danceWeaponSel, 'Inget vapen')}`
+          : `Dansande vapen tillgängligt • ${getSelectLabel(danceTraitSel, 'Viljestark')} • ${getSelectLabel(danceWeaponSel, 'Inget vapen')}`;
+      }
+    }
+    return currentSetup;
+  };
   getWeaponCheckboxes().forEach(ch => {
     ch.addEventListener('change', () => {
-      syncWeaponSelectionUi(ch.dataset.path || '');
+      manualModeEnabled = true;
+      updateSummaryUi(ch.dataset.path || '');
     });
   });
   const weaponOptions = ['<option value="">Inget vapen</option>'].concat(
@@ -3710,8 +3833,35 @@ function openDefenseCalcPopup() {
     })
   ).join('');
   danceWeaponSel.innerHTML = weaponOptions;
-  danceWeaponSel.value = selectedDanceWeaponPath;
   setDancingVisibility(hasDancingAbility);
+  const onTraitChange = () => {
+    manualModeEnabled = true;
+    updateSummaryUi();
+  };
+  const onArmorChange = () => {
+    manualModeEnabled = true;
+    updateSummaryUi();
+  };
+  const onDanceTraitChange = () => {
+    manualModeEnabled = true;
+    updateSummaryUi();
+  };
+  const onDanceWeaponChange = () => {
+    manualModeEnabled = true;
+    updateSummaryUi();
+  };
+  traitSel.addEventListener('change', onTraitChange);
+  armorSel.addEventListener('change', onArmorChange);
+  danceTraitSel.addEventListener('change', onDanceTraitChange);
+  danceWeaponSel.addEventListener('change', onDanceWeaponChange);
+  applySetupToUi({
+    trait: selectedTrait,
+    armor: selectedArmorPath ? { path: selectedArmorPath.split('.').map(Number).filter(Number.isInteger) } : null,
+    weapons: [...selectedWeaponPaths].map(pathStr => ({ path: pathStr.split('.').map(Number).filter(Number.isInteger) })),
+    dancingTrait: selectedDanceTrait,
+    dancingWeapon: selectedDanceWeaponPath ? { path: selectedDanceWeaponPath.split('.').map(Number).filter(Number.isInteger) } : null
+  });
+  updateSummaryUi();
   if (emptyMsg) {
     const hasWeapons = Boolean(weaponHtml);
     emptyMsg.hidden = hasWeapons;
@@ -3726,9 +3876,14 @@ function openDefenseCalcPopup() {
   const cleanup = () => {
     applyBtn.removeEventListener('click', onApply);
     cancelBtn.removeEventListener('click', onCancel);
+    closeBtn.removeEventListener('click', onCancel);
     resetBtn.removeEventListener('click', onReset);
     pop.removeEventListener('click', onOutside);
     inner.removeEventListener('keydown', onKey);
+    traitSel.removeEventListener('change', onTraitChange);
+    armorSel.removeEventListener('change', onArmorChange);
+    danceTraitSel.removeEventListener('change', onDanceTraitChange);
+    danceWeaponSel.removeEventListener('change', onDanceWeaponChange);
   };
 
   const close = () => {
@@ -3744,22 +3899,25 @@ function openDefenseCalcPopup() {
   };
 
   const onApply = () => {
-    const armorVal = armorSel.value;
-    const armorRef = armorMeta.get(armorVal) || null;
-    const dancingEnabled = hasDancingAbility;
-    const danceWeaponVal = dancingEnabled ? danceWeaponSel.value : '';
-    const danceWeaponRef = dancingEnabled ? (weaponMeta.get(danceWeaponVal) || null) : null;
-    const selectedWeaponPathsNext = syncWeaponSelectionUi();
-    const selectedWeaponsNext = selectedWeaponPathsNext
-      .map(pathStr => weaponMeta.get(pathStr))
-      .filter(Boolean);
+    const currentSetup = buildCurrentSetup();
+    if (!manualModeEnabled) {
+      if (typeof storeHelper.setDefenseSetup === 'function') {
+        storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
+      }
+      if (typeof storeHelper.setDefenseTrait === 'function') {
+        storeHelper.setDefenseTrait(store, '');
+      }
+      refreshUI();
+      updateSummaryUi();
+      return;
+    }
     const nextSetup = {
       enabled: true,
-      trait: traitSel.value || '',
-      armor: armorRef ? { path: armorRef.path, id: armorRef.id, name: armorRef.name } : null,
-      weapons: selectedWeaponsNext.map(w => ({ path: w.path, id: w.id, name: w.name })),
-      dancingTrait: dancingEnabled ? (danceTraitSel.value || '') : '',
-      dancingWeapon: dancingEnabled && danceWeaponRef ? { path: danceWeaponRef.path, id: danceWeaponRef.id, name: danceWeaponRef.name } : null
+      trait: currentSetup.trait || '',
+      armor: currentSetup.armor,
+      weapons: currentSetup.weapons,
+      dancingTrait: currentSetup.dancingTrait || '',
+      dancingWeapon: currentSetup.dancingWeapon
     };
     if (typeof storeHelper.setDefenseSetup === 'function') {
       storeHelper.setDefenseSetup(store, nextSetup);
@@ -3767,19 +3925,14 @@ function openDefenseCalcPopup() {
     if (typeof storeHelper.setDefenseTrait === 'function') {
       storeHelper.setDefenseTrait(store, '');
     }
-    close();
     refreshUI();
+    updateSummaryUi();
   };
 
   const onReset = () => {
-    if (typeof storeHelper.setDefenseSetup === 'function') {
-      storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
-    }
-    if (typeof storeHelper.setDefenseTrait === 'function') {
-      storeHelper.setDefenseTrait(store, '');
-    }
-    close();
-    refreshUI();
+    manualModeEnabled = false;
+    applySetupToUi(autoDefenseSetup);
+    updateSummaryUi();
   };
 
   const onCancel = () => {
@@ -3804,6 +3957,7 @@ function openDefenseCalcPopup() {
 
   applyBtn.addEventListener('click', onApply);
   cancelBtn.addEventListener('click', onCancel);
+  closeBtn.addEventListener('click', onCancel);
   resetBtn.addEventListener('click', onReset);
   pop.addEventListener('click', onOutside);
   inner.addEventListener('keydown', onKey);

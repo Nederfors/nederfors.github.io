@@ -1,4 +1,5 @@
-const CACHE_NAME = 'symbaroum-pwa-v15';
+const CACHE_NAME = 'symbaroum-pwa-v16';
+const PDF_DIR = 'pdf/';
 const URLS_TO_CACHE = [
   // Core pages and styles
   'index.html',
@@ -100,7 +101,9 @@ async function precacheResources(cache) {
       if (!collection || !Array.isArray(collection.items)) return;
       collection.items.forEach(item => {
         if (!item || !item.file) return;
-        fileRequests.push(new Request(item.file, { cache: 'reload' }));
+        const file = normalizePdfPath(item.file);
+        if (!file) return;
+        fileRequests.push(new Request(file, { cache: 'reload' }));
       });
     });
     if (fileRequests.length) {
@@ -111,6 +114,18 @@ async function precacheResources(cache) {
   } catch (error) {
     // Ignore invalid PDF list entries; they will be fetched on demand.
   }
+}
+
+function normalizePdfPath(file) {
+  if (typeof file !== 'string') return '';
+  const trimmed = file.trim();
+  if (!trimmed) return '';
+  if (/^(https?:)?\/\//i.test(trimmed)) return trimmed;
+  if (trimmed.startsWith(PDF_DIR)) return trimmed;
+  if (trimmed.startsWith('data/')) {
+    return `${PDF_DIR}${trimmed.slice('data/'.length)}`;
+  }
+  return `${PDF_DIR}${trimmed.replace(/^\/+/, '')}`;
 }
 
 async function forceRefreshCaches() {

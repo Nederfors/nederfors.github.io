@@ -27,6 +27,66 @@
     return root ? root.getElementById(id) : null;
   };
   const getEl = (id) => document.getElementById(id) || $T(id);
+  const INVENTORY_HUB_DEFS = {
+    items: {
+      popupId: 'inventoryItemsPopup',
+      closeId: 'inventoryItemsClose',
+      defaultTab: 'custom-item',
+      tabs: ['custom-item', 'bulk-qty', 'vehicle-load', 'vehicle-unload'],
+      sectionTabIds: {
+        customPopup: 'custom-item',
+        qtyPopup: 'bulk-qty',
+        vehiclePopup: 'vehicle-load',
+        vehicleRemovePopup: 'vehicle-unload'
+      },
+      stackIds: {
+        'custom-item': 'inventoryItemsCustomItemStack',
+        'bulk-qty': 'inventoryItemsBulkQtyStack',
+        'vehicle-load': 'inventoryItemsVehicleLoadStack',
+        'vehicle-unload': 'inventoryItemsVehicleUnloadStack'
+      },
+      emptyIds: ['inventoryItemsVehicleLoadEmpty', 'inventoryItemsVehicleUnloadEmpty']
+    },
+    economy: {
+      popupId: 'inventoryEconomyPopup',
+      closeId: 'inventoryEconomyClose',
+      saveFreeBtnId: 'inventoryEconomySaveFreeBtn',
+      massActionsId: 'inventoryEconomyMassActions',
+      defaultTab: 'money',
+      tabs: ['money', 'bulk-price'],
+      sectionTabIds: {
+        moneyPopup: 'money',
+        pricePopup: 'bulk-price'
+      },
+      stackIds: {
+        money: 'inventoryEconomyMoneyStack',
+        'bulk-price': 'inventoryEconomyPriceStack'
+      }
+    }
+  };
+  const INVENTORY_HUB_FOCUS_TARGETS = {
+    'custom-item': 'customPopup',
+    'bulk-qty': 'qtyPopup',
+    money: 'moneyPopup',
+    'quick-spend': 'moneyPopup',
+    'bulk-price': 'pricePopup',
+    'mass-actions': 'inventoryEconomyMassActions',
+    'vehicle-load': 'vehiclePopup',
+    'vehicle-unload': 'vehicleRemovePopup'
+  };
+  const INVENTORY_HUB_FOCUS_TABS = {
+    'custom-item': 'custom-item',
+    'bulk-qty': 'bulk-qty',
+    money: 'money',
+    'quick-spend': 'money',
+    'bulk-price': 'bulk-price',
+    'mass-actions': 'money',
+    'vehicle-load': 'vehicle-load',
+    'vehicle-unload': 'vehicle-unload'
+  };
+  const INVENTORY_HUB_SECTION_IDS = Array.from(new Set(
+    Object.values(INVENTORY_HUB_DEFS).flatMap(def => Object.keys(def.sectionTabIds))
+  ));
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
@@ -129,6 +189,290 @@
     if (!Array.isArray(inv)) return;
     inv.forEach(row => normalizeRowQualities(row));
   };
+
+  function getInventoryHubKeyForTab(tabId) {
+    return Object.entries(INVENTORY_HUB_DEFS).find(([, def]) => def.tabs.includes(tabId))?.[0] || '';
+  }
+
+  function setInventoryHubTab(hubKey, tabId) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return;
+    const hub = root.getElementById(def.popupId);
+    if (!hub) return;
+    const wanted = def.tabs.includes(tabId) ? tabId : def.defaultTab;
+    hub.dataset.activeTab = wanted;
+    hub.querySelectorAll('.inventory-hub-tab').forEach(btn => {
+      const active = btn.dataset.tab === wanted;
+      btn.classList.toggle('active', active);
+      btn.setAttribute('aria-selected', active ? 'true' : 'false');
+      btn.setAttribute('tabindex', active ? '0' : '-1');
+    });
+    hub.querySelectorAll('.inventory-hub-panel').forEach(panel => {
+      panel.classList.toggle('active', panel.dataset.tabPanel === wanted);
+    });
+  }
+
+  function clearInventoryHubHighlight(root) {
+    if (!root) return;
+    root.querySelectorAll('.inventory-hub-popup [data-hub-active="true"]').forEach(el => {
+      el.removeAttribute('data-hub-active');
+      el.classList.remove('is-active');
+      if (el.__hubHighlightTimer) {
+        clearTimeout(el.__hubHighlightTimer);
+        delete el.__hubHighlightTimer;
+      }
+    });
+  }
+
+  function highlightInventoryHubSection(focusSection) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    clearInventoryHubHighlight(root);
+    const targetId = INVENTORY_HUB_FOCUS_TARGETS[focusSection];
+    if (!targetId) return;
+    const target = root.getElementById(targetId);
+    if (!target) return;
+    target.dataset.hubActive = 'true';
+    target.classList.add('is-active');
+    target.__hubHighlightTimer = setTimeout(() => {
+      target.removeAttribute('data-hub-active');
+      target.classList.remove('is-active');
+      delete target.__hubHighlightTimer;
+    }, 1800);
+    requestAnimationFrame(() => {
+      const field = target.querySelector('input, select, textarea, button');
+      if (field && typeof field.focus === 'function') {
+        try { field.focus({ preventScroll: true }); } catch { field.focus(); }
+      }
+    });
+  }
+
+  function cleanupInventoryHubSections(exceptId) {
+    const root = getToolbarRoot();
+    if (!root) return;
+    INVENTORY_HUB_SECTION_IDS.forEach(sectionId => {
+      if (sectionId === exceptId) return;
+      const section = root.getElementById(sectionId);
+      if (!section || typeof section.__hubCleanup !== 'function') return;
+      const cleanup = section.__hubCleanup;
+      section.__hubCleanup = null;
+      try { cleanup({ switching: true }); } catch {}
+    });
+  }
+
+  function ensureInventoryHubMounted(hubKey) {
+    const root = getToolbarRoot();
+    if (!root) return null;
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return null;
+    const hub = root.getElementById(def.popupId);
+    if (!hub) return null;
+
+    Object.entries(def.sectionTabIds).forEach(([sectionId, tabId]) => {
+      const stackId = def.stackIds[tabId];
+      const stack = root.getElementById(stackId);
+      if (!stack) return;
+      const section = root.getElementById(sectionId);
+      if (!section || section.parentElement === stack) return;
+      section.classList.add('inventory-hub-section');
+      section.setAttribute('data-hub-tab', tabId);
+      if (hubKey === 'economy' && tabId === 'money') {
+        const massActions = def.massActionsId ? root.getElementById(def.massActionsId) : null;
+        if (massActions && massActions.parentElement === stack) {
+          stack.insertBefore(section, massActions);
+          return;
+        }
+      }
+      stack.appendChild(section);
+    });
+
+    if (hub.dataset.bound === '1') return hub;
+
+    const closeBtn = root.getElementById(def.closeId);
+    const saveFreeBtn = def.saveFreeBtnId ? root.getElementById(def.saveFreeBtnId) : null;
+    closeBtn?.addEventListener('click', () => closeInventoryHub(hubKey));
+    saveFreeBtn?.addEventListener('click', () => openSaveFreePopup());
+    hub.addEventListener('click', event => {
+      const inner = hub.querySelector('.popup-inner.inventory-hub-ui');
+      if (!hub.classList.contains('open') || !inner) return;
+      if (!inner.contains(event.target)) {
+        closeInventoryHub(hubKey);
+      }
+    });
+    hub.querySelectorAll('.inventory-hub-tab').forEach(btn => {
+      btn.addEventListener('click', () => {
+        openInventoryHubTab(btn.dataset.tab || 'custom-item');
+      });
+    });
+
+    hub.dataset.bound = '1';
+    return hub;
+  }
+
+  function syncInventoryHubState() {
+    const root = getToolbarRoot();
+    if (!root) return;
+    const inv = Array.isArray(storeHelper.getInventory(store)) ? storeHelper.getInventory(store) : [];
+    const hasVehicle = inv.some(row => {
+      const entry = getEntry(row?.id || row?.name);
+      return (entry?.taggar?.typ || []).includes('Färdmedel');
+    });
+    (INVENTORY_HUB_DEFS.items.emptyIds || []).forEach(id => {
+      const emptyState = root.getElementById(id);
+      if (emptyState) emptyState.hidden = hasVehicle;
+    });
+    const vehicleLoadSection = root.getElementById('vehiclePopup');
+    const vehicleUnloadSection = root.getElementById('vehicleRemovePopup');
+    if (vehicleLoadSection) vehicleLoadSection.hidden = !hasVehicle;
+    if (vehicleUnloadSection) vehicleUnloadSection.hidden = !hasVehicle;
+  }
+
+  function closeInventoryHub(target = 'all', options = {}) {
+    if (target && typeof target === 'object') {
+      options = target;
+      target = 'all';
+    }
+    const root = getToolbarRoot();
+    if (!root) return;
+    const skipSection = options.skipSection || '';
+    const keys = target === 'all' ? Object.keys(INVENTORY_HUB_DEFS) : [target];
+    keys.forEach(hubKey => {
+      const def = INVENTORY_HUB_DEFS[hubKey];
+      if (!def) return;
+      Object.keys(def.sectionTabIds).forEach(sectionId => {
+        if (sectionId === skipSection) return;
+        const section = root.getElementById(sectionId);
+        if (!section || typeof section.__hubCleanup !== 'function') return;
+        const cleanup = section.__hubCleanup;
+        section.__hubCleanup = null;
+        try { cleanup({ viaHubClose: true }); } catch {}
+      });
+      const popup = root.getElementById(def.popupId);
+      if (popup) popup.classList.remove('open');
+    });
+    clearInventoryHubHighlight(root);
+    window.updateScrollLock?.();
+  }
+
+  function openInventoryHub(target = 'items', options = {}) {
+    const focusSection = options && typeof options === 'object' ? options.focusSection : '';
+    let hubKey = Object.prototype.hasOwnProperty.call(INVENTORY_HUB_DEFS, target) ? target : '';
+    let resolvedTab = getInventoryHubKeyForTab(target) ? target : '';
+    if (!resolvedTab && focusSection) {
+      resolvedTab = INVENTORY_HUB_FOCUS_TABS[focusSection] || '';
+    }
+    if (!resolvedTab && target === 'vehicles') {
+      resolvedTab = 'vehicle-load';
+    }
+    if (!hubKey) hubKey = getInventoryHubKeyForTab(resolvedTab) || 'items';
+    const def = INVENTORY_HUB_DEFS[hubKey];
+    if (!def) return null;
+    if (!resolvedTab || !def.tabs.includes(resolvedTab)) resolvedTab = def.defaultTab;
+    const hub = ensureInventoryHubMounted(hubKey);
+    if (!hub) return null;
+    Object.keys(INVENTORY_HUB_DEFS).forEach(key => {
+      if (key !== hubKey) closeInventoryHub(key);
+    });
+    syncInventoryHubState();
+    setInventoryHubTab(hubKey, resolvedTab);
+    hub.classList.add('open');
+    const inner = hub.querySelector('.popup-inner.inventory-hub-ui');
+    if (inner) inner.scrollTop = 0;
+    window.updateScrollLock?.();
+    if (focusSection) {
+      requestAnimationFrame(() => highlightInventoryHubSection(focusSection));
+    }
+    return hub;
+  }
+
+  function openInventoryItemsHub(tabId = 'custom-item', options = {}) {
+    return openInventoryHub(tabId || 'items', options);
+  }
+
+  function openInventoryEconomyHub(tabId = 'money', options = {}) {
+    return openInventoryHub(tabId || 'economy', options);
+  }
+
+  function openInventoryCustomItemManager() {
+    openCustomPopup(entry => {
+      if (!entry) return;
+      const list = storeHelper.getCustomEntries(store);
+      list.push(entry);
+      const result = storeHelper.setCustomEntries(store, list);
+      if (result && result.idMap) {
+        const mappedId = result.idMap.get(entry.id);
+        if (mappedId) entry.id = mappedId;
+      }
+      if (result && Array.isArray(result.entries)) {
+        const persisted = result.entries.find(e => e.id === entry.id);
+        if (persisted) {
+          entry.namn = persisted.namn;
+          entry.artifactEffect = persisted.artifactEffect;
+        }
+      }
+      const inv = storeHelper.getInventory(store);
+      inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
+      saveInventory(inv);
+      renderInventory();
+      if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
+      if (window.indexViewUpdate) window.indexViewUpdate();
+    });
+  }
+
+  function openInventoryHubTab(tabId) {
+    if (tabId === 'custom-item') {
+      openInventoryCustomItemManager();
+      return;
+    }
+    if (tabId === 'bulk-qty') {
+      openQtyPopup();
+      return;
+    }
+    if (tabId === 'money') {
+      openMoneyPopup();
+      return;
+    }
+    if (tabId === 'bulk-price') {
+      openPricePopup();
+      return;
+    }
+    if (tabId === 'vehicle-load') {
+      openVehiclePopup();
+      return;
+    }
+    if (tabId === 'vehicle-unload') {
+      openVehicleRemovePopup();
+    }
+  }
+
+  function spendInventoryMoney(spendMoney, options = {}) {
+    const normalized = storeHelper.normalizeMoney(spendMoney || {});
+    const spendO = moneyToO(normalized);
+    if (spendO <= 0) return false;
+    const finish = () => {
+      const curMoney = storeHelper.getMoney(store);
+      const remainingO = Math.max(0, moneyToO(curMoney) - spendO);
+      storeHelper.setMoney(store, oToMoney(remainingO));
+      renderInventory();
+    };
+    const priv = storeHelper.getPrivMoney(store);
+    const pos  = storeHelper.getPossessionMoney(store);
+    const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
+    if (hasAdv) {
+      openAdvMoneyPopup(() => {
+        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        finish();
+        if (typeof options.onComplete === 'function') options.onComplete(true);
+      });
+      return true;
+    }
+    finish();
+    if (typeof options.onComplete === 'function') options.onComplete(true);
+    return true;
+  }
 
   function getCraftLevels() {
     const list = storeHelper.getCurrentList(store);
@@ -651,6 +995,130 @@
     return map;
   }
 
+  function getInventoryVehicleContext(inv) {
+    const inventory = Array.isArray(inv) ? inv : [];
+    const vehicles = inventory
+      .map((row, idx) => ({ row, entry: getEntry(row?.id || row?.name), idx }))
+      .filter(({ entry }) => (entry?.taggar?.typ || []).includes('Färdmedel'));
+    const flat = flattenInventoryWithPath(inventory);
+    const nameMap = makeNameMap(flat.map(item => item.row));
+    const vehicleNameMap = makeNameMap(vehicles.map(item => item.row));
+    const vehicleNames = new Map(
+      vehicles.map(({ row, entry, idx }) => [idx, vehicleNameMap.get(row) || entry?.namn || row?.name || 'Färdmedel'])
+    );
+    const vehicleIndexes = vehicles.map(item => item.idx);
+    return { vehicles, flat, nameMap, vehicleNames, vehicleIndexes };
+  }
+
+  function buildInventoryBatchCheckboxRow(label, path, meta = '') {
+    const safeLabel = escapeHtml(label || 'Okänt föremål');
+    const safeMeta = meta ? `<span class="inventory-batch-item-meta">${escapeHtml(meta)}</span>` : '';
+    return `
+      <label class="price-item inventory-batch-item">
+        <span class="inventory-batch-item-copy">
+          <span class="inventory-batch-item-label">${safeLabel}</span>
+          ${safeMeta}
+        </span>
+        <input type="checkbox" data-path="${path}">
+      </label>
+    `;
+  }
+
+  function buildInventoryBatchActionRow(label, actionLabel, path, meta = '') {
+    const safeLabel = escapeHtml(label || 'Okänt föremål');
+    const safeAction = escapeHtml(actionLabel || 'Verkställ');
+    const safeMeta = meta ? `<span class="inventory-batch-item-meta">${escapeHtml(meta)}</span>` : '';
+    return `
+      <div class="price-item inventory-batch-item inventory-batch-item-action">
+        <span class="inventory-batch-item-copy">
+          <span class="inventory-batch-item-label">${safeLabel}</span>
+          ${safeMeta}
+        </span>
+        <button type="button" class="char-btn vehicle-money-action" data-path="${path}">${safeAction}</button>
+      </div>
+    `;
+  }
+
+  function getCharacterCarrySummary(inv) {
+    const inventory = Array.isArray(inv) ? inv : (storeHelper.getInventory(store) || []);
+    const allInv = flattenInventory(inventory);
+    const levels = getCraftLevels();
+    const totalCostO = allInv.reduce((sum, row) => sum + calcRowCostOWithLevels(row, levels), 0);
+    const totalMoney = storeHelper.normalizeMoney(storeHelper.getTotalMoney(store));
+    const diffO = moneyToO(totalMoney) - totalCostO;
+    const unusedMoney = oToMoney(Math.max(0, diffO));
+    const moneyWeight = calcMoneyWeight(unusedMoney);
+    const usedWeight = allInv.reduce((sum, row) => {
+      const entry = getEntry(row.id || row.name);
+      const isVehicle = (entry.taggar?.typ || []).includes('Färdmedel');
+      return sum + (isVehicle ? 0 : calcRowWeight(row));
+    }, 0) + moneyWeight;
+    const list = storeHelper.getCurrentList(store);
+    const traits = storeHelper.getTraits(store);
+    const manualAdjust = storeHelper.getManualAdjustments(store) || {};
+    const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
+    const maskBonus = window.maskSkill ? maskSkill.getBonuses(allInv) : {};
+    const valStark = (traits['Stark'] || 0) + (bonus['Stark'] || 0) + (maskBonus['Stark'] || 0);
+    const maxCapacity = storeHelper.calcCarryCapacity(valStark, list) + Number(manualAdjust.capacity || 0);
+    return { usedWeight, maxCapacity };
+  }
+
+  function getVehicleCarrySummary(row) {
+    const entry = getEntry(row?.id || row?.name);
+    const qtyRaw = Number(row?.qty);
+    const qty = Number.isFinite(qtyRaw) && qtyRaw > 0 ? qtyRaw : 1;
+    const baseWeight = row?.vikt ?? entry?.vikt ?? entry?.stat?.vikt ?? 0;
+    const totalWeight = calcRowWeight(row || {});
+    const usedWeight = Math.max(0, totalWeight - (baseWeight * qty));
+    const maxCapacity = Number(entry?.stat?.bärkapacitet || 0);
+    return { usedWeight, maxCapacity, entry };
+  }
+
+  function formatBatchCapacityText(usedWeight, maxCapacity) {
+    const fmt = value => typeof formatWeight === 'function'
+      ? formatWeight(value)
+      : String(Math.round((Number(value) || 0) * 100) / 100);
+    return `Bärkapacitet: ${fmt(usedWeight)}/${fmt(maxCapacity)}`;
+  }
+
+  function buildInventoryBatchGroup({ title, subtitle = '', metaText = '', icon = '', count = '', itemsHtml = '', emptyText = '' }) {
+    const safeTitle = escapeHtml(title || 'Grupp');
+    const subtitleHtml = subtitle
+      ? `<span class="inventory-batch-group-subtitle">${escapeHtml(subtitle)}</span>`
+      : '';
+    const metaHtml = metaText
+      ? `<span class="inventory-batch-group-meta">${escapeHtml(metaText)}</span>`
+      : '';
+    const countText = count === '' || count === null || count === undefined
+      ? ''
+      : String(count);
+    const countHtml = countText
+      ? `<span class="inventory-batch-group-count">${escapeHtml(countText)}</span>`
+      : '';
+    const iconHtml = icon
+      ? `<span class="inventory-batch-group-icon" aria-hidden="true">${icon}</span>`
+      : '';
+    const content = itemsHtml || `<p class="inventory-batch-empty">${escapeHtml(emptyText || 'Inga valbara poster.')}</p>`;
+    return `
+      <section class="vehicle-group inventory-batch-group">
+        <header class="inventory-batch-group-header">
+          <span class="inventory-batch-group-title-wrap">
+            ${iconHtml}
+            <span class="inventory-batch-group-copy">
+              <span class="inventory-batch-group-title">${safeTitle}</span>
+              ${subtitleHtml}
+              ${metaHtml}
+            </span>
+          </span>
+          ${countHtml}
+        </header>
+        <div class="inventory-batch-group-items">
+          ${content}
+        </div>
+      </section>
+    `;
+  }
+
   function sortAllInventories() {
     const sortRec = arr => {
       if (!Array.isArray(arr)) return;
@@ -775,8 +1243,10 @@
 
     const root = getToolbarRoot();
     if (!root) return;
-    const pop    = root.getElementById('customPopup');
-    const popInner = pop ? pop.querySelector('.popup-inner') : null;
+    cleanupInventoryHubSections('customPopup');
+    const hub = openInventoryItemsHub('custom-item', { focusSection: 'custom-item' });
+    const section = root.getElementById('customPopup');
+    const popInner = section ? section.querySelector('.popup-inner') : null;
     const title  = root.getElementById('customTitle');
     const name   = root.getElementById('customName');
     const typeSel= root.getElementById('customType');
@@ -1100,6 +1570,45 @@
       updateTypeFields();
     };
 
+    const cleanup = () => {
+      add.removeEventListener('click', onAdd);
+      if (del) del.removeEventListener('click', onDelete);
+      cancel.removeEventListener('click', onCancel);
+      if (typeAdd) typeAdd.removeEventListener('click', onAddType);
+      if (typeTags) typeTags.removeEventListener('click', onTagsClick);
+      if (powerAdd) powerAdd.removeEventListener('click', onAddPower);
+      if (lvlMode) lvlMode.removeEventListener('change', applyLevelMode);
+      if (desc) desc.removeEventListener('input', markDescTouched);
+      if (section) section.__hubCleanup = null;
+      resetFields();
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
+      if (effBox) effBox.style.display = 'none';
+      if (weaponBox) weaponBox.style.display = 'none';
+      if (armorBox) armorBox.style.display = 'none';
+    };
+
+    const close = (result) => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'customPopup' });
+      callback(result);
+    };
+
+    const switchToCreateMode = () => {
+      existing = null;
+      isEditing = false;
+      resetFields();
+      if (title) title.textContent = 'Nytt föremål';
+      add.textContent = 'Spara';
+      if (effSel) effSel.value = 'corruption';
+      if (del) {
+        del.style.display = 'none';
+        del.disabled = true;
+      }
+      updateTypeFields();
+      requestAnimationFrame(() => name?.focus());
+    };
+
     const onAdd = () => {
       const nameVal = name.value.trim();
       const types = orderedTypes();
@@ -1180,19 +1689,22 @@
         }
       }
 
-      close();
       callback(entry);
+      if (isEditing) {
+        existing = entry;
+        originalDesc = entry.beskrivning || '';
+      } else {
+        switchToCreateMode();
+      }
     };
 
     const onCancel = () => {
-      close();
-      callback(null);
+      close(null);
     };
 
     const onDelete = () => {
       if (!isEditing) {
-        close();
-        callback(null);
+        close(null);
         return;
       }
       const payload = {
@@ -1200,41 +1712,14 @@
         id: existing?.id || '',
         namn: existing?.namn || ''
       };
-      close();
       callback(payload);
+      switchToCreateMode();
     };
 
-    const onOutside = e => {
-      if (!popInner) return;
-      const path = typeof e.composedPath === 'function' ? e.composedPath() : e.path;
-      if (Array.isArray(path) && path.includes(popInner)) return;
-      if (popInner.contains(e.target)) return;
-      close();
-      callback(null);
-    };
-
-    function close() {
-      pop.classList.remove('open');
-      add.removeEventListener('click', onAdd);
-      if (del) del.removeEventListener('click', onDelete);
-      cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      if (typeAdd) typeAdd.removeEventListener('click', onAddType);
-      if (typeTags) typeTags.removeEventListener('click', onTagsClick);
-      if (powerAdd) powerAdd.removeEventListener('click', onAddPower);
-      if (lvlMode) lvlMode.removeEventListener('change', applyLevelMode);
-      if (desc) desc.removeEventListener('input', markDescTouched);
-      resetFields();
-      if (title) title.textContent = 'Nytt föremål';
-      add.textContent = 'Spara';
-      if (effBox) effBox.style.display = 'none';
-      if (weaponBox) weaponBox.style.display = 'none';
-      if (armorBox) armorBox.style.display = 'none';
+    window.autoResizeAll?.(section || hub);
+    if (popInner) {
+      popInner.scrollTop = 0;
     }
-
-    pop.classList.add('open');
-    window.autoResizeAll?.(pop);
-    if (popInner) popInner.scrollTop = 0;
     const markDescTouched = () => {
       if (desc) desc.dataset.touched = '1';
     };
@@ -1253,7 +1738,6 @@
       }
     }
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
     const onAddPower = e => {
       e?.preventDefault();
       const row = document.createElement('div');
@@ -1273,29 +1757,34 @@
       });
     };
     if (powerAdd) powerAdd.addEventListener('click', onAddPower);
+    if (section) {
+      section.__hubCleanup = () => {
+        cleanup();
+        callback(null);
+      };
+    }
   }
 
   function openMoneyPopup() {
     const root = getToolbarRoot();
     if (!root) return;
-    const pop   = root.getElementById('moneyPopup');
-    const dIn   = root.getElementById('moneyDaler');
-    const sIn   = root.getElementById('moneySkilling');
-    const oIn   = root.getElementById('moneyOrtegar');
+    cleanupInventoryHubSections('moneyPopup');
+    openInventoryEconomyHub('money', { focusSection: 'money' });
+    const section = root.getElementById('moneyPopup');
     const balDIn = root.getElementById('moneyBalanceDaler');
     const balSIn = root.getElementById('moneyBalanceSkilling');
     const balOIn = root.getElementById('moneyBalanceOrtegar');
     const setBtn= root.getElementById('moneySetBtn');
     const addBtn= root.getElementById('moneyAddBtn');
-    const spendBtn = root.getElementById('moneySpendBtn');
     const cancel = root.getElementById('moneyCancel');
     const statusEl = root.getElementById('moneyStatus');
 
     // Fälten ska börja tomma oavsett aktuell summa pengar
-    [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
-
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    [balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
     const updateStatus = () => {
       if (!statusEl || typeof formatMoney !== 'function') return;
@@ -1311,23 +1800,27 @@
       statusEl.textContent = `Kontant: ${formatMoney(cash)} · Oanvänt: ${diffText}`;
     };
 
+    const clearBalanceInputs = ({ focus = false } = {}) => {
+      [balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+      if (focus && typeof balDIn?.focus === 'function') {
+        balDIn.focus();
+      }
+    };
+
     updateStatus();
 
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       setBtn.removeEventListener('click', onSet);
       addBtn.removeEventListener('click', onAdd);
-      if (spendBtn) spendBtn.removeEventListener('click', onSpend);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      [dIn, sIn, oIn, balDIn, balSIn, balOIn].forEach(input => { if (input) input.value = ''; });
+      clearBalanceInputs();
       if (statusEl) statusEl.textContent = '';
+      if (section) section.__hubCleanup = null;
     };
-    const getSpendMoney = () => storeHelper.normalizeMoney({
-      daler: Number(dIn?.value) || 0,
-      skilling: Number(sIn?.value) || 0,
-      'örtegar': Number(oIn?.value) || 0
-    });
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'moneyPopup' });
+    };
     const getBalanceMoney = () => storeHelper.normalizeMoney({
       daler: Number(balDIn?.value) || 0,
       skilling: Number(balSIn?.value) || 0,
@@ -1338,15 +1831,15 @@
       const pos  = storeHelper.getPossessionMoney(store);
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) {
-        close();
         openAdvMoneyPopup(() => {
           storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
           storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
           fn();
+          updateStatus();
         });
       } else {
-        close();
         fn();
+        updateStatus();
       }
     };
     const onSet = () => {
@@ -1354,6 +1847,7 @@
       maybeAdv(() => {
         storeHelper.setMoney(store, money);
         renderInventory();
+        clearBalanceInputs({ focus: true });
       });
     };
     const onAdd = () => {
@@ -1367,37 +1861,14 @@
       maybeAdv(() => {
         storeHelper.setMoney(store, total);
         renderInventory();
+        clearBalanceInputs({ focus: true });
       });
     };
-    const onSpend = () => {
-      const spendMoney = getSpendMoney();
-      const spendO = moneyToO(spendMoney);
-      if (spendO <= 0) {
-        if (dIn) dIn.focus();
-        return;
-      }
-      const pay = () => {
-        const curMoney = storeHelper.getMoney(store);
-        const remainingO = Math.max(0, moneyToO(curMoney) - spendO);
-        storeHelper.setMoney(store, oToMoney(remainingO));
-        renderInventory();
-      };
-      if (typeof maybeAdv === 'function') {
-        maybeAdv(pay);
-      } else {
-        close();
-        pay();
-      }
-    };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
     setBtn.addEventListener('click', onSet);
     addBtn.addEventListener('click', onAdd);
-    if (spendBtn) spendBtn.addEventListener('click', onSpend);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   function removeCustomEntryFromInventory(arr, targetId, targetName) {
@@ -1495,92 +1966,112 @@
   function openQtyPopup() {
     const root = getToolbarRoot();
     if (!root) return;
-    const pop   = root.getElementById('qtyPopup');
+    cleanupInventoryHubSections('qtyPopup');
+    openInventoryItemsHub('bulk-qty', { focusSection: 'bulk-qty' });
+    const section = root.getElementById('qtyPopup');
     const inEl  = root.getElementById('qtyInput');
     const list  = root.getElementById('qtyItemList');
+    const apply = root.getElementById('qtyApply');
     const cancel= root.getElementById('qtyCancel');
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
-    const flat = flattenInventoryWithPath(inv);
-    const nameMap = makeNameMap(flat.map(f => f.row));
-    const vehicles = inv
-      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
-    const vehIdx = vehicles.map(v => v.idx);
-    const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
-    const vehicleHtml = vehicles.map(v => {
-      const items = flattenInventoryWithPath(v.row.contains || [], [v.idx]);
-      if (!items.length) return '';
-      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
-      const inner = items
-        .map(o => `<button data-path="${o.path.join('.')}" class="char-btn">${nameMap.get(o.row)}</button>`)
+    const charCarry = getCharacterCarrySummary(inv);
+    const { vehicles, flat, nameMap, vehicleNames, vehicleIndexes } = getInventoryVehicleContext(inv);
+    const regular = flat.filter(obj => !(vehicleIndexes.includes(obj.path[0]) && obj.path.length > 1));
+    const sections = [];
+    if (regular.length) {
+      const regularHtml = regular
+        .map(obj => buildInventoryBatchCheckboxRow(nameMap.get(obj.row), obj.path.join('.')))
         .join('');
-      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
-    }).join('');
-    list.innerHTML = regular
-      .map(obj => `<button data-path="${obj.path.join('.')}" class="char-btn">${nameMap.get(obj.row)}</button>`)
-      .join('') + vehicleHtml;
+      sections.push(buildInventoryBatchGroup({
+        title: 'Huvudinventarie',
+        metaText: formatBatchCapacityText(charCarry.usedWeight, charCarry.maxCapacity),
+        icon: '🎒',
+        count: regular.length,
+        itemsHtml: regularHtml
+      }));
+    }
+    vehicles.forEach(vehicle => {
+      const items = flattenInventoryWithPath(vehicle.row.contains || [], [vehicle.idx]);
+      if (!items.length) return;
+      const vehicleCarry = getVehicleCarrySummary(vehicle.row);
+      const itemsHtml = items
+        .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+        .join('');
+      sections.push(buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleNames.get(vehicle.idx),
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[vehicle.entry?.namn] || '🛞',
+        count: items.length,
+        itemsHtml
+      }));
+    });
+    list.innerHTML = sections.join('') || '<p class="inventory-batch-empty">Det finns inga poster att mängdköpa just nu.</p>';
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
-      list.removeEventListener('click', onBtn);
+    const cleanup = () => {
+      apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       list.innerHTML = '';
       inEl.value = '';
+      if (section) section.__hubCleanup = null;
     };
-    const onBtn = e => {
-      const b = e.target.closest('button[data-path]');
-      if (!b) return;
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'qtyPopup' });
+    };
+    const onApply = () => {
       const qty = parseInt(inEl.value, 10);
       if (!qty || qty <= 0) return;
-      const path = b.dataset.path.split('.').map(Number);
-      let parentArr = inv;
-      let row = null;
-      path.forEach((pIdx, i) => {
-        row = parentArr[pIdx];
-        if (i < path.length - 1) parentArr = row.contains || [];
-      });
-      if (!row) return;
-      const entry = getEntry(row.id || row.name);
-      const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-        .some(t => entry.taggar?.typ?.includes(t)) &&
-        !STACKABLE_IDS.includes(entry.id) &&
-        !['kraft','ritual'].includes(entry.bound);
-
+      const checks = [...list.querySelectorAll('input[type="checkbox"][data-path]:checked')]
+        .map(ch => ch.dataset.path.split('.').map(Number));
+      if (!checks.length) return;
       const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
       const livePairs = liveEnabled ? [] : null;
+      checks.forEach(path => {
+        let parentArr = inv;
+        let row = null;
+        path.forEach((pIdx, i) => {
+          row = parentArr[pIdx];
+          if (i < path.length - 1) parentArr = row.contains || [];
+        });
+        if (!row) return;
+        const entry = getEntry(row.id || row.name);
+        const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
+          .some(t => entry.taggar?.typ?.includes(t)) &&
+          !STACKABLE_IDS.includes(entry.id) &&
+          !['kraft','ritual'].includes(entry.bound);
 
-      if (indiv) {
-        for (let i = 0; i < qty; i++) {
-          const clone = JSON.parse(JSON.stringify(row));
-          clone.qty = 1;
-          parentArr.push(clone);
-          if (livePairs) livePairs.push({ prev: null, next: clone });
+        if (indiv) {
+          for (let i = 0; i < qty; i++) {
+            const clone = JSON.parse(JSON.stringify(row));
+            clone.qty = 1;
+            parentArr.push(clone);
+            if (livePairs) livePairs.push({ prev: null, next: clone });
+          }
+        } else {
+          const prevState = livePairs ? cloneRow(row) : null;
+          row.qty += qty;
+          if (livePairs) livePairs.push({ prev: prevState, next: row });
         }
-      } else {
-        const prevState = livePairs ? cloneRow(row) : null;
-        row.qty += qty;
-        if (livePairs) livePairs.push({ prev: prevState, next: row });
-      }
+      });
 
       if (livePairs && livePairs.length) applyLiveModePayment(livePairs);
       saveInventory(inv);
       renderInventory();
-      close();
+      cleanup();
+      openQtyPopup();
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
-    list.addEventListener('click', onBtn);
+    apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   async function buildInventoryRow({ entry, list } = {}) {
@@ -2036,7 +2527,9 @@
   function openPricePopup() {
     const root    = getToolbarRoot();
     if (!root) return;
-    const pop    = root.getElementById('pricePopup');
+    cleanupInventoryHubSections('pricePopup');
+    openInventoryEconomyHub('bulk-price', { focusSection: 'bulk-price' });
+    const section = root.getElementById('pricePopup');
     const inEl   = root.getElementById('priceFactor');
     const list   = root.getElementById('priceItemList');
     const apply  = root.getElementById('priceApply');
@@ -2044,36 +2537,54 @@
 
     inEl.value = '';
     const inv = storeHelper.getInventory(store);
-    const flat = flattenInventoryWithPath(inv);
-    const nameMap = makeNameMap(flat.map(f => f.row));
-    const vehicles = inv
-      .map((row,i)=>({ row, entry:getEntry(row.id || row.name), idx:i }))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
-    const vehIdx = vehicles.map(v => v.idx);
-    const regular = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length > 1));
-    const vehicleHtml = vehicles.map(v => {
-      const items = flattenInventoryWithPath(v.row.contains || [], [v.idx]);
-      if (!items.length) return '';
-      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
-      const inner = items.map(o => `
-        <label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}"></label>`).join('');
-      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
-    }).join('');
-    list.innerHTML = regular
-      .map(obj => `
-        <label class="price-item"><span>${nameMap.get(obj.row)}</span><input type="checkbox" data-path="${obj.path.join('.')}"></label>`)
-      .join('') + vehicleHtml;
+    const charCarry = getCharacterCarrySummary(inv);
+    const { vehicles, flat, nameMap, vehicleNames, vehicleIndexes } = getInventoryVehicleContext(inv);
+    const regular = flat.filter(obj => !(vehicleIndexes.includes(obj.path[0]) && obj.path.length > 1));
+    const sections = [];
+    if (regular.length) {
+      const regularHtml = regular
+        .map(obj => buildInventoryBatchCheckboxRow(nameMap.get(obj.row), obj.path.join('.')))
+        .join('');
+      sections.push(buildInventoryBatchGroup({
+        title: 'Huvudinventarie',
+        metaText: formatBatchCapacityText(charCarry.usedWeight, charCarry.maxCapacity),
+        icon: '🎒',
+        count: regular.length,
+        itemsHtml: regularHtml
+      }));
+    }
+    vehicles.forEach(vehicle => {
+      const items = flattenInventoryWithPath(vehicle.row.contains || [], [vehicle.idx]);
+      if (!items.length) return;
+      const vehicleCarry = getVehicleCarrySummary(vehicle.row);
+      const itemsHtml = items
+        .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+        .join('');
+      sections.push(buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleNames.get(vehicle.idx),
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[vehicle.entry?.namn] || '🛞',
+        count: items.length,
+        itemsHtml
+      }));
+    });
+    list.innerHTML = sections.join('') || '<p class="inventory-batch-empty">Det finns inga poster att prisjustera.</p>';
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       list.innerHTML = '';
       inEl.value = '';
+      if (section) section.__hubCleanup = null;
+    };
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'pricePopup' });
     };
     const onApply = () => {
       const factor = parseFloat(inEl.value);
@@ -2090,18 +2601,16 @@
         if (row) row.priceMult = (row.priceMult || 1) * factor;
       });
       saveInventory(inv);
-      // Stäng popuppen innan omrendering för snabbare feedback
-      close();
       renderInventory();
+      inEl.value = '';
+      [...list.querySelectorAll('input[type="checkbox"][data-path]')].forEach(chk => { chk.checked = false; });
+      if (typeof inEl.focus === 'function') inEl.focus();
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
     apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   function openRowPricePopup(row) {
@@ -2520,20 +3029,18 @@
   function openVehiclePopup(preselectValue, precheckedPaths) {
     const root = getToolbarRoot();
     if (!root) return;
-    const pop    = root.getElementById('vehiclePopup');
+    cleanupInventoryHubSections('vehiclePopup');
+    openInventoryItemsHub('vehicle-load', { focusSection: 'vehicle-load' });
+    const section = root.getElementById('vehiclePopup');
     const sel    = root.getElementById('vehicleSelect');
     const list   = root.getElementById('vehicleItemList');
     const apply  = root.getElementById('vehicleApply');
     const cancel = root.getElementById('vehicleCancel');
 
     const inv = storeHelper.getInventory(store);
-    const vehicles = inv
-      .map((row,i)=>({row, entry:getEntry(row.id || row.name), idx:i}))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
+    const charCarry = getCharacterCarrySummary(inv);
+    const { vehicles, flat, nameMap, vehicleNames, vehicleIndexes } = getInventoryVehicleContext(inv);
     if (!vehicles.length) return;
-
-    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
-    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
 
     sel.innerHTML = vehicles
       .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
@@ -2551,11 +3058,8 @@
     const initialIdx = resolvePreselectIdx(preselectValue);
     if (initialIdx !== null) sel.value = String(initialIdx);
 
-    const flat = flattenInventoryWithPath(inv);
-    const nameMap = makeNameMap(flat.map(f => f.row));
-    const vehIdx = vehicles.map(v => v.idx);
-    const movable = flat.filter(obj => !(vehIdx.includes(obj.path[0]) && obj.path.length === 1));
-    const outside = movable.filter(obj => !vehIdx.includes(obj.path[0]));
+    const movable = flat.filter(obj => !(vehicleIndexes.includes(obj.path[0]) && obj.path.length === 1));
+    const outside = movable.filter(obj => !vehicleIndexes.includes(obj.path[0]));
     const moneyRowHtml = `
       <div class="vehicle-money-row">
         <span>Lägg till pengar</span>
@@ -2565,16 +3069,41 @@
           <input id="vehicleMoneyOrtegar" type="number" min="0" step="1" placeholder="Örtegar">
         </div>
       </div>`;
-    const vehicleHtml = vehicles.map(v => {
-      const items = movable.filter(o => o.path[0] === v.idx);
-      if (!items.length) return '';
-      const icon = VEHICLE_EMOJI[v.entry.namn] || '🛞';
-      const inner = items.map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`).join('');
-      return `<div class="vehicle-group"><span class="vehicle-icon">${icon}</span>${inner}</div>`;
-    }).join('');
-    list.innerHTML = moneyRowHtml + outside
-      .map(o => `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${o.path.join('.')}" ></label>`)
-      .join('') + vehicleHtml;
+    const sections = [
+      buildInventoryBatchGroup({
+        title: 'Bältesbörs',
+        subtitle: 'Lägg pengar i valt färdmedel',
+        icon: '💰',
+        itemsHtml: moneyRowHtml
+      })
+    ];
+    if (outside.length) {
+      sections.push(buildInventoryBatchGroup({
+        title: 'Huvudinventarie',
+        metaText: formatBatchCapacityText(charCarry.usedWeight, charCarry.maxCapacity),
+        icon: '🎒',
+        count: outside.length,
+        itemsHtml: outside
+          .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+          .join('')
+      }));
+    }
+    vehicles.forEach(vehicle => {
+      const items = movable.filter(item => item.path[0] === vehicle.idx);
+      if (!items.length) return;
+      const vehicleCarry = getVehicleCarrySummary(vehicle.row);
+      sections.push(buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleNames.get(vehicle.idx),
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[vehicle.entry?.namn] || '🛞',
+        count: items.length,
+        itemsHtml: items
+          .map(item => buildInventoryBatchCheckboxRow(nameMap.get(item.row), item.path.join('.')))
+          .join('')
+      }));
+    });
+    list.innerHTML = sections.join('');
     const dalerInput = root.getElementById('vehicleMoneyDaler');
     const skillingInput = root.getElementById('vehicleMoneySkilling');
     const ortegarInput = root.getElementById('vehicleMoneyOrtegar');
@@ -2583,9 +3112,10 @@
       [...list.querySelectorAll('input[type="checkbox"][data-path]')]
         .forEach(ch => { if (set.has(ch.dataset.path)) ch.checked = true; });
     }
-
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
     const clearMoneyInputs = () => {
       [dalerInput, skillingInput, ortegarInput].forEach(inp => {
@@ -2595,14 +3125,17 @@
         }
       });
     };
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       clearMoneyInputs();
       sel.innerHTML = '';
       list.innerHTML = '';
+      if (section) section.__hubCleanup = null;
+    };
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'vehiclePopup' });
     };
     const onApply = async () => {
       const vIdx = Number(sel.value);
@@ -2693,35 +3226,31 @@
       vehicle.contains.sort(sortInvEntry);
       saveInventory(inv);
       renderInventory();
-      close();
+      const keepValue = vIdx;
+      cleanup();
+      openVehiclePopup(keepValue);
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
     apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
 }
 
   function openVehicleRemovePopup(preselectIdx, precheckedPaths) {
     const root = getToolbarRoot();
     if (!root) return;
-    const pop    = root.getElementById('vehicleRemovePopup');
+    cleanupInventoryHubSections('vehicleRemovePopup');
+    openInventoryItemsHub('vehicle-unload', { focusSection: 'vehicle-unload' });
+    const section = root.getElementById('vehicleRemovePopup');
     const sel    = root.getElementById('vehicleRemoveSelect');
     const list   = root.getElementById('vehicleRemoveItemList');
     const apply  = root.getElementById('vehicleRemoveApply');
     const cancel = root.getElementById('vehicleRemoveCancel');
 
     const inv = storeHelper.getInventory(store);
-    const vehicles = inv
-      .map((row,i)=>({row, entry:getEntry(row.id || row.name), idx:i}))
-      .filter(v => (v.entry.taggar?.typ || []).includes('Färdmedel'));
+    const { vehicles, vehicleNames } = getInventoryVehicleContext(inv);
     if (!vehicles.length) return;
-
-    const vehicleNameMap = makeNameMap(vehicles.map(v => v.row));
-    const vehicleNames = new Map(vehicles.map(v => [v.idx, vehicleNameMap.get(v.row) || v.entry.namn || v.row.name || 'Färdmedel']));
 
     sel.innerHTML = vehicles
       .map(v => `<option value="${v.idx}">${vehicleNames.get(v.idx)}</option>`)
@@ -2739,17 +3268,26 @@
       }
       const items = flattenInventoryWithPath(vehicle.contains, [vIdx]);
       const nameMap = makeNameMap(items.map(i => i.row));
+      const vehicleCarry = getVehicleCarrySummary(vehicle);
       const parts = items.map(o => {
         const pathStr = o.path.join('.');
         if (isMoneyRow(o.row)) {
           const normalized = storeHelper.normalizeMoney(o.row.money || {});
           const amountText = typeof formatMoney === 'function' ? formatMoney(normalized) : nameMap.get(o.row);
           const label = nameMap.get(o.row) || 'Pengar';
-          return `<div class="price-item vehicle-money-action-row"><span>${label}: ${amountText}</span><button type="button" class="char-btn vehicle-money-action" data-path="${pathStr}">Ta ut pengar</button></div>`;
+          return buildInventoryBatchActionRow(label, 'Ta ut pengar', pathStr, `Tillgängligt: ${amountText}`);
         }
-        return `<label class="price-item"><span>${nameMap.get(o.row)}</span><input type="checkbox" data-path="${pathStr}"></label>`;
+        return buildInventoryBatchCheckboxRow(nameMap.get(o.row), pathStr);
       });
-      list.innerHTML = parts.join('');
+      list.innerHTML = buildInventoryBatchGroup({
+        title: 'Färdmedel',
+        subtitle: vehicleName || 'Färdmedel',
+        metaText: formatBatchCapacityText(vehicleCarry.usedWeight, vehicleCarry.maxCapacity),
+        icon: VEHICLE_EMOJI[getEntry(vehicle.id || vehicle.name)?.namn] || '🛞',
+        count: items.length,
+        itemsHtml: parts.join(''),
+        emptyText: 'Det valda färdmedlet är tomt.'
+      });
       if (Array.isArray(precheckedPaths) && precheckedPaths.length) {
         const set = new Set(precheckedPaths.map(String));
         [...list.querySelectorAll('input[type="checkbox"][data-path]')]
@@ -2775,18 +3313,22 @@
     };
 
     fillList();
+    const sectionInner = section?.querySelector('.popup-inner');
+    if (sectionInner) {
+      sectionInner.scrollTop = 0;
+    }
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
       apply.removeEventListener('click', onApply);
       cancel.removeEventListener('click', onCancel);
       sel.removeEventListener('change', fillList);
-      pop.removeEventListener('click', onOutside);
       sel.innerHTML = '';
       list.innerHTML = '';
+      if (section) section.__hubCleanup = null;
+    };
+    const close = () => {
+      cleanup();
+      closeInventoryHub({ skipSection: 'vehicleRemovePopup' });
     };
     const onApply = async () => {
       const vIdx = Number(sel.value);
@@ -2837,17 +3379,16 @@
       });
       saveInventory(inv);
       renderInventory();
-      close();
+      const keepValue = vIdx;
+      cleanup();
+      openVehicleRemovePopup(keepValue);
     };
     const onCancel = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
 
     apply.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
     sel.addEventListener('change', fillList);
-    pop.addEventListener('click', onOutside);
+    if (section) section.__hubCleanup = cleanup;
   }
 
   function openDeleteContainerPopup(removeAll, removeOnly, options = {}) {
@@ -3630,23 +4171,26 @@
       ? `<div class="cap-row"><span class="label">Myntvikt:</span><span class="value">${formatWeight(moneyWeight)}</span></div>`
       : '';
 
-    const baseFunctionButtons = [
-      '<button id="addCustomBtn" class="char-btn">Nytt föremål</button>',
-      '<button id="manageMoneyBtn" class="char-btn">Hantera pengar</button>',
-      '<button id="multiPriceBtn" class="char-btn">Multiplicera pris</button>',
-      '<button id="squareBtn" class="char-btn" aria-label="Lägg till antal" title="Lägg till antal">Lägg till antal</button>'
+    const allFunctionButtons = [
+      '<button id="manageItemsBtn" class="char-btn">Hantera föremål</button>',
+      '<button id="manageEconomyBtn" class="char-btn">Hantera ekonomi</button>'
     ];
-    const vehicleButtons = vehicles.length
-      ? ['<button id="vehicleBtn" class="char-btn">Lasta i färdmedel</button>']
-      : [];
-    const trailingFunctionButtons = [
-      '<button id="saveFreeBtn" class="char-btn">Spara & gratismarkera</button>',
-      '<button id="clearInvBtn" class="char-btn danger">Rensa inventarie</button>'
-    ];
-    const allFunctionButtons = [...baseFunctionButtons, ...vehicleButtons, ...trailingFunctionButtons];
     const functionsState = localStorage.getItem(INV_TOOLS_KEY);
     const functionsOpen = functionsState === null ? true : functionsState === '1';
     if (functionsState === null) localStorage.setItem(INV_TOOLS_KEY, '1');
+    const quickSpendHtml = `
+      <div class="inv-live-toggle inventory-quick-spend">
+        <div class="inventory-quick-spend-copy">
+          <span class="inventory-quick-spend-title">Snabbspendera</span>
+          <span class="inventory-quick-spend-sub">Betala direkt utan att spara köpet som inventariepost</span>
+        </div>
+        <div class="money-row inventory-quick-spend-row">
+          <input id="inventoryQuickSpendDaler" type="number" min="0" step="1" placeholder="Daler" aria-label="Snabbspendera daler">
+          <input id="inventoryQuickSpendSkilling" type="number" min="0" step="1" placeholder="Skilling" aria-label="Snabbspendera skilling">
+          <input id="inventoryQuickSpendOrtegar" type="number" min="0" step="1" placeholder="Örtegar" aria-label="Snabbspendera örtegar">
+        </div>
+        <button id="inventoryQuickSpendBtn" class="char-btn" type="button">Betala</button>
+      </div>`;
     const liveModeEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
     const liveToggleHtml = `
       <div class="inv-live-toggle">
@@ -3664,7 +4208,7 @@
       dataset: { special: '__invfunc__' },
       nameHtml: 'Inventarie',
       titleSuffixHtml: icon('basket', { className: 'title-icon', alt: 'Inventarie' }),
-      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div>${liveToggleHtml}</div>`,
+      descHtml: `<div class="card-desc"><div class="inv-buttons">${allFunctionButtons.join('')}</div>${quickSpendHtml}${liveToggleHtml}</div>`,
       collapsible: true
     });
 
@@ -4013,7 +4557,21 @@
         });
         if (sublistEl.childElementCount) {
           const detailsHost = li.querySelector('.entry-card-details') || li;
-          detailsHost.appendChild(sublistEl);
+          const shellEl = document.createElement('div');
+          shellEl.className = 'vehicle-items-shell';
+          const headerEl = document.createElement('div');
+          headerEl.className = 'vehicle-items-header';
+          const titleEl = document.createElement('span');
+          titleEl.className = 'vehicle-items-title';
+          titleEl.textContent = `Innehåll i ${displayName}`;
+          const countEl = document.createElement('span');
+          countEl.className = 'vehicle-items-count';
+          countEl.textContent = String(filteredChildren.length);
+          headerEl.appendChild(titleEl);
+          headerEl.appendChild(countEl);
+          shellEl.appendChild(headerEl);
+          shellEl.appendChild(sublistEl);
+          detailsHost.appendChild(shellEl);
         }
       }
 
@@ -4159,34 +4717,10 @@
         renderInventory();
       });
     }
-    const squareBtn = getEl('squareBtn');
-    if (squareBtn) squareBtn.onclick = openQtyPopup;
-    const customBtn = getEl('addCustomBtn');
-    if (customBtn) customBtn.onclick = () => {
-      openCustomPopup(entry => {
-        if (!entry) return;
-        const list = storeHelper.getCustomEntries(store);
-        list.push(entry);
-        const result = storeHelper.setCustomEntries(store, list);
-        if (result && result.idMap) {
-          const mappedId = result.idMap.get(entry.id);
-          if (mappedId) entry.id = mappedId;
-        }
-        if (result && Array.isArray(result.entries)) {
-          const persisted = result.entries.find(e => e.id === entry.id);
-          if (persisted) {
-            entry.namn = persisted.namn;
-            entry.artifactEffect = persisted.artifactEffect;
-          }
-        }
-        const inv = storeHelper.getInventory(store);
-        inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
-        saveInventory(inv);
-        renderInventory();
-        if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
-        if (window.indexViewUpdate) window.indexViewUpdate();
-      });
-    };
+    const manageItemsBtn = getEl('manageItemsBtn');
+    if (manageItemsBtn) {
+      manageItemsBtn.onclick = () => openInventoryCustomItemManager();
+    }
     if (dom.collapseAllBtn) {
       dom.collapseAllBtn.onclick = () => {
         const cards = getInvCards();
@@ -4844,15 +5378,45 @@
   }
 
   function bindMoney() {
-    const manageBtn = getEl('manageMoneyBtn');
-    const multiBtn  = getEl('multiPriceBtn');
+    const manageItemsBtn = getEl('manageItemsBtn');
+    const manageEconomyBtn = getEl('manageEconomyBtn');
+    const quickSpendBtn = getEl('inventoryQuickSpendBtn');
+    const quickSpendDaler = getEl('inventoryQuickSpendDaler');
+    const quickSpendSkilling = getEl('inventoryQuickSpendSkilling');
+    const quickSpendOrtegar = getEl('inventoryQuickSpendOrtegar');
     const resetBtn  = getEl('moneyResetBtn');
     const clearBtn  = getEl('clearInvBtn');
-    const saveFreeBtn = getEl('saveFreeBtn');
-    // Bind existing buttons if present
-    if (manageBtn) manageBtn.onclick = openMoneyPopup;
-    if (multiBtn)  multiBtn.onclick  = openPricePopup;
-    if (saveFreeBtn) saveFreeBtn.onclick = openSaveFreePopup;
+    if (manageItemsBtn) manageItemsBtn.onclick = () => openInventoryCustomItemManager();
+    if (manageEconomyBtn) manageEconomyBtn.onclick = () => openMoneyPopup();
+    const runQuickSpend = () => {
+      const spendMoney = {
+        daler: Number(quickSpendDaler?.value) || 0,
+        skilling: Number(quickSpendSkilling?.value) || 0,
+        'örtegar': Number(quickSpendOrtegar?.value) || 0
+      };
+      const spendO = moneyToO(storeHelper.normalizeMoney(spendMoney));
+      if (spendO <= 0) {
+        quickSpendDaler?.focus();
+        return;
+      }
+      spendInventoryMoney(spendMoney, {
+        onComplete: () => {
+          [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
+            if (input) input.value = '';
+          });
+        }
+      });
+    };
+    if (quickSpendBtn) quickSpendBtn.onclick = runQuickSpend;
+    [quickSpendDaler, quickSpendSkilling, quickSpendOrtegar].forEach(input => {
+      if (!input) return;
+      input.onkeydown = e => {
+        if (e.key === 'Enter') {
+          e.preventDefault();
+          runQuickSpend();
+        }
+      };
+    });
     if (resetBtn) resetBtn.onclick = () => {
       const doReset = () => {
         storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
@@ -4883,17 +5447,6 @@
         }
       };
     }
-
-
-    const inv = storeHelper.getInventory(store);
-    const hasVehicle = Array.isArray(inv) && inv.some(row => {
-      const entry = getEntry(row.id || row.name);
-      return (entry?.taggar?.typ || []).includes('Färdmedel');
-    });
-    const vehicleBtn = getEl('vehicleBtn');
-    if (vehicleBtn && hasVehicle) {
-      vehicleBtn.onclick = () => openVehiclePopup();
-    }
   }
 
   window.invUtil = {
@@ -4911,10 +5464,14 @@
     sortQualsForDisplay,
     openQualPopup,
     openCustomPopup,
+    openInventoryHub,
+    openInventoryItemsHub,
+    openInventoryEconomyHub,
     editCustomEntry,
     editArtifactEntry,
     openMoneyPopup,
     openQtyPopup,
+    spendInventoryMoney,
     applyLiveModePayment,
     openLiveBuyPopup,
     openPricePopup,
@@ -4935,4 +5492,7 @@
     bindInv,
     bindMoney
   };
+  window.openInventoryHub = openInventoryHub;
+  window.openInventoryItemsHub = openInventoryItemsHub;
+  window.openInventoryEconomyHub = openInventoryEconomyHub;
 })(window);
