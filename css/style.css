@@ -3639,10 +3639,9 @@ select.level {
 }
 
 .skadetyp-level-block {
-  display: flex;
-  flex-direction: column;
-  gap: .7rem;
-  padding: .95rem 1rem;
+  display: block;
+  gap: 0;
+  padding: 0;
   border: 1px solid rgba(255, 255, 255, .07);
   border-radius: 1rem;
   background:
@@ -3658,6 +3657,17 @@ select.level {
   justify-content: space-between;
   gap: .6rem;
   flex-wrap: wrap;
+  list-style: none;
+  cursor: pointer;
+  padding: .95rem 1rem;
+}
+
+.skadetyp-level-head::-webkit-details-marker {
+  display: none;
+}
+
+.skadetyp-level-head::marker {
+  content: '';
 }
 
 .skadetyp-level-head .tag {
@@ -3668,6 +3678,56 @@ select.level {
 .skadetyp-level-type {
   font-weight: 700;
   font-size: 1.02rem;
+  margin-right: auto;
+}
+
+.skadetyp-level-toggle {
+  width: 2rem;
+  height: 2rem;
+  flex: 0 0 2rem;
+  display: inline-grid;
+  place-items: center;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(255, 255, 255, .05);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .04);
+}
+
+.skadetyp-level-toggle::before {
+  content: '';
+  width: .6rem;
+  height: .6rem;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg) translateY(-1px);
+  transform-origin: 50% 50%;
+  transition: transform .18s ease;
+}
+
+.skadetyp-level-details[open] .skadetyp-level-toggle::before {
+  transform: rotate(-135deg) translate(-1px, -1px);
+}
+
+.skadetyp-level-details[open] {
+  border-color: rgba(227, 186, 106, .20);
+  box-shadow:
+    0 16px 30px rgba(0, 0, 0, .16),
+    inset 0 1px 0 rgba(255, 255, 255, .03);
+}
+
+.skadetyp-level-details[open] .skadetyp-level-head {
+  border-bottom: 1px solid rgba(255, 255, 255, .06);
+}
+
+.skadetyp-level-body {
+  display: flex;
+  flex-direction: column;
+  gap: .7rem;
+  padding: .9rem 1rem 1rem;
+}
+
+.skadetyp-level-details:not([open]) .skadetyp-level-body {
+  display: none;
 }
 
 .skadetyp-col {
@@ -3751,34 +3811,108 @@ select.level {
   font-weight: 600;
 }
 
-.skadetyp-fact-pill {
-  display: inline-flex;
+.skadetyp-fact-badge-wrap {
+  display: flex;
   align-items: center;
-  justify-content: center;
-  gap: .45rem;
-  min-width: 8.4rem;
-  padding: .42rem .78rem;
+  justify-content: flex-end;
+  min-width: 0;
+  text-align: right;
+}
+
+.skadetyp-fact-row {
+  --skadetyp-badge-fg: var(--txt);
+  --skadetyp-badge-border: rgba(255, 255, 255, .10);
+  --skadetyp-badge-bg: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .03));
+  --skadetyp-badge-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 8px 18px rgba(0, 0, 0, .14);
+}
+
+.skadetyp-status-badge {
+  display: inline-grid;
+  align-items: center;
+  grid-template-columns: .55rem auto .55rem;
+  column-gap: .5rem;
+  width: fit-content;
+  max-width: 100%;
+  min-height: 2.7rem;
+  padding: .46rem .92rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, .08);
-  background: rgba(255, 255, 255, .05);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, .03);
+  color: var(--skadetyp-badge-fg);
+  border: 1px solid var(--skadetyp-badge-border);
+  background: var(--skadetyp-badge-bg);
+  box-shadow: var(--skadetyp-badge-shadow);
   text-align: center;
 }
 
-.skadetyp-fact-dot {
-  width: .5rem;
-  height: .5rem;
+.skadetyp-status-badge.no-dot {
+  grid-template-columns: auto;
+}
+
+.skadetyp-status-badge.no-dot::after {
+  display: none;
+}
+
+.skadetyp-fact-value.skadetyp-fact-badge-wrap {
+  justify-self: end;
+  background: transparent;
+  border: 0;
+  box-shadow: none;
+  font-variant-numeric: normal;
+  padding: 0;
+}
+
+.skadetyp-status-badge::after {
+  content: '';
+  width: .55rem;
+  height: .55rem;
+  visibility: hidden;
+}
+
+.skadetyp-status-badge__dot {
+  width: .55rem;
+  height: .55rem;
   border-radius: 999px;
   background: currentColor;
-  flex: 0 0 auto;
+}
+
+.skadetyp-status-badge__label {
+  grid-column: 2;
+  text-align: center;
+  white-space: nowrap;
+  line-height: 1.1;
+}
+
+.skadetyp-status-badge.no-dot .skadetyp-status-badge__label {
+  grid-column: 1;
+}
+
+.skadetyp-fact-row.is-blocked {
+  --skadetyp-badge-fg: #fff1ed;
+  --skadetyp-badge-border: rgba(188, 84, 74, .78);
+  --skadetyp-badge-bg: linear-gradient(180deg, rgba(109, 55, 50, .92), rgba(90, 43, 40, .92));
+  --skadetyp-badge-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 8px 18px rgba(73, 24, 24, .26);
 }
 
 .skadetyp-fact-row.is-blocked::before {
   background: linear-gradient(180deg, rgba(238, 107, 97, .95), rgba(238, 107, 97, .32));
 }
 
+.skadetyp-fact-row.is-piercing {
+  --skadetyp-badge-fg: #edf7e9;
+  --skadetyp-badge-border: rgba(104, 137, 108, .76);
+  --skadetyp-badge-bg: linear-gradient(180deg, rgba(67, 84, 66, .92), rgba(54, 68, 53, .92));
+  --skadetyp-badge-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 8px 18px rgba(22, 44, 24, .24);
+}
+
 .skadetyp-fact-row.is-piercing::before {
   background: linear-gradient(180deg, rgba(156, 182, 154, .95), rgba(156, 182, 154, .38));
+}
+
+.skadetyp-fact-row.is-immunity,
+.skadetyp-fact-row.is-scaled {
+  --skadetyp-badge-fg: var(--txt);
+  --skadetyp-badge-border: rgba(227, 186, 106, .26);
+  --skadetyp-badge-bg: linear-gradient(180deg, rgba(227, 186, 106, .18), rgba(227, 186, 106, .08));
+  --skadetyp-badge-shadow: inset 0 1px 0 rgba(255, 255, 255, .05), 0 8px 18px rgba(65, 46, 8, .18);
 }
 
 .skadetyp-fact-row.is-immunity::before,
@@ -3802,6 +3936,16 @@ select.level {
 .skadetyp-fact-value.is-scaled {
   color: var(--txt);
   font-size: 1.02rem;
+}
+
+.skadetyp-fact-row.is-blocked .skadetyp-status-badge,
+.skadetyp-fact-row.is-piercing .skadetyp-status-badge,
+.skadetyp-fact-row.is-immunity .skadetyp-status-badge,
+.skadetyp-fact-row.is-scaled .skadetyp-status-badge {
+  color: var(--skadetyp-badge-fg);
+  border-color: var(--skadetyp-badge-border);
+  background: var(--skadetyp-badge-bg);
+  box-shadow: var(--skadetyp-badge-shadow);
 }
 
 .skadetyp-fact-breakdown-wrap {
@@ -3918,6 +4062,10 @@ select.level {
     text-align: left;
   }
 
+  .skadetyp-fact-badge-wrap {
+    justify-content: flex-start;
+  }
+
   .skadetyp-fact-breakdown-wrap {
     justify-content: stretch;
   }
@@ -3936,9 +4084,6 @@ select.level {
     text-align: left;
   }
 
-  .skadetyp-fact-pill {
-    min-width: 0;
-  }
 }
 
 /* ---------- Popup för kvaliteter ---------- */

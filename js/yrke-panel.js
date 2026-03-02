@@ -36,6 +36,18 @@
     panel.addEventListener('click', (e) => {
       const conflictBtn = e.target.closest('[data-conflict-btn]');
       const tab = e.target.closest('.info-tab');
+      const skadetypSummary = e.target.closest('.skadetyp-level-details > summary');
+      if (skadetypSummary) {
+        const detailsEl = skadetypSummary.parentElement;
+        requestAnimationFrame(() => {
+          if (!detailsEl?.open) return;
+          const scope = detailsEl.closest('.skadetyp-panel') || panel;
+          scope.querySelectorAll('.skadetyp-level-details[open]').forEach(other => {
+            if (other !== detailsEl) other.open = false;
+          });
+        });
+        return;
+      }
       if (!tab) return;
       const target = tab.dataset.tab;
       if (!target) return;

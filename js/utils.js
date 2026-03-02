@@ -1131,17 +1131,18 @@
         const breakdown = parseSkadetypValueBreakdown(item.value);
         const rowClasses = ['skadetyp-fact-row'];
         const valueClasses = ['summary-value', 'skadetyp-fact-value'];
-        if (display.tone) {
-          rowClasses.push(`is-${display.tone}`);
-          valueClasses.push(`is-${display.tone}`);
-        }
+        if (display.tone) rowClasses.push(`is-${display.tone}`);
         let valueHtml = '';
         if (breakdown?.length) {
-          valueClasses.push('skadetyp-fact-breakdown-wrap');
           if (breakdown.length === 1 && !breakdown[0].levelLabel) {
-            valueClasses.push('skadetyp-fact-pill', 'is-scaled');
-            valueHtml = escapeHtml(breakdown[0].effectLabel);
+            valueClasses.push('skadetyp-fact-badge-wrap');
+            valueHtml = `
+              <span class="skadetyp-status-badge is-scaled no-dot">
+                <span class="skadetyp-status-badge__label">${escapeHtml(breakdown[0].effectLabel)}</span>
+              </span>
+            `.trim();
           } else {
+            valueClasses.push('skadetyp-fact-breakdown-wrap');
             valueHtml = `<span class="skadetyp-fact-breakdown">${breakdown.map(part => `
               <span class="skadetyp-fact-segment">
                 <span class="skadetyp-fact-segment-label">${escapeHtml(part.levelLabel || 'Alla nivåer')}</span>
@@ -1150,9 +1151,15 @@
             `).join('')}</span>`;
           }
         } else if (display.pill) {
-          valueClasses.push('skadetyp-fact-pill');
-          valueHtml = `<span class="skadetyp-fact-dot" aria-hidden="true"></span>${escapeHtml(display.text)}`;
+          valueClasses.push('skadetyp-fact-badge-wrap');
+          valueHtml = `
+            <span class="skadetyp-status-badge${display.tone ? ` is-${display.tone}` : ''}">
+              <span class="skadetyp-status-badge__dot" aria-hidden="true"></span>
+              <span class="skadetyp-status-badge__label">${escapeHtml(display.text)}</span>
+            </span>
+          `.trim();
         } else {
+          if (display.tone) valueClasses.push(`is-${display.tone}`);
           valueHtml = escapeHtml(display.text);
         }
         return `
@@ -1167,6 +1174,7 @@
     const renderLevelBlock = (profile) => {
       const lvl = profile.level || 'Okänd';
       const hasDamage = !skadetypIsNone(profile.skadetyp);
+      const isActiveLevel = normalizeLevelKey(profile.level) === normalizeLevelKey(pick.level);
       const tableDetails = hasDamage ? getSkadetypTableDetails(profile.skadetyp, opts.tables || window.TABELLER) : null;
       let armorSection = '';
       if (!hasDamage) {
@@ -1187,13 +1195,16 @@
         </div>`;
       }
       return `
-        <section class="skadetyp-level-block">
-          <div class="skadetyp-level-head">
+        <details class="skadetyp-level-block skadetyp-level-details"${isActiveLevel ? ' open' : ''}>
+          <summary class="skadetyp-level-head">
             <span class="tag">${escapeHtml(lvl)}</span>
             <span class="skadetyp-level-type">${escapeHtml(hasDamage ? (profile.skadetyp || '') : 'Ingen skadetyp')}</span>
+            <span class="skadetyp-level-toggle" aria-hidden="true"></span>
+          </summary>
+          <div class="skadetyp-level-body">
+            ${armorSection}
           </div>
-          ${armorSection}
-        </section>`;
+        </details>`;
     };
 
     const levelBlocks = profiles.map(renderLevelBlock).join('');
