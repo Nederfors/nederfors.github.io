@@ -5094,6 +5094,10 @@ select.level {
   background: none !important;
   z-index: auto !important;
 }
+.inventory-hub-popup .inventory-hub-section[hidden],
+.inventory-hub-popup .inventory-hub-static-card[hidden] {
+  display: none !important;
+}
 .inventory-hub-popup .inventory-hub-section .popup-inner {
   width: 100% !important;
   max-width: none !important;
