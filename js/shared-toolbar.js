@@ -314,7 +314,7 @@ class SharedToolbar extends HTMLElement {
           `${icon('inventarie')}: Öppnar inventariesidan. ${icon('egenskaper')}: Öppnar egenskapsvyn med tabbarna Karaktärsdrag, Översikt och Effekter. ${icon('settings')}: Öppnar filterpanelen.`,
           `${icon('anteckningar')}: Öppnar anteckningssidan i rollpersonens sidhuvud.`,
           'XP: Visar dina totala erfarenhetspoäng.',
-          'Sök: Skriv och tryck Enter för att lägga till ett filter. Klicka på taggarna under sökfältet för att ta bort filter.',
+          'Sök: Skriv och tryck Enter för att lägga till ett filter. Skriv ett ord inom citattecken för att tvinga fritextsökning. Klicka på taggarna under sökfältet för att ta bort filter.',
           'Förslag: Använd ↑/↓ för att bläddra, klicka för att lägga till.',
           'Ångra: Esc eller webbläsarens tillbaka stänger senast öppnade panel eller popup.'
         ]

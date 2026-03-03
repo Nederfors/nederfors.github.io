@@ -58,11 +58,17 @@
   ];
   const TRADITION_BASE_ABILITY_PAIRS = [
     ['Häxkonst', 'Häxkonster'],
+    ['Häxa', 'Häxkonster'],
     ['Svartkonst', 'Svartkonst'],
+    ['Svartkonstnär', 'Svartkonst'],
     ['Teurgi', 'Teurgi'],
+    ['Teurg', 'Teurgi'],
     ['Ordensmagi', 'Ordensmagi'],
+    ['Ordensmagiker', 'Ordensmagi'],
     ['Symbolism', 'Symbolism'],
+    ['Symbolist', 'Symbolism'],
     ['Trollsång', 'Trollsång'],
+    ['Trollsångare', 'Trollsång'],
     ['Stavmagiker', 'Stavmagi']
   ];
   const isEliteEntry = (entry) => {
@@ -1747,6 +1753,11 @@
   }
 
   function getYrkeTraditionName(entry) {
+    const helper = window.storeHelper || {};
+    if (typeof helper.resolveTraditionSkillName === 'function') {
+      const resolved = helper.resolveTraditionSkillName(entry?.namn);
+      if (resolved) return resolved;
+    }
     const name = normalizeName(entry?.namn);
     if (!name) return '';
     const match = YRKE_TRADITION_PAIRS.find(pair => pair[0] === name);
@@ -1754,6 +1765,11 @@
   }
 
   function getTraditionBaseAbilityName(tradition) {
+    const helper = window.storeHelper || {};
+    if (typeof helper.resolveTraditionSkillName === 'function') {
+      const resolved = helper.resolveTraditionSkillName(tradition);
+      if (resolved) return resolved;
+    }
     const key = normalizeTraditionKey(tradition);
     if (!key) return '';
     const match = TRADITION_BASE_ABILITY_PAIRS.find(pair => normalizeTraditionKey(pair[0]) === key);

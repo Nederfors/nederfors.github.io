@@ -261,11 +261,14 @@
   }
   function normalizeRef(ref) {
     if (ref && typeof ref === 'object') {
-      const { id, namn, name } = ref;
+      const { id, namn, name, sourceEntryName } = ref;
+      const canonicalName = typeof sourceEntryName === 'string' && sourceEntryName.trim()
+        ? sourceEntryName.trim()
+        : undefined;
       return {
         id: id !== undefined && id !== null && String(id).trim() !== '' ? String(id).trim() : undefined,
-        name: typeof namn === 'string' && namn.trim() ? namn.trim()
-          : (typeof name === 'string' && name.trim() ? name.trim() : undefined)
+        name: canonicalName || (typeof namn === 'string' && namn.trim() ? namn.trim()
+          : (typeof name === 'string' && name.trim() ? name.trim() : undefined))
       };
     }
     if (ref === undefined || ref === null) return { id: undefined, name: undefined };
@@ -783,7 +786,7 @@
     return result;
   }
 
-  const SKADETYP_NONE = new Set(['ingen', 'none', 'saknas', '']);
+  const SKADETYP_NONE = new Set(['ingen', 'none', 'saknas', '-', '']);
   const SKADETYP_SPLIT_RE = /\s*(?:&|\/|,|\boch\b)\s*/i;
   const SKADETYP_ALIASES = new Map([
     ['fysisk', ['Yttre fysisk']],
@@ -1046,7 +1049,9 @@
     const map = {
       n: 'Novis',
       g: 'Gesäll',
-      m: 'Mästare'
+      m: 'Mästare',
+      alla: 'Alla nivåer',
+      'alla nivaer': 'Alla nivåer'
     };
     return String(value ?? '')
       .split('/')
@@ -1058,6 +1063,26 @@
       })
       .filter(Boolean)
       .join(' / ');
+  }
+
+  function compactSkadetypLevelCodes(value) {
+    const map = {
+      novis: 'N',
+      gesall: 'G',
+      mastare: 'M',
+      alla: 'Alla',
+      'alla nivaer': 'Alla'
+    };
+    return String(value ?? '')
+      .split('/')
+      .map(part => {
+        const label = String(part ?? '').trim();
+        if (!label) return '';
+        const norm = searchNormalize(label.toLowerCase());
+        return map[norm] || label;
+      })
+      .filter(Boolean)
+      .join('/');
   }
 
   function describeSkadetypDamageAmount(value) {
@@ -1076,6 +1101,13 @@
     if (!raw) return null;
     const parts = raw.split(/\s*,\s*/).filter(Boolean);
     const parsed = parts.map(part => {
+      const colonMatch = part.match(/^(.+?)\s*:\s*(.+)$/);
+      if (colonMatch) {
+        return {
+          levelLabel: expandSkadetypLevelCodes(colonMatch[1]),
+          effectLabel: describeSkadetypDamageAmount(colonMatch[2])
+        };
+      }
       const match = part.match(/^(.+?)\s*\(([^)]+)\)$/);
       if (match) {
         return {
@@ -1094,6 +1126,20 @@
     return parsed.every(Boolean) ? parsed : null;
   }
 
+  function buildSkadetypBreakdownHtml(value, escapeHtmlFn) {
+    const breakdown = parseSkadetypValueBreakdown(value);
+    if (!breakdown?.length) return '';
+    const escape = typeof escapeHtmlFn === 'function'
+      ? escapeHtmlFn
+      : (input => String(input ?? ''));
+    return `<span class="skadetyp-fact-breakdown">${breakdown.map(part => `
+      <span class="skadetyp-fact-segment">
+        <span class="skadetyp-fact-segment-label">${escape(part.levelLabel || 'Alla nivåer')}</span>
+        <span class="skadetyp-fact-segment-value">${escape(part.effectLabel)}</span>
+      </span>
+    `).join('')}</span>`;
+  }
+
   function buildSkadetypPanelHtml(entry, opts = {}) {
     const escapeHtml = (value) => String(value ?? '').replace(/[&<>"']/g, ch => ({
       '&': '&amp;',
@@ -1102,6 +1148,9 @@
       '"': '&quot;',
       "'": '&#39;'
     })[ch]);
+    const toSafeDomKey = (value) => searchNormalize(String(value ?? '').toLowerCase())
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-+|-+$/g, '') || 'item';
 
     if (!entry || typeof entry !== 'object') return null;
     const profiles = getEntryDamageProfiles(entry, { includeNone: true });
@@ -1128,13 +1177,14 @@
       }
       const rowsHtml = facts.map(item => {
         const display = describeSkadetypFactValue(item.value, sourceLabel);
-        const breakdown = parseSkadetypValueBreakdown(item.value);
+        const breakdownHtml = buildSkadetypBreakdownHtml(item.value, escapeHtml);
         const rowClasses = ['skadetyp-fact-row'];
         const valueClasses = ['summary-value', 'skadetyp-fact-value'];
         if (display.tone) rowClasses.push(`is-${display.tone}`);
         let valueHtml = '';
-        if (breakdown?.length) {
-          if (breakdown.length === 1 && !breakdown[0].levelLabel) {
+        if (breakdownHtml) {
+          const breakdown = parseSkadetypValueBreakdown(item.value);
+          if (breakdown?.length === 1 && !breakdown[0].levelLabel) {
             valueClasses.push('skadetyp-fact-badge-wrap');
             valueHtml = `
               <span class="skadetyp-status-badge is-scaled no-dot">
@@ -1143,12 +1193,7 @@
             `.trim();
           } else {
             valueClasses.push('skadetyp-fact-breakdown-wrap');
-            valueHtml = `<span class="skadetyp-fact-breakdown">${breakdown.map(part => `
-              <span class="skadetyp-fact-segment">
-                <span class="skadetyp-fact-segment-label">${escapeHtml(part.levelLabel || 'Alla nivåer')}</span>
-                <span class="skadetyp-fact-segment-value">${escapeHtml(part.effectLabel)}</span>
-              </span>
-            `).join('')}</span>`;
+            valueHtml = breakdownHtml;
           }
         } else if (display.pill) {
           valueClasses.push('skadetyp-fact-badge-wrap');
@@ -1176,6 +1221,9 @@
       const hasDamage = !skadetypIsNone(profile.skadetyp);
       const isActiveLevel = normalizeLevelKey(profile.level) === normalizeLevelKey(pick.level);
       const tableDetails = hasDamage ? getSkadetypTableDetails(profile.skadetyp, opts.tables || window.TABELLER) : null;
+      const levelTypes = hasDamage
+        ? resolveSkadetypLabels(profile.skadetyp, opts.tables || window.TABELLER)
+        : [];
       let armorSection = '';
       if (!hasDamage) {
         armorSection = `<p class="skadetyp-empty">Ingen skadetyp angiven för denna nivå.</p>`;
@@ -1183,22 +1231,61 @@
         armorSection = `<p class="skadetyp-empty">Ingen skadetypstabell hittades.</p>`;
       } else if (!tableDetails?.items?.length) {
         armorSection = `<p class="skadetyp-empty">Ingen matchande rad eller kolumn hittades i skadetypstabellerna.</p>`;
-      } else {
-        armorSection = `<div class="skadetyp-columns">
-          ${tableDetails.items.map(item => `
+      } else if (tableDetails.items.length === 1) {
+        const item = tableDetails.items[0];
+        armorSection = `
+          <div class="skadetyp-columns">
             <div class="skadetyp-col skadetyp-table-block">
               <div class="skadetyp-col-title">${escapeHtml(item.label || 'Skadetyp')}</div>
               ${item.source ? `<div class="skadetyp-source">${escapeHtml(item.source)}</div>` : ''}
               ${renderFactPairs(Array.isArray(item.facts) ? item.facts : [], item.source || '')}
             </div>
-          `).join('')}
-        </div>`;
+          </div>`;
+      } else {
+        const switcherKey = [entry?.id || entry?.namn || 'skadetyp', lvl]
+          .map(toSafeDomKey)
+          .join('-');
+        armorSection = `
+          <div class="skadetyp-switcher" data-skadetyp-switcher>
+            <div class="skadetyp-switcher-tabs" role="tablist" aria-label="Skadetyper">
+              ${tableDetails.items.map((item, idx) => {
+                const targetId = `${switcherKey}-${toSafeDomKey(item.label || idx)}`;
+                return `<button
+                  class="skadetyp-switcher-tab${idx === 0 ? ' is-active' : ''}"
+                  type="button"
+                  role="tab"
+                  aria-selected="${idx === 0 ? 'true' : 'false'}"
+                  data-skadetyp-switcher-tab="${targetId}"
+                >${escapeHtml(item.label || 'Skadetyp')}</button>`;
+              }).join('')}
+            </div>
+            <div class="skadetyp-switcher-panels">
+              ${tableDetails.items.map((item, idx) => {
+                const targetId = `${switcherKey}-${toSafeDomKey(item.label || idx)}`;
+                return `<div
+                  class="skadetyp-switcher-panel${idx === 0 ? ' is-active' : ''}"
+                  role="tabpanel"
+                  data-skadetyp-switcher-panel="${targetId}"
+                  ${idx === 0 ? '' : 'hidden'}
+                >
+                  <div class="skadetyp-col skadetyp-table-block">
+                    <div class="skadetyp-col-title">${escapeHtml(item.label || 'Skadetyp')}</div>
+                    ${item.source ? `<div class="skadetyp-source">${escapeHtml(item.source)}</div>` : ''}
+                    ${renderFactPairs(Array.isArray(item.facts) ? item.facts : [], item.source || '')}
+                  </div>
+                </div>`;
+              }).join('')}
+            </div>
+          </div>`;
       }
+      const levelTypeHtml = levelTypes.length > 1
+        ? `<span class="skadetyp-level-types tags">${levelTypes.map(type => `<span class="tag">${escapeHtml(type)}</span>`).join('')}</span>`
+        : `<span class="skadetyp-level-type">${escapeHtml(hasDamage ? (profile.skadetyp || '') : 'Ingen skadetyp')}</span>`;
       return `
         <details class="skadetyp-level-block skadetyp-level-details"${isActiveLevel ? ' open' : ''}>
           <summary class="skadetyp-level-head">
             <span class="tag">${escapeHtml(lvl)}</span>
-            <span class="skadetyp-level-type">${escapeHtml(hasDamage ? (profile.skadetyp || '') : 'Ingen skadetyp')}</span>
+            ${levelTypeHtml}
             <span class="skadetyp-level-toggle" aria-hidden="true"></span>
           </summary>
           <div class="skadetyp-level-body">
@@ -1240,6 +1327,32 @@
     }
     return true;
   }
+
+  let skadetypSwitcherBound = false;
+  function ensureSkadetypSwitcherHandler() {
+    if (skadetypSwitcherBound || typeof document === 'undefined') return;
+    document.addEventListener('click', event => {
+      const button = event.target.closest('[data-skadetyp-switcher-tab]');
+      if (!button) return;
+      const wrap = button.closest('[data-skadetyp-switcher]');
+      if (!wrap) return;
+      const target = String(button.dataset.skadetypSwitcherTab || '').trim();
+      if (!target) return;
+      wrap.querySelectorAll('[data-skadetyp-switcher-tab]').forEach(tab => {
+        const active = tab === button;
+        tab.classList.toggle('is-active', active);
+        tab.setAttribute('aria-selected', active ? 'true' : 'false');
+      });
+      wrap.querySelectorAll('[data-skadetyp-switcher-panel]').forEach(panel => {
+        const active = String(panel.dataset.skadetypSwitcherPanel || '').trim() === target;
+        panel.classList.toggle('is-active', active);
+        panel.hidden = !active;
+      });
+    });
+    skadetypSwitcherBound = true;
+  }
+
+  ensureSkadetypSwitcherHandler();
 
   window.LVL = LVL;
   window.EQUIP = EQUIP;
@@ -1297,6 +1410,10 @@
   window.getEntryDamageProfiles = getEntryDamageProfiles;
   window.entryHasDamageType = entryHasDamageType;
   window.getSkadetypShielding = getSkadetypShielding;
+  window.describeSkadetypFactValue = describeSkadetypFactValue;
+  window.parseSkadetypValueBreakdown = parseSkadetypValueBreakdown;
+  window.compactSkadetypLevelCodes = compactSkadetypLevelCodes;
+  window.buildSkadetypBreakdownHtml = buildSkadetypBreakdownHtml;
   window.buildSkadetypPanelHtml = buildSkadetypPanelHtml;
   window.openSkadetypPanel = openSkadetypPanel;
 })(window);

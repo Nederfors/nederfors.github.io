@@ -26,6 +26,7 @@
       </div>
     `;
     document.body.appendChild(wrap);
+    window.registerOverlayElement?.(wrap);
     wrap.querySelector('#tabellClose').addEventListener('click', close);
     wrap.querySelector('#tabellWidth').addEventListener('click', (e) => {
       const inner = wrap.querySelector('.popup-inner');
@@ -47,6 +48,7 @@
     document.getElementById('tabellContent').innerHTML = html || '';
     document.getElementById('tabellTitle').textContent = title || '';
     const pop = document.getElementById('tabellPopup');
+    window.registerOverlayElement?.(pop);
     const inner = pop.querySelector('.popup-inner');
     const content = document.getElementById('tabellContent');
     const isMobile = window.matchMedia('(max-width: 760px)').matches;

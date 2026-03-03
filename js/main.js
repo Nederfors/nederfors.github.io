@@ -1217,6 +1217,7 @@ let DBIndex = {};
 window.DB = DB;
 window.DBIndex = DBIndex;
 const DATA_FILES = [
+  // sync-data-manifest:start
   'diverse.json',
   'kuriositeter.json',
   'skatter.json',
@@ -1251,15 +1252,92 @@ const DATA_FILES = [
   'monstruost-sardrag.json',
   'artefakter.json',
   'lagre-artefakter.json',
-  'fallor.json'
+  'fallor.json',
+  // sync-data-manifest:end
 ].map(f => `data/${f}`);
 
 const TABELLER_FILE = 'data/tabeller.json';
 let TABELLER = [];
+
+function normalizeTableMatrixCell(value) {
+  if (value === undefined || value === null) return '—';
+  const text = String(value).trim();
+  return text || '—';
+}
+
+function buildDerivedTableFromMatrix(entry, view = {}) {
+  const matrix = entry?.matris;
+  if (!matrix || typeof matrix !== 'object') return null;
+
+  const rowLabel = String(matrix.rowLabel || 'Rad').trim() || 'Rad';
+  const columnLabel = String(matrix.columnLabel || 'Kolumn').trim() || 'Kolumn';
+  const columns = (Array.isArray(matrix.columns) ? matrix.columns : [])
+    .map(value => String(value ?? '').trim())
+    .filter(Boolean);
+  const rows = (Array.isArray(matrix.rows) ? matrix.rows : [])
+    .map(row => ({
+      label: String(row?.label ?? '').trim(),
+      values: row?.values && typeof row.values === 'object' ? row.values : {}
+    }))
+    .filter(row => row.label);
+  if (!columns.length || !rows.length) return null;
+
+  const derived = {
+    ...entry,
+    id: String(view.id || entry.id || '').trim() || entry.id,
+    namn: String(view.namn || entry.namn || '').trim() || entry.namn,
+    extra: view.extra !== undefined ? view.extra : entry.extra,
+    kolumner: [],
+    rader: [],
+    __derivedFrom: String(entry.id || '').trim()
+  };
+  delete derived.matris;
+  delete derived.tabellvyer;
+
+  const orientation = String(view.orientation || 'rows').trim().toLowerCase();
+  if (orientation === 'columns') {
+    derived.kolumner = [columnLabel, ...rows.map(row => row.label)];
+    derived.rader = columns.map(column => {
+      const result = { [columnLabel]: column };
+      rows.forEach(row => {
+        result[row.label] = normalizeTableMatrixCell(row.values?.[column]);
+      });
+      return result;
+    });
+    return derived;
+  }
+
+  derived.kolumner = [rowLabel, ...columns];
+  derived.rader = rows.map(row => {
+    const result = { [rowLabel]: row.label };
+    columns.forEach(column => {
+      result[column] = normalizeTableMatrixCell(row.values?.[column]);
+    });
+    return result;
+  });
+  return derived;
+}
+
+// Expand matrix-backed tables into concrete table entries so one JSON entry can drive multiple views.
+function normalizeTableEntries(entries) {
+  return (Array.isArray(entries) ? entries : []).flatMap(entry => {
+    if (!entry?.matris || typeof entry.matris !== 'object') {
+      return [entry];
+    }
+    const views = Array.isArray(entry.tabellvyer) && entry.tabellvyer.length
+      ? entry.tabellvyer
+      : [{ id: entry.id, namn: entry.namn, orientation: 'rows' }];
+    const derived = views
+      .map(view => buildDerivedTableFromMatrix(entry, view))
+      .filter(Boolean);
+    return derived.length ? derived : [entry];
+  });
+}
+
 fetch(TABELLER_FILE)
   .then(r => r.json())
   .then(arr => {
-    TABELLER = Array.isArray(arr) ? arr : [];
+    TABELLER = normalizeTableEntries(arr);
     ensureEntryMetaList(TABELLER);
     entryDataVersions.tables += 1;
     window.TABELLER = TABELLER;

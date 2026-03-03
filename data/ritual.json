@@ -1838,17 +1838,17 @@
   {
     "id": "ri84",
     "namn": "Renhetsvärn",
-    "beskrivning": "Tradition: Endast tillgänglig för Templár\nDen högre nivån av ritualen Sanktum skapar en helgad zon som fysiskt och andligt stöter bort korruptionens varelser. Mystikern ritar en cirkel av heliga tecken som fungerar som en barriär; styggelser och daemoner kan inte passera in i cirkeln utan att vinna ett motståndsslag mot [Viljestark←Viljestark]. Dessutom renas luften innanför gränsen så att mörkrets verkan dämpas: alla effekttärningar som orsakar temporär eller permanent korruption sänks med en nivå (exempelvis från 1T6 till 1T4, eller 1 till 0.",
+    "beskrivning": "Tradition: Endast tillgänglig för Templár\nDen högre nivån av ritualen Helgande Rit skapar en helgad zon som fysiskt och andligt stöter bort korruptionens varelser. Mystikern ritar en cirkel av heliga tecken som fungerar som en barriär; styggelser och daemoner kan inte passera in i cirkeln utan att vinna ett motståndsslag mot [Viljestark←Viljestark]. Dessutom renas luften innanför gränsen så att mörkrets verkan dämpas: alla effekttärningar som orsakar temporär eller permanent korruption sänks med en nivå (exempelvis från 1T6 till 1T4, eller 1 till 0.",
     "taggar": {
       "typ": [
         "Ritual",
         "Elityrkesförmåga"
       ],
       "ark_trad": [
-        "Templár"
+        "Templár", "Själasörjare"
       ],
       "grundritual": [
-        "Sanktum"
+        "Helgande Rit"
       ],
       "nivå_data": {
         "Enkel": {

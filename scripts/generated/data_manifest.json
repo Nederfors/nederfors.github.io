@@ -1,0 +1,50 @@
+{
+  "generatedAt": "2026-03-03T10:54:00.329379+00:00",
+  "entryDataFiles": [
+    "diverse.json",
+    "kuriositeter.json",
+    "skatter.json",
+    "elixir.json",
+    "fordel.json",
+    "formaga.json",
+    "basformagor.json",
+    "kvalitet.json",
+    "mystisk-kraft.json",
+    "mystisk-kvalitet.json",
+    "neutral-kvalitet.json",
+    "negativ-kvalitet.json",
+    "nackdel.json",
+    "anstallning.json",
+    "byggnader.json",
+    "yrke.json",
+    "ras.json",
+    "elityrke.json",
+    "fardmedel.json",
+    "forvaring.json",
+    "gardsdjur.json",
+    "instrument.json",
+    "klader.json",
+    "specialverktyg.json",
+    "tjanster.json",
+    "ritual.json",
+    "rustning.json",
+    "vapen.json",
+    "mat.json",
+    "dryck.json",
+    "sardrag.json",
+    "monstruost-sardrag.json",
+    "artefakter.json",
+    "lagre-artefakter.json",
+    "fallor.json"
+  ],
+  "specialDataFiles": [
+    "pdf-list.json",
+    "tabeller.json"
+  ],
+  "excludedDataFiles": [
+    "all.json",
+    "pdf-list.json",
+    "struktur.json",
+    "tabeller.json"
+  ]
+}

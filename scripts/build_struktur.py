@@ -8,6 +8,7 @@ from pathlib import Path
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 OUTPUT_FILE = DATA_DIR / 'struktur.json'
+MANIFEST_FILE = ROOT_DIR / 'scripts' / 'generated' / 'data_manifest.json'
 EXCLUDED_FILES = {'all.json', 'struktur.json', 'pdf-list.json'}
 
 
@@ -46,6 +47,17 @@ def split_tags(value):
 
 
 def discover_data_files():
+    if MANIFEST_FILE.exists():
+        manifest = load_json(MANIFEST_FILE)
+        names = manifest.get('entryDataFiles') or []
+        files = []
+        for name in names:
+            path = DATA_DIR / str(name)
+            if path.exists():
+                files.append(path)
+        if files:
+            return files
+
     files = []
     for path in sorted(DATA_DIR.glob('*.json'), key=lambda p: p.name.casefold()):
         if path.name in EXCLUDED_FILES:

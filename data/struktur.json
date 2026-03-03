@@ -3,45 +3,44 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-02-27T14:07:24.824895+00:00",
-      "antal_typer_hittade": 53,
+      "genererad": "2026-03-03T12:42:21.384983+00:00",
+      "antal_typer_hittade": 51,
       "källfiler": [
-        "data/anstallning.json",
-        "data/artefakter.json",
-        "data/basformagor.json",
-        "data/byggnader.json",
         "data/diverse.json",
-        "data/dryck.json",
-        "data/elityrke.json",
+        "data/kuriositeter.json",
+        "data/skatter.json",
         "data/elixir.json",
-        "data/fallor.json",
-        "data/fardmedel.json",
         "data/fordel.json",
         "data/formaga.json",
+        "data/basformagor.json",
+        "data/kvalitet.json",
+        "data/mystisk-kraft.json",
+        "data/mystisk-kvalitet.json",
+        "data/neutral-kvalitet.json",
+        "data/negativ-kvalitet.json",
+        "data/nackdel.json",
+        "data/anstallning.json",
+        "data/byggnader.json",
+        "data/yrke.json",
+        "data/ras.json",
+        "data/elityrke.json",
+        "data/fardmedel.json",
         "data/forvaring.json",
         "data/gardsdjur.json",
         "data/instrument.json",
         "data/klader.json",
-        "data/kuriositeter.json",
-        "data/kvalitet.json",
-        "data/lagre-artefakter.json",
-        "data/mat.json",
-        "data/monstruost-sardrag.json",
-        "data/mystisk-kraft.json",
-        "data/mystisk-kvalitet.json",
-        "data/nackdel.json",
-        "data/negativ-kvalitet.json",
-        "data/neutral-kvalitet.json",
-        "data/ras.json",
+        "data/specialverktyg.json",
+        "data/tjanster.json",
         "data/ritual.json",
         "data/rustning.json",
-        "data/sardrag.json",
-        "data/skatter.json",
-        "data/specialverktyg.json",
-        "data/tabeller.json",
-        "data/tjanster.json",
         "data/vapen.json",
-        "data/yrke.json"
+        "data/mat.json",
+        "data/dryck.json",
+        "data/sardrag.json",
+        "data/monstruost-sardrag.json",
+        "data/artefakter.json",
+        "data/lagre-artefakter.json",
+        "data/fallor.json"
       ]
     },
     "Allmän kvalitet": {
@@ -302,7 +301,7 @@
               ""
             ],
             "nivå_data": {
-              "Enkel": {
+              "Ordinär": {
                 "handling": "Reaktiv",
                 "skadetyp": ""
               }
@@ -611,9 +610,9 @@
           },
           "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
           "Elityrkesförmågor": [
-            "Rörlig strid",
-            "Koreograferad Strid",
-            "Miljökämpe"
+            "Koreograferad strid",
+            "Miljökämpe",
+            "Rörlig strid"
           ],
           "mojliga_fordelar": [
             "Bestars tunga",
@@ -632,7 +631,9 @@
           "id": "elit1",
           "krav": {
             "primarformaga": {
-              "namn": "Akrobatik"
+              "namn": [
+                "Akrobatik"
+              ]
             },
             "primartagg": {
               "taggfalt": "ark_trad",
@@ -640,7 +641,7 @@
                 "Monsterjägare"
               ],
               "krav_erf": 30,
-              "min_antal": 0
+              "min_antal": 1
             },
             "sekundartagg": {
               "aktiv": true,
@@ -649,7 +650,7 @@
                 "Häxa"
               ],
               "krav_erf": 20,
-              "min_antal": 0
+              "min_antal": 1
             },
             "valfri_inom_tagg": [],
             "specifika_formagor": {
@@ -660,7 +661,7 @@
                 "Prickskytt"
               ],
               "min_erf": 30,
-              "min_antal": 0
+              "min_antal": 1
             },
             "specifika_mystiska_krafter": {
               "namn": [],
@@ -701,10 +702,12 @@
               "Teurg"
             ]
           },
+          "undertradition": "Teurgi",
           "krav_formagor": "",
           "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
           "Elityrkesförmågor": [
-            "Bepansrad mystiker"
+            "Bepansrad mystiker",
+            "Renhetsvärn"
           ],
           "mojliga_fordelar": [
             "Arvegods",
@@ -876,7 +879,7 @@
       ]
     },
     "Elityrkesförmåga": {
-      "antal": 59,
+      "antal": 60,
       "källfiler": [
         "data/formaga.json",
         "data/monstruost-sardrag.json",
@@ -1268,7 +1271,7 @@
       ]
     },
     "Fördel": {
-      "antal": 101,
+      "antal": 100,
       "källfiler": [
         "data/fordel.json"
       ],
@@ -1890,38 +1893,6 @@
       ],
       "exempel": [
         {
-          "id": "l52",
-          "namn": "Jakaarsärk",
-          "taggar": {
-            "typ": [
-              "Lägre Artefakt",
-              "Rustning",
-              "Lätt Rustning"
-            ],
-            "kvalitet": [
-              "Otymplig",
-              "Förstärkt"
-            ],
-            "ark_trad": [
-              "Ulvahedna"
-            ]
-          },
-          "nivåer": {
-            "Gesäll": "Denna massiva väst är sydd av dubbla lager jakaarhud, förstärkt med grova nitar av svärtat järn och benplattor från bestens bröstkorg. Den tjocka pälsen och de tunga förstärkningarna gör rustningen klumpig att röra sig i, men den erbjuder ett skydd som få andra lätta rustningar kan mäta sig med. Precis som med enklare varianter pulserar särken av en dov värme när bärarens vrede stiger, och de inbundna andarna tycks hårdna till en ogenomtränglig barriär vid strid. I vanliga fall skyddar rustningen 1T4 +1, men när användaren är i aktiv Bärsärkargång så skyddar den 1T6 +1."
-          },
-          "grundpris": {
-            "daler": 12,
-            "skilling": 0,
-            "örtegar": 0
-          },
-          "stat": {
-            "skydd": "1T4",
-            "vikt": 2.5,
-            "begränsning": -2
-          },
-          "effekt": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
-        },
-        {
           "id": "ru1",
           "namn": "Flätat silke",
           "beskrivning": "Flätat silke är det främsta inom lätt bepansning, då trådarnas täta väv avvärjer hugg och spetsar långt bättre än dess tjocklek och tyngd antyder. Flätat silke är känt sedan länge av såväl barbarer som ambrier, och vissa lärde spekulerar i om inte kunskapen kommer från alver och då teoretiskt sett sträcker sig ända tillbaka till Järnpaktens dagar.",
@@ -1947,6 +1918,28 @@
           "id": "ru2",
           "namn": "Häxsärk",
           "beskrivning": "Häxorna binder skyddande andar i ristade benbitar och fallna fienders skallar, och fäster dem på sina klädnader till effektivt skydd.",
+          "kvalitet": "Smidigt",
+          "taggar": {
+            "typ": [
+              "Rustning",
+              "Lätt Rustning"
+            ]
+          },
+          "stat": {
+            "skydd": "1T4",
+            "vikt": 1.0,
+            "begränsning": -2
+          },
+          "grundpris": {
+            "daler": 2,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ru3",
+          "namn": "Ordensrober",
+          "beskrivning": "De flesta ordensnoviser erbjuds en beskyddande ordensrob lagom till sin första längre resa. Dessa kåpor är broderade med angreppsavvisande runor, vilket ger noviserna en något större chans att överleva och därmed slutföra sina mer eller mindre viktiga uppdrag.",
           "kvalitet": "Smidigt",
           "taggar": {
             "typ": [
@@ -2191,6 +2184,37 @@
       ],
       "exempel": [
         {
+          "id": "sa4",
+          "namn": "Robust",
+          "beskrivning": "Endast tillgänglig för Resar och Troll. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
+          "taggar": {
+            "typ": [
+              "Särdrag",
+              "Monstruöst särdrag"
+            ],
+            "ras": [
+              "Rese",
+              "Troll"
+            ],
+            "handling": {
+              "Novis": [
+                "Speciell"
+              ],
+              "Gesäll": [
+                "Speciell"
+              ],
+              "Mästare": [
+                "Speciell"
+              ]
+            }
+          },
+          "nivåer": {
+            "Novis": "Handling: Speciell. Rollpersonen är cirka två meter lång och råstark. En sådan tornande siluett är lättare att träffa i strid vilket balanseras med en påtaglig stryktålighet. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar dubbelt så mycket. I gengäld ignorerar rollpersonen 1T4 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T4 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −2].",
+            "Gesäll": "Handling: Speciell. Rollpersonen sträcker sig två och en halv meter över marken, väger tvåhundra kilo och dess hud är grov som bark. En sådan varelse lägger kraft i slagen, men är också lätt att träffa. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därmed kostar tre gånger så mycket. I gengäld ignorerar rollpersonen 1T6 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T6 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −3].\n",
+            "Mästare": "Handling: Speciell. Rollpersonen är tre meter lång, väger ett halvt ton och krossar mindre varelser medan fiendens vapen studsar mot hud som mest liknar mossig sten. Att träffa en sådan varelse är lätt, men att skada den allvarligt är svårt. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar fyra gånger så mycket. I gengäld ignorerar rollpersonen 1T8 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T8 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −4]."
+          }
+        },
+        {
           "namn": "Skräckslå",
           "beskrivning": "Varelsen kan genom sin uppenbarelse injaga skräck i sina offer och kräver särdraget Andeform.",
           "taggar": {
@@ -2248,32 +2272,6 @@
             "Mästare": "Handling: Reaktiv. Den frätande attacken är stark och gör 1t10 i skada i 1t10 rundor."
           },
           "id": "mo2"
-        },
-        {
-          "namn": "Frätande blod",
-          "beskrivning": "Varelsens blod är frätande och skvätter vida omkring när den träffas av attacker. Den som träffar varelsen i närstrid och gör skada måste slå Försvar eller träffas av det frätande blodet. Att få bort syran från kropp eller rustning kräver att någon spenderar en handling och lyckas med Listig (tvättar bort syran med vatten, jord eller motsvarande).",
-          "taggar": {
-            "typ": [
-              "Monstruöst särdrag"
-            ],
-            "handling": {
-              "Novis": [
-                "Reaktiv"
-              ],
-              "Gesäll": [
-                "Reaktiv"
-              ],
-              "Mästare": [
-                "Reaktiv"
-              ]
-            }
-          },
-          "nivåer": {
-            "Novis": "Handling: Reaktiv. Det frätande blodet är svagt och gör 1t6 i skada i 1t6 rundor.",
-            "Gesäll": "Handling: Reaktiv. Det frätande blodet är medelstarkt och gör 1t8 i skada i 1t8 rundor.",
-            "Mästare": "Handling: Reaktiv. Det frätande blodet är starkt och gör 1t10 i skada i 1t10 rundor."
-          },
-          "id": "mo3"
         }
       ]
     },
@@ -2403,11 +2401,11 @@
               },
               "Gesäll": {
                 "handling": "Aktiv",
-                "skadetyp": "Mystisk"
+                "skadetyp": "Alternativ skada"
               },
               "Mästare": {
                 "handling": "Aktiv",
-                "skadetyp": "Mystisk"
+                "skadetyp": "Alternativ skada"
               }
             }
           },
@@ -3010,38 +3008,6 @@
       ],
       "exempel": [
         {
-          "id": "l52",
-          "namn": "Jakaarsärk",
-          "taggar": {
-            "typ": [
-              "Lägre Artefakt",
-              "Rustning",
-              "Lätt Rustning"
-            ],
-            "kvalitet": [
-              "Otymplig",
-              "Förstärkt"
-            ],
-            "ark_trad": [
-              "Ulvahedna"
-            ]
-          },
-          "nivåer": {
-            "Gesäll": "Denna massiva väst är sydd av dubbla lager jakaarhud, förstärkt med grova nitar av svärtat järn och benplattor från bestens bröstkorg. Den tjocka pälsen och de tunga förstärkningarna gör rustningen klumpig att röra sig i, men den erbjuder ett skydd som få andra lätta rustningar kan mäta sig med. Precis som med enklare varianter pulserar särken av en dov värme när bärarens vrede stiger, och de inbundna andarna tycks hårdna till en ogenomtränglig barriär vid strid. I vanliga fall skyddar rustningen 1T4 +1, men när användaren är i aktiv Bärsärkargång så skyddar den 1T6 +1."
-          },
-          "grundpris": {
-            "daler": 12,
-            "skilling": 0,
-            "örtegar": 0
-          },
-          "stat": {
-            "skydd": "1T4",
-            "vikt": 2.5,
-            "begränsning": -2
-          },
-          "effekt": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
-        },
-        {
           "id": "ru1",
           "namn": "Flätat silke",
           "beskrivning": "Flätat silke är det främsta inom lätt bepansning, då trådarnas täta väv avvärjer hugg och spetsar långt bättre än dess tjocklek och tyngd antyder. Flätat silke är känt sedan länge av såväl barbarer som ambrier, och vissa lärde spekulerar i om inte kunskapen kommer från alver och då teoretiskt sett sträcker sig ända tillbaka till Järnpaktens dagar.",
@@ -3067,6 +3033,28 @@
           "id": "ru2",
           "namn": "Häxsärk",
           "beskrivning": "Häxorna binder skyddande andar i ristade benbitar och fallna fienders skallar, och fäster dem på sina klädnader till effektivt skydd.",
+          "kvalitet": "Smidigt",
+          "taggar": {
+            "typ": [
+              "Rustning",
+              "Lätt Rustning"
+            ]
+          },
+          "stat": {
+            "skydd": "1T4",
+            "vikt": 1.0,
+            "begränsning": -2
+          },
+          "grundpris": {
+            "daler": 2,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ru3",
+          "namn": "Ordensrober",
+          "beskrivning": "De flesta ordensnoviser erbjuds en beskyddande ordensrob lagom till sin första längre resa. Dessa kåpor är broderade med angreppsavvisande runor, vilket ger noviserna en något större chans att överleva och därmed slutföra sina mer eller mindre viktiga uppdrag.",
           "kvalitet": "Smidigt",
           "taggar": {
             "typ": [
@@ -3131,71 +3119,6 @@
             ]
           },
           "effekt": "Rustningen ger +1 på bepansringsslag."
-        }
-      ]
-    },
-    "Skada": {
-      "antal": 1,
-      "källfiler": [
-        "data/tabeller.json"
-      ],
-      "exempel": [
-        {
-          "id": "ta22",
-          "namn": "Effekt vid överskriden Smärtgräns",
-          "taggar": {
-            "typ": [
-              "Tabell",
-              "Skada"
-            ]
-          },
-          "kolumner": [
-            "1T10",
-            "Effekt"
-          ],
-          "rader": [
-            {
-              "1T10": "1",
-              "Effekt": "Smärtan verkade i ett ögonblick värre än den egentligen var, ingenting händer."
-            },
-            {
-              "1T10": "2",
-              "Effekt": "Slå fram två separata effekter på tabellen (som inte är ingen effekt eller kritisk skada)."
-            },
-            {
-              "1T10": "3",
-              "Effekt": "Offret faller omedelbart omkull."
-            },
-            {
-              "1T10": "4",
-              "Effekt": "Offret tvingas ta ett steg tillbaka och fienden får ett Frislag."
-            },
-            {
-              "1T10": "5",
-              "Effekt": "Offret får en andra chans att misslyckas med alla slag mot försvar under resten av striden."
-            },
-            {
-              "1T10": "6",
-              "Effekt": "Offret får en andra chans att misslyckas med alla aktiva handlingar under resten av striden."
-            },
-            {
-              "1T10": "7",
-              "Effekt": "Rollpersonen måste klara ett slag mot Kvick för att lyckas utföra en förflyttning."
-            },
-            {
-              "1T10": "8",
-              "Effekt": "Smärtan verkade i ett ögonblick värre än den egentligen var, ingenting händer."
-            },
-            {
-              "1T10": "9",
-              "Effekt": "Offret tar 1T4 intern skada i början av varje runda."
-            },
-            {
-              "1T10": "10",
-              "Effekt": "Rollpersonen kan inte agera alls förrän den klarar ett slag mot Stark eller Viljestark."
-            }
-          ],
-          "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T10 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
         }
       ]
     },
@@ -3386,25 +3309,6 @@
       ],
       "exempel": [
         {
-          "id": "l46",
-          "namn": "Mumifierad hartass",
-          "beskrivning": "En torkad hartass insvept i bandage och täckt av små vaxsigill, preparerad för att kanalisera och stärka magins flöde. Genom att krama tassen hårt under den långa ritualen skänker den mystikern fokus och kraft och ger således +1 vid utförandet av mystiska ritualer.",
-          "taggar": {
-            "typ": [
-              "Specialverktyg"
-            ]
-          },
-          "grundpris": {
-            "daler": 5,
-            "skilling": 0,
-            "örtegar": 0
-          },
-          "stat": {
-            "vikt": 0.1
-          },
-          "effekt": "Ger +1 på [Viljestark] vid utförandet av ritualer."
-        },
-        {
           "id": "sp1",
           "namn": "Artefaktkatalog",
           "beskrivning": "En vältummad kopia av av trollsmeden Xavaundos visdomar, nedtecknade av ordensmäster Balinda. Boken ger +1 på framgångsslag i Artefaktmakande.",
@@ -3441,6 +3345,25 @@
             "vikt": 1.0
           },
           "effekt": "+1 på framgångsslag i Monsterlärd."
+        },
+        {
+          "id": "sp3",
+          "namn": "Falskspelsutrustning",
+          "beskrivning": "Viktade tärningar, märkta kort och spelpjäser ger användaren +1 på alla framgångsslag i spel (se dock fördelen Falskspelare på sidan 53 för riskerna med att spela falskt).",
+          "taggar": {
+            "typ": [
+              "Specialverktyg"
+            ]
+          },
+          "grundpris": {
+            "daler": 10,
+            "skilling": 0,
+            "örtegar": 0
+          },
+          "stat": {
+            "vikt": 1.0
+          },
+          "effekt": "+1 på framgångsslag i spel."
         }
       ]
     },
@@ -3510,229 +3433,6 @@
               "Bortbyting"
             ]
           }
-        }
-      ]
-    },
-    "Tabell": {
-      "antal": 26,
-      "källfiler": [
-        "data/tabeller.json"
-      ],
-      "exempel": [
-        {
-          "id": "ta1",
-          "namn": "Kostnad för Skattletarlicens",
-          "taggar": {
-            "typ": [
-              "Tabell"
-            ]
-          },
-          "kolumner": [
-            "antal personer",
-            "kostnad månad",
-            "kostnad år",
-            "extra tillägg"
-          ],
-          "rader": [
-            {
-              "antal personer": "Individuell",
-              "kostnad månad": "2",
-              "kostnad år": "9 daler",
-              "extra tillägg": "—"
-            },
-            {
-              "antal personer": "Sällskap 2–5",
-              "kostnad månad": "10",
-              "kostnad år": "50 daler",
-              "extra tillägg": "—"
-            },
-            {
-              "antal personer": "Sällskap 6–8",
-              "kostnad månad": "25",
-              "kostnad år": "90 daler",
-              "extra tillägg": "—"
-            },
-            {
-              "antal personer": "Sällskap 9–10",
-              "kostnad månad": "55",
-              "kostnad år": "180 daler",
-              "extra tillägg": "—"
-            },
-            {
-              "antal personer": "Obegränsat",
-              "kostnad månad": "—",
-              "kostnad år": "450 daler",
-              "extra tillägg": "—"
-            },
-            {
-              "antal personer": "Avverkningsstillägg",
-              "kostnad månad": "—",
-              "kostnad år": "—",
-              "extra tillägg": "3–10 daler"
-            },
-            {
-              "antal personer": "Skördetillägg",
-              "kostnad månad": "—",
-              "kostnad år": "—",
-              "extra tillägg": "5–12 daler"
-            },
-            {
-              "antal personer": "Utforskartillägg",
-              "kostnad månad": "—",
-              "kostnad år": "—",
-              "extra tillägg": "5 daler/person"
-            },
-            {
-              "antal personer": "Vagnstillägg",
-              "kostnad månad": "—",
-              "kostnad år": "—",
-              "extra tillägg": "5 daler/vagn"
-            },
-            {
-              "antal personer": "Inkompetenstillägg",
-              "kostnad månad": "—",
-              "kostnad år": "—",
-              "extra tillägg": "5–15 daler"
-            },
-            {
-              "antal personer": "Avsiktstillägg",
-              "kostnad månad": "—",
-              "kostnad år": "—",
-              "extra tillägg": "5–50 daler"
-            },
-            {
-              "antal personer": "Övrigt",
-              "kostnad månad": "—",
-              "kostnad år": "—",
-              "extra tillägg": "1–50 daler"
-            }
-          ]
-        },
-        {
-          "id": "ta2",
-          "namn": "Kostnad för boende i Tistla Fäste",
-          "taggar": {
-            "typ": [
-              "Tabell"
-            ]
-          },
-          "kolumner": [
-            "kvalitet",
-            "exempel",
-            "1 natt",
-            "1 vecka",
-            "1 månad",
-            "ägarskap"
-          ],
-          "rader": [
-            {
-              "kvalitet": "Exklusivt",
-              "exempel": "Hovet & Harpan, Det Bevingade Stopet",
-              "1 natt": "1 daler",
-              "1 vecka": "—",
-              "1 månad": "—",
-              "ägarskap": "—"
-            },
-            {
-              "kvalitet": "Fint",
-              "exempel": "Sömnerskans vila, Ruinen",
-              "1 natt": "2 skilling",
-              "1 vecka": "1 daler",
-              "1 månad": "4 daler",
-              "ägarskap": "—"
-            },
-            {
-              "kvalitet": "Ordinärt",
-              "exempel": "Häxan & Bjäran, Herr Arkerios",
-              "1 natt": "1 skilling",
-              "1 vecka": "5 skilling",
-              "1 månad": "2 daler",
-              "ägarskap": "—"
-            },
-            {
-              "kvalitet": "Simpelt",
-              "exempel": "Rosengården, Baracken",
-              "1 natt": "5 örtegar",
-              "1 vecka": "2 skilling",
-              "1 månad": "1 daler",
-              "ägarskap": "—"
-            },
-            {
-              "kvalitet": "Hyra fint",
-              "exempel": "Trerummare vid Antiktorget",
-              "1 natt": "—",
-              "1 vecka": "2 daler",
-              "1 månad": "10 daler",
-              "ägarskap": "—"
-            },
-            {
-              "kvalitet": "Hyra ordinärt",
-              "exempel": "Trerummare vid Västerport",
-              "1 natt": "—",
-              "1 vecka": "1 daler",
-              "1 månad": "4 daler",
-              "ägarskap": "—"
-            },
-            {
-              "kvalitet": "Hyra simpelt",
-              "exempel": "Enrummare öster om Paddans Torg",
-              "1 natt": "—",
-              "1 vecka": "5 skilling",
-              "1 månad": "2 daler",
-              "ägarskap": "—"
-            },
-            {
-              "kvalitet": "Köpa fint",
-              "exempel": "Trerummare vid Antiktorget",
-              "1 natt": "—",
-              "1 vecka": "—",
-              "1 månad": "—",
-              "ägarskap": "500 daler"
-            },
-            {
-              "kvalitet": "Köpa ordinärt",
-              "exempel": "Trerummare vid Västerport",
-              "1 natt": "—",
-              "1 vecka": "—",
-              "1 månad": "—",
-              "ägarskap": "300 daler"
-            },
-            {
-              "kvalitet": "Köpa simpelt",
-              "exempel": "Enrummare öster om Paddans Torg",
-              "1 natt": "—",
-              "1 vecka": "—",
-              "1 månad": "—",
-              "ägarskap": "100 daler"
-            }
-          ]
-        },
-        {
-          "id": "ta3",
-          "namn": "Varelsers skuggor",
-          "taggar": {
-            "typ": [
-              "Tabell"
-            ]
-          },
-          "kolumner": [
-            "varelse",
-            "färg på skugga"
-          ],
-          "rader": [
-            {
-              "varelse": "Naturnära väsen",
-              "färg på skugga": "Grönt, rött och vitt, ibland andra klara grundfärger."
-            },
-            {
-              "varelse": "Civiliserat väsen",
-              "färg på skugga": "Guld, silver, koppar, ibland andra metalliska nyanser."
-            },
-            {
-              "varelse": "Korrumperat väsen",
-              "färg på skugga": "Svart och lila dominerar hos styggelser och varelser som är nära att helt korrumperas, medan varelser som bara berört eller berörts av korruptionen får förändringar i sina grundfärger så som ärgad koppar, svartnat silver, sjukligt grönt, rostbruna stråk i det röda eller askgrå fläckar i det vita."
-            }
-          ]
         }
       ]
     },
@@ -3948,106 +3648,64 @@
       ],
       "exempel": [
         {
-          "id": "ar01",
-          "namn": "Opadias Ormstav",
-          "beskrivning": "Den ormhövdade runstav som nyligen försvann från Ordo Magicas kapitel i Tistla Fäste sägs ha tillhört Opadia, en nu avliden stavmagiker – mäktiga magiker som enligt legenden verkade som livvakter åt den siste symbariske kejsaren. Opadia var bekant med Lasifor Nattbäcka och levde en tid i Tistla Fäste. Hon stupade i strid mot anfallande alver och staven såldes till Ordo Magica, varifrån den alltså har försvunnit.",
-          "kvalitet": [
-            "Trubbigt"
-          ],
+          "id": "sk11",
+          "namn": "Järndjurhuvuden (bola)",
+          "beskrivning": "Tre vackert gjutna djurhuvuden i järn, stora som knytnävar och helt utan rost – varg, björn och vildsvin. Öglor på undersidan gör att de kan bindas samma till en bola vilken då ger +3 på framgångsslaget om den kastas mot varelser ur kategorin Bestar.",
           "taggar": {
             "typ": [
-              "Artefakt",
+              "Skatt",
               "Vapen"
-            ],
-            "handling": {
-              "Förmåga 1": [
-                "Reaktiv"
-              ],
-              "Förmåga 2": [
-                "Aktiv"
-              ]
-            }
+            ]
           },
-          "nivåer": {
-            "Förmåga 1": "Stavbett; Handling: Reaktiv\nDen som bundit staven till sig kan låta den bita giftigt vid träff i närstrid. Stavslaget måste orsaka skada för att giftet ska verka. Giftet är medelstarkt och ger 1T6 skada i 1T6 rundor. Korruption: 1T4.",
-            "Förmåga 2": "Bitande fjättrar; Handling: Aktiv\nOm bäraren har förmågan Stångverkan kan staven användas mot ett offer i närstrid som träffas Passivt. Staven slingrar sig runt offret och biter det varje runda. Bäraren måste klara [Viljestark←Stark] varje runda för att greppet ska hållas kvar. Offret får agera men drabbas av en bettattack varje runda, 1T6 i skada. Om skadan penetrerar rustning aktiveras ett gift (1T6 skada i 1T6 rundor). Giftet verkar endast en gång, men betten fortsätter. Om offret kommer loss faller staven till marken och återgår till att vara en runstav. Korruption: 1T6."
+          "stat": {
+            "skada": "1T10",
+            "vikt": 2.0
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "v1",
+          "namn": "Enhandsvapen",
+          "beskrivning": "Enhandsvapen omfattar alla typer av vapen som kan svingas i en hand. Exempel på enhandsvapen som är vanliga i davokarregionen är hammare, kroksabel, svärd och yxa.",
+          "taggar": {
+            "typ": [
+              "Vapen",
+              "Enhandsvapen"
+            ]
           },
           "stat": {
             "skada": "1T8",
             "vikt": 1.5
           },
           "grundpris": {
-            "daler": 0,
+            "daler": 5,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "ar05",
-          "namn": "Algsar-Maras Kätting",
-          "beskrivning": "algsar-maras kätting, artefakt Algsar-Mara omnämns såvitt känt bara i en enda strof, tillskriven Aroaleta, och då endast med hänvisning till dennes bakslughet, mordiska sinnelag och ”bitande kätting”. Vem han eller hon var och vad som gör denne förtjänt av omnämnandet är ett lika stort mysterium som frågan om huruvida just denna kätting var hans. Eller hennes. Kättingen med sina tunna men urstarka länkar är nära två meter lång och väger inte mer än ett motsvarande rep. Den tycks vara ingjuten med en hungrande eller rent av svulten makt. Vid sidan om nedanstående krafter kan den svingas som en Långpiska (ledat, snärjande och djupverkande).",
-          "kvalitet": [
-            "Ledat",
-            "Snärjande",
-            "Djupverkande"
-          ],
+          "id": "v2",
+          "namn": "Duellsvärd",
+          "beskrivning": "I Yndaros är det ambriska duellsvärdet högsta mode, ett fjäderstålsmide med ypperlig precision. Och det kombineras gärna med fäktarens favorit, parerdolken, som ger de lätt rustade duellanterna ett starkare försvar under fäktningsmatcherna.",
           "taggar": {
             "typ": [
-              "Artefakt",
-              "Vapen"
+              "Vapen",
+              "Enhandsvapen"
             ],
-            "handling": {
-              "Förmåga 1": [
-                "Aktiv"
-              ],
-              "Förmåga 2": [
-                "Aktiv"
-              ]
-            }
-          },
-          "nivåer": {
-            "Förmåga 1": "Omslingra; Handling: Aktiv\nDen som har bundit sig till kättingen kan med ett lyckat anfallsslag kasta artefakten mot en fiende som den har Övertag emot. Oavsett hur den kastas snärjer sig kättingen blixtsnabbt kring offret och hindrar dess rörelser totalt under följande runda. Därefter krävs det ett slag mot [10←Stark] varje runda för att vidmakthålla effekten; misslyckas slaget sliter sig fienden fri. Korruption: 1T4.",
-            "Förmåga 2": "Krypande fälla; Handling: Aktiv\nArtefaktens mästare kan placera den som en levande fälla som täcker av ett större område (en palatsruin, en skogsdunge eller området kring en lägerplats). Kättingen kommer Passivt att söka sig till annalkande varelser, undantaget sådana som sedan tidigare har varit i kontakt med den, och snärja sig kring dem som ovan (max två inom närstridsavstånd från varandra). Kättingens rasslande är ljudligt nog för att varsko mästaren även om denne sover [Vaksam]. Korruption: 1T4."
+            "kvalitet": [
+              "Precist"
+            ]
           },
           "stat": {
-            "skada": "",
+            "skada": "1T8",
             "vikt": 1.5
           },
           "grundpris": {
-            "daler": 0,
-            "skilling": 0,
-            "örtegar": 0
-          }
-        },
-        {
-          "id": "ar08",
-          "namn": "Själaslukaren",
-          "beskrivning": "själaslukarEn Stridshammaren Själaslukaren ska enligt legenderna ha skapats i österlandet bortom Ravennerna i syfte att tillfredsställa en anonym krigsherres härsklystnad. Vapnet var illa omtalat redan i Symbaroum om man får tro de krönikor där det omnämns, ofta med påståenden som att det”smiddes i avundsjuka och härdades i missunnsamhet”. Ingen av dess ägare i gamla Symbaroum påstås heller ha gått goda öden till mötes. När Själaslukaren hittas i mausoleet har den en mystisk kraft lagrad från ett tidigare offer: Helig aura (Novis).",
-          "kvalitet": [],
-          "taggar": {
-            "typ": [
-              "Artefakt",
-              "Vapen"
-            ],
-            "handling": {
-              "Förmåga 1": [
-                "Reaktiv"
-              ],
-              "Förmåga 2": [
-                "Samma som den lagrade kraften"
-              ]
-            }
-          },
-          "nivåer": {
-            "Förmåga 1": "Liktjuv; Handling: Reaktiv\nSjälaslukaren kan ”suga åt sig” en mystisk kraft som involverar karaktärsdraget Viljestark från en varelse den dräper och lagra den i sitt runristade huvud. För att det ska hända måste hammaren fälla det dödande slaget och dess mästare måste välja att ersätta den redan lagrade förmågan med en från det nya offret. Korruption: 1T4.",
-            "Förmåga 2": "Parasitens storhet; Handling: Speciell\nVapnets mästare kan använda den mystiska kraft som har lagrats i vapnet, som om den var mästarens egen. Bärarens Viljestark räknas som 15 i sammanhang som har med användningen av den lagrade kraften att göra, dock utan att ha någon inverkan på bärarens korruptionströskel. Villkor: Samma som den lagrade kraften. Korruption: 1T4."
-          },
-          "stat": {
-            "skada": "",
-            "vikt": 2
-          },
-          "grundpris": {
-            "daler": 0,
+            "daler": 5,
             "skilling": 0,
             "örtegar": 0
           }

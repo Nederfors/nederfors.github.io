@@ -1631,195 +1631,131 @@
         "Tabell"
       ]
     },
-    "kolumner": [
-      "Bepansringstyp",
-      "Yttre fysisk",
-      "Mystiska vapen",
-      "Elementär",
-      "Mystisk",
-      "Ignorerar bepansring",
-      "Inre fysisk",
-      "Gift",
-      "Fallskada"
-    ],
-    "rader": [
-      {
-        "Bepansringstyp": "Rustningar",
-        "Yttre fysisk": "Skyddar",
-        "Mystiska vapen": "Skyddar",
-        "Elementär": "Skyddar inte",
-        "Mystisk": "Skyddar inte",
-        "Ignorerar bepansring": "Skyddar inte",
-        "Inre fysisk": "Skyddar inte",
-        "Gift": "Skyddar inte",
-        "Fallskada": "Skyddar inte"
-      },
-      {
-        "Bepansringstyp": "Naturligt pansar",
-        "Yttre fysisk": "Skyddar",
-        "Mystiska vapen": "Skyddar",
-        "Elementär": "Skyddar inte",
-        "Mystisk": "Skyddar inte",
-        "Ignorerar bepansring": "Skyddar inte",
-        "Inre fysisk": "Skyddar inte",
-        "Gift": "Skyddar inte",
-        "Fallskada": "Skyddar inte"
-      },
-      {
-        "Bepansringstyp": "Mystisk bepansring",
-        "Yttre fysisk": "Skyddar",
-        "Mystiska vapen": "Skyddar",
-        "Elementär": "Skyddar",
-        "Mystisk": "Skyddar",
-        "Ignorerar bepansring": "Skyddar",
-        "Inre fysisk": "Skyddar inte",
-        "Gift": "Skyddar inte",
-        "Fallskada": "Skyddar inte"
-      },
-      {
-        "Bepansringstyp": "Ignorerar skada",
-        "Yttre fysisk": "Skyddar",
-        "Mystiska vapen": "Skyddar",
-        "Elementär": "Skyddar",
-        "Mystisk": "Skyddar",
-        "Ignorerar bepansring": "Skyddar",
-        "Inre fysisk": "Skyddar",
-        "Gift": "Skyddar",
-        "Fallskada": "Skyddar inte"
-      },
-      {
-        "Bepansringstyp": "Väldig",
-        "Yttre fysisk": "100% (N/G), Immun (M)",
-        "Mystiska vapen": "100%",
-        "Elementär": "100% (N/G), Immun (M)",
-        "Mystisk": "100%",
-        "Ignorerar bepansring": "100% (N/G), Immun (M)",
-        "Inre fysisk": "100% (N/G), Immun (M)",
-        "Gift": "100% (N/G), Immun (M)",
-        "Fallskada": "100%"
-      },
-      {
-        "Bepansringstyp": "Vandödhet",
-        "Yttre fysisk": "100% (N), 50% (G/M)",
-        "Mystiska vapen": "100%",
-        "Elementär": "100% (N), 50% (G/M)",
-        "Mystisk": "100% (N/G), 50% (M)",
-        "Ignorerar bepansring": "100% (N), 50% (G/M)",
-        "Inre fysisk": "Immun",
-        "Gift": "Immun",
-        "Fallskada": "100% (N), 50% (G/M)"
-      },
-      {
-        "Bepansringstyp": "Andeform",
-        "Yttre fysisk": "50% (N/G), Immun (M)",
-        "Mystiska vapen": "100% (N), 50% (G/M)",
-        "Elementär": "100% (N), 50% (G/M)",
-        "Mystisk": "100% (N), 50% (G/M)",
-        "Ignorerar bepansring": "50% (N/G), Immun (M)",
-        "Inre fysisk": "Immun",
-        "Gift": "Immun",
-        "Fallskada": "Immun"
-      }
-    ]
-  },
-  {
-    "id": "ta26",
-    "namn": "Skadetyper och penetrering",
-    "taggar": {
-      "typ": [
-        "Tabell"
+    "matris": {
+      "rowLabel": "Bepansringstyp",
+      "columnLabel": "Skadetyp",
+      "columns": [
+        "Yttre fysisk",
+        "Mystiska vapen",
+        "Elementär",
+        "Mystisk",
+        "Alternativ skada",
+        "Ignorerar bepansring",
+        "Inre fysisk",
+        "Gift",
+        "Fallskada"
+      ],
+      "rows": [
+        {
+          "label": "Rustningar",
+          "values": {
+            "Yttre fysisk": "Skyddar",
+            "Mystiska vapen": "Skyddar",
+            "Elementär": "Skyddar inte",
+            "Mystisk": "Skyddar inte",
+            "Alternativ skada": "Skyddar inte",
+            "Ignorerar bepansring": "Skyddar inte",
+            "Inre fysisk": "Skyddar inte",
+            "Gift": "Skyddar inte",
+            "Fallskada": "Skyddar inte"
+          }
+        },
+        {
+          "label": "Naturligt pansar",
+          "values": {
+            "Yttre fysisk": "Skyddar",
+            "Mystiska vapen": "Skyddar",
+            "Elementär": "Skyddar inte",
+            "Mystisk": "Skyddar inte",
+            "Alternativ skada": "Skyddar inte",
+            "Ignorerar bepansring": "Skyddar inte",
+            "Inre fysisk": "Skyddar inte",
+            "Gift": "Skyddar inte",
+            "Fallskada": "Skyddar inte"
+          }
+        },
+        {
+          "label": "Mystisk bepansring",
+          "values": {
+            "Yttre fysisk": "Skyddar",
+            "Mystiska vapen": "Skyddar",
+            "Elementär": "Skyddar",
+            "Mystisk": "Skyddar",
+            "Alternativ skada": "Skyddar",
+            "Ignorerar bepansring": "Skyddar",
+            "Inre fysisk": "Skyddar inte",
+            "Gift": "Skyddar inte",
+            "Fallskada": "Skyddar inte"
+          }
+        },
+        {
+          "label": "Ignorerar skada",
+          "values": {
+            "Yttre fysisk": "Skyddar",
+            "Mystiska vapen": "Skyddar",
+            "Elementär": "Skyddar",
+            "Mystisk": "Skyddar",
+            "Alternativ skada": "Skyddar inte",
+            "Ignorerar bepansring": "Skyddar",
+            "Inre fysisk": "Skyddar",
+            "Gift": "Skyddar",
+            "Fallskada": "Skyddar inte"
+          }
+        },
+        {
+          "label": "Väldig",
+          "values": {
+            "Yttre fysisk": "N/G: Full skada, M: Ingen skada",
+            "Mystiska vapen": "N/G/M: Full skada",
+            "Elementär": "N/G: Full skada, M: Ingen skada",
+            "Mystisk": "N/G/M: Full skada",
+            "Alternativ skada": "N/G/M: Full skada",
+            "Ignorerar bepansring": "N/G: Full skada, M: Ingen skada",
+            "Inre fysisk": "N/G: Full skada, M: Ingen skada",
+            "Gift": "N/G: Full skada, M: Ingen skada",
+            "Fallskada": "N/G/M: Full skada"
+          }
+        },
+        {
+          "label": "Vandödhet",
+          "values": {
+            "Yttre fysisk": "N: Full skada, G/M: Halv skada",
+            "Mystiska vapen": "N/G/M: Full skada",
+            "Elementär": "N: Full skada, G/M: Halv skada",
+            "Mystisk": "N/G: Full skada, M: Halv skada",
+            "Alternativ skada": "N/G: Full skada, M: Halv skada",
+            "Ignorerar bepansring": "N: Full skada, G/M: Halv skada",
+            "Inre fysisk": "N/G/M: Ingen skada",
+            "Gift": "N/G/M: Ingen skada",
+            "Fallskada": "N: Full skada, G/M: Halv skada"
+          }
+        },
+        {
+          "label": "Andeform",
+          "values": {
+            "Yttre fysisk": "N/G: Halv skada, M: Ingen skada",
+            "Mystiska vapen": "N: Full skada, G/M: Halv skada",
+            "Elementär": "N: Full skada, G/M: Halv skada",
+            "Mystisk": "N: Full skada, G/M: Halv skada",
+            "Alternativ skada": "N: Full skada, G/M: Halv skada",
+            "Ignorerar bepansring": "N/G: Halv skada, M: Ingen skada",
+            "Inre fysisk": "N/G/M: Ingen skada",
+            "Gift": "N/G/M: Ingen skada",
+            "Fallskada": "N/G/M: Ingen skada"
+          }
+        }
       ]
     },
-    "kolumner": [
-      "Skadetyp",
-      "Rustningar",
-      "Naturligt pansar",
-      "Mystisk bepansring",
-      "Ignorerar skada",
-      "Väldig",
-      "Vandödhet",
-      "Andeform"
-    ],
-    "rader": [
+    "tabellvyer": [
       {
-        "Skadetyp": "Yttre fysisk",
-        "Rustningar": "Stoppas",
-        "Naturligt pansar": "Stoppas",
-        "Mystisk bepansring": "Stoppas",
-        "Ignorerar skada": "Stoppas",
-        "Väldig": "100% (N/G), Immun (M)",
-        "Vandödhet": "100% (N), 50% (G/M)",
-        "Andeform": "50% (N/G), Immun (M)"
+        "id": "ta25",
+        "namn": "Bepansring och skydd",
+        "orientation": "rows"
       },
       {
-        "Skadetyp": "Mystiska vapen",
-        "Rustningar": "Stoppas",
-        "Naturligt pansar": "Stoppas",
-        "Mystisk bepansring": "Stoppas",
-        "Ignorerar skada": "Stoppas",
-        "Väldig": "100%",
-        "Vandödhet": "100%",
-        "Andeform": "100% (N), 50% (G/M)"
-      },
-      {
-        "Skadetyp": "Elementär",
-        "Rustningar": "Går igenom",
-        "Naturligt pansar": "Går igenom",
-        "Mystisk bepansring": "Stoppas",
-        "Ignorerar skada": "Stoppas",
-        "Väldig": "100% (N/G), Immun (M)",
-        "Vandödhet": "100% (N), 50% (G/M)",
-        "Andeform": "100% (N), 50% (G/M)"
-      },
-      {
-        "Skadetyp": "Mystisk",
-        "Rustningar": "Går igenom",
-        "Naturligt pansar": "Går igenom",
-        "Mystisk bepansring": "Stoppas",
-        "Ignorerar skada": "Stoppas",
-        "Väldig": "100%",
-        "Vandödhet": "100% (N/G), 50% (M)",
-        "Andeform": "100% (N), 50% (G/M)"
-      },
-      {
-        "Skadetyp": "Ignorerar bepansring",
-        "Rustningar": "Går igenom",
-        "Naturligt pansar": "Går igenom",
-        "Mystisk bepansring": "Stoppas",
-        "Ignorerar skada": "Stoppas",
-        "Väldig": "100% (N/G), Immun (M)",
-        "Vandödhet": "100% (N), 50% (G/M)",
-        "Andeform": "50% (N/G), Immun (M)"
-      },
-      {
-        "Skadetyp": "Inre fysisk",
-        "Rustningar": "Går igenom",
-        "Naturligt pansar": "Går igenom",
-        "Mystisk bepansring": "Går igenom",
-        "Ignorerar skada": "Stoppas",
-        "Väldig": "100% (N/G), Immun (M)",
-        "Vandödhet": "Immun",
-        "Andeform": "Immun"
-      },
-      {
-        "Skadetyp": "Gift",
-        "Rustningar": "Går igenom",
-        "Naturligt pansar": "Går igenom",
-        "Mystisk bepansring": "Går igenom",
-        "Ignorerar skada": "Stoppas",
-        "Väldig": "100% (N/G), Immun (M)",
-        "Vandödhet": "Immun",
-        "Andeform": "Immun"
-      },
-      {
-        "Skadetyp": "Fallskada",
-        "Rustningar": "Går igenom",
-        "Naturligt pansar": "Går igenom",
-        "Mystisk bepansring": "Går igenom",
-        "Ignorerar skada": "Går igenom",
-        "Väldig": "100%",
-        "Vandödhet": "100% (N), 50% (G/M)",
-        "Andeform": "Immun"
+        "id": "ta26",
+        "namn": "Skadetyper och penetrering",
+        "orientation": "columns"
       }
     ]
   }

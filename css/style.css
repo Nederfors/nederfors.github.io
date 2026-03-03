@@ -3942,6 +3942,57 @@ select.level {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.skadetyp-switcher {
+  display: flex;
+  flex-direction: column;
+  gap: .8rem;
+}
+
+.skadetyp-switcher-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+
+.skadetyp-switcher-tab {
+  width: auto;
+  align-self: flex-start;
+  padding: .42rem .78rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, .09);
+  background: rgba(255, 255, 255, .04);
+  color: var(--subtxt);
+  font-size: .84rem;
+  font-weight: 700;
+  line-height: 1.2;
+  cursor: pointer;
+  transition: border-color .18s ease, background-color .18s ease, color .18s ease, transform .12s ease;
+}
+
+.skadetyp-switcher-tab:hover {
+  border-color: rgba(227, 186, 106, .24);
+  color: var(--txt);
+}
+
+.skadetyp-switcher-tab:active {
+  transform: translateY(1px);
+}
+
+.skadetyp-switcher-tab.is-active {
+  color: #2a1d12;
+  border-color: rgba(227, 186, 106, .34);
+  background: linear-gradient(180deg, rgba(232, 198, 124, .94), rgba(202, 158, 80, .94));
+  box-shadow: 0 10px 20px rgba(57, 37, 5, .18), inset 0 1px 0 rgba(255, 255, 255, .26);
+}
+
+.skadetyp-switcher-panels {
+  min-width: 0;
+}
+
+.skadetyp-switcher-panel[hidden] {
+  display: none !important;
+}
+
 .skadetyp-level-block {
   display: block;
   gap: 0;
@@ -3983,6 +4034,18 @@ select.level {
   font-weight: 700;
   font-size: 1.02rem;
   margin-right: auto;
+}
+
+.skadetyp-level-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  margin-right: auto;
+}
+
+.skadetyp-level-types .tag {
+  background: rgba(255, 255, 255, .06);
+  border: 1px solid rgba(255, 255, 255, .08);
 }
 
 .skadetyp-level-toggle {
@@ -8159,16 +8222,10 @@ textarea.auto-resize {
   overflow-y: visible;
   -webkit-overflow-scrolling: touch;
   position: relative;
+  padding-right: .85rem;
 }
 #tabellPopup .table-wrap::after {
-  content: '';
-  position: absolute;
-  top: 0;
-  right: 0;
-  height: 100%;
-  width: 26px;
-  pointer-events: none;
-  background: linear-gradient(to left, rgba(13, 10, 9, .34), transparent);
+  display: none;
 }
 #tabellPopup .tabell-grid {
   width: max-content;
@@ -8193,6 +8250,7 @@ textarea.auto-resize {
   position: sticky;
   top: 0;
   z-index: 3;
+  padding: .78rem .95rem;
   background:
     linear-gradient(180deg, rgba(84, 63, 51, .96), rgba(58, 44, 37, .98));
   color: var(--txt);
@@ -8216,6 +8274,56 @@ textarea.auto-resize {
   min-height: 100%;
   padding: .88rem .95rem;
   line-height: 1.45;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich,
+#tabellPopup .tabell-card .tabell-cell.is-rich {
+  padding: .58rem .72rem;
+  line-height: 1.28;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-breakdown,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .26rem .45rem;
+  align-items: baseline;
+  max-width: 100%;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-segment,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-segment {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: .2rem .3rem;
+  align-items: baseline;
+  min-width: 0;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-label,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-label {
+  color: var(--subtxt);
+  font-size: .72rem;
+  font-weight: 700;
+  letter-spacing: .06em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-effect,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-effect {
+  color: var(--txt);
+  font-size: .92rem;
+  font-weight: 650;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-effect.is-blocked,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-effect.is-blocked {
+  color: #ffe9e6;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-effect.is-piercing,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-effect.is-piercing {
+  color: #e8f3e5;
+}
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-effect.is-scaled,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-effect.is-scaled,
+#tabellPopup .tabell-grid .tabell-cell.is-rich .tabell-inline-effect.is-immunity,
+#tabellPopup .tabell-card .tabell-cell.is-rich .tabell-inline-effect.is-immunity {
+  color: #f5ead2;
 }
 #tabellPopup .tabell-grid .tabell-cell.is-empty,
 #tabellPopup .tabell-card .tabell-cell.is-empty {
