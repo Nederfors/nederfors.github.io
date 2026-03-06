@@ -34,7 +34,9 @@
     "id": "elit1",
     "krav": {
       "primarformaga": {
-        "namn": ["Akrobatik"]
+        "namn": [
+          "Akrobatik"
+        ]
       },
       "primartagg": {
         "taggfalt": "ark_trad",
@@ -284,7 +286,7 @@
       ],
       "ark_trad": [
         "Artefaktmakare",
-        "Ordensmagi",
+        "Ordensmagiker",
         "Trollsång"
       ]
     },
@@ -541,7 +543,8 @@
       "ark_trad": [
         "Blodvadare",
         "Häxkonst"
-      ]
+      ],
+      "regler": {}
     },
     "krav_formagor": "",
     "viktiga_karaktarsdrag": "",
@@ -803,7 +806,7 @@
       ],
       "ark_trad": [
         "Illusionist",
-        "Ordensmagi"
+        "Ordensmagiker"
       ]
     },
     "krav_formagor": "",
@@ -1016,7 +1019,7 @@
       ],
       "ark_trad": [
         "Mentalist",
-        "Ordensmagi"
+        "Ordensmagiker"
       ]
     },
     "krav_formagor": "",
@@ -1187,7 +1190,7 @@
       ],
       "ark_trad": [
         "Pyromantiker",
-        "Ordensmagi"
+        "Ordensmagiker"
       ]
     },
     "krav_formagor": "",
@@ -1557,7 +1560,7 @@
       ],
       "ark_trad": [
         "Stormbringare",
-        "Ordensmagi"
+        "Ordensmagiker"
       ]
     },
     "krav_formagor": "",

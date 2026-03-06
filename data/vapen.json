@@ -175,8 +175,8 @@
       "vikt": 1.5
     },
     "grundpris": {
-      "daler": 0,
-      "skilling": 6,
+      "daler": 3,
+      "skilling": 0,
       "örtegar": 0
     }
   },
@@ -233,7 +233,8 @@
     "taggar": {
       "typ": [
         "Vapen",
-        "Långa vapen"
+        "Långa vapen",
+        "Stav"
       ],
       "kvalitet": [
         "Trubbigt",
@@ -303,7 +304,12 @@
     "taggar": {
       "typ": [
         "Sköld"
-      ]
+      ],
+      "regler": {
+        "andrar": [
+          { "mal": "forsvar_modifierare", "varde": 1 }
+        ]
+      }
     },
     "stat": {
       "skada": "1T4",
@@ -325,7 +331,12 @@
       ],
       "kvalitet": [
         "Armfäst"
-      ]
+      ],
+      "regler": {
+        "andrar": [
+          { "mal": "forsvar_modifierare", "varde": 1 }
+        ]
+      }
     },
     "stat": {
       "skada": "1T4",
@@ -347,7 +358,12 @@
       ],
       "kvalitet": [
         "Balanserad"
-      ]
+      ],
+      "regler": {
+        "andrar": [
+          { "mal": "forsvar_modifierare", "varde": 1 }
+        ]
+      }
     },
     "stat": {
       "skada": "1T4",
@@ -1499,6 +1515,29 @@
     "grundpris": {
       "daler": 0,
       "skilling": 1,
+      "örtegar": 0
+    }
+  },
+  {
+    "id": "v68",
+    "namn": "Långspjut",
+    "beskrivning": "Ett spjut med långt skaft; tillräckligt långt för att hålla fienden på avstånd i första handgemänget.",
+    "taggar": {
+      "typ": [
+        "Vapen",
+        "Långa vapen"
+      ],
+      "kvalitet": [
+        "Djupverkande"
+      ]
+    },
+    "stat": {
+      "skada": "1T6",
+      "vikt": 1.0
+    },
+    "grundpris": {
+      "daler": 3,
+      "skilling": 0,
       "örtegar": 0
     }
   }

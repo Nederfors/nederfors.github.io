@@ -913,10 +913,32 @@ class SharedToolbar extends HTMLElement {
 
       <!-- ---------- Popup Kvalitet ---------- -->
       <div id="qualPopup" class="popup">
-        <div class="popup-inner">
-          <h3 id="qualTitle">Välj kvalitet</h3>
-          <div id="qualOptions"></div>
-          <button id="qualCancel" class="char-btn danger">Avbryt</button>
+        <div class="popup-inner qual-popup-ui">
+          <header class="qual-popup-header">
+            <div class="qual-popup-copy">
+              <div class="qual-popup-kicker">Inventarieverktyg</div>
+              <h3 id="qualTitle">Välj kvalitet</h3>
+              <p id="qualSubtitle" class="qual-popup-subtitle">Välj ett alternativ i listan nedan.</p>
+              <div id="qualLegend" class="qual-popup-legend" aria-label="Färgkodning">
+                <span class="qual-legend-item positive">Positiv</span>
+                <span class="qual-legend-item neutral">Neutral</span>
+                <span class="qual-legend-item negative">Negativ</span>
+                <span class="qual-legend-item mystic">Mystisk</span>
+              </div>
+            </div>
+            <button id="qualClose" class="char-btn icon qual-popup-close" type="button" title="Stäng">✕</button>
+          </header>
+          <label for="qualSearch" class="qual-popup-search-label">Sök</label>
+          <input id="qualSearch" class="qual-popup-search-input" type="search" placeholder="Sök..." autocomplete="off" spellcheck="false">
+          <div class="qual-popup-meta">
+            <span id="qualCount" class="qual-popup-count"></span>
+          </div>
+          <div id="qualOptions" class="qual-popup-options"></div>
+          <p id="qualEmpty" class="qual-popup-empty" hidden>Inga alternativ matchar sökningen.</p>
+          <div class="confirm-row qual-popup-actions">
+            <button id="qualApply" class="char-btn" type="button" hidden disabled>Lägg till valda</button>
+            <button id="qualCancel" class="char-btn danger" type="button">Avbryt</button>
+          </div>
         </div>
       </div>
 
@@ -2066,7 +2088,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-    const popups = ['inventoryItemsPopup', 'inventoryEconomyPopup', 'qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup'];
+    const popups = ['inventoryItemsPopup', 'inventoryEconomyPopup', 'qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup', 'traitPopup', 'maskPopup', 'powerPopup', 'beastPopup', 'bloodPopup', 'monsterPopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

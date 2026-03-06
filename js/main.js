@@ -3628,9 +3628,10 @@ function openDefenseCalcPopup() {
   const list = typeof storeHelper.getCurrentList === 'function'
     ? storeHelper.getCurrentList(store)
     : [];
-  const hasDancingAbility = typeof storeHelper.abilityLevel === 'function'
-    ? storeHelper.abilityLevel(list, 'Dansande vapen') >= 1
-    : false;
+  const dancingTraitCandidates = typeof window.rulesHelper?.getDancingDefenseTraitRuleCandidates === 'function'
+    ? (window.rulesHelper.getDancingDefenseTraitRuleCandidates(list, { list }) || [])
+    : [];
+  const hasDancingCandidates = dancingTraitCandidates.length > 0;
   const setDancingVisibility = (visible) => {
     pop.classList.toggle('defense-calc-has-dancing', visible);
     if (danceCard) {
@@ -3722,7 +3723,7 @@ function openDefenseCalcPopup() {
     .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
     .join('');
   traitSel.value = selectedTrait;
-  danceTraitSel.innerHTML = ['<option value="">Viljestark (standard)</option>']
+  danceTraitSel.innerHTML = ['<option value="">Automatiskt</option>']
     .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
     .join('');
   danceTraitSel.value = selectedDanceTrait;
@@ -3762,6 +3763,9 @@ function openDefenseCalcPopup() {
         path: obj.path,
         id: obj.row.id,
         name: obj.row.name || entry.namn || '',
+        entry,
+        types,
+        qualities: quals,
         isArmMountedShield,
         isTwoHandedWeapon
       });
@@ -3771,9 +3775,7 @@ function openDefenseCalcPopup() {
     .join('');
   weaponList.innerHTML = weaponHtml;
   const getWeaponCheckboxes = () => [...weaponList.querySelectorAll('input[type="checkbox"][data-path]')];
-  const isArmMountedShieldPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isArmMountedShield);
-  const isTwoHandedWeaponPath = pathStr => Boolean(weaponMeta.get(pathStr)?.isTwoHandedWeapon);
-  const sanitizeWeaponPathSelection = (paths, preferredPath = '') => {
+  const sanitizeWeaponPathSelection = (paths) => {
     const unique = [];
     const seen = new Set();
     (Array.isArray(paths) ? paths : []).forEach(pathStr => {
@@ -3781,39 +3783,58 @@ function openDefenseCalcPopup() {
       seen.add(pathStr);
       unique.push(pathStr);
     });
-    const hasArmMountedShield = unique.some(isArmMountedShieldPath);
-    const hasTwoHandedWeapon = unique.some(isTwoHandedWeaponPath);
-    if (!hasArmMountedShield || !hasTwoHandedWeapon) return unique;
-    if (isTwoHandedWeaponPath(preferredPath)) {
-      return unique.filter(pathStr => !isArmMountedShieldPath(pathStr));
+    return unique;
+  };
+  const buildWeaponFacts = (paths) => sanitizeWeaponPathSelection(paths).map(pathStr => {
+    const meta = weaponMeta.get(pathStr);
+    if (!meta) return null;
+    return {
+      path: meta.path,
+      id: meta.id,
+      name: meta.name,
+      entryRef: meta.entry,
+      types: meta.types,
+      qualities: meta.qualities,
+      __path: pathStr
+    };
+  }).filter(Boolean);
+  const validateWeaponPathSelection = (paths) => {
+    if (typeof window.rulesHelper?.validateDefenseLoadout !== 'function') {
+      return { valid: true, reasons: [] };
     }
-    return unique.filter(pathStr => !isTwoHandedWeaponPath(pathStr));
+    return window.rulesHelper.validateDefenseLoadout(list, buildWeaponFacts(paths));
+  };
+  const normalizeWeaponPathSelection = (paths, preferredPath = '') => {
+    const unique = sanitizeWeaponPathSelection(paths);
+    if (typeof window.rulesHelper?.normalizeDefenseLoadout !== 'function') return unique;
+    const normalized = window.rulesHelper.normalizeDefenseLoadout(list, buildWeaponFacts(unique), preferredPath);
+    return (Array.isArray(normalized) ? normalized : [])
+      .map(fact => String(fact?.__path || ''))
+      .filter(Boolean);
   };
   const syncWeaponSelectionUi = (preferredPath = '') => {
     const checkboxes = getWeaponCheckboxes();
-    const selectedPaths = sanitizeWeaponPathSelection(
+    const selectedPaths = normalizeWeaponPathSelection(
       checkboxes.filter(ch => ch.checked).map(ch => ch.dataset.path || ''),
       preferredPath
     );
     const selectedSet = new Set(selectedPaths);
-    const hasArmMountedShield = selectedPaths.some(isArmMountedShieldPath);
-    const hasTwoHandedWeapon = selectedPaths.some(isTwoHandedWeaponPath);
     checkboxes.forEach(ch => {
       const pathStr = ch.dataset.path || '';
       const isSelected = selectedSet.has(pathStr);
       const item = ch.closest('.defense-item');
       ch.checked = isSelected;
-      const disable = !isSelected && (
-        (hasArmMountedShield && isTwoHandedWeaponPath(pathStr)) ||
-        (hasTwoHandedWeapon && isArmMountedShieldPath(pathStr))
-      );
+      const validation = isSelected
+        ? { valid: true, reasons: [] }
+        : validateWeaponPathSelection([...selectedPaths, pathStr]);
+      const disable = !isSelected && !validation.valid;
       ch.disabled = disable;
       if (item) {
         item.classList.toggle('is-selected', isSelected);
         item.classList.toggle('is-disabled', disable);
       }
-      if (disable) {
-        ch.title = 'Kan inte kombineras med Armfäst/Tvåhandsvapen.';
+      if (disable && Array.isArray(validation.reasons) && validation.reasons.length) {
+        ch.title = validation.reasons.join('\n');
       } else {
         ch.removeAttribute('title');
       }
@@ -3824,7 +3845,7 @@ function openDefenseCalcPopup() {
   const buildCurrentSetup = (preferredPath = '') => {
     const selectedPathsNext = syncWeaponSelectionUi(preferredPath);
     const armorRef = armorSel.value ? toStoredRef(armorMeta.get(armorSel.value) || null) : null;
-    const danceWeaponRef = hasDancingAbility && danceWeaponSel.value
+    const danceWeaponRef = hasDancingCandidates && danceWeaponSel.value
       ? toStoredRef(weaponMeta.get(danceWeaponSel.value) || null)
       : null;
     return {
@@ -3834,8 +3855,8 @@ function openDefenseCalcPopup() {
       weapons: selectedPathsNext
         .map(pathStr => toStoredRef(weaponMeta.get(pathStr) || null))
         .filter(Boolean),
-      dancingTrait: hasDancingAbility ? (danceTraitSel.value || '') : '',
-      dancingWeapon: hasDancingAbility ? danceWeaponRef : null
+      dancingTrait: hasDancingCandidates ? (danceTraitSel.value || '') : '',
+      dancingWeapon: hasDancingCandidates ? danceWeaponRef : null
     };
   };
   const applySetupToUi = (setup) => {
@@ -3885,7 +3906,7 @@ function openDefenseCalcPopup() {
         : 'Inga vapen eller sköldar valda';
     }
     if (dancingSummaryEl) {
-      if (!hasDancingAbility) {
+      if (!hasDancingCandidates) {
         dancingSummaryEl.hidden = true;
         dancingSummaryEl.textContent = '';
       } else {
@@ -3893,7 +3914,7 @@ function openDefenseCalcPopup() {
         const dancingValue = Number(preview?.dancingValue);
         dancingSummaryEl.textContent = Number.isFinite(dancingValue)
           ? `Dansande vapen • Försvar ${dancingValue} • ${getSelectLabel(danceWeaponSel, 'Inget vapen')}`
-          : `Dansande vapen tillgängligt • ${getSelectLabel(danceTraitSel, 'Viljestark')} • ${getSelectLabel(danceWeaponSel, 'Inget vapen')}`;
+          : `Dansande försvar • ${getSelectLabel(danceTraitSel, 'Automatiskt')} • ${getSelectLabel(danceWeaponSel, 'Inget vapen')}`;
       }
     }
     return currentSetup;
@@ -3911,7 +3932,7 @@ function openDefenseCalcPopup() {
     })
   ).join('');
   danceWeaponSel.innerHTML = weaponOptions;
-  setDancingVisibility(hasDancingAbility);
+  setDancingVisibility(hasDancingCandidates);
   const onTraitChange = () => {
     manualModeEnabled = true;
     updateSummaryUi();

@@ -822,8 +822,15 @@
       const buildPool = (poolOpts = {}) => {
         const respectRace = poolOpts.respectRace !== false;
         const respectStats = poolOpts.respectStats !== false;
+        const requirementContext = respectRace
+          ? buildEntryList({
+            abilities: this.Formagor,
+            rituals: this.valdaRitualer,
+            extraEntries: this.extraPicks
+          })
+          : [];
         return getEntriesByType(tag)
-          .filter(entry => !respectRace || entryMatchesRace(entry, this.selectedRace))
+          .filter(entry => !respectRace || entryMeetsRequirements(entry, requirementContext))
           .filter(entry => !respectStats || this.isAbilityAllowedByStats(entry?.namn))
           .map(entry => {
             let weight = 1;
@@ -1637,17 +1644,20 @@
     return list.some(tag => normalizeTraditionKey(tag) === target);
   }
 
-  function entryMatchesRace(entry, raceEntry) {
-    const raceTags = toNameArray(entry?.taggar?.ras).map(normalizeName).filter(Boolean);
-    if (!raceTags.length) return true;
-    if (!raceEntry) return false;
-    const candidates = [
-      raceEntry.id,
-      raceEntry.namn,
-      ...(toNameArray(raceEntry?.taggar?.ras) || [])
-    ].map(normalizeName).filter(Boolean);
-    if (!candidates.length) return false;
-    return raceTags.some(tag => candidates.includes(tag));
+  function entryMeetsRequirements(entry, contextList) {
+    if (!entry || typeof entry !== 'object') return false;
+    const checker = window.rulesHelper?.getMissingRequirementReasonsForCandidate;
+    if (typeof checker !== 'function') return true;
+    const candidateLevel = typeof entry?.nivå === 'string' && entry.nivå.trim()
+      ? entry.nivå.trim()
+      : (entry?.nivåer ? 'Novis' : '');
+    const candidate = candidateLevel ? { ...entry, nivå: candidateLevel } : entry;
+    const missing = checker(
+      candidate,
+      Array.isArray(contextList) ? contextList : [],
+      candidateLevel ? { level: candidateLevel } : undefined
+    );
+    return !Array.isArray(missing) || missing.length === 0;
   }
 
   function getEntryArchetypes(entry) {

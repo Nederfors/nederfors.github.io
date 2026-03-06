@@ -1,18 +1,15 @@
 (function(window){
-  const STAFF_NAMES = ['runstav', 'vandringsstav', 'tr\u00e4stav'];
   const TRAIT_KEYS = ['Diskret','Kvick','Listig','Stark','Tr\u00e4ffs\u00e4ker','Vaksam','Viljestark','\u00d6vertygande'];
-  const AUTO_DEFENSE_TRAITS = [
-    { ability: 'Fint', level: 2, trait: 'Diskret' },
-    { ability: 'Pareringsmästare', level: 1, trait: 'Träffsäker' },
-    { ability: ['Sjätte Sinne', 'Sjätte sinne'], level: 2, trait: 'Vaksam' },
-    { ability: 'Taktiker', level: 2, trait: 'Listig' },
-    { ability: 'Provokatör', level: 2, trait: 'Övertygande' }
-  ];
+  const RANGED_WEAPON_TYPES = new Set(['Projektilvapen', 'Bel\u00e4gringsvapen']);
   const isBalancedQuality = q => {
     const txt = String(q || '').toLowerCase();
     return txt.startsWith('balanser');
   };
   const isArmMountedShieldQuality = q => {
+    if (typeof window.lookupEntry === 'function') {
+      const entry = window.lookupEntry({ name: q });
+      if (entry) return Boolean(entry?.taggar?.arm_fast);
+    }
     const txt = String(q || '').toLowerCase();
     return txt.startsWith('armf\u00e4st') || txt.startsWith('armfast') || txt.startsWith('smidig');
   };
@@ -23,6 +20,22 @@
     const txt = String(typeName || '').toLowerCase();
     return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tunga vapen';
   };
+
+  function qualityHasWeaponBonusByMal(qualityName, mal, fallbackCheck = null) {
+    const qualityEntry = typeof window.lookupEntry === 'function'
+      ? window.lookupEntry({ name: qualityName })
+      : null;
+    if (!qualityEntry) {
+      return typeof fallbackCheck === 'function' ? Boolean(fallbackCheck(qualityName)) : false;
+    }
+    if (typeof window.rulesHelper?.sumVapenBonusByMal === 'function') {
+      return (window.rulesHelper.sumVapenBonusByMal([qualityEntry], mal, {}) || 0) > 0;
+    }
+    if (mal === 'forsvar_modifierare') {
+      return (window.rulesHelper?.sumVapenBonus?.([qualityEntry], {}) || 0) > 0;
+    }
+    return typeof fallbackCheck === 'function' ? Boolean(fallbackCheck(qualityName)) : false;
+  }
 
   function flattenInventoryWithPath(arr, prefix = []) {
     return (Array.isArray(arr) ? arr : []).reduce((acc, row, idx) => {
@@ -66,18 +79,38 @@
     return vals;
   }
 
-  function getAutomaticDefenseTraitCandidates(list) {
+  function getAutomaticDefenseTraitCandidates(list, context = {}) {
     const candidates = ['Kvick'];
-    AUTO_DEFENSE_TRAITS.forEach(({ ability, level, trait }) => {
-      const abilities = Array.isArray(ability) ? ability : [ability];
-      const highest = abilities.reduce((max, name) => Math.max(max, storeHelper.abilityLevel(list, name)), 0);
-      if (highest >= level) candidates.push(trait);
-    });
+    if (typeof window.rulesHelper?.getDefenseTraitRuleCandidates === 'function') {
+      candidates.push(...window.rulesHelper.getDefenseTraitRuleCandidates(list, context));
+    }
     return [...new Set(candidates)];
   }
 
-  function pickBestDefenseTrait(candidates, traitValues) {
-    let bestTrait = 'Kvick';
+  function getAutomaticDancingDefenseTraitCandidates(list, context = {}) {
+    if (typeof window.rulesHelper?.getDancingDefenseTraitRuleCandidates !== 'function') return [];
+    return [...new Set(window.rulesHelper.getDancingDefenseTraitRuleCandidates(list, context) || [])];
+  }
+
+  function getAutomaticAttackTraitCandidates(list, context = {}) {
+    const candidates = ['Tr\u00e4ffs\u00e4ker'];
+    if (typeof window.rulesHelper?.getAttackTraitRuleCandidates === 'function') {
+      candidates.push(...window.rulesHelper.getAttackTraitRuleCandidates(list, context));
+    }
+    return [...new Set(candidates)];
+  }
+
+  function getAttackTraitRuleNotes(list) {
+    return typeof window.rulesHelper?.getAttackTraitRuleNotes === 'function'
+      ? window.rulesHelper.getAttackTraitRuleNotes(list)
+      : [];
+  }
+
+  function pickBestTrait(candidates, traitValues, fallbackTrait) {
+    const baseTrait = typeof fallbackTrait === 'string' && fallbackTrait.trim()
+      ? fallbackTrait.trim()
+      : 'Kvick';
+    let bestTrait = baseTrait;
     let bestValue = Number.NEGATIVE_INFINITY;
     (Array.isArray(candidates) ? candidates : []).forEach((trait, index) => {
       const value = Number(traitValues?.[trait] || 0);
@@ -86,11 +119,15 @@
         bestValue = value;
         return;
       }
-      if (value === bestValue && bestTrait === 'Kvick' && trait !== 'Kvick' && index > 0) {
+      if (value === bestValue && bestTrait === baseTrait && trait !== baseTrait && index > 0) {
         bestTrait = trait;
       }
     });
     return bestTrait;
+  }
+
+  function pickBestDefenseTrait(candidates, traitValues) {
+    return pickBestTrait(candidates, traitValues, 'Kvick');
   }
 
   function findInventoryItemByDefenseRef(inv, item) {
@@ -119,31 +156,51 @@
     };
   }
 
+  function buildPathKey(path) {
+    return Array.isArray(path) ? path.join('.') : '';
+  }
+
   function buildArmorInfos(inv) {
-    return flattenInventoryWithPath(inv).filter(obj => {
+    const flat = flattenInventoryWithPath(inv);
+    const nameMap = invUtil.makeNameMap(flat.map(f => f.row));
+    return flat.map(obj => {
       const entry = invUtil.getEntry(obj.row.id || obj.row.name);
-      return entry && (entry.taggar?.typ || []).includes('Rustning');
-    });
+      const types = entry?.taggar?.typ || [];
+      if (!entry || !types.includes('Rustning')) return null;
+      return {
+        ...obj,
+        entry,
+        name: nameMap.get(obj.row) || obj.row?.name || entry?.namn || 'Rustning',
+        types,
+        qualities: getAllQualities(obj.row, entry)
+      };
+    }).filter(Boolean);
   }
 
   function buildWeaponInfos(inv) {
-    return flattenInventoryWithPath(inv).map(obj => {
+    const flat = flattenInventoryWithPath(inv);
+    const nameMap = invUtil.makeNameMap(flat.map(f => f.row));
+    return flat.map(obj => {
       const entry = invUtil.getEntry(obj.row.id || obj.row.name);
       const types = entry?.taggar?.typ || [];
       if (!entry || (!types.includes('Vapen') && !types.includes('Sköld'))) return null;
       const qualities = getAllQualities(obj.row, entry);
-      const lowerName = String(obj.row?.name || entry?.namn || '').toLowerCase();
       return {
         ...obj,
         entry,
+        name: nameMap.get(obj.row) || obj.row?.name || entry?.namn || 'Vapen',
         types,
         qualities,
         isShield: types.includes('Sköld'),
         isArmMountedShield: types.includes('Sköld') && qualities.some(isArmMountedShieldQuality),
         isTwoHandedWeapon: !types.includes('Sköld') && types.some(isTwoHandedWeaponType),
-        isBalanced: qualities.some(isBalancedQuality),
+        isBalanced: qualities.some(q => qualityHasWeaponBonusByMal(
+          q,
+          'forsvar_modifierare',
+          isBalancedQuality
+        )),
         hasLongWeapon: qualities.includes('L\u00e5ngt'),
-        hasLongStaff: qualities.includes('L\u00e5ngt') && STAFF_NAMES.includes(lowerName)
+        hasLongStaff: types.includes('Stav')
       };
     }).filter(Boolean);
   }
@@ -155,132 +212,114 @@
     }, Number.NEGATIVE_INFINITY);
   }
 
-  function computeDancingDefenseEntries(baseTraitVal, list, inv, weaponItems) {
-    if (storeHelper.abilityLevel(list, 'Dansande vapen') < 3) {
-      return [];
-    }
-    const flatInv = flattenInventoryWithPath(inv);
-    const nameMap = invUtil.makeNameMap(flatInv.map(f => f.row));
-    const hasBalancedWeapon = (Array.isArray(weaponItems) ? weaponItems : []).some(obj => {
-      const entry = invUtil.getEntry(obj?.row?.id || obj?.row?.name);
-      if (!entry) return false;
-      return getAllQualities(obj.row, entry).some(isBalancedQuality);
-    });
-    const weaponName = weaponItems?.length ? nameMap.get(weaponItems[0].row) : '';
-    const value = Math.max(1, baseTraitVal + (hasBalancedWeapon ? 1 : 0));
-    return [{ name: weaponName || '', value, source: 'dancing' }];
+  function toWeaponFact(info) {
+    if (!info) return null;
+    return {
+      path: Array.isArray(info.path) ? [...info.path] : [],
+      id: info.row?.id,
+      name: info.row?.name || info.entry?.namn || info.name || '',
+      entryRef: info.entry || null,
+      types: Array.isArray(info.types) ? [...info.types] : [],
+      qualities: Array.isArray(info.qualities) ? [...info.qualities] : []
+    };
   }
 
-  function computeStandardDefenseEntries(baseTraitVal, list, inv, armorItems, weaponItems) {
-    const flatInv = flattenInventoryWithPath(inv);
-    const nameMap = invUtil.makeNameMap(flatInv.map(f => f.row));
-    const rustLvl = storeHelper.abilityLevel(list, 'Rustmästare');
-    const hasSensorySensitive = list.some(p => p.namn === 'Sensoriskt känslig');
+  function toArmorContext(armorInfo) {
+    if (!armorInfo?.entry) return { utrustadTyper: [], utrustadeKvaliteter: [] };
+    const qualities = Array.isArray(armorInfo.qualities)
+      ? armorInfo.qualities
+      : getAllQualities(armorInfo.row, armorInfo.entry);
+    return {
+      utrustadTyper: Array.isArray(armorInfo.types) ? armorInfo.types : (armorInfo.entry.taggar?.typ || []),
+      utrustadeKvaliteter: qualities
+    };
+  }
+
+  function normalizeSelectedWeapons(list, weaponInfos, preferredPath = '') {
+    const infos = Array.isArray(weaponInfos) ? weaponInfos.filter(Boolean) : [];
+    if (!infos.length) return [];
+    if (typeof window.rulesHelper?.normalizeDefenseLoadout !== 'function') return infos;
+    const facts = infos.map(info => {
+      const fact = toWeaponFact(info);
+      return fact ? { ...fact, __source: info } : null;
+    }).filter(Boolean);
+    const normalized = window.rulesHelper.normalizeDefenseLoadout(list, facts, preferredPath);
+    return (Array.isArray(normalized) ? normalized : [])
+      .map(fact => fact?.__source)
+      .filter(Boolean);
+  }
+
+  function getWeaponSelectionValidation(list, weaponInfos) {
+    const facts = (Array.isArray(weaponInfos) ? weaponInfos : [])
+      .map(info => toWeaponFact(info))
+      .filter(Boolean);
+    if (typeof window.rulesHelper?.validateDefenseLoadout === 'function') {
+      return window.rulesHelper.validateDefenseLoadout(list, facts);
+    }
+    return { valid: true, reasons: [] };
+  }
+
+  function getArmorRestrictionValue(list, armorInfo) {
+    if (!armorInfo?.entry) return 0;
+    const qualities = Array.isArray(armorInfo.qualities)
+      ? armorInfo.qualities
+      : getAllQualities(armorInfo.row, armorInfo.entry);
+    let limit = Number(armorInfo.entry.stat?.['begränsning'] || 0);
+    limit += window.rulesHelper?.getArmorRestrictionBonus?.(qualities) || 0;
+    if (window.rulesHelper?.hasArmorRestrictionReset?.(list)) limit = 0;
+    limit += window.rulesHelper?.getArmorRestrictionBonusFast?.(qualities) || 0;
+    return limit;
+  }
+
+  function getDefenseModifierForSetup(list, weaponInfos, armorInfo = null) {
+    const selectedWeapons = normalizeSelectedWeapons(list, weaponInfos);
+    const weaponFacts = selectedWeapons.map(info => toWeaponFact(info)).filter(Boolean);
+    const armorContext = toArmorContext(armorInfo);
+    if (typeof window.rulesHelper?.getEquippedDefenseModifier === 'function') {
+      return window.rulesHelper.getEquippedDefenseModifier(list, weaponFacts, armorContext) || 0;
+    }
+    return window.rulesHelper?.getDefenseValueModifier?.(list) || 0;
+  }
+
+  function computeDancingDefenseEntries(baseTraitVal, list, _inv, weaponItems) {
+    const selected = normalizeSelectedWeapons(list, (Array.isArray(weaponItems) ? weaponItems : []).slice(0, 1));
+    const modifier = getDefenseModifierForSetup(list, selected, null);
+    const value = Math.max(1, Number(baseTraitVal || 0) + Number(modifier || 0));
+    return [{ name: selected[0]?.name || '', value, source: 'dancing' }];
+  }
+
+  function computeStandardDefenseEntries(baseTraitVal, list, _inv, armorItems, weaponItems) {
+    const selectedWeapons = normalizeSelectedWeapons(list, weaponItems || []);
+    const normalizedWeaponFacts = selectedWeapons.map(info => toWeaponFact(info)).filter(Boolean);
+    const armorInfos = (Array.isArray(armorItems) && armorItems.length) ? armorItems : [null];
+    let res = armorInfos.map(armorInfo => {
+      const limit = getArmorRestrictionValue(list, armorInfo);
+      const modifier = getDefenseModifierForSetup(list, selectedWeapons, armorInfo);
+      return {
+        name: armorInfo?.name || '',
+        value: Math.max(1, Number(baseTraitVal || 0) + Number(limit || 0) + Number(modifier || 0))
+      };
+    });
 
     const PEN = { Novis: 2, 'Gesäll': 3, 'Mästare': 4 };
-    const robustPenalty = list
-      .filter(x => x.namn === 'Robust')
-      .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
     const hamRobustName = storeHelper.HAMNSKIFTE_NAMES['Robust'];
-    const hamRobustPenalty = list
+    const hamRobustPenalty = (Array.isArray(list) ? list : [])
       .filter(x => x.namn === hamRobustName)
       .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
 
-    let hasBalancedWeapon = false;
-    let hasLongWeapon = false;
-    let hasLongStaff = false;
-    let hasShield = false;
-    const weaponFacts = (Array.isArray(weaponItems) ? weaponItems : []).map(obj => {
-      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
-      if (!entry) return null;
-      return {
-        types: entry.taggar?.typ || [],
-        qualities: getAllQualities(obj.row, entry),
-        row: obj.row
-      };
-    }).filter(Boolean);
-    const hasArmMountedShield = weaponFacts.some(f =>
-      f.types.includes('Sköld') && f.qualities.some(isArmMountedShieldQuality)
-    );
-    const weaponCount = weaponFacts.reduce((count, fact) => {
-      const { types, qualities, row } = fact;
-      if (!types.includes('Vapen') && !types.includes('Sköld')) return count;
-      if (types.includes('Sköld')) hasShield = true;
-      if (hasArmMountedShield && !types.includes('Sköld') && types.some(isTwoHandedWeaponType)) {
-        return count;
-      }
-      if (qualities.some(isBalancedQuality)) hasBalancedWeapon = true;
-      if (qualities.includes('L\u00e5ngt')) {
-        hasLongWeapon = true;
-        const lname = (row.name || '').toLowerCase();
-        if (STAFF_NAMES.includes(lname)) {
-          hasLongStaff = true;
-        }
-      }
-      return count + 1;
-    }, 0);
-
-    let res = (Array.isArray(armorItems) ? armorItems : []).reduce((out, obj) => {
-      const row = obj.row;
-      const entry = invUtil.getEntry(row.id || row.name);
-      if (!entry || !((entry.taggar?.typ || []).includes('Rustning'))) return out;
-      const allQ = getAllQualities(row, entry);
-      let limit = entry.stat?.['begränsning'] || 0;
-      let stonePen = 0;
-      if (allQ.includes('Smidig') || allQ.includes('Smidigt')) limit += 2;
-      if (allQ.includes('Otymplig') || allQ.includes('Otympligt')) limit -= 1;
-      if (allQ.includes('Stenpansar')) stonePen -= 4;
-      if (rustLvl >= 2) limit = 0;
-      limit += stonePen;
-      const armorPenalty = hasSensorySensitive ? 2 : 0;
-      out.push({ name: nameMap.get(row), value: baseTraitVal + limit - armorPenalty });
-      return out;
-    }, []);
-
-    res = res.length ? res : [{ value: baseTraitVal }];
-
-    if (robustPenalty) {
-      res.forEach(r => { r.value -= robustPenalty; });
-    }
-
-    const twinLvl = storeHelper.abilityLevel(list, 'Tvillingattack');
-    if (twinLvl >= 1 && weaponCount >= 2) {
-      res.forEach(r => { r.value += 1; });
-    }
-
-    if (hasBalancedWeapon) {
-      res.forEach(r => { r.value += 1; });
-    }
-
-    if (hasShield) {
-      res.forEach(r => { r.value += 1; });
-      const shieldfightLvl = storeHelper.abilityLevel(list, 'Sköldkamp');
-      if (shieldfightLvl >= 1 && !hasArmMountedShield) {
-        res.forEach(r => { r.value += 1; });
-      }
-    }
-
-    const stafffightLvl = storeHelper.abilityLevel(list, 'Stavkamp');
-    if (stafffightLvl >= 1) {
-      const bonus = hasLongStaff ? 2 : (hasLongWeapon ? 1 : 0);
-      if (bonus) res.forEach(r => { r.value += bonus; });
-    }
-
-    const mantleLvl = storeHelper.abilityLevel(list, 'Manteldans');
-    if (mantleLvl >= 1) {
-      res.forEach(r => { r.value += 1; });
-    }
-
     let hamRes = [];
     if (hamRobustPenalty) {
-      hamRes = [{ name: hamRobustName, value: baseTraitVal - hamRobustPenalty }];
-      if (mantleLvl >= 1) {
-        hamRes.forEach(r => { r.value += 1; });
-      }
+      const noArmorModifier = typeof window.rulesHelper?.getEquippedDefenseModifier === 'function'
+        ? (window.rulesHelper.getEquippedDefenseModifier(list, normalizedWeaponFacts, {
+            utrustadTyper: [],
+            utrustadeKvaliteter: []
+          }) || 0)
+        : getDefenseModifierForSetup(list, selectedWeapons, null);
+      hamRes = [{
+        name: hamRobustName,
+        value: Math.max(1, Number(baseTraitVal || 0) - hamRobustPenalty + Number(noArmorModifier || 0))
+      }];
     }
-
-    res.forEach(r => { r.value = Math.max(1, r.value); });
-    hamRes.forEach(r => { r.value = Math.max(1, r.value); });
 
     return res.concat(hamRes).map(entry => ({
       ...entry,
@@ -288,113 +327,193 @@
     }));
   }
 
-  function buildRepresentativeWeaponInfos(weaponInfos) {
-    const byPath = new Set();
-    const reps = [];
-    const push = (info) => {
-      if (!info) return;
-      const key = info.path.join('.');
-      if (byPath.has(key)) return;
-      byPath.add(key);
-      reps.push(info);
+  function getStableDefenseOrderKey(entry) {
+    const trait = String(entry?.trait || '').trim();
+    const armorKey = buildPathKey(entry?.armor?.path || []);
+    const weaponKeys = (Array.isArray(entry?.weapons) ? entry.weapons : [])
+      .map(item => buildPathKey(item?.path || []))
+      .sort()
+      .join('|');
+    const danceTrait = String(entry?.dancingTrait || '').trim();
+    const danceWeapon = buildPathKey(entry?.dancingWeapon?.path || []);
+    return `${trait}|${armorKey}|${weaponKeys}|${danceTrait}|${danceWeapon}`;
+  }
+
+  function isBetterDefenseCandidate(next, best) {
+    if (!best) return true;
+    if (next.value !== best.value) return next.value > best.value;
+    if (next.itemCount !== best.itemCount) return next.itemCount < best.itemCount;
+    return String(next.orderKey || '') < String(best.orderKey || '');
+  }
+
+  function generateLegalWeaponSelections(list, weaponInfos) {
+    const infos = (Array.isArray(weaponInfos) ? weaponInfos : [])
+      .filter(Boolean)
+      .slice()
+      .sort((a, b) => buildPathKey(a.path).localeCompare(buildPathKey(b.path), 'sv'));
+    const out = [[]];
+    const seen = new Set(['']);
+    const addCandidate = (candidate) => {
+      const current = Array.isArray(candidate) ? candidate.filter(Boolean) : [];
+      const paths = current.map(info => buildPathKey(info.path)).sort();
+      const key = paths.join('|');
+      if (seen.has(key)) return;
+      if (!getWeaponSelectionValidation(list, current).valid) return;
+      seen.add(key);
+      out.push(current);
     };
-    push(weaponInfos.find(info => info.isArmMountedShield));
-    push(weaponInfos.find(info => info.isShield && !info.isArmMountedShield));
-    push(weaponInfos.find(info => info.hasLongStaff));
-    push(weaponInfos.find(info => info.hasLongWeapon && !info.hasLongStaff));
-    push(weaponInfos.find(info => info.isBalanced));
-    push(weaponInfos.find(info => !byPath.has(info.path.join('.'))));
-    return reps;
-  }
 
-  function pickBestAutoWeaponSelection(inv, list, baseTraitVal) {
-    const weaponInfos = buildWeaponInfos(inv);
-    const reps = buildRepresentativeWeaponInfos(weaponInfos);
-    let best = [];
-    let bestScore = getHighestDefenseValue(computeStandardDefenseEntries(baseTraitVal, list, inv, [], []));
-    for (let mask = 1; mask < (1 << reps.length); mask += 1) {
-      const selected = reps.filter((_, idx) => (mask & (1 << idx)) !== 0);
-      const score = getHighestDefenseValue(computeStandardDefenseEntries(baseTraitVal, list, inv, [], selected));
-      if (score > bestScore) {
-        best = selected;
-        bestScore = score;
-        continue;
-      }
-      if (score === bestScore && selected.length < best.length) {
-        best = selected;
-      }
-    }
-    return best;
-  }
-
-  function pickBestAutoArmorSelection(inv, list, baseTraitVal, weaponItems) {
-    const armorInfos = buildArmorInfos(inv);
-    let bestArmor = null;
-    let bestScore = getHighestDefenseValue(computeStandardDefenseEntries(baseTraitVal, list, inv, [], weaponItems));
-    armorInfos.forEach(obj => {
-      const score = getHighestDefenseValue(computeStandardDefenseEntries(baseTraitVal, list, inv, [obj], weaponItems));
-      if (score > bestScore) {
-        bestArmor = obj;
-        bestScore = score;
-        return;
-      }
-      if (score === bestScore && !bestArmor) {
-        bestArmor = obj;
+    infos.forEach((_, i) => addCandidate([infos[i]]));
+    infos.forEach((_, i) => {
+      for (let j = i + 1; j < infos.length; j += 1) addCandidate([infos[i], infos[j]]);
+    });
+    infos.forEach((_, i) => {
+      for (let j = i + 1; j < infos.length; j += 1) {
+        for (let k = j + 1; k < infos.length; k += 1) {
+          addCandidate([infos[i], infos[j], infos[k]]);
+        }
       }
     });
-    return bestArmor;
+    return out;
   }
 
-  function pickBestAutoDancingWeapon(inv) {
+  function optimizeStandardDefenseSetup(inv, list, traitValues) {
+    const weaponInfos = buildWeaponInfos(inv);
+    const armorInfos = [null, ...buildArmorInfos(inv)];
+    const weaponSelections = generateLegalWeaponSelections(list, weaponInfos);
+    let best = null;
+
+    armorInfos.forEach(armorInfo => {
+      const armorContext = toArmorContext(armorInfo);
+      weaponSelections.forEach(selection => {
+        const selected = normalizeSelectedWeapons(list, selection);
+        const weaponFacts = selected.map(info => toWeaponFact(info)).filter(Boolean);
+        const defenseContext = {
+          list,
+          vapenFakta: weaponFacts.map(f => ({ typer: f.types, kvaliteter: f.qualities })),
+          antalVapen: weaponFacts.filter(f => (f.types || []).includes('Vapen')).length,
+          utrustadTyper: armorContext.utrustadTyper,
+          utrustadeKvaliteter: armorContext.utrustadeKvaliteter
+        };
+        const trait = pickBestDefenseTrait(getAutomaticDefenseTraitCandidates(list, defenseContext), traitValues);
+        const traitValue = Number(traitValues?.[trait] || 0);
+        const entries = computeStandardDefenseEntries(traitValue, list, inv, armorInfo ? [armorInfo] : [], selected);
+        const value = getHighestDefenseValue(entries);
+        const candidate = {
+          trait,
+          armor: armorInfo ? toDefenseRef(armorInfo) : null,
+          weapons: selected.map(toDefenseRef).filter(Boolean),
+          value: Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY,
+          itemCount: selected.length + (armorInfo ? 1 : 0)
+        };
+        candidate.orderKey = getStableDefenseOrderKey(candidate);
+        if (isBetterDefenseCandidate(candidate, best)) best = candidate;
+      });
+    });
+
+    return best || {
+      trait: 'Kvick',
+      armor: null,
+      weapons: [],
+      value: Number.NEGATIVE_INFINITY,
+      itemCount: 0,
+      orderKey: ''
+    };
+  }
+
+  function optimizeDancingDefenseSetup(inv, list, traitValues) {
     const weapons = buildWeaponInfos(inv);
-    const balanced = weapons.find(info => info.isBalanced);
-    return balanced || null;
+    const candidates = [null, ...weapons];
+    let best = null;
+
+    candidates.forEach(weaponInfo => {
+      const selected = normalizeSelectedWeapons(list, weaponInfo ? [weaponInfo] : []);
+      const weaponFacts = selected.map(info => toWeaponFact(info)).filter(Boolean);
+      const context = {
+        list,
+        vapenFakta: weaponFacts.map(f => ({ typer: f.types, kvaliteter: f.qualities })),
+        antalVapen: weaponFacts.filter(f => (f.types || []).includes('Vapen')).length
+      };
+      const dancingTraits = getAutomaticDancingDefenseTraitCandidates(list, context);
+      if (!dancingTraits.length) return;
+      const trait = pickBestTrait(dancingTraits, traitValues, dancingTraits[0]);
+      const traitValue = Number(traitValues?.[trait] || 0);
+      const entries = computeDancingDefenseEntries(traitValue, list, inv, selected);
+      const value = getHighestDefenseValue(entries);
+      const candidate = {
+        dancingTrait: trait,
+        dancingWeapon: selected[0] ? toDefenseRef(selected[0]) : null,
+        value: Number.isFinite(value) ? value : Number.NEGATIVE_INFINITY,
+        itemCount: selected.length
+      };
+      candidate.orderKey = getStableDefenseOrderKey(candidate);
+      if (isBetterDefenseCandidate(candidate, best)) best = candidate;
+    });
+
+    return best || { dancingTrait: '', dancingWeapon: null, value: Number.NEGATIVE_INFINITY, itemCount: 0, orderKey: '' };
   }
 
   function getAutoDefenseSetup(options = {}) {
     const inv = Array.isArray(options.inv) ? options.inv : storeHelper.getInventory(store);
     const list = Array.isArray(options.list) ? options.list : storeHelper.getCurrentList(store);
     const traitValues = options.traitValues || getCurrentTraitValues(list, inv);
-    const standardTrait = options.standardTrait || pickBestDefenseTrait(getAutomaticDefenseTraitCandidates(list), traitValues);
-    const baseTraitVal = Number(traitValues?.[standardTrait] || 0);
-    const standardWeapons = pickBestAutoWeaponSelection(inv, list, baseTraitVal);
-    const standardArmor = pickBestAutoArmorSelection(inv, list, baseTraitVal, standardWeapons);
-    const dancingTrait = storeHelper.abilityLevel(list, 'Dansande vapen') >= 3 ? 'Viljestark' : '';
-    const dancingWeapon = dancingTrait ? pickBestAutoDancingWeapon(inv) : null;
+    const standardBest = optimizeStandardDefenseSetup(inv, list, traitValues);
+    const dancingBest = optimizeDancingDefenseSetup(inv, list, traitValues);
     return {
       enabled: false,
-      trait: standardTrait,
-      armor: toDefenseRef(standardArmor),
-      weapons: standardWeapons.map(toDefenseRef).filter(Boolean),
-      dancingTrait,
-      dancingWeapon: toDefenseRef(dancingWeapon)
+      trait: standardBest?.trait || '',
+      armor: standardBest?.armor || null,
+      weapons: standardBest?.weapons || [],
+      dancingTrait: dancingBest?.dancingTrait || '',
+      dancingWeapon: dancingBest?.dancingWeapon || null
     };
   }
 
   function resolveDefenseSelection(inv, mode = 'standard', opts = {}) {
+    const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
+    const weaponInfos = buildWeaponInfos(inv);
+    const armorInfos = buildArmorInfos(inv);
+    const weaponByPath = new Map(weaponInfos.map(info => [buildPathKey(info.path), info]));
+    const armorByPath = new Map(armorInfos.map(info => [buildPathKey(info.path), info]));
+    const resolveFromRef = (ref, map, fallbackInfos) => {
+      if (!ref) return null;
+      const key = buildPathKey(ref.path || []);
+      if (key && map.has(key)) return map.get(key);
+      const fallbackId = typeof ref.id === 'string' ? ref.id : '';
+      const fallbackName = typeof ref.name === 'string' ? ref.name : '';
+      return (Array.isArray(fallbackInfos) ? fallbackInfos : []).find(info => {
+        if (!info?.row) return false;
+        if (fallbackId && info.row.id === fallbackId) return true;
+        if (fallbackName && (info.row.name === fallbackName || info.entry?.namn === fallbackName)) return true;
+        return false;
+      }) || null;
+    };
+
     const setup = Object.prototype.hasOwnProperty.call(opts, 'setupOverride')
       ? (opts.setupOverride || null)
       : (typeof storeHelper.getDefenseSetup === 'function'
           ? storeHelper.getDefenseSetup(store)
           : { enabled: false, armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
     if (setup?.enabled) {
-      const armor = findInventoryItemByDefenseRef(inv, setup.armor);
-      const weapons = mode === 'dancing'
-        ? (setup.dancingWeapon ? [findInventoryItemByDefenseRef(inv, setup.dancingWeapon)].filter(Boolean) : [])
-        : (Array.isArray(setup.weapons) ? setup.weapons.map(item => findInventoryItemByDefenseRef(inv, item)).filter(Boolean) : []);
+      const armor = resolveFromRef(setup.armor, armorByPath, armorInfos);
+      const selectedWeapons = mode === 'dancing'
+        ? (setup.dancingWeapon ? [resolveFromRef(setup.dancingWeapon, weaponByPath, weaponInfos)].filter(Boolean) : [])
+        : (Array.isArray(setup.weapons) ? setup.weapons.map(item => resolveFromRef(item, weaponByPath, weaponInfos)).filter(Boolean) : []);
+      const weapons = normalizeSelectedWeapons(list, selectedWeapons);
       return { enabled: true, armor, weapons };
     }
+
     const autoSetup = getAutoDefenseSetup({
       inv,
-      list: opts.list,
+      list,
       traitValues: opts.traitValues
     });
     return {
       enabled: false,
-      armor: findInventoryItemByDefenseRef(inv, autoSetup.armor),
+      armor: resolveFromRef(autoSetup.armor, armorByPath, armorInfos),
       weapons: mode === 'dancing'
-        ? (autoSetup.dancingWeapon ? [findInventoryItemByDefenseRef(inv, autoSetup.dancingWeapon)].filter(Boolean) : [])
-        : autoSetup.weapons.map(item => findInventoryItemByDefenseRef(inv, item)).filter(Boolean)
+        ? (autoSetup.dancingWeapon ? [resolveFromRef(autoSetup.dancingWeapon, weaponByPath, weaponInfos)].filter(Boolean) : [])
+        : (autoSetup.weapons || []).map(item => resolveFromRef(item, weaponByPath, weaponInfos)).filter(Boolean)
     };
   }
 
@@ -423,17 +542,22 @@
 
     const forced = storeHelper.getDefenseTrait(store);
     if (forced) return forced;
-    const vals = traitValues || getCurrentTraitValues(list);
+    const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
+    const vals = traitValues || getCurrentTraitValues(list, inv);
+    const autoSetup = getAutoDefenseSetup({ list, inv, traitValues: vals });
+    if (autoSetup?.trait) return autoSetup.trait;
     return pickBestDefenseTrait(getAutomaticDefenseTraitCandidates(list), vals);
   }
 
-  function getDancingDefenseTraitName(list, opts = {}) {
+  function getDancingDefenseTraitName(list, traitValues = null, opts = {}) {
     const setup = Object.prototype.hasOwnProperty.call(opts, 'setup')
       ? (opts.setup || null)
       : (typeof storeHelper.getDefenseSetup === 'function' ? storeHelper.getDefenseSetup(store) : null);
     if (setup?.enabled && setup.dancingTrait) return setup.dancingTrait;
-    if (storeHelper.abilityLevel(list, 'Dansande vapen') >= 3) return 'Viljestark';
-    return '';
+    const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
+    const vals = traitValues || getCurrentTraitValues(list, inv);
+    const autoSetup = getAutoDefenseSetup({ list, inv, traitValues: vals });
+    return autoSetup?.dancingTrait || '';
   }
 
   function getDefensePreview(opts = {}) {
@@ -443,7 +567,7 @@
     const setup = Object.prototype.hasOwnProperty.call(opts, 'setup')
       ? (opts.setup || null)
       : (typeof storeHelper.getDefenseSetup === 'function' ? storeHelper.getDefenseSetup(store) : null);
-    const standardTrait = getDefenseTraitName(list, traitValues, { setup });
+    const standardTrait = getDefenseTraitName(list, traitValues, { setup, inv });
     const standardEntries = calcDefense(Number(traitValues?.[standardTrait] || 0), {
       mode: 'standard',
       list,
@@ -451,7 +575,7 @@
       traitValues,
       setupOverride: setup
     });
-    const dancingTrait = getDancingDefenseTraitName(list, { setup });
+    const dancingTrait = getDancingDefenseTraitName(list, traitValues, { setup, inv });
     const dancingEntries = dancingTrait ? calcDefense(Number(traitValues?.[dancingTrait] || 0), {
       mode: 'dancing',
       list,
@@ -466,6 +590,102 @@
       dancingTrait,
       dancingEntries,
       dancingValue: getHighestDefenseValue(dancingEntries)
+    };
+  }
+
+  function buildAttackWeaponInfos(inv) {
+    const flatInv = flattenInventoryWithPath(inv);
+    const nameMap = invUtil.makeNameMap(flatInv.map(f => f.row));
+    const byPath = new Set();
+    const out = [];
+    flatInv.forEach(obj => {
+      const pathKey = Array.isArray(obj.path) ? obj.path.join('.') : '';
+      if (pathKey && byPath.has(pathKey)) return;
+      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+      const types = entry?.taggar?.typ || [];
+      if (!entry || !types.includes('Vapen')) return;
+      if (pathKey) byPath.add(pathKey);
+      out.push({
+        ...obj,
+        entry,
+        types,
+        qualities: getAllQualities(obj.row, entry),
+        name: nameMap.get(obj.row) || obj.row?.name || entry?.namn || ''
+      });
+    });
+    return out;
+  }
+
+  function isRangedWeapon(types) {
+    const list = Array.isArray(types) ? types : [];
+    return list.some(type => RANGED_WEAPON_TYPES.has(type));
+  }
+
+  function getAttackTraitNameForWeapon(list, weaponInfo, traitValues) {
+    const types = Array.isArray(weaponInfo?.types) ? weaponInfo.types : [];
+    const qualities = Array.isArray(weaponInfo?.qualities) ? weaponInfo.qualities : [];
+    const ranged = isRangedWeapon(types);
+    const context = {
+      avstand: ranged,
+      narstrid: !ranged,
+      foremal: {
+        typ: types,
+        kvalitet: qualities
+      }
+    };
+    const candidates = getAutomaticAttackTraitCandidates(list, context);
+    return pickBestTrait(candidates, traitValues, 'Tr\u00e4ffs\u00e4ker');
+  }
+
+  function calcAccuracy(opts = {}) {
+    const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
+    const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
+    const traitValues = opts.traitValues || getCurrentTraitValues(list, inv);
+    const weapons = buildAttackWeaponInfos(inv);
+    if (!weapons.length) {
+      const baseValue = Number(traitValues?.['Tr\u00e4ffs\u00e4ker'] || 0);
+      return [{
+        name: '',
+        value: Math.max(1, baseValue),
+        trait: 'Tr\u00e4ffs\u00e4ker',
+        source: 'base'
+      }];
+    }
+
+    return weapons.map(info => {
+      const types = Array.isArray(info.types) ? info.types : [];
+      const qualities = Array.isArray(info.qualities) ? info.qualities : [];
+      const ranged = isRangedWeapon(types);
+      const weaponContext = {
+        vapenFakta: [{ typer: types, kvaliteter: qualities }],
+        antalVapen: 1
+      };
+      const trait = getAttackTraitNameForWeapon(list, info, traitValues);
+      const traitValue = Number(traitValues?.[trait] || 0);
+      const entryBonus = window.rulesHelper?.getEquippedWeaponEntryAttackBonus?.([{
+        entryRef: info.entry,
+        types,
+        qualities
+      }]) || 0;
+      const abilityBonus = window.rulesHelper?.getWeaponAttackBonus?.(list, weaponContext) || 0;
+      const qualityBonus = window.rulesHelper?.getEquippedQualityAttackBonus?.(qualities, weaponContext) || 0;
+      return {
+        name: info.name || '',
+        value: Math.max(1, traitValue + entryBonus + abilityBonus + qualityBonus),
+        trait,
+        source: ranged ? 'ranged' : 'melee'
+      };
+    });
+  }
+
+  function getAccuracyPreview(opts = {}) {
+    const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
+    const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
+    const traitValues = opts.traitValues || getCurrentTraitValues(list, inv);
+    const entries = calcAccuracy({ list, inv, traitValues });
+    return {
+      entries,
+      value: getHighestDefenseValue(entries)
     };
   }
 
@@ -484,8 +704,6 @@
     const manualToughness = Number(manualAdjust?.toughness || 0);
     const manualPain = Number(manualAdjust?.pain || 0);
     const manualCapacity = Number(manualAdjust?.capacity || 0);
-    const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
-    const hasEarth = list.some(p => p.namn === 'Jordnära');
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
     const maskBonus = window.maskSkill ? maskSkill.getBonuses(storeHelper.getInventory(store)) : {};
     const counts = {};
@@ -503,31 +721,41 @@
       }).length;
       vals[k] = (data[k] || 0) + (bonus[k] || 0) + (maskBonus[k] || 0);
     });
-    const hasKraftprov = list.some(p => p.namn === 'Kraftprov');
-    const hasHardnackad = list.some(p => p.namn === 'Hårdnackad');
-    const hasSjalastark = list.some(p => p.namn === 'Själastark');
-
-    const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
-    const strongGift = strongGiftLevel >= 1;
-
-    const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
-    const sensCount   = list.filter(p => p.namn === 'Korruptionskänslig').length;
-
     const valWill = vals['Viljestark'];
-    const baseMax   = strongGift ? valWill + 5 : valWill;
-    const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
-    const maxCor = baseMax + (hasSjalastark ? 1 : 0);
-    let   thresh = threshBase + resistCount - sensCount;
-    const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
+    const corruptionStats = storeHelper.calcCorruptionTrackStats(list, valWill);
+    const maxCor = corruptionStats.styggelsetroskel;
+    const thresh = corruptionStats.korruptionstroskel;
     const effectsWithDark = {
-      xp: combinedEffects.xp || 0,
-      corruption: (combinedEffects.corruption || 0) + darkPerm
+      ...combinedEffects,
+      korruptionstroskel: thresh
     };
+    const permBase = storeHelper.calcPermanentCorruption(list, effectsWithDark);
 
     const defTrait = getDefenseTraitName(list, vals);
     const defs = calcDefense(vals[defTrait], { mode: 'standard' });
     const dancingTrait = getDancingDefenseTraitName(list);
     const dancingDefs = dancingTrait ? calcDefense(vals[dancingTrait], { mode: 'dancing' }) : [];
+    const accuracyPreview = getAccuracyPreview({
+      list,
+      inv: storeHelper.getInventory(store),
+      traitValues: vals
+    });
+    const accuracyByTrait = (accuracyPreview?.entries || []).reduce((acc, entry) => {
+      const trait = typeof entry?.trait === 'string' ? entry.trait.trim() : '';
+      if (!trait) return acc;
+      if (!acc[trait]) acc[trait] = [];
+      acc[trait].push(entry);
+      return acc;
+    }, {});
+    const attackRuleNotes = getAttackTraitRuleNotes(list);
+    const attackNotesByTrait = attackRuleNotes.reduce((acc, note) => {
+      const trait = typeof note?.trait === 'string' ? note.trait.trim() : '';
+      const text = typeof note?.extraText === 'string' ? note.extraText.trim() : '';
+      if (!trait || !text) return acc;
+      if (!acc[trait]) acc[trait] = [];
+      acc[trait].push(text);
+      return acc;
+    }, {});
     if (dom.defenseCalcBtn) {
       const setup = typeof storeHelper.getDefenseSetup === 'function'
         ? storeHelper.getDefenseSetup(store)
@@ -542,11 +770,9 @@
       const countMarkup = `<button class="trait-count" data-trait="${k}">Förmågor: ${counts[k]}</button>`;
 
       if (k === 'Stark') {
-        const hardy = hasHardnackad ? 1 : 0;
         const base = storeHelper.calcCarryCapacity(val, list);
         const capacity = base + manualCapacity;
-        const talBase = hasKraftprov ? val + 5 : Math.max(10, val);
-        const tal = talBase + hardy + manualToughness;
+        const tal = storeHelper.calcToughness(val, list) + manualToughness;
         const pain = storeHelper.calcPainThreshold(val, list, effectsWithDark) + manualPain;
 
 
@@ -554,59 +780,19 @@
         extras.push(` Smärtgräns: ${pain}`);
         extras.push(`Bärkapacitet: ${formatWeight(capacity)}`);
       } else if (k === 'Viljestark') {
-        let perm = hasEarth ? (permBase % 2) : permBase;
-        perm += darkPerm;
+        const perm = permBase;
         extras.push(`Styggelsetröskel: ${maxCor}`);
         extras.push(`Korruptionströskel: ${thresh}`);
         extras.push(`Permanent korruption: ${perm}`);
       }
 
-      if (k === 'Diskret') {
-        if (storeHelper.abilityLevel(list, 'Fint') >= 1) {
-          extras.push('Kan användas som träffsäker för attacker i närstrid med kort eller precist vapen');
-        }
-        if (storeHelper.abilityLevel(list, 'Lönnstöt') >= 1) {
-          extras.push('Kan användas som träffsäker för attacker med Övertag');
-        }
-      }
-
-      if (k === 'Kvick') {
-        if (storeHelper.abilityLevel(list, 'Knivgöra') >= 1) {
-          extras.push('Kan användas som träffsäker för attacker med knivliknande vapen med kvaliteten Kort');
-        }
-        if (storeHelper.abilityLevel(list, 'Koreograferad strid') >= 1) {
-          extras.push('Kan användas som träffsäker för närstridsattacker med kort eller balanserat vapen efter en förflyttning');
-        }
-        if (storeHelper.abilityLevel(list, 'Spjutdans') >= 1) {
-          extras.push('Kan användas som träffsäker för närstridsattacker med spjut (kvalitet Långt)');
-        }
-      }
-
-      if (k === 'Listig' && storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
-        extras.push('Kan användas som träffsäker för attacker med allt utom tunga vapen');
-      }
-
-      if (k === 'Vaksam') {
-        const sjatteSinneLvl = Math.max(
-          storeHelper.abilityLevel(list, 'Sjätte Sinne'),
-          storeHelper.abilityLevel(list, 'Sjätte sinne')
-        );
-        if (sjatteSinneLvl >= 1) {
-          extras.push('Kan användas som träffsäker för avståndsattacker');
-        }
-      }
-
-      if (k === 'Stark' && storeHelper.abilityLevel(list, 'Järnnäve') >= 1) {
-        extras.push('Kan användas som träffsäker för närstridsattacker');
-      }
-
-      if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Dominera') >= 1) {
-        extras.push('Kan användas som träffsäker för närstridsattacker');
-      }
-
-      if (k === 'Övertygande' && storeHelper.abilityLevel(list, 'Ledare') >= 1) {
-        extras.push('Kan användas istället för Viljestark vid användandet av mystiska förmågor och ritualer');
-      }
+      (attackNotesByTrait[k] || []).forEach(text => extras.push(text));
+      (accuracyByTrait[k] || []).forEach(entry => {
+        const sourceLabel = entry?.name ? ` (${entry.name})` : '';
+        const value = Number(entry?.value);
+        if (!Number.isFinite(value)) return;
+        extras.push(`Tr\u00e4ffs\u00e4kerhet${sourceLabel}: ${value}`);
+      });
 
       if (k === defTrait) {
         defs.forEach(d => {
@@ -643,17 +829,8 @@
 
     const total = KEYS.reduce((sum,k)=>sum+(data[k]||0)+(bonus[k]||0)+(maskBonus[k]||0),0);
 
-    const lvlMap = { Novis: 1, 'Gesäll': 2, 'Mästare': 3 };
-    let maxTot = 80;
-    list.forEach(it => {
-      if (it.namn === 'Exceptionellt karaktärsdrag') {
-        maxTot += lvlMap[it.nivå] || 0;
-      }
-    });
     const inv = storeHelper.getInventory(store);
-    inv.forEach(row => {
-      if (row.id === 'l9' && row.trait) maxTot += 1;
-    });
+    const maxTot = storeHelper.calcTraitTotalMax(list, inv);
     if (dom.traitsTot) dom.traitsTot.textContent = total;
     if (dom.traitsMax) dom.traitsMax.textContent = maxTot;
     const parent = dom.traitsTot.closest('.traits-total');
@@ -746,9 +923,12 @@
   window.renderTraits = renderTraits;
   window.bindTraits = bindTraits;
   window.calcDefense = calcDefense;
+  window.calcAccuracy = calcAccuracy;
   window.getCurrentTraitValues = getCurrentTraitValues;
   window.getAutoDefenseSetup = getAutoDefenseSetup;
   window.getDefensePreview = getDefensePreview;
+  window.getAccuracyPreview = getAccuracyPreview;
   window.getDefenseTraitName = getDefenseTraitName;
   window.getDancingDefenseTraitName = getDancingDefenseTraitName;
+  window.getAttackTraitRuleNotes = getAttackTraitRuleNotes;
 })(window);

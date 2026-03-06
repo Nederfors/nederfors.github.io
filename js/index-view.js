@@ -54,6 +54,31 @@
     return { allowed: !!fallback, autoAdd: [] };
   }
 
+  function makeHardStop(code, message, label = '', value = '') {
+    return { code, message, label, value };
+  }
+
+  function isHamnskifteGrantedEntry(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    const id = String(entry?.id || '').trim().toLowerCase();
+    if (id.startsWith('hamnskifte_grants')) return true;
+    const name = String(entry?.namn || '').trim();
+    return /^hamnskifte:\s*/i.test(name);
+  }
+
+  async function confirmRuleStopOverride(entryName, stopResult, action = 'add') {
+    const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
+      ? window.rulesHelper.formatEntryStopMessages(entryName, stopResult || {})
+      : [];
+    if (!messages.length) return true;
+    const label = quoteName(entryName) || 'posten';
+    const actionLine = action === 'level-change'
+      ? `Vill du ändra nivån för ${label} ändå?`
+      : `Vill du lägga till ${label} ändå?`;
+    const text = `Karaktären möter inte följande krav:\n- ${messages.join('\n- ')}\n\n${actionLine}`;
+    return !!(await confirmPopup(text));
+  }
+
   function computeIndexEntryXP(entry, list, options = {}) {
     const defaults = {
       allowInventory: true,
@@ -617,8 +642,25 @@
       return map;
     };
 
-    const FALT_BUNDLE = ['di10', 'di11', 'di12', 'di13', 'di14', 'di15'];
-    const STACKABLE_IDS = ['l1', 'l11', 'l27', 'l6', 'l12', 'l13', 'l28', 'l30'];
+    const isStackableInventoryEntry = (entry) =>
+      typeof window.invUtil?.isEntryStackable === 'function'
+        ? window.invUtil.isEntryStackable(entry)
+        : false;
+
+    const getBundleCountForEntry = (inv, entry) =>
+      typeof window.invUtil?.getInventoryBundleCount === 'function'
+        ? window.invUtil.getInventoryBundleCount(inv, entry)
+        : null;
+
+    const addBundleForEntry = (inv, entry) =>
+      typeof window.invUtil?.addInventoryBundle === 'function'
+        ? window.invUtil.addInventoryBundle(inv, entry)
+        : [];
+
+    const removeBundleForEntry = (inv, entry, units) =>
+      typeof window.invUtil?.removeInventoryBundle === 'function'
+        ? window.invUtil.removeInventoryBundle(inv, entry, units)
+        : false;
 
     const QUAL_TYPE_MAP = {
       'Vapenkvalitet': 'Vapen',
@@ -1456,10 +1498,11 @@
         }
       }
       const hasFilterTags = combinedFilters.length > 0;
+      const hasTerms = terms.length > 0;
       const result = baseEntries.filter(entry => {
+        if (entry?.taggar?.dold && !hasTerms) return false;
         const meta = ensureEntryMeta(entry) || {};
         const text = meta.normText || '';
-        const hasTerms = terms.length > 0;
         const txtHit = hasTerms && (
           union ? terms.some(q => text.includes(q))
             : terms.every(q => text.includes(q))
@@ -1851,9 +1894,9 @@
           const multi = isInventoryEntry || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel", "Nackdel"].includes(t))) || monsterLoreMulti;
           let count;
           if (isInv(p)) {
-            if (p.id === 'di79') {
-              const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
-              count = Math.min(...qtys);
+            const bundleCount = getBundleCountForEntry(invList, p);
+            if (bundleCount !== null) {
+              count = bundleCount;
             } else {
               count = invList.filter(c => c.id === p.id).reduce((sum, c) => sum + (c.qty || 1), 0);
             }
@@ -2064,9 +2107,9 @@
       const multi = isInventory || (entry.kan_införskaffas_flera_gånger && entryTypes.some(t => ["Fördel", "Nackdel"].includes(t))) || monsterLoreMulti;
       let count = 0;
       if (isInventory) {
-        if (entry.id === 'di79') {
-          const qtys = FALT_BUNDLE.map(id => invList.find(c => c.id === id)?.qty || 0);
-          count = qtys.length ? Math.min(...qtys) : 0;
+        const bundleCount = getBundleCountForEntry(invList, entry);
+        if (bundleCount !== null) {
+          count = bundleCount;
         } else {
           count = invList
             .filter(c => c.id === entry.id)
@@ -2492,21 +2535,39 @@
           if (window.canApplyQuality) return canApplyQuality(entry, p);
           const types = entry?.taggar?.typ || [];
           return types.some(t => allowed.has(t));
-        }).filter(it => {
-          const entry = invUtil.getEntry(it.id || it.name);
-          return qualityAllowedForRow(entry, it, p.namn);
         });
         if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
         invUtil.openQualPopup(elig, async iIdx => {
+          if (!Number.isInteger(iIdx) || !elig[iIdx]) return;
           const row = elig[iIdx];
           const entry = invUtil.getEntry(row.id || row.name);
           if (window.canApplyQuality && !canApplyQuality(entry, p)) return;
-          if (!qualityAllowedForRow(entry, row, p.namn)) {
-            await alertPopup('En sköld med kvaliteten "Armfäst" kan inte ha fler positiva kvaliteter.');
-            return;
-          }
           row.kvaliteter = row.kvaliteter || [];
           const qn = p.namn;
+          const blockedByRules = !qualityAllowedForRow(entry, row, qn);
+          if (blockedByRules) {
+            const hardStops = [{
+              code: `quality_blocked_${String(qn || '').toLowerCase()}`,
+              message: `Kvalitet: ${qn}`
+            }];
+            const stopResult = {
+              requirementReasons: [],
+              blockingConflicts: [],
+              replaceTargetNames: [],
+              grantedLevelStop: null,
+              hardStops,
+              hasStops: true
+            };
+            const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
+              ? window.rulesHelper.formatEntryStopMessages(entry?.namn || row?.name || 'föremålet', stopResult)
+              : hardStops.map(stop => stop.message);
+            const label = `“${String(entry?.namn || row?.name || 'föremålet').trim()}”`;
+            const text = `Karaktären möter inte följande krav:\n- ${messages.join('\n- ')}\n\nVill du lägga till blockerade kvaliteter på ${label} ändå?`;
+            const forceOverride = !!(await confirmPopup(text));
+            if (!forceOverride) return;
+            row.manualQualityOverride = Array.isArray(row.manualQualityOverride) ? row.manualQualityOverride : [];
+            if (!row.manualQualityOverride.includes(qn)) row.manualQualityOverride.push(qn);
+          }
           if (!row.kvaliteter.includes(qn)) row.kvaliteter.push(qn);
           invUtil.saveInventory(inv); invUtil.renderInventory();
           activeTags();
@@ -2525,25 +2586,21 @@
         if (isInv(p)) {
           const inv = storeHelper.getInventory(store);
           const list = storeHelper.getCurrentList(store);
-          if (p.id === 'di79') {
-            FALT_BUNDLE.forEach(id => {
-              const ent = invUtil.getEntry(id);
-              if (!ent.namn) return;
-              const indivItem = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel']
-                .some(t => ent.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(ent.id);
-              const existing = inv.find(r => r.id === ent.id);
-              if (indivItem || !existing) {
-                inv.push({ id: ent.id, name: ent.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] });
-              } else {
-                existing.qty++;
-              }
-            });
+          const bundleRefs = addBundleForEntry(inv, p);
+          if (bundleRefs.length) {
             invUtil.saveInventory(inv); invUtil.renderInventory();
             queueUpdate(p);
-            FALT_BUNDLE.forEach(id => {
-              const ent = invUtil.getEntry(id);
-              const i = inv.findIndex(r => r.id === id);
-              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(ent.namn)}"][data-idx="${i}"]`);
+            bundleRefs.forEach(ref => {
+              const refId = ref?.id === undefined || ref?.id === null ? '' : String(ref.id).trim();
+              const resolved = invUtil.getEntry(refId || ref?.name || '');
+              const refName = (resolved?.namn && String(resolved.namn).trim())
+                || (ref?.name ? String(ref.name).trim() : '');
+              if (!refName) return;
+              const i = inv.findIndex(r => refId
+                ? String(r?.id || '').trim() === refId
+                : String(r?.name || '').trim() === refName);
+              if (i < 0) return;
+              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(refName)}"][data-idx="${i}"]`);
               if (li) {
                 li.classList.add('inv-flash');
                 setTimeout(() => li.classList.remove('inv-flash'), 1000);
@@ -2551,7 +2608,7 @@
             });
           } else {
             const indiv = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel']
-              .some(t => p.taggar.typ.includes(t)) && !STACKABLE_IDS.includes(p.id);
+              .some(t => p.taggar.typ.includes(t)) && !isStackableInventoryEntry(p);
             const rowTemplate = await invUtil.buildInventoryRow({ entry: p, list });
             if (!rowTemplate) return;
             const liveEnabled = typeof storeHelper?.getLiveMode === 'function'
@@ -2660,14 +2717,14 @@
               const used = inv.filter(it => it.id === p.id).map(it => it.trait).filter(Boolean);
               powerPicker.pickKraft(used, async val => {
                 if (!val) return;
-                if (used.includes(val) && !STACKABLE_IDS.includes(p.id) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                if (used.includes(val) && !isStackableInventoryEntry(p) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(val);
               });
             } else if (p.bound === 'ritual' && window.powerPicker) {
               const used = inv.filter(it => it.id === p.id).map(it => it.trait).filter(Boolean);
               powerPicker.pickRitual(used, async val => {
                 if (!val) return;
-                if (used.includes(val) && !STACKABLE_IDS.includes(p.id) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                if (used.includes(val) && !isStackableInventoryEntry(p) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(val);
               });
             } else {
@@ -2682,101 +2739,109 @@
               await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
             }
           };
-          if (p.namn === 'Korruptionskänslig' && list.some(x => x.namn === 'Dvärg')) {
-            await alertPopup('Dvärgar kan inte ta Korruptionskänslig.');
-            return;
-          }
+          const levelCandidate = { ...p, nivå: lvl };
+          const hardStops = [];
           if (isRas(p) && list.some(isRas)) {
-            if (!(await confirmPopup('Du kan bara välja en ras. Lägga till ändå?'))) return;
-          }
-          if (p.namn === 'Dvärg') {
-            const hasKorrupt = list.some(x => x.namn === 'Korruptionskänslig');
-            if (hasKorrupt) {
-              if (!(await confirmPopup('Du har korruptionskänslig, om du väljer till rasen Dvärg så kommer den nackdelen tas bort. Fortsätt?'))) return;
-              for (let i = list.length - 1; i >= 0; i--) {
-                if (list[i].namn === 'Korruptionskänslig') list.splice(i, 1);
-              }
-            }
+            hardStops.push(makeHardStop('single_race', 'Ras: Karaktären kan normalt bara ha en ras.'));
           }
           if (isYrke(p) && list.some(isYrke)) {
-            if (!(await confirmPopup('Du kan bara välja ett yrke. Lägga till ändå?'))) return;
+            hardStops.push(makeHardStop('single_occupation', 'Yrke: Karaktären kan normalt bara ha ett yrke.'));
           }
           if (isElityrke(p) && list.some(isElityrke)) {
-            if (!(await confirmPopup('Du kan bara välja ett elityrke. Lägga till ändå?'))) return;
+            hardStops.push(makeHardStop('single_elite', 'Elityrke: Karaktären kan normalt bara ha ett elityrke.'));
           }
           if (isElityrke(p)) {
             const res = eliteReq.check(p, list);
             if (!res.ok) {
-              const msg = 'Krav ej uppfyllda:\n' +
-                (res.missing.length ? 'Saknar: ' + res.missing.join(', ') + '\n' : '') +
-                (res.master ? '' : 'Primärförmågekravet uppfylls inte.\n') +
-                'Lägga till ändå?';
-              if (!(await confirmPopup(msg))) return;
+              if (res.missing.length) {
+                hardStops.push(makeHardStop('elite_missing_requirements', `Elityrke: Saknar ${res.missing.join(', ')}.`));
+              }
+              if (!res.master) {
+                hardStops.push(makeHardStop('elite_primary_requirement', 'Elityrke: Primärförmågekravet uppfylls inte.'));
+              }
             }
           }
           if (isEliteSkill(p)) {
-            const allowed = explodeTags(p.taggar.ark_trad).some(reqYrke =>
+            const requiredEliteNames = explodeTags(p.taggar.ark_trad);
+            const allowed = requiredEliteNames.some(reqYrke =>
               list.some(item => isElityrke(item) && item.namn === reqYrke)
             );
             if (!allowed) {
-              const msg =
-                'Förmågan är låst till elityrket ' +
-                explodeTags(p.taggar.ark_trad).join(', ') +
-                '.\nLägga till ändå?';
-              if (!(await confirmPopup(msg))) return;
+              hardStops.push(
+                makeHardStop(
+                  'elite_skill_locked',
+                  `Elityrkesförmåga: Låst till elityrket ${requiredEliteNames.join(', ')}.`
+                )
+              );
             }
           }
           let monsterOk = false;
           if (isMonstrousTrait(p)) {
-            const baseName = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
-            const baseRace = list.find(isRas)?.namn;
-            const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
-            const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
-            const bloodvaderTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
-            const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
-            const bloodRaces = list.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
-            monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga') ||
-              (list.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
-              (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
-              (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
-              (baseRace === 'Djur/Bjära' || bloodRaces.includes('Djur/Bjära')) ||
-              (baseRace === 'Rese' && baseName === 'Robust') ||
-              (list.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
-              ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && baseName === 'Diminutiv') ||
-              (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen', 'Pansar'].includes(baseName)) ||
-              (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration', 'Robust'].includes(baseName));
+            const missing = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(levelCandidate, list, { level: lvl }) || ['unknown'];
+            monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga')
+              || missing.length === 0;
             if (!monsterOk) {
-              if (!(await confirmPopup('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?'))) return;
-            }
-            if (storeHelper.hamnskifteNoviceLimit(list, p, lvl)) {
-              await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
-              return;
+              hardStops.push(makeHardStop('monster_trait_locked', 'Monstruöst särdrag: kan normalt inte väljas.'));
             }
           }
-          if (storeHelper.HAMNSKIFTE_BASE[p.namn] ? storeHelper.HAMNSKIFTE_BASE[p.namn] === 'Robust' : p.namn === 'Robust') {
-            const hamLvl = storeHelper.abilityLevel(list, 'Hamnskifte');
-            const robustOk = monsterOk || (hamLvl >= 3 && lvl === 'Novis');
-            if (!robustOk) {
-              if (!(await confirmPopup('Robust kan normalt inte väljas. Lägga till ändå?'))) return;
-            }
-          }
-          if (p.namn === 'Råstyrka') {
-            const robust = list.find(x => x.namn === 'Robust');
-            const hasRobust = !!robust && (robust.nivå === undefined || robust.nivå !== '');
-            if (!hasRobust) {
-              if (!(await confirmPopup('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?'))) return;
+          if (p.namn === 'Robust') {
+            const missing = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(levelCandidate, list, { level: lvl }) || ['unknown'];
+            if (!monsterOk && missing.length > 0) {
+              hardStops.push(makeHardStop('robust_locked', 'Robust: kan normalt inte väljas i detta läge.'));
             }
           }
           // Tidigare blockerades Mörkt förflutet om Jordnära fanns – inte längre.
-          if (isSardrag(p) && (p.taggar.ras || []).length && !(isMonstrousTrait(p) && monsterOk)) {
-            const races = [];
-            const base = list.find(isRas)?.namn;
-            if (base) races.push(base);
-            list.forEach(it => { if (it.namn === 'Blodsband' && it.race) races.push(it.race); });
-            const ok = races.some(r => p.taggar.ras.includes(r));
-            if (!ok) {
-              const msg = 'Särdraget är bundet till rasen ' + p.taggar.ras.join(', ') + '.\nLägga till ändå?';
-              if (!(await confirmPopup(msg))) return;
+          const multi = (
+            p.kan_införskaffas_flera_gånger
+            && (p.taggar.typ || []).some(t => ["Fördel", "Nackdel"].includes(t))
+          );
+          if (multi) {
+            const cnt = list.filter(x => x.namn === p.namn && !x.trait).length;
+            const limit = storeHelper.monsterStackLimit(list, p.namn);
+            if (p.namn !== 'Blodsband' && cnt >= limit) {
+              hardStops.push(makeHardStop('stack_limit', `Limit: Denna fördel eller nackdel kan normalt bara tas ${limit} gånger.`));
+            }
+          } else if (list.some(x => x.namn === p.namn && !x.trait)) {
+            hardStops.push(makeHardStop('duplicate_entry', `${p.namn}: Posten är redan vald.`));
+          }
+
+          const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
+            ? window.rulesHelper.evaluateEntryStops(levelCandidate, list, {
+              action: 'add',
+              level: lvl,
+              hardStops
+            })
+            : (() => {
+              const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
+                ? window.rulesHelper.getMissingRequirementReasonsForCandidate(levelCandidate, list, { level: lvl })
+                : []);
+              const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
+                ? window.rulesHelper.getConflictResolutionForCandidate(levelCandidate, list, { level: lvl })
+                : { blockingReasons: [], replaceTargetNames: [] });
+              const blockingConflicts = conflictRes.blockingReasons;
+              return {
+                requirementReasons,
+                blockingConflicts,
+                replaceTargetNames: conflictRes.replaceTargetNames || [],
+                grantedLevelStop: null,
+                hardStops,
+                hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+              };
+            })();
+          const hasReplaceTargets = Array.isArray(stopResult.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
+          const forceRuleOverride = (stopResult.hasStops || hasReplaceTargets)
+            ? (await confirmRuleStopOverride(p.namn, stopResult, 'add'))
+            : false;
+          if (stopResult.hasStops && !forceRuleOverride) return;
+
+          if (!forceRuleOverride && hasReplaceTargets) {
+            const replaceSet = new Set(
+              stopResult.replaceTargetNames
+                .map(value => String(value || '').trim())
+                .filter(Boolean)
+            );
+            for (let i = list.length - 1; i >= 0; i--) {
+              if (replaceSet.has(list[i]?.namn || '') && !list[i]?.manualRuleOverride) list.splice(i, 1);
             }
           }
           if (p.namn === 'Blodsband' && window.bloodBond) {
@@ -2784,6 +2849,7 @@
             bloodBond.pickRace(used, async race => {
               if (!race) return;
               const added = { ...p, race };
+              if (forceRuleOverride) added.manualRuleOverride = true;
               list.push(added);
               await checkDisadvWarning();
               storeHelper.setCurrentList(store, list); updateXP();
@@ -2803,6 +2869,7 @@
             monsterLore.pickSpec(usedSpecs, async spec => {
               if (!spec || usedSpecs.includes(spec)) return;
               const added = { ...p, nivå: lvl, trait: spec };
+              if (forceRuleOverride) added.manualRuleOverride = true;
               list.push(added);
               await checkDisadvWarning();
               storeHelper.setCurrentList(store, list); updateXP();
@@ -2820,9 +2887,11 @@
               let added;
               if (existing) {
                 existing.nivå = lvl;
+                if (forceRuleOverride) existing.manualRuleOverride = true;
                 added = existing;
               } else {
                 added = { ...p, nivå: lvl, trait };
+                if (forceRuleOverride) added.manualRuleOverride = true;
                 list.push(added);
               }
               await checkDisadvWarning();
@@ -2856,17 +2925,6 @@
               await alertPopup(`Hittar inte ${plural} ${formatQuotedList(missingBases)} i databasen. Lägg till manuellt.`);
             }
           }
-          const multi = (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel", "Nackdel"].includes(t)));
-          if (multi) {
-            const cnt = list.filter(x => x.namn === p.namn && !x.trait).length;
-            const limit = storeHelper.monsterStackLimit(list, p.namn);
-            if (p.namn !== 'Blodsband' && cnt >= limit) {
-              await alertPopup(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
-              return;
-            }
-          } else if (list.some(x => x.namn === p.namn && !x.trait)) {
-            return;
-          }
           let form = 'normal';
           const finishAdd = async added => {
             await checkDisadvWarning();
@@ -2880,28 +2938,22 @@
               await alertPopup(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
               invUtil.renderInventory();
             }
-            if (p.namn === 'Välutrustad') {
-              const inv = storeHelper.getInventory(store);
-              invUtil.addWellEquippedItems(inv);
-              invUtil.saveInventory(inv); invUtil.renderInventory();
-            }
             needsFullRefresh = true;
             renderTraits();
             flashAdded(added.namn, added.trait);
           };
-          if (isMonstrousTrait(p)) {
-            const test = { ...p, nivå: lvl, form: 'beast' };
-            if (storeHelper.isFreeMonsterTrait(list, test) && window.beastForm) {
-              beastForm.pickForm(async res => {
-                if (!res) return;
-                const added = { ...p, nivå: lvl, form: res };
-                list.push(added);
-                await finishAdd(added);
-              });
-              return;
-            }
+          if (isMonstrousTrait(p) && isHamnskifteGrantedEntry(p) && window.beastForm) {
+            beastForm.pickForm(async res => {
+              if (!res) return;
+              const added = { ...p, nivå: lvl, form: res };
+              if (forceRuleOverride) added.manualRuleOverride = true;
+              list.push(added);
+              await finishAdd(added);
+            });
+            return;
           }
           const added = { ...p, nivå: lvl, form };
+          if (forceRuleOverride) added.manualRuleOverride = true;
           list.push(added);
           await finishAdd(added);
         }
@@ -2952,19 +3004,10 @@
       } else if (act === 'sub' || act === 'del' || act === 'rem') {
         if (isInv(p)) {
           const inv = storeHelper.getInventory(store);
-          if (p.id === 'di79') {
-            const removeCnt = (act === 'del' || act === 'rem')
-              ? Math.min(...FALT_BUNDLE.map(id => inv.find(r => r.id === id)?.qty || 0))
-              : 1;
-            if (removeCnt > 0) {
-              FALT_BUNDLE.forEach(id => {
-                const idxRow = inv.findIndex(r => r.id === id);
-                if (idxRow >= 0) {
-                  inv[idxRow].qty -= removeCnt;
-                  if (inv[idxRow].qty < 1) inv.splice(idxRow, 1);
-                }
-              });
-            }
+          const bundleCount = getBundleCountForEntry(inv, p);
+          if (bundleCount !== null) {
+            const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
+            if (removeCnt > 0) removeBundleForEntry(inv, p, removeCnt);
           } else {
             const idxInv = inv.findIndex(x => x.id === p.id);
             if (idxInv >= 0) {
@@ -2999,20 +3042,17 @@
             if (!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
               return;
           }
-          const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
-          if (isMonstrousTrait(p) && storeHelper.DARK_BLOOD_TRAITS.includes(baseRem) && before.some(x => x.namn === 'Mörkt blod')) {
-            if (!(await confirmPopup(p.namn + ' hänger ihop med Mörkt blod. Ta bort ändå?')))
-              return;
+          if (isMonstrousTrait(p)) {
+            const missingBefore = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(p, before) || ['unknown'];
+            if (missingBefore.length === 0) {
+              if (!(await confirmPopup(p.namn + ' är ett monstruöst särdrag. Ta bort ändå?')))
+                return;
+            }
           }
-          if (storeHelper.HAMNSKIFTE_BASE[p.namn] && before.some(x => x.namn === 'Hamnskifte')) {
+          if (isHamnskifteGrantedEntry(p) && before.some(x => x.namn === 'Hamnskifte')) {
             if (!(await confirmPopup(p.namn + ' hänger ihop med Hamnskifte. Ta bort ändå?')))
               return;
-            const rem = storeHelper.getHamnskifteRemoved(store);
-            const base = storeHelper.HAMNSKIFTE_BASE[p.namn];
-            if (!rem.includes(base)) {
-              rem.push(base);
-              storeHelper.setHamnskifteRemoved(store, rem);
-            }
+            // Suppression is handled automatically by syncRuleEntryGrants when the entry disappears from the list.
           }
           let list;
           if (act === 'del' || act === 'rem') {
@@ -3034,11 +3074,6 @@
             if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
               list = list.filter(x => !remDeps.includes(x.namn));
             }
-          } else if (p.namn === 'Hamnskifte' && remDeps.length) {
-            if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
-              list = list.filter(x => !remDeps.includes(x.namn));
-              storeHelper.setHamnskifteRemoved(store, []);
-            }
           } else if (remDeps.length) {
             if (!(await confirmPopup(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`))) return;
           }
@@ -3052,6 +3087,15 @@
               : 'Förmågan krävs för ett valt elityrke. Ta bort ändå?';
             if (!(await confirmPopup(msg)))
               return;
+          }
+          if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
+            const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+            if (toClean.length > 0) {
+              const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
+              if (await confirmPopup(`Att ta bort "${p.namn}" tar även bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
+                toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+              }
+            }
           }
           storeHelper.setCurrentList(store, list); updateXP();
           const affected = new Set([p.namn, ...remDeps]);
@@ -3085,11 +3129,6 @@
               await alertPopup('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
             }
             invUtil.renderInventory();
-          }
-          if (p.namn === 'Välutrustad') {
-            const inv = storeHelper.getInventory(store);
-            invUtil.removeWellEquippedItems(inv);
-            invUtil.saveInventory(inv); invUtil.renderInventory();
           }
           const hidden = isHidden(p);
           const artifactTagged = hasArtifactTag(p);
@@ -3134,19 +3173,9 @@
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
         ent.nivå = select.value;
+        const hardStops = [];
         if (eliteReq.canChange(before) && !eliteReq.canChange(list)) {
-          await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
-          ent.nivå = old;
-          select.value = old;
-          window.entryCardFactory?.syncLevelControl?.(select);
-          return;
-        }
-        if (storeHelper.hamnskifteNoviceLimit(list, ent, ent.nivå)) {
-          await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
-          ent.nivå = old;
-          select.value = old;
-          window.entryCardFactory?.syncLevelControl?.(select);
-          return;
+          hardStops.push(makeHardStop('elite_locked_level_change', 'Elityrke: Förmågan krävs för ett valt elityrke och kan normalt inte ändras.'));
         }
         if (name === 'Monsterlärd') {
           if (['Gesäll', 'Mästare'].includes(ent.nivå)) {
@@ -3159,7 +3188,7 @@
                 await alertPopup('Alla specialiseringar är redan valda.');
                 return;
               }
-              monsterLore.pickSpec(usedSpecs, spec => {
+              monsterLore.pickSpec(usedSpecs, async spec => {
                 if (!spec) {
                   ent.nivå = old;
                   select.value = old;
@@ -3167,6 +3196,51 @@
                   return;
                 }
                 ent.trait = spec;
+                const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
+                  ? window.rulesHelper.evaluateEntryStops(ent, before, {
+                    action: 'level-change',
+                    fromLevel: old,
+                    toLevel: ent.nivå,
+                    level: ent.nivå,
+                    hardStops
+                  })
+                  : (() => {
+                    const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
+                      ? window.rulesHelper.getMissingRequirementReasonsForCandidate(ent, before, { level: ent.nivå })
+                      : []);
+                    const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
+                      ? window.rulesHelper.getConflictResolutionForCandidate(ent, before, { level: ent.nivå })
+                      : { blockingReasons: [], replaceTargetNames: [] });
+                    const blockingConflicts = conflictRes.blockingReasons;
+                    return {
+                      requirementReasons,
+                      blockingConflicts,
+                      replaceTargetNames: conflictRes.replaceTargetNames || [],
+                      grantedLevelStop: null,
+                      hardStops,
+                      hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+                    };
+                  })();
+                const forceRuleOverride = stopResult.hasStops
+                  ? (await confirmRuleStopOverride(name, stopResult, 'level-change'))
+                  : false;
+                if (stopResult.hasStops && !forceRuleOverride) {
+                  ent.nivå = old;
+                  delete ent.trait;
+                  select.value = old;
+                  window.entryCardFactory?.syncLevelControl?.(select);
+                  return;
+                }
+                if (forceRuleOverride) ent.manualRuleOverride = true;
+                if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
+                  const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+                  if (toClean.length > 0) {
+                    const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
+                    if (await confirmPopup(`Att ändra nivån på "${name}" tar bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
+                      toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+                    }
+                  }
+                }
                 storeHelper.setCurrentList(store, list); updateXP();
                 scheduleRenderList(); renderTraits();
               });
@@ -3180,42 +3254,49 @@
             return;
           }
         }
-        if (name === 'Hamnskifte') {
-          const lvlMap = { "": 0, Novis: 1, Gesäll: 2, Mästare: 3 };
-          const oldIdx = lvlMap[old] || 0;
-          const newIdx = lvlMap[ent.nivå] || 0;
-          let toRemove = [];
-          if (oldIdx >= 3 && newIdx < 3) toRemove.push('Robust', 'Regeneration');
-          if (oldIdx >= 2 && newIdx < 2) toRemove.push('Naturligt vapen', 'Pansar');
-          toRemove = toRemove.filter(n => list.some(x => x.namn === storeHelper.HAMNSKIFTE_NAMES[n]));
-          if (toRemove.length) {
-            const dispNames = toRemove.map(n => storeHelper.HAMNSKIFTE_NAMES[n]);
-            if (!(await confirmPopup(`Ta bort även: ${dispNames.join(', ')}?`))) {
-              ent.nivå = old;
-              select.value = old;
-              window.entryCardFactory?.syncLevelControl?.(select);
-              return;
+        const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
+          ? window.rulesHelper.evaluateEntryStops(ent, before, {
+            action: 'level-change',
+            fromLevel: old,
+            toLevel: ent.nivå,
+            level: ent.nivå,
+            hardStops
+          })
+          : (() => {
+            const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
+              ? window.rulesHelper.getMissingRequirementReasonsForCandidate(ent, before, { level: ent.nivå })
+              : []);
+            const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
+              ? window.rulesHelper.getConflictResolutionForCandidate(ent, before, { level: ent.nivå })
+              : { blockingReasons: [], replaceTargetNames: [] });
+            const blockingConflicts = conflictRes.blockingReasons;
+            return {
+              requirementReasons,
+              blockingConflicts,
+              replaceTargetNames: conflictRes.replaceTargetNames || [],
+              grantedLevelStop: null,
+              hardStops,
+              hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+            };
+          })();
+        const forceRuleOverride = stopResult.hasStops
+          ? (await confirmRuleStopOverride(name, stopResult, 'level-change'))
+          : false;
+        if (stopResult.hasStops && !forceRuleOverride) {
+          ent.nivå = old;
+          select.value = old;
+          window.entryCardFactory?.syncLevelControl?.(select);
+          return;
+        }
+        if (forceRuleOverride) ent.manualRuleOverride = true;
+        if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
+          const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+          if (toClean.length > 0) {
+            const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
+            if (await confirmPopup(`Att ändra nivån på "${name}" tar bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
+              toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
             }
-            for (let i = list.length - 1; i >= 0; i--) {
-              const base = storeHelper.HAMNSKIFTE_BASE[list[i].namn];
-              if (base && toRemove.includes(base)) list.splice(i, 1);
-            }
-            const rem = storeHelper.getHamnskifteRemoved(store).filter(x => !toRemove.includes(x));
-            storeHelper.setHamnskifteRemoved(store, rem);
           }
-          const toAdd = [];
-          if (newIdx >= 2 && oldIdx < 2) toAdd.push('Naturligt vapen', 'Pansar');
-          if (newIdx >= 3 && oldIdx < 3) toAdd.push('Robust', 'Regeneration');
-          let rem = storeHelper.getHamnskifteRemoved(store);
-          toAdd.forEach(n => {
-            const hamName = storeHelper.HAMNSKIFTE_NAMES[n];
-            if (!list.some(x => x.namn === hamName) && !rem.includes(n)) {
-              const entry = lookupEntry({ id: n, name: n });
-              if (entry) list.push({ ...entry, namn: hamName, form: 'beast' });
-            }
-            rem = rem.filter(x => x !== n);
-          });
-          storeHelper.setHamnskifteRemoved(store, rem);
         }
         storeHelper.setCurrentList(store, list); updateXP();
         scheduleRenderList(); renderTraits();

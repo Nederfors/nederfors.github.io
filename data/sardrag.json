@@ -11,9 +11,17 @@
         "Diskret",
         "Viljestark"
       ],
-      "ras": [
-        "Bortbyting"
-      ],
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Bortbyting"
+              ]
+            }
+          }
+        ]
+        },
       "handling": {
         "Novis": [
           "Fri"
@@ -40,10 +48,18 @@
       "typ": [
         "Särdrag"
       ],
-      "ras": [
-        "Svartalf"
-      ]
-    }
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Svartalf"
+              ]
+            }
+          }
+        ]
+        }
+        }
   },
   {
     "id": "sa3",
@@ -53,12 +69,18 @@
       "typ": [
         "Särdrag"
       ],
-      "ras": [
-        "Alv",
-        "Rese",
-        "Bortbyting"
-      ]
-    }
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Alv","Rese","Bortbyting"
+              ]
+            }
+          }
+        ]
+        }
+        }
   },
   {
     "id": "sa4",
@@ -69,10 +91,6 @@
         "Särdrag",
         "Monstruöst särdrag"
       ],
-      "ras": [
-        "Rese",
-        "Troll"
-      ],
       "handling": {
         "Novis": [
           "Speciell"
@@ -82,6 +100,56 @@
         ],
         "Mästare": [
           "Speciell"
+        ]
+      },
+      "nivå_data": {
+        "Novis": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_modifierare",
+                "varde": -2,
+                "satt": "ersatt"
+              }
+            ]
+          }
+        },
+        "Gesäll": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_modifierare",
+                "varde": -3,
+                "satt": "ersatt"
+              }
+            ]
+          }
+        },
+        "Mästare": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_modifierare",
+                "varde": -4,
+                "satt": "ersatt"
+              }
+            ]
+          }
+        }
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Troll",
+                "Rese",
+                "Djur/Bjära",
+                "Mörkt blod",
+                "Blodvadare"
+              ]
+            }
+          }
         ]
       }
     },
@@ -99,9 +167,17 @@
       "typ": [
         "Särdrag"
       ],
-      "ras": [
-        "Svartalf"
-      ],
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Svartalf"
+              ]
+            }
+          }
+        ]
+        },
       "handling": {
         "Novis": [
           "Fri"
@@ -131,9 +207,17 @@
       "test": [
         "Viljestark"
       ],
-      "ras": [
-        "Alv"
-      ],
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Alv"
+              ]
+            }
+          }
+        ]
+        },
       "handling": {
         "Gesäll": [
           "Aktiv"
@@ -160,9 +244,48 @@
       "typ": [
         "Särdrag"
       ],
-      "ras": [
-        "Dvärg"
-      ]
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Dvärg"
+              ]
+            }
+          }
+        ],
+        "andrar": [
+          {
+            "mal": "smartgrans_tillagg",
+            "satt": "add",
+            "formel": {
+              "bas": "permanent_korruption",
+              "division": 2,
+              "avrunda": "nedat"
+            },
+            "varde": -1
+          },
+          {
+            "mal": "smartgrans_tillagg",
+            "satt": "add",
+            "formel": {
+              "bas": "aktuell_smartgrans",
+              "division": 4,
+              "avrunda": "nedat"
+            },
+            "varde": -1,
+            "nar": {
+              "har_namn": [
+                "Mörkt förflutet"
+              ]
+            }
+          },
+          {
+            "mal": "permanent_korruption_faktor",
+            "varde": 0.5
+          }
+        ]
+      }
     }
   },
   {
@@ -176,9 +299,17 @@
       "test": [
         "Listig"
       ],
-      "ras": [
-        "Andrik"
-      ],
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Andrik"
+              ]
+            }
+          }
+        ]
+        },
       "handling": {
         "Novis": [
           "Fri"

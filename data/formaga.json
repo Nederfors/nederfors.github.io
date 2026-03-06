@@ -127,6 +127,18 @@
       "test": [
         "Övertygande"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Övertygande",
+            "nar": {
+              "narstrid": true
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
@@ -162,6 +174,15 @@
         "Jägare",
         "Mystiker"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "karaktarsdrag_max_tillagg",
+            "satt": "add",
+            "formel": "niva"
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -199,12 +220,42 @@
       "test": [
         "Diskret"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Diskret",
+            "nar": {
+              "narstrid": true,
+              "foremal": {
+                "typ": [
+                  "Vapen"
+                ],
+                "nagon_kvalitet": [
+                  "Kort",
+                  "Precist"
+                ]
+              }
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
           "skadetyp": "Yttre fysisk"
         },
         "Gesäll": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_karaktarsdrag",
+                "satt": "ersatt",
+                "varde": "Diskret"
+              }
+            ]
+          },
           "handling": "Reaktiv",
           "skadetyp": "Ingen"
         },
@@ -269,6 +320,20 @@
       "ark_trad": [
         "Häxa"
       ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "skydd_permanent_korruption",
+            "formel": "niva",
+            "nar": {
+              "typ": [
+                "Mystisk kraft",
+                "Ritual"
+              ]
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -345,6 +410,18 @@
       "test": [
         "Stark"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Stark",
+            "nar": {
+              "narstrid": true
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
@@ -382,6 +459,15 @@
       "test": [
         "Övertygande"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "mystik_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Övertygande"
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
@@ -490,6 +576,16 @@
       "test": [
         "Diskret"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Diskret",
+            "nar": { "overtag": true }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Reaktiv",
@@ -634,6 +730,20 @@
       "ark_trad": [
         "Ordensmagiker"
       ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "skydd_permanent_korruption",
+            "formel": "niva",
+            "nar": {
+              "typ": [
+                "Mystisk kraft",
+                "Ritual"
+              ]
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -719,7 +829,12 @@
         },
         "Gesäll": {
           "handling": "Passiv",
-          "skadetyp": "Ingen"
+          "skadetyp": "Ingen",
+          "regler": {
+            "andrar": [
+              { "mal": "nollstall_begransning_modifierare" }
+            ]
+          }
         },
         "Mästare": {
           "handling": "Reaktiv",
@@ -783,16 +898,49 @@
       "test": [
         "Vaksam"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Vaksam",
+            "nar": {
+              "avstand": true
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
           "skadetyp": "Ingen"
         },
         "Gesäll": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_karaktarsdrag",
+                "satt": "ersatt",
+                "varde": "Vaksam"
+              }
+            ]
+          },
           "handling": "Passiv",
           "skadetyp": "Ingen"
         },
         "Mästare": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "anfall_karaktarsdrag",
+                "satt": "ersatt",
+                "varde": "Vaksam",
+                "nar": {
+                  "narstrid": true
+                }
+              }
+            ]
+          },
           "handling": "Passiv",
           "skadetyp": "Ingen"
         }
@@ -823,7 +971,10 @@
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
-          "skadetyp": "Yttre fysisk"
+          "skadetyp": "Yttre fysisk",
+          "regler": {
+            "andrar": [{ "mal": "forsvar_modifierare", "varde": 1, "nar": { "har_utrustad_vapen_typ": ["Sköld"], "ej_utrustad_vapen_kvalitet": ["Armfäst"] } }]
+          }
         },
         "Gesäll": {
           "handling": "Reaktiv",
@@ -1226,10 +1377,38 @@
           "skadetyp": "Ingen"
         },
         "Gesäll": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_karaktarsdrag",
+                "satt": "ersatt",
+                "varde": "Listig"
+              }
+            ]
+          },
           "handling": "Passiv",
           "skadetyp": "Ingen"
         },
         "Mästare": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "anfall_karaktarsdrag",
+                "satt": "ersatt",
+                "varde": "Listig",
+                "nar": {
+                  "foremal": {
+                    "typ": [
+                      "Vapen"
+                    ],
+                    "ingen_typ": [
+                      "Tunga vapen"
+                    ]
+                  }
+                }
+              }
+            ]
+          },
           "handling": "Passiv",
           "skadetyp": "Ingen"
         }
@@ -1252,6 +1431,20 @@
       "ark_trad": [
         "Teurg"
       ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "skydd_permanent_korruption",
+            "formel": "niva",
+            "nar": {
+              "typ": [
+                "Mystisk kraft",
+                "Ritual"
+              ]
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -1291,7 +1484,10 @@
       "nivå_data": {
         "Novis": {
           "handling": "Aktiv",
-          "skadetyp": "Yttre fysisk"
+          "skadetyp": "Yttre fysisk",
+          "regler": {
+            "andrar": [{ "mal": "forsvar_modifierare", "varde": 1, "nar": { "antal_utrustade_vapen_minst": 2 } }]
+          }
         },
         "Gesäll": {
           "handling": "Passiv",
@@ -1704,6 +1900,23 @@
       "test": [
         "Kvick"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Kvick",
+            "nar": {
+              "narstrid": true,
+              "foremal": {
+                "typ": [
+                  "Korta vapen"
+                ]
+              }
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
@@ -1739,6 +1952,18 @@
       "test": [
         "Stark"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "talighet_bas",
+            "satt": "ersatt",
+            "formel": {
+              "bas": "stark",
+              "tillagg": 5
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
@@ -1778,7 +2003,10 @@
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
-          "skadetyp": "Ingen"
+          "skadetyp": "Ingen",
+          "regler": {
+            "andrar": [{ "mal": "forsvar_modifierare", "varde": 1 }]
+          }
         },
         "Gesäll": {
           "handling": "Aktiv",
@@ -1982,6 +2210,20 @@
       ],
       "nivå_data": {
         "Novis": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "korruptionstroskel",
+                "satt": "add",
+                "formel": "halv_viljestark_nedat"
+              },
+              {
+                "mal": "styggelsetroskel",
+                "satt": "add",
+                "varde": 5
+              }
+            ]
+          },
           "handling": "Speciell",
           "skadetyp": "Ingen"
         },
@@ -2021,7 +2263,13 @@
       "nivå_data": {
         "Novis": {
           "handling": "Reaktiv",
-          "skadetyp": "Ingen"
+          "skadetyp": "Ingen",
+          "regler": {
+            "andrar": [
+              { "mal": "forsvar_modifierare", "varde": 2, "nar": { "har_utrustad_vapen_typ": ["Stav"] } },
+              { "mal": "forsvar_modifierare", "varde": 1, "nar": { "har_utrustad_vapen_kvalitet": ["Långt"], "ej_utrustad_vapen_typ": ["Stav"] } }
+            ]
+          }
         },
         "Gesäll": {
           "handling": "Reaktiv",
@@ -2051,6 +2299,20 @@
       "ark_trad": [
         "Stavmagiker"
       ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "skydd_permanent_korruption",
+            "formel": "niva",
+            "nar": {
+              "typ": [
+                "Mystisk kraft",
+                "Ritual"
+              ]
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -2152,6 +2414,20 @@
       "ark_trad": [
         "Symbolist"
       ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "skydd_permanent_korruption",
+            "formel": "niva",
+            "nar": {
+              "typ": [
+                "Mystisk kraft",
+                "Ritual"
+              ]
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -2260,6 +2536,20 @@
       "ark_trad": [
         "Trollsångare"
       ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "skydd_permanent_korruption",
+            "formel": "niva",
+            "nar": {
+              "typ": [
+                "Mystisk kraft",
+                "Ritual"
+              ]
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -2336,6 +2626,14 @@
       "test": [
         "Stark"
       ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "permanent_korruption",
+            "formel": "niva"
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Aktiv",
@@ -2554,6 +2852,15 @@
       "test": [
         "Träffsäker"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "forsvar_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Träffsäker"
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
@@ -2666,6 +2973,28 @@
       "test": [
         "Kvick"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Kvick",
+            "nar": {
+              "narstrid": true,
+              "efter_forflyttning": true,
+              "foremal": {
+                "typ": [
+                  "Vapen"
+                ],
+                "nagon_kvalitet": [
+                  "Kort",
+                  "Balanserad"
+                ]
+              }
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Speciell",
@@ -2813,6 +3142,23 @@
       "test": [
         "Kvick"
       ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "anfall_karaktarsdrag",
+            "satt": "ersatt",
+            "varde": "Kvick",
+            "nar": {
+              "narstrid": true,
+              "foremal": {
+                "typ": [
+                  "Långa vapen"
+                ]
+              }
+            }
+          }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Passiv",
@@ -2997,6 +3343,15 @@
           "skadetyp": "Ingen"
         },
         "Gesäll": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_karaktarsdrag",
+                "satt": "ersatt",
+                "varde": "Övertygande"
+              }
+            ]
+          },
           "handling": "Passiv",
           "skadetyp": "Ingen"
         },

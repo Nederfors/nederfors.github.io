@@ -23,6 +23,18 @@
         "Mästare": [
           "Fri"
         ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Vandöd",
+                "Djur/Bjära"
+              ]
+            }
+          }
+        ]
       }
     },
     "nivåer": {
@@ -244,6 +256,18 @@
         "Mästare": [
           "Fri"
         ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Vandöd",
+                "Djur/Bjära"
+              ]
+            }
+          }
+        ]
       }
     },
     "nivåer": {
@@ -322,6 +346,20 @@
         "Mästare": [
           "Passiv"
         ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Troll",
+                "Djur/Bjära",
+                "Mörkt blod",
+                "Blodvadare"
+              ]
+            }
+          }
+        ]
       }
     },
     "nivåer": {
@@ -348,6 +386,19 @@
         "Mästare": [
           "Passiv"
         ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Troll",
+                "Djur/Bjära",
+                "Mörkt blod"
+              ]
+            }
+          }
+        ]
       }
     },
     "nivåer": {
@@ -373,6 +424,19 @@
         ],
         "Mästare": [
           "Passiv"
+        ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Troll",
+                "Djur/Bjära",
+                "Mörkt blod"
+              ]
+            }
+          }
         ]
       }
     },
@@ -456,6 +520,18 @@
         "Mästare": [
           "Passiv"
         ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Vandöd",
+                "Djur/Bjära"
+              ]
+            }
+          }
+        ]
       }
     },
     "nivåer": {
@@ -481,6 +557,18 @@
         ],
         "Mästare": [
           "Passiv"
+        ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Mörkt blod",
+                "Djur/Bjära"
+              ]
+            }
+          }
         ]
       }
     },
@@ -594,7 +682,19 @@
       ],
       "test": [
         "Diskret"
-      ]
+      ],
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Andrik",
+                "Djur/Bjära"
+              ]
+            }
+          }
+        ]
+      }
     },
     "id": "mo23"
   },
@@ -1454,5 +1554,216 @@
       "Mästare": "Handling: Aktiv. Varelsen frustar fram en veritabel eldstorm. Om varelsen lyckas med [Träffsäker←Kvick] gör kaskaden 1T12 i skada. Om slaget misslyckas blir skadan 1T6. Även om varelsen misslyckas med slaget en gång fortsätter kedjan, den bryts först vid det andra misslyckade slaget."
     },
     "id": "mo57"
+  },
+  {
+    "id": "hamnskifte_grants1",
+    "namn": "Hamnskifte: Robust",
+    "beskrivning": "Endast tillgänglig för varelser med Hamnskifte. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
+    "taggar": {
+      "typ": [
+        "Monstruöst särdrag"
+      ],
+      "ras": [
+        "Hamnskifte"
+      ],
+      "dold": true,
+      "ark_trad": [
+        "Blodvadare"
+      ],
+      "handling": {
+        "Novis": [
+          "Speciell"
+        ],
+        "Gesäll": [
+          "Speciell"
+        ],
+        "Mästare": [
+          "Speciell"
+        ]
+      },
+      "nivå_data": {
+        "Novis": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_modifierare",
+                "varde": -2,
+                "satt": "ersatt"
+              }
+            ]
+          }
+        },
+        "Gesäll": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_modifierare",
+                "varde": -3,
+                "satt": "ersatt"
+              }
+            ]
+          }
+        },
+        "Mästare": {
+          "regler": {
+            "andrar": [
+              {
+                "mal": "forsvar_modifierare",
+                "varde": -4,
+                "satt": "ersatt"
+              }
+            ]
+          }
+        }
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Blodvadare"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Speciell. Rollpersonen är cirka två meter lång och råstark. En sådan tornande siluett är lättare att träffa i strid vilket balanseras med en påtaglig stryktålighet. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar dubbelt så mycket. I gengäld ignorerar rollpersonen 1T4 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T4 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −2].",
+      "Gesäll": "Handling: Speciell. Rollpersonen sträcker sig två och en halv meter över marken, väger tvåhundra kilo och dess hud är grov som bark. En sådan varelse lägger kraft i slagen, men är också lätt att träffa. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därmed kostar tre gånger så mycket. I gengäld ignorerar rollpersonen 1T6 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T6 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −3].\n",
+      "Mästare": "Handling: Speciell. Rollpersonen är tre meter lång, väger ett halvt ton och krossar mindre varelser medan fiendens vapen studsar mot hud som mest liknar mossig sten. Att träffa en sådan varelse är lätt, men att skada den allvarligt är svårt. Rollpersonen kan endast använda lätt rustning, vilken måste måttbeställas och därför kostar fyra gånger så mycket. I gengäld ignorerar rollpersonen 1T8 skada per träff, i tillägg till eventuell rustning. Till detta kommer att rollpersonen kan ge 1T8 extra i skada med en närstridsattack per runda, men också att dess Försvar baseras på [Kvick −4]."
+    }
+  },
+  {
+    "namn": "Hamnskifte: Pansar",
+    "beskrivning": "Endast tillgänglig för varelser med Hamnskifte. Varelsen är tjockhudad, fjällig eller på annat sätt särskilt svår att skada. Varelsen kan inte bära ytterligare rustning på sitt naturliga pansar, men bepansringen ger inte heller Begränsning som annan rustning gör. Förmågan Rustmästare utvecklar dock varelsens naturliga skydd ytterligare, utöver nivåerna i Pansar.",
+    "taggar": {
+      "typ": [
+        "Monstruöst särdrag"
+      ],
+      "ras": [
+        "Hamnskifte"
+      ],
+      "dold": true,
+      "ark_trad": [
+        "Blodvadare"
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Blodvadare"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1t4.",
+      "Gesäll": "Handling: Passiv. Pansaret skyddar 1t6.",
+      "Mästare": "Handling: Passiv. Pansaret skyddar 1t8."
+    },
+    "id": "hamnskifte_grants2"
+  },
+  {
+    "namn": "Hamnskifte: Regeneration",
+    "beskrivning": "Varelsen läker skador utan att behöva ägna varken tid eller kraft åt det. Varelsen har också en svaghet i form av en skadetyp som den inte kan regenerera (men såklart läka på annat aktivt sätt). Varelsen måste välja en svaghet som avser en typ av skada som den inte kan läka automatiskt. Välj mellan typerna magiska vapen, elementarenergier (eld och syra), helig skada eller ohelig skada.",
+    "taggar": {
+      "typ": [
+        "Monstruöst särdrag"
+      ],
+      "ras": [
+        "Hamnskifte"
+      ],
+      "dold": true,
+      "ark_trad": [
+        "Blodvadare"
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Blodvadare"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Varelsen regenererar 1t4 Tålighet per runda.",
+      "Gesäll": "Handling: Passiv. Varelsen regenererar 1t6 Tålighet per runda.",
+      "Mästare": "Handling: Passiv. Varelsen regenererar 1t8 Tålighet per runda."
+    },
+    "id": "hamnskifte_grants3"
+  },
+  {
+    "namn": "Hamnskifte: Naturligt vapen",
+    "beskrivning": "Varelsen har begåvats med ett välutvecklat naturligt vapen som den kan göra bruk av i närstrid, exempelvis skarpa klor, bett eller svanssting. Förmågan Naturlig krigare (beskriven på sid 119) kan användas för att utveckla varelsens naturliga vapen ytterligare.",
+    "taggar": {
+      "typ": [
+        "Monstruöst särdrag"
+      ],
+      "ras": [
+        "Hamnskifte"
+      ],
+      "dold": true,
+      "ark_trad": [
+        "Blodvadare"
+      ],
+      "handling": {
+        "Novis": [
+          "Passiv"
+        ],
+        "Gesäll": [
+          "Passiv"
+        ],
+        "Mästare": [
+          "Passiv"
+        ]
+      },
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "nagon_av_namn": [
+                "Blodvadare"
+              ]
+            }
+          }
+        ]
+      }
+    },
+    "nivåer": {
+      "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 i skada istället för 1t4.",
+      "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 i skada.",
+      "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 i skada. Det naturliga vapnet har kvaliteten Långt och ger alltså frislag initialt i striden mot dem med kortare vapen."
+    },
+    "id": "hamnskifte_grants4"
   }
 ]

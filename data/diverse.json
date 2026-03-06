@@ -1410,7 +1410,40 @@
     "taggar": {
       "typ": [
         "Diverse"
-      ]
+      ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "foremal",
+            "foremal": [
+              {
+                "id": "di10",
+                "antal": 1
+              },
+              {
+                "id": "di11",
+                "antal": 1
+              },
+              {
+                "id": "di12",
+                "antal": 1
+              },
+              {
+                "id": "di13",
+                "antal": 1
+              },
+              {
+                "id": "di14",
+                "antal": 1
+              },
+              {
+                "id": "di15",
+                "antal": 1
+              }
+            ]
+          }
+        ]
+      }
     },
     "stat": {
       "vikt": 4.8

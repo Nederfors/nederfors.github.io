@@ -205,7 +205,16 @@
         },
         "Mästare": {
           "handling": "Fri",
-          "skadetyp": "Yttre fysisk"
+          "skadetyp": "Yttre fysisk",
+          "regler": {
+            "andrar": [
+              {
+                "mal": "dansande_forsvar_karaktarsdrag",
+                "satt": "ersatt",
+                "varde": "Viljestark"
+              }
+            ]
+          }
         }
       }
     },
@@ -510,6 +519,14 @@
       "test": [
         "Viljestark"
       ],
+      "regler": {
+        "ger": [
+          { "mal": "post", "id": "hamnskifte_grants4", "gratis_upp_till": "Novis", "beviljad_niva": "Novis", "nar": { "kalla_niva_minst": "Gesäll" } },
+          { "mal": "post", "id": "hamnskifte_grants2", "gratis_upp_till": "Novis", "beviljad_niva": "Novis", "nar": { "kalla_niva_minst": "Gesäll" } },
+          { "mal": "post", "id": "hamnskifte_grants1", "gratis_upp_till": "Novis", "beviljad_niva": "Novis", "nar": { "kalla_niva_minst": "Mästare" } },
+          { "mal": "post", "id": "hamnskifte_grants3", "gratis_upp_till": "Novis", "beviljad_niva": "Novis", "nar": { "kalla_niva_minst": "Mästare" } }
+        ]
+      },
       "nivå_data": {
         "Novis": {
           "handling": "Aktiv",

@@ -17,6 +17,7 @@
   <script src="js/auto-resize.js" defer></script>
   <script src="js/text-format.js" defer></script>
   <script src="js/utils.js"          defer></script>
+  <script src="js/rules-helper.js" defer></script>
   <script src="js/store.js"          defer></script>
   <script src="js/inventory-utils.js" defer></script>
   <script src="js/traits-utils.js" defer></script>
@@ -50,6 +51,11 @@
   <div class="panel inventory-panel">
     <div class="panel-header">
       <h2 id="charName" style="margin:0;"></h2>
+      <div class="header-actions">
+        <button id="clearInvBtn" class="char-btn icon danger" type="button" title="Töm inventarie" aria-label="Töm inventarie">
+          <img src="icons/broom.svg" alt="" class="btn-icon" width="32" height="32">
+        </button>
+      </div>
     </div>
 
     <div class="inventory-content">

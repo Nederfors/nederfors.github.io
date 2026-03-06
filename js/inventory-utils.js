@@ -14,8 +14,18 @@
   const INV_INFO_KEY  = 'invInfoOpen';
   const INV_CAT_STATE_PREFIX = 'invCatState:';
   let cachedCatState = { key: '', state: {} };
-  const STACKABLE_IDS = ['l1','l11','l27','l6','l12','l13','l28','l30'];
   const INDIVIDUAL_TYPES = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'];
+  const LEGACY_STACKABLE_ID_SET = new Set(['l1', 'l11', 'l27', 'l6', 'l12', 'l13', 'l28', 'l30']);
+  const LEGACY_BUNDLE_BY_ENTRY_ID = Object.freeze({
+    di79: [
+      { id: 'di10', qty: 1 },
+      { id: 'di11', qty: 1 },
+      { id: 'di12', qty: 1 },
+      { id: 'di13', qty: 1 },
+      { id: 'di14', qty: 1 },
+      { id: 'di15', qty: 1 }
+    ]
+  });
   // Local helper to safely access the toolbar shadow root without relying on main.js scope
   const getToolbarRoot = () => {
     const el = document.querySelector('shared-toolbar');
@@ -160,6 +170,7 @@
       if (Array.isArray(row.kvaliteter)) row.kvaliteter = mapRowQualityArray(entry, row.kvaliteter);
       if (Array.isArray(row.gratisKval)) row.gratisKval = mapRowQualityArray(entry, row.gratisKval);
       if (Array.isArray(row.removedKval)) row.removedKval = mapRowQualityArray(entry, row.removedKval);
+      if (Array.isArray(row.manualQualityOverride)) row.manualQualityOverride = mapRowQualityArray(entry, row.manualQualityOverride);
       const { baseQ, addedQ } = getRowQualityState(entry, row);
       const allowedAll = sanitizeArmorQualities(entry, [...baseQ, ...addedQ]);
       const allowance = new Map();
@@ -168,13 +179,25 @@
         const count = allowance.get(q) || 0;
         if (count > 0) allowance.set(q, count - 1);
       });
+      const manualOverrides = Array.isArray(row.manualQualityOverride)
+        ? row.manualQualityOverride.filter(Boolean)
+        : [];
+      const manualSet = new Set(manualOverrides);
       if (Array.isArray(row.kvaliteter)) {
         row.kvaliteter = addedQ.filter(q => {
+          if (manualSet.has(q)) return true;
           const count = allowance.get(q) || 0;
           if (count <= 0) return false;
           allowance.set(q, count - 1);
           return true;
         });
+      }
+      if (manualOverrides.length) {
+        const current = new Set(Array.isArray(row.kvaliteter) ? row.kvaliteter : []);
+        row.manualQualityOverride = manualOverrides.filter(q => current.has(q));
+        if (!row.manualQualityOverride.length) delete row.manualQualityOverride;
+      } else if (row.manualQualityOverride) {
+        delete row.manualQualityOverride;
       }
       if (Array.isArray(row.gratisKval)) {
         const allowedSet = new Set(allowedAll);
@@ -634,6 +657,294 @@
     return {};
   }
 
+  function normalizePositiveInt(value, fallback = 1) {
+    const num = Math.floor(Number(value));
+    if (!Number.isFinite(num)) return fallback;
+    return Math.max(0, num);
+  }
+
+  function listify(value) {
+    if (Array.isArray(value)) return value;
+    if (value === undefined || value === null) return [];
+    return [value];
+  }
+
+  function getInventoryMeta(entry) {
+    const invTag = entry?.taggar?.inventory;
+    return (invTag && typeof invTag === 'object' && !Array.isArray(invTag))
+      ? invTag
+      : {};
+  }
+
+  function isEntryStackable(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    const invMeta = getInventoryMeta(entry);
+    if (typeof invMeta.stackbar === 'boolean') return invMeta.stackbar;
+    const id = entry.id === undefined || entry.id === null ? '' : String(entry.id).trim();
+    return id ? LEGACY_STACKABLE_ID_SET.has(id) : false;
+  }
+
+  function isTraitBoundInventoryEntry(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (entry.bound) return true;
+    if (Array.isArray(entry.traits) && entry.traits.filter(Boolean).length > 0) return true;
+    const invMeta = getInventoryMeta(entry);
+    return invMeta.traitbunden === true || invMeta.traitBound === true;
+  }
+
+  function shouldShowRowTraitInName(row, entry) {
+    if (!row || !row.trait) return false;
+    return isTraitBoundInventoryEntry(entry);
+  }
+
+  function getEntryRuleListWithFallback(entry, key, options = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getRuleList === 'function') {
+      try {
+        const rules = helper.getRuleList(entry, key, options);
+        if (Array.isArray(rules)) return rules;
+      } catch (_) {
+        // Ignore malformed rules and continue with local fallback.
+      }
+    }
+    const raw = entry?.taggar?.regler?.[key];
+    return listify(raw).filter(rule => rule && typeof rule === 'object');
+  }
+
+  function normalizeBundleRuleRef(raw) {
+    if (raw === undefined || raw === null) return null;
+    let id = '';
+    let name = '';
+    let qty = 1;
+
+    if (typeof raw === 'string' || typeof raw === 'number') {
+      const txt = String(raw).trim();
+      if (!txt) return null;
+      id = txt;
+    } else if (raw && typeof raw === 'object') {
+      id = raw.id === undefined || raw.id === null ? '' : String(raw.id).trim();
+      name = typeof raw.namn === 'string'
+        ? raw.namn.trim()
+        : (typeof raw.name === 'string' ? raw.name.trim() : '');
+      qty = normalizePositiveInt(raw.antal ?? raw.qty ?? raw.varde, 1);
+    }
+
+    if (!id && !name) return null;
+    if (!qty) return null;
+    return { id, name, qty };
+  }
+
+  function getLegacyBundleRefs(entry) {
+    const id = entry?.id === undefined || entry?.id === null ? '' : String(entry.id).trim();
+    const legacy = id ? LEGACY_BUNDLE_BY_ENTRY_ID[id] : null;
+    if (!Array.isArray(legacy)) return [];
+    return legacy.map(item => ({
+      id: String(item?.id || '').trim(),
+      name: String(item?.name || '').trim(),
+      qty: normalizePositiveInt(item?.qty ?? item?.antal, 1)
+    })).filter(item => (item.id || item.name) && item.qty > 0);
+  }
+
+  function getInventoryBundleItems(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return [];
+    const level = options?.level ?? entry.nivå;
+    const rules = getEntryRuleListWithFallback(entry, 'ger', level ? { level } : {});
+    const aggregate = new Map();
+
+    rules.forEach(rule => {
+      if (String(rule?.mal || '').trim() !== 'foremal') return;
+      listify(rule?.foremal).forEach(raw => {
+        const parsed = normalizeBundleRuleRef(raw);
+        if (!parsed) return;
+        const resolved = getEntry(parsed.id || parsed.name);
+        const resolvedId = resolved?.id === undefined || resolved?.id === null
+          ? parsed.id
+          : String(resolved.id).trim();
+        const resolvedName = typeof resolved?.namn === 'string' && resolved.namn.trim()
+          ? resolved.namn.trim()
+          : parsed.name;
+        if (!resolvedId && !resolvedName) return;
+        const key = resolvedId ? `id:${resolvedId}` : `name:${resolvedName.toLowerCase()}`;
+        if (!aggregate.has(key)) {
+          aggregate.set(key, {
+            id: resolvedId || undefined,
+            name: resolvedName,
+            qty: 0,
+            entry: resolved && resolved.namn ? resolved : null
+          });
+        }
+        aggregate.get(key).qty += parsed.qty;
+      });
+    });
+
+    const fromRules = Array.from(aggregate.values()).filter(item => item.qty > 0);
+    if (fromRules.length) return fromRules;
+
+    return getLegacyBundleRefs(entry).map(item => {
+      const resolved = getEntry(item.id || item.name);
+      return {
+        id: resolved?.id ? String(resolved.id).trim() : (item.id || undefined),
+        name: (resolved?.namn && String(resolved.namn).trim()) || item.name,
+        qty: item.qty,
+        entry: resolved && resolved.namn ? resolved : null
+      };
+    }).filter(item => (item.id || item.name) && item.qty > 0);
+  }
+
+  function isInventoryBundleEntry(entry, options = {}) {
+    return getInventoryBundleItems(entry, options).length > 0;
+  }
+
+  function getRowQuantityValue(row) {
+    if (!row || typeof row !== 'object') return 0;
+    if (row.qty === undefined || row.qty === null || row.qty === '') return 1;
+    return normalizePositiveInt(row.qty, 0);
+  }
+
+  function rowMatchesInventoryRef(row, ref) {
+    if (!row || !ref) return false;
+    const rowId = row.id === undefined || row.id === null ? '' : String(row.id).trim();
+    const refId = ref.id === undefined || ref.id === null ? '' : String(ref.id).trim();
+    if (refId) {
+      if (rowId) return rowId === refId;
+      const refName = ref.name === undefined || ref.name === null ? '' : String(ref.name).trim();
+      return refName && String(row.name || '').trim() === refName;
+    }
+    const refName = ref.name === undefined || ref.name === null ? '' : String(ref.name).trim();
+    if (!refName) return false;
+    return String(row.name || '').trim() === refName;
+  }
+
+  function getInventoryRefQuantity(inv, ref) {
+    return (Array.isArray(inv) ? inv : []).reduce((sum, row) => {
+      if (!rowMatchesInventoryRef(row, ref)) return sum;
+      return sum + getRowQuantityValue(row);
+    }, 0);
+  }
+
+  function buildBasicInventoryRow(entry, qty = 1) {
+    return {
+      id: entry.id,
+      name: entry.namn,
+      qty: normalizePositiveInt(qty, 1) || 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: []
+    };
+  }
+
+  function addInventoryEntryQuantity(inv, entry, qty, options = {}) {
+    if (!Array.isArray(inv) || !entry || !entry.namn) return false;
+    const amount = normalizePositiveInt(qty, 0);
+    if (!amount) return false;
+    const livePairs = Array.isArray(options.livePairs) ? options.livePairs : null;
+    const ref = { id: entry.id, name: entry.namn };
+    if (isIndividualItem(entry)) {
+      for (let i = 0; i < amount; i++) {
+        const row = buildBasicInventoryRow(entry, 1);
+        inv.push(row);
+        if (livePairs) livePairs.push({ prev: null, next: row });
+      }
+      return true;
+    }
+
+    const idx = inv.findIndex(row => rowMatchesInventoryRef(row, ref));
+    if (idx === -1) {
+      const row = buildBasicInventoryRow(entry, amount);
+      inv.push(row);
+      if (livePairs) livePairs.push({ prev: null, next: row });
+      return true;
+    }
+
+    const target = inv[idx];
+    const prevState = livePairs ? cloneRow(target) : null;
+    const curQty = getRowQuantityValue(target);
+    target.qty = curQty + amount;
+    if (livePairs) livePairs.push({ prev: prevState, next: target });
+    return true;
+  }
+
+  function addInventoryBundle(inv, entry, options = {}) {
+    const units = normalizePositiveInt(options?.units ?? 1, 1);
+    if (!units) return [];
+    const bundleItems = getInventoryBundleItems(entry, options);
+    if (!bundleItems.length) return [];
+    const livePairs = Array.isArray(options.livePairs) ? options.livePairs : null;
+    const refs = [];
+
+    bundleItems.forEach(item => {
+      const resolvedEntry = item.entry && item.entry.namn ? item.entry : getEntry(item.id || item.name);
+      if (!resolvedEntry || !resolvedEntry.namn) return;
+      const qty = item.qty * units;
+      const changed = addInventoryEntryQuantity(inv, resolvedEntry, qty, { livePairs });
+      if (!changed) return;
+      refs.push({
+        id: resolvedEntry.id === undefined || resolvedEntry.id === null ? undefined : String(resolvedEntry.id).trim(),
+        name: resolvedEntry.namn
+      });
+    });
+
+    const seen = new Set();
+    return refs.filter(ref => {
+      const key = ref.id ? `id:${ref.id}` : `name:${String(ref.name || '').trim().toLowerCase()}`;
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  function removeInventoryRefQuantity(inv, ref, qty) {
+    if (!Array.isArray(inv)) return 0;
+    let remaining = normalizePositiveInt(qty, 0);
+    if (!remaining) return 0;
+    let removed = 0;
+    for (let i = 0; i < inv.length && remaining > 0;) {
+      const row = inv[i];
+      if (!rowMatchesInventoryRef(row, ref)) {
+        i += 1;
+        continue;
+      }
+      const rowQty = getRowQuantityValue(row);
+      if (rowQty <= remaining) {
+        remaining -= rowQty;
+        removed += rowQty;
+        inv.splice(i, 1);
+        continue;
+      }
+      row.qty = rowQty - remaining;
+      removed += remaining;
+      remaining = 0;
+      i += 1;
+    }
+    return removed;
+  }
+
+  function removeInventoryBundle(inv, entry, units = 1, options = {}) {
+    const removeUnits = normalizePositiveInt(units, 0);
+    if (!removeUnits) return false;
+    const bundleItems = getInventoryBundleItems(entry, options);
+    if (!bundleItems.length) return false;
+    let changed = false;
+    bundleItems.forEach(item => {
+      const targetQty = item.qty * removeUnits;
+      if (!targetQty) return;
+      const removed = removeInventoryRefQuantity(inv, { id: item.id, name: item.name }, targetQty);
+      if (removed > 0) changed = true;
+    });
+    return changed;
+  }
+
+  function getInventoryBundleCount(inv, entry, options = {}) {
+    const bundleItems = getInventoryBundleItems(entry, options);
+    if (!bundleItems.length) return null;
+    const counts = bundleItems.map(item => {
+      const available = getInventoryRefQuantity(inv, { id: item.id, name: item.name });
+      return Math.floor(available / item.qty);
+    });
+    if (!counts.length) return 0;
+    return Math.max(0, Math.min(...counts));
+  }
+
   function isHiddenType(tagTyp) {
     const arr = Array.isArray(tagTyp) ? tagTyp : [];
     const primary = arr[0] ? String(arr[0]).toLowerCase() : '';
@@ -699,46 +1010,27 @@
     if (window.indexViewUpdate) window.indexViewUpdate();
   }
 
-  function addWellEquippedItems(inv) {
-    const freebies = [
-      { id: 'di12', name: 'Rep, 10 meter', qty: 3 },
-      { id: 'di23', name: 'Papper', qty: 1 },
-      { id: 'di18', name: 'Kritor', qty: 1 },
-      { id: 'di5',  name: 'Fackla', qty: 3 },
-      { id: 'i11',  name: 'Signalhorn', qty: 1 },
-      { id: 'elix34', name: 'Långfärdsbröd', qty: 3 },
-      { id: 'elix43', name: 'Örtkur', qty: 3 }
-    ];
-    freebies.forEach(it => {
-      const row = inv.find(r => r.id === it.id || r.name === it.name);
-      const entry = getEntry(it.id || it.name);
-      if (row) {
-        row.id = entry.id;
-        row.name = entry.namn;
-        row.qty += it.qty;
-        row.gratis = (row.gratis || 0) + it.qty;
-        row.perkGratis = (row.perkGratis || 0) + it.qty;
-        if (!row.perk) row.perk = 'Välutrustad';
-      } else {
-        inv.push({ id: entry.id, name: entry.namn, qty: it.qty, gratis: it.qty, gratisKval: [], removedKval: [], perk: 'Välutrustad', perkGratis: it.qty });
-      }
-    });
+  function getGrantSourceName(value) {
+    return String(value || '').trim();
   }
 
-  function removeWellEquippedItems(inv) {
-    for (let i = inv.length - 1; i >= 0; i--) {
-      const row = inv[i];
-      if (row.perk === 'Välutrustad') {
-        const pg = row.perkGratis || row.gratis || 0;
-        const removed = Math.min(pg, row.qty);
-        row.qty -= removed;
-        row.gratis = Math.max(0, (row.gratis || 0) - removed);
-        row.perkGratis = Math.max(0, (row.perkGratis || 0) - removed);
-        delete row.perk;
-        delete row.perkGratis;
-        if (row.qty <= 0) inv.splice(i, 1);
-      }
-    }
+  function isGrantSourceActive(sourceName) {
+    const source = getGrantSourceName(sourceName);
+    if (!source) return false;
+    return storeHelper.getCurrentList(store).some(entry => entry?.namn === source);
+  }
+
+  function getGrantRemovalMessage(sourceName) {
+    const source = getGrantSourceName(sourceName);
+    if (!source) return 'Utrustningen kommer från en regelstyrd källa. Ta bort ändå?';
+    return `Utrustningen kommer från fördelen “${source}”. Ta bort ändå?`;
+  }
+
+  async function confirmGrantRemoval(sourceName) {
+    const source = getGrantSourceName(sourceName);
+    if (!source) return true;
+    if (!isGrantSourceActive(source)) return true;
+    return confirmPopup(getGrantRemovalMessage(source));
   }
 
   function flattenInventory(arr) {
@@ -830,7 +1122,7 @@
     const tagTyp = entry.taggar?.typ || [];
     const indivType = INDIVIDUAL_TYPES.some(t => tagTyp.includes(t));
     if (!indivType) return false;
-    if (STACKABLE_IDS.includes(entry.id)) return false;
+    if (isEntryStackable(entry)) return false;
     if (['kraft', 'ritual'].includes(entry.bound)) return false;
     return true;
   }
@@ -864,6 +1156,10 @@
     if (Array.isArray(source.removedKval) && source.removedKval.length) {
       const set = new Set([...(target.removedKval || []), ...source.removedKval]);
       target.removedKval = [...set];
+    }
+    if (Array.isArray(source.manualQualityOverride) && source.manualQualityOverride.length) {
+      const set = new Set([...(target.manualQualityOverride || []), ...source.manualQualityOverride]);
+      target.manualQualityOverride = [...set];
     }
 
     if (!target.basePrice && source.basePrice) {
@@ -929,6 +1225,9 @@
       }
       if (!Array.isArray(row.gratisKval)) row.gratisKval = row.gratisKval ? [row.gratisKval] : [];
       if (!Array.isArray(row.removedKval)) row.removedKval = row.removedKval ? [row.removedKval] : [];
+      if (!Array.isArray(row.manualQualityOverride)) {
+        row.manualQualityOverride = row.manualQualityOverride ? [row.manualQualityOverride] : [];
+      }
       if (Number(row.gratis) > Number(row.qty)) row.gratis = Number(row.qty) || 0;
       if (Number(row.perkGratis) > Number(row.qty)) row.perkGratis = Number(row.qty) || 0;
       inv.push(row);
@@ -975,7 +1274,7 @@
     inv.forEach(r => {
       const entry = getEntry(r.id || r.name);
       let n = r.name;
-      if (r.trait && (entry.bound || r.id === 'l9')) {
+      if (shouldShowRowTraitInName(r, entry)) {
         n += `: ${r.trait}`;
       }
       baseNames.set(r, n);
@@ -1179,57 +1478,242 @@
     const pop  = root.getElementById('qualPopup');
     const box  = root.getElementById('qualOptions');
     const cls  = root.getElementById('qualCancel');
+    const closeBtn = root.getElementById('qualClose');
+    const applyBtn = root.getElementById('qualApply');
+    const titleEl = root.getElementById('qualTitle');
+    const subtitleEl = root.getElementById('qualSubtitle');
+    const legendEl = root.getElementById('qualLegend');
+    const searchEl = root.getElementById('qualSearch');
+    const countEl = root.getElementById('qualCount');
+    const emptyEl = root.getElementById('qualEmpty');
+    if (!pop || !box || !cls || !searchEl || !countEl || !emptyEl || !applyBtn) return;
 
+    const done = typeof callback === 'function' ? callback : () => {};
     const nameMap = makeNameMap(storeHelper.getInventory(store));
     const qualMode = list.every(it => isQual(it));
-    const items = qualMode
-      ? sortQualsForDisplay(list.map((item, idx) => ({ item, idx })))
-      : list.map((item, idx) => ({ item, idx }));
-    /* bygg knappar: stöd både namn och name */
-    box.innerHTML = items.map(({item, idx}) => {
-      const base  = item.namn || item.name;
-      const label = nameMap.get(item) || base;
-      let cls = 'char-btn';
-      if (qualMode) {
-        cls += ' quality';
-        if (isNegativeQual(base)) cls += ' negative';
-        else if (isNeutralQual(base)) cls += ' neutral';
-        if (isMysticQual(base)) cls += ' mystic';
+    const selected = new Set();
+    const categoryOrder = ['positive', 'neutral', 'negative', 'mystic'];
+    const categoryLabel = {
+      positive: 'Positiva',
+      neutral: 'Neutrala',
+      negative: 'Negativa',
+      mystic: 'Mystiska'
+    };
+    const qualityCategory = (name) => {
+      if (isMysticQual(name)) return 'mystic';
+      if (isNegativeQual(name)) return 'negative';
+      if (isNeutralQual(name)) return 'neutral';
+      return 'positive';
+    };
+    const normalizeText = (value) => {
+      const source = String(value || '').trim().toLowerCase();
+      if (!source) return '';
+      if (typeof window.searchNormalize === 'function') return window.searchNormalize(source);
+      if (typeof source.normalize === 'function') {
+        return source.normalize('NFD').replace(/[\u0300-\u036f]/g, '');
       }
-      return `<button data-i="${idx}" class="${cls}">${label}</button>`;
-    }).join('');
+      return source;
+    };
+    const items = (qualMode
+      ? sortQualsForDisplay(list.map((item, idx) => ({ item, idx })))
+      : list.map((item, idx) => ({ item, idx })))
+      .map(({ item, idx }) => {
+        const base = String(item?.namn || item?.name || '');
+        const label = nameMap.get(item) || base;
+        const types = Array.isArray(item?.taggar?.typ) ? item.taggar.typ.join(' ') : '';
+        let btnClass = 'char-btn';
+        if (qualMode) {
+          btnClass += ' quality';
+          if (isNegativeQual(base)) btnClass += ' negative';
+          else if (isNeutralQual(base)) btnClass += ' neutral';
+          if (isMysticQual(base)) btnClass += ' mystic';
+        }
+        return {
+          idx,
+          label,
+          btnClass,
+          category: qualMode ? qualityCategory(base) : 'all',
+          searchKey: normalizeText(`${label} ${base} ${types}`)
+        };
+      });
+    let filtered = items.slice();
 
-    /* öppna */
+    if (titleEl) {
+      titleEl.textContent = qualMode ? 'Lägg till kvalitet' : 'Välj föremål';
+    }
+    if (subtitleEl) {
+      subtitleEl.textContent = qualMode
+        ? 'Välj en eller flera kvaliteter att lägga på föremålet.'
+        : 'Välj vilket föremål som ska få kvaliteten.';
+    }
+    if (legendEl) legendEl.hidden = !qualMode;
+    searchEl.placeholder = qualMode ? 'Sök kvalitet...' : 'Sök föremål...';
+    searchEl.value = '';
+    applyBtn.hidden = !qualMode;
+    applyBtn.disabled = true;
+    applyBtn.textContent = 'Lägg till valda';
+
+    const updateApplyState = () => {
+      if (!qualMode) return;
+      const cnt = selected.size;
+      applyBtn.disabled = cnt <= 0;
+      applyBtn.textContent = cnt > 0 ? `Lägg till valda (${cnt})` : 'Lägg till valda';
+    };
+    const renderGroups = (rows) => categoryOrder
+      .map(key => ({
+        key,
+        rows: rows.filter(it => it.category === key)
+      }))
+      .filter(group => group.rows.length > 0)
+      .map(group => `
+        <section class="qual-popup-group" data-group="${group.key}">
+          <header class="qual-popup-group-head">
+            <span class="qual-popup-group-title">${categoryLabel[group.key] || group.key}</span>
+            <span class="qual-popup-group-count">${group.rows.length}</span>
+          </header>
+          <div class="qual-popup-group-list">
+            ${group.rows.map(it => {
+              const isSelected = selected.has(it.idx);
+              const stateCls = isSelected ? ' is-selected' : '';
+              const ariaPressed = isSelected ? 'true' : 'false';
+              return `<button data-i="${it.idx}" class="${it.btnClass}${stateCls}" type="button" aria-pressed="${ariaPressed}">${escapeHtml(it.label)}</button>`;
+            }).join('')}
+          </div>
+        </section>
+      `).join('');
+
+    const render = () => {
+      const term = normalizeText(searchEl.value);
+      filtered = term
+        ? items.filter(it => it.searchKey.includes(term))
+        : items.slice();
+      if (qualMode) {
+        box.innerHTML = renderGroups(filtered);
+      } else {
+        box.innerHTML = filtered
+          .map(it => `<button data-i="${it.idx}" class="${it.btnClass}" type="button">${escapeHtml(it.label)}</button>`)
+          .join('');
+      }
+      if (qualMode) {
+        const selectedTxt = `${selected.size} valda`;
+        countEl.textContent = term
+          ? `${filtered.length} av ${items.length} kvaliteter • ${selectedTxt}`
+          : `${items.length} kvaliteter • ${selectedTxt}`;
+      } else {
+        countEl.textContent = term
+          ? `${filtered.length} av ${items.length} föremål`
+          : `${items.length} föremål`;
+      }
+      if (!filtered.length) {
+        const q = searchEl.value.trim();
+        emptyEl.textContent = q
+          ? `Inga träffar för "${q}".`
+          : qualMode ? 'Inga kvaliteter matchar sökningen.' : 'Inga alternativ matchar sökningen.';
+        emptyEl.hidden = false;
+      } else {
+        emptyEl.hidden = true;
+      }
+      updateApplyState();
+    };
+    const applySelection = () => {
+      if (!qualMode || !selected.size) return;
+      const chosen = Array.from(selected)
+        .map(Number)
+        .filter(idx => Number.isInteger(idx) && idx >= 0)
+        .sort((a, b) => a - b);
+      if (!chosen.length) return;
+      close();
+      done(chosen);
+    };
+
     const popInner = pop.querySelector('.popup-inner');
-
     pop.classList.add('open');
     window.autoResizeAll?.(pop);
     if (popInner) popInner.scrollTop = 0;
+    render();
+    requestAnimationFrame(() => {
+      if (typeof searchEl.focus === 'function') {
+        try { searchEl.focus({ preventScroll: true }); } catch { searchEl.focus(); }
+      }
+    });
 
-    /* local helpers */
     const close = () => {
       pop.classList.remove('open');
       box.removeEventListener('click', onBtn);
       cls.removeEventListener('click', close);
+      if (closeBtn) closeBtn.removeEventListener('click', close);
+      applyBtn.removeEventListener('click', onApply);
       pop.removeEventListener('click', onOutside);
-      box.innerHTML = '';                      // rensa bort gamla knappar
+      searchEl.removeEventListener('input', onSearch);
+      searchEl.removeEventListener('keydown', onSearchKeydown);
+      box.innerHTML = '';
+      searchEl.value = '';
+      countEl.textContent = '';
+      emptyEl.hidden = true;
+      selected.clear();
+      applyBtn.hidden = true;
+      applyBtn.disabled = true;
+      applyBtn.textContent = 'Lägg till valda';
+      if (legendEl) legendEl.hidden = true;
     };
     const onBtn = e => {
       const b = e.target.closest('button[data-i]');
       if (!b) return;
+      e.stopPropagation();
       const idx = Number(b.dataset.i);
+      if (!Number.isInteger(idx)) return;
+      if (qualMode) {
+        if (selected.has(idx)) selected.delete(idx);
+        else selected.add(idx);
+        render();
+        return;
+      }
       close();
-      callback(idx);
+      done(idx);
     };
-    const onOutside = e => {
-      if(!pop.querySelector('.popup-inner').contains(e.target)){
+    const onSearch = () => render();
+    const onSearchKeydown = e => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
         close();
-        callback(null);
+        return;
+      }
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (qualMode) {
+          if (selected.size > 0) {
+            applySelection();
+            return;
+          }
+          if (filtered.length === 1) {
+            const idx = Number(filtered[0]?.idx);
+            if (!Number.isInteger(idx)) return;
+            if (selected.has(idx)) selected.delete(idx);
+            else selected.add(idx);
+            render();
+          }
+          return;
+        }
+        if (filtered.length !== 1) return;
+        const idx = Number(filtered[0]?.idx);
+        if (!Number.isInteger(idx)) return;
+        close();
+        done(idx);
+      }
+    };
+    const onApply = () => applySelection();
+    const onOutside = e => {
+      if (popInner && !popInner.contains(e.target)) {
+        close();
       }
     };
 
     box.addEventListener('click', onBtn);
     cls.addEventListener('click', close);
+    if (closeBtn) closeBtn.addEventListener('click', close);
+    applyBtn.addEventListener('click', onApply);
+    searchEl.addEventListener('input', onSearch);
+    searchEl.addEventListener('keydown', onSearchKeydown);
     pop.addEventListener('click', onOutside);
   }
 
@@ -2042,10 +2526,7 @@
         });
         if (!row) return;
         const entry = getEntry(row.id || row.name);
-        const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-          .some(t => entry.taggar?.typ?.includes(t)) &&
-          !STACKABLE_IDS.includes(entry.id) &&
-          !['kraft','ritual'].includes(entry.bound);
+        const indiv = isIndividualItem(entry);
 
         if (indiv) {
           for (let i = 0; i < qty; i++) {
@@ -2253,10 +2734,7 @@
   async function openBuyMultiplePopup({ row, entry, inv, li, parentArr, idx, onCancel: cancelCb, onConfirm: confirmCb, isNewRow = false }) {
     const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
     const tagTyp = entry.taggar?.typ || [];
-    const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-      .some(t => tagTyp.includes(t)) &&
-      !STACKABLE_IDS.includes(entry.id) &&
-      !['kraft','ritual'].includes(entry.bound);
+    const indiv = isIndividualItem(entry);
 
     const referenceId = row.id || entry?.id || null;
     const referenceName = row.name || entry?.namn || null;
@@ -3863,7 +4341,7 @@
       desc += statsHtml;
       infoBody += statsHtml;
     }
-    if (row.trait && !entry.bound && row.id !== 'l9') {
+    if (row.trait && !shouldShowRowTraitInName(row, entry)) {
       const label = entry.boundLabel || 'Karaktärsdrag';
       const traitHtml = `<br><strong>${label}:</strong> ${row.trait}`;
       desc += traitHtml;
@@ -4401,9 +4879,7 @@
       if (isVehicle && remaining < 0) classes.push('vehicle-over');
 
       const displayName = nameMap.get(row) || row.name;
-      const baseName = (row.id === 'l9' && row.trait)
-        ? `${displayName}: ${row.trait}`
-        : `${displayName}`;
+      const baseName = `${displayName}`;
 
       const li = createEntryCard({
         compact: isCompact,
@@ -4526,9 +5002,7 @@
         const childDisplayName = (cIsCurrency && cPriceText)
           ? `${childName} (${cPriceText})`
           : childName;
-        const childBaseName = (childRow.id === 'l9' && childRow.trait)
-          ? `${childDisplayName}: ${childRow.trait}`
-          : childDisplayName;
+        const childBaseName = childDisplayName;
 
         const childLi = createEntryCard({
           compact: childCompact,
@@ -4784,11 +5258,9 @@
           const { row } = getRowInfo(inv, li);
           if (!row) return;
           if (removeTagBtn.dataset.free) {
-            const perkActive = storeHelper.getCurrentList(store)
-              .some(x => x.namn === 'Välutrustad');
             const pg = row.perkGratis || 0;
-            if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-              if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+            if (pg > 0 && !(await confirmGrantRemoval(row.perk))) {
+              return;
             }
             row.gratis = 0;
             if (pg > 0) row.perkGratis = 0;
@@ -4815,6 +5287,11 @@
               if (row.gratisKval) {
                 row.gratisKval = row.gratisKval.filter(x => x !== q);
               }
+            }
+            if (Array.isArray(row.manualQualityOverride)) {
+              const keep = row.manualQualityOverride.filter(x => (row.kvaliteter || []).includes(x));
+              if (keep.length) row.manualQualityOverride = keep;
+              else delete row.manualQualityOverride;
             }
           } else if (removeTagBtn.dataset.mult) {
             delete row.priceMult;
@@ -4911,11 +5388,9 @@
       // 3a) Röd soptunna tar bort hela posten
       if (act === 'del') {
         if (row) {
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
-          if (perkActive && row.perk === 'Välutrustad' && pg > 0) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+          if (pg > 0 && !(await confirmGrantRemoval(row.perk))) {
+            return;
           }
           const entry  = getEntry(row.id || row.name);
           const tagTyp = entry.taggar?.typ || [];
@@ -4976,40 +5451,23 @@
           const liveEnabled = typeof storeHelper?.getLiveMode === 'function' && storeHelper.getLiveMode(store);
           const livePairs = liveEnabled ? [] : null;
           let purchase = null;
-          if (entry.id === 'di79') {
-            const bundle = ['di10','di11','di12','di13','di14','di15'];
-            bundle.forEach(id => {
-              const ent = getEntry(id);
-              if (!ent.namn) return;
-              const indivItem = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-                .some(t => ent.taggar.typ.includes(t)) &&
-                !STACKABLE_IDS.includes(ent.id) &&
-                !['kraft','ritual'].includes(ent.bound);
-              const existing = inv.findIndex(r => r.id === ent.id);
-              if (indivItem || existing === -1) {
-                const obj = { id: ent.id, name: ent.namn, qty:1, gratis:0, gratisKval:[], removedKval:[] };
-                inv.push(obj);
-                if (livePairs) livePairs.push({ prev: null, next: obj });
-              } else {
-                const target = inv[existing];
-                const prevState = livePairs ? cloneRow(target) : null;
-                target.qty++;
-                if (livePairs) livePairs.push({ prev: prevState, next: target });
-              }
-            });
+          const bundleRefs = addInventoryBundle(inv, entry, { livePairs });
+          if (bundleRefs.length) {
             if (livePairs && livePairs.length) {
               applyLiveModePayment(livePairs);
               livePairs.length = 0;
             }
             saveInventory(inv);
             renderInventory();
-            bundle.forEach(id => {
-              const ent = getEntry(id);
-              const i = inv.findIndex(r => r.id === id);
-              const li = dom.invList?.querySelector(`li[data-name="${CSS.escape(ent.namn)}"][data-idx="${i}"]`);
-              if (li) {
-                li.classList.add('inv-flash');
-                setTimeout(() => li.classList.remove('inv-flash'), 600);
+            bundleRefs.forEach(ref => {
+              const refName = String(ref?.name || '').trim();
+              if (!refName) return;
+              const i = inv.findIndex(r => rowMatchesInventoryRef(r, ref));
+              if (i < 0) return;
+              const flashLi = dom.invList?.querySelector(`li[data-name="${CSS.escape(refName)}"][data-idx="${i}"]`);
+              if (flashLi) {
+                flashLi.classList.add('inv-flash');
+                setTimeout(() => flashLi.classList.remove('inv-flash'), 600);
               }
             });
           } else {
@@ -5017,10 +5475,7 @@
               purchase = await openLiveBuyPopup(entry, row);
               if (!purchase) return;
             }
-            const indiv = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel']
-              .some(t => entry.taggar.typ.includes(t)) &&
-              !STACKABLE_IDS.includes(entry.id) &&
-              !['kraft','ritual'].includes(entry.bound);
+            const indiv = isIndividualItem(entry);
             const tagTyp = entry.taggar?.typ || [];
             let artifactEffect = '';
             if (tagTyp.includes('Artefakt')) {
@@ -5140,14 +5595,14 @@
               const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
               powerPicker.pickKraft(used, async val => {
                 if(!val) return;
-                if (used.includes(val) && !STACKABLE_IDS.includes(entry.id) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                if (used.includes(val) && !isEntryStackable(entry) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(val);
               });
             } else if (entry.bound === 'ritual' && window.powerPicker) {
               const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
               powerPicker.pickRitual(used, async val => {
                 if(!val) return;
-                if (used.includes(val) && !STACKABLE_IDS.includes(entry.id) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
+                if (used.includes(val) && !isEntryStackable(entry) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
                 addRow(val);
               });
             } else {
@@ -5159,12 +5614,10 @@
       // "–" minskar qty eller tar bort posten
       if (act === 'sub') {
         if (row) {
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
           const pg = row.perkGratis || 0;
           const removingPerkItem = (row.qty - 1) < pg;
-          if (perkActive && row.perk === 'Välutrustad' && removingPerkItem) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) return;
+          if (removingPerkItem && !(await confirmGrantRemoval(row.perk))) {
+            return;
           }
           if (row.qty > 1) {
             row.qty--;
@@ -5205,34 +5658,80 @@
         if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t))) return;
         const qualities = DB
           .filter(isQual)
-          .filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true)
-          .filter(q => isQualityAllowedByRules(entry, row, q.namn || q.name));
+          .filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true);
         if (!qualities.length) {
           if (window.alertPopup) await alertPopup('Inga passande kvaliteter för detta föremål.');
           return;
         }
-        openQualPopup(qualities, async qIdx => {
-          if (row && qualities[qIdx]) {
-            row.kvaliteter = row.kvaliteter || [];
-            const qn = qualities[qIdx].namn;
+        openQualPopup(qualities, async qSelection => {
+          if (!row) return;
+          const indices = Array.isArray(qSelection) ? qSelection : [qSelection];
+          const chosen = Array.from(new Set(
+            indices
+              .map(val => Number(val))
+              .filter(idx => Number.isInteger(idx) && qualities[idx])
+          )).map(idx => qualities[idx]);
+          if (!chosen.length) return;
+
+          row.kvaliteter = row.kvaliteter || [];
+          const removed = row.removedKval ?? [];
+          const baseQuals = [
+            ...(entry.taggar?.kvalitet ?? []),
+            ...splitQuals(entry.kvalitet)
+          ];
+          const baseQ = baseQuals.filter(q => !removed.includes(q));
+
+          let addedCount = 0;
+          const blockedNames = [];
+          chosen.forEach(quality => {
+            const qn = quality?.namn || quality?.name;
+            if (!qn) return;
+            const existing = [...baseQ, ...(row.kvaliteter || [])];
+            if (existing.includes(qn)) return;
             if (!isQualityAllowedByRules(entry, row, qn)) {
-              if (window.alertPopup) {
-                await alertPopup('En sköld med kvaliteten "Armfäst" kan inte ha fler positiva kvaliteter.');
-              }
+              blockedNames.push(qn);
               return;
             }
-            const removed = row.removedKval ?? [];
-            const baseQuals = [
-              ...(entry.taggar?.kvalitet ?? []),
-              ...splitQuals(entry.kvalitet)
-            ];
-            const baseQ = baseQuals.filter(q => !removed.includes(q));
-            const existing = [...baseQ, ...row.kvaliteter];
-            if (!existing.includes(qn)) {
-              row.kvaliteter.push(qn);
-              saveInventory(inv);
-              renderInventory();
+            row.kvaliteter.push(qn);
+            addedCount++;
+          });
+
+          if (blockedNames.length) {
+            const hardStops = blockedNames.map(name => ({
+              code: `quality_blocked_${String(name || '').toLowerCase()}`,
+              message: `Kvalitet: ${name}`
+            }));
+            const stopResult = {
+              requirementReasons: [],
+              blockingConflicts: [],
+              replaceTargetNames: [],
+              grantedLevelStop: null,
+              hardStops,
+              hasStops: true
+            };
+            const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
+              ? window.rulesHelper.formatEntryStopMessages(entry?.namn || row?.name || 'föremålet', stopResult)
+              : hardStops.map(stop => stop.message);
+            const label = `“${String(entry?.namn || row?.name || 'föremålet').trim()}”`;
+            const text = `Karaktären möter inte följande krav:\n- ${messages.join('\n- ')}\n\nVill du lägga till blockerade kvaliteter på ${label} ändå?`;
+            const forceOverride = !!(await confirmPopup(text));
+            if (forceOverride) {
+              row.manualQualityOverride = Array.isArray(row.manualQualityOverride) ? row.manualQualityOverride : [];
+              blockedNames.forEach(qn => {
+                if (!row.kvaliteter.includes(qn)) {
+                  row.kvaliteter.push(qn);
+                  addedCount++;
+                }
+                if (!row.manualQualityOverride.includes(qn)) {
+                  row.manualQualityOverride.push(qn);
+                }
+              });
             }
+          }
+
+          if (addedCount > 0) {
+            saveInventory(inv);
+            renderInventory();
           }
         });
         return;
@@ -5286,15 +5785,11 @@
             if (newGratis > row.qty) newGratis = 0;
           }
 
-          const perkActive = storeHelper.getCurrentList(store)
-            .some(x => x.namn === 'Välutrustad');
           if (
-            perkActive &&
-            row.perk === 'Välutrustad' &&
             newGratis < currentGratis &&
             newGratis < (row.perkGratis || 0)
           ) {
-            if (!(await confirmPopup('Utrustningen kommer från fördelen “Välutrustad”. Ta bort ändå?'))) {
+            if (!(await confirmGrantRemoval(row.perk))) {
               return;
             }
           }
@@ -5456,6 +5951,15 @@
     saveInventory,
     sortAllInventories,
     getEntry,
+    isEntryStackable,
+    isTraitBoundInventoryEntry,
+    shouldShowRowTraitInName,
+    isInventoryBundleEntry,
+    getInventoryBundleItems,
+    getInventoryBundleCount,
+    addInventoryBundle,
+    removeInventoryBundle,
+    isIndividualItem,
     calcRowCost,
     calcRowWeight,
     calcEntryCost,
@@ -5486,8 +5990,6 @@
     openBuyMultiplePopup,
     massFreeAndSave,
     recalcArtifactEffects,
-    addWellEquippedItems,
-    removeWellEquippedItems,
     renderInventory,
     bindInv,
     bindMoney

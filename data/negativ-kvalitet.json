@@ -20,7 +20,10 @@
       "typ": [
         "Kvalitet",
         "Rustningskvalitet"
-      ]
+      ],
+      "regler": {
+        "andrar": [{ "mal": "begransning_modifierare", "varde": -1 }]
+      }
     },
     "negativ": true,
     "effekt": "Begränsning höjs med 1 (lätt −3, medeltung −4, tung −5)."
@@ -46,7 +49,10 @@
       "typ": [
         "Kvalitet",
         "Vapenkvalitet"
-      ]
+      ],
+      "regler": {
+        "andrar": [{ "mal": "forsvar_modifierare", "varde": -1 }]
+      }
     },
     "negativ": true,
     "effekt": "−1 i Försvar."

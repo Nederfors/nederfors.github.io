@@ -6,6 +6,7 @@ Symbapedia is a static web app for managing characters and inventory for the Sym
 - [Kom igång](#kom-igång)
 - [Funktioner](#funktioner)
 - [Projektstruktur](#projektstruktur)
+- [Datamodell för JSON-entries](#datamodell-för-json-entries)
 - [Export och import av rollpersoner](#export-och-import-av-rollpersoner)
 - [Anteckningssidan](#anteckningssidan)
 - [Användarmanual](#användarmanual)
@@ -30,8 +31,15 @@ Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
 - `index.html` – bläddra bland föremål och förmågor.
 - `character.html` – hantera en specifik rollperson.
 - `data/` – JSON-filer med databasen över föremål, färdigheter m.m.
+- `data/README.md` – komplett schema- och regelguide för datafilerna (inkl. uppdateringsflöde).
 - `js/` – JavaScript-moduler för lagring, logik och användargränssnitt.
 - `css/` – stilmallar.
+
+## Datamodell för JSON-entries
+
+För all data-driven struktur och regeldefinitioner i `data/*.json`, se:
+
+- `data/README.md` – fältstruktur, regelmotor (`regler`), nivådata, begränsningar, statmodifierare och obligatoriskt "håll uppdaterat"-flöde.
 
 ## Export och import av rollpersoner
 Use the **Export** button in the filter panel to open a menu where you can either download a specific character as a JSON file, or download all saved characters together as a single JSON file. "Alla rollpersoner" ligger alltid överst och den aktiva rollpersonen visas näst högst upp. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the files are downloaded normally. The **Import** button lets you select one or more such files — including a single file containing multiple characters — to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.

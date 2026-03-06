@@ -406,7 +406,15 @@
         "Nackdel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "ger": [
+          {
+            "mal": "permanent_korruption",
+            "formel": "fjardedel_korruptionstroskel_uppat"
+          }
+        ]
+      }
     },
     "effekt": "Få permanent Korruption = ¼ av tröskeln (uppåt); med Jordnära sänks smärtgränsen i stället med ¼."
   },
@@ -420,7 +428,16 @@
         "Nackdel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "korruptionstroskel",
+            "satt": "add",
+            "varde": -1
+          }
+        ]
+      }
     },
     "effekt": "−1 på korruptionströskeln per nivå (max −3)."
   },
@@ -434,7 +451,16 @@
         "Nackdel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "smartgrans_tillagg",
+            "satt": "add",
+            "varde": -1
+          }
+        ]
+      }
     },
     "effekt": "−1 på smärtgränsen per nivå (max −3)."
   },
@@ -518,7 +544,22 @@
         "Nackdel"
       ],
       "test": [],
-      "ark_trad": []
+      "ark_trad": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "barkapacitet_faktor",
+            "satt": "ersatt",
+            "varde": 0.5
+          }
+        ],
+        "krockar": [
+          {
+            "namn": "Packåsna",
+            "varde": "packasna_hafspackare"
+          }
+        ]
+      }
     },
     "effekt": "Bärkapacitet = Stark ×0,5 + 3 (avrundat uppåt)."
   },
@@ -1324,7 +1365,10 @@
         "Nackdel"
       ],
       "test": [],
-      "ark_trad": []
+      "ark_trad": [],
+      "regler": {
+        "andrar": [{ "mal": "forsvar_modifierare", "varde": -2, "nar": { "har_utrustad_typ": ["Rustning"] } }]
+      }
     },
     "effekt": "-2 i Försvar om rustning bärs."
   },

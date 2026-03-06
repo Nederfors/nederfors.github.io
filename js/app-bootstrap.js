@@ -4,6 +4,7 @@ const CORE_SCRIPTS = [
   'js/auto-resize.js',
   'js/text-format.js',
   'js/utils.js',
+  'js/rules-helper.js',
   'js/store.js',
   'js/inventory-utils.js',
   'js/traits-utils.js',

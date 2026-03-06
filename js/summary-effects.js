@@ -494,31 +494,18 @@
 
     const valStark = vals['Stark'];
     const valWill = vals['Viljestark'];
-    const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
-    const strongGift = strongGiftLevel >= 1;
-    const hasSjalastark = list.some(p=>p.namn==='Själastark');
-    const resistCount = list.filter(p=>p.namn==='Motståndskraft').length;
-    const sensCount = list.filter(p=>p.namn==='Korruptionskänslig').length;
-    const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
-    const hasEarth = list.some(p=>p.namn==='Jordnära');
-    const baseMax = strongGift ? valWill + 5 : valWill;
-    const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
-    const maxCor = baseMax + (hasSjalastark ? 1 : 0);
-    let thresh = threshBase + resistCount - sensCount;
-    const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
-    let perm = hasEarth ? (permBase % 2) : permBase;
-    perm += darkPerm;
-    const effectsWithDark = {
-      xp: combinedEffects.xp || 0,
-      corruption: (combinedEffects.corruption || 0) + darkPerm
+    const corruptionStats = storeHelper.calcCorruptionTrackStats(list, valWill);
+    const maxCor = corruptionStats.styggelsetroskel;
+    const thresh = corruptionStats.korruptionstroskel;
+    const corruptionEffects = {
+      ...combinedEffects,
+      korruptionstroskel: thresh
     };
+    const perm = storeHelper.calcPermanentCorruption(list, corruptionEffects);
+    const effectsWithDark = corruptionEffects;
 
-    const hasHardnackad = list.some(p=>p.namn==='Hårdnackad');
-    const hasKraftprov = list.some(p=>p.namn==='Kraftprov');
     const capacity = storeHelper.calcCarryCapacity(valStark, list) + manualCapacity;
-    const hardy = hasHardnackad ? 1 : 0;
-    const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
-    const tal = talBase + hardy + manualToughness;
+    const tal = storeHelper.calcToughness(valStark, list) + manualToughness;
     const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
 
     const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list, vals) : 'Kvick';
@@ -553,41 +540,33 @@
       ? storeHelper.getDefenseSetup(store)
       : null;
     const defenseActionBtn = `<button type="button" class="char-btn icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Beräkna försvar</span></button>`;
+    const accuracyPreview = typeof window.getAccuracyPreview === 'function'
+      ? window.getAccuracyPreview({ list, inv, traitValues: vals })
+      : {
+          entries: (typeof window.calcAccuracy === 'function'
+            ? window.calcAccuracy({ list, inv, traitValues: vals })
+            : []),
+          value: Number.NEGATIVE_INFINITY
+        };
+    const accuracyEntries = (Array.isArray(accuracyPreview?.entries) ? accuracyPreview.entries : [])
+      .map(entry => {
+        if (!entry || typeof entry !== 'object') return null;
+        const name = typeof entry.name === 'string' ? entry.name.trim() : '';
+        const trait = typeof entry.trait === 'string' ? entry.trait.trim() : '';
+        const value = Number(entry.value);
+        if (!Number.isFinite(value)) return null;
+        return { name, trait, value };
+      })
+      .filter(Boolean);
+    const highestAccuracy = accuracyEntries.reduce((max, entry) => Math.max(max, entry.value), Number.NEGATIVE_INFINITY);
 
     const cond = [];
-    if(storeHelper.abilityLevel(list,'Fint') >= 1){
-      cond.push('Diskret som träffsäker för kort eller precist vapen i närstrid');
-    }
-    if(storeHelper.abilityLevel(list,'Lönnstöt') >= 1){
-      cond.push('Diskret som träffsäker vid attacker med Övertag');
-    }
-    if(storeHelper.abilityLevel(list,'Knivgöra') >= 1){
-      cond.push('Kvick som träffsäker för attacker med knivliknande vapen med kvaliteten Kort');
-    }
-    if(storeHelper.abilityLevel(list,'Koreograferad strid') >= 1){
-      cond.push('Kvick som träffsäker för närstridsattacker med kort eller balanserat vapen efter en förflyttning');
-    }
-    if(storeHelper.abilityLevel(list,'Spjutdans') >= 1){
-      cond.push('Kvick som träffsäker för närstridsattacker med spjut (kvalitet Långt)');
-    }
-    if(storeHelper.abilityLevel(list,'Taktiker') >= 3){
-      cond.push('Listig som träffsäker för allt utom tunga vapen');
-    }
-    const sjatte = Math.max(
-      storeHelper.abilityLevel(list,'Sjätte Sinne'),
-      storeHelper.abilityLevel(list,'Sjätte sinne')
-    );
-    if(sjatte >= 1){
-      cond.push('Vaksam som träffsäker för avståndsattacker');
-    }
-    if(storeHelper.abilityLevel(list,'Järnnäve') >= 1){
-      cond.push('Stark som träffsäker för närstridsattacker');
-    }
-    if(storeHelper.abilityLevel(list,'Dominera') >= 1){
-      cond.push('Övertygande som träffsäker för närstridsattacker');
-    }
-    if(storeHelper.abilityLevel(list,'Ledare') >= 1){
-      cond.push('Övertygande istället för Viljestark vid mystiska förmågor och ritualer');
+    if (typeof window.getAttackTraitRuleNotes === 'function') {
+      window.getAttackTraitRuleNotes(list).forEach(note => {
+        if (typeof note?.summaryText === 'string' && note.summaryText.trim()) {
+          cond.push(note.summaryText.trim());
+        }
+      });
     }
     if(!cond.length) cond.push('Inga särskilda ersättningar');
 
@@ -721,6 +700,25 @@
       ]
     });
 
+    const accuracyItems = [];
+    if (Number.isFinite(highestAccuracy) && highestAccuracy > Number.NEGATIVE_INFINITY) {
+      accuracyItems.push({ label: 'Träffsäkerhet', value: formatNumber(highestAccuracy) });
+    }
+    accuracyEntries.forEach(entry => {
+      const baseLabel = entry.name ? `Träffsäker (${entry.name})` : 'Träffsäker';
+      const traitSuffix = entry.trait ? ` [${entry.trait}]` : '';
+      accuracyItems.push({
+        label: `${baseLabel}${traitSuffix}`,
+        value: formatNumber(entry.value)
+      });
+    });
+    cond.forEach(text => accuracyItems.push({ text }));
+    summarySections.push({
+      title: 'Träffsäkerhet',
+      layout: 'block',
+      items: accuracyItems
+    });
+
     const categorySections = [
       { title: 'Förmågor', types: 'Förmåga' },
       { title: 'Mystiska krafter', types: 'Mystisk kraft' },
@@ -742,12 +740,6 @@
         layout: 'stack',
         items: [row]
       });
-    });
-
-    summarySections.push({
-      title: 'Träffsäkerhet',
-      layout: 'block',
-      items: cond.map(text => ({ text }))
     });
 
     const sectionsHtml = summarySections.map(section => {

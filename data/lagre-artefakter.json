@@ -6,6 +6,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": [
         "Ordensmagiker"
       ]
@@ -124,6 +127,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": []
     },
     "nivåer": {
@@ -196,7 +202,25 @@
       ],
       "ark_trad": [
         "Blodvadare"
-      ]
+      ],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "karaktarsdrag_max_tillagg",
+            "satt": "add",
+            "varde": 1,
+            "nar": {
+              "trait": [
+                "Diskret",
+                "Kvick",
+                "Listig",
+                "Stark",
+                "Vaksam"
+              ]
+            }
+          }
+        ]
+      }
     },
     "nivåer": {
       "Gesäll": "För blodvadande häxor är identifikationen med bestar stor och djurmasken markerar deras närhet till djuren. Varje djurmask med kraft symboliserar ett djur och ger +1 på ett karaktärsdrag som associeras med djuret; antingen Diskret, Kvick, Listig, Stark eller Vaksam."
@@ -249,6 +273,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": [
         "Ordensmagiker"
       ]
@@ -275,6 +302,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": []
     },
     "nivåer": {
@@ -299,6 +329,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": []
     },
     "nivåer": {
@@ -628,6 +661,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": [
         "Ordensmagiker"
       ]
@@ -654,6 +690,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": []
     },
     "nivåer": {
@@ -701,6 +740,9 @@
       "typ": [
         "Lägre Artefakt"
       ],
+      "inventory": {
+        "stackbar": true
+      },
       "ark_trad": []
     },
     "nivåer": {

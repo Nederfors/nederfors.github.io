@@ -76,7 +76,30 @@
     "taggar": {
       "typ": [
         "Ras"
-      ]
+      ],
+      "regler": {
+        "ger": [
+          {
+            "mal": "skydd_permanent_korruption",
+            "varde": 3,
+            "nar": {
+              "typ": [
+                "Mystisk kraft"
+              ],
+              "namn": [
+                "Vedergällning"
+              ]
+            }
+          }
+        ],
+        "krockar": [
+          {
+            "namn": "Korruptionskänslig",
+            "satt": "ersatt",
+            "varde": "dvarg_korruptionskanslig"
+          }
+        ]
+      }
     }
   },
   {
@@ -124,7 +147,8 @@
     "taggar": {
       "typ": [
         "Ras"
-      ]
+      ],
+      "regler": {}
     }
   },
   {
@@ -138,7 +162,8 @@
     "taggar": {
       "typ": [
         "Ras"
-      ]
+      ],
+      "regler": {}
     }
   },
   {
@@ -313,7 +338,8 @@
     "taggar": {
       "typ": [
         "Ras"
-      ]
+      ],
+      "regler": {}
     }
   },
   {
@@ -383,7 +409,8 @@
     "taggar": {
       "typ": [
         "Ras"
-      ]
+      ],
+      "regler": {}
     }
   },
   {
@@ -397,7 +424,8 @@
     "taggar": {
       "typ": [
         "Ras"
-      ]
+      ],
+      "regler": {}
     }
   }
 ]

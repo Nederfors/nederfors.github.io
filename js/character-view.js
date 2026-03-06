@@ -1,5 +1,28 @@
 (function (window) {
   const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+
+  const quoteName = (value) => {
+    const str = String(value ?? '').trim();
+    return str ? `“${str}”` : '';
+  };
+
+  function makeHardStop(code, message, label = '', value = '') {
+    return { code, message, label, value };
+  }
+
+  async function confirmRuleStopOverride(entryName, stopResult, action = 'add') {
+    const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
+      ? window.rulesHelper.formatEntryStopMessages(entryName, stopResult || {})
+      : [];
+    if (!messages.length) return true;
+    const label = quoteName(entryName) || 'posten';
+    const actionLine = action === 'level-change'
+      ? `Vill du ändra nivån för ${label} ändå?`
+      : `Vill du lägga till ${label} ändå?`;
+    const text = `Karaktären möter inte följande krav:\n- ${messages.join('\n- ')}\n\n${actionLine}`;
+    return !!(await confirmPopup(text));
+  }
+
   function initCharacter() {
     const createEntryCard = window.entryCardFactory.create;
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
@@ -763,32 +786,20 @@
       const valStark = vals['Stark'];
 
       const valWill = vals['Viljestark'];
-      const strongGiftLevel = storeHelper.abilityLevel(list, 'Stark gåva');
-      const strongGift = strongGiftLevel >= 1;
-      const hasSjalastark = list.some(p => p.namn === 'Själastark');
-      const resistCount = list.filter(p => p.namn === 'Motståndskraft').length;
-      const sensCount = list.filter(p => p.namn === 'Korruptionskänslig').length;
-      const permBase = storeHelper.calcPermanentCorruption(list, combinedEffects);
-      const hasEarth = list.some(p => p.namn === 'Jordnära');
-      const baseMax = strongGift ? valWill + 5 : valWill;
-      const threshBase = strongGift ? valWill : Math.ceil(valWill / 2);
-      const maxCor = baseMax + (hasSjalastark ? 1 : 0);
-      let thresh = threshBase + resistCount - sensCount;
-      const darkPerm = storeHelper.calcDarkPastPermanentCorruption(list, thresh);
-      let perm = hasEarth ? (permBase % 2) : permBase;
-      perm += darkPerm;
-      const effectsWithDark = {
-        xp: combinedEffects.xp || 0,
-        corruption: (combinedEffects.corruption || 0) + darkPerm
+      const corruptionStats = storeHelper.calcCorruptionTrackStats(list, valWill);
+      const maxCor = corruptionStats.styggelsetroskel;
+      const thresh = corruptionStats.korruptionstroskel;
+      const corruptionEffects = {
+        ...combinedEffects,
+        korruptionstroskel: thresh
       };
+      const permBase = storeHelper.calcPermanentCorruption(list, corruptionEffects);
+      const hasEarth = list.some(p => p.namn === 'Jordnära');
+      let perm = hasEarth ? (permBase % 2) : permBase;
 
-      const hasHardnackad = list.some(p => p.namn === 'Hårdnackad');
-      const hasKraftprov = list.some(p => p.namn === 'Kraftprov');
       const capacity = storeHelper.calcCarryCapacity(valStark, list) + manualCapacity;
-      const hardy = hasHardnackad ? 1 : 0;
-      const talBase = hasKraftprov ? valStark + 5 : Math.max(10, valStark);
-      const tal = talBase + hardy + manualToughness;
-      const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
+      const tal = storeHelper.calcToughness(valStark, list) + manualToughness;
+      const pain = storeHelper.calcPainThreshold(valStark, list, corruptionEffects) + manualPain;
 
       const defTrait = getDefenseTraitName(list, vals);
       const kvickForDef = vals[defTrait];
@@ -796,41 +807,22 @@
       const dancingTrait = getDancingDefenseTraitName(list);
       const defenseListDance = dancingTrait ? calcDefense(vals[dancingTrait], { mode: 'dancing' }) : [];
       const defenseList = [...defenseListStd, ...defenseListDance];
+      const accuracyPreview = typeof window.getAccuracyPreview === 'function'
+        ? window.getAccuracyPreview({ list, inv, traitValues: vals })
+        : {
+            entries: (typeof window.calcAccuracy === 'function'
+              ? window.calcAccuracy({ list, inv, traitValues: vals })
+              : []),
+            value: Number.NEGATIVE_INFINITY
+          };
 
       const cond = [];
-      if (storeHelper.abilityLevel(list, 'Fint') >= 1) {
-        cond.push('Diskret som träffsäker för kort eller precist vapen i närstrid');
-      }
-      if (storeHelper.abilityLevel(list, 'Lönnstöt') >= 1) {
-        cond.push('Diskret som träffsäker vid attacker med Övertag');
-      }
-      if (storeHelper.abilityLevel(list, 'Knivgöra') >= 1) {
-        cond.push('Kvick som träffsäker för attacker med knivliknande vapen med kvaliteten Kort');
-      }
-      if (storeHelper.abilityLevel(list, 'Koreograferad strid') >= 1) {
-        cond.push('Kvick som träffsäker för närstridsattacker med kort eller balanserat vapen efter en förflyttning');
-      }
-      if (storeHelper.abilityLevel(list, 'Spjutdans') >= 1) {
-        cond.push('Kvick som träffsäker för närstridsattacker med spjut (kvalitet Långt)');
-      }
-      if (storeHelper.abilityLevel(list, 'Taktiker') >= 3) {
-        cond.push('Listig som träffsäker för allt utom tunga vapen');
-      }
-      const sjatte = Math.max(
-        storeHelper.abilityLevel(list, 'Sjätte Sinne'),
-        storeHelper.abilityLevel(list, 'Sjätte sinne')
-      );
-      if (sjatte >= 1) {
-        cond.push('Vaksam som träffsäker för avståndsattacker');
-      }
-      if (storeHelper.abilityLevel(list, 'Järnnäve') >= 1) {
-        cond.push('Stark som träffsäker för närstridsattacker');
-      }
-      if (storeHelper.abilityLevel(list, 'Dominera') >= 1) {
-        cond.push('Övertygande som träffsäker för närstridsattacker');
-      }
-      if (storeHelper.abilityLevel(list, 'Ledare') >= 1) {
-        cond.push('Övertygande istället för Viljestark vid mystiska förmågor och ritualer');
+      if (typeof window.getAttackTraitRuleNotes === 'function') {
+        window.getAttackTraitRuleNotes(list).forEach(note => {
+          if (typeof note?.summaryText === 'string' && note.summaryText.trim()) {
+            cond.push(note.summaryText.trim());
+          }
+        });
       }
       if (!cond.length) cond.push('Inga särskilda ersättningar');
 
@@ -1065,6 +1057,40 @@
         summarySections.push({ title: 'Försvar', rows: defenseRows, listClass: 'summary-pairs', action: defenseAction });
       }
 
+      const normalizedAccuracy = (Array.isArray(accuracyPreview?.entries) ? accuracyPreview.entries : [])
+        .map(entry => ({
+          name: entry?.name ? String(entry.name).trim() : '',
+          value: Number(entry?.value),
+          trait: entry?.trait ? String(entry.trait).trim() : ''
+        }))
+        .filter(entry => Number.isFinite(entry.value));
+      const highestAccuracyFromList = normalizedAccuracy
+        .reduce((max, entry) => Math.max(max, entry.value), Number.NEGATIVE_INFINITY);
+      const highestAccuracy = Number.isFinite(highestAccuracyFromList)
+        ? highestAccuracyFromList
+        : Number(accuracyPreview?.value);
+      const accuracyRows = [];
+      if (Number.isFinite(highestAccuracy)) {
+        accuracyRows.push({
+          label: 'Träffsäkerhet',
+          value: String(highestAccuracy),
+          align: 'right'
+        });
+      }
+      normalizedAccuracy.forEach(entry => {
+        const baseLabel = entry.name ? `Träffsäker (${entry.name})` : 'Träffsäker';
+        const traitSuffix = entry.trait ? ` [${entry.trait}]` : '';
+        accuracyRows.push({
+          label: `${baseLabel}${traitSuffix}`,
+          value: String(entry.value),
+          align: 'right'
+        });
+      });
+      cond.forEach(text => {
+        accuracyRows.push({ text });
+      });
+      summarySections.push({ title: 'Träffsäkerhet', rows: accuracyRows, listClass: 'summary-pairs' });
+
       const healthRows = [
         { label: 'Tålighet', value: String(tal), align: 'right' },
         { label: 'Smärtgräns', value: String(pain), align: 'right' },
@@ -1078,9 +1104,6 @@
         { label: 'Korruptionströskel', value: String(thresh), align: 'right' }
       ];
       summarySections.push({ title: 'Korruption', rows: corruptionRows, listClass: 'summary-pairs' });
-
-      const accuracyRows = cond.map(text => ({ text }));
-      summarySections.push({ title: 'Träffsäkerhet', rows: accuracyRows, listClass: 'summary-text' });
 
       const sectionHtml = summarySections
         .filter(section => Array.isArray(section.rows) && section.rows.length)
@@ -1900,16 +1923,12 @@
       const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel", "Nackdel"].includes(t))) && !p.trait;
       let list;
       if (act === 'add') {
-        if (name === 'Korruptionskänslig' && before.some(x => x.namn === 'Dvärg')) {
-          await alertPopup('Dvärgar kan inte ta Korruptionskänslig.');
-          return;
-        }
         if (!multi) return;
         const cnt = before.filter(x => x.namn === name && !x.trait).length;
         const limit = storeHelper.monsterStackLimit(before, name);
+        const hardStops = [];
         if (cnt >= limit) {
-          await alertPopup(`Denna fördel eller nackdel kan bara tas ${limit} gånger.`);
-          return;
+          hardStops.push(makeHardStop('stack_limit', `Limit: Denna fördel eller nackdel kan normalt bara tas ${limit} gånger.`));
         }
         const lvlSel = liEl.querySelector('select.level');
         let lvl = lvlSel ? lvlSel.value : null;
@@ -1923,50 +1942,56 @@
             if (resolved) lvl = resolved;
           }
         }
+        const levelCandidate = { ...p, nivå: lvl };
         if (isMonstrousTrait(p)) {
-          const baseName = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
-          const baseRace = before.find(isRas)?.namn;
-          const trollTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
-          const undeadTraits = ['Gravkyla', 'Skräckslå', 'Vandödhet'];
-          const bloodvaderTraits = ['Naturligt vapen', 'Pansar', 'Regeneration', 'Robust'];
-          const hamLvl = storeHelper.abilityLevel(before, 'Hamnskifte');
-          const bloodRaces = before.filter(x => x.namn === 'Blodsband' && x.race).map(x => x.race);
-          let monsterOk = typesList.includes('Elityrkesförmåga') ||
-            (before.some(x => x.namn === 'Mörkt blod') && storeHelper.DARK_BLOOD_TRAITS.includes(baseName)) ||
-            (baseRace === 'Troll' && trollTraits.includes(baseName)) ||
-            (baseRace === 'Vandöd' && undeadTraits.includes(baseName)) ||
-            (baseRace === 'Rese' && baseName === 'Robust') ||
-            (before.some(x => x.namn === 'Blodvadare') && bloodvaderTraits.includes(baseName)) ||
-            ((baseRace === 'Andrik' || bloodRaces.includes('Andrik')) && baseName === 'Diminutiv') ||
-            (hamLvl >= 2 && lvl === 'Novis' && ['Naturligt vapen', 'Pansar'].includes(baseName)) ||
-            (hamLvl >= 3 && lvl === 'Novis' && ['Regeneration', 'Robust'].includes(baseName));
+          const missing = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(levelCandidate, before, { level: lvl }) || ['unknown'];
+          const monsterOk = typesList.includes('Elityrkesförmåga') ||
+            missing.length === 0;
           if (!monsterOk) {
-            if (!(await confirmPopup('Monstruösa särdrag kan normalt inte väljas. Lägga till ändå?')))
-              return;
-          }
-          if (storeHelper.hamnskifteNoviceLimit(before, p, lvl)) {
-            await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
-            return;
+            hardStops.push(makeHardStop('monster_trait_locked', 'Monstruöst särdrag: kan normalt inte väljas.'));
           }
         }
-        if (name === 'Råstyrka') {
-          const robust = before.find(x => x.namn === 'Robust');
-          const hasRobust = !!robust && (robust.nivå === undefined || robust.nivå !== '');
-          if (!hasRobust) {
-            if (!(await confirmPopup('Råstyrka kräver Robust på minst Novis-nivå. Lägga till ändå?')))
-              return;
-          }
+        const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
+          ? window.rulesHelper.evaluateEntryStops(levelCandidate, before, {
+            action: 'add',
+            level: lvl,
+            hardStops
+          })
+          : (() => {
+            const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
+              ? window.rulesHelper.getMissingRequirementReasonsForCandidate(levelCandidate, before, { level: lvl })
+              : []);
+            const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
+              ? window.rulesHelper.getConflictResolutionForCandidate(levelCandidate, before, { level: lvl })
+              : { blockingReasons: [], replaceTargetNames: [] });
+            const blockingConflicts = conflictRes.blockingReasons;
+            return {
+              requirementReasons,
+              blockingConflicts,
+              replaceTargetNames: conflictRes.replaceTargetNames || [],
+              grantedLevelStop: null,
+              hardStops,
+              hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+            };
+          })();
+        const hasReplaceTargets = Array.isArray(stopResult.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
+        const forceRuleOverride = (stopResult.hasStops || hasReplaceTargets)
+          ? (await confirmRuleStopOverride(name, stopResult, 'add'))
+          : false;
+        if (stopResult.hasStops && !forceRuleOverride) return;
+
+        let conflictBaseList = before;
+        if (!forceRuleOverride && hasReplaceTargets) {
+          const replaceSet = new Set(
+            stopResult.replaceTargetNames
+              .map(value => String(value || '').trim())
+              .filter(Boolean)
+          );
+          conflictBaseList = before.filter(entry => !replaceSet.has(entry?.namn || '') || entry?.manualRuleOverride);
         }
-        // Tidigare blockerades Mörkt förflutet om Jordnära fanns – inte längre.
-        if (name === 'Packåsna' && before.some(x => x.namn === 'Hafspackare')) {
-          await alertPopup('Karaktärer med Hafspackare kan inte ta Packåsna.');
-          return;
-        }
-        if (name === 'Hafspackare' && before.some(x => x.namn === 'Packåsna')) {
-          await alertPopup('Karaktärer med Packåsna kan inte ta Hafspackare.');
-          return;
-        }
-        list = [...before, { ...p, nivå: lvl }];
+        const added = { ...p, nivå: lvl };
+        if (forceRuleOverride) added.manualRuleOverride = true;
+        list = [...conflictBaseList, added];
         const disAfter = storeHelper.countDisadvantages(list);
         if (disAfter === 5 && disBefore < 5) {
           await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
@@ -1976,10 +2001,12 @@
           if (!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
             return;
         }
-        const baseRem = storeHelper.HAMNSKIFTE_BASE[p.namn] || p.namn;
-        if (isMonstrousTrait(p) && storeHelper.DARK_BLOOD_TRAITS.includes(baseRem) && before.some(x => x.namn === 'Mörkt blod')) {
-          if (!(await confirmPopup(name + ' hänger ihop med Mörkt blod. Ta bort ändå?')))
-            return;
+        if (isMonstrousTrait(p)) {
+          const missingBefore = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(p, before) || ['unknown'];
+          if (missingBefore.length === 0) {
+            if (!(await confirmPopup(name + ' är ett monstruöst särdrag. Ta bort ändå?')))
+              return;
+          }
         }
         if (act === 'sub') {
           // Remove a single instance
@@ -2032,6 +2059,15 @@
       } else {
         return;
       }
+      if ((act === 'sub' || act === 'del' || act === 'rem') && typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
+        const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+        if (toClean.length > 0) {
+          const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
+          if (await confirmPopup(`Att ta bort "${name}" tar även bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
+            toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+          }
+        }
+      }
       storeHelper.setCurrentList(store, list);
       if (p.namn === 'Privilegierad') {
         invUtil.renderInventory();
@@ -2044,16 +2080,6 @@
         } else {
           storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
         }
-        invUtil.renderInventory();
-      }
-      if (p.namn === 'Välutrustad') {
-        const inv = storeHelper.getInventory(store);
-        if (act === 'add') {
-          invUtil.addWellEquippedItems(inv);
-        } else {
-          invUtil.removeWellEquippedItems(inv);
-        }
-        invUtil.saveInventory(inv);
         invUtil.renderInventory();
       }
       if ((p.taggar?.typ || []).includes('Artefakt')) {
@@ -2097,19 +2123,9 @@
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
         ent.nivå = select.value;
+        const hardStops = [];
         if (eliteReq.canChange(before) && !eliteReq.canChange(list)) {
-          await alertPopup('Förmågan krävs för ett valt elityrke och kan inte ändras.');
-          ent.nivå = old;
-          select.value = old;
-          window.entryCardFactory?.syncLevelControl?.(select);
-          return;
-        }
-        if (storeHelper.hamnskifteNoviceLimit(list, ent, ent.nivå)) {
-          await alertPopup('Särdraget kan inte tas högre än Novis utan Blodvadare eller motsvarande.');
-          ent.nivå = old;
-          select.value = old;
-          window.entryCardFactory?.syncLevelControl?.(select);
-          return;
+          hardStops.push(makeHardStop('elite_locked_level_change', 'Elityrke: Förmågan krävs för ett valt elityrke och kan normalt inte ändras.'));
         }
         if (name === 'Monsterlärd') {
           if (['Gesäll', 'Mästare'].includes(ent.nivå)) {
@@ -2122,7 +2138,7 @@
                 await alertPopup('Alla specialiseringar är redan valda.');
                 return;
               }
-              monsterLore.pickSpec(usedSpecs, spec => {
+              monsterLore.pickSpec(usedSpecs, async spec => {
                 if (!spec) {
                   ent.nivå = old;
                   select.value = old;
@@ -2130,6 +2146,51 @@
                   return;
                 }
                 ent.trait = spec;
+                const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
+                  ? window.rulesHelper.evaluateEntryStops(ent, before, {
+                    action: 'level-change',
+                    fromLevel: old,
+                    toLevel: ent.nivå,
+                    level: ent.nivå,
+                    hardStops
+                  })
+                  : (() => {
+                    const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
+                      ? window.rulesHelper.getMissingRequirementReasonsForCandidate(ent, before, { level: ent.nivå })
+                      : []);
+                    const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
+                      ? window.rulesHelper.getConflictResolutionForCandidate(ent, before, { level: ent.nivå })
+                      : { blockingReasons: [], replaceTargetNames: [] });
+                    const blockingConflicts = conflictRes.blockingReasons;
+                    return {
+                      requirementReasons,
+                      blockingConflicts,
+                      replaceTargetNames: conflictRes.replaceTargetNames || [],
+                      grantedLevelStop: null,
+                      hardStops,
+                      hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+                    };
+                  })();
+                const forceRuleOverride = stopResult.hasStops
+                  ? (await confirmRuleStopOverride(name, stopResult, 'level-change'))
+                  : false;
+                if (stopResult.hasStops && !forceRuleOverride) {
+                  ent.nivå = old;
+                  delete ent.trait;
+                  select.value = old;
+                  window.entryCardFactory?.syncLevelControl?.(select);
+                  return;
+                }
+                if (forceRuleOverride) ent.manualRuleOverride = true;
+                if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
+                  const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+                  if (toClean.length > 0) {
+                    const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
+                    if (await confirmPopup(`Att ändra nivån på "${name}" tar bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
+                      toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+                    }
+                  }
+                }
                 storeHelper.setCurrentList(store, list); updateXP();
                 renderSkills(filtered()); renderTraits(); updateSearchDatalist();
               });
@@ -2141,6 +2202,50 @@
             renderSkills(filtered()); renderTraits(); updateSearchDatalist();
             window.entryCardFactory?.syncLevelControl?.(select);
             return;
+          }
+        }
+        const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
+          ? window.rulesHelper.evaluateEntryStops(ent, before, {
+            action: 'level-change',
+            fromLevel: old,
+            toLevel: ent.nivå,
+            level: ent.nivå,
+            hardStops
+          })
+          : (() => {
+            const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
+              ? window.rulesHelper.getMissingRequirementReasonsForCandidate(ent, before, { level: ent.nivå })
+              : []);
+            const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
+              ? window.rulesHelper.getConflictResolutionForCandidate(ent, before, { level: ent.nivå })
+              : { blockingReasons: [], replaceTargetNames: [] });
+            const blockingConflicts = conflictRes.blockingReasons;
+            return {
+              requirementReasons,
+              blockingConflicts,
+              replaceTargetNames: conflictRes.replaceTargetNames || [],
+              grantedLevelStop: null,
+              hardStops,
+              hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+            };
+          })();
+        const forceRuleOverride = stopResult.hasStops
+          ? (await confirmRuleStopOverride(name, stopResult, 'level-change'))
+          : false;
+        if (stopResult.hasStops && !forceRuleOverride) {
+          ent.nivå = old;
+          select.value = old;
+          window.entryCardFactory?.syncLevelControl?.(select);
+          return;
+        }
+        if (forceRuleOverride) ent.manualRuleOverride = true;
+        if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
+          const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
+          if (toClean.length > 0) {
+            const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
+            if (await confirmPopup(`Att ändra nivån på "${name}" tar bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
+              toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
+            }
           }
         }
         storeHelper.setCurrentList(store, list); updateXP();

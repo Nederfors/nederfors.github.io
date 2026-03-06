@@ -6,42 +6,53 @@
     if(document.getElementById('traitPopup')) return;
     const div=document.createElement('div');
     div.id='traitPopup';
-    div.innerHTML=`<div class="popup-inner"><h3 id="traitTitle">V\u00e4lj karakt\u00e4rsdrag</h3><div id="traitOpts"></div><button id="traitCancel" class="char-btn danger">Avbryt</button></div>`;
+    div.className='popup picker-popup';
+    div.innerHTML=`<div class="popup-inner picker-popup-ui"><header class="picker-popup-header"><h3 id="traitTitle" class="picker-popup-title">V\u00e4lj karakt\u00e4rsdrag</h3><button id="traitClose" class="char-btn icon picker-popup-close" type="button" title="St\u00e4ng">\u2715</button></header><p class="picker-popup-subtitle">V\u00e4lj vilket karakt\u00e4rsdrag som ska f\u00e5 bonus.</p><div id="traitOpts" class="picker-popup-options"></div><div class="picker-popup-actions"><button id="traitCancel" class="char-btn danger" type="button">Avbryt</button></div></div>`;
     document.body.appendChild(div);
+    window.registerOverlayElement?.(div);
   }
 
   function openPopup(options, cb){
     createPopup();
     const pop=document.getElementById('traitPopup');
+    const inner=pop.querySelector('.popup-inner');
     const box=pop.querySelector('#traitOpts');
-    const cls=pop.querySelector('#traitCancel');
-    box.innerHTML=options.map((n,i)=>`<button data-i="${i}" class="char-btn">${n}</button>`).join('');
+    const cancelBtn=pop.querySelector('#traitCancel');
+    const closeBtn=pop.querySelector('#traitClose');
+    box.innerHTML=options.map((n,i)=>`<button data-i="${i}" class="char-btn" type="button">${n}</button>`).join('');
     pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-    function close(){
+    if(inner) inner.scrollTop = 0;
+    let done=false;
+    function finish(result){
+      if(done) return;
+      done=true;
       pop.classList.remove('open');
       box.innerHTML='';
       box.removeEventListener('click',onClick);
-      cls.removeEventListener('click',onCancel);
+      cancelBtn.removeEventListener('click',onCancel);
+      closeBtn.removeEventListener('click',onCancel);
       pop.removeEventListener('click',onOutside);
+      window.registerOverlayCleanup?.(pop, null);
+      cb(result);
     }
     function onClick(e){
       const b=e.target.closest('button[data-i]');
       if(!b) return;
       const idx=Number(b.dataset.i);
-      close();
-      cb(options[idx]);
+      finish(options[idx]);
     }
-    function onCancel(){ close(); cb(null); }
+    function onCancel(){ finish(null); }
     function onOutside(e){
-      if(!pop.querySelector('.popup-inner').contains(e.target)){
-        close();
-        cb(null);
+      if(e.target===pop){
+        finish(null);
       }
     }
+    function onOverlayClose(){ finish(null); }
     box.addEventListener('click',onClick);
-    cls.addEventListener('click',onCancel);
+    cancelBtn.addEventListener('click',onCancel);
+    closeBtn.addEventListener('click',onCancel);
     pop.addEventListener('click',onOutside);
+    window.registerOverlayCleanup?.(pop, onOverlayClose);
   }
 
   function pickTrait(used, cb){

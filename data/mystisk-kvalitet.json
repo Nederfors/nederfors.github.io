@@ -323,7 +323,10 @@
         "Mystisk kvalitet",
         "Rustningskvalitet",
         "Kvalitet"
-      ]
+      ],
+      "regler": {
+        "andrar": [{ "mal": "forsvar_modifierare", "varde": -4 }]
+      }
     },
     "effekt": "Begränsning −4 ej reducerbar men +1t6 i Bepansring; kräver minst medeltung rustning."
   },

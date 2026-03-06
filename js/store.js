@@ -101,6 +101,14 @@
     Object.entries(HAMNSKIFTE_NAMES).map(([k,v]) => [v,k])
   );
 
+  function isHamnskifteGrantEntry(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    const id = String(entry?.id || '').trim().toLowerCase();
+    if (id.startsWith('hamnskifte_grants')) return true;
+    const name = String(entry?.namn || '').trim();
+    return /^hamnskifte:\s*/i.test(name);
+  }
+
   const DARK_BLOOD_TRAITS = ['Naturligt vapen', 'Pansar', 'Robust', 'Regeneration', 'Vingar'];
 
   let entryUidCounter = 0;
@@ -150,7 +158,8 @@
     'trait',
     'form',
     'race',
-    'noInv'
+    'noInv',
+    'manualRuleOverride'
   ]);
 
   const ENTRY_PRESERVE_KEYS = new Set([
@@ -161,7 +170,8 @@
     'trait',
     'form',
     'race',
-    'noInv'
+    'noInv',
+    'manualRuleOverride'
   ]);
 
   const stableClone = (value) => {
@@ -628,6 +638,7 @@
       possessionMoney: defaultMoney(),
       possessionRemoved: 0,
       hamnskifteRemoved: [],
+      suppressedEntryGrants: {},
       forcedDefense: '',
       defenseSetup: defaultDefenseSetup(),
       notes: defaultNotes(),
@@ -681,6 +692,32 @@
       data.darkPastSuppressed = false;
       mutated = true;
     }
+    const normalizedSuppressedEntryGrants = normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants);
+    if (Array.isArray(data.hamnskifteRemoved) && data.hamnskifteRemoved.length) {
+      const REMOVED_TO_GRANT_ID = {
+        'Naturligt vapen': 'hamnskifte_grants4',
+        'Pansar': 'hamnskifte_grants2',
+        'Robust': 'hamnskifte_grants1',
+        'Regeneration': 'hamnskifte_grants3'
+      };
+      data.hamnskifteRemoved.forEach(baseName => {
+        const grantId = REMOVED_TO_GRANT_ID[baseName];
+        if (grantId) addSuppressedEntryGrant(normalizedSuppressedEntryGrants, 'Hamnskifte', `id:${grantId}`);
+      });
+      data.hamnskifteRemoved = [];
+      mutated = true;
+    }
+    if (data.darkPastSuppressed) {
+      addSuppressedEntryGrant(
+        normalizedSuppressedEntryGrants,
+        'Mörkt blod',
+        `name:${normalizeEntryGrantName('Mörkt förflutet')}`
+      );
+    }
+    if (JSON.stringify(normalizedSuppressedEntryGrants) !== JSON.stringify(data.suppressedEntryGrants || {})) {
+      mutated = true;
+    }
+    data.suppressedEntryGrants = normalizedSuppressedEntryGrants;
     if (!data.notes) {
       data.notes = defaultNotes();
       mutated = true;
@@ -992,40 +1029,351 @@
     return { base, blood };
   }
 
-  function applyDarkBloodEffects(store, list) {
-    const hasDark = list.some(x => x.namn === 'Mörkt blod');
-    const idxBest = list.findIndex(x => x.namn === 'Mörkt förflutet');
-    const data = store.data[store.current] || {};
-    const suppressed = !!data.darkPastSuppressed;
-
-    if (hasDark) {
-      if (idxBest < 0 && !suppressed) {
-        const entry = lookupEntry({ name: 'Mörkt förflutet' });
-        if (entry) list.push({ ...entry });
-      }
-    }
+  function normalizeEntryGrantName(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
   }
 
-  function applyRaceTraits(list) {
-    const races = [];
-    const main = list.find(isRas)?.namn || null;
-    if (main) races.push(main);
-    list.forEach(it => {
-      if (it.namn === 'Blodsband' && it.race) races.push(it.race);
+  function normalizeSuppressedEntryGrantMap(raw) {
+    const out = {};
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return out;
+    Object.keys(raw).forEach(sourceName => {
+      const source = String(sourceName || '').trim();
+      if (!source) return;
+      const values = Array.isArray(raw[sourceName]) ? raw[sourceName] : [];
+      const keys = values
+        .map(value => String(value || '').trim())
+        .filter(Boolean);
+      if (!keys.length) return;
+      out[source] = Array.from(new Set(keys));
     });
-    DB.forEach(ent => {
-      if (!((ent.taggar?.typ || []).includes('S\u00e4rdrag'))) return;
-      const ras = ent.taggar?.ras;
-      if (!ras || !Array.isArray(ras)) return;
-      if (ent.niv\u00e5er) return;
-      const idx = list.findIndex(x => x.namn === ent.namn);
-      const allowed = races.some(r => ras.includes(r));
-      if (allowed) {
-        if (idx < 0) list.push({ ...ent });
-      } else if (idx >= 0) {
-        list.splice(idx, 1);
+    return out;
+  }
+
+  function addSuppressedEntryGrant(map, sourceName, targetKey) {
+    const source = String(sourceName || '').trim();
+    const target = String(targetKey || '').trim();
+    if (!source || !target) return;
+    const list = Array.isArray(map[source]) ? map[source] : [];
+    if (!list.includes(target)) list.push(target);
+    map[source] = list;
+  }
+
+  function removeSuppressedEntryGrant(map, sourceName, targetKey) {
+    const source = String(sourceName || '').trim();
+    const target = String(targetKey || '').trim();
+    if (!source || !target || !Array.isArray(map[source])) return;
+    map[source] = map[source].filter(value => value !== target);
+    if (!map[source].length) delete map[source];
+  }
+
+  function isSuppressedEntryGrant(map, sourceName, targetKey) {
+    const source = String(sourceName || '').trim();
+    const target = String(targetKey || '').trim();
+    if (!source || !target) return false;
+    return Array.isArray(map[source]) && map[source].includes(target);
+  }
+
+  function getEntryGrantTargetKey(ref) {
+    const name = normalizeEntryGrantName(ref?.name || ref?.namn || '');
+    if (name) return `name:${name}`;
+    const id = ref?.id === undefined || ref?.id === null
+      ? ''
+      : String(ref.id).trim();
+    return id ? `id:${id}` : '';
+  }
+
+  function resolveEntryGrantTarget(target) {
+    const id = target?.id === undefined || target?.id === null
+      ? ''
+      : String(target.id).trim();
+    const name = typeof target?.name === 'string'
+      ? target.name.trim()
+      : (typeof target?.namn === 'string' ? target.namn.trim() : '');
+    let hit = null;
+    if (typeof global.lookupEntry === 'function') {
+      try {
+        const query = {};
+        if (id) query.id = id;
+        if (name) query.name = name;
+        if (Object.keys(query).length) hit = global.lookupEntry(query);
+      } catch {}
+    }
+    const resolvedId = hit?.id === undefined || hit?.id === null
+      ? (id || undefined)
+      : hit.id;
+    const resolvedName = (typeof hit?.namn === 'string' && hit.namn.trim())
+      ? hit.namn.trim()
+      : name;
+    const key = getEntryGrantTargetKey({ id: resolvedId, name: resolvedName || name })
+      || getEntryGrantTargetKey({ id, name });
+    return {
+      id: resolvedId,
+      name: resolvedName,
+      key,
+      entry: hit && typeof hit === 'object' ? hit : null
+    };
+  }
+
+  function listHasEntryByGrantTarget(list, target) {
+    const targetId = target?.id === undefined || target?.id === null
+      ? ''
+      : String(target.id).trim();
+    const targetNameNorm = normalizeEntryGrantName(target?.name || target?.namn || '');
+    return (Array.isArray(list) ? list : []).some(entry => {
+      if (!entry || typeof entry !== 'object') return false;
+      if (targetId && entry.id !== undefined && entry.id !== null && String(entry.id) === targetId) return true;
+      return targetNameNorm && normalizeEntryGrantName(entry?.namn || '') === targetNameNorm;
+    });
+  }
+
+  function listHasEntryByName(list, name) {
+    const normalized = normalizeEntryGrantName(name);
+    if (!normalized) return false;
+    return (Array.isArray(list) ? list : []).some(entry => normalizeEntryGrantName(entry?.namn || '') === normalized);
+  }
+
+  function buildGrantMaps(list) {
+    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const grantCounts = new Map();
+    const grantConstraints = new Map();
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return { grantCounts, grantConstraints };
+
+    global.rulesHelper.getEntryGrantTargets(entries).forEach(rawTarget => {
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      const key = resolvedTarget?.key || getEntryGrantTargetKey(rawTarget);
+      if (!key) return;
+      grantCounts.set(key, (grantCounts.get(key) || 0) + 1);
+      if (rawTarget.gratisTill && !grantConstraints.has(key)) {
+        grantConstraints.set(key, { gratisTill: rawTarget.gratisTill });
       }
     });
+
+    return { grantCounts, grantConstraints };
+  }
+
+  function buildEntryGrantCountMap(list) {
+    return buildGrantMaps(list).grantCounts;
+  }
+
+  function getGrantTargetOccurrence(list, entry, targetKey) {
+    const entries = Array.isArray(list) ? list.filter(item => item && typeof item === 'object') : [];
+    const wantedUid = entry && entry.__uid ? String(entry.__uid) : '';
+    const wantedSig = entrySignature(entry);
+    let count = 0;
+    let refIndex = -1;
+    let uidIndex = -1;
+    let sigIndex = -1;
+
+    entries.forEach(candidate => {
+      if (getEntryGrantTargetKey(candidate) !== targetKey) return;
+      if (refIndex === -1 && candidate === entry) refIndex = count;
+      if (uidIndex === -1 && wantedUid && candidate?.__uid && String(candidate.__uid) === wantedUid) {
+        uidIndex = count;
+      }
+      if (sigIndex === -1 && wantedSig && entrySignature(candidate) === wantedSig) {
+        sigIndex = count;
+      }
+      count += 1;
+    });
+
+    if (refIndex !== -1) return { index: refIndex, total: count };
+    if (uidIndex !== -1) return { index: uidIndex, total: count };
+    if (sigIndex !== -1) return { index: sigIndex, total: count };
+    return { index: count, total: count };
+  }
+
+  function getEntryGrantCoverage(entry, list, options = {}) {
+    const targetKey = getEntryGrantTargetKey(entry);
+    if (!targetKey) {
+      return {
+        key: '',
+        grantCount: 0,
+        occurrenceIndex: -1,
+        matchingCount: 0,
+        covered: false
+      };
+    }
+
+    let grantCounts, grantConstraints;
+    if (options.grantCounts instanceof Map) {
+      grantCounts = options.grantCounts;
+      grantConstraints = options.grantConstraints instanceof Map ? options.grantConstraints : new Map();
+    } else {
+      const maps = buildGrantMaps(list);
+      grantCounts = maps.grantCounts;
+      grantConstraints = maps.grantConstraints;
+    }
+
+    const grantCount = Math.max(0, Number(grantCounts.get(targetKey) || 0));
+    const occurrence = getGrantTargetOccurrence(list, entry, targetKey);
+    const occurrenceIndex = occurrence.index;
+    const matchingCount = occurrence.total;
+    let covered = grantCount > 0 && occurrenceIndex > -1 && occurrenceIndex < grantCount;
+
+    if (covered) {
+      const constraint = grantConstraints.get(targetKey);
+      if (constraint?.gratisTill) {
+        const entryLvlIdx = LEVEL_IDX[entry?.nivå || ''] || 0;
+        const gratisTillIdx = LEVEL_IDX[constraint.gratisTill] || 0;
+        if (entryLvlIdx > gratisTillIdx) covered = false;
+      }
+    }
+
+    return {
+      key: targetKey,
+      grantCount,
+      occurrenceIndex,
+      matchingCount,
+      covered
+    };
+  }
+
+  function getGrantedEntryOverrideCost(entry, list, options = {}) {
+    const targetKey = getEntryGrantTargetKey(entry);
+    if (!targetKey) return null;
+
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : buildGrantMaps(list).grantConstraints;
+
+    const constraint = grantConstraints.get(targetKey);
+    if (!constraint?.gratisTill) return null;
+
+    const entryLvlIdx = LEVEL_IDX[entry?.nivå || ''] || 0;
+    const gratisTillIdx = LEVEL_IDX[constraint.gratisTill] || 0;
+    if (entryLvlIdx <= gratisTillIdx) return null; // at or below free level → handled by isRuleGrantedEntry
+
+    // Additive auto-discount: cumulative cost minus the free portion
+    const totalCost = XP_LADDER[entry?.nivå || ''] || 10;
+    const freeCost = XP_LADDER[constraint.gratisTill] || 0;
+    return Math.max(0, totalCost - freeCost);
+  }
+
+  function isRuleGrantedEntry(entry, list, options = {}) {
+    return getEntryGrantCoverage(entry, list, options).covered;
+  }
+
+  function syncRuleEntryGrants(store, list, prevList) {
+    if (!store?.current) return false;
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const now = Array.isArray(list) ? list : [];
+    const suppressed = normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants);
+    const legacyTargetKey = `name:${normalizeEntryGrantName('Mörkt förflutet')}`;
+    if (data.darkPastSuppressed) {
+      addSuppressedEntryGrant(suppressed, 'Mörkt blod', legacyTargetKey);
+    }
+
+    const desiredBySource = new Map();
+    const prevDesiredBySource = new Map();
+    const allSources = new Set(Object.keys(suppressed));
+
+    global.rulesHelper.getEntryGrantTargets(now).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+
+      allSources.add(source);
+      if (!desiredBySource.has(source)) desiredBySource.set(source, new Map());
+      const sourceTargets = desiredBySource.get(source);
+      if (!sourceTargets.has(resolvedTarget.key)) {
+        sourceTargets.set(resolvedTarget.key, resolvedTarget);
+      }
+    });
+
+    global.rulesHelper.getEntryGrantTargets(prev).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+      allSources.add(source);
+      if (!prevDesiredBySource.has(source)) prevDesiredBySource.set(source, new Map());
+      prevDesiredBySource.get(source).set(resolvedTarget.key, resolvedTarget);
+    });
+
+    let changed = false;
+    allSources.forEach(source => {
+      const sourceWasPresent = listHasEntryByName(prev, source);
+      const sourceIsPresent = listHasEntryByName(now, source);
+      const sourceTargets = desiredBySource.get(source);
+      if (!sourceIsPresent) {
+        delete suppressed[source];
+        if (sourceWasPresent) {
+          const prevTargets = prevDesiredBySource.get(source);
+          if (prevTargets) {
+            prevTargets.forEach(target => {
+              for (let i = now.length - 1; i >= 0; i--) {
+                if (listHasEntryByGrantTarget([now[i]], target) && !now[i]?.manualRuleOverride) {
+                  now.splice(i, 1);
+                  changed = true;
+                }
+              }
+            });
+          }
+        }
+        return;
+      }
+
+      if (sourceTargets && sourceWasPresent) {
+        sourceTargets.forEach(target => {
+          const hadTarget = listHasEntryByGrantTarget(prev, target);
+          const hasTarget = listHasEntryByGrantTarget(now, target);
+          if (hadTarget && !hasTarget) {
+            addSuppressedEntryGrant(suppressed, source, target.key);
+          }
+        });
+      }
+
+      if (sourceTargets) {
+        sourceTargets.forEach(target => {
+          if (listHasEntryByGrantTarget(now, target)) {
+            removeSuppressedEntryGrant(suppressed, source, target.key);
+          }
+        });
+      }
+
+      // Clean up grants that fell off due to source level downgrade
+      if (sourceWasPresent) {
+        const prevTargetsForSource = prevDesiredBySource.get(source);
+        const currentTargetsForSource = desiredBySource.get(source);
+        if (prevTargetsForSource) {
+          prevTargetsForSource.forEach((prevTarget, key) => {
+            if (!currentTargetsForSource || !currentTargetsForSource.has(key)) {
+              for (let i = now.length - 1; i >= 0; i--) {
+                if (listHasEntryByGrantTarget([now[i]], prevTarget) && !now[i]?.manualRuleOverride) {
+                  now.splice(i, 1);
+                  changed = true;
+                }
+              }
+              removeSuppressedEntryGrant(suppressed, source, prevTarget.key);
+            }
+          });
+        }
+      }
+    });
+
+    desiredBySource.forEach((targets, source) => {
+      targets.forEach(target => {
+        if (!target?.entry) return;
+        if (isSuppressedEntryGrant(suppressed, source, target.key)) return;
+        if (listHasEntryByGrantTarget(now, target)) return;
+        const grantedEntry = { ...target.entry };
+        if (isHamnskifteGrantEntry(grantedEntry)) grantedEntry.form = 'beast';
+        now.push(grantedEntry);
+        changed = true;
+      });
+    });
+
+    data.suppressedEntryGrants = suppressed;
+    data.darkPastSuppressed = isSuppressedEntryGrant(suppressed, 'Mörkt blod', legacyTargetKey);
+    return changed;
   }
 
   function enforceEarthbound(list) {
@@ -1033,71 +1381,299 @@
     // Ny regel: tillåtet – ingen borttagning här.
   }
 
-  function enforceDwarf(list) {
-    if (list.some(x => x.namn === 'Dvärg')) {
-      for (let i = list.length - 1; i >= 0; i--) {
-        if (list[i].namn === 'Korruptionskänslig') list.splice(i, 1);
+  function enforceRuleConflicts(list) {
+    if (!Array.isArray(list) || list.length < 2) return;
+    const hasResolutionHelper = typeof global.rulesHelper?.getConflictResolutionForCandidate === 'function';
+    const hasReasonHelper = typeof global.rulesHelper?.getConflictReasonsForCandidate === 'function';
+    if (!hasResolutionHelper && !hasReasonHelper) return;
+    const normalizeName = (value) => String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    const kept = [];
+    list.forEach(entry => {
+      if (!entry || typeof entry !== 'object') return;
+      if (entry.manualRuleOverride) {
+        kept.push(entry);
+        return;
       }
+      const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
+      const resolution = hasResolutionHelper
+        ? global.rulesHelper.getConflictResolutionForCandidate(entry, kept, { level })
+        : {
+          reasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
+          blockingReasons: hasReasonHelper ? global.rulesHelper.getConflictReasonsForCandidate(entry, kept, { level }) : [],
+          replaceTargetNames: []
+        };
+      if (resolution.blockingReasons.length) return;
+      if (Array.isArray(resolution.replaceTargetNames) && resolution.replaceTargetNames.length) {
+        const replaceSet = new Set(
+          resolution.replaceTargetNames
+            .map(name => normalizeName(name))
+            .filter(Boolean)
+        );
+        for (let i = kept.length - 1; i >= 0; i--) {
+          if (replaceSet.has(normalizeName(kept[i]?.namn || '')) && !kept[i]?.manualRuleOverride) {
+            kept.splice(i, 1);
+          }
+        }
+      }
+      kept.push(entry);
+    });
+
+    if (kept.length !== list.length) {
+      list.splice(0, list.length, ...kept);
     }
   }
 
-  function enforcePackAnimal(list) {
-    const packIdx = list.findIndex(x => x.namn === 'Packåsna');
-    const hafsIdx = list.findIndex(x => x.namn === 'Hafspackare');
-    if (packIdx >= 0 && hafsIdx >= 0) {
-      if (packIdx > hafsIdx) {
-        list.splice(packIdx, 1);
-      } else {
-        list.splice(hafsIdx, 1);
+  function normalizeGrantSourceName(value) {
+    return String(value || '').trim();
+  }
+
+  function getInventoryGrantItemKey(ref) {
+    const id = ref?.id === undefined || ref?.id === null
+      ? ''
+      : String(ref.id).trim();
+    if (id) return `id:${id}`;
+    const name = normalizeLevelName(ref?.name || ref?.namn || '');
+    return name ? `name:${name}` : '';
+  }
+
+  function resolveInventoryGrantItem(grant) {
+    const id = grant?.id === undefined || grant?.id === null
+      ? ''
+      : String(grant.id).trim();
+    const name = typeof grant?.name === 'string' ? grant.name.trim() : '';
+
+    let hit = null;
+    if (typeof global.lookupEntry === 'function') {
+      try {
+        const query = {};
+        if (id) query.id = id;
+        if (name) query.name = name;
+        if (Object.keys(query).length) {
+          hit = global.lookupEntry(query);
+        }
+      } catch {}
+    }
+
+    const resolvedId = hit?.id === undefined || hit?.id === null
+      ? (id || undefined)
+      : hit.id;
+    const resolvedName = (typeof hit?.namn === 'string' && hit.namn.trim())
+      ? hit.namn.trim()
+      : name;
+    const key = getInventoryGrantItemKey({
+      id: resolvedId,
+      name: resolvedName || name
+    }) || getInventoryGrantItemKey({ id, name });
+
+    return {
+      id: resolvedId,
+      name: resolvedName,
+      key
+    };
+  }
+
+  function syncRuleInventoryGrants(store, list) {
+    if (!store?.current) return false;
+    if (typeof global.rulesHelper?.getInventoryGrantItems !== 'function') return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const inv = Array.isArray(data.inventory) ? data.inventory : [];
+    const desiredBySource = new Map();
+    const grants = global.rulesHelper.getInventoryGrantItems(Array.isArray(list) ? list : []);
+
+    grants.forEach(grant => {
+      const source = normalizeGrantSourceName(grant?.sourceEntryName || grant?.sourceEntryId);
+      if (!source) return;
+      const qty = Math.max(0, Math.floor(Number(grant?.qty || 0)));
+      if (!qty) return;
+      const resolved = resolveInventoryGrantItem(grant);
+      if (!resolved.key) return;
+
+      if (!desiredBySource.has(source)) desiredBySource.set(source, new Map());
+      const byItem = desiredBySource.get(source);
+      if (!byItem.has(resolved.key)) {
+        byItem.set(resolved.key, {
+          id: resolved.id,
+          name: resolved.name,
+          qty: 0
+        });
+      }
+      byItem.get(resolved.key).qty += qty;
+    });
+
+    let changed = false;
+
+    for (let i = inv.length - 1; i >= 0; i--) {
+      const row = inv[i];
+      if (!row || typeof row !== 'object') continue;
+      const source = normalizeGrantSourceName(row.perk);
+      const grantedQty = Math.max(0, Math.floor(Number(row.perkGratis || 0)));
+      if (!source || !grantedQty) continue;
+
+      const itemKey = getInventoryGrantItemKey(row);
+      const sourceItems = desiredBySource.get(source);
+      const desiredQty = itemKey && sourceItems && sourceItems.get(itemKey)
+        ? Math.max(0, Math.floor(Number(sourceItems.get(itemKey).qty || 0)))
+        : 0;
+      if (grantedQty > desiredQty) {
+        const diff = grantedQty - desiredQty;
+        row.qty = Math.max(0, (Number(row.qty) || 0) - diff);
+        row.gratis = Math.max(0, (Number(row.gratis) || 0) - diff);
+        row.perkGratis = desiredQty;
+        changed = true;
+      }
+      if (!row.perkGratis) {
+        delete row.perk;
+        delete row.perkGratis;
+        changed = true;
+      }
+      if ((Number(row.qty) || 0) <= 0) {
+        inv.splice(i, 1);
+        changed = true;
       }
     }
+
+    desiredBySource.forEach((itemsByKey, source) => {
+      itemsByKey.forEach((target, itemKey) => {
+        const desiredQty = Math.max(0, Math.floor(Number(target?.qty || 0)));
+        if (!desiredQty) return;
+
+        let row = inv.find(candidate => {
+          if (!candidate || typeof candidate !== 'object') return false;
+          const candidateKey = getInventoryGrantItemKey(candidate);
+          if (candidateKey !== itemKey) return false;
+          const candidateSource = normalizeGrantSourceName(candidate.perk);
+          return candidateSource === source || !candidateSource;
+        });
+
+        if (!row) {
+          inv.push({
+            id: target?.id,
+            name: target?.name || '',
+            qty: desiredQty,
+            gratis: desiredQty,
+            kvaliteter: [],
+            gratisKval: [],
+            removedKval: [],
+            perk: source,
+            perkGratis: desiredQty
+          });
+          changed = true;
+          return;
+        }
+
+        const currentSource = normalizeGrantSourceName(row.perk);
+        if (!currentSource) {
+          row.perk = source;
+        } else if (currentSource !== source) {
+          return;
+        }
+
+        const currentGrantedQty = Math.max(0, Math.floor(Number(row.perkGratis || 0)));
+        if (target?.id !== undefined && target?.id !== null && row.id !== target.id) {
+          row.id = target.id;
+          changed = true;
+        }
+        if (target?.name && row.name !== target.name) {
+          row.name = target.name;
+          changed = true;
+        }
+        if (desiredQty > currentGrantedQty) {
+          const diff = desiredQty - currentGrantedQty;
+          row.qty = Math.max(0, Number(row.qty) || 0) + diff;
+          row.gratis = Math.max(0, Number(row.gratis) || 0) + diff;
+          row.perkGratis = currentGrantedQty + diff;
+          changed = true;
+        }
+      });
+    });
+
+    if (changed) {
+      data.inventory = inv;
+    }
+    return changed;
   }
 
   function applyHamnskifteTraits(store, list) {
-    if (!store.current) return;
-    const data = store.data[store.current] || {};
-    const removed = Array.isArray(data.hamnskifteRemoved) ? data.hamnskifteRemoved : [];
+    // Migration shim: remove legacy Hamnskifte entries created by old applyHamnskifteTraits.
+    // New entries are granted via syncRuleEntryGrants using ger rules on Hamnskifte (mystisk-kraft).
+    const legacyNames = new Set(Object.values(HAMNSKIFTE_NAMES));
+    for (let i = list.length - 1; i >= 0; i--) {
+      if (legacyNames.has(list[i].namn) && !list[i]?.manualRuleOverride) list.splice(i, 1);
+    }
+  }
 
-    const hamLvl = abilityLevel(list, 'Hamnskifte');
-    const needed = [];
-    if (hamLvl >= 2) needed.push('Naturligt vapen', 'Pansar');
-    if (hamLvl >= 3) needed.push('Robust', 'Regeneration');
+  function getEntriesToBeCleanedByGrants(store, newList, prevList) {
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return [];
+    const now = Array.isArray(newList) ? newList : [];
+    const prev = Array.isArray(prevList) ? prevList : [];
+    const desiredBySource = new Map();
+    const prevDesiredBySource = new Map();
 
-    const all = Object.keys(HAMNSKIFTE_NAMES);
-    const hamNames = HAMNSKIFTE_NAMES;
-    const allHamNames = Object.values(hamNames);
+    global.rulesHelper.getEntryGrantTargets(now).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+      if (!desiredBySource.has(source)) desiredBySource.set(source, new Map());
+      if (!desiredBySource.get(source).has(resolvedTarget.key)) {
+        desiredBySource.get(source).set(resolvedTarget.key, resolvedTarget);
+      }
+    });
 
-    let customs = getCustomEntries(store).filter(e => !allHamNames.includes(e.namn));
+    global.rulesHelper.getEntryGrantTargets(prev).forEach(rawTarget => {
+      const source = String(rawTarget?.sourceEntryName || rawTarget?.sourceEntryId || '').trim();
+      if (!source) return;
+      const resolvedTarget = resolveEntryGrantTarget(rawTarget);
+      if (!resolvedTarget.key) return;
+      if (!prevDesiredBySource.has(source)) prevDesiredBySource.set(source, new Map());
+      if (!prevDesiredBySource.get(source).has(resolvedTarget.key)) {
+        prevDesiredBySource.get(source).set(resolvedTarget.key, resolvedTarget);
+      }
+    });
 
-    all.forEach(base => {
-      const hamName = hamNames[base];
-      if (!needed.includes(base)) {
-        for (let i=list.length-1;i>=0;i--) {
-          if (list[i].namn === hamName) {
-            list.splice(i,1);
-            const idx = removed.indexOf(base);
-            if (idx >= 0) removed.splice(idx,1);
+    const allSources = new Set([...desiredBySource.keys(), ...prevDesiredBySource.keys()]);
+    const result = [];
+    const seen = new WeakSet();
+
+    allSources.forEach(source => {
+      const sourceWasPresent = listHasEntryByName(prev, source);
+      const sourceIsPresent = listHasEntryByName(now, source);
+      let targetsToCheck = null;
+
+      if (!sourceIsPresent && sourceWasPresent) {
+        targetsToCheck = prevDesiredBySource.get(source);
+      } else if (sourceIsPresent && sourceWasPresent) {
+        const prevTargets = prevDesiredBySource.get(source);
+        const currentTargets = desiredBySource.get(source);
+        if (prevTargets) {
+          const dropped = new Map();
+          prevTargets.forEach((target, key) => {
+            if (!currentTargets || !currentTargets.has(key)) dropped.set(key, target);
+          });
+          if (dropped.size > 0) targetsToCheck = dropped;
+        }
+      }
+
+      if (!targetsToCheck) return;
+      targetsToCheck.forEach(target => {
+        for (const entry of now) {
+          if (listHasEntryByGrantTarget([entry], target) && !entry?.manualRuleOverride) {
+            if (!seen.has(entry)) {
+              seen.add(entry);
+              result.push({ entry, sourceName: source });
+            }
           }
         }
-        customs = customs.filter(c => c.namn !== hamName);
-      }
+      });
     });
 
-    needed.forEach(base => {
-      const hamName = hamNames[base];
-      if (!customs.some(c => c.namn === hamName)) {
-        const entry = lookupEntry({ id: base, name: base });
-        if (entry) customs.push({ ...entry, namn: hamName, form: 'beast' });
-      }
-      const idx = list.findIndex(it => it.namn === hamName);
-      if (idx < 0 && !removed.includes(base)) {
-        const entry = customs.find(e => e.namn === hamName);
-        if (entry) list.push({ ...entry, nivå: 'Novis' });
-      }
-    });
-
-    setCustomEntries(store, customs);
-    store.data[store.current].hamnskifteRemoved = removed;
+    return result;
   }
 
   function getDependents(list, entry) {
@@ -1116,18 +1692,15 @@
       });
     }
 
-    if (name === 'M\u00f6rkt blod') {
-      list.forEach(it => {
-        const base = HAMNSKIFTE_BASE[it.namn] || it.namn;
-        if (it.namn === 'Mörkt förflutet' || DARK_BLOOD_TRAITS.includes(base)) {
-          if (it.namn !== name) out.push(it.namn);
-        }
+    if (typeof global.rulesHelper?.getEntryGrantDependents === 'function') {
+      global.rulesHelper.getEntryGrantDependents(list, ent).forEach(depName => {
+        if (depName && depName !== name) out.push(depName);
       });
     }
 
-    if (name === 'Robust') {
-      list.forEach(it => {
-        if (it.namn === 'R\u00e5styrka') out.push(it.namn);
+    if (typeof global.rulesHelper?.getRequirementDependents === 'function') {
+      global.rulesHelper.getRequirementDependents(list, ent).forEach(depName => {
+        if (depName && depName !== name) out.push(depName);
       });
     }
 
@@ -1138,23 +1711,25 @@
       });
     }
 
-    if (isRas(ent)) {
-      const race = name;
-      list.forEach(it => {
-        const ras = it.taggar?.ras || [];
-        if (ras.includes(race)) out.push(it.namn);
-      });
-    }
-
-    if (name === 'Blodsband' && entry.race) {
-      const race = entry.race;
-      list.forEach(it => {
-        const ras = it.taggar?.ras || [];
-        if (ras.includes(race)) out.push(it.namn);
-      });
-    }
-
     return Array.from(new Set(out));
+  }
+
+  function syncRuleMoneyGrant(store, list, prev) {
+    if (!store?.current) return;
+    if (typeof global.rulesHelper?.getMoneyGrant !== 'function') return;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const prevGrant = global.rulesHelper.getMoneyGrant(Array.isArray(prev) ? prev : []);
+    const nowGrant  = global.rulesHelper.getMoneyGrant(Array.isArray(list) ? list : []);
+    const prevHas = prevGrant.daler || prevGrant.skilling || prevGrant.ortegar;
+    const nowHas  = nowGrant.daler  || nowGrant.skilling  || nowGrant.ortegar;
+    const priv    = data.privMoney || defaultMoney();
+    const privHas = priv.daler || priv.skilling || priv['örtegar'];
+    if (nowHas && !prevHas) {
+      data.privMoney = { daler: nowGrant.daler, skilling: nowGrant.skilling, 'örtegar': nowGrant.ortegar };
+    } else if (!nowHas && privHas) {
+      data.privMoney = defaultMoney();
+    }
   }
 
   function setCurrentList(store, list) {
@@ -1162,43 +1737,17 @@
     store.data[store.current] = store.data[store.current] || {};
     const prev = store.data[store.current]?.list || [];
     ensureListEntryMetadata(store, prev);
-    // Hantera undertryckning av Mörkt förflutet när Mörkt blod finns kvar
-    try {
-      const hadDark = prev.some(x => x.namn === 'Mörkt blod');
-      const hasDark = list.some(x => x.namn === 'Mörkt blod');
-      const hadPast = prev.some(x => x.namn === 'Mörkt förflutet');
-      const hasPast = list.some(x => x.namn === 'Mörkt förflutet');
-      store.data[store.current] = store.data[store.current] || {};
-      if (!hasDark) {
-        // Om Mörkt blod tagits bort: återställ suppression så att förflutet kan auto-läggas igen vid nytt val
-        store.data[store.current].darkPastSuppressed = false;
-      } else if (hadDark && hadPast && !hasPast) {
-        // Om användaren tog bort Mörkt förflutet medan Mörkt blod är kvar: undertryck auto-återläggning
-        store.data[store.current].darkPastSuppressed = true;
-      }
-    } catch {}
-
-    applyDarkBloodEffects(store, list);
-    applyRaceTraits(list);
+    syncRuleEntryGrants(store, list, prev);
     enforceEarthbound(list);
-    enforceDwarf(list);
-    enforcePackAnimal(list);
+    enforceRuleConflicts(list);
     applyHamnskifteTraits(store, list);
     syncEntryMetadataFromPrev(store, prev, list);
     store.data[store.current].list = list;
-    const hadPriv = prev.some(x => x.namn === 'Privilegierad');
-    const hasPriv = list.some(x => x.namn === 'Privilegierad');
-    const hasPos  = list.some(x => x.namn === 'Besittning');
+    syncRuleInventoryGrants(store, list);
+    syncRuleMoneyGrant(store, list, prev);
 
-    const priv = store.data[store.current].privMoney || defaultMoney();
-    const pos  = store.data[store.current].possessionMoney || defaultMoney();
-
-    const privHas = priv.daler || priv.skilling || priv['örtegar'];
-    if (hasPriv && !hadPriv) {
-      store.data[store.current].privMoney = { daler: 50, skilling: 0, 'örtegar': 0 };
-    } else if (!hasPriv && privHas) {
-      store.data[store.current].privMoney = defaultMoney();
-    }
+    const hasPos = list.some(x => x.namn === 'Besittning');
+    const pos    = store.data[store.current].possessionMoney || defaultMoney();
 
     if (!hasPos && (pos.daler || pos.skilling || pos['örtegar'])) {
       store.data[store.current].possessionMoney = defaultMoney();
@@ -1949,30 +2498,6 @@ function defaultTraits() {
   const RITUAL_COST = 10;
   const ADVANTAGE_STEP_COST = 5;
 
-  const ELITE_TO_BASE_MAGIC = {
-    'Templár': 'Teurgi',
-    'Stavmagiker': 'Stavmagiker',
-    'Andebesvärjare': 'Häxkonst',
-    'Blodvadare': 'Häxkonst',
-    'Demonolog': 'Svartkonst',
-    'Grönvävare': 'Häxkonst',
-    'Illusionist': 'Ordensmagi',
-    'Inkvisitor': 'Teurgi',
-    'Mentalist': 'Ordensmagi',
-    'Nekromantiker': 'Svartkonst',
-    'Pyromantiker': 'Ordensmagi',
-    'Själasörjare': 'Teurgi'
-  };
-
-  const TRAD_TO_SKILL = {
-    'Häxkonst': 'Häxkonster',
-    'Ordensmagi': 'Ordensmagi',
-    'Stavmagiker': 'Stavmagi',
-    'Teurgi': 'Teurgi',
-    'Trollsång': 'Trollsång',
-    'Symbolism': 'Symbolism'
-  };
-
   const LEVEL_IDX = {
     '': 0,
     Novis: 1,
@@ -1983,34 +2508,6 @@ function defaultTraits() {
     Avancerad: 3
   };
 
-  function resolveRitualLevel(entry) {
-    const selected = normalizeLevelName(entry?.nivå);
-    const defined = entryDefinedLevels(entry);
-    const legacyMap = {
-      Novis: 'Enkel',
-      'Gesäll': 'Ordinär',
-      'Mästare': 'Avancerad'
-    };
-    if (selected) {
-      if (!defined.length && legacyMap[selected]) return legacyMap[selected];
-      if (!defined.length || defined.includes(selected)) return selected;
-      if (defined.length === 1) return defined[0];
-    }
-    if (defined.length) {
-      if (defined.includes('Enkel')) return 'Enkel';
-      if (defined.includes('Novis')) return 'Enkel';
-      return defined[0];
-    }
-    return 'Enkel';
-  }
-
-  function ritualTraditionRequirement(level) {
-    const ritualLevel = normalizeLevelName(level);
-    if (ritualLevel === 'Avancerad' || ritualLevel === 'Mästare') return 3;
-    if (ritualLevel === 'Ordinär' || ritualLevel === 'Gesäll') return 2;
-    return 1; // Enkel / Novis / fallback
-  }
-
   function abilityLevel(list, ability) {
     const ent = list.find(x =>
       x.namn === ability &&
@@ -2019,54 +2516,14 @@ function defaultTraits() {
     return LEVEL_IDX[ent?.nivå || ''] || 0;
   }
 
-  function hamnskifteNoviceLimit(list, item, level) {
-    const lvl = LEVEL_IDX[level || 'Novis'] || 1;
-    if (lvl <= 1) return false;
-    const base = HAMNSKIFTE_BASE[item.namn];
-    if (!base) return false;
-    const hamlvl = abilityLevel(list, 'Hamnskifte');
-    const hasBloodvader = list.some(x => x.namn === 'Blodvadare');
-    if (hasBloodvader) return false;
-    if (['Naturligt vapen', 'Pansar'].includes(base) && hamlvl >= 2) {
-      return true;
-    }
-    if (['Regeneration', 'Robust'].includes(base) && hamlvl >= 3) {
-      return true;
-    }
-    return false;
-  }
+  function hamnskifteNoviceLimit() { return false; }
 
   function isFreeMonsterTrait(list, item) {
-    const base = HAMNSKIFTE_BASE[item.namn];
-    if (!base) return false;
-    const lvl = LEVEL_IDX[item.nivå || 'Novis'] || 1;
-    if (lvl !== 1) return false; // Only Novis level can be free
-
-    const hamnskifte = abilityLevel(list, 'Hamnskifte');
-
-    if (['Naturligt vapen', 'Pansar'].includes(base)) {
-      return hamnskifte >= 2;
-    }
-
-    if (['Regeneration', 'Robust'].includes(base)) {
-      return hamnskifte >= 3;
-    }
-
-    return false;
+    // Level-free check is now handled by the ger/gratis_upp_till system via isRuleGrantedEntry.
+    return isRuleGrantedEntry(item, list);
   }
 
-  function monsterTraitDiscount(list, item) {
-    const base = HAMNSKIFTE_BASE[item.namn];
-    if (!base) return 0;
-    const hamnskifte = abilityLevel(list, 'Hamnskifte');
-
-    if (hamnskifte >= 2 && ['Naturligt vapen', 'Pansar'].includes(base)) {
-      return 10;
-    }
-
-    if (hamnskifte >= 3 && ['Regeneration', 'Robust'].includes(base)) {
-      return 10;
-    }
+  function monsterTraitDiscount() {
 
     return 0;
   }
@@ -2081,64 +2538,44 @@ function defaultTraits() {
   }
 
   function calcPermanentCorruption(list, extra) {
-    let cor = 0;
-    const isDwarf = list.some(x => x.namn === 'Dvärg' && (x.taggar?.typ || []).includes('Ras'));
-    list.forEach(it => {
-      const levelValue = LEVEL_IDX[it.nivå || 'Novis'] || 0;
-      if (it.namn === 'Reningskraft') {
-        cor += levelValue;
-        return;
-      }
-      const types = it.taggar?.typ || [];
-      if (!['Mystisk kraft', 'Ritual'].some(t => types.includes(t))) return;
-      if (isDwarf && types.includes('Mystisk kraft') && it.namn === 'Vedergällning') return;
-      const trads = explodeTags(it.taggar?.ark_trad);
-      let lvl = 0;
-      trads.forEach(tr => {
-        const baseTrad = ELITE_TO_BASE_MAGIC[tr] || tr;
-        const abilityName = TRAD_TO_SKILL[baseTrad] || TRAD_TO_SKILL[tr];
-        if (abilityName) {
-          lvl = Math.max(lvl, abilityLevel(list, abilityName));
-        }
+    if (typeof global.rulesHelper?.calcPermanentCorruption === 'function') {
+      return global.rulesHelper.calcPermanentCorruption(list, {
+        corruption: extra?.corruption || 0,
+        korruptionstroskel: extra?.korruptionstroskel || 0
       });
-      if (types.includes('Mystisk kraft')) {
-        const plvl = levelValue || 1;
-        if (plvl > lvl) cor += (plvl - lvl);
-      } else if (types.includes('Ritual')) {
-        const reqLevel = ritualTraditionRequirement(resolveRitualLevel(it));
-        if (lvl < reqLevel) cor++;
-      }
-    });
-    cor += extra?.corruption || 0;
-    return cor;
+    }
+    return Number(extra?.corruption || 0);
   }
 
-  function calcDarkPastPermanentCorruption(list, thresh) {
-    if (!Array.isArray(list)) return 0;
-    if (!list.some(e => e.namn === 'Mörkt förflutet')) return 0;
-    return Math.ceil((Number(thresh) || 0) / 4);
+  function calcCorruptionTrackStats(list, willpower) {
+    const will = Number(willpower || 0);
+    if (typeof global.rulesHelper?.getCorruptionTrackStats === 'function') {
+      return global.rulesHelper.getCorruptionTrackStats(list, {
+        viljestark: will
+      });
+    }
+
+    return {
+      viljestark: will,
+      korruptionstroskel: Math.ceil(will / 2),
+      styggelsetroskel: will
+    };
   }
 
   function calcUsedXP(list, extra) {
     let xp = 0;
     const entries = Array.isArray(list) ? list : [];
+    const { grantCounts, grantConstraints } = buildGrantMaps(entries);
     const advantageCounts = new Map();
 
     entries.forEach(item => {
       if (!item || typeof item !== 'object') return;
+      if (isRuleGrantedEntry(item, entries, { grantCounts, grantConstraints })) return;
       const types = (item.taggar?.typ || []).map(t => t.toLowerCase());
 
       if (isLevelCostType(types)) {
-        let cost = isFreeMonsterTrait(entries, item)
-          ? 0
-          : entryLevelCost(item);
-        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
-        xp += cost;
-
-      } else if (types.includes('monstruöst särdrag')) {
-        let cost = isFreeMonsterTrait(entries, item) ? 0 : RITUAL_COST;
-        cost = Math.max(0, cost - monsterTraitDiscount(entries, item));
-        xp += cost;
+        const overrideCost = getGrantedEntryOverrideCost(item, entries, { grantCounts, grantConstraints });
+        xp += overrideCost !== null ? overrideCost : entryLevelCost(item);
       }
 
       const advKey = getAdvantageKey(item, types);
@@ -2157,14 +2594,17 @@ function defaultTraits() {
     return xp;
   }
 
-  function getDisadvantages(list) {
-    const hasDark = list.some(x => x.namn === 'Mörkt blod');
-    return list.filter(item => {
+  function getDisadvantages(list, options = {}) {
+    const entries = Array.isArray(list) ? list : [];
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : buildEntryGrantCountMap(entries);
+    return entries.filter(item => {
       const isDis = (item.taggar?.typ || [])
         .map(t => t.toLowerCase())
         .includes('nackdel');
       if (!isDis) return false;
-      if (hasDark && item.namn === 'Mörkt förflutet') return false;
+      if (isRuleGrantedEntry(item, entries, { grantCounts })) return false;
       return true;
     });
   }
@@ -2180,8 +2620,8 @@ function defaultTraits() {
     return null;
   }
 
-  function disadvantagesWithXP(list) {
-    const disadvantages = getDisadvantages(list);
+  function disadvantagesWithXP(list, options = {}) {
+    const disadvantages = getDisadvantages(list, options);
     if (disadvantages.length <= 5) return disadvantages;
     const sorted = disadvantages
       .map((entry, index) => ({ entry, index }))
@@ -2235,29 +2675,35 @@ function defaultTraits() {
     return ADVANTAGE_STEP_COST * 3;
   }
 
-  function resolveAdvantageCount(entry, list, types) {
+  function resolveAdvantageCount(entry, list, types, options = {}) {
     const key = getAdvantageKey(entry, types);
     if (!key) return null;
     const arr = Array.isArray(list) ? list : [];
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : buildEntryGrantCountMap(arr);
     let count = 0;
     let includesEntry = false;
     arr.forEach(item => {
       if (getAdvantageKey(item) === key) {
-        count += 1;
+        if (!isRuleGrantedEntry(item, arr, { grantCounts })) {
+          count += 1;
+        }
         if (!includesEntry && item === entry) includesEntry = true;
       }
     });
-    const effectiveCount = includesEntry ? count : count + 1;
+    const previewCount = isRuleGrantedEntry(entry, arr, { grantCounts }) ? 0 : 1;
+    const effectiveCount = includesEntry ? count : count + previewCount;
     return { key, count, effectiveCount };
   }
 
   function calcEntryXP(entry, list) {
+    const entries = Array.isArray(list) ? list : [];
+    const { grantCounts, grantConstraints } = buildGrantMaps(entries);
+    if (isRuleGrantedEntry(entry, entries, { grantCounts, grantConstraints })) return 0;
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) {
-      const hasDark = (list || []).some(x => x.namn === 'Mörkt blod');
-      if (entry.namn === 'Mörkt förflutet' && hasDark) return 0;
-      const disXp = disadvantagesWithXP(list || []);
-      const entries = Array.isArray(list) ? list : [];
+      const disXp = disadvantagesWithXP(entries, { grantCounts });
       if (entries.includes(entry)) {
         if (disXp.includes(entry)) return -ADVANTAGE_STEP_COST;
         return 0;
@@ -2266,18 +2712,11 @@ function defaultTraits() {
     }
     let xp = 0;
     if (isLevelCostType(types)) {
-      let cost = isFreeMonsterTrait(list || [], entry)
-        ? 0
-        : entryLevelCost(entry);
-      cost = Math.max(0, cost - monsterTraitDiscount(list || [], entry));
-      xp += cost;
-    } else if (types.includes('monstruöst särdrag')) {
-      let cost = isFreeMonsterTrait(list || [], entry) ? 0 : RITUAL_COST;
-      cost = Math.max(0, cost - monsterTraitDiscount(list || [], entry));
-      xp += cost;
+      const overrideCost = getGrantedEntryOverrideCost(entry, entries, { grantCounts, grantConstraints });
+      xp += overrideCost !== null ? overrideCost : entryLevelCost(entry);
     }
     if (types.includes('fördel')) {
-      const advantageInfo = resolveAdvantageCount(entry, list, types);
+      const advantageInfo = resolveAdvantageCount(entry, entries, types, { grantCounts });
       if (advantageInfo) {
         xp += advantageTotalCost(advantageInfo.effectiveCount);
       } else {
@@ -2317,8 +2756,13 @@ function defaultTraits() {
     const xpSource = (level && (!baseSource || baseSource.nivå !== level))
       ? { ...baseSource, nivå: level }
       : baseSource;
+    const grantCounts = buildEntryGrantCountMap(baseList);
     const stackKey = stackableDisplayKey(entry);
-    if (stackKey) {
+    const stackGrantCount = Math.max(
+      0,
+      Number(getEntryGrantCoverage(xpSource, baseList, { grantCounts }).grantCount || 0)
+    );
+    if (stackKey && stackGrantCount <= 0) {
       const stackEntries = baseList.filter(item => stackableDisplayKey(item) === stackKey);
       const actualCount = stackEntries.length;
       const previewBonus = actualCount === 0 ? 1 : 0;
@@ -2327,7 +2771,7 @@ function defaultTraits() {
         return advantageTotalCost(targetCount);
       }
       if (stackKey.startsWith('dis:')) {
-        const eligible = disadvantagesWithXP(baseList);
+        const eligible = disadvantagesWithXP(baseList, { grantCounts });
         const eligibleSet = new Set(
           eligible
             .map(entryMembershipKey)
@@ -2380,36 +2824,52 @@ function defaultTraits() {
   }
 
   function calcTotalXP(baseXp, list) {
-    return Number(baseXp || 0) + disadvantagesWithXP(list).length * 5;
+    const entries = Array.isArray(list) ? list : [];
+    const grantCounts = buildEntryGrantCountMap(entries);
+    return Number(baseXp || 0) + disadvantagesWithXP(entries, { grantCounts }).length * 5;
   }
 
   function calcCarryCapacity(strength, list) {
     const str = Number(strength || 0);
-    let base = str + 3;
-    if (Array.isArray(list)) {
-      if (list.some(e => e.namn === 'Packåsna')) {
-        base = Math.ceil(str * 1.5) + 3;
-      } else if (list.some(e => e.namn === 'Hafspackare')) {
-        base = Math.ceil(str * 0.5) + 3;
-      }
+    if (typeof global.rulesHelper?.getCarryCapacityBase === 'function') {
+      return global.rulesHelper.getCarryCapacityBase(list, {
+        stark: str
+      });
     }
-    return base;
+    return str + 3;
+  }
+
+  function calcToughness(strength, list) {
+    const str = Number(strength || 0);
+    if (typeof global.rulesHelper?.getToughnessBase === 'function') {
+      return global.rulesHelper.getToughnessBase(list, {
+        stark: str
+      });
+    }
+    return Math.max(10, str);
+  }
+
+  function calcTraitTotalMax(list, inventory) {
+    if (typeof global.rulesHelper?.getTraitTotalMax === 'function') {
+      return global.rulesHelper.getTraitTotalMax(list, inventory);
+    }
+    return 80;
   }
 
   function calcPainThreshold(strength, list, extra) {
-    const painBonus = list.filter(e => e.namn === 'Smärttålig').length;
-    const painPenalty = list.filter(e => e.namn === 'Bräcklig').length;
-    let pain = Math.ceil(Number(strength || 0) / 2);
-    pain += painBonus - painPenalty;
-    const perm = calcPermanentCorruption(list, extra);
-    if (list.some(e => e.namn === 'Jordnära')) {
-      pain -= Math.floor(perm / 2);
+    const entries = Array.isArray(list) ? list : [];
+    const str = Number(strength || 0);
+    let pain = Math.ceil(str / 2);
+    const perm = calcPermanentCorruption(entries, extra);
+
+    if (typeof global.rulesHelper?.getPainThresholdModifier === 'function') {
+      pain += global.rulesHelper.getPainThresholdModifier(entries, {
+        ...(extra && typeof extra === 'object' ? extra : {}),
+        stark: str,
+        permanent_korruption: perm
+      });
     }
-    // Ny regel: Jordnära + Mörkt förflutet ger ytterligare - (smärtgräns / 4)
-    if (list.some(e => e.namn === 'Jordnära') && list.some(e => e.namn === 'Mörkt förflutet')) {
-      const extraPenalty = Math.floor(pain / 4);
-      pain -= extraPenalty;
-    }
+
     return pain;
   }
 
@@ -2436,6 +2896,20 @@ function defaultTraits() {
     });
     if (obj.nilasPopupShown === false) delete obj.nilasPopupShown;
     if (obj.darkPastSuppressed === false) delete obj.darkPastSuppressed;
+    if (obj.suppressedEntryGrants && typeof obj.suppressedEntryGrants === 'object' && !Array.isArray(obj.suppressedEntryGrants)) {
+      const compact = {};
+      Object.keys(obj.suppressedEntryGrants).forEach(sourceName => {
+        const source = String(sourceName || '').trim();
+        if (!source) return;
+        const values = obj.suppressedEntryGrants[sourceName];
+        const keys = Array.isArray(values)
+          ? values.map(value => String(value || '').trim()).filter(Boolean)
+          : [];
+        if (keys.length) compact[source] = Array.from(new Set(keys));
+      });
+      if (Object.keys(compact).length) obj.suppressedEntryGrants = compact;
+      else delete obj.suppressedEntryGrants;
+    }
     if (obj.baseXp === 0) delete obj.baseXp;
     if (obj.notes) {
       const def = defaultNotes();
@@ -2468,6 +2942,7 @@ function defaultTraits() {
           if (it.trait) row.t = it.trait;
           if (it.race) row.r = it.race;
           if (it.form) row.f = it.form;
+          if (it.manualRuleOverride) row.mo = 1;
           if (it.__uid) row.u = it.__uid;
           const orderVal = coerceOrderValue(it.__order);
           if (orderVal !== null) row.o = orderVal;
@@ -2506,6 +2981,7 @@ function defaultTraits() {
       if (src.t) base.trait = src.t;
       if (src.r) base.race = src.r;
       if (src.f) base.form = src.f;
+      if (src.mo || src.manualRuleOverride) base.manualRuleOverride = true;
       if (src.u) base.__uid = src.u;
       const orderVal = coerceOrderValue(src.o);
       if (orderVal !== null) base.__order = orderVal;
@@ -2612,6 +3088,12 @@ function defaultTraits() {
       if (row.kvaliteter && row.kvaliteter.length) res.k = row.kvaliteter;
       if (row.gratisKval && row.gratisKval.length) res.gk = row.gratisKval;
       if (row.removedKval && row.removedKval.length) res.rk = row.removedKval;
+      if (Array.isArray(row.manualQualityOverride) && row.manualQualityOverride.length) {
+        const manual = row.manualQualityOverride
+          .map(value => String(value || '').trim())
+          .filter(Boolean);
+        if (manual.length) res.mqo = Array.from(new Set(manual));
+      }
       if (row.artifactEffect === 'xp' || row.artifactEffect === 'corruption') res.e = row.artifactEffect;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
@@ -2737,6 +3219,11 @@ function defaultTraits() {
         const removedKval = Array.isArray(row.removedKval ?? row.rk)
           ? [...(row.removedKval ?? row.rk)]
           : [];
+        const manualQualityOverride = Array.isArray(row.manualQualityOverride ?? row.mqo)
+          ? Array.from(new Set((row.manualQualityOverride ?? row.mqo)
+            .map(value => String(value || '').trim())
+            .filter(Boolean)))
+          : [];
         const artifactEffectRaw = row.artifactEffect ?? row.e ?? entry?.artifactEffect ?? '';
         const artifactEffect = artifactEffectRaw === 'xp' || artifactEffectRaw === 'corruption'
           ? artifactEffectRaw
@@ -2751,6 +3238,9 @@ function defaultTraits() {
           removedKval,
           artifactEffect
         };
+        if (manualQualityOverride.length) {
+          expanded.manualQualityOverride = manualQualityOverride;
+        }
         const nivå = row.nivå ?? row.l;
         if (nivå !== undefined) expanded.nivå = nivå;
         const trait = row.trait ?? row.t;
@@ -3069,6 +3559,7 @@ function defaultTraits() {
     getCurrentList,
     getCharacterRaces,
     setCurrentList,
+    syncRuleInventoryGrants,
     findOutdatedEntries,
     syncEntriesWithDb,
     getInventory,
@@ -3133,9 +3624,11 @@ function defaultTraits() {
     entryLevelCost,
     calcTotalXP,
     countDisadvantages,
+    calcCorruptionTrackStats,
     calcPermanentCorruption,
-    calcDarkPastPermanentCorruption,
     calcCarryCapacity,
+    calcToughness,
+    calcTraitTotalMax,
     calcPainThreshold,
     abilityLevel,
     hamnskifteNoviceLimit,
@@ -3155,6 +3648,10 @@ function defaultTraits() {
     deleteCharacter,
     deleteCharactersInFolder,
     deleteAllCharacters,
+    buildGrantMaps,
+    isRuleGrantedEntry,
+    getGrantedEntryOverrideCost,
+    getEntriesToBeCleanedByGrants,
     getDependents,
     HAMNSKIFTE_NAMES,
     HAMNSKIFTE_BASE,

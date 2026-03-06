@@ -349,7 +349,18 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "ger": [
+          {
+            "mal": "post",
+            "namn": [
+              "Mörkt förflutet"
+            ],
+            "varde": "morkt_blod_morkt_forflutet"
+          }
+        ]
+      }
     },
     "effekt": "Ger tillgång till monstruösa särdrag (Naturligt vapen, Pansar, Robust, Regeneration, Vingar) men medför nackdelen Mörkt förflutet."
   },
@@ -363,7 +374,22 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "barkapacitet_faktor",
+            "satt": "ersatt",
+            "varde": 1.5
+          }
+        ],
+        "krockar": [
+          {
+            "namn": "Hafspackare",
+            "varde": "packasna_hafspackare"
+          }
+        ]
+      }
     },
     "effekt": "Bärkapacitet = Stark×1,5 + 3."
   },
@@ -622,7 +648,16 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "ger": [
+          {
+            "mal": "pengar",
+            "daler": 50,
+            "varde": "privilegierad_startkapital"
+          }
+        ]
+      }
     },
     "effekt": "Dubbelrull på socialt inom egen grupp (välj bäst) men dubbelslag med sämsta utfallet mot främlingar; startar med 50 daler."
   },
@@ -756,7 +791,44 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "ger": [
+          {
+            "mal": "foremal",
+            "foremal": [
+              {
+                "id": "di12",
+                "antal": 3
+              },
+              {
+                "id": "di23",
+                "antal": 1
+              },
+              {
+                "id": "di18",
+                "antal": 1
+              },
+              {
+                "id": "di5",
+                "antal": 3
+              },
+              {
+                "id": "i11",
+                "antal": 1
+              },
+              {
+                "id": "elix34",
+                "antal": 3
+              },
+              {
+                "id": "elix43",
+                "antal": 3
+              }
+            ]
+          }
+        ]
+      }
     },
     "effekt": "Börjar varje äventyr med extra utrustning: 3×10 m rep, papper, kritor, 3 facklor och ett signalhorn."
   },
@@ -772,7 +844,19 @@
       "ark_trad": [],
       "test": [
         "Stark"
-      ]
+      ],
+      "regler": {
+        "kraver": [
+          {
+            "nar": {
+              "har_namn": [
+                "Robust"
+              ]
+            },
+            "varde": "rawstyrka_robust"
+          }
+        ]
+      }
     },
     "effekt": "Med Robust får du +2 på Stark utanför strid per Robust-nivå."
   },
@@ -914,7 +998,16 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "korruptionstroskel",
+            "satt": "add",
+            "varde": 1
+          }
+        ]
+      }
     },
     "effekt": "Korruptionströskeln ökar med +1 varje gång (max +3)."
   },
@@ -928,7 +1021,16 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "smartgrans_tillagg",
+            "satt": "add",
+            "varde": 1
+          }
+        ]
+      }
     },
     "effekt": "Smärtgränsen ökar med +1 varje gång (max +3)."
   },
@@ -942,7 +1044,16 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "talighet_tillagg",
+            "satt": "add",
+            "varde": 1
+          }
+        ]
+      }
     },
     "effekt": "Total Tålighet ökar med +1."
   },
@@ -956,7 +1067,16 @@
         "Fördel"
       ],
       "ark_trad": [],
-      "test": []
+      "test": [],
+      "regler": {
+        "andrar": [
+          {
+            "mal": "styggelsetroskel",
+            "satt": "add",
+            "varde": 1
+          }
+        ]
+      }
     },
     "effekt": "Max korruption ökar med +1; tröskeln ändras inte."
   },

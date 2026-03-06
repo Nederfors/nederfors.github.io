@@ -8,7 +8,10 @@
         "Kvalitet",
         "Vapenkvalitet",
         "Sköldkvalitet"
-      ]
+      ],
+      "regler": {
+        "andrar": [{ "mal": "forsvar_modifierare", "varde": 1 }]
+      }
     },
     "effekt": "+1 Försvar vid parering."
   },
@@ -44,7 +47,10 @@
       "typ": [
         "Kvalitet",
         "Vapenkvalitet"
-      ]
+      ],
+      "regler": {
+        "andrar": [{ "mal": "traffsaker_modifierare_vapen", "varde": 1 }]
+      }
     },
     "effekt": "+1 på anfallsslag."
   },
@@ -56,7 +62,10 @@
       "typ": [
         "Kvalitet",
         "Rustningskvalitet"
-      ]
+      ],
+      "regler": {
+        "andrar": [{ "mal": "begransning_modifierare", "varde": 2 }]
+      }
     },
     "effekt": "Minskad begränsning (Lätt: 0, Medel: −1, Tung: −2)."
   },
@@ -68,7 +77,8 @@
       "typ": [
         "Kvalitet",
         "Sköldkvalitet"
-      ]
+      ],
+      "arm_fast": true
     },
     "effekt": "Skölden ockuperar inte handen, men tillåter ej användning av tvåhandsvapen. Kan ej användas för sköldbaserade förmågor eller kombineras med fler positiva kvaliteter."
   },
