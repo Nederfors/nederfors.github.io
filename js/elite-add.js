@@ -124,12 +124,39 @@
     }
   }
 
+  function parsePositiveLimit(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.floor(numeric);
+    if (rounded <= 0) return null;
+    return rounded;
+  }
+
+  function getEntryMaxCount(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return 1;
+    if (typeof utils.getEntryMaxCount === 'function') {
+      return Math.max(1, Number(utils.getEntryMaxCount(entry, options)) || 1);
+    }
+    const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
+    if (tagLimit !== null) return tagLimit;
+    const directLimit = parsePositiveLimit(entry?.max_antal);
+    if (directLimit !== null) return directLimit;
+    if (options.allowLegacy !== false) {
+      const legacyMulti = Boolean(
+        entry?.kan_införskaffas_flera_gånger === true
+        || entry?.taggar?.kan_införskaffas_flera_gånger === true
+      );
+      if (legacyMulti) return 3;
+    }
+    return 1;
+  }
+
   function isRepeatableBenefitEntry(entry) {
     if (!entry) return false;
     if (typeof utils.isRepeatableBenefitEntry === 'function') {
       return utils.isRepeatableBenefitEntry(entry);
     }
-    const multi = Boolean(entry?.kan_införskaffas_flera_gånger || entry?.taggar?.kan_införskaffas_flera_gånger);
+    const multi = getEntryMaxCount(entry) > 1;
     if (!multi) return false;
     return entryHasType(entry, 'Fördel') || entryHasType(entry, 'Nackdel');
   }
@@ -480,7 +507,7 @@
     const required = Math.max(0, Number(minCount) || 0);
     const rows = list.map(name => {
       const entry = findEntry(name);
-      const max = isRepeatableBenefitEntry(entry) ? 3 : 1;
+      const max = isRepeatableBenefitEntry(entry) ? getEntryMaxCount(entry) : 1;
       return { name, key: normalizeKey(name), max };
     }).filter(row => row.key);
     const totalMax = rows.reduce((sum, row) => sum + row.max, 0);
@@ -512,7 +539,7 @@
     const fromPlan = Math.max(0, Number(model?.benefitPlan?.byKey?.get(key)?.max) || 0);
     if (fromPlan > 0) return fromPlan;
     const entry = findEntry(name);
-    return isRepeatableBenefitEntry(entry) ? 3 : 1;
+    return isRepeatableBenefitEntry(entry) ? getEntryMaxCount(entry) : 1;
   }
 
   function benefitMinQtyFloor(model, name) {
@@ -1191,7 +1218,9 @@
       if (typeKey === 'ability' || typeKey === 'mystic') {
         extraOptions = ['Novis', 'Gesäll', 'Mästare'].map(level => ({ value: level, label: level }));
       } else if (typeKey === 'advantage' || typeKey === 'drawback') {
-        const maxCount = chosenEntry && isRepeatableBenefitEntry(chosenEntry) ? 3 : 1;
+        const maxCount = chosenEntry && isRepeatableBenefitEntry(chosenEntry)
+          ? getEntryMaxCount(chosenEntry)
+          : 1;
         extraOptions = Array.from({ length: maxCount }).map((_, idx) => ({ value: `x${idx + 1}`, label: `x${idx + 1}` }));
       } else {
         extraOptions = [{ value: 'x1', label: 'x1' }];
@@ -1309,7 +1338,7 @@
         return;
       }
       const entry = findEntry(picked);
-      const max = isRepeatableBenefitEntry(entry) ? 3 : 1;
+      const max = isRepeatableBenefitEntry(entry) ? getEntryMaxCount(entry) : 1;
       const floor = Math.max(1, Math.min(max, benefitMinQtyFloor(model, picked)));
       const prev = String(qtySel.value || '').trim();
       qtySel.innerHTML = Array.from({ length: Math.max(1, (max - floor) + 1) }, (_, idx) => {

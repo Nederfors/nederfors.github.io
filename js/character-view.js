@@ -10,6 +10,18 @@
     return { code, message, label, value };
   }
 
+  function getEntryMaxCount(entry) {
+    if (typeof window.storeHelper?.getEntryMaxCount === 'function') {
+      return Math.max(1, Number(window.storeHelper.getEntryMaxCount(entry)) || 1);
+    }
+    if (typeof window.rulesHelper?.getEntryMaxCount === 'function') {
+      return Math.max(1, Number(window.rulesHelper.getEntryMaxCount(entry)) || 1);
+    }
+    const raw = Number(entry?.taggar?.max_antal);
+    if (Number.isFinite(raw) && raw > 0) return Math.floor(raw);
+    return 1;
+  }
+
   async function confirmRuleStopOverride(entryName, stopResult, action = 'add') {
     const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
       ? window.rulesHelper.formatEntryStopMessages(entryName, stopResult || {})
@@ -1321,7 +1333,7 @@
       const groups = [];
       arr.forEach(p => {
         const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
-        const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel", "Nackdel"].includes(t))) && !p.trait;
+        const multi = getEntryMaxCount(p) > 1 && !p.trait;
         if (multi) {
           const g = groups.find(x => x.entry.namn === p.namn);
           if (g) { g.count++; return; }
@@ -1563,9 +1575,9 @@
           const skadeTabHtml = (typeof buildSkadetypPanelHtml === 'function' && skadeEntry)
             ? buildSkadetypPanelHtml(skadeEntry, { level: curLvl, tables: window.TABELLER })
             : '';
-          const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel", "Nackdel"].includes(t))) && !p.trait;
+          const multi = getEntryMaxCount(p) > 1 && !p.trait;
           const total = storeHelper.getCurrentList(store).filter(x => x.namn === p.namn && !x.trait).length;
-          const limit = storeHelper.monsterStackLimit(storeHelper.getCurrentList(store), p.namn);
+          const limit = getEntryMaxCount(p);
           const badge = g.count > 1 ? `<span class="count-badge">×${g.count}</span>` : '';
           const conflictTabHtml = conflictsHtml ? renderConflictTabButton() : '';
           const infoTagsHtml = infoTagParts.join(' ');
@@ -1920,16 +1932,10 @@
         }
         return;
       }
-      const multi = (p.kan_införskaffas_flera_gånger && typesList.some(t => ["Fördel", "Nackdel"].includes(t))) && !p.trait;
+      const multi = getEntryMaxCount(p) > 1 && !p.trait;
       let list;
       if (act === 'add') {
         if (!multi) return;
-        const cnt = before.filter(x => x.namn === name && !x.trait).length;
-        const limit = storeHelper.monsterStackLimit(before, name);
-        const hardStops = [];
-        if (cnt >= limit) {
-          hardStops.push(makeHardStop('stack_limit', `Limit: Denna fördel eller nackdel kan normalt bara tas ${limit} gånger.`));
-        }
         const lvlSel = liEl.querySelector('select.level');
         let lvl = lvlSel ? lvlSel.value : null;
         if (!lvl && p.nivåer) lvl = LVL.find(l => p.nivåer[l]) || p.nivå;
@@ -1943,19 +1949,10 @@
           }
         }
         const levelCandidate = { ...p, nivå: lvl };
-        if (isMonstrousTrait(p)) {
-          const missing = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(levelCandidate, before, { level: lvl }) || ['unknown'];
-          const monsterOk = typesList.includes('Elityrkesförmåga') ||
-            missing.length === 0;
-          if (!monsterOk) {
-            hardStops.push(makeHardStop('monster_trait_locked', 'Monstruöst särdrag: kan normalt inte väljas.'));
-          }
-        }
         const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
           ? window.rulesHelper.evaluateEntryStops(levelCandidate, before, {
             action: 'add',
-            level: lvl,
-            hardStops
+            level: lvl
           })
           : (() => {
             const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
@@ -1970,8 +1967,8 @@
               blockingConflicts,
               replaceTargetNames: conflictRes.replaceTargetNames || [],
               grantedLevelStop: null,
-              hardStops,
-              hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+              hardStops: [],
+              hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
             };
           })();
         const hasReplaceTargets = Array.isArray(stopResult.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
@@ -2123,10 +2120,6 @@
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
         ent.nivå = select.value;
-        const hardStops = [];
-        if (eliteReq.canChange(before) && !eliteReq.canChange(list)) {
-          hardStops.push(makeHardStop('elite_locked_level_change', 'Elityrke: Förmågan krävs för ett valt elityrke och kan normalt inte ändras.'));
-        }
         if (name === 'Monsterlärd') {
           if (['Gesäll', 'Mästare'].includes(ent.nivå)) {
             if (!ent.trait && window.monsterLore) {
@@ -2152,7 +2145,8 @@
                     fromLevel: old,
                     toLevel: ent.nivå,
                     level: ent.nivå,
-                    hardStops
+                    beforeList: before,
+                    afterList: list
                   })
                   : (() => {
                     const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
@@ -2167,8 +2161,8 @@
                       blockingConflicts,
                       replaceTargetNames: conflictRes.replaceTargetNames || [],
                       grantedLevelStop: null,
-                      hardStops,
-                      hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+                      hardStops: [],
+                      hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
                     };
                   })();
                 const forceRuleOverride = stopResult.hasStops
@@ -2210,7 +2204,8 @@
             fromLevel: old,
             toLevel: ent.nivå,
             level: ent.nivå,
-            hardStops
+            beforeList: before,
+            afterList: list
           })
           : (() => {
             const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
@@ -2225,8 +2220,8 @@
               blockingConflicts,
               replaceTargetNames: conflictRes.replaceTargetNames || [],
               grantedLevelStop: null,
-              hardStops,
-              hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+              hardStops: [],
+              hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
             };
           })();
         const forceRuleOverride = stopResult.hasStops

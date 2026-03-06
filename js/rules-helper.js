@@ -37,6 +37,7 @@
   });
 
   const MAL_REGISTRY = new Map();
+  const MANUAL_ENTRY_ERF_OVERRIDES = new Map();
 
   function registerMal(mal, handler) {
     MAL_REGISTRY.set(String(mal), handler);
@@ -68,6 +69,13 @@
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function isTruthyRuleValue(value) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    const norm = normalizeLevelName(value);
+    return ['true', '1', 'yes', 'ja', 'on'].includes(norm);
   }
 
   function toRuleList(value) {
@@ -113,6 +121,154 @@
       });
     });
     return out;
+  }
+
+  function getRuleOverrideToken(key, rule) {
+    if (!rule || typeof rule !== 'object') return '';
+    const explicitId = String(rule.regel_id || rule.rule_id || rule.id || '').trim();
+    if (explicitId) return `id:${normalizeLevelName(explicitId)}`;
+
+    const mal = String(rule.mal || '').trim();
+    if (mal) return `mal:${normalizeLevelName(mal)}`;
+
+    const nar = rule.nar && typeof rule.nar === 'object' ? rule.nar : {};
+    const ruleNames = toArray(rule.namn).map(name => normalizeLevelName(name)).filter(Boolean);
+    const narNames = toArray(nar.namn).map(name => normalizeLevelName(name)).filter(Boolean);
+    const narTypes = toArray(nar.typ).map(type => normalizeLevelName(type)).filter(Boolean);
+    const narTraditions = toArray(nar.ark_trad).map(trad => normalizeLevelName(trad)).filter(Boolean);
+
+    const names = Array.from(new Set([...ruleNames, ...narNames])).sort();
+    const types = Array.from(new Set(narTypes)).sort();
+    const traditions = Array.from(new Set(narTraditions)).sort();
+
+    if (names.length || types.length || traditions.length) {
+      return `${key}:names=${names.join(',')}|types=${types.join(',')}|ark_trad=${traditions.join(',')}`;
+    }
+    return '';
+  }
+
+  function mergeRuleListsByHierarchy(lowPriority, highPriority, key) {
+    const low = toRuleList(lowPriority);
+    const high = toRuleList(highPriority);
+    if (!low.length) return high;
+    if (!high.length) return low;
+
+    const highTokens = new Set(
+      high
+        .map(rule => getRuleOverrideToken(key, rule))
+        .filter(Boolean)
+    );
+
+    const baseline = highTokens.size
+      ? low.filter(rule => !highTokens.has(getRuleOverrideToken(key, rule)))
+      : low;
+
+    return baseline.concat(high);
+  }
+
+  function mergeRuleBlocksByHierarchy(lowPriority, highPriority) {
+    const out = {};
+    RULE_KEYS.forEach(key => {
+      const list = mergeRuleListsByHierarchy(lowPriority?.[key], highPriority?.[key], key);
+      if (list.length) out[key] = list;
+    });
+    return out;
+  }
+
+  function getTypeRuleMap(entry) {
+    const map = entry?.__typ_regler || entry?.typ_regler || entry?.__type_rules || entry?.type_rules;
+    if (!map || typeof map !== 'object' || Array.isArray(map)) return null;
+    return map;
+  }
+
+  function attachTypeRuleMap(entry, typeRules) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
+    if (!typeRules || typeof typeRules !== 'object' || Array.isArray(typeRules)) return entry;
+    if (!Object.keys(typeRules).length) return entry;
+    try {
+      Object.defineProperty(entry, '__typ_regler', {
+        value: typeRules,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      entry.__typ_regler = typeRules;
+    }
+    return entry;
+  }
+
+  function normalizeTypeRuleTemplate(rawTemplate) {
+    if (!rawTemplate || typeof rawTemplate !== 'object' || Array.isArray(rawTemplate)) return null;
+    if (rawTemplate.taggar && typeof rawTemplate.taggar === 'object' && !Array.isArray(rawTemplate.taggar)) {
+      return { taggar: rawTemplate.taggar };
+    }
+
+    const taggar = {};
+
+    if (rawTemplate.regler && typeof rawTemplate.regler === 'object' && !Array.isArray(rawTemplate.regler)) {
+      taggar.regler = rawTemplate.regler;
+    } else if (RULE_KEYS.some(key => rawTemplate[key] !== undefined)) {
+      taggar.regler = rawTemplate;
+    }
+
+    if (rawTemplate.nivå_data && typeof rawTemplate.nivå_data === 'object' && !Array.isArray(rawTemplate.nivå_data)) {
+      taggar.nivå_data = rawTemplate.nivå_data;
+    } else if (rawTemplate.niva_data && typeof rawTemplate.niva_data === 'object' && !Array.isArray(rawTemplate.niva_data)) {
+      taggar.niva_data = rawTemplate.niva_data;
+    }
+
+    if (rawTemplate.max_antal !== undefined) {
+      taggar.max_antal = rawTemplate.max_antal;
+    }
+    if (rawTemplate.kan_införskaffas_flera_gånger !== undefined) {
+      taggar.kan_införskaffas_flera_gånger = rawTemplate.kan_införskaffas_flera_gånger;
+    }
+    if (rawTemplate.kan_inforskaffas_flera_ganger !== undefined) {
+      taggar.kan_inforskaffas_flera_ganger = rawTemplate.kan_inforskaffas_flera_ganger;
+    }
+
+    if (!Object.keys(taggar).length) return null;
+    return { taggar };
+  }
+
+  function getTypeRuleTemplateEntries(entry) {
+    const map = getTypeRuleMap(entry);
+    if (!map) return [];
+
+    const mapByType = new Map();
+    Object.keys(map).forEach(typeName => {
+      const normalized = normalizeLevelName(typeName);
+      if (!normalized) return;
+      if (!mapByType.has(normalized)) mapByType.set(normalized, []);
+      mapByType.get(normalized).push(typeName);
+    });
+
+    const out = [];
+    const seenTemplates = new Set();
+    getEntryTypes(entry).forEach(typeName => {
+      const normalized = normalizeLevelName(typeName);
+      const matching = mapByType.get(normalized) || [];
+      matching.forEach(rawKey => {
+        if (seenTemplates.has(rawKey)) return;
+        seenTemplates.add(rawKey);
+        const template = normalizeTypeRuleTemplate(map[rawKey]);
+        if (template) out.push(template);
+      });
+    });
+    return out;
+  }
+
+  function getTypeRules(entry, level = '') {
+    const templates = getTypeRuleTemplateEntries(entry);
+    if (!templates.length) return {};
+
+    return templates.reduce((acc, templateEntry) => {
+      const block = !level
+        ? getTopLevelRules(templateEntry)
+        : mergeRuleBlocks(getTopLevelRules(templateEntry), getLevelRules(templateEntry, level));
+      return mergeRuleBlocksByHierarchy(acc, block);
+    }, {});
   }
 
   function getLevelDataMap(entry) {
@@ -173,7 +329,8 @@
 
   function resolveRuleSourceEntry(entry) {
     if (!entry || typeof entry !== 'object') return entry;
-    if (entryHasInlineRules(entry)) return entry;
+    const hasInlineRules = entryHasInlineRules(entry);
+    if (hasInlineRules && getTypeRuleMap(entry)) return entry;
     if (typeof window.lookupEntry !== 'function') return entry;
 
     const query = {};
@@ -184,22 +341,26 @@
     try {
       const hit = window.lookupEntry(query);
       if (hit && typeof hit === 'object') {
+        const hitTypeRules = getTypeRuleMap(hit);
+        if (hasInlineRules) {
+          return attachTypeRuleMap(entry, hitTypeRules);
+        }
         const extendsName = typeof hit.taggar?.extends === 'string' ? hit.taggar.extends.trim() : '';
         if (extendsName) {
           try {
             const base = window.lookupEntry({ name: extendsName });
             if (base && typeof base === 'object') {
-              return {
+              return attachTypeRuleMap({
                 ...hit,
                 taggar: {
                   ...hit.taggar,
                   regler: mergeRuleBlocks(base.taggar?.regler || {}, hit.taggar?.regler || {})
                 }
-              };
+              }, hitTypeRules);
             }
           } catch (_) { /* ignore base lookup errors */ }
         }
-        return hit;
+        return attachTypeRuleMap(hit, hitTypeRules);
       }
     } catch (_) {
       // Ignore lookup errors and keep the original entry as source.
@@ -211,8 +372,11 @@
   function getEntryRules(entry, options = {}) {
     const level = options && typeof options === 'object' ? options.level : '';
     const sourceEntry = resolveRuleSourceEntry(entry);
-    if (!level) return getTopLevelRules(sourceEntry);
-    return mergeRuleBlocks(getTopLevelRules(sourceEntry), getLevelRules(sourceEntry, level));
+    const typeRules = getTypeRules(sourceEntry, level);
+    const entryRules = !level
+      ? getTopLevelRules(sourceEntry)
+      : mergeRuleBlocks(getTopLevelRules(sourceEntry), getLevelRules(sourceEntry, level));
+    return mergeRuleBlocksByHierarchy(typeRules, entryRules);
   }
 
   function getRuleList(entry, key, options = {}) {
@@ -284,6 +448,49 @@
 
   function getDancingDefenseTraitRuleCandidates(list, context = {}) {
     return getTraitRuleCandidates(list, 'dansande_forsvar_karaktarsdrag', context);
+  }
+
+  // Returns full rule objects for separat_forsvar_karaktarsdrag rules on the list.
+  // Each returned rule already carries sourceEntryName, sourceEntryLevel, etc. from getListRules.
+  // satt:'ersatt' with cumulative level merging means the highest-level rule wins per (source, varde).
+  function getSeparateDefenseTraitRules(list, context = {}) {
+    const entries = Array.isArray(list) ? list : [];
+    const candidates = getListRules(entries, { key: 'andrar', mal: 'separat_forsvar_karaktarsdrag' })
+      .filter(rule => String(rule?.satt || '') === 'ersatt'
+        && evaluateNar(rule?.nar, { list: entries, ...context }));
+    // Deduplicate by (sourceEntryId, varde): last rule in accumulation order is the highest level
+    const seen = new Map();
+    candidates.forEach(rule => {
+      const key = `${rule.sourceEntryId}|${String(rule.varde || '')}`;
+      seen.set(key, rule);
+    });
+    return [...seen.values()];
+  }
+
+  // Applies only the modifier components opted-in via tillat flags.
+  // tillat: { karaktarsdrag, vapen_typer, vapen_kvaliteter }  (all default false → returns 0)
+  function getSelectiveDefenseModifier(list, weaponFacts, armorCtx, tillat) {
+    const tl = tillat || {};
+    if (!tl.karaktarsdrag && !tl.vapen_typer && !tl.vapen_kvaliteter) return 0;
+    const facts = normalizeDefenseWeaponFacts(weaponFacts || []);
+    const ctx = buildDefenseContext(
+      tl.karaktarsdrag ? list : [],
+      (tl.vapen_typer || tl.vapen_kvaliteter) ? facts : [],
+      armorCtx || { utrustadTyper: [], utrustadeKvaliteter: [] }
+    );
+    let total = 0;
+    if (tl.karaktarsdrag) {
+      total += sumModifierByMal(Array.isArray(list) ? list : [], 'forsvar_modifierare', ctx);
+    }
+    if (tl.vapen_typer) {
+      const weaponEntries = facts.map(f => f.entryRef).filter(e => e && typeof e === 'object');
+      total += sumModifierByMal(weaponEntries, 'forsvar_modifierare', ctx);
+    }
+    if (tl.vapen_kvaliteter) {
+      const qualNames = [...new Set(facts.flatMap(f => toArray(f.qualities).map(String).filter(Boolean)))];
+      total += sumModifierByMal(lookupEntriesByNames(qualNames), 'forsvar_modifierare', ctx);
+    }
+    return total;
   }
 
   function hasPermanentCorruptionHalving(list) {
@@ -469,6 +676,198 @@
       if (matches) return String(rule.beviljad_niva).trim();
     }
     return null;
+  }
+
+  function normalizeErfOverrideNumber(value) {
+    if (value === undefined || value === null || value === '') return null;
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    return Math.trunc(numeric);
+  }
+
+  function getEntryTargetKeys(entry) {
+    if (!entry || typeof entry !== 'object') return [];
+    const keys = [];
+    const id = entry.id === undefined || entry.id === null
+      ? ''
+      : String(entry.id).trim();
+    const name = typeof entry.namn === 'string'
+      ? entry.namn.trim()
+      : (typeof entry.name === 'string' ? entry.name.trim() : '');
+    if (id) keys.push(`id:${id}`);
+    const normalizedName = normalizeLevelName(name);
+    if (normalizedName) keys.push(`name:${normalizedName}`);
+    return keys;
+  }
+
+  function normalizeErfOverrideLevel(level) {
+    const normalized = normalizeLevelName(level);
+    return normalized || '*';
+  }
+
+  function makeEntryErfOverrideKey(targetKey, level) {
+    if (!targetKey) return '';
+    return `${targetKey}|${normalizeErfOverrideLevel(level)}`;
+  }
+
+  function getManualEntryErfOverride(entry, level = '') {
+    const targetKeys = getEntryTargetKeys(entry);
+    if (!targetKeys.length) return null;
+
+    for (const targetKey of targetKeys) {
+      const exactKey = makeEntryErfOverrideKey(targetKey, level);
+      if (exactKey && MANUAL_ENTRY_ERF_OVERRIDES.has(exactKey)) {
+        return MANUAL_ENTRY_ERF_OVERRIDES.get(exactKey);
+      }
+      const wildcardKey = makeEntryErfOverrideKey(targetKey, '*');
+      if (wildcardKey && MANUAL_ENTRY_ERF_OVERRIDES.has(wildcardKey)) {
+        return MANUAL_ENTRY_ERF_OVERRIDES.get(wildcardKey);
+      }
+    }
+    return null;
+  }
+
+  function setEntryErfOverride(target, levelOrValue, maybeValue) {
+    const hasExplicitLevel = maybeValue !== undefined;
+    const level = hasExplicitLevel ? levelOrValue : '';
+    const value = hasExplicitLevel ? maybeValue : levelOrValue;
+    const normalizedValue = normalizeErfOverrideNumber(value);
+    if (normalizedValue === null) return false;
+
+    const targetKeys = getEntryTargetKeys(target);
+    if (!targetKeys.length) return false;
+
+    const normalizedLevel = normalizeErfOverrideLevel(level);
+    targetKeys.forEach(targetKey => {
+      const key = `${targetKey}|${normalizedLevel}`;
+      MANUAL_ENTRY_ERF_OVERRIDES.set(key, normalizedValue);
+    });
+    return true;
+  }
+
+  function clearEntryErfOverride(target, level = '') {
+    const targetKeys = getEntryTargetKeys(target);
+    if (!targetKeys.length) return false;
+    const normalizedLevel = normalizeErfOverrideLevel(level);
+    let removed = false;
+    targetKeys.forEach(targetKey => {
+      const key = `${targetKey}|${normalizedLevel}`;
+      if (MANUAL_ENTRY_ERF_OVERRIDES.delete(key)) removed = true;
+    });
+    return removed;
+  }
+
+  function clearAllEntryErfOverrides() {
+    MANUAL_ENTRY_ERF_OVERRIDES.clear();
+  }
+
+  function getEntryErfOverrideMapValue(mapLike, level = '') {
+    if (!mapLike || typeof mapLike !== 'object' || Array.isArray(mapLike)) return null;
+    const wanted = normalizeLevelName(level);
+    if (!wanted) return null;
+    const key = Object.keys(mapLike).find(name => normalizeLevelName(name) === wanted);
+    if (!key) return null;
+    return normalizeErfOverrideNumber(mapLike[key]);
+  }
+
+  function getEntryStaticErfOverride(entry, level = '') {
+    if (!entry || typeof entry !== 'object') return null;
+
+    const levelData = findLevelData(entry, level);
+    if (levelData && typeof levelData === 'object') {
+      const levelValue = normalizeErfOverrideNumber(levelData.erf ?? levelData.xp);
+      if (levelValue !== null) return levelValue;
+      const taggedLevelValue = normalizeErfOverrideNumber(levelData?.taggar?.erf ?? levelData?.taggar?.xp);
+      if (taggedLevelValue !== null) return taggedLevelValue;
+    }
+
+    const tagMapValue = getEntryErfOverrideMapValue(
+      entry?.taggar?.erf_per_niva
+      ?? entry?.taggar?.erf_per_nivå
+      ?? entry?.taggar?.erf_niva
+      ?? entry?.taggar?.erf_nivå
+      ?? entry?.taggar?.xp_per_niva
+      ?? entry?.taggar?.xp_per_nivå
+      ?? entry?.taggar?.xp_niva
+      ?? entry?.taggar?.xp_nivå,
+      level
+    );
+    if (tagMapValue !== null) return tagMapValue;
+
+    const entryMapValue = getEntryErfOverrideMapValue(
+      entry?.erf_per_niva
+      ?? entry?.erf_per_nivå
+      ?? entry?.erf_niva
+      ?? entry?.erf_nivå
+      ?? entry?.xp_per_niva
+      ?? entry?.xp_per_nivå
+      ?? entry?.xp_niva
+      ?? entry?.xp_nivå,
+      level
+    );
+    if (entryMapValue !== null) return entryMapValue;
+
+    const taggedValue = normalizeErfOverrideNumber(entry?.taggar?.erf ?? entry?.taggar?.xp);
+    if (taggedValue !== null) return taggedValue;
+
+    return normalizeErfOverrideNumber(entry?.erf ?? entry?.xp);
+  }
+
+  function getRuleEntryErfOverride(rule, level = '') {
+    const mapValue = getEntryErfOverrideMapValue(
+      rule?.erf_per_niva
+      ?? rule?.erf_per_nivå
+      ?? rule?.erf_niva
+      ?? rule?.erf_nivå
+      ?? rule?.xp_per_niva
+      ?? rule?.xp_per_nivå
+      ?? rule?.xp_niva
+      ?? rule?.xp_nivå,
+      level
+    );
+    if (mapValue !== null) return mapValue;
+    return normalizeErfOverrideNumber(rule?.erf ?? rule?.xp);
+  }
+
+  function getRuleBasedEntryErfOverride(entry, list, level = '') {
+    const targetKeys = getEntryTargetKeys(entry);
+    if (!targetKeys.length) return null;
+
+    const entries = Array.isArray(list) ? list : [];
+    let matchedOverride = null;
+    getListRules(entries, { key: 'ger', mal: 'post' }).forEach(rule => {
+      if (!matchesListCondition(rule, entries)) return;
+      const matchesTarget = getEntryGrantRefs(rule).some(ref => {
+        const key = ref.id
+          ? `id:${String(ref.id).trim()}`
+          : `name:${normalizeLevelName(ref.name)}`;
+        return key && targetKeys.includes(key);
+      });
+      if (!matchesTarget) return;
+      const value = getRuleEntryErfOverride(rule, level);
+      if (value === null) return;
+      matchedOverride = value;
+    });
+    return matchedOverride;
+  }
+
+  function getEntryErfOverride(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    const level = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : (typeof entry?.nivå === 'string' ? entry.nivå.trim() : '');
+
+    const manualOverride = getManualEntryErfOverride(entry, level);
+    if (manualOverride !== null) return manualOverride;
+
+    const sourceEntry = resolveRuleSourceEntry(entry);
+    const staticOverride = getEntryStaticErfOverride(sourceEntry, level);
+    if (staticOverride !== null) return staticOverride;
+
+    const fallbackStaticOverride = getEntryStaticErfOverride(entry, level);
+    if (fallbackStaticOverride !== null) return fallbackStaticOverride;
+
+    return getRuleBasedEntryErfOverride(entry, list, level);
   }
 
   function getEntryGrantDependents(list, removedEntry) {
@@ -828,6 +1227,32 @@
       .some(value => haystack.has(value));
   }
 
+  function parseMaxConstraint(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return null;
+    const rounded = Math.floor(parsed);
+    if (rounded < 0) return null;
+    return rounded;
+  }
+
+  function getNameCount(list, name) {
+    const target = normalizeLevelName(name || '');
+    if (!target) return 0;
+    return (Array.isArray(list) ? list : []).reduce((count, entry) => {
+      if (normalizeLevelName(entry?.namn || '') !== target) return count;
+      return count + 1;
+    }, 0);
+  }
+
+  function getTypeCount(list, typeName) {
+    const target = normalizeLevelName(typeName || '');
+    if (!target) return 0;
+    return (Array.isArray(list) ? list : []).reduce((count, entry) => {
+      if (!entryHasType(entry, typeName)) return count;
+      return count + 1;
+    }, 0);
+  }
+
   function evaluateNar(nar, context) {
     if (!nar || typeof nar !== 'object') return true;
     const ctx = context || {};
@@ -851,6 +1276,40 @@
             effectiveNames.add(normalizeLevelName(e.race));
         });
         if (!nagonAv.some(n => effectiveNames.has(n))) return false;
+      }
+
+      const nameMaxObject = nar.antal_namn_max && typeof nar.antal_namn_max === 'object' && !Array.isArray(nar.antal_namn_max)
+        ? nar.antal_namn_max
+        : null;
+      if (nameMaxObject) {
+        const failed = Object.keys(nameMaxObject).some(name => {
+          const max = parseMaxConstraint(nameMaxObject[name]);
+          if (max === null) return false;
+          return getNameCount(list, name) > max;
+        });
+        if (failed) return false;
+      }
+      const listNameMax = parseMaxConstraint(nar.antal_namn_max);
+      if (listNameMax !== null) {
+        const names = toArray(nar.namn).map(String).filter(Boolean);
+        if (names.length && names.some(name => getNameCount(list, name) > listNameMax)) return false;
+      }
+
+      const typeMaxObject = nar.antal_typ_max && typeof nar.antal_typ_max === 'object' && !Array.isArray(nar.antal_typ_max)
+        ? nar.antal_typ_max
+        : null;
+      if (typeMaxObject) {
+        const failed = Object.keys(typeMaxObject).some(typeName => {
+          const max = parseMaxConstraint(typeMaxObject[typeName]);
+          if (max === null) return false;
+          return getTypeCount(list, typeName) > max;
+        });
+        if (failed) return false;
+      }
+      const listTypeMax = parseMaxConstraint(nar.antal_typ_max);
+      if (listTypeMax !== null) {
+        const types = toArray(nar.typ).map(String).filter(Boolean);
+        if (types.length && types.some(typeName => getTypeCount(list, typeName) > listTypeMax)) return false;
       }
     }
 
@@ -1385,6 +1844,60 @@
     return 'krav';
   }
 
+  function getCandidateRequirementRuleSets(candidateEntry, level = '') {
+    const sourceEntry = resolveRuleSourceEntry(candidateEntry || {});
+    const typeRules = getTypeRules(sourceEntry, level);
+    const entryRules = !level
+      ? getTopLevelRules(sourceEntry)
+      : mergeRuleBlocks(getTopLevelRules(sourceEntry), getLevelRules(sourceEntry, level));
+    return {
+      entryRequirements: toRuleList(entryRules?.kraver),
+      typeRequirements: toRuleList(typeRules?.kraver)
+    };
+  }
+
+  function buildRequirementReason(rule, candidate, contextEntries, nameSet) {
+    const requiredNames = getRequirementNames(rule);
+    const missingNames = requiredNames.filter(name => !nameSet.has(normalizeLevelName(name)));
+    const satisfied = requiredNames.length
+      ? missingNames.length === 0
+      : matchesListCondition(rule, contextEntries);
+    if (satisfied) return null;
+
+    return {
+      code: getRequirementReasonCode(rule, candidate),
+      sourceEntryId: candidate?.id || '',
+      sourceEntryName: candidate?.namn || '',
+      sourceEntryLevel: candidate?.nivå || '',
+      requiredNames,
+      missingNames,
+      message: String(rule?.meddelande || rule?.message || '').trim()
+    };
+  }
+
+  function getRequirementReasonDedupeKey(reason) {
+    if (!reason || typeof reason !== 'object') return '';
+    return `${String(reason.code || '').trim()}|${normalizeLevelName(reason.sourceEntryName || '')}|${(Array.isArray(reason.missingNames) ? reason.missingNames : [])
+      .map(name => normalizeLevelName(name))
+      .sort()
+      .join(',')}|${normalizeLevelName(reason.message || '')}`;
+  }
+
+  function collectMissingRequirementReasons(candidate, entries, contextEntries, requirementRules) {
+    const reasons = [];
+    const seen = new Set();
+    const nameSet = new Set(entries.map(entry => normalizeLevelName(entry?.namn || '')).filter(Boolean));
+    toRuleList(requirementRules).forEach(rule => {
+      const reason = buildRequirementReason(rule, candidate, contextEntries, nameSet);
+      if (!reason) return;
+      const dedupeKey = getRequirementReasonDedupeKey(reason);
+      if (seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      reasons.push(reason);
+    });
+    return reasons;
+  }
+
   function getMissingRequirementReasonsForCandidate(candidateEntry, list, options = {}) {
     if (!candidateEntry || typeof candidateEntry !== 'object') return [];
     const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
@@ -1394,38 +1907,32 @@
     const candidate = candidateLevel && candidateEntry?.nivå !== candidateLevel
       ? { ...candidateEntry, nivå: candidateLevel }
       : candidateEntry;
+    const contextEntries = [...entries, candidate];
+    const { entryRequirements, typeRequirements } = getCandidateRequirementRuleSets(candidate, candidateLevel);
 
-    const nameSet = new Set(entries.map(entry => normalizeLevelName(entry?.namn || '')).filter(Boolean));
-    const out = [];
+    if (!entryRequirements.length) {
+      return collectMissingRequirementReasons(candidate, entries, contextEntries, typeRequirements);
+    }
+
+    // Conditional override:
+    // - If entry-krav are satisfied, they override type-krav.
+    // - If entry-krav are not satisfied, type-krav can still unlock as fallback.
+    const entryMissing = collectMissingRequirementReasons(candidate, entries, contextEntries, entryRequirements);
+    if (!entryMissing.length) return [];
+
+    if (!typeRequirements.length) return entryMissing;
+    const typeMissing = collectMissingRequirementReasons(candidate, entries, contextEntries, typeRequirements);
+    if (!typeMissing.length) return [];
+
+    const merged = [];
     const seen = new Set();
-
-    getRuleList(candidate, 'kraver', { level: candidateLevel }).forEach(rule => {
-      const requiredNames = getRequirementNames(rule);
-      const missingNames = requiredNames.filter(name => !nameSet.has(normalizeLevelName(name)));
-      const satisfied = requiredNames.length
-        ? missingNames.length === 0
-        : matchesListCondition(rule, entries);
-      if (satisfied) return;
-
-      const code = getRequirementReasonCode(rule, candidate);
-      const dedupeKey = `${code}|${normalizeLevelName(candidate?.namn || '')}|${missingNames
-        .map(name => normalizeLevelName(name))
-        .sort()
-        .join(',')}`;
-      if (seen.has(dedupeKey)) return;
+    [...entryMissing, ...typeMissing].forEach(reason => {
+      const dedupeKey = getRequirementReasonDedupeKey(reason);
+      if (!dedupeKey || seen.has(dedupeKey)) return;
       seen.add(dedupeKey);
-
-      out.push({
-        code,
-        sourceEntryId: candidate?.id || '',
-        sourceEntryName: candidate?.namn || '',
-        sourceEntryLevel: candidate?.nivå || '',
-        requiredNames,
-        missingNames
-      });
+      merged.push(reason);
     });
-
-    return out;
+    return merged;
   }
 
   function getEntryTypeLabel(name) {
@@ -1467,6 +1974,108 @@
       label,
       value
     };
+  }
+
+  function parsePositiveLimit(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.floor(numeric);
+    if (rounded <= 0) return null;
+    return rounded;
+  }
+
+  function splitListTags(value) {
+    return toArray(value)
+      .flatMap(item => String(item ?? '').split(','))
+      .map(item => item.trim())
+      .filter(Boolean);
+  }
+
+  function getDirectMaxCount(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
+    if (tagLimit !== null) return tagLimit;
+    const directLimit = parsePositiveLimit(entry?.max_antal);
+    if (directLimit !== null) return directLimit;
+
+    if (options.allowLegacy !== false) {
+      const legacyMulti = Boolean(
+        entry?.kan_införskaffas_flera_gånger === true
+        || entry?.taggar?.kan_införskaffas_flera_gånger === true
+        || entry?.kan_inforskaffas_flera_ganger === true
+        || entry?.taggar?.kan_inforskaffas_flera_ganger === true
+      );
+      if (legacyMulti) return 3;
+    }
+    return null;
+  }
+
+  function getTypeDefaultMaxCount(entry, options = {}) {
+    let resolved = null;
+    getTypeRuleTemplateEntries(entry).forEach(templateEntry => {
+      const candidate = getDirectMaxCount(templateEntry, options);
+      if (candidate !== null) resolved = candidate;
+    });
+    return resolved;
+  }
+
+  function getEntryMaxCount(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return 1;
+    const sourceEntry = resolveRuleSourceEntry(entry);
+    const direct = getDirectMaxCount(sourceEntry, options);
+    if (direct !== null) return direct;
+
+    const typeDefault = getTypeDefaultMaxCount(sourceEntry, options);
+    if (typeDefault !== null) return typeDefault;
+
+    return 1;
+  }
+
+  function entryMatchesCountTarget(candidate, existing) {
+    if (!candidate || !existing) return false;
+    const candidateName = normalizeLevelName(candidate?.namn || '');
+    const existingName = normalizeLevelName(existing?.namn || '');
+    if (!candidateName || candidateName !== existingName) return false;
+    const candidateTrait = normalizeLevelName(candidate?.trait || '');
+    const existingTrait = normalizeLevelName(existing?.trait || '');
+    if (candidateTrait) return candidateTrait === existingTrait;
+    return !existingTrait;
+  }
+
+  function buildLevelChangeAfterEntries(beforeEntries, candidate) {
+    const out = [];
+    let replaced = false;
+    const candidateId = String(candidate?.id || '').trim();
+    const candidateName = normalizeLevelName(candidate?.namn || '');
+    const candidateTrait = normalizeLevelName(candidate?.trait || '');
+
+    (Array.isArray(beforeEntries) ? beforeEntries : []).forEach(entry => {
+      if (!entry || replaced) {
+        out.push(entry);
+        return;
+      }
+      const sameId = candidateId && String(entry?.id || '').trim() === candidateId;
+      const sameName = candidateName && normalizeLevelName(entry?.namn || '') === candidateName;
+      if (!sameId && !sameName) {
+        out.push(entry);
+        return;
+      }
+      const existingTrait = normalizeLevelName(entry?.trait || '');
+      if (candidateTrait) {
+        if (existingTrait !== candidateTrait) {
+          out.push(entry);
+          return;
+        }
+      } else if (existingTrait) {
+        out.push(entry);
+        return;
+      }
+      out.push(candidate);
+      replaced = true;
+    });
+
+    if (!replaced) out.push(candidate);
+    return out;
   }
 
   function evaluateEntryStops(candidateEntry, list, options = {}) {
@@ -1522,7 +2131,83 @@
       }
     }
 
-    const hardStops = toArray(options?.hardStops)
+    const autoHardStops = [];
+
+    if (action === 'add') {
+      const maxCount = getEntryMaxCount(candidate);
+      const currentCount = entries.filter(entry => entryMatchesCountTarget(candidate, entry)).length;
+      if (currentCount >= maxCount) {
+        const candidateName = String(candidate?.namn || '').trim();
+        if (maxCount <= 1) {
+          autoHardStops.push({
+            code: 'duplicate_entry',
+            message: candidateName ? `${candidateName}: Posten är redan vald.` : 'Posten är redan vald.'
+          });
+        } else {
+          const isAdvantageOrDisadvantage = entryHasType(candidate, 'Fördel') || entryHasType(candidate, 'Nackdel');
+          const label = isAdvantageOrDisadvantage ? 'fördel eller nackdel' : 'post';
+          autoHardStops.push({
+            code: 'stack_limit',
+            message: `Limit: Denna ${label} kan normalt bara tas ${maxCount} gånger.`
+          });
+        }
+      }
+
+      const eliteReq = window.eliteReq;
+      if (entryHasType(candidate, 'Elityrke') && typeof eliteReq?.check === 'function') {
+        const res = eliteReq.check(candidate, entries);
+        if (!res?.ok) {
+          if (Array.isArray(res?.missing) && res.missing.length) {
+            autoHardStops.push({
+              code: 'elite_missing_requirements',
+              message: `Elityrke: Saknar ${res.missing.join(', ')}.`
+            });
+          }
+          if (!res?.master) {
+            autoHardStops.push({
+              code: 'elite_primary_requirement',
+              message: 'Elityrke: Primärförmågekravet uppfylls inte.'
+            });
+          }
+        }
+      }
+
+      if (entryHasType(candidate, 'Elityrkesförmåga')) {
+        const requiredEliteNames = (typeof window.explodeTags === 'function'
+          ? window.explodeTags(candidate?.taggar?.ark_trad)
+          : splitListTags(candidate?.taggar?.ark_trad)
+        ).map(String).filter(Boolean);
+        if (requiredEliteNames.length) {
+          const allowed = requiredEliteNames.some(reqYrke =>
+            entries.some(item =>
+              entryHasType(item, 'Elityrke')
+              && String(item?.namn || '').trim() === String(reqYrke || '').trim()
+            )
+          );
+          if (!allowed) {
+            autoHardStops.push({
+              code: 'elite_skill_locked',
+              message: `Elityrkesförmåga: Låst till elityrket ${requiredEliteNames.join(', ')}.`
+            });
+          }
+        }
+      }
+    }
+
+    if (action === 'level-change' && typeof window.eliteReq?.canChange === 'function') {
+      const beforeEntries = Array.isArray(options?.beforeList) ? options.beforeList : entries;
+      const afterEntries = Array.isArray(options?.afterList)
+        ? options.afterList
+        : buildLevelChangeAfterEntries(beforeEntries, candidate);
+      if (window.eliteReq.canChange(beforeEntries) && !window.eliteReq.canChange(afterEntries)) {
+        autoHardStops.push({
+          code: 'elite_locked_level_change',
+          message: 'Elityrke: Förmågan krävs för ett valt elityrke och kan normalt inte ändras.'
+        });
+      }
+    }
+
+    const hardStops = [...toArray(options?.hardStops), ...autoHardStops]
       .map(normalizeHardStop)
       .filter(Boolean);
 
@@ -1553,6 +2238,11 @@
     };
 
     (Array.isArray(stopResult?.requirementReasons) ? stopResult.requirementReasons : []).forEach(reason => {
+      const explicitMessage = String(reason?.message || '').trim();
+      if (explicitMessage) {
+        add(explicitMessage);
+        return;
+      }
       const names = Array.isArray(reason?.missingNames) && reason.missingNames.length
         ? reason.missingNames
         : (Array.isArray(reason?.requiredNames) ? reason.requiredNames : []);
@@ -1640,16 +2330,6 @@
     );
   }
 
-  function isRequirementRuleSatisfied(rule, nameSet, listForCondition) {
-    const requiredNames = getRequirementNames(rule)
-      .map(name => normalizeLevelName(name))
-      .filter(Boolean);
-    if (requiredNames.length) {
-      return requiredNames.every(name => nameSet.has(name));
-    }
-    return matchesListCondition(rule, listForCondition);
-  }
-
   function getRequirementDependents(list, removedEntry, options = {}) {
     if (!removedEntry || typeof removedEntry !== 'object') return [];
     const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
@@ -1658,7 +2338,6 @@
     const removedName = normalizeLevelName(removedEntry?.namn || '');
     if (!removedName) return [];
     const afterEntries = removeOneMatchingEntry(entries, removedEntry);
-    const beforeNameSet = buildNameSet(entries);
     const afterNameSet = buildNameSet(afterEntries);
     const out = [];
     const seen = new Set();
@@ -1666,22 +2345,28 @@
     entries.forEach(candidate => {
       if (!candidate || candidate === removedEntry) return;
       const candidateLevel = typeof candidate?.nivå === 'string' ? candidate.nivå : '';
-      getRuleList(candidate, 'kraver', { level: candidateLevel }).forEach(rule => {
-        const requiredNames = getRequirementNames(rule)
+      const beforeMissing = getMissingRequirementReasonsForCandidate(candidate, entries, { level: candidateLevel });
+      if (beforeMissing.length) return;
+
+      const afterMissing = getMissingRequirementReasonsForCandidate(candidate, afterEntries, { level: candidateLevel });
+      if (!afterMissing.length) return;
+
+      const removedStillExists = afterNameSet.has(removedName);
+      const referencesRemoved = afterMissing.some(reason =>
+        (Array.isArray(reason?.requiredNames) ? reason.requiredNames : [])
           .map(name => normalizeLevelName(name))
-          .filter(Boolean);
-        if (requiredNames.length && !requiredNames.includes(removedName)) return;
+          .includes(removedName)
+        || (Array.isArray(reason?.missingNames) ? reason.missingNames : [])
+          .map(name => normalizeLevelName(name))
+          .includes(removedName)
+      );
+      if (!referencesRemoved && !removedStillExists) return;
 
-        const beforeSatisfied = isRequirementRuleSatisfied(rule, beforeNameSet, entries);
-        const afterSatisfied = isRequirementRuleSatisfied(rule, afterNameSet, afterEntries);
-        if (!(beforeSatisfied && !afterSatisfied)) return;
-
-        const candidateName = String(candidate?.namn || '').trim();
-        const dedupeKey = normalizeLevelName(candidateName);
-        if (!candidateName || !dedupeKey || seen.has(dedupeKey)) return;
-        seen.add(dedupeKey);
-        out.push(candidateName);
-      });
+      const candidateName = String(candidate?.namn || '').trim();
+      const dedupeKey = normalizeLevelName(candidateName);
+      if (!candidateName || !dedupeKey || seen.has(dedupeKey)) return;
+      seen.add(dedupeKey);
+      out.push(candidateName);
     });
 
     return out;
@@ -2365,11 +3050,21 @@
   registerMal('tillater_monstruost', () => ({ allowAll: false, allowedNames: new Set() }));
   registerMal('anfall_karaktarsdrag', (list, ctx) => getAttackTraitRuleNotes(list, ctx));
   registerMal('forsvar_karaktarsdrag', (list, ctx) => getDefenseTraitRuleCandidates(list, ctx));
-  registerMal('dansande_forsvar_karaktarsdrag', (list, ctx) => getDancingDefenseTraitRuleCandidates(list, ctx));
+  registerMal('dansande_forsvar_karaktarsdrag', () => []); // deprecated: superseded by separat_forsvar_karaktarsdrag
+  registerMal('separat_forsvar_karaktarsdrag', (list, ctx) =>
+    getSeparateDefenseTraitRules(list, ctx).map(r => r.varde).filter(Boolean));
   registerMal('mystik_karaktarsdrag', (list) => getListRules(list, { key: 'andrar', mal: 'mystik_karaktarsdrag' }));
   registerMal('post', (list) => getListRules(list, { key: 'ger', mal: 'post' }));
   registerMal('foremal', (list, ctx) => getInventoryGrantItems(list, ctx));
   registerMal('pengar', (list, ctx) => getMoneyGrant(list, ctx));
+  registerMal('Hidden', (list, ctx) => {
+    const entries = Array.isArray(list) ? list : [];
+    const rules = getListRules(entries, { key: 'andrar', mal: 'Hidden' });
+    return rules.some(rule =>
+      evaluateNar(rule?.nar, { list: entries, ...(ctx || {}) })
+      && isTruthyRuleValue(rule?.varde)
+    );
+  });
   registerMal('skydd_permanent_korruption', (list) => getListRules(list, { key: 'ger', mal: 'skydd_permanent_korruption' }));
 
   window.rulesHelper = {
@@ -2379,8 +3074,10 @@
     queryMal,
     normalizeRuleBlock,
     mergeRuleBlocks,
+    mergeRuleBlocksByHierarchy,
     getTopLevelRules,
     getLevelRules,
+    getTypeRules,
     getEntryRules,
     getRuleList,
     getListRules,
@@ -2388,6 +3085,7 @@
     getConflictReasonsForCandidate,
     getConflictResolutionForCandidate,
     getMissingRequirementReasonsForCandidate,
+    getEntryMaxCount,
     evaluateEntryStops,
     formatEntryStopMessages,
     getRequirementDependents,
@@ -2395,6 +3093,10 @@
     getEntryGrantDependents,
     getPartialGrantInfo,
     getGrantedLevelRestriction,
+    getEntryErfOverride,
+    setEntryErfOverride,
+    clearEntryErfOverride,
+    clearAllEntryErfOverrides,
     getMoneyGrant,
     validateDefenseLoadout,
     normalizeDefenseLoadout,
@@ -2421,6 +3123,8 @@
     getAttackTraitRuleCandidates,
     getDefenseTraitRuleCandidates,
     getDancingDefenseTraitRuleCandidates,
+    getSeparateDefenseTraitRules,
+    getSelectiveDefenseModifier,
     hasPermanentCorruptionHalving,
     getMonstruosTraitPermissions,
     getAttackTraitRuleNotes,

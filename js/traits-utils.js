@@ -288,9 +288,32 @@
     return [{ name: selected[0]?.name || '', value, source: 'dancing' }];
   }
 
+  // weaponsBySourceId: { [sourceEntryId]: weaponInfo[] } — per-rule weapon selection.
+  // Falls back to empty (fully isolated) for rules with no entry in the map.
+  function computeSeparateDefenseEntries(stdTraitName, list, traitValues, weaponsBySourceId) {
+    const rules = window.rulesHelper?.getSeparateDefenseTraitRules?.(list) || [];
+    if (!rules.length) return [];
+    const byId = weaponsBySourceId && typeof weaponsBySourceId === 'object' ? weaponsBySourceId : {};
+    return rules.map(rule => {
+      const trait = String(rule.varde || stdTraitName || 'Kvick');
+      const baseVal = Number(traitValues?.[trait] || 0);
+      const mod = Number(rule.modifierare || 0);
+      const ruleWeapons = Array.isArray(byId[rule.sourceEntryId]) ? byId[rule.sourceEntryId] : [];
+      const weaponFacts = ruleWeapons.map(info => toWeaponFact(info)).filter(Boolean);
+      const bonus = typeof window.rulesHelper?.getSelectiveDefenseModifier === 'function'
+        ? window.rulesHelper.getSelectiveDefenseModifier(list, weaponFacts, { utrustadTyper: [], utrustadeKvaliteter: [] }, rule.tillat)
+        : 0;
+      return {
+        name: String(rule.sourceEntryName || ''),
+        value: Math.max(1, baseVal + mod + bonus),
+        trait,
+        source: 'separate'
+      };
+    });
+  }
+
   function computeStandardDefenseEntries(baseTraitVal, list, _inv, armorItems, weaponItems) {
     const selectedWeapons = normalizeSelectedWeapons(list, weaponItems || []);
-    const normalizedWeaponFacts = selectedWeapons.map(info => toWeaponFact(info)).filter(Boolean);
     const armorInfos = (Array.isArray(armorItems) && armorItems.length) ? armorItems : [null];
     let res = armorInfos.map(armorInfo => {
       const limit = getArmorRestrictionValue(list, armorInfo);
@@ -301,27 +324,7 @@
       };
     });
 
-    const PEN = { Novis: 2, 'Gesäll': 3, 'Mästare': 4 };
-    const hamRobustName = storeHelper.HAMNSKIFTE_NAMES['Robust'];
-    const hamRobustPenalty = (Array.isArray(list) ? list : [])
-      .filter(x => x.namn === hamRobustName)
-      .reduce((sum, x) => sum + (PEN[x.nivå] || 0), 0);
-
-    let hamRes = [];
-    if (hamRobustPenalty) {
-      const noArmorModifier = typeof window.rulesHelper?.getEquippedDefenseModifier === 'function'
-        ? (window.rulesHelper.getEquippedDefenseModifier(list, normalizedWeaponFacts, {
-            utrustadTyper: [],
-            utrustadeKvaliteter: []
-          }) || 0)
-        : getDefenseModifierForSetup(list, selectedWeapons, null);
-      hamRes = [{
-        name: hamRobustName,
-        value: Math.max(1, Number(baseTraitVal || 0) - hamRobustPenalty + Number(noArmorModifier || 0))
-      }];
-    }
-
-    return res.concat(hamRes).map(entry => ({
+    return res.map(entry => ({
       ...entry,
       source: 'standard'
     }));
@@ -453,19 +456,63 @@
     return best || { dancingTrait: '', dancingWeapon: null, value: Number.NEGATIVE_INFINITY, itemCount: 0, orderKey: '' };
   }
 
+  // Generates weapon combinations up to maxCount from an array of weapon infos.
+  // Returns an array of arrays (each sub-array is a combination).
+  function generateWeaponCombinationsForRule(weapons, maxCount) {
+    if (!weapons.length || maxCount < 1) return [];
+    const result = weapons.map(w => [w]);
+    if (maxCount >= 2) {
+      for (let i = 0; i < weapons.length; i++) {
+        for (let j = i + 1; j < weapons.length; j++) {
+          result.push([weapons[i], weapons[j]]);
+        }
+      }
+    }
+    return result;
+  }
+
+  // For each separate defense rule that allows weapon selection, finds the best weapon(s).
+  // Returns { [sourceEntryId]: weaponRef[] }
+  function optimizeSeparateDefenseSetups(inv, list, traitValues) {
+    const rules = (window.rulesHelper?.getSeparateDefenseTraitRules?.(list) || [])
+      .filter(r => r.tillat?.vapen_typer || r.tillat?.vapen_kvaliteter || r.tillat?.sköld);
+    if (!rules.length) return {};
+    const allWeaponInfos = buildWeaponInfos(inv);
+    const result = {};
+    rules.forEach(rule => {
+      const tl = rule.tillat || {};
+      const maxWeapons = Math.max(1, Number(tl.antal_vapen || 1));
+      const candidates = allWeaponInfos.filter(info => !info.isShield || Boolean(tl.sköld));
+      const trait = String(rule.varde || 'Kvick');
+      const baseVal = Number(traitValues?.[trait] || 0);
+      const mod = Number(rule.modifierare || 0);
+      let best = { weaponRefs: [], value: Math.max(1, baseVal + mod) };
+      generateWeaponCombinationsForRule(candidates, maxWeapons).forEach(combo => {
+        const facts = combo.map(info => toWeaponFact(info)).filter(Boolean);
+        const bonus = window.rulesHelper?.getSelectiveDefenseModifier?.(list, facts, { utrustadTyper: [], utrustadeKvaliteter: [] }, rule.tillat) || 0;
+        const value = Math.max(1, baseVal + mod + bonus);
+        if (value > best.value) best = { weaponRefs: combo.map(toDefenseRef).filter(Boolean), value };
+      });
+      result[rule.sourceEntryId] = best.weaponRefs;
+    });
+    return result;
+  }
+
   function getAutoDefenseSetup(options = {}) {
     const inv = Array.isArray(options.inv) ? options.inv : storeHelper.getInventory(store);
     const list = Array.isArray(options.list) ? options.list : storeHelper.getCurrentList(store);
     const traitValues = options.traitValues || getCurrentTraitValues(list, inv);
     const standardBest = optimizeStandardDefenseSetup(inv, list, traitValues);
     const dancingBest = optimizeDancingDefenseSetup(inv, list, traitValues);
+    const separateWeapons = optimizeSeparateDefenseSetups(inv, list, traitValues);
     return {
       enabled: false,
       trait: standardBest?.trait || '',
       armor: standardBest?.armor || null,
       weapons: standardBest?.weapons || [],
       dancingTrait: dancingBest?.dancingTrait || '',
-      dancingWeapon: dancingBest?.dancingWeapon || null
+      dancingWeapon: dancingBest?.dancingWeapon || null,
+      separateWeapons
     };
   }
 
@@ -534,6 +581,33 @@
     return computeStandardDefenseEntries(baseTraitVal, list, inv, armorItems, selection.weapons || []);
   }
 
+  function calcSeparateDefense(stdTraitName, traitValues, opts = {}) {
+    const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
+    const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
+    const setup = Object.prototype.hasOwnProperty.call(opts, 'setupOverride')
+      ? (opts.setupOverride || null)
+      : (typeof storeHelper.getDefenseSetup === 'function' ? storeHelper.getDefenseSetup(store) : null);
+    const storedMap = setup?.enabled
+      ? (setup.separateWeapons || {})
+      : (getAutoDefenseSetup({ inv, list, traitValues }).separateWeapons || {});
+    // Resolve stored weapon refs to weaponInfo arrays (supports both single ref and array)
+    const weaponInfos = buildWeaponInfos(inv);
+    const weaponByPath = new Map(weaponInfos.map(info => [buildPathKey(info.path), info]));
+    const weaponsBySourceId = {};
+    Object.entries(storedMap).forEach(([id, refs]) => {
+      const refArray = Array.isArray(refs) ? refs : (refs ? [refs] : []);
+      const infos = refArray.map(ref => {
+        if (!ref) return null;
+        const key = buildPathKey(ref.path || []);
+        return (key && weaponByPath.get(key))
+          || weaponInfos.find(i => (typeof ref.id === 'string' && ref.id && i.row?.id === ref.id)
+            || (typeof ref.name === 'string' && ref.name && i.entry?.namn === ref.name));
+      }).filter(Boolean);
+      if (infos.length) weaponsBySourceId[id] = infos;
+    });
+    return computeSeparateDefenseEntries(stdTraitName, list, traitValues, weaponsBySourceId);
+  }
+
   function getDefenseTraitName(list, traitValues = null, opts = {}) {
     const setup = Object.prototype.hasOwnProperty.call(opts, 'setup')
       ? (opts.setup || null)
@@ -583,13 +657,16 @@
       traitValues,
       setupOverride: setup
     }) : [];
+    const separateEntries = calcSeparateDefense(standardTrait, traitValues, { list, inv, setupOverride: setup });
     return {
       standardTrait,
       standardEntries,
       standardValue: getHighestDefenseValue(standardEntries),
       dancingTrait,
       dancingEntries,
-      dancingValue: getHighestDefenseValue(dancingEntries)
+      dancingValue: getHighestDefenseValue(dancingEntries),
+      separateEntries,
+      separateValue: getHighestDefenseValue(separateEntries)
     };
   }
 
@@ -735,6 +812,7 @@
     const defs = calcDefense(vals[defTrait], { mode: 'standard' });
     const dancingTrait = getDancingDefenseTraitName(list);
     const dancingDefs = dancingTrait ? calcDefense(vals[dancingTrait], { mode: 'dancing' }) : [];
+    const separateDefs = calcSeparateDefense(defTrait, vals);
     const accuracyPreview = getAccuracyPreview({
       list,
       inv: storeHelper.getInventory(store),
@@ -803,6 +881,14 @@
       if (k === dancingTrait && dancingDefs.length) {
         dancingDefs.forEach(d => {
           const label = d.name ? `Försvar (Dansande v. ${d.name})` : 'Försvar (Dansande v.)';
+          extras.push(`${label}: ${d.value}`);
+        });
+      }
+
+      const traitSeparateDefs = separateDefs.filter(d => d.trait === k);
+      if (traitSeparateDefs.length) {
+        traitSeparateDefs.forEach(d => {
+          const label = d.name ? `Försvar (${d.name})` : 'Försvar';
           extras.push(`${label}: ${d.value}`);
         });
       }

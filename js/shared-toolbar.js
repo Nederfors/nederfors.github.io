@@ -1424,20 +1424,11 @@ class SharedToolbar extends HTMLElement {
               <div class="defense-calc-card-head">
                 <div class="defense-calc-card-title-group">
                   <div class="defense-calc-step">3. Specialfall</div>
-                  <div class="defense-calc-heading">Dansande vapen</div>
+                  <div class="defense-calc-heading">Alternativt försvar</div>
                 </div>
-                <p class="defense-calc-card-note">Visas när rollpersonen har förmågan. Lämna vapen tomt om inget vapen ska användas.</p>
+                <p class="defense-calc-card-note">Visas när rollpersonen har separat försvarsform. Välj vapen om tillämpligt.</p>
               </div>
-              <div class="defense-calc-field-grid">
-                <div class="defense-calc-field">
-                  <label for="defenseCalcDancingTrait">Karaktärsdrag</label>
-                  <select id="defenseCalcDancingTrait"></select>
-                </div>
-                <div class="defense-calc-field">
-                  <label for="defenseCalcDancingWeapon">Vapen</label>
-                  <select id="defenseCalcDancingWeapon"></select>
-                </div>
-              </div>
+              <div id="defenseCalcSeparateSelectors"></div>
             </section>
           </div>
           <div class="confirm-row defense-calc-actions">

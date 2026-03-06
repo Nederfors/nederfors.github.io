@@ -206,12 +206,16 @@ def render_bootstrap_bundle() -> str:
 
 def sync_html_page(path: Path, scripts: list[str]) -> bool:
     text = read_text(path)
+    if HTML_START not in text or HTML_END not in text:
+        return False
     updated = replace_marked_block(text, HTML_START, HTML_END, render_html_bundle(scripts))
     return update_file(path, updated)
 
 
 def sync_app_bootstrap() -> bool:
     text = read_text(APP_BOOTSTRAP_PATH)
+    if BOOTSTRAP_START not in text or BOOTSTRAP_END not in text:
+        return False
     updated = replace_marked_block(text, BOOTSTRAP_START, BOOTSTRAP_END, render_bootstrap_bundle())
     return update_file(APP_BOOTSTRAP_PATH, updated)
 

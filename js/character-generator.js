@@ -1718,10 +1718,17 @@
   }
 
   function entryAllowsMultiple(entry) {
-    if (!entry) return false;
-    if (entry.kan_införskaffas_flera_gånger) return true;
-    const tags = entry.taggar || {};
-    if (tags.kan_införskaffas_flera_gånger) return true;
+    if (!entry || typeof entry !== 'object') return false;
+    if (typeof window.rulesHelper?.getEntryMaxCount === 'function') {
+      return Number(window.rulesHelper.getEntryMaxCount(entry)) > 1;
+    }
+    const tagLimit = Number(entry?.taggar?.max_antal);
+    if (Number.isFinite(tagLimit) && tagLimit > 1) return true;
+    const directLimit = Number(entry?.max_antal);
+    if (Number.isFinite(directLimit) && directLimit > 1) return true;
+    if (entry.kan_införskaffas_flera_gånger === true || entry?.taggar?.kan_införskaffas_flera_gånger === true) {
+      return true;
+    }
     return false;
   }
 

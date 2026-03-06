@@ -80,6 +80,13 @@
 
   function levelCost(level) {
     const norm = normalizeLevel(level, '');
+    const helper = window.storeHelper;
+    if (helper && typeof helper.typeBaseErf === 'function') {
+      try {
+        const fromStore = Number(helper.typeBaseErf('Förmåga', norm || 'Novis'));
+        if (Number.isFinite(fromStore)) return fromStore;
+      } catch {}
+    }
     return LEVEL_COST[norm] || 10;
   }
 
@@ -143,6 +150,13 @@
 
   function typeBaseErf(type, level = 'Novis') {
     const normType = normalizeType(type);
+    const helper = window.storeHelper;
+    if (helper && typeof helper.typeBaseErf === 'function') {
+      try {
+        const fromStore = Number(helper.typeBaseErf(normType || type, level));
+        if (Number.isFinite(fromStore)) return fromStore;
+      } catch {}
+    }
     if (normType === 'Nackdel') return 0;
     if (normType === 'Fördel') return 5;
     if (normType === 'Ritual') return 10;
@@ -408,11 +422,38 @@
     return false;
   }
 
+  function parsePositiveLimit(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.floor(numeric);
+    if (rounded <= 0) return null;
+    return rounded;
+  }
+
+  function getEntryMaxCount(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return 1;
+    if (typeof window.rulesHelper?.getEntryMaxCount === 'function') {
+      return window.rulesHelper.getEntryMaxCount(entry, options);
+    }
+    if (typeof window.storeHelper?.getEntryMaxCount === 'function') {
+      return window.storeHelper.getEntryMaxCount(entry, options);
+    }
+    const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
+    if (tagLimit !== null) return tagLimit;
+    const directLimit = parsePositiveLimit(entry?.max_antal);
+    if (directLimit !== null) return directLimit;
+    if (options.allowLegacy !== false) {
+      const legacyMulti = Boolean(
+        entry?.kan_införskaffas_flera_gånger === true
+        || entry?.taggar?.kan_införskaffas_flera_gånger === true
+      );
+      if (legacyMulti) return 3;
+    }
+    return 1;
+  }
+
   function entryAllowsMultiple(entry) {
-    if (!entry || typeof entry !== 'object') return false;
-    if (entry.kan_införskaffas_flera_gånger) return true;
-    if (entry.taggar?.kan_införskaffas_flera_gånger) return true;
-    return false;
+    return getEntryMaxCount(entry) > 1;
   }
 
   function isRepeatableBenefitEntry(entry) {
@@ -422,9 +463,9 @@
 
   function requirementErf(entry, level) {
     if (!entry) return 0;
-    if (entryHasType(entry, 'Nackdel')) return 0;
-    if (entryHasType(entry, 'Fördel')) return 5;
-    if (entryHasType(entry, 'Ritual')) return 10;
+    if (entryHasType(entry, 'Nackdel')) return typeBaseErf('Nackdel', 'Novis');
+    if (entryHasType(entry, 'Fördel')) return typeBaseErf('Fördel', 'Novis');
+    if (entryHasType(entry, 'Ritual')) return typeBaseErf('Ritual', 'Novis');
     if (
       entryHasType(entry, 'Förmåga') ||
       entryHasType(entry, 'Basförmåga') ||
@@ -433,6 +474,13 @@
       entryHasType(entry, 'Särdrag')
     ) {
       const lvl = resolveEntryLevel(entry, level, 'Novis');
+      const helper = window.storeHelper;
+      if (helper && typeof helper.entryLevelCost === 'function') {
+        try {
+          const fromStore = Number(helper.entryLevelCost(entry, lvl));
+          if (Number.isFinite(fromStore)) return fromStore;
+        } catch {}
+      }
       return levelCost(lvl);
     }
     return 10;
@@ -763,6 +811,7 @@
     matchesValfriRule,
     findEntryByName,
     entryHasType,
+    getEntryMaxCount,
     isRepeatableBenefitEntry,
     requirementErf
   });

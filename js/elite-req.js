@@ -37,12 +37,39 @@
     return String(value || '').trim().toLowerCase();
   }
 
+  function parsePositiveLimit(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.floor(numeric);
+    if (rounded <= 0) return null;
+    return rounded;
+  }
+
+  function getEntryMaxCount(item, options = {}) {
+    if (!item || typeof item !== 'object') return 1;
+    if (typeof utils.getEntryMaxCount === 'function') {
+      return Math.max(1, Number(utils.getEntryMaxCount(item, options)) || 1);
+    }
+    const tagLimit = parsePositiveLimit(item?.taggar?.max_antal);
+    if (tagLimit !== null) return tagLimit;
+    const directLimit = parsePositiveLimit(item?.max_antal);
+    if (directLimit !== null) return directLimit;
+    if (options.allowLegacy !== false) {
+      const legacyMulti = Boolean(
+        item?.kan_införskaffas_flera_gånger === true
+        || item?.taggar?.kan_införskaffas_flera_gånger === true
+      );
+      if (legacyMulti) return 3;
+    }
+    return 1;
+  }
+
   function isRepeatableBenefitEntry(item) {
     if (typeof utils.isRepeatableBenefitEntry === 'function') {
       return utils.isRepeatableBenefitEntry(item);
     }
     const types = toArray(item?.taggar?.typ).map(normalizeType);
-    const multi = Boolean(item?.kan_införskaffas_flera_gånger || item?.taggar?.kan_införskaffas_flera_gånger);
+    const multi = getEntryMaxCount(item) > 1;
     return multi && (types.includes('Fördel') || types.includes('Nackdel'));
   }
 

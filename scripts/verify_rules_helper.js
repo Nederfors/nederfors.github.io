@@ -27,6 +27,99 @@ function deepEqual(actual, expected, message) {
   }
 }
 
+function parsePositiveLimit(value) {
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric)) return null;
+  const rounded = Math.floor(numeric);
+  if (rounded <= 0) return null;
+  return rounded;
+}
+
+function hasHardStopCode(stopResult, code) {
+  const wanted = String(code || '').trim();
+  if (!wanted) return false;
+  return (Array.isArray(stopResult?.hardStops) ? stopResult.hardStops : [])
+    .some(stop => String(stop?.code || '').trim() === wanted);
+}
+
+function listDataJsonFiles(rootPath) {
+  const dataPath = joinPath(rootPath, 'data');
+  const names = ObjC.deepUnwrap($.NSFileManager.defaultManager.contentsOfDirectoryAtPathError($(dataPath), null));
+  return (Array.isArray(names) ? names : [])
+    .filter(name => typeof name === 'string' && name.endsWith('.json'))
+    .filter(name => name !== 'all.json' && name !== 'struktur.json')
+    .sort();
+}
+
+function resolveTypeRuleMap(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return {};
+  const primary = payload.typ_regler;
+  if (primary && typeof primary === 'object' && !Array.isArray(primary)) return primary;
+  const legacy = payload.type_rules;
+  if (legacy && typeof legacy === 'object' && !Array.isArray(legacy)) return legacy;
+  return {};
+}
+
+function attachTypeRulesToEntries(entries, typeRules) {
+  if (!Array.isArray(entries)) return [];
+  if (!typeRules || typeof typeRules !== 'object' || Array.isArray(typeRules)) return entries;
+  if (!Object.keys(typeRules).length) return entries;
+
+  return entries.map(entry => {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
+    try {
+      Object.defineProperty(entry, '__typ_regler', {
+        value: typeRules,
+        configurable: true,
+        writable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      entry.__typ_regler = typeRules;
+    }
+    return entry;
+  });
+}
+
+function parseEntryDataPayload(payload, sourceFile = '') {
+  if (Array.isArray(payload)) {
+    return { entries: payload, typeRules: {} };
+  }
+  if (!payload || typeof payload !== 'object') {
+    throw new Error(`${sourceFile || 'data file'} har ogiltigt JSON-format`);
+  }
+  if (!Array.isArray(payload.entries)) {
+    throw new Error(`${sourceFile || 'data file'} saknar entries-array`);
+  }
+  return {
+    entries: payload.entries,
+    typeRules: resolveTypeRuleMap(payload)
+  };
+}
+
+function readEntryDataFile(rootPath, relativePath) {
+  const payload = JSON.parse(readText(joinPath(rootPath, relativePath)));
+  const parsed = parseEntryDataPayload(payload, relativePath);
+  return attachTypeRulesToEntries(parsed.entries, parsed.typeRules);
+}
+
+function collectLegacyRepeatabilityTrue(value, path, out) {
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      collectLegacyRepeatabilityTrue(item, `${path}[${index}]`, out);
+    });
+    return;
+  }
+  if (!value || typeof value !== 'object') return;
+  Object.keys(value).forEach(key => {
+    const nextPath = path ? `${path}.${key}` : key;
+    if (key === 'kan_införskaffas_flera_gånger' && value[key] === true) {
+      out.push(nextPath);
+    }
+    collectLegacyRepeatabilityTrue(value[key], nextPath, out);
+  });
+}
+
 function createLocalStorage(seed = {}) {
   const state = { ...seed };
   return {
@@ -104,7 +197,7 @@ function verifyRuleHelper(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
 
-  const data = JSON.parse(readText(joinPath(rootPath, 'data/formaga.json')));
+  const data = readEntryDataFile(rootPath, 'data/formaga.json');
   const byName = name => data.find(entry => entry && entry.namn === name);
   const fint = byName('Fint');
   const dominera = byName('Dominera');
@@ -512,6 +605,22 @@ function verifyRuntimeConsumers(rootPath) {
     'index-view ska använda rulesHelper.getConflictResolutionForCandidate för regelkrockar'
   );
   assert(
+    !characterViewSource.includes('kan_införskaffas_flera_gånger'),
+    'character-view ska inte bygga add/level-spärrar på kan_införskaffas_flera_gånger'
+  );
+  assert(
+    !indexViewSource.includes('kan_införskaffas_flera_gånger'),
+    'index-view ska inte bygga add/level-spärrar på kan_införskaffas_flera_gånger'
+  );
+  assert(
+    characterViewSource.includes('getEntryMaxCount('),
+    'character-view ska använda max_antal-modellen via getEntryMaxCount'
+  );
+  assert(
+    indexViewSource.includes('getEntryMaxCount('),
+    'index-view ska använda max_antal-modellen via getEntryMaxCount'
+  );
+  assert(
     !indexViewSource.includes("if (p.namn === 'Välutrustad')"),
     'index-view ska inte ha kvar hårdkodad Välutrustad-gren'
   );
@@ -604,17 +713,221 @@ function verifyRuntimeConsumers(rootPath) {
   }
 }
 
+function verifyMaxCountRules(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+
+  const evaluateEntryStops = sandbox.rulesHelper?.evaluateEntryStops;
+  assert(typeof evaluateEntryStops === 'function', 'rulesHelper ska exponera evaluateEntryStops');
+
+  const makeCopies = (entry, count) => Array.from({ length: Number(count) || 0 }, (_, index) => ({
+    ...entry,
+    id: `${entry.id || 'copy'}-${index + 1}`
+  }));
+
+  const singlePickEntry = {
+    id: 'max-test-single',
+    namn: 'Enstaka testpost',
+    taggar: { typ: ['Fördel'] }
+  };
+  const defaultSecondCopyStop = evaluateEntryStops(singlePickEntry, makeCopies(singlePickEntry, 1), { action: 'add' });
+  assert(
+    hasHardStopCode(defaultSecondCopyStop, 'duplicate_entry'),
+    'evaluateEntryStops ska blockera andra kopian när max_antal saknas'
+  );
+  assert(
+    !hasHardStopCode(defaultSecondCopyStop, 'stack_limit'),
+    'Default max_antal=1 ska använda duplicate_entry, inte stack_limit'
+  );
+
+  const stackableEntry = {
+    id: 'max-test-stack',
+    namn: 'Staplingsbar testpost',
+    taggar: {
+      typ: ['Fördel'],
+      max_antal: 3
+    }
+  };
+  const allowThirdCopy = evaluateEntryStops(stackableEntry, makeCopies(stackableEntry, 2), { action: 'add' });
+  assert(
+    !allowThirdCopy.hasStops,
+    'evaluateEntryStops ska tillåta val upp till taggar.max_antal'
+  );
+  const blockFourthCopy = evaluateEntryStops(stackableEntry, makeCopies(stackableEntry, 3), { action: 'add' });
+  assert(
+    hasHardStopCode(blockFourthCopy, 'stack_limit'),
+    'evaluateEntryStops ska blockera först över taggar.max_antal'
+  );
+  assert(
+    !hasHardStopCode(blockFourthCopy, 'duplicate_entry'),
+    'taggar.max_antal > 1 ska ge stack_limit, inte duplicate_entry'
+  );
+
+  const legacyTrueWithExplicitLimit = {
+    id: 'max-test-legacy-true',
+    namn: 'Legacy med limit',
+    kan_införskaffas_flera_gånger: true,
+    taggar: {
+      typ: ['Fördel'],
+      max_antal: 2,
+      kan_införskaffas_flera_gånger: true
+    }
+  };
+  const legacyFalseWithExplicitLimit = {
+    id: 'max-test-legacy-false',
+    namn: 'Legacy med limit',
+    kan_införskaffas_flera_gånger: false,
+    taggar: {
+      typ: ['Fördel'],
+      max_antal: 2,
+      kan_införskaffas_flera_gånger: false
+    }
+  };
+  const legacyTrueStop = evaluateEntryStops(
+    legacyTrueWithExplicitLimit,
+    makeCopies(legacyTrueWithExplicitLimit, 2),
+    { action: 'add' }
+  );
+  const legacyFalseStop = evaluateEntryStops(
+    legacyFalseWithExplicitLimit,
+    makeCopies(legacyFalseWithExplicitLimit, 2),
+    { action: 'add' }
+  );
+  assert(
+    hasHardStopCode(legacyTrueStop, 'stack_limit') && hasHardStopCode(legacyFalseStop, 'stack_limit'),
+    'Legacy-flaggan ska inte påverka utfallet när max_antal finns (förväntad stack_limit)'
+  );
+  const stopCodes = result => (Array.isArray(result?.hardStops) ? result.hardStops : [])
+    .map(stop => String(stop?.code || '').trim())
+    .filter(Boolean)
+    .sort();
+  deepEqual(
+    stopCodes(legacyTrueStop),
+    stopCodes(legacyFalseStop),
+    'Legacy-flaggan ska inte ändra hardStops när max_antal finns'
+  );
+
+  const maxOneLegacyTrue = {
+    id: 'max-test-legacy-max-one',
+    namn: 'Legacy ignoreras av max_antal',
+    kan_införskaffas_flera_gånger: true,
+    taggar: {
+      typ: ['Fördel'],
+      max_antal: 1
+    }
+  };
+  const maxOneLegacyStop = evaluateEntryStops(maxOneLegacyTrue, makeCopies(maxOneLegacyTrue, 1), { action: 'add' });
+  assert(
+    hasHardStopCode(maxOneLegacyStop, 'duplicate_entry'),
+    'Legacy-flagga true ska inte överstyra explicit max_antal=1'
+  );
+
+  const repeatableExpectations = {
+    'data/fordel.json': [
+      'Arkivarie',
+      'Berättare',
+      'Blodhund',
+      'Bluffmakare',
+      'Falköga',
+      'Falskspelare',
+      'Fingerfärdig',
+      'Grodbent',
+      'Gröna fingrar',
+      'Imitatör',
+      'Inbrottstjuv',
+      'Kartograf',
+      'Klanvän',
+      'Klippvandrare',
+      'Kommenderande stämma',
+      'Lagvrängare',
+      'Medium',
+      'Motståndskraft',
+      'Musikant',
+      'Prios Barn',
+      'Prisjakt',
+      'Rännstensfostran',
+      'Sjövan',
+      'Skattöga',
+      'Skräckinjagande',
+      'Skuggyngel',
+      'Skvallerbytta',
+      'Smärttålig',
+      'Stegrytm',
+      'Stigkedja',
+      'Stridsberedd',
+      'Stäppfödd',
+      'Taktisk spelare',
+      'Teckentydare',
+      'Tyst andning',
+      'Vildmarksvana',
+      'Väderbiten',
+      'Vägvisare',
+      'Väktarblick'
+    ],
+    'data/nackdel.json': [
+      'Bräcklig',
+      'Korruptionskänslig'
+    ]
+  };
+
+  Object.keys(repeatableExpectations).forEach(relativePath => {
+    const entries = readEntryDataFile(rootPath, relativePath);
+    const expectedNames = [...repeatableExpectations[relativePath]].sort();
+    const byName = new Map(
+      (Array.isArray(entries) ? entries : [])
+        .filter(entry => entry && typeof entry === 'object')
+        .map(entry => [String(entry.namn || '').trim(), entry])
+    );
+    expectedNames.forEach(name => {
+      const entry = byName.get(name);
+      assert(entry, `${relativePath}: saknar förväntad repeatable-post ${name}`);
+      assert(
+        parsePositiveLimit(entry?.taggar?.max_antal) > 1,
+        `${relativePath}: repeatable-posten ${name} måste ha taggar.max_antal > 1`
+      );
+    });
+
+    const actualRepeatable = (Array.isArray(entries) ? entries : [])
+      .filter(entry => parsePositiveLimit(entry?.taggar?.max_antal) > 1)
+      .map(entry => String(entry?.namn || '').trim())
+      .filter(Boolean)
+      .sort();
+    deepEqual(
+      actualRepeatable,
+      expectedNames,
+      `${relativePath}: repeatable-listan har ändrats. Uppdatera verify_rules_helper.js och säkra max_antal > 1.`
+    );
+  });
+
+  const legacyHits = [];
+  listDataJsonFiles(rootPath).forEach(fileName => {
+    const relativePath = `data/${fileName}`;
+    const parsed = readEntryDataFile(rootPath, relativePath);
+    const fileHits = [];
+    collectLegacyRepeatabilityTrue(parsed, '$', fileHits);
+    fileHits.forEach(hit => legacyHits.push(`${relativePath}:${hit}`));
+  });
+  assert(
+    legacyHits.length === 0,
+    [
+      'Källdata får inte innehålla kan_införskaffas_flera_gånger: true.',
+      ...legacyHits.slice(0, 20),
+      legacyHits.length > 20 ? `... och ${legacyHits.length - 20} till` : ''
+    ].filter(Boolean).join('\n')
+  );
+}
+
 function verifyPermanentCorruption(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const abilities = JSON.parse(readText(joinPath(rootPath, 'data/formaga.json')));
-  const powers = JSON.parse(readText(joinPath(rootPath, 'data/mystisk-kraft.json')));
-  const rituals = JSON.parse(readText(joinPath(rootPath, 'data/ritual.json')));
-  const disadvantages = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
-  const traits = JSON.parse(readText(joinPath(rootPath, 'data/sardrag.json')));
-  const races = JSON.parse(readText(joinPath(rootPath, 'data/ras.json')));
+  const abilities = readEntryDataFile(rootPath, 'data/formaga.json');
+  const powers = readEntryDataFile(rootPath, 'data/mystisk-kraft.json');
+  const rituals = readEntryDataFile(rootPath, 'data/ritual.json');
+  const disadvantages = readEntryDataFile(rootPath, 'data/nackdel.json');
+  const traits = readEntryDataFile(rootPath, 'data/sardrag.json');
+  const races = readEntryDataFile(rootPath, 'data/ras.json');
 
   const findByName = (list, name) => list.find(entry => entry && entry.namn === name);
   const ordensmagi = findByName(abilities, 'Ordensmagi');
@@ -904,9 +1217,9 @@ function verifyCorruptionTrackStats(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const abilities = JSON.parse(readText(joinPath(rootPath, 'data/formaga.json')));
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const disadvantages = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
+  const abilities = readEntryDataFile(rootPath, 'data/formaga.json');
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
+  const disadvantages = readEntryDataFile(rootPath, 'data/nackdel.json');
   const allEntries = [...abilities, ...advantages, ...disadvantages];
 
   sandbox.lookupEntry = (ref) => {
@@ -1115,9 +1428,9 @@ function verifyCarryCapacityRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const disadvantages = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
-  const traits = JSON.parse(readText(joinPath(rootPath, 'data/sardrag.json')));
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
+  const disadvantages = readEntryDataFile(rootPath, 'data/nackdel.json');
+  const traits = readEntryDataFile(rootPath, 'data/sardrag.json');
   const allEntries = [...advantages, ...disadvantages, ...traits];
 
   sandbox.lookupEntry = (ref) => {
@@ -1338,8 +1651,8 @@ function verifyRequirementRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const traits = JSON.parse(readText(joinPath(rootPath, 'data/sardrag.json')));
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
+  const traits = readEntryDataFile(rootPath, 'data/sardrag.json');
   const allEntries = [...advantages, ...traits];
 
   sandbox.lookupEntry = (ref) => {
@@ -1503,8 +1816,8 @@ function verifyRaceConflictRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const races = JSON.parse(readText(joinPath(rootPath, 'data/ras.json')));
-  const disadvantages = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
+  const races = readEntryDataFile(rootPath, 'data/ras.json');
+  const disadvantages = readEntryDataFile(rootPath, 'data/nackdel.json');
   const allEntries = [...races, ...disadvantages];
   sandbox.DB = allEntries;
 
@@ -1638,10 +1951,10 @@ function verifyInventoryGrantRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const misc = JSON.parse(readText(joinPath(rootPath, 'data/diverse.json')));
-  const elixirs = JSON.parse(readText(joinPath(rootPath, 'data/elixir.json')));
-  const instruments = JSON.parse(readText(joinPath(rootPath, 'data/instrument.json')));
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
+  const misc = readEntryDataFile(rootPath, 'data/diverse.json');
+  const elixirs = readEntryDataFile(rootPath, 'data/elixir.json');
+  const instruments = readEntryDataFile(rootPath, 'data/instrument.json');
   const allEntries = [...advantages, ...misc, ...elixirs, ...instruments];
   sandbox.DB = allEntries;
 
@@ -1790,8 +2103,8 @@ function verifyEntryGrantRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const disadvantages = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
+  const disadvantages = readEntryDataFile(rootPath, 'data/nackdel.json');
   const allEntries = [...advantages, ...disadvantages];
   sandbox.DB = allEntries;
 
@@ -1960,8 +2273,8 @@ function verifyToughnessRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const abilities = JSON.parse(readText(joinPath(rootPath, 'data/formaga.json')));
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
+  const abilities = readEntryDataFile(rootPath, 'data/formaga.json');
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
   const allEntries = [...abilities, ...advantages];
 
   sandbox.lookupEntry = (ref) => {
@@ -2099,8 +2412,8 @@ function verifyTraitTotalMaxRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const abilities = JSON.parse(readText(joinPath(rootPath, 'data/formaga.json')));
-  const lowerArtifacts = JSON.parse(readText(joinPath(rootPath, 'data/lagre-artefakter.json')));
+  const abilities = readEntryDataFile(rootPath, 'data/formaga.json');
+  const lowerArtifacts = readEntryDataFile(rootPath, 'data/lagre-artefakter.json');
   const allEntries = [...abilities, ...lowerArtifacts];
 
   sandbox.lookupEntry = (ref) => {
@@ -2223,9 +2536,9 @@ function verifyPainThresholdRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const disadvantages = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
-  const traits = JSON.parse(readText(joinPath(rootPath, 'data/sardrag.json')));
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
+  const disadvantages = readEntryDataFile(rootPath, 'data/nackdel.json');
+  const traits = readEntryDataFile(rootPath, 'data/sardrag.json');
   const allEntries = [...advantages, ...disadvantages, ...traits];
 
   sandbox.lookupEntry = (ref) => {
@@ -2561,7 +2874,7 @@ function verifyMoneyGrantRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
   const allEntries = [...advantages];
 
   sandbox.lookupEntry = (ref) => {
@@ -2681,8 +2994,8 @@ function verifyXpNeutralizationForGrants(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const advantages = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const disadvantages = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
+  const advantages = readEntryDataFile(rootPath, 'data/fordel.json');
+  const disadvantages = readEntryDataFile(rootPath, 'data/nackdel.json');
   const allEntries = [...advantages, ...disadvantages];
 
   sandbox.lookupEntry = (ref) => {
@@ -2776,7 +3089,7 @@ function verifyDefenseModifierRules(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
 
-  const sardrag = JSON.parse(readText(joinPath(rootPath, 'data/sardrag.json')));
+  const sardrag = readEntryDataFile(rootPath, 'data/sardrag.json');
   const robust = sardrag.find(e => e.namn === 'Robust');
   assert(robust, 'Hittade inte Robust i sardrag.json');
 
@@ -2817,7 +3130,7 @@ function verifyDefenseModifierRules(rootPath) {
   assert(getDefenseValueModifier([noRule]) === 0, 'Icke-Robust entry ska ge 0');
 
   // Tests for Sensoriskt känslig (forsvar_modifierare + nar.har_utrustad_typ — only when armor worn)
-  const nackdelar = JSON.parse(readText(joinPath(rootPath, 'data/nackdel.json')));
+  const nackdelar = readEntryDataFile(rootPath, 'data/nackdel.json');
   const sensorisk = nackdelar.find(e => e.namn === 'Sensoriskt känslig');
   assert(sensorisk, 'Hittade inte Sensoriskt känslig i nackdel.json');
 
@@ -2870,9 +3183,9 @@ function verifyArmorRestrictionBonusRules(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
 
-  const kvalitet = JSON.parse(readText(joinPath(rootPath, 'data/kvalitet.json')));
-  const negativKvalitet = JSON.parse(readText(joinPath(rootPath, 'data/negativ-kvalitet.json')));
-  const mystiskKvalitet = JSON.parse(readText(joinPath(rootPath, 'data/mystisk-kvalitet.json')));
+  const kvalitet = readEntryDataFile(rootPath, 'data/kvalitet.json');
+  const negativKvalitet = readEntryDataFile(rootPath, 'data/negativ-kvalitet.json');
+  const mystiskKvalitet = readEntryDataFile(rootPath, 'data/mystisk-kvalitet.json');
 
   const smidigt = kvalitet.find(e => e.namn === 'Smidigt');
   const otymplig = negativKvalitet.find(e => e.namn === 'Otymplig');
@@ -2932,9 +3245,9 @@ function verifyWeaponDefenseBonusRules(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
 
-  const formaga = JSON.parse(readText(joinPath(rootPath, 'data/formaga.json')));
-  const kvalitet = JSON.parse(readText(joinPath(rootPath, 'data/kvalitet.json')));
-  const vapen = JSON.parse(readText(joinPath(rootPath, 'data/vapen.json')));
+  const formaga = readEntryDataFile(rootPath, 'data/formaga.json');
+  const kvalitet = readEntryDataFile(rootPath, 'data/kvalitet.json');
+  const vapen = readEntryDataFile(rootPath, 'data/vapen.json');
 
   const manteldans = formaga.find(e => e.namn === 'Manteldans');
   const sköldkamp = formaga.find(e => e.namn === 'Sköldkamp');
@@ -3043,8 +3356,8 @@ function verifyWeaponAttackBonusRules(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
 
-  const formaga = JSON.parse(readText(joinPath(rootPath, 'data/formaga.json')));
-  const kvalitet = JSON.parse(readText(joinPath(rootPath, 'data/kvalitet.json')));
+  const formaga = readEntryDataFile(rootPath, 'data/formaga.json');
+  const kvalitet = readEntryDataFile(rootPath, 'data/kvalitet.json');
   const fint = formaga.find(e => e.namn === 'Fint');
   const precist = kvalitet.find(e => e.namn === 'Precist');
 
@@ -3110,7 +3423,7 @@ function verifyWeaponAttackBonusRules(rootPath) {
 }
 
 function verifyObalanserat(rootPath) {
-  const negativKvalitet = JSON.parse(readText(joinPath(rootPath, 'data/negativ-kvalitet.json')));
+  const negativKvalitet = readEntryDataFile(rootPath, 'data/negativ-kvalitet.json');
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
 
@@ -3125,7 +3438,7 @@ function verifyObalanserat(rootPath) {
   const { getEquippedQualityDefenseBonus } = sandbox.rulesHelper;
 
   // Test 2: getEquippedQualityDefenseBonus returns -1 for Obalanserat
-  const balanserat = JSON.parse(readText(joinPath(rootPath, 'data/kvalitet.json'))).find(e => e.namn === 'Balanserat');
+  const balanserat = readEntryDataFile(rootPath, 'data/kvalitet.json').find(e => e.namn === 'Balanserat');
   sandbox.lookupEntry = (ref) => {
     if (ref?.name === 'Obalanserat') return obalanserat;
     if (ref?.name === 'Balanserat') return balanserat;
@@ -3329,11 +3642,11 @@ function verifyDefenseAutoOptimizer(rootPath) {
 }
 
 function verifyTargetDrivenMonstruosKrav(rootPath) {
-  const rasList = JSON.parse(readText(joinPath(rootPath, 'data/ras.json')));
-  const fordelList = JSON.parse(readText(joinPath(rootPath, 'data/fordel.json')));
-  const elityrkeList = JSON.parse(readText(joinPath(rootPath, 'data/elityrke.json')));
-  const monstruostSardrag = JSON.parse(readText(joinPath(rootPath, 'data/monstruost-sardrag.json')));
-  const sardrag = JSON.parse(readText(joinPath(rootPath, 'data/sardrag.json')));
+  const rasList = readEntryDataFile(rootPath, 'data/ras.json');
+  const fordelList = readEntryDataFile(rootPath, 'data/fordel.json');
+  const elityrkeList = readEntryDataFile(rootPath, 'data/elityrke.json');
+  const monstruostSardrag = readEntryDataFile(rootPath, 'data/monstruost-sardrag.json');
+  const sardrag = readEntryDataFile(rootPath, 'data/sardrag.json');
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   const { getMissingRequirementReasonsForCandidate, getMonstruosTraitPermissions } = sandbox.rulesHelper;
@@ -3341,6 +3654,7 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
   const troll = rasList.find(e => e.namn === 'Troll');
   const vandod = rasList.find(e => e.namn === 'Vandöd');
   const andrik = rasList.find(e => e.namn === 'Andrik');
+  const monster = rasList.find(e => e.namn === 'Monster');
   const djurBjara = rasList.find(e => e.namn === 'Djur/Bjära');
   const morktBlod = fordelList.find(e => e.namn === 'Mörkt blod');
   const blodvadare = elityrkeList.find(e => e.namn === 'Blodvadare');
@@ -3350,64 +3664,95 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
   const vingar = monstruostSardrag.find(e => e.namn === 'Vingar');
   const robustSardrag = sardrag.find(e => e.namn === 'Robust');
 
+  assert(monster, 'Hittade inte rasen Monster');
+
+  const hasReasonCode = (reasons, code) => (Array.isArray(reasons) ? reasons : [])
+    .some(reason => String(reason?.code || '').trim() === code);
+
   sandbox.lookupEntry = () => null;
 
   // Test 1: Diminutiv blocked without source
   const missing1 = getMissingRequirementReasonsForCandidate(diminutiv, []);
   assert(missing1.length > 0, 'Diminutiv ska ha krav utan källa');
 
-  // Test 2: Diminutiv permitted with Andrik
+  // Test 2: Diminutiv permitted with only Andrik (entry-krav överstyr type-krav)
   const missing2 = getMissingRequirementReasonsForCandidate(diminutiv, [{ ...andrik, nivå: '' }]);
-  assert(missing2.length === 0, 'Diminutiv ska vara tillåtet med Andrik');
+  assert(missing2.length === 0, 'Diminutiv ska vara tillåtet med enbart Andrik');
 
-  // Test 3: Diminutiv permitted with Djur/Bjära
-  const missing3 = getMissingRequirementReasonsForCandidate(diminutiv, [{ ...djurBjara, nivå: '' }]);
-  assert(missing3.length === 0, 'Diminutiv ska vara tillåtet med Djur/Bjära');
+  // Test 3: Diminutiv permitted with only Djur/Bjära
+  const missing3 = getMissingRequirementReasonsForCandidate(
+    diminutiv,
+    [{ ...djurBjara, nivå: '' }]
+  );
+  assert(missing3.length === 0, 'Diminutiv ska vara tillåtet med enbart Djur/Bjära');
 
-  // Test 4: Gravkyla blocked without Vandöd or Djur/Bjära
-  const missing4 = getMissingRequirementReasonsForCandidate(gravkyla, [{ ...troll, nivå: '' }]);
-  assert(missing4.length > 0, 'Gravkyla ska vara blockerat utan Vandöd/Djur/Bjära');
+  // Test 4: Diminutiv permitted with only Monster (type-krav fallback)
+  const missing4 = getMissingRequirementReasonsForCandidate(
+    diminutiv,
+    [{ ...monster, nivå: '' }]
+  );
+  assert(missing4.length === 0, 'Diminutiv ska vara tillåtet med enbart Monster');
 
-  // Test 5: Gravkyla permitted with Vandöd
-  const missing5 = getMissingRequirementReasonsForCandidate(gravkyla, [{ ...vandod, nivå: '' }]);
-  assert(missing5.length === 0, 'Gravkyla ska vara tillåtet med Vandöd');
+  // Test 5: Gravkyla blocked without Vandöd or Djur/Bjära
+  const missing5 = getMissingRequirementReasonsForCandidate(
+    gravkyla,
+    [{ ...troll, nivå: '' }]
+  );
+  assert(missing5.length > 0, 'Gravkyla ska vara blockerat utan Vandöd/Djur/Bjära');
 
-  // Test 6: Vingar permitted with Mörkt blod
-  const missing6 = getMissingRequirementReasonsForCandidate(vingar, [{ ...morktBlod, nivå: '' }]);
-  assert(missing6.length === 0, 'Vingar ska vara tillåtet med Mörkt blod');
+  // Test 6: Gravkyla permitted with Vandöd
+  const missing6 = getMissingRequirementReasonsForCandidate(
+    gravkyla,
+    [{ ...vandod, nivå: '' }]
+  );
+  assert(missing6.length === 0, 'Gravkyla ska vara tillåtet med Vandöd');
 
-  // Test 7: Vingar blocked without source
-  const missing7 = getMissingRequirementReasonsForCandidate(vingar, [{ ...andrik, nivå: '' }]);
-  assert(missing7.length > 0, 'Vingar ska vara blockerat utan Mörkt blod/Djur/Bjära');
+  // Test 7: Vingar permitted with Mörkt blod
+  const missing7 = getMissingRequirementReasonsForCandidate(
+    vingar,
+    [{ ...morktBlod, nivå: '' }]
+  );
+  assert(missing7.length === 0, 'Vingar ska vara tillåtet med Mörkt blod');
 
-  // Test 8: Robust (sardrag) permitted with Troll
-  const missing8 = getMissingRequirementReasonsForCandidate(robustSardrag, [{ ...troll, nivå: '' }]);
-  assert(missing8.length === 0, 'Robust (sardrag) ska vara tillåtet med Troll');
+  // Test 8: Vingar blocked with Andrik-only (ingen entry-undantag och saknar Monster)
+  const missing8 = getMissingRequirementReasonsForCandidate(vingar, [{ ...andrik, nivå: '' }]);
+  assert(missing8.length > 0, 'Vingar ska vara blockerat med enbart Andrik');
+  assert(
+    hasReasonCode(missing8, 'monster_race_required'),
+    'Vingar med enbart Andrik ska fortsatt blockeras av type-kravet Monster'
+  );
 
-  // Test 9: Robust (sardrag) blocked without source
-  const missing9 = getMissingRequirementReasonsForCandidate(robustSardrag, [{ ...andrik, nivå: '' }]);
-  assert(missing9.length > 0, 'Robust (sardrag) ska vara blockerat utan källa');
+  // Test 9: Robust (sardrag) permitted with Troll
+  const missing9 = getMissingRequirementReasonsForCandidate(robustSardrag, [{ ...troll, nivå: '' }]);
+  assert(missing9.length === 0, 'Robust (sardrag) ska vara tillåtet med Troll');
 
-  // Test 10: Blodsband.race counts as that race (Blodsband Andrik → permits Diminutiv)
+  // Test 10: Robust (sardrag) blocked without source
+  const missing10 = getMissingRequirementReasonsForCandidate(robustSardrag, [{ ...andrik, nivå: '' }]);
+  assert(missing10.length > 0, 'Robust (sardrag) ska vara blockerat utan källa');
+
+  // Test 11: Blodsband.race counts as that race (Blodsband Andrik → permits Diminutiv)
   const blodsband = { namn: 'Blodsband', race: 'Andrik', nivå: '' };
   sandbox.lookupEntry = (ref) => {
     if (ref?.name === 'Andrik') return andrik;
     return null;
   };
-  const missing10 = getMissingRequirementReasonsForCandidate(diminutiv, [blodsband]);
-  assert(missing10.length === 0, 'Blodsband Andrik ska tillåta Diminutiv via nagon_av_namn');
+  const missing11 = getMissingRequirementReasonsForCandidate(diminutiv, [blodsband]);
+  assert(missing11.length === 0, 'Blodsband Andrik ska tillåta Diminutiv via nagon_av_namn');
 
-  // Test 11: Naturligt vapen permitted with Blodvadare
+  // Test 12: Naturligt vapen permitted with Blodvadare
   sandbox.lookupEntry = () => null;
-  const missing11 = getMissingRequirementReasonsForCandidate(naturligtVapen, [{ ...blodvadare, nivå: '' }]);
-  assert(missing11.length === 0, 'Naturligt vapen ska vara tillåtet med Blodvadare');
+  const missing12 = getMissingRequirementReasonsForCandidate(
+    naturligtVapen,
+    [{ ...blodvadare, nivå: '' }]
+  );
+  assert(missing12.length === 0, 'Naturligt vapen ska vara tillåtet med Blodvadare');
 
-  // Test 12: No tillater_monstruost remains in data sources
+  // Test 13: No tillater_monstruost remains in data sources
   const allSources = [...rasList, ...fordelList, ...elityrkeList];
   const remaining = allSources.filter(e => (e?.taggar?.regler?.ger || []).some(r => r.mal === 'tillater_monstruost'));
   assert(remaining.length === 0, 'Ingen källa ska ha kvar tillater_monstruost: ' + remaining.map(e => e.namn).join(', '));
 
-  // Test 13: getMonstruosTraitPermissions shim returns empty (deprecated)
+  // Test 14: getMonstruosTraitPermissions shim returns empty (deprecated)
   const shim = getMonstruosTraitPermissions([{ ...troll, nivå: '' }]);
   assert(!shim.allowAll, 'getMonstruosTraitPermissions-shim ska ge allowAll=false');
   assert(shim.allowedNames.size === 0, 'getMonstruosTraitPermissions-shim ska ge tom allowedNames');
@@ -3508,6 +3853,88 @@ function verifyUnifiedNarEvaluator(rootPath) {
   assert(ern({}, {}), 'evaluateRustningNar: tom nar passerar');
 }
 
+function verifySeparateDefenseRules(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+
+  const monstruostSardrag = readEntryDataFile(rootPath, 'data/monstruost-sardrag.json');
+  const mystiskKraft = readEntryDataFile(rootPath, 'data/mystisk-kraft.json');
+  const kvalitet = readEntryDataFile(rootPath, 'data/kvalitet.json');
+
+  const hamRobust = monstruostSardrag.find(e => e.id === 'hamnskifte_grants1');
+  const dansandeVapen = mystiskKraft.find(e => e.id === 'mystiskkr6');
+  const balanserat = kvalitet.find(e => e.namn === 'Balanserat');
+
+  assert(hamRobust, 'Hittade inte hamnskifte_grants1 i monstruost-sardrag.json');
+  assert(dansandeVapen, 'Hittade inte mystiskkr6 (Dansande vapen) i mystisk-kraft.json');
+  assert(balanserat, 'Hittade inte Balanserat i kvalitet.json');
+
+  const { getSeparateDefenseTraitRules, getSelectiveDefenseModifier } = sandbox.rulesHelper;
+  assert(typeof getSeparateDefenseTraitRules === 'function', 'getSeparateDefenseTraitRules ska vara exporterad');
+  assert(typeof getSelectiveDefenseModifier === 'function', 'getSelectiveDefenseModifier ska vara exporterad');
+
+  // Test 1: Empty list → no rules
+  assert(getSeparateDefenseTraitRules([]).length === 0, 'Tom lista ska ge inga separat-regler');
+
+  // Test 2: Hamnskifte Robust Novis → 1 rule with varde:"Kvick", modifierare:-2, no tillat
+  const hamNovis = { ...hamRobust, nivå: 'Novis' };
+  const rulesNovis = getSeparateDefenseTraitRules([hamNovis]);
+  assert(rulesNovis.length === 1, `Hamnskifte Robust Novis ska ge 1 regel, fick ${rulesNovis.length}`);
+  assert(rulesNovis[0].varde === 'Kvick', `Regel ska ha varde=Kvick, fick ${rulesNovis[0].varde}`);
+  assert(rulesNovis[0].modifierare === -2, `Regel ska ha modifierare=-2, fick ${rulesNovis[0].modifierare}`);
+  assert(!rulesNovis[0].tillat, 'Hamnskifte Robust Novis ska inte ha tillat-konfiguration');
+
+  // Test 3: Hamnskifte Robust Gesäll → modifierare:-3
+  const hamGesall = { ...hamRobust, nivå: 'Gesäll' };
+  const rulesGesall = getSeparateDefenseTraitRules([hamGesall]);
+  assert(rulesGesall.length === 1, 'Hamnskifte Robust Gesäll ska ge 1 regel');
+  assert(rulesGesall[0].modifierare === -3, `Gesäll ska ha modifierare=-3, fick ${rulesGesall[0].modifierare}`);
+
+  // Test 4: Hamnskifte Robust Mästare → modifierare:-4
+  const hamMastare = { ...hamRobust, nivå: 'Mästare' };
+  const rulesMastare = getSeparateDefenseTraitRules([hamMastare]);
+  assert(rulesMastare.length === 1, 'Hamnskifte Robust Mästare ska ge 1 regel');
+  assert(rulesMastare[0].modifierare === -4, `Mästare ska ha modifierare=-4, fick ${rulesMastare[0].modifierare}`);
+
+  // Test 5: getSelectiveDefenseModifier — no tillat (fully isolated) → 0
+  assert(getSelectiveDefenseModifier([hamNovis], [], {}, undefined) === 0,
+    'Utan tillat ska getSelectiveDefenseModifier ge 0');
+  assert(getSelectiveDefenseModifier([hamNovis], [], {}, {}) === 0,
+    'Tom tillat ska ge 0');
+
+  // Test 6: getSelectiveDefenseModifier — tillat.vapen_kvaliteter → Balanserat quality gives +1
+  sandbox.lookupEntry = (ref) => {
+    if (ref?.name === 'Balanserat') return balanserat;
+    return null;
+  };
+  const balaFact = { entryRef: null, types: [], qualities: ['Balanserat'] };
+  const bonusWithQual = getSelectiveDefenseModifier([], [balaFact], {}, { vapen_kvaliteter: true });
+  assert(bonusWithQual === 1, `tillat.vapen_kvaliteter med Balanserat ska ge +1, fick ${bonusWithQual}`);
+
+  // Test 7: getSelectiveDefenseModifier — no tillat → Balanserat does NOT contribute
+  const bonusNoTillat = getSelectiveDefenseModifier([], [balaFact], {}, {});
+  assert(bonusNoTillat === 0, `Utan tillat ska Balanserat inte bidra, fick ${bonusNoTillat}`);
+
+  // Test 8: Dansande vapen Mästare rule → varde:"Viljestark", tillat.vapen_typer+vapen_kvaliteter
+  const dansandeMastare = { ...dansandeVapen, nivå: 'Mästare' };
+  const rulesDansande = getSeparateDefenseTraitRules([dansandeMastare]);
+  assert(rulesDansande.length === 1, `Dansande vapen Mästare ska ge 1 regel, fick ${rulesDansande.length}`);
+  assert(rulesDansande[0].varde === 'Viljestark', `Dansande vapen ska ha varde=Viljestark, fick ${rulesDansande[0].varde}`);
+  assert(rulesDansande[0].tillat?.vapen_typer === true, 'Dansande vapen ska ha tillat.vapen_typer=true');
+  assert(rulesDansande[0].tillat?.vapen_kvaliteter === true, 'Dansande vapen ska ha tillat.vapen_kvaliteter=true');
+  assert(!rulesDansande[0].tillat?.rustning, 'Dansande vapen ska inte ha tillat.rustning');
+
+  // Test 9: Dansande vapen — Balanserat applies (tillat.vapen_kvaliteter)
+  const bonusDansande = getSelectiveDefenseModifier([], [balaFact], {}, rulesDansande[0].tillat);
+  assert(bonusDansande === 1, `Dansande vapen med Balanserat ska ge +1, fick ${bonusDansande}`);
+
+  // Test 10: sourceEntryName is attached to rules
+  assert(rulesNovis[0].sourceEntryName === hamRobust.namn,
+    `Regel ska ha sourceEntryName="${hamRobust.namn}", fick "${rulesNovis[0].sourceEntryName}"`);
+  assert(rulesDansande[0].sourceEntryName === dansandeVapen.namn,
+    `Dansande vapen regel ska ha sourceEntryName="${dansandeVapen.namn}", fick "${rulesDansande[0].sourceEntryName}"`);
+}
+
 function verifyMalCoverage(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
@@ -3533,7 +3960,7 @@ function verifyMalCoverage(rootPath) {
   const uncovered = new Set();
   dataFiles.forEach(fileName => {
     try {
-      const content = JSON.parse(readText(joinPath(rootPath, 'data/' + fileName)));
+      const content = readEntryDataFile(rootPath, 'data/' + fileName);
       const entries = Array.isArray(content) ? content : [content];
       entries.forEach(entry => {
         if (!entry || typeof entry !== 'object') return;
@@ -3595,13 +4022,153 @@ function verifyRuleExtends(rootPath) {
   assert(baseModifier === 2, 'Basepost ska bara ge sina egna regler (+2, fick ' + baseModifier + ')');
 }
 
+function verifyTypeRuleHierarchy(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+  const helper = sandbox.rulesHelper;
+  assert(typeof helper.getTypeRules === 'function', 'rulesHelper ska exponera getTypeRules');
+
+  const typeRules = {
+    'Förmåga': {
+      max_antal: 2,
+      regler: {
+        andrar: [
+          { mal: 'forsvar_modifierare', satt: 'add', varde: 1 },
+          { mal: 'anfall_karaktarsdrag', satt: 'ersatt', varde: 'Stark' },
+          { mal: 'talighet_tillagg', satt: 'add', varde: 1 }
+        ],
+        kraver: [
+          {
+            nar: { har_namn: ['Monster'] },
+            varde: 'monster_race_required'
+          }
+        ]
+      },
+      nivå_data: {
+        Novis: {
+          regler: {
+            andrar: [
+              { mal: 'forsvar_modifierare', satt: 'add', varde: 2 }
+            ]
+          }
+        }
+      }
+    }
+  };
+
+  const addTypeRules = (entry) => {
+    try {
+      Object.defineProperty(entry, '__typ_regler', {
+        value: typeRules,
+        configurable: true,
+        writable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      entry.__typ_regler = typeRules;
+    }
+    return entry;
+  };
+
+  const baseline = addTypeRules({
+    id: 'type-base-1',
+    namn: 'Typbas',
+    taggar: {
+      typ: ['Förmåga']
+    }
+  });
+  assert(helper.getEntryMaxCount(baseline) === 2, 'Typregel ska sätta baseline max_antal=2');
+
+  const overrideMax = addTypeRules({
+    id: 'type-entry-max-1',
+    namn: 'Entry max',
+    taggar: {
+      typ: ['Förmåga'],
+      max_antal: 4
+    }
+  });
+  assert(helper.getEntryMaxCount(overrideMax) === 4, 'Entry-regel ska överstyra type max_antal');
+
+  const candidate = addTypeRules({
+    id: 'type-entry-rules-1',
+    namn: 'Entry regler',
+    nivå: 'Novis',
+    taggar: {
+      typ: ['Förmåga'],
+      regler: {
+        andrar: [
+          { mal: 'forsvar_modifierare', satt: 'ersatt', varde: 5 }
+        ],
+        kraver: [
+          {
+            nar: { nagon_av_namn: ['Andrik'] },
+            varde: 'andrik_required'
+          }
+        ]
+      },
+      nivå_data: {
+        Novis: {
+          regler: {
+            andrar: [
+              { mal: 'anfall_karaktarsdrag', satt: 'ersatt', varde: 'Kvick' }
+            ]
+          }
+        }
+      }
+    }
+  });
+
+  const mergedRules = helper.getEntryRules(candidate, { level: 'Novis' });
+  const andrar = Array.isArray(mergedRules?.andrar) ? mergedRules.andrar : [];
+  const byMal = mal => andrar.filter(rule => String(rule?.mal || '').trim() === mal);
+
+  const defenseRules = byMal('forsvar_modifierare');
+  assert(defenseRules.length === 1, `Entry-regel ska ersätta type-regler för forsvar_modifierare, fick ${defenseRules.length}`);
+  assert(Number(defenseRules[0]?.varde) === 5, 'forsvar_modifierare ska följa entry-regeln (varde=5)');
+
+  const attackRules = byMal('anfall_karaktarsdrag');
+  assert(attackRules.length === 1, 'Entry-nivåregel ska ersätta type-regel för anfall_karaktarsdrag');
+  assert(String(attackRules[0]?.varde || '') === 'Kvick', 'anfall_karaktarsdrag ska följa entry-nivåregeln (Kvick)');
+
+  const toughnessRules = byMal('talighet_tillagg');
+  assert(toughnessRules.length === 1, 'Type-regel ska finnas kvar när entry saknar samma mal');
+  assert(Number(toughnessRules[0]?.varde) === 1, 'Type-regel talighet_tillagg ska behålla baseline-värdet');
+
+  const missingWithAndrik = helper.getMissingRequirementReasonsForCandidate(
+    candidate,
+    [{ namn: 'Andrik' }],
+    { level: 'Novis' }
+  );
+  assert(missingWithAndrik.length === 0, 'Entry-krav (Andrik) ska kunna överstyra type-krav (Monster)');
+
+  const missingWithMonster = helper.getMissingRequirementReasonsForCandidate(
+    candidate,
+    [{ namn: 'Monster' }],
+    { level: 'Novis' }
+  );
+  assert(missingWithMonster.length === 0, 'Type-krav (Monster) ska fungera som fallback när entry-krav inte uppfylls');
+
+  const missingWithoutEither = helper.getMissingRequirementReasonsForCandidate(
+    candidate,
+    [],
+    { level: 'Novis' }
+  );
+  const missingCodes = new Set((Array.isArray(missingWithoutEither) ? missingWithoutEither : [])
+    .map(reason => String(reason?.code || '').trim())
+    .filter(Boolean));
+  assert(
+    missingCodes.has('andrik_required') && missingCodes.has('monster_race_required'),
+    'När varken entry-krav eller type-krav uppfylls ska båda reasons rapporteras'
+  );
+}
+
 function verifyHamnskifteGrants(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const mysticPowers = JSON.parse(readText(joinPath(rootPath, 'data/mystisk-kraft.json')));
-  const monstrousTraits = JSON.parse(readText(joinPath(rootPath, 'data/monstruost-sardrag.json')));
+  const mysticPowers = readEntryDataFile(rootPath, 'data/mystisk-kraft.json');
+  const monstrousTraits = readEntryDataFile(rootPath, 'data/monstruost-sardrag.json');
   const allEntries = [...mysticPowers, ...monstrousTraits];
   sandbox.DB = allEntries;
 
@@ -3640,8 +4207,21 @@ function verifyHamnskifteGrants(rootPath) {
   assert(grants3, 'Hittade inte hamnskifte_grants3 (Regeneration)');
   assert(grants4, 'Hittade inte hamnskifte_grants4 (Naturligt vapen)');
 
-  const { getEntryGrantTargets, getPartialGrantInfo } = sandbox.rulesHelper;
-  const { calcEntryXP, buildGrantMaps, isRuleGrantedEntry, getGrantedEntryOverrideCost, setCurrentList, getCurrentList } = sandbox.storeHelper;
+  const {
+    getEntryGrantTargets,
+    getPartialGrantInfo,
+    getEntryErfOverride,
+    setEntryErfOverride,
+    clearAllEntryErfOverrides
+  } = sandbox.rulesHelper;
+  const {
+    calcEntryXP,
+    buildGrantMaps,
+    isRuleGrantedEntry,
+    getGrantedEntryOverrideCost,
+    setCurrentList,
+    getCurrentList
+  } = sandbox.storeHelper;
 
   // Test 1: No Hamnskifte in list → no grant targets
   const emptyList = [];
@@ -3732,7 +4312,82 @@ function verifyHamnskifteGrants(rootPath) {
     `calcEntryXP för grants4 Mästare med gratisTill=Novis ska vara 50`
   );
 
-  // Test 10–12: Source removal cleanup — granted entries removed when source is removed
+  // Test 10: Explicit ERF override in nivå_data should be used by calcEntryXP
+  const customCostGrant = {
+    ...grants4,
+    nivå: 'Gesäll',
+    taggar: {
+      ...(grants4.taggar || {}),
+      nivå_data: {
+        ...(grants4.taggar?.nivå_data || {}),
+        Gesäll: {
+          ...((grants4.taggar?.nivå_data && grants4.taggar.nivå_data.Gesäll) || {}),
+          erf: 17
+        }
+      }
+    }
+  };
+  assert(
+    getEntryErfOverride(customCostGrant, [customCostGrant], { level: 'Gesäll' }) === 17,
+    'getEntryErfOverride ska läsa explicit nivåkostnad (erf) från entry data'
+  );
+  assert(
+    calcEntryXP(customCostGrant, [customCostGrant]) === 17,
+    'calcEntryXP ska använda explicit nivåkostnad (erf) från entry data'
+  );
+
+  // Test 11: Runtime manual ERF override API
+  clearAllEntryErfOverrides();
+  assert(
+    setEntryErfOverride({ id: grants4.id }, 'Gesäll', 14),
+    'setEntryErfOverride ska acceptera id + nivå + värde'
+  );
+  const manualOverrideGrant = { ...grants4, nivå: 'Gesäll' };
+  assert(
+    calcEntryXP(manualOverrideGrant, [manualOverrideGrant]) === 14,
+    'calcEntryXP ska använda runtime-manual ERF override'
+  );
+  clearAllEntryErfOverrides();
+
+  // Test 12: Rule-based ERF override on ger:post supports level maps
+  const pricedSource = {
+    id: 'synth-priced-source',
+    namn: 'SynthPricedAbility',
+    nivå: 'Gesäll',
+    taggar: {
+      typ: ['Mystisk kraft'],
+      regler: {
+        ger: [
+          {
+            mal: 'post',
+            id: 'hamnskifte_grants4',
+            gratis_upp_till: 'Novis',
+            erf_per_niva: {
+              Novis: 10,
+              'Gesäll': 35,
+              'Mästare': 80
+            }
+          }
+        ]
+      }
+    }
+  };
+  const pricedGrantGesall = { ...grants4, nivå: 'Gesäll' };
+  const pricedList = [pricedSource, pricedGrantGesall];
+  assert(
+    getEntryErfOverride(pricedGrantGesall, pricedList, { level: 'Gesäll' }) === 35,
+    'Rule-based ERF map ska ge nivåspecifik total kostnad (Gesäll)'
+  );
+  assert(
+    getGrantedEntryOverrideCost(pricedGrantGesall, pricedList) === 25,
+    'Rule-based ERF map ska påverka gratis_upp_till-avdraget korrekt (35-10=25)'
+  );
+  assert(
+    calcEntryXP(pricedGrantGesall, pricedList) === 25,
+    'calcEntryXP ska använda rule-based nivåspecifik ERF override vid partial grant'
+  );
+
+  // Test 13–15: Source removal cleanup — granted entries removed when source is removed
   const baseStoreData = {
     list: [],
     inventory: [],
@@ -3782,8 +4437,8 @@ function verifyGrantCleanupRules(rootPath) {
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
 
-  const mysticPowers = JSON.parse(readText(joinPath(rootPath, 'data/mystisk-kraft.json')));
-  const monstrousTraits = JSON.parse(readText(joinPath(rootPath, 'data/monstruost-sardrag.json')));
+  const mysticPowers = readEntryDataFile(rootPath, 'data/mystisk-kraft.json');
+  const monstrousTraits = readEntryDataFile(rootPath, 'data/monstruost-sardrag.json');
   const allEntries = [...mysticPowers, ...monstrousTraits];
   sandbox.DB = allEntries;
   sandbox.lookupEntry = (ref) => {
@@ -3940,6 +4595,7 @@ try {
   verifyRuleHelper(rootPath);
   verifyUnifiedNarEvaluator(rootPath);
   verifyRuntimeConsumers(rootPath);
+  verifyMaxCountRules(rootPath);
   verifyPermanentCorruption(rootPath);
   verifyCorruptionTrackStats(rootPath);
   verifyCarryCapacityRules(rootPath);
@@ -3964,8 +4620,10 @@ try {
   verifyObalanserat(rootPath);
   verifyTargetDrivenMonstruosKrav(rootPath);
   verifyRuleExtends(rootPath);
+  verifyTypeRuleHierarchy(rootPath);
   verifyHamnskifteGrants(rootPath);
   verifyGrantCleanupRules(rootPath);
+  verifySeparateDefenseRules(rootPath);
   verifyMalCoverage(rootPath);
   console.log('verify_rules_helper: ok');
 } catch (error) {

@@ -4,6 +4,7 @@ import json
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
+from data_file_schema import load_json, normalize_payload
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
@@ -25,14 +26,9 @@ def parse_args():
     parser.add_argument(
         '--strict',
         action='store_true',
-        help='Avbryt om en källfil inte innehåller en top-level-array.'
+        help='Avbryt om en källfil inte följer datafil-schemat.'
     )
     return parser.parse_args()
-
-
-def load_json(path: Path):
-    with path.open('r', encoding='utf-8') as handle:
-        return json.load(handle)
 
 
 def split_tags(value):
@@ -74,17 +70,18 @@ def build_structure(max_examples, strict=False):
     skipped_files = []
 
     for path in discover_data_files():
-        data = load_json(path)
-        if not isinstance(data, list):
-            msg = f'{path.name} innehåller inte en top-level-array.'
+        try:
+            payload = normalize_payload(load_json(path), source=path.name)
+        except ValueError as err:
+            msg = str(err)
             if strict:
-                raise ValueError(msg)
+                raise
             skipped_files.append(msg)
             continue
 
         processed_files.append(path.name)
         rel_source = f'data/{path.name}'
-        for entry in data:
+        for entry in payload.entries:
             if not isinstance(entry, dict):
                 continue
             tags = entry.get('taggar') or {}

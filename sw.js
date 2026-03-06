@@ -78,6 +78,7 @@ const URLS_TO_CACHE = [
   'js/notes-view.js',
   'js/pdf-library.js',
   'js/pwa.js',
+  'js/rules-helper.js',
   'js/shared-toolbar.js',
   'js/store.js',
   'js/summary-effects.js',

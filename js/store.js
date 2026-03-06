@@ -1235,21 +1235,24 @@
   function getGrantedEntryOverrideCost(entry, list, options = {}) {
     const targetKey = getEntryGrantTargetKey(entry);
     if (!targetKey) return null;
+    const entries = Array.isArray(list) ? list : [];
 
     const grantConstraints = options.grantConstraints instanceof Map
       ? options.grantConstraints
-      : buildGrantMaps(list).grantConstraints;
+      : buildGrantMaps(entries).grantConstraints;
 
     const constraint = grantConstraints.get(targetKey);
     if (!constraint?.gratisTill) return null;
 
-    const entryLvlIdx = LEVEL_IDX[entry?.nivå || ''] || 0;
-    const gratisTillIdx = LEVEL_IDX[constraint.gratisTill] || 0;
+    const entryLevel = normalizeLevelName(entry?.nivå) || resolveEntryLevel(entry, entry?.nivå);
+    const gratisLevel = normalizeLevelName(constraint.gratisTill) || resolveEntryLevel(entry, constraint.gratisTill);
+    const entryLvlIdx = LEVEL_IDX[entryLevel] || 0;
+    const gratisTillIdx = LEVEL_IDX[gratisLevel] || 0;
     if (entryLvlIdx <= gratisTillIdx) return null; // at or below free level → handled by isRuleGrantedEntry
 
     // Additive auto-discount: cumulative cost minus the free portion
-    const totalCost = XP_LADDER[entry?.nivå || ''] || 10;
-    const freeCost = XP_LADDER[constraint.gratisTill] || 0;
+    const totalCost = resolveEntryLevelCost(entry, entryLevel, { list: entries, strictLevel: true });
+    const freeCost = resolveEntryLevelCost(entry, gratisLevel, { list: entries, strictLevel: true });
     return Math.max(0, totalCost - freeCost);
   }
 
@@ -1743,6 +1746,7 @@
     applyHamnskifteTraits(store, list);
     syncEntryMetadataFromPrev(store, prev, list);
     store.data[store.current].list = list;
+    const hiddenRevealChanged = syncHiddenRevealedFromList(store, list);
     syncRuleInventoryGrants(store, list);
     syncRuleMoneyGrant(store, list, prev);
 
@@ -1760,6 +1764,7 @@
     });
     store.data[store.current].bonusMoney = total;
     ensureListAppliedDigests(list);
+    if (hiddenRevealChanged) bumpRuntimeVersion('revealed');
 
     persistCurrentCharacter(store);
   }
@@ -1833,8 +1838,9 @@
       trait: '',
       armor: null,
       weapons: [],
-      dancingTrait: '',
-      dancingWeapon: null
+      dancingTrait: '',       // kept for backward compat (no longer used in logic)
+      dancingWeapon: null,    // kept for backward compat (no longer used in logic)
+      separateWeapons: {}     // { [sourceEntryId]: normalizedItem[] }
     };
   }
 
@@ -1862,13 +1868,25 @@
     const weapons = Array.isArray(base.weapons)
       ? base.weapons.map(normalizeDefenseItem).filter(Boolean)
       : [];
+    const rawSep = (base.separateWeapons && typeof base.separateWeapons === 'object')
+      ? base.separateWeapons : {};
+    const separateWeapons = {};
+    Object.entries(rawSep).forEach(([id, item]) => {
+      if (Array.isArray(item)) {
+        separateWeapons[String(id)] = item.map(normalizeDefenseItem).filter(Boolean);
+      } else {
+        const normalized = normalizeDefenseItem(item);
+        separateWeapons[String(id)] = normalized ? [normalized] : [];
+      }
+    });
     return {
       enabled: Boolean(base.enabled),
       trait: typeof base.trait === 'string' ? base.trait : '',
       armor: normalizeDefenseItem(base.armor),
       weapons,
       dancingTrait: typeof base.dancingTrait === 'string' ? base.dancingTrait : '',
-      dancingWeapon: normalizeDefenseItem(base.dancingWeapon)
+      dancingWeapon: normalizeDefenseItem(base.dancingWeapon),
+      separateWeapons
     };
   }
 
@@ -2248,6 +2266,75 @@
     persistMeta(store);
   }
 
+  const SEARCH_HIDDEN_PRIMARY_TYPES = new Set(['artefakt', 'kuriositet', 'skatt']);
+
+  function normalizeSearchRuleToken(value) {
+    return String(value || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function isTruthySearchRuleValue(value) {
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    const norm = normalizeSearchRuleToken(value);
+    return ['true', '1', 'yes', 'ja', 'on'].includes(norm);
+  }
+
+  function hasHiddenSearchRule(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    const level = options?.level !== undefined ? options.level : entry?.nivå;
+
+    let rules = [];
+    if (typeof global.rulesHelper?.getRuleList === 'function') {
+      try {
+        rules = global.rulesHelper.getRuleList(
+          entry,
+          'andrar',
+          level ? { level } : {}
+        ) || [];
+      } catch {
+        rules = [];
+      }
+    }
+
+    return rules.some(rule => {
+      const target = normalizeSearchRuleToken(rule?.mal);
+      if (target !== 'hidden') return false;
+      return isTruthySearchRuleValue(rule?.varde);
+    });
+  }
+
+  function isSearchHiddenEntry(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+    const primary = normalizeSearchRuleToken(types[0]);
+    if (SEARCH_HIDDEN_PRIMARY_TYPES.has(primary)) return true;
+    return hasHiddenSearchRule(entry, options);
+  }
+
+  function syncHiddenRevealedFromList(store, list) {
+    if (!store?.current) return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const data = store.data[store.current];
+    const existing = new Set(Array.isArray(data.revealedArtifacts) ? data.revealedArtifacts : []);
+    let changed = false;
+
+    (Array.isArray(list) ? list : []).forEach(entry => {
+      if (!entry || entry.id === undefined || entry.id === null) return;
+      if (!isSearchHiddenEntry(entry)) return;
+      if (existing.has(entry.id)) return;
+      existing.add(entry.id);
+      changed = true;
+    });
+
+    if (!changed) return false;
+    data.revealedArtifacts = [...existing];
+    return true;
+  }
+
   function getRevealedArtifacts(store) {
     if (!store.current) return [];
     const data = store.data[store.current] || {};
@@ -2258,7 +2345,9 @@
     if (!store.current || !id) return;
     store.data[store.current] = store.data[store.current] || {};
     const set = new Set(store.data[store.current].revealedArtifacts || []);
+    const before = set.size;
     set.add(id);
+    if (set.size === before) return;
     store.data[store.current].revealedArtifacts = [...set];
     persistCurrentCharacter(store);
     bumpRuntimeVersion('revealed');
@@ -2268,7 +2357,9 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     const list = store.data[store.current].revealedArtifacts || [];
-    store.data[store.current].revealedArtifacts = list.filter(n => n !== id);
+    const next = list.filter(n => n !== id);
+    if (next.length === list.length) return;
+    store.data[store.current].revealedArtifacts = next;
     persistCurrentCharacter(store);
     bumpRuntimeVersion('revealed');
   }
@@ -2279,15 +2370,9 @@
 
     const keep = new Set();
 
-    const isHiddenTags = (tagTyp) => {
-      const arr = Array.isArray(tagTyp) ? tagTyp : [];
-      return arr.some(t => ['Artefakt', 'Kuriositet', 'Skatt'].includes(String(t)));
-    };
-
     // Keep any currently selected entries that are hidden types
     getCurrentList(store).forEach(it => {
-      const tagTyp = it.taggar?.typ || [];
-      if (isHiddenTags(tagTyp) && it.id) keep.add(it.id);
+      if (isSearchHiddenEntry(it) && it.id) keep.add(it.id);
     });
 
     // Keep any hidden items that still exist in the inventory (recursively)
@@ -2298,8 +2383,7 @@
               ? global.lookupEntry({ id: row.id, name: row.name })
               : {})
             || {};
-          const tagTyp = entry.taggar?.typ || [];
-          if (isHiddenTags(tagTyp) && entry.id) keep.add(entry.id);
+          if (isSearchHiddenEntry(entry) && entry.id) keep.add(entry.id);
           if (Array.isArray(row.contains)) collect(row.contains);
         });
       };
@@ -2386,35 +2470,58 @@ function defaultTraits() {
   }
 
   /* ---------- 6. XP-hantering ---------- */
-  const XP_LADDER = Object.freeze({
-    Novis: 10,
-    'Gesäll': 30,
-    'Mästare': 60,
-    Enkel: 10,
-    'Ordinär': 20,
-    Avancerad: 30
+  const ERF_RULES = Object.freeze({
+    levelCosts: Object.freeze({
+      Novis: 10,
+      'Gesäll': 30,
+      'Mästare': 60,
+      Enkel: 10,
+      'Ordinär': 20,
+      Avancerad: 30
+    }),
+    levelAliases: Object.freeze({
+      novis: 'Novis',
+      gesall: 'Gesäll',
+      'gesäll': 'Gesäll',
+      mastare: 'Mästare',
+      'mästare': 'Mästare',
+      enkel: 'Enkel',
+      ordinar: 'Ordinär',
+      'ordinär': 'Ordinär',
+      avancerad: 'Avancerad'
+    }),
+    levelPriority: Object.freeze([
+      'Novis',
+      'Enkel',
+      'Gesäll',
+      'Ordinär',
+      'Mästare',
+      'Avancerad'
+    ]),
+    levelIndex: Object.freeze({
+      '': 0,
+      Novis: 1,
+      Enkel: 1,
+      'Gesäll': 2,
+      'Ordinär': 2,
+      'Mästare': 3,
+      Avancerad: 3
+    }),
+    levelCostTypes: Object.freeze([
+      'mystisk kraft',
+      'förmåga',
+      'basförmåga',
+      'särdrag',
+      'monstruöst särdrag'
+    ]),
+    ritualCost: 10,
+    advantageStepCost: 5,
+    disadvantageCap: 5
   });
 
-  const LEVEL_ALIASES = Object.freeze({
-    novis: 'Novis',
-    gesall: 'Gesäll',
-    'gesäll': 'Gesäll',
-    mastare: 'Mästare',
-    'mästare': 'Mästare',
-    enkel: 'Enkel',
-    ordinar: 'Ordinär',
-    'ordinär': 'Ordinär',
-    avancerad: 'Avancerad'
-  });
-
-  const LEVEL_PRIORITY = Object.freeze([
-    'Novis',
-    'Enkel',
-    'Gesäll',
-    'Ordinär',
-    'Mästare',
-    'Avancerad'
-  ]);
+  const XP_LADDER = ERF_RULES.levelCosts;
+  const LEVEL_ALIASES = ERF_RULES.levelAliases;
+  const LEVEL_PRIORITY = ERF_RULES.levelPriority;
 
   const normalizeLevelName = (level) => {
     const raw = String(level || '').trim();
@@ -2471,15 +2578,71 @@ function defaultTraits() {
     return XP_LADDER[norm] || 10;
   }
 
-  function entryLevelCost(entry, preferredLevel) {
-    const resolved = resolveEntryLevel(entry, preferredLevel);
-    return levelCost(resolved);
+  function normalizeErfOverrideNumber(value) {
+    if (value === undefined || value === null || value === '') return null;
+    const num = Number(value);
+    if (!Number.isFinite(num)) return null;
+    return Math.trunc(num);
+  }
+
+  function normalizeErfTypeName(type) {
+    return String(type || '')
+      .trim()
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function getEntryErfOverride(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    if (typeof global.rulesHelper?.getEntryErfOverride !== 'function') return null;
+    const entries = Array.isArray(list) ? list : [];
+    const resolvedLevel = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : resolveEntryLevel(entry, entry?.nivå);
+    const override = global.rulesHelper.getEntryErfOverride(entry, entries, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    return normalizeErfOverrideNumber(override);
+  }
+
+  function resolveEntryLevelCost(entry, preferredLevel, options = {}) {
+    const normalizedPreferred = normalizeLevelName(preferredLevel);
+    const resolvedLevel = options.strictLevel && normalizedPreferred
+      ? normalizedPreferred
+      : resolveEntryLevel(entry, preferredLevel);
+    const list = Array.isArray(options?.list) ? options.list : [];
+    const override = getEntryErfOverride(entry, list, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    if (override !== null) return override;
+    return levelCost(resolvedLevel);
+  }
+
+  function entryLevelCost(entry, preferredLevel, options = {}) {
+    return resolveEntryLevelCost(entry, preferredLevel, options);
   }
 
   function isLevelCostType(types = []) {
-    const lower = types.map(type => String(type || '').trim().toLowerCase());
-    return ['mystisk kraft', 'förmåga', 'basförmåga', 'särdrag', 'monstruöst särdrag']
-      .some(type => lower.includes(type));
+    const normalized = types.map(type => normalizeErfTypeName(type));
+    const levelTypes = ERF_RULES.levelCostTypes.map(type => normalizeErfTypeName(type));
+    return levelTypes.some(type => normalized.includes(type));
+  }
+
+  function typeBaseErf(type, level = 'Novis') {
+    const normalized = normalizeErfTypeName(type);
+    if (!normalized) return levelCost(level);
+    if (normalized === 'nackdel') return 0;
+    if (normalized === 'fordel') return ADVANTAGE_STEP_COST;
+    if (normalized === 'ritual') return RITUAL_COST;
+    if (isLevelCostType([normalized])) return levelCost(level);
+    return levelCost(level);
+  }
+
+  function getErfRules() {
+    return ERF_RULES;
   }
 
   function getBaseXP(store) {
@@ -2495,18 +2658,10 @@ function defaultTraits() {
     persistCurrentCharacter(store);
   }
 
-  const RITUAL_COST = 10;
-  const ADVANTAGE_STEP_COST = 5;
-
-  const LEVEL_IDX = {
-    '': 0,
-    Novis: 1,
-    Enkel: 1,
-    'Gesäll': 2,
-    'Ordinär': 2,
-    'Mästare': 3,
-    Avancerad: 3
-  };
+  const RITUAL_COST = ERF_RULES.ritualCost;
+  const ADVANTAGE_STEP_COST = ERF_RULES.advantageStepCost;
+  const DISADVANTAGE_CAP = ERF_RULES.disadvantageCap;
+  const LEVEL_IDX = ERF_RULES.levelIndex;
 
   function abilityLevel(list, ability) {
     const ent = list.find(x =>
@@ -2528,13 +2683,46 @@ function defaultTraits() {
     return 0;
   }
 
+  function parsePositiveLimit(value) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return null;
+    const rounded = Math.floor(numeric);
+    if (rounded <= 0) return null;
+    return rounded;
+  }
+
+  function entryTypeNames(entry) {
+    return Array.isArray(entry?.taggar?.typ)
+      ? entry.taggar.typ.map(type => String(type || '').trim().toLowerCase())
+      : [];
+  }
+
+  function getEntryMaxCount(entry, options = {}) {
+    if (!entry || typeof entry !== 'object') return 1;
+    if (typeof global.rulesHelper?.getEntryMaxCount === 'function') {
+      return global.rulesHelper.getEntryMaxCount(entry, options);
+    }
+    const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
+    if (tagLimit !== null) return tagLimit;
+    const directLimit = parsePositiveLimit(entry?.max_antal);
+    if (directLimit !== null) return directLimit;
+    if (options.allowLegacy !== false) {
+      const legacyMulti = Boolean(
+        entry?.kan_införskaffas_flera_gånger === true
+        || entry?.taggar?.kan_införskaffas_flera_gånger === true
+      );
+      if (legacyMulti) return 3;
+    }
+    return 1;
+  }
+
   function monsterStackLimit(list, name) {
     const base = HAMNSKIFTE_BASE[name] || name;
     const entry = typeof global.lookupEntry === 'function'
       ? global.lookupEntry({ id: base, name: base })
       : null;
-    if (!entry || !isMonstrousTrait(entry)) return 3;
-    return 1;
+    if (!entry || typeof entry !== 'object') return 1;
+    return getEntryMaxCount(entry);
   }
 
   function calcPermanentCorruption(list, extra) {
@@ -2575,7 +2763,9 @@ function defaultTraits() {
 
       if (isLevelCostType(types)) {
         const overrideCost = getGrantedEntryOverrideCost(item, entries, { grantCounts, grantConstraints });
-        xp += overrideCost !== null ? overrideCost : entryLevelCost(item);
+        xp += overrideCost !== null
+          ? overrideCost
+          : entryLevelCost(item, item?.nivå, { list: entries });
       }
 
       const advKey = getAdvantageKey(item, types);
@@ -2622,7 +2812,7 @@ function defaultTraits() {
 
   function disadvantagesWithXP(list, options = {}) {
     const disadvantages = getDisadvantages(list, options);
-    if (disadvantages.length <= 5) return disadvantages;
+    if (disadvantages.length <= DISADVANTAGE_CAP) return disadvantages;
     const sorted = disadvantages
       .map((entry, index) => ({ entry, index }))
       .sort((a, b) => {
@@ -2636,7 +2826,7 @@ function defaultTraits() {
         return a.index - b.index;
       })
       .map(item => item.entry);
-    return sorted.slice(0, 5);
+    return sorted.slice(0, DISADVANTAGE_CAP);
   }
 
   function getAdvantageKey(entry, types) {
@@ -2708,12 +2898,14 @@ function defaultTraits() {
         if (disXp.includes(entry)) return -ADVANTAGE_STEP_COST;
         return 0;
       }
-      return disXp.length < 5 ? -ADVANTAGE_STEP_COST : 0;
+      return disXp.length < DISADVANTAGE_CAP ? -ADVANTAGE_STEP_COST : 0;
     }
     let xp = 0;
     if (isLevelCostType(types)) {
       const overrideCost = getGrantedEntryOverrideCost(entry, entries, { grantCounts, grantConstraints });
-      xp += overrideCost !== null ? overrideCost : entryLevelCost(entry);
+      xp += overrideCost !== null
+        ? overrideCost
+        : entryLevelCost(entry, entry?.nivå, { list: entries });
     }
     if (types.includes('fördel')) {
       const advantageInfo = resolveAdvantageCount(entry, entries, types, { grantCounts });
@@ -2729,11 +2921,9 @@ function defaultTraits() {
 
   function stackableDisplayKey(entry) {
     if (!entry || typeof entry !== 'object') return null;
-    if (!entry.kan_införskaffas_flera_gånger) return null;
+    if (getEntryMaxCount(entry) <= 1) return null;
     if (entry.trait) return null;
-    const types = Array.isArray(entry?.taggar?.typ)
-      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
-      : [];
+    const types = entryTypeNames(entry);
     if (!types.length) return null;
     const hasAdvantage = types.includes('fördel');
     const hasDisadvantage = types.includes('nackdel');
@@ -2783,7 +2973,7 @@ function defaultTraits() {
           return count + (eligibleSet.has(key) ? 1 : 0);
         }, 0);
         const totalEligible = eligible.length;
-        const extra = previewBonus && totalEligible < 5 ? 1 : 0;
+        const extra = previewBonus && totalEligible < DISADVANTAGE_CAP ? 1 : 0;
         return (eligibleCount + extra) * -ADVANTAGE_STEP_COST;
       }
     }
@@ -2796,10 +2986,8 @@ function defaultTraits() {
 
   function singlePickAdvantageInfo(entry) {
     if (!entry || typeof entry !== 'object') return null;
-    if (entry.kan_införskaffas_flera_gånger) return null;
-    const types = Array.isArray(entry?.taggar?.typ)
-      ? entry.taggar.typ.map(t => String(t).trim().toLowerCase())
-      : [];
+    if (getEntryMaxCount(entry) > 1) return null;
+    const types = entryTypeNames(entry);
     if (!types.length) return null;
     const isAdv = types.includes('fördel');
     const isDis = types.includes('nackdel');
@@ -2826,7 +3014,7 @@ function defaultTraits() {
   function calcTotalXP(baseXp, list) {
     const entries = Array.isArray(list) ? list : [];
     const grantCounts = buildEntryGrantCountMap(entries);
-    return Number(baseXp || 0) + disadvantagesWithXP(entries, { grantCounts }).length * 5;
+    return Number(baseXp || 0) + disadvantagesWithXP(entries, { grantCounts }).length * ADVANTAGE_STEP_COST;
   }
 
   function calcCarryCapacity(strength, list) {
@@ -3605,6 +3793,7 @@ function defaultTraits() {
     addRevealedArtifact,
     removeRevealedArtifact,
     clearRevealedArtifacts,
+    isSearchHiddenEntry,
     migrateInventoryIds,
     genId,
     getNilasPopupSeen,
@@ -3614,6 +3803,9 @@ function defaultTraits() {
     setTraits,
     getBaseXP,
     setBaseXP,
+    getErfRules,
+    typeBaseErf,
+    getEntryErfOverride,
     calcUsedXP,
     calcEntryXP,
     calcEntryDisplayXP,
@@ -3634,6 +3826,7 @@ function defaultTraits() {
     hamnskifteNoviceLimit,
     isFreeMonsterTrait,
     monsterTraitDiscount,
+    getEntryMaxCount,
     monsterStackLimit,
     exportCharacterJSON,
     importCharacterJSON,

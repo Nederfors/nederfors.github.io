@@ -31,6 +31,7 @@ Kör:
 import json
 from collections import defaultdict
 from pathlib import Path
+from data_file_schema import build_payload, load_data_file
 
 BASE = Path(__file__).resolve().parent.parent
 YRKE_PATH = BASE / "data/yrke.json"
@@ -51,11 +52,6 @@ SUBS = {
     "Krigare": {"Bärsärkare", "Duellant", "Kapten", "Säljsvärd", "Riddare", "Ristad krigare", "Runsmed", "Vapenmästare"},
     "Mystiker": {"Häxa", "Svartkonstnär", "Teurg", "Ordensmagiker", "Självlärd besvärjare", "Symbolist", "Trollsångare"},
 }
-
-
-def load_json(path: Path):
-    with path.open("r", encoding="utf-8") as f:
-        return json.load(f)
 
 
 def dump_json(path: Path, data):
@@ -116,12 +112,19 @@ def merged_names(exact, categories, targets):
 
 
 def main():
-    yrke_data = load_json(YRKE_PATH)
-    elityrke_data = load_json(ELITYRKE_PATH)
-    bas_data = load_json(BASFORMAGA_PATH)
-    form_data = load_json(FORMAGA_PATH)
-    mk_data = load_json(MK_PATH)
-    ritual_data = load_json(RITUAL_PATH)
+    yrke_payload = load_data_file(YRKE_PATH)
+    elityrke_payload = load_data_file(ELITYRKE_PATH)
+    bas_payload = load_data_file(BASFORMAGA_PATH)
+    form_payload = load_data_file(FORMAGA_PATH)
+    mk_payload = load_data_file(MK_PATH)
+    ritual_payload = load_data_file(RITUAL_PATH)
+
+    yrke_data = yrke_payload.entries
+    elityrke_data = elityrke_payload.entries
+    bas_data = bas_payload.entries
+    form_data = form_payload.entries
+    mk_data = mk_payload.entries
+    ritual_data = ritual_payload.entries
 
     yrke_names = [entry["namn"] for entry in yrke_data]
     elityrke_names = [entry["namn"] for entry in elityrke_data]
@@ -183,8 +186,21 @@ def main():
         updated_entry["Elityrkesförmågor"] = merged_elityrkesformagor_for(entry["namn"])
         updated_elityrken.append(updated_entry)
 
-    dump_json(OUT_YRKE_PATH, updated_yrken)
-    dump_json(OUT_ELITYRKE_PATH, updated_elityrken)
+    yrke_output = build_payload(
+        updated_yrken,
+        type_rules=yrke_payload.type_rules,
+        extra=yrke_payload.extra,
+        as_object=yrke_payload.is_object_format
+    )
+    elityrke_output = build_payload(
+        updated_elityrken,
+        type_rules=elityrke_payload.type_rules,
+        extra=elityrke_payload.extra,
+        as_object=elityrke_payload.is_object_format
+    )
+
+    dump_json(OUT_YRKE_PATH, yrke_output)
+    dump_json(OUT_ELITYRKE_PATH, elityrke_output)
 
     print(f"Skrev: {OUT_YRKE_PATH}")
     for top in TOP_LEVELS:

@@ -58,6 +58,18 @@
     return { code, message, label, value };
   }
 
+  function getEntryMaxCount(entry) {
+    if (typeof window.storeHelper?.getEntryMaxCount === 'function') {
+      return Math.max(1, Number(window.storeHelper.getEntryMaxCount(entry)) || 1);
+    }
+    if (typeof window.rulesHelper?.getEntryMaxCount === 'function') {
+      return Math.max(1, Number(window.rulesHelper.getEntryMaxCount(entry)) || 1);
+    }
+    const raw = Number(entry?.taggar?.max_antal);
+    if (Number.isFinite(raw) && raw > 0) return Math.floor(raw);
+    return 1;
+  }
+
   function isHamnskifteGrantedEntry(entry) {
     if (!entry || typeof entry !== 'object') return false;
     const id = String(entry?.id || '').trim().toLowerCase();
@@ -493,6 +505,9 @@
         [...typList, ...secondaryTags].map(tag => normFn(tag.toLowerCase()))
       );
       const allTags = new Set([...typList, ...secondaryTags]);
+      const searchHidden = typeof storeHelper?.isSearchHiddenEntry === 'function'
+        ? !!storeHelper.isSearchHiddenEntry(entry)
+        : ['artefakt', 'kuriositet', 'skatt'].includes((typList[0] || '').toLowerCase());
 
       const meta = {
         normName,
@@ -505,7 +520,8 @@
         secondaryTags,
         secondaryLookup: new Set(secondaryTags.map(tag => normFn(tag.toLowerCase()))),
         allTagsNormalized,
-        allTags
+        allTags,
+        searchHidden
       };
 
       Object.defineProperty(entry, ENTRY_META_FIELD, {
@@ -590,6 +606,11 @@
 
     const isHidden = (entry) => {
       const meta = ensureEntryMeta(entry);
+      if (typeof meta?.searchHidden === 'boolean') return meta.searchHidden;
+      if (typeof storeHelper?.isSearchHiddenEntry === 'function') {
+        try { return !!storeHelper.isSearchHiddenEntry(entry); }
+        catch { /* ignore and use fallback */ }
+      }
       const primary = meta?.primaryTypeLower || '';
       return hiddenPrimaryTypes.has(primary);
     };
@@ -1891,7 +1912,8 @@
           const isMonsterLore = p.namn === 'Monsterlärd';
           const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
           const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
-          const multi = isInventoryEntry || (p.kan_införskaffas_flera_gånger && (p.taggar.typ || []).some(t => ["Fördel", "Nackdel"].includes(t))) || monsterLoreMulti;
+          const entryMaxCount = getEntryMaxCount(p);
+          const multi = isInventoryEntry || monsterLoreMulti || entryMaxCount > 1;
           let count;
           if (isInv(p)) {
             const bundleCount = getBundleCountForEntry(invList, p);
@@ -1911,7 +1933,7 @@
             ? Infinity
             : isMonsterLore
               ? getMonsterLoreSpecs().length
-              : storeHelper.monsterStackLimit(charList, p.namn);
+              : entryMaxCount;
           const badge = multi && count > 0 ? `<span class="count-badge">×${count}</span>` : '';
           const showInfo = compact || hideDetails;
           const canEdit = (p.taggar?.typ || []).includes('Hemmagjort');
@@ -2104,7 +2126,8 @@
       const isMonsterLore = entry.namn === 'Monsterlärd';
       const monsterLoreUsed = isMonsterLore ? usedMonsterLoreSpecs(charList) : [];
       const monsterLoreMulti = isMonsterLore && monsterLoreUsed.length > 0;
-      const multi = isInventory || (entry.kan_införskaffas_flera_gånger && entryTypes.some(t => ["Fördel", "Nackdel"].includes(t))) || monsterLoreMulti;
+      const entryMaxCount = getEntryMaxCount(entry);
+      const multi = isInventory || monsterLoreMulti || entryMaxCount > 1;
       let count = 0;
       if (isInventory) {
         const bundleCount = getBundleCountForEntry(invList, entry);
@@ -2132,7 +2155,7 @@
         ? Infinity
         : isMonsterLore
           ? getMonsterLoreSpecs().length
-          : storeHelper.monsterStackLimit(charList, entry.namn);
+          : entryMaxCount;
       const allowAdd = !(isService(entry) || isEmployment(entry));
 
       cards.forEach(card => {
@@ -2740,76 +2763,11 @@
             }
           };
           const levelCandidate = { ...p, nivå: lvl };
-          const hardStops = [];
-          if (isRas(p) && list.some(isRas)) {
-            hardStops.push(makeHardStop('single_race', 'Ras: Karaktären kan normalt bara ha en ras.'));
-          }
-          if (isYrke(p) && list.some(isYrke)) {
-            hardStops.push(makeHardStop('single_occupation', 'Yrke: Karaktären kan normalt bara ha ett yrke.'));
-          }
-          if (isElityrke(p) && list.some(isElityrke)) {
-            hardStops.push(makeHardStop('single_elite', 'Elityrke: Karaktären kan normalt bara ha ett elityrke.'));
-          }
-          if (isElityrke(p)) {
-            const res = eliteReq.check(p, list);
-            if (!res.ok) {
-              if (res.missing.length) {
-                hardStops.push(makeHardStop('elite_missing_requirements', `Elityrke: Saknar ${res.missing.join(', ')}.`));
-              }
-              if (!res.master) {
-                hardStops.push(makeHardStop('elite_primary_requirement', 'Elityrke: Primärförmågekravet uppfylls inte.'));
-              }
-            }
-          }
-          if (isEliteSkill(p)) {
-            const requiredEliteNames = explodeTags(p.taggar.ark_trad);
-            const allowed = requiredEliteNames.some(reqYrke =>
-              list.some(item => isElityrke(item) && item.namn === reqYrke)
-            );
-            if (!allowed) {
-              hardStops.push(
-                makeHardStop(
-                  'elite_skill_locked',
-                  `Elityrkesförmåga: Låst till elityrket ${requiredEliteNames.join(', ')}.`
-                )
-              );
-            }
-          }
-          let monsterOk = false;
-          if (isMonstrousTrait(p)) {
-            const missing = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(levelCandidate, list, { level: lvl }) || ['unknown'];
-            monsterOk = (p.taggar.typ || []).includes('Elityrkesförmåga')
-              || missing.length === 0;
-            if (!monsterOk) {
-              hardStops.push(makeHardStop('monster_trait_locked', 'Monstruöst särdrag: kan normalt inte väljas.'));
-            }
-          }
-          if (p.namn === 'Robust') {
-            const missing = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(levelCandidate, list, { level: lvl }) || ['unknown'];
-            if (!monsterOk && missing.length > 0) {
-              hardStops.push(makeHardStop('robust_locked', 'Robust: kan normalt inte väljas i detta läge.'));
-            }
-          }
-          // Tidigare blockerades Mörkt förflutet om Jordnära fanns – inte längre.
-          const multi = (
-            p.kan_införskaffas_flera_gånger
-            && (p.taggar.typ || []).some(t => ["Fördel", "Nackdel"].includes(t))
-          );
-          if (multi) {
-            const cnt = list.filter(x => x.namn === p.namn && !x.trait).length;
-            const limit = storeHelper.monsterStackLimit(list, p.namn);
-            if (p.namn !== 'Blodsband' && cnt >= limit) {
-              hardStops.push(makeHardStop('stack_limit', `Limit: Denna fördel eller nackdel kan normalt bara tas ${limit} gånger.`));
-            }
-          } else if (list.some(x => x.namn === p.namn && !x.trait)) {
-            hardStops.push(makeHardStop('duplicate_entry', `${p.namn}: Posten är redan vald.`));
-          }
 
           const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
             ? window.rulesHelper.evaluateEntryStops(levelCandidate, list, {
               action: 'add',
-              level: lvl,
-              hardStops
+              level: lvl
             })
             : (() => {
               const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
@@ -2824,8 +2782,8 @@
                 blockingConflicts,
                 replaceTargetNames: conflictRes.replaceTargetNames || [],
                 grantedLevelStop: null,
-                hardStops,
-                hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+                hardStops: [],
+                hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
               };
             })();
           const hasReplaceTargets = Array.isArray(stopResult.replaceTargetNames) && stopResult.replaceTargetNames.length > 0;
@@ -3173,10 +3131,6 @@
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
         ent.nivå = select.value;
-        const hardStops = [];
-        if (eliteReq.canChange(before) && !eliteReq.canChange(list)) {
-          hardStops.push(makeHardStop('elite_locked_level_change', 'Elityrke: Förmågan krävs för ett valt elityrke och kan normalt inte ändras.'));
-        }
         if (name === 'Monsterlärd') {
           if (['Gesäll', 'Mästare'].includes(ent.nivå)) {
             if (!ent.trait && window.monsterLore) {
@@ -3202,7 +3156,8 @@
                     fromLevel: old,
                     toLevel: ent.nivå,
                     level: ent.nivå,
-                    hardStops
+                    beforeList: before,
+                    afterList: list
                   })
                   : (() => {
                     const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
@@ -3217,8 +3172,8 @@
                       blockingConflicts,
                       replaceTargetNames: conflictRes.replaceTargetNames || [],
                       grantedLevelStop: null,
-                      hardStops,
-                      hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+                      hardStops: [],
+                      hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
                     };
                   })();
                 const forceRuleOverride = stopResult.hasStops
@@ -3260,7 +3215,8 @@
             fromLevel: old,
             toLevel: ent.nivå,
             level: ent.nivå,
-            hardStops
+            beforeList: before,
+            afterList: list
           })
           : (() => {
             const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
@@ -3275,8 +3231,8 @@
               blockingConflicts,
               replaceTargetNames: conflictRes.replaceTargetNames || [],
               grantedLevelStop: null,
-              hardStops,
-              hasStops: Boolean(requirementReasons.length || blockingConflicts.length || hardStops.length)
+              hardStops: [],
+              hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
             };
           })();
         const forceRuleOverride = stopResult.hasStops

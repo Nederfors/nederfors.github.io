@@ -704,11 +704,10 @@
         const rules = helper.getRuleList(entry, key, options);
         if (Array.isArray(rules)) return rules;
       } catch (_) {
-        // Ignore malformed rules and continue with local fallback.
+        // Ignore malformed rules and fall through to empty.
       }
     }
-    const raw = entry?.taggar?.regler?.[key];
-    return listify(raw).filter(rule => rule && typeof rule === 'object');
+    return [];
   }
 
   function normalizeBundleRuleRef(raw) {
@@ -945,19 +944,31 @@
     return Math.max(0, Math.min(...counts));
   }
 
-  function isHiddenType(tagTyp) {
-    const arr = Array.isArray(tagTyp) ? tagTyp : [];
+  function isHiddenType(entryOrTagTyp) {
+    const entry = entryOrTagTyp && typeof entryOrTagTyp === 'object' && !Array.isArray(entryOrTagTyp)
+      ? entryOrTagTyp
+      : null;
+    if (entry && typeof storeHelper?.isSearchHiddenEntry === 'function') {
+      try { return !!storeHelper.isSearchHiddenEntry(entry); }
+      catch { /* ignore and use legacy fallback */ }
+    }
+    const arr = Array.isArray(entryOrTagTyp)
+      ? entryOrTagTyp
+      : (Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : []);
     const primary = arr[0] ? String(arr[0]).toLowerCase() : '';
     return ['artefakt','kuriositet','skatt'].includes(primary);
   }
 
-  function hasArtifactTag(tagTyp) {
-    return (Array.isArray(tagTyp) ? tagTyp : [])
+  function hasArtifactTag(entryOrTagTyp) {
+    const arr = Array.isArray(entryOrTagTyp)
+      ? entryOrTagTyp
+      : (Array.isArray(entryOrTagTyp?.taggar?.typ) ? entryOrTagTyp.taggar.typ : []);
+    return arr
       .some(t => String(t || '').trim().toLowerCase() === 'artefakt');
   }
 
-  function needsArtifactListSync(tagTyp) {
-    return isHiddenType(tagTyp) || hasArtifactTag(tagTyp);
+  function needsArtifactListSync(entryOrTagTyp) {
+    return isHiddenType(entryOrTagTyp) || hasArtifactTag(entryOrTagTyp);
   }
 
   const LEVEL_MARKERS = new Map([
@@ -5419,8 +5430,8 @@
             parentArr.splice(idx, 1);
             saveInventory(inv);
             renderInventory();
-            const hidden = isHiddenType(tagTyp);
-            if (needsArtifactListSync(tagTyp)) {
+            const hidden = isHiddenType(entry);
+            if (needsArtifactListSync(entry)) {
               const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
               if (!still) {
                 let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
@@ -5536,9 +5547,9 @@
               const parentIdx = Number(li.dataset.parent);
               saveInventory(inv);
               renderInventory();
-              const hidden = isHiddenType(tagTyp);
+              const hidden = isHiddenType(entry);
               let addedToList = false;
-              if (needsArtifactListSync(tagTyp)) {
+              if (needsArtifactListSync(entry)) {
                 const list = storeHelper.getCurrentList(store);
                 if ((entry.taggar?.typ || []).includes('Artefakt')) {
                   if (!entry.id && storeHelper.genId) {
@@ -5629,8 +5640,8 @@
           const parentIdx = Number(li.dataset.parent);
           saveInventory(inv);
           renderInventory();
-          const hidden = isHiddenType(tagTyp);
-          if (needsArtifactListSync(tagTyp)) {
+          const hidden = isHiddenType(entry);
+          if (needsArtifactListSync(entry)) {
             const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
             if (!still) {
               let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));

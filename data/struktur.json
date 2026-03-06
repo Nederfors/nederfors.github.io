@@ -3,8 +3,8 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-03T12:42:21.384983+00:00",
-      "antal_typer_hittade": 51,
+      "genererad": "2026-03-06T08:29:39.605926+00:00",
+      "antal_typer_hittade": 52,
       "källfiler": [
         "data/diverse.json",
         "data/kuriositeter.json",
@@ -606,7 +606,20 @@
             "ark_trad": [
               "Järnsvuren",
               "Jägare"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Elityrke": 1
+                    }
+                  },
+                  "varde": "single_elite",
+                  "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
+                }
+              ]
+            }
           },
           "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
           "Elityrkesförmågor": [
@@ -700,9 +713,21 @@
             "ark_trad": [
               "Templár",
               "Teurg"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Elityrke": 1
+                    }
+                  },
+                  "varde": "single_elite",
+                  "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
+                }
+              ]
+            }
           },
-          "undertradition": "Teurgi",
           "krav_formagor": "",
           "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
           "Elityrkesförmågor": [
@@ -798,7 +823,20 @@
             "ark_trad": [
               "Vredesgardist",
               "Krigare"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Elityrke": 1
+                    }
+                  },
+                  "varde": "single_elite",
+                  "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
+                }
+              ]
+            }
           },
           "krav_formagor": "",
           "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
@@ -879,7 +917,7 @@
       ]
     },
     "Elityrkesförmåga": {
-      "antal": 60,
+      "antal": 59,
       "källfiler": [
         "data/formaga.json",
         "data/monstruost-sardrag.json",
@@ -1271,7 +1309,7 @@
       ]
     },
     "Fördel": {
-      "antal": 100,
+      "antal": 101,
       "källfiler": [
         "data/fordel.json"
       ],
@@ -1280,7 +1318,6 @@
           "id": "ford1",
           "namn": "Arkivarie",
           "beskrivning": "Rollpersonen är tränad i att ordna upp och söka information. Rollpersonen får +1 på alla slag i listig när det kommer till att göra efterforskningar i arkiv och bibliotek. Arkivarie kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
-          "kan_införskaffas_flera_gånger": true,
           "taggar": {
             "typ": [
               "Fördel"
@@ -1288,7 +1325,8 @@
             "ark_trad": [],
             "test": [
               "Listig"
-            ]
+            ],
+            "max_antal": 3
           },
           "effekt": "+1 Listig vid efterforskningar i arkiv och bibliotek (upp till +3)."
         },
@@ -1296,7 +1334,6 @@
           "id": "ford2",
           "namn": "Arvegods",
           "beskrivning": "Rollpersonen har genom släktleden erhållit ett arvegods. Välj ett valfritt vapen eller en rustning från listorna på hemsidan och gratismarkera det med två gratis kvaliteter som inte är mystiska kvaliteter. Arvegodset kan också avse någonting annat som avgörs i samrådan med spelledaren.",
-          "kan_införskaffas_flera_gånger": false,
           "taggar": {
             "typ": [
               "Fördel"
@@ -1310,7 +1347,6 @@
           "id": "ford3",
           "namn": "Berättare",
           "beskrivning": "Rollpersonen har berättandets gåva och vare sig det rör sagor, religiösa myter eller burleska historier kommer åhörare att imponeras av dem. Berättaren får +1 på slag i Övertygande då det gäller att väva en trovärdig vision för att imponera på en grupp åhörare. Berättaren är skicklig nog att tjäna daler på sin fördel (se Inkomst av fördelar på sidan 103). Berättare kan införskaffas flera gånger, maximalt tre gånger med +3 i bonus.",
-          "kan_införskaffas_flera_gånger": true,
           "taggar": {
             "typ": [
               "Fördel"
@@ -1318,7 +1354,8 @@
             "ark_trad": [],
             "test": [
               "Övertygande"
-            ]
+            ],
+            "max_antal": 3
           },
           "effekt": "+1 Övertygande för att imponera en grupp med berättelser (upp till +3). Kan även ge inkomst enligt reglerna."
         }
@@ -1777,7 +1814,15 @@
               "Kvalitet",
               "Vapenkvalitet",
               "Sköldkvalitet"
-            ]
+            ],
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_modifierare",
+                  "varde": 1
+                }
+              ]
+            }
           },
           "effekt": "+1 Försvar vid parering."
         },
@@ -1820,6 +1865,9 @@
             "typ": [
               "Lägre Artefakt"
             ],
+            "inventory": {
+              "stackbar": true
+            },
             "ark_trad": [
               "Ordensmagiker"
             ]
@@ -1961,7 +2009,7 @@
       ]
     },
     "Långa vapen": {
-      "antal": 6,
+      "antal": 7,
       "källfiler": [
         "data/vapen.json"
       ],
@@ -1984,8 +2032,8 @@
             "vikt": 1.5
           },
           "grundpris": {
-            "daler": 0,
-            "skilling": 6,
+            "daler": 3,
+            "skilling": 0,
             "örtegar": 0
           }
         },
@@ -2177,7 +2225,7 @@
       ]
     },
     "Monstruöst särdrag": {
-      "antal": 58,
+      "antal": 62,
       "källfiler": [
         "data/monstruost-sardrag.json",
         "data/sardrag.json"
@@ -2192,10 +2240,6 @@
               "Särdrag",
               "Monstruöst särdrag"
             ],
-            "ras": [
-              "Rese",
-              "Troll"
-            ],
             "handling": {
               "Novis": [
                 "Speciell"
@@ -2205,6 +2249,56 @@
               ],
               "Mästare": [
                 "Speciell"
+              ]
+            },
+            "nivå_data": {
+              "Novis": {
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "forsvar_modifierare",
+                      "varde": -2,
+                      "satt": "ersatt"
+                    }
+                  ]
+                }
+              },
+              "Gesäll": {
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "forsvar_modifierare",
+                      "varde": -3,
+                      "satt": "ersatt"
+                    }
+                  ]
+                }
+              },
+              "Mästare": {
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "forsvar_modifierare",
+                      "varde": -4,
+                      "satt": "ersatt"
+                    }
+                  ]
+                }
+              }
+            },
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Troll",
+                      "Rese",
+                      "Djur/Bjära",
+                      "Mörkt blod",
+                      "Blodvadare"
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -2237,6 +2331,18 @@
               ],
               "Mästare": [
                 "Fri"
+              ]
+            },
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Vandöd",
+                      "Djur/Bjära"
+                    ]
+                  }
+                }
               ]
             }
           },
@@ -2401,11 +2507,11 @@
               },
               "Gesäll": {
                 "handling": "Aktiv",
-                "skadetyp": "Alternativ skada"
+                "skadetyp": "Mystisk"
               },
               "Mästare": {
                 "handling": "Aktiv",
-                "skadetyp": "Alternativ skada"
+                "skadetyp": "Mystisk"
               }
             }
           },
@@ -2519,6 +2625,20 @@
             "ark_trad": [
               "Trollsångare"
             ],
+            "regler": {
+              "ger": [
+                {
+                  "mal": "skydd_permanent_korruption",
+                  "formel": "niva",
+                  "nar": {
+                    "typ": [
+                      "Mystisk kraft",
+                      "Ritual"
+                    ]
+                  }
+                }
+              ]
+            },
             "nivå_data": {
               "Novis": {
                 "handling": "Speciell",
@@ -2827,7 +2947,20 @@
           "taggar": {
             "typ": [
               "Ras"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Ras": 1
+                    }
+                  },
+                  "varde": "single_race",
+                  "meddelande": "Ras: Karaktären kan normalt bara ha en ras."
+                }
+              ]
+            }
           }
         },
         {
@@ -2873,7 +3006,41 @@
           "taggar": {
             "typ": [
               "Ras"
-            ]
+            ],
+            "regler": {
+              "ger": [
+                {
+                  "mal": "skydd_permanent_korruption",
+                  "varde": 3,
+                  "nar": {
+                    "typ": [
+                      "Mystisk kraft"
+                    ],
+                    "namn": [
+                      "Vedergällning"
+                    ]
+                  }
+                }
+              ],
+              "krockar": [
+                {
+                  "namn": "Korruptionskänslig",
+                  "satt": "ersatt",
+                  "varde": "dvarg_korruptionskanslig"
+                }
+              ],
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Ras": 1
+                    }
+                  },
+                  "varde": "single_race",
+                  "meddelande": "Ras: Karaktären kan normalt bara ha en ras."
+                }
+              ]
+            }
           }
         },
         {
@@ -2921,7 +3088,20 @@
           "taggar": {
             "typ": [
               "Ras"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Ras": 1
+                    }
+                  },
+                  "varde": "single_race",
+                  "meddelande": "Ras: Karaktären kan normalt bara ha en ras."
+                }
+              ]
+            }
           }
         }
       ]
@@ -3091,7 +3271,15 @@
             "typ": [
               "Kvalitet",
               "Rustningskvalitet"
-            ]
+            ],
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "begransning_modifierare",
+                  "varde": 2
+                }
+              ]
+            }
           },
           "effekt": "Minskad begränsning (Lätt: 0, Medel: −1, Tung: −2)."
         },
@@ -3197,7 +3385,15 @@
           "taggar": {
             "typ": [
               "Sköld"
-            ]
+            ],
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_modifierare",
+                  "varde": 1
+                }
+              ]
+            }
           },
           "stat": {
             "skada": "1T4",
@@ -3219,7 +3415,15 @@
             ],
             "kvalitet": [
               "Armfäst"
-            ]
+            ],
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_modifierare",
+                  "varde": 1
+                }
+              ]
+            }
           },
           "stat": {
             "skada": "1T4",
@@ -3241,7 +3445,15 @@
             ],
             "kvalitet": [
               "Balanserad"
-            ]
+            ],
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_modifierare",
+                  "varde": 1
+                }
+              ]
+            }
           },
           "stat": {
             "skada": "1T4",
@@ -3270,7 +3482,15 @@
               "Kvalitet",
               "Vapenkvalitet",
               "Sköldkvalitet"
-            ]
+            ],
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_modifierare",
+                  "varde": 1
+                }
+              ]
+            }
           },
           "effekt": "+1 Försvar vid parering."
         },
@@ -3282,7 +3502,8 @@
             "typ": [
               "Kvalitet",
               "Sköldkvalitet"
-            ]
+            ],
+            "arm_fast": true
           },
           "effekt": "Skölden ockuperar inte handen, men tillåter ej användning av tvåhandsvapen. Kan ej användas för sköldbaserade förmågor eller kombineras med fler positiva kvaliteter."
         },
@@ -3367,6 +3588,39 @@
         }
       ]
     },
+    "Stav": {
+      "antal": 1,
+      "källfiler": [
+        "data/vapen.json"
+      ],
+      "exempel": [
+        {
+          "id": "v11",
+          "namn": "Vandringsstav",
+          "beskrivning": "Den enklare trästaven, inte sällan i tungt trä och härdad nära elden, har de långa vapnens räckvidd men saknar stålspetsade vapnens verkan.",
+          "taggar": {
+            "typ": [
+              "Vapen",
+              "Långa vapen",
+              "Stav"
+            ],
+            "kvalitet": [
+              "Trubbigt",
+              "Långt"
+            ]
+          },
+          "stat": {
+            "skada": "1T8",
+            "vikt": 1.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 1,
+            "örtegar": 0
+          }
+        }
+      ]
+    },
     "Särdrag": {
       "antal": 8,
       "källfiler": [
@@ -3385,9 +3639,17 @@
               "Diskret",
               "Viljestark"
             ],
-            "ras": [
-              "Bortbyting"
-            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Bortbyting"
+                    ]
+                  }
+                }
+              ]
+            },
             "handling": {
               "Novis": [
                 "Fri"
@@ -3414,9 +3676,17 @@
             "typ": [
               "Särdrag"
             ],
-            "ras": [
-              "Svartalf"
-            ]
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Svartalf"
+                    ]
+                  }
+                }
+              ]
+            }
           }
         },
         {
@@ -3427,11 +3697,19 @@
             "typ": [
               "Särdrag"
             ],
-            "ras": [
-              "Alv",
-              "Rese",
-              "Bortbyting"
-            ]
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Alv",
+                      "Rese",
+                      "Bortbyting"
+                    ]
+                  }
+                }
+              ]
+            }
           }
         }
       ]
@@ -3639,7 +3917,7 @@
       ]
     },
     "Vapen": {
-      "antal": 92,
+      "antal": 93,
       "källfiler": [
         "data/artefakter.json",
         "data/lagre-artefakter.json",
@@ -3730,7 +4008,15 @@
               "Kvalitet",
               "Vapenkvalitet",
               "Sköldkvalitet"
-            ]
+            ],
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_modifierare",
+                  "varde": 1
+                }
+              ]
+            }
           },
           "effekt": "+1 Försvar vid parering."
         },
@@ -3776,7 +4062,20 @@
             ],
             "ark_trad": [
               "Bärsärkare"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Yrke": 1
+                    }
+                  },
+                  "varde": "single_occupation",
+                  "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
+                }
+              ]
+            }
           },
           "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
           "forslag_pa_slakte": [
@@ -3802,7 +4101,20 @@
             ],
             "ark_trad": [
               "Duellant"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Yrke": 1
+                    }
+                  },
+                  "varde": "single_occupation",
+                  "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
+                }
+              ]
+            }
           },
           "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick eller Diskret 11+",
           "forslag_pa_slakte": [
@@ -3834,7 +4146,20 @@
             ],
             "ark_trad": [
               "Kapten"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "antal_typ_max": {
+                      "Yrke": 1
+                    }
+                  },
+                  "varde": "single_occupation",
+                  "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
+                }
+              ]
+            }
           },
           "viktiga_karaktarsdrag": "Övertygande 13+",
           "forslag_pa_slakte": "Människa (vanligen ambrier)",

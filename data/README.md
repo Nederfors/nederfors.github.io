@@ -1,233 +1,690 @@
-# Data README: JSON Entry Schema and Rule Authoring
+# Data README: Komplett guide till `rules-helper`
 
-This document explains how to structure entries in `data/*.json`, how rule definitions drive calculations, and how to keep generated data files up to date.
+Den här guiden beskriver **hela regelmotorn i `js/rules-helper.js`** och hur du skriver data i `data/*.json` så att allt fungerar i UI, store och beräkningar.
 
-## 1) Scope and Data Flow
+Mål:
+- Tydlig authoring av `andrar`, `kraver`, `krockar`, `ger`, `val`.
+- Full förståelse för hierarkier, `satt`/`ersatt`, `nar`, formler och specialfall.
+- Praktisk referens för alla exponerade helper-funktioner.
 
-Source-of-truth files are the entry arrays in `data/*.json` (except generated files).
+## 1. Grundmodell
 
-Generated/derived files:
-- `data/all.json` (built aggregate bundle)
-- `data/struktur.json` (sample structure overview)
-- `scripts/generated/data_manifest.json` (entry file manifest)
-- `sw.js` cache list, plus sync markers in `js/main.js`, HTML pages, and `js/app-bootstrap.js`
-- Derived content fields in some files (`lampliga_formagor`, `Elityrkesförmågor`)
+`rules-helper` läser regler från:
+- `entry.taggar.regler`
+- `entry.taggar.nivå_data.<nivå>.regler` (eller legacy `niva_data`)
+- typmallar (`typ_regler`/`type_rules`) via intern koppling `__typ_regler`
 
-Do not hand-edit generated files. Edit source entry files, then run the sync workflow (see section 12).
-
-## 2) File-Level Rules
-
-Each source data file must:
-- Be valid UTF-8 JSON.
-- Have a top-level array (`[]`).
-- Contain entry objects as array items.
-
-The build pipeline expects source files from `scripts/generated/data_manifest.json` / `scripts/build_all.py`.
-
-## 3) Canonical Entry Shape
-
-Minimal entry:
-
-```json
-{
-  "id": "unique-id",
-  "namn": "Entry name",
-  "taggar": {
-    "typ": ["Förmåga"]
-  }
-}
-```
-
-Typical full entry:
-
-```json
-{
-  "id": "form4",
-  "namn": "Dominera",
-  "beskrivning": "Lore/rules text",
-  "taggar": {
-    "typ": ["Förmåga"],
-    "ark_trad": ["Krigare", "Teurg"],
-    "test": ["Övertygande"],
-    "nivå_data": {
-      "Novis": { "handling": "Passiv", "skadetyp": "Ingen" },
-      "Gesäll": { "handling": "Fri", "skadetyp": "Ingen" },
-      "Mästare": { "handling": "Aktiv", "skadetyp": "Ingen" }
-    },
-    "regler": {
-      "andrar": [
-        {
-          "mal": "anfall_karaktarsdrag",
-          "satt": "ersatt",
-          "varde": "Övertygande",
-          "nar": { "narstrid": true }
-        }
-      ]
-    }
-  },
-  "nivåer": {
-    "Novis": "Text",
-    "Gesäll": "Text",
-    "Mästare": "Text"
-  },
-  "effekt": "Short summary"
-}
-```
-
-## 4) Core Fields
-
-| Field | Type | Required | Notes |
-|---|---|---|---|
-| `id` | string | Yes | Must be globally unique across all source files. |
-| `namn` | string | Yes | Display name and lookup key. |
-| `taggar` | object | Yes | Main metadata/rule container. |
-| `taggar.typ` | array or comma string | Yes | Entry type tags. Arrays are preferred. |
-| `beskrivning` | string | Recommended | Full descriptive text shown in UI. |
-| `nivåer` | object | Optional | Level text by level name (`Novis`, `Gesäll`, etc). |
-| `taggar.nivå_data` | object | Optional | Structured per-level metadata/rules. |
-| `taggar.regler` | object | Optional | Data-driven rule blocks (`andrar`, `kraver`, `krockar`, `ger`, `val`). |
-| `taggar.ark_trad` | array/string | Optional | Archetype/tradition tags. |
-| `taggar.test` | array/string | Optional | Trait/check tags used in filters and UX. |
-| `stat` | object | Optional | Numeric/mechanical values (ex: `skada`, `skydd`, `begränsning`, `vikt`, `bärkapacitet`). |
-| `grundpris` | object | Optional | Money object: `daler`, `skilling`, `örtegar`. |
-| `maxpris` | object | Optional | Optional max price cap for specific items. |
-| `kvalitet` | array/string | Optional | Built-in qualities, combined with `taggar.kvalitet`. |
-| `kan_införskaffas_flera_gånger` | boolean | Optional | Repeatable entry flag (especially relevant for Fördel/Nackdel behavior). |
-| `taggar.dold` | boolean | Optional | Hidden from normal list results until explicitly searched. |
-| `effekt` | string | Optional | Short summary text. |
-| `krav` | object | Elityrke entries | Legacy elityrke requirement model (section 10). |
-
-Specialized inventory/artefact fields also exist (`taggar.inventory`, `bound`, `boundLabel`, `traits`) and are consumed by inventory UI logic.
-
-## 5) Levels and Level Data
-
-Use:
-- `nivåer` for display text.
-- `taggar.nivå_data` for machine-readable metadata and per-level rules.
-
-Preferred key is `nivå_data`. Legacy `niva_data` is still read, but should not be authored in new/updated entries.
-
-### Level rule merge behavior
-
-For Novis/Gesäll/Mästare entries:
-- Rules inherit cumulatively from lower levels to selected level.
-
-For levels outside that progression (for example Enkel/Ordinär/Avancerad):
-- Exact-level rules are used.
-
-## 6) Rule System (`taggar.regler` / `taggar.nivå_data.<level>.regler`)
-
-Allowed rule block keys:
+Tillåtna regelblock (`RULE_KEYS`):
 - `andrar`
 - `kraver`
 - `krockar`
 - `ger`
 - `val`
 
-Unknown top-level rule keys are ignored by rule normalization.
+Allt annat på samma nivå ignoreras av normaliseringen.
 
-Each rule block key accepts an array (or single object that is normalized as array).
+## 2. Filformat och källor
 
-Common rule fields:
-- `mal`: target/calculation key.
-- `varde`: numeric or string value depending on `mal`.
-- `satt`: operation mode (typically `add` or `ersatt`).
-- `nar`: condition object.
-- `formel`: formula string or object.
+Stödda toppnivåformat i datafiler:
+- Rekommenderat: objekt med `entries` och ev. `typ_regler`
+- Legacy: ren array av entries
 
-### `satt`
+Exempel (rekommenderat):
 
-- `add` (or omitted): additive.
-- `ersatt` (and `satt` alias in numeric application): replace/override current value.
+```json
+{
+  "typ_regler": {
+    "Förmåga": {
+      "regler": {
+        "kraver": [
+          {
+            "nar": { "antal_typ_max": { "Förmåga": 999 } }
+          }
+        ]
+      }
+    }
+  },
+  "entries": [
+    {
+      "id": "formX",
+      "namn": "Exempelförmåga",
+      "taggar": {
+        "typ": ["Förmåga"],
+        "regler": {
+          "andrar": [
+            { "mal": "forsvar_modifierare", "satt": "add", "varde": 1 }
+          ]
+        }
+      }
+    }
+  ]
+}
+```
 
-## 7) Condition Grammar (`nar`)
+## 2.1 Snabb uppslagstabell: exakt var du lägger regler
 
-Supported condition keys are context-sensitive. Commonly used keys:
+Använd detta som första uppslag när du authorar.
 
-List/presence conditions:
+| Du vill göra | Exakt JSON-path | Notering |
+|---|---|---|
+| Sätta typ-baseline för alla entries av en typ | `typ_regler.<Typ>.regler.<regelblock>[]` | Gäller alla entries som har `<Typ>` i `taggar.typ`. |
+| Sätta typ-baseline på viss nivå | `typ_regler.<Typ>.nivå_data.<Nivå>.regler.<regelblock>[]` | Typdefault som bara gäller från den nivån. |
+| Sätta typ-baseline i kortform | `typ_regler.<Typ>.<regelblock>[]` | Stöds av motorn (normaliseras till `taggar.regler`). |
+| Sätta entry-specifik regel (alla nivåer) | `entries[i].taggar.regler.<regelblock>[]` | Överstyr typregler vid samma override-token. |
+| Sätta entry-specifik regel på viss nivå | `entries[i].taggar.nivå_data.<Nivå>.regler.<regelblock>[]` | Kumulativt för `Novis/Gesäll/Mästare`. |
+| Sätta max antal per typ | `typ_regler.<Typ>.max_antal` | Typdefault när entry saknar eget max. |
+| Sätta max antal för viss entry | `entries[i].taggar.max_antal` | Har företräde över typdefault. |
+| Lägga krav | `...kraver[]` | Samma path-mönster (typ/entry/nivå). |
+| Lägga krock | `...krockar[]` | Samma path-mönster (typ/entry/nivå). |
+| Lägga ändring av värde | `...andrar[]` | Samma path-mönster (typ/entry/nivå). |
+| Lägga grant av post/föremål/pengar | `...ger[]` | Samma path-mönster (typ/entry/nivå). |
+| Lägga val-regler | `...val[]` | Strukturellt stödd, ingen särskild runtime-logik idag. |
+
+`<regelblock>` är en av:
+- `andrar`
+- `kraver`
+- `krockar`
+- `ger`
+- `val`
+
+## 2.2 Entry-specifika typer (`taggar.typ`) och hur de kopplas till `typ_regler`
+
+### Hur du lägger till typ(er) på en entry
+
+Sätt typer på entryn i:
+- `entries[i].taggar.typ`
+
+Rekommenderat format:
+
+```json
+{
+  "taggar": {
+    "typ": ["Monstruöst särdrag", "Elityrkesförmåga"]
+  }
+}
+```
+
+Viktigt:
+- En entry kan ha flera typer.
+- Motorn matchar typer normaliserat (case/diakritik-insensitivt).
+- Alla matchande typmallar appliceras.
+- Om bara en entry har en viss typ blir den typen i praktiken entry-specifik.
+
+### Hur du skapar en ny typmall
+
+Lägg en toppnivånyckel i `typ_regler` med exakt typnamn:
+
+```json
+{
+  "typ_regler": {
+    "Ny Typ": {
+      "regler": {
+        "kraver": [
+          {
+            "nar": { "har_namn": ["Exempelkälla"] },
+            "varde": "ny_typ_requires_source"
+          }
+        ]
+      },
+      "nivå_data": {
+        "Gesäll": {
+          "regler": {
+            "andrar": [
+              { "mal": "forsvar_modifierare", "satt": "add", "varde": 1 }
+            ]
+          }
+        }
+      },
+      "max_antal": 2
+    }
+  }
+}
+```
+
+### Om en entry har flera typer
+
+Exempel:
+
+```json
+{
+  "typ_regler": {
+    "Typ A": {
+      "regler": {
+        "andrar": [{ "mal": "talighet_tillagg", "satt": "add", "varde": 1 }]
+      }
+    },
+    "Typ B": {
+      "regler": {
+        "andrar": [{ "mal": "talighet_tillagg", "satt": "ersatt", "varde": 3 }]
+      }
+    }
+  },
+  "entries": [
+    {
+      "id": "x1",
+      "namn": "Entry X",
+      "taggar": { "typ": ["Typ A", "Typ B"] }
+    }
+  ]
+}
+```
+
+Båda typreglerna läses. Om de krockar på samma override-token vinner senare merge-steg enligt motorns hierarkilogik.
+
+### Entry-specifikt override ovanpå typ
+
+Vill du avvika för en enda entry: lägg regeln direkt på entryn.
+
+```json
+{
+  "entries": [
+    {
+      "id": "x1",
+      "namn": "Entry X",
+      "taggar": {
+        "typ": ["Typ A"],
+        "regler": {
+          "andrar": [
+            { "mal": "talighet_tillagg", "satt": "ersatt", "varde": 5, "regel_id": "entry_x_talighet" }
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+## 2.3 Snabbrecept: vad du lägger till och var
+
+### Krav på att annan post finns
+
+Lägg i `entries[i].taggar.regler.kraver[]`:
+
+```json
+{
+  "nar": { "har_namn": ["Robust"] },
+  "varde": "requires_robust",
+  "meddelande": "Kräver Robust."
+}
+```
+
+### OR-krav (en av flera)
+
+Lägg i `...kraver[]`:
+
+```json
+{
+  "nar": { "nagon_av_namn": ["Troll", "Andrik"] },
+  "varde": "requires_troll_or_andrik"
+}
+```
+
+### Blockerande krock
+
+Lägg i `...krockar[]`:
+
+```json
+{
+  "namn": ["Korruptionskänslig"],
+  "varde": "conflict_korruptionskanslig"
+}
+```
+
+### Ersättningskrock (`ersatt`)
+
+Lägg i `...krockar[]`:
+
+```json
+{
+  "namn": ["Korruptionskänslig"],
+  "satt": "ersatt",
+  "varde": "dvarg_korruptionskanslig"
+}
+```
+
+### Grant av post
+
+Lägg i `...ger[]`:
+
+```json
+{
+  "mal": "post",
+  "id": ["hamnskifte_grants4"],
+  "gratis_upp_till": "Novis",
+  "beviljad_niva": "Gesäll"
+}
+```
+
+### Grant av föremål
+
+Lägg i `...ger[]`:
+
+```json
+{
+  "mal": "foremal",
+  "foremal": [
+    { "id": "rep", "antal": 3 },
+    { "namn": "Fackla", "antal": 2 }
+  ]
+}
+```
+
+### Grant av pengar
+
+Lägg i `...ger[]`:
+
+```json
+{
+  "mal": "pengar",
+  "daler": 1,
+  "skilling": 5,
+  "ortegar": 0
+}
+```
+
+### Sätta nivåspecifik regel
+
+Lägg i `entries[i].taggar.nivå_data.Gesäll.regler.andrar[]`:
+
+```json
+{
+  "mal": "forsvar_modifierare",
+  "satt": "add",
+  "varde": 1
+}
+```
+
+### Sätta conditional `nar` på regel
+
+Lägg `nar` direkt i regelobjektet (oavsett block):
+
+```json
+{
+  "mal": "anfall_karaktarsdrag",
+  "satt": "ersatt",
+  "varde": "Diskret",
+  "nar": {
+    "narstrid": true,
+    "foremal": {
+      "typ": ["Vapen"],
+      "nagon_kvalitet": ["Kort", "Precist"]
+    }
+  }
+}
+```
+
+## 2.4 Vanliga specialfall (Hidden, manuell ERF, separat försvar)
+
+### A) Dölja innehåll (`Hidden`)
+
+Det finns två vanliga sätt:
+
+1. Statisk dold post (UI/filter-beteende):
+- `entries[i].taggar.dold: true`
+
+2. Regelstyrd dold status via `rules-helper`:
+- `...andrar[]` med `mal: "Hidden"` och truthy `varde`.
+
+Exempel (alltid dold när posten är vald):
+
+```json
+{
+  "andrar": [
+    { "mal": "Hidden", "varde": true }
+  ]
+}
+```
+
+Exempel (villkorat dold):
+
+```json
+{
+  "andrar": [
+    {
+      "mal": "Hidden",
+      "varde": true,
+      "nar": { "har_namn": ["Robust"] }
+    }
+  ]
+}
+```
+
+`Hidden` beräknas av `queryMal(list, "Hidden", ctx)`.
+
+### B) Sätta manuell ERF / XP
+
+#### B1. Författad i data (rekommenderat när kostnaden är regelbunden)
+
+Lägg på entry:
+- `entries[i].taggar.erf` (alla nivåer), eller
+- `entries[i].taggar.nivå_data.<Nivå>.erf` (nivåspecifikt)
+
+Alternativa legacy-fält läses också (`xp`, map-fält för `erf_per_niva`/`xp_per_niva`), men håll dig helst till `taggar.nivå_data.<Nivå>.erf`.
+
+Exempel:
+
+```json
+{
+  "taggar": {
+    "nivå_data": {
+      "Novis": { "erf": 10 },
+      "Gesäll": { "erf": 20 },
+      "Mästare": { "erf": 30 }
+    }
+  }
+}
+```
+
+#### B2. Manuell runtime-override (per vald post)
+
+Använd API:
+
+```js
+rulesHelper.setEntryErfOverride(entry, 25);                 // alla nivåer
+rulesHelper.setEntryErfOverride(entry, 'Gesäll', 35);       // endast Gesäll
+rulesHelper.clearEntryErfOverride(entry, 'Gesäll');         // ta bort nivåoverride
+rulesHelper.clearAllEntryErfOverrides();                    // nollställ allt
+```
+
+Avläsning:
+
+```js
+const erf = rulesHelper.getEntryErfOverride(entry, currentList, { level: 'Gesäll' });
+```
+
+### C) Separata försvarsberäkningar
+
+För separata försvarsdrag används `mal: "separat_forsvar_karaktarsdrag"` i `andrar`.
+
+Path:
+- `...andrar[]` (typ/entry/nivå enligt tabellen ovan)
+
+Exempelregel:
+
+```json
+{
+  "mal": "separat_forsvar_karaktarsdrag",
+  "satt": "ersatt",
+  "varde": "Kvick",
+  "modifierare": -2,
+  "tillat": {
+    "karaktarsdrag": true,
+    "vapen_typer": true,
+    "vapen_kvaliteter": true
+  }
+}
+```
+
+Viktigt:
+- `satt` måste vara `"ersatt"` för att plockas upp av separata-försvarslogiken.
+- `tillat` styr vilka komponenter som räknas i selektiv försvarsmodifiering.
+
+Runtimeflöde:
+
+```js
+const rules = rulesHelper.getSeparateDefenseTraitRules(currentList, context);
+const mod = rulesHelper.getSelectiveDefenseModifier(
+  currentList,
+  weaponFacts,
+  armorContext,
+  rules[0]?.tillat
+);
+```
+
+## 3. Regelhierarki (mycket viktigt)
+
+Regler hämtas och merges i denna ordning:
+1. Typregler (`typ_regler`) som baseline
+2. Entry-regler (`taggar.regler`)
+3. Nivåregler (`taggar.nivå_data.<nivå>.regler`) enligt vald nivå
+
+För nivåer i standardprogression (`Novis`, `Gesäll`, `Mästare`) används **kumulativ merge** upp till vald nivå.
+
+För nivåer utanför progressionen används exakt nivåträff.
+
+Nivåordning kommer från:
+- `window.LVL` om satt
+- annars default: `novis`, `gesall`, `mastare`
+
+Intern nivåmappning (för jämförelser):
+- `novis`/`enkel` = 1
+- `gesall`/`ordinar` = 2
+- `mastare`/`avancerad` = 3
+
+## 4. Override-semantik i hierarkin
+
+När högre nivå (entry/nivå) ska kunna ersätta lägre (typ) används ett internt override-token per regel.
+
+Prioritet för token:
+1. `regel_id` / `rule_id` / `id`
+2. `mal`
+3. kombination av `namn`, `nar.namn`, `nar.typ`, `nar.ark_trad`
+
+Konsekvens:
+- Om två regler får samma token, vinner högre hierarki.
+- Om ingen token kan byggas, concat: båda reglerna blir kvar.
+
+Tips:
+- Sätt `regel_id` på regler som ska vara explicit överstyrbara.
+
+## 5. Regelblock och fält
+
+### 5.1 `andrar`
+Typiska fält:
+- `mal` (vilket värde som påverkas)
+- `satt` (`add`/uteblivet eller `ersatt`)
+- `varde` (nummer eller text beroende på `mal`)
+- `nar` (villkor)
+- `formel` (sträng eller objekt)
+- `modifierare` (extra numerisk justering, används bl.a. för separata försvarsdrag)
+- `tillat` (selektiv aktivering av delkomponenter, t.ex. `karaktarsdrag`, `vapen_typer`, `vapen_kvaliteter`)
+
+### 5.2 `kraver`
+Typiska fält:
+- `nar` (kravlogik, ofta `har_namn`/`nagon_av_namn`/antalbegränsning)
+- `varde` (felkod)
+- `meddelande`/`message` (valfritt UX-meddelande)
+
+### 5.3 `krockar`
+Typiska fält:
+- `namn` (målpost(er) som krockar)
+- `nar` (targetfilter: `namn`/`typ`/`ark_trad`)
+- `satt` (`ersatt` = ersättbar krock, annars blockerande)
+- `varde` (valfri kod)
+
+### 5.4 `ger`
+Typiska `mal`:
+- `post` (autograntar poster)
+- `foremal` (inventarier med antal)
+- `pengar` (`daler`/`skilling`/`ortegar`)
+- `permanent_korruption`
+- `skydd_permanent_korruption`
+
+För `mal: "post"` finns extra fält:
+- `id`, `namn`, `post` (referenser)
+- `gratis_upp_till`
+- `beviljad_niva`
+- `erf`, `xp`, `erf_per_niva` m.fl.
+
+### 5.5 `val`
+- Nyckeln stöds strukturellt (`RULE_KEYS`) och kan hämtas via `getRuleList`.
+- `rules-helper` har i nuläget ingen speciallogik för att processa `val` utöver generell läsning/merge.
+
+## 6. `satt` och `ersatt`
+
+### Numeriska förändringar (`andrar`, vissa `ger`)
+- `ersatt` (och alias `satt` i intern numeric-apply) sätter absolut värde.
+- Allt annat behandlas additivt.
+
+### Konflikter (`krockar`)
+- `satt: "ersatt"`: kandidat får ersätta specifika mål i konfliktupplösning.
+- annars: blockerande konflikt.
+
+### Karaktärsdragsersättningar
+Flera helpers letar uttryckligen efter `satt: "ersatt"` när de bygger alternativa drag.
+
+## 7. `nar`-villkor: komplett grammatik
+
+`evaluateNar(nar, context)` är kontextstyrd. Om relevant context-del saknas, ignoreras just den villkorsgruppen.
+
+### 7.1 Listvillkor (`context.list`)
 - `har_namn`
 - `saknar_namn`
 - `nagon_av_namn`
+- `antal_namn_max`
+  - objektform: `{ "Robust": 1 }`
+  - numerisk form + `nar.namn`
+- `antal_typ_max`
+  - objektform: `{ "Ras": 1 }`
+  - numerisk form + `nar.typ`
 
-Source-level gate:
-- `kalla_niva_minst`
+Specialfall:
+- `Blodsband` bidrar med `race` i `nagon_av_namn`-matchning.
 
-Armor/weapon conditions:
+### 7.2 Beräknade mål (`context.computedValues`)
+- `mal_minst`
+- `mal_saknas`
+- `har_mal`
+
+### 7.3 Rustning (`context.utrustadTyper`)
 - `har_utrustad_typ`
+
+### 7.4 Vapen (`context.vapenFakta`/`context.antalVapen`)
 - `antal_utrustade_vapen_minst`
 - `har_utrustad_vapen_typ`
 - `ej_utrustad_vapen_typ`
 - `har_utrustad_vapen_kvalitet`
 - `ej_utrustad_vapen_kvalitet`
 
-Item conditions:
+### 7.5 Föremål (`context.foremal`)
 - `foremal.typ`
 - `foremal.ingen_typ`
 - `foremal.nagon_kvalitet`
+- undernycklar i `foremal`: `typ`, `ingen_typ`, `nagon_kvalitet`
 
-Combat flags:
+### 7.6 Stridsflaggor
 - `narstrid`
 - `avstand`
 - `overtag`
 - `efter_forflyttning`
 
-Inventory/row conditions:
-- `trait`
+### 7.7 Källnivå (`context.sourceLevel`)
+- `kalla_niva_minst`
 
-Target filters in rule matching flows:
+### 7.8 Inventory-rad (`context.row` / `context.sourceEntry`)
+- `trait`
 - `namn`
 - `typ`
-- `ark_trad`
 
-Advanced computed-value conditions (only where computed values are passed):
-- `mal_minst`
-- `mal_saknas`
-- `har_mal`
+### 7.9 Targetfilter i krav/krock-logik (utanför `evaluateNar`)
+- `nar.namn`
+- `nar.typ`
+- `nar.ark_trad`
 
-## 8) `mal` Catalog (What Rules Can Modify/Grant)
+## 8. `kraver` i praktiken
 
-Common `andrar` targets:
-- `forsvar_modifierare`
-- `traffsaker_modifierare_vapen`
-- `anfall_karaktarsdrag`
-- `forsvar_karaktarsdrag`
-- `dansande_forsvar_karaktarsdrag`
-- `mystik_karaktarsdrag`
-- `barkapacitet_stark`
-- `barkapacitet_faktor`
-- `barkapacitet_tillagg`
-- `barkapacitet_bas`
-- `talighet_bas`
-- `talighet_faktor`
-- `talighet_tillagg`
-- `smartgrans_faktor`
-- `smartgrans_tillagg`
-- `korruptionstroskel`
-- `styggelsetroskel`
-- `permanent_korruption_faktor`
-- `begransning_modifierare`
-- `begransning_modifierare_fast`
-- `nollstall_begransning_modifierare`
-- `karaktarsdrag_max_tillagg`
+Primär funktion:
+- `getMissingRequirementReasonsForCandidate(candidate, list, { level })`
 
-Common `ger` targets:
-- `post` (grant entries by `id`/`namn`; supports `gratis_upp_till`, `beviljad_niva`)
-- `foremal` (grant inventory items with quantities)
-- `pengar` (`daler`, `skilling`, `ortegar`)
-- `permanent_korruption`
-- `skydd_permanent_korruption`
+Retur: array av reasons med bl.a.
+- `code`
+- `requiredNames`
+- `missingNames`
+- `message`
 
-Requirement/conflict blocks:
-- `kraver`: hard requirements.
-- `krockar`: incompatibilities/replacements.
+Kodkälla:
+- `rule.varde` om satt
+- annars `krav_<sourceEntryName>`
 
-If you add a new `mal`, update both runtime logic (`js/rules-helper.js`) and this document.
+Viktig override-regel mellan entry- och typkrav:
+- Om entry-krav finns och uppfylls: type-krav ignoreras.
+- Om entry-krav finns men inte uppfylls: type-krav får fungera som fallback-upplåsning.
+- Om varken entry- eller type-krav uppfylls: reasons från båda kan returneras.
 
-## 9) Formula Authoring (`formel`)
+Exempel:
 
-`formel` can be:
+```json
+{
+  "kraver": [
+    {
+      "nar": { "nagon_av_namn": ["Robust", "Troll"] },
+      "varde": "requires_robust_or_troll",
+      "meddelande": "Kräver Robust eller Troll."
+    }
+  ]
+}
+```
 
-1) String formula:
+## 9. `krockar` i praktiken
+
+Primära funktioner:
+- `getConflictReasonsForCandidate(candidate, list, { level })`
+- `getConflictResolutionForCandidate(candidate, list, { level })`
+
+Konflikter utvärderas åt båda håll:
+- kandidatens `krockar` mot befintlig lista
+- befintliga entries `krockar` mot kandidaten
+
+`getConflictResolutionForCandidate` returnerar:
+- `reasons`
+- `blockingReasons`
+- `replaceTargetNames` (när kandidatens `satt:"ersatt"` tillåter ersättning)
+
+Exempel:
+
+```json
+{
+  "krockar": [
+    {
+      "namn": ["Korruptionskänslig"],
+      "satt": "ersatt",
+      "varde": "dvarg_korruptionskanslig"
+    }
+  ]
+}
+```
+
+## 10. `ger` i praktiken
+
+### 10.1 `mal: "foremal"`
+Aggregeras via `getInventoryGrantItems(list)`.
+
+Exempel:
+
+```json
+{
+  "ger": [
+    {
+      "mal": "foremal",
+      "foremal": [
+        { "id": "rep", "antal": 3 },
+        { "namn": "Fackla", "antal": 2 }
+      ]
+    }
+  ]
+}
+```
+
+### 10.2 `mal: "post"`
+Hämtas via `getEntryGrantTargets(list)`.
+
+Stödda targetfält:
+- `post` (lista av refs)
+- `id`
+- `namn`
+
+Extra:
+- `gratis_upp_till` styr delvis gratis nivåintervall
+- `beviljad_niva` används vid nivåspärrar
+- `erf`/`erf_per_niva` kan ge kostnads-override
+
+### 10.3 `mal: "pengar"`
+Summeras via `getMoneyGrant(list)`.
+
+## 11. Formler (`formel`)
+
+### 11.1 Strängformler
+Stöd i motorn:
 - `viljestark`
 - `hel_viljestark`
 - `halv_viljestark_uppat`
@@ -237,115 +694,256 @@ If you add a new `mal`, update both runtime logic (`js/rules-helper.js`) and thi
 - `stark_x_0_5_plus_3`
 - `halv_permanent_korruption_nedat`
 - `fjardedel_aktuell_smartgrans_nedat`
-- `fjardedel_korruptionstroskel_uppat`
 - `niva`
+- `fjardedel_korruptionstroskel_uppat`
 
-2) Object formula:
-
-```json
-{
-  "bas": "stark",
-  "faktor": 1.5,
-  "division": 2,
-  "tillagg": 3,
-  "avrunda": "uppat"
-}
-```
-
-Object formula fields:
-- `bas`: base source (`niva`, `mal:<name>`, `attribut:<name>`, or direct option key)
-- `faktor`: multiply
-- `division`: divide
-- `tillagg`: add offset
-- `avrunda`: `uppat`, `nedat`, or `narmast`
-
-## 10) Elityrke `krav` Model (Legacy but Active)
-
-Elityrke entries still use `krav` and are normalized by `js/elite-utils.js`.
-
-Main keys:
-- `primarformaga`
-- `primartagg`
-- `sekundartagg`
-- `valfri_inom_tagg`
-- `specifika_formagor`
-- `specifika_mystiska_krafter`
-- `specifika_ritualer`
-- `specifika_fordelar`
-- `specifika_nackdelar`
-
-Minimal example:
+### 11.2 Objektformler
 
 ```json
 {
-  "krav": {
-    "primarformaga": { "namn": "Häxkonster" },
-    "valfri_inom_tagg": [
-      { "typ": "Mystisk kraft", "min_antal": 1, "min_erf": 10 }
-    ],
-    "specifika_formagor": {
-      "namn": ["Medicus", "Naturlig krigare"],
-      "min_erf": 20,
-      "min_antal": 0
-    }
+  "formel": {
+    "bas": "attribut:stark",
+    "faktor": 1.5,
+    "division": 2,
+    "tillagg": 3,
+    "avrunda": "uppat"
   }
 }
 ```
 
-## 11) Type-Specific Validation Rules Enforced in Build
+`bas` kan vara:
+- `niva`
+- `mal:<malnamn>`
+- `attribut:<fält>`
+- eller direkt options-nyckel
 
-`scripts/build_all.py` validates additional constraints:
+`avrunda`:
+- `uppat`
+- `nedat`
+- `narmast`
 
-- Ritual entries:
-  - Should have `taggar.nivå_data.Enkel`.
-  - `handling` on `Enkel` should be `Speciell`.
-  - `test` on `Enkel` should be a list.
+## 12. Komplett `MAL_REGISTRY` (inbyggda mål)
 
-- Basförmåga entries:
-  - Should have `taggar.nivå_data`.
-  - Should define exactly one of `Enkel`, `Ordinär`, `Avancerad`.
+Registrerade mål i `rules-helper`:
+- `korruptionstroskel`
+- `styggelsetroskel`
+- `permanent_korruption`
+- `permanent_korruption_halvera`
+- `permanent_korruption_faktor`
+- `barkapacitet_stark`
+- `talighet_bas`
+- `talighet_faktor`
+- `smartgrans_faktor`
+- `talighet_tillagg`
+- `smartgrans_tillagg`
+- `barkapacitet`
+- `barkapacitet_faktor`
+- `barkapacitet_tillagg`
+- `barkapacitet_bas`
+- `forsvar_modifierare`
+- `traffsaker_modifierare_vapen`
+- `karaktarsdrag_max_tillagg`
+- `begransning_modifierare`
+- `begransning_modifierare_fast`
+- `nollstall_begransning_modifierare`
+- `tillater_monstruost` (deprecated shim)
+- `anfall_karaktarsdrag`
+- `forsvar_karaktarsdrag`
+- `dansande_forsvar_karaktarsdrag` (deprecated, returnerar tom lista)
+- `separat_forsvar_karaktarsdrag`
+- `mystik_karaktarsdrag`
+- `post`
+- `foremal`
+- `pengar`
+- `Hidden`
+- `skydd_permanent_korruption`
 
-- Mystisk kraft entries:
-  - If level data exists, level keys should be `Novis`, `Gesäll`, `Mästare`.
+Viktig fallback:
+- `queryMal(list, mal, ctx)` returnerar inbyggd handler om den finns.
+- Om handler saknas: fallback till `getListRules(list, { key: 'andrar', mal })`.
 
-- Legacy field warning:
-  - `taggar.niva_data` is allowed but warned as legacy.
+## 13. `max_antal` och upprepning
 
-- Duplicate IDs:
-  - Duplicate `id` values across files are reported.
+`getEntryMaxCount(entry)` prioriterar:
+1. entrys direkta `taggar.max_antal` / `max_antal`
+2. typregel-default (`typ_regler`)
+3. default `1`
 
-## 12) Mandatory Keep-Up-To-Date Workflow
+Legacy:
+- `kan_införskaffas_flera_gånger: true` mappas till max `3` om legacy tillåts.
 
-Run this every time you change anything in `data/*.json`:
+## 14. ERF/XP override-ordning
+
+`getEntryErfOverride(entry, list, { level })` använder:
+1. manuella overrides (`setEntryErfOverride`)
+2. statiska entryvärden (`nivå_data.<nivå>.erf/xp`, mappfält, taggar)
+3. fallback på originalentry
+4. regelbaserad override från `ger/post`
+
+Relaterade API:
+- `setEntryErfOverride`
+- `clearEntryErfOverride`
+- `clearAllEntryErfOverrides`
+
+## 15. Entry stop-evaluering (UI-spärrar)
+
+`evaluateEntryStops(candidate, list, options)` returnerar:
+- `requirementReasons`
+- `blockingConflicts`
+- `replaceTargetNames`
+- `grantedLevelStop`
+- `hardStops`
+- `hasStops`
+
+Automatiska hard-stops inkluderar bl.a.:
+- `duplicate_entry`
+- `stack_limit`
+- elityrkesrelaterade spärrar
+
+Meddelanden kan formateras med:
+- `formatEntryStopMessages(entryName, stopResult)`
+
+## 16. Traditioner och alias
+
+`rules-helper` normaliserar traditioner och stöder alias, t.ex.:
+- `haxa`/`haxkonst` -> `Häxkonst`
+- `ordensmagiker` -> `Ordensmagi`
+- `teurg` -> `Teurgi`
+- `trollsangare` -> `Trollsång`
+
+Traditionsgraf byggs från vald lista och används i targetmatchning (`ark_trad`) samt skyddsregler.
+
+## 17. Legacy- och kompatibilitetsbeteende
+
+Stöd finns för:
+- `niva_data` (legacy för `nivå_data`)
+- `type_rules` (legacy för `typ_regler`)
+- `kan_inforskaffas_flera_ganger`/`kan_införskaffas_flera_gånger`
+- lookup-baserad upplösning av rulesource när entry saknar inline-regler
+- `taggar.extends` vid lookup: basregler + härledda regler merges
+
+## 18. Exporterad API (`window.rulesHelper`)
+
+### 18.1 Kärna
+- `RULE_KEYS`
+- `MAL_REGISTRY`
+- `registerMal`
+- `queryMal`
+- `normalizeRuleBlock`
+- `mergeRuleBlocks`
+- `mergeRuleBlocksByHierarchy`
+
+### 18.2 Regelhämtning
+- `getTopLevelRules`
+- `getLevelRules`
+- `getTypeRules`
+- `getEntryRules`
+- `getRuleList`
+- `getListRules`
+- `hasRules`
+
+### 18.3 Villkor, krav, krock
+- `evaluateNar`
+- `getMissingRequirementReasonsForCandidate`
+- `getRequirementDependents`
+- `getConflictReasonsForCandidate`
+- `getConflictResolutionForCandidate`
+- `getEntryMaxCount`
+- `evaluateEntryStops`
+- `formatEntryStopMessages`
+
+### 18.4 Grant/Kostnad
+- `getEntryGrantTargets`
+- `getEntryGrantDependents`
+- `getPartialGrantInfo`
+- `getGrantedLevelRestriction`
+- `getInventoryGrantItems`
+- `getMoneyGrant`
+- `getEntryErfOverride`
+- `setEntryErfOverride`
+- `clearEntryErfOverride`
+- `clearAllEntryErfOverrides`
+
+### 18.5 Vapen/Rustning/Försvar
+- `validateDefenseLoadout`
+- `normalizeDefenseLoadout`
+- `getDefenseModifier`
+- `getEquippedDefenseModifier`
+- `getDefenseValueModifier`
+- `getArmorDefenseModifier`
+- `evaluateVapenNar`
+- `sumVapenBonusByMal`
+- `sumVapenBonus`
+- `getWeaponDefenseBonus`
+- `getWeaponAttackBonus`
+- `getEquippedWeaponEntryDefenseBonus`
+- `getEquippedWeaponEntryAttackBonus`
+- `getEquippedQualityVapenBonus`
+- `getEquippedQualityDefenseBonus`
+- `getEquippedQualityAttackBonus`
+- `evaluateRustningNar`
+- `sumRustningBonus`
+- `getArmorRestrictionBonus`
+- `getArmorRestrictionBonusFast`
+- `hasArmorRestrictionReset`
+- `getSelectiveDefenseModifier`
+
+### 18.6 Karaktärsdrag och korruption
+- `getAttackTraitRuleCandidates`
+- `getDefenseTraitRuleCandidates`
+- `getDancingDefenseTraitRuleCandidates`
+- `getSeparateDefenseTraitRules`
+- `hasPermanentCorruptionHalving`
+- `getMonstruosTraitPermissions` (deprecated shim)
+- `getAttackTraitRuleNotes`
+- `getCorruptionTrackStats`
+- `getCarryCapacityBase`
+- `getToughnessBase`
+- `getTraitTotalMax`
+- `getPainThresholdModifier`
+- `getPermanentCorruptionBreakdown`
+- `calcPermanentCorruption`
+
+## 19. Faktiskt använda mål i nuvarande data
+
+Mål som förekommer i `data/*.json` idag:
+- `Hidden`
+- `anfall_karaktarsdrag`
+- `barkapacitet_faktor`
+- `begransning_modifierare`
+- `foremal`
+- `forsvar_karaktarsdrag`
+- `forsvar_modifierare`
+- `karaktarsdrag_max_tillagg`
+- `korruptionstroskel`
+- `mystik_karaktarsdrag`
+- `nollstall_begransning_modifierare`
+- `pengar`
+- `permanent_korruption`
+- `permanent_korruption_faktor`
+- `post`
+- `separat_forsvar_karaktarsdrag`
+- `skydd_permanent_korruption`
+- `smartgrans_tillagg`
+- `styggelsetroskel`
+- `talighet_bas`
+- `talighet_tillagg`
+- `traffsaker_modifierare_vapen`
+
+## 20. Authoring-checklista
+
+- Använd alltid `taggar.typ`.
+- Lägg regler i `taggar.regler` och nivåspecifikt i `taggar.nivå_data`.
+- Sätt `regel_id` om du vill ha exakt override-beteende i hierarkin.
+- Använd `satt: "ersatt"` endast när du menar full replacement.
+- Skriv `nar` med korrekt datatyp (listor/objekt/booleans).
+- För grants via `post`: ange tydliga refs (`id` rekommenderas).
+- Uppdatera den här README:n när du inför nya `mal`, `nar`-nycklar eller semantik.
+
+Verifiering efter ändringar:
 
 ```bash
 python3 scripts/master_sync.py
 python3 scripts/build_all.py --strict
 osascript -l JavaScript scripts/verify_rules_helper.js
 ```
-
-What this does:
-- Syncs manifest and page bundle references.
-- Rebuilds `data/all.json` and `data/struktur.json`.
-- Refreshes derived yrke/elityrke ability lists.
-- Validates schema warnings as errors (`--strict`).
-- Verifies rules-helper behavior against regression tests.
-
-Then:
-- Review `git diff`.
-- Ensure generated files are committed with source changes.
-- Update this README if you introduced new fields, new `mal`, new `nar` keys, or new formula patterns.
-
-This documentation must always reflect the live data model and rule engine.
-
-## 13) Authoring Guidelines
-
-- Keep `id` stable forever once published.
-- Prefer arrays over comma-separated strings for tag lists.
-- Keep keys consistent (`nivå_data`, not `niva_data`).
-- Keep rule changes small and explicit; prefer one concern per rule object.
-- Use `krockar` for incompatibilities and `kraver` for prerequisites.
-- Put numeric/stat-driving logic in rules, not only in free-text `nivåer`.
-- Avoid hidden coupling: if a rule depends on another entry name, verify spelling exactly.
-- When adding a new source data file, run `python3 scripts/sync_data_manifest.py` (or full `master_sync`) immediately.
-

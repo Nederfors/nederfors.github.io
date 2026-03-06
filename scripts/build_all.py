@@ -4,8 +4,10 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime, timezone
+from data_file_schema import load_json, normalize_payload
 
 DATA_FILES = [
+    # sync-data-manifest:start
     'diverse.json',
     'kuriositeter.json',
     'skatter.json',
@@ -40,7 +42,8 @@ DATA_FILES = [
     'monstruost-sardrag.json',
     'artefakter.json',
     'lagre-artefakter.json',
-    'fallor.json'
+    'fallor.json',
+    # sync-data-manifest:end
 ]
 
 ROOT_DIR = Path(__file__).resolve().parent.parent
@@ -48,11 +51,6 @@ DATA_DIR = ROOT_DIR / 'data'
 OUTPUT_FILE = DATA_DIR / 'all.json'
 RITUAL_LEVELS = ('Enkel', 'Ordinär', 'Avancerad')
 MYSTIC_LEVELS = ('Novis', 'Gesäll', 'Mästare')
-
-
-def load_json(path: Path):
-    with path.open('r', encoding='utf-8') as handle:
-        return json.load(handle)
 
 
 def checksum(data) -> str:
@@ -149,9 +147,9 @@ def main():
 
     for filename in DATA_FILES:
         source_path = DATA_DIR / filename
-        data = load_json(source_path)
-        if not isinstance(data, list):
-            raise ValueError(f'{filename} does not contain an array at the top level')
+        payload = load_json(source_path)
+        parsed = normalize_payload(payload, source=filename)
+        data = parsed.entries
         for idx, entry in enumerate(data):
             validate_entry_schema(entry, filename, idx, warnings)
             entry_id = entry.get('id') if isinstance(entry, dict) else None
@@ -165,7 +163,8 @@ def main():
         sources.append({
             'file': f'data/{filename}',
             'count': len(data),
-            'checksum': checksum(data)
+            'checksum': checksum(payload),
+            'typeRuleCount': len(parsed.type_rules)
         })
 
     bundle = {

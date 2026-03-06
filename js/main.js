@@ -304,6 +304,9 @@ function ensureEntryMeta(entry) {
     })
   );
   const allTags = new Set([...typList, ...secondaryTags]);
+  const searchHidden = typeof storeHelper?.isSearchHiddenEntry === 'function'
+    ? !!storeHelper.isSearchHiddenEntry(entry)
+    : ['artefakt', 'kuriositet', 'skatt'].includes((typList[0] || '').toLowerCase());
 
   const meta = {
     normName,
@@ -316,7 +319,8 @@ function ensureEntryMeta(entry) {
     secondaryTags,
     secondaryLookup,
     allTagsNormalized,
-    allTags
+    allTags,
+    searchHidden
   };
 
   Object.defineProperty(entry, ENTRY_META_FIELD, {
@@ -1334,6 +1338,48 @@ function normalizeTableEntries(entries) {
   });
 }
 
+function resolveTypeRuleMap(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) return {};
+  const primary = payload.typ_regler;
+  if (primary && typeof primary === 'object' && !Array.isArray(primary)) return primary;
+  const legacy = payload.type_rules;
+  if (legacy && typeof legacy === 'object' && !Array.isArray(legacy)) return legacy;
+  return {};
+}
+
+function normalizeEntryDataPayload(payload, sourceFile = '') {
+  if (Array.isArray(payload)) {
+    return { entries: payload, typeRules: {} };
+  }
+  if (!payload || typeof payload !== 'object') {
+    throw new Error(`${sourceFile || 'data file'} has invalid JSON payload`);
+  }
+  if (!Array.isArray(payload.entries)) {
+    throw new Error(`${sourceFile || 'data file'} must contain an entries array`);
+  }
+  return {
+    entries: payload.entries,
+    typeRules: resolveTypeRuleMap(payload)
+  };
+}
+
+function attachTypeRules(entry, typeRules) {
+  if (!entry || typeof entry !== 'object' || Array.isArray(entry)) return entry;
+  if (!typeRules || typeof typeRules !== 'object' || Array.isArray(typeRules)) return entry;
+  if (!Object.keys(typeRules).length) return entry;
+  try {
+    Object.defineProperty(entry, '__typ_regler', {
+      value: typeRules,
+      writable: true,
+      configurable: true,
+      enumerable: false
+    });
+  } catch (_) {
+    entry.__typ_regler = typeRules;
+  }
+  return entry;
+}
+
 fetch(TABELLER_FILE)
   .then(r => r.json())
   .then(arr => {
@@ -1350,8 +1396,20 @@ fetch(TABELLER_FILE)
   });
 
 function loadDatabaseData() {
-  return Promise.all(DATA_FILES.map(f => fetch(f).then(r => r.json())))
-    .then(arrays => ({ entries: arrays.flat(), meta: null }));
+  return Promise.all(
+    DATA_FILES.map(f => fetch(f).then(r => r.json()).then(payload => ({ file: f, payload })))
+  ).then(files => {
+    const entries = [];
+    files.forEach(({ file, payload }) => {
+      const parsed = normalizeEntryDataPayload(payload, file);
+      const typeRules = parsed.typeRules;
+      (Array.isArray(parsed.entries) ? parsed.entries : []).forEach(entry => {
+        attachTypeRules(entry, typeRules);
+        entries.push(entry);
+      });
+    });
+    return { entries, meta: null };
+  });
 }
 
 loadDatabaseData()
@@ -3610,9 +3668,8 @@ function openDefenseCalcPopup() {
   const traitSel = root.getElementById('defenseCalcTrait');
   const armorSel = root.getElementById('defenseCalcArmor');
   const weaponList = root.getElementById('defenseCalcWeaponList');
-  const danceTraitSel = root.getElementById('defenseCalcDancingTrait');
-  const danceWeaponSel = root.getElementById('defenseCalcDancingWeapon');
   const danceCard = root.getElementById('defenseCalcDancingCard');
+  const separateSelectorsEl = root.getElementById('defenseCalcSeparateSelectors');
   const emptyMsg = root.getElementById('defenseCalcEmpty');
   const applyBtn = root.getElementById('defenseCalcApply');
   const cancelBtn = root.getElementById('defenseCalcCancel');
@@ -3623,23 +3680,21 @@ function openDefenseCalcPopup() {
   const weaponSummaryEl = root.getElementById('defenseCalcWeaponSummary');
   const dancingSummaryEl = root.getElementById('defenseCalcDancingSummary');
   const inner = pop?.querySelector('.popup-inner');
-  if (!pop || !traitSel || !armorSel || !weaponList || !applyBtn || !cancelBtn || !closeBtn || !resetBtn || !inner || !danceTraitSel || !danceWeaponSel) return;
+  if (!pop || !traitSel || !armorSel || !weaponList || !applyBtn || !cancelBtn || !closeBtn || !resetBtn || !inner) return;
 
   const list = typeof storeHelper.getCurrentList === 'function'
     ? storeHelper.getCurrentList(store)
     : [];
-  const dancingTraitCandidates = typeof window.rulesHelper?.getDancingDefenseTraitRuleCandidates === 'function'
-    ? (window.rulesHelper.getDancingDefenseTraitRuleCandidates(list, { list }) || [])
-    : [];
-  const hasDancingCandidates = dancingTraitCandidates.length > 0;
-  const setDancingVisibility = (visible) => {
+  const separateRulesWithWeapons = (typeof window.rulesHelper?.getSeparateDefenseTraitRules === 'function'
+    ? (window.rulesHelper.getSeparateDefenseTraitRules(list) || [])
+    : []).filter(r => r.tillat?.vapen_typer || r.tillat?.vapen_kvaliteter || r.tillat?.sköld);
+  const hasSeparateWithWeapons = separateRulesWithWeapons.length > 0;
+  const setSeparateVisibility = (visible) => {
     pop.classList.toggle('defense-calc-has-dancing', visible);
     if (danceCard) {
       danceCard.hidden = !visible;
       danceCard.setAttribute('aria-hidden', visible ? 'false' : 'true');
     }
-    danceTraitSel.disabled = !visible;
-    danceWeaponSel.disabled = !visible;
   };
 
   const flatten = (arr, prefix = []) => (Array.isArray(arr) ? arr : []).reduce((acc, row, idx) => {
@@ -3705,12 +3760,11 @@ function openDefenseCalcPopup() {
     : null;
   const autoDefenseSetup = typeof window.getAutoDefenseSetup === 'function'
     ? window.getAutoDefenseSetup({ list, inv, traitValues })
-    : { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null };
+    : { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} };
   const initialSetup = defenseSetup?.enabled ? defenseSetup : autoDefenseSetup;
   const selectedTrait = initialSetup?.trait || '';
   const selectedArmorPath = Array.isArray(initialSetup?.armor?.path) ? initialSetup.armor.path.join('.') : '';
-  const selectedDanceTrait = initialSetup?.dancingTrait || '';
-  const selectedDanceWeaponPath = Array.isArray(initialSetup?.dancingWeapon?.path) ? initialSetup.dancingWeapon.path.join('.') : '';
+  const initialSeparateWeapons = initialSetup?.separateWeapons || {};
   let manualModeEnabled = Boolean(defenseSetup?.enabled);
   const selectedWeaponPaths = new Set(
     (initialSetup?.weapons || [])
@@ -3723,10 +3777,6 @@ function openDefenseCalcPopup() {
     .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
     .join('');
   traitSel.value = selectedTrait;
-  danceTraitSel.innerHTML = ['<option value="">Automatiskt</option>']
-    .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
-    .join('');
-  danceTraitSel.value = selectedDanceTrait;
 
   const armorMeta = new Map();
   const armorOptions = flat
@@ -3845,9 +3895,13 @@ function openDefenseCalcPopup() {
   const buildCurrentSetup = (preferredPath = '') => {
     const selectedPathsNext = syncWeaponSelectionUi(preferredPath);
     const armorRef = armorSel.value ? toStoredRef(armorMeta.get(armorSel.value) || null) : null;
-    const danceWeaponRef = hasDancingCandidates && danceWeaponSel.value
-      ? toStoredRef(weaponMeta.get(danceWeaponSel.value) || null)
-      : null;
+    const separateWeapons = {};
+    separateWeaponCheckboxes.forEach(({ els }, sourceEntryId) => {
+      separateWeapons[sourceEntryId] = els
+        .filter(ch => ch.checked)
+        .map(ch => toStoredRef(weaponMeta.get(ch.dataset.path || '') || null))
+        .filter(Boolean);
+    });
     return {
       enabled: manualModeEnabled,
       trait: traitSel.value || '',
@@ -3855,13 +3909,13 @@ function openDefenseCalcPopup() {
       weapons: selectedPathsNext
         .map(pathStr => toStoredRef(weaponMeta.get(pathStr) || null))
         .filter(Boolean),
-      dancingTrait: hasDancingCandidates ? (danceTraitSel.value || '') : '',
-      dancingWeapon: hasDancingCandidates ? danceWeaponRef : null
+      dancingTrait: '',
+      dancingWeapon: null,
+      separateWeapons
     };
   };
   const applySetupToUi = (setup) => {
     const armorPath = Array.isArray(setup?.armor?.path) ? setup.armor.path.join('.') : '';
-    const dancingWeaponPath = Array.isArray(setup?.dancingWeapon?.path) ? setup.dancingWeapon.path.join('.') : '';
     const weaponPathSet = new Set(
       (setup?.weapons || [])
         .map(item => Array.isArray(item?.path) ? item.path.join('.') : '')
@@ -3872,8 +3926,14 @@ function openDefenseCalcPopup() {
     getWeaponCheckboxes().forEach(ch => {
       ch.checked = weaponPathSet.has(ch.dataset.path || '');
     });
-    danceTraitSel.value = setup?.dancingTrait || '';
-    danceWeaponSel.value = dancingWeaponPath;
+    const setupSepWeapons = setup?.separateWeapons || {};
+    separateWeaponCheckboxes.forEach(({ els }, sourceEntryId) => {
+      const refs = setupSepWeapons[sourceEntryId];
+      const refArray = Array.isArray(refs) ? refs : (refs ? [refs] : []);
+      const pathSet = new Set(refArray.map(ref => Array.isArray(ref?.path) ? ref.path.join('.') : '').filter(Boolean));
+      els.forEach(ch => { ch.checked = pathSet.has(ch.dataset.path || ''); });
+      syncSeparateRuleUi(sourceEntryId);
+    });
     syncWeaponSelectionUi();
   };
   const updateSummaryUi = (preferredPath = '') => {
@@ -3906,15 +3966,17 @@ function openDefenseCalcPopup() {
         : 'Inga vapen eller sköldar valda';
     }
     if (dancingSummaryEl) {
-      if (!hasDancingCandidates) {
+      if (!hasSeparateWithWeapons) {
         dancingSummaryEl.hidden = true;
         dancingSummaryEl.textContent = '';
       } else {
         dancingSummaryEl.hidden = false;
-        const dancingValue = Number(preview?.dancingValue);
-        dancingSummaryEl.textContent = Number.isFinite(dancingValue)
-          ? `Dansande vapen • Försvar ${dancingValue} • ${getSelectLabel(danceWeaponSel, 'Inget vapen')}`
-          : `Dansande försvar • ${getSelectLabel(danceTraitSel, 'Automatiskt')} • ${getSelectLabel(danceWeaponSel, 'Inget vapen')}`;
+        const separateEntries = preview?.separateEntries || [];
+        const lines = separateEntries
+          .filter(d => d.source === 'separate')
+          .map(d => `${d.name || 'Alternativt försvar'} • Försvar ${d.value}`)
+          .join(' | ');
+        dancingSummaryEl.textContent = lines || 'Alternativt försvar';
       }
     }
     return currentSetup;
@@ -3925,14 +3987,65 @@ function openDefenseCalcPopup() {
       updateSummaryUi(ch.dataset.path || '');
     });
   });
-  const weaponOptions = ['<option value="">Inget vapen</option>'].concat(
-    [...weaponMeta.entries()].map(([pathStr, meta]) => {
-      const label = escapeText(meta.name || meta.id || pathStr || 'Vapen');
-      return `<option value="${escapeAttrLocal(pathStr)}">${label}</option>`;
-    })
-  ).join('');
-  danceWeaponSel.innerHTML = weaponOptions;
-  setDancingVisibility(hasDancingCandidates);
+  // Build per-rule checkbox lists for separate defense forms that allow weapon selection
+  // separateWeaponCheckboxes: Map<sourceEntryId, { els: HTMLInputElement[], maxCount: number }>
+  const separateWeaponCheckboxes = new Map();
+  const syncSeparateRuleUi = (sourceEntryId) => {
+    const entry = separateWeaponCheckboxes.get(sourceEntryId);
+    if (!entry) return;
+    const { els, maxCount } = entry;
+    const checked = els.filter(ch => ch.checked);
+    if (checked.length > maxCount) {
+      checked.slice(0, checked.length - maxCount).forEach(ch => { ch.checked = false; });
+    }
+    const atLimit = els.filter(ch => ch.checked).length >= maxCount;
+    els.forEach(ch => {
+      const disable = !ch.checked && atLimit;
+      ch.disabled = disable;
+      const item = ch.closest('.defense-item');
+      if (item) {
+        item.classList.toggle('is-selected', ch.checked);
+        item.classList.toggle('is-disabled', disable);
+      }
+    });
+  };
+  if (separateSelectorsEl) {
+    separateSelectorsEl.innerHTML = separateRulesWithWeapons.map(rule => {
+      const tl = rule.tillat || {};
+      const maxWeapons = Math.max(1, Number(tl.antal_vapen || 1));
+      const lbl = escapeText(rule.sourceEntryName || 'Alternativt försvar');
+      const itemsHtml = [...weaponMeta.entries()]
+        .filter(([, meta]) => !((meta.types || []).includes('Sköld')) || Boolean(tl.sköld))
+        .map(([pathStr, meta]) => {
+          const isShield = (meta.types || []).includes('Sköld');
+          const qualities = meta.qualities || [];
+          const chips = [];
+          if (qualities.some(isBalancedQuality)) chips.push('<span class="defense-chip balanced">Balanserat</span>');
+          if (qualities.includes('L\u00e5ngt')) chips.push('<span class="defense-chip long">Långt</span>');
+          if (isShield) chips.push('<span class="defense-chip shield">Sköld</span>');
+          const metaHtml = chips.length ? `<span class="defense-item-meta">${chips.join('')}</span>` : '';
+          return `<label class="price-item defense-item"><span class="defense-item-copy"><span class="defense-item-name">${escapeText(meta.name || pathStr)}</span>${metaHtml}</span><input type="checkbox" data-path="${escapeAttrLocal(pathStr)}" data-rule-source="${escapeAttrLocal(rule.sourceEntryId)}"></label>`;
+        }).join('');
+      const emptyHtml = itemsHtml ? '' : '<p class="defense-calc-empty">Inga vapen i inventariet</p>';
+      return `<div class="defense-calc-field" data-source-entry-id="${escapeAttrLocal(rule.sourceEntryId)}" data-max-weapons="${maxWeapons}"><label>${lbl}</label><div class="defense-item-list">${itemsHtml}${emptyHtml}</div></div>`;
+    }).join('');
+    separateRulesWithWeapons.forEach(rule => {
+      const tl = rule.tillat || {};
+      const maxCount = Math.max(1, Number(tl.antal_vapen || 1));
+      const container = separateSelectorsEl.querySelector(`[data-source-entry-id="${escapeAttrLocal(rule.sourceEntryId)}"]`);
+      const els = container ? [...container.querySelectorAll('input[type="checkbox"][data-path]')] : [];
+      separateWeaponCheckboxes.set(rule.sourceEntryId, { els, maxCount });
+    });
+  }
+  // Set initial values from stored separateWeapons
+  separateWeaponCheckboxes.forEach(({ els, maxCount }, sourceEntryId) => {
+    const storedRefs = initialSeparateWeapons[sourceEntryId];
+    const refArray = Array.isArray(storedRefs) ? storedRefs : (storedRefs ? [storedRefs] : []);
+    const pathSet = new Set(refArray.map(ref => Array.isArray(ref?.path) ? ref.path.join('.') : '').filter(Boolean));
+    els.forEach(ch => { ch.checked = pathSet.has(ch.dataset.path || ''); });
+    syncSeparateRuleUi(sourceEntryId);
+  });
+  setSeparateVisibility(hasSeparateWithWeapons);
   const onTraitChange = () => {
     manualModeEnabled = true;
     updateSummaryUi();
@@ -3941,24 +4054,23 @@ function openDefenseCalcPopup() {
     manualModeEnabled = true;
     updateSummaryUi();
   };
-  const onDanceTraitChange = () => {
+  const onSeparateWeaponChange = (e) => {
+    const sourceId = e.target?.dataset?.ruleSource;
+    if (sourceId) syncSeparateRuleUi(sourceId);
     manualModeEnabled = true;
     updateSummaryUi();
   };
-  const onDanceWeaponChange = () => {
-    manualModeEnabled = true;
-    updateSummaryUi();
-  };
+  separateWeaponCheckboxes.forEach(({ els }) => {
+    els.forEach(ch => ch.addEventListener('change', onSeparateWeaponChange));
+  });
   traitSel.addEventListener('change', onTraitChange);
   armorSel.addEventListener('change', onArmorChange);
-  danceTraitSel.addEventListener('change', onDanceTraitChange);
-  danceWeaponSel.addEventListener('change', onDanceWeaponChange);
   applySetupToUi({
     trait: selectedTrait,
     armor: selectedArmorPath ? { path: selectedArmorPath.split('.').map(Number).filter(Number.isInteger) } : null,
     weapons: [...selectedWeaponPaths].map(pathStr => ({ path: pathStr.split('.').map(Number).filter(Number.isInteger) })),
-    dancingTrait: selectedDanceTrait,
-    dancingWeapon: selectedDanceWeaponPath ? { path: selectedDanceWeaponPath.split('.').map(Number).filter(Number.isInteger) } : null
+    dancingTrait: '',
+    dancingWeapon: null
   });
   updateSummaryUi();
   if (emptyMsg) {
@@ -3981,8 +4093,9 @@ function openDefenseCalcPopup() {
     inner.removeEventListener('keydown', onKey);
     traitSel.removeEventListener('change', onTraitChange);
     armorSel.removeEventListener('change', onArmorChange);
-    danceTraitSel.removeEventListener('change', onDanceTraitChange);
-    danceWeaponSel.removeEventListener('change', onDanceWeaponChange);
+    separateWeaponCheckboxes.forEach(({ els }) => {
+      els.forEach(ch => ch.removeEventListener('change', onSeparateWeaponChange));
+    });
   };
 
   const close = () => {
@@ -4001,7 +4114,7 @@ function openDefenseCalcPopup() {
     const currentSetup = buildCurrentSetup();
     if (!manualModeEnabled) {
       if (typeof storeHelper.setDefenseSetup === 'function') {
-        storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
+        storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
       }
       if (typeof storeHelper.setDefenseTrait === 'function') {
         storeHelper.setDefenseTrait(store, '');
@@ -4015,8 +4128,9 @@ function openDefenseCalcPopup() {
       trait: currentSetup.trait || '',
       armor: currentSetup.armor,
       weapons: currentSetup.weapons,
-      dancingTrait: currentSetup.dancingTrait || '',
-      dancingWeapon: currentSetup.dancingWeapon
+      dancingTrait: '',
+      dancingWeapon: null,
+      separateWeapons: currentSetup.separateWeapons || {}
     };
     if (typeof storeHelper.setDefenseSetup === 'function') {
       storeHelper.setDefenseSetup(store, nextSetup);
