@@ -78,7 +78,7 @@ Använd detta som första uppslag när du authorar.
 | Lägga krock | `...krockar[]` | Samma path-mönster (typ/entry/nivå). |
 | Lägga ändring av värde | `...andrar[]` | Samma path-mönster (typ/entry/nivå). |
 | Lägga grant av post/föremål/pengar | `...ger[]` | Samma path-mönster (typ/entry/nivå). |
-| Lägga val-regler | `...val[]` | Strukturellt stödd, ingen särskild runtime-logik idag. |
+| Lägga val-regler | `...val[]` | Driver enhetliga val-popups via `getEntryChoiceRule` + `resolveChoiceOptions`. |
 
 `<regelblock>` är en av:
 - `andrar`
@@ -481,9 +481,23 @@ Typiska fält:
 
 ### 5.2 `kraver`
 Typiska fält:
+- `namn` (krävd post via namn)
 - `nar` (kravlogik, ofta `har_namn`/`nagon_av_namn`/antalbegränsning)
+- `nivå_minst` / `niva_minst` (global miniminivå för alla namn i `namn`)
+- `namn_nivå_minst` / `namn_niva_minst` (per-entry nivåkrav, objekt eller array av objekt)
+- `nar.har_namn_niva_minst` (nivåkrav i `nar`-grammatiken; objekt eller array)
+- `else` / `annars` / `on_fail` (effekter när kravet inte uppfylls)
+- `om_uppfyllt` / `vid_uppfyllt` / `on_pass` (effekter när kravet uppfylls)
 - `varde` (felkod)
 - `meddelande`/`message` (valfritt UX-meddelande)
+
+Kravformel för nivåkrav:
+- `kraver: [{ "namn": ["<Entry>"], "nivå_minst": "<Nivå>" }]` betyder `<Entry> >= <Nivå>`.
+
+Outcome-block (`else`/`om_uppfyllt`) kan innehålla:
+- samtliga regelnycklar (`andrar`, `kraver`, `krockar`, `ger`, `val`)
+- pris/erf-multiplikatorer (`pengar_multiplikator`/`money_multiplier`, `erf_multiplikator`/`xp_multiplier`)
+- om flera krav ger multiplikator samtidigt används högsta värdet per typ (pengar/erf)
 
 ### 5.3 `krockar`
 Typiska fält:
@@ -507,8 +521,38 @@ För `mal: "post"` finns extra fält:
 - `erf`, `xp`, `erf_per_niva` m.fl.
 
 ### 5.5 `val`
-- Nyckeln stöds strukturellt (`RULE_KEYS`) och kan hämtas via `getRuleList`.
-- `rules-helper` har i nuläget ingen speciallogik för att processa `val` utöver generell läsning/merge.
+`val` används för enhetliga single-choice-popups i list- och inventarieflöden.
+
+#### Fält
+- `field` (obligatorisk): `trait | race | form | artifactEffect`
+- `title`, `subtitle`, `search` (popup-UI)
+- `options` (statiska val)
+  - stöder strängar eller objekt (`value`, `label`, `search`, `disabled`, `disabledReason`)
+- `source` (dynamiska val från DB)
+  - initialt stöds `typ`-filtrering
+  - valfria nycklar: `value_field`, `label_field`, `sort`, `nar`
+- `nar` (när regeln är aktiv), utvärderas med samma `evaluateNar`-grammatik
+- `duplicate_policy`: `allow | reject | confirm | replace_existing`
+- `exclude_used` (filtrera bort redan använda värden)
+- `duplicate_message` (valfri bekräftelsetext vid `confirm`)
+
+#### Runtime-semantik
+- `getEntryChoiceRule(entry, context)`:
+  - läser primärt `val` efter normal typ/entry/nivå-merge
+  - returnerar första aktiva regel (inkl. `nar`-kontroll)
+- `resolveChoiceOptions(rule, context)`:
+  - löser `source` + `options`
+  - deduplicerar på `value`
+  - tillämpar `exclude_used` (med undantag för `currentValue`)
+  - markerar använda val som disabled när policy är `reject`
+- `getLegacyChoiceRule(entry, context)`:
+  - fallback för äldre `bound`/`traits` och tidigare hårdkodade flöden
+  - täcker bl.a. `Monsterlärd`, `Exceptionellt karaktärsdrag`, `Blodsband`, `Djurmask`, bound kraft/ritual, Hamnskifte-grants och artefaktbetalning
+
+#### Vanlig context
+- `list`, `entry`, `sourceEntry`, `level`, `sourceLevel`
+- `row` (inventarierad)
+- `usedValues`, `currentValue`
 
 ## 6. `satt` och `ersatt`
 
@@ -529,6 +573,7 @@ Flera helpers letar uttryckligen efter `satt: "ersatt"` när de bygger alternati
 
 ### 7.1 Listvillkor (`context.list`)
 - `har_namn`
+- `har_namn_niva_minst`
 - `saknar_namn`
 - `nagon_av_namn`
 - `antal_namn_max`
@@ -610,6 +655,39 @@ Exempel:
       "nar": { "nagon_av_namn": ["Robust", "Troll"] },
       "varde": "requires_robust_or_troll",
       "meddelande": "Kräver Robust eller Troll."
+    }
+  ]
+}
+```
+
+Exempel (miniminivå på specifik post):
+
+```json
+{
+  "kraver": [
+    {
+      "namn": ["Häxkonster"],
+      "nivå_minst": "Gesäll"
+    },
+    {
+      "namn": ["Blodvadare"]
+    }
+  ]
+}
+```
+
+Exempel (`else` för pris/erf om krav saknas):
+
+```json
+{
+  "kraver": [
+    {
+      "namn": ["Häxkonster"],
+      "nivå_minst": "Gesäll",
+      "else": {
+        "pengar_multiplikator": 10,
+        "erf_multiplikator": 10
+      }
     }
   ]
 }
@@ -839,12 +917,17 @@ Stöd finns för:
 - `getTypeRules`
 - `getEntryRules`
 - `getRuleList`
+- `getEntryChoiceRule`
+- `resolveChoiceOptions`
+- `getLegacyChoiceRule`
 - `getListRules`
 - `hasRules`
 
 ### 18.3 Villkor, krav, krock
 - `evaluateNar`
+- `hasEntryAtLeastLevel`
 - `getMissingRequirementReasonsForCandidate`
+- `getRequirementEffectsForCandidate`
 - `getRequirementDependents`
 - `getConflictReasonsForCandidate`
 - `getConflictResolutionForCandidate`

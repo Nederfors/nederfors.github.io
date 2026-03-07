@@ -122,7 +122,25 @@
           "Fördel"
         ],
         "ark_trad": [],
-        "test": []
+        "test": [],
+        "regler": {
+          "val": [
+            {
+              "field": "race",
+              "title": "Välj ras",
+              "subtitle": "Välj en ras för Blodsband.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Ras"
+                ],
+                "sort": "alpha"
+              },
+              "exclude_used": true,
+              "duplicate_policy": "reject"
+            }
+          ]
+        }
       },
       "effekt": "Kan använda erfarenhet för att köpa ett valt släktes särdrag."
     },

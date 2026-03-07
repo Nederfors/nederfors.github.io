@@ -1,11 +1,6 @@
 {
   "typ_regler": {
-    "Lägre Artefakt": {},
-    "Vapen": {},
-    "Artefakt": {},
-    "Specialverktyg": {},
-    "Rustning": {},
-    "Lätt Rustning": {}
+    "Lägre artefakt": {}
   },
   "entries": [
     {
@@ -20,7 +15,47 @@
         },
         "ark_trad": [
           "Ordensmagiker"
-        ]
+        ],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj formel",
+              "subtitle": "Välj vilken formel som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Mystisk kraft"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ],
+          "kraver": [
+            {
+              "namn": [
+                "Ordensmagiker"
+              ],
+              "meddelande": "Krav: Ordensmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Novis",
+              "meddelande": "Krav: Ordensmagi >= Novis",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Novis": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novisnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst novisnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
@@ -90,7 +125,32 @@
         ],
         "ark_trad": [
           "Ordensmagiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Ordensmagiker"
+              ],
+              "meddelande": "Krav: Ordensmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Novis",
+              "meddelande": "Krav: Ordensmagi >= Novis",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Novis": "Ordo Magicas medaljonger delas ut till noviser och följer sedan med mystikern genom karriären inom orden. När mystikern uppnår en adepts status ändras symbolen till den nya nivån, och detsamma händer när mästarnivån nås. Vissa ordenskapitel har gjort medaljongen obligatorisk och har också knutit andra funktioner till den, så som vilka dörrar bäraren kan öppna eller en förutbestämd nivå som krävs för att aktivera kapitlets Magiska cirkel."
@@ -114,7 +174,32 @@
         ],
         "ark_trad": [
           "Teurg"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Teurg"
+              ],
+              "meddelande": "Krav: Teurg",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Teurgi"
+              ],
+              "nivå_minst": "Novis",
+              "meddelande": "Krav: Teurgi >= Novis",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Novis": "I en värld full av smittor och gifter är det inte underligt att många metoder – verkningsfulla eller endast skrockfulla – mot sådana fenomen har utvecklats. De teurgiska själavårdarna bär kraftfulla pestmasker som skydd mot smitta och gift. Bäraren av pestmasken får använda sitt Viljestark för att motstå sjukdomar och gifter, istället för Stark."
@@ -139,7 +224,24 @@
         "inventory": {
           "stackbar": true
         },
-        "ark_trad": []
+        "ark_trad": [],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj ritual",
+              "subtitle": "Välj vilken ritual som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Ritual"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ]
+        }
       },
       "nivåer": {
         "Novis": "En ritual nedtecknas i en kodex på ett sådant sätt att en annan ritualist kan använda den, trots att de inte behärskar ritualen. Kodexen förbrukas när ritualen används."
@@ -187,7 +289,32 @@
         ],
         "ark_trad": [
           "Grönvävare"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Grönvävare"
+              ],
+              "meddelande": "Krav: Grönvävare",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Häxkonster"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Häxkonster >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Grönvävande häxor täcker ofta sitt anlete med en mask av bark, som en symbol för en önskan att gå upp i det växande. Många av dessa masker hyser kraft och ger då ett omslag per scen för slag rörande krafter som omfattar växter och det växande, exempelvis Törnemantel eller Örtrankor. Det kan röra slag för att använda sådana krafter eller för att motstå effekten av sådana krafter."
@@ -228,6 +355,44 @@
                 ]
               }
             }
+          ],
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj karaktärsdrag",
+              "subtitle": "Välj vilket karaktärsdrag som ska få +1.",
+              "options": [
+                "Diskret",
+                "Kvick",
+                "Listig",
+                "Stark",
+                "Vaksam"
+              ],
+              "duplicate_policy": "confirm"
+            }
+          ],
+          "kraver": [
+            {
+              "namn": [
+                "Blodvadare"
+              ],
+              "meddelande": "Krav: Blodvadare",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Häxkonster"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Häxkonster >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
           ]
         }
       },
@@ -260,7 +425,32 @@
         ],
         "ark_trad": [
           "Nekromantiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Nekromantiker"
+              ],
+              "meddelande": "Krav: Nekromantiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Svartkonst"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Svartkonst >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Nekromantikers strävan efter att dominera döden har lett till bärandet av hiskeliga dödsmasker, fyllda med kraft. Dödsmasken ger +1 på alla slag för krafter och ritualer som påverkar döden, eller motstår döden; exempelvis kraften Vandråp och ritualen Väcka vandöd."
@@ -287,7 +477,47 @@
         },
         "ark_trad": [
           "Ordensmagiker"
-        ]
+        ],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj formel",
+              "subtitle": "Välj vilken formel som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Mystisk kraft"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ],
+          "kraver": [
+            {
+              "namn": [
+                "Ordensmagiker"
+              ],
+              "meddelande": "Krav: Ordensmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på gesällnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst gesällnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
@@ -314,7 +544,24 @@
         "inventory": {
           "stackbar": true
         },
-        "ark_trad": []
+        "ark_trad": [],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj formel",
+              "subtitle": "Välj vilken formel som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Mystisk kraft"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Artefaktmakaren har bundit en mystisk kraft på gesällnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
@@ -341,7 +588,24 @@
         "inventory": {
           "stackbar": true
         },
-        "ark_trad": []
+        "ark_trad": [],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj formel",
+              "subtitle": "Välj vilken formel som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Mystisk kraft"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ]
+        }
       },
       "nivåer": {
         "Novis": "Artefaktmakaren har bundit en mystisk kraft på novisnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
@@ -367,7 +631,32 @@
         ],
         "ark_trad": [
           "Pyromantiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Pyromantiker"
+              ],
+              "meddelande": "Krav: Pyromantiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Pyromantikernas krafter eldas på av denna glödande bärnsten. Gniststenen är en svagare släkting till de omtalade eldstenar som forntida mästerglödgare kunde skapa av frammanade eldandar. Nutida pyromantiker får nöja sig med lägre artefakter som gniststenar, vilka förvisso inte är illa för den vars krafter väsentligen handlar om elden och det brinnande. Mystiska krafter med eldeffekter får +1 på effekttärningen när de skapas av en mystiker med en gniststen i sin hand eller på toppen av sin stav."
@@ -391,7 +680,32 @@
         ],
         "ark_trad": [
           "Häxa"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Häxa"
+              ],
+              "meddelande": "Krav: Häxa",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Häxkonster"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Häxkonster >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "En fläta av tre sorters hår eller päls håller döden på avstånd. Häxflätan ger +1 på Stark vid Dödsslag. Spelledarpersoner som bär flätan slår också för Dödsslag, då med +1."
@@ -415,7 +729,32 @@
         ],
         "ark_trad": [
           "Mentalist"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Mentalist"
+              ],
+              "meddelande": "Krav: Mentalist",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Framstående viljevändare bland ordensmagikerna bär ofta en ring i guld på fingret, handleden, överarmen eller på hjässan som ett pannband. För dem är detta ett tecken på härskarens ädla strävan. Mången gång är dessa också gjutna med viljan att dominera allt levande, för det allmänna godas skull. Dessa guldringar ger +1 på alla slag för ordensmagins mystiska krafter och ritualer som böjer målets vilja, samt motståndet mot dem; specifikt Bända vilja och Telepatiskt förhör."
@@ -439,7 +778,32 @@
         ],
         "ark_trad": [
           "Demonolog"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Demonolog"
+              ],
+              "meddelande": "Krav: Demonolog",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Demonologer bär ofta kronor av rostigt järn vid brytandet i tillvarons murar. Dessa järnkronor ger +1 på slag för att manipulera världens ramar, som de mystiska krafterna Förvisning och Teleportering samt ritualen Frammana daemon."
@@ -529,7 +893,32 @@
         ],
         "ark_trad": [
           "Teurg"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Teurg"
+              ],
+              "meddelande": "Krav: Teurg",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Teurgi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Teurgi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Teurgernas solmasker skänker andlig värme till de själskalla och sprider ljus dit där inget annat ljus når in. Buren av en teurg kan de dessutom assistera i fördrivandet och bekämpandet av odöda och styggelser. Masken skänker ljus kring bäraren som om denne bar på en fackla, samt att krafter med helig eller fördrivande effekt får +1 på sin effekttärning."
@@ -553,7 +942,32 @@
         ],
         "ark_trad": [
           "Stavmagiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Stavmagiker"
+              ],
+              "meddelande": "Krav: Stavmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Stavmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Stavmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Stavmagikerns stav kan få extra kraft i kast och stöt med hjälp av en stavfot, smidd under kastandet av härdande besvärjelser. Stavfoten fästs på en stav och ger +1 på effekttärningen för angrepp med staven som vapen, samt på alla krafter som direkt använder staven som vapen. Även om stavfoten vanligen sitter på en runstav så kan den också fästas på vanliga trästavar och har då samma effekt."
@@ -577,7 +991,32 @@
         ],
         "ark_trad": [
           "Stavmagiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Stavmagiker"
+              ],
+              "meddelande": "Krav: Stavmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Stavmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Stavmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Stavmagikern kan dra extra fokus ur ett stavhuvud fäst på sin runstav. Stavhuvudet – inte sällan i formen av en vacker sten infattad i meteoritjärn – ger +1 på slag för att lyckas med krafter som inte direkt innefattar staven som vapen: Blodsregn, Sfär och de av symbolismens krafter vilka ingår i stavmagin."
@@ -601,7 +1040,32 @@
         ],
         "ark_trad": [
           "Andebesvärjare"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Andebesvärjare"
+              ],
+              "meddelande": "Krav: Andebesvärjare",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Häxkonster"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Häxkonster >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Häxornas andebesvärjare bär ofta en ansiktsduk eller del av en liksvepning under sitt samröre med de dödas andar, då detta skänker andarna lugn och ger andebesvärjaren närmare kontakt med dem. Mystikern som bär svepduken får +1 på alla slag mot Viljestark som rör hanteringen av andar, vare sig det gäller kontrollen över dem (som kraften Andeplåga) eller motståndskraft mot dem (dvs. mot monstruösa särdrag från andar som angriper Viljestark)."
@@ -625,7 +1089,32 @@
         ],
         "ark_trad": [
           "Illusionist"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Illusionist"
+              ],
+              "meddelande": "Krav: Illusionist",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Ordo Magicas illusionister använder ofta en prisma för att beskriva hur uppfattningen av världen kan brytas ned och förstås. Vissa av dessa kristaller är fyllda med sådan mängd tankeväckande energi att de ger bäraren +1 på alla slag för krafter som skapar illusioner."
@@ -675,7 +1164,47 @@
         },
         "ark_trad": [
           "Ordensmagiker"
-        ]
+        ],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj formel",
+              "subtitle": "Välj vilken formel som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Mystisk kraft"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ],
+          "kraver": [
+            {
+              "namn": [
+                "Ordensmagiker"
+              ],
+              "meddelande": "Krav: Ordensmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Mästare",
+              "meddelande": "Krav: Ordensmagi >= Mästare",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Mästare": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på mästarnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst mästarnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
@@ -702,7 +1231,24 @@
         "inventory": {
           "stackbar": true
         },
-        "ark_trad": []
+        "ark_trad": [],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj formel",
+              "subtitle": "Välj vilken formel som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Mystisk kraft"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ]
+        }
       },
       "nivåer": {
         "Mästare": "Artefaktmakaren har bundit en mystisk kraft på mästarnivå i ett sigill, som när det bryts av någon utlöser kraften. Den som bryter sigillet drabbas av temporär korruption som vanligt. Sigillet kan bara brytas en gång, sedan är det förbrukat."
@@ -752,7 +1298,24 @@
         "inventory": {
           "stackbar": true
         },
-        "ark_trad": []
+        "ark_trad": [],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj ritual",
+              "subtitle": "Välj vilken ritual som ska bindas.",
+              "search": true,
+              "source": {
+                "typ": [
+                  "Ritual"
+                ],
+                "sort": "alpha"
+              },
+              "duplicate_policy": "confirm"
+            }
+          ]
+        }
       },
       "nivåer": {
         "Mästare": "Artefaktmakaren binder en ritual i ett sigill, som när det bryts utlöser ritualens effekt. Skaparen av sigillet måste inte själv behärska ritualen men behöver någon med sig som kan ritualen vid skapandet av sigillet, eller ha tillgång till en ritualkodex med ritualen (kodexen förstörs då när sigillet skapas). Den som bryter sigillet drabbas av temporär korruption som vanligt."
@@ -783,7 +1346,32 @@
         "kvalitet": [
           "Balanserat",
           "Långt"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Stavmagiker"
+              ],
+              "meddelande": "Krav: Stavmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Stavmagi"
+              ],
+              "nivå_minst": "Mästare",
+              "meddelande": "Krav: Stavmagi >= Mästare",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Mästare": "Stavmagikernas signum är den personliga runstaven, etsad med elementens runor. Staven avger i ägarens hand en skyddande aura, skydd 1t4, samt utgör också i övrigt grunden för mystikerns krafter."
@@ -830,7 +1418,32 @@
         ],
         "ark_trad": [
           "Svartkonstnär"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Svartkonstnär"
+              ],
+              "meddelande": "Krav: Svartkonstnär",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Svartkonst"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Svartkonst >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Små, blodröda fragment som påträffats i Davokars randzoner och smusslats genom Tistla Fäste trots påbud. Skärvan pulserar svagt när bäraren blöder. När bäraren tar skada kan skärvan ”matas” av såret: ta 1T4 temporär Korruption för att återfå lika mycket Tålighet. Effekten kan användas varje gång bäraren tar skada. "
@@ -854,7 +1467,32 @@
         ],
         "ark_trad": [
           "Mentalist"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Mentalist"
+              ],
+              "meddelande": "Krav: Mentalist",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Ett flätat smycke med ett sprucket glasöga som sägs ha fångat en rubbad sekund. Mentalister använder den för att tvinga ögonblicket att upprepa sig, med risk för stel tid. En gång per scen får bäraren slå om ett helt misslyckat slag. Om det nya resultatet blir över 15 förlorar rollpersonen sin nästa handling då tiden hakar upp sig, ger 1T4 korruption vid användning."
@@ -878,7 +1516,32 @@
         ],
         "ark_trad": [
           "Stavmagiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Stavmagiker"
+              ],
+              "meddelande": "Krav: Stavmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Stavmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Stavmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Ett pryttligt band i meteoritjärn eller ben som fästs runt stavens övre halva, laddat för att kortvarigt förtäta kraftflödet i en runstav. Ornamentet används av stavmagiker som söker ett snabbt dubbelslag av samma kraft. En gång per scen kan en mystisk kraft aktiveras två gånger i följd. Den andra aktiveringen kostar 1T4 extra temporär Korruption."
@@ -902,7 +1565,32 @@
         ],
         "ark_trad": [
           "Pyromantiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Pyromantiker"
+              ],
+              "meddelande": "Krav: Pyromantiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "En fjällig, sotglänsande bit av stelnad låga. Fragmentet dricker av brinnande offer och lämnar bärarens nästa angrepp hetare än förut. Varje fiende som dör av en eldeffekt från bärarens mystiska krafter laddar fragmentet. För varje sådant offer får bäraren +1 på nästa anfall med eld under samma strid."
@@ -970,7 +1658,32 @@
         ],
         "ark_trad": [
           "Teurg"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Teurg"
+              ],
+              "meddelande": "Krav: Teurg",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Teurgi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Teurgi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Rökelsebrännare fyllda med heliga örter placeras ofta i lägereldar inför strid. Den väldoftande röken anses rena sinnet och stärka kroppen. Alla allierade inom en förflyttning från elden får +1 i bepansring varje runda de slåss i dess sken."
@@ -1016,7 +1729,32 @@
         ],
         "ark_trad": [
           "Ordensmagiker"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Ordensmagiker"
+              ],
+              "meddelande": "Krav: Ordensmagiker",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            },
+            {
+              "namn": [
+                "Ordensmagi"
+              ],
+              "nivå_minst": "Gesäll",
+              "meddelande": "Krav: Ordensmagi >= Gesäll",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Ett uråldrigt timglas fyllt med slipat kopparpulver som aldrig tycks ta slut. När glaset vänds som en aktiv handling frigörs gnistrande stoft som angriper en fiende i närheten. Stoftet åsamkar alla fiender inom närstridsområdet 3 elementarskada."
@@ -1263,7 +2001,21 @@
         ],
         "ark_trad": [
           "Ulvahedna"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Ulvahedna"
+              ],
+              "meddelande": "Krav: Ulvahedna",
+              "else": {
+                "pengar_multiplikator": 10,
+                "erf_multiplikator": 10
+              }
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Denna massiva väst är sydd av dubbla lager jakaarhud, förstärkt med grova nitar av svärtat järn och benplattor från bestens bröstkorg. Den tjocka pälsen och de tunga förstärkningarna gör rustningen klumpig att röra sig i, men den erbjuder ett skydd som få andra lätta rustningar kan mäta sig med. Precis som med enklare varianter pulserar särken av en dov värme när bärarens vrede stiger, och de inbundna andarna tycks hårdna till en ogenomtränglig barriär vid strid. I vanliga fall skyddar rustningen 1T4 +1, men när användaren är i aktiv Bärsärkargång så skyddar den 1T6 +1."

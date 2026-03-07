@@ -87,6 +87,15 @@
         "test": [
           "Listig"
         ],
+        "regler": {
+          "andrar": [
+            {
+              "mal": "vikt_faktor",
+              "nar": { "foremal": { "id": ["di12"] } },
+              "varde": 0.5
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",

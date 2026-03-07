@@ -619,6 +619,107 @@
       }
     };
 
+    const normalizeChoiceToken = (value) => String(value ?? '').trim().toLowerCase();
+
+    const isSameChoiceSource = (left, right) => {
+      if (!left || !right) return false;
+      const leftId = left.id === undefined || left.id === null ? '' : String(left.id).trim();
+      const rightId = right.id === undefined || right.id === null ? '' : String(right.id).trim();
+      if (leftId && rightId) return leftId === rightId;
+      const leftName = String(left.namn || left.name || '').trim();
+      const rightName = String(right.namn || right.name || '').trim();
+      return Boolean(leftName && rightName && leftName === rightName);
+    };
+
+    const getChoiceUsedValues = (list, entry, field, excludeEntry = null) => {
+      if (!Array.isArray(list) || !field) return [];
+      return list
+        .filter(item => item && item !== excludeEntry && isSameChoiceSource(item, entry))
+        .map(item => item?.[field])
+        .filter(value => value !== undefined && value !== null && String(value).trim() !== '');
+    };
+
+    async function pickCharacterEntryChoice(entry, list, level, excludeEntry = null, options = {}) {
+      const picker = window.choicePopup;
+      if (!picker || typeof picker.getChoiceRule !== 'function' || typeof picker.pickForEntry !== 'function') {
+        return { hasChoice: false, cancelled: false };
+      }
+
+      const candidate = level && entry?.nivå !== level
+        ? { ...entry, nivå: level }
+        : { ...entry };
+      const context = {
+        list: Array.isArray(list) ? list : [],
+        entry: candidate,
+        sourceEntry: candidate,
+        level: level || candidate?.nivå || '',
+        sourceLevel: level || candidate?.nivå || ''
+      };
+      const rule = picker.getChoiceRule(candidate, context, { fallbackLegacy: true });
+      if (!rule) return { hasChoice: false, cancelled: false };
+
+      const usedValues = getChoiceUsedValues(list, candidate, rule.field, excludeEntry);
+      const currentValue = Object.prototype.hasOwnProperty.call(options || {}, 'currentValue')
+        ? options.currentValue
+        : candidate?.[rule.field];
+      const hasCurrentValue = currentValue !== undefined
+        && currentValue !== null
+        && String(currentValue).trim() !== '';
+      if (options?.promptIfMissingOnly && hasCurrentValue) {
+        return {
+          hasChoice: true,
+          cancelled: false,
+          skippedPrompt: true,
+          rule,
+          value: currentValue,
+          usedValues
+        };
+      }
+      const picked = await picker.pickForEntry({
+        entry: candidate,
+        context,
+        rule,
+        usedValues,
+        currentValue,
+        fallbackLegacy: true
+      });
+      if (!picked?.hasChoice) return { hasChoice: false, cancelled: false };
+      if (picked.cancelled) {
+        return {
+          hasChoice: true,
+          cancelled: true,
+          noOptions: Boolean(picked.noOptions),
+          rule,
+          usedValues
+        };
+      }
+
+      const duplicate = await picker.enforceDuplicatePolicy({
+        rule,
+        value: picked.value,
+        usedValues,
+        label: picked.value
+      });
+      if (!duplicate.ok) {
+        return {
+          hasChoice: true,
+          cancelled: true,
+          duplicateRejected: true,
+          rule,
+          usedValues
+        };
+      }
+
+      return {
+        hasChoice: true,
+        cancelled: false,
+        rule,
+        value: picked.value,
+        usedValues,
+        duplicate
+      };
+    }
+
     function getActiveHandlingKeys(p) {
       const isActiveHandling = (value) => {
         const values = Array.isArray(value) ? value : [value];
@@ -2120,83 +2221,41 @@
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
         ent.nivå = select.value;
-        if (name === 'Monsterlärd') {
-          if (['Gesäll', 'Mästare'].includes(ent.nivå)) {
-            if (!ent.trait && window.monsterLore) {
-              const usedSpecs = list.filter(x => x?.namn === 'Monsterlärd' && x.trait).map(x => x.trait);
-              if (usedSpecs.length >= (Array.isArray(window.monsterLore?.SPECS) ? window.monsterLore.SPECS.length : 4)) {
-                ent.nivå = old;
-                select.value = old;
-                window.entryCardFactory?.syncLevelControl?.(select);
-                await alertPopup('Alla specialiseringar är redan valda.');
-                return;
-              }
-              monsterLore.pickSpec(usedSpecs, async spec => {
-                if (!spec) {
-                  ent.nivå = old;
-                  select.value = old;
-                  window.entryCardFactory?.syncLevelControl?.(select);
-                  return;
-                }
-                ent.trait = spec;
-                const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
-                  ? window.rulesHelper.evaluateEntryStops(ent, before, {
-                    action: 'level-change',
-                    fromLevel: old,
-                    toLevel: ent.nivå,
-                    level: ent.nivå,
-                    beforeList: before,
-                    afterList: list
-                  })
-                  : (() => {
-                    const requirementReasons = (typeof window.rulesHelper?.getMissingRequirementReasonsForCandidate === 'function'
-                      ? window.rulesHelper.getMissingRequirementReasonsForCandidate(ent, before, { level: ent.nivå })
-                      : []);
-                    const conflictRes = (typeof window.rulesHelper?.getConflictResolutionForCandidate === 'function'
-                      ? window.rulesHelper.getConflictResolutionForCandidate(ent, before, { level: ent.nivå })
-                      : { blockingReasons: [], replaceTargetNames: [] });
-                    const blockingConflicts = conflictRes.blockingReasons;
-                    return {
-                      requirementReasons,
-                      blockingConflicts,
-                      replaceTargetNames: conflictRes.replaceTargetNames || [],
-                      grantedLevelStop: null,
-                      hardStops: [],
-                      hasStops: Boolean(requirementReasons.length || blockingConflicts.length)
-                    };
-                  })();
-                const forceRuleOverride = stopResult.hasStops
-                  ? (await confirmRuleStopOverride(name, stopResult, 'level-change'))
-                  : false;
-                if (stopResult.hasStops && !forceRuleOverride) {
-                  ent.nivå = old;
-                  delete ent.trait;
-                  select.value = old;
-                  window.entryCardFactory?.syncLevelControl?.(select);
-                  return;
-                }
-                if (forceRuleOverride) ent.manualRuleOverride = true;
-                if (typeof storeHelper.getEntriesToBeCleanedByGrants === 'function') {
-                  const toClean = storeHelper.getEntriesToBeCleanedByGrants(store, list, before);
-                  if (toClean.length > 0) {
-                    const cleanNames = [...new Set(toClean.map(r => r.entry?.namn).filter(Boolean))].join(', ');
-                    if (await confirmPopup(`Att ändra nivån på "${name}" tar bort automatiskt tillagda förmågor: ${cleanNames}.\nVill du behålla dessa ändå?`)) {
-                      toClean.forEach(r => { if (r.entry) r.entry.manualRuleOverride = true; });
-                    }
-                  }
-                }
-                storeHelper.setCurrentList(store, list); updateXP();
-                renderSkills(filtered()); renderTraits(); updateSearchDatalist();
-              });
-              return;
-            }
-          } else if (ent.trait) {
-            delete ent.trait;
-            storeHelper.setCurrentList(store, list); updateXP();
-            renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+        const levelChoice = await pickCharacterEntryChoice(ent, list, ent.nivå, ent, {
+          promptIfMissingOnly: true
+        });
+        if (levelChoice.hasChoice) {
+          if (levelChoice.cancelled) {
+            ent.nivå = old;
+            select.value = old;
             window.entryCardFactory?.syncLevelControl?.(select);
+            if (levelChoice.noOptions) {
+              await alertPopup(`Inga val kvar för "${name}".`);
+            } else if (levelChoice.duplicateRejected && levelChoice.rule?.duplicate_policy === 'reject') {
+              await alertPopup('Samma val är redan valt.');
+            }
             return;
           }
+          const field = levelChoice.rule?.field;
+          if (field) {
+            ent[field] = levelChoice.value;
+            if (levelChoice.duplicate?.replaceExisting) {
+              const wanted = normalizeChoiceToken(levelChoice.value);
+              for (let i = list.length - 1; i >= 0; i--) {
+                const item = list[i];
+                if (!item || item === ent) continue;
+                if (!isSameChoiceSource(item, ent)) continue;
+                if (normalizeChoiceToken(item?.[field]) !== wanted) continue;
+                list.splice(i, 1);
+              }
+            }
+          }
+        } else if (name === 'Monsterlärd' && ent.trait) {
+          delete ent.trait;
+          storeHelper.setCurrentList(store, list); updateXP();
+          renderSkills(filtered()); renderTraits(); updateSearchDatalist();
+          window.entryCardFactory?.syncLevelControl?.(select);
+          return;
         }
         const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
           ? window.rulesHelper.evaluateEntryStops(ent, before, {

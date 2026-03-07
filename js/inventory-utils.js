@@ -98,6 +98,7 @@
     Object.values(INVENTORY_HUB_DEFS).flatMap(def => Object.keys(def.sectionTabIds))
   ));
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
+  const LOWER_ARTIFACT_PRICE_MULT = 10;
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
     'Släde': '🛷',
@@ -131,6 +132,54 @@
     return source
       .flatMap(v => String(v ?? '').split(',').map(t => t.trim()))
       .filter(Boolean);
+  };
+  const getEntryPrimaryLevelName = (entry) => {
+    if (!entry || typeof entry !== 'object') return '';
+    const ownLevel = typeof entry.niv\u00e5 === 'string' ? entry.niv\u00e5.trim() : '';
+    if (ownLevel) return ownLevel;
+    const levelKeys = Object.keys(entry.niv\u00e5er || {});
+    return levelKeys.find(key => String(key || '').trim()) || '';
+  };
+  const normalizeMultiplierValue = (value, fallback = 1) => {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
+    return numeric;
+  };
+  const formatMultiplierLabel = (value) => {
+    const mult = normalizeMultiplierValue(value, 1);
+    if (Math.abs(mult - Math.round(mult)) < 0.001) return String(Math.round(mult));
+    return mult.toFixed(2).replace(/\.?0+$/, '');
+  };
+  const checkLowerArtifactKraver = (entry, list) => {
+    const entries = Array.isArray(list) ? list : [];
+    const levelName = getEntryPrimaryLevelName(entry);
+    const candidate = levelName
+      ? { ...entry, niv\u00e5: levelName }
+      : { ...entry };
+    const helper = window.rulesHelper;
+    const requirementEffects = (helper && typeof helper.getRequirementEffectsForCandidate === 'function')
+      ? helper.getRequirementEffectsForCandidate(candidate, entries, { level: levelName || candidate.niv\u00e5 || '' })
+      : null;
+    const explicitRequirementReasons = Array.isArray(requirementEffects?.missingReasons)
+      ? requirementEffects.missingReasons
+      : ((helper && typeof helper.getMissingRequirementReasonsForCandidate === 'function')
+        ? helper.getMissingRequirementReasonsForCandidate(candidate, entries, { level: levelName || candidate.niv\u00e5 || '' })
+        : []);
+    const explicitMessages = (helper && typeof helper.formatEntryStopMessages === 'function')
+      ? helper.formatEntryStopMessages(entry?.namn || '', { requirementReasons: explicitRequirementReasons })
+      : [];
+    let moneyMultiplier = normalizeMultiplierValue(requirementEffects?.moneyMultiplier, 1);
+    const erfMultiplier = normalizeMultiplierValue(requirementEffects?.erfMultiplier, 1);
+    if (explicitRequirementReasons.length && Math.abs(moneyMultiplier - 1) < 0.001) {
+      moneyMultiplier = LOWER_ARTIFACT_PRICE_MULT;
+    }
+
+    return {
+      ok: explicitRequirementReasons.length === 0,
+      explicitMessages,
+      moneyMultiplier,
+      erfMultiplier
+    };
   };
   const mapRowQualityArray = (entry, list) => {
     if (!Array.isArray(list)) return list;
@@ -655,6 +704,97 @@
       if (byId) return byId;
     }
     return {};
+  }
+
+  function isSameChoiceSource(left, right) {
+    if (!left || !right) return false;
+    const leftId = left.id === undefined || left.id === null ? '' : String(left.id).trim();
+    const rightId = right.id === undefined || right.id === null ? '' : String(right.id).trim();
+    if (leftId && rightId) return leftId === rightId;
+    const leftName = String(left.namn || left.name || '').trim();
+    const rightName = String(right.namn || right.name || '').trim();
+    return Boolean(leftName && rightName && leftName === rightName);
+  }
+
+  function getInventoryChoiceUsedValues(inv, entry, field, excludeRow = null) {
+    if (!field) return [];
+    return flattenInventory(Array.isArray(inv) ? inv : [])
+      .filter(row => row && row !== excludeRow && isSameChoiceSource(row, entry))
+      .map(row => row?.[field])
+      .filter(value => value !== undefined && value !== null && String(value).trim() !== '');
+  }
+
+  async function pickInventoryEntryChoice(options = {}) {
+    const picker = window.choicePopup;
+    if (!picker || typeof picker.getChoiceRule !== 'function' || typeof picker.pickForEntry !== 'function') {
+      return { hasChoice: false, cancelled: false };
+    }
+
+    const entry = options.entry;
+    if (!entry || typeof entry !== 'object') return { hasChoice: false, cancelled: false };
+    const fieldFilter = String(options.field || '').trim();
+    const list = Array.isArray(options.list) ? options.list : [];
+    const inv = Array.isArray(options.inv) ? options.inv : [];
+    const row = options.row && typeof options.row === 'object' ? options.row : null;
+    const context = {
+      list,
+      inventory: inv,
+      row,
+      entry,
+      sourceEntry: entry,
+      field: fieldFilter,
+      level: typeof options.level === 'string' ? options.level : (entry.nivå || ''),
+      sourceLevel: typeof options.level === 'string' ? options.level : (entry.nivå || '')
+    };
+    const rule = picker.getChoiceRule(entry, context, { fallbackLegacy: true });
+    if (!rule) return { hasChoice: false, cancelled: false };
+
+    const usedValues = Array.isArray(options.usedValues)
+      ? options.usedValues
+      : getInventoryChoiceUsedValues(inv, entry, rule.field, row);
+    const picked = await picker.pickForEntry({
+      entry,
+      context,
+      rule,
+      usedValues,
+      currentValue: options.currentValue,
+      fallbackLegacy: true
+    });
+    if (!picked?.hasChoice) return { hasChoice: false, cancelled: false };
+    if (picked.cancelled) {
+      return {
+        hasChoice: true,
+        cancelled: true,
+        noOptions: Boolean(picked.noOptions),
+        rule,
+        usedValues
+      };
+    }
+
+    const duplicate = await picker.enforceDuplicatePolicy({
+      rule,
+      value: picked.value,
+      usedValues,
+      label: picked.value
+    });
+    if (!duplicate.ok) {
+      return {
+        hasChoice: true,
+        cancelled: true,
+        duplicateRejected: true,
+        rule,
+        usedValues
+      };
+    }
+
+    return {
+      hasChoice: true,
+      cancelled: false,
+      rule,
+      value: picked.value,
+      usedValues,
+      duplicate
+    };
   }
 
   function normalizePositiveInt(value, fallback = 1) {
@@ -1358,12 +1498,12 @@
     const diffO = moneyToO(totalMoney) - totalCostO;
     const unusedMoney = oToMoney(Math.max(0, diffO));
     const moneyWeight = calcMoneyWeight(unusedMoney);
+    const list = storeHelper.getCurrentList(store);
     const usedWeight = allInv.reduce((sum, row) => {
       const entry = getEntry(row.id || row.name);
       const isVehicle = (entry.taggar?.typ || []).includes('Färdmedel');
-      return sum + (isVehicle ? 0 : calcRowWeight(row));
+      return sum + (isVehicle ? 0 : calcRowWeight(row, list));
     }, 0) + moneyWeight;
-    const list = storeHelper.getCurrentList(store);
     const traits = storeHelper.getTraits(store);
     const manualAdjust = storeHelper.getManualAdjustments(store) || {};
     const bonus = window.exceptionSkill ? exceptionSkill.getBonuses(list) : {};
@@ -2426,7 +2566,7 @@
   }
 
   async function editArtifactEntry(entry, opts, onSave) {
-    if (!entry || typeof selectArtifactPayment !== 'function') return false;
+    if (!entry) return false;
     const options = opts && typeof opts === 'object' ? opts : {};
     const trait = options.trait ?? null;
     const inv = storeHelper.getInventory(store);
@@ -2448,10 +2588,21 @@
       const withoutTrait = matches.find(({ row }) => row && !row.trait);
       if (withoutTrait) target = withoutTrait;
     }
-    const current = target.row.artifactEffect || '';
-    const chosen = await selectArtifactPayment(current);
-    if (chosen === null) return true;
-    target.row.artifactEffect = chosen;
+    const choice = await pickInventoryEntryChoice({
+      entry,
+      row: target.row,
+      list: storeHelper.getCurrentList(store),
+      inv,
+      field: 'artifactEffect',
+      currentValue: target.row.artifactEffect || '',
+      usedValues: []
+    });
+    if (choice.hasChoice) {
+      if (choice.cancelled) return true;
+      target.row.artifactEffect = choice.value || '';
+    } else {
+      return true;
+    }
     saveInventory(inv);
     renderInventory();
     if (typeof onSave === 'function') onSave();
@@ -2570,44 +2721,44 @@
     if (!entry) return null;
     const row = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
     const tagTyp = entry.taggar?.typ || [];
-    const explode = typeof window.explodeTags === 'function' ? window.explodeTags : () => [];
     const curList = Array.isArray(list) ? list : storeHelper.getCurrentList(store);
     if (tagTyp.includes('L\u00e4gre Artefakt')) {
-      const reqYrken = explode(entry.taggar?.ark_trad);
-      if (reqYrken.length) {
-        const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-        const skillArt = storeHelper.abilityLevel(curList, 'Artefaktmakande');
-        const artLevel = Math.max(partyArt, skillArt);
-        const lvlName = Object.keys(entry.niv\u00e5er || {}).find(l => l) || '';
-        const itemLevel = LEVEL_IDX[lvlName] || 0;
-        const hasYrke = reqYrken.some(req => curList.some(it => {
-          const nameTags = explode([it.namn]);
-          const isJob = typeof window.isYrke === 'function' ? window.isYrke(it) : false;
-          const isElite = typeof window.isElityrke === 'function' ? window.isElityrke(it) : false;
-          return (isJob || isElite) && nameTags.includes(req);
-        }));
-        let allowPurchase = hasYrke;
-        if (!allowPurchase && artLevel >= itemLevel) {
-          allowPurchase = true;
-        }
-        if (!allowPurchase) {
-          const reqTxt = reqYrken.join(', ');
-          const msg = `Du har inte r\u00e4tt yrke (kr\u00e4ver: ${reqTxt}); om du \u00e4nd\u00e5 vill ha ${entry.namn} blir det 10x dyrare och traditionens f\u00f6ljare kan komma att ta illa vid sig. L\u00e4gg till \u00e4nd\u00e5?`;
-          if (typeof openDialog === 'function') {
-            const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
-            if (!ok) return null;
-          } else {
-            return null;
-          }
-          row.priceMult = 10;
+      const requirementCheck = checkLowerArtifactKraver(entry, curList);
+      const moneyMult = normalizeMultiplierValue(requirementCheck.moneyMultiplier, 1);
+      if (!requirementCheck.ok) {
+        const bullets = [];
+        (Array.isArray(requirementCheck.explicitMessages) ? requirementCheck.explicitMessages : [])
+          .map(msg => String(msg || '').trim())
+          .filter(Boolean)
+          .forEach(msg => bullets.push(`- ${msg}`));
+        if (!bullets.length) bullets.push('- Krav: Förkunskaper saknas');
+        const requirementBlock = bullets.length
+          ? `Krav:\n${bullets.join('\n')}\n\n`
+          : '';
+        const msg = `${entry.namn}: kraven uppfylls inte.\n\n${requirementBlock}Priset \u00e4r f\u00f6rh\u00f6jt (\u00d7${formatMultiplierLabel(moneyMult)}) och ut\u00f6vare av traditionen kan ta illa vid sig.\nL\u00e4gg till \u00e4nd\u00e5?`;
+        if (typeof openDialog === 'function') {
+          const ok = await openDialog(msg, { cancel: true, cancelText: 'Nej!', okText: 'Ja!' });
+          if (!ok) return null;
+        } else {
+          return null;
         }
       }
+      if (Math.abs(moneyMult - 1) > 0.001) row.priceMult = moneyMult;
     }
     if (tagTyp.includes('Artefakt')) {
-      if (typeof selectArtifactPayment === 'function') {
-        const val = await selectArtifactPayment();
-        if (val === null) return null;
-        if (val) row.artifactEffect = val;
+      const choice = await pickInventoryEntryChoice({
+        entry,
+        list: curList,
+        inv: storeHelper.getInventory(store),
+        field: 'artifactEffect',
+        currentValue: entry.artifactEffect || '',
+        usedValues: []
+      });
+      if (choice.hasChoice) {
+        if (choice.cancelled) return null;
+        row.artifactEffect = choice.value || '';
+      } else if (entry.artifactEffect) {
+        row.artifactEffect = entry.artifactEffect;
       }
     } else if (entry.artifactEffect) {
       row.artifactEffect = entry.artifactEffect;
@@ -2641,8 +2792,13 @@
       if (existingRow?.basePrice && src === 'live') {
         return storeHelper.normalizeMoney(existingRow.basePrice);
       }
-      const cost = entry ? calcEntryCost(entry) : { daler: 0, skilling: 0, 'örtegar': 0 };
-      return storeHelper.normalizeMoney(cost);
+      const baseCost = entry ? calcEntryCost(entry) : { daler: 0, skilling: 0, 'örtegar': 0 };
+      const mult = normalizeMultiplierValue(existingRow?.priceMult, 1);
+      if (Math.abs(mult - 1) < 0.001) {
+        return storeHelper.normalizeMoney(baseCost);
+      }
+      const totalO = Math.max(0, moneyToO(baseCost) * mult);
+      return storeHelper.normalizeMoney(oToMoney(totalO));
     };
 
     const fillPriceFields = money => {
@@ -4047,7 +4203,7 @@
     renderInventory();
   }
 
-  function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
+  function calcRowCost(row, forgeLvl, alcLevel, _artLevel) {
     const entry  = getEntry(row.id || row.name);
     const tagger = entry.taggar ?? {};
     const tagTyp = tagger.typ ?? [];
@@ -4093,14 +4249,6 @@
         fallbackBase = dividePrice(fallbackBase, 2);
       }
     }
-    if (tagTyp.includes('L\u00e4gre Artefakt')) {
-      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) {
-        base = dividePrice(base, 2);
-        fallbackBase = dividePrice(fallbackBase, 2);
-      }
-    }
     // Build price chain and track before/after for each quality
     const priceBase = base > 0 ? base : fallbackBase; // ensures qualities still cost after mark-free flows
     let price = priceBase;
@@ -4119,7 +4267,9 @@
       steps.push({ name: q, before, after, negat, neut });
     });
 
-    const mult = row.priceMult || 1;
+    const rowMultRaw = Number(row.priceMult || 1);
+    const rowMult = Number.isFinite(rowMultRaw) && rowMultRaw > 0 ? rowMultRaw : 1;
+    const mult = rowMult;
     const qty = qtyNum || 1;
     const baseOverrideZero = hasBaseOverride && overrideBase === 0;
     const rawFreeBase = Math.min(gratisNum, qty);
@@ -4155,7 +4305,7 @@
     return oToMoney(totalO);
   }
 
-  function calcRowWeight(row) {
+  function calcRowWeight(row, list) {
     const entry  = getEntry(row.id || row.name);
     if (row.typ === 'currency' && row.money) {
       return calcMoneyWeight(storeHelper.normalizeMoney(row.money));
@@ -4172,9 +4322,12 @@
     ]);
     const massCnt = allQuals.filter(q => q === 'Massivt').length;
     const sub = Array.isArray(row.contains)
-      ? row.contains.reduce((s, r) => s + calcRowWeight(r), 0)
+      ? row.contains.reduce((s, r) => s + calcRowWeight(r, list), 0)
       : 0;
-    return (base + massCnt) * row.qty + sub;
+    const wMod = Array.isArray(list) && list.length && window.rulesHelper
+      ? window.rulesHelper.getItemWeightModifiers(list, entry)
+      : { faktor: 1, tillagg: 0 };
+    return ((base + massCnt) * wMod.faktor + wMod.tillagg) * row.qty + sub;
   }
 
   function calcMoneyWeight(money) {
@@ -4197,11 +4350,6 @@
     const skillAlc = storeHelper.abilityLevel(
       storeHelper.getCurrentList(store), 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
-    const partyArt = LEVEL_IDX[storeHelper.getPartyArtefacter(store) || ''] || 0;
-    const skillArt = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Artefaktmakande');
-    const artLevel = Math.max(partyArt, skillArt);
-
     const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
@@ -4223,12 +4371,6 @@
       const req = LEVEL_IDX[lvlName] || 0;
       if (alcLevel >= req) price = dividePrice(price, 2);
     }
-    if (tagTyp.includes('L\u00e4gre Artefakt')) {
-      const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (artLevel >= req) price = dividePrice(price, 2);
-    }
-
     const posBaseQuals = baseQuals.filter(q => !isNegativeQual(q));
     const negBaseQuals = baseQuals.filter(q => isNegativeQual(q));
     posBaseQuals.forEach(q => {
@@ -4325,15 +4467,17 @@
       tagList.push(`<span class="tag free removable" data-free="1">${freeTxt} ✕</span>`);
       infoTagParts.push(`<span class="tag free">${escapeHtml(freeTxt)}</span>`);
     }
-    const priceMult = row.priceMult;
+    const rowPriceMult = Number(row.priceMult || 1);
+    const extraMult = Number.isFinite(rowPriceMult) && rowPriceMult > 0 ? rowPriceMult : 1;
     let priceMultTag = '';
-    if (priceMult && Math.abs(priceMult - 1) > 0.001) {
-      const mTxt = Number.isInteger(priceMult)
-        ? priceMult
-        : priceMult.toFixed(2).replace(/\.?0+$/, '');
-      const safeMult = escapeHtml(String(mTxt));
-      priceMultTag = `<span class="tag price-mult removable" data-mult="1">×${safeMult} ✕</span>`;
-      infoTagParts.push(`<span class="tag price-mult">×${safeMult}</span>`);
+    if (Math.abs(extraMult - 1) > 0.001) {
+      const extraTxt = Number.isInteger(extraMult)
+        ? extraMult
+        : extraMult.toFixed(2).replace(/\.?0+$/, '');
+      const safeExtra = escapeHtml(String(extraTxt));
+      const extraTag = `<span class="tag price-mult removable" data-mult="1">×${safeExtra} ✕</span>`;
+      priceMultTag += extraTag;
+      infoTagParts.push(`<span class="tag price-mult">×${safeExtra}</span>`);
     }
     if (row.basePrice) {
       const basePriceTxt = formatMoney(row.basePrice);
@@ -4557,7 +4701,7 @@
     const usedWeight = allInv.reduce((s, r) => {
       const entry = getEntry(r.id || r.name);
       const isVeh = (entry.taggar?.typ || []).includes('F\u00e4rdmedel');
-      return s + (isVeh ? 0 : calcRowWeight(r));
+      return s + (isVeh ? 0 : calcRowWeight(r, list));
     }, 0) + moneyWeight;
     const traits = storeHelper.getTraits(store);
     const manualAdjust = storeHelper.getManualAdjustments(store) || {};
@@ -4739,7 +4883,7 @@
       const tagTyp = entry.taggar?.typ ?? [];
       const isVehicle = tagTyp.includes('F\u00e4rdmedel');
       const baseWeight = row.vikt ?? entry.vikt ?? entry.stat?.vikt ?? 0;
-      const rowWeight = calcRowWeight(row);
+      const rowWeight = calcRowWeight(row, list);
       const loadWeight = rowWeight - baseWeight * (row.qty || 0);
       const capacity = isVehicle ? (entry.stat?.b\u00e4rkapacitet || 0) : 0;
       const remaining = capacity - loadWeight;
@@ -4957,7 +5101,7 @@
           ? 'Belopp'
           : (cTagTyp.includes('Anställning') ? 'Dagslön' : 'Pris');
         const cPriceDisplay = `${cPriceLabel}: ${cPriceText}`.trim();
-        const cWeightText = formatWeight(calcRowWeight(childRow));
+        const cWeightText = formatWeight(calcRowWeight(childRow, list));
         const cWeightClass = capClassOf(loadWeight, capacity);
         const cKey = `${childRow.id || childRow.name}|${childRow.trait || ''}|${cRowLevel || ''}`;
 
@@ -5490,13 +5634,24 @@
             const tagTyp = entry.taggar?.typ || [];
             let artifactEffect = '';
             if (tagTyp.includes('Artefakt')) {
-              const val = await selectArtifactPayment();
-              if (val === null) return;
-              artifactEffect = val;
+              const artifactChoice = await pickInventoryEntryChoice({
+                entry,
+                row,
+                list: storeHelper.getCurrentList(store),
+                inv,
+                field: 'artifactEffect',
+                currentValue: row?.artifactEffect || '',
+                usedValues: []
+              });
+              if (artifactChoice.hasChoice) {
+                if (artifactChoice.cancelled) return;
+                artifactEffect = artifactChoice.value || '';
+              }
             }
             const addRow = trait => {
               const qtyToAdd = Math.max(1, purchase?.qty || 1);
               const priceMoney = purchase ? purchase.pricePerUnit : null;
+              const inheritedPriceMult = normalizeMultiplierValue(row?.priceMult, 1);
               const applyLiveBase = target => {
                 if (!priceMoney || !target) return;
                 target.basePrice = {
@@ -5506,12 +5661,17 @@
                 };
                 target.basePriceSource = 'live';
               };
+              const applyInheritedMultipliers = target => {
+                if (!target || typeof target !== 'object') return;
+                if (Math.abs(inheritedPriceMult - 1) > 0.001) target.priceMult = inheritedPriceMult;
+              };
               let flashIdx;
               if (indiv) {
                 for (let iAdd = 0; iAdd < qtyToAdd; iAdd++) {
                   const obj = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
                   if (artifactEffect) obj.artifactEffect = artifactEffect;
                   if (trait) obj.trait = trait;
+                  applyInheritedMultipliers(obj);
                   applyLiveBase(obj);
                   parentArr.push(obj);
                   flashIdx = parentArr.length - 1;
@@ -5527,6 +5687,7 @@
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
                 obj.trait = trait;
+                applyInheritedMultipliers(obj);
                 applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
@@ -5535,6 +5696,7 @@
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
                 if (trait) obj.trait = trait;
+                applyInheritedMultipliers(obj);
                 applyLiveBase(obj);
                 parentArr.push(obj);
                 flashIdx = parentArr.length - 1;
@@ -5593,30 +5755,30 @@
                 setTimeout(() => flashEl.classList.remove('inv-flash'), 600);
               }
             };
-            if (['kraft','ritual'].includes(entry.bound) && row?.trait) {
+            if (['kraft', 'ritual'].includes(entry.bound) && row?.trait) {
               addRow(row.trait);
-            } else if (entry.traits && window.maskSkill) {
-              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
-              maskSkill.pickTrait(used, async trait => {
-                if(!trait) return;
-                if (used.includes(trait) && !(await confirmPopup('Samma karakt\u00e4rsdrag finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-                addRow(trait);
-              });
-            } else if (entry.bound === 'kraft' && window.powerPicker) {
-              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
-              powerPicker.pickKraft(used, async val => {
-                if(!val) return;
-                if (used.includes(val) && !isEntryStackable(entry) && !(await confirmPopup('Samma formel finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-                addRow(val);
-              });
-            } else if (entry.bound === 'ritual' && window.powerPicker) {
-              const used = inv.filter(it => it.id === entry.id).map(it=>it.trait).filter(Boolean);
-              powerPicker.pickRitual(used, async val => {
-                if(!val) return;
-                if (used.includes(val) && !isEntryStackable(entry) && !(await confirmPopup('Samma ritual finns redan. L\u00e4gga till \u00e4nd\u00e5?'))) return;
-                addRow(val);
-              });
             } else {
+              const traitChoice = await pickInventoryEntryChoice({
+                entry,
+                row,
+                list: storeHelper.getCurrentList(store),
+                inv,
+                field: 'trait',
+                currentValue: row?.trait || '',
+                usedValues: isEntryStackable(entry) ? [] : undefined
+              });
+              if (traitChoice.hasChoice) {
+                if (traitChoice.cancelled) {
+                  if (traitChoice.noOptions) {
+                    await alertPopup('Inga val kvar för den här posten.');
+                  }
+                  return;
+                }
+                if (traitChoice.rule?.field === 'trait') {
+                  addRow(traitChoice.value);
+                  return;
+                }
+              }
               addRow();
             }
           }
@@ -5773,9 +5935,17 @@
 
       // "toggleEffect" växlar artefaktens effekt
       if (act === 'toggleEffect') {
-        const val = await selectArtifactPayment(row.artifactEffect);
-        if (val === null) return;
-        row.artifactEffect = val;
+        const effectChoice = await pickInventoryEntryChoice({
+          entry,
+          row,
+          list: storeHelper.getCurrentList(store),
+          inv,
+          field: 'artifactEffect',
+          currentValue: row?.artifactEffect || '',
+          usedValues: []
+        });
+        if (!effectChoice.hasChoice || effectChoice.cancelled) return;
+        row.artifactEffect = effectChoice.value || '';
         saveInventory(inv);
         renderInventory();
         return;

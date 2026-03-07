@@ -3914,6 +3914,12 @@ function openDefenseCalcPopup() {
       separateWeapons
     };
   };
+  const refreshUI = () => {
+    if (typeof window.renderTraits === 'function') renderTraits();
+    if (typeof renderSummary === 'function') renderSummary();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    syncDefenseButtons();
+  };
   const applySetupToUi = (setup) => {
     const armorPath = Array.isArray(setup?.armor?.path) ? setup.armor.path.join('.') : '';
     const weaponPathSet = new Set(
@@ -3979,6 +3985,14 @@ function openDefenseCalcPopup() {
         dancingSummaryEl.textContent = lines || 'Alternativt försvar';
       }
     }
+    // Write to store first so renderTraits/refreshSummaryPage read the updated setup.
+    if (typeof storeHelper.setDefenseSetup === 'function') {
+      storeHelper.setDefenseSetup(store, currentSetup);
+    }
+    // Re-render traits and summary from store (store was just updated above).
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
+    syncDefenseButtons();
     return currentSetup;
   };
   getWeaponCheckboxes().forEach(ch => {
@@ -4103,13 +4117,6 @@ function openDefenseCalcPopup() {
     cleanup();
   };
 
-  const refreshUI = () => {
-    if (typeof window.renderTraits === 'function') renderTraits();
-    if (typeof renderSummary === 'function') renderSummary();
-    if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
-    syncDefenseButtons();
-  };
-
   const onApply = () => {
     const currentSetup = buildCurrentSetup();
     if (!manualModeEnabled) {
@@ -4120,7 +4127,7 @@ function openDefenseCalcPopup() {
         storeHelper.setDefenseTrait(store, '');
       }
       refreshUI();
-      updateSummaryUi();
+      close();
       return;
     }
     const nextSetup = {
@@ -4140,15 +4147,28 @@ function openDefenseCalcPopup() {
     }
     refreshUI();
     updateSummaryUi();
+    close();
   };
 
   const onReset = () => {
     manualModeEnabled = false;
     applySetupToUi(autoDefenseSetup);
-    updateSummaryUi();
+    if (typeof storeHelper.setDefenseSetup === 'function') {
+      storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
+    }
+    if (typeof storeHelper.setDefenseTrait === 'function') {
+      storeHelper.setDefenseTrait(store, '');
+    }
+    refreshUI();
+    close();
   };
 
   const onCancel = () => {
+    // Restore the defense setup that was active before the popup opened.
+    if (typeof storeHelper.setDefenseSetup === 'function') {
+      storeHelper.setDefenseSetup(store, defenseSetup || { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
+    }
+    refreshUI();
     close();
   };
 

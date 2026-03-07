@@ -1646,6 +1646,23 @@
               "varde": true
             }
           ],
+          "val": [
+            {
+              "field": "form",
+              "title": "Välj form",
+              "subtitle": "Välj vilken form som ska användas för Hamnskifte.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Humanoid form (vanlig kostnad)"
+                },
+                {
+                  "value": "beast",
+                  "label": "För hamnskifte (gratis upp till novisnivå)"
+                }
+              ]
+            }
+          ],
           "kraver": [
             {
               "nar": {
@@ -1694,6 +1711,23 @@
               "mal": "Hidden",
               "satt": "ersatt",
               "varde": true
+            }
+          ],
+          "val": [
+            {
+              "field": "form",
+              "title": "Välj form",
+              "subtitle": "Välj vilken form som ska användas för Hamnskifte.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Humanoid form (vanlig kostnad)"
+                },
+                {
+                  "value": "beast",
+                  "label": "För hamnskifte (gratis upp till novisnivå)"
+                }
+              ]
             }
           ],
           "kraver": [
@@ -1747,6 +1781,23 @@
               "varde": true
             }
           ],
+          "val": [
+            {
+              "field": "form",
+              "title": "Välj form",
+              "subtitle": "Välj vilken form som ska användas för Hamnskifte.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Humanoid form (vanlig kostnad)"
+                },
+                {
+                  "value": "beast",
+                  "label": "För hamnskifte (gratis upp till novisnivå)"
+                }
+              ]
+            }
+          ],
           "kraver": [
             {
               "nar": {
@@ -1796,6 +1847,23 @@
               "mal": "Hidden",
               "satt": "ersatt",
               "varde": true
+            }
+          ],
+          "val": [
+            {
+              "field": "form",
+              "title": "Välj form",
+              "subtitle": "Välj vilken form som ska användas för Hamnskifte.",
+              "options": [
+                {
+                  "value": "normal",
+                  "label": "Humanoid form (vanlig kostnad)"
+                },
+                {
+                  "value": "beast",
+                  "label": "För hamnskifte (gratis upp till novisnivå)"
+                }
+              ]
             }
           ],
           "kraver": [

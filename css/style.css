@@ -8525,7 +8525,8 @@ textarea.auto-resize {
 #beastPopup.popup.picker-popup,
 #bloodPopup.popup.picker-popup,
 #monsterPopup.popup.picker-popup,
-#artifactPaymentPopup.popup.picker-popup {
+#artifactPaymentPopup.popup.picker-popup,
+#choicePopup.popup.picker-popup {
   align-items: center;
   justify-content: center;
   padding: .75rem;
@@ -8541,7 +8542,8 @@ textarea.auto-resize {
 #beastPopup.popup.picker-popup .popup-inner.picker-popup-ui,
 #bloodPopup.popup.picker-popup .popup-inner.picker-popup-ui,
 #monsterPopup.popup.picker-popup .popup-inner.picker-popup-ui,
-#artifactPaymentPopup.popup.picker-popup .popup-inner.picker-popup-ui {
+#artifactPaymentPopup.popup.picker-popup .popup-inner.picker-popup-ui,
+#choicePopup.popup.picker-popup .popup-inner.picker-popup-ui {
   width: min(94vw, 560px);
   max-width: 560px;
   max-height: min(86vh, 760px);
@@ -8570,7 +8572,8 @@ textarea.auto-resize {
 #beastPopup.popup.picker-popup.open .popup-inner.picker-popup-ui,
 #bloodPopup.popup.picker-popup.open .popup-inner.picker-popup-ui,
 #monsterPopup.popup.picker-popup.open .popup-inner.picker-popup-ui,
-#artifactPaymentPopup.popup.picker-popup.open .popup-inner.picker-popup-ui {
+#artifactPaymentPopup.popup.picker-popup.open .popup-inner.picker-popup-ui,
+#choicePopup.popup.picker-popup.open .popup-inner.picker-popup-ui {
   transform: scale(1) translateY(0);
 }
 

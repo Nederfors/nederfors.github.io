@@ -190,11 +190,12 @@
       "beskrivning": "Tradition: Stavmagi, Trollsång\nMaterial: Ett närstridsvapen\nMystikern låter med viljans hjälp ett vapen sväva och slåss, vilket det gör med tankens snabbhet. Vapnet behöver inte vara speciellt; om vapnet har kvaliteter eller krafter kan dessa användas av mystikern enligt stridens vanliga regler. Mystikern kan inte använda andra förmågor relaterade till närstrid eller vapentyp på ett dansande vapen.",
       "taggar": {
         "typ": [
-          "Mystisk kraft"
+          "Mystisk kraft",
+          "Elityrkesförmåga"
         ],
         "ark_trad": [
           "Stavmagiker",
-          "Trollsångare"
+          "Skald"
         ],
         "test": [
           "Viljestark"
@@ -3015,7 +3016,7 @@
           "Elityrkesförmåga"
         ],
         "ark_trad": [
-          "Trollsångare"
+          "Skald"
         ],
         "test": [
           "Viljestark"

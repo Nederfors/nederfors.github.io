@@ -61,6 +61,7 @@ const URLS_TO_CACHE = [
   'js/bloodbond.js',
   'js/character-generator.js',
   'js/character-view.js',
+  'js/choice-popup.js',
   'js/djurmask.js',
   'js/elite-add.js',
   'js/elite-req.js',

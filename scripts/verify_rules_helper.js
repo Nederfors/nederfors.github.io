@@ -1703,8 +1703,16 @@ function verifyRequirementRules(rootPath) {
     'rulesHelper ska exponera getMissingRequirementReasonsForCandidate'
   );
   assert(
+    typeof sandbox.rulesHelper.hasEntryAtLeastLevel === 'function',
+    'rulesHelper ska exponera hasEntryAtLeastLevel'
+  );
+  assert(
     typeof sandbox.rulesHelper.getRequirementDependents === 'function',
     'rulesHelper ska exponera getRequirementDependents'
+  );
+  assert(
+    typeof sandbox.rulesHelper.getRequirementEffectsForCandidate === 'function',
+    'rulesHelper ska exponera getRequirementEffectsForCandidate'
   );
 
   const missingReasons = sandbox.rulesHelper.getMissingRequirementReasonsForCandidate(
@@ -1800,6 +1808,98 @@ function verifyRequirementRules(rootPath) {
     ),
     ['Sköldteknik'],
     'Generisk kraver-regel ska ge beroende vid borttagning'
+  );
+
+  const customLevelRequirement = {
+    id: 'test-krav-2',
+    namn: 'Traditionsmask',
+    taggar: {
+      typ: ['Lägre Artefakt'],
+      regler: {
+        kraver: [
+          { namn: ['Blodvadare'], else: { pengar_multiplikator: 10, erf_multiplikator: 10 } },
+          { namn: ['Häxkonster'], nivå_minst: 'Gesäll', else: { pengar_multiplikator: 10, erf_multiplikator: 10 } }
+        ]
+      }
+    }
+  };
+  const levelMissingNone = sandbox.rulesHelper.getMissingRequirementReasonsForCandidate(
+    customLevelRequirement,
+    [{ namn: 'Blodvadare' }, { namn: 'Häxkonster', nivå: 'Novis' }]
+  );
+  assert(
+    levelMissingNone.length === 1
+      && Array.isArray(levelMissingNone[0].missingLevelRequirements)
+      && levelMissingNone[0].missingLevelRequirements.some(req => req.name === 'Häxkonster' && req.minLevelName === 'Gesäll'),
+    'Kraver namn + nivå_minst ska blockera när nivån är för låg'
+  );
+  deepEqual(
+    sandbox.rulesHelper.getMissingRequirementReasonsForCandidate(
+      customLevelRequirement,
+      [{ namn: 'Blodvadare' }, { namn: 'Häxkonster', nivå: 'Gesäll' }]
+    ),
+    [],
+    'Kraver namn + nivå_minst ska släppa igenom när nivån uppfylls'
+  );
+  assert(
+    sandbox.rulesHelper.hasEntryAtLeastLevel(
+      [{ namn: 'Häxkonster', nivå: 'Mästare' }],
+      'Häxkonster',
+      'Gesäll'
+    ).ok === true,
+    'hasEntryAtLeastLevel ska kunna verifiera nivåparitet'
+  );
+  assert(
+    sandbox.rulesHelper.hasEntryAtLeastLevel(
+      [{ namn: 'Häxkonster', nivå: 'Novis' }],
+      'Häxkonster',
+      'Gesäll'
+    ).ok === false,
+    'hasEntryAtLeastLevel ska ge false när nivån är för låg'
+  );
+  const failedRequirementEffects = sandbox.rulesHelper.getRequirementEffectsForCandidate(
+    customLevelRequirement,
+    [{ namn: 'Blodvadare' }, { namn: 'Häxkonster', nivå: 'Novis' }]
+  );
+  assert(
+    failedRequirementEffects.met === false
+      && failedRequirementEffects.moneyMultiplier === 10
+      && failedRequirementEffects.erfMultiplier === 10,
+    'kraver else ska kunna sätta pengar/erf-multiplikator vid missat krav'
+  );
+  const passedRequirementEffects = sandbox.rulesHelper.getRequirementEffectsForCandidate(
+    customLevelRequirement,
+    [{ namn: 'Blodvadare' }, { namn: 'Häxkonster', nivå: 'Gesäll' }]
+  );
+  assert(
+    passedRequirementEffects.met === true
+      && passedRequirementEffects.moneyMultiplier === 1
+      && passedRequirementEffects.erfMultiplier === 1,
+    'kraver else ska inte appliceras när kravet är uppfyllt'
+  );
+  const erfScaledEntry = {
+    id: 'test-krav-3',
+    namn: 'Kravförmåga',
+    nivå: 'Novis',
+    taggar: {
+      typ: ['Förmåga'],
+      regler: {
+        kraver: [
+          {
+            namn: ['Robust'],
+            else: { erf_multiplikator: 10 }
+          }
+        ]
+      }
+    }
+  };
+  assert(
+    sandbox.storeHelper.calcEntryDisplayXP(erfScaledEntry, []) === 100,
+    'kraver else med erf_multiplikator ska påverka visad XP-kostnad'
+  );
+  assert(
+    sandbox.storeHelper.calcEntryDisplayXP(erfScaledEntry, [{ ...robust, nivå: 'Novis' }]) === 10,
+    'kraver else med erf_multiplikator ska upphöra när kravet uppfylls'
   );
   deepEqual(
     sandbox.storeHelper.getDependents(
@@ -2451,6 +2551,15 @@ function verifyTraitTotalMaxRules(rootPath) {
           satt: 'add',
           formel: 'niva'
         }
+      ],
+      val: [
+        {
+          field: 'trait',
+          title: 'Välj karaktärsdrag',
+          subtitle: 'Välj vilket karaktärsdrag som ska få bonus.',
+          options: ['Diskret', 'Kvick', 'Listig', 'Stark', 'Träffsäker', 'Vaksam', 'Viljestark', 'Övertygande'],
+          duplicate_policy: 'replace_existing'
+        }
       ]
     },
     'Exceptionellt karaktärsdrag ska ha regelstyrd max-total'
@@ -2466,6 +2575,34 @@ function verifyTraitTotalMaxRules(rootPath) {
           nar: {
             trait: ['Diskret', 'Kvick', 'Listig', 'Stark', 'Vaksam']
           }
+        }
+      ],
+      kraver: [
+        {
+          namn: ['Blodvadare'],
+          meddelande: 'Krav: Blodvadare',
+          else: {
+            pengar_multiplikator: 10,
+            erf_multiplikator: 10
+          }
+        },
+        {
+          namn: ['Häxkonster'],
+          nivå_minst: 'Gesäll',
+          meddelande: 'Krav: Häxkonster >= Gesäll',
+          else: {
+            pengar_multiplikator: 10,
+            erf_multiplikator: 10
+          }
+        }
+      ],
+      val: [
+        {
+          field: 'trait',
+          title: 'Välj karaktärsdrag',
+          subtitle: 'Välj vilket karaktärsdrag som ska få +1.',
+          options: ['Diskret', 'Kvick', 'Listig', 'Stark', 'Vaksam'],
+          duplicate_policy: 'confirm'
         }
       ]
     },
@@ -3283,7 +3420,7 @@ function verifyWeaponDefenseBonusRules(rootPath) {
   const tRule = tvillingattack.taggar?.nivå_data?.Novis?.regler?.andrar?.[0];
   assert(tRule, 'Tvillingattack Novis saknar andrar-regel');
   assert(tRule.mal === 'forsvar_modifierare', 'Tvillingattack Novis regel ska ha mal=forsvar_modifierare');
-  assert(tRule.varde === 1, 'Tvillingattack Novis regel ska ha varde=1');
+  assert(tRule.varde === -5, 'Tvillingattack Novis regel ska ha varde=-5');
   assert(tRule.nar?.antal_utrustade_vapen_minst === 2, 'Tvillingattack Novis ska kräva antal_utrustade_vapen_minst=2');
 
   // Test 5: Sköldkamp Novis has har_utrustad_vapen_typ: ["Sköld"] + ej_utrustad_vapen_kvalitet: ["Armfäst"]
@@ -3319,7 +3456,7 @@ function verifyWeaponDefenseBonusRules(rootPath) {
   // Test 9: Tvillingattack — needs 2 weapons
   const tvillingNovis = { ...tvillingattack, nivå: 'Novis' };
   assert(getWeaponDefenseBonus([tvillingNovis], { antalVapen: 1 }) === 0, 'Tvillingattack med 1 vapen ska ge 0');
-  assert(getWeaponDefenseBonus([tvillingNovis], { antalVapen: 2 }) === 1, 'Tvillingattack med 2 vapen ska ge +1');
+  assert(getWeaponDefenseBonus([tvillingNovis], { antalVapen: 2 }) === -5, 'Tvillingattack med 2 vapen ska ge -5');
 
   // Test 10: Sköldkamp — shield without Armfäst gives +1, with Armfäst gives 0
   const sköldkampNovis = { ...sköldkamp, nivå: 'Novis' };
@@ -3350,6 +3487,83 @@ function verifyWeaponDefenseBonusRules(rootPath) {
   assert((vandringsstav.taggar?.typ || []).includes('Stav'), 'Vandringsstav ska ha Stav-typ för Stavkamp');
   const vandringCtx = { vapenFakta: [{ typer: vandringsstav.taggar.typ, kvaliteter: vandringsstav.taggar.kvalitet }], antalVapen: 1 };
   assert(getWeaponDefenseBonus([stavkampNovis], vandringCtx) === 2, 'Stavkamp med Vandringsstav ska ge +2');
+}
+
+function verifySelectiveDefenseModifierWeaponContext(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+
+  const formaga = readEntryDataFile(rootPath, 'data/formaga.json');
+  const tvillingattack = formaga.find(e => e.namn === 'Tvillingattack');
+  assert(tvillingattack, 'Hittade inte Tvillingattack i formaga.json');
+
+  const { getSelectiveDefenseModifier } = sandbox.rulesHelper;
+  assert(typeof getSelectiveDefenseModifier === 'function', 'getSelectiveDefenseModifier ska vara exporterad');
+
+  const tvillingNovis = { ...tvillingattack, nivå: 'Novis' };
+  const weaponFact1 = { path: [0], id: 'w1', name: 'Vapen 1', entryRef: null, types: ['Vapen'], qualities: [] };
+  const weaponFact2 = { path: [1], id: 'w2', name: 'Vapen 2', entryRef: null, types: ['Vapen'], qualities: [] };
+
+  // Test 1: No tillat sources → always 0
+  const noSources = getSelectiveDefenseModifier([tvillingNovis], [weaponFact1, weaponFact2], {}, {});
+  assert(noSources === 0, `Inga tillat-källor ska ge 0, fick ${noSources}`);
+
+  // Test 2: karaktarsdrag=true with 1 weapon — Tvillingattack condition fails (needs 2)
+  const oneWeapon = getSelectiveDefenseModifier(
+    [tvillingNovis], [weaponFact1], {}, { karaktarsdrag: true }
+  );
+  assert(oneWeapon === 0, `Tvillingattack med 1 vapen ska ge 0, fick ${oneWeapon}`);
+
+  // Test 3: karaktarsdrag=true with 2 weapons — Tvillingattack condition met, +1 applies
+  const twoWeapons = getSelectiveDefenseModifier(
+    [tvillingNovis], [weaponFact1, weaponFact2], {}, { karaktarsdrag: true }
+  );
+  assert(twoWeapons === -5, `Tvillingattack med 2 vapen ska ge -5, fick ${twoWeapons}`);
+
+  // Test 4: karaktarsdrag=true, vapen_typer=false — weapon context must still propagate
+  // (this was the bug: empty facts broke antalVapen)
+  const twoWeaponsNoVapenTyper = getSelectiveDefenseModifier(
+    [tvillingNovis], [weaponFact1, weaponFact2], {}, { karaktarsdrag: true, vapen_typer: false }
+  );
+  assert(twoWeaponsNoVapenTyper === -5, `karaktarsdrag utan vapen_typer ska fortfarande ge -5, fick ${twoWeaponsNoVapenTyper}`);
+}
+
+function verifyArmorQualityDefenseModifier(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+
+  const mystiskKvalitet = readEntryDataFile(rootPath, 'data/mystisk-kvalitet.json');
+  const stenpansar = mystiskKvalitet.find(e => e.namn === 'Stenpansar');
+  assert(stenpansar, 'Hittade inte Stenpansar i mystisk-kvalitet.json');
+
+  sandbox.lookupEntry = (ref) => {
+    const name = typeof ref === 'string' ? ref : (ref?.name || ref?.namn);
+    if (name === 'Stenpansar') return stenpansar;
+    return null;
+  };
+
+  const { getEquippedDefenseModifier } = sandbox.rulesHelper;
+  assert(typeof getEquippedDefenseModifier === 'function', 'getEquippedDefenseModifier ska vara exporterad');
+
+  // Test 1: No armor equipped → Stenpansar rule not applied → 0
+  const noArmor = getEquippedDefenseModifier([], [], {});
+  assert(noArmor === 0, `Inget rustning ska ge 0, fick ${noArmor}`);
+
+  // Test 2: Stenpansar armor equipped → forsvar_modifierare: -4 applies
+  const withStenpansar = getEquippedDefenseModifier(
+    [],
+    [],
+    { utrustadTyper: ['Rustning'], utrustadeKvaliteter: ['Stenpansar'] }
+  );
+  assert(withStenpansar === -4, `Stenpansar ska ge -4, fick ${withStenpansar}`);
+
+  // Test 3: Armor without Stenpansar → 0
+  const plainArmor = getEquippedDefenseModifier(
+    [],
+    [],
+    { utrustadTyper: ['Rustning'], utrustadeKvaliteter: [] }
+  );
+  assert(plainArmor === 0, `Rustning utan Stenpansar ska ge 0, fick ${plainArmor}`);
 }
 
 function verifyWeaponAttackBonusRules(rootPath) {
@@ -3773,6 +3987,14 @@ function verifyUnifiedNarEvaluator(rootPath) {
   assert(!evaluateNar({ har_namn: ['Smidig'] }, { list: listA }), 'har_namn: Smidig saknas');
   assert(!evaluateNar({ saknar_namn: ['Robust'] }, { list: listA }), 'saknar_namn: Robust finns');
   assert(evaluateNar({ saknar_namn: ['Smidig'] }, { list: listA }), 'saknar_namn: Smidig saknas → ok');
+  assert(
+    !evaluateNar({ har_namn_niva_minst: { Robust: 'Gesäll' } }, { list: [{ namn: 'Robust', nivå: 'Novis' }] }),
+    'har_namn_niva_minst ska blockera för låg nivå'
+  );
+  assert(
+    evaluateNar({ har_namn_niva_minst: { Robust: 'Gesäll' } }, { list: [{ namn: 'Robust', nivå: 'Mästare' }] }),
+    'har_namn_niva_minst ska passera när nivåkrav uppfylls'
+  );
 
   // --- nagon_av_namn ---
   assert(evaluateNar({ nagon_av_namn: ['Robust', 'Smidig'] }, { list: listA }), 'nagon_av_namn: Robust matchar');
@@ -3935,13 +4157,84 @@ function verifySeparateDefenseRules(rootPath) {
     `Dansande vapen regel ska ha sourceEntryName="${dansandeVapen.namn}", fick "${rulesDansande[0].sourceEntryName}"`);
 }
 
+function verifyItemWeightModifiers(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+  const { getItemWeightModifiers, evaluateNar } = sandbox.rulesHelper;
+
+  const rope = { id: 'di12', namn: 'Rep, 10 meter', taggar: { typ: ['Diverse'] } };
+  const torch = { id: 'di1', namn: 'Fackla', taggar: { typ: ['Diverse'] } };
+
+  const repmastare = {
+    id: 'bas4',
+    namn: 'Repmästare',
+    taggar: {
+      typ: ['Basförmåga'],
+      regler: {
+        andrar: [
+          { mal: 'vikt_faktor', nar: { foremal: { id: ['di12'] } }, varde: 0.5 }
+        ]
+      }
+    }
+  };
+
+  // Test 1: no modifier when list is empty
+  const mod0 = getItemWeightModifiers([], rope);
+  assert(mod0.faktor === 1, `Faktor ska vara 1 utan regler, fick ${mod0.faktor}`);
+  assert(mod0.tillagg === 0, `Tillagg ska vara 0 utan regler, fick ${mod0.tillagg}`);
+
+  // Test 2: vikt_faktor 0.5 applied to rope when Repmästare is in list
+  const mod1 = getItemWeightModifiers([repmastare], rope);
+  assert(mod1.faktor === 0.5, `Repmästare ska halvera vikten av rep, faktor=${mod1.faktor}`);
+  assert(mod1.tillagg === 0, `Tillagg ska vara 0, fick ${mod1.tillagg}`);
+
+  // Test 3: no modifier applied to unrelated item (torch)
+  const mod2 = getItemWeightModifiers([repmastare], torch);
+  assert(mod2.faktor === 1, `Repmästare ska inte ändra vikten av fackla, faktor=${mod2.faktor}`);
+
+  // Test 4: multiple vikt_faktor rules stack multiplicatively
+  const extraHalf = {
+    id: 'test1', namn: 'Halvare', taggar: { typ: ['Särdrag'],
+      regler: { andrar: [{ mal: 'vikt_faktor', nar: { foremal: { id: ['di12'] } }, varde: 0.5 }] }
+    }
+  };
+  const mod3 = getItemWeightModifiers([repmastare, extraHalf], rope);
+  assert(Math.abs(mod3.faktor - 0.25) < 0.001, `Två halvare ska ge faktor 0.25, fick ${mod3.faktor}`);
+
+  // Test 5: vikt_tillagg works additively
+  const addRule = {
+    id: 'test2', namn: 'Lättare', taggar: { typ: ['Särdrag'],
+      regler: { andrar: [{ mal: 'vikt_tillagg', nar: { foremal: { id: ['di12'] } }, varde: -0.2 }] }
+    }
+  };
+  const mod4 = getItemWeightModifiers([addRule], rope);
+  assert(mod4.faktor === 1, `vikt_tillagg ska inte ändra faktor, faktor=${mod4.faktor}`);
+  assert(Math.abs(mod4.tillagg - (-0.2)) < 0.001, `vikt_tillagg ska ge tillagg=-0.2, fick ${mod4.tillagg}`);
+
+  // Test 6: nar.foremal.namn matching by name
+  const nameRule = {
+    id: 'test3', namn: 'Namnmatchare', taggar: { typ: ['Särdrag'],
+      regler: { andrar: [{ mal: 'vikt_faktor', nar: { foremal: { namn: ['Rep, 10 meter'] } }, varde: 0.5 }] }
+    }
+  };
+  const mod5 = getItemWeightModifiers([nameRule], rope);
+  assert(mod5.faktor === 0.5, `Namnmatchning ska ge faktor 0.5 för rep, fick ${mod5.faktor}`);
+  const mod6 = getItemWeightModifiers([nameRule], torch);
+  assert(mod6.faktor === 1, `Namnmatchning ska inte träffa fackla, fick ${mod6.faktor}`);
+
+  // Test 7: evaluateNar foremal.id works in isolation
+  const narWithId = { foremal: { id: ['di12'] } };
+  assert(evaluateNar(narWithId, { foremal: { id: 'di12' } }), 'foremal.id ska matcha di12');
+  assert(!evaluateNar(narWithId, { foremal: { id: 'di1' } }), 'foremal.id ska inte matcha di1');
+}
+
 function verifyMalCoverage(rootPath) {
   const sandbox = createSandbox();
   loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
   const { MAL_REGISTRY } = sandbox.rulesHelper;
 
   const dataFiles = [
-    'elityrke.json', 'fordel.json', 'formaga.json', 'kvalitet.json',
+    'basformagor.json', 'elityrke.json', 'fordel.json', 'formaga.json', 'kvalitet.json',
     'lagre-artefakter.json', 'mystisk-kraft.json', 'mystisk-kvalitet.json',
     'monstruost-sardrag.json', 'nackdel.json', 'negativ-kvalitet.json',
     'ras.json', 'sardrag.json', 'vapen.json', 'ritual.json'
@@ -4614,6 +4907,8 @@ try {
   verifyDefenseModifierRules(rootPath);
   verifyArmorRestrictionBonusRules(rootPath);
   verifyWeaponDefenseBonusRules(rootPath);
+  verifySelectiveDefenseModifierWeaponContext(rootPath);
+  verifyArmorQualityDefenseModifier(rootPath);
   verifyDefenseLoadoutCompatibility(rootPath);
   verifyDefenseAutoOptimizer(rootPath);
   verifyWeaponAttackBonusRules(rootPath);
@@ -4624,6 +4919,7 @@ try {
   verifyHamnskifteGrants(rootPath);
   verifyGrantCleanupRules(rootPath);
   verifySeparateDefenseRules(rootPath);
+  verifyItemWeightModifiers(rootPath);
   verifyMalCoverage(rootPath);
   console.log('verify_rules_helper: ok');
 } catch (error) {

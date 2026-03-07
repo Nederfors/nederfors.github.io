@@ -2607,6 +2607,22 @@ function defaultTraits() {
     return normalizeErfOverrideNumber(override);
   }
 
+  function getEntryErfMultiplier(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return 1;
+    if (typeof global.rulesHelper?.getRequirementEffectsForCandidate !== 'function') return 1;
+    const entries = Array.isArray(list) ? list : [];
+    const resolvedLevel = typeof options?.level === 'string' && options.level.trim()
+      ? options.level.trim()
+      : resolveEntryLevel(entry, entry?.nivå);
+    const effects = global.rulesHelper.getRequirementEffectsForCandidate(entry, entries, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    const raw = Number(effects?.erfMultiplier || 1);
+    if (!Number.isFinite(raw) || raw <= 0) return 1;
+    return raw;
+  }
+
   function resolveEntryLevelCost(entry, preferredLevel, options = {}) {
     const normalizedPreferred = normalizeLevelName(preferredLevel);
     const resolvedLevel = options.strictLevel && normalizedPreferred
@@ -2617,8 +2633,14 @@ function defaultTraits() {
       ...(options && typeof options === 'object' ? options : {}),
       level: resolvedLevel
     });
-    if (override !== null) return override;
-    return levelCost(resolvedLevel);
+    const baseCost = override !== null ? override : levelCost(resolvedLevel);
+    const multiplier = getEntryErfMultiplier(entry, list, {
+      ...(options && typeof options === 'object' ? options : {}),
+      level: resolvedLevel
+    });
+    if (Math.abs(multiplier - 1) < 0.001) return baseCost;
+    const scaled = normalizeErfOverrideNumber(Number(baseCost) * multiplier);
+    return scaled === null ? baseCost : scaled;
   }
 
   function entryLevelCost(entry, preferredLevel, options = {}) {

@@ -8,6 +8,27 @@
             "satt": "ersatt",
             "varde": true
           }
+        ],
+        "val": [
+          {
+            "field": "artifactEffect",
+            "title": "Välj betalning",
+            "subtitle": "Välj hur artefakten ska bindas.",
+            "options": [
+              {
+                "value": "",
+                "label": "Obunden"
+              },
+              {
+                "value": "corruption",
+                "label": "+1 Permanent korruption"
+              },
+              {
+                "value": "xp",
+                "label": "−1 Erfarenhetspoäng"
+              }
+            ]
+          }
         ]
       }
     },

@@ -187,6 +187,24 @@
               "satt": "add",
               "formel": "niva"
             }
+          ],
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj karaktärsdrag",
+              "subtitle": "Välj vilket karaktärsdrag som ska få bonus.",
+              "options": [
+                "Diskret",
+                "Kvick",
+                "Listig",
+                "Stark",
+                "Träffsäker",
+                "Vaksam",
+                "Viljestark",
+                "Övertygande"
+              ],
+              "duplicate_policy": "replace_existing"
+            }
           ]
         },
         "nivå_data": {
@@ -671,6 +689,26 @@
         "test": [
           "Listig"
         ],
+        "regler": {
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj specialisering",
+              "subtitle": "Välj en specialisering för Monsterlärd.",
+              "options": [
+                "Bestar",
+                "Kulturvarelser",
+                "Odöda",
+                "Styggelser"
+              ],
+              "exclude_used": true,
+              "duplicate_policy": "reject",
+              "nar": {
+                "kalla_niva_minst": "gesall"
+              }
+            }
+          ]
+        },
         "nivå_data": {
           "Novis": {
             "handling": "Fri",
@@ -1512,7 +1550,7 @@
               "andrar": [
                 {
                   "mal": "forsvar_modifierare",
-                  "varde": 1,
+                  "varde": -5,
                   "nar": {
                     "antal_utrustade_vapen_minst": 2
                   }

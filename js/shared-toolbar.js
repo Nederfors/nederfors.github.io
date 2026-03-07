@@ -1433,7 +1433,7 @@ class SharedToolbar extends HTMLElement {
           </div>
           <div class="confirm-row defense-calc-actions">
             <button id="defenseCalcReset" class="char-btn danger" type="button">Återställ</button>
-            <button id="defenseCalcCancel" class="char-btn danger" type="button">Avbryt</button>
+            <button id="defenseCalcCancel" class="char-btn" type="button">Stäng</button>
             <button id="defenseCalcApply" class="char-btn" type="button">Verkställ</button>
           </div>
         </div>
@@ -2079,7 +2079,7 @@ class SharedToolbar extends HTMLElement {
     }
 
     // ignore clicks inside popups so panels stay open
-    const popups = ['inventoryItemsPopup', 'inventoryEconomyPopup', 'qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup', 'traitPopup', 'maskPopup', 'powerPopup', 'beastPopup', 'bloodPopup', 'monsterPopup'];
+    const popups = ['inventoryItemsPopup', 'inventoryEconomyPopup', 'qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup', 'traitPopup', 'maskPopup', 'powerPopup', 'beastPopup', 'bloodPopup', 'monsterPopup', 'choicePopup'];
     if (path.some(el => el && popups.includes(el.id))) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));

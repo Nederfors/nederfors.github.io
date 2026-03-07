@@ -13,6 +13,7 @@ const CORE_SCRIPTS = [
   'js/elite-utils.js',
   'js/elite-req.js',
   'js/entry-card.js',
+  'js/choice-popup.js',
   'js/exceptionellt.js',
   'js/djurmask.js',
   'js/beastform.js',

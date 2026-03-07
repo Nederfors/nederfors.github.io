@@ -3,7 +3,7 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-06T08:29:39.605926+00:00",
+      "genererad": "2026-03-06T11:50:37.709386+00:00",
       "antal_typer_hittade": 52,
       "källfiler": [
         "data/diverse.json",
@@ -1870,7 +1870,24 @@
             },
             "ark_trad": [
               "Ordensmagiker"
-            ]
+            ],
+            "regler": {
+              "val": [
+                {
+                  "field": "trait",
+                  "title": "Välj formel",
+                  "subtitle": "Välj vilken formel som ska bindas.",
+                  "search": true,
+                  "source": {
+                    "typ": [
+                      "Mystisk kraft"
+                    ],
+                    "sort": "alpha"
+                  },
+                  "duplicate_policy": "confirm"
+                }
+              ]
+            }
           },
           "nivåer": {
             "Novis": "Artefaktmakare inom Ordo Magica har bundit en mystisk kraft på novisnivå i pergamentet, som sedan kan läsas och aktiveras av någon annan som behärskar Ordensmagi till minst novisnivå eller besitter förmågan Lärd till minst gesällnivå. Den som använder pergamentet drabbas av temporär korruption som vanligt. Pergamentet förbrukas när det används."
@@ -2911,7 +2928,7 @@
       ]
     },
     "Ras": {
-      "antal": 12,
+      "antal": 13,
       "källfiler": [
         "data/ras.json"
       ],

@@ -346,6 +346,10 @@
     if (!best) return true;
     if (next.value !== best.value) return next.value > best.value;
     if (next.itemCount !== best.itemCount) return next.itemCount < best.itemCount;
+    // Prefer more weapons when tied — allows Tvillingattack setups to beat shield-alone
+    const nextWeapons = Array.isArray(next.weapons) ? next.weapons.length : 0;
+    const bestWeapons = Array.isArray(best.weapons) ? best.weapons.length : 0;
+    if (nextWeapons !== bestWeapons) return nextWeapons > bestWeapons;
     return String(next.orderKey || '') < String(best.orderKey || '');
   }
 
@@ -384,7 +388,8 @@
     const weaponInfos = buildWeaponInfos(inv);
     const armorInfos = [null, ...buildArmorInfos(inv)];
     const weaponSelections = generateLegalWeaponSelections(list, weaponInfos);
-    let best = null;
+    let bestWithArmor = null;
+    let bestWithoutArmor = null;
 
     armorInfos.forEach(armorInfo => {
       const armorContext = toArmorContext(armorInfo);
@@ -410,11 +415,16 @@
           itemCount: selected.length + (armorInfo ? 1 : 0)
         };
         candidate.orderKey = getStableDefenseOrderKey(candidate);
-        if (isBetterDefenseCandidate(candidate, best)) best = candidate;
+        // Track armored and unarmed best separately — armor is always preferred when available
+        if (armorInfo) {
+          if (isBetterDefenseCandidate(candidate, bestWithArmor)) bestWithArmor = candidate;
+        } else {
+          if (isBetterDefenseCandidate(candidate, bestWithoutArmor)) bestWithoutArmor = candidate;
+        }
       });
     });
 
-    return best || {
+    return bestWithArmor || bestWithoutArmor || {
       trait: 'Kvick',
       armor: null,
       weapons: [],
@@ -569,11 +579,11 @@
     const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
     const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
     const baseTraitVal = Number.isFinite(traitValue) ? traitValue : 0;
-    const selection = resolveDefenseSelection(inv, mode, {
-      setupOverride: opts.setupOverride,
-      list,
-      traitValues: opts.traitValues
-    });
+    const resolveOpts = { list, traitValues: opts.traitValues };
+    if ('setupOverride' in opts) {
+      resolveOpts.setupOverride = opts.setupOverride;
+    }
+    const selection = resolveDefenseSelection(inv, mode, resolveOpts);
     if (mode === 'dancing') {
       return computeDancingDefenseEntries(baseTraitVal, list, inv, selection.weapons || []);
     }
@@ -584,7 +594,7 @@
   function calcSeparateDefense(stdTraitName, traitValues, opts = {}) {
     const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
     const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
-    const setup = Object.prototype.hasOwnProperty.call(opts, 'setupOverride')
+    const setup = ('setupOverride' in opts)
       ? (opts.setupOverride || null)
       : (typeof storeHelper.getDefenseSetup === 'function' ? storeHelper.getDefenseSetup(store) : null);
     const storedMap = setup?.enabled
@@ -1003,6 +1013,7 @@
       t[key] = proposed;
       storeHelper.setTraits(store, t);
       renderTraits();
+      if (typeof window.refreshSummaryPage === 'function') window.refreshSummaryPage();
     });
   }
 
