@@ -549,6 +549,36 @@ För `mal: "post"` finns extra fält:
   - fallback för äldre `bound`/`traits` och tidigare hårdkodade flöden
   - täcker bl.a. `Monsterlärd`, `Exceptionellt karaktärsdrag`, `Blodsband`, `Djurmask`, bound kraft/ritual, Hamnskifte-grants och artefaktbetalning
 
+#### Artefaktbindning via taggar
+För artefakter kan val för `artifactEffect` styras direkt via taggkonfig:
+
+- `taggar.artefakt_bindning` (alias: `artifact_binding`, `artifact_effect_options`)
+- kan vara:
+  - array med presets/val, t.ex. `["xp"]` eller `["corruption"]`
+  - objekt med `options` + valfria `title`/`subtitle`
+  - options-objekt med `value`, `label`, samt valfritt `effects`
+- presets:
+  - `xp` / `erf` → `−1 Erfarenhetspoäng`
+  - `corruption` / `korruption` → `+1 Permanent korruption`
+- `effects` stöder nycklar som `xp`, `corruption`, `toughness`, `pain`, `capacity` (med aliaser)
+- `Obunden` injiceras alltid automatiskt som val med tomt värde
+
+Exempel:
+
+```json
+{
+  "taggar": {
+    "typ": ["Artefakt"],
+    "artefakt_bindning": {
+      "options": [
+        "xp",
+        { "value": "blood", "label": "+1 Blodspris", "effects": { "toughness": -1 } }
+      ]
+    }
+  }
+}
+```
+
 #### Vanlig context
 - `list`, `entry`, `sourceEntry`, `level`, `sourceLevel`
 - `row` (inventarierad)

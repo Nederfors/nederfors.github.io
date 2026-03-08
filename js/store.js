@@ -566,7 +566,9 @@
       entry.taggar = taggar;
 
       entry.beskrivning = typeof entry.beskrivning === 'string' ? entry.beskrivning.trim() : '';
-      entry.artifactEffect = entry.artifactEffect === 'xp' || entry.artifactEffect === 'corruption' ? entry.artifactEffect : '';
+      entry.artifactEffect = entry.artifactEffect === undefined || entry.artifactEffect === null
+        ? ''
+        : String(entry.artifactEffect).trim();
 
       if (entry.bound === 'kraft' || entry.bound === 'ritual') {
         const rawLabel = typeof entry.boundLabel === 'string' ? entry.boundLabel.trim() : '';
@@ -631,7 +633,7 @@
 
     const data = {
       custom: [],
-      artifactEffects: { xp: 0, corruption: 0 },
+      artifactEffects: defaultArtifactEffects(),
       bonusMoney: defaultMoney(),
       savedUnusedMoney: defaultMoney(),
       privMoney: defaultMoney(),
@@ -650,10 +652,11 @@
 
     let mutated = false;
 
-    if (!data.artifactEffects) {
-      data.artifactEffects = { xp: 0, corruption: 0 };
+    const normalizedArtifactEffects = normalizeArtifactEffectsMap(data.artifactEffects);
+    if (JSON.stringify(normalizedArtifactEffects) !== JSON.stringify(data.artifactEffects || {})) {
       mutated = true;
     }
+    data.artifactEffects = normalizedArtifactEffects;
     if (!data.manualAdjustments) {
       data.manualAdjustments = defaultManualAdjustments();
       mutated = true;
@@ -772,7 +775,7 @@
     return {
       current: '',          // id för vald karaktär
       characters: [],       // [{ id, name }]
-      data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{xp:0,corruption:0} } }
+      data: {},             // { [charId]: { list: [...], inventory: [], custom: [], artifactEffects:{...} } }
       folders: [],          // [{ id, name, order }]
       activeFolder: 'ALL',  // 'ALL' | folderId ("Utan mapp" ej tillåtet)
       filterUnion: false,
@@ -1819,7 +1822,28 @@
   }
 
   function defaultArtifactEffects() {
-    return { xp: 0, corruption: 0 };
+    return {
+      xp: 0,
+      corruption: 0,
+      toughness: 0,
+      pain: 0,
+      capacity: 0
+    };
+  }
+
+  function normalizeArtifactEffectsMap(value) {
+    const out = { ...defaultArtifactEffects() };
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return out;
+    Object.keys(value).forEach(key => {
+      const num = Number(value[key]);
+      if (!Number.isFinite(num)) return;
+      if (Object.prototype.hasOwnProperty.call(out, key)) {
+        out[key] = num;
+      } else if (num !== 0) {
+        out[key] = num;
+      }
+    });
+    return out;
   }
 
   function defaultManualAdjustments() {
@@ -2190,17 +2214,13 @@
   function getArtifactEffects(store) {
     if (!store.current) return defaultArtifactEffects();
     const data = store.data[store.current] || {};
-    const auto = { ...defaultArtifactEffects(), ...(data.artifactEffects || {}) };
-    return {
-      xp: Number(auto.xp || 0),
-      corruption: Number(auto.corruption || 0)
-    };
+    return normalizeArtifactEffectsMap(data.artifactEffects);
   }
 
   function setArtifactEffects(store, eff) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
-    store.data[store.current].artifactEffects = { ...defaultArtifactEffects(), ...(eff || {}) };
+    store.data[store.current].artifactEffects = normalizeArtifactEffectsMap(eff);
     persistCurrentCharacter(store);
   }
 
@@ -3304,7 +3324,10 @@ function defaultTraits() {
           .filter(Boolean);
         if (manual.length) res.mqo = Array.from(new Set(manual));
       }
-      if (row.artifactEffect === 'xp' || row.artifactEffect === 'corruption') res.e = row.artifactEffect;
+      const artifactEffect = row.artifactEffect === undefined || row.artifactEffect === null
+        ? ''
+        : String(row.artifactEffect).trim();
+      if (artifactEffect) res.e = artifactEffect;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
       if (row.perk) res.pk = row.perk;
@@ -3435,9 +3458,9 @@ function defaultTraits() {
             .filter(Boolean)))
           : [];
         const artifactEffectRaw = row.artifactEffect ?? row.e ?? entry?.artifactEffect ?? '';
-        const artifactEffect = artifactEffectRaw === 'xp' || artifactEffectRaw === 'corruption'
-          ? artifactEffectRaw
-          : '';
+        const artifactEffect = artifactEffectRaw === undefined || artifactEffectRaw === null
+          ? ''
+          : String(artifactEffectRaw).trim();
         const expanded = {
           id: resolvedId,
           name: resolvedName,

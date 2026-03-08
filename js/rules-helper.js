@@ -39,6 +39,76 @@
   const CHOICE_DUPLICATE_POLICIES = Object.freeze(['allow', 'reject', 'confirm', 'replace_existing']);
   const MONSTER_LORE_SPECS = Object.freeze(['Bestar', 'Kulturvarelser', 'Odöda', 'Styggelser']);
   const EXCEPTION_TRAITS = Object.freeze(['Diskret', 'Kvick', 'Listig', 'Stark', 'Träffsäker', 'Vaksam', 'Viljestark', 'Övertygande']);
+  const CHOICE_EMPTY_VALUE_KEY = '__empty__';
+  const ARTIFACT_BINDING_TAG_KEYS = Object.freeze([
+    'artefakt_bindning',
+    'artefakt_bindningar',
+    'artefaktbindning',
+    'artefaktbindningar',
+    'artifact_binding',
+    'artifact_bindings',
+    'artifactbinding',
+    'artifactbindings',
+    'artifactEffectOptions',
+    'artifactEffects',
+    'artifact_effect_options',
+    'artifact_effects'
+  ]);
+  const ARTIFACT_EFFECT_STAT_KEY_MAP = Object.freeze({
+    xp: 'xp',
+    erf: 'xp',
+    erfarenhet: 'xp',
+    erfarenhetspoang: 'xp',
+    experience: 'xp',
+    corruption: 'corruption',
+    korruption: 'corruption',
+    permanent_korruption: 'corruption',
+    permanentkorruption: 'corruption',
+    permanent_corruption: 'corruption',
+    permanentcorruption: 'corruption',
+    toughness: 'toughness',
+    talighet: 'toughness',
+    pain: 'pain',
+    smartgrans: 'pain',
+    smartgransen: 'pain',
+    capacity: 'capacity',
+    barkapacitet: 'capacity'
+  });
+  const ARTIFACT_BINDING_PRESETS = Object.freeze({
+    unbound: Object.freeze({
+      value: '',
+      label: 'Obunden',
+      effects: Object.freeze({})
+    }),
+    corruption: Object.freeze({
+      value: 'corruption',
+      label: '+1 Permanent korruption',
+      effects: Object.freeze({ corruption: 1 })
+    }),
+    xp: Object.freeze({
+      value: 'xp',
+      label: '−1 Erfarenhetspoäng',
+      effects: Object.freeze({ xp: 1 })
+    })
+  });
+  const ARTIFACT_BINDING_PRESET_ALIASES = Object.freeze({
+    '': 'unbound',
+    obunden: 'unbound',
+    unbound: 'unbound',
+    none: 'unbound',
+    ingen: 'unbound',
+    corruption: 'corruption',
+    korruption: 'corruption',
+    permanent_korruption: 'corruption',
+    permanentkorruption: 'corruption',
+    permanent_corruption: 'corruption',
+    permanentcorruption: 'corruption',
+    xp: 'xp',
+    erf: 'xp',
+    erfarenhet: 'xp',
+    erfarenhetspoang: 'xp',
+    experience: 'xp'
+  });
 
   const MAL_REGISTRY = new Map();
   const MANUAL_ENTRY_ERF_OVERRIDES = new Map();
@@ -425,6 +495,214 @@
     return rule;
   }
 
+  function normalizeChoiceOptionKey(value) {
+    const token = normalizeChoiceUsedValue(value);
+    return token || CHOICE_EMPTY_VALUE_KEY;
+  }
+
+  function getArtifactBindingPresetName(value) {
+    const token = normalizeChoiceUsedValue(value);
+    if (Object.prototype.hasOwnProperty.call(ARTIFACT_BINDING_PRESET_ALIASES, token)) {
+      return ARTIFACT_BINDING_PRESET_ALIASES[token];
+    }
+    return '';
+  }
+
+  function cloneArtifactBindingPreset(name) {
+    const preset = ARTIFACT_BINDING_PRESETS[name];
+    if (!preset) return null;
+    return {
+      value: preset.value,
+      label: preset.label,
+      effects: { ...(preset.effects || {}) }
+    };
+  }
+
+  function normalizeArtifactEffectMap(rawMap, fallbackPreset = '') {
+    const out = {};
+    if (rawMap && typeof rawMap === 'object' && !Array.isArray(rawMap)) {
+      Object.keys(rawMap).forEach(rawKey => {
+        const statKey = ARTIFACT_EFFECT_STAT_KEY_MAP[normalizeCompareToken(rawKey)];
+        if (!statKey) return;
+        const value = Number(rawMap[rawKey]);
+        if (!Number.isFinite(value) || value === 0) return;
+        out[statKey] = (out[statKey] || 0) + value;
+      });
+    }
+
+    if (Object.keys(out).length) return out;
+    const fallback = cloneArtifactBindingPreset(fallbackPreset);
+    if (fallback && fallback.effects && typeof fallback.effects === 'object') {
+      Object.keys(fallback.effects).forEach(key => {
+        const value = Number(fallback.effects[key]);
+        if (!Number.isFinite(value) || value === 0) return;
+        out[key] = value;
+      });
+    }
+    return out;
+  }
+
+  function getTaggedConfigValue(container, wantedKeys) {
+    if (!container || typeof container !== 'object' || Array.isArray(container)) return undefined;
+    for (const key of wantedKeys) {
+      if (Object.prototype.hasOwnProperty.call(container, key)) return container[key];
+    }
+    const wanted = new Set(wantedKeys.map(normalizeCompareToken));
+    for (const key of Object.keys(container)) {
+      if (wanted.has(normalizeCompareToken(key))) return container[key];
+    }
+    return undefined;
+  }
+
+  function getArtifactBindingConfig(entry) {
+    if (!entry || typeof entry !== 'object') return null;
+    const fromTags = getTaggedConfigValue(entry?.taggar, ARTIFACT_BINDING_TAG_KEYS);
+    if (fromTags !== undefined) return fromTags;
+    const fromEntry = getTaggedConfigValue(entry, ARTIFACT_BINDING_TAG_KEYS);
+    if (fromEntry !== undefined) return fromEntry;
+    return null;
+  }
+
+  function getArtifactBindingConfigOptions(rawConfig) {
+    if (rawConfig === undefined || rawConfig === null) return null;
+    if (Array.isArray(rawConfig)) return rawConfig;
+    if (rawConfig && typeof rawConfig === 'object') {
+      const optionKeys = ['options', 'alternativ', 'choices', 'val', 'betalning', 'kostnad', 'cost'];
+      const fromObject = getTaggedConfigValue(rawConfig, optionKeys);
+      if (fromObject !== undefined) return toArray(fromObject);
+      const hasInlineOptionKeys = (
+        rawConfig.value !== undefined
+        || rawConfig.varde !== undefined
+        || rawConfig.id !== undefined
+        || rawConfig.key !== undefined
+        || rawConfig.preset !== undefined
+        || rawConfig.typ !== undefined
+        || rawConfig.namn !== undefined
+        || rawConfig.name !== undefined
+      );
+      return hasInlineOptionKeys ? [rawConfig] : null;
+    }
+    return [rawConfig];
+  }
+
+  function normalizeArtifactBindingOption(rawOption) {
+    if (rawOption === undefined || rawOption === null) return null;
+
+    if (typeof rawOption !== 'object' || Array.isArray(rawOption)) {
+      const value = String(rawOption).trim();
+      const presetName = getArtifactBindingPresetName(value);
+      if (presetName) return cloneArtifactBindingPreset(presetName);
+      return {
+        value,
+        label: value,
+        effects: {}
+      };
+    }
+
+    const rawValue = rawOption.value ?? rawOption.varde ?? rawOption.id ?? rawOption.namn ?? rawOption.key;
+    const presetName = getArtifactBindingPresetName(
+      rawOption.preset ?? rawOption.typ ?? rawValue ?? ''
+    );
+
+    let value = '';
+    if (rawValue !== undefined && rawValue !== null) {
+      value = String(rawValue).trim();
+    } else if (presetName) {
+      value = ARTIFACT_BINDING_PRESETS[presetName].value;
+    } else {
+      return null;
+    }
+
+    const canonicalPreset = presetName || getArtifactBindingPresetName(value);
+    if (canonicalPreset) {
+      value = ARTIFACT_BINDING_PRESETS[canonicalPreset].value;
+    }
+
+    const rawLabel = rawOption.label ?? rawOption.text ?? rawOption.name ?? null;
+    const label = rawLabel !== null && rawLabel !== undefined
+      ? String(rawLabel)
+      : (canonicalPreset ? ARTIFACT_BINDING_PRESETS[canonicalPreset].label : (value || ARTIFACT_BINDING_PRESETS.unbound.label));
+
+    const rawEffects = rawOption.effects
+      ?? rawOption.effekter
+      ?? rawOption.effect
+      ?? rawOption.kostnad
+      ?? rawOption.cost;
+    const effects = normalizeArtifactEffectMap(rawEffects, canonicalPreset || '');
+
+    const out = { value, label, effects };
+    if (rawOption.search !== undefined) out.search = String(rawOption.search || '');
+    if (rawOption.disabled !== undefined) out.disabled = isTruthyRuleValue(rawOption.disabled);
+    if (rawOption.disabledReason !== undefined) out.disabledReason = String(rawOption.disabledReason || '');
+    return out;
+  }
+
+  function normalizeArtifactBindingOptions(rawOptions) {
+    const normalized = toArray(rawOptions)
+      .map(normalizeArtifactBindingOption)
+      .filter(Boolean);
+
+    const seen = new Set();
+    const out = [];
+    const pushUnique = (option) => {
+      const key = normalizeChoiceOptionKey(option?.value);
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(option);
+    };
+
+    pushUnique(cloneArtifactBindingPreset('unbound'));
+    normalized.forEach(option => {
+      const key = normalizeChoiceOptionKey(option?.value);
+      if (key === CHOICE_EMPTY_VALUE_KEY) return;
+      pushUnique(option);
+    });
+
+    return out;
+  }
+
+  function createDefaultArtifactBindingChoiceRule() {
+    return {
+      field: 'artifactEffect',
+      title: 'Välj betalning',
+      subtitle: 'Välj hur artefakten ska bindas.',
+      options: normalizeArtifactBindingOptions([
+        cloneArtifactBindingPreset('corruption'),
+        cloneArtifactBindingPreset('xp')
+      ])
+    };
+  }
+
+  function applyArtifactBindingChoiceConfig(rule, sourceEntry, context = {}) {
+    const wantedField = normalizeChoiceField(context?.field);
+    if (wantedField && wantedField !== 'artifactEffect') return rule;
+    if (!entryHasType(sourceEntry, 'Artefakt')) return rule;
+
+    const baseRule = normalizeChoiceRule(rule || createDefaultArtifactBindingChoiceRule());
+    if (!baseRule || baseRule.field !== 'artifactEffect') return baseRule;
+
+    const rawConfig = getArtifactBindingConfig(sourceEntry);
+    const configObj = rawConfig && typeof rawConfig === 'object' && !Array.isArray(rawConfig) ? rawConfig : null;
+    const configOptions = rawConfig !== null && rawConfig !== undefined
+      ? getArtifactBindingConfigOptions(rawConfig)
+      : null;
+    const rawOptions = configOptions === null ? toArray(baseRule.options) : configOptions;
+    const options = normalizeArtifactBindingOptions(rawOptions);
+
+    if (configObj) {
+      if (configObj.title !== undefined) baseRule.title = String(configObj.title || '').trim();
+      if (configObj.subtitle !== undefined) baseRule.subtitle = String(configObj.subtitle || '').trim();
+      if (configObj.search !== undefined) baseRule.search = isTruthyRuleValue(configObj.search);
+      if (configObj.exclude_used !== undefined) baseRule.exclude_used = isTruthyRuleValue(configObj.exclude_used);
+      if (configObj.duplicate_policy !== undefined) {
+        baseRule.duplicate_policy = normalizeChoiceDuplicatePolicy(configObj.duplicate_policy);
+      }
+    }
+
+    baseRule.options = options;
+    return baseRule;
+  }
+
   function buildChoiceContext(entry, context = {}) {
     const ctx = context && typeof context === 'object' ? { ...context } : {};
     const sourceEntry = ctx.sourceEntry && typeof ctx.sourceEntry === 'object'
@@ -466,13 +744,20 @@
       : (typeof sourceEntry?.nivå === 'string' ? sourceEntry.nivå : '');
     const rules = getRuleList(sourceEntry, 'val', level ? { level } : {});
 
+    let chosenRule = null;
     for (const rawRule of rules) {
       const rule = normalizeChoiceRule(rawRule);
       if (!rule) continue;
       if (!ruleMatchesChoiceContext(rule, ctx)) continue;
-      return rule;
+      chosenRule = rule;
+      break;
     }
-    return null;
+
+    const withArtifactConfig = applyArtifactBindingChoiceConfig(chosenRule, sourceEntry, ctx);
+    if (withArtifactConfig) {
+      if (ruleMatchesChoiceContext(withArtifactConfig, ctx)) return withArtifactConfig;
+    }
+    return chosenRule && ruleMatchesChoiceContext(chosenRule, ctx) ? chosenRule : null;
   }
 
   function normalizeChoiceOption(rawOption) {
@@ -480,7 +765,6 @@
       const rawValue = rawOption.value ?? rawOption.varde ?? rawOption.id ?? rawOption.namn;
       if (rawValue === undefined || rawValue === null) return null;
       const value = String(rawValue);
-      if (!value && value !== '0') return null;
       const rawLabel = rawOption.label ?? rawOption.namn ?? rawOption.name ?? value;
       const out = {
         value,
@@ -489,12 +773,14 @@
       if (rawOption.search !== undefined) out.search = String(rawOption.search || '');
       if (rawOption.disabled !== undefined) out.disabled = isTruthyRuleValue(rawOption.disabled);
       if (rawOption.disabledReason !== undefined) out.disabledReason = String(rawOption.disabledReason || '');
+      if (rawOption.effects && typeof rawOption.effects === 'object' && !Array.isArray(rawOption.effects)) {
+        out.effects = cloneRuleValue(rawOption.effects);
+      }
       return out;
     }
 
     if (rawOption === undefined || rawOption === null) return null;
     const value = String(rawOption);
-    if (!value && value !== '0') return null;
     return { value, label: value };
   }
 
@@ -574,8 +860,8 @@
     options.forEach(rawOption => {
       const option = normalizeChoiceOption(rawOption);
       if (!option) return;
-      const key = normalizeChoiceUsedValue(option.value);
-      if (!key || seen.has(key)) return;
+      const key = normalizeChoiceOptionKey(option.value);
+      if (seen.has(key)) return;
       seen.add(key);
       deduped.push(option);
     });
@@ -598,6 +884,56 @@
         return option;
       })
       .filter(Boolean);
+  }
+
+  function getArtifactEffectChoiceRule(entry, context = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    const ctx = buildChoiceContext(entry, { ...(context || {}), field: 'artifactEffect' });
+    const sourceEntry = resolveRuleSourceEntry(entry);
+    let rule = getEntryChoiceRule(sourceEntry, ctx);
+    if (!rule && typeof getLegacyChoiceRule === 'function') {
+      rule = getLegacyChoiceRule(sourceEntry, ctx);
+    }
+    return applyArtifactBindingChoiceConfig(rule, sourceEntry, ctx);
+  }
+
+  function getArtifactEffectOption(entry, value, context = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+    const ctx = buildChoiceContext(entry, { ...(context || {}), field: 'artifactEffect' });
+    const rule = getArtifactEffectChoiceRule(entry, ctx);
+    if (!rule) return null;
+
+    const options = resolveChoiceOptions(rule, {
+      ...ctx,
+      usedValues: [],
+      currentValue: value
+    });
+    const wantedKey = normalizeChoiceOptionKey(value);
+    const match = options.find(option => normalizeChoiceOptionKey(option?.value) === wantedKey) || null;
+    if (match) {
+      const normalized = normalizeArtifactBindingOption(match);
+      return normalized ? normalized : null;
+    }
+
+    const presetName = getArtifactBindingPresetName(value);
+    return presetName ? cloneArtifactBindingPreset(presetName) : null;
+  }
+
+  function getArtifactEffectValueLabel(entry, value, context = {}) {
+    const option = getArtifactEffectOption(entry, value, context);
+    if (option?.label) return String(option.label);
+    const presetName = getArtifactBindingPresetName(value);
+    if (presetName) return ARTIFACT_BINDING_PRESETS[presetName].label;
+    const raw = value === undefined || value === null ? '' : String(value);
+    return raw || ARTIFACT_BINDING_PRESETS.unbound.label;
+  }
+
+  function getArtifactEffectValueEffects(entry, value, context = {}) {
+    const option = getArtifactEffectOption(entry, value, context);
+    if (option && option.effects && typeof option.effects === 'object') {
+      return normalizeArtifactEffectMap(option.effects, getArtifactBindingPresetName(option.value));
+    }
+    return normalizeArtifactEffectMap(null, getArtifactBindingPresetName(value));
   }
 
   function isHamnskifteGrantEntry(entry) {
@@ -692,7 +1028,7 @@
     }
 
     if (entryHasType(sourceEntry, 'Artefakt') || entryHasType(entry, 'Artefakt')) {
-      return makeRule({
+      const baseRule = makeRule({
         field: 'artifactEffect',
         title: 'Välj betalning',
         subtitle: 'Välj hur artefakten ska bindas.',
@@ -702,6 +1038,7 @@
           { value: 'xp', label: '−1 Erfarenhetspoäng' }
         ]
       });
+      return applyArtifactBindingChoiceConfig(baseRule, sourceEntry, ctx);
     }
 
     return null;
@@ -3803,6 +4140,10 @@
     getRuleList,
     getEntryChoiceRule,
     resolveChoiceOptions,
+    getArtifactEffectChoiceRule,
+    getArtifactEffectOption,
+    getArtifactEffectValueLabel,
+    getArtifactEffectValueEffects,
     getLegacyChoiceRule,
     getListRules,
     evaluateNar,

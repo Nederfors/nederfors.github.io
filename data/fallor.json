@@ -11,7 +11,21 @@
         "typ": [
           "Elixir",
           "Fälla"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "nar": {
+                "nagon_av_namn": [
+                  "Försåtsgillrare",
+                  "Pyroteknik"
+                ]
+              },
+              "varde": "requires_forsatsgillrare_or_pyroteknik",
+              "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
+            }
+          ]
+        }
       },
       "nivåer": {
         "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t8 skada; därefter brinner substansen i 1t4 rundor och ger 1t4 skada per runda."
@@ -32,7 +46,21 @@
         "typ": [
           "Elixir",
           "Fälla"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "nar": {
+                "nagon_av_namn": [
+                  "Försåtsgillrare",
+                  "Pyroteknik"
+                ]
+              },
+              "varde": "requires_forsatsgillrare_or_pyroteknik",
+              "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
+            }
+          ]
+        }
       },
       "nivåer": {
         "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t10 skada; därefter brinner substansen i 1t6 rundor och ger 1t6 skada per runda."
@@ -53,7 +81,21 @@
         "typ": [
           "Elixir",
           "Fälla"
-        ]
+        ],
+        "regler": {
+          "kraver": [
+            {
+              "nar": {
+                "nagon_av_namn": [
+                  "Försåtsgillrare",
+                  "Pyroteknik"
+                ]
+              },
+              "varde": "requires_forsatsgillrare_or_pyroteknik",
+              "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
+            }
+          ]
+        }
       },
       "nivåer": {
         "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t12 skada; därefter brinner substansen i 1t8 rundor och ger 1t8 skada per runda."

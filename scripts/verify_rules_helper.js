@@ -281,6 +281,87 @@ function verifyRuleHelper(rootPath) {
     'Legacy-post utan regler ska vara inert'
   );
 
+  const artifacts = readEntryDataFile(rootPath, 'data/artefakter.json');
+  const artifactById = id => artifacts.find(entry => entry && entry.id === id);
+  const skymningsvatten = artifactById('ar02');
+  const nidvatten = artifactById('ar06');
+  assert(skymningsvatten, 'Hittade inte ar02 i data/artefakter.json');
+  assert(nidvatten, 'Hittade inte ar06 i data/artefakter.json');
+
+  const skymRule = sandbox.rulesHelper.getEntryChoiceRule(skymningsvatten, { field: 'artifactEffect' });
+  const skymOptions = sandbox.rulesHelper.resolveChoiceOptions(skymRule, {
+    entry: skymningsvatten,
+    sourceEntry: skymningsvatten,
+    field: 'artifactEffect'
+  });
+  deepEqual(
+    skymOptions.map(option => option.value),
+    ['', 'xp'],
+    'Skymningsvatten ska bara tillåta Obunden eller XP-bindning'
+  );
+  deepEqual(
+    skymOptions.map(option => option.label),
+    ['Obunden', '−1 Erfarenhetspoäng'],
+    'Skymningsvatten ska visa korrekta bindningsetiketter'
+  );
+  deepEqual(
+    sandbox.rulesHelper.getArtifactEffectValueEffects(skymningsvatten, 'xp'),
+    { xp: 1 },
+    'XP-bindning ska ge +1 XP-kostnad'
+  );
+
+  const nidRule = sandbox.rulesHelper.getEntryChoiceRule(nidvatten, { field: 'artifactEffect' });
+  const nidOptions = sandbox.rulesHelper.resolveChoiceOptions(nidRule, {
+    entry: nidvatten,
+    sourceEntry: nidvatten,
+    field: 'artifactEffect'
+  });
+  deepEqual(
+    nidOptions.map(option => option.value),
+    ['', 'corruption'],
+    'Nidvatten ska bara tillåta Obunden eller korruptionsbindning'
+  );
+  deepEqual(
+    sandbox.rulesHelper.getArtifactEffectValueEffects(nidvatten, 'corruption'),
+    { corruption: 1 },
+    'Korruptionsbindning ska ge +1 permanent korruption'
+  );
+  assert(
+    sandbox.rulesHelper.getArtifactEffectValueLabel(nidvatten, '') === 'Obunden',
+    'Tomt artefaktvärde ska visas som Obunden'
+  );
+
+  const customArtifact = {
+    id: 'custom-artifact-bind-test',
+    namn: 'Custom Bind Test',
+    taggar: {
+      typ: ['Artefakt'],
+      artefakt_bindning: {
+        options: [
+          { value: 'blood', label: '+1 Blodspris', effects: { toughness: -1, xp: 2 } }
+        ]
+      }
+    }
+  };
+  const customRule = sandbox.rulesHelper.getEntryChoiceRule(customArtifact, { field: 'artifactEffect' });
+  const customOptions = sandbox.rulesHelper.resolveChoiceOptions(customRule, {
+    entry: customArtifact,
+    sourceEntry: customArtifact,
+    field: 'artifactEffect'
+  });
+  deepEqual(
+    customOptions.map(option => ({ value: option.value, label: option.label })),
+    [
+      { value: '', label: 'Obunden' },
+      { value: 'blood', label: '+1 Blodspris' }
+    ],
+    'Custom artefaktbindning ska ha Obunden + customval'
+  );
+  const customEffects = sandbox.rulesHelper.getArtifactEffectValueEffects(customArtifact, 'blood');
+  assert(customEffects.xp === 2, 'Custom bindning ska kunna ge XP-kostnad');
+  assert(customEffects.toughness === -1, 'Custom bindning ska kunna ge tålighetskostnad');
+  assert(Object.keys(customEffects).length === 2, 'Custom bindning ska inte lägga till extra defaultkostnader');
+
   const unsupported = sandbox.rulesHelper.getEntryRules({
     taggar: {
       regler: {

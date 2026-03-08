@@ -1,4 +1,6 @@
 (function(window){
+  const CHOICE_EMPTY_VALUE_KEY = '__empty__';
+
   function toArray(value) {
     if (Array.isArray(value)) return value;
     if (value === undefined || value === null) return [];
@@ -18,6 +20,11 @@
     return String(value);
   }
 
+  function normalizeOptionKey(value) {
+    const token = normalizeText(normalizeValue(value));
+    return token || CHOICE_EMPTY_VALUE_KEY;
+  }
+
   function createPopup() {
     if (document.getElementById('choicePopup')) return;
     const div = document.createElement('div');
@@ -34,7 +41,6 @@
         ? raw.value
         : (raw.varde !== undefined ? raw.varde : raw.id);
       const normalizedValue = normalizeValue(value);
-      if (!normalizedValue && normalizedValue !== '0') return null;
       const label = raw.label !== undefined
         ? String(raw.label)
         : (raw.namn !== undefined ? String(raw.namn) : normalizedValue);
@@ -48,7 +54,6 @@
       };
     }
     const normalizedValue = normalizeValue(raw);
-    if (!normalizedValue && normalizedValue !== '0') return null;
     return {
       idx: index,
       value: normalizedValue,
@@ -117,8 +122,8 @@
 
     const dedupe = new Set();
     const deduped = out.filter(option => {
-      const key = normalizeText(option.value);
-      if (!key || dedupe.has(key)) return false;
+      const key = normalizeOptionKey(option.value);
+      if (dedupe.has(key)) return false;
       dedupe.add(key);
       return true;
     });
@@ -126,9 +131,9 @@
     const excludeUsed = Boolean(rule?.exclude_used);
     const filtered = excludeUsed
       ? deduped.filter(option => {
-        const key = normalizeText(option.value);
-        if (!key) return true;
-        return !usedSet.has(key);
+        const token = normalizeText(option.value);
+        if (!token) return true;
+        return !usedSet.has(token);
       })
       : deduped;
 

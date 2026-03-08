@@ -706,6 +706,66 @@
     return {};
   }
 
+  function defaultArtifactEffectTotals() {
+    return {
+      xp: 0,
+      corruption: 0,
+      toughness: 0,
+      pain: 0,
+      capacity: 0
+    };
+  }
+
+  function normalizeArtifactEffectTotals(value) {
+    const base = defaultArtifactEffectTotals();
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return base;
+    const out = { ...base };
+    Object.keys(value).forEach(key => {
+      const num = Number(value[key]);
+      if (!Number.isFinite(num)) return;
+      out[key] = (out[key] || 0) + num;
+    });
+    return out;
+  }
+
+  function getArtifactEffectOption(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectOption === 'function') {
+      try {
+        return helper.getArtifactEffectOption(entry, artifactEffect, context) || null;
+      } catch (_) {}
+    }
+    const value = String(artifactEffect || '');
+    if (!value) return { value: '', label: 'Obunden', effects: {} };
+    if (value === 'xp') return { value: 'xp', label: '−1 Erfarenhetspoäng', effects: { xp: 1 } };
+    if (value === 'corruption') return { value: 'corruption', label: '+1 Permanent korruption', effects: { corruption: 1 } };
+    return { value, label: value, effects: {} };
+  }
+
+  function getArtifactEffectLabel(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectValueLabel === 'function') {
+      try {
+        return String(helper.getArtifactEffectValueLabel(entry, artifactEffect, context) || '');
+      } catch (_) {}
+    }
+    return getArtifactEffectOption(entry, artifactEffect, context)?.label || 'Obunden';
+  }
+
+  function getArtifactEffectEffects(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectValueEffects === 'function') {
+      try {
+        return normalizeArtifactEffectTotals(
+          helper.getArtifactEffectValueEffects(entry, artifactEffect, context)
+        );
+      } catch (_) {}
+    }
+    return normalizeArtifactEffectTotals(
+      getArtifactEffectOption(entry, artifactEffect, context)?.effects || {}
+    );
+  }
+
   function isSameChoiceSource(left, right) {
     if (!left || !right) return false;
     const leftId = left.id === undefined || left.id === null ? '' : String(left.id).trim();
@@ -1406,17 +1466,29 @@
   }
 
   function recalcArtifactEffects() {
-    const inv = flattenInventory(storeHelper.getInventory(store));
-    const effects = inv.reduce((acc, row) => {
+    const rawInventory = storeHelper.getInventory(store);
+    const list = storeHelper.getCurrentList(store);
+    const flatInventory = flattenInventory(rawInventory);
+    const effects = flatInventory.reduce((acc, row) => {
       const entry = getEntry(row.id || row.name);
       const tagTyp = entry.taggar?.typ || [];
       if (!tagTyp.includes('Artefakt')) return acc;
-      const eff = row.artifactEffect;
-      if (eff === 'corruption') acc.corruption += 1;
-      else if (eff === 'xp') acc.xp += 1;
+      const resolved = getArtifactEffectEffects(entry, row.artifactEffect, {
+        entry,
+        sourceEntry: entry,
+        row,
+        list,
+        inventory: rawInventory,
+        field: 'artifactEffect'
+      });
+      Object.keys(resolved).forEach(key => {
+        const num = Number(resolved[key]);
+        if (!Number.isFinite(num) || num === 0) return;
+        acc[key] = (acc[key] || 0) + num;
+      });
       return acc;
-    }, { xp:0, corruption:0 });
-    storeHelper.setArtifactEffects(store, effects);
+    }, defaultArtifactEffectTotals());
+    storeHelper.setArtifactEffects(store, normalizeArtifactEffectTotals(effects));
   }
 
   function makeNameMap(inv) {
@@ -4543,15 +4615,14 @@
 
     const effectVal = row.artifactEffect ?? entry.artifactEffect ?? '';
     if (isArtifact) {
-      let txt, cls = 'tag';
-      if (effectVal === 'corruption') {
-        txt = '+1 Permanent korruption';
-      } else if (effectVal === 'xp') {
-        txt = '–1 Erfarenhetspoäng';
-      } else {
-        txt = 'Obunden';
-        cls += ' unbound';
-      }
+      const txt = getArtifactEffectLabel(entry, effectVal, {
+        entry,
+        sourceEntry: entry,
+        row,
+        field: 'artifactEffect'
+      });
+      let cls = 'tag';
+      if (!String(effectVal || '').trim()) cls += ' unbound';
       const effectHtml = `<br><span class="${cls}">${txt}</span>`;
       desc += effectHtml;
       infoBody += effectHtml;

@@ -79,6 +79,9 @@
         "typ": [
           "Artefakt"
         ],
+        "artefakt_bindning": [
+          "xp"
+        ],
         "handling": {
           "Förmåga 1": [
             "Fri"
@@ -228,6 +231,9 @@
         "typ": [
           "Artefakt"
         ],
+        "artefakt_bindning": [
+          "corruption"
+        ],
         "handling": {
           "Förmåga 1": [
             "Fri"
@@ -303,7 +309,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Vapen",
+          "Tunga vapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -332,7 +339,9 @@
       "id": "ar09",
       "namn": "Brandskär",
       "beskrivning": "branDskär Kastyxan Brandskär hyser vilda andar av eld och aska vilka låter den flamma upp och också flyga genom luften tillbaka till kastarens hand. Legenderna är märkligt tysta om vapnets ursprung, men det är inte otänkbart att vapnet är den brinnande yxa som sades svingas av monsterjägaren Ksandukha, hon som enligt legenderna dräpte Davokars sista drake. Vapnets huvud glöder och osar svagt och ger +1T4 i skada på alla attacker. Vapnets mästare är märkligt opåverkad av dess hetta och kan hantera det som en vanlig kastyxa. Det eldfängda vapnet söker sig alltid tillbaka till mästaren, om inte denne vill ha det annorlunda. När yxan kastas eller tappas återvänder den till mästarens hand som en fri handling, utan någon kostnad i korruption.",
-      "kvalitet": [],
+      "kvalitet": [
+        "Självfarande"
+      ],
       "taggar": {
         "typ": [
           "Artefakt",
@@ -365,10 +374,13 @@
       "id": "ar10",
       "namn": "Ellas Trollkors",
       "beskrivning": "Ellas trollkors Ett trollkors graverat på en plåt av meteoritjärn, smitt av trollhaggan Ella som hjälp mot hennes ärkefiende, den styggelsefödda barbarhärskaren Odalbagar. Antingen hjälpte korset inte trollkonan, eller så stupade trollet i senare strider. Oavsett vilket har hennes skyddstalisman vandrat vidare till andra händer. Trollkorset är av lämplig smyckesstorlek för ett fullvuxet ärketroll och alltså i storlek som en bucklare för en människa. Trollkorset går de facto att använda som just en bucklare, med de regler som grundboken anger (sidan 150). Detta kräver inte heller att rollpersonen binder artefakten till sig. För trollkorsets övriga krafter måste artefakten bindas till bäraren på vanligt vis.",
-      "kvalitet": [],
+      "kvalitet": [
+        "Armfäst"
+      ],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Sköld"
         ],
         "handling": {
           "Förmåga 1": [
@@ -377,6 +389,15 @@
           "Förmåga 2": [
             "Reaktiv"
           ]
+        },
+        "regler": {
+          "andrar": [
+            {
+              "mal": "forsvar_modifierare",
+              "varde": 1,
+              "regel_id": "ellas_trollkors_bucklare_forsvar"
+            }
+          ]
         }
       },
       "nivåer": {
@@ -384,8 +405,8 @@
         "Förmåga 2": "Hämnande spegel; Handling: Reaktiv\nBäraren tar stöd i trollsmedens djupaste kunnande för att försöka vända tillbaka anfallande magi mot kastaren. Alla offensiva krafter som inkluderar trollkorsets bärare som måltavla påverkas. Den hämnande speglingen fungerar regeltekniskt som om bäraren av trollkorset attackerade kastaren med kraften i fråga. Om kraften exempelvis kräver ett slag mot Viljestark är det alltså bärarens Viljestark som används för att avgöra om spelgingen lyckas, modifierat av kastarens karaktärsdrag om modifiering ska göras. Speglingen är dock riskfylld. En misslyckad spegling drar ännu mer korruption till bäraren. Korruption: 1T4 om försöket lyckas, 1T6 om det miss lyckas"
       },
       "stat": {
-        "skada": "",
-        "vikt": 1.5
+        "skada": "1T4",
+        "vikt": 0.5
       },
       "grundpris": {
         "daler": 0,
@@ -400,7 +421,9 @@
       "kvalitet": [],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Rustning",
+          "Lätt Rustning"
         ],
         "handling": {
           "Förmåga 1": [
@@ -416,8 +439,9 @@
         "Förmåga 2": "Kommenderande stämma; Handling: Aktiv\nHaganorskinnets bärare kan med ett lyckat [Övertygande←Viljestark] ta kontroll över en varelse. Kontrollen sitter i tills bäraren misslyckas med ett [Övertygande←Viljestark] (slås på bärarens initiativ) eller tills koncentrationen bryts [Viljestark – Skada]. Den kontrollerade varelsen har endast en handling per runda och kan inte använda aktiva förmågor eller krafter under kontrollen. Korruption: 1T4."
       },
       "stat": {
-        "skada": "",
-        "vikt": 0.5
+        "skydd": "1T4",
+        "vikt": 0.5,
+        "begränsning": 0
       },
       "grundpris": {
         "daler": 0,
@@ -969,7 +993,9 @@
       "id": "ar30",
       "namn": "Loravanas Kastsköld",
       "beskrivning": "En av det tidiga Symbaroums mest omsjungna hjältar är krigaren Loravana, ledare för Drottning Serala-Han Urels väpnade styrkor. Under hennes befäl kunde drottningens nordliga smårike ta allt större landområden i beslag, och vissa legender utpekar henne därför som det förenade Symbaroums verkliga moder. Om det stämmer skulle det även förklara varför hennes legendariska sköld blev kvar i de symbariska härskarnas ägo.",
-      "kvalitet": [],
+      "kvalitet": [
+        "Självfarande"
+      ],
       "taggar": {
         "typ": [
           "Artefakt"
@@ -1457,7 +1483,9 @@
       "id": "ar48",
       "namn": "Girakosh Cirkelstål",
       "beskrivning": "Ett runristat cirkelvapen av skarpt stål som enligt ryktet en gång bars av en hjälte uppfostrad bland troll. Föremålet florerar i norra gränstrakter och sägs vara igenkänt av trollen; en bärare kan behöva förhandla eller visa gott uppsåt. Den som binder artefakten kan även använda den i närstrid likt en dolk, annars är det ett kastvapen. Beskrivningen undviker ursprungsplatser och olycksbådande detaljer som hör till spelledarens verktyg, och fokuserar på reglerna för bruk.",
-      "kvalitet": [],
+      "kvalitet": [
+        "Självfarande"
+      ],
       "taggar": {
         "typ": [
           "Artefakt",
@@ -1596,7 +1624,9 @@
       "id": "ar52",
       "namn": "Iloonas Spegelsköld",
       "beskrivning": "En speglande sköld som enligt myten smiddes av en häxa i samarbete med ett troll. Känd för att vända bort fientlig magi och för att kunna kastas i rätt händer. Sköldens nuvarande hemvist lämnas därhän; texten fokuserar på användning i spel.",
-      "kvalitet": [],
+      "kvalitet": [
+        "Självfarande"
+      ],
       "taggar": {
         "typ": [
           "Artefakt"

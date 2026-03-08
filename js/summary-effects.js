@@ -462,6 +462,9 @@
       xp: (artifactEffects.xp || 0) + (manualAdjust.xp || 0),
       corruption: (artifactEffects.corruption || 0) + (manualAdjust.corruption || 0)
     };
+    const artifactToughness = Number(artifactEffects.toughness || 0);
+    const artifactPain = Number(artifactEffects.pain || 0);
+    const artifactCapacity = Number(artifactEffects.capacity || 0);
     const manualToughness = Number(manualAdjust.toughness || 0);
     const manualPain = Number(manualAdjust.pain || 0);
     const manualCapacity = Number(manualAdjust.capacity || 0);
@@ -504,9 +507,9 @@
     const perm = storeHelper.calcPermanentCorruption(list, corruptionEffects);
     const effectsWithDark = corruptionEffects;
 
-    const capacity = storeHelper.calcCarryCapacity(valStark, list) + manualCapacity;
-    const tal = storeHelper.calcToughness(valStark, list) + manualToughness;
-    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + manualPain;
+    const capacity = storeHelper.calcCarryCapacity(valStark, list) + artifactCapacity + manualCapacity;
+    const tal = storeHelper.calcToughness(valStark, list) + artifactToughness + manualToughness;
+    const pain = storeHelper.calcPainThreshold(valStark, list, effectsWithDark) + artifactPain + manualPain;
 
     const defTrait = window.getDefenseTraitName ? getDefenseTraitName(list, vals) : 'Kvick';
     const kvickForDef = vals[defTrait];

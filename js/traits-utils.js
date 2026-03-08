@@ -788,6 +788,9 @@
       xp: (artifactEffects?.xp || 0) + (manualAdjust?.xp || 0),
       corruption: (artifactEffects?.corruption || 0) + (manualAdjust?.corruption || 0)
     };
+    const artifactToughness = Number(artifactEffects?.toughness || 0);
+    const artifactPain = Number(artifactEffects?.pain || 0);
+    const artifactCapacity = Number(artifactEffects?.capacity || 0);
     const manualToughness = Number(manualAdjust?.toughness || 0);
     const manualPain = Number(manualAdjust?.pain || 0);
     const manualCapacity = Number(manualAdjust?.capacity || 0);
@@ -859,9 +862,9 @@
 
       if (k === 'Stark') {
         const base = storeHelper.calcCarryCapacity(val, list);
-        const capacity = base + manualCapacity;
-        const tal = storeHelper.calcToughness(val, list) + manualToughness;
-        const pain = storeHelper.calcPainThreshold(val, list, effectsWithDark) + manualPain;
+        const capacity = base + artifactCapacity + manualCapacity;
+        const tal = storeHelper.calcToughness(val, list) + artifactToughness + manualToughness;
+        const pain = storeHelper.calcPainThreshold(val, list, effectsWithDark) + artifactPain + manualPain;
 
 
         extras.push(`Tålighet: ${tal}`)
