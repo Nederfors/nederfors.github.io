@@ -129,27 +129,38 @@
       }
     },
     {
-      "id": "bas6",
-      "namn": "Djurvän",
-      "beskrivning": "Handling: Speciell. Banden mellan klanfolken och skogens varelser är urgamla; de delar mark, bytesdjur och ibland till och med gudar. Karaktären har tillägnat sig denna djupa samhörighet och erhåller därmed särdraget Bestars tunga. Karaktärens förståelse för djurisk instinkt är så pass djup att inget test mot [Övertygande] krävs för att be en best om hjälp, förutsatt att varelsen har [Listig] lägre än 10. Begäran måste dock ligga inom ramen för vad djuret naturligt kan och vill göra.",
-      "taggar": {
-        "typ": [
-          "Basförmåga"
-        ],
-        "ark_trad": [
-          "Häxa"
-        ],
-        "test": [
-          "Övertygande"
-        ],
-        "nivå_data": {
-          "Enkel": {
-            "handling": "Speciell",
-            "skadetyp": ""
-          }
+  "id": "bas6",
+  "namn": "Djurvän",
+  "beskrivning": "Handling: Speciell. Banden mellan klanfolken och skogens varelser är urgamla; de delar mark, bytesdjur och ibland till och med gudar. Karaktären har tillägnat sig denna djupa samhörighet och erhåller därmed särdraget Bestars tunga. Karaktärens förståelse för djurisk instinkt är så pass djup att inget test mot [Övertygande] krävs för att be en best om hjälp, förutsatt att varelsen har [Listig] lägre än 10. Begäran måste dock ligga inom ramen för vad djuret naturligt kan och vill göra.",
+  "taggar": {
+    "typ": [
+      "Basförmåga"
+    ],
+    "ark_trad": [
+      "Häxa"
+    ],
+    "test": [
+      "Övertygande"
+    ],
+    "nivå_data": {
+      "Enkel": {
+        "handling": "Speciell",
+        "skadetyp": "",
+        "regler": {
+          "ger": [
+            {
+              "mal": "post",
+              "namn": [
+                "Bestars tunga"
+              ],
+              "gratis": true
+            }
+          ]
         }
       }
-    },
+    }
+  }
+},
     {
       "id": "bas7",
       "namn": "Fältkartering",

@@ -1,6 +1,8 @@
 (function(window){
   const LVL   = ['Novis','Ges\u00e4ll','M\u00e4stare'];
   const EQUIP = [
+    'Närstridsvapen',
+    'Avståndsvapen',
     'Vapen',
     'Sköld',
     'Pil/Lod',
@@ -187,6 +189,8 @@
     'Särdrag',
     'Monstruöst särdrag',
     'Rustning',
+    'Närstridsvapen',
+    'Avståndsvapen',
     'Vapen',
     'Pil/Lod',
     'Kvalitet',
@@ -215,6 +219,8 @@
     'Särdrag': 'Särdrag',
     'Monstruöst särdrag': 'Monstruösa särdrag',
     'Rustning': 'Rustningar',
+    'Närstridsvapen': 'Närstridsvapen',
+    'Avståndsvapen': 'Avståndsvapen',
     'Vapen': 'Vapen',
     'Pil/Lod': 'Pilar/Lod',
     'Sköld': 'Sköldar',
@@ -324,21 +330,26 @@
     const toWeapon  = qTypes.includes('Vapenkvalitet');
     const toShield  = qTypes.includes('Sköldkvalitet');
     const toArmor   = qTypes.includes('Rustningskvalitet');
-
-    const QUAL_ITEM_TYPES = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt','Lägre Artefakt'];
+    const hasGeneralQualityTarget = () =>
+      hasWeaponType(itTypes)
+      || itTypes.includes('Sköld')
+      || itTypes.includes('Pil/Lod')
+      || itTypes.includes('Rustning')
+      || itTypes.includes('Artefakt')
+      || itTypes.includes('Lägre Artefakt');
 
     // Allmän kvalitet: endast för föremål som kan ha kvaliteter
     if (isGeneral) {
-      return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
+      return hasGeneralQualityTarget();
     }
 
     // Om inga nya typer finns på kvaliteten: falla tillbaka till gamla beteendet
     // (kvaliteter gällde generellt för vapen/sköld/rustning)
     if (!toWeapon && !toShield && !toArmor) {
-      return QUAL_ITEM_TYPES.some(t => itTypes.includes(t));
+      return hasGeneralQualityTarget();
     }
 
-    if (toWeapon && itTypes.includes('Vapen')) return true;
+    if (toWeapon && hasWeaponType(itTypes)) return true;
     if (toShield && itTypes.includes('Sköld')) return true;
     if (toArmor  && itTypes.includes('Rustning')) return true;
     return false;
@@ -460,19 +471,113 @@
     return String(val).split(',').map(t=>t.trim()).filter(Boolean);
   }
 
-  const TWO_HANDED_WEAPON_TYPES = Object.freeze(['Långa vapen', 'Tunga vapen']);
   const normalizeTypeNameForMatch = value => String(value || '')
     .trim()
     .toLowerCase()
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '');
+  const LEGACY_WEAPON_BASE_TYPE = 'Vapen';
+  const MELEE_WEAPON_BASE_TYPE = 'Närstridsvapen';
+  const RANGED_WEAPON_BASE_TYPE = 'Avståndsvapen';
+  const WEAPON_BASE_TYPES = Object.freeze([
+    MELEE_WEAPON_BASE_TYPE,
+    RANGED_WEAPON_BASE_TYPE,
+    LEGACY_WEAPON_BASE_TYPE
+  ]);
+  const WEAPON_SUBTYPE_ALIASES = Object.freeze({
+    'Tunga vapen': 'Tvåhandsvapen'
+  });
+  const WEAPON_TYPE_FALLBACK = Object.freeze([
+    'Enhandsvapen',
+    'Korta vapen',
+    'Långa vapen',
+    'Tvåhandsvapen',
+    'Tunga vapen',
+    'Obeväpnad attack',
+    'Stav',
+    'Armborst',
+    'Pilbåge',
+    'Kastvapen',
+    'Slunga',
+    'Blåsrör',
+    'Belägringsvapen',
+    'Projektilvapen'
+  ]);
+  const WEAPON_TYPE_KEYS = new Set(
+    [...WEAPON_BASE_TYPES, ...WEAPON_TYPE_FALLBACK]
+      .map(normalizeTypeNameForMatch)
+      .filter(Boolean)
+  );
+  const WEAPON_BASE_TYPE_KEYS = new Set(
+    WEAPON_BASE_TYPES.map(normalizeTypeNameForMatch).filter(Boolean)
+  );
+  const RANGED_WEAPON_TYPES = Object.freeze([
+    RANGED_WEAPON_BASE_TYPE,
+    'Armborst',
+    'Pilbåge',
+    'Kastvapen',
+    'Slunga',
+    'Blåsrör',
+    'Belägringsvapen',
+    'Projektilvapen',
+    'Pil/Lod'
+  ]);
+  const RANGED_WEAPON_TYPE_KEYS = new Set(
+    RANGED_WEAPON_TYPES.map(normalizeTypeNameForMatch).filter(Boolean)
+  );
+  const TWO_HANDED_WEAPON_TYPES = Object.freeze(['Långa vapen', 'Tvåhandsvapen', 'Tunga vapen']);
   const TWO_HANDED_WEAPON_TYPE_KEYS = new Set(
     TWO_HANDED_WEAPON_TYPES.map(normalizeTypeNameForMatch)
   );
 
+  function normalizeWeaponTypeName(typeName) {
+    const original = String(typeName || '').trim();
+    if (!original) return '';
+    const wantedKey = normalizeTypeNameForMatch(original);
+    for (const [from, to] of Object.entries(WEAPON_SUBTYPE_ALIASES)) {
+      if (normalizeTypeNameForMatch(from) === wantedKey) return to;
+    }
+    return original;
+  }
+
+  function normalizeWeaponTypeList(types) {
+    const source = Array.isArray(types) ? types : [types];
+    const out = [];
+    const seen = new Set();
+    source.forEach(raw => {
+      const normalized = normalizeWeaponTypeName(raw);
+      if (!normalized) return;
+      const key = normalizeTypeNameForMatch(normalized);
+      if (!key || seen.has(key)) return;
+      seen.add(key);
+      out.push(normalized);
+    });
+    return out;
+  }
+
+  function isWeaponType(typeName) {
+    const key = normalizeTypeNameForMatch(normalizeWeaponTypeName(typeName));
+    return key ? WEAPON_TYPE_KEYS.has(key) : false;
+  }
+
+  function hasWeaponType(types) {
+    return (Array.isArray(types) ? types : []).some(isWeaponType);
+  }
+
+  function isWeaponBaseType(typeName) {
+    const key = normalizeTypeNameForMatch(typeName);
+    return key ? WEAPON_BASE_TYPE_KEYS.has(key) : false;
+  }
+
+  function isRangedWeaponType(typeName) {
+    const key = normalizeTypeNameForMatch(normalizeWeaponTypeName(typeName));
+    return key ? RANGED_WEAPON_TYPE_KEYS.has(key) : false;
+  }
+
   function isTwoHandedWeaponType(typeName) {
     if (!typeName) return false;
-    return TWO_HANDED_WEAPON_TYPE_KEYS.has(normalizeTypeNameForMatch(typeName));
+    const normalized = normalizeWeaponTypeName(typeName);
+    return TWO_HANDED_WEAPON_TYPE_KEYS.has(normalizeTypeNameForMatch(normalized));
   }
 
   function isTwoHandedWeaponEntry(entry) {
@@ -566,7 +671,7 @@
       }
       return parts.length ? `<br>${parts.join('<br>')}` : '';
     }
-    if (types.includes('Vapen') || types.includes('Sköld')) {
+    if (hasWeaponType(types) || types.includes('Sköld')) {
       const dmg = entry.stat?.skada;
       return dmg ? `<br>Skada: ${dmg}` : '';
     }
@@ -1378,6 +1483,16 @@
   window.splitTags = splitTags;
   window.explodeTags = explodeTags;
   window.splitQuals = splitQuals;
+  window.LEGACY_WEAPON_BASE_TYPE = LEGACY_WEAPON_BASE_TYPE;
+  window.MELEE_WEAPON_BASE_TYPE = MELEE_WEAPON_BASE_TYPE;
+  window.RANGED_WEAPON_BASE_TYPE = RANGED_WEAPON_BASE_TYPE;
+  window.WEAPON_BASE_TYPES = WEAPON_BASE_TYPES;
+  window.normalizeWeaponTypeName = normalizeWeaponTypeName;
+  window.normalizeWeaponTypeList = normalizeWeaponTypeList;
+  window.isWeaponType = isWeaponType;
+  window.hasWeaponType = hasWeaponType;
+  window.isWeaponBaseType = isWeaponBaseType;
+  window.isRangedWeaponType = isRangedWeaponType;
   window.TWO_HANDED_WEAPON_TYPES = TWO_HANDED_WEAPON_TYPES;
   window.isTwoHandedWeaponType = isTwoHandedWeaponType;
   window.isTwoHandedWeaponEntry = isTwoHandedWeaponEntry;

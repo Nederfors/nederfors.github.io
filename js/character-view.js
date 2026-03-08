@@ -35,6 +35,47 @@
     return !!(await confirmPopup(text));
   }
 
+  async function handleSnapshotEntryRemoval(entry, store) {
+    if (!entry || typeof entry !== 'object') return true;
+    const impactFn = window.storeHelper?.getSnapshotSourceImpactForEntry;
+    if (typeof impactFn !== 'function') return true;
+    const impact = impactFn(store, entry) || {};
+    const count = Number(impact.count || 0);
+    const sourceKeys = Array.isArray(impact.sourceKeys)
+      ? impact.sourceKeys.map(key => String(key || '').trim()).filter(Boolean)
+      : [];
+    const fallbackSourceKey = String(impact.sourceKey || '').trim();
+    if (!sourceKeys.length && fallbackSourceKey) sourceKeys.push(fallbackSourceKey);
+    if (!count || !sourceKeys.length) return true;
+
+    if (typeof window.openDialog === 'function') {
+      const label = String(entry?.namn || 'källan').trim() || 'källan';
+      const message = `${quoteName(label)} har ${count} snapshot-effekt${count === 1 ? '' : 'er'}.\nVälj om de ska tas bort eller behållas när posten tas bort.`;
+      const choice = await window.openDialog(message, {
+        cancel: true,
+        okText: 'Ta bort effekter',
+        extraText: 'Behåll effekter',
+        cancelText: 'Avbryt'
+      });
+      if (choice === false) return false;
+      if (choice === true) {
+        sourceKeys.forEach(key => window.storeHelper?.removeSnapshotRulesBySource?.(store, key));
+        return true;
+      }
+      if (choice === 'extra') {
+        sourceKeys.forEach(key => window.storeHelper?.detachSnapshotRulesBySource?.(store, key));
+      }
+      return true;
+    }
+
+    const fallback = await confirmPopup('Ta bort kopplade snapshot-effekter också?');
+    if (fallback) {
+      sourceKeys.forEach(key => window.storeHelper?.removeSnapshotRulesBySource?.(store, key));
+      return true;
+    }
+    return false;
+  }
+
   function initCharacter() {
     const createEntryCard = window.entryCardFactory.create;
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
@@ -161,6 +202,8 @@
       ['Ras', 'Raser'],
       ['Artefakt', 'Artefakter'],
       ['L\u00e4gre Artefakt', 'L\u00e4gre artefakter'],
+      ['Närstridsvapen', 'Vapen'],
+      ['Avståndsvapen', 'Vapen'],
       ['Vapen', 'Vapen'],
       ['Rustning', 'Rustningar'],
       ['Sköld', 'Sköldar'],
@@ -310,7 +353,28 @@
       return fallback || 'Övrigt';
     };
 
-    const abilityDisplayName = (entry) => {
+    const getEntryChoiceDisplay = (entry, context = {}) => {
+      if (typeof window.rulesHelper?.getEntryChoiceDisplay !== 'function') return null;
+      try {
+        return window.rulesHelper.getEntryChoiceDisplay(entry, context) || null;
+      } catch (_) {
+        return null;
+      }
+    };
+
+    const abilityDisplayName = (entry, context = {}) => {
+      if (typeof window.rulesHelper?.formatEntryDisplayName === 'function') {
+        try {
+          const formatted = window.rulesHelper.formatEntryDisplayName(entry, {
+            ...context,
+            includeChoice: true,
+            includeLevel: true
+          });
+          if (formatted) return formatted;
+        } catch (_) {
+          // Fall back to legacy formatting below.
+        }
+      }
       const base = entry?.namn ? String(entry.namn).trim() : 'Okänd post';
       const parts = [];
       if (entry?.trait) parts.push(String(entry.trait).trim());
@@ -384,9 +448,10 @@
         return sections.get(key);
       };
 
+      const currentEntries = storeHelper.getCurrentList(store) || [];
       const abilityMap = new Map();
-      storeHelper.getCurrentList(store).
-        filter(entry => !isInv(entry)).
+      currentEntries
+        .filter(entry => !isInv(entry)).
         forEach(entry => {
           const baseEntry = resolveDbEntry(entry);
           const baseName = baseEntry?.namn || entry?.namn || 'Post';
@@ -403,7 +468,17 @@
           if (baseEntry?.id !== undefined) keyParts.push(`id:${baseEntry.id}`);
           else if (entry?.id !== undefined) keyParts.push(`id:${entry.id}`);
           else if (entry?.namn) keyParts.push(`name:${entry.namn}`);
-          if (entry?.trait) keyParts.push(`trait:${entry.trait}`);
+          const choiceMeta = getEntryChoiceDisplay(entry, {
+            list: currentEntries,
+            sourceEntry: baseEntry || entry,
+            level: entry?.nivå || ''
+          });
+          if (choiceMeta?.field) {
+            const choiceValueKey = String(choiceMeta.value ?? '').trim().toLowerCase();
+            keyParts.push(`choice:${choiceMeta.field}:${choiceValueKey}`);
+          } else if (entry?.trait) {
+            keyParts.push(`trait:${entry.trait}`);
+          }
           if (entry?.nivå) keyParts.push(`lvl:${entry.nivå}`);
           if (!keyParts.length) keyParts.push(`name:${baseName}`);
           const key = keyParts.join('|');
@@ -411,7 +486,11 @@
           if (!bucket) {
             bucket = {
               section,
-              label: abilityDisplayName(entry),
+              label: abilityDisplayName(entry, {
+                list: currentEntries,
+                sourceEntry: baseEntry || entry,
+                level: entry?.nivå || ''
+              }),
               baseName,
               count: 0,
               effects
@@ -665,15 +744,37 @@
       const hasCurrentValue = currentValue !== undefined
         && currentValue !== null
         && String(currentValue).trim() !== '';
+      const isCurrentChoiceStillAvailable = () => {
+        if (!hasCurrentValue) return false;
+        if (typeof picker.resolveRuleOptions !== 'function') return true;
+        try {
+          const optionsForRule = picker.resolveRuleOptions(rule, {
+            ...context,
+            entry: candidate,
+            usedValues,
+            currentValue
+          });
+          const wanted = normalizeChoiceToken(currentValue);
+          if (!wanted) return false;
+          return optionsForRule.some(option =>
+            !option?.disabled && normalizeChoiceToken(option?.value) === wanted
+          );
+        } catch (_) {
+          // Fallback to legacy behavior if option resolution fails.
+          return true;
+        }
+      };
       if (options?.promptIfMissingOnly && hasCurrentValue) {
-        return {
-          hasChoice: true,
-          cancelled: false,
-          skippedPrompt: true,
-          rule,
-          value: currentValue,
-          usedValues
-        };
+        if (isCurrentChoiceStillAvailable()) {
+          return {
+            hasChoice: true,
+            cancelled: false,
+            skippedPrompt: true,
+            rule,
+            value: currentValue,
+            usedValues
+          };
+        }
       }
       const picked = await picker.pickForEntry({
         entry: candidate,
@@ -1041,7 +1142,10 @@
         list.forEach(entry => {
           const entryTypes = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
           if (!wanted.some(type => matchesType(entryTypes, type))) return;
-          const display = abilityDisplayName(entry);
+          const display = abilityDisplayName(entry, {
+            list,
+            level: entry?.nivå || ''
+          });
           if (!display) return;
           const key = display.toLocaleLowerCase('sv');
           const item = counts.get(key);
@@ -1525,24 +1629,23 @@
           let desc = abilityHtml(p, p.nivå);
           let infoBodyHtml = desc;
           const infoMeta = [];
-          let raceInfo = '';
-          let traitInfo = '';
+          const keyInfoMeta = [];
+          let choiceInfo = '';
           if (isRas(p) || isYrke(p) || isElityrke(p)) {
             const extra = yrkeInfoHtml(p);
             if (extra) infoBodyHtml += extra;
           }
-          if (p.namn === 'Blodsband' && p.race) {
-            const race = escapeHtml(p.race);
-            infoMeta.push({ label: 'Ras', value: race });
-            raceInfo = `<p><strong>Ras:</strong> ${race}</p>`;
-          }
-          if (p.trait) {
-            const label = p.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
-            const value = escapeHtml(p.trait);
-            infoMeta.push({ label, value });
-            traitInfo = `<p><strong>${label}:</strong> ${value}</p>`;
-          }
           const curList = storeHelper.getCurrentList(store);
+          const choiceMeta = getEntryChoiceDisplay(p, {
+            list: curList,
+            level: p?.nivå || ''
+          });
+          if (choiceMeta?.valueLabel) {
+            const label = escapeHtml(choiceMeta.label || 'Val');
+            const value = escapeHtml(choiceMeta.valueLabel);
+            keyInfoMeta.push({ label, value });
+            choiceInfo = `<p><strong>${label}:</strong> ${value}</p>`;
+          }
           let xpSourceMatch = null;
           if (Array.isArray(curList) && curList.length) {
             xpSourceMatch = curList.find(item => {
@@ -1687,6 +1790,7 @@
           const infoTagsHtml = infoTagParts.join(' ');
           const infoPanelHtml = buildInfoPanelHtml({
             tagsHtml: infoTagsHtml,
+            keyInfoMeta,
             bodyHtml: infoBodyHtml,
             meta: infoMeta,
             sections: infoSections,
@@ -1744,8 +1848,8 @@
           const leftSections = [];
           if (shouldDockTags && dockedTagsHtml) leftSections.push(dockedTagsHtml);
           else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
-          const descBlock = (!hideDetails && (desc || raceInfo || traitInfo))
-            ? `<div class="card-desc">${desc}${raceInfo}${traitInfo}</div>`
+          const descBlock = (!hideDetails && (desc || choiceInfo))
+            ? `<div class="card-desc">${desc}${choiceInfo}</div>`
             : '';
           const dataset = { name: p.namn };
           if (p.trait) dataset.trait = p.trait;
@@ -2136,6 +2240,7 @@
           return;
         }
         const removed = before.find(it => it.namn === name && (tr ? it.trait === tr : !it.trait));
+        if (removed && !(await handleSnapshotEntryRemoval(removed, store))) return;
         const remDeps = storeHelper.getDependents(before, removed);
         if (name === 'Mörkt blod' && remDeps.length) {
           if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
@@ -2223,6 +2328,23 @@
       if (ent) {
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
+        const previousChoiceRule = (() => {
+          const picker = window.choicePopup;
+          if (!picker || typeof picker.getChoiceRule !== 'function') return null;
+          const prevCandidate = { ...ent, nivå: old };
+          const prevContext = {
+            list: Array.isArray(list) ? list : [],
+            entry: prevCandidate,
+            sourceEntry: prevCandidate,
+            level: old || '',
+            sourceLevel: old || ''
+          };
+          try {
+            return picker.getChoiceRule(prevCandidate, prevContext, { fallbackLegacy: true });
+          } catch (_) {
+            return null;
+          }
+        })();
         ent.nivå = select.value;
         const levelChoice = await pickCharacterEntryChoice(ent, list, ent.nivå, ent, {
           promptIfMissingOnly: true
@@ -2253,12 +2375,13 @@
               }
             }
           }
-        } else if (name === 'Monsterlärd' && ent.trait) {
-          delete ent.trait;
-          storeHelper.setCurrentList(store, list); updateXP();
-          renderSkills(filtered()); renderTraits(); updateSearchDatalist();
-          window.entryCardFactory?.syncLevelControl?.(select);
-          return;
+        } else {
+          const staleField = previousChoiceRule?.field;
+          if (staleField && Object.prototype.hasOwnProperty.call(ent, staleField)) {
+            delete ent[staleField];
+          } else if (name === 'Monsterlärd' && ent.trait) {
+            delete ent.trait;
+          }
         }
         const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
           ? window.rulesHelper.evaluateEntryStops(ent, before, {

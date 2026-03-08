@@ -43,14 +43,14 @@
     {
       "id": "kv3",
       "namn": "Ledat",
-      "beskrivning": "Vapnet är ledat, vapenhuvudet slår runt parerande vapen och sköldkanter och är därmed svårparerat. Kättingens längd gör också attacker svåra att undvika. Även vid ett lyckat försvar träffar fienden om Försvaret sker på ett udda utfall på tärningen; då träffar vapnet ändå, med 1t6 i skada. Inga förmågor påverkar denna sekundära skada, den är 1t6 oavsett anfallarens övriga förmågor.",
+      "beskrivning": "Vapnet är ledat, vapenhuvudet slår runt parerande vapen och sköldkanter och är därmed svårparerat. Kättingens längd gör också attacker svåra att undvika. Även vid ett lyckat försvar träffar fienden om Försvaret sker på ett udda utfall på tärningen; då träffar vapnet ändå, med 1T6 i skada. Inga förmågor påverkar denna sekundära skada, den är 1T6 oavsett anfallarens övriga förmågor.",
       "taggar": {
         "typ": [
           "Kvalitet",
           "Vapenkvalitet"
         ]
       },
-      "effekt": "Lyckat försvar på udda utfall ger ändå träff: 1t6 skada."
+      "effekt": "Lyckat försvar på udda utfall ger ändå träff: 1T6 skada."
     },
     {
       "id": "kv4",
@@ -255,14 +255,14 @@
     {
       "id": "kv18",
       "namn": "Skottfast",
-      "beskrivning": "Rustningen ger +1t4 i Bepansring mot avståndsattacker.",
+      "beskrivning": "Rustningen ger +1T4 i Bepansring mot avståndsattacker.",
       "taggar": {
         "typ": [
           "Kvalitet",
           "Rustningskvalitet"
         ]
       },
-      "effekt": "+1t4 i Bepansring mot avståndsattacker."
+      "effekt": "+1T4 i Bepansring mot avståndsattacker."
     },
     {
       "id": "kv19",

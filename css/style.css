@@ -1269,6 +1269,20 @@ body[data-role="summary"] .summary-value.neg {
   gap: .35rem;
 }
 
+#yrkePanel .info-panel-overview-tags .info-panel-key-meta,
+#infoPanel .info-panel-overview-tags .info-panel-key-meta {
+  display: grid;
+  gap: .4rem;
+  margin-top: .15rem;
+}
+
+#yrkePanel .info-panel-overview-tags .info-panel-key-meta li,
+#infoPanel .info-panel-overview-tags .info-panel-key-meta li {
+  background: rgba(31, 34, 40, .66);
+  border: 1px solid rgba(255, 255, 255, .07);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, .02);
+}
+
 #yrkePanel .info-panel-overview .tag,
 #infoPanel .info-panel-overview .tag {
   border-radius: 999px;

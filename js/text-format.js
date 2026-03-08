@@ -95,6 +95,7 @@
   function buildInfoPanelHtml(options = {}) {
     const {
       tagsHtml = '',
+      keyInfoMeta = [],
       bodyHtml = '',
       meta = [],
       sections = [],
@@ -108,6 +109,9 @@
     const parts = [];
 
     const trimmedTags = String(tagsHtml || '').trim();
+    const keyInfoItems = Array.isArray(keyInfoMeta)
+      ? keyInfoMeta.filter(item => item && (item.value || item.value === 0))
+      : [];
     const metaItems = Array.isArray(meta) ? meta.filter(item => item && (item.value || item.value === 0)) : [];
     const compactMetaLabels = new Set([
       'pris',
@@ -121,13 +125,29 @@
       && metaItems.length <= 4
       && metaItems.every(item => compactMetaLabels.has(String(item?.label || '').trim().toLowerCase()));
     const overviewBlocks = [];
-    if (trimmedTags) {
+    if (trimmedTags || keyInfoItems.length) {
+      const keyInfoRows = keyInfoItems.map(item => {
+        const label = String(item.label || '').trim();
+        const value = item.value === 0 ? '0' : (item.value ?? '');
+        const valueHtml = typeof value === 'string' ? value : String(value);
+        return `
+          <li>
+            <span class="summary-key">${label}</span>
+            <span class="summary-value">${valueHtml}</span>
+          </li>
+        `;
+      }).join('');
+      const tagsWrapHtml = trimmedTags
+        ? `<div class="info-panel-tagswrap"><div class="tags">${trimmedTags}</div></div>`
+        : '';
+      const keyInfoHtml = keyInfoRows
+        ? `<ul class="summary-list summary-pairs info-panel-key-meta">${keyInfoRows}</ul>`
+        : '';
       overviewBlocks.push(`
         <div class="info-panel-overview-block info-panel-overview-tags">
           <div class="info-panel-overview-label">Nyckelinfo</div>
-          <div class="info-panel-tagswrap">
-            <div class="tags">${trimmedTags}</div>
-          </div>
+          ${tagsWrapHtml}
+          ${keyInfoHtml}
         </div>
       `);
     }

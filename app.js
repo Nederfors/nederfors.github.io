@@ -7,7 +7,9 @@
 /* ---------- hjälp ---------- */
 const $       = id => document.getElementById(id);
 const LEVELS  = ['Novis', 'Gesäll', 'Mästare'];
-const EQUIP_T = ['Vapen', 'Rustning', 'Diverse', 'Elixir'];
+const WEAPON_TYPES = ['Vapen', 'Närstridsvapen', 'Avståndsvapen'];
+const hasWeaponType = (types) => (Array.isArray(types) ? types : []).some(t => WEAPON_TYPES.includes(t));
+const EQUIP_T = [...WEAPON_TYPES, 'Rustning', 'Diverse', 'Elixir'];
 const isInv   = p => (p.taggar?.typ || []).some(t => EQUIP_T.includes(t));
 
 /* ---------- start ---------- */
@@ -205,7 +207,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           const inv = storeHelper.getInventory(store);
           const equip = inv.filter(it => {
             const e = ALL.find(x => x.id === it.itemId);
-            return e && (e.taggar?.typ?.includes('Vapen') || e.taggar?.typ?.includes('Rustning'));
+            return e && (hasWeaponType(e.taggar?.typ) || e.taggar?.typ?.includes('Rustning'));
           });
           if (!equip.length) { alert('Inga vapen eller rustningar i inventariet.'); return; }
           const msg = equip.map((it,i)=>`${i+1}: ${it.name} ${(it.kval||[]).join(', ')}`).join('\n');
@@ -225,7 +227,7 @@ document.addEventListener('DOMContentLoaded', async () => {
           storeHelper.setInventory(store, inv); renderInv();
         } else if (isInv(entry)) {
           let kval = entry.taggar?.kvalitet || [];
-          if (entry.taggar?.typ?.includes('Vapen') || entry.taggar?.typ?.includes('Rustning')) {
+          if (hasWeaponType(entry.taggar?.typ) || entry.taggar?.typ?.includes('Rustning')) {
             const inp = prompt('Kvaliteter (kommaseparerade):', kval.join(', '));
             if (inp === null) return;
             kval = inp.split(',').map(s=>s.trim()).filter(Boolean);

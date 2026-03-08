@@ -36,10 +36,44 @@
     nekromantiker: 'Svartkonst'
   });
   const CHOICE_FIELDS = Object.freeze(['trait', 'race', 'form', 'artifactEffect']);
+  const CHOICE_FIELD_DISPLAY_LABELS = Object.freeze({
+    trait: 'Karaktärsdrag',
+    race: 'Ras',
+    form: 'Form',
+    artifactEffect: 'Betalning'
+  });
   const CHOICE_DUPLICATE_POLICIES = Object.freeze(['allow', 'reject', 'confirm', 'replace_existing']);
   const MONSTER_LORE_SPECS = Object.freeze(['Bestar', 'Kulturvarelser', 'Odöda', 'Styggelser']);
   const EXCEPTION_TRAITS = Object.freeze(['Diskret', 'Kvick', 'Listig', 'Stark', 'Träffsäker', 'Vaksam', 'Viljestark', 'Övertygande']);
   const CHOICE_EMPTY_VALUE_KEY = '__empty__';
+  const CHOICE_SOURCE_ONLY_SELECTED_KEYS = Object.freeze([
+    'endast_valda',
+    'endastValda',
+    'endast valda',
+    'only_selected',
+    'onlySelected',
+    'selected_only',
+    'selectedOnly'
+  ]);
+  const CHOICE_SOURCE_ONLY_SELECTED_TYP_TOKENS = new Set([
+    '__onlyselected',
+    'onlyselected',
+    'only_selected',
+    'selectedonly',
+    'selected_only',
+    'endast valda',
+    'endast_valda',
+    'endastvalda'
+  ]);
+  const NAR_ONLY_SELECTED_KEYS = Object.freeze([
+    'endast_valda',
+    'endastValda',
+    'endast valda',
+    'only_selected',
+    'onlySelected',
+    'selected_only',
+    'selectedOnly'
+  ]);
   const ARTIFACT_BINDING_TAG_KEYS = Object.freeze([
     'artefakt_bindning',
     'artefakt_bindningar',
@@ -53,6 +87,16 @@
     'artifactEffects',
     'artifact_effect_options',
     'artifact_effects'
+  ]);
+  const LIMIT_IGNORE_TAG_KEYS = Object.freeze([
+    'ignore_limits',
+    'ignore_limit',
+    'ignorelimits',
+    'ignorelimit',
+    'ignoreLimits',
+    'ignoreLimit',
+    'bypass_limits',
+    'bypass_limit'
   ]);
   const ARTIFACT_EFFECT_STAT_KEY_MAP = Object.freeze({
     xp: 'xp',
@@ -74,6 +118,17 @@
     capacity: 'capacity',
     barkapacitet: 'capacity'
   });
+  const TRAIT_VALUE_ALIASES = Object.freeze({
+    diskret: 'Diskret',
+    kvick: 'Kvick',
+    listig: 'Listig',
+    stark: 'Stark',
+    traffsaker: 'Träffsäker',
+    vaksam: 'Vaksam',
+    viljestark: 'Viljestark',
+    overtygande: 'Övertygande'
+  });
+  const SNAPSHOT_RULE_LIST_KEYS = Object.freeze(['__snapshotRules', '__resolvedRules']);
   const ARTIFACT_BINDING_PRESETS = Object.freeze({
     unbound: Object.freeze({
       value: '',
@@ -117,9 +172,44 @@
     MAL_REGISTRY.set(String(mal), handler);
   }
 
+  function resolveTraitValueFromContext(rawMal, context = {}) {
+    const mal = String(rawMal || '').trim();
+    if (!mal) return null;
+    const token = normalizeLevelName(mal);
+    let traitToken = token;
+    if (token.startsWith('trait:')) traitToken = token.slice(6).trim();
+    if (token.startsWith('karaktarsdrag:')) traitToken = token.slice(14).trim();
+    const canonical = TRAIT_VALUE_ALIASES[traitToken];
+    if (!canonical) return null;
+
+    const traits = context?.traits && typeof context.traits === 'object' && !Array.isArray(context.traits)
+      ? context.traits
+      : {};
+    const byCanonical = Number(traits[canonical]);
+    if (Number.isFinite(byCanonical)) return byCanonical;
+
+    const byLower = Number(context?.[traitToken]);
+    if (Number.isFinite(byLower)) return byLower;
+
+    const byCanonicalKey = Number(context?.[canonical]);
+    if (Number.isFinite(byCanonicalKey)) return byCanonicalKey;
+
+    return null;
+  }
+
   function queryMal(list, mal, context) {
     const entries = Array.isArray(list) ? list : [];
     const ctx = context || {};
+    if (!ctx.bypassResolveMal && typeof ctx.resolveMal === 'function') {
+      try {
+        const resolved = ctx.resolveMal(String(mal), { ...ctx, bypassResolveMal: true });
+        if (resolved !== undefined) return resolved;
+      } catch (_) {
+        // Fall through to registry/default handlers on resolver errors.
+      }
+    }
+    const traitValue = resolveTraitValueFromContext(mal, ctx);
+    if (traitValue !== null) return traitValue;
     const handler = MAL_REGISTRY.get(String(mal));
     if (!handler) return getListRules(entries, { key: 'andrar', mal });
     return handler(entries, ctx);
@@ -150,6 +240,25 @@
     if (typeof value === 'number') return value !== 0;
     const norm = normalizeLevelName(value);
     return ['true', '1', 'yes', 'ja', 'on'].includes(norm);
+  }
+
+  function readIgnoreLimitFlagFromContainer(container) {
+    const raw = getTaggedConfigValue(container, LIMIT_IGNORE_TAG_KEYS);
+    if (raw === undefined) return null;
+    return isTruthyRuleValue(raw);
+  }
+
+  function entryIgnoresLimits(entry, context = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (isTruthyRuleValue(context?.ignoreLimits) || isTruthyRuleValue(context?.limitBypass)) return true;
+
+    const fromTags = readIgnoreLimitFlagFromContainer(entry?.taggar);
+    if (fromTags !== null) return fromTags;
+
+    const fromEntry = readIgnoreLimitFlagFromContainer(entry);
+    if (fromEntry !== null) return fromEntry;
+
+    return false;
   }
 
   function toRuleList(value) {
@@ -629,8 +738,14 @@
       ?? rawOption.kostnad
       ?? rawOption.cost;
     const effects = normalizeArtifactEffectMap(rawEffects, canonicalPreset || '');
+    const rawRules = rawOption.regler
+      ?? rawOption.rules
+      ?? rawOption.ruleBlock
+      ?? null;
+    const regler = normalizeRuleBlock(rawRules);
 
     const out = { value, label, effects };
+    if (Object.keys(regler).length) out.regler = regler;
     if (rawOption.search !== undefined) out.search = String(rawOption.search || '');
     if (rawOption.disabled !== undefined) out.disabled = isTruthyRuleValue(rawOption.disabled);
     if (rawOption.disabledReason !== undefined) out.disabledReason = String(rawOption.disabledReason || '');
@@ -776,6 +891,13 @@
       if (rawOption.effects && typeof rawOption.effects === 'object' && !Array.isArray(rawOption.effects)) {
         out.effects = cloneRuleValue(rawOption.effects);
       }
+      const rawRules = rawOption.regler
+        ?? rawOption.rules
+        ?? null;
+      if (rawRules && typeof rawRules === 'object' && !Array.isArray(rawRules)) {
+        const regler = normalizeRuleBlock(rawRules);
+        if (Object.keys(regler).length) out.regler = regler;
+      }
       return out;
     }
 
@@ -805,10 +927,54 @@
       .filter(Boolean);
   }
 
+  function parseChoiceSourceTypeFilter(rawTypeValue) {
+    let onlySelected = false;
+    const wantedTypes = [];
+    normalizeChoiceSourceTypList(rawTypeValue).forEach(typeName => {
+      const token = normalizeCompareToken(typeName);
+      if (token && CHOICE_SOURCE_ONLY_SELECTED_TYP_TOKENS.has(token)) {
+        onlySelected = true;
+        return;
+      }
+      wantedTypes.push(typeName);
+    });
+    return { wantedTypes, onlySelected };
+  }
+
+  function buildListEntryLookup(list) {
+    const byId = new Set();
+    const byName = new Set();
+    (Array.isArray(list) ? list : []).forEach(item => {
+      const idToken = normalizeCompareToken(item?.id || '');
+      if (idToken) byId.add(idToken);
+      const nameToken = normalizeCompareToken(item?.namn || item?.name || '');
+      if (nameToken) byName.add(nameToken);
+    });
+    return { byId, byName };
+  }
+
+  function isEntryInListLookup(entry, lookup) {
+    if (!entry || typeof entry !== 'object' || !lookup) return false;
+    const idToken = normalizeCompareToken(entry?.id || '');
+    if (idToken && lookup.byId.has(idToken)) return true;
+    const nameToken = normalizeCompareToken(entry?.namn || entry?.name || '');
+    return Boolean(nameToken && lookup.byName.has(nameToken));
+  }
+
+  function readOnlySelectedFlag(container, wantedKeys) {
+    const raw = getTaggedConfigValue(container, wantedKeys);
+    if (raw === undefined) return undefined;
+    return isTruthyRuleValue(raw);
+  }
+
   function resolveChoiceSourceOptions(source, context = {}) {
     if (!source || typeof source !== 'object' || Array.isArray(source)) return [];
 
-    const wantedTypes = normalizeChoiceSourceTypList(source.typ);
+    const typeFilter = parseChoiceSourceTypeFilter(source.typ);
+    const sourceOnlySelected = readOnlySelectedFlag(source, CHOICE_SOURCE_ONLY_SELECTED_KEYS);
+    const onlySelected = Boolean(typeFilter.onlySelected || sourceOnlySelected);
+    const onlySelectedLookup = onlySelected ? buildListEntryLookup(context?.list) : null;
+    const wantedTypes = typeFilter.wantedTypes;
     const valueField = String(source.value_field || source.valueField || source.field || 'namn').trim() || 'namn';
     const labelField = String(source.label_field || source.labelField || 'namn').trim() || 'namn';
     const sort = String(source.sort || 'alpha').trim().toLowerCase();
@@ -818,6 +984,7 @@
     const out = [];
     db.forEach(entry => {
       if (!entry || typeof entry !== 'object') return;
+      if (onlySelected && !isEntryInListLookup(entry, onlySelectedLookup)) return;
       if (wantedTypes.length && !wantedTypes.some(typeName => entryHasType(entry, typeName))) return;
       if (nar && !evaluateNar(nar, { ...context, sourceEntry: entry, entry })) return;
 
@@ -936,6 +1103,14 @@
     return normalizeArtifactEffectMap(null, getArtifactBindingPresetName(value));
   }
 
+  function getArtifactEffectValueRules(entry, value, context = {}) {
+    const option = getArtifactEffectOption(entry, value, context);
+    if (!option || !option.regler || typeof option.regler !== 'object' || Array.isArray(option.regler)) {
+      return {};
+    }
+    return normalizeRuleBlock(option.regler);
+  }
+
   function isHamnskifteGrantEntry(entry) {
     if (!entry || typeof entry !== 'object') return false;
     const id = String(entry?.id || '').trim().toLowerCase();
@@ -1044,6 +1219,195 @@
     return null;
   }
 
+  function normalizeChoiceFieldDisplayLabel(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  }
+
+  function stripChoicePromptPrefix(value) {
+    const text = String(value || '').trim();
+    if (!text) return '';
+    return text
+      .replace(/^[Vv][äa]lj\s+/u, '')
+      .replace(/^[Ss]elect\s+/u, '')
+      .replace(/[.?!:]+$/u, '')
+      .trim();
+  }
+
+  function getChoiceFieldDisplayLabel(field, rule = null) {
+    const normalizedField = normalizeChoiceField(field);
+    const explicitLabel = [
+      rule?.display_label,
+      rule?.displayLabel,
+      rule?.label,
+      rule?.title
+    ]
+      .map(value => stripChoicePromptPrefix(value))
+      .find(Boolean);
+    if (explicitLabel) return normalizeChoiceFieldDisplayLabel(explicitLabel);
+    return CHOICE_FIELD_DISPLAY_LABELS[normalizedField] || 'Val';
+  }
+
+  function getEntryChoiceDisplay(entry, context = {}) {
+    if (!entry || typeof entry !== 'object') return null;
+
+    const sourceEntry = context?.sourceEntry && typeof context.sourceEntry === 'object'
+      ? context.sourceEntry
+      : resolveRuleSourceEntry(entry);
+    const ctx = buildChoiceContext(entry, {
+      ...(context || {}),
+      entry,
+      sourceEntry
+    });
+
+    let rule = getEntryChoiceRule(sourceEntry, ctx);
+    if (!rule && typeof getLegacyChoiceRule === 'function') {
+      rule = getLegacyChoiceRule(sourceEntry, ctx);
+    }
+    if (!rule) return null;
+
+    const field = normalizeChoiceField(rule.field);
+    if (!field) return null;
+
+    const rawValue = entry[field];
+    const hasExplicitValue = Object.prototype.hasOwnProperty.call(entry, field);
+    const rawText = rawValue === undefined || rawValue === null ? '' : String(rawValue);
+    const hasValue = rawText.trim() !== '' || (field === 'artifactEffect' && hasExplicitValue);
+    if (!hasValue) return null;
+
+    let valueLabel = '';
+    if (field === 'artifactEffect') {
+      valueLabel = String(getArtifactEffectValueLabel(sourceEntry, rawValue, ctx) || '').trim();
+    } else {
+      try {
+        const options = resolveChoiceOptions(rule, {
+          ...ctx,
+          entry,
+          sourceEntry,
+          currentValue: rawValue
+        });
+        const wantedKey = normalizeChoiceOptionKey(rawValue);
+        const hit = options.find(option => normalizeChoiceOptionKey(option?.value) === wantedKey) || null;
+        if (hit?.label !== undefined && hit?.label !== null) {
+          valueLabel = String(hit.label).trim();
+        }
+      } catch (_) {
+        // Fall back to raw value below if option resolution fails.
+      }
+    }
+
+    if (!valueLabel) valueLabel = rawText.trim() || rawText;
+
+    return {
+      field,
+      label: getChoiceFieldDisplayLabel(field, rule),
+      value: rawText,
+      valueLabel,
+      rule
+    };
+  }
+
+  function formatEntryDisplayName(entry, context = {}) {
+    if (!entry || typeof entry !== 'object') return '';
+    const base = String(context?.baseName || entry?.namn || '').trim();
+    if (!base) return '';
+
+    const parts = [];
+    if (context?.includeChoice !== false) {
+      const choice = getEntryChoiceDisplay(entry, context);
+      if (choice?.valueLabel) parts.push(String(choice.valueLabel).trim());
+    }
+
+    if (context?.includeLevel !== false) {
+      const level = context?.level !== undefined && context?.level !== null
+        ? context.level
+        : entry?.nivå;
+      const levelLabel = String(level || '').trim();
+      if (levelLabel) parts.push(levelLabel);
+    }
+
+    const dedupedParts = [];
+    const seen = new Set();
+    parts.forEach(part => {
+      const text = String(part || '').trim();
+      if (!text) return;
+      const key = normalizeCompareToken(text);
+      if (key && seen.has(key)) return;
+      if (key) seen.add(key);
+      dedupedParts.push(text);
+    });
+
+    if (!dedupedParts.length) return base;
+    return `${base} (${dedupedParts.join(', ')})`;
+  }
+
+  function getListContextRules(list) {
+    const records = [];
+    const arr = Array.isArray(list) ? list : [];
+    SNAPSHOT_RULE_LIST_KEYS.forEach(key => {
+      const raw = arr?.[key];
+      if (!Array.isArray(raw)) return;
+      raw.forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        const explicitRule = item.rule && typeof item.rule === 'object' && !Array.isArray(item.rule)
+          ? cloneRuleValue(item.rule)
+          : null;
+        if (explicitRule) {
+          const ruleKey = RULE_KEYS.includes(item.key) ? item.key : 'andrar';
+          records.push({
+            key: ruleKey,
+            rule: explicitRule,
+            sourceEntryId: item.sourceEntryId,
+            sourceEntryName: item.sourceEntryName,
+            sourceEntryLevel: item.sourceEntryLevel,
+            sourceEntry: item.sourceEntry || null
+          });
+          return;
+        }
+
+        RULE_KEYS.forEach(ruleKey => {
+          toRuleList(item?.[ruleKey]).forEach(rule => {
+            records.push({
+              key: ruleKey,
+              rule,
+              sourceEntryId: item.sourceEntryId,
+              sourceEntryName: item.sourceEntryName,
+              sourceEntryLevel: item.sourceEntryLevel,
+              sourceEntry: item.sourceEntry || null
+            });
+          });
+        });
+      });
+    });
+    return records;
+  }
+
+  function copyListContextRules(targetList, sourceList) {
+    if (!Array.isArray(targetList) || !Array.isArray(sourceList)) return targetList;
+    SNAPSHOT_RULE_LIST_KEYS.forEach(key => {
+      const raw = sourceList[key];
+      if (!Array.isArray(raw)) return;
+      try {
+        Object.defineProperty(targetList, key, {
+          value: raw,
+          writable: true,
+          configurable: true,
+          enumerable: false
+        });
+      } catch (_) {
+        targetList[key] = raw;
+      }
+    });
+    return targetList;
+  }
+
+  function getRuleEntries(list) {
+    if (!Array.isArray(list)) return [];
+    const filtered = list.filter(entry => entry && typeof entry === 'object');
+    return copyListContextRules(filtered, list);
+  }
+
   function getListRules(list, options = {}) {
     const keyFilter = typeof options.key === 'string' ? options.key : '';
     const targetFilter = typeof options.mal === 'string' ? options.mal : '';
@@ -1066,6 +1430,25 @@
             sourceEntry: entry
           });
         });
+      });
+    });
+
+    getListContextRules(list).forEach(record => {
+      if (!record || typeof record !== 'object') return;
+      const key = String(record.key || '').trim();
+      if (!RULE_KEYS.includes(key)) return;
+      if (keyFilter && key !== keyFilter) return;
+      const rule = record.rule && typeof record.rule === 'object'
+        ? cloneRuleValue(record.rule)
+        : null;
+      if (!rule) return;
+      if (targetFilter && String(rule?.mal || '') !== targetFilter) return;
+      out.push({
+        ...rule,
+        sourceEntryId: record.sourceEntryId,
+        sourceEntryName: typeof record.sourceEntryName === 'string' ? record.sourceEntryName : '',
+        sourceEntryLevel: typeof record.sourceEntryLevel === 'string' ? record.sourceEntryLevel : '',
+        sourceEntry: record.sourceEntry || null
       });
     });
 
@@ -1260,6 +1643,54 @@
     return refs;
   }
 
+  function normalizeGrantFreeLevel(value) {
+    if (typeof value !== 'string') return '';
+    const trimmed = value.trim();
+    return trimmed || '';
+  }
+
+  function parseGrantFreeConfig(rule) {
+    if (!rule || typeof rule !== 'object') {
+      return { gratis: false, gratisTill: null };
+    }
+
+    const levelCandidates = [
+      rule?.gratis_upp_till,
+      rule?.gratis_till,
+      rule?.gratisTill
+    ];
+    for (const candidate of levelCandidates) {
+      const level = normalizeGrantFreeLevel(candidate);
+      if (level) return { gratis: true, gratisTill: level };
+    }
+
+    const boolCandidates = [rule?.gratis, rule?.free, rule?.is_gratis, rule?.isGratis];
+    for (const candidate of boolCandidates) {
+      if (candidate === undefined || candidate === null || candidate === '') continue;
+
+      if (typeof candidate === 'string') {
+        const trimmed = candidate.trim();
+        if (!trimmed) continue;
+        const normalized = normalizeLevelName(trimmed);
+        if (['false', '0', 'no', 'nej', 'off'].includes(normalized)) continue;
+        if (['true', '1', 'yes', 'ja', 'on'].includes(normalized)) {
+          return { gratis: true, gratisTill: null };
+        }
+        return { gratis: true, gratisTill: trimmed };
+      }
+
+      if (isTruthyRuleValue(candidate)) return { gratis: true, gratisTill: null };
+    }
+
+    return { gratis: false, gratisTill: null };
+  }
+
+  function parseGrantIgnoreLimitsConfig(rule) {
+    if (!rule || typeof rule !== 'object') return false;
+    const explicit = readIgnoreLimitFlagFromContainer(rule);
+    return explicit === null ? false : explicit;
+  }
+
   function getEntryGrantTargets(list) {
     const aggregate = new Map();
 
@@ -1272,7 +1703,8 @@
       const sourceKey = sourceName || sourceId;
       if (!sourceKey) return;
 
-      const gratisTill = typeof rule.gratis_upp_till === 'string' ? rule.gratis_upp_till.trim() : null;
+      const grantFree = parseGrantFreeConfig(rule);
+      const grantIgnoreLimits = parseGrantIgnoreLimitsConfig(rule);
 
       getEntryGrantRefs(rule).forEach(target => {
         const targetKey = target.id
@@ -1287,7 +1719,9 @@
           sourceEntryId: sourceId,
           sourceEntryName: sourceName,
           sourceEntryLevel: String(rule?.sourceEntryLevel || '').trim(),
-          gratisTill
+          gratis: grantFree.gratis,
+          gratisTill: grantFree.gratisTill,
+          ignoreLimits: grantIgnoreLimits
         });
       });
     });
@@ -1304,7 +1738,8 @@
     const entries = Array.isArray(list) ? list : [];
     const rules = getListRules(entries, { key: 'ger', mal: 'post' });
     for (const rule of rules) {
-      if (!rule.gratis_upp_till) continue;
+      const grantFree = parseGrantFreeConfig(rule);
+      if (!grantFree.gratis) continue;
       if (!matchesListCondition(rule, entries)) continue;
       const refs = getEntryGrantRefs(rule);
       const matches = refs.some(ref => {
@@ -1314,7 +1749,7 @@
         return refKey === targetKey;
       });
       if (!matches) continue;
-      return { gratisTill: rule.gratis_upp_till.trim() };
+      return { gratis: true, gratisTill: grantFree.gratisTill };
     }
     return null;
   }
@@ -1534,7 +1969,7 @@
 
   function getEntryGrantDependents(list, removedEntry) {
     if (!removedEntry || typeof removedEntry !== 'object') return [];
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     if (!entries.length) return [];
 
     const sourceEntry = resolveRuleSourceEntry(removedEntry);
@@ -1598,7 +2033,7 @@
     const isWeapon = !isShield && hasNormalizedAny(types, ['Vapen']);
     const hasBastard = hasNormalizedAny(qualities, ['Bastardvapen']);
     const hasLong = hasNormalizedAny(qualities, ['Långt']);
-    const hasHeavyType = hasNormalizedAny(types, ['Tunga vapen']);
+    const hasHeavyType = hasNormalizedAny(types, ['Tvåhandsvapen']);
     const isArmMountedShield = isShield && hasNormalizedAny(qualities, ['Armfäst']);
     const isOneHandedClass = isWeapon && (hasBastard || hasNormalizedAny(types, ONE_HANDED_DEFENSE_TYPES));
     const key = getDefenseFactKey(raw, index);
@@ -1747,7 +2182,7 @@
         if ((weapon.hasLong || weapon.hasHeavyType) && !weapon.hasBastard) {
           pushReason(
             'shield_long_or_heavy',
-            'Sköld kan inte kombineras med Långt eller Tunga vapen utan Bastardvapen.'
+            'Sköld kan inte kombineras med Långt eller Tvåhandsvapen utan Bastardvapen.'
           );
           violations.push({ code: 'shield_long_or_heavy', shield, weapon });
         }
@@ -1880,13 +2315,50 @@
     return normalizeLevelName(String(value || ''));
   }
 
-  function hasNormalizedAny(haystackValues, needleValues) {
-    const haystack = new Set(toArray(haystackValues).map(normalizeCompareToken).filter(Boolean));
-    if (!haystack.size) return false;
-    return toArray(needleValues)
+  const NORMALIZED_TOKEN_ALIASES = (() => {
+    const rawMap = Object.freeze({
+      Vapen: ['Vapen', 'Närstridsvapen', 'Avståndsvapen'],
+      Närstridsvapen: ['Närstridsvapen'],
+      Avståndsvapen: ['Avståndsvapen'],
+      'Tunga vapen': ['Tunga vapen', 'Tvåhandsvapen'],
+      Tvåhandsvapen: ['Tvåhandsvapen', 'Tunga vapen'],
+      Projektilvapen: ['Projektilvapen', 'Avståndsvapen'],
+      'Kort vapen': ['Kort vapen', 'Korta vapen'],
+      'Korta vapen': ['Korta vapen', 'Kort vapen']
+    });
+    const map = new Map();
+    Object.keys(rawMap).forEach(key => {
+      const token = normalizeCompareToken(key);
+      if (!token) return;
+      const aliases = new Set(
+        toArray(rawMap[key])
+          .map(normalizeCompareToken)
+          .filter(Boolean)
+      );
+      aliases.add(token);
+      map.set(token, aliases);
+    });
+    return map;
+  })();
+
+  function expandNormalizedTokens(values) {
+    const expanded = new Set();
+    toArray(values)
       .map(normalizeCompareToken)
       .filter(Boolean)
-      .some(value => haystack.has(value));
+      .forEach(token => {
+        expanded.add(token);
+        const aliases = NORMALIZED_TOKEN_ALIASES.get(token);
+        if (!aliases) return;
+        aliases.forEach(alias => expanded.add(alias));
+      });
+    return expanded;
+  }
+
+  function hasNormalizedAny(haystackValues, needleValues) {
+    const haystack = expandNormalizedTokens(haystackValues);
+    if (!haystack.size) return false;
+    return [...expandNormalizedTokens(needleValues)].some(value => haystack.has(value));
   }
 
   function parseMaxConstraint(value) {
@@ -1897,19 +2369,23 @@
     return rounded;
   }
 
-  function getNameCount(list, name) {
+  function getNameCount(list, name, options = {}) {
     const target = normalizeLevelName(name || '');
     if (!target) return 0;
+    const skipIgnoredLimits = options?.skipIgnoredLimits === true;
     return (Array.isArray(list) ? list : []).reduce((count, entry) => {
+      if (skipIgnoredLimits && entryIgnoresLimits(entry, options)) return count;
       if (normalizeLevelName(entry?.namn || '') !== target) return count;
       return count + 1;
     }, 0);
   }
 
-  function getTypeCount(list, typeName) {
+  function getTypeCount(list, typeName, options = {}) {
     const target = normalizeLevelName(typeName || '');
     if (!target) return 0;
+    const skipIgnoredLimits = options?.skipIgnoredLimits === true;
     return (Array.isArray(list) ? list : []).reduce((count, entry) => {
+      if (skipIgnoredLimits && entryIgnoresLimits(entry, options)) return count;
       if (!entryHasType(entry, typeName)) return count;
       return count + 1;
     }, 0);
@@ -1955,14 +2431,14 @@
         const failed = Object.keys(nameMaxObject).some(name => {
           const max = parseMaxConstraint(nameMaxObject[name]);
           if (max === null) return false;
-          return getNameCount(list, name) > max;
+          return getNameCount(list, name, { skipIgnoredLimits: true }) > max;
         });
         if (failed) return false;
       }
       const listNameMax = parseMaxConstraint(nar.antal_namn_max);
       if (listNameMax !== null) {
         const names = toArray(nar.namn).map(String).filter(Boolean);
-        if (names.length && names.some(name => getNameCount(list, name) > listNameMax)) return false;
+        if (names.length && names.some(name => getNameCount(list, name, { skipIgnoredLimits: true }) > listNameMax)) return false;
       }
 
       const typeMaxObject = nar.antal_typ_max && typeof nar.antal_typ_max === 'object' && !Array.isArray(nar.antal_typ_max)
@@ -1972,14 +2448,14 @@
         const failed = Object.keys(typeMaxObject).some(typeName => {
           const max = parseMaxConstraint(typeMaxObject[typeName]);
           if (max === null) return false;
-          return getTypeCount(list, typeName) > max;
+          return getTypeCount(list, typeName, { skipIgnoredLimits: true }) > max;
         });
         if (failed) return false;
       }
       const listTypeMax = parseMaxConstraint(nar.antal_typ_max);
       if (listTypeMax !== null) {
         const types = toArray(nar.typ).map(String).filter(Boolean);
-        if (types.length && types.some(typeName => getTypeCount(list, typeName) > listTypeMax)) return false;
+        if (types.length && types.some(typeName => getTypeCount(list, typeName, { skipIgnoredLimits: true }) > listTypeMax)) return false;
       }
     }
 
@@ -2066,6 +2542,16 @@
         const minLvl = LEVEL_VALUE_MAP[normalizeLevelName(String(nar.kalla_niva_minst))] || 0;
         const srcLvl = LEVEL_VALUE_MAP[normalizeLevelName(String(ctx.sourceLevel || ''))] || 0;
         if (srcLvl < minLvl) return false;
+      }
+    }
+
+    // --- Source entry must be selected in list (only when both list + sourceEntry exist) ---
+    if (ctx.list !== undefined && ctx.sourceEntry !== undefined) {
+      const onlySelected = readOnlySelectedFlag(nar, NAR_ONLY_SELECTED_KEYS);
+      if (onlySelected !== undefined) {
+        const lookup = buildListEntryLookup(ctx.list);
+        const isSelected = isEntryInListLookup(ctx.sourceEntry, lookup);
+        if (Boolean(onlySelected) !== isSelected) return false;
       }
     }
 
@@ -2263,9 +2749,7 @@
   }
 
   function entryHasType(entry, typeName) {
-    const wanted = normalizeLevelName(typeName);
-    if (!wanted) return false;
-    return getEntryTypes(entry).some(type => normalizeLevelName(type) === wanted);
+    return hasNormalizedAny(getEntryTypes(entry), [typeName]);
   }
 
   function getEntryTraditions(entry) {
@@ -2429,7 +2913,7 @@
 
   function getConflictReasonsForCandidate(candidateEntry, list, options = {}) {
     if (!candidateEntry || typeof candidateEntry !== 'object') return [];
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const candidateLevel = typeof options?.level === 'string' && options.level.trim()
       ? options.level.trim()
       : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
@@ -2907,7 +3391,7 @@
 
   function getMissingRequirementReasonsForCandidate(candidateEntry, list, options = {}) {
     if (!candidateEntry || typeof candidateEntry !== 'object') return [];
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const candidateLevel = typeof options?.level === 'string' && options.level.trim()
       ? options.level.trim()
       : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
@@ -2928,7 +3412,7 @@
     RULE_KEYS.forEach(key => { out[key] = []; });
     if (!candidateEntry || typeof candidateEntry !== 'object') return out;
 
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const candidateLevel = typeof options?.level === 'string' && options.level.trim()
       ? options.level.trim()
       : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
@@ -3009,6 +3493,7 @@
 
   function getDirectMaxCount(entry, options = {}) {
     if (!entry || typeof entry !== 'object') return null;
+    if (entryIgnoresLimits(entry, options)) return Number.POSITIVE_INFINITY;
     const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
     if (tagLimit !== null) return tagLimit;
     const directLimit = parsePositiveLimit(entry?.max_antal);
@@ -3038,6 +3523,7 @@
   function getEntryMaxCount(entry, options = {}) {
     if (!entry || typeof entry !== 'object') return 1;
     const sourceEntry = resolveRuleSourceEntry(entry);
+    if (entryIgnoresLimits(sourceEntry, options)) return Number.POSITIVE_INFINITY;
     const direct = getDirectMaxCount(sourceEntry, options);
     if (direct !== null) return direct;
 
@@ -3105,7 +3591,7 @@
         hasStops: false
       };
     }
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const action = String(options?.action || 'add').trim();
     const toLevel = typeof options?.toLevel === 'string' && options.toLevel.trim()
       ? options.toLevel.trim()
@@ -3150,22 +3636,28 @@
     const autoHardStops = [];
 
     if (action === 'add') {
-      const maxCount = getEntryMaxCount(candidate);
-      const currentCount = entries.filter(entry => entryMatchesCountTarget(candidate, entry)).length;
-      if (currentCount >= maxCount) {
-        const candidateName = String(candidate?.namn || '').trim();
-        if (maxCount <= 1) {
-          autoHardStops.push({
-            code: 'duplicate_entry',
-            message: candidateName ? `${candidateName}: Posten är redan vald.` : 'Posten är redan vald.'
-          });
-        } else {
-          const isAdvantageOrDisadvantage = entryHasType(candidate, 'Fördel') || entryHasType(candidate, 'Nackdel');
-          const label = isAdvantageOrDisadvantage ? 'fördel eller nackdel' : 'post';
-          autoHardStops.push({
-            code: 'stack_limit',
-            message: `Limit: Denna ${label} kan normalt bara tas ${maxCount} gånger.`
-          });
+      const ignoresLimits = entryIgnoresLimits(candidate, options);
+      if (!ignoresLimits) {
+        const maxCount = getEntryMaxCount(candidate);
+        const currentCount = entries.filter(entry =>
+          entryMatchesCountTarget(candidate, entry)
+          && !entryIgnoresLimits(entry, options)
+        ).length;
+        if (currentCount >= maxCount) {
+          const candidateName = String(candidate?.namn || '').trim();
+          if (maxCount <= 1) {
+            autoHardStops.push({
+              code: 'duplicate_entry',
+              message: candidateName ? `${candidateName}: Posten är redan vald.` : 'Posten är redan vald.'
+            });
+          } else {
+            const isAdvantageOrDisadvantage = entryHasType(candidate, 'Fördel') || entryHasType(candidate, 'Nackdel');
+            const label = isAdvantageOrDisadvantage ? 'fördel eller nackdel' : 'post';
+            autoHardStops.push({
+              code: 'stack_limit',
+              message: `Limit: Denna ${label} kan normalt bara tas ${maxCount} gånger.`
+            });
+          }
         }
       }
 
@@ -3360,7 +3852,7 @@
 
   function getRequirementDependents(list, removedEntry, options = {}) {
     if (!removedEntry || typeof removedEntry !== 'object') return [];
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     if (!entries.length) return [];
 
     const removedName = normalizeLevelName(removedEntry?.namn || '');
@@ -3409,7 +3901,13 @@
     if (key === 'niva') return getEntryLevelValue(sourceEntry || {});
     if (key.startsWith('mal:')) {
       const malName = key.slice(4).trim();
-      const result = queryMal(options?.list, malName, options);
+      let result;
+      if (typeof options?.resolveMal === 'function' && !options?.bypassResolveMal) {
+        result = options.resolveMal(malName, options);
+      }
+      if (result === undefined) {
+        result = queryMal(options?.list, malName, options);
+      }
       return Number.isFinite(Number(result)) ? Number(result) : 0;
     }
     if (key.startsWith('attribut:')) {
@@ -3417,6 +3915,8 @@
       const value = Number(options?.[attrName]);
       return Number.isFinite(value) ? value : 0;
     }
+    const traitValue = resolveTraitValueFromContext(key, options);
+    if (traitValue !== null) return traitValue;
     const value = Number(options?.[key]);
     return Number.isFinite(value) ? value : 0;
   }
@@ -3499,8 +3999,173 @@
     return currentValue + amount;
   }
 
+  function appendSnapshotSourceValue(sourceValues, key, value) {
+    const sourceKey = String(key || '').trim();
+    if (!sourceKey) return;
+    const num = Number(value);
+    sourceValues[sourceKey] = Number.isFinite(num) ? num : value;
+  }
+
+  function collectSnapshotFormulaSourceValues(rule, context, sourceValues) {
+    if (!rule || typeof rule !== 'object') return;
+    const rawFormel = rule.formel;
+    if (!rawFormel || typeof rawFormel !== 'object' || Array.isArray(rawFormel)) return;
+    const base = String(rawFormel.bas || '').trim();
+    if (!base) return;
+    if (base.startsWith('mal:')) {
+      const malName = base.slice(4).trim();
+      if (!malName) return;
+      appendSnapshotSourceValue(sourceValues, malName, context.resolveMal(malName, context.baseOptions));
+      return;
+    }
+    const traitValue = resolveTraitValueFromContext(base, context.baseOptions);
+    if (traitValue !== null) {
+      appendSnapshotSourceValue(sourceValues, base, traitValue);
+      return;
+    }
+    const direct = Number(context.baseOptions?.[base]);
+    if (Number.isFinite(direct)) {
+      appendSnapshotSourceValue(sourceValues, base, direct);
+    }
+  }
+
+  function collectSnapshotNarSourceValues(rule, context, sourceValues) {
+    const nar = rule?.nar && typeof rule.nar === 'object' && !Array.isArray(rule.nar)
+      ? rule.nar
+      : null;
+    if (!nar) return {};
+    const computedValues = {};
+    const addMal = (malName) => {
+      const key = String(malName || '').trim();
+      if (!key) return;
+      if (Object.prototype.hasOwnProperty.call(computedValues, key)) return;
+      const value = context.resolveMal(key, context.baseOptions);
+      computedValues[key] = value;
+      appendSnapshotSourceValue(sourceValues, key, value);
+    };
+
+    if (nar.mal_minst && typeof nar.mal_minst === 'object') {
+      Object.keys(nar.mal_minst).forEach(addMal);
+    }
+    toArray(nar.mal_saknas).forEach(addMal);
+    toArray(nar.har_mal).forEach(addMal);
+    return computedValues;
+  }
+
+  function computeSnapshotRuleAmount(rule, sourceEntry, options = {}) {
+    const rawFormel = rule?.formel;
+    const objectFormulaValue = computeObjectFormulaValue(rawFormel, sourceEntry, options);
+    const numericValue = Number(rule?.varde);
+    if (Number.isFinite(objectFormulaValue)) {
+      return Number.isFinite(numericValue) ? objectFormulaValue * numericValue : objectFormulaValue;
+    }
+    if (rawFormel && typeof rawFormel === 'string') {
+      return getRuleNumericValue(rule, sourceEntry, options);
+    }
+    if (Number.isFinite(numericValue)) return numericValue;
+    return null;
+  }
+
+  function materializeSnapshotAndrarRules(rawRules, options = {}) {
+    const rules = toArray(rawRules)
+      .map(cloneRuleValue)
+      .filter(rule => rule && typeof rule === 'object' && !Array.isArray(rule));
+    if (!rules.length) return [];
+
+    const baseList = Array.isArray(options?.list) ? options.list : [];
+    const sourceEntry = options?.sourceEntry && typeof options.sourceEntry === 'object'
+      ? options.sourceEntry
+      : null;
+    const baseOptions = {
+      ...(options && typeof options === 'object' ? options : {}),
+      list: baseList
+    };
+    const snapshotState = {};
+    const resolvingMals = new Set();
+    const resolveMal = (malName, malOptions = {}) => {
+      const key = String(malName || '').trim();
+      if (!key) return 0;
+      if (Object.prototype.hasOwnProperty.call(snapshotState, key)) {
+        return snapshotState[key];
+      }
+      if (resolvingMals.has(key)) return 0;
+      resolvingMals.add(key);
+      try {
+        return queryMal(baseList, key, {
+          ...baseOptions,
+          ...(malOptions && typeof malOptions === 'object' ? malOptions : {}),
+          list: baseList,
+          resolveMal,
+          bypassResolveMal: true
+        });
+      } finally {
+        resolvingMals.delete(key);
+      }
+    };
+
+    const materialized = [];
+    rules.forEach((rule, index) => {
+      const sourceValues = {};
+      const computedValues = collectSnapshotNarSourceValues(rule, { resolveMal, baseOptions }, sourceValues);
+      const narContext = {
+        ...(baseOptions && typeof baseOptions === 'object' ? baseOptions : {}),
+        list: baseList,
+        sourceEntry: sourceEntry || rule?.sourceEntry || null,
+        row: baseOptions?.row || null,
+        computedValues
+      };
+      if (rule?.nar && !evaluateNar(rule.nar, narContext)) {
+        return;
+      }
+
+      collectSnapshotFormulaSourceValues(rule, { resolveMal, baseOptions }, sourceValues);
+      const mal = String(rule?.mal || '').trim();
+      const mode = normalizeLevelName(rule?.satt || '');
+      const amount = computeSnapshotRuleAmount(rule, sourceEntry || rule?.sourceEntry, {
+        ...baseOptions,
+        list: baseList,
+        resolveMal,
+        aktuell_malvarde: resolveMal(mal, baseOptions)
+      });
+      if (amount !== null && mal) {
+        const currentValue = Number(resolveMal(mal, baseOptions));
+        if (Number.isFinite(currentValue)) {
+          const nextValue = (mode === 'ersatt' || mode === 'satt')
+            ? Number(amount)
+            : currentValue + Number(amount);
+          if (Number.isFinite(nextValue)) snapshotState[mal] = nextValue;
+        }
+      }
+
+      const isSnapshot = isTruthyRuleValue(rule?.snapshot);
+      const resolvedRule = cloneRuleValue(rule);
+      if (resolvedRule.snapshot !== undefined) delete resolvedRule.snapshot;
+
+      if (isSnapshot) {
+        if (resolvedRule.nar !== undefined) delete resolvedRule.nar;
+        if (amount !== null) {
+          if (resolvedRule.formel !== undefined) delete resolvedRule.formel;
+          resolvedRule.varde = amount;
+        }
+        resolvedRule.metadata = {
+          ...(resolvedRule.metadata && typeof resolvedRule.metadata === 'object' && !Array.isArray(resolvedRule.metadata)
+            ? resolvedRule.metadata
+            : {}),
+          snapshot: true,
+          source_rule: cloneRuleValue(rule),
+          source_values: sourceValues,
+          snapshot_index: index
+        };
+      }
+
+      materialized.push(resolvedRule);
+    });
+
+    return materialized;
+  }
+
   function getCorruptionTrackStats(list, options = {}) {
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const willpower = Number(options?.viljestark || 0);
     const normalizedWillpower = Number.isFinite(willpower) ? willpower : 0;
     let korruptionstroskel = Math.ceil(normalizedWillpower / 2);
@@ -3546,7 +4211,7 @@
   }
 
   function getCarryCapacityBase(list, options = {}) {
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const strength = Number(options?.stark || 0);
     const normalizedStrength = Number.isFinite(strength) ? strength : 0;
     let barkapacitetFaktor = 1;
@@ -3616,7 +4281,7 @@
   }
 
   function getToughnessBase(list, options = {}) {
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const strength = Number(options?.stark || 0);
     const normalizedStrength = Number.isFinite(strength) ? strength : 0;
     let talighetBas = Math.max(10, normalizedStrength);
@@ -3700,7 +4365,7 @@
   }
 
   function getTraitTotalMax(list, inventory, options = {}) {
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     let maxTotal = 80;
 
     getListRules(entries, { key: 'andrar', mal: 'karaktarsdrag_max_tillagg' }).forEach(rule => {
@@ -3727,7 +4392,7 @@
   }
 
   function getPainThresholdModifier(list, options = {}) {
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const strength = Number(options?.stark || 0);
     const normalizedStrength = Number.isFinite(strength) ? strength : 0;
     const basePainThreshold = Math.ceil(normalizedStrength / 2);
@@ -3792,7 +4457,7 @@
   }
 
   function getPermanentCorruptionBreakdown(list, options = {}) {
-    const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const entries = getRuleEntries(list);
     const traditionGraph = buildTraditionGraph(entries);
     const contributions = [];
     let runningPermanentCorruption = 0;
@@ -3857,7 +4522,65 @@
     }
 
     let total = contributions.reduce((sum, item) => sum + (Number(item?.amount) || 0), 0);
-    const faktor = queryMal(entries, 'permanent_korruption_faktor', { list: entries, ...options });
+    const resolvingAndrarMals = new Set();
+    const resolveAndrarMal = (malName, malOptions = {}) => {
+      const key = String(malName || '').trim();
+      if (!key) return 0;
+      if (key === 'permanent_korruption') return total;
+      if (resolvingAndrarMals.has(key)) return 0;
+      resolvingAndrarMals.add(key);
+      try {
+        return queryMal(list, key, {
+          ...options,
+          ...(malOptions && typeof malOptions === 'object' ? malOptions : {}),
+          list,
+          resolveMal: resolveAndrarMal,
+          bypassResolveMal: true,
+          aktuell_permanent_korruption: total,
+          permanent_korruption: total
+        });
+      } finally {
+        resolvingAndrarMals.delete(key);
+      }
+    };
+
+    getListRules(list, { key: 'andrar', mal: 'permanent_korruption' }).forEach(rule => {
+      const narComputed = collectSnapshotNarSourceValues(rule, {
+        resolveMal: resolveAndrarMal,
+        baseOptions: { ...options, list }
+      }, {});
+      if (rule?.nar && !evaluateNar(rule.nar, {
+        ...options,
+        list,
+        sourceEntry: rule?.sourceEntry || null,
+        computedValues: narComputed
+      })) return;
+      const mal = String(rule?.mal || '').trim();
+      const amount = computeSnapshotRuleAmount(rule, rule?.sourceEntry, {
+        ...options,
+        list,
+        resolveMal: resolveAndrarMal,
+        aktuell_permanent_korruption: total,
+        permanent_korruption: total,
+        aktuell_malvarde: resolveAndrarMal(mal, options)
+      });
+      if (amount === null) return;
+      const mode = normalizeLevelName(rule?.satt || '');
+      if (mode === 'ersatt' || mode === 'satt') {
+        total = Number(amount);
+      } else {
+        total += Number(amount);
+      }
+      contributions.push({
+        amount,
+        sourceEntryId: rule.sourceEntryId,
+        sourceEntryName: rule.sourceEntryName || '',
+        sourceEntryLevel: rule.sourceEntryLevel || '',
+        kind: 'andrar'
+      });
+    });
+
+    const faktor = queryMal(list, 'permanent_korruption_faktor', { list, ...options });
     if (Number.isFinite(Number(faktor)) && Number(faktor) !== 1) {
       total = Math.ceil(total * Number(faktor));
     }
@@ -3903,8 +4626,8 @@
     const excludedTypes = toArray(foremal?.ingen_typ).map(String);
     const anyQualities = toArray(foremal?.nagon_kvalitet);
 
-    if (types.includes('Vapen') && excludedTypes.includes('Tunga vapen')) {
-      return 'allt utom tunga vapen';
+    if (hasNormalizedAny(types, ['Vapen']) && hasNormalizedAny(excludedTypes, ['Tvåhandsvapen'])) {
+      return 'allt utom tvåhandsvapen';
     }
     if (types.includes('Korta vapen')) {
       return 'korta vapen';
@@ -3912,11 +4635,11 @@
     if (types.includes('Långa vapen')) {
       return 'långa vapen';
     }
-    if (types.includes('Vapen') && anyQualities.length) {
+    if (hasNormalizedAny(types, ['Vapen']) && anyQualities.length) {
       const qualityText = joinLabelsWithOr(anyQualities);
       return qualityText ? `${qualityText} vapen` : '';
     }
-    if (types.includes('Vapen')) {
+    if (hasNormalizedAny(types, ['Vapen'])) {
       return 'vapen';
     }
     return '';
@@ -4139,11 +4862,16 @@
     getEntryRules,
     getRuleList,
     getEntryChoiceRule,
+    getEntryChoiceDisplay,
+    formatEntryDisplayName,
+    getChoiceFieldDisplayLabel,
     resolveChoiceOptions,
+    entryIgnoresLimits,
     getArtifactEffectChoiceRule,
     getArtifactEffectOption,
     getArtifactEffectValueLabel,
     getArtifactEffectValueEffects,
+    getArtifactEffectValueRules,
     getLegacyChoiceRule,
     getListRules,
     evaluateNar,
@@ -4202,6 +4930,7 @@
     getPainThresholdModifier,
     getPermanentCorruptionBreakdown,
     calcPermanentCorruption,
+    materializeSnapshotAndrarRules,
     hasRules,
     getItemWeightModifiers
   };

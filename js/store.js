@@ -16,6 +16,9 @@
     custom: 0,
     revealed: 0
   };
+  const SNAPSHOT_RULES_KEY = 'snapshotRules';
+  const SNAPSHOT_SOURCE_TYPE_ENTRY = 'entry';
+  const SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING = 'artifact_binding';
 
   const normalizeEntrySort = (mode) => {
     if (typeof global.normalizeEntrySortMode === 'function') {
@@ -466,8 +469,34 @@
     return `Custom${cleaned || 'Unnamed'}`;
   }
 
-  const FALLBACK_WEAPON_TYPES = ['Enhandsvapen','Korta vapen','Långa vapen','Tunga vapen','Obeväpnad attack','Projektilvapen','Belägringsvapen'];
+  const LEGACY_WEAPON_BASE_TYPE = global.LEGACY_WEAPON_BASE_TYPE || 'Vapen';
+  const MELEE_WEAPON_BASE_TYPE = global.MELEE_WEAPON_BASE_TYPE || 'Närstridsvapen';
+  const RANGED_WEAPON_BASE_TYPE = global.RANGED_WEAPON_BASE_TYPE || 'Avståndsvapen';
+  const WEAPON_BASE_TYPES = Array.isArray(global.WEAPON_BASE_TYPES)
+    ? global.WEAPON_BASE_TYPES
+    : [MELEE_WEAPON_BASE_TYPE, RANGED_WEAPON_BASE_TYPE, LEGACY_WEAPON_BASE_TYPE];
+  const FALLBACK_WEAPON_TYPES = ['Enhandsvapen','Korta vapen','Långa vapen','Tvåhandsvapen','Obeväpnad attack','Stav','Armborst','Pilbåge','Kastvapen','Slunga','Blåsrör','Belägringsvapen','Projektilvapen'];
   const FALLBACK_ARMOR_TYPES  = ['Lätt Rustning','Medeltung Rustning','Tung Rustning'];
+  const isWeaponTypeName = (value) => {
+    if (typeof global.isWeaponType === 'function') return global.isWeaponType(value);
+    const txt = String(value || '').trim();
+    return txt === LEGACY_WEAPON_BASE_TYPE || txt === MELEE_WEAPON_BASE_TYPE || txt === RANGED_WEAPON_BASE_TYPE;
+  };
+  const isWeaponBaseTypeName = (value) => {
+    if (typeof global.isWeaponBaseType === 'function') return global.isWeaponBaseType(value);
+    const txt = String(value || '').trim();
+    return WEAPON_BASE_TYPES.includes(txt);
+  };
+  const isRangedWeaponTypeName = (value) => {
+    if (typeof global.isRangedWeaponType === 'function') return global.isRangedWeaponType(value);
+    const txt = String(value || '').trim();
+    return txt === RANGED_WEAPON_BASE_TYPE || txt === 'Armborst' || txt === 'Pilbåge' || txt === 'Kastvapen' || txt === 'Slunga' || txt === 'Blåsrör' || txt === 'Belägringsvapen' || txt === 'Projektilvapen';
+  };
+  const normalizeWeaponType = (value) => {
+    if (typeof global.normalizeWeaponTypeName === 'function') return global.normalizeWeaponTypeName(value);
+    const txt = String(value || '').trim();
+    return txt === 'Tunga vapen' ? 'Tvåhandsvapen' : txt;
+  };
 
   function getSubtypeSets() {
     const weapon = new Set();
@@ -481,11 +510,11 @@
       const db = global.DB || [];
       db.forEach(e => {
         const typs = e?.taggar?.typ || [];
-        if (typs.includes('Vapen')) {
+        if (Array.isArray(typs) && typs.some(isWeaponTypeName)) {
           typs.forEach(t => {
             const key = normalize(t);
-            if (!key || key === 'vapen' || key === 'sköld' || skip.has(key)) return;
-            const label = String(t).trim();
+            if (!key || key === 'sköld' || skip.has(key) || isWeaponBaseTypeName(t)) return;
+            const label = normalizeWeaponType(t);
             if (label) weapon.add(label);
           });
         }
@@ -541,19 +570,34 @@
       entry.vikt = Number.isFinite(weight) && weight >= 0 ? weight : 0;
       entry.grundpris = sanitizeMoneyStruct(entry.grundpris);
 
-      // Tags: ensure Hemmagjort baseline; inject base types for subtypes; treat Sköld as weapon
+      // Tags: ensure Hemmagjort baseline; inject weapon/armor base types for subtypes.
       const taggar = (entry.taggar && typeof entry.taggar === 'object') ? { ...entry.taggar } : {};
       const normalizeTypes = (vals) => {
-        const extras = new Set((vals || []).map(v => String(v).trim()).filter(Boolean));
+        const extras = new Set(
+          (vals || [])
+            .map(v => normalizeWeaponType(v))
+            .map(v => String(v).trim())
+            .filter(Boolean)
+        );
         extras.delete('Hemmagjort');
-        const hasWeapon = extras.has('Vapen') || extras.has('Sköld') || [...extras].some(t => weaponSubs.has(t));
+        const hadLegacyWeapon = extras.delete(LEGACY_WEAPON_BASE_TYPE);
+        const hasWeapon = hadLegacyWeapon || extras.has('Sköld') || [...extras].some(t => weaponSubs.has(t) || isWeaponTypeName(t));
         const hasArmor  = extras.has('Rustning') || [...extras].some(t => armorSubs.has(t));
-        if (hasWeapon) extras.add('Vapen');
+        const hasMeleeBase = extras.has(MELEE_WEAPON_BASE_TYPE);
+        const hasRangedBase = extras.has(RANGED_WEAPON_BASE_TYPE);
+        if (hasWeapon && !hasMeleeBase && !hasRangedBase) {
+          const hasRangedSubtype = [...extras].some(t => isRangedWeaponTypeName(t));
+          extras.add(hasRangedSubtype ? RANGED_WEAPON_BASE_TYPE : MELEE_WEAPON_BASE_TYPE);
+        }
         if (hasArmor) extras.add('Rustning');
         const ordered = ['Hemmagjort'];
-        if (extras.has('Vapen')) ordered.push('Vapen');
+        if (extras.has(MELEE_WEAPON_BASE_TYPE)) ordered.push(MELEE_WEAPON_BASE_TYPE);
+        if (extras.has(RANGED_WEAPON_BASE_TYPE)) ordered.push(RANGED_WEAPON_BASE_TYPE);
         if (extras.has('Rustning')) ordered.push('Rustning');
-        extras.forEach(t => { if (t !== 'Vapen' && t !== 'Rustning') ordered.push(t); });
+        extras.forEach(t => {
+          if (t === MELEE_WEAPON_BASE_TYPE || t === RANGED_WEAPON_BASE_TYPE || t === 'Rustning') return;
+          ordered.push(t);
+        });
         return ordered;
       };
       if (Array.isArray(taggar.typ)) {
@@ -634,6 +678,7 @@
     const data = {
       custom: [],
       artifactEffects: defaultArtifactEffects(),
+      snapshotRules: [],
       bonusMoney: defaultMoney(),
       savedUnusedMoney: defaultMoney(),
       privMoney: defaultMoney(),
@@ -657,6 +702,11 @@
       mutated = true;
     }
     data.artifactEffects = normalizedArtifactEffects;
+    const normalizedSnapshotRules = normalizeSnapshotRuleRecords(data.snapshotRules);
+    if (JSON.stringify(normalizedSnapshotRules) !== JSON.stringify(data.snapshotRules || [])) {
+      mutated = true;
+    }
+    data.snapshotRules = normalizedSnapshotRules;
     if (!data.manualAdjustments) {
       data.manualAdjustments = defaultManualAdjustments();
       mutated = true;
@@ -1009,7 +1059,13 @@
   function getCurrentList(store) {
     if (!store.current) return [];
     const list = store.data[store.current]?.list || [];
-    return list.map(x => ({ ...x }));
+    const cloned = list.map(x => ({ ...x }));
+    const snapshotRules = getSnapshotRuleRecords(store).map(record => ({
+      ...record,
+      rule: cloneSnapshotValue(record.rule),
+      sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+    }));
+    return attachSnapshotRulesToList(cloned, snapshotRules);
   }
 
   function normalizeRaceName(value) {
@@ -1139,23 +1195,128 @@
     return (Array.isArray(list) ? list : []).some(entry => normalizeEntryGrantName(entry?.namn || '') === normalized);
   }
 
+  const LIMIT_IGNORE_TAG_KEYS = Object.freeze([
+    'ignore_limits',
+    'ignore_limit',
+    'ignorelimits',
+    'ignorelimit',
+    'ignoreLimits',
+    'ignoreLimit',
+    'bypass_limits',
+    'bypass_limit'
+  ]);
+
+  function parseIgnoreLimitsFlagValue(value) {
+    if (value === undefined || value === null || value === '') return null;
+    if (typeof value === 'boolean') return value;
+    if (typeof value === 'number') return value !== 0;
+    if (typeof value === 'string') {
+      const trimmed = value.trim();
+      if (!trimmed) return null;
+      const normalized = normalizeEntryGrantName(trimmed);
+      if (['false', '0', 'no', 'nej', 'off'].includes(normalized)) return false;
+      if (['true', '1', 'yes', 'ja', 'on'].includes(normalized)) return true;
+      return true;
+    }
+    return true;
+  }
+
+  function readIgnoreLimitsFlag(container) {
+    if (!container || typeof container !== 'object' || Array.isArray(container)) return null;
+
+    for (const key of LIMIT_IGNORE_TAG_KEYS) {
+      if (!Object.prototype.hasOwnProperty.call(container, key)) continue;
+      return parseIgnoreLimitsFlagValue(container[key]);
+    }
+
+    const wanted = new Set(LIMIT_IGNORE_TAG_KEYS.map(normalizeEntryGrantName));
+    for (const key of Object.keys(container)) {
+      if (!wanted.has(normalizeEntryGrantName(key))) continue;
+      return parseIgnoreLimitsFlagValue(container[key]);
+    }
+
+    return null;
+  }
+
+  function parseEntryGrantConstraint(rawTarget) {
+    if (!rawTarget || typeof rawTarget !== 'object') return null;
+
+    let isFree = false;
+    let gratisTill = null;
+    const levelCandidates = [rawTarget.gratisTill, rawTarget.gratis_till, rawTarget.gratis_upp_till];
+    for (const candidate of levelCandidates) {
+      if (typeof candidate !== 'string') continue;
+      const trimmed = candidate.trim();
+      if (!trimmed) continue;
+      const normalized = normalizeEntryGrantName(trimmed);
+      if (['false', '0', 'no', 'nej', 'off'].includes(normalized)) continue;
+      isFree = true;
+      gratisTill = ['true', '1', 'yes', 'ja', 'on'].includes(normalized) ? null : trimmed;
+      break;
+    }
+
+    if (!isFree) {
+      const freeCandidates = [rawTarget.gratis, rawTarget.free, rawTarget.is_gratis, rawTarget.isGratis];
+      for (const candidate of freeCandidates) {
+        if (candidate === undefined || candidate === null || candidate === '') continue;
+        if (typeof candidate === 'string') {
+          const trimmed = candidate.trim();
+          if (!trimmed) continue;
+          const normalized = normalizeEntryGrantName(trimmed);
+          if (['false', '0', 'no', 'nej', 'off'].includes(normalized)) continue;
+          isFree = true;
+          gratisTill = ['true', '1', 'yes', 'ja', 'on'].includes(normalized) ? null : trimmed;
+          break;
+        }
+        if (typeof candidate === 'number') {
+          if (candidate === 0) continue;
+          isFree = true;
+          gratisTill = null;
+          break;
+        }
+        if (candidate === true) {
+          isFree = true;
+          gratisTill = null;
+          break;
+        }
+      }
+    }
+
+    const ignoreLimits = readIgnoreLimitsFlag(rawTarget) === true;
+    if (!isFree && !ignoreLimits) return null;
+
+    return {
+      isFree,
+      gratisTill: isFree ? gratisTill : null,
+      ignoreLimits
+    };
+  }
+
   function buildGrantMaps(list) {
     const entries = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
     const grantCounts = new Map();
     const grantConstraints = new Map();
-    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return { grantCounts, grantConstraints };
+    const grantIgnoreCounts = new Map();
+    if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return { grantCounts, grantConstraints, grantIgnoreCounts };
 
     global.rulesHelper.getEntryGrantTargets(entries).forEach(rawTarget => {
       const resolvedTarget = resolveEntryGrantTarget(rawTarget);
       const key = resolvedTarget?.key || getEntryGrantTargetKey(rawTarget);
       if (!key) return;
-      grantCounts.set(key, (grantCounts.get(key) || 0) + 1);
-      if (rawTarget.gratisTill && !grantConstraints.has(key)) {
-        grantConstraints.set(key, { gratisTill: rawTarget.gratisTill });
+      const constraint = parseEntryGrantConstraint(rawTarget);
+      if (!constraint) return;
+      if (constraint.isFree) {
+        grantCounts.set(key, (grantCounts.get(key) || 0) + 1);
+        if (!grantConstraints.has(key)) {
+          grantConstraints.set(key, { gratisTill: constraint.gratisTill });
+        }
+      }
+      if (constraint.ignoreLimits) {
+        grantIgnoreCounts.set(key, (grantIgnoreCounts.get(key) || 0) + 1);
       }
     });
 
-    return { grantCounts, grantConstraints };
+    return { grantCounts, grantConstraints, grantIgnoreCounts };
   }
 
   function buildEntryGrantCountMap(list) {
@@ -1204,7 +1365,9 @@
     let grantCounts, grantConstraints;
     if (options.grantCounts instanceof Map) {
       grantCounts = options.grantCounts;
-      grantConstraints = options.grantConstraints instanceof Map ? options.grantConstraints : new Map();
+      grantConstraints = options.grantConstraints instanceof Map
+        ? options.grantConstraints
+        : buildGrantMaps(list).grantConstraints;
     } else {
       const maps = buildGrantMaps(list);
       grantCounts = maps.grantCounts;
@@ -1261,6 +1424,47 @@
 
   function isRuleGrantedEntry(entry, list, options = {}) {
     return getEntryGrantCoverage(entry, list, options).covered;
+  }
+
+  function hasEntryIgnoreLimitTag(entry) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (typeof global.rulesHelper?.entryIgnoresLimits === 'function') {
+      try {
+        const helperValue = global.rulesHelper.entryIgnoresLimits(entry);
+        if (helperValue === true) return true;
+      } catch (_) {
+        // Ignore helper errors and fall back to local parsing.
+      }
+    }
+
+    const fromTags = readIgnoreLimitsFlag(entry?.taggar);
+    if (fromTags !== null) return fromTags;
+
+    const fromEntry = readIgnoreLimitsFlag(entry);
+    if (fromEntry !== null) return fromEntry;
+
+    return false;
+  }
+
+  function isEntryIgnoredByGrantLimit(entry, list, options = {}) {
+    const targetKey = getEntryGrantTargetKey(entry);
+    if (!targetKey) return false;
+
+    const entries = Array.isArray(list) ? list : [];
+    const grantIgnoreCounts = options.grantIgnoreCounts instanceof Map
+      ? options.grantIgnoreCounts
+      : buildGrantMaps(entries).grantIgnoreCounts;
+    const ignoreCount = Math.max(0, Number(grantIgnoreCounts.get(targetKey) || 0));
+    if (ignoreCount <= 0) return false;
+
+    const occurrence = getGrantTargetOccurrence(entries, entry, targetKey);
+    return occurrence.index > -1 && occurrence.index < ignoreCount;
+  }
+
+  function entryIgnoresLimits(entry, list, options = {}) {
+    if (!entry || typeof entry !== 'object') return false;
+    if (hasEntryIgnoreLimitTag(entry)) return true;
+    return isEntryIgnoredByGrantLimit(entry, list, options);
   }
 
   function syncRuleEntryGrants(store, list, prevList) {
@@ -1738,6 +1942,298 @@
     }
   }
 
+  function buildSnapshotEvaluationList(baseList, snapshotRecords) {
+    const list = (Array.isArray(baseList) ? baseList : []).map(entry => ({ ...entry }));
+    return attachSnapshotRulesToList(list, snapshotRecords);
+  }
+
+  function resolveSnapshotTraits(store) {
+    if (!store.current) return defaultTraits();
+    const data = store.data[store.current] || {};
+    return { ...defaultTraits(), ...(data.traits || {}) };
+  }
+
+  function materializeSnapshotSourceRules(store, descriptor, baseList, existingRecords) {
+    const sourceKey = String(descriptor?.sourceKey || '').trim();
+    if (!sourceKey) return [];
+    const sourceType = normalizeSnapshotSourceType(descriptor?.sourceType);
+    const sourceName = String(descriptor?.sourceName || '').trim();
+    const sourceSignature = String(descriptor?.sourceSignature || '').trim();
+    const rules = Array.isArray(descriptor?.rules) ? descriptor.rules : [];
+    if (!rules.length) return [];
+
+    const helper = global.rulesHelper;
+    if (!helper || typeof helper.materializeSnapshotAndrarRules !== 'function') return [];
+
+    const evalList = buildSnapshotEvaluationList(baseList, existingRecords);
+    const traits = resolveSnapshotTraits(store);
+    const artifactEffects = getArtifactEffects(store);
+    const corruption = Number(artifactEffects?.corruption || 0);
+    const pain = Number(artifactEffects?.pain || 0);
+    const toughness = Number(artifactEffects?.toughness || 0);
+    const capacity = Number(artifactEffects?.capacity || 0);
+    let materialized = [];
+    try {
+      materialized = helper.materializeSnapshotAndrarRules(rules, {
+        list: evalList,
+        sourceEntry: descriptor?.sourceEntry || null,
+        row: descriptor?.row || null,
+        traits,
+        corruption: Number.isFinite(corruption) ? corruption : 0,
+        pain: Number.isFinite(pain) ? pain : 0,
+        toughness: Number.isFinite(toughness) ? toughness : 0,
+        capacity: Number.isFinite(capacity) ? capacity : 0
+      });
+    } catch (_) {
+      materialized = [];
+    }
+
+    return (Array.isArray(materialized) ? materialized : [])
+      .map(rule => ({
+        key: 'andrar',
+        rule: cloneSnapshotValue(rule),
+        sourceKey,
+        sourceType,
+        sourceName,
+        sourceSignature,
+        detached: false,
+        sourceRef: descriptor?.sourceRef && typeof descriptor.sourceRef === 'object'
+          ? cloneSnapshotValue(descriptor.sourceRef)
+          : undefined
+      }))
+      .filter(record => record.rule && typeof record.rule === 'object');
+  }
+
+  function getEntrySnapshotRules(entry) {
+    if (!entry || typeof entry !== 'object') return [];
+    if (typeof global.rulesHelper?.getRuleList !== 'function') return [];
+    const level = typeof entry?.nivå === 'string' ? entry.nivå : '';
+    try {
+      return (global.rulesHelper.getRuleList(entry, 'andrar', level ? { level } : {}) || [])
+        .filter(rule => rule && typeof rule === 'object' && Boolean(rule.snapshot));
+    } catch {
+      return [];
+    }
+  }
+
+  function syncEntrySnapshotRules(store, list) {
+    if (!store.current) return false;
+    const data = store.data[store.current] = store.data[store.current] || {};
+    const entries = Array.isArray(list) ? list : [];
+    const existing = normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY]);
+    const detached = existing.filter(record => record.sourceType === SNAPSHOT_SOURCE_TYPE_ENTRY && record.detached);
+    const retainedNonEntry = existing.filter(record => record.sourceType !== SNAPSHOT_SOURCE_TYPE_ENTRY);
+    const activeExistingBySource = new Map();
+    existing.forEach(record => {
+      if (record.sourceType !== SNAPSHOT_SOURCE_TYPE_ENTRY || record.detached) return;
+      const key = record.sourceKey || '';
+      if (!key) return;
+      if (!activeExistingBySource.has(key)) activeExistingBySource.set(key, []);
+      activeExistingBySource.get(key).push(record);
+    });
+
+    const next = [...retainedNonEntry, ...detached];
+    entries.forEach(entry => {
+      const sourceKey = getEntrySnapshotSourceKey(entry);
+      if (!sourceKey) return;
+      const rules = getEntrySnapshotRules(entry);
+      const sourceSignature = stableSignature({
+        rules,
+        level: entry?.nivå || ''
+      });
+      const current = activeExistingBySource.get(sourceKey) || [];
+      const unchanged = current.length > 0
+        && current.every(record => record.sourceSignature === sourceSignature)
+        && rules.length > 0;
+      if (unchanged) {
+        next.push(...current.map(record => ({
+          ...record,
+          rule: cloneSnapshotValue(record.rule),
+          sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+        })));
+        activeExistingBySource.delete(sourceKey);
+        return;
+      }
+      activeExistingBySource.delete(sourceKey);
+      if (!rules.length) return;
+      const materialized = materializeSnapshotSourceRules(
+        store,
+        {
+          sourceKey,
+          sourceType: SNAPSHOT_SOURCE_TYPE_ENTRY,
+          sourceName: String(entry?.namn || '').trim(),
+          sourceSignature,
+          rules,
+          sourceEntry: entry,
+          sourceRef: {
+            kind: SNAPSHOT_SOURCE_TYPE_ENTRY,
+            entryUid: entry.__uid || '',
+            entryId: entry.id || '',
+            entryName: entry.namn || ''
+          }
+        },
+        entries,
+        next
+      );
+      next.push(...materialized);
+    });
+
+    activeExistingBySource.forEach(records => {
+      next.push(...records.map(record => ({
+        ...record,
+        rule: cloneSnapshotValue(record.rule),
+        sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+      })));
+    });
+
+    return setSnapshotRuleRecords(store, next, { persist: false });
+  }
+
+  function syncSnapshotRuleSources(store, descriptors, options = {}) {
+    if (!store.current) return false;
+    const sourceType = normalizeSnapshotSourceType(options?.sourceType || SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING);
+    const activeDescriptors = (Array.isArray(descriptors) ? descriptors : [])
+      .map(descriptor => ({
+        ...descriptor,
+        sourceKey: String(descriptor?.sourceKey || '').trim(),
+        sourceType
+      }))
+      .filter(descriptor => descriptor.sourceKey);
+    const activeByKey = new Map(activeDescriptors.map(descriptor => [descriptor.sourceKey, descriptor]));
+
+    const data = store.data[store.current] = store.data[store.current] || {};
+    const existing = normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY]);
+    const preserved = [];
+    const targetExistingBySource = new Map();
+    existing.forEach(record => {
+      if (record.sourceType !== sourceType || record.detached) {
+        preserved.push(record);
+        return;
+      }
+      const key = record.sourceKey || '';
+      if (!key) return;
+      if (!targetExistingBySource.has(key)) targetExistingBySource.set(key, []);
+      targetExistingBySource.get(key).push(record);
+    });
+
+    const next = [...preserved];
+    activeDescriptors.forEach(descriptor => {
+      const key = descriptor.sourceKey;
+      const rules = Array.isArray(descriptor.rules) ? descriptor.rules : [];
+      const sourceSignature = String(descriptor.sourceSignature || stableSignature({
+        value: descriptor.value || '',
+        rules
+      }));
+      const existingForKey = targetExistingBySource.get(key) || [];
+      const unchanged = existingForKey.length > 0
+        && existingForKey.every(record => record.sourceSignature === sourceSignature);
+      if (unchanged) {
+        next.push(...existingForKey.map(record => ({
+          ...record,
+          rule: cloneSnapshotValue(record.rule),
+          sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+        })));
+        targetExistingBySource.delete(key);
+        return;
+      }
+      targetExistingBySource.delete(key);
+      const materialized = materializeSnapshotSourceRules(store, {
+        ...descriptor,
+        sourceType,
+        sourceSignature,
+        rules
+      }, store.data[store.current]?.list || [], next);
+      next.push(...materialized);
+    });
+
+    if (options.removeMissing !== false) {
+      targetExistingBySource.forEach((records, key) => {
+        if (activeByKey.has(key)) return;
+        // Missing source for this type is treated as explicit replacement/removal.
+        // Records are intentionally dropped unless caller kept them by detaching first.
+      });
+    } else {
+      targetExistingBySource.forEach(records => {
+        next.push(...records);
+      });
+    }
+
+    return setSnapshotRuleRecords(store, next);
+  }
+
+  function getSnapshotSourceImpactForEntry(store, entry) {
+    const sourceKey = getEntrySnapshotSourceKey(entry);
+    const entryUid = entry?.__uid === undefined || entry?.__uid === null
+      ? ''
+      : String(entry.__uid).trim();
+    const entryId = entry?.id === undefined || entry?.id === null
+      ? ''
+      : String(entry.id).trim();
+    const entryName = normalizeLevelName(entry?.namn || '');
+    const matchesEntry = (record) => {
+      if (!record || record.detached) return false;
+      const recordSourceKey = String(record.sourceKey || '').trim();
+      if (sourceKey && recordSourceKey === sourceKey) return true;
+      const sourceRef = record.sourceRef && typeof record.sourceRef === 'object' && !Array.isArray(record.sourceRef)
+        ? record.sourceRef
+        : null;
+      if (!sourceRef) return false;
+      const refEntryUid = sourceRef.entryUid === undefined || sourceRef.entryUid === null
+        ? ''
+        : String(sourceRef.entryUid).trim();
+      const refEntryId = sourceRef.entryId === undefined || sourceRef.entryId === null
+        ? ''
+        : String(sourceRef.entryId).trim();
+      const refEntryName = normalizeLevelName(sourceRef.entryName || '');
+      if (entryUid && refEntryUid && entryUid === refEntryUid) return true;
+      if (entryId && refEntryId && entryId === refEntryId) return true;
+      if (entryName && refEntryName && entryName === refEntryName) return true;
+
+      const refArtifactId = sourceRef.artifactId === undefined || sourceRef.artifactId === null
+        ? ''
+        : String(sourceRef.artifactId).trim();
+      const refArtifactName = normalizeLevelName(sourceRef.artifactName || '');
+      if (entryId && refArtifactId && entryId === refArtifactId) return true;
+      if (entryName && refArtifactName && entryName === refArtifactName) return true;
+      return false;
+    };
+
+    const records = getSnapshotRuleRecords(store).filter(matchesEntry);
+    if (!records.length) return { sourceKey: '', sourceKeys: [], records: [], count: 0 };
+    const sourceKeys = [...new Set(records
+      .map(record => String(record.sourceKey || '').trim())
+      .filter(Boolean))];
+    return {
+      sourceKey: sourceKeys.length === 1 ? sourceKeys[0] : '',
+      sourceKeys,
+      records,
+      count: records.length
+    };
+  }
+
+  function detachSnapshotRulesBySource(store, sourceKey) {
+    const key = String(sourceKey || '').trim();
+    if (!key) return false;
+    const records = getSnapshotRuleRecords(store);
+    let changed = false;
+    const next = records.map(record => {
+      if (record.sourceKey !== key || record.detached) return record;
+      changed = true;
+      return { ...record, detached: true };
+    });
+    if (!changed) return false;
+    return setSnapshotRuleRecords(store, next);
+  }
+
+  function removeSnapshotRulesBySource(store, sourceKey) {
+    const key = String(sourceKey || '').trim();
+    if (!key) return false;
+    const records = getSnapshotRuleRecords(store);
+    const next = records.filter(record => record.sourceKey !== key);
+    if (next.length === records.length) return false;
+    return setSnapshotRuleRecords(store, next);
+  }
+
   function setCurrentList(store, list) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
@@ -1748,6 +2244,7 @@
     enforceRuleConflicts(list);
     applyHamnskifteTraits(store, list);
     syncEntryMetadataFromPrev(store, prev, list);
+    syncEntrySnapshotRules(store, list);
     store.data[store.current].list = list;
     const hiddenRevealChanged = syncHiddenRevealedFromList(store, list);
     syncRuleInventoryGrants(store, list);
@@ -1844,6 +2341,123 @@
       }
     });
     return out;
+  }
+
+  function cloneSnapshotValue(value) {
+    if (value === null || typeof value !== 'object') return value;
+    if (Array.isArray(value)) return value.map(cloneSnapshotValue);
+    const out = {};
+    Object.keys(value).forEach(key => {
+      const next = value[key];
+      if (next === undefined) return;
+      out[key] = cloneSnapshotValue(next);
+    });
+    return out;
+  }
+
+  function normalizeSnapshotSourceType(value) {
+    const type = String(value || '').trim().toLowerCase();
+    if (type === SNAPSHOT_SOURCE_TYPE_ENTRY) return SNAPSHOT_SOURCE_TYPE_ENTRY;
+    if (type === SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING) return SNAPSHOT_SOURCE_TYPE_ARTIFACT_BINDING;
+    return SNAPSHOT_SOURCE_TYPE_ENTRY;
+  }
+
+  function normalizeSnapshotRuleRecord(raw) {
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+    const rule = raw.rule && typeof raw.rule === 'object' && !Array.isArray(raw.rule)
+      ? cloneSnapshotValue(raw.rule)
+      : null;
+    if (!rule) return null;
+    const key = String(raw.key || 'andrar').trim() || 'andrar';
+    if (key !== 'andrar') return null;
+    const sourceKey = String(raw.sourceKey || '').trim();
+    const sourceType = normalizeSnapshotSourceType(raw.sourceType);
+    const sourceName = String(raw.sourceName || '').trim();
+    const sourceSignature = String(raw.sourceSignature || '').trim();
+    return {
+      key,
+      rule,
+      sourceKey,
+      sourceType,
+      sourceName,
+      sourceSignature,
+      detached: Boolean(raw.detached),
+      sourceRef: raw.sourceRef && typeof raw.sourceRef === 'object' && !Array.isArray(raw.sourceRef)
+        ? cloneSnapshotValue(raw.sourceRef)
+        : undefined
+    };
+  }
+
+  function normalizeSnapshotRuleRecords(value) {
+    const out = [];
+    (Array.isArray(value) ? value : []).forEach(item => {
+      const normalized = normalizeSnapshotRuleRecord(item);
+      if (!normalized) return;
+      out.push(normalized);
+    });
+    return out;
+  }
+
+  function snapshotRulesToListContext(records) {
+    return normalizeSnapshotRuleRecords(records).map(record => ({
+      key: record.key,
+      rule: cloneSnapshotValue(record.rule),
+      sourceEntryId: record.sourceKey || undefined,
+      sourceEntryName: record.sourceName || '',
+      sourceEntryLevel: '',
+      sourceEntry: null,
+      sourceType: record.sourceType,
+      sourceRef: record.sourceRef ? cloneSnapshotValue(record.sourceRef) : undefined
+    }));
+  }
+
+  function attachSnapshotRulesToList(list, records) {
+    if (!Array.isArray(list)) return list;
+    const normalized = snapshotRulesToListContext(records);
+    try {
+      Object.defineProperty(list, '__snapshotRules', {
+        value: normalized,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      list.__snapshotRules = normalized;
+    }
+    return list;
+  }
+
+  function getSnapshotRuleRecords(store) {
+    if (!store.current) return [];
+    const data = store.data[store.current] || {};
+    return normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY]);
+  }
+
+  function setSnapshotRuleRecords(store, records, options = {}) {
+    if (!store.current) return false;
+    store.data[store.current] = store.data[store.current] || {};
+    const next = normalizeSnapshotRuleRecords(records);
+    const prevJson = JSON.stringify(normalizeSnapshotRuleRecords(store.data[store.current][SNAPSHOT_RULES_KEY]));
+    const nextJson = JSON.stringify(next);
+    if (prevJson === nextJson) return false;
+    store.data[store.current][SNAPSHOT_RULES_KEY] = next;
+    if (options.persist !== false) persistCurrentCharacter(store);
+    return true;
+  }
+
+  function stableSignature(value) {
+    try {
+      return JSON.stringify(cloneSnapshotValue(value));
+    } catch {
+      return '';
+    }
+  }
+
+  function getEntrySnapshotSourceKey(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const uid = entry.__uid ? String(entry.__uid).trim() : '';
+    if (!uid) return '';
+    return `${SNAPSHOT_SOURCE_TYPE_ENTRY}:${uid}`;
   }
 
   function defaultManualAdjustments() {
@@ -2716,7 +3330,7 @@ function defaultTraits() {
   function hamnskifteNoviceLimit() { return false; }
 
   function isFreeMonsterTrait(list, item) {
-    // Level-free check is now handled by the ger/gratis_upp_till system via isRuleGrantedEntry.
+    // Grant-based free checks are handled via ger + explicit gratis/gratis_upp_till tags.
     return isRuleGrantedEntry(item, list);
   }
 
@@ -2741,6 +3355,7 @@ function defaultTraits() {
 
   function getEntryMaxCount(entry, options = {}) {
     if (!entry || typeof entry !== 'object') return 1;
+    if (entryIgnoresLimits(entry, options?.list, options)) return Number.POSITIVE_INFINITY;
     if (typeof global.rulesHelper?.getEntryMaxCount === 'function') {
       return global.rulesHelper.getEntryMaxCount(entry, options);
     }
@@ -2767,9 +3382,14 @@ function defaultTraits() {
     return getEntryMaxCount(entry);
   }
 
+  function withSnapshotRules(list) {
+    return Array.isArray(list) ? list : [];
+  }
+
   function calcPermanentCorruption(list, extra) {
+    const entries = withSnapshotRules(list);
     if (typeof global.rulesHelper?.calcPermanentCorruption === 'function') {
-      return global.rulesHelper.calcPermanentCorruption(list, {
+      return global.rulesHelper.calcPermanentCorruption(entries, {
         corruption: extra?.corruption || 0,
         korruptionstroskel: extra?.korruptionstroskel || 0
       });
@@ -2779,8 +3399,9 @@ function defaultTraits() {
 
   function calcCorruptionTrackStats(list, willpower) {
     const will = Number(willpower || 0);
+    const entries = withSnapshotRules(list);
     if (typeof global.rulesHelper?.getCorruptionTrackStats === 'function') {
-      return global.rulesHelper.getCorruptionTrackStats(list, {
+      return global.rulesHelper.getCorruptionTrackStats(entries, {
         viljestark: will
       });
     }
@@ -2828,21 +3449,47 @@ function defaultTraits() {
 
   function getDisadvantages(list, options = {}) {
     const entries = Array.isArray(list) ? list : [];
+    const maps = (options.grantCounts instanceof Map && options.grantConstraints instanceof Map)
+      ? null
+      : buildGrantMaps(entries);
     const grantCounts = options.grantCounts instanceof Map
       ? options.grantCounts
-      : buildEntryGrantCountMap(entries);
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
     return entries.filter(item => {
       const isDis = (item.taggar?.typ || [])
         .map(t => t.toLowerCase())
         .includes('nackdel');
       if (!isDis) return false;
-      if (isRuleGrantedEntry(item, entries, { grantCounts })) return false;
+      if (isRuleGrantedEntry(item, entries, { grantCounts, grantConstraints })) return false;
       return true;
     });
   }
 
-  function countDisadvantages(list) {
-    return getDisadvantages(list).length;
+  function countDisadvantages(list, options = {}) {
+    const entries = Array.isArray(list) ? list : [];
+    const maps = (
+      options.grantCounts instanceof Map
+      && options.grantConstraints instanceof Map
+      && options.grantIgnoreCounts instanceof Map
+    )
+      ? null
+      : buildGrantMaps(entries);
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
+    const grantIgnoreCounts = options.grantIgnoreCounts instanceof Map
+      ? options.grantIgnoreCounts
+      : maps.grantIgnoreCounts;
+
+    return getDisadvantages(entries, { grantCounts, grantConstraints }).filter(item =>
+      !entryIgnoresLimits(item, entries, { grantIgnoreCounts })
+    ).length;
   }
 
   function entryMembershipKey(entry) {
@@ -2853,9 +3500,36 @@ function defaultTraits() {
   }
 
   function disadvantagesWithXP(list, options = {}) {
-    const disadvantages = getDisadvantages(list, options);
-    if (disadvantages.length <= DISADVANTAGE_CAP) return disadvantages;
-    const sorted = disadvantages
+    const entries = Array.isArray(list) ? list : [];
+    const maps = (
+      options.grantCounts instanceof Map
+      && options.grantConstraints instanceof Map
+      && options.grantIgnoreCounts instanceof Map
+    )
+      ? null
+      : buildGrantMaps(entries);
+    const grantCounts = options.grantCounts instanceof Map
+      ? options.grantCounts
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
+    const grantIgnoreCounts = options.grantIgnoreCounts instanceof Map
+      ? options.grantIgnoreCounts
+      : maps.grantIgnoreCounts;
+
+    const disadvantages = getDisadvantages(entries, { grantCounts, grantConstraints });
+    if (!disadvantages.length) return [];
+
+    const unlimited = [];
+    const limited = [];
+    disadvantages.forEach(entry => {
+      if (entryIgnoresLimits(entry, entries, { grantIgnoreCounts })) unlimited.push(entry);
+      else limited.push(entry);
+    });
+
+    if (limited.length <= DISADVANTAGE_CAP) return [...unlimited, ...limited];
+    const sorted = limited
       .map((entry, index) => ({ entry, index }))
       .sort((a, b) => {
         const aOrder = coerceOrderValue(a.entry?.__order);
@@ -2868,7 +3542,7 @@ function defaultTraits() {
         return a.index - b.index;
       })
       .map(item => item.entry);
-    return sorted.slice(0, DISADVANTAGE_CAP);
+    return [...unlimited, ...sorted.slice(0, DISADVANTAGE_CAP)];
   }
 
   function getAdvantageKey(entry, types) {
@@ -2911,36 +3585,44 @@ function defaultTraits() {
     const key = getAdvantageKey(entry, types);
     if (!key) return null;
     const arr = Array.isArray(list) ? list : [];
+    const maps = (options.grantCounts instanceof Map && options.grantConstraints instanceof Map)
+      ? null
+      : buildGrantMaps(arr);
     const grantCounts = options.grantCounts instanceof Map
       ? options.grantCounts
-      : buildEntryGrantCountMap(arr);
+      : maps.grantCounts;
+    const grantConstraints = options.grantConstraints instanceof Map
+      ? options.grantConstraints
+      : maps.grantConstraints;
     let count = 0;
     let includesEntry = false;
     arr.forEach(item => {
       if (getAdvantageKey(item) === key) {
-        if (!isRuleGrantedEntry(item, arr, { grantCounts })) {
+        if (!isRuleGrantedEntry(item, arr, { grantCounts, grantConstraints })) {
           count += 1;
         }
         if (!includesEntry && item === entry) includesEntry = true;
       }
     });
-    const previewCount = isRuleGrantedEntry(entry, arr, { grantCounts }) ? 0 : 1;
+    const previewCount = isRuleGrantedEntry(entry, arr, { grantCounts, grantConstraints }) ? 0 : 1;
     const effectiveCount = includesEntry ? count : count + previewCount;
     return { key, count, effectiveCount };
   }
 
   function calcEntryXP(entry, list) {
     const entries = Array.isArray(list) ? list : [];
-    const { grantCounts, grantConstraints } = buildGrantMaps(entries);
+    const { grantCounts, grantConstraints, grantIgnoreCounts } = buildGrantMaps(entries);
     if (isRuleGrantedEntry(entry, entries, { grantCounts, grantConstraints })) return 0;
     const types = (entry.taggar?.typ || []).map(t => t.toLowerCase());
     if (types.includes('nackdel')) {
-      const disXp = disadvantagesWithXP(entries, { grantCounts });
+      const disXp = disadvantagesWithXP(entries, { grantCounts, grantConstraints, grantIgnoreCounts });
       if (entries.includes(entry)) {
         if (disXp.includes(entry)) return -ADVANTAGE_STEP_COST;
         return 0;
       }
-      return disXp.length < DISADVANTAGE_CAP ? -ADVANTAGE_STEP_COST : 0;
+      if (entryIgnoresLimits(entry, entries, { grantIgnoreCounts })) return -ADVANTAGE_STEP_COST;
+      const counted = countDisadvantages(entries, { grantCounts, grantConstraints, grantIgnoreCounts });
+      return counted < DISADVANTAGE_CAP ? -ADVANTAGE_STEP_COST : 0;
     }
     let xp = 0;
     if (isLevelCostType(types)) {
@@ -2950,7 +3632,7 @@ function defaultTraits() {
         : entryLevelCost(entry, entry?.nivå, { list: entries });
     }
     if (types.includes('fördel')) {
-      const advantageInfo = resolveAdvantageCount(entry, entries, types, { grantCounts });
+      const advantageInfo = resolveAdvantageCount(entry, entries, types, { grantCounts, grantConstraints });
       if (advantageInfo) {
         xp += advantageTotalCost(advantageInfo.effectiveCount);
       } else {
@@ -2988,11 +3670,11 @@ function defaultTraits() {
     const xpSource = (level && (!baseSource || baseSource.nivå !== level))
       ? { ...baseSource, nivå: level }
       : baseSource;
-    const grantCounts = buildEntryGrantCountMap(baseList);
+    const { grantCounts, grantConstraints, grantIgnoreCounts } = buildGrantMaps(baseList);
     const stackKey = stackableDisplayKey(entry);
     const stackGrantCount = Math.max(
       0,
-      Number(getEntryGrantCoverage(xpSource, baseList, { grantCounts }).grantCount || 0)
+      Number(getEntryGrantCoverage(xpSource, baseList, { grantCounts, grantConstraints }).grantCount || 0)
     );
     if (stackKey && stackGrantCount <= 0) {
       const stackEntries = baseList.filter(item => stackableDisplayKey(item) === stackKey);
@@ -3003,7 +3685,7 @@ function defaultTraits() {
         return advantageTotalCost(targetCount);
       }
       if (stackKey.startsWith('dis:')) {
-        const eligible = disadvantagesWithXP(baseList, { grantCounts });
+        const eligible = disadvantagesWithXP(baseList, { grantCounts, grantConstraints, grantIgnoreCounts });
         const eligibleSet = new Set(
           eligible
             .map(entryMembershipKey)
@@ -3014,8 +3696,9 @@ function defaultTraits() {
           if (!key) return count;
           return count + (eligibleSet.has(key) ? 1 : 0);
         }, 0);
-        const totalEligible = eligible.length;
-        const extra = previewBonus && totalEligible < DISADVANTAGE_CAP ? 1 : 0;
+        const ignoresLimits = entryIgnoresLimits(xpSource, baseList, { grantIgnoreCounts });
+        const counted = countDisadvantages(baseList, { grantCounts, grantConstraints, grantIgnoreCounts });
+        const extra = previewBonus && (ignoresLimits || counted < DISADVANTAGE_CAP) ? 1 : 0;
         return (eligibleCount + extra) * -ADVANTAGE_STEP_COST;
       }
     }
@@ -3055,14 +3738,19 @@ function defaultTraits() {
 
   function calcTotalXP(baseXp, list) {
     const entries = Array.isArray(list) ? list : [];
-    const grantCounts = buildEntryGrantCountMap(entries);
-    return Number(baseXp || 0) + disadvantagesWithXP(entries, { grantCounts }).length * ADVANTAGE_STEP_COST;
+    const { grantCounts, grantConstraints, grantIgnoreCounts } = buildGrantMaps(entries);
+    return Number(baseXp || 0) + disadvantagesWithXP(entries, {
+      grantCounts,
+      grantConstraints,
+      grantIgnoreCounts
+    }).length * ADVANTAGE_STEP_COST;
   }
 
   function calcCarryCapacity(strength, list) {
+    const entries = withSnapshotRules(list);
     const str = Number(strength || 0);
     if (typeof global.rulesHelper?.getCarryCapacityBase === 'function') {
-      return global.rulesHelper.getCarryCapacityBase(list, {
+      return global.rulesHelper.getCarryCapacityBase(entries, {
         stark: str
       });
     }
@@ -3070,9 +3758,10 @@ function defaultTraits() {
   }
 
   function calcToughness(strength, list) {
+    const entries = withSnapshotRules(list);
     const str = Number(strength || 0);
     if (typeof global.rulesHelper?.getToughnessBase === 'function') {
-      return global.rulesHelper.getToughnessBase(list, {
+      return global.rulesHelper.getToughnessBase(entries, {
         stark: str
       });
     }
@@ -3080,14 +3769,15 @@ function defaultTraits() {
   }
 
   function calcTraitTotalMax(list, inventory) {
+    const entries = withSnapshotRules(list);
     if (typeof global.rulesHelper?.getTraitTotalMax === 'function') {
-      return global.rulesHelper.getTraitTotalMax(list, inventory);
+      return global.rulesHelper.getTraitTotalMax(entries, inventory);
     }
     return 80;
   }
 
   function calcPainThreshold(strength, list, extra) {
-    const entries = Array.isArray(list) ? list : [];
+    const entries = withSnapshotRules(list);
     const str = Number(strength || 0);
     let pain = Math.ceil(str / 2);
     const perm = calcPermanentCorruption(entries, extra);
@@ -3118,6 +3808,7 @@ function defaultTraits() {
     if (Array.isArray(obj.hamnskifteRemoved) && obj.hamnskifteRemoved.length === 0) delete obj.hamnskifteRemoved;
     if (obj.artifactEffects && JSON.stringify(obj.artifactEffects) === JSON.stringify(emptyEff)) delete obj.artifactEffects;
     if (obj.manualAdjustments && JSON.stringify(obj.manualAdjustments) === JSON.stringify(emptyManual)) delete obj.manualAdjustments;
+    if (Array.isArray(obj.snapshotRules) && obj.snapshotRules.length === 0) delete obj.snapshotRules;
     ['inventory','list','custom'].forEach(k => {
       if (Array.isArray(obj[k]) && obj[k].length === 0) delete obj[k];
     });
@@ -3328,6 +4019,10 @@ function defaultTraits() {
         ? ''
         : String(row.artifactEffect).trim();
       if (artifactEffect) res.e = artifactEffect;
+      const snapshotSourceKey = row.snapshotSourceKey === undefined || row.snapshotSourceKey === null
+        ? ''
+        : String(row.snapshotSourceKey).trim();
+      if (snapshotSourceKey) res.ssk = snapshotSourceKey;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
       if (row.perk) res.pk = row.perk;
@@ -3461,6 +4156,10 @@ function defaultTraits() {
         const artifactEffect = artifactEffectRaw === undefined || artifactEffectRaw === null
           ? ''
           : String(artifactEffectRaw).trim();
+        const snapshotSourceKeyRaw = row.snapshotSourceKey ?? row.ssk ?? '';
+        const snapshotSourceKey = snapshotSourceKeyRaw === undefined || snapshotSourceKeyRaw === null
+          ? ''
+          : String(snapshotSourceKeyRaw).trim();
         const expanded = {
           id: resolvedId,
           name: resolvedName,
@@ -3471,6 +4170,7 @@ function defaultTraits() {
           removedKval,
           artifactEffect
         };
+        if (snapshotSourceKey) expanded.snapshotSourceKey = snapshotSourceKey;
         if (manualQualityOverride.length) {
           expanded.manualQualityOverride = manualQualityOverride;
         }
@@ -3824,6 +4524,11 @@ function defaultTraits() {
     setDefenseSetup,
     getArtifactEffects,
     setArtifactEffects,
+    getSnapshotRuleRecords,
+    syncSnapshotRuleSources,
+    getSnapshotSourceImpactForEntry,
+    detachSnapshotRulesBySource,
+    removeSnapshotRulesBySource,
     getManualAdjustments,
     setManualAdjustments,
     getFilterUnion,

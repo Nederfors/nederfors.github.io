@@ -177,7 +177,7 @@
         {
           "id": "ar02",
           "namn": "Skymningsvatten",
-          "beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet. När den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar. Detta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret. Det heliga skymningsvattnet går inte att binda till sig med korruption, det krävs ett permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. Rollpersoner som binder sig till vattnet tar direkt skada, 1t4 per poäng av permanent korruption de besitter. Om rollpersonen går ner till 0 Tålighet förbränns rollpersonen till en hög med aska – här gäller inte regeln om dödsslag! Rollpersoner med permanent Korruption får slå ett slag för [Vaksam -permanent Korruption] för att inse att vattnet kommer att döma dem hårt. Vattnet bränner också bort den permanenta Korruption rollpersonen har. Skymningsvatten har därtill följande egenskaper och krafter:",
+          "beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet. När den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar. Detta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret. Det heliga skymningsvattnet går inte att binda till sig med korruption, det krävs ett permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. Rollpersoner som binder sig till vattnet tar direkt skada, 1T4 per poäng av permanent korruption de besitter. Om rollpersonen går ner till 0 Tålighet förbränns rollpersonen till en hög med aska – här gäller inte regeln om dödsslag! Rollpersoner med permanent Korruption får slå ett slag för [Vaksam -permanent Korruption] för att inse att vattnet kommer att döma dem hårt. Vattnet bränner också bort den permanenta Korruption rollpersonen har. Skymningsvatten har därtill följande egenskaper och krafter:",
           "kvalitet": [],
           "taggar": {
             "typ": [
@@ -203,9 +203,9 @@
           },
           "nivåer": {
             "Förmåga 1": "Solens sken; Handling: Speciell\nI handen på den som underkastat sig ljuset och bundit det till sig kan flaskan flamma upp med solens ljuskraft, så att omgivningen badar i ljus likt en molnfri dag med solen mitt på himlen. Villkor: Fri handling. Korruption: Ingen.",
-            "Förmåga 2": "Solens droppar; Handling: Aktiv\nFlaskan innehåller 1t10 droppar heligt ljusvatten, vilka kan droppas på en sjuk eller skadad person och bota denne. Varje droppe gör allt nedanstående när det droppas på en varelse. När alla droppar har använts är flaskan tom och Prios ljus borta. ◆ Helar 1t10 Tålighet ◆ Fungerar som ett medelstarkt motgift ◆ Renar ett poäng permanent Korruption ◆ Ger varelsen dess Korruption i skada, om den har någon sådan. Korruption: Ingen.",
+            "Förmåga 2": "Solens droppar; Handling: Aktiv\nFlaskan innehåller 1T10 droppar heligt ljusvatten, vilka kan droppas på en sjuk eller skadad person och bota denne. Varje droppe gör allt nedanstående när det droppas på en varelse. När alla droppar har använts är flaskan tom och Prios ljus borta. ◆ Helar 1T10 Tålighet ◆ Fungerar som ett medelstarkt motgift ◆ Renar ett poäng permanent Korruption ◆ Ger varelsen dess Korruption i skada, om den har någon sådan. Korruption: Ingen.",
             "Förmåga 3": "Helig synergi; Handling: Reaktiv\nDen som har bundit skymningsvattnet till sig kan använda dess ljus för att förstärka teurgiska krafter. Dessa får sin effekttärning höjd ett steg. Synergin kan göras en gång per scen. Korruption: Ingen.",
-            "Förmåga 4": "Ljusbringarens rättarting; Handling: Speciell\nDen som underkastat sig skymningsvattnet kan med en tanke krossa flaskan och släppa lös dess dömande ljus. Alla närvarande varelser med minst ett (1) i Korruption tar sin Korruption i skada, medan varelser som tillhör kategorin styggelser tar 1t10 + 10 i skada. Detta drabbar såklart även bäraren själv. Villkor: Fri handling. Korruption: Ingen.",
+            "Förmåga 4": "Ljusbringarens rättarting; Handling: Speciell\nDen som underkastat sig skymningsvattnet kan med en tanke krossa flaskan och släppa lös dess dömande ljus. Alla närvarande varelser med minst ett (1) i Korruption tar sin Korruption i skada, medan varelser som tillhör kategorin styggelser tar 1T10 + 10 i skada. Detta drabbar såklart även bäraren själv. Villkor: Fri handling. Korruption: Ingen.",
             "Förmåga 5": "Skinande undergång; Handling: Passiv\nOm den som bär och som har bundit skymningsvatten till sig någonsin blir styggelsemärkt detonerar flaskan, med samma effekt som för kraften Ljusbringarens rättarting."
           },
           "stat": {
@@ -240,8 +240,8 @@
             }
           },
           "nivåer": {
-            "Förmåga 1": "Slå med eld; Handling: Aktiv\nEldstenens herre kan med ett lyckat Viljestark få eldstenens hjälp att sätta eld på något brännbart inom synhåll – inklusive plagg på en fiende. Elden brinner 1t4 rundor och gör 1t4 i skada per runda. Rustning skyddar som vanligt. En brinnande varelse kan släcka elden genom att rulla runt på marken (förflyttningshandling) och lyckas med ett Kvick. Korruption: 1T4.",
-            "Förmåga 2": "Förstärka flamma; Handling: Speciell\nOm eldstenens herre behärskar krafter som producerar eld kan denne med ett lyckat Viljestark använda eldstenens till att förstärka en av sina eldbesvärjelser. Effekttärningen ökas ett steg (ex från 1t6 till 1t8, eller med +1 om den redan är 1t12). Villkor: Fri handling. Korruption: 1T4.",
+            "Förmåga 1": "Slå med eld; Handling: Aktiv\nEldstenens herre kan med ett lyckat Viljestark få eldstenens hjälp att sätta eld på något brännbart inom synhåll – inklusive plagg på en fiende. Elden brinner 1T4 rundor och gör 1T4 i skada per runda. Rustning skyddar som vanligt. En brinnande varelse kan släcka elden genom att rulla runt på marken (förflyttningshandling) och lyckas med ett Kvick. Korruption: 1T4.",
+            "Förmåga 2": "Förstärka flamma; Handling: Speciell\nOm eldstenens herre behärskar krafter som producerar eld kan denne med ett lyckat Viljestark använda eldstenens till att förstärka en av sina eldbesvärjelser. Effekttärningen ökas ett steg (ex från 1T6 till 1T8, eller med +1 om den redan är 1T12). Villkor: Fri handling. Korruption: 1T4.",
             "Förmåga 3": "Eldens ande; Handling: Aktiv\nEldstenens herre kan med ett lyckat Viljestark krossa eldstenen och släppa loss den fångade eldanden. Detta förstör också eldstenen. Eldanden manifesteras som en reslig människoskepnad av flammor och sot. Den är tacksam mot mästaren och lyder denne under resten av scenen. Anden kan ges enkla kommandon (fria handlingar) som ”vakta den här platsen”, ”anfall den där fienden” eller ”skydda mig”. Korruption: 1T6. eldenS ande Motstånd Utmanande Särdrag Andeform (II), Naturlig vapen (III) Diskret 5 (+5), Kvick 13 (−3) Listig 10 (0), Stark 11 (−1), Träffsäker 15 (−5), Vaksam 10 (0), Viljestark 9 (+1), Övertygande 7 (+3) Förmågor Naturlig krigare (III) Beväpning Brinnande omfamning 9 (Långt), två attacker mot samma mål Rustning Ingen (tar halv skada av attacker) Försvar −3 (Undvika) Tålighet 11 Smärtgräns 6"
           },
           "stat": {
@@ -1048,7 +1048,7 @@
             ]
           },
           "nivåer": {
-            "Mästare": "Det mirakulösa medel som kallas Andevän tillverkas i en kittel men det är inte vätskan som buteljeras utan ångan. Den gråvita röken fångas i små keramikpluntor och andas in vid behov. Andevän ger användaren nivå I i det monstruösa särdraget Andeform. Effekten varar i 1t4 rundor, till priset av lika många poäng temporär korruption."
+            "Mästare": "Det mirakulösa medel som kallas Andevän tillverkas i en kittel men det är inte vätskan som buteljeras utan ångan. Den gråvita röken fångas i små keramikpluntor och andas in vid behov. Andevän ger användaren nivå I i det monstruösa särdraget Andeform. Effekten varar i 1T4 rundor, till priset av lika många poäng temporär korruption."
           },
           "grundpris": {
             "daler": 12,
@@ -1191,7 +1191,7 @@
             ]
           },
           "nivåer": {
-            "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t8 skada; därefter brinner substansen i 1t4 rundor och ger 1t4 skada per runda."
+            "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T8 skada; därefter brinner substansen i 1T4 rundor och ger 1T4 skada per runda."
           },
           "stat": {
             "vikt": 1.0
@@ -1212,7 +1212,7 @@
             ]
           },
           "nivåer": {
-            "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t10 skada; därefter brinner substansen i 1t6 rundor och ger 1t6 skada per runda."
+            "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T10 skada; därefter brinner substansen i 1T6 rundor och ger 1T6 skada per runda."
           },
           "stat": {
             "vikt": 1.0
@@ -1233,7 +1233,7 @@
             ]
           },
           "nivåer": {
-            "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1t12 skada; därefter brinner substansen i 1t8 rundor och ger 1t8 skada per runda."
+            "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T12 skada; därefter brinner substansen i 1T8 rundor och ger 1T8 skada per runda."
           },
           "stat": {
             "vikt": 1.0
@@ -1841,14 +1841,14 @@
         {
           "id": "kv3",
           "namn": "Ledat",
-          "beskrivning": "Vapnet är ledat, vapenhuvudet slår runt parerande vapen och sköldkanter och är därmed svårparerat. Kättingens längd gör också attacker svåra att undvika. Även vid ett lyckat försvar träffar fienden om Försvaret sker på ett udda utfall på tärningen; då träffar vapnet ändå, med 1t6 i skada. Inga förmågor påverkar denna sekundära skada, den är 1t6 oavsett anfallarens övriga förmågor.",
+          "beskrivning": "Vapnet är ledat, vapenhuvudet slår runt parerande vapen och sköldkanter och är därmed svårparerat. Kättingens längd gör också attacker svåra att undvika. Även vid ett lyckat försvar träffar fienden om Försvaret sker på ett udda utfall på tärningen; då träffar vapnet ändå, med 1T6 i skada. Inga förmågor påverkar denna sekundära skada, den är 1T6 oavsett anfallarens övriga förmågor.",
           "taggar": {
             "typ": [
               "Kvalitet",
               "Vapenkvalitet"
             ]
           },
-          "effekt": "Lyckat försvar på udda utfall ger ändå träff: 1t6 skada."
+          "effekt": "Lyckat försvar på udda utfall ger ändå träff: 1T6 skada."
         }
       ]
     },
@@ -2310,7 +2310,7 @@
                     "nagon_av_namn": [
                       "Troll",
                       "Rese",
-                      "Djur/Bjära",
+                      "Best",
                       "Mörkt blod",
                       "Blodvadare"
                     ]
@@ -2356,7 +2356,7 @@
                   "nar": {
                     "nagon_av_namn": [
                       "Vandöd",
-                      "Djur/Bjära"
+                      "Best"
                     ]
                   }
                 }
@@ -2390,9 +2390,9 @@
             }
           },
           "nivåer": {
-            "Novis": "Handling: Reaktiv. Den frätande attacken är svag och gör 1t6 i skada i 1t6 rundor.",
-            "Gesäll": "Handling: Reaktiv. Den frätande attacken är medelstark och gör 1t8 i skada i 1t8 rundor.",
-            "Mästare": "Handling: Reaktiv. Den frätande attacken är stark och gör 1t10 i skada i 1t10 rundor."
+            "Novis": "Handling: Reaktiv. Den frätande attacken är svag och gör 1T6 i skada i 1T6 rundor.",
+            "Gesäll": "Handling: Reaktiv. Den frätande attacken är medelstark och gör 1T8 i skada i 1T8 rundor.",
+            "Mästare": "Handling: Reaktiv. Den frätande attacken är stark och gör 1T10 i skada i 1T10 rundor."
           },
           "id": "mo2"
         }
@@ -2586,7 +2586,7 @@
         {
           "id": "mystiskkv1",
           "namn": "Banevapen",
-          "beskrivning": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familj en gör banevapnet +1t4 i skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
+          "beskrivning": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familj en gör banevapnet +1T4 i skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
           "taggar": {
             "typ": [
               "Mystisk kvalitet",
@@ -2594,12 +2594,12 @@
               "Kvalitet"
             ]
           },
-          "effekt": "+1t4 skada mot vald familj; +1 Vaksamhet för att ana dem."
+          "effekt": "+1T4 skada mot vald familj; +1 Vaksamhet för att ana dem."
         },
         {
           "id": "mystiskkv2",
           "namn": "Brinnande",
-          "beskrivning": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet börjar sedan brinna, 1t4 skada i 1t4 rundor, med start rundan efter initial träff. Målet kan släcka sig genom att spendera en hel runda på att rulla på marken och lyckas med ett Kvick.",
+          "beskrivning": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet börjar sedan brinna, 1T4 skada i 1T4 rundor, med start rundan efter initial träff. Målet kan släcka sig genom att spendera en hel runda på att rulla på marken och lyckas med ett Kvick.",
           "taggar": {
             "typ": [
               "Mystisk kvalitet",
@@ -2607,12 +2607,12 @@
               "Kvalitet"
             ]
           },
-          "effekt": "Efter träff: 1t4 eldskada i 1t4 rundor; släckning tar en hel runda (Kvick)."
+          "effekt": "Efter träff: 1T4 eldskada i 1T4 rundor; släckning tar en hel runda (Kvick)."
         },
         {
           "id": "mystiskkv3",
           "namn": "Dundrande",
-          "beskrivning": "Vapnet är smitt med stormande och dundrande runor. Varje träff med vapnet ekar med blixtars kraft vilket gör 1t8 dundrande skada, vilket slås separat i förhållande till den vanliga skadan från attacken. Förmågor påverkar inte denna extra dundrande skada. Om något av den dundrande skadan går genom rustning och skadar målet måste offret dessutom klara ett slag i Stark eller förlora en handling på grund av knallens kraft.",
+          "beskrivning": "Vapnet är smitt med stormande och dundrande runor. Varje träff med vapnet ekar med blixtars kraft vilket gör 1T8 dundrande skada, vilket slås separat i förhållande till den vanliga skadan från attacken. Förmågor påverkar inte denna extra dundrande skada. Om något av den dundrande skadan går genom rustning och skadar målet måste offret dessutom klara ett slag i Stark eller förlora en handling på grund av knallens kraft.",
           "taggar": {
             "typ": [
               "Mystisk kvalitet",
@@ -2620,7 +2620,7 @@
               "Kvalitet"
             ]
           },
-          "effekt": "+1t8 dundrande skada; går skadan igenom krävs Stark eller en handling förloras."
+          "effekt": "+1T8 dundrande skada; går skadan igenom krävs Stark eller en handling förloras."
         }
       ]
     },
@@ -4052,14 +4052,14 @@
         {
           "id": "kv3",
           "namn": "Ledat",
-          "beskrivning": "Vapnet är ledat, vapenhuvudet slår runt parerande vapen och sköldkanter och är därmed svårparerat. Kättingens längd gör också attacker svåra att undvika. Även vid ett lyckat försvar träffar fienden om Försvaret sker på ett udda utfall på tärningen; då träffar vapnet ändå, med 1t6 i skada. Inga förmågor påverkar denna sekundära skada, den är 1t6 oavsett anfallarens övriga förmågor.",
+          "beskrivning": "Vapnet är ledat, vapenhuvudet slår runt parerande vapen och sköldkanter och är därmed svårparerat. Kättingens längd gör också attacker svåra att undvika. Även vid ett lyckat försvar träffar fienden om Försvaret sker på ett udda utfall på tärningen; då träffar vapnet ändå, med 1T6 i skada. Inga förmågor påverkar denna sekundära skada, den är 1T6 oavsett anfallarens övriga förmågor.",
           "taggar": {
             "typ": [
               "Kvalitet",
               "Vapenkvalitet"
             ]
           },
-          "effekt": "Lyckat försvar på udda utfall ger ändå träff: 1t6 skada."
+          "effekt": "Lyckat försvar på udda utfall ger ändå träff: 1T6 skada."
         }
       ]
     },

@@ -430,13 +430,21 @@
     return rounded;
   }
 
+  function normalizeMaxCount(value, fallback = 1) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric)) return 99;
+    const rounded = Math.floor(numeric);
+    if (rounded <= 0) return fallback;
+    return rounded;
+  }
+
   function getEntryMaxCount(entry, options = {}) {
     if (!entry || typeof entry !== 'object') return 1;
     if (typeof window.rulesHelper?.getEntryMaxCount === 'function') {
-      return window.rulesHelper.getEntryMaxCount(entry, options);
+      return normalizeMaxCount(window.rulesHelper.getEntryMaxCount(entry, options), 1);
     }
     if (typeof window.storeHelper?.getEntryMaxCount === 'function') {
-      return window.storeHelper.getEntryMaxCount(entry, options);
+      return normalizeMaxCount(window.storeHelper.getEntryMaxCount(entry, options), 1);
     }
     const tagLimit = parsePositiveLimit(entry?.taggar?.max_antal);
     if (tagLimit !== null) return tagLimit;

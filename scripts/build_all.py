@@ -35,7 +35,6 @@ DATA_FILES = [
     'tjanster.json',
     'ritual.json',
     'rustning.json',
-    'vapen.json',
     'mat.json',
     'dryck.json',
     'sardrag.json',
@@ -43,6 +42,8 @@ DATA_FILES = [
     'artefakter.json',
     'lagre-artefakter.json',
     'fallor.json',
+    'avstandsvapen.json',
+    'narstridsvapen.json',
     # sync-data-manifest:end
 ]
 

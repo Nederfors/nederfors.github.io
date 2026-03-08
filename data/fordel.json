@@ -51,7 +51,7 @@
     {
       "id": "ford4",
       "namn": "Besittning",
-      "beskrivning": "Rollpersonen har en affärsrörelse av något slag – en liten taverna, en mindre handelsbod eller annan enklare hantverkstjänst som skomakare eller liknande. Andra möjligheter är en teater eller gycklargrupp. Besittningen kan vara stationär på en plats dit rollpersonen ofta återkommer mellan äventyr, eller rörlig i form av en vagn eller liten flodbåt om det passar spelet bättre. En gång per äventyr (lämpligen mellan äventyr) får spelaren slå mot Listig (för hantverk) eller Övertygande (för tjänster). Framgång ger en vinst om 1t10+10 daler, efter att alla omkostnader för affärsrörelsen är betalda. Pengarna läggs till i inventariet automatiskt. Om flera rollpersoner har Besittning kan det utgöra andelar i samma rörelse. Varje rollperson slår då separata slag för sin andel.",
+      "beskrivning": "Rollpersonen har en affärsrörelse av något slag – en liten taverna, en mindre handelsbod eller annan enklare hantverkstjänst som skomakare eller liknande. Andra möjligheter är en teater eller gycklargrupp. Besittningen kan vara stationär på en plats dit rollpersonen ofta återkommer mellan äventyr, eller rörlig i form av en vagn eller liten flodbåt om det passar spelet bättre. En gång per äventyr (lämpligen mellan äventyr) får spelaren slå mot Listig (för hantverk) eller Övertygande (för tjänster). Framgång ger en vinst om 1T10+10 daler, efter att alla omkostnader för affärsrörelsen är betalda. Pengarna läggs till i inventariet automatiskt. Om flera rollpersoner har Besittning kan det utgöra andelar i samma rörelse. Varje rollperson slår då separata slag för sin andel.",
       "taggar": {
         "typ": [
           "Fördel"
@@ -62,7 +62,7 @@
           "Övertygande"
         ]
       },
-      "effekt": "En gång per äventyr ger ett slag på Listig/Övertygande vinst om 1t10+10 daler."
+      "effekt": "En gång per äventyr ger ett slag på Listig/Övertygande vinst om 1T10+10 daler."
     },
     {
       "id": "ford5",
@@ -365,7 +365,9 @@
               "namn": [
                 "Mörkt förflutet"
               ],
-              "varde": "morkt_blod_morkt_forflutet"
+              "varde": "morkt_blod_morkt_forflutet",
+              "gratis": true,
+              "ignore_limits": true
             }
           ]
         }
@@ -392,8 +394,7 @@
           ],
           "krockar": [
             {
-              "namn": "Hafspackare",
-              "varde": "packasna_hafspackare"
+              "namn": "Hafspackare"
             }
           ]
         }
@@ -678,7 +679,7 @@
     {
       "id": "ford43",
       "namn": "Vildmarksvana",
-      "beskrivning": "Personen kan tyda vildmarkens tecken, vet vilka områden som bör undvikas och är van att hitta mat, föda och skydd i ogästvänliga miljöer. Under förflyttningar i vildmark eller ruiner kan personen med ett lyckat Vaksam skörda 1t6 ransoner mat och vatten per dygn, eller 1t10 ransoner om allt fokus läggs på det (ingen förflyttning). Vildmarksvana kan införskaffas flera gånger och då vara användbar i allt ogästvänligare miljöer. Nivå I motsvarar Ljusa Davokar och bergskedjornas ytterområden; nivå II Vilda Davokar och bergens djupa dalar; nivå III Mörka Davokar och Undervärlden (spelledaren avgör). Notera att en person måste ha befunnit sig en längre tid i de mer krävande miljöerna för att få tillgodogöra sig högre nivåer i fördelen.",
+      "beskrivning": "Personen kan tyda vildmarkens tecken, vet vilka områden som bör undvikas och är van att hitta mat, föda och skydd i ogästvänliga miljöer. Under förflyttningar i vildmark eller ruiner kan personen med ett lyckat Vaksam skörda 1T6 ransoner mat och vatten per dygn, eller 1T10 ransoner om allt fokus läggs på det (ingen förflyttning). Vildmarksvana kan införskaffas flera gånger och då vara användbar i allt ogästvänligare miljöer. Nivå I motsvarar Ljusa Davokar och bergskedjornas ytterområden; nivå II Vilda Davokar och bergens djupa dalar; nivå III Mörka Davokar och Undervärlden (spelledaren avgör). Notera att en person måste ha befunnit sig en längre tid i de mer krävande miljöerna för att få tillgodogöra sig högre nivåer i fördelen.",
       "taggar": {
         "typ": [
           "Fördel"
@@ -689,7 +690,7 @@
         ],
         "max_antal": 3
       },
-      "effekt": "Skördar 1t6 ransoner/dygn i fält (1t10 om du enbart söker) och skalar upp för tuffare miljöer (upp till nivå III)."
+      "effekt": "Skördar 1T6 ransoner/dygn i fält (1T10 om du enbart söker) och skalar upp för tuffare miljöer (upp till nivå III)."
     },
     {
       "id": "ford44",
@@ -701,7 +702,16 @@
         ],
         "ark_trad": [],
         "test": [],
-        "max_antal": 3
+        "max_antal": 3,
+        "regler": {
+          "krockar": [
+            {
+              "namn": [
+                "Prios Förtappad"
+              ]
+            }
+          ]
+        }
       },
       "effekt": "+1 försvar per nivå mot genomkorrumperade; vid avfall blir fördelen till nackdelen Prios Förtappad av samma grad."
     },
@@ -716,7 +726,16 @@
         "ark_trad": [],
         "test": [
           "Övertygande"
-        ]
+        ],
+        "regler": {
+          "krockar": [
+            {
+              "namn": [
+                "Fallen Stjärna"
+              ]
+            }
+          ]
+        }
       },
       "effekt": "+1 Övertygande i religiösa samtal med troende eller tvivlare; vid avfall ersätts med nackdelen Fallen Stjärna."
     },
@@ -1181,7 +1200,16 @@
           "Fördel"
         ],
         "ark_trad": [],
-        "test": []
+        "test": [],
+        "regler": {
+          "krockar": [
+            {
+              "namn": [
+                "Korruptionsmagnet"
+              ]
+            }
+          ]
+        }
       },
       "effekt": "Tar alltid 1 mindre tillfällig korruption (minst 1); gäller bara utan permanent korruption, annars blir det nackdelen Korruptionsmagnet."
     },
@@ -1252,7 +1280,21 @@
           "Fördel"
         ],
         "ark_trad": [],
-        "test": []
+        "test": [],
+        "regler": {
+          "kraver": [
+            {
+              "nar": {
+                "nagon_av_namn": [
+                  "Giftbrukare",
+                  "Medicus",
+                  "Alkemist"
+                ]
+              },
+              "varde": "elixirkannare_requires_giftbrukare_medicus_alkemist"
+            }
+          ]
+        }
       },
       "effekt": "Identifierar gifter/elixir och deras symptom utan Listig-slag (kräver Giftbrukare, Medicus eller Alkemist)."
     },
@@ -1572,8 +1614,8 @@
     },
     {
       "id": "ford100",
-      "namn": "Ljusvakt",
-      "beskrivning": "Rollpersonens skråmor har alltid läkt snabbare än andras och när hen vilar är sömnen djupare och återhämtningen starkare än för andra, som om köttet lyftade på hens uppmaning att läka. Vid en timmes aktiv meditation läker rollpersonen alltid +1 Tålighet utöver den normala läkningstakten.",
+      "namn": "Bra läkekött",
+      "beskrivning": "Rollpersonens skråmor har alltid läkt snabbare än andras och när hen vilar är sömnen djupare och återhämtningen starkare än för andra, som om köttet lyftade på hens uppmaning att läka. Vid en timmes aktiv meditation läker rollpersonen alltid +1T4 Tålighet utöver den normala läkningstakten.",
       "taggar": {
         "typ": [
           "Fördel"
@@ -1581,7 +1623,7 @@
         "ark_trad": [],
         "test": []
       },
-      "effekt": "Vid en timmes vila (kort vila) läker du alltid +1 Tålighet utöver den normala läkningstakten."
+      "effekt": "Vid en timmes vila (kort vila) läker du alltid +1T4 Tålighet utöver den normala läkningstakten."
     },
     {
       "id": "ford101",

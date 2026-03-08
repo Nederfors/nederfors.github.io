@@ -46,10 +46,15 @@
         "regler": {
           "kraver": [
             {
+              "namn": [
+                "Andeform"
+              ]
+            },
+            {
               "nar": {
                 "nagon_av_namn": [
                   "Vandöd",
-                  "Djur/Bjära"
+                  "Andebesvärjare"
                 ]
               }
             }
@@ -80,12 +85,50 @@
           "Mästare": [
             "Reaktiv"
           ]
+        },
+        "nivå_data": {
+          "Novis": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Frätande blod"
+                  ],
+                  "nivå_minst": "Novis"
+                }
+              ]
+            }
+          },
+          "Gesäll": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Frätande blod"
+                  ],
+                  "nivå_minst": "Gesäll"
+                }
+              ]
+            }
+          },
+          "Mästare": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Frätande blod"
+                  ],
+                  "nivå_minst": "Mästare"
+                }
+              ]
+            }
+          }
         }
       },
       "nivåer": {
-        "Novis": "Handling: Reaktiv. Den frätande attacken är svag och gör 1t6 i skada i 1t6 rundor.",
-        "Gesäll": "Handling: Reaktiv. Den frätande attacken är medelstark och gör 1t8 i skada i 1t8 rundor.",
-        "Mästare": "Handling: Reaktiv. Den frätande attacken är stark och gör 1t10 i skada i 1t10 rundor."
+        "Novis": "Handling: Reaktiv. Den frätande attacken är svag och gör 1T6 i skada i 1T6 rundor.",
+        "Gesäll": "Handling: Reaktiv. Den frätande attacken är medelstark och gör 1T8 i skada i 1T8 rundor.",
+        "Mästare": "Handling: Reaktiv. Den frätande attacken är stark och gör 1T10 i skada i 1T10 rundor."
       },
       "id": "mo2"
     },
@@ -109,9 +152,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Reaktiv. Det frätande blodet är svagt och gör 1t6 i skada i 1t6 rundor.",
-        "Gesäll": "Handling: Reaktiv. Det frätande blodet är medelstarkt och gör 1t8 i skada i 1t8 rundor.",
-        "Mästare": "Handling: Reaktiv. Det frätande blodet är starkt och gör 1t10 i skada i 1t10 rundor."
+        "Novis": "Handling: Reaktiv. Det frätande blodet är svagt och gör 1T6 i skada i 1T6 rundor.",
+        "Gesäll": "Handling: Reaktiv. Det frätande blodet är medelstarkt och gör 1T8 i skada i 1T8 rundor.",
+        "Mästare": "Handling: Reaktiv. Det frätande blodet är starkt och gör 1T10 i skada i 1T10 rundor."
       },
       "id": "mo3"
     },
@@ -168,9 +211,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
-        "Gesäll": "Handling: Passiv. Giftet är medelstarkt och gör 1t6 i skada i 1t6 rundor.",
-        "Mästare": "Handling: Passiv. Giftet är starkt och gör 1t8 i skada i 1t8 rundor."
+        "Novis": "Handling: Passiv. Giftet är svagt och gör 1T4 i skada i 1T4 rundor.",
+        "Gesäll": "Handling: Passiv. Giftet är medelstarkt och gör 1T6 i skada i 1T6 rundor.",
+        "Mästare": "Handling: Passiv. Giftet är starkt och gör 1T8 i skada i 1T8 rundor."
       },
       "id": "mo5"
     },
@@ -191,12 +234,21 @@
           "Mästare": [
             "Passiv"
           ]
+        },
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Andeform"
+              ]
+            }
+          ]
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 alternativ skada, Bepansring skyddar ej.",
-        "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 alternativ skada, Bepansring skyddar ej.",
-        "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 alternativ skada, Bepansring skyddar ej."
+        "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1T6 alternativ skada, Bepansring skyddar ej.",
+        "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1T8 alternativ skada, Bepansring skyddar ej.",
+        "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1T10 alternativ skada, Bepansring skyddar ej."
       },
       "id": "mo6"
     },
@@ -246,12 +298,50 @@
           "Mästare": [
             "Aktiv"
           ]
+        },
+        "nivå_data": {
+          "Novis": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Giftig"
+                  ],
+                  "nivå_minst": "Novis"
+                }
+              ]
+            }
+          },
+          "Gesäll": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Giftig"
+                  ],
+                  "nivå_minst": "Gesäll"
+                }
+              ]
+            }
+          },
+          "Mästare": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Giftig"
+                  ],
+                  "nivå_minst": "Mästare"
+                }
+              ]
+            }
+          }
         }
       },
       "nivåer": {
-        "Novis": "Handling: Aktiv. Giftet är svagt och gör 1t4 i skada i 1t4 rundor.",
-        "Gesäll": "Handling: Aktiv. Giftet är medelstarkt och gör 1t6 i skada i 1t6 rundor.",
-        "Mästare": "Handling: Aktiv. Giftet är starkt och gör 1t8 i skada i 1t8 rundor."
+        "Novis": "Handling: Aktiv. Giftet är svagt och gör 1T4 i skada i 1T4 rundor.",
+        "Gesäll": "Handling: Aktiv. Giftet är medelstarkt och gör 1T6 i skada i 1T6 rundor.",
+        "Mästare": "Handling: Aktiv. Giftet är starkt och gör 1T8 i skada i 1T8 rundor."
       },
       "id": "mo8"
     },
@@ -281,8 +371,7 @@
             {
               "nar": {
                 "nagon_av_namn": [
-                  "Vandöd",
-                  "Djur/Bjära"
+                  "Vandöd"
                 ]
               }
             }
@@ -291,7 +380,7 @@
       },
       "nivåer": {
         "Novis": "Handling: Fri. Varelsen sprider gravens paralyserade kyla omkring sig; rollpersoner på närstridsavstånd paralyseras om de misslyckas med Viljestark. Ett slag slås per runda, lyckas rollpersonen får den agera som vanligt. En rollperson som bryter gravkylan kan inte drabbas igen under samma scen.",
-        "Gesäll": "Handling: Fri. Som Novis med tillägget att gravkylan också gör 1t4 per runda för dem som drabbas och Bepansring skyddar ej.",
+        "Gesäll": "Handling: Fri. Som Novis med tillägget att gravkylan också gör 1T4 per runda för dem som drabbas och Bepansring skyddar ej.",
         "Mästare": "Handling: Fri. Som Gesäll men effekten drabbar de rollpersoner som misslyckas med [Viljestark←Viljestark]."
       },
       "id": "mo9"
@@ -316,9 +405,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsens attacker osar av korruption och smittar den som skadas av attacken. Ett offer som tar minst 1 i skada av attacken får också 1t4 temporär korruption.",
-        "Gesäll": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1t6 temporär korruption.",
-        "Mästare": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1t8 temporär korruption."
+        "Novis": "Handling: Passiv. Varelsens attacker osar av korruption och smittar den som skadas av attacken. Ett offer som tar minst 1 i skada av attacken får också 1T4 temporär korruption.",
+        "Gesäll": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1T6 temporär korruption.",
+        "Mästare": "Handling: Passiv. Ett offer som tar minst 1 i skada av attacken får också 1T8 temporär korruption."
       },
       "id": "mo10"
     },
@@ -338,6 +427,15 @@
           ],
           "Mästare": [
             "Speciell"
+          ]
+        },
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Andeform"
+              ]
+            }
           ]
         }
       },
@@ -372,7 +470,7 @@
               "nar": {
                 "nagon_av_namn": [
                   "Troll",
-                  "Djur/Bjära",
+                  "Best",
                   "Mörkt blod",
                   "Blodvadare"
                 ]
@@ -382,9 +480,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 i skada istället för 1t4.",
-        "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 i skada.",
-        "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 i skada. Det naturliga vapnet har kvaliteten Långt och ger alltså frislag initialt i striden mot dem med kortare vapen."
+        "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1T6 i skada istället för 1T4.",
+        "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1T8 i skada.",
+        "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1T10 i skada. Det naturliga vapnet har kvaliteten Långt och ger alltså frislag initialt i striden mot dem med kortare vapen."
       },
       "id": "mo12"
     },
@@ -412,7 +510,7 @@
               "nar": {
                 "nagon_av_namn": [
                   "Troll",
-                  "Djur/Bjära",
+                  "Best",
                   "Mörkt blod"
                 ]
               }
@@ -421,9 +519,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1t4.",
-        "Gesäll": "Handling: Passiv. Pansaret skyddar 1t6.",
-        "Mästare": "Handling: Passiv. Pansaret skyddar 1t8."
+        "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1T4.",
+        "Gesäll": "Handling: Passiv. Pansaret skyddar 1T6.",
+        "Mästare": "Handling: Passiv. Pansaret skyddar 1T8."
       },
       "id": "mo13"
     },
@@ -451,7 +549,7 @@
               "nar": {
                 "nagon_av_namn": [
                   "Troll",
-                  "Djur/Bjära",
+                  "Best",
                   "Mörkt blod"
                 ]
               }
@@ -460,9 +558,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsen regenererar 1t4 Tålighet per runda.",
-        "Gesäll": "Handling: Passiv. Varelsen regenererar 1t6 Tålighet per runda.",
-        "Mästare": "Handling: Passiv. Varelsen regenererar 1t8 Tålighet per runda."
+        "Novis": "Handling: Passiv. Varelsen regenererar 1T4 Tålighet per runda. Regenerationen upphör om varelsen blir utslagen av skada, men fortsätter så länge varelsen på något sätt fortfarande är kapabel att agera.",
+        "Gesäll": "Handling: Passiv. Varelsen regenererar 1T6 Tålighet per runda. Regenerationen upphör om varelsen blir utslagen av skada, men fortsätter så länge varelsen på något sätt fortfarande är kapabel att agera.",
+        "Mästare": "Handling: Passiv. Varelsen regenererar 1T8 Tålighet per runda. Regenerationen upphör om varelsen blir utslagen av skada, men fortsätter så länge varelsen på något sätt fortfarande är kapabel att agera."
       },
       "id": "mo14"
     },
@@ -545,8 +643,7 @@
             {
               "nar": {
                 "nagon_av_namn": [
-                  "Vandöd",
-                  "Djur/Bjära"
+                  "Vandöd"
                 ]
               }
             }
@@ -584,7 +681,7 @@
               "nar": {
                 "nagon_av_namn": [
                   "Mörkt blod",
-                  "Djur/Bjära"
+                  "Best"
                 ]
               }
             }
@@ -708,7 +805,7 @@
               "nar": {
                 "nagon_av_namn": [
                   "Andrik",
-                  "Djur/Bjära"
+                  "Best"
                 ]
               }
             }
@@ -954,6 +1051,16 @@
           "Mästare": [
             "Reaktiv"
           ]
+        },
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Andeform"
+              ],
+              "nivå_minst": "Novis"
+            }
+          ]
         }
       },
       "nivåer": {
@@ -1103,6 +1210,44 @@
           "Mästare": [
             "Förflyttning"
           ]
+        },
+        "nivå_data": {
+          "Novis": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Robust"
+                  ],
+                  "nivå_minst": "Novis"
+                }
+              ]
+            }
+          },
+          "Gesäll": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Robust"
+                  ],
+                  "nivå_minst": "Gesäll"
+                }
+              ]
+            }
+          },
+          "Mästare": {
+            "regler": {
+              "kraver": [
+                {
+                  "namn": [
+                    "Robust"
+                  ],
+                  "nivå_minst": "Mästare"
+                }
+              ]
+            }
+          }
         }
       },
       "nivåer": {
@@ -1400,6 +1545,16 @@
           "Mästare": [
             "Reaktiv"
           ]
+        },
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Pansar"
+              ],
+              "nivå_minst": "Novis"
+            }
+          ]
         }
       },
       "nivåer": {
@@ -1455,6 +1610,16 @@
           "Mästare": [
             "Reaktiv"
           ]
+        },
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Väldig"
+              ],
+              "nivå_minst": "Novis"
+            }
+          ]
         }
       },
       "nivåer": {
@@ -1506,6 +1671,16 @@
           ],
           "Mästare": [
             "Passiv"
+          ]
+        },
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Robust"
+              ],
+              "nivå_minst": "Mästare"
+            }
           ]
         }
       },
@@ -1708,9 +1883,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1t4.",
-        "Gesäll": "Handling: Passiv. Pansaret skyddar 1t6.",
-        "Mästare": "Handling: Passiv. Pansaret skyddar 1t8."
+        "Novis": "Handling: Passiv. Varelsen har ett naturligt skydd på 1T4.",
+        "Gesäll": "Handling: Passiv. Pansaret skyddar 1T6.",
+        "Mästare": "Handling: Passiv. Pansaret skyddar 1T8."
       },
       "id": "hamnskifte_grants2"
     },
@@ -1759,9 +1934,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsen regenererar 1t4 Tålighet per runda.",
-        "Gesäll": "Handling: Passiv. Varelsen regenererar 1t6 Tålighet per runda.",
-        "Mästare": "Handling: Passiv. Varelsen regenererar 1t8 Tålighet per runda."
+        "Novis": "Handling: Passiv. Varelsen regenererar 1T4 Tålighet per runda. Regenerationen upphör om varelsen blir utslagen av skada, men fortsätter så länge varelsen på något sätt fortfarande är kapabel att agera.",
+        "Gesäll": "Handling: Passiv. Varelsen regenererar 1T6 Tålighet per runda. Regenerationen upphör om varelsen blir utslagen av skada, men fortsätter så länge varelsen på något sätt fortfarande är kapabel att agera.",
+        "Mästare": "Handling: Passiv. Varelsen regenererar 1T8 Tålighet per runda. Regenerationen upphör om varelsen blir utslagen av skada, men fortsätter så länge varelsen på något sätt fortfarande är kapabel att agera."
       },
       "id": "hamnskifte_grants3"
     },
@@ -1810,9 +1985,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1t6 i skada istället för 1t4.",
-        "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1t8 i skada.",
-        "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1t10 i skada. Det naturliga vapnet har kvaliteten Långt och ger alltså frislag initialt i striden mot dem med kortare vapen."
+        "Novis": "Handling: Passiv. Varelsens naturliga vapen gör 1T6 i skada istället för 1T4.",
+        "Gesäll": "Handling: Passiv. Varelsens naturliga vapen gör 1T8 i skada.",
+        "Mästare": "Handling: Passiv. Varelsens naturliga vapen gör 1T10 i skada. Det naturliga vapnet har kvaliteten Långt och ger alltså frislag initialt i striden mot dem med kortare vapen."
       },
       "id": "hamnskifte_grants4"
     }

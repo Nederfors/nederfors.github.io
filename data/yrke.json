@@ -1,19 +1,6 @@
 {
   "typ_regler": {
-    "Yrke": {}
-  },
-  "entries": [
-    {
-      "id": "y1",
-      "namn": "Bärsärkare",
-      "beskrivning": "*Håll dig på avstånd! Jag vill ogärna skada dig.*\n\nVredgade andar följer dig och fyller dig med rasande kraft i strid. Vid sidan om slagfältet är du av ett eftertänksamt och tålmodigt kynne, en kontrast som gör dig såväl uppskattad som fruktad.\n\nMest omtalade bland barbarerna är de särskilt utvalda bärsärkakrigare som samlas kring Storhövdingen i Slumrande vredens garde – kanske drömmer du om att bli en av dem, eller om att besegra någon av dem som hämnd för att denne tog ”din plats”?",
-      "taggar": {
-        "typ": [
-          "Yrke"
-        ],
-        "ark_trad": [
-          "Bärsärkare"
-        ],
+    "Yrke": {
         "regler": {
           "kraver": [
             {
@@ -27,7 +14,20 @@
             }
           ]
         }
-      },
+      }
+  },
+  "entries": [
+    {
+      "id": "y1",
+      "namn": "Bärsärkare",
+      "beskrivning": "*Håll dig på avstånd! Jag vill ogärna skada dig.*\n\nVredgade andar följer dig och fyller dig med rasande kraft i strid. Vid sidan om slagfältet är du av ett eftertänksamt och tålmodigt kynne, en kontrast som gör dig såväl uppskattad som fruktad.\n\nMest omtalade bland barbarerna är de särskilt utvalda bärsärkakrigare som samlas kring Storhövdingen i Slumrande vredens garde – kanske drömmer du om att bli en av dem, eller om att besegra någon av dem som hämnd för att denne tog ”din plats”?",
+      "taggar": {
+        "typ": [
+          "Yrke"
+        ],
+        "ark_trad": [
+          "Bärsärkare"
+        ]},
       "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
       "forslag_pa_slakte": [
         "Barbar",
@@ -52,21 +52,7 @@
         ],
         "ark_trad": [
           "Duellant"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick eller Diskret 11+",
       "forslag_pa_slakte": [
         "Ambrier",
@@ -97,21 +83,7 @@
         ],
         "ark_trad": [
           "Kapten"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Övertygande 13+",
       "forslag_pa_slakte": "Människa (vanligen ambrier)",
       "lampliga_formagor": [
@@ -142,21 +114,7 @@
         ],
         "ark_trad": [
           "Säljsvärd"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Stark 13+",
       "forslag_pa_slakte": "Människa",
       "lampliga_formagor": [
@@ -187,21 +145,7 @@
         ],
         "ark_trad": [
           "Riddare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
       "forslag_pa_slakte": "Ambrier",
       "lampliga_formagor": [
@@ -234,21 +178,7 @@
         ],
         "ark_trad": [
           "Häxa"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Viljestark 13+, Träffsäker 11+",
       "forslag_pa_slakte": [
         "Barbar",
@@ -310,21 +240,7 @@
         ],
         "ark_trad": [
           "Svartkonstnär"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Viljestark 13+, Diskret eller Listig 11+",
       "forslag_pa_slakte": "Människa",
       "lampliga_formagor": [
@@ -371,21 +287,7 @@
         ],
         "ark_trad": [
           "Teurg"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Viljestark 13+, Listig eller Övertygande 11+",
       "forslag_pa_slakte": "Ambrier",
       "lampliga_formagor": [
@@ -429,21 +331,7 @@
         ],
         "ark_trad": [
           "Ordensmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
       "forslag_pa_slakte": "Ambrier",
       "lampliga_formagor": [
@@ -499,21 +387,7 @@
         ],
         "ark_trad": [
           "Självlärd besvärjare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Vaksam 13+, Viljestark 11+",
       "forslag_pa_slakte": [
         "Ambrier",
@@ -531,21 +405,7 @@
         ],
         "ark_trad": [
           "Bedragare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Kvick 13+, Diskret 11+",
       "forslag_pa_slakte": [
         "Människa (vanligen ambrier)",
@@ -568,21 +428,7 @@
         ],
         "ark_trad": [
           "Häxjägare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Viljestark 13+, Listig eller Träffsäker 11+",
       "forslag_pa_slakte": "Människa",
       "lampliga_formagor": [
@@ -609,21 +455,7 @@
         ],
         "ark_trad": [
           "Ligist"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Kvick 13+, Listig 11+",
       "forslag_pa_slakte": [
         "Människa",
@@ -649,21 +481,7 @@
         ],
         "ark_trad": [
           "Skattletare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Listig 13+, Kvick 11+",
       "forslag_pa_slakte": [
         "Människa",
@@ -690,21 +508,7 @@
         ],
         "ark_trad": [
           "Utbygdsjägare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Vaksam 13+, Diskret 11+",
       "forslag_pa_slakte": [
         "Barbarättad människa",
@@ -728,21 +532,7 @@
         ],
         "ark_trad": [
           "Jägare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Vaksam, Diskret, Kvick, Träffsäker, Listig",
       "forslag_pa_slakte": [
         "alver",
@@ -806,21 +596,7 @@
         ],
         "ark_trad": [
           "Prisjägare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Träffsäker 13+, Vaksam 11+",
       "forslag_pa_slakte": [
         "Människa",
@@ -848,21 +624,7 @@
         ],
         "ark_trad": [
           "Monsterjägare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Listig 13+, Träffsäker 11+",
       "forslag_pa_slakte": [
         "Människa"
@@ -890,22 +652,8 @@
         ],
         "ark_trad": [
           "Krigare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
-      "viktiga_karaktarsdrag": "Stark, Kvick, Träffsäker, Viljestark, Övertygande, Oberoende",
+        ]},
+      "viktiga_karaktarsdrag": "Stark, Kvick, Träffsäker, Viljestark, Övertygande",
       "forslag_pa_slakte": [
         "alvtagen människa",
         "troll",
@@ -970,21 +718,7 @@
         ],
         "ark_trad": [
           "Ristad krigare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
       "forslag_pa_slakte": [
         "Barbarättad människa",
@@ -1011,21 +745,7 @@
         ],
         "ark_trad": [
           "Runsmed"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Stark 13+, Listig 11+",
       "forslag_pa_slakte": [
         "Alvtagen människa",
@@ -1052,20 +772,7 @@
         ],
         "ark_trad": [
           "Vapenmästare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
+        ]
       },
       "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
       "forslag_pa_slakte": [
@@ -1099,22 +806,8 @@
         ],
         "ark_trad": [
           "Mystiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
-      "viktiga_karaktarsdrag": "Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande, Oberoende",
+        ]},
+      "viktiga_karaktarsdrag": "Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande",
       "forslag_pa_slakte": [
         "alver",
         "troll",
@@ -1302,21 +995,7 @@
         ],
         "ark_trad": [
           "Symbolist"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
       "forslag_pa_slakte": [
         "Barbarättad människa (klan Vajvod)",
@@ -1352,21 +1031,7 @@
         ],
         "ark_trad": [
           "Trollsångare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Övertygande 13+, Stark 11+",
       "forslag_pa_slakte": [
         "Alv",
@@ -1417,22 +1082,8 @@
         ],
         "ark_trad": [
           "Tjuv"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
-      "viktiga_karaktarsdrag": "Diskret, Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande, Oberoende",
+        ]},
+      "viktiga_karaktarsdrag": "Diskret, Kvick, Listig, Stark, Träffsäker, Vaksam, Viljestark, Övertygande",
       "forslag_pa_slakte": [
         "dvärgar",
         "vandöd"
@@ -1492,21 +1143,7 @@
         ],
         "ark_trad": [
           "Före detta kultist"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Listig 13+, Viljestark 11+",
       "forslag_pa_slakte": [
         "Bortbyting",
@@ -1529,21 +1166,7 @@
         ],
         "ark_trad": [
           "Gillestjuv"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Listig 13+, Kvick 11+",
       "forslag_pa_slakte": [
         "Bortbyting",
@@ -1571,21 +1194,7 @@
         ],
         "ark_trad": [
           "Sappör"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Yrke": 1
-                }
-              },
-              "varde": "single_occupation",
-              "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-            }
-          ]
-        }
-      },
+        ]},
       "viktiga_karaktarsdrag": "Listig 13+, Träffsäker 11+",
       "forslag_pa_slakte": [
         "Ambrier",

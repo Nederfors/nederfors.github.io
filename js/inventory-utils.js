@@ -14,7 +14,25 @@
   const INV_INFO_KEY  = 'invInfoOpen';
   const INV_CAT_STATE_PREFIX = 'invCatState:';
   let cachedCatState = { key: '', state: {} };
-  const INDIVIDUAL_TYPES = ['Vapen','Sköld','Rustning','L\u00e4gre Artefakt','Artefakt','Färdmedel'];
+  const WEAPON_BASE_TYPES = Array.isArray(window.WEAPON_BASE_TYPES)
+    ? window.WEAPON_BASE_TYPES
+    : ['Närstridsvapen', 'Avståndsvapen', 'Vapen'];
+  const MELEE_WEAPON_BASE_TYPE = window.MELEE_WEAPON_BASE_TYPE || 'Närstridsvapen';
+  const RANGED_WEAPON_BASE_TYPE = window.RANGED_WEAPON_BASE_TYPE || 'Avståndsvapen';
+  const hasWeaponType = (types) => {
+    if (typeof window.hasWeaponType === 'function') return window.hasWeaponType(types);
+    return (Array.isArray(types) ? types : []).some(t => WEAPON_BASE_TYPES.includes(String(t || '').trim()));
+  };
+  const isRangedWeaponType = (typeName) => {
+    if (typeof window.isRangedWeaponType === 'function') return window.isRangedWeaponType(typeName);
+    const txt = String(typeName || '').trim();
+    return txt === RANGED_WEAPON_BASE_TYPE || txt === 'Armborst' || txt === 'Pilbåge' || txt === 'Kastvapen' || txt === 'Slunga' || txt === 'Blåsrör' || txt === 'Belägringsvapen' || txt === 'Projektilvapen';
+  };
+  const isWeaponBaseType = (typeName) => WEAPON_BASE_TYPES.includes(String(typeName || '').trim());
+  const WEAPON_AND_SHIELD_TYPES = [...WEAPON_BASE_TYPES, 'Sköld'];
+  const WEAPON_QUALITY_TARGET_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Pil/Lod'];
+  const FORGEABLE_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning'];
+  const INDIVIDUAL_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'];
   const LEGACY_STACKABLE_ID_SET = new Set(['l1', 'l11', 'l27', 'l6', 'l12', 'l13', 'l28', 'l30']);
   const LEGACY_BUNDLE_BY_ENTRY_ID = Object.freeze({
     di79: [
@@ -485,7 +503,19 @@
         }
       }
       const inv = storeHelper.getInventory(store);
-      inv.push({ id: entry.id, name: entry.namn, qty:1, gratis:0, gratisKval:[], removedKval:[], artifactEffect: entry.artifactEffect });
+      const row = {
+        id: entry.id,
+        name: entry.namn,
+        qty: 1,
+        gratis: 0,
+        gratisKval: [],
+        removedKval: [],
+        artifactEffect: entry.artifactEffect
+      };
+      if ((entry.taggar?.typ || []).includes('Artefakt')) {
+        ensureArtifactSnapshotSourceKey(entry, row);
+      }
+      inv.push(row);
       saveInventory(inv);
       renderInventory();
       if (window.indexViewRefreshFilters) window.indexViewRefreshFilters();
@@ -764,6 +794,40 @@
     return normalizeArtifactEffectTotals(
       getArtifactEffectOption(entry, artifactEffect, context)?.effects || {}
     );
+  }
+
+  function getArtifactEffectRules(entry, artifactEffect, context = {}) {
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getArtifactEffectValueRules === 'function') {
+      try {
+        const resolved = helper.getArtifactEffectValueRules(entry, artifactEffect, context);
+        if (resolved && typeof resolved === 'object' && !Array.isArray(resolved)) return resolved;
+      } catch (_) {}
+    }
+    const option = getArtifactEffectOption(entry, artifactEffect, context);
+    const raw = option?.regler;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    return { ...raw };
+  }
+
+  function createArtifactSnapshotSourceKey(entry, row) {
+    const entryId = entry?.id === undefined || entry?.id === null
+      ? String(entry?.namn || row?.name || '').trim()
+      : String(entry.id).trim();
+    const ts = Date.now().toString(36);
+    const rand = Math.floor(Math.random() * 1e9).toString(36);
+    return `artifact:${entryId}:${ts}:${rand}`;
+  }
+
+  function ensureArtifactSnapshotSourceKey(entry, row) {
+    if (!row || typeof row !== 'object') return '';
+    const key = row.snapshotSourceKey === undefined || row.snapshotSourceKey === null
+      ? ''
+      : String(row.snapshotSourceKey).trim();
+    if (key) return key;
+    const generated = createArtifactSnapshotSourceKey(entry, row);
+    row.snapshotSourceKey = generated;
+    return generated;
   }
 
   function isSameChoiceSource(left, right) {
@@ -1244,6 +1308,94 @@
     return confirmPopup(getGrantRemovalMessage(source));
   }
 
+  function collectSnapshotRows(rows, includeChildren = true) {
+    const out = [];
+    const queue = Array.isArray(rows) ? [...rows] : [rows];
+    while (queue.length) {
+      const row = queue.shift();
+      if (!row || typeof row !== 'object') continue;
+      out.push(row);
+      if (!includeChildren) continue;
+      if (Array.isArray(row.contains) && row.contains.length) {
+        row.contains.forEach(child => queue.push(child));
+      }
+    }
+    return out;
+  }
+
+  function getSnapshotSourceImpactForRows(rows, options = {}) {
+    const recordsFn = storeHelper?.getSnapshotRuleRecords;
+    if (typeof recordsFn !== 'function') return [];
+    const includeChildren = options.includeChildren !== false;
+    const impacts = [];
+    const activeRecords = recordsFn(store)
+      .filter(record => record && typeof record === 'object' && !record.detached)
+      .filter(record => String(record.sourceKey || '').trim());
+    if (!activeRecords.length) return impacts;
+    const countsBySource = new Map();
+    activeRecords.forEach(record => {
+      const key = String(record.sourceKey || '').trim();
+      countsBySource.set(key, (countsBySource.get(key) || 0) + 1);
+    });
+    const seenSources = new Set();
+    collectSnapshotRows(rows, includeChildren).forEach(row => {
+      const sourceKey = row?.snapshotSourceKey === undefined || row?.snapshotSourceKey === null
+        ? ''
+        : String(row.snapshotSourceKey).trim();
+      if (!sourceKey || seenSources.has(sourceKey)) return;
+      const count = Number(countsBySource.get(sourceKey) || 0);
+      if (!count) return;
+      seenSources.add(sourceKey);
+      impacts.push({
+        sourceKey,
+        count,
+        label: String(row?.name || row?.namn || '').trim()
+      });
+    });
+    return impacts;
+  }
+
+  async function confirmSnapshotSourceRemoval(rows, options = {}) {
+    const impacts = getSnapshotSourceImpactForRows(rows, options);
+    if (!impacts.length) return true;
+
+    const totalCount = impacts.reduce((sum, item) => sum + Number(item.count || 0), 0);
+    let message = '';
+    if (impacts.length === 1) {
+      const impact = impacts[0];
+      const label = impact.label || 'källan';
+      const count = Number(impact.count || 0);
+      message = `“${label}” har ${count} snapshot-effekt${count === 1 ? '' : 'er'}.\nVälj om de ska tas bort eller behållas när posten tas bort.`;
+    } else {
+      message = `${impacts.length} poster har totalt ${totalCount} snapshot-effekter.\nVälj om de ska tas bort eller behållas när posterna tas bort.`;
+    }
+
+    if (typeof openDialog === 'function') {
+      const choice = await openDialog(message, {
+        cancel: true,
+        okText: 'Ta bort effekter',
+        extraText: 'Behåll effekter',
+        cancelText: 'Avbryt'
+      });
+      if (choice === false) return false;
+      if (choice === true) {
+        impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
+        return true;
+      }
+      if (choice === 'extra') {
+        impacts.forEach(impact => storeHelper?.detachSnapshotRulesBySource?.(store, impact.sourceKey));
+      }
+      return true;
+    }
+
+    const fallback = await confirmPopup('Ta bort kopplade snapshot-effekter också?');
+    if (fallback) {
+      impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
+      return true;
+    }
+    return false;
+  }
+
   function flattenInventory(arr) {
     return arr.reduce((acc, row) => {
       acc.push(row);
@@ -1423,6 +1575,9 @@
   function addToInventory(inv, row) {
     if (!row || !Array.isArray(inv)) return;
     const entry = getEntry(row.id || row.name);
+    if ((entry.taggar?.typ || []).includes('Artefakt')) {
+      ensureArtifactSnapshotSourceKey(entry, row);
+    }
     if (isIndividualItem(entry)) {
       inv.push(row);
       return;
@@ -1469,10 +1624,49 @@
     const rawInventory = storeHelper.getInventory(store);
     const list = storeHelper.getCurrentList(store);
     const flatInventory = flattenInventory(rawInventory);
+    const snapshotSources = [];
+    const effectToRuleMal = {
+      corruption: 'permanent_korruption',
+      pain: 'smartgrans_tillagg',
+      toughness: 'talighet_tillagg',
+      capacity: 'barkapacitet_tillagg'
+    };
     const effects = flatInventory.reduce((acc, row) => {
       const entry = getEntry(row.id || row.name);
       const tagTyp = entry.taggar?.typ || [];
       if (!tagTyp.includes('Artefakt')) return acc;
+      const sourceKey = ensureArtifactSnapshotSourceKey(entry, row);
+      const rulesBlock = getArtifactEffectRules(entry, row.artifactEffect, {
+        entry,
+        sourceEntry: entry,
+        row,
+        list,
+        inventory: rawInventory,
+        field: 'artifactEffect'
+      });
+      const andrarRules = Array.isArray(rulesBlock?.andrar) ? rulesBlock.andrar : [];
+      if (sourceKey && andrarRules.length) {
+        snapshotSources.push({
+          sourceKey,
+          sourceName: String(entry?.namn || row?.name || '').trim(),
+          sourceType: 'artifact_binding',
+          sourceSignature: JSON.stringify({
+            artifactId: entry?.id || row?.id || '',
+            value: row?.artifactEffect || '',
+            rules: andrarRules
+          }),
+          sourceEntry: entry,
+          row,
+          sourceRef: {
+            kind: 'artifact_binding',
+            artifactId: entry?.id || '',
+            artifactName: entry?.namn || '',
+            artifactEffect: row?.artifactEffect || '',
+            snapshotSourceKey: sourceKey
+          },
+          rules: andrarRules
+        });
+      }
       const resolved = getArtifactEffectEffects(entry, row.artifactEffect, {
         entry,
         sourceEntry: entry,
@@ -1481,7 +1675,15 @@
         inventory: rawInventory,
         field: 'artifactEffect'
       });
+      const blockedEffects = new Set();
+      Object.keys(effectToRuleMal).forEach(effectKey => {
+        const targetMal = effectToRuleMal[effectKey];
+        if (andrarRules.some(rule => String(rule?.mal || '').trim() === targetMal)) {
+          blockedEffects.add(effectKey);
+        }
+      });
       Object.keys(resolved).forEach(key => {
+        if (blockedEffects.has(key)) return;
         const num = Number(resolved[key]);
         if (!Number.isFinite(num) || num === 0) return;
         acc[key] = (acc[key] || 0) + num;
@@ -1489,6 +1691,12 @@
       return acc;
     }, defaultArtifactEffectTotals());
     storeHelper.setArtifactEffects(store, normalizeArtifactEffectTotals(effects));
+    if (typeof storeHelper.syncSnapshotRuleSources === 'function') {
+      storeHelper.syncSnapshotRuleSources(store, snapshotSources, {
+        sourceType: 'artifact_binding',
+        removeMissing: true
+      });
+    }
   }
 
   function makeNameMap(inv) {
@@ -1997,14 +2205,18 @@
         const wSet = new Set();
         const rSet = new Set();
         const skip = new Set(['artefakt','lägre artefakt','kuriositet','skatt','hemmagjort']);
+        const normalizeWeaponType = typeof window.normalizeWeaponTypeName === 'function'
+          ? window.normalizeWeaponTypeName
+          : (value => String(value || '').trim());
         for (const e of db) {
           const typs = (e.taggar?.typ) || [];
-          if (typs.includes('Vapen')) {
+          if (hasWeaponType(typs)) {
             for (const t of typs) {
-              if (t === 'Vapen' || t === 'Sköld') continue;
+              if (isWeaponBaseType(t) || t === 'Sköld') continue;
               const key = typeof t === 'string' ? t.trim().toLowerCase() : '';
               if (!key || skip.has(key)) continue;
-              wSet.add(t);
+              const normalized = normalizeWeaponType(t);
+              if (normalized) wSet.add(normalized);
             }
           }
           if (typs.includes('Rustning')) {
@@ -2022,7 +2234,7 @@
         };
       } catch {
         return {
-          weapon: ['Enhandsvapen','Korta vapen','Långa vapen','Tunga vapen','Obeväpnad attack','Projektilvapen','Belägringsvapen'],
+          weapon: ['Enhandsvapen','Korta vapen','Långa vapen','Tvåhandsvapen','Obeväpnad attack','Stav','Armborst','Pilbåge','Kastvapen','Slunga','Blåsrör','Belägringsvapen','Projektilvapen'],
           armor : ['Lätt Rustning','Medeltung Rustning','Tung Rustning']
         };
       }
@@ -2045,7 +2257,13 @@
     const selectedTypes = new Set(['Hemmagjort']);
 
     const ensureBaseTypes = (val) => {
-      if (SUB.weapon.includes(val)) selectedTypes.add('Vapen');
+      if (SUB.weapon.includes(val)) {
+        if (isWeaponBaseType(val)) {
+          selectedTypes.add(val);
+        } else {
+          selectedTypes.add(isRangedWeaponType(val) ? RANGED_WEAPON_BASE_TYPE : MELEE_WEAPON_BASE_TYPE);
+        }
+      }
       if (SUB.armor.includes(val)) selectedTypes.add('Rustning');
     };
 
@@ -2109,7 +2327,7 @@
     const updateTypeFields = () => {
       const selected = orderedTypes();
       const hasArtifact = selected.includes('Artefakt');
-      const hasWeapon = selected.includes('Vapen') || selected.includes('Sköld') || selected.includes('Pil/Lod') || selected.some(t => SUB.weapon.includes(t));
+      const hasWeapon = hasWeaponType(selected) || selected.includes('Sköld') || selected.includes('Pil/Lod') || selected.some(t => SUB.weapon.includes(t));
       const hasArmor = selected.includes('Rustning') || selected.some(t => SUB.armor.includes(t));
       const hasVehicle = selected.includes('F\u00e4rdmedel');
       const hasLevels = selected.includes('Elixir') || selected.includes('L\u00e4gre Artefakt') || selected.includes('F\u00e4lla');
@@ -2319,7 +2537,7 @@
     const onAdd = () => {
       const nameVal = name.value.trim();
       const types = orderedTypes();
-      const hasWeapon = types.includes('Vapen') || types.includes('Sköld') || types.includes('Pil/Lod') || types.some(t => SUB.weapon.includes(t));
+      const hasWeapon = hasWeaponType(types) || types.includes('Sköld') || types.includes('Pil/Lod') || types.some(t => SUB.weapon.includes(t));
       const hasArmor = types.includes('Rustning') || types.some(t => SUB.armor.includes(t));
       const hasVehicle = types.includes('F\u00e4rdmedel');
       const hasBound = types.includes('L\u00e4gre Artefakt');
@@ -2766,6 +2984,10 @@
           for (let i = 0; i < qty; i++) {
             const clone = JSON.parse(JSON.stringify(row));
             clone.qty = 1;
+            if ((entry.taggar?.typ || []).includes('Artefakt')) {
+              clone.snapshotSourceKey = '';
+              ensureArtifactSnapshotSourceKey(entry, clone);
+            }
             parentArr.push(clone);
             if (livePairs) livePairs.push({ prev: null, next: clone });
           }
@@ -2818,6 +3040,7 @@
       if (Math.abs(moneyMult - 1) > 0.001) row.priceMult = moneyMult;
     }
     if (tagTyp.includes('Artefakt')) {
+      ensureArtifactSnapshotSourceKey(entry, row);
       const choice = await pickInventoryEntryChoice({
         entry,
         list: curList,
@@ -3060,6 +3283,10 @@
           for (let i = 1; i < qty; i++) {
             const clone = JSON.parse(JSON.stringify(row));
             clone.qty = 1;
+            if ((entry.taggar?.typ || []).includes('Artefakt')) {
+              clone.snapshotSourceKey = '';
+              ensureArtifactSnapshotSourceKey(entry, clone);
+            }
             if (priceMoney) assignPrice(clone);
             parentArr.push(clone);
             result.highlightIdx = parentArr.length - 1;
@@ -3069,6 +3296,10 @@
           for (let i = 0; i < qty; i++) {
             const clone = JSON.parse(JSON.stringify(row));
             clone.qty = 1;
+            if ((entry.taggar?.typ || []).includes('Artefakt')) {
+              clone.snapshotSourceKey = '';
+              ensureArtifactSnapshotSourceKey(entry, clone);
+            }
             if (priceMoney) assignPrice(clone);
             parentArr.push(clone);
             if (livePairs) livePairs.push({ prev: null, next: clone });
@@ -4291,7 +4522,7 @@
     const overrideBase = hasBaseOverride ? moneyToO(row.basePrice || {}) : null;
     let base = hasBaseOverride ? overrideBase : entryBase;
     let fallbackBase = entryBase;
-    const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
+    const forgeable = FORGEABLE_TYPES.some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
@@ -4422,7 +4653,7 @@
     const skillAlc = storeHelper.abilityLevel(
       storeHelper.getCurrentList(store), 'Alkemist');
     const alcLevel = Math.max(partyAlc, skillAlc);
-    const forgeable = ['Vapen','Sköld','Rustning'].some(t => tagTyp.includes(t));
+    const forgeable = FORGEABLE_TYPES.some(t => tagTyp.includes(t));
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
@@ -4970,8 +5201,8 @@
 
       const isArtifact = tagTyp.includes('Artefakt');
       const isCustom = tagTyp.includes('Hemmagjort');
-      const isGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
-      const allowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t));
+      const isGear = [...WEAPON_AND_SHIELD_TYPES, 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'].some(t => tagTyp.includes(t));
+      const allowQual = [...WEAPON_QUALITY_TARGET_TYPES, 'Rustning', 'Artefakt'].some(t => tagTyp.includes(t));
       const canStack = ['kraft','ritual'].includes(entry.bound);
       const isCurrency = row.typ === 'currency' && row.money;
       const moneyAmount = (isCurrency && typeof formatMoney === 'function')
@@ -5138,8 +5369,8 @@
         const cTagTyp = centry.taggar?.typ ?? [];
         const cIsArtifact = cTagTyp.includes('Artefakt');
         const cIsCustom = cTagTyp.includes('Hemmagjort');
-        const cIsGear = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => cTagTyp.includes(t));
-        const cAllowQual = ['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => cTagTyp.includes(t));
+        const cIsGear = [...WEAPON_AND_SHIELD_TYPES, 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => cTagTyp.includes(t));
+        const cAllowQual = [...WEAPON_QUALITY_TARGET_TYPES, 'Rustning', 'Artefakt'].some(t => cTagTyp.includes(t));
         const cCanStack = ['kraft','ritual'].includes(centry.bound);
         const cButtons = [];
         if (cIsGear && !cCanStack) {
@@ -5627,14 +5858,20 @@
           if (isVeh && hasStuff) {
             openDeleteContainerPopup(
               () => {
-                parentArr.splice(idx, 1);
-                saveInventory(inv);
-                renderInventory();
+                (async () => {
+                  if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: true }))) return;
+                  parentArr.splice(idx, 1);
+                  saveInventory(inv);
+                  renderInventory();
+                })();
               },
               () => {
-                parentArr.splice(idx, 1, ...(row.contains || []));
-                saveInventory(inv);
-                renderInventory();
+                (async () => {
+                  if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
+                  parentArr.splice(idx, 1, ...(row.contains || []));
+                  saveInventory(inv);
+                  renderInventory();
+                })();
               },
               {
                 message: 'Du håller på att ta bort ett färdmedel som innehåller föremål. Vill du ta bort föremålen i färdmedlet?',
@@ -5642,6 +5879,7 @@
               }
             );
           } else {
+            if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
             parentArr.splice(idx, 1);
             saveInventory(inv);
             renderInventory();
@@ -5741,6 +5979,7 @@
                 for (let iAdd = 0; iAdd < qtyToAdd; iAdd++) {
                   const obj = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
                   if (artifactEffect) obj.artifactEffect = artifactEffect;
+                  if (tagTyp.includes('Artefakt')) ensureArtifactSnapshotSourceKey(entry, obj);
                   if (trait) obj.trait = trait;
                   applyInheritedMultipliers(obj);
                   applyLiveBase(obj);
@@ -5757,6 +5996,7 @@
               } else if (row && trait && row.trait !== trait) {
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
+                if (tagTyp.includes('Artefakt')) ensureArtifactSnapshotSourceKey(entry, obj);
                 obj.trait = trait;
                 applyInheritedMultipliers(obj);
                 applyLiveBase(obj);
@@ -5766,6 +6006,7 @@
               } else {
                 const obj = { id: entry.id, name: entry.namn, qty: qtyToAdd, gratis:0, gratisKval:[], removedKval:[] };
                 if (artifactEffect) obj.artifactEffect = artifactEffect;
+                if (tagTyp.includes('Artefakt')) ensureArtifactSnapshotSourceKey(entry, obj);
                 if (trait) obj.trait = trait;
                 applyInheritedMultipliers(obj);
                 applyLiveBase(obj);
@@ -5868,6 +6109,7 @@
             if (row.gratis > row.qty) row.gratis = row.qty;
             if (removingPerkItem && pg > 0) row.perkGratis = pg - 1;
           } else {
+            if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
             parentArr.splice(idx, 1);
           }
           const parentIdx = Number(li.dataset.parent);
@@ -5899,7 +6141,7 @@
       // "🔨" öppnar popup för att lägga kvalitet
       if (act === 'addQual') {
         const tagTyp = (entry.taggar?.typ || []);
-        if (!['Vapen','Sköld','Pil/Lod','Rustning','Artefakt'].some(t => tagTyp.includes(t))) return;
+        if (![...WEAPON_QUALITY_TARGET_TYPES, 'Rustning', 'Artefakt'].some(t => tagTyp.includes(t))) return;
         const qualities = DB
           .filter(isQual)
           .filter(q => window.canApplyQuality ? canApplyQuality(entry, q) : true);
@@ -6178,6 +6420,8 @@
     };
     if (clearBtn) clearBtn.onclick = async () => {
       if (await confirmPopup('Du håller på att tömma hela inventariet, är du säker?')) {
+        const inv = storeHelper.getInventory(store);
+        if (!(await confirmSnapshotSourceRemoval(inv, { includeChildren: true }))) return;
         saveInventory([]);
         renderInventory();
       }

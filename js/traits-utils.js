@@ -1,6 +1,14 @@
 (function(window){
   const TRAIT_KEYS = ['Diskret','Kvick','Listig','Stark','Tr\u00e4ffs\u00e4ker','Vaksam','Viljestark','\u00d6vertygande'];
-  const RANGED_WEAPON_TYPES = new Set(['Projektilvapen', 'Bel\u00e4gringsvapen']);
+  const hasWeaponType = (types) => {
+    if (typeof window.hasWeaponType === 'function') return window.hasWeaponType(types);
+    return (Array.isArray(types) ? types : []).some(type => ['Vapen', 'Närstridsvapen', 'Avståndsvapen'].includes(String(type || '').trim()));
+  };
+  const isRangedWeaponType = (typeName) => {
+    if (typeof window.isRangedWeaponType === 'function') return window.isRangedWeaponType(typeName);
+    const txt = String(typeName || '').trim();
+    return ['Avståndsvapen', 'Armborst', 'Pilbåge', 'Kastvapen', 'Slunga', 'Blåsrör', 'Belägringsvapen', 'Projektilvapen', 'Pil/Lod'].includes(txt);
+  };
   const isBalancedQuality = q => {
     const txt = String(q || '').toLowerCase();
     return txt.startsWith('balanser');
@@ -18,7 +26,7 @@
       return window.isTwoHandedWeaponType(typeName);
     }
     const txt = String(typeName || '').toLowerCase();
-    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tunga vapen';
+    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tvåhandsvapen' || txt === 'tvahandsvapen' || txt === 'tunga vapen';
   };
 
   function qualityHasWeaponBonusByMal(qualityName, mal, fallbackCheck = null) {
@@ -183,7 +191,7 @@
     return flat.map(obj => {
       const entry = invUtil.getEntry(obj.row.id || obj.row.name);
       const types = entry?.taggar?.typ || [];
-      if (!entry || (!types.includes('Vapen') && !types.includes('Sköld'))) return null;
+      if (!entry || (!hasWeaponType(types) && !types.includes('Sköld'))) return null;
       const qualities = getAllQualities(obj.row, entry);
       return {
         ...obj,
@@ -399,7 +407,7 @@
         const defenseContext = {
           list,
           vapenFakta: weaponFacts.map(f => ({ typer: f.types, kvaliteter: f.qualities })),
-          antalVapen: weaponFacts.filter(f => (f.types || []).includes('Vapen')).length,
+          antalVapen: weaponFacts.filter(f => hasWeaponType(f.types || [])).length,
           utrustadTyper: armorContext.utrustadTyper,
           utrustadeKvaliteter: armorContext.utrustadeKvaliteter
         };
@@ -445,7 +453,7 @@
       const context = {
         list,
         vapenFakta: weaponFacts.map(f => ({ typer: f.types, kvaliteter: f.qualities })),
-        antalVapen: weaponFacts.filter(f => (f.types || []).includes('Vapen')).length
+        antalVapen: weaponFacts.filter(f => hasWeaponType(f.types || [])).length
       };
       const dancingTraits = getAutomaticDancingDefenseTraitCandidates(list, context);
       if (!dancingTraits.length) return;
@@ -690,7 +698,7 @@
       if (pathKey && byPath.has(pathKey)) return;
       const entry = invUtil.getEntry(obj.row.id || obj.row.name);
       const types = entry?.taggar?.typ || [];
-      if (!entry || !types.includes('Vapen')) return;
+      if (!entry || !hasWeaponType(types)) return;
       if (pathKey) byPath.add(pathKey);
       out.push({
         ...obj,
@@ -705,7 +713,7 @@
 
   function isRangedWeapon(types) {
     const list = Array.isArray(types) ? types : [];
-    return list.some(type => RANGED_WEAPON_TYPES.has(type));
+    return list.some(type => isRangedWeaponType(type));
   }
 
   function getAttackTraitNameForWeapon(list, weaponInfo, traitValues) {

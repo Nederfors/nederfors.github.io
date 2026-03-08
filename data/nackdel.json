@@ -80,7 +80,7 @@
     {
       "id": "na6",
       "namn": "Fallandesjuk",
-      "beskrivning": "När stressen blir övermäktig stänger kroppen ner. Vid kritiskt misslyckande drabbas rollpersonen av kramper i 1t4 rundor, såvida inte ett slag mot [Stark] lyckas bryta anfallet i början av rundan.",
+      "beskrivning": "När stressen blir övermäktig stänger kroppen ner. Vid kritiskt misslyckande drabbas rollpersonen av kramper i 1T4 rundor, såvida inte ett slag mot [Stark] lyckas bryta anfallet i början av rundan.",
       "taggar": {
         "typ": [
           "Nackdel"
@@ -90,7 +90,7 @@
         ],
         "ark_trad": []
       },
-      "effekt": "Vid kritiskt misslyckande på ett framgångsslag slås du ut i 1t4 rundor eller tills du lyckas med [Stark]."
+      "effekt": "Vid kritiskt misslyckande på ett framgångsslag slås du ut i 1T4 rundor eller tills du lyckas med [Stark]."
     },
     {
       "id": "na7",
@@ -401,14 +401,24 @@
         "ark_trad": [],
         "test": [],
         "regler": {
-          "ger": [
-            {
-              "mal": "permanent_korruption",
-              "formel": "fjardedel_korruptionstroskel_uppat"
-            }
-          ]
+      "ger": [
+        {
+          "nar": {
+            "saknar_namn": ["Jordnära"]
+          },
+          "mal": "permanent_korruption",
+          "formel": "fjardedel_korruptionstroskel_uppat"
+        },
+        {
+          "nar": {
+            "har_namn": ["Jordnära"]
+          },
+          "mal": "smartgrans_tillagg",
+          "formel": "fjardedel_aktuell_smartgrans_nedat"
         }
-      },
+      ]
+    }
+  },
       "effekt": "Få permanent Korruption = ¼ av tröskeln (uppåt); med Jordnära sänks smärtgränsen i stället med ¼."
     },
     {
@@ -721,7 +731,7 @@
     {
       "id": "na48",
       "namn": "Giftkänslig",
-      "beskrivning": "Kroppen reagerar hårt på främmande ämnen. Effekt: Varje gift som drabbar rollpersonen räknas som en nivå starkare än normalt: svagt gift räknas som medelstarkt, medelstarkt räknas som starkt och starkt gift räknas som ett jättestarkt, det vill säga att det gör +1t4 skada i +1t4 rundor.",
+      "beskrivning": "Kroppen reagerar hårt på främmande ämnen. Effekt: Varje gift som drabbar rollpersonen räknas som en nivå starkare än normalt: svagt gift räknas som medelstarkt, medelstarkt räknas som starkt och starkt gift räknas som ett jättestarkt, det vill säga att det gör +1T4 skada i +1T4 rundor.",
       "taggar": {
         "typ": [
           "Nackdel"

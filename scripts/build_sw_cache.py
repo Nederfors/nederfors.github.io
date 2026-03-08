@@ -24,6 +24,7 @@ ENTRY_DATA_EXCLUDES = {
     "pdf-list.json",
     "struktur.json",
     "tabeller.json",
+    "vapen.json",
 }
 SPECIAL_DATA_FILES = [
     "pdf-list.json",

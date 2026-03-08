@@ -1249,7 +1249,6 @@ const DATA_FILES = [
   'tjanster.json',
   'ritual.json',
   'rustning.json',
-  'vapen.json',
   'mat.json',
   'dryck.json',
   'sardrag.json',
@@ -1257,6 +1256,8 @@ const DATA_FILES = [
   'artefakter.json',
   'lagre-artefakter.json',
   'fallor.json',
+  'avstandsvapen.json',
+  'narstridsvapen.json',
   // sync-data-manifest:end
 ].map(f => `data/${f}`);
 
@@ -1397,10 +1398,25 @@ fetch(TABELLER_FILE)
 
 function loadDatabaseData() {
   return Promise.all(
-    DATA_FILES.map(f => fetch(f).then(r => r.json()).then(payload => ({ file: f, payload })))
+    DATA_FILES.map(f =>
+      fetch(f)
+        .then(r => {
+          if (!r.ok) throw new Error(`${f} (${r.status})`);
+          return r.json();
+        })
+        .then(payload => ({ file: f, payload }))
+        .catch(err => {
+          console.warn(`Kunde inte läsa ${f}, filen ignoreras.`, err);
+          return null;
+        })
+    )
   ).then(files => {
+    const loadedFiles = files.filter(Boolean);
+    if (!loadedFiles.length) {
+      throw new Error('Ingen datafil kunde läsas.');
+    }
     const entries = [];
-    files.forEach(({ file, payload }) => {
+    loadedFiles.forEach(({ file, payload }) => {
       const parsed = normalizeEntryDataPayload(payload, file);
       const typeRules = parsed.typeRules;
       (Array.isArray(parsed.entries) ? parsed.entries : []).forEach(entry => {
@@ -3724,7 +3740,11 @@ function openDefenseCalcPopup() {
       return window.isTwoHandedWeaponType(typeName);
     }
     const txt = String(typeName || '').toLowerCase();
-    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tunga vapen';
+    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tvåhandsvapen' || txt === 'tvahandsvapen' || txt === 'tunga vapen';
+  };
+  const hasWeaponType = (types) => {
+    if (typeof window.hasWeaponType === 'function') return window.hasWeaponType(types);
+    return (Array.isArray(types) ? types : []).some(type => ['Vapen', 'Närstridsvapen', 'Avståndsvapen'].includes(String(type || '').trim()));
   };
 
   const inv = storeHelper.getInventory(store) || [];
@@ -3797,7 +3817,7 @@ function openDefenseCalcPopup() {
     .map(obj => {
       const entry = invUtil.getEntry(obj.row.id || obj.row.name);
       const types = entry?.taggar?.typ || [];
-      if (!entry || (!types.includes('Vapen') && !types.includes('Sköld'))) return '';
+      if (!entry || (!hasWeaponType(types) && !types.includes('Sköld'))) return '';
       const value = obj.path.join('.');
       const name = nameMap.get(obj.row) || entry.namn || obj.row.name || 'Vapen';
       const quals = getQualities(obj.row, entry);
@@ -4466,7 +4486,7 @@ function sanitizeFilename(name) {
 
 // --- Google Drive (manuell lagring, en fil per rollperson) ---
 const DRIVE_CONFIG = {
-  clientId: '618760628907-j5pdjhke84shln3sadl5t61e2sskav0s.apps.googleusercontent.com',
+  clientId: '618760628907-j5pdjhke84shln3sadl5T61e2sskav0s.apps.googleusercontent.com',
   apiKey: 'AIzaSyB5f67LBlMssggG7SREFbCZD43YzDESW5Q',
   // Full Drive access so all users with access to the shared folder can see each other's files.
   scope: 'https://www.googleapis.com/auth/drive',

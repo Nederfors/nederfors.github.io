@@ -32,7 +32,19 @@
         ]
       }
     },
-    "Vapen": {}
+    "Närstridsvapen": {},
+    "Avståndsvapen": {},
+    "Enhandsvapen": {},
+    "Korta vapen": {},
+    "Långa vapen": {},
+    "Tvåhandsvapen": {},
+    "Obeväpnad attack": {},
+    "Stav": {},
+    "Kastvapen": {},
+    "Pilbåge": {},
+    "Sköld": {},
+    "Rustning": {},
+    "Lätt Rustning": {}
   },
   "entries": [
     {
@@ -40,12 +52,15 @@
       "namn": "Opadias Ormstav",
       "beskrivning": "Den ormhövdade runstav som nyligen försvann från Ordo Magicas kapitel i Tistla Fäste sägs ha tillhört Opadia, en nu avliden stavmagiker – mäktiga magiker som enligt legenden verkade som livvakter åt den siste symbariske kejsaren. Opadia var bekant med Lasifor Nattbäcka och levde en tid i Tistla Fäste. Hon stupade i strid mot anfallande alver och staven såldes till Ordo Magica, varifrån den alltså har försvunnit.",
       "kvalitet": [
-        "Trubbigt"
+        "Trubbigt",
+        "Långt"
       ],
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Långa vapen",
+          "Stav"
         ],
         "handling": {
           "Förmåga 1": [
@@ -73,15 +88,43 @@
     {
       "id": "ar02",
       "namn": "Skymningsvatten",
-      "beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet. När den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar. Detta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret. Det heliga skymningsvattnet går inte att binda till sig med korruption, det krävs ett permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. Rollpersoner som binder sig till vattnet tar direkt skada, 1t4 per poäng av permanent korruption de besitter. Om rollpersonen går ner till 0 Tålighet förbränns rollpersonen till en hög med aska – här gäller inte regeln om dödsslag! Rollpersoner med permanent Korruption får slå ett slag för [Vaksam -permanent Korruption] för att inse att vattnet kommer att döma dem hårt. Vattnet bränner också bort den permanenta Korruption rollpersonen har. Skymningsvatten har därtill följande egenskaper och krafter:",
+      "beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet. När den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar. Detta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret. Det heliga skymningsvattnet går inte att binda till sig med korruption, det krävs i stället 1 permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. När rollpersonen binder sig till vattnet sänks rollpersonens smärtgräns med 1 för varje poäng permanent Korruption som rollpersonen har vid bindningstillfället. Därefter bränner vattnet bort lika mycket permanent Korruption som rollpersonen då besitter, vilket innebär att den permanenta Korruptionen förbränns helt. Dessa effekter avgörs vid bindningen och påverkas inte av senare förändringar. Skymningsvatten har därtill följande egenskaper och krafter:",
       "kvalitet": [],
       "taggar": {
         "typ": [
           "Artefakt"
         ],
-        "artefakt_bindning": [
-          "xp"
-        ],
+        "artefakt_bindning": {
+          "options": [
+            {
+              "value": "xp",
+              "label": "−1 Erfarenhetspoäng",
+              "effects": {
+                "xp": 1
+              },
+              "regler": {
+                "andrar": [
+                  {
+                    "mal": "smartgrans_tillagg",
+                    "formel": {
+                      "bas": "mal:permanent_korruption",
+                      "faktor": -1
+                    },
+                    "snapshot": true
+                  },
+                  {
+                    "mal": "permanent_korruption",
+                    "formel": {
+                      "bas": "mal:permanent_korruption",
+                      "faktor": -1
+                    },
+                    "snapshot": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "handling": {
           "Förmåga 1": [
             "Fri"
@@ -102,9 +145,9 @@
       },
       "nivåer": {
         "Förmåga 1": "Solens sken; Handling: Speciell\nI handen på den som underkastat sig ljuset och bundit det till sig kan flaskan flamma upp med solens ljuskraft, så att omgivningen badar i ljus likt en molnfri dag med solen mitt på himlen. Villkor: Fri handling. Korruption: Ingen.",
-        "Förmåga 2": "Solens droppar; Handling: Aktiv\nFlaskan innehåller 1t10 droppar heligt ljusvatten, vilka kan droppas på en sjuk eller skadad person och bota denne. Varje droppe gör allt nedanstående när det droppas på en varelse. När alla droppar har använts är flaskan tom och Prios ljus borta. ◆ Helar 1t10 Tålighet ◆ Fungerar som ett medelstarkt motgift ◆ Renar ett poäng permanent Korruption ◆ Ger varelsen dess Korruption i skada, om den har någon sådan. Korruption: Ingen.",
+        "Förmåga 2": "Solens droppar; Handling: Aktiv\nFlaskan innehåller 1T10 droppar heligt ljusvatten, vilka kan droppas på en sjuk eller skadad person och bota denne. Varje droppe gör allt nedanstående när det droppas på en varelse. När alla droppar har använts är flaskan tom och Prios ljus borta. ◆ Helar 1T10 Tålighet ◆ Fungerar som ett medelstarkt motgift ◆ Renar ett poäng permanent Korruption ◆ Ger varelsen dess Korruption i skada, om den har någon sådan. Korruption: Ingen.",
         "Förmåga 3": "Helig synergi; Handling: Reaktiv\nDen som har bundit skymningsvattnet till sig kan använda dess ljus för att förstärka teurgiska krafter. Dessa får sin effekttärning höjd ett steg. Synergin kan göras en gång per scen. Korruption: Ingen.",
-        "Förmåga 4": "Ljusbringarens rättarting; Handling: Speciell\nDen som underkastat sig skymningsvattnet kan med en tanke krossa flaskan och släppa lös dess dömande ljus. Alla närvarande varelser med minst ett (1) i Korruption tar sin Korruption i skada, medan varelser som tillhör kategorin styggelser tar 1t10 + 10 i skada. Detta drabbar såklart även bäraren själv. Villkor: Fri handling. Korruption: Ingen.",
+        "Förmåga 4": "Ljusbringarens rättarting; Handling: Speciell\nDen som underkastat sig skymningsvattnet kan med en tanke krossa flaskan och släppa lös dess dömande ljus. Alla närvarande varelser med minst ett (1) i Korruption tar sin Korruption i skada, medan varelser som tillhör kategorin styggelser tar 1T10 + 10 i skada. Detta drabbar såklart även bäraren själv. Villkor: Fri handling. Korruption: Ingen.",
         "Förmåga 5": "Skinande undergång; Handling: Passiv\nOm den som bär och som har bundit skymningsvatten till sig någonsin blir styggelsemärkt detonerar flaskan, med samma effekt som för kraften Ljusbringarens rättarting."
       },
       "stat": {
@@ -139,8 +182,8 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Slå med eld; Handling: Aktiv\nEldstenens herre kan med ett lyckat Viljestark få eldstenens hjälp att sätta eld på något brännbart inom synhåll – inklusive plagg på en fiende. Elden brinner 1t4 rundor och gör 1t4 i skada per runda. Rustning skyddar som vanligt. En brinnande varelse kan släcka elden genom att rulla runt på marken (förflyttningshandling) och lyckas med ett Kvick. Korruption: 1T4.",
-        "Förmåga 2": "Förstärka flamma; Handling: Speciell\nOm eldstenens herre behärskar krafter som producerar eld kan denne med ett lyckat Viljestark använda eldstenens till att förstärka en av sina eldbesvärjelser. Effekttärningen ökas ett steg (ex från 1t6 till 1t8, eller med +1 om den redan är 1t12). Villkor: Fri handling. Korruption: 1T4.",
+        "Förmåga 1": "Slå med eld; Handling: Aktiv\nEldstenens herre kan med ett lyckat Viljestark få eldstenens hjälp att sätta eld på något brännbart inom synhåll – inklusive plagg på en fiende. Elden brinner 1T4 rundor och gör 1T4 i skada per runda. Rustning skyddar som vanligt. En brinnande varelse kan släcka elden genom att rulla runt på marken (förflyttningshandling) och lyckas med ett Kvick. Korruption: 1T4.",
+        "Förmåga 2": "Förstärka flamma; Handling: Speciell\nOm eldstenens herre behärskar krafter som producerar eld kan denne med ett lyckat Viljestark använda eldstenens till att förstärka en av sina eldbesvärjelser. Effekttärningen ökas ett steg (ex från 1T6 till 1T8, eller med +1 om den redan är 1T12). Villkor: Fri handling. Korruption: 1T4.",
         "Förmåga 3": "Eldens ande; Handling: Aktiv\nEldstenens herre kan med ett lyckat Viljestark krossa eldstenen och släppa loss den fångade eldanden. Detta förstör också eldstenen. Eldanden manifesteras som en reslig människoskepnad av flammor och sot. Den är tacksam mot mästaren och lyder denne under resten av scenen. Anden kan ges enkla kommandon (fria handlingar) som ”vakta den här platsen”, ”anfall den där fienden” eller ”skydda mig”. Korruption: 1T6. eldenS ande Motstånd Utmanande Särdrag Andeform (II), Naturlig vapen (III) Diskret 5 (+5), Kvick 13 (−3) Listig 10 (0), Stark 11 (−1), Träffsäker 15 (−5), Vaksam 10 (0), Viljestark 9 (+1), Övertygande 7 (+3) Förmågor Naturlig krigare (III) Beväpning Brinnande omfamning 9 (Långt), två attacker mot samma mål Rustning Ingen (tar halv skada av attacker) Försvar −3 (Undvika) Tålighet 11 Smärtgräns 6"
       },
       "stat": {
@@ -172,8 +215,8 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Lögnarens dom; Handling: Aktiv\nMästaren kan ställa en fråga (öppen eller ja/nej) till en utvald person. När denne har levererat sitt svar förs eller tvingas dess hand in i lågan. Om personen inte talade sanning bränns denne svårt (1t4 i skada); annars känns elden bara sval och behaglig. Villkor: Hel runda. Korruption: 1T4.",
-        "Förmåga 2": "Minnesväckare; Handling: Aktiv\nMästaren kan använda fyrfatets eld för att väcka glömda eller förträngda minnen hos en annan person, som svar på en fråga eller en uppmaning att beskriva en viss situation eller händelse. Personen för in handen i elden och tar skada (1t4) men kommer sedan att minnas händelsen/svaret med full klarhet. Villkor: Hel runda. Korruption: 1T4."
+        "Förmåga 1": "Lögnarens dom; Handling: Aktiv\nMästaren kan ställa en fråga (öppen eller ja/nej) till en utvald person. När denne har levererat sitt svar förs eller tvingas dess hand in i lågan. Om personen inte talade sanning bränns denne svårt (1T4 i skada); annars känns elden bara sval och behaglig. Villkor: Hel runda. Korruption: 1T4.",
+        "Förmåga 2": "Minnesväckare; Handling: Aktiv\nMästaren kan använda fyrfatets eld för att väcka glömda eller förträngda minnen hos en annan person, som svar på en fråga eller en uppmaning att beskriva en viss situation eller händelse. Personen för in handen i elden och tar skada (1T4) men kommer sedan att minnas händelsen/svaret med full klarhet. Villkor: Hel runda. Korruption: 1T4."
       },
       "stat": {
         "skada": "",
@@ -197,7 +240,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -304,13 +348,13 @@
     {
       "id": "ar08",
       "namn": "Själaslukaren",
-      "beskrivning": "själaslukarEn Stridshammaren Själaslukaren ska enligt legenderna ha skapats i österlandet bortom Ravennerna i syfte att tillfredsställa en anonym krigsherres härsklystnad. Vapnet var illa omtalat redan i Symbaroum om man får tro de krönikor där det omnämns, ofta med påståenden som att det”smiddes i avundsjuka och härdades i missunnsamhet”. Ingen av dess ägare i gamla Symbaroum påstås heller ha gått goda öden till mötes. När Själaslukaren hittas i mausoleet har den en mystisk kraft lagrad från ett tidigare offer: Helig aura (Novis).",
+      "beskrivning": "Stridshammaren Själaslukaren ska enligt legenderna ha skapats i österlandet bortom Ravennerna i syfte att tillfredsställa en anonym krigsherres härsklystnad. Vapnet var illa omtalat redan i Symbaroum om man får tro de krönikor där det omnämns, ofta med påståenden som att det”smiddes i avundsjuka och härdades i missunnsamhet”. Ingen av dess ägare i gamla Symbaroum påstås heller ha gått goda öden till mötes. När Själaslukaren hittas i mausoleet har den en mystisk kraft lagrad från ett tidigare offer: Helig aura (Novis).",
       "kvalitet": [],
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen",
-          "Tunga vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -338,14 +382,17 @@
     {
       "id": "ar09",
       "namn": "Brandskär",
-      "beskrivning": "branDskär Kastyxan Brandskär hyser vilda andar av eld och aska vilka låter den flamma upp och också flyga genom luften tillbaka till kastarens hand. Legenderna är märkligt tysta om vapnets ursprung, men det är inte otänkbart att vapnet är den brinnande yxa som sades svingas av monsterjägaren Ksandukha, hon som enligt legenderna dräpte Davokars sista drake. Vapnets huvud glöder och osar svagt och ger +1T4 i skada på alla attacker. Vapnets mästare är märkligt opåverkad av dess hetta och kan hantera det som en vanlig kastyxa. Det eldfängda vapnet söker sig alltid tillbaka till mästaren, om inte denne vill ha det annorlunda. När yxan kastas eller tappas återvänder den till mästarens hand som en fri handling, utan någon kostnad i korruption.",
+      "beskrivning": "Kastyxan Brandskär hyser vilda andar av eld och aska vilka låter den flamma upp och också flyga genom luften tillbaka till kastarens hand. Legenderna är märkligt tysta om vapnets ursprung, men det är inte otänkbart att vapnet är den brinnande yxa som sades svingas av monsterjägaren Ksandukha, hon som enligt legenderna dräpte Davokars sista drake. Vapnets huvud glöder och osar svagt och ger +1T4 i skada på alla attacker. Vapnets mästare är märkligt opåverkad av dess hetta och kan hantera det som en vanlig kastyxa. Det eldfängda vapnet söker sig alltid tillbaka till mästaren, om inte denne vill ha det annorlunda. När yxan kastas eller tappas återvänder den till mästarens hand som en fri handling, utan någon kostnad i korruption.",
       "kvalitet": [
         "Självfarande"
       ],
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen",
+          "Avståndsvapen",
+          "Kastvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -457,7 +504,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -526,7 +574,11 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Korta vapen",
+          "Enhandsvapen",
+          "Långa vapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -541,9 +593,9 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Formförändring; Handling: Aktiv\nArtefakten kan omforma sig i enlighet med mästarens vilja, till någon av typerna Korta vapen, Enhandsvapen, Långa vapen eller Tunga vapen. Förändringen tar en runda i anspråk men håller sedan i sig tills mästaren vill något annat. Korruption: 1",
-        "Förmåga 2": "Blodets rening; Handling: Speciell\nMed ett lätt jack eller stick på en egen, blottad kroppsdel kan artefaktens mästare låta Spinneldräpa komma i kontakt med dennes blod och därigenom mildra effekten av gifter – fungerar som ett medelstarkt motgift. Villkor: Fri handling. Korruption: 1t4",
-        "Förmåga 3": "Spindelbane; Handling: Speciell\nOm artefaktens mästare behärskar förmågan Monsterlärd till gesällnivå (specialisering: bestar) och lyckas med ett slag mot Listig gör Spinneldräpa +1T8 i skada mot varelser av familjen Spindlar. Effekten varar hela scenen ut. Villkor: Fri handling. Korruption: 1t6"
+        "Förmåga 1": "Formförändring; Handling: Aktiv\nArtefakten kan omforma sig i enlighet med mästarens vilja, till någon av typerna Korta vapen, Enhandsvapen, Långa vapen eller Tvåhandsvapen. Förändringen tar en runda i anspråk men håller sedan i sig tills mästaren vill något annat. Korruption: 1",
+        "Förmåga 2": "Blodets rening; Handling: Speciell\nMed ett lätt jack eller stick på en egen, blottad kroppsdel kan artefaktens mästare låta Spinneldräpa komma i kontakt med dennes blod och därigenom mildra effekten av gifter – fungerar som ett medelstarkt motgift. Villkor: Fri handling. Korruption: 1T4",
+        "Förmåga 3": "Spindelbane; Handling: Speciell\nOm artefaktens mästare behärskar förmågan Monsterlärd till gesällnivå (specialisering: bestar) och lyckas med ett slag mot Listig gör Spinneldräpa +1T8 i skada mot varelser av familjen Spindlar. Effekten varar hela scenen ut. Villkor: Fri handling. Korruption: 1T6"
       },
       "stat": {
         "skada": "",
@@ -602,7 +654,7 @@
       "nivåer": {
         "Förmåga 1": "BalansEns sköld Ringen skyddar bäraren mot korruption utifrån, så som smittan i Davokars mörka delar eller den giftiga ondska som följer med vissa styggelsers bett och klor (det monstruösa särdraget Korrumperande attack); Handling: Speciell\nRingen har ingen effekt på korruption som bäraren frivilligt accepterar som del av användande av artefakter eller mystiska krafter: tvärtom straffar ringen sådant (se kraften Ringens lag). Villkor: Fri handling. Korruption: Ingen",
         "Förmåga 2": "drömsändning En gång under varje nattsömn kan den som bundit sig till ringen sända ett drömbudskap till en annan paktringsbärare; Handling: Aktiv\nDe två måste inte ha mötts men sändaren måste känna till mottagarens existens. Budskapet blir i form av ett bildspel i drömmen, iga ord kan kommunicerats. Tolkningen sker av mottagaren. Korruption: Ingen",
-        "Förmåga 3": "ringEns lag Ringen slår hårt mot edsbrytare; Handling: Passiv\nDen som underkastat sig Järnpaktens lag drabbas av fysisk skada av all korruption som bäraren frivilligt drar på sig: varje poäng temporär korruption ger 1t4 i skada på bäraren."
+        "Förmåga 3": "ringEns lag Ringen slår hårt mot edsbrytare; Handling: Passiv\nDen som underkastat sig Järnpaktens lag drabbas av fysisk skada av all korruption som bäraren frivilligt drar på sig: varje poäng temporär korruption ger 1T4 i skada på bäraren."
       },
       "stat": {
         "skada": "",
@@ -639,9 +691,9 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Aktiv förmåga 1; Handling: Aktiv\nUppenbarelse \nBäraren kan en gång per äventyr med ett lyckat slag mot Listig se in i framtiden och använda ritualen spådomskonst. \nKorruptionskostnad: 1t4.",
-        "Förmåga 2": "Aktiv förmåga 2; Handling: Reaktiv\nFramtidsro\nBäraren kan med ett lyckat slag mot Listig skydda sitt eget öde och undvika en attack innan den hunnit göras. Slaget mot listig görs då istället för ett slag mot försvar.\nKorruptionskostnad: 1t8 temporär korruption.",
-        "Förmåga 3": "Aktiv förmåga 3; Handling: Aktiv\nÖdets Nyck\nBäraren kan med ett lyckat slag mot Listig manipulera tiden och gå tillbaka till föregående scen. Enbart användaren är medveten om att tiden skiftat. Spelledaren avgör vad som är föregående scen. Bärarens kropp påverkas inte av tidsresan och eventuella skador och korruption som tillkommit finns kvar. \nKorruptionskostnad: 1t12 permanent korruption\nÖvrig kostnad: Ingreppet är att begå våld mot verkligheten i en så pass stor mån att artefakten helt går sönder i processen.",
+        "Förmåga 1": "Aktiv förmåga 1; Handling: Aktiv\nUppenbarelse \nBäraren kan en gång per äventyr med ett lyckat slag mot Listig se in i framtiden och använda ritualen spådomskonst. \nKorruptionskostnad: 1T4.",
+        "Förmåga 2": "Aktiv förmåga 2; Handling: Reaktiv\nFramtidsro\nBäraren kan med ett lyckat slag mot Listig skydda sitt eget öde och undvika en attack innan den hunnit göras. Slaget mot listig görs då istället för ett slag mot försvar.\nKorruptionskostnad: 1T8 temporär korruption.",
+        "Förmåga 3": "Aktiv förmåga 3; Handling: Aktiv\nÖdets Nyck\nBäraren kan med ett lyckat slag mot Listig manipulera tiden och gå tillbaka till föregående scen. Enbart användaren är medveten om att tiden skiftat. Spelledaren avgör vad som är föregående scen. Bärarens kropp påverkas inte av tidsresan och eventuella skador och korruption som tillkommit finns kvar. \nKorruptionskostnad: 1T12 permanent korruption\nÖvrig kostnad: Ingreppet är att begå våld mot verkligheten i en så pass stor mån att artefakten helt går sönder i processen.",
         "Förmåga 4": "Passiv förmåga; Handling: Passiv\nSinnesutvidgning\nBäraren av Zyrkrysschas Öga får en ökad förmåga att uppfatta hot mot sig själva. De får +1 i vaksam på alla slag som avser att upptäcka fara för sitt eget liv."
       },
       "stat": {
@@ -698,7 +750,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Korta vapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -829,7 +882,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -857,7 +911,9 @@
       "kvalitet": [],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Närstridsvapen",
+          "Obeväpnad attack"
         ],
         "handling": {
           "Förmåga 1": [
@@ -964,7 +1020,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Långa vapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -998,7 +1055,10 @@
       ],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Sköld",
+          "Avståndsvapen",
+          "Kastvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1010,8 +1070,8 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Sköldkast; Handling: Aktiv\nOm den som har bundit sig till Loravanas kastsköld behärskar förmågan Stålkast kan artefakten slungas som ett kastvapen med 1t8 i skada. Skölden återvänder dessutom Passivt till mästarens arm, redo att användas för pareringar direkt efter kastet. Korruption: 1.",
-        "Förmåga 2": "Kraftstöt; Handling: Reaktiv\nOm sköldens mästare behärskar förmågan Sköldkamp till minst gesällnivå kan denne lägga extra kraft bakom sina sköldstötar. En kraftstöt ökar manöverns skada till 1t8 och ger +5 på Stark i försöket att slå fienden till backen. Korruption: 1T4."
+        "Förmåga 1": "Sköldkast; Handling: Aktiv\nOm den som har bundit sig till Loravanas kastsköld behärskar förmågan Stålkast kan artefakten slungas som ett kastvapen med 1T8 i skada. Skölden återvänder dessutom Passivt till mästarens arm, redo att användas för pareringar direkt efter kastet. Korruption: 1.",
+        "Förmåga 2": "Kraftstöt; Handling: Reaktiv\nOm sköldens mästare behärskar förmågan Sköldkamp till minst gesällnivå kan denne lägga extra kraft bakom sina sköldstötar. En kraftstöt ökar manöverns skada till 1T8 och ger +5 på Stark i försöket att slå fienden till backen. Korruption: 1T4."
       },
       "stat": {
         "skada": "",
@@ -1086,7 +1146,7 @@
     {
       "id": "ar35",
       "namn": "Stålsolen",
-      "beskrivning": "Den artefakt som Broder Eumenos döpte till Stålsolen hittades i packningen på en gravt styggelsemärkt och djupt störd lycksökare i närheten av ruinstaden Alkor. Dess ursprung är okänt och hett omdiskuterat, i synnerhet sedan allt fler har börjat tolka många av Davokars ”solsymboler” som egentligen varande spindelsymboler. Oavsett vilket är artefakten tydligt kopplad till solen och ett synnerligen kraftfullt vapen mot Prios fiender. Dess enda kraft beskrivs nedan men tilläggas bör att denna kraft kräver tid för återhämtning. Efter att kraften har släppts lös krävs 1t6+4 dagar av klart solljus, alternativt det dubbla under en molnig himmel, för att ”ladda upp” artefakten inför en ny aktivering.",
+      "beskrivning": "Den artefakt som Broder Eumenos döpte till Stålsolen hittades i packningen på en gravt styggelsemärkt och djupt störd lycksökare i närheten av ruinstaden Alkor. Dess ursprung är okänt och hett omdiskuterat, i synnerhet sedan allt fler har börjat tolka många av Davokars ”solsymboler” som egentligen varande spindelsymboler. Oavsett vilket är artefakten tydligt kopplad till solen och ett synnerligen kraftfullt vapen mot Prios fiender. Dess enda kraft beskrivs nedan men tilläggas bör att denna kraft kräver tid för återhämtning. Efter att kraften har släppts lös krävs 1T6+4 dagar av klart solljus, alternativt det dubbla under en molnig himmel, för att ”ladda upp” artefakten inför en ny aktivering.",
       "kvalitet": [],
       "taggar": {
         "typ": [
@@ -1099,7 +1159,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Solstorm; Handling: Aktiv\nGenom att slå staven som artefakten är monterad på i marken kan dess mästare få dess blanka metallyta att skina upp i en bländande, ögonblicklig ljusblixt. Alla inom synhåll som inte förvarnas att blunda blir förblindade under 1t4 rundor. Dessutom vållar strålglansen Styggelser och Vandöda stor kroppslig smärta – 3t10 i skada som ignorerar Bepansring, vilken dock halveras för de varelser som lyckas med ett slag mot Viljestark (mästarens spelare slår slaget/slagen). Korruption: 1T8."
+        "Förmåga 1": "Solstorm; Handling: Aktiv\nGenom att slå staven som artefakten är monterad på i marken kan dess mästare få dess blanka metallyta att skina upp i en bländande, ögonblicklig ljusblixt. Alla inom synhåll som inte förvarnas att blunda blir förblindade under 1T4 rundor. Dessutom vållar strålglansen Styggelser och Vandöda stor kroppslig smärta – 3T10 i skada som ignorerar Bepansring, vilken dock halveras för de varelser som lyckas med ett slag mot Viljestark (mästarens spelare slår slaget/slagen). Korruption: 1T8."
       },
       "stat": {
         "skada": "",
@@ -1127,7 +1187,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Förnimma mörkerväsen; Handling: Aktiv\nDen som har bundit sig till kompassen kan aktivera dess förmåga att förnimma styggelser. Den svarta delen av nålen kommer osvikligen att peka mot den mäktigaste styggelsen (spelledaren avgör) på maximalt en kilometers avstånd, dock med två begränsningar: dels kan andra mäktiga styggelser finnas på andra ställen inom området, dels börjar nålen pendla mer och mer ju närmare kompassen kommer källan, för att till slut bara snurra runt (inom 100 meter från varelsen). Effekten varar i en scen/timme men kan förstås aktiveras gång på gång, med resultatet att mästaren alltid har 1t4 temporär korruption så länge förmågan är aktiv. Korruption: 1T4."
+        "Förmåga 1": "Förnimma mörkerväsen; Handling: Aktiv\nDen som har bundit sig till kompassen kan aktivera dess förmåga att förnimma styggelser. Den svarta delen av nålen kommer osvikligen att peka mot den mäktigaste styggelsen (spelledaren avgör) på maximalt en kilometers avstånd, dock med två begränsningar: dels kan andra mäktiga styggelser finnas på andra ställen inom området, dels börjar nålen pendla mer och mer ju närmare kompassen kommer källan, för att till slut bara snurra runt (inom 100 meter från varelsen). Effekten varar i en scen/timme men kan förstås aktiveras gång på gång, med resultatet att mästaren alltid har 1T4 temporär korruption så länge förmågan är aktiv. Korruption: 1T4."
       },
       "stat": {
         "skada": "",
@@ -1164,7 +1224,7 @@
     {
       "id": "ar38",
       "namn": "Alials Stenmantel",
-      "beskrivning": "Det sägs att det var den paranoide Kung Alial XIII av Arval som under Symbaroums mest expansiva fas lät tillverka denna mantel, omtalad i kvädet Den storknande ynkryggens frånfälle. Agramai fick den av Hertig Sesario, via Esmerelda, inför utfärden till Symbar. Notera att den som aktiverar någon av nedanstående krafter omsluts av ett fullständigt lufttätt hölje. Syret räcker olika länge olika gånger beroende på att höljets form aldrig är densamma; räkna med att det tar 10+1t10 minuter innan mästaren somnar in, varefter eventuella allierade har ett antal rundor motsvarande mästarens värde i Stark på sig att slå sig in genom höljet.",
+      "beskrivning": "Det sägs att det var den paranoide Kung Alial XIII av Arval som under Symbaroums mest expansiva fas lät tillverka denna mantel, omtalad i kvädet Den storknande ynkryggens frånfälle. Agramai fick den av Hertig Sesario, via Esmerelda, inför utfärden till Symbar. Notera att den som aktiverar någon av nedanstående krafter omsluts av ett fullständigt lufttätt hölje. Syret räcker olika länge olika gånger beroende på att höljets form aldrig är densamma; räkna med att det tar 10+1T10 minuter innan mästaren somnar in, varefter eventuella allierade har ett antal rundor motsvarande mästarens värde i Stark på sig att slå sig in genom höljet.",
       "kvalitet": [],
       "taggar": {
         "typ": [
@@ -1233,7 +1293,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Korta vapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1277,7 +1338,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Nålens öga; Handling: Speciell\nDödsmasken ger sin mästare hjälp med att hitta blottor i sina motståndares rustning. När kraften aktiveras reduceras alla fienders Bepansring med 1t4 för attacker i närstrid, för resten av striden. Detta gäller bara för maskens mästare och är inte att räkna som extra skada – oskyddade mål tar skada som vanligt. Villkor: Fri handling. Korruption: 1T4.",
+        "Förmåga 1": "Nålens öga; Handling: Speciell\nDödsmasken ger sin mästare hjälp med att hitta blottor i sina motståndares rustning. När kraften aktiveras reduceras alla fienders Bepansring med 1T4 för attacker i närstrid, för resten av striden. Detta gäller bara för maskens mästare och är inte att räkna som extra skada – oskyddade mål tar skada som vanligt. Villkor: Fri handling. Korruption: 1T4.",
         "Förmåga 2": "Tusen nålar; Handling: Reaktiv\nEn mästare med förmågan Stångverkan kan få maskens hjälp att paralysera fiender med skärande skrik. Varje fiende som träffas av maskmästarens stångvapen måste klara ett Viljestark eller förlora sin nästa stridshandling (maskmästaren slår slaget). Korruption: 1 per skrik från masken."
       },
       "stat": {
@@ -1309,7 +1370,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Korruptionsbarriär; Handling: Reaktiv\nIkosaederns mästare får ett komplett skydd mot korruption som drabbar de som rör sig på en viss plats, såsom i korruptionssjuk natur eller i Bortomvärlden. För korruption som används som vapen (exempelvis särdraget Korrumperande attack eller den mystiska kraften Svart andedräkt) måste mästaren slå över den skadande korruptionen med 1t20, om slaget är högre drabbas mästaren inte av korruptionen; om slaget är lika med eller under så drabbar korruptionen som vanligt. Skyddet gäller inte korruptionskällor mästaren väljer att använda, som att binda eller använda artefakter eller aktivera mystiska krafter. Korruption: Ingen.",
+        "Förmåga 1": "Korruptionsbarriär; Handling: Reaktiv\nIkosaederns mästare får ett komplett skydd mot korruption som drabbar de som rör sig på en viss plats, såsom i korruptionssjuk natur eller i Bortomvärlden. För korruption som används som vapen (exempelvis särdraget Korrumperande attack eller den mystiska kraften Svart andedräkt) måste mästaren slå över den skadande korruptionen med 1T20, om slaget är högre drabbas mästaren inte av korruptionen; om slaget är lika med eller under så drabbar korruptionen som vanligt. Skyddet gäller inte korruptionskällor mästaren väljer att använda, som att binda eller använda artefakter eller aktivera mystiska krafter. Korruption: Ingen.",
         "Förmåga 2": "Korruptionsinsamlare; Handling: Speciell\nEn mästare med förmågan Svartkonst kan samla korruption som används som vapen, för att senare själv vända den mot sina fiender. För att det ska fungera måste svartkonstnären först lyckas skydda sig mot attacken, se Korruptionsbarriär – då lagras korruptionen i artefakten. Svartkonstnären kan sedan spendera denna insamlade korruption för att sänka motståndet mot sina egna krafter: varje poäng som spenderas ger målet en –1 modifikation på Viljestark när det gäller försvar mot mästarens kraft. Alla poäng kan spenderas vid samma kraft, men hälften av den mängd som spenderas (avrundat uppåt) drabbar också svartkonstnären som temporär korruption. Korruption som svartkonstnären själv genererar (krafter etc.) kan inte samlas in, inte heller sådan som kommer från omgivningen mer generellt, så som i korruptionssjuk natur eller i Bortomvärlden. Villkor: Fri handling. Korruption: Inget vid insamlandet av korruption; vid användande drabbar hälften av den använda korruptionen svartkonstnären själv."
       },
       "stat": {
@@ -1343,7 +1404,7 @@
       },
       "nivåer": {
         "Förmåga 1": "Samla trupperna; Handling: Aktiv\nNär den som bundit sig till banéret slår det i marken ger det alla allierade inom synhåll ett omslag per scen på ett motståndsslag mot valfri effekt; detta gäller även Försvar. Allierade som lämnar synhåll för banéret tappar effekten, men allierade som kommer inom synhåll för banéret får den. Allierade som använt omslaget kan inte få ytterligare ett under samma strid, oavsett om banéret planteras om. För allierade med Ståndaktig gäller att omslag mot sådant som täcks av förmågan lyckas Passivt istället för att slås om. Banérets mästare behöver inte stanna inom synhåll för banéret när det väl är planterat i marken, men följer också samma regler som alla andra avseende omslaget. Korruption: 1T4.",
-        "Förmåga 2": "Vederkvickelse; Handling: Speciell\nEn mästare med förmågan Ledare kan förmå banéret att utstråla helande energier när det har slagits ner i marken. Alla allierade inom synhåll får 1t4 Tålighet tillbaka. Allierade med förmågan Återhämtning får sin nivå av läkning istället, om det är bättre än 1t4. Om mästaren har och använder förmågan Ledare på gesäll- eller mästarnivå kan Vederkvickelsen aktiveras som en reaktion på de handlingarna (dvs. Vederkvickelse kostar ingen egen Aktiv handling). Villkor: (eller Reaktiv, tillsammans med Ledare gesäll- eller mästarnivå); Kan användas både aktivt och reaktivt. Korruption: 1T4."
+        "Förmåga 2": "Vederkvickelse; Handling: Speciell\nEn mästare med förmågan Ledare kan förmå banéret att utstråla helande energier när det har slagits ner i marken. Alla allierade inom synhåll får 1T4 Tålighet tillbaka. Allierade med förmågan Återhämtning får sin nivå av läkning istället, om det är bättre än 1T4. Om mästaren har och använder förmågan Ledare på gesäll- eller mästarnivå kan Vederkvickelsen aktiveras som en reaktion på de handlingarna (dvs. Vederkvickelse kostar ingen egen Aktiv handling). Villkor: (eller Reaktiv, tillsammans med Ledare gesäll- eller mästarnivå); Kan användas både aktivt och reaktivt. Korruption: 1T4."
       },
       "stat": {
         "skada": "",
@@ -1374,7 +1435,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Ljuv musik; Handling: Speciell\nFlöjten är följsam och instruktiv, och även den minst kvalificerade musikant kan spela vackert på den. En skicklig musiker kan förtrolla med sina toner, och dra ned både applåder och klingande daler på sitt spel. Flöjtens mästare kan, en gång per äventyr och med ett lyckat Övertygande, hänföra en publik som då skänker 1t10 daler (väsentligen i form av skillingar och örtegar) i ersättning för upplevelsen. En mästare med fördelen Musikant slår Övertygande med bonus från fördelen, samt slår värdet på den intjänade slanten två gånger och tar det bästa utfallet. Villkor: Särskild. Korruption: Inget.",
+        "Förmåga 1": "Ljuv musik; Handling: Speciell\nFlöjten är följsam och instruktiv, och även den minst kvalificerade musikant kan spela vackert på den. En skicklig musiker kan förtrolla med sina toner, och dra ned både applåder och klingande daler på sitt spel. Flöjtens mästare kan, en gång per äventyr och med ett lyckat Övertygande, hänföra en publik som då skänker 1T10 daler (väsentligen i form av skillingar och örtegar) i ersättning för upplevelsen. En mästare med fördelen Musikant slår Övertygande med bonus från fördelen, samt slår värdet på den intjänade slanten två gånger och tar det bästa utfallet. Villkor: Särskild. Korruption: Inget.",
         "Förmåga 2": "Djurens konung; Handling: Aktiv\nOm flöjtens mästare besitter förmågan Trollsång (se Spelarens handbok, sida 77) kan denne använda sin musik till att leda och kommendera bestar. Alla bestar av ett visst släkte inom hörhåll (musikanten bestämmer vilket om det finns flera att välja på) blir neutralt inställda till musikanten och låter denna och dennes vänner passera utan inblandning. Dessutom kan en kedja [Övertygande←Viljestark] av bestar av det utvalda släktet fås att följa med och hjälpa musikanten under varaktigheten. Om mästaren också har fördelen Musikant läggs förmågans bonus till Övertygande för detta slag. Musikanten måste spela hela tiden vilket kräver två händer samt koncentration, [Viljestark –skada] bryter koncentrationen. Korruption: 1T4."
       },
       "stat": {
@@ -1466,7 +1527,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Sanningens kraft; Handling: Aktiv\nDen som frivilligt stoppar in handen bland lågorna blir bränd om denne ljuger när handen är i elden: 1t6 i skada per lögn (ignorerar Bepansring). Att ljuga innebär att säga något som talaren själv inte tror på, vilket såklart kan vara en ärlig missuppfattning. Den som säger sanningen finner lågorna svalkande, rent av helande (rensar temporär korruption samt helar 1t4 Tålighet) Den som bundit artefakten till sig påverkas inte själv av kraften, och kan ljuga fritt med handen i lågorna. Korruption: 1T4",
+        "Förmåga 1": "Sanningens kraft; Handling: Aktiv\nDen som frivilligt stoppar in handen bland lågorna blir bränd om denne ljuger när handen är i elden: 1T6 i skada per lögn (ignorerar Bepansring). Att ljuga innebär att säga något som talaren själv inte tror på, vilket såklart kan vara en ärlig missuppfattning. Den som säger sanningen finner lågorna svalkande, rent av helande (rensar temporär korruption samt helar 1T4 Tålighet) Den som bundit artefakten till sig påverkas inte själv av kraften, och kan ljuga fritt med handen i lågorna. Korruption: 1T4",
         "Förmåga 2": "Rättarting; Handling: Aktiv\nFör mästare med förmågan Teurgi kan flammorna användas för att tvinga någon att tala sanning. Teurgen pekar på en person inom synhåll från eldfatet och kräver att denne talar sanning. Lågor slår sedan ut kring personen, och effekten är sedan densamma som Sanningens kraft. Korruption: 1T6"
       },
       "stat": {
@@ -1489,7 +1550,10 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Korta vapen",
+          "Avståndsvapen",
+          "Kastvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1517,7 +1581,7 @@
     {
       "id": "ar49",
       "namn": "Hafmuuls Förvandlingsplagg",
-      "beskrivning": "Hafmuul Förvandlaren var en produktiv artefaktmakare med fokus på förvandlingar. De tre kända plaggen – baiagornsärken, kråkkappan och maradräkten – låter bäraren anta djurskepnader; i kombination kan de ge en urornes gestalt. Plaggen ger särskild utdelning för häxor. Upprepad användning innebär risk: förvandlingar oftare än en gång per dygn kräver slag med 1t20; vid utfall ≤ antalet förvandlingar per dygn fastnar mästaren i formen. Över tid blir sinnet mer bestlikt. En exorcism kan skilja plagg och bärare åt; sinnet återgår efter lika lång tid som fångenskapen.",
+      "beskrivning": "Hafmuul Förvandlaren var en produktiv artefaktmakare med fokus på förvandlingar. De tre kända plaggen – baiagornsärken, kråkkappan och maradräkten – låter bäraren anta djurskepnader; i kombination kan de ge en urornes gestalt. Plaggen ger särskild utdelning för häxor. Upprepad användning innebär risk: förvandlingar oftare än en gång per dygn kräver slag med 1T20; vid utfall ≤ antalet förvandlingar per dygn fastnar mästaren i formen. Över tid blir sinnet mer bestlikt. En exorcism kan skilja plagg och bärare åt; sinnet återgår efter lika lång tid som fångenskapen.",
       "kvalitet": [],
       "taggar": {
         "typ": [
@@ -1562,7 +1626,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Avståndsvapen",
+          "Pilbåge"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1574,7 +1639,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Gnista i mörkret; Handling: Reaktiv\nVapnets mästare kan ingjuta sitt korruptionshat i projektilerna och sända dem brinnande mot korrumperade varelser. En varelse som träffas av pilen måste slå över sin korruption med 1t6, om slaget misslyckas tar varelsen omedelbart så mycket extra skada som tärningen visade. Rustning skyddar inte mot denna extra skada men kan såklart göra det mot pilen. Notera att den extra skadan drabbar offret även om själva pilen inte trängde genom rustning; pilens brännande ljus gör det oavsett. Korruption: 1 per pil",
+        "Förmåga 1": "Gnista i mörkret; Handling: Reaktiv\nVapnets mästare kan ingjuta sitt korruptionshat i projektilerna och sända dem brinnande mot korrumperade varelser. En varelse som träffas av pilen måste slå över sin korruption med 1T6, om slaget misslyckas tar varelsen omedelbart så mycket extra skada som tärningen visade. Rustning skyddar inte mot denna extra skada men kan såklart göra det mot pilen. Notera att den extra skadan drabbar offret även om själva pilen inte trängde genom rustning; pilens brännande ljus gör det oavsett. Korruption: 1 per pil",
         "Förmåga 2": "Glödande fjättrar; Handling: Reaktiv\nI handen på en mästare med förmågan Prickskytt kan pilarna förutom att göra extra skada (se Gnista i mörkret) också binda genomkorrumperade varelser. En genomkorrumperad varelse som träffas av pilen måste klara ett Viljestark eller fångas i kedjor av eld och inte kunna röra sig eller attackera under en runda; den kan dock använda mystiska krafter och särdrag. Korruption: 1T4 per pil, inklusive effekten av Gnista i mörkret."
       },
       "stat": {
@@ -1595,7 +1660,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1629,7 +1695,10 @@
       ],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Sköld",
+          "Avståndsvapen",
+          "Kastvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1706,7 +1775,7 @@
       },
       "nivåer": {
         "Förmåga 1": "Avslöjande viskning; Handling: Speciell\nHalsbandet viskar hemligheter om den som mästaren tittar på. Ormen ger mästaren kunskap om vilket målets lägsta karaktärsdrag är (inte dess exakta värde), samt dessutom vilka eventuella nackdelar (se Spelarens handbok, sida 56) målet har. Om mästaren lyckas med ett [Vaksam←Diskret] får mästaren också veta värdet på det lägsta karaktärsdraget, samt om målet har nackdelen Mörk hemlighet, vilken hemligheten är. Villkor: Fri handling. Korruption: 1T4",
-        "Förmåga 2": "Giftdrypare; Handling: Reaktiv\nHalsbandet kan fås att anfalla i närstrid med sitt giftiga bett. Ormen anfaller en gång per runda samtidigt som mästaren också gör det, och mot samma mål. Om mästaren träffar med en attack under rundan gör ormen detsamma. Ormen anfaller endast en gång per runda, oavsett hur många attacker mästaren gör. Slå 1t8 för att se om bettet går igenom målets skydd; bettet i sig gör ingen skada men målet drabbas av ett svagt gift, 1t4 i skada i 1t4 rundor. Om mästaren har förmågan Giftbrukare är ormens gift istället medelstarkt och gör 1t6 i skada i 1t6 rundor. Villkor: när mästaren anfaller i närstrid. Korruption: 1T4"
+        "Förmåga 2": "Giftdrypare; Handling: Reaktiv\nHalsbandet kan fås att anfalla i närstrid med sitt giftiga bett. Ormen anfaller en gång per runda samtidigt som mästaren också gör det, och mot samma mål. Om mästaren träffar med en attack under rundan gör ormen detsamma. Ormen anfaller endast en gång per runda, oavsett hur många attacker mästaren gör. Slå 1T8 för att se om bettet går igenom målets skydd; bettet i sig gör ingen skada men målet drabbas av ett svagt gift, 1T4 i skada i 1T4 rundor. Om mästaren har förmågan Giftbrukare är ormens gift istället medelstarkt och gör 1T6 i skada i 1T6 rundor. Villkor: när mästaren anfaller i närstrid. Korruption: 1T4"
       },
       "stat": {
         "skada": "",
@@ -1737,8 +1806,8 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Hjärtats rytm; Handling: Aktiv\nArtefaktens ljusa kraft skadar korrumperade varelser. Kraften kräver tre slag på gonggongen (aktiva handlingar) för att aktiveras och påverkar alla inom hörhåll. Alla med permanent korruption måste slå ett slag med 1t20 över sin permanenta korruption; om det misslyckas tar varelsen sin permanenta korruption i skada på Tålighet. Även gonggongens mästare påverkas, liksom dennes allierade. Genomkorrumperade varelser flyr istället, och kan inte återvända till platsen under den närmaste månaden. Om de inte kan fly utom hörhåll förintas de i en kaskad av ljus. Korruption: Ingen, dock risk för skada enligt kraftens beskrivning.",
-        "Förmåga 2": "Göra ogjort; Handling: Aktiv\nI handen på en mästare med förmågan Teurgi kan gonggongens kraft förinta ett ting eller en varelse inom hörhåll. Gonggongens mästare väljer ett mål och slår sedan fem tunga slag på gonggongen. Döda ting förintas direkt, upp till portars, pelares och broars storlek; större saker än så tar skada men förintas inte. En mur rasar inte men får en bred bräsch slagen i sig. Artefakter är immuna mot kraften. Varelser måste slå över sin permanenta korruption med 1t20 eller förintas; om slaget lyckas tar de sin permanenta korruption i skada på Tålighet, om de inte väljer att fly. Då kan de inte återvända till platsen någonsin igen. Om målet är en genomkorrumperad varelse förintas den när det femte slaget faller; om den hinner fly utom hörhåll innan dess klarar den sig. Mästaren tar sin egen permanenta korruption i skada på Tålighet vid varje slag, alltså totalt fem gånger sin permanenta korruption för att aktivera kraften. Villkor: 5 aktiva handlingar. Korruption: Ingen, dock möjlig skada enligt kraftens beskrivning."
+        "Förmåga 1": "Hjärtats rytm; Handling: Aktiv\nArtefaktens ljusa kraft skadar korrumperade varelser. Kraften kräver tre slag på gonggongen (aktiva handlingar) för att aktiveras och påverkar alla inom hörhåll. Alla med permanent korruption måste slå ett slag med 1T20 över sin permanenta korruption; om det misslyckas tar varelsen sin permanenta korruption i skada på Tålighet. Även gonggongens mästare påverkas, liksom dennes allierade. Genomkorrumperade varelser flyr istället, och kan inte återvända till platsen under den närmaste månaden. Om de inte kan fly utom hörhåll förintas de i en kaskad av ljus. Korruption: Ingen, dock risk för skada enligt kraftens beskrivning.",
+        "Förmåga 2": "Göra ogjort; Handling: Aktiv\nI handen på en mästare med förmågan Teurgi kan gonggongens kraft förinta ett ting eller en varelse inom hörhåll. Gonggongens mästare väljer ett mål och slår sedan fem tunga slag på gonggongen. Döda ting förintas direkt, upp till portars, pelares och broars storlek; större saker än så tar skada men förintas inte. En mur rasar inte men får en bred bräsch slagen i sig. Artefakter är immuna mot kraften. Varelser måste slå över sin permanenta korruption med 1T20 eller förintas; om slaget lyckas tar de sin permanenta korruption i skada på Tålighet, om de inte väljer att fly. Då kan de inte återvända till platsen någonsin igen. Om målet är en genomkorrumperad varelse förintas den när det femte slaget faller; om den hinner fly utom hörhåll innan dess klarar den sig. Mästaren tar sin egen permanenta korruption i skada på Tålighet vid varje slag, alltså totalt fem gånger sin permanenta korruption för att aktivera kraften. Villkor: 5 aktiva handlingar. Korruption: Ingen, dock möjlig skada enligt kraftens beskrivning."
       },
       "stat": {
         "skada": "",
@@ -1758,7 +1827,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1770,11 +1840,11 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Åskan går; Handling: Aktiv\nHammarens mästare kan slå vapnet i backen och släppa lös ett mäktigt åskdunder. Detta slår ut från hammaren och sprider sig som en cirkel åt alla håll. Fiender inom synhåll från mästaren tar 1t6 i skada, rustning skyddar som vanligt, och de måste klara ett [Stark←Stark] eller ramla omkull. Robust ger +2 på Stark per nivå för detta slag. Korruption: 1T4.",
-        "Förmåga 2": "Blixten slår; Handling: Reaktiv\nI händerna på en mästare med förmågan Tvåhandskraft kan blixtar slå ut från hammaren. Blixten slår ut samtidigt som mästaren träffar ett mål i närstrid. Målet för blixten kan vara detsamma som för hammarslaget, eller ett annat mål inom synhåll. Blixten gör 1t12 i skada (ignorerar Bepansring). Villkor: tillsammans med ett anfall med hammaren. Korruption: 1T6."
+        "Förmåga 1": "Åskan går; Handling: Aktiv\nHammarens mästare kan slå vapnet i backen och släppa lös ett mäktigt åskdunder. Detta slår ut från hammaren och sprider sig som en cirkel åt alla håll. Fiender inom synhåll från mästaren tar 1T6 i skada, rustning skyddar som vanligt, och de måste klara ett [Stark←Stark] eller ramla omkull. Robust ger +2 på Stark per nivå för detta slag. Korruption: 1T4.",
+        "Förmåga 2": "Blixten slår; Handling: Reaktiv\nI händerna på en mästare med förmågan Tvåhandskraft kan blixtar slå ut från hammaren. Blixten slår ut samtidigt som mästaren träffar ett mål i närstrid. Målet för blixten kan vara detsamma som för hammarslaget, eller ett annat mål inom synhåll. Blixten gör 1T12 i skada (ignorerar Bepansring). Villkor: tillsammans med ett anfall med hammaren. Korruption: 1T6."
       },
       "stat": {
-        "skada": "",
+        "skada": "1T10",
         "vikt": 2.0
       },
       "grundpris": {
@@ -1818,7 +1888,7 @@
     {
       "id": "ar58",
       "namn": "Palamukks Ögonsten",
-      "beskrivning": "En smaragdgrön ögonsten skapad av den ökände illvätten Palamukks. Kräver att bäraren permanent ersätter ett öga (ger 1t6 skada som ignorerar bepansring). Fungerar som synorgan med mörkerseende och svagt inre sken. Nedan beskrivs spelmekanik; ursprung och efterspel lämnas öppna.",
+      "beskrivning": "En smaragdgrön ögonsten skapad av den ökände illvätten Palamukks. Kräver att bäraren permanent ersätter ett öga (ger 1T6 skada som ignorerar bepansring). Fungerar som synorgan med mörkerseende och svagt inre sken. Nedan beskrivs spelmekanik; ursprung och efterspel lämnas öppna.",
       "kvalitet": [],
       "taggar": {
         "typ": [
@@ -1834,7 +1904,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Förändringens vindar; Handling: Reaktiv\nEn gång per runda kan ögonstenens mästare påverka ett slag för en handling som sker inom synhåll; det kan vara vilken sorts slag som helst: framgångsslag, effektslag, dödsslag eller annat så länge slumpen spelar in. Kraften ger den aktiva parten en modifikation på 1t4 på slaget, positiv eller negativ enligt mästarens önskemål. Korruption: 1T4",
+        "Förmåga 1": "Förändringens vindar; Handling: Reaktiv\nEn gång per runda kan ögonstenens mästare påverka ett slag för en handling som sker inom synhåll; det kan vara vilken sorts slag som helst: framgångsslag, effektslag, dödsslag eller annat så länge slumpen spelar in. Kraften ger den aktiva parten en modifikation på 1T4 på slaget, positiv eller negativ enligt mästarens önskemål. Korruption: 1T4",
         "Förmåga 2": "Stundens skapelsekraft; Handling: Aktiv\nFör mästare med någon av förmågorna Alkemi, Artefaktmakande eller Smideskonst kan ögat användas för att omedelbart skapa något; det sker direkt i stunden, ur tomma luften. Vad gäller Smideskonst kan en gesäll förläna föremålet med en normal Kvalitet; en mästare kan ge det två kvaliteter, varav en mystisk. Det som skapas kan bäras, användas eller konsumeras med samma effekt som det verkligaföremålet. Det skapade existerar dock blott i en scen, sedan vittrar det till aska. Om skaparen är villig att acceptera en permanent korruption blir objektet permanent. Handlar det om en förbrukningsvara (exempelvis ett elixir) kan det då konsumeras senare men förbrukas i så fall som andra föremål av sin sort. Korruption: 1T4 (tillfälligt objekt), eller 1T4 varav 1 permanent (permanent objekt)"
       },
       "stat": {
@@ -1851,11 +1921,12 @@
       "id": "ar59",
       "namn": "Stormrytarens Stridslur",
       "beskrivning": "En kolossal lur ristad med krafttecken. Den kan svingas som tvåhandsklubba men dess styrka ligger i hornstötarna – från kraftigt dån till tordön. Ursprunget är omstritt och nuvarande hemvist okänd. Texten nedan fokuserar på bruk i spel utan plats- eller maktpolitiska ledtrådar.",
-      "kvalitet": [],
+      "kvalitet": ["Trubbigt"],
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1867,11 +1938,11 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Allierade till hjälp; Handling: Speciell\nHornstöten dånar ut över nejden och alla allierade till hornets mästare inom en dagsmarsch avstånd blir omedelbart medvetna om att mästaren är i fara och var denne befinner sig. Spelledaren avgör ytterst vilka allierade som finns i närheten, om några, vilka de är och hur långt bort de befinner sig. Vill man basera det på tärningsslag föreslås att mästaren måste lyckas med ett slag mot Övertygande, och att de allierade då är 1t10 timmar bort – utfallet 0 innebär att mästaren slår 1t10 igen och det slaget istället avser minuter bort. De allierade som kommer till undsättning är [RP+1 stycken] med en nivå lägre motstånd än mästaren, ledda av en person med samma grad av motstånd som mästaren (för mer om motståndsnivåer, se Symbaroums Monsterkodex, sida 179). Villkor: Fri handling. Korruption: Ingen.",
-        "Förmåga 2": "Stormskräck; Handling: Aktiv\nI handen på någon med förmågan Dominera kan stridsluren skicka ut en så pass kraftig hornstöt att fiender kan skrämmas på flykten. Ett slag i [Övertygande←Viljestark] krävs för att påverka en fiende, och denne flyr under 1t6 rundor om slaget lyckas. Korruption: 1T6."
+        "Förmåga 1": "Allierade till hjälp; Handling: Speciell\nHornstöten dånar ut över nejden och alla allierade till hornets mästare inom en dagsmarsch avstånd blir omedelbart medvetna om att mästaren är i fara och var denne befinner sig. Spelledaren avgör ytterst vilka allierade som finns i närheten, om några, vilka de är och hur långt bort de befinner sig. Vill man basera det på tärningsslag föreslås att mästaren måste lyckas med ett slag mot Övertygande, och att de allierade då är 1T10 timmar bort – utfallet 0 innebär att mästaren slår 1T10 igen och det slaget istället avser minuter bort. De allierade som kommer till undsättning är [RP+1 stycken] med en nivå lägre motstånd än mästaren, ledda av en person med samma grad av motstånd som mästaren (för mer om motståndsnivåer, se Symbaroums Monsterkodex, sida 179). Villkor: Fri handling. Korruption: Ingen.",
+        "Förmåga 2": "Stormskräck; Handling: Aktiv\nI handen på någon med förmågan Dominera kan stridsluren skicka ut en så pass kraftig hornstöt att fiender kan skrämmas på flykten. Ett slag i [Övertygande←Viljestark] krävs för att påverka en fiende, och denne flyr under 1T6 rundor om slaget lyckas. Korruption: 1T6."
       },
       "stat": {
-        "skada": "",
+        "skada": "1T10",
         "vikt": 2.0
       },
       "grundpris": {
@@ -1899,8 +1970,8 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Se bortom världen; Handling: Aktiv\nDen som binder sig till spegeln kan använda den för att blicka in i Bortomvärlden. Informationen som där erhålls beror helt på läget i Bortomvärlden, vilka eventuella daemoner eller ruiner som där finns. Den andra sidan kan också titta tillbaka. Slå 1t20 per runda, om utfallet är samma eller lägre än antalet rundor mästaren tittat upptäcks denne av något på andra sidan; spelledaren bestämmer vad. En förskräcklig variant av denna kraft är att från Bortomvärlden speja in i den vanliga världen; det sker på samma sätt och med samma risker som att se ut ur världen. Den som kan teleportera kan ta med sig spegeln ut i Bortomvärlden, det går inte att kliva igenom spegeln och ta den med sig. Korruption: 1T4 för den som aktiverar spegeln, 1 korruption för eventuella andra som också tittar genom spegeln.",
-        "Förmåga 2": "Nå bortom världen; Handling: Aktiv\nEn användare med förmågan Svartkonst kan använda spegeln för att påverka Bortomvärlden. Det går att sträcka sig ut ur världen för att nå något där, samt såklart använda krafter och förmågor mot mål i Bortomvärlden. Detta är praktiskt exempelvis om man slåss mot varelser som teleporterar sig, vilket sker som förflyttningar genom Bortomvärlden. När kraften är aktiverad går det faktiskt att kliva igenom spegeln helt och hållet och träda ut ur världen. Den möjligheten gäller alla, inte bara svartkonstnären som aktiverade kraften. För att komma åter till de levandes värld måste man dras tillbaka av personer som befinner sig på rätt sida spegeln, eller använda en kraft som låter en teleportera; då kan man själv hoppa tillbaka till de levandes värld och stanna där. Detta inses av en Lärd som klarar ett slag i Listig. Den andra sidan kan också påverka den vanliga världen i retur: slå 1t20 varje runda, om utfallet är samma eller lägre än antalet rundor användaren vistats på andra sidan skapas korruptionssjuk natur på platsen där spegeln finns (se Symbaroums Monsterkodex, sida 58). En annan vedervärdig möjlighet är att från Bortomvärlden kliva in i den vanliga världen; det sker på samma sätt och med samma risker som att kliva ut ur världen. Eventuell korruptionssjuk natur som uppstår skapas då i de levandes värld. För att göra detta måste man kunna teleportera sig (exempelvis med kraften Teleportering) eller bli teleporterad (kraften Förvisning) och ta med sig spegeln ut i Bortomvärlden; det går inte att kliva igenom spegeln och samtidigt ta den med sig. Korruption: 1T4 för den som aktiverar kraften, samt 1T6–3 korruption för var femte runda som påbörjas i kontakt med Bortomvärlden. Det senare gäller även andra som använder kraften när den är aktiverad."
+        "Förmåga 1": "Se bortom världen; Handling: Aktiv\nDen som binder sig till spegeln kan använda den för att blicka in i Bortomvärlden. Informationen som där erhålls beror helt på läget i Bortomvärlden, vilka eventuella daemoner eller ruiner som där finns. Den andra sidan kan också titta tillbaka. Slå 1T20 per runda, om utfallet är samma eller lägre än antalet rundor mästaren tittat upptäcks denne av något på andra sidan; spelledaren bestämmer vad. En förskräcklig variant av denna kraft är att från Bortomvärlden speja in i den vanliga världen; det sker på samma sätt och med samma risker som att se ut ur världen. Den som kan teleportera kan ta med sig spegeln ut i Bortomvärlden, det går inte att kliva igenom spegeln och ta den med sig. Korruption: 1T4 för den som aktiverar spegeln, 1 korruption för eventuella andra som också tittar genom spegeln.",
+        "Förmåga 2": "Nå bortom världen; Handling: Aktiv\nEn användare med förmågan Svartkonst kan använda spegeln för att påverka Bortomvärlden. Det går att sträcka sig ut ur världen för att nå något där, samt såklart använda krafter och förmågor mot mål i Bortomvärlden. Detta är praktiskt exempelvis om man slåss mot varelser som teleporterar sig, vilket sker som förflyttningar genom Bortomvärlden. När kraften är aktiverad går det faktiskt att kliva igenom spegeln helt och hållet och träda ut ur världen. Den möjligheten gäller alla, inte bara svartkonstnären som aktiverade kraften. För att komma åter till de levandes värld måste man dras tillbaka av personer som befinner sig på rätt sida spegeln, eller använda en kraft som låter en teleportera; då kan man själv hoppa tillbaka till de levandes värld och stanna där. Detta inses av en Lärd som klarar ett slag i Listig. Den andra sidan kan också påverka den vanliga världen i retur: slå 1T20 varje runda, om utfallet är samma eller lägre än antalet rundor användaren vistats på andra sidan skapas korruptionssjuk natur på platsen där spegeln finns (se Symbaroums Monsterkodex, sida 58). En annan vedervärdig möjlighet är att från Bortomvärlden kliva in i den vanliga världen; det sker på samma sätt och med samma risker som att kliva ut ur världen. Eventuell korruptionssjuk natur som uppstår skapas då i de levandes värld. För att göra detta måste man kunna teleportera sig (exempelvis med kraften Teleportering) eller bli teleporterad (kraften Förvisning) och ta med sig spegeln ut i Bortomvärlden; det går inte att kliva igenom spegeln och samtidigt ta den med sig. Korruption: 1T4 för den som aktiverar kraften, samt 1T6–3 korruption för var femte runda som påbörjas i kontakt med Bortomvärlden. Det senare gäller även andra som använder kraften när den är aktiverad."
       },
       "stat": {
         "skada": "",
@@ -1915,12 +1986,40 @@
     {
       "id": "ar61",
       "namn": "Rasthuuls Andekärl",
-      "beskrivning": "Ett forntida kärl som kan hysa en mästares själ och därigenom skärma mot både korruption och död. Ett lyckat Vaksam tillsammans med förmågan Häxsyn avslöjar om kärlet är tomt eller bebott; i det senare fallet syns skuggan hos själen i kärlet. Kärlet kan förstöras (Bepansring 2, Tålighet 10). En skyddad ande kan också kastas ut genom att binda artefakten och lyckas med [Viljestark←Viljestark]. Andekärlet kan endast bindas genom att acceptera 1t4 permanent korruption (Ej Erfarenhet). Denna permanenta korruption hålls i schack enligt Själaskydd och blir ett problem först när anden lämnar kärlet.",
+      "beskrivning": "Ett forntida kärl som kan hysa en mästares själ och därigenom skärma mot både korruption och död. Ett lyckat Vaksam tillsammans med förmågan Häxsyn avslöjar om kärlet är tomt eller bebott; i det senare fallet syns skuggan hos själen i kärlet. Kärlet kan förstöras (Bepansring 2, Tålighet 10). En skyddad ande kan också kastas ut genom att binda artefakten och lyckas med [Viljestark←Viljestark]. Andekärlet kan endast bindas genom att acceptera permanent korruption (ej Erfarenhet). När artefakten binds får bäraren först 1 permanent Korruption. Därefter ökar den permanenta Korruptionen ytterligare med ett värde lika med bärarens nuvarande permanenta Korruption efter denna första ökning, vilket i praktiken fördubblar den permanenta Korruptionen från dess nya värde. Den permanenta korruption som uppstår hålls i schack enligt Själaskydd och blir ett problem först när anden lämnar kärlet.",
       "kvalitet": [],
       "taggar": {
         "typ": [
           "Artefakt"
         ],
+        "artefakt_bindning": {
+          "options": [
+            {
+              "value": "corruption",
+              "label": "+1 Permanent korruption",
+              "effects": {
+                "corruption": 1
+              },
+              "regler": {
+                "andrar": [
+                  {
+                    "mal": "permanent_korruption",
+                    "varde": 1,
+                    "snapshot": true
+                  },
+                  {
+                    "mal": "permanent_korruption",
+                    "formel": {
+                      "bas": "mal:permanent_korruption",
+                      "faktor": 1
+                    },
+                    "snapshot": true
+                  }
+                ]
+              }
+            }
+          ]
+        },
         "handling": {
           "Förmåga 1": [
             "Fri"
@@ -1932,7 +2031,7 @@
       },
       "nivåer": {
         "Förmåga 1": "Själaskydd; Handling: Speciell\nAndekärlet skyddar användarens själ mot korruption och mot den fysiska kroppens död. All korruption som mästaren ådrar sig binds i runorna som täcker urnan och når aldrig fram till mästarens ande. Detsamma gäller dödens kalla fingrar, vilka aldrig kan komma åt mästaren – Dödsslag slås som vanligt men utfall som innebär döden ignoreras. Om mästarens ande skulle hamna utanför kärlet (om det krossas eller någon annan lyckas binda det till sig) drabbas den oskyddade anden av all korruption som är bunden av urnans runor. Dessutom kommer en eventuell uppskjuten död omedelbart ikapp. Villkor: Fri handling. Korruption: Ingen",
-        "Förmåga 2": "Rasthuuls eko; Handling: Reaktiv\nRasthuuls ande vilar i någon mån över kärlet han skapade, och artefaktens mästare kan alltid känna på sig om någon annan står i begrepp att greppa eller attackera andekärlet. Mästaren kan då aktivera denna kraft som en reaktion, innan någon har hunnit påverka kärlet på något vis. Kraften gör två saker. För det första slår en våg av hat ut från andekärlet, vilket ger alla inom synhåll 1t6 i skada (ignorerar Bepansring). Dessutom måste alla närvarande klara ett Viljestark eller ramla omkull. I tillägg till detta teleporteras kärlets ägare omedelbart till platsen för kärlet, och ägaren manifesteras inom 1t6 meter från kärlet. Korruption: 1T8, som dock binds i urnans runor och inte påverkar mästaren förrän mästarens ande lämnar kärlet."
+        "Förmåga 2": "Rasthuuls eko; Handling: Reaktiv\nRasthuuls ande vilar i någon mån över kärlet han skapade, och artefaktens mästare kan alltid känna på sig om någon annan står i begrepp att greppa eller attackera andekärlet. Mästaren kan då aktivera denna kraft som en reaktion, innan någon har hunnit påverka kärlet på något vis. Kraften gör två saker. För det första slår en våg av hat ut från andekärlet, vilket ger alla inom synhåll 1T6 i skada (ignorerar Bepansring). Dessutom måste alla närvarande klara ett Viljestark eller ramla omkull. I tillägg till detta teleporteras kärlets ägare omedelbart till platsen för kärlet, och ägaren manifesteras inom 1T6 meter från kärlet. Korruption: 1T8, som dock binds i urnans runor och inte påverkar mästaren förrän mästarens ande lämnar kärlet."
       },
       "stat": {
         "skada": "",
@@ -1984,7 +2083,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -1997,7 +2097,7 @@
       },
       "nivåer": {
         "Förmåga 1": "Demonfödsel; Handling: Aktiv\nVapnets mästare kan klyva verkligheten istället för en fiende, och föda en daemon ur såret. Daemonen lyder bäraren under en scen, och sedan sugs den tillbaka in i världssåret. Daemonen har värden som en Inkräktare (se Symbaroums Monsterkodex, sida 166). Korruption: 1T6",
-        "Förmåga 2": "Blodig förvisning; Handling: Reaktiv\nEn mästare med förmågan Tvåhandskraft kan angripa en fiende och klyva verkligheten med samma attack. En fiende som skadas av detta stygga angrepp måste slå över skadan med 1t20 eller sugas ut i Bortomvärlden. Ute i det ylande vansinnet tar offret 1t6–3 korruption per runda. Ett slag mot Viljestark får slås varje runda, om det lyckas kommer offret tillbaka till de levandes värld igen. Om offret förstyggas under sin vistelse i Bortomvärlden återkommer varelsen genast, som en dragoul under kontroll av Världsklyvarens mästare. Korruption: 1T6"
+        "Förmåga 2": "Blodig förvisning; Handling: Reaktiv\nEn mästare med förmågan Tvåhandskraft kan angripa en fiende och klyva verkligheten med samma attack. En fiende som skadas av detta stygga angrepp måste slå över skadan med 1T20 eller sugas ut i Bortomvärlden. Ute i det ylande vansinnet tar offret 1T6–3 korruption per runda. Ett slag mot Viljestark får slås varje runda, om det lyckas kommer offret tillbaka till de levandes värld igen. Om offret förstyggas under sin vistelse i Bortomvärlden återkommer varelsen genast, som en dragoul under kontroll av Världsklyvarens mästare. Korruption: 1T6"
       },
       "stat": {
         "skada": "",
@@ -2025,7 +2125,7 @@
         }
       },
       "nivåer": {
-        "Förmåga 1": "Tidens sand; Handling: Aktiv\nArtefaktens mästare kan låta sand rinna igenom glaset och på så sätt stoppa tiden mätt i rundor. Under dessa rundor får användaren agera ensam, och effekten av alla handlingar sker när tiden börjar röra sig igen. Varje runda som mästaren agerar utanför tiden åldrar denne ett år. Dessutom måste mästaren slå 1t20 varje runda; om utfallet är samma eller lägre än antalet rundor som mästaren har agerat utanför tiden under den innevarande scenen faller mästaren död till marken. Det går att inte att slå om detta slag; tiden är obeveklig i sin hämnd. Korruption: 1T4 per runda utanför tiden"
+        "Förmåga 1": "Tidens sand; Handling: Aktiv\nArtefaktens mästare kan låta sand rinna igenom glaset och på så sätt stoppa tiden mätt i rundor. Under dessa rundor får användaren agera ensam, och effekten av alla handlingar sker när tiden börjar röra sig igen. Varje runda som mästaren agerar utanför tiden åldrar denne ett år. Dessutom måste mästaren slå 1T20 varje runda; om utfallet är samma eller lägre än antalet rundor som mästaren har agerat utanför tiden under den innevarande scenen faller mästaren död till marken. Det går att inte att slå om detta slag; tiden är obeveklig i sin hämnd. Korruption: 1T4 per runda utanför tiden"
       },
       "stat": {
         "skada": "",
@@ -2151,7 +2251,9 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Långa vapen",
+          "Stav"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2191,7 +2293,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2227,7 +2330,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2302,7 +2406,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2379,7 +2484,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Korta vapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2418,7 +2524,9 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Långa vapen",
+          "Stav"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2535,7 +2643,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2687,7 +2796,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2728,7 +2838,8 @@
       ],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Rustning"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2776,7 +2887,7 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2957,7 +3068,9 @@
       ],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -2973,7 +3086,7 @@
         "Förmåga 2": "Vevklyv; Handling: Fri\nYxan kan svingas i vida rörelser och hjälper då mästaren att träffa de fiender som omringar denne. Varje attack som görs under rundan fungerar som en kedja mot de fiender som finns inom närstridsavstånd – om attacken träffar får en attack göras mot en annan fiende, och så vidare tills ett framgångsslag misslyckas. Bäraren kan använda sina förmågor som vanligt, och deras effekter gäller för alla anfallen i kedjan. Korruption: 1T6."
       },
       "stat": {
-        "skada": "1t10",
+        "skada": "1T10",
         "vikt": 2.0
       },
       "grundpris": {
@@ -2985,7 +3098,7 @@
     {
       "id": "ar90",
       "namn": "Progos lans",
-      "beskrivning": "De lärde tvistar om huruvida detta legendariska spjut någonsin har existerat, men enligt legenderna smiddes den av alver och gavs som gåva till den mänsklige riddaren Progo under Symbaroums ödestimmar. Andra sagor berättar hur Progo senare dog i strid mot Titanernas sista stenjättar, varefter hans vapen försvann i historiens strömmar. Progos lans kan användas som både kast- och närstridsspjut, med skada 1t6 respektive 1t8 och med kvaliteterna Blodsgjutande, Långt och Precist. Därtill kan följande egenskaper aktiveras:",
+      "beskrivning": "De lärde tvistar om huruvida detta legendariska spjut någonsin har existerat, men enligt legenderna smiddes den av alver och gavs som gåva till den mänsklige riddaren Progo under Symbaroums ödestimmar. Andra sagor berättar hur Progo senare dog i strid mot Titanernas sista stenjättar, varefter hans vapen försvann i historiens strömmar. Progos lans kan användas som både kast- och närstridsspjut, med skada 1T6 respektive 1T8 och med kvaliteterna Blodsgjutande, Långt och Precist. Därtill kan följande egenskaper aktiveras:",
       "kvalitet": [
         "Blodsgjutande",
         "Långt",
@@ -2993,7 +3106,11 @@
       ],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Närstridsvapen",
+          "Långa vapen",
+          "Avståndsvapen",
+          "Kastvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3041,8 +3158,8 @@
       },
       "nivåer": {
         "Förmåga 1": "Kraftgrepp; Handling: Reaktiv\nMästaren kan få de levande växtfibrernas hjälp att hålla fast en fiende. Kan användas med förmågan Brottning (novis) eller Stryparkonst (novis), och ger då en bonus på +5 på relevant karaktärsdrag när det gäller slag för att etablera eller behålla ett grepp. Korruption: 1.",
-        "Förmåga 2": "Törnebett; Handling: Fri\nI samband med fasthållning kan mästaren låta handskarna utveckla små, sylvassa taggar som sedan ger 1t4 i skada under varje runda som greppet är aktivt (ignorerar Bepansring). Korruption: 1T4.",
-        "Förmåga 3": "Törnetrådar; Handling: Fri\nMästaren kan låta handskarna skicka in tunna rottrådar i den fasthållnes kött för att suga åt sig av dess livskraft. Effekten varar en runda under vilken offret drabbas av 1t6 skada (ignorerar Bepansring) som överförs till mästaren i form av läkt Tålighet. Om offret redan lider av ett pågående Törnebett ersätts dess effekt av Törnetrådar under en runda, varefter bettet återupptas automatiskt. Korruption: 1T4."
+        "Förmåga 2": "Törnebett; Handling: Fri\nI samband med fasthållning kan mästaren låta handskarna utveckla små, sylvassa taggar som sedan ger 1T4 i skada under varje runda som greppet är aktivt (ignorerar Bepansring). Korruption: 1T4.",
+        "Förmåga 3": "Törnetrådar; Handling: Fri\nMästaren kan låta handskarna skicka in tunna rottrådar i den fasthållnes kött för att suga åt sig av dess livskraft. Effekten varar en runda under vilken offret drabbas av 1T6 skada (ignorerar Bepansring) som överförs till mästaren i form av läkt Tålighet. Om offret redan lider av ett pågående Törnebett ersätts dess effekt av Törnetrådar under en runda, varefter bettet återupptas automatiskt. Korruption: 1T4."
       },
       "stat": {
         "skada": "",
@@ -3077,7 +3194,7 @@
       },
       "nivåer": {
         "Förmåga 1": "Materialisering; Handling: Aktiv\nArtefaktens mästare kan blåsa röken från det tända karet mot en andevarelse inom två förflyttningars avstånd (cirka 20 meter). Om mästaren lyckas med ett slag mot [Viljestark←Viljestark] tvingas anden ta gestalt under en runda, och fungerar då som en fysisk varelse avseende skada och förflyttning (dock utan Smärtgräns). Korruption: 1T4.",
-        "Förmåga 2": "Rökridå; Handling: Aktiv\nMästaren kan låta röken från artefakten omsluta sig själv och ett antal andra, med effekten att de blir osynliga för andevarelser så länge de endast förflyttar sig. Effekten är automatisk under 1t4 rundor och kan därefter upprätthållas så länge som mästaren lyckas med ett slag mot [Diskret←Vaksam] per andeväsen och runda. Korruption: 1T4+1 per dold person utöver mästaren.",
+        "Förmåga 2": "Rökridå; Handling: Aktiv\nMästaren kan låta röken från artefakten omsluta sig själv och ett antal andra, med effekten att de blir osynliga för andevarelser så länge de endast förflyttar sig. Effekten är automatisk under 1T4 rundor och kan därefter upprätthållas så länge som mästaren lyckas med ett slag mot [Diskret←Vaksam] per andeväsen och runda. Korruption: 1T4+1 per dold person utöver mästaren.",
         "Förmåga 3": "Andens fasa; Handling: Reaktiv\nOm artefaktens mästare behärskar ritualen Exorcism kan rökelsekaret användas för att förstärka dess fördrivande verkan – denne får då två chanser att lyckas med vart och ett av de tre försöken att fördriva anden. Korruption: +1T4."
       },
       "stat": {
@@ -3100,7 +3217,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3138,7 +3256,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3316,7 +3435,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Långa vapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3389,7 +3509,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Avståndsvapen",
+          "Pilbåge"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3462,7 +3583,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3609,7 +3731,8 @@
       ],
       "taggar": {
         "typ": [
-          "Artefakt"
+          "Artefakt",
+          "Rustning"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3681,7 +3804,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3822,7 +3946,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Korta vapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -3897,7 +4022,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -4032,7 +4158,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Tvåhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [
@@ -4105,7 +4232,8 @@
       "taggar": {
         "typ": [
           "Artefakt",
-          "Vapen"
+          "Närstridsvapen",
+          "Enhandsvapen"
         ],
         "handling": {
           "Förmåga 1": [

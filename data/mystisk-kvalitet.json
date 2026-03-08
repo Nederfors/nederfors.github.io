@@ -9,7 +9,7 @@
     {
       "id": "mystiskkv1",
       "namn": "Banevapen",
-      "beskrivning": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familj en gör banevapnet +1t4 i skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
+      "beskrivning": "Vapnet är smitt i hat och härdat i hämndlystnad, med fokus riktat mot en viss familj av varelser: Alver, Flygfän, Gastar, Människor, Reptiler, Spindlar, Styggelser, Troll eller Vilddjur (se sidan 209 i Grundboken). Bortbytingar räknas i detta avseende till alverna, medan resar och svartalfer hör till trollen. Dvärgar är en egen familj. Mot den utvalda familj en gör banevapnet +1T4 i skada. Det glöder också svagt i banefamiljens närhet, vilket ger +1 i Vaksamhet för att upptäcka att fiender ur den familjen finns i närheten.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -17,12 +17,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "+1t4 skada mot vald familj; +1 Vaksamhet för att ana dem."
+      "effekt": "+1T4 skada mot vald familj; +1 Vaksamhet för att ana dem."
     },
     {
       "id": "mystiskkv2",
       "namn": "Brinnande",
-      "beskrivning": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet börjar sedan brinna, 1t4 skada i 1t4 rundor, med start rundan efter initial träff. Målet kan släcka sig genom att spendera en hel runda på att rulla på marken och lyckas med ett Kvick.",
+      "beskrivning": "Vapnet glöder och ryker för att flamma upp vid användning. Vapnet gör normal skada vid träff, men målet börjar sedan brinna, 1T4 skada i 1T4 rundor, med start rundan efter initial träff. Målet kan släcka sig genom att spendera en hel runda på att rulla på marken och lyckas med ett Kvick.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -30,12 +30,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Efter träff: 1t4 eldskada i 1t4 rundor; släckning tar en hel runda (Kvick)."
+      "effekt": "Efter träff: 1T4 eldskada i 1T4 rundor; släckning tar en hel runda (Kvick)."
     },
     {
       "id": "mystiskkv3",
       "namn": "Dundrande",
-      "beskrivning": "Vapnet är smitt med stormande och dundrande runor. Varje träff med vapnet ekar med blixtars kraft vilket gör 1t8 dundrande skada, vilket slås separat i förhållande till den vanliga skadan från attacken. Förmågor påverkar inte denna extra dundrande skada. Om något av den dundrande skadan går genom rustning och skadar målet måste offret dessutom klara ett slag i Stark eller förlora en handling på grund av knallens kraft.",
+      "beskrivning": "Vapnet är smitt med stormande och dundrande runor. Varje träff med vapnet ekar med blixtars kraft vilket gör 1T8 dundrande skada, vilket slås separat i förhållande till den vanliga skadan från attacken. Förmågor påverkar inte denna extra dundrande skada. Om något av den dundrande skadan går genom rustning och skadar målet måste offret dessutom klara ett slag i Stark eller förlora en handling på grund av knallens kraft.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -43,12 +43,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "+1t8 dundrande skada; går skadan igenom krävs Stark eller en handling förloras."
+      "effekt": "+1T8 dundrande skada; går skadan igenom krävs Stark eller en handling förloras."
     },
     {
       "id": "mystiskkv4",
       "namn": "Dödsruna",
-      "beskrivning": "Vapnet är smitt med livsförnekande runor och gör 1t4 extra skada mot levande och icke-genomkorrumperade varelser. Dessutom helar dödsenergierna vandöda och andra genomkorrumperade varelser med samma värde.",
+      "beskrivning": "Vapnet är smitt med livsförnekande runor och gör 1T4 extra skada mot levande och icke-genomkorrumperade varelser. Dessutom helar dödsenergierna vandöda och andra genomkorrumperade varelser med samma värde.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -56,12 +56,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Levande tar +1t4 extra; vandöda/genomkorrumperade helas lika mycket."
+      "effekt": "Levande tar +1T4 extra; vandöda/genomkorrumperade helas lika mycket."
     },
     {
       "id": "mystiskkv5",
       "namn": "Giftdrypande",
-      "beskrivning": "Uråldriga gifttekniker gör varje attack till potentiellt förgiftande. När en attack skadar målet tar det också giftskada, 1t4 i skada i 1t4 rundor.",
+      "beskrivning": "Uråldriga gifttekniker gör varje attack till potentiellt förgiftande. När en attack skadar målet tar det också giftskada, 1T4 i skada i 1T4 rundor.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -69,12 +69,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Efter skada: 1t4 giftskada i 1t4 rundor."
+      "effekt": "Efter skada: 1T4 giftskada i 1T4 rundor."
     },
     {
       "id": "mystiskkv6",
       "namn": "Helig",
-      "beskrivning": "Vapnet eller rustningen är smitt i helig eld och skadar respektive skyddar mot korrumperade varelser. En varelse som skadas måste slå 1t20 och slå över sin korruption, eller ta 1t4 extra i skada. Och i samband med en lyckad attack mot någon iförd en helig rustning måste anfallaren slå över sin korruption med 1t20; är slaget under anfallarens korruption skyddar rustningen 1t4 extra mot angreppet. Genomkorrumperade varelser misslyckas alltid med slaget, liksom helt rena varelser (0 i korruption) alltid lyckas.",
+      "beskrivning": "Vapnet eller rustningen är smitt i helig eld och skadar respektive skyddar mot korrumperade varelser. En varelse som skadas måste slå 1T20 och slå över sin korruption, eller ta 1T4 extra i skada. Och i samband med en lyckad attack mot någon iförd en helig rustning måste anfallaren slå över sin korruption med 1T20; är slaget under anfallarens korruption skyddar rustningen 1T4 extra mot angreppet. Genomkorrumperade varelser misslyckas alltid med slaget, liksom helt rena varelser (0 i korruption) alltid lyckas.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -83,12 +83,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Misslyckat 1t20 över korruption ger +1t4; helig rustning ger +1t4 skydd om angriparen slår under sin korruption."
+      "effekt": "Misslyckat 1T20 över korruption ger +1T4; helig rustning ger +1T4 skydd om angriparen slår under sin korruption."
     },
     {
       "id": "mystiskkv7",
       "namn": "Oheligt",
-      "beskrivning": "Vapnet eller rustningen är smitt i svart eld och skadar respektive skyddar mot rena varelser. En varelse som skadas av ett oheligt vapen måste slå 1t20 och slå under sin korruption, eller ta 1t4 extra i skada. Så snart en varelse lyckas med en attack mot någon iförd en ohelig rustning måste anfallaren slå mot sin korruption med 1t20; är slaget över anfallarens korruption skyddar rustningen 1t4 extra mot angreppet. Genomkorrumperade varelser lyckas alltid med slaget, liksom helt rena varelser (0 i korruption) alltid misslyckas.",
+      "beskrivning": "Vapnet eller rustningen är smitt i svart eld och skadar respektive skyddar mot rena varelser. En varelse som skadas av ett oheligt vapen måste slå 1T20 och slå under sin korruption, eller ta 1T4 extra i skada. Så snart en varelse lyckas med en attack mot någon iförd en ohelig rustning måste anfallaren slå mot sin korruption med 1T20; är slaget över anfallarens korruption skyddar rustningen 1T4 extra mot angreppet. Genomkorrumperade varelser lyckas alltid med slaget, liksom helt rena varelser (0 i korruption) alltid misslyckas.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -97,12 +97,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Misslyckat 1t20 under korruption ger +1t4; ohelig rustning ger +1t4 skydd om angriparen slår över sin korruption."
+      "effekt": "Misslyckat 1T20 under korruption ger +1T4; ohelig rustning ger +1T4 skydd om angriparen slår över sin korruption."
     },
     {
       "id": "mystiskkv8",
       "namn": "Syraosande",
-      "beskrivning": "Vapnet är smitt med korrosiva tekniker som gör att vapnet är frätande. Varje träff med vapnet gör 1t4 extra i skada i 1t4 rundor. Syraskadan läggs inte till vapenskadan utan slås separat som en ytterligare träff. Vapnet bärs i en särskild skida eller hylsa för att inte skada användaren. I strid drabbas bäraren själv av syran om anfallsslaget blir 20 och ett andra slag blir över svingarens Träffsäker (eller det karaktärsdrag som ersätter Träffsäker).",
+      "beskrivning": "Vapnet är smitt med korrosiva tekniker som gör att vapnet är frätande. Varje träff med vapnet gör 1T4 extra i skada i 1T4 rundor. Syraskadan läggs inte till vapenskadan utan slås separat som en ytterligare träff. Vapnet bärs i en särskild skida eller hylsa för att inte skada användaren. I strid drabbas bäraren själv av syran om anfallsslaget blir 20 och ett andra slag blir över svingarens Träffsäker (eller det karaktärsdrag som ersätter Träffsäker).",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -110,12 +110,12 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Efter träff: 1t4 syraskada i 1t4 rundor som separata träffar; fummel kan skada bäraren."
+      "effekt": "Efter träff: 1T4 syraskada i 1T4 rundor som separata träffar; fummel kan skada bäraren."
     },
     {
       "id": "mystiskkv9",
       "namn": "Vedergällande",
-      "beskrivning": "Rustningen är smidd med hemliga och hämnande tekniker och osar av syra. Varje träff i närstrid mot rustningen kräver att anfallaren lyckas med ett Kvick, annars träffas anfallaren av syrastänk som gör 1t4 i skada i 1t4 rundor.",
+      "beskrivning": "Rustningen är smidd med hemliga och hämnande tekniker och osar av syra. Varje träff i närstrid mot rustningen kräver att anfallaren lyckas med ett Kvick, annars träffas anfallaren av syrastänk som gör 1T4 i skada i 1T4 rundor.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -123,7 +123,7 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Närstridsanfallare som misslyckas med Kvick tar 1t4 syraskada i 1t4 rundor."
+      "effekt": "Närstridsanfallare som misslyckas med Kvick tar 1T4 syraskada i 1T4 rundor."
     },
     {
       "id": "mystiskkv10",
@@ -141,7 +141,7 @@
     {
       "id": "mystiskkv11",
       "namn": "Bräckande",
-      "beskrivning": "Den klang som uppstår när ett Bräckande närstridsvapen träffar metall inrymmer försvagande harmonier som steg för steg förstör rustningen eller skölden. En rustning får sitt värde i Bepansring sänkt med 1 för varje lyckad träff, medan en sköld löper risk att bli obrukbar vid varje lyckat försvar [1–5 på 1t20] *",
+      "beskrivning": "Den klang som uppstår när ett Bräckande närstridsvapen träffar metall inrymmer försvagande harmonier som steg för steg förstör rustningen eller skölden. En rustning får sitt värde i Bepansring sänkt med 1 för varje lyckad träff, medan en sköld löper risk att bli obrukbar vid varje lyckat försvar [1–5 på 1T20] *",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -149,7 +149,7 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Sänker rustnings Bepansring −1 per träff; sköld kan bli obrukbar [1–5 på 1t20]."
+      "effekt": "Sänker rustnings Bepansring −1 per träff; sköld kan bli obrukbar [1–5 på 1T20]."
     },
     {
       "id": "mystiskkv12",
@@ -180,7 +180,7 @@
     {
       "id": "mystiskkv14",
       "namn": "Vindkraft",
-      "beskrivning": "Avståndsattacker med detta vapen tycks styras mot fiendernas svaga punkter av vinden själv. Denna dödliga precission gör att projektilerna ignorerar 1t4 i Bepansring när de träffar sin måltavla.",
+      "beskrivning": "Avståndsattacker med detta vapen tycks styras mot fiendernas svaga punkter av vinden själv. Denna dödliga precission gör att projektilerna ignorerar 1T4 i Bepansring när de träffar sin måltavla.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -188,7 +188,7 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Avståndsträffar ignorerar 1t4 i Bepansring."
+      "effekt": "Avståndsträffar ignorerar 1T4 i Bepansring."
     },
     {
       "id": "mystiskkv15",
@@ -258,7 +258,7 @@
     {
       "id": "mystiskkv20",
       "namn": "Vredesband",
-      "beskrivning": "Bandet kring vapnets skaft är spänt av obändig kraft och bryter i samma stund som det frigörs. När bäraren släpper lös dess vrede flammar styrkan till, men skyddet faller undan. Den runda det aktiveras får ett av bärarens anfall +1t6 skada. Samma runda kan bäraren inte göra försvarsslag om hen blir attackerad, då vredens hetta driver bort allt fokus från att värja sig.",
+      "beskrivning": "Bandet kring vapnets skaft är spänt av obändig kraft och bryter i samma stund som det frigörs. När bäraren släpper lös dess vrede flammar styrkan till, men skyddet faller undan. Den runda det aktiveras får ett av bärarens anfall +1T6 skada. Samma runda kan bäraren inte göra försvarsslag om hen blir attackerad, då vredens hetta driver bort allt fokus från att värja sig.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -266,7 +266,7 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Aktiveringsrundan ger +1t6 skada; inga försvarsslag möjliga den rundan."
+      "effekt": "Aktiveringsrundan ger +1T6 skada; inga försvarsslag möjliga den rundan."
     },
     {
       "id": "mystiskkv21",
@@ -284,7 +284,7 @@
     {
       "id": "mystiskkv22",
       "namn": "Giftkatalysator",
-      "beskrivning": "I klingan vilar en katalys som väcker gifter till liv på nytt. När den träffar ett redan förgiftat mål rycker det till som om toxinet flammar upp en gång till. Giftet triggas omedelbart en extra gång på en nivå svagare: svagt ger 1 skada, medelstarkt 1t4, starkt 1t6. Denna effekt ignorerar rustning och pulserar direkt i köttet.",
+      "beskrivning": "I klingan vilar en katalys som väcker gifter till liv på nytt. När den träffar ett redan förgiftat mål rycker det till som om toxinet flammar upp en gång till. Giftet triggas omedelbart en extra gång på en nivå svagare: svagt ger 1 skada, medelstarkt 1T4, starkt 1T6. Denna effekt ignorerar rustning och pulserar direkt i köttet.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -324,7 +324,7 @@
     {
       "id": "mystiskkv25",
       "namn": "Stenpansar",
-      "beskrivning": "Rustningen är vävd med stens hårdhet och tyngd, en kraft som skyddar till priset av smidighet. När den bärs blir rörelserna klumpiga och långsamma, och en ytterligare begränsning på −4 läggs till, en nackdel som inte kan minskas av förmågan rustmästare. I gengäld härdas pansaret och ger +1t6 i bepansring. För att rustningen ska kunna bära denna tyngd krävs minst medeltung grundrustning.",
+      "beskrivning": "Rustningen är vävd med stens hårdhet och tyngd, en kraft som skyddar till priset av smidighet. När den bärs blir rörelserna klumpiga och långsamma, och en ytterligare begränsning på −4 läggs till, en nackdel som inte kan minskas av förmågan rustmästare. I gengäld härdas pansaret och ger +1T6 i bepansring. För att rustningen ska kunna bära denna tyngd krävs minst medeltung grundrustning.",
       "taggar": {
         "typ": [
           "Mystisk kvalitet",
@@ -340,7 +340,7 @@
           ]
         }
       },
-      "effekt": "Begränsning −4 ej reducerbar men +1t6 i Bepansring; kräver minst medeltung rustning."
+      "effekt": "Begränsning −4 ej reducerbar men +1T6 i Bepansring; kräver minst medeltung rustning."
     },
     {
       "id": "mystiskkv26",
@@ -366,7 +366,7 @@
           "Kvalitet"
         ]
       },
-      "effekt": "Aktivera för 1t4 temporär korruption; skydd växer per runda tills träff och förbrukas då."
+      "effekt": "Aktivera för 1T4 temporär korruption; skydd växer per runda tills träff och förbrukas då."
     },
     {
       "id": "mystiskkv28",

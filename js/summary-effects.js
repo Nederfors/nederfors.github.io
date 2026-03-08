@@ -14,6 +14,8 @@
     ['Ras', 'Raser'],
     ['Artefakt', 'Artefakter'],
     ['Lägre Artefakt', 'Lägre artefakter'],
+    ['Närstridsvapen', 'Vapen'],
+    ['Avståndsvapen', 'Vapen'],
     ['Vapen', 'Vapen'],
     ['Rustning', 'Rustningar'],
     ['Sköld', 'Sköldar'],
@@ -102,7 +104,28 @@
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
   }[ch]));
 
-  const abilityDisplayName = (entry) => {
+  const getEntryChoiceDisplay = (entry, context = {}) => {
+    if (typeof window.rulesHelper?.getEntryChoiceDisplay !== 'function') return null;
+    try {
+      return window.rulesHelper.getEntryChoiceDisplay(entry, context) || null;
+    } catch (_) {
+      return null;
+    }
+  };
+
+  const abilityDisplayName = (entry, context = {}) => {
+    if (typeof window.rulesHelper?.formatEntryDisplayName === 'function') {
+      try {
+        const formatted = window.rulesHelper.formatEntryDisplayName(entry, {
+          ...context,
+          includeChoice: true,
+          includeLevel: true
+        });
+        if (formatted) return formatted;
+      } catch (_) {
+        // Fall back to legacy display formatting below.
+      }
+    }
     const base = entry?.namn ? String(entry.namn).trim() : 'Okänd post';
     const parts = [];
     if (entry?.trait) parts.push(String(entry.trait).trim());
@@ -236,8 +259,9 @@
       return sections.get(key);
     };
 
+    const currentEntries = storeHelper.getCurrentList(store) || [];
     const abilityMap = new Map();
-    (storeHelper.getCurrentList(store) || [])
+    currentEntries
       .filter(entry => !window.isInv?.(entry))
       .forEach(entry => {
         const baseEntry = resolveDbEntry(entry);
@@ -255,7 +279,17 @@
         if (baseEntry?.id !== undefined) keyParts.push(`id:${baseEntry.id}`);
         else if (entry?.id !== undefined) keyParts.push(`id:${entry.id}`);
         else if (entry?.namn) keyParts.push(`name:${entry.namn}`);
-        if (entry?.trait) keyParts.push(`trait:${entry.trait}`);
+        const choiceMeta = getEntryChoiceDisplay(entry, {
+          list: currentEntries,
+          sourceEntry: baseEntry || entry,
+          level: entry?.nivå || ''
+        });
+        if (choiceMeta?.field) {
+          const choiceValueKey = String(choiceMeta.value ?? '').trim().toLowerCase();
+          keyParts.push(`choice:${choiceMeta.field}:${choiceValueKey}`);
+        } else if (entry?.trait) {
+          keyParts.push(`trait:${entry.trait}`);
+        }
         if (entry?.nivå) keyParts.push(`lvl:${entry.nivå}`);
         if (!keyParts.length) keyParts.push(`name:${baseName}`);
         const key = keyParts.join('|');
@@ -263,7 +297,11 @@
         if (!bucket) {
           bucket = {
             section,
-            label: abilityDisplayName(entry),
+            label: abilityDisplayName(entry, {
+              list: currentEntries,
+              sourceEntry: baseEntry || entry,
+              level: entry?.nivå || ''
+            }),
             baseName,
             count: 0,
             effects
@@ -419,10 +457,14 @@
       return type === 'Förmåga' && entryTypes.includes('Basförmåga');
     };
     const counts = new Map();
-    (storeHelper.getCurrentList(store) || []).forEach(entry => {
+    const activeList = storeHelper.getCurrentList(store) || [];
+    activeList.forEach(entry => {
       const entryTypes = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
       if (!wanted.some(type => matchesType(entryTypes, type))) return;
-      const display = abilityDisplayName(entry);
+      const display = abilityDisplayName(entry, {
+        list: activeList,
+        level: entry?.nivå || ''
+      });
       if (!display) return;
       const key = display.toLocaleLowerCase('sv');
       const existing = counts.get(key);
@@ -858,12 +900,17 @@
     const merged = { ...baseEntry, ...entry };
 
     const infoMeta = [];
-    if (merged.trait) {
-      const label = merged.namn === 'Monsterlärd' ? 'Specialisering' : 'Karaktärsdrag';
-      infoMeta.push({ label, value: escapeHtml(merged.trait) });
-    }
-    if (merged.race) {
-      infoMeta.push({ label: 'Ras', value: escapeHtml(merged.race) });
+    const keyInfoMeta = [];
+    const choiceMeta = getEntryChoiceDisplay(merged, {
+      list,
+      sourceEntry: baseEntry,
+      level: merged?.nivå || entry?.nivå || ''
+    });
+    if (choiceMeta?.valueLabel) {
+      keyInfoMeta.push({
+        label: escapeHtml(choiceMeta.label || 'Val'),
+        value: escapeHtml(choiceMeta.valueLabel)
+      });
     }
 
     const xpRaw = storeHelper.calcEntryXP(entry, list);
@@ -883,10 +930,11 @@
     const tagsHtml = buildInfoTags(entry, baseEntry, xpTag);
     const html = buildInfoPanelHtml({
       tagsHtml,
+      keyInfoMeta,
       bodyHtml,
       meta: infoMeta
     });
-    const title = abilityDisplayName(entry) || fallbackName || entry.namn || baseEntry?.namn || '';
+    const title = abilityDisplayName(entry, { list }) || fallbackName || entry.namn || baseEntry?.namn || '';
     window.yrkePanel?.open(title, html);
   };
 

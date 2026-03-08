@@ -53,13 +53,14 @@
         "typ": [
           "Särdrag"
         ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Svartalf"
-                ]
+        "erf": 0,
+    "regler": {
+      "kraver": [
+        {
+          "nar": {
+            "nagon_av_namn": [
+              "Svartalf"
+            ]
               }
             }
           ]
@@ -74,18 +75,19 @@
         "typ": [
           "Särdrag"
         ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "nagon_av_namn": [
-                  "Alv",
-                  "Rese",
-                  "Bortbyting"
-                ]
-              }
-            }
-          ]
+       "erf": 0,
+    "regler": {
+      "kraver": [
+        {
+          "nar": {
+            "nagon_av_namn": [
+              "Alv",
+              "Rese",
+              "Bortbyting"
+            ]
+          }
+        }
+      ] 
         }
       }
     },
@@ -151,7 +153,7 @@
                 "nagon_av_namn": [
                   "Troll",
                   "Rese",
-                  "Djur/Bjära",
+                  "Best",
                   "Mörkt blod",
                   "Blodvadare"
                 ]
@@ -226,14 +228,14 @@
           ]
         },
         "handling": {
+          "Novis": [
+            "Hel runda"
+          ],
           "Gesäll": [
             "Aktiv"
           ],
           "Mästare": [
             "Aktiv"
-          ],
-          "Novis": [
-            "Speciell"
           ]
         }
       },

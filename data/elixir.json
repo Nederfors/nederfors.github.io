@@ -13,7 +13,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "Det mirakulösa medel som kallas Andevän tillverkas i en kittel men det är inte vätskan som buteljeras utan ångan. Den gråvita röken fångas i små keramikpluntor och andas in vid behov. Andevän ger användaren nivå I i det monstruösa särdraget Andeform. Effekten varar i 1t4 rundor, till priset av lika många poäng temporär korruption."
+        "Mästare": "Det mirakulösa medel som kallas Andevän tillverkas i en kittel men det är inte vätskan som buteljeras utan ångan. Den gråvita röken fångas i små keramikpluntor och andas in vid behov. Andevän ger användaren nivå I i det monstruösa särdraget Andeform. Effekten varar i 1T4 rundor, till priset av lika många poäng temporär korruption."
       },
       "grundpris": {
         "daler": 12,
@@ -113,7 +113,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Ett till synes vanligt ljus som när det tänds avger ett gift; avslöjas med [Vaksam ← alkemistens Diskret]. Giftet är luftburet och drabbar alla i rummet, eller i närheten om utomhus. Ljuset måste brinna en kortare stund (1t4 rundor) innan giftet frigörs, så mördaren kan själv tända ljuset och lämna rummet om denne så vill. Ett svagt giftljus gör 2 i skada per runda."
+        "Gesäll": "Ett till synes vanligt ljus som när det tänds avger ett gift; avslöjas med [Vaksam ← alkemistens Diskret]. Giftet är luftburet och drabbar alla i rummet, eller i närheten om utomhus. Ljuset måste brinna en kortare stund (1T4 rundor) innan giftet frigörs, så mördaren kan själv tända ljuset och lämna rummet om denne så vill. Ett svagt giftljus gör 2 i skada per runda."
       },
       "grundpris": {
         "daler": 8,
@@ -133,7 +133,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "Ett till synes vanligt ljus som när det tänds avger ett gift; avslöjas med [Vaksam ← alkemistens Diskret]. Giftet är luftburet och drabbar alla i rummet, eller i närheten om utomhus. Ljuset måste brinna en kortare stund (1t4 rundor) innan giftet frigörs, så mördaren kan själv tända ljuset och lämna rummet om denne så vill. Ett medelstarkt giftljus gör 3 i skada per runda."
+        "Mästare": "Ett till synes vanligt ljus som när det tänds avger ett gift; avslöjas med [Vaksam ← alkemistens Diskret]. Giftet är luftburet och drabbar alla i rummet, eller i närheten om utomhus. Ljuset måste brinna en kortare stund (1T4 rundor) innan giftet frigörs, så mördaren kan själv tända ljuset och lämna rummet om denne så vill. Ett medelstarkt giftljus gör 3 i skada per runda."
       },
       "grundpris": {
         "daler": 12,
@@ -153,7 +153,7 @@
         ]
       },
       "nivåer": {
-        "Novis": "Ett frö som planteras och dagen efter föder en hjälpare ur marken. Hjälparen är liten som ett barn och saknar förmågor. Dess karaktärsdrag är samtliga 5 (+5). Den utför tjänster åt skaparen, men förtvinar inom ett månvarv från skapandet. Kvar blir en liten hög med jord. Skapandet av en homunculus är en våldshandling mot naturens ordning vilket ger skaparen 1t6 temporär Korruption."
+        "Novis": "Ett frö som planteras och dagen efter föder en hjälpare ur marken. Hjälparen är liten som ett barn och saknar förmågor. Dess karaktärsdrag är samtliga 5 (+5). Den utför tjänster åt skaparen, men förtvinar inom ett månvarv från skapandet. Kvar blir en liten hög med jord. Skapandet av en homunculus är en våldshandling mot naturens ordning vilket ger skaparen 1T6 temporär Korruption."
       },
       "grundpris": {
         "daler": 2,
@@ -273,7 +273,7 @@
         ]
       },
       "nivåer": {
-        "Novis": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. En novis på Alkemi förmår att tillverka en dryck som omedelbart tvättar bort 1t4 temporär korruption från brukarens själ."
+        "Novis": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. En novis på Alkemi förmår att tillverka en dryck som omedelbart tvättar bort 1T4 temporär korruption från brukarens själ."
       },
       "grundpris": {
         "daler": 4,
@@ -293,7 +293,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. Gesällens motsvarighet av elixiret renar användaren från 1t6 temporär korruption."
+        "Gesäll": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. Gesällens motsvarighet av elixiret renar användaren från 1T6 temporär korruption."
       },
       "grundpris": {
         "daler": 8,
@@ -313,7 +313,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. Mästarens version av elixiret tvättar bort 1t8 temporär korruption."
+        "Mästare": "Purpursav är ett elixir som till huvudparten består av extrakt från purpurkonvaljen, en blomväxt vars renande egenskaper och tålighet mot korruption tidigt upptäcktes av Davokars häxor. Att köpa elixiret från en droghandlare är dyrt, dels på grund av den sällsynta råvaran men också då bryggandet av elixiret är svårbemästrat. Elixiret har ingen effekt på permanent korruption eller på styggelsemärken som redan uppkommit hos användaren. Mästarens version av elixiret tvättar bort 1T8 temporär korruption."
       },
       "grundpris": {
         "daler": 12,
@@ -353,7 +353,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Det vedervärdigt smakande och osande elixiret användes en gång i tiden av mystiker som ville dölja hur nära de var förstyggelsens rand, vilket gör det till ett garanterat välkommet tillskott i varje svartkonstnärs arsenal av dekokter. Den som tvingar i sig sörjan förvrider sin skugga så att det under en hel scen framstår som om användaren hade 1t6 lägre värde i total korruption."
+        "Gesäll": "Det vedervärdigt smakande och osande elixiret användes en gång i tiden av mystiker som ville dölja hur nära de var förstyggelsens rand, vilket gör det till ett garanterat välkommet tillskott i varje svartkonstnärs arsenal av dekokter. Den som tvingar i sig sörjan förvrider sin skugga så att det under en hel scen framstår som om användaren hade 1T6 lägre värde i total korruption."
       },
       "grundpris": {
         "daler": 3,
@@ -393,7 +393,7 @@
         ]
       },
       "nivåer": {
-        "Novis": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå Novis, till en kostnad av 1t4 temporär korruption."
+        "Novis": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå Novis, till en kostnad av 1T4 temporär korruption."
       },
       "grundpris": {
         "daler": 6,
@@ -413,7 +413,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå Gesäll, till en kostnad av 1t6 temporär korruption."
+        "Gesäll": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå Gesäll, till en kostnad av 1T6 temporär korruption."
       },
       "grundpris": {
         "daler": 12,
@@ -433,7 +433,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå Mästare, till en kostnad av 1t8 temporär korruption."
+        "Mästare": "En mäktig mutagen som förvandlar användarens kropp i användbar och monstruös riktning. Användaren förvrids under scenen till en bestialisk halv-varelse som har en andra chans att misslyckas med alla slag mot Övertygande scenen ut. Drycken ger användaren ett monstruöst särdrag under resten av scenen; nivån på särdraget bestäms av elixirets grad. Varje inmundigande ger dessutom användaren temporär korruption, hur mycket beror av elixirets nivå. Den fysiska förändringen tillsammans med korruptionen är såklart skäl nog att brygden i Ambria har förvisats till den svarta marknaden. Följande monstruösa särdrag kan erhållas av elixiret. Vilket särdrag det blir bestäms av alkemisten vid bryggande: Naturligt vapen, Pansar, Robust, Vingar. Brygden ger det utvalda särdraget till nivå Mästare, till en kostnad av 1T8 temporär korruption."
       },
       "grundpris": {
         "daler": 24,
@@ -453,7 +453,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "En näve frön kastas på barmark eller jordgolv och rundan efter springer 1t4 törnekryp upp till kastarens tjänst. Törnekrypen är små, vagt människo-lika varelser av taggiga törnen. De talar inte men gnisslar och knakar som pinnar som böjs och gnids mot varandra. Törnekrypen lever under en scen, sedan förtorkar de och ser ut som taggiga häxdockor. Frammanandet av törnekryp är en våldsgärning på den naturliga ordningen vilket ger användaren 1t6 temporär Korruption. Exempelstats för törnekryp finns på sidan 123 i spelarens handbok."
+        "Gesäll": "En näve frön kastas på barmark eller jordgolv och rundan efter springer 1T4 törnekryp upp till kastarens tjänst. Törnekrypen är små, vagt människo-lika varelser av taggiga törnen. De talar inte men gnisslar och knakar som pinnar som böjs och gnids mot varandra. Törnekrypen lever under en scen, sedan förtorkar de och ser ut som taggiga häxdockor. Frammanandet av törnekryp är en våldsgärning på den naturliga ordningen vilket ger användaren 1T6 temporär Korruption. Exempelstats för törnekryp finns på sidan 123 i spelarens handbok."
       },
       "grundpris": {
         "daler": 5,
@@ -533,7 +533,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Ett vapen, fyra kastvapen eller alla lod/pilar i ett koger gör 1t4 extra elementarskada under en scen. Alkemisten måste välja vilket element som ska beredas: eld, kyla, syra eller blixt."
+        "Gesäll": "Ett vapen, fyra kastvapen eller alla lod/pilar i ett koger gör 1T4 extra elementarskada under en scen. Alkemisten måste välja vilket element som ska beredas: eld, kyla, syra eller blixt."
       },
       "grundpris": {
         "daler": 2,
@@ -573,7 +573,7 @@
         ]
       },
       "nivåer": {
-        "Novis": "Svagt gift ger 1t4 i skada under 1t4 rundor."
+        "Novis": "Svagt gift ger 1T4 i skada under 1T4 rundor."
       },
       "grundpris": {
         "daler": 2,
@@ -593,7 +593,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Det medelstarka giftet ger 1t6 i skada under 1t6 rundor."
+        "Gesäll": "Det medelstarka giftet ger 1T6 i skada under 1T6 rundor."
       },
       "grundpris": {
         "daler": 4,
@@ -613,7 +613,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "Starkt gift ger 1t8 i skada under 1t8 rundor."
+        "Mästare": "Starkt gift ger 1T8 i skada under 1T8 rundor."
       },
       "grundpris": {
         "daler": 6,
@@ -774,7 +774,7 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "Den alkemiska oljan skyddar mot elementarskada, vilket konkret ger 1t4 extra skydd under en scen mot ett av elementen. Alkemisten måste välja vilket element som oljan ska skydda mot: eld, kyla, syra eller blixt."
+        "Gesäll": "Den alkemiska oljan skyddar mot elementarskada, vilket konkret ger 1T4 extra skydd under en scen mot ett av elementen. Alkemisten måste välja vilket element som oljan ska skydda mot: eld, kyla, syra eller blixt."
       },
       "grundpris": {
         "daler": 4,

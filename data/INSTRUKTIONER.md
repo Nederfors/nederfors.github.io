@@ -1,4 +1,4 @@
-# Data README: Komplett guide till `rules-helper`
+# Data INSTRUKTIONER: Komplett guide till entries, regler och webbflöden
 
 Den här guiden beskriver **hela regelmotorn i `js/rules-helper.js`** och hur du skriver data i `data/*.json` så att allt fungerar i UI, store och beräkningar.
 
@@ -6,6 +6,134 @@ Mål:
 - Tydlig authoring av `andrar`, `kraver`, `krockar`, `ger`, `val`.
 - Full förståelse för hierarkier, `satt`/`ersatt`, `nar`, formler och specialfall.
 - Praktisk referens för alla exponerade helper-funktioner.
+
+## 0. Hemsidan: sidor, dataflöde och modulansvar
+
+Det här avsnittet kopplar ihop dataformatet med faktiska funktioner i webbappen.
+
+### 0.1 Sidor och `data-role`
+
+| Sida | `body[data-role]` | Huvudfunktion | Primär vylogik |
+|---|---|---|---|
+| `index.html` | `index` | Databasvy: sök, filter, lägg till poster | `js/index-view.js` |
+| `character.html` | `character` | Rollpersonslista: nivåbyte, ta bort, konflikter | `js/character-view.js` |
+| `inventory.html` | `inventory` | Inventarie + pengar + utrustning | `js/inventory-view.js` + `js/inventory-utils.js` |
+| `traits.html` | `traits` | Karaktärsdrag, Översikt, Effekter | `js/summary-effects.js` + `js/traits-utils.js` |
+| `notes.html` | `notes` | Anteckningar per rollperson | `js/notes-view.js` |
+| `summary.html` | (redirect) | Omdirigerar till `traits.html#tab-summary` | - |
+| `effects.html` | (redirect) | Omdirigerar till `traits.html#tab-effects` | - |
+| `webapp.html` | - | Installationshjälp för PWA | inline + `js/pwa.js` |
+
+Alla sidor laddar samma kärna:
+- `js/rules-helper.js`
+- `js/store.js`
+- `js/main.js`
+- `js/shared-toolbar.js`
+
+### 0.2 Boot-sekvens och data in i appen
+
+1. `js/main.js` läser `ROLE` från `body[data-role]` och initierar rätt vy.
+2. `loadDatabaseData()` laddar alla entryfiler i `DATA_FILES` (`data/*.json`).
+3. Varje fil normaliseras till:
+   - `{ entries: [...] }`, och ev.
+   - `typ_regler`/`type_rules`.
+4. Typregler kopplas in på entries via intern `__typ_regler`.
+5. Resultat publiceras globalt som:
+   - `window.DB` (array)
+   - `window.DBIndex` (name/index lookup)
+
+Tabeller laddas separat från `data/tabeller.json` och expanderas från matrisformat till renderbara tabellentries.
+
+### 0.3 Aktiva entrykällor (`DATA_FILES`)
+
+Manifestet i `js/main.js` laddar just nu:
+- `diverse.json`
+- `kuriositeter.json`
+- `skatter.json`
+- `elixir.json`
+- `fordel.json`
+- `formaga.json`
+- `basformagor.json`
+- `kvalitet.json`
+- `mystisk-kraft.json`
+- `mystisk-kvalitet.json`
+- `neutral-kvalitet.json`
+- `negativ-kvalitet.json`
+- `nackdel.json`
+- `anstallning.json`
+- `byggnader.json`
+- `yrke.json`
+- `ras.json`
+- `elityrke.json`
+- `fardmedel.json`
+- `forvaring.json`
+- `gardsdjur.json`
+- `instrument.json`
+- `klader.json`
+- `specialverktyg.json`
+- `tjanster.json`
+- `ritual.json`
+- `rustning.json`
+- `mat.json`
+- `dryck.json`
+- `sardrag.json`
+- `monstruost-sardrag.json`
+- `artefakter.json`
+- `lagre-artefakter.json`
+- `fallor.json`
+- `avstandsvapen.json`
+- `narstridsvapen.json`
+
+### 0.4 Runtimeflöde när en entry ändras
+
+Vid add/remove/level-change sker i praktiken:
+
+1. Kandidaten valideras i `rules-helper`:
+   - krav (`kraver`)
+   - konflikter (`krockar`)
+   - grantspärrar (`beviljad_niva`)
+   - hard-stops (`duplicate_entry`, `stack_limit`, elityrkesspärrar)
+2. Listan skrivs via `storeHelper.setList(...)`.
+3. `store.js` synkar sidoeffekter:
+   - `syncRuleEntryGrants` (autogrant av poster)
+   - `syncRuleInventoryGrants` (autogrant av inventarie)
+   - `syncRuleMoneyGrant` (autogrant av pengar)
+   - `enforceRuleConflicts` (städar blockerande kombinationer)
+   - snapshot-materialisering (`snapshotRules`)
+4. Vyer renderas om (`index-view`, `character-view`, `inventory-view`, `summary-effects`).
+5. XP/ERF, nackdelstak, traits och derived stats räknas om från aktuell lista.
+
+### 0.5 Persistens i `localStorage`
+
+Store delas upp i metadata + per-karaktärdata:
+
+- `rpall-meta`
+  - `current`, `characters`, `folders`, filter/sort-flaggor, `liveMode`.
+- `rpall-char-<charId>`
+  - `list` (valda entries)
+  - `inventory`
+  - `custom`
+  - `traits`
+  - `baseXp`
+  - `notes`
+  - `artifactEffects`
+  - `snapshotRules`
+  - `defenseSetup`
+  - `suppressedEntryGrants`
+  - pengar (`bonusMoney`, `privMoney`, `possessionMoney`, `savedUnusedMoney`)
+
+### 0.6 Modulöversikt
+
+| Modul | Primärt ansvar |
+|---|---|
+| `js/rules-helper.js` | Regeltolkning: merge-hierarki, `nar`, krav/krock, grants, maxgränser, valregler |
+| `js/store.js` | Persistens, listsync, grant-automation, XP/ERF-beräkning, nackdelstak, snapshots |
+| `js/index-view.js` | Databasvy: kort, filter, add-knappar, add-stops |
+| `js/character-view.js` | Rollpersonsvy: valda poster, nivåbyte, konfliktdialoger |
+| `js/inventory-utils.js` | Inventarielogik, utrustning, kvaliteter, begränsning/vapenfakta |
+| `js/traits-utils.js` | Traits, försvarsunderlag, korruption/smärta/tålighet-bidrag |
+| `js/summary-effects.js` | Traits/Översikt/Effekter-tabbar |
+| `js/main.js` | Gemensam boot, datahämtning, toolbar-flöden, import/export, Drive-integration |
 
 ## 1. Grundmodell
 
@@ -250,8 +378,32 @@ Lägg i `...ger[]`:
 {
   "mal": "post",
   "id": ["hamnskifte_grants4"],
-  "gratis_upp_till": "Novis",
+  "gratis_till": "Novis",
   "beviljad_niva": "Gesäll"
+}
+```
+
+Rekommendation:
+- använd `gratis_till` i ny data (neutral namngivning),
+- `gratis_upp_till` och `gratisTill` stöds fortsatt som alias.
+
+För en helt gratis grant (typiskt engångspost utan nivåsteg), använd:
+
+```json
+{
+  "mal": "post",
+  "namn": ["Paria"],
+  "gratis": true
+}
+```
+
+För att låta en grantad post ignorera systemgränser (t.ex. max-antal/tak), lägg till:
+
+```json
+{
+  "mal": "post",
+  "namn": ["Mörkt förflutet"],
+  "ignore_limits": true
 }
 ```
 
@@ -431,6 +583,372 @@ const mod = rulesHelper.getSelectiveDefenseModifier(
 );
 ```
 
+## 2.5 Tagglexikon: vad motorn letar efter och i vilken kontext
+
+Det här avsnittet förklarar vad olika `taggar.*` betyder i praktiken.
+
+Grundprinciper:
+- Listtaggar (t.ex. `typ`, `ark_trad`, `test`) kan vara array eller kommaseparerad sträng.
+- Matchning är i regel case/diakritik-insensitiv.
+- Samma tagg kan användas i flera kontexter: UI-filter, regelmotor, inventory-logik.
+
+### 2.5.1 Klassificering och filter
+
+| Tagg | Vad systemet letar efter | Kontext | Betydelse |
+|---|---|---|---|
+| `taggar.typ` | Typnamn som matchar `typ_regler`, `nar.typ`, `antal_typ_max` och UI-kategorier | Regelmotor + UI | Primär klassificering av entry; kan ha flera typer. |
+| `taggar.ark_trad` | Traditions-/arketypnamn (med alias-normalisering, t.ex. Häxa -> Häxkonst) | Regelmotor + UI | Används i traditionsträd, `nar.ark_trad`, krock/krav-targeting och filter. |
+| `taggar.test` | Test-taggar på entry och nivå | UI + hjälpfunktioner | Visas/filteras som testtaggar; kan kompletteras nivåspecifikt. |
+| `taggar.kvalitet` | Kvalitetsnamn på entry | UI + inventory + `nar.foremal` | Bas-kvaliteter för utrustning; används vid quality-logik och matchning mot `foremal.nagon_kvalitet`. |
+
+Notering:
+- `test` läses både från `taggar.test` och `taggar.nivå_data.<Nivå>.test` (legacy: `niva_data`).
+- För kvaliteter används i praktiken både `taggar.kvalitet` och legacy-fältet `entry.kvalitet`.
+
+### 2.5.2 Regelstyrande taggar
+
+| Tagg | Vad systemet letar efter | Kontext | Betydelse |
+|---|---|---|---|
+| `taggar.regler` | Blocken `andrar/kraver/krockar/ger/val` | Regelmotor | Entryns huvudregler (alla nivåer). |
+| `taggar.nivå_data.<Nivå>.regler` | Nivåspecifika regelblock | Regelmotor | Kumulativa nivåregler (Novis/Gesäll/Mästare). |
+| `taggar.niva_data.<Nivå>.regler` | Som ovan, legacy | Regelmotor | Bakåtkompatibel form av `nivå_data`. |
+| `taggar.max_antal` | Positiv heltalsgräns | Regelmotor + UI-spärrar | Max antal instanser av entryn. |
+| `taggar.ignore_limits` | Bool | Regelmotor + XP/cap-logik | Entryn ignorerar systemets limit-checkar (t.ex. max_antal/nackdelstak). |
+| `taggar.kan_införskaffas_flera_gånger` | Bool | Regelmotor | Legacy-stöd som implicit maxgräns (3) när `max_antal` saknas. |
+| `taggar.erf` / `taggar.xp` | Numeriskt override-värde | ERF/XP-beräkning | Statisk kostnad om inget mer specifikt override finns. |
+| `taggar.nivå_data.<Nivå>.erf` | Nivåspecifikt numeriskt override | ERF/XP-beräkning | Rekommenderad väg för nivåbaserad kostnad. |
+
+Viktigt:
+- `taggar.dold: true` är en statisk UI-döljning.
+- `andrar` med `mal: "Hidden"` är regelstyrd döljning (beror på aktiv lista/villkor).
+
+### 2.5.3 Specialtaggar för specifika flöden
+
+| Tagg | Vad systemet letar efter | Kontext | Betydelse |
+|---|---|---|---|
+| `taggar.artefakt_bindning` | Bindningskonfig + options | Artefaktval (`artifactEffect`) | Definierar valbara bindningskostnader och ev. regelsnuttar per val. |
+| `taggar.inventory.stackbar` | Bool | Inventory | Tvingar stackbar/ej stackbar radhantering. |
+| `taggar.inventory.traitbunden` / `traitBound` | Bool | Inventory | Markerar traitbunden inventoryrad. |
+| `taggar.grundritual` | Lista med ritualnamn | Ritual-flöde i UI | Kräver grundritual(er) innan ritual får läggas till (med dialogflöde). |
+| `taggar.handling` | Handling-status per nivå (legacy) | UI-konflikter/info | Används som fallback om nivåmetadata saknas; "aktiv" triggar hanteringskonflikter. |
+| `taggar.arm_fast` | Bool | Traits/strid | Markerar armfäst kvalitet (påverkar vapen/sköldtolkning i försvarslogik). |
+
+### 2.5.4 Legacy och metadata-taggar
+
+| Tagg | Vad systemet letar efter | Kontext | Betydelse |
+|---|---|---|---|
+| `taggar.extends` | Bas-entry med samma namn | Rulesource-upplösning | Ärver/mergar basregler vid lookup när entry saknar inline-regler. |
+| `taggar.ras` | Ingen direkt `rules-helper`-matchning | Datametadata | Förekommer i data men används inte som generell regelnyckel i motorn. |
+
+### 2.5.5 Nivåmetadata utanför `regler`
+
+`taggar.nivå_data.<Nivå>` används inte bara för `regler`, utan även för nivåspecifik metadata:
+- `test` (testtaggar)
+- `erf` / `xp` (kostnad)
+- `handling` (aktiverings-/konfliktmetadata i UI)
+- `skadetyp` (visningsmetadata i UI)
+
+Rekommendation:
+- Nya nivåbundna värden bör läggas i `taggar.nivå_data` (inte i legacy `niva_data`).
+- Nya regelrelaterade taggar bör dokumenteras här direkt när de införs.
+
+## 2.6 Exakta taggvärden i nuvarande data
+
+Detta är en konkret snapshot av vilka taggar/taggvärden som faktiskt finns i `data/*.json` just nu
+(exklusive byggda filer som `all.json`/`struktur.json`).
+
+### 2.6.1 Exakta `taggar`-nycklar (14 st)
+
+```text
+ark_trad
+arm_fast
+artefakt_bindning
+dold
+grundritual
+handling
+inventory
+kvalitet
+max_antal
+nivå_data
+ras
+regler
+test
+typ
+```
+
+### 2.6.2 Exakta `taggar.typ`-värden (62 st)
+
+```text
+Allmän kvalitet
+Anställning
+Armborst
+Artefakt
+Avståndsvapen
+Basförmåga
+Belägringsvapen
+Blåsrör
+Byggnad
+Diverse
+Dryck
+Elityrke
+Elityrkesförmåga
+Elixir
+Enhandsvapen
+Fälla
+Färdmedel
+Fördel
+Förmåga
+Förvaring
+Gårdsdjur
+Kastvapen
+Kläder
+Korta vapen
+Kuriositet
+Kvalitet
+Lägre Artefakt
+Lätt Rustning
+Långa vapen
+Mat
+Medeltung Rustning
+Monstruöst särdrag
+Musikinstrument
+Mystisk kraft
+Mystisk kvalitet
+Mystisk tradition
+Nackdel
+Närstridsvapen
+Obeväpnad attack
+Pil/Lod
+Pilbåge
+Projektilvapen
+Ras
+Ritual
+Rustning
+Rustningskvalitet
+Skada
+Skatt
+Sköld
+Sköldkvalitet
+Slunga
+Specialverktyg
+Stav
+Särdrag
+Tabell
+Tjänster
+Tung Rustning
+Tunga vapen
+Tvåhandsvapen
+Vapen
+Vapenkvalitet
+Yrke
+```
+
+### 2.6.3 Vapentyper (delmängd av `taggar.typ`, 17 st)
+
+```text
+Armborst
+Avståndsvapen
+Belägringsvapen
+Blåsrör
+Enhandsvapen
+Kastvapen
+Korta vapen
+Långa vapen
+Närstridsvapen
+Obeväpnad attack
+Pil/Lod
+Pilbåge
+Projektilvapen
+Slunga
+Stav
+Tvåhandsvapen
+Vapen
+```
+
+### 2.6.4 Kvalitetstyper (delmängd av `taggar.typ`, 6 st)
+
+```text
+Allmän kvalitet
+Kvalitet
+Mystisk kvalitet
+Rustningskvalitet
+Sköldkvalitet
+Vapenkvalitet
+```
+
+### 2.6.5 Exakta `taggar.ark_trad`-värden (52 st)
+
+```text
+Andebesvärjare
+Artefaktmakare
+Bedragare
+Blodvadare
+Bärsärkare
+Demonolog
+Drottningspion
+Duellant
+Före detta kultist
+Gentlemannatjuv
+Gillestjuv
+Grönvävare
+Häxa
+Häxjägare
+Häxkonst
+Illusionist
+Inkvisitor
+Jägare
+Järnsvuren
+Kapten
+Krigare
+Ligist
+Mentalist
+Monsterjägare
+Mystiker
+Nekromantiker
+Ordensmagiker
+Placeholder
+Prisjägare
+Pyromantiker
+Riddare
+Ristad krigare
+Runsmed
+Sappör
+Själasörjare
+Självlärd besvärjare
+Skald
+Skattletare
+Stavmagiker
+Stormbringare
+Svartkonstnär
+Symbolist
+Säljsvärd
+Templár
+Teurg
+Tjuv
+Trollsång
+Trollsångare
+Ulvahedna
+Utbygdsjägare
+Vapenmästare
+Vredesgardist
+```
+
+### 2.6.6 Traits / karaktärsdrag (8 st)
+
+Dessa används som canonical traits i app och regelmotor (`TRAIT_KEYS` / `EXCEPTION_TRAITS`):
+
+```text
+Diskret
+Kvick
+Listig
+Stark
+Träffsäker
+Vaksam
+Viljestark
+Övertygande
+```
+
+Alias som accepteras vid trait-upplösning i formler/`mal`:
+
+```text
+diskret
+kvick
+listig
+stark
+traffsaker
+vaksam
+viljestark
+overtygande
+```
+
+### 2.6.7 Exakta `taggar.test`-värden (8 st)
+
+```text
+Diskret
+Kvick
+Listig
+Stark
+Träffsäker
+Vaksam
+Viljestark
+Övertygande
+```
+
+### 2.6.8 Exakta `taggar.kvalitet`-värden (24 st)
+
+```text
+Armfäst
+Balanserad
+Balanserat
+Bastardvapen
+Blodsgjutande
+Brinnande
+Djupverkande
+Dold
+Förstärkt
+Kort
+Ledat
+Långsamt
+Långt
+Massiv
+Massivt
+Otymplig
+Precist
+Raserande
+Snärjande
+Speciell
+Trubbigt
+Ytverkande (kon)
+Ytverkande (radie)
+Återvändande
+```
+
+### 2.6.9 Specialtaggar med konkreta värden
+
+`taggar.grundritual` (15 st):
+
+```text
+Andebesvärjelse
+Bjära
+Exorcism
+Falsk terräng
+Frammana Hämnddaemon
+Frammana Kunskapsdaemon
+Frammana Tjänardaemon
+Frammana Väktardaemon
+Helgande Rit
+Häxcirkel
+Klärvoajans
+Lockelse
+Offerrök
+Snabbväxt
+Väcka vandöd
+```
+
+`taggar.handling` (råvärden i data, 12 st):
+
+```text
+Aktiv
+Fri
+Förflyttning
+Hel runda
+Passiv
+Reaktion
+Reaktiv
+Ritual
+Samma som den lagrade kraften
+Som en ritual
+Speciell
+Särskild
+```
+
+`taggar.inventory`:
+- Nycklar som faktiskt finns i data: `stackbar`
+- Nycklar som stöds i kod men inte förekommer i data just nu: `traitbunden`, `traitBound`
+
+`taggar.ras`:
+- Faktiskt värde i data: `Hamnskifte`
+
 ## 3. Regelhierarki (mycket viktigt)
 
 Regler hämtas och merges i denna ordning:
@@ -472,7 +990,7 @@ Tips:
 ### 5.1 `andrar`
 Typiska fält:
 - `mal` (vilket värde som påverkas)
-- `satt` (`add`/uteblivet eller `ersatt`)
+- `satt` (`add`/uteblivet eller `ersatt`; aliasvärdet `satt` behandlas också som ersättning i numeric-apply)
 - `varde` (nummer eller text beroende på `mal`)
 - `nar` (villkor)
 - `formel` (sträng eller objekt)
@@ -516,9 +1034,12 @@ Typiska `mal`:
 
 För `mal: "post"` finns extra fält:
 - `id`, `namn`, `post` (referenser)
-- `gratis_upp_till`
+- `gratis` (hela posten gratis)
+- `gratis_till` (rekommenderat), samt alias `gratis_upp_till` / `gratisTill`
+- `ignore_limits` (ignorera systemets limit-checkar)
 - `beviljad_niva`
 - `erf`, `xp`, `erf_per_niva` m.fl.
+- Saknas `gratis*`-fält blir granten inte gratis
 
 ### 5.5 `val`
 `val` används för enhetliga single-choice-popups i list- och inventarieflöden.
@@ -529,8 +1050,9 @@ För `mal: "post"` finns extra fält:
 - `options` (statiska val)
   - stöder strängar eller objekt (`value`, `label`, `search`, `disabled`, `disabledReason`)
 - `source` (dynamiska val från DB)
-  - initialt stöds `typ`-filtrering
-  - valfria nycklar: `value_field`, `label_field`, `sort`, `nar`
+  - stöder `typ`-filtrering
+  - specialtagg i `typ`: `Endast valda` (alias: `__onlySelected`, `endast_valda`, `only_selected`) för att bara visa entries som redan finns lagrade på aktiv rollperson
+  - valfria nycklar: `value_field`, `label_field`, `sort`, `nar`, `endast_valda` (alias: `only_selected`)
 - `nar` (när regeln är aktiv), utvärderas med samma `evaluateNar`-grammatik
 - `duplicate_policy`: `allow | reject | confirm | replace_existing`
 - `exclude_used` (filtrera bort redan använda värden)
@@ -579,6 +1101,36 @@ Exempel:
 }
 ```
 
+#### Snapshot-regler (`snapshot: true`)
+
+`andrar`-regler kan märkas med:
+
+```json
+{ "mal": "smartgrans_tillagg", "formel": { "bas": "mal:permanent_korruption", "faktor": -1 }, "snapshot": true }
+```
+
+Semantik:
+- Samma shape som vanliga `andrar` (`mal`, `varde`/`formel`, `satt`, `nar`).
+- Samma målupplösning/formelupplösning som vanliga regler (`formel.bas: "mal:<mål>"` stöds).
+- Snapshot körs mot aktuellt effektivt läge vid appliceringstillfället.
+- Flera snapshot-regler i samma kedja körs sekventiellt i deklarerad ordning; senare regler läser mellanstatus.
+- Snapshot-regler materialiseras till frysta regler med metadata (`metadata.snapshot`, `metadata.source_rule`, `metadata.source_values`) och räknas inte om dynamiskt senare.
+
+Persistens:
+- Materialiserade snapshot-effekter ligger kvar tills de tas bort explicit.
+- Om käll-entry tas bort visas en bekräftelse med val att:
+  - ta bort snapshot-effekter tillsammans med källan, eller
+  - behålla snapshot-effekterna som persistenta.
+
+Artefaktbindning:
+- `taggar.artefakt_bindning.options[].regler` kan innehålla ett vanligt regelblock (främst `andrar`).
+- Reglerna gäller bara för vald bindningsoption.
+- `Obunden` finns alltid kvar som val.
+- Byts bindningsval rensas gamla bindningsregler för den källan och nya byggs upp.
+
+Exempel (framtida/generaliserat utanför artefakter):
+- En vanlig förmåga kan ha `taggar.regler.andrar[]` med `snapshot: true`; när förmågan appliceras materialiseras dess snapshot-regler på samma sätt och fortsätter gälla tills de tas bort.
+
 #### Vanlig context
 - `list`, `entry`, `sourceEntry`, `level`, `sourceLevel`
 - `row` (inventarierad)
@@ -604,6 +1156,7 @@ Flera helpers letar uttryckligen efter `satt: "ersatt"` när de bygger alternati
 ### 7.1 Listvillkor (`context.list`)
 - `har_namn`
 - `har_namn_niva_minst`
+  - alias: `har_namn_nivå_minst`, `har_namn_level_min`
 - `saknar_namn`
 - `nagon_av_namn`
 - `antal_namn_max`
@@ -635,7 +1188,9 @@ Specialfall:
 - `foremal.typ`
 - `foremal.ingen_typ`
 - `foremal.nagon_kvalitet`
-- undernycklar i `foremal`: `typ`, `ingen_typ`, `nagon_kvalitet`
+- `foremal.id`
+- `foremal.namn`
+- undernycklar i `foremal`: `typ`, `ingen_typ`, `nagon_kvalitet`, `id`, `namn`
 
 ### 7.6 Stridsflaggor
 - `narstrid`
@@ -650,6 +1205,7 @@ Specialfall:
 - `trait`
 - `namn`
 - `typ`
+- `endast_valda` (alias: `only_selected`) när `context.list` också finns; matchar om `sourceEntry` redan finns i karaktärslistan (id eller namn)
 
 ### 7.9 Targetfilter i krav/krock-logik (utanför `evaluateNar`)
 - `nar.namn`
@@ -782,9 +1338,12 @@ Stödda targetfält:
 - `namn`
 
 Extra:
-- `gratis_upp_till` styr delvis gratis nivåintervall
+- `gratis` ger helt gratis grant
+- `gratis_till` styr delvis gratis nivåintervall (`gratis_upp_till`/`gratisTill` är alias)
+- `ignore_limits` gör att posten ignorerar limit-checkar
 - `beviljad_niva` används vid nivåspärrar
 - `erf`/`erf_per_niva` kan ge kostnads-override
+- utan `gratis*` är granten inte gratis
 
 ### 10.3 `mal: "pengar"`
 Summeras via `getMoneyGrant(list)`.
@@ -877,8 +1436,46 @@ Viktig fallback:
 2. typregel-default (`typ_regler`)
 3. default `1`
 
+Limit-bypass:
+- `taggar.ignore_limits` gör att entryn ignorerar maxgränser.
+- `ger` med `mal: "post"` + `ignore_limits` ger samma bypass på grantade instanser.
+
 Legacy:
 - `kan_införskaffas_flera_gånger: true` mappas till max `3` om legacy tillåts.
+
+### 13.1 Limit-checkar i systemet
+
+Följande är de limit-checkar som finns för entries:
+
+1. Entry-max (`max_antal`)
+- Används av `getEntryMaxCount` och UI/add-spärrar.
+- Driver hard-stops `duplicate_entry` och `stack_limit` i `evaluateEntryStops`.
+- Påverkas av `ignore_limits`: **Ja**.
+- Hookad via `rulesHelper.getEntryMaxCount` + `rulesHelper.evaluateEntryStops`.
+
+2. `nar.antal_namn_max`
+- Villkorslimit per namn i `evaluateNar`.
+- Påverkas av `ignore_limits`: **Ja** (entries med `ignore_limits` räknas inte i antalet).
+- Hookad via `rulesHelper.evaluateNar` (`getNameCount(..., { skipIgnoredLimits: true })`).
+
+3. `nar.antal_typ_max`
+- Villkorslimit per typ i `evaluateNar`.
+- Påverkas av `ignore_limits`: **Ja** (entries med `ignore_limits` räknas inte i antalet).
+- Hookad via `rulesHelper.evaluateNar` (`getTypeCount(..., { skipIgnoredLimits: true })`).
+
+4. Nackdelstak för ERF/XP (`ERF_RULES.disadvantageCap`, standard 5)
+- Används i `countDisadvantages`, `disadvantagesWithXP`, `calcEntryXP`, `calcTotalXP`.
+- Påverkas av `ignore_limits`: **Ja** (nackdelar med `ignore_limits` tar inte plats i taket men ger fortfarande ERF).
+- Hookad via `store.entryIgnoresLimits(...)` som i sin tur använder:
+  - entry-tag (`taggar.ignore_limits`), eller
+  - grant-baserad bypass från `rulesHelper.getEntryGrantTargets` (`ger/post.ignore_limits`).
+
+### 13.2 Spärrar som inte är limit-checkar
+
+Dessa är regelspärrar men inte limit-checkar för `ignore_limits`:
+- Kravregler (`kraver`) och konfliktregler (`krockar`)
+- Grantad nivåspärr via `beviljad_niva`
+- Elityrkes-/elityrkesförmågespärrar
 
 ## 14. ERF/XP override-ordning
 

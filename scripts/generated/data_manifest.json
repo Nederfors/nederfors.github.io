@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-03T10:54:00.329379+00:00",
+  "generatedAt": "2026-03-08T08:05:55.896464+00:00",
   "entryDataFiles": [
     "diverse.json",
     "kuriositeter.json",
@@ -28,14 +28,15 @@
     "tjanster.json",
     "ritual.json",
     "rustning.json",
-    "vapen.json",
     "mat.json",
     "dryck.json",
     "sardrag.json",
     "monstruost-sardrag.json",
     "artefakter.json",
     "lagre-artefakter.json",
-    "fallor.json"
+    "fallor.json",
+    "avstandsvapen.json",
+    "narstridsvapen.json"
   ],
   "specialDataFiles": [
     "pdf-list.json",
@@ -45,6 +46,7 @@
     "all.json",
     "pdf-list.json",
     "struktur.json",
-    "tabeller.json"
+    "tabeller.json",
+    "vapen.json"
   ]
 }

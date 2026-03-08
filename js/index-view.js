@@ -91,6 +91,47 @@
     return !!(await confirmPopup(text));
   }
 
+  async function handleSnapshotEntryRemoval(entry) {
+    if (!entry || typeof entry !== 'object') return true;
+    const impactFn = window.storeHelper?.getSnapshotSourceImpactForEntry;
+    if (typeof impactFn !== 'function') return true;
+    const impact = impactFn(store, entry) || {};
+    const count = Number(impact.count || 0);
+    const sourceKeys = Array.isArray(impact.sourceKeys)
+      ? impact.sourceKeys.map(key => String(key || '').trim()).filter(Boolean)
+      : [];
+    const fallbackSourceKey = String(impact.sourceKey || '').trim();
+    if (!sourceKeys.length && fallbackSourceKey) sourceKeys.push(fallbackSourceKey);
+    if (!count || !sourceKeys.length) return true;
+
+    if (typeof window.openDialog === 'function') {
+      const label = String(entry?.namn || 'källan').trim() || 'källan';
+      const message = `${quoteName(label)} har ${count} snapshot-effekt${count === 1 ? '' : 'er'}.\nVälj om de ska tas bort eller behållas när posten tas bort.`;
+      const choice = await window.openDialog(message, {
+        cancel: true,
+        okText: 'Ta bort effekter',
+        extraText: 'Behåll effekter',
+        cancelText: 'Avbryt'
+      });
+      if (choice === false) return false;
+      if (choice === true) {
+        sourceKeys.forEach(key => window.storeHelper?.removeSnapshotRulesBySource?.(store, key));
+        return true;
+      }
+      if (choice === 'extra') {
+        sourceKeys.forEach(key => window.storeHelper?.detachSnapshotRulesBySource?.(store, key));
+      }
+      return true;
+    }
+
+    const fallback = await confirmPopup('Ta bort kopplade snapshot-effekter också?');
+    if (fallback) {
+      sourceKeys.forEach(key => window.storeHelper?.removeSnapshotRulesBySource?.(store, key));
+      return true;
+    }
+    return false;
+  }
+
   function computeIndexEntryXP(entry, list, options = {}) {
     const defaults = {
       allowInventory: true,
@@ -682,6 +723,10 @@
       typeof window.invUtil?.removeInventoryBundle === 'function'
         ? window.invUtil.removeInventoryBundle(inv, entry, units)
         : false;
+    const WEAPON_BASE_TYPES = Array.isArray(window.WEAPON_BASE_TYPES)
+      ? window.WEAPON_BASE_TYPES
+      : ['Närstridsvapen', 'Avståndsvapen', 'Vapen'];
+    const DEFAULT_QUALITY_TARGET_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Pil/Lod', 'Rustning', 'Artefakt', 'Lägre Artefakt'];
 
     const QUAL_TYPE_MAP = {
       'Vapenkvalitet': 'Vapen',
@@ -712,6 +757,58 @@
       if (val === undefined || val === null) return null;
       if (typeof val === 'number') return String(val);
       return String(val).trim();
+    };
+
+    const getEntryChoiceDisplay = (entry, context = {}) => {
+      if (typeof window.rulesHelper?.getEntryChoiceDisplay !== 'function') return null;
+      try {
+        return window.rulesHelper.getEntryChoiceDisplay(entry, context) || null;
+      } catch (_) {
+        return null;
+      }
+    };
+
+    const collectChoiceDisplayValuesForEntry = (sourceEntry, list) => {
+      const out = [];
+      const buckets = new Map();
+      (Array.isArray(list) ? list : []).forEach(item => {
+        if (!item || typeof item !== 'object') return;
+        const sameId = sourceEntry?.id != null && item?.id != null
+          && normalizeId(item.id) === normalizeId(sourceEntry.id);
+        const sameName = item?.namn && sourceEntry?.namn
+          && String(item.namn).trim() === String(sourceEntry.namn).trim();
+        if (!sameId && !sameName) return;
+
+        const choice = getEntryChoiceDisplay(item, {
+          list,
+          sourceEntry,
+          level: item?.nivå || ''
+        });
+        if (!choice?.valueLabel) return;
+
+        const field = String(choice.field || '').trim();
+        const label = String(choice.label || 'Val').trim() || 'Val';
+        const valueLabel = String(choice.valueLabel || '').trim();
+        if (!valueLabel) return;
+
+        const bucketKey = `${field}|${label.toLowerCase()}`;
+        let bucket = buckets.get(bucketKey);
+        if (!bucket) {
+          bucket = { field, label, values: [], seen: new Set() };
+          buckets.set(bucketKey, bucket);
+          out.push(bucket);
+        }
+        const valueKey = valueLabel.toLowerCase();
+        if (bucket.seen.has(valueKey)) return;
+        bucket.seen.add(valueKey);
+        bucket.values.push(valueLabel);
+      });
+
+      return out.map(bucket => ({
+        field: bucket.field,
+        label: bucket.label,
+        values: bucket.values
+      }));
     };
 
     const entrySignature = (ent) => {
@@ -857,15 +954,37 @@
       const hasCurrentValue = currentValue !== undefined
         && currentValue !== null
         && String(currentValue).trim() !== '';
+      const isCurrentChoiceStillAvailable = () => {
+        if (!hasCurrentValue) return false;
+        if (typeof picker.resolveRuleOptions !== 'function') return true;
+        try {
+          const optionsForRule = picker.resolveRuleOptions(rule, {
+            ...context,
+            entry: candidate,
+            usedValues,
+            currentValue
+          });
+          const wanted = normalizeChoiceToken(currentValue);
+          if (!wanted) return false;
+          return optionsForRule.some(option =>
+            !option?.disabled && normalizeChoiceToken(option?.value) === wanted
+          );
+        } catch (_) {
+          // Fallback to legacy behavior if option resolution fails.
+          return true;
+        }
+      };
       if (options?.promptIfMissingOnly && hasCurrentValue) {
-        return {
-          hasChoice: true,
-          cancelled: false,
-          skippedPrompt: true,
-          rule,
-          value: currentValue,
-          usedValues
-        };
+        if (isCurrentChoiceStillAvailable()) {
+          return {
+            hasChoice: true,
+            cancelled: false,
+            skippedPrompt: true,
+            rule,
+            value: currentValue,
+            usedValues
+          };
+        }
       }
       const picked = await picker.pickForEntry({
         entry: candidate,
@@ -1844,29 +1963,25 @@
           if (weightVal != null) {
             infoMeta.push({ label: 'Vikt', value: weightVal });
           }
+          const keyInfoMeta = [];
           const infoBodyExtras = [];
           if (isRas(p) || isYrke(p) || isElityrke(p)) {
             const extra = yrkeInfoHtml(p);
             if (extra) infoBodyExtras.push(extra);
           }
-          if (p.namn === 'Blodsband') {
-            const races = charList.filter(c => c.namn === 'Blodsband').map(c => c.race).filter(Boolean);
-            if (races.length) {
-              const str = races.join(', ');
-              const block = `<p><strong>Raser:</strong> ${str}</p>`;
-              cardDesc += block;
-              infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
-            }
-          }
           let spec = null;
           if (p.namn === 'Monsterlärd') {
             spec = charEntry?.trait || null;
-            if (spec) {
-              const block = `<p><strong>Specialisering:</strong> ${spec}</p>`;
-              cardDesc += block;
-              infoBodyExtras.push(`<div class="info-block info-block-extra">${block}</div>`);
-            }
           }
+          const choiceGroups = collectChoiceDisplayValuesForEntry(p, charList);
+          choiceGroups.forEach(group => {
+            if (!group.values.length) return;
+            const label = escapeHtml(group.label || 'Val');
+            const valueText = escapeHtml(group.values.join(', '));
+            keyInfoMeta.push({ label, value: valueText });
+            const block = `<p><strong>${label}:</strong> ${valueText}</p>`;
+            cardDesc += block;
+          });
           let infoBodyHtml = desc;
           if (infoBodyExtras.length) infoBodyHtml += infoBodyExtras.join('');
           const levelCapable = hasAnyLevel
@@ -2004,6 +2119,7 @@
           const infoTagsHtml = infoTagParts.join(' ');
           const infoPanelHtml = buildInfoPanelHtml({
             tagsHtml: infoTagsHtml,
+            keyInfoMeta,
             bodyHtml: infoBodyHtml,
             meta: infoMeta,
             sections: infoSections,
@@ -2645,10 +2761,10 @@
         };
         const qTypes = p.taggar?.typ || [];
         const TYPE_MAP = {
-          'Vapenkvalitet': 'Vapen',
+          'Vapenkvalitet': WEAPON_BASE_TYPES,
           'Rustningskvalitet': 'Rustning',
           'Sköldkvalitet': 'Sköld',
-          'Allmän kvalitet': ['Vapen', 'Sköld', 'Pil/Lod', 'Rustning', 'Artefakt', 'Lägre Artefakt']
+          'Allmän kvalitet': DEFAULT_QUALITY_TARGET_TYPES
         };
         const allowed = new Set();
         qTypes.forEach(t => {
@@ -2656,11 +2772,16 @@
           if (Array.isArray(mapped)) mapped.forEach(x => allowed.add(x));
           else if (mapped) allowed.add(mapped);
         });
-        if (!allowed.size) ['Vapen', 'Sköld', 'Pil/Lod', 'Rustning', 'Artefakt', 'Lägre Artefakt'].forEach(x => allowed.add(x));
+        if (!allowed.size) DEFAULT_QUALITY_TARGET_TYPES.forEach(x => allowed.add(x));
         const elig = inv.filter(it => {
           const entry = invUtil.getEntry(it.id || it.name);
           if (window.canApplyQuality) return canApplyQuality(entry, p);
           const types = entry?.taggar?.typ || [];
+          if ([...WEAPON_BASE_TYPES].some(typeName => allowed.has(typeName))
+            && typeof window.hasWeaponType === 'function'
+            && window.hasWeaponType(types)) {
+            return true;
+          }
           return types.some(t => allowed.has(t));
         });
         if (!elig.length) { await alertPopup('Ingen lämplig utrustning att förbättra.'); return; }
@@ -2734,7 +2855,7 @@
               }
             });
           } else {
-            const indiv = ['Vapen', 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel']
+            const indiv = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel']
               .some(t => p.taggar.typ.includes(t)) && !isStackableInventoryEntry(p);
             const rowTemplate = await invUtil.buildInventoryRow({ entry: p, list });
             if (!rowTemplate) return;
@@ -3098,6 +3219,7 @@
             }
           }
           const removed = before.find(it => it.namn === p.namn && (tr ? it.trait === tr : !it.trait));
+          if (removed && !(await handleSnapshotEntryRemoval(removed))) return;
           const remDeps = storeHelper.getDependents(before, removed);
           if (p.namn === 'Mörkt blod' && remDeps.length) {
             if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
@@ -3201,6 +3323,23 @@
       if (ent) {
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
+        const previousChoiceRule = (() => {
+          const picker = window.choicePopup;
+          if (!picker || typeof picker.getChoiceRule !== 'function') return null;
+          const prevCandidate = { ...ent, nivå: old };
+          const prevContext = {
+            list: Array.isArray(list) ? list : [],
+            entry: prevCandidate,
+            sourceEntry: prevCandidate,
+            level: old || '',
+            sourceLevel: old || ''
+          };
+          try {
+            return picker.getChoiceRule(prevCandidate, prevContext, { fallbackLegacy: true });
+          } catch (_) {
+            return null;
+          }
+        })();
         ent.nivå = select.value;
         const levelChoice = await pickListEntryChoice(ent, list, ent.nivå, ent, {
           promptIfMissingOnly: true
@@ -3231,12 +3370,13 @@
               }
             }
           }
-        } else if (name === 'Monsterlärd' && ent.trait) {
-          delete ent.trait;
-          storeHelper.setCurrentList(store, list); updateXP();
-          scheduleRenderList(); renderTraits();
-          updateSearchDatalist();
-          return;
+        } else {
+          const staleField = previousChoiceRule?.field;
+          if (staleField && Object.prototype.hasOwnProperty.call(ent, staleField)) {
+            delete ent[staleField];
+          } else if (name === 'Monsterlärd' && ent.trait) {
+            delete ent.trait;
+          }
         }
         const stopResult = typeof window.rulesHelper?.evaluateEntryStops === 'function'
           ? window.rulesHelper.evaluateEntryStops(ent, before, {

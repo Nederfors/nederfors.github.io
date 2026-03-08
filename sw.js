@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v16';
+const CACHE_NAME = 'symbaroum-pwa-v17';
 const PDF_DIR = 'pdf/';
 const URLS_TO_CACHE = [
   // build-sw-cache:start
@@ -117,7 +117,6 @@ const URLS_TO_CACHE = [
   'data/tjanster.json',
   'data/ritual.json',
   'data/rustning.json',
-  'data/vapen.json',
   'data/mat.json',
   'data/dryck.json',
   'data/sardrag.json',
@@ -125,6 +124,8 @@ const URLS_TO_CACHE = [
   'data/artefakter.json',
   'data/lagre-artefakter.json',
   'data/fallor.json',
+  'data/avstandsvapen.json',
+  'data/narstridsvapen.json',
   'data/pdf-list.json',
   'data/tabeller.json',
   // build-sw-cache:end

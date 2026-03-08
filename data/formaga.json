@@ -1463,7 +1463,7 @@
                         "Vapen"
                       ],
                       "ingen_typ": [
-                        "Tunga vapen"
+                        "Tvåhandsvapen"
                       ]
                     }
                   }
@@ -1478,7 +1478,7 @@
       "nivåer": {
         "Novis": "Handling: Passiv. Rollpersonen har studerat stridens taktik och genomskådat dess elementa. Rollpersonen kan beräkna sitt initiativ på Listig istället för Kvick.",
         "Gesäll": "Handling: Passiv. Rollpersonens defensiva snille låter rollpersonen använda Listig istället för Kvick i sitt Försvar.",
-        "Mästare": "Handling: Passiv. Rollpersonens offensiva geni gör att rollpersonen kan använda Listig istället för Träffsäker vid attacker med allt utom Tunga vapen."
+        "Mästare": "Handling: Passiv. Rollpersonens offensiva geni gör att rollpersonen kan använda Listig istället för Träffsäker vid attacker med allt utom Tvåhandsvapen."
       }
     },
     {
@@ -2072,15 +2072,7 @@
         "nivå_data": {
           "Novis": {
             "handling": "Passiv",
-            "skadetyp": "Ingen",
-            "regler": {
-              "andrar": [
-                {
-                  "mal": "forsvar_modifierare",
-                  "varde": 1
-                }
-              ]
-            }
+            "skadetyp": "Ingen"
           },
           "Gesäll": {
             "handling": "Aktiv",
@@ -2276,41 +2268,50 @@
       "namn": "Stark gåva",
       "beskrivning": "Det finns många myter om mystikens ursprung och många inom de etablerade traditionerna är ivriga med att utropa just sin tradition till den äldsta, eller i varje fall placera den i nära släktled till de första mystikerna. En spridd åsikt är att det var självlärda besvärjare med särskilt väl utvecklad eller stark gåva som grundade traditionerna. Den starka gåvan – medfödd eller utvecklad genom upprepade prövningar – finns fortfarande bland mystiker. Gåvan ger dels ett enastående motstånd mot världens tilltagande korruption och dessutom en omfattande förmåga att improvisera magi, det senare dock till ett högt pris i denna korruptionsrika skymningstid.",
       "taggar": {
-        "typ": [
-          "Förmåga"
-        ],
-        "ark_trad": [
-          "Mystiker"
-        ],
-        "nivå_data": {
-          "Novis": {
-            "regler": {
-              "andrar": [
-                {
-                  "mal": "korruptionstroskel",
-                  "satt": "add",
-                  "formel": "halv_viljestark_nedat"
-                },
-                {
-                  "mal": "styggelsetroskel",
-                  "satt": "add",
-                  "varde": 5
-                }
-              ]
+    "typ": ["Förmåga"],
+    "ark_trad": ["Mystiker"],
+    "nivå_data": {
+      "Novis": {
+        "regler": {
+          "andrar": [
+            {
+              "mal": "korruptionstroskel",
+              "satt": "add",
+              "formel": "halv_viljestark_nedat"
             },
-            "handling": "Speciell",
-            "skadetyp": "Ingen"
-          },
-          "Gesäll": {
-            "handling": "Speciell",
-            "skadetyp": "Ingen"
-          },
-          "Mästare": {
-            "handling": "Speciell",
-            "skadetyp": "Ingen"
-          }
-        }
+            {
+              "mal": "styggelsetroskel",
+              "satt": "add",
+              "varde": 5
+            }
+          ]
+        },
+        "handling": "Speciell",
+        "skadetyp": "Ingen"
       },
+      "Gesäll": {
+        "regler": {
+          "val": [
+            {
+              "field": "form",
+              "title": "Välj signaturkraft",
+              "subtitle": "Välj en redan vald mystisk kraft som signaturkraft för Stark gåva.",
+              "search": true,
+              "source": {
+                "typ": ["Mystisk kraft", "Endast valda"]
+              }
+            }
+          ]
+        },
+        "handling": "Speciell",
+        "skadetyp": "Ingen"
+      },
+      "Mästare": {
+        "handling": "Speciell",
+        "skadetyp": "Ingen"
+      }
+    }
+  },
       "nivåer": {
         "Novis": "Speciell. Redan på novisnivå låter den starka gåvan rollpersonen använda hela sin Viljestark som korruptionströskel i stället för halva. Total förstyggelse infaller först när den totala korruptionen uppgår till Viljestark +5",
         "Gesäll": "Speciell. Den starka gåvan låter rollpersonen välja en signaturkraft. Signaturkraften väljs bland de mystiska krafter som mystikern besitter och den kraften får sin korruptionstärning höjd med en nivå (till minst 1T4), men får också lägga till extra 1T4 till kraftens effekt. Om rollpersonen inte behärskar några krafter eller hellre vill använda signaturen på en förmåga som ger korruption kan den istället ge samma effekt där.",
@@ -2772,7 +2773,10 @@
             "handling": "Reaktiv",
             "skadetyp": "Ingen"
           }
-        }
+        },
+        "test": [
+          "Viljestark"
+        ]
       },
       "nivåer": {
         "Novis": "Handling: Reaktiv. En gång per runda, efter ett misslyckat försök att aktivera en mystisk kraft får rollpersonen kalla på de djupare resonanser som vilar under ytan. Genom att omfamna ett stänk av korruption (1 temporär Korruption), kan rollpersonen slå om sitt slag och välja det bästa resultatet.",
@@ -3125,7 +3129,16 @@
         "nivå_data": {
           "Novis": {
             "handling": "Passiv",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "mystik_karaktarsdrag",
+                  "satt": "ersatt",
+                  "varde": "Listig"
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Reaktiv",
@@ -3408,7 +3421,7 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Speciell. Vreden är starkare än rädslan för döden. Om Tåligheten når noll eller lägre fortsätter rollpersonen slå dödsslag som vanligt, men kan välja att fortsätta agera som om hen vore oskadd. Att pressa sig själv på detta vis sliter dock på kroppen; medan rollpersonen är under noll Tålighet räknas alla helande effekter som hälften av sin vanliga effekt, avrundat uppåt.",
+        "Novis": "Handling: Speciell. Vreden är starkare än rädslan för döden. Om Tåligheten når noll eller lägre fortsätter rollpersonen slå dödsslag som vanligt, men kan välja att inte ligga utslagen av skadan och agera som om hen vore oskadd. Att pressa sig själv på detta vis sliter dock på kroppen; Varje runda som rollpersonen är under noll Tålighet och utför en aktiv handling räknas alla helande effekter som hälften av sin vanliga effekt, avrundat uppåt.",
         "Gesäll": "Handling: Passiv. Om Ulvahednan ligger på eller under 0 Tålighet är det förblindande raseriet totalt. Varje anfall gör ytterligare 1T6 i skada.",
         "Mästare": "Handling: Speciell. Döden måste vänta. Om Ulvahednan slår ett slag som leder till döden, dör hen inte omedelbart. Istället fortsätter karaktären strida i 3 rundor till, utan att behöva slå dödsslag. Rollpersonens kropp är dock i dåligt skick och tar i slutet av varje runda 1T6 intern skada. Rollpersonen dör omedelbart om tiden löper ut och Tåligheten är under noll, men hinner göra ett sista anfall mot en fiende inom räckvidd som gör ytterligare 1T12 skada."
       }
@@ -3591,7 +3604,24 @@
         "nivå_data": {
           "Novis": {
             "handling": "Passiv",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_karaktarsdrag",
+                  "satt": "ersatt",
+                  "varde": "Träffsäker",
+                  "nar": {
+                    "har_utrustad_vapen_typ": [
+                      "Sköld"
+                    ],
+                    "ej_utrustad_vapen_kvalitet": [
+                      "Armfäst"
+                    ]
+                  }
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Reaktiv",

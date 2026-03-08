@@ -1,118 +1,290 @@
 # Symbapedia
 
-Symbapedia is a static web app for managing characters and inventory for the Symbaroum RPG. Open `index.html` to browse items and `character.html` to manage a character sheet locally in your browser.
+Symbapedia är en statisk webbapp för Symbaroum: du bläddrar poster i `index.html` och bygger/hanterar rollpersoner i `character.html`.
 
 ## Innehåll
 - [Kom igång](#kom-igång)
-- [Funktioner](#funktioner)
+- [Hur allt hänger ihop](#hur-allt-hänger-ihop)
+- [Regelnycklar (komplett lista)](#regelnycklar-komplett-lista)
+- [Snapshot-regler](#snapshot-regler)
+- [Export och import](#export-och-import)
+- [Kort användarmanual](#kort-användarmanual)
 - [Projektstruktur](#projektstruktur)
-- [Datamodell för JSON-entries](#datamodell-för-json-entries)
-- [Export och import av rollpersoner](#export-och-import-av-rollpersoner)
-- [Anteckningssidan](#anteckningssidan)
-- [Användarmanual](#användarmanual)
-- [Utveckling och bidrag](#utveckling-och-bidrag)
+- [Dataflöde för utveckling](#dataflöde-för-utveckling)
 
 ## Kom igång
-1. Klona eller ladda ned detta repo.
-2. Öppna `index.html` för att bläddra bland föremål och förmågor.
-3. Öppna `character.html` för att arbeta med en rollperson.
-4. För en lokal webbserver kan du exempelvis köra `python3 -m http.server` och besöka `http://localhost:8000`.
+1. Klona eller ladda ner repot.
+2. Öppna `index.html` för databasvyn.
+3. Öppna `character.html` för rollpersonsvyn.
+4. Alternativt: kör `python3 -m http.server` och öppna `http://localhost:8000`.
 
-Sidan fungerar helt offline och sparar all data i din webbläsares lagring.
+Allt körs lokalt i webbläsaren och sparas i `localStorage`.
 
-## Funktioner
-- Hantera flera rollpersoner med erfarenhetspoäng, inventarie och specialförmågor.
-- Filtrera listor på taggar och sökord.
-- Paneler för inventarie (`🎒`), egenskaper (`📊`) och anteckningar (`📜`).
-- Export och import av rollpersoner via JSON-filer.
-- All information lagras i webbläsarens `localStorage`, vilket gör att dina val finns kvar mellan besök.
+## Hur allt hänger ihop
+
+### 1) Databas
+- Data laddas från `data/*.json` (se listan i `js/main.js`).
+- Varje datafil kan vara:
+  - ett objekt med `entries` och valfritt `typ_regler`/`type_rules`
+  - en legacy-array av entries
+- `typ_regler` kopplas till entries via `taggar.typ`.
+
+### 2) Rollperson och persistens
+- Rollpersoner, listor, inventory, pengar, snapshots och anteckningar lagras i `localStorage`.
+- Centrallogiken för state finns i `js/store.js`.
+
+### 3) Regelmotor
+- Regelmotorn finns i `js/rules-helper.js`.
+- Regler hämtas från:
+  - `entry.taggar.regler`
+  - `entry.taggar.nivå_data.<nivå>.regler` (eller `niva_data`)
+  - matchande `typ_regler`
+- Merge-ordning: typregler -> entry-regler -> nivåregler (kumulativt för Novis/Gesäll/Mästare).
+
+För full teknisk referens av dataformat och regelmotor, se `data/INSTRUKTIONER.md`.
+
+## Regelnycklar (komplett lista)
+Det här är alla nycklar som regelmotorn använder för authoring i datafilerna.
+
+### A) Tillåtna regelblock (`RULE_KEYS`)
+- `andrar`
+- `kraver`
+- `krockar`
+- `ger`
+- `val`
+
+### B) Var regler ska ligga
+| Syfte | JSON-path |
+|---|---|
+| Entry-regler | `entries[i].taggar.regler.<regelblock>[]` |
+| Nivåspecifika entry-regler | `entries[i].taggar.nivå_data.<Nivå>.regler.<regelblock>[]` |
+| Typregler | `typ_regler.<Typ>.regler.<regelblock>[]` |
+| Nivåspecifika typregler | `typ_regler.<Typ>.nivå_data.<Nivå>.regler.<regelblock>[]` |
+| Maxgräns per entry | `entries[i].taggar.max_antal` |
+| Maxgräns per typ | `typ_regler.<Typ>.max_antal` |
+
+### C) Nycklar per regelblock
+#### `andrar[]`
+- `mal`
+- `satt` (`ersatt`/`satt` = ersätt, uteblivet = additivt)
+- `varde`
+- `formel`
+- `nar`
+- `regel_id` (alias: `rule_id`, `id`) för explicit override-token
+- `snapshot` (`true` för materialiserad snapshot-effekt)
+- `modifierare`
+- `tillat` (framförallt `karaktarsdrag`, `vapen_typer`, `vapen_kvaliteter`)
+
+#### `kraver[]`
+- `namn`
+- `nar`
+- `varde`
+- `meddelande` (alias: `message`)
+- Global nivågräns: `nivå_minst` (alias: `niva_minst`, `level_min`, `levelMin`)
+- Per-namn nivågräns: `namn_nivå_minst` (alias: `namn_niva_minst`, `name_level_min`)
+  - Objekt/arrayform accepterar namnfält: `namn`, `name`, `entry`, `post`
+  - Objekt/arrayform accepterar nivåfält: `nivå_minst`, `niva_minst`, `nivå`, `niva`, `level_min`, `levelMin`, `level`
+- Pass-block: `om_uppfyllt`, `vid_uppfyllt`, `on_pass`, `if_true`, `then`
+- Fail-block: `om_ej_uppfyllt`, `vid_ej_uppfyllt`, `on_fail`, `if_false`, `else`, `annars`
+
+Multiplikator-nycklar i pass/fail-block:
+- Pengar: `pengar_multiplikator`, `pengar_mult`, `pris_multiplikator`, `pris_mult`, `grundpris_multiplikator`, `money_multiplier`, `money_mult`, `price_multiplier`, `price_mult`, `cost_multiplier`
+- Erf/XP: `erf_multiplikator`, `erf_mult`, `xp_multiplier`, `xp_mult`, `experience_multiplier`
+- Nestad container: `mult`, `multiplikator`, `multipliers`, `multiplier`
+
+#### `krockar[]`
+- `namn`
+- `nar` (targetfilter, inkl. `nar.ark_trad`)
+- `satt` (`ersatt` för replace-konflikt, annars blockerande)
+- `varde`
+
+#### `ger[]`
+- `mal` (vanligast: `post`, `foremal`, `pengar`, `permanent_korruption`, `skydd_permanent_korruption`)
+- `nar`
+- `varde`
+
+För `mal: "post"`:
+- Referenser: `post`, `id`, `namn`
+- Gratisstyrning: `gratis` (hela posten gratis) eller `gratis_upp_till`/`gratis_till` (gratis upp till nivå)
+- Limit-bypass: `ignore_limits` (posten ignorerar systemets gränser)
+- Övrigt: `beviljad_niva`, `erf`, `xp`, `erf_per_niva`
+- Utan gratis-tag (`gratis*`) är granten inte gratis
+
+För `mal: "foremal"`:
+- `foremal: [{ id|namn|name, antal|qty|varde }]`
+
+För `mal: "pengar"`:
+- `daler`, `skilling`, `ortegar`
+
+#### `val[]`
+- `field` (alias: `mal`) med värde: `trait`, `race`, `form`, `artifactEffect`
+- `title`, `subtitle`, `search`
+- `options`
+- `source`
+- `nar`
+- `duplicate_policy`: `allow`, `reject`, `confirm`, `replace_existing`
+- `exclude_used`
+- `duplicate_message`
+
+`options[]` accepterar:
+- strängvärden, eller objekt med `value` (alias: `varde`, `id`, `namn`)
+- valfritt: `label` (alias: `name`, `namn`), `search`, `disabled`, `disabledReason`, `effects`, `regler` (alias: `rules`)
+
+`source` accepterar:
+- `typ`
+- `value_field` (alias: `valueField`, `field`)
+- `label_field` (alias: `labelField`)
+- `sort`
+- `nar`
+
+Artefaktbindning via taggar (för `artifactEffect`-val):
+- Konfig-nycklar: `artefakt_bindning`, `artefakt_bindningar`, `artefaktbindning`, `artefaktbindningar`, `artifact_binding`, `artifact_bindings`, `artifactbinding`, `artifactbindings`, `artifactEffectOptions`, `artifactEffects`, `artifact_effect_options`, `artifact_effects`
+- Options-container-nycklar: `options`, `alternativ`, `choices`, `val`, `betalning`, `kostnad`, `cost`
+
+### D) `nar`-villkor (komplett)
+Listvillkor (`context.list`):
+- `har_namn`
+- `har_namn_niva_minst` (alias: `har_namn_nivå_minst`, `har_namn_level_min`)
+- `saknar_namn`
+- `nagon_av_namn`
+- `antal_namn_max`
+- `antal_typ_max`
+
+Beräknade mål (`context.computedValues`):
+- `mal_minst`
+- `mal_saknas`
+- `har_mal`
+
+Rustning (`context.utrustadTyper`):
+- `har_utrustad_typ`
+
+Vapen (`context.vapenFakta`/`context.antalVapen`):
+- `antal_utrustade_vapen_minst`
+- `har_utrustad_vapen_typ`
+- `ej_utrustad_vapen_typ`
+- `har_utrustad_vapen_kvalitet`
+- `ej_utrustad_vapen_kvalitet`
+
+Föremål (`context.foremal`):
+- `foremal.typ`
+- `foremal.ingen_typ`
+- `foremal.nagon_kvalitet`
+- `foremal.id`
+- `foremal.namn`
+
+Stridsflaggor:
+- `narstrid`
+- `avstand`
+- `overtag`
+- `efter_forflyttning`
+
+Källnivå (`context.sourceLevel`):
+- `kalla_niva_minst`
+
+Inventory/source-filter (`context.row`/`context.sourceEntry`):
+- `trait`
+- `namn`
+- `typ`
+
+Targetmatchning i krav/krock (utanför `evaluateNar`):
+- `nar.namn`
+- `nar.typ`
+- `nar.ark_trad`
+
+### E) `formel`-nycklar
+Strängformler:
+- `viljestark`
+- `hel_viljestark`
+- `halv_viljestark_uppat`
+- `halv_viljestark_nedat`
+- `stark_plus_3`
+- `stark_x_1_5_plus_3`
+- `stark_x_0_5_plus_3`
+- `halv_permanent_korruption_nedat`
+- `fjardedel_aktuell_smartgrans_nedat`
+- `niva`
+- `fjardedel_korruptionstroskel_uppat`
+
+Objektformel:
+- `bas` (`niva`, `mal:<mal>`, `attribut:<fält>` eller direkt context-nyckel)
+- `faktor`
+- `division`
+- `tillagg`
+- `avrunda` (`uppat`, `nedat`, `narmast`)
+
+### F) `mal` som används i nuvarande data
+- `Hidden`
+- `anfall_karaktarsdrag`
+- `barkapacitet_faktor`
+- `begransning_modifierare`
+- `foremal`
+- `forsvar_karaktarsdrag`
+- `forsvar_modifierare`
+- `karaktarsdrag_max_tillagg`
+- `korruptionstroskel`
+- `mystik_karaktarsdrag`
+- `nollstall_begransning_modifierare`
+- `pengar`
+- `permanent_korruption`
+- `permanent_korruption_faktor`
+- `post`
+- `separat_forsvar_karaktarsdrag`
+- `skydd_permanent_korruption`
+- `smartgrans_tillagg`
+- `styggelsetroskel`
+- `talighet_bas`
+- `talighet_tillagg`
+- `traffsaker_modifierare_vapen`
+
+### G) Relaterade begränsningsnycklar
+- `max_antal`
+- `ignore_limits`
+- `kan_införskaffas_flera_gånger` (legacy alias: `kan_inforskaffas_flera_ganger`)
+
+Detaljerad lista över aktiva limit-checkar och hur `ignore_limits` påverkar dem finns i `data/INSTRUKTIONER.md` (sektion 13.1).
+
+## Snapshot-regler
+`snapshot: true` används på `andrar`-regler för att frysa en beräknad effekt vid appliceringstillfället.
+
+- Samma shape som vanliga `andrar`: `mal`, `varde`/`formel`, `satt`, `nar`.
+- Snapshot-regler materialiseras till statiska regler med metadata:
+  - `metadata.snapshot`
+  - `metadata.source_rule`
+  - `metadata.source_values`
+- När en källa tas bort får användaren välja om snapshot-effekter ska tas bort eller behållas.
+- För artefakter stöds snapshot även via `taggar.artefakt_bindning.options[].regler`.
+
+## Export och import
+- **Export** i filterpanelen kan spara:
+  - en vald rollperson som JSON
+  - alla rollpersoner i en gemensam JSON
+- **Import** läser en eller flera sådana filer och återställer rollpersoner.
+- Anteckningar (`notes.html`) följer med om något fält är ifyllt.
+
+## Kort användarmanual
+- `index.html`: sök och filtrera poster.
+- `character.html`: lägg till/ta bort poster på rollpersonen.
+- `🎒`: inventarie.
+- `📊`: karaktärsdrag, översikt, effekter.
+- `📜`: anteckningar.
+- `⚙️`: filtermeny, ny/ta bort rollperson, export/import.
+- Skriv `lol` i sökfältet och tryck Enter för att rensa filter.
 
 ## Projektstruktur
-- `index.html` – bläddra bland föremål och förmågor.
-- `character.html` – hantera en specifik rollperson.
-- `data/` – JSON-filer med databasen över föremål, färdigheter m.m.
-- `data/README.md` – komplett schema- och regelguide för datafilerna (inkl. uppdateringsflöde).
-- `js/` – JavaScript-moduler för lagring, logik och användargränssnitt.
-- `css/` – stilmallar.
+- `index.html` - databasvy.
+- `character.html` - rollpersonsvy.
+- `data/` - alla JSON-filer och dataskrivregler.
+- `data/INSTRUKTIONER.md` - fullständig regelmotor- och dataguide.
+- `js/` - app-, store- och regelmotorlogik.
+- `css/` - stilar.
 
-## Datamodell för JSON-entries
+## Dataflöde för utveckling
+Efter ändringar i data/regler:
 
-För all data-driven struktur och regeldefinitioner i `data/*.json`, se:
+```bash
+python3 scripts/master_sync.py
+python3 scripts/build_all.py --strict
+osascript -l JavaScript scripts/verify_rules_helper.js
+```
 
-- `data/README.md` – fältstruktur, regelmotor (`regler`), nivådata, begränsningar, statmodifierare och obligatoriskt "håll uppdaterat"-flöde.
-
-## Export och import av rollpersoner
-Use the **Export** button in the filter panel to open a menu where you can either download a specific character as a JSON file, or download all saved characters together as a single JSON file. "Alla rollpersoner" ligger alltid överst och den aktiva rollpersonen visas näst högst upp. When supported by your browser a “Save As” dialog allows you to pick both filename and location; otherwise the files are downloaded normally. The **Import** button lets you select one or more such files — including a single file containing multiple characters — to recreate characters (requires that the database is loaded). Anteckningar följer med vid export så länge något fält är ifyllt.
-
-## Anteckningssidan
-
-`notes.html` är en fristående sida där du kan skriva bakgrund och övriga anteckningar för rollpersonen. All text sparas i webbläsarens lagring och inkluderas automatiskt vid export och import av rollpersonen.
-
-## Användarmanual
-
-### 1. Kom igång
-Sidan är helt fristående och kräver ingen installation. Öppna `index.html` för att se alla föremål och förmågor, eller `character.html` för att arbeta direkt med din nuvarande rollperson.
-
-### 2. Navigering mellan vyer
-Både index- och rollpersons-vyn använder samma verktygsrad. Pilen med symbolen `🔄` byter mellan de två sidorna.
-
-### 3. Verktygsraden
-Verktygsraden innehåller:
-- Ett sökfält. Skriv ett ord och tryck Enter för att lägga till det som filter.
-- `XP:` visar hur mycket erfarenhet du har använt. Detta uppdateras automatiskt.
-- `🎒` öppnar inventariet.
-- `📊` öppnar egenskapsvyn med tabbarna Karaktärsdrag, Översikt och Effekter.
-- `📜` öppnar anteckningspanelen.
-- Skriv `lol` i sökfältet och tryck Enter för att rensa alla filter.
-- `⚙️` öppnar filtermenyn där du bland annat skapar och hanterar rollpersoner.
-
-### 4. Filtermenyn
-I panelen som öppnas med `⚙️` finns flera viktiga knappar:
-- **Ny rollperson** skapar en tom karaktär och gör den aktiv.
-- **Ta bort rollperson** raderar den aktuella karaktären.
-- **Export** öppnar en meny där du kan ladda ner alla rollpersoner eller välja en specifik att exportera som JSON-fil.
-- **Import** återställer en eller flera karaktärer från sparade filer.
-- **<img src="icons/smithing.svg" alt="Smed" width="18">**, **<img src="icons/alkemi.svg" alt="Alkemist" width="18">** och **<img src="icons/artefakt.svg" alt="Artefakt" width="18">** anger nivå på smed, alkemist och artefaktmakare i ditt sällskap. Dessa nivåer används för att räkna ut rabatter på priser.
-- **<img src="icons/extend.svg" alt="Utvidga sökning" width="18">** gör att flera filter kombineras med OR i stället för AND, vilket ger en bredare sökning.
-- **<img src="icons/expand.svg" alt="Expandera vy" width="18"> Expandera vy** växlar till vanliga vyn.
-- **ℹ️** visar en snabböversikt av alla knappar.
-
-### 5. Inventariepanelen
-Via `🎒` kommer du åt allt du har samlat på dig.
-- **Kategori** låter dig filtrera inventarielistan på typ av utrustning.
-- Under **Verktyg** hittar du knappar för **🆕**, **<img src="icons/basket.svg" alt="Pengar" width="18" height="18">**, **🧹** och **x²** för att lägga till flera av samma föremål. Om föremålet inte kan staplas skapas nya fält.
-I listan för varje föremål finns knappar för att öka/minska antal, markera som gratis, redigera kvaliteter och mer.
-
-### 6. Egenskapssidorna
-`📊` öppnar en samlad sektion med tre flikar:
-- **Karaktärsdrag**: nuvarande vy för att justera drag, XP och bonusar.
-- **Översikt**: visar bärkapacitet, försvar, ekonomi och sammanfattande listor.
-- **Effekter**: listar alla aktiva effekter från förmågor och inventarie.
-
-### 7. Anteckningspanelen
-`📜` låter dig skriva fria anteckningar om rollpersonen. Dessa sparas tillsammans med karaktären och följer med vid export och import om något fält innehåller text.
-
-### 8. Arbeta med listorna
-Både i index-vyn och i din karaktär visas poster som kort.
-- **Lägg till** eller `+` lägger till posten.
-- `−` tar bort en instans av posten eller hela raden om det bara finns en.
-- **Info** visar beskrivning och eventuella regler.
-- **🔨** låter dig välja en extra kvalitet till ett vapen, rustning eller en artefakt.
-- **☭** markerar en av kvaliteterna som gratis.
-- **🆓** gör hela föremålet gratis vid beräkning av totalkostnad.
-- **↔** finns på artefakter och växlar dess effekt mellan att ge 1 XP eller permanent korruption.
-- **🗑** tar bort posten helt.
-- Monstruösa särdrag som blir gratis via Hamnskifte eller Blodvadare ger ett val mellan Humanoid eller Hamnskifte (−10 XP) när de läggs till.
-- Naturligt vapen, Pansar, Regeneration och Robust kan bara tas en gång och visas som separata poster.
-- Monstruösa särdrag kan inte staplas.
-
-### 9. Export och import
-Se avsnittet ovan. Export öppnar en meny där du kan spara alla karaktärer som en samlad JSON-fil, eller välja en enskild karaktär som JSON-fil. Import läser in sparade filer (även en fil med flera karaktärer) och återställer karaktärer. Anteckningar följer med så länge minst ett fält innehåller text. All data sparas i webblagring så inget backend behövs.
-
-### 10. Tips och tricks
-- Alla dina val sparas automatiskt i webblagringen på datorn.
-- Klicka på taggar i en lista för att snabbt filtrera på samma typ eller arketyp.
-- Hjälpmenyn (ℹ️) innehåller en sammanfattning av alla knappar om du behöver snabb hjälp.
-
-## Utveckling och bidrag
-Projektet består av statisk HTML, CSS och JavaScript utan byggsteg. Ändringar i `data/` och `js/` reflekteras direkt i webbläsaren. Förslag, felrapporter och förbättringar tas emot via pull requests.
+Projektet är statisk HTML/CSS/JS utan byggsteg. Förslag och förbättringar tas via pull requests.

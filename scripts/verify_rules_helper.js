@@ -103,6 +103,20 @@ function readEntryDataFile(rootPath, relativePath) {
   return attachTypeRulesToEntries(parsed.entries, parsed.typeRules);
 }
 
+function readWeaponEntries(rootPath) {
+  const files = ['data/narstridsvapen.json', 'data/avstandsvapen.json'];
+  const out = [];
+  files.forEach(file => {
+    try {
+      out.push(...readEntryDataFile(rootPath, file));
+    } catch (_) {
+      // Ignore missing split files and try legacy fallback below.
+    }
+  });
+  if (out.length) return out;
+  return readEntryDataFile(rootPath, 'data/vapen.json');
+}
+
 function collectLegacyRepeatabilityTrue(value, path, out) {
   if (Array.isArray(value)) {
     value.forEach((item, index) => {
@@ -362,6 +376,49 @@ function verifyRuleHelper(rootPath) {
   assert(customEffects.toughness === -1, 'Custom bindning ska kunna ge tålighetskostnad');
   assert(Object.keys(customEffects).length === 2, 'Custom bindning ska inte lägga till extra defaultkostnader');
 
+  const prevDb = Array.isArray(sandbox.DB) ? sandbox.DB.slice() : sandbox.DB;
+  sandbox.DB = [
+    { id: 'mk-selected', namn: 'Vald kraft', taggar: { typ: ['Mystisk kraft'] } },
+    { id: 'mk-other', namn: 'Ovald kraft', taggar: { typ: ['Mystisk kraft'] } },
+    { id: 'rit-selected', namn: 'Vald ritual', taggar: { typ: ['Ritual'] } }
+  ];
+  const selectedList = [
+    { id: 'mk-selected', namn: 'Vald kraft' },
+    { id: 'rit-selected', namn: 'Vald ritual' }
+  ];
+  const selectedTagOptions = sandbox.rulesHelper.resolveChoiceOptions(
+    {
+      field: 'trait',
+      source: {
+        typ: ['Mystisk kraft', 'Endast valda'],
+        sort: 'alpha'
+      }
+    },
+    { list: selectedList }
+  );
+  deepEqual(
+    selectedTagOptions.map(option => option.value),
+    ['Vald kraft'],
+    'source.typ=Endast valda ska filtrera till entries som finns sparade på karaktären'
+  );
+  const selectedNarOptions = sandbox.rulesHelper.resolveChoiceOptions(
+    {
+      field: 'trait',
+      source: {
+        typ: ['Mystisk kraft'],
+        nar: { endast_valda: true },
+        sort: 'alpha'
+      }
+    },
+    { list: selectedList }
+  );
+  deepEqual(
+    selectedNarOptions.map(option => option.value),
+    ['Vald kraft'],
+    'source.nar.endast_valda ska filtrera till entries som finns sparade på karaktären'
+  );
+  sandbox.DB = prevDb;
+
   const unsupported = sandbox.rulesHelper.getEntryRules({
     taggar: {
       regler: {
@@ -447,8 +504,8 @@ function verifyRuleHelper(rootPath) {
     [
       {
         trait: 'Listig',
-        summaryText: 'Listig som tr\u00e4ffs\u00e4ker f\u00f6r attacker med allt utom tunga vapen',
-        extraText: 'Kan anv\u00e4ndas som tr\u00e4ffs\u00e4ker f\u00f6r attacker med allt utom tunga vapen',
+        summaryText: 'Listig som tr\u00e4ffs\u00e4ker f\u00f6r attacker med allt utom tv\u00e5handsvapen',
+        extraText: 'Kan anv\u00e4ndas som tr\u00e4ffs\u00e4ker f\u00f6r attacker med allt utom tv\u00e5handsvapen',
         sourceEntryId: taktiker.id,
         sourceEntryName: 'Taktiker',
         sourceEntryLevel: 'M\u00e4stare'
@@ -572,6 +629,356 @@ function verifyRuleHelper(rootPath) {
   );
 }
 
+function verifySnapshotRules(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
+
+  const artifacts = readEntryDataFile(rootPath, 'data/artefakter.json');
+  const artifactById = id => artifacts.find(entry => entry && entry.id === id);
+  const skymningsvatten = artifactById('ar02');
+  const rasthuulsAndekarl = artifactById('ar61');
+  const nidvatten = artifactById('ar06');
+  assert(skymningsvatten, 'Hittade inte ar02 för snapshot-verifiering');
+  assert(rasthuulsAndekarl, 'Hittade inte ar61 för snapshot-verifiering');
+  assert(nidvatten, 'Hittade inte ar06 för snapshot-verifiering');
+
+  deepEqual(
+    sandbox.rulesHelper.getArtifactEffectValueEffects(nidvatten, 'corruption'),
+    { corruption: 1 },
+    'Artefaktbindning utan regler ska behålla legacy effects-beteende'
+  );
+  deepEqual(
+    sandbox.rulesHelper.getArtifactEffectValueRules(nidvatten, 'corruption'),
+    {},
+    'Artefaktbindning utan regler ska inte skapa regelblock implicit'
+  );
+
+  const makePermanentRuleEntry = (id, amount) => ({
+    id,
+    namn: id,
+    taggar: {
+      typ: ['Nackdel'],
+      regler: {
+        ger: [{ mal: 'permanent_korruption', varde: Number(amount) || 0 }]
+      }
+    }
+  });
+  const makePermanentModifierEntry = (id, amount) => ({
+    id,
+    namn: id,
+    taggar: {
+      typ: ['Fördel'],
+      regler: {
+        andrar: [{ mal: 'permanent_korruption', varde: Number(amount) || 0 }]
+      }
+    }
+  });
+  const attachResolvedRules = (list, rules, sourceKey = 'snapshot-test') => {
+    const targetList = Array.isArray(list) ? list : [];
+    const mapped = (Array.isArray(rules) ? rules : []).map(rule => ({
+      key: 'andrar',
+      rule: JSON.parse(JSON.stringify(rule)),
+      sourceEntryId: sourceKey,
+      sourceEntryName: sourceKey
+    }));
+    try {
+      Object.defineProperty(targetList, '__snapshotRules', {
+        value: mapped,
+        writable: true,
+        configurable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      targetList.__snapshotRules = mapped;
+    }
+    return targetList;
+  };
+
+  const skymRules = sandbox.rulesHelper.getArtifactEffectValueRules(skymningsvatten, 'xp');
+  assert(Array.isArray(skymRules.andrar) && skymRules.andrar.length === 2, 'ar02 ska ha två bindningsregler');
+  assert(skymRules.andrar.every(rule => rule && rule.snapshot === true), 'ar02-bindningsregler ska vara snapshot');
+  const skymMaterialized = sandbox.rulesHelper.materializeSnapshotAndrarRules(skymRules.andrar, {
+    list: [makePermanentRuleEntry('perm-base-3', 3)]
+  });
+  deepEqual(
+    skymMaterialized.map(rule => ({ mal: rule.mal, varde: rule.varde })),
+    [
+      { mal: 'smartgrans_tillagg', varde: -3 },
+      { mal: 'permanent_korruption', varde: -3 }
+    ],
+    'ar02 snapshot-kedjan ska materialiseras med bindningstidens permanent korruption'
+  );
+
+  const andekarlRules = sandbox.rulesHelper.getArtifactEffectValueRules(rasthuulsAndekarl, 'corruption');
+  assert(Array.isArray(andekarlRules.andrar) && andekarlRules.andrar.length === 2, 'ar61 ska ha två bindningsregler');
+  assert(andekarlRules.andrar.every(rule => rule && rule.snapshot === true), 'ar61-bindningsregler ska vara snapshot');
+  const andekarlMaterialized = sandbox.rulesHelper.materializeSnapshotAndrarRules(andekarlRules.andrar, {
+    list: [makePermanentRuleEntry('perm-base-2', 2)]
+  });
+  deepEqual(
+    andekarlMaterialized.map(rule => Number(rule.varde)),
+    [1, 3],
+    'ar61 snapshot-regler ska köras sekventiellt och läsa mellanstatus'
+  );
+  const andekarlList = attachResolvedRules(
+    [makePermanentRuleEntry('perm-base-2', 2)],
+    andekarlMaterialized,
+    'ar61-test'
+  );
+  assert(
+    sandbox.rulesHelper.calcPermanentCorruption(andekarlList, { korruptionstroskel: 12 }) === 6,
+    'ar61 snapshot-kedjan ska ge slutvärde 6 från bas 2'
+  );
+
+  const nonSnapshotRules = sandbox.rulesHelper.materializeSnapshotAndrarRules([
+    {
+      mal: 'smartgrans_tillagg',
+      formel: { bas: 'mal:permanent_korruption', faktor: -1 }
+    }
+  ], {
+    list: [makePermanentRuleEntry('perm-base-4', 4)]
+  });
+  assert(nonSnapshotRules.length === 1, 'Icke-snapshot-regel ska finnas kvar i materialiseringsresultatet');
+  assert(
+    nonSnapshotRules[0].formel && nonSnapshotRules[0].varde === undefined,
+    'Icke-snapshot-regel ska behålla dynamisk formel och inte frysa till varde'
+  );
+  assert(
+    !nonSnapshotRules[0]?.metadata?.snapshot,
+    'Icke-snapshot-regel ska inte få snapshot-metadata'
+  );
+
+  const snapshotNarRules = sandbox.rulesHelper.materializeSnapshotAndrarRules([
+    {
+      mal: 'smartgrans_tillagg',
+      formel: { bas: 'mal:permanent_korruption', faktor: -1 },
+      nar: { mal_minst: { permanent_korruption: 3 } },
+      snapshot: true
+    },
+    {
+      mal: 'smartgrans_tillagg',
+      formel: { bas: 'mal:permanent_korruption', faktor: -1 },
+      nar: { mal_minst: { permanent_korruption: 4 } },
+      snapshot: true
+    }
+  ], {
+    list: [
+      makePermanentRuleEntry('perm-base-2', 2),
+      makePermanentModifierEntry('perm-plus-1', 1)
+    ]
+  });
+  assert(snapshotNarRules.length === 1, 'Snapshot nar-villkor ska filtrera bort regler som inte uppfylls');
+  assert(snapshotNarRules[0].varde === -3, 'Snapshot med nar ska läsa effektiva värden efter aktiva regler');
+  assert(
+    Number(snapshotNarRules[0]?.metadata?.source_values?.permanent_korruption) === 3,
+    'Snapshot-metadata ska spåra avläst permanent korruption'
+  );
+
+  const traitSnapshot = sandbox.rulesHelper.materializeSnapshotAndrarRules([
+    {
+      mal: 'talighet_tillagg',
+      formel: { bas: 'mal:karaktarsdrag:stark', faktor: -1 },
+      snapshot: true
+    }
+  ], {
+    list: [],
+    traits: { Stark: 15 }
+  });
+  assert(traitSnapshot.length === 1, 'Trait-baserad snapshot ska materialiseras');
+  assert(traitSnapshot[0].varde === -15, 'Snapshot ska kunna läsa ett specifikt trait-värde');
+  assert(
+    Number(traitSnapshot[0]?.metadata?.source_values?.['karaktarsdrag:stark']) === 15,
+    'Trait-baserad snapshot ska logga läst trait-värde i metadata'
+  );
+
+  const emptyMoney = { daler: 0, skilling: 0, 'örtegar': 0 };
+  const createStore = () => ({
+    current: 'snapshot-test',
+    characters: [{ id: 'snapshot-test', name: 'Snapshot Test' }],
+    folders: [],
+    data: {
+      'snapshot-test': {
+        list: [],
+        inventory: [],
+        custom: [],
+        bonusMoney: { ...emptyMoney },
+        privMoney: { ...emptyMoney },
+        possessionMoney: { ...emptyMoney }
+      }
+    }
+  });
+
+  const freezeStore = createStore();
+  sandbox.storeHelper.setCurrentList(freezeStore, [makePermanentRuleEntry('perm-base-3', 3)]);
+  sandbox.storeHelper.syncSnapshotRuleSources(freezeStore, [
+    {
+      sourceKey: 'artifact:freeze',
+      sourceName: 'Freeze source',
+      sourceType: 'artifact_binding',
+      sourceSignature: 'freeze-v1',
+      rules: [
+        {
+          mal: 'permanent_korruption',
+          formel: { bas: 'mal:permanent_korruption', faktor: -1 },
+          snapshot: true
+        }
+      ]
+    }
+  ], {
+    sourceType: 'artifact_binding',
+    removeMissing: true
+  });
+  let freezeRecords = sandbox.storeHelper.getSnapshotRuleRecords(freezeStore);
+  assert(freezeRecords.length === 1, 'Snapshot-källa ska materialisera en regel i store');
+  assert(freezeRecords[0].rule.varde === -3, 'Snapshot ska frysa permanent korruption till bindningsvärdet');
+
+  sandbox.storeHelper.setCurrentList(freezeStore, [makePermanentRuleEntry('perm-base-5', 5)]);
+  sandbox.storeHelper.syncSnapshotRuleSources(freezeStore, [
+    {
+      sourceKey: 'artifact:freeze',
+      sourceName: 'Freeze source',
+      sourceType: 'artifact_binding',
+      sourceSignature: 'freeze-v1',
+      rules: [
+        {
+          mal: 'permanent_korruption',
+          formel: { bas: 'mal:permanent_korruption', faktor: -1 },
+          snapshot: true
+        }
+      ]
+    }
+  ], {
+    sourceType: 'artifact_binding',
+    removeMissing: true
+  });
+  freezeRecords = sandbox.storeHelper.getSnapshotRuleRecords(freezeStore);
+  assert(freezeRecords.length === 1, 'Snapshot-källa ska behålla tidigare materialiserad regel');
+  assert(freezeRecords[0].rule.varde === -3, 'Snapshot-värde ska ligga kvar oförändrat efter senare stat-ändring');
+  assert(
+    sandbox.storeHelper.calcPermanentCorruption(
+      sandbox.storeHelper.getCurrentList(freezeStore),
+      { korruptionstroskel: 12 }
+    ) === 2,
+    'Fryst snapshot ska fortsätta bidra med ursprungsvärdet även när basvärdet ändras'
+  );
+
+  const equipmentStore = createStore();
+  const artifactEntry = {
+    id: 'ar61',
+    namn: 'Rasthuuls Andekärl',
+    taggar: { typ: ['Artefakt'] },
+    noInv: true
+  };
+  sandbox.storeHelper.setCurrentList(equipmentStore, [
+    makePermanentRuleEntry('perm-base-2', 2),
+    artifactEntry
+  ]);
+  sandbox.storeHelper.setArtifactEffects(equipmentStore, { corruption: 1 });
+  sandbox.storeHelper.syncSnapshotRuleSources(equipmentStore, [
+    {
+      sourceKey: 'artifact:equipment',
+      sourceName: 'Equipment source',
+      sourceType: 'artifact_binding',
+      sourceSignature: 'equipment-v1',
+      sourceRef: {
+        kind: 'artifact_binding',
+        artifactId: 'ar61',
+        artifactName: 'Rasthuuls Andekärl'
+      },
+      rules: [
+        {
+          mal: 'smartgrans_tillagg',
+          formel: { bas: 'mal:permanent_korruption', faktor: -1 },
+          snapshot: true
+        }
+      ]
+    }
+  ], {
+    sourceType: 'artifact_binding',
+    removeMissing: true
+  });
+  const equipmentRecords = sandbox.storeHelper.getSnapshotRuleRecords(equipmentStore);
+  assert(equipmentRecords.length === 1, 'Snapshot med artefaktkälla ska materialiseras');
+  assert(
+    equipmentRecords[0].rule.varde === -3,
+    'Snapshot ska läsa effektiva värden inklusive aktiv utrustningskorruption'
+  );
+  const equipmentList = sandbox.storeHelper.getCurrentList(equipmentStore);
+  const equipmentArtifact = equipmentList.find(entry => entry && entry.id === 'ar61');
+  assert(equipmentArtifact, 'Artefaktentry för impact-test ska finnas i listan');
+  const equipmentImpact = sandbox.storeHelper.getSnapshotSourceImpactForEntry(equipmentStore, equipmentArtifact);
+  assert(
+    Number(equipmentImpact.count || 0) > 0 && Array.isArray(equipmentImpact.sourceKeys) && equipmentImpact.sourceKeys.includes('artifact:equipment'),
+    'Snapshot-impact i listvyer ska hitta artefaktkällor via sourceRef'
+  );
+
+  const snapshotEntry = {
+    id: 'snapshot-entry-test',
+    namn: 'Snapshot Entry',
+    taggar: {
+      typ: ['Fördel'],
+      regler: {
+        andrar: [
+          {
+            mal: 'smartgrans_tillagg',
+            varde: -2,
+            snapshot: true
+          }
+        ]
+      }
+    }
+  };
+
+  const keepStore = createStore();
+  sandbox.storeHelper.setCurrentList(keepStore, [{ ...snapshotEntry }]);
+  const keepList = sandbox.storeHelper.getCurrentList(keepStore);
+  const keepSourceEntry = keepList.find(entry => entry.id === 'snapshot-entry-test');
+  assert(keepSourceEntry, 'Snapshot-källa ska finnas i listan före borttagning');
+  const keepImpact = sandbox.storeHelper.getSnapshotSourceImpactForEntry(keepStore, keepSourceEntry);
+  assert(keepImpact.count === 1 && keepImpact.sourceKey, 'Snapshot-impact ska hittas för entry-källa');
+  assert(
+    sandbox.storeHelper.detachSnapshotRulesBySource(keepStore, keepImpact.sourceKey) === true,
+    'Detach ska kunna behålla snapshot-effekter utan källa'
+  );
+  sandbox.storeHelper.setCurrentList(keepStore, []);
+  const keptRecords = sandbox.storeHelper.getSnapshotRuleRecords(keepStore);
+  assert(keptRecords.length === 1 && keptRecords[0].detached === true, 'Detachade snapshot-regler ska persistera');
+  assert(
+    sandbox.storeHelper.calcPainThreshold(
+      10,
+      sandbox.storeHelper.getCurrentList(keepStore),
+      { korruptionstroskel: 12 }
+    ) === 3,
+    'Behåll-valet ska låta snapshot-effekter ligga kvar efter att käll-entry tagits bort'
+  );
+
+  const removeStore = createStore();
+  sandbox.storeHelper.setCurrentList(removeStore, [{ ...snapshotEntry }]);
+  const removeList = sandbox.storeHelper.getCurrentList(removeStore);
+  const removeSourceEntry = removeList.find(entry => entry.id === 'snapshot-entry-test');
+  assert(removeSourceEntry, 'Snapshot-källa för remove-test ska finnas i listan');
+  const removeImpact = sandbox.storeHelper.getSnapshotSourceImpactForEntry(removeStore, removeSourceEntry);
+  assert(removeImpact.count === 1 && removeImpact.sourceKey, 'Remove-test ska hitta snapshot-impact');
+  assert(
+    sandbox.storeHelper.removeSnapshotRulesBySource(removeStore, removeImpact.sourceKey) === true,
+    'Remove ska kunna ta bort snapshot-effekter med källan'
+  );
+  sandbox.storeHelper.setCurrentList(removeStore, []);
+  assert(
+    sandbox.storeHelper.getSnapshotRuleRecords(removeStore).length === 0,
+    'Ta-bort-valet ska rensa snapshot-effekter från state'
+  );
+  assert(
+    sandbox.storeHelper.calcPainThreshold(
+      10,
+      sandbox.storeHelper.getCurrentList(removeStore),
+      { korruptionstroskel: 12 }
+    ) === 5,
+    'Efter remove-valet ska ingen snapshot-effekt påverka smärtgränsen'
+  );
+}
+
 function verifyRuntimeConsumers(rootPath) {
   const traitsSource = readText(joinPath(rootPath, 'js/traits-utils.js'));
   const characterViewSource = readText(joinPath(rootPath, 'js/character-view.js'));
@@ -579,6 +986,34 @@ function verifyRuntimeConsumers(rootPath) {
   const summaryEffectsSource = readText(joinPath(rootPath, 'js/summary-effects.js'));
   const storeSource = readText(joinPath(rootPath, 'js/store.js'));
   const inventoryUtilsSource = readText(joinPath(rootPath, 'js/inventory-utils.js'));
+
+  assert(
+    characterViewSource.includes('handleSnapshotEntryRemoval(')
+      && characterViewSource.includes('getSnapshotSourceImpactForEntry')
+      && characterViewSource.includes('removeSnapshotRulesBySource')
+      && characterViewSource.includes('detachSnapshotRulesBySource')
+      && characterViewSource.includes('openDialog')
+      && characterViewSource.includes('Behåll effekter'),
+    'character-view ska trigga snapshot popup/confirm-flöde med val för behåll/ta bort'
+  );
+  assert(
+    indexViewSource.includes('handleSnapshotEntryRemoval(')
+      && indexViewSource.includes('getSnapshotSourceImpactForEntry')
+      && indexViewSource.includes('removeSnapshotRulesBySource')
+      && indexViewSource.includes('detachSnapshotRulesBySource')
+      && indexViewSource.includes('openDialog')
+      && indexViewSource.includes('Behåll effekter'),
+    'index-view ska trigga snapshot popup/confirm-flöde med val för behåll/ta bort'
+  );
+  assert(
+    inventoryUtilsSource.includes('confirmSnapshotSourceRemoval(')
+      && inventoryUtilsSource.includes('getSnapshotRuleRecords')
+      && inventoryUtilsSource.includes('removeSnapshotRulesBySource')
+      && inventoryUtilsSource.includes('detachSnapshotRulesBySource')
+      && inventoryUtilsSource.includes('openDialog')
+      && inventoryUtilsSource.includes('Behåll effekter'),
+    'inventory-utils ska trigga snapshot popup/confirm-flöde med val för behåll/ta bort'
+  );
 
   assert(!traitsSource.includes('AUTO_DEFENSE_TRAITS'), 'traits-utils ska inte ha kvar AUTO_DEFENSE_TRAITS');
   assert(!storeSource.includes('calcDarkPastPermanentCorruption'), 'store ska inte ha kvar calcDarkPastPermanentCorruption');
@@ -2114,16 +2549,24 @@ function verifyRaceConflictRules(rootPath) {
     }
   };
   sandbox.storeHelper.setCurrentList(store, [{ ...korruptionskanslig }, { ...dvarg }]);
-  deepEqual(
-    sandbox.storeHelper.getCurrentList(store).map(entry => entry.namn),
-    ['Dvärg'],
-    'setCurrentList ska låta Dvärg ersätta Korruptionskänslig'
+  const afterDvargAdds = sandbox.storeHelper.getCurrentList(store).map(entry => entry.namn);
+  assert(
+    afterDvargAdds.includes('Dvärg'),
+    'setCurrentList ska behålla Dvärg när den ersätter Korruptionskänslig'
+  );
+  assert(
+    !afterDvargAdds.includes('Korruptionskänslig'),
+    'setCurrentList ska ta bort Korruptionskänslig när Dvärg läggs till'
   );
   sandbox.storeHelper.setCurrentList(store, [{ ...dvarg }, { ...korruptionskanslig }]);
-  deepEqual(
-    sandbox.storeHelper.getCurrentList(store).map(entry => entry.namn),
-    ['Dvärg'],
+  const afterDisadvantageAdds = sandbox.storeHelper.getCurrentList(store).map(entry => entry.namn);
+  assert(
+    afterDisadvantageAdds.includes('Dvärg'),
     'setCurrentList ska behålla Dvärg om Korruptionskänslig läggs till efteråt'
+  );
+  assert(
+    !afterDisadvantageAdds.includes('Korruptionskänslig'),
+    'setCurrentList ska fortsatt blockera Korruptionskänslig när Dvärg redan finns'
   );
 }
 
@@ -2350,6 +2793,10 @@ function verifyEntryGrantRules(rootPath) {
   assert(
     helperTargets[0]?.sourceEntryName === 'Mörkt blod' && helperTargets[0]?.name === 'Mörkt förflutet',
     'getEntryGrantTargets ska hitta Mörkt blod -> Mörkt förflutet'
+  );
+  assert(
+    helperTargets[0]?.gratis !== true,
+    'Mörkt blod -> Mörkt förflutet ska inte vara gratis utan explicit gratis-tag'
   );
 
   deepEqual(
@@ -3247,33 +3694,64 @@ function verifyXpNeutralizationForGrants(rootPath) {
 
   const { calcEntryXP, calcTotalXP, calcUsedXP, countDisadvantages } = sandbox.storeHelper;
 
-  // Test 1: Granted disadvantage costs 0 ERF via calcEntryXP
+  // Test 1: Untagged grant should NOT be free
   const listWithGrant = [{ ...darkBlood }, { ...darkPast }];
   assert(
-    calcEntryXP(listWithGrant[1], listWithGrant) === 0,
-    'Mörkt förflutet (granted av Mörkt blod) ska kosta 0 ERF via calcEntryXP'
+    calcEntryXP(listWithGrant[1], listWithGrant) === -5,
+    'Mörkt förflutet (granted utan gratis-tag) ska räknas som vanlig nackdel i calcEntryXP'
   );
 
-  // Test 2: Granted disadvantage not counted by countDisadvantages
+  // Test 2: Untagged grant should count as disadvantage
   assert(
-    countDisadvantages(listWithGrant) === 0,
-    'Granted Mörkt förflutet ska inte räknas som nackdel i countDisadvantages'
+    countDisadvantages(listWithGrant) === 1,
+    'Mörkt förflutet (utan gratis-tag) ska räknas som nackdel i countDisadvantages'
   );
 
-  // Test 3: Granted disadvantage doesn't inflate total XP
+  // Test 3: Untagged grant should contribute total XP as normal disadvantage
   assert(
-    calcTotalXP(0, listWithGrant) === 0,
-    'Granted Mörkt förflutet ska inte lägga till ERF i calcTotalXP'
+    calcTotalXP(0, listWithGrant) === 5,
+    'Mörkt förflutet (utan gratis-tag) ska ge +5 ERF i calcTotalXP'
   );
 
-  // Test 4: calcUsedXP ignores granted entry; Mörkt blod (fördel, 1 pick) = 5 ERF
+  // Test 4: calcUsedXP remains based on costs, not disadvantage XP income
   const usedXp = calcUsedXP(listWithGrant);
   assert(
     usedXp === 5,
     `calcUsedXP ska ge 5 ERF (bara Mörkt blod som fördel), fick ${usedXp}`
   );
 
-  // Test 5: Non-granted Mörkt förflutet (no grant source) counts normally
+  // Test 5: Explicit gratis-tag should neutralize granted disadvantage
+  const explicitFreeGrantSource = {
+    id: 'explicit-free-grant-source',
+    namn: 'Explicit gratis-grant',
+    taggar: {
+      typ: ['Fördel'],
+      regler: {
+        ger: [
+          {
+            mal: 'post',
+            namn: ['Mörkt förflutet'],
+            gratis: true
+          }
+        ]
+      }
+    }
+  };
+  const listWithExplicitFreeGrant = [explicitFreeGrantSource, { ...darkPast }];
+  assert(
+    calcEntryXP(listWithExplicitFreeGrant[1], listWithExplicitFreeGrant) === 0,
+    'Mörkt förflutet (granted med gratis:true) ska kosta 0 ERF via calcEntryXP'
+  );
+  assert(
+    countDisadvantages(listWithExplicitFreeGrant) === 0,
+    'Mörkt förflutet (granted med gratis:true) ska inte räknas som nackdel i countDisadvantages'
+  );
+  assert(
+    calcTotalXP(0, listWithExplicitFreeGrant) === 0,
+    'Mörkt förflutet (granted med gratis:true) ska inte ge ERF i calcTotalXP'
+  );
+
+  // Test 6: Non-granted Mörkt förflutet (no grant source) counts normally
   const listWithoutGrantSource = [{ ...darkPast }];
   assert(
     countDisadvantages(listWithoutGrantSource) === 1,
@@ -3284,8 +3762,8 @@ function verifyXpNeutralizationForGrants(rootPath) {
     'Mörkt förflutet utan grant-källa ska ge +5 ERF i calcTotalXP'
   );
 
-  // Test 6: Granted disadvantage does not occupy a cap slot
-  // Build 5 real non-granted disadvantages + the granted pair
+  // Test 7: Untagged granted disadvantage occupies a cap slot
+  // Build 5 real non-granted disadvantages + the untagged granted pair
   const syntheticDis = (i) => ({
     id: `synthetic-dis-${i}`,
     namn: `Syntetisk nackdel ${i}`,
@@ -3294,12 +3772,43 @@ function verifyXpNeutralizationForGrants(rootPath) {
   const fiveRealDis = [1, 2, 3, 4, 5].map(syntheticDis);
   const listWithCapTest = [...fiveRealDis, { ...darkBlood }, { ...darkPast }];
   assert(
-    countDisadvantages(listWithCapTest) === 5,
-    'Granted Mörkt förflutet ska inte räknas mot nackdelstaket (5 nackdelar)'
+    countDisadvantages(listWithCapTest) === 6,
+    'Mörkt förflutet utan gratis-tag ska räknas mot nackdelstaket (6 nackdelar före cap)'
   );
   assert(
     calcTotalXP(0, listWithCapTest) === 25,
-    'Granted nackdel ska inte ge extra ERF utöver de 5 riktiga nackdelarna'
+    'Nackdelstaket ska fortsatt begränsa till +25 ERF även när en untagged grant tillkommer'
+  );
+
+  // Test 8: ignoreLimits-grant should bypass disadvantage cap counting but still grant XP
+  const ignoreLimitGrantSource = {
+    id: 'ignore-limit-grant-source',
+    namn: 'Ignore limit grant',
+    taggar: {
+      typ: ['Fördel'],
+      regler: {
+        ger: [
+          {
+            mal: 'post',
+            namn: ['Mörkt förflutet'],
+            ignoreLimits: true
+          }
+        ]
+      }
+    }
+  };
+  const listWithIgnoreLimitGrant = [...fiveRealDis, ignoreLimitGrantSource, { ...darkPast }];
+  assert(
+    countDisadvantages(listWithIgnoreLimitGrant) === 5,
+    'ignoreLimits-grantad nackdel ska inte räknas mot nackdelstaket'
+  );
+  assert(
+    calcEntryXP(listWithIgnoreLimitGrant[listWithIgnoreLimitGrant.length - 1], listWithIgnoreLimitGrant) === -5,
+    'ignoreLimits-grantad nackdel ska fortsatt ge ERF via calcEntryXP'
+  );
+  assert(
+    calcTotalXP(0, listWithIgnoreLimitGrant) === 30,
+    'ignoreLimits-grantad nackdel ska ge ERF utanför nackdelstaket'
   );
 }
 
@@ -3465,7 +3974,7 @@ function verifyWeaponDefenseBonusRules(rootPath) {
 
   const formaga = readEntryDataFile(rootPath, 'data/formaga.json');
   const kvalitet = readEntryDataFile(rootPath, 'data/kvalitet.json');
-  const vapen = readEntryDataFile(rootPath, 'data/vapen.json');
+  const vapen = readWeaponEntries(rootPath);
 
   const manteldans = formaga.find(e => e.namn === 'Manteldans');
   const sköldkamp = formaga.find(e => e.namn === 'Sköldkamp');
@@ -3479,7 +3988,7 @@ function verifyWeaponDefenseBonusRules(rootPath) {
   assert(tvillingattack, 'Hittade inte Tvillingattack i formaga.json');
   assert(stavkamp, 'Hittade inte Stavkamp i formaga.json');
   assert(balanserat, 'Hittade inte Balanserat i kvalitet.json');
-  assert(vandringsstav, 'Hittade inte Vandringsstav i vapen.json');
+  assert(vandringsstav, 'Hittade inte Vandringsstav i vapenkällorna');
 
   // Test 1: Data structure — Balanserat has forsvar_modifierare rule
   const bRule = balanserat.taggar?.regler?.andrar?.[0];
@@ -3692,15 +4201,17 @@ function verifyWeaponAttackBonusRules(rootPath) {
           {
             mal: 'traffsaker_modifierare_vapen',
             varde: 2,
-            nar: { har_utrustad_vapen_typ: ['Projektilvapen'] }
+            nar: { har_utrustad_vapen_typ: ['Avståndsvapen'] }
           }
         ]
       }
     }
   };
-  const rangedCtx = { vapenFakta: [{ typer: ['Vapen', 'Projektilvapen'], kvaliteter: ['Precist'] }], antalVapen: 1 };
-  const meleeCtx = { vapenFakta: [{ typer: ['Vapen', 'Korta vapen'], kvaliteter: ['Precist'] }], antalVapen: 1 };
+  const rangedCtx = { vapenFakta: [{ typer: ['Avståndsvapen', 'Pilbåge'], kvaliteter: ['Precist'] }], antalVapen: 1 };
+  const thrownCtx = { vapenFakta: [{ typer: ['Avståndsvapen', 'Kastvapen'], kvaliteter: ['Precist'] }], antalVapen: 1 };
+  const meleeCtx = { vapenFakta: [{ typer: ['Närstridsvapen', 'Korta vapen'], kvaliteter: ['Precist'] }], antalVapen: 1 };
   assert(getWeaponAttackBonus([customAttackAbility], rangedCtx) === 2, 'Ranged kontext ska ge +2 från custom attack-regel');
+  assert(getWeaponAttackBonus([customAttackAbility], thrownCtx) === 2, 'Kastvapen kontext ska ge +2 från custom attack-regel');
   assert(getWeaponAttackBonus([customAttackAbility], meleeCtx) === 0, 'Melee kontext ska inte ge ranged-bonus');
 
   const fintNovis = { ...fint, nivå: 'Novis' };
@@ -3754,7 +4265,8 @@ function verifyDefenseSchemaMigration(rootPath) {
     'formaga.json',
     'kvalitet.json',
     'negativ-kvalitet.json',
-    'vapen.json'
+    'narstridsvapen.json',
+    'avstandsvapen.json'
   ];
   defenseFiles.forEach(file => {
     const source = readText(joinPath(rootPath, 'data/' + file));
@@ -3776,15 +4288,15 @@ function verifyDefenseLoadoutCompatibility(rootPath) {
   const shield = { path: [2], id: 's1', types: ['Sköld'], qualities: [] };
   const armShield = { path: [3], id: 's2', types: ['Sköld'], qualities: ['Armfäst'] };
   const longWeapon = { path: [4], id: 'w3', types: ['Vapen', 'Långa vapen'], qualities: ['Långt'] };
-  const heavyWeapon = { path: [5], id: 'w4', types: ['Vapen', 'Tunga vapen'], qualities: [] };
-  const bastardLong = { path: [6], id: 'w5', types: ['Vapen', 'Tunga vapen'], qualities: ['Långt', 'Bastardvapen'] };
+  const heavyWeapon = { path: [5], id: 'w4', types: ['Vapen', 'Tvåhandsvapen'], qualities: [] };
+  const bastardLong = { path: [6], id: 'w5', types: ['Vapen', 'Tvåhandsvapen'], qualities: ['Långt', 'Bastardvapen'] };
 
   assert(!validateDefenseLoadout(listNoTwin, [oneA, oneB]).valid, 'Dual-wield utan Tvillingattack ska vara ogiltigt');
   assert(validateDefenseLoadout(listWithTwin, [oneA, oneB]).valid, 'Tvillingattack + två vapen ska vara giltigt');
   assert(!validateDefenseLoadout(listWithTwin, [oneA, oneB, shield]).valid, 'Två vapen + sköld utan Armfäst ska vara ogiltigt');
   assert(validateDefenseLoadout(listWithTwin, [oneA, oneB, armShield]).valid, 'Två vapen + Armfäst sköld ska vara giltigt');
   assert(!validateDefenseLoadout(listWithTwin, [longWeapon, shield]).valid, 'Sköld + Långt utan Bastardvapen ska vara ogiltigt');
-  assert(!validateDefenseLoadout(listWithTwin, [heavyWeapon, shield]).valid, 'Sköld + Tunga vapen utan Bastardvapen ska vara ogiltigt');
+  assert(!validateDefenseLoadout(listWithTwin, [heavyWeapon, shield]).valid, 'Sköld + Tvåhandsvapen utan Bastardvapen ska vara ogiltigt');
   assert(validateDefenseLoadout(listWithTwin, [bastardLong, shield]).valid, 'Sköld + Bastardvapen ska vara giltigt');
 
   const normalized = normalizeDefenseLoadout(listWithTwin, [oneA, oneB, shield, armShield]);
@@ -3950,7 +4462,7 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
   const vandod = rasList.find(e => e.namn === 'Vandöd');
   const andrik = rasList.find(e => e.namn === 'Andrik');
   const monster = rasList.find(e => e.namn === 'Monster');
-  const djurBjara = rasList.find(e => e.namn === 'Djur/Bjära');
+  const djurBjara = rasList.find(e => e.namn === 'Best');
   const morktBlod = fordelList.find(e => e.namn === 'Mörkt blod');
   const blodvadare = elityrkeList.find(e => e.namn === 'Blodvadare');
   const diminutiv = monstruostSardrag.find(e => e.namn === 'Diminutiv');
@@ -3974,12 +4486,12 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
   const missing2 = getMissingRequirementReasonsForCandidate(diminutiv, [{ ...andrik, nivå: '' }]);
   assert(missing2.length === 0, 'Diminutiv ska vara tillåtet med enbart Andrik');
 
-  // Test 3: Diminutiv permitted with only Djur/Bjära
+  // Test 3: Diminutiv permitted with only Best
   const missing3 = getMissingRequirementReasonsForCandidate(
     diminutiv,
     [{ ...djurBjara, nivå: '' }]
   );
-  assert(missing3.length === 0, 'Diminutiv ska vara tillåtet med enbart Djur/Bjära');
+  assert(missing3.length === 0, 'Diminutiv ska vara tillåtet med enbart Best');
 
   // Test 4: Diminutiv permitted with only Monster (type-krav fallback)
   const missing4 = getMissingRequirementReasonsForCandidate(
@@ -3988,12 +4500,12 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
   );
   assert(missing4.length === 0, 'Diminutiv ska vara tillåtet med enbart Monster');
 
-  // Test 5: Gravkyla blocked without Vandöd or Djur/Bjära
+  // Test 5: Gravkyla blocked without Vandöd or Best
   const missing5 = getMissingRequirementReasonsForCandidate(
     gravkyla,
     [{ ...troll, nivå: '' }]
   );
-  assert(missing5.length > 0, 'Gravkyla ska vara blockerat utan Vandöd/Djur/Bjära');
+  assert(missing5.length > 0, 'Gravkyla ska vara blockerat utan Vandöd/Best');
 
   // Test 6: Gravkyla permitted with Vandöd
   const missing6 = getMissingRequirementReasonsForCandidate(
@@ -4083,10 +4595,70 @@ function verifyUnifiedNarEvaluator(rootPath) {
   // Blodsband.race
   const blodsband = [{ namn: 'Blodsband', race: 'Andrik' }];
   assert(evaluateNar({ nagon_av_namn: ['Andrik'] }, { list: blodsband }), 'Blodsband.race ska räknas som Andrik');
+  assert(
+    !evaluateNar({ namn: ['Robust'], antal_namn_max: 1 }, { list: [{ namn: 'Robust' }, { namn: 'Robust' }] }),
+    'antal_namn_max ska blockera när max överskrids'
+  );
+  assert(
+    evaluateNar(
+      { namn: ['Robust'], antal_namn_max: 1 },
+      {
+        list: [
+          { namn: 'Robust' },
+          { namn: 'Robust', taggar: { ignore_limits: true } }
+        ]
+      }
+    ),
+    'antal_namn_max ska ignorera entries med ignore_limits-tag'
+  );
+  assert(
+    evaluateNar(
+      { typ: ['Nackdel'], antal_typ_max: 1 },
+      {
+        list: [
+          { namn: 'Nackdel A', taggar: { typ: ['Nackdel'] } },
+          { namn: 'Nackdel B', taggar: { typ: ['Nackdel'], ignore_limits: true } }
+        ]
+      }
+    ),
+    'antal_typ_max ska ignorera entries med ignore_limits-tag'
+  );
 
   // --- List conditions ignored when no list in context ---
   assert(evaluateNar({ har_namn: ['Robust'] }, {}), 'har_namn ignoreras utan list i kontext');
   assert(evaluateNar({ nagon_av_namn: ['Robust'] }, {}), 'nagon_av_namn ignoreras utan list i kontext');
+  assert(
+    evaluateNar({ endast_valda: true }, { sourceEntry: { id: 'mk-selected', namn: 'Vald kraft' } }),
+    'endast_valda ignoreras när list saknas i kontext'
+  );
+  const selectedContext = {
+    list: [{ id: 'mk-selected', namn: 'Vald kraft' }],
+    sourceEntry: { id: 'mk-selected', namn: 'Vald kraft' }
+  };
+  assert(
+    evaluateNar({ endast_valda: true }, selectedContext),
+    'endast_valda=true ska matcha entries som finns i listan'
+  );
+  assert(
+    !evaluateNar(
+      { endast_valda: true },
+      {
+        list: selectedContext.list,
+        sourceEntry: { id: 'mk-other', namn: 'Ovald kraft' }
+      }
+    ),
+    'endast_valda=true ska blockera entries som saknas i listan'
+  );
+  assert(
+    evaluateNar(
+      { only_selected: false },
+      {
+        list: selectedContext.list,
+        sourceEntry: { id: 'mk-other', namn: 'Ovald kraft' }
+      }
+    ),
+    'only_selected=false ska tillåta entries som inte finns i listan'
+  );
 
   // --- Weapon conditions ---
   const weaponCtx = {
@@ -4106,8 +4678,8 @@ function verifyUnifiedNarEvaluator(rootPath) {
   const foremalCtx = { foremal: { typ: ['Vapen', 'Korta vapen'], kvalitet: ['Precist'] } };
   assert(evaluateNar({ foremal: { typ: ['Vapen'] } }, foremalCtx), 'foremal.typ matchar Vapen');
   assert(evaluateNar({ foremal: { typ: ['Korta vapen'] } }, foremalCtx), 'foremal.typ matchar Korta vapen');
-  assert(!evaluateNar({ foremal: { typ: ['Tunga vapen'] } }, foremalCtx), 'foremal.typ missar Tunga vapen');
-  assert(evaluateNar({ foremal: { ingen_typ: ['Tunga vapen'] } }, foremalCtx), 'foremal.ingen_typ tillåter frånvaro');
+  assert(!evaluateNar({ foremal: { typ: ['Tvåhandsvapen'] } }, foremalCtx), 'foremal.typ missar Tvåhandsvapen');
+  assert(evaluateNar({ foremal: { ingen_typ: ['Tvåhandsvapen'] } }, foremalCtx), 'foremal.ingen_typ tillåter frånvaro');
   assert(!evaluateNar({ foremal: { ingen_typ: ['Vapen'] } }, foremalCtx), 'foremal.ingen_typ blockerar matchande typ');
   assert(evaluateNar({ foremal: { nagon_kvalitet: ['Precist'] } }, foremalCtx), 'foremal.nagon_kvalitet matchar Precist');
   assert(!evaluateNar({ foremal: { nagon_kvalitet: ['Balanserat'] } }, foremalCtx), 'foremal.nagon_kvalitet missar Balanserat');
@@ -4318,7 +4890,7 @@ function verifyMalCoverage(rootPath) {
     'basformagor.json', 'elityrke.json', 'fordel.json', 'formaga.json', 'kvalitet.json',
     'lagre-artefakter.json', 'mystisk-kraft.json', 'mystisk-kvalitet.json',
     'monstruost-sardrag.json', 'nackdel.json', 'negativ-kvalitet.json',
-    'ras.json', 'sardrag.json', 'vapen.json', 'ritual.json'
+    'ras.json', 'sardrag.json', 'narstridsvapen.json', 'avstandsvapen.json', 'ritual.json'
   ];
 
   function scanRegler(regler, uncovered) {
@@ -4462,6 +5034,26 @@ function verifyTypeRuleHierarchy(rootPath) {
     }
   });
   assert(helper.getEntryMaxCount(overrideMax) === 4, 'Entry-regel ska överstyra type max_antal');
+
+  const ignoreLimitsMax = addTypeRules({
+    id: 'type-entry-ignore-limit-1',
+    namn: 'Ignore max',
+    taggar: {
+      typ: ['Förmåga'],
+      max_antal: 1,
+      ignore_limits: true
+    }
+  });
+  assert(
+    helper.getEntryMaxCount(ignoreLimitsMax) === Number.POSITIVE_INFINITY,
+    'ignore_limits-tag ska göra att max_antal ignoreras'
+  );
+  const ignoreStops = helper.evaluateEntryStops(ignoreLimitsMax, [{ ...ignoreLimitsMax }], { action: 'add' });
+  const hasLimitStop = (ignoreStops.hardStops || []).some(stop => {
+    const code = String(stop?.code || '').trim();
+    return code === 'duplicate_entry' || code === 'stack_limit';
+  });
+  assert(!hasLimitStop, 'ignore_limits-tag ska förhindra duplicate/stack hard-stops');
 
   const candidate = addTypeRules({
     id: 'type-entry-rules-1',
@@ -4614,6 +5206,7 @@ function verifyHamnskifteGrants(rootPath) {
   const gesallIds = targetsGesall.map(t => t.id).sort();
   deepEqual(gesallIds, ['hamnskifte_grants2', 'hamnskifte_grants4'], 'Hamnskifte Gesäll ska granta grants2 och grants4');
   targetsGesall.forEach(t => {
+    assert(t.gratis === true, `Grant ${t.id} ska markeras som gratis-grant`);
     assert(t.gratisTill === 'Novis', `Grant ${t.id} ska ha gratisTill=Novis, fick ${t.gratisTill}`);
   });
 
@@ -4967,6 +5560,7 @@ function verifyGrantCleanupRules(rootPath) {
 try {
   const rootPath = unwrap($.NSFileManager.defaultManager.currentDirectoryPath);
   verifyRuleHelper(rootPath);
+  verifySnapshotRules(rootPath);
   verifyUnifiedNarEvaluator(rootPath);
   verifyRuntimeConsumers(rootPath);
   verifyMaxCountRules(rootPath);
