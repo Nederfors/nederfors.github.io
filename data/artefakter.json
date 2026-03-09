@@ -3483,9 +3483,9 @@
       }
     },
     "nivåer": {
-      "Förmåga 1": "Tvungen vapenvila; Handling: Aktiv\nBäraren höjer bägaren och befaller 'Halt!'. Alla intelligenta fiender (Kulturvarelser) inom hörhåll måste lyckas med ett slag mot [Viljestark←Övertygande]. De som misslyckas kan inte utföra offensiva handlingar under nästa runda. Korruption: 1T6.",
-      "Förmåga 2": "Dukning; Handling: Aktiv\nGenom att fokusera sin karaktär (slå ett slag mot Övertygande) producerar bägaren tillräckligt med mat och dryck för en grupp på upp till tio personer. Maten är näringsrik, men kraften kan enbart användas en gång i veckan. Korruption: 1T4.",
-      "Förmåga 3": "Guldregn; Handling: Speciell\nEn gång per äventyr kan bäraren skaka bägaren och hälla ut 1T100 daler i myn och juvelert. Varje gång kraften aktiveras får rollpersonen slå mot Övertygande; ett misslyckande innebär att rollpersonen ådrar sig nackdelen Draksjuka, om karaktären redan har nackdelen ådrar den sig istället Artefaktsjuka. Om båda nackdelarna redan innehas av karaktären får hen istället permanent -1 i Övertygande. Villkor: Fri handling. Korruption: 1T6."
+      "Förmåga 1": "Tvungen vapenvila; Handling: Aktiv\n Bäraren höjer bägaren och befaller 'Halt!'. Alla intelligenta fiender (Kulturvarelser) inom hörhåll måste lyckas med ett slag mot [Viljestark←Övertygande]. De som misslyckas kan inte utföra offensiva handlingar under nästa runda. Korruption: 1T6.",
+      "Förmåga 2": "Dukning; Handling: Aktiv\n Genom att fokusera sin karaktär (slå ett slag mot Övertygande) producerar bägaren tillräckligt med mat och dryck för en grupp på upp till tio personer. Maten är näringsrik, men kraften kan enbart användas en gång i veckan. Korruption: 1T4.",
+      "Förmåga 3": "Guldregn; Handling: Speciell\n En gång per äventyr kan bäraren skaka bägaren och hälla ut 1T100 daler i mynt och juveler. Varje gång kraften aktiveras får rollpersonen slå mot Övertygande; ett misslyckande innebär att rollpersonen ådrar sig nackdelen Draksjuka, om karaktären redan har nackdelen ådrar den sig istället Artefaktsjuka. Om båda nackdelarna redan innehas av karaktären får hen istället permanent -1 i Övertygande. Villkor: Fri handling. Korruption: 1T6."
     },
     "stat": {
       "skada": "",
