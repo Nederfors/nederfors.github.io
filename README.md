@@ -87,6 +87,10 @@ Det här är alla nycklar som regelmotorn använder för authoring i datafilerna
 - Pass-block: `om_uppfyllt`, `vid_uppfyllt`, `on_pass`, `if_true`, `then`
 - Fail-block: `om_ej_uppfyllt`, `vid_ej_uppfyllt`, `on_fail`, `if_false`, `else`, `annars`
 
+Logiknycklar i samma `regler`-container som `kraver`:
+- `kraver_logik`: `or` (default) eller `and` för kombination inom scope (entry eller typ).
+- `kraver_typ_och_entry`: `or` (default) eller `and` för kombination mellan type-scope och entry-scope.
+
 Multiplikator-nycklar i pass/fail-block:
 - Pengar: `pengar_multiplikator`, `pengar_mult`, `pris_multiplikator`, `pris_mult`, `grundpris_multiplikator`, `money_multiplier`, `money_mult`, `price_multiplier`, `price_mult`, `cost_multiplier`
 - Erf/XP: `erf_multiplikator`, `erf_mult`, `xp_multiplier`, `xp_mult`, `experience_multiplier`

@@ -4754,6 +4754,32 @@ select.level {
 #masterPopup .master-row select.master-locked-field:disabled {
   opacity: 1;
 }
+#masterPopup .master-overflow-block {
+  display: grid;
+  gap: .45rem;
+  margin-top: .4rem;
+}
+#masterPopup .master-overflow-title {
+  font-weight: 700;
+  color: var(--txt);
+}
+#masterPopup .master-overflow-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .45rem;
+}
+#masterPopup .master-overflow-chip {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.2rem;
+  padding: .34rem .72rem;
+  border-radius: 999px;
+  border: 1px solid rgba(84, 195, 121, .6);
+  background-color: rgba(46, 160, 67, .22);
+  color: #d7fbe2;
+  box-shadow: inset 0 0 0 1px rgba(84, 195, 121, .25);
+  font-size: .95rem;
+}
 #masterPopup .master-row select:disabled {
   opacity: .75;
 }

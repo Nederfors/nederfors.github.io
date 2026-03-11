@@ -1609,16 +1609,12 @@ function buildElityrkeInfoSections(p) {
       const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
       return names.length > 1 ? 'Primärförmåga (välj en)' : 'Primärförmåga';
     }
+    if (String(group?.source || '').trim().startsWith('specifikt_val')) return 'Specifikt val';
     if (group?.anyMystic) return 'Valfri mystisk kraft';
     if (group?.anyRitual) return 'Valfri ritual';
     const source = String(group?.source || '');
-    if (source === 'specifika_formagor') return 'Specifika förmågor';
-    if (source === 'specifika_mystiska_krafter') return 'Specifika mystiska krafter';
-    if (source === 'specifika_ritualer') return 'Specifika ritualer';
     if (source === 'specifika_fordelar') return 'Specifika fördelar';
     if (source === 'specifika_nackdelar') return 'Specifika nackdelar';
-    if (source === 'primartagg') return `Primärt taggkrav: ${groupTagLabel(group) || 'Tagg'}`;
-    if (source === 'sekundartagg') return `Sekundärt taggkrav: ${groupTagLabel(group) || 'Tagg'}`;
     if (source.startsWith('valfri_inom_tagg')) return `Valfritt inom: ${groupTagLabel(group) || 'Tagg'}`;
     return `Kravgrupp ${idx + 1}`;
   };

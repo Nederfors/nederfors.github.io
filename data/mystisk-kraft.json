@@ -203,7 +203,21 @@
         "nivå_data": {
           "Novis": {
             "handling": "Aktiv",
-            "skadetyp": "Yttre fysisk"
+            "skadetyp": "Yttre fysisk",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "anfall_karaktarsdrag",
+                  "satt": "ersatt",
+                  "varde": "Viljestark"
+                },
+                {
+                  "mal": "forsvar_karaktarsdrag",
+                  "satt": "ersatt",
+                  "varde": "Viljestark"
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Aktiv",
@@ -218,7 +232,10 @@
                   "mal": "separat_forsvar_karaktarsdrag",
                   "satt": "ersatt",
                   "varde": "Viljestark",
-                  "tillat": { "vapen_typer": true, "vapen_kvaliteter": true }
+                  "tillat": {
+                    "vapen_typer": true,
+                    "vapen_kvaliteter": true
+                  }
                 }
               ]
             }
@@ -1102,7 +1119,16 @@
         "nivå_data": {
           "Novis": {
             "handling": "Aktiv",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_karaktarsdrag",
+                  "satt": "ersatt",
+                  "varde": "Viljestark"
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Aktiv",
@@ -1896,7 +1922,7 @@
       "nivåer": {
         "Novis": "Handling: Fri. Vid ett lyckat Viljestark mot Viljestark riktar mystikern in sig på en individ så att denne får en andra chans att misslyckas med ett framgångsslag, så länge de är inom hörhåll för mystikerns talade ord.",
         "Gesäll": "Handling: Fri. Vid ett lyckat Viljestark mot Viljestark kan mystikern förmå målet att glömma någonting, så länge det är inom hörhåll för mystikerns talade ord. Det som glöms bort måste sammanfattas tydligt på cirka sex ord. Exempel: ”Glöm att du såg mig idag”, ”Glöm det senaste samtalet du hade” eller ”Glöm dagens lösenord till porten”.",
-        "Mästare": "Handling: Fri. Vid ett lyckat Viljestark mot Viljestark agerar målet på ett sätt som känns helt logiskt för dem själva och försvarar handlingen mot andras invändningar. En enskild handling, formulerad i högst ett dussin ord, blir målets överväldigande drivkraft. Instruktionen gäller endast så länge målet är inom hörhåll och kraften varar. Exempel: ”Fördöm drottning Korinthias suveränitet och kalla henne bedragare och svartkonstnär”, ”Lås upp dörren till skattkammaren och beordra vakten att gå” eller ”Beordra en dags uppskov i vakternas jakt på hertigarnas mördare.”"
+        "Mästare": "Handling: Fri. Vid ett lyckat Viljestark mot Viljestark agerar målet på ett sätt som känns helt logiskt för dem själva och försvarar handlingen mot andras invändningar. En enskild icke-våldsam handling, formulerad i högst ett dussin ord, blir målets överväldigande drivkraft. Instruktionen gäller endast så länge målet är inom hörhåll och kraften varar. Exempel: ”Fördöm drottning Korinthias suveränitet och kalla henne bedragare och svartkonstnär”, ”Lås upp dörren till skattkammaren och beordra vakten att gå” eller ”Beordra en dags uppskov i vakternas jakt på hertigarnas mördare.”"
       },
       "id": "mystiskkr52"
     },
@@ -2341,11 +2367,29 @@
         "nivå_data": {
           "Novis": {
             "handling": "Fri",
-            "skadetyp": "Yttre fysisk"
+            "skadetyp": "Yttre fysisk",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "anfall_karaktarsdrag",
+                  "satt": "ersatt",
+                  "varde": "Viljestark"
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Reaktiv",
-            "skadetyp": "Yttre fysisk"
+            "skadetyp": "Yttre fysisk",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "forsvar_karaktarsdrag",
+                  "satt": "ersatt",
+                  "varde": "Viljestark"
+                }
+              ]
+            }
           },
           "Mästare": {
             "handling": "Aktiv",
@@ -2796,7 +2840,7 @@
     {
       "id": "mystiskkr79",
       "namn": "Elementarvapen",
-      "beskrivning": "Tradition: Ordensmagi, Symbolism\nMaterial: En flisa flinta (eld), en droppe kvicksilver (syra) eller en bit bergkristall (kyla)\nMystikern kanaliserar elementens råa kraft direkt in i sitt vapen. Stålet kan börja glöda av hetta, droppa av frätande syra eller täckas av bitande rimfrost, beroende på vilken aspekt mystikern har vald att specialisera sig i vid tränande av kraften.",
+      "beskrivning": "Tradition: Ordensmagi, Symbolism\nMaterial: En flisa flinta (eld), en droppe kvicksilver (syra) eller en bit bergkristall (kyla)\nMystikern kanaliserar elementens råa kraft direkt in i sitt vapen. Stålet kan bli Brinnande av hetta, Syraosande av frätande syra, Isande av bitande rimfrost eller fyllas av Dundrande kraft, beroende på vilken aspekt mystikern har valt att specialisera sig i vid tränande av kraften.",
       "taggar": {
         "typ": [
           "Mystisk kraft"
@@ -2805,7 +2849,9 @@
           "Ordensmagiker",
           "Symbolist"
         ],
-        "test": [],
+        "test": [
+          "Viljestark"
+        ],
         "nivå_data": {
           "Novis": {
             "handling": "Aktiv",
@@ -2819,10 +2865,25 @@
             "handling": "Aktiv",
             "skadetyp": "Mystisk"
           }
+        },
+        "regler": {
+          "val": [
+            {
+              "field": "form",
+              "title": "Välj elementaspekt",
+              "subtitle": "Välj vilken elementär kvalitet som kraften ska ge vapnet.",
+              "options": [
+                "Isande",
+                "Dundrande",
+                "Syraosande",
+                "Brinnande"
+              ]
+            }
+          ]
         }
       },
       "nivåer": {
-        "Novis": "Handling: Aktiv.\nMystikern väcker vapnets latenta potential med ett lyckat Viljestark.\nVapnet erhåller den mystiska kvaliteten Brinnande (eld), Syraosande (syra) eller Dundrande (blixt/kyla) under resten av scenen.\nOm vapnet redan besitter en permanent mystisk kvalitet som gör skada, ökar istället den kvalitetens skadetärning med ett steg (exempelvis från 1T4 till 1T6).",
+        "Novis": "Handling: Aktiv.\nMystikern väcker vapnets latenta potential med ett lyckat Viljestark.\nVapnet erhåller den mystiska kvaliteten Brinnande (eld), Syraosande (syra), Dundrande (blixt) eller Isande (kyla) under resten av scenen.\nOm vapnet redan besitter en permanent mystisk kvalitet som gör skada, ökar istället den kvalitetens skadetärning med ett steg (exempelvis från 1T4 till 1T6).",
         "Gesäll": "Handling: Aktiv.\nElementarkraften resonerar med vapnets stål och kraften sprider sig vidare. Vid lyckat svar så kan mystikern styra kraften till nästa allierades vapen och väcka elementär kraft även i det.\nKraften fortsätter sprida sig tills mystikern misslyckas med ett slag.",
         "Mästare": "Handling: Aktiv.\nMystikern överladdar vapnets energier. De elementära effekterna är stärkta bortom det vanliga.\nSkadan som orsakas av de mystiska kvaliteterna räknas nu som mystisk istället för elementär.\nAlla träffar med de besvärjade vapnena gör nu också sin vanliga elementarskada på fiender inom närstrid från det träffade målet."
       }

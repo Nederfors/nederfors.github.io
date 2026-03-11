@@ -1,20 +1,6 @@
 {
   "typ_regler": {
-    "Elityrke": {}
-  },
-  "entries": [
-    {
-      "namn": "Järnsvuren",
-      "beskrivning": "*\"Aldrig igen!\"*\n\nJärnpakten tycks få allt mer att stå i vilket ställer stora krav på dess agenter, de järnsvurna. Järnpakten skapades av alverna kring tiden för Symbaroums fall och är nu efter lång tid i skuggorna åter på frammarsch för att försöka bromsa mörkrets tillväxt.\n\nDavokar rister i sin sömn men får inte vakna, inte om järnpaktens agenter kan stoppa det.\n\nJärnpakten söker numera sina agenter hos alla släkten och folk; alla som tydligt sympatiserar med kampen testas genom en serie utmaningar av både fysisk och moralisk karaktär. De som klarar sig genom utmaningarna med både liv och lojalitet i behåll inbjuds att svära Järneden.\n\nDärefter följer en tid av träning för att bli fullvärdig medlem av järnpakten – en agent hängiven kampen mot korruptionen.",
-      "taggar": {
-        "typ": [
-          "Elityrke"
-        ],
-        "ark_trad": [
-          "Järnsvuren",
-          "Jägare"
-        ],
-        "regler": {
+    "Elityrke": {
           "kraver": [
             {
               "nar": {
@@ -27,6 +13,19 @@
             }
           ]
         }
+      },
+  "entries": [
+    {
+      "namn": "Järnsvuren",
+      "beskrivning": "*\"Aldrig igen!\"*\n\nJärnpakten tycks få allt mer att stå i vilket ställer stora krav på dess agenter, de järnsvurna. Järnpakten skapades av alverna kring tiden för Symbaroums fall och är nu efter lång tid i skuggorna åter på frammarsch för att försöka bromsa mörkrets tillväxt.\n\nDavokar rister i sin sömn men får inte vakna, inte om järnpaktens agenter kan stoppa det.\n\nJärnpakten söker numera sina agenter hos alla släkten och folk; alla som tydligt sympatiserar med kampen testas genom en serie utmaningar av både fysisk och moralisk karaktär. De som klarar sig genom utmaningarna med både liv och lojalitet i behåll inbjuds att svära Järneden.\n\nDärefter följer en tid av träning för att bli fullvärdig medlem av järnpakten – en agent hängiven kampen mot korruptionen.",
+      "taggar": {
+        "typ": [
+          "Elityrke"
+        ],
+        "ark_trad": [
+          "Järnsvuren",
+          "Jägare"
+        ]
       },
       "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
       "Elityrkesförmågor": [
@@ -50,50 +49,58 @@
       ],
       "id": "elit1",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": [
-            "Akrobatik"
-          ]
+          "namn": ["Prickskytt", "Tvillingattack", "Spjutdans"],
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "Monsterjägare"
-          ],
-          "krav_erf": 30,
-          "min_antal": 1
-        },
-        "sekundartagg": {
-          "aktiv": true,
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "Häxa"
-          ],
-          "krav_erf": 20,
-          "min_antal": 1
-        },
-        "valfri_inom_tagg": [],
-        "specifika_formagor": {
-          "namn": [
-            "Sjätte sinne",
-            "Spjutdans",
-            "Snabbskytte",
-            "Prickskytt"
-          ],
-          "min_erf": 30,
-          "min_antal": 1
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            ""
-          ],
-          "min_erf": 0,
-          "min_antal": 0
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Prickskytt"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Spjutdans"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Tvillingattack"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Prickskytt"
+              },
+                            {
+                "typ": "Förmåga",
+                "namn": "Akrobatik"
+              },
+                            {
+                "typ": "Förmåga",
+                "namn": "Lärd"
+              },
+                            {
+                "typ": "Förmåga",
+                "namn": "Monsterlärd"
+              }
+            ],
+            "krav_erf": 40,
+            "min_antal": 1
+          }
+        ],
+        "valfri_inom_tagg": [
+          {
+            "taggfalt": "ark_trad",
+            "taggar": [
+              "Jägare"
+            ],
+            "krav_erf": 30
+          }
+        ],
+        "valfritt": {
+          "krav_erf": 20
         },
         "specifika_fordelar": {
           "namn": [
@@ -120,20 +127,7 @@
         "ark_trad": [
           "Templár",
           "Teurg"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
@@ -155,60 +149,45 @@
       ],
       "id": "elit2",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Teurg"
+          "namn": "Teurg",
+          "krav_erf": 10
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Rustmästare"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Förmåga",
             "taggfalt": "namn",
             "taggar": [
               "Tvåhandskraft",
               "Sköldkamp"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Förmåga"
           },
           {
-            "typ": "Mystisk kraft",
             "taggfalt": "namn",
             "taggar": [
               "Häxhammare",
               "Helig aura"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Mystisk kraft"
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Rustmästare"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -230,20 +209,7 @@
         "ark_trad": [
           "Vredesgardist",
           "Krigare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
@@ -265,51 +231,40 @@
       ],
       "id": "elit3",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Järnnäve"
+          "namn": "Järnnäve",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Rustmästare"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Återhämtning"
+              }
+            ],
+            "krav_erf": 20,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Förmåga",
             "taggfalt": "namn",
             "taggar": [
               "Sköldkamp",
               "Tvillingattack"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Förmåga"
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Rustmästare",
-            "Återhämtning"
-          ],
-          "min_erf": 20,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -332,20 +287,7 @@
           "Artefaktmakare",
           "Ordensmagiker",
           "Trollsång"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Listig 13+, Viljestark 11+",
@@ -364,54 +306,43 @@
       ],
       "id": "elit4",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Smideskonst"
+          "namn": "Smideskonst",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "valfri_inom_tagg": [
+        "specifikt_val": [
           {
-            "typ": "Mystisk kraft",
-            "taggfalt": "",
-            "taggar": [],
-            "min_erf": 10,
-            "min_antal": 0
-          },
-          {
-            "typ": "Ritual",
-            "taggfalt": "",
-            "taggar": [],
-            "min_erf": 10,
-            "min_antal": 0
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Lärd"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Lärd"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfri_inom_tagg": [
+          {
+            "taggfalt": "typ",
+            "taggar": [
+              "Mystisk kraft"
+            ],
+            "krav_erf": 10,
+            "typ": "Mystisk kraft"
+          },
+          {
+            "taggfalt": "typ",
+            "taggar": [
+              "Ritual"
+            ],
+            "krav_erf": 10,
+            "typ": "Ritual"
+          }
+        ],
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -433,20 +364,7 @@
         "ark_trad": [
           "Stavmagiker",
           "Mystiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
@@ -472,48 +390,39 @@
       ],
       "id": "elit5",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Stavkamp"
+          "namn": "Stavkamp",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "valfri_inom_tagg": [
+        "specifikt_val": [
           {
-            "typ": "Mystisk kraft",
-            "taggfalt": "",
-            "taggar": [],
-            "min_erf": 10,
-            "min_antal": 0
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Lärd"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Stångverkan"
+              }
+            ],
+            "krav_erf": 20,
+            "min_antal": 1
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Lärd",
-            "Stångverkan"
-          ],
-          "min_erf": 20,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfri_inom_tagg": [
+          {
+            "taggfalt": "typ",
+            "taggar": [
+              "Mystisk kraft"
+            ],
+            "krav_erf": 10,
+            "typ": "Mystisk kraft"
+          }
+        ],
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -535,20 +444,7 @@
         "ark_trad": [
           "Andebesvärjare",
           "Häxkonst"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -572,43 +468,46 @@
       ],
       "id": "elit6",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Häxkonster"
+          "namn": "Häxkonster",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Häxsyn"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Ärva skada"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Andebesvärjelse"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [],
-        "specifika_formagor": {
-          "namn": [
-            "Häxsyn"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Ärva skada"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Andebesvärjelse"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -630,20 +529,7 @@
         "ark_trad": [
           "Blodvadare",
           "Häxkonst"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -666,42 +552,40 @@
       ],
       "id": "elit7",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Häxkonster"
+          "namn": "Häxkonster",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Medicus"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Naturlig krigare"
+              }
+            ],
+            "krav_erf": 20,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Hamnskifte"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [],
-        "specifika_formagor": {
-          "namn": [
-            "Medicus",
-            "Naturlig krigare"
-          ],
-          "min_erf": 20,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Hamnskifte"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -723,20 +607,7 @@
         "ark_trad": [
           "Demonolog",
           "Svartkonstnär"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -762,52 +633,46 @@
       ],
       "id": "elit8",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Svartkonst"
+          "namn": "Svartkonst",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Ohelig aura"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Vanhelgande rit"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Förmåga",
             "taggfalt": "namn",
             "taggar": [
               "Häxsyn",
               "Lärd"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Förmåga"
           }
         ],
-        "specifika_formagor": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Ohelig aura"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Vanhelgande rit"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -829,20 +694,7 @@
         "ark_trad": [
           "Grönvävare",
           "Häxkonst"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -866,57 +718,72 @@
       ],
       "id": "elit9",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Häxkonster"
+          "namn": "Häxkonster",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "Mystiker",
-            "Häxa"
-          ],
-          "krav_erf": 20,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "valfri_inom_tagg": [],
-        "specifika_formagor": {
-          "namn": [
-            ""
-          ],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Örtrankor",
-            "Naturens famn",
-            "Barkhud",
-            "Tvångsförvandling"
-          ],
-          "min_erf": 60,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Snabbväxt",
-            "Vädervända",
-            "Vyssja till ro",
-            "Häxcirkel"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Örtrankor"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Naturens famn"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Barkhud"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Tvångsförvandling"
+              }
+            ],
+            "krav_erf": 60,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Snabbväxt"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Vädervända"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Vyssja till ro"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Häxcirkel"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
+        "valfri_inom_tagg": [
+          {
+            "taggfalt": "ark_trad",
+            "taggar": [
+              "Mystiker",
+              "Häxa"
+            ],
+            "krav_erf": 20
+          }
+        ],
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
-          "namn": [
-            ""
-          ],
+          "namn": [],
           "min_antal": 0
         },
         "specifika_nackdelar": {
@@ -935,20 +802,7 @@
         "ark_trad": [
           "Illusionist",
           "Ordensmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -971,62 +825,60 @@
       ],
       "id": "elit10",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Ordensmagi"
+          "namn": "Ordensmagi",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "Ordensmagiker",
-            "Mystiker"
-          ],
-          "krav_erf": 40,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": true,
-          "taggfalt": "test",
-          "taggar": [
-            "Listig"
-          ],
-          "krav_erf": 30,
-          "min_antal": 0
-        },
-        "valfri_inom_tagg": [
+        "specifikt_val": [
           {
-            "typ": "Fördel",
-            "taggfalt": "test",
-            "taggar": [
-              "Diskret",
-              "Övertygande",
-              "Listig"
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Illusorisk korrigering"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Obemärkt"
+              }
             ],
-            "min_erf": 0,
-            "min_antal": 0
+            "krav_erf": 30,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Falsk terräng"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Skenverk"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            ""
-          ],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Illusorisk korrigering",
-            "Obemärkt"
-          ],
-          "min_erf": 30,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Falsk terräng",
-            "Skenverk"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfri_inom_tagg": [
+          {
+            "taggfalt": "ark_trad",
+            "taggar": [
+              "Ordensmagiker",
+              "Mystiker"
+            ],
+            "krav_erf": 40
+          },
+          {
+            "taggfalt": "test",
+            "taggar": [
+              "Listig"
+            ],
+            "krav_erf": 30
+          }
+        ],
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [
@@ -1053,20 +905,7 @@
         "ark_trad": [
           "Inkvisitor",
           "Teurg"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -1088,72 +927,72 @@
       ],
       "id": "elit11",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Teurgi"
+          "namn": "Teurgi",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "test",
-          "taggar": [
-            "Diskret",
-            "Övertygande"
-          ],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "Mystiker",
-            "Teurg"
-          ],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "valfri_inom_tagg": [
+        "specifikt_val": [
           {
-            "typ": "Förmåga",
-            "taggfalt": "ark_trad",
-            "taggar": [],
-            "min_erf": 0,
-            "min_antal": 0
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Anatema"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Obemärkt"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Själens brännglas"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Sannform"
+              },
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Ljusets bojor"
+              }
+            ],
+            "krav_erf": 60,
+            "min_antal": 1
           },
           {
-            "typ": "Mystisk kraft",
-            "taggfalt": "namn",
-            "taggar": [],
-            "min_erf": 0,
-            "min_antal": 0
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Offerrök"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Syndabekännelse"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Kättarens spår"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Renande eld"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Exorcism"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Dömande fjättrar"
+              }
+            ],
+            "krav_erf": 20,
+            "min_antal": 1
           }
         ],
-        "specifika_formagor": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Anatema",
-            "Obemärkt",
-            "Själens brännglas",
-            "Sannform",
-            "Ljusets bojor"
-          ],
-          "min_erf": 60,
-          "min antal": 2,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Offerrök",
-            "Syndabekännelse",
-            "Kättarens spår",
-            "Renande eld",
-            "Exorcism",
-            "Dömande fjättrar"
-          ],
-          "min_erf": 20,
-          "min_antal": 0
+        "valfri_inom_tagg": [],
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1175,20 +1014,7 @@
         "ark_trad": [
           "Mentalist",
           "Ordensmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -1211,54 +1037,51 @@
       ],
       "id": "elit12",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Ordensmagi"
+          "namn": "Ordensmagi",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Lärd"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Klärvoajans"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Telepatiskt förhör"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Mystisk kraft",
             "taggfalt": "namn",
             "taggar": [
               "Bända vilja",
               "Tankekast",
               "Viljelyft"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Mystisk kraft"
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Lärd"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Klärvoajans",
-            "Telepatiskt förhör"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1280,20 +1103,7 @@
         "ark_trad": [
           "Nekromantiker",
           "Svartkonstnär"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -1314,43 +1124,46 @@
       ],
       "id": "elit13",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Svartkonst"
+          "namn": "Svartkonst",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Medicus"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Vandråp"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Väcka vandöd"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [],
-        "specifika_formagor": {
-          "namn": [
-            "Medicus"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Vandråp"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Väcka vandöd"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1372,20 +1185,7 @@
         "ark_trad": [
           "Pyromantiker",
           "Ordensmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -1407,53 +1207,50 @@
       ],
       "id": "elit14",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Ordensmagi"
+          "namn": "Ordensmagi",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Lärd"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Askans berättelse"
+              },
+              {
+                "typ": "Ritual",
+                "namn": "Flammande tjänare"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Mystisk kraft",
             "taggfalt": "namn",
             "taggar": [
               "Brandvägg",
               "Svavelkaskad"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Mystisk kraft"
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Lärd"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Askans berättelse",
-            "Flammande tjänare"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1475,20 +1272,7 @@
         "ark_trad": [
           "Själasörjare",
           "Teurg"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -1510,61 +1294,46 @@
       ],
       "id": "elit15",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Teurg"
+          "namn": "Teurg",
+          "krav_erf": 10
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Exorcism"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Förmåga",
             "taggfalt": "namn",
             "taggar": [
               "Ledare",
               "Medicus"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Förmåga"
           },
           {
-            "typ": "Mystisk kraft",
             "taggfalt": "namn",
             "taggar": [
               "Helbrägdagörelse",
               "Helig aura",
               "Sannform"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Mystisk kraft"
           }
         ],
-        "specifika_formagor": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Exorcism"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1586,20 +1355,7 @@
         "ark_trad": [
           "Drottningspion",
           "Tjuv"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Listig 13+, Diskret 11+",
@@ -1621,51 +1377,63 @@
       ],
       "id": "elit16",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Fint"
+          "namn": "Taktiker",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "valfri_inom_tagg": [
+        "specifikt_val": [
           {
-            "typ": "Förmåga",
-            "taggfalt": "namn",
-            "taggar": [
-              "Giftbrukare",
-              "Stryparkonst"
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Blixtsnabba reflexer"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Giftbrukare"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Stryparkonst"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Lönnstöt"
+              },
+               {
+                "typ": "Mystisk kraft",
+                "namn": "Obemärkt"
+              },
+              {
+                "typ": "Basförmåga",
+                "namn": "Desinformationsspridning"
+              },
+              {
+                "typ": "Basförmåga",
+                "namn": "Karaktärsmord"
+              },
+              {
+                "typ": "Basförmåga",
+                "namn": "Manipulatör"
+              }
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 60,
+            "min_antal": 2
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Svärdshelgon",
-            "Tvillingattack"
-          ],
-          "min_erf": 20,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfri_inom_tagg": [
+          {
+            "taggfalt": "",
+            "taggar": [
+              ""
+            ],
+            "krav_erf": 0,
+            "typ": ""
+          }
+        ],
+        "valfritt": {
+          "krav_erf": 30
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1687,20 +1455,7 @@
         "ark_trad": [
           "Gentlemannatjuv",
           "Tjuv"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Diskret 13+, Övertygande 11+",
@@ -1722,53 +1477,41 @@
       ],
       "id": "elit17",
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Fint"
+          "namn": "Fint",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "Tjuv"
-          ],
-          "krav_erf": 60,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": true,
-          "taggfalt": "test",
-          "taggar": [
-            "Övertygande"
-          ],
-          "krav_erf": 10,
-          "min_antal": 0
-        },
-        "valfri_inom_tagg": [
+        "specifikt_val": [
           {
-            "typ": "Förmåga",
-            "taggfalt": "test",
-            "taggar": [
-              ""
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Lönnstöt"
+              }
             ],
-            "min_erf": 0,
-            "min_antal": 0
+            "krav_erf": 10,
+            "min_antal": 1
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Lönnstöt"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfri_inom_tagg": [
+          {
+            "taggfalt": "ark_trad",
+            "taggar": [
+              "Tjuv"
+            ],
+            "krav_erf": 60
+          },
+          {
+            "taggfalt": "test",
+            "taggar": [
+              "Övertygande"
+            ],
+            "krav_erf": 10
+          }
+        ],
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [
@@ -1796,20 +1539,7 @@
         "ark_trad": [
           "Stormbringare",
           "Ordensmagiker"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Viljestark 13+, Listig 11+",
@@ -1830,52 +1560,46 @@
         "Övermod"
       ],
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Ordensmagi"
+          "namn": "Ordensmagi",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Lärd"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Blixtfång"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Mystisk kraft",
             "taggfalt": "namn",
             "taggar": [
               "Blixtfrämjande",
               "Åskvärn"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Mystisk kraft"
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Lärd"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Blixtfång"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1898,20 +1622,7 @@
         "ark_trad": [
           "Skald",
           "Trollsång"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Övertygande 13+, Viljestark 11+",
@@ -1931,43 +1642,46 @@
         "Mörkt förflutet"
       ],
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Trollsång"
+          "namn": "Trollsång",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Ledare"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Mystisk kraft",
+                "namn": "Bergasång"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          },
+          {
+            "alternativ": [
+              {
+                "typ": "Ritual",
+                "namn": "Stensång"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [],
-        "specifika_formagor": {
-          "namn": [
-            "Ledare"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Bergasång"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Stensång"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -1990,20 +1704,7 @@
         "ark_trad": [
           "Ulvahedna",
           "Krigare"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "Stark 15+, Viljestark 13+",
@@ -2027,61 +1728,46 @@
         "Mardrömmar"
       ],
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Bärsärk"
+          "namn": "Bärsärk",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "",
-          "taggar": [],
-          "krav_erf": 0,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Kraftprov"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Förmåga",
             "taggfalt": "namn",
             "taggar": [
               "Tvåhandskraft",
               "Tvillingattack",
               "Naturlig krigare"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Förmåga"
           },
           {
-            "typ": "Förmåga",
             "taggfalt": "namn",
             "taggar": [
               "Järnnäve",
               "Dominera"
             ],
-            "min_erf": 10,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Förmåga"
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Kraftprov"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [],
@@ -2103,20 +1789,7 @@
         ],
         "ark_trad": [
           "Placeholder"
-        ],
-        "regler": {
-          "kraver": [
-            {
-              "nar": {
-                "antal_typ_max": {
-                  "Elityrke": 1
-                }
-              },
-              "varde": "single_elite",
-              "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-            }
-          ]
-        }
+        ]
       },
       "krav_formagor": "",
       "viktiga_karaktarsdrag": "",
@@ -2130,76 +1803,46 @@
         "Nackdel B"
       ],
       "krav": {
+        "total_erf": 150,
         "primarformaga": {
-          "namn": "Primärförmåga"
+          "namn": "Primärförmåga",
+          "krav_erf": 60
         },
-        "primartagg": {
-          "taggfalt": "ark_trad",
-          "taggar": [
-            "PlaceholderPrimartagg"
-          ],
-          "krav_erf": 60,
-          "min_antal": 0
-        },
-        "sekundartagg": {
-          "aktiv": false,
-          "taggfalt": "test",
-          "taggar": [],
-          "krav_erf": 40,
-          "min_antal": 0
-        },
+        "specifikt_val": [
+          {
+            "alternativ": [
+              {
+                "typ": "Förmåga",
+                "namn": "Kravförmåga A"
+              },
+              {
+                "typ": "Förmåga",
+                "namn": "Kravförmåga B"
+              }
+            ],
+            "krav_erf": 10,
+            "min_antal": 1
+          }
+        ],
         "valfri_inom_tagg": [
           {
-            "typ": "Förmåga",
+            "taggfalt": "ark_trad",
+            "taggar": [
+              "PlaceholderPrimartagg"
+            ],
+            "krav_erf": 60
+          },
+          {
             "taggfalt": "ark_trad",
             "taggar": [
               "PlaceholderValfriTagg"
             ],
-            "min_erf": 10,
-            "min_antal": 0
-          },
-          {
-            "typ": "Mystisk kraft",
-            "taggfalt": "ark_trad",
-            "taggar": [
-              "PlaceholderValfriMystikTagg"
-            ],
-            "min_erf": 0,
-            "min_antal": 0
-          },
-          {
-            "typ": "Ritual",
-            "taggfalt": "ark_trad",
-            "taggar": [
-              "PlaceholderValfriRitualTagg"
-            ],
-            "min_erf": 0,
-            "min_antal": 0
+            "krav_erf": 10,
+            "typ": "Förmåga"
           }
         ],
-        "specifika_formagor": {
-          "namn": [
-            "Kravförmåga A",
-            "Kravförmåga B"
-          ],
-          "min_erf": 10,
-          "min_antal": 0
-        },
-        "specifika_mystiska_krafter": {
-          "namn": [
-            "Mystisk kraft A",
-            "Mystisk kraft B"
-          ],
-          "min_erf": 0,
-          "min_antal": 0
-        },
-        "specifika_ritualer": {
-          "namn": [
-            "Ritual A",
-            "Ritual B"
-          ],
-          "min_erf": 0,
-          "min_antal": 0
+        "valfritt": {
+          "krav_erf": 10
         },
         "specifika_fordelar": {
           "namn": [

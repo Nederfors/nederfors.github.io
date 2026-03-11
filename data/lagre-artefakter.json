@@ -1,6 +1,10 @@
 {
   "typ_regler": {
-    "Lägre artefakt": {}
+    "Lägre artefakt": {
+      "regler": {
+        "kraver_logik": "and"
+      }
+    }
   },
   "entries": [
     {

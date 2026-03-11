@@ -380,6 +380,19 @@
         ]
       },
       "effekt": "Skadan ökar med +1 kumulativt för varje runda vapnet orsakar skada; nollställs och skadar bärare vid miss, ingen skada eller blodlöst mål."
+    },
+    {
+      "id": "mystiskkv2",
+      "namn": "Isande",
+      "beskrivning": "Vapnet avger en isig dimma vid användning. Vapnet gör normal skada vid träff, men målets sår fryser till is om det tar skada och ger 1 skada på offrets Kvick, med start rundan efter initial träff. Den alternativa skadan läks omedelbart om målet träffas av någon eldbaserad attack eller på annat sätt lyckas värma sig igen.",
+      "taggar": {
+        "typ": [
+          "Mystisk kvalitet",
+          "Vapenkvalitet",
+          "Kvalitet"
+        ]
+      },
+      "effekt": "Efter träff: 1 i skada på Kvick som läks av värme."
     }
-  ]
+    ]
 }

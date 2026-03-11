@@ -303,79 +303,84 @@
     return uniqStrings(out);
   }
 
-  function normalizeTagRule(raw = {}, includeActive = false) {
-    const parseActive = (value) => {
-      if (typeof value === 'string') {
-        const norm = value.trim().toLowerCase();
-        if (norm === 'true') return true;
-        if (norm === 'false') return false;
-      }
-      return Boolean(value);
-    };
-    const activeDefault = includeActive ? parseActive(raw.aktiv) : false;
+  function normalizePrimary(rawPrimary = {}) {
+    const source = rawPrimary && typeof rawPrimary === 'object'
+      ? rawPrimary
+      : { namn: rawPrimary };
+    const names = normalizePrimaryNames(source);
     return {
-      aktiv: includeActive ? activeDefault : false,
-      taggfalt: String(raw.taggfalt || '').trim(),
-      taggar: uniqStrings(raw.taggar),
-      krav_erf: toInt(raw.krav_erf, 0),
+      namn: names.length === 1 ? names[0] : names,
+      namn_lista: names,
+      krav_erf: toInt(source.krav_erf, 0)
+    };
+  }
+
+  function normalizeNamedCount(raw = {}) {
+    return {
+      namn: uniqStrings(raw.namn),
       min_antal: toInt(raw.min_antal, 0)
     };
   }
 
-  function normalizeSpecific(raw = {}, type) {
-    const normType = normalizeType(type);
-    const minCount = toInt(raw.min_antal, 0);
-    const hasExplicitMinErf = raw.min_erf !== undefined && raw.min_erf !== null && String(raw.min_erf).trim() !== '';
-    let minErf = toInt(raw.min_erf, 0);
-    if (!hasExplicitMinErf && raw.min_niva !== undefined) {
-      const legacyLevel = normalizeLevel(raw.min_niva || 'Novis', 'Novis');
-      minErf = minCount * typeBaseErf(normType, legacyLevel);
+  function normalizeSpecificAlternative(raw = {}) {
+    if (typeof raw === 'string') {
+      const text = String(raw || '').trim();
+      if (!text) return null;
+      return { typ: '', namn: text };
     }
+    if (!raw || typeof raw !== 'object') return null;
+    const name = String(raw.namn || '').trim();
+    if (!name) return null;
     return {
-      namn: uniqStrings(raw.namn),
-      min_antal: minCount,
-      min_erf: minErf
+      typ: normalizeType(raw.typ),
+      namn: name
+    };
+  }
+
+  function normalizeSpecificChoice(raw = {}) {
+    const seen = new Set();
+    const alternatives = toArray(raw.alternativ)
+      .map(normalizeSpecificAlternative)
+      .filter(Boolean)
+      .filter(item => {
+        const key = `${normalizeKey(item.typ)}::${normalizeKey(item.namn)}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+    const hasMinCount = raw.min_antal !== undefined && raw.min_antal !== null && String(raw.min_antal).trim() !== '';
+    return {
+      alternativ: alternatives,
+      krav_erf: toInt(raw.krav_erf, 0),
+      min_antal: hasMinCount ? Math.max(0, toInt(raw.min_antal, 0)) : 1
     };
   }
 
   function normalizeValfriRule(raw = {}) {
-    const types = normalizeTypeList(raw.typ);
-    const type = types.length === 1 ? types[0] : '';
-    const minCount = toInt(raw.min_antal, 0);
-    const hasExplicitMinErf = raw.min_erf !== undefined && raw.min_erf !== null && String(raw.min_erf).trim() !== '';
-    let minErf = toInt(raw.min_erf, 0);
-    if (!hasExplicitMinErf && raw.min_niva !== undefined) {
-      const legacyLevel = normalizeLevel(raw.min_niva || 'Novis', 'Novis');
-      const legacyType = types[0] || normalizeType(raw.typ);
-      minErf = minCount * typeBaseErf(legacyType || 'Förmåga', legacyLevel);
-    }
-    const rule = {
-      typ: type,
-      typer: types,
+    return {
+      typ: normalizeType(raw.typ),
       taggfalt: String(raw.taggfalt || '').trim(),
       taggar: uniqStrings(raw.taggar),
-      min_antal: minCount,
-      min_erf: minErf
+      krav_erf: toInt(raw.krav_erf, 0)
     };
-    return rule;
   }
 
   function normalizeKrav(rawKrav = {}) {
     const raw = rawKrav && typeof rawKrav === 'object' ? rawKrav : {};
-    const primaryNames = normalizePrimaryNames(raw.primarformaga || {});
     return {
-      primarformaga: {
-        namn: primaryNames[0] || '',
-        namn_lista: primaryNames
+      total_erf: toInt(raw.total_erf, 0),
+      primarformaga: normalizePrimary(raw.primarformaga || {}),
+      specifikt_val: toArray(raw.specifikt_val)
+        .map(normalizeSpecificChoice)
+        .filter(rule => rule.alternativ.length > 0 && rule.krav_erf > 0 && rule.min_antal >= 0),
+      valfri_inom_tagg: toArray(raw.valfri_inom_tagg)
+        .map(normalizeValfriRule)
+        .filter(rule => rule.taggfalt && rule.taggar.length > 0 && rule.krav_erf > 0),
+      valfritt: {
+        krav_erf: toInt(raw?.valfritt?.krav_erf, 0)
       },
-      primartagg: normalizeTagRule(raw.primartagg, false),
-      sekundartagg: normalizeTagRule(raw.sekundartagg, true),
-      valfri_inom_tagg: toArray(raw.valfri_inom_tagg).map(normalizeValfriRule),
-      specifika_formagor: normalizeSpecific(raw.specifika_formagor, 'Förmåga'),
-      specifika_mystiska_krafter: normalizeSpecific(raw.specifika_mystiska_krafter, 'Mystisk kraft'),
-      specifika_ritualer: normalizeSpecific(raw.specifika_ritualer, 'Ritual'),
-      specifika_fordelar: normalizeSpecific(raw.specifika_fordelar, 'Fördel'),
-      specifika_nackdelar: normalizeSpecific(raw.specifika_nackdelar, 'Nackdel')
+      specifika_fordelar: normalizeNamedCount(raw.specifika_fordelar || {}),
+      specifika_nackdelar: normalizeNamedCount(raw.specifika_nackdelar || {})
     };
   }
 
@@ -538,13 +543,15 @@
   }
 
   function resolveGroupNamesFromRule(rule, options = {}) {
-    const types = normalizeTypeList(rule.typer?.length ? rule.typer : rule.typ);
-    if (!types.length) return [];
     const db = getDBList(options);
     const names = db
       .filter(entry => !isEliteSkillEntry(entry))
-      .filter(entry => types.some(type => entryHasType(entry, type)))
-      .filter(entry => matchesTagRule(entry, rule))
+      .filter(entry => {
+        if (rule.typ && !entryHasType(entry, rule.typ)) return false;
+        if (!matchesTagRule(entry, rule)) return false;
+        if (entryHasType(entry, 'Fördel') || entryHasType(entry, 'Nackdel')) return false;
+        return true;
+      })
       .map(entry => String(entry?.namn || '').trim())
       .filter(Boolean);
     return uniqStrings(names).sort((a, b) => a.localeCompare(b, 'sv'));
@@ -583,41 +590,16 @@
     return uniqStrings(names).sort((a, b) => a.localeCompare(b, 'sv'));
   }
 
-  function buildNameGroups(source, type, config = {}, options = {}, extra = {}) {
-    const normType = normalizeType(type);
-    const list = uniqStrings(config?.namn);
-    const minCount = toInt(config?.min_antal, 0);
-    const minErf = toInt(config?.min_erf, 0);
-    if (!normType || !list.length || (minCount <= 0 && minErf <= 0)) return [];
-    const ritual = normType === 'Ritual';
-    const allowRepeat = list.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
-    const slotCost = Math.max(1, typeBaseErf(normType, 'Novis'));
-    const slotByErf = minErf > 0 ? Math.ceil(minErf / slotCost) : 0;
-    return [{
-      source,
-      type: normType,
-      names: list,
-      min_niva: 'Novis',
-      min_antal: minCount,
-      min_erf: minErf,
-      slot_count: Math.max(1, minCount, slotByErf),
-      allRitual: ritual,
-      dynamic_select: minCount < list.length || minErf > 0,
-      allow_repeat: allowRepeat,
-      ...extra
-    }];
-  }
-
-  function buildPrimaryOption(name, options = {}) {
+  function buildPrimaryOption(name, options = {}, explicitMinErf = 0) {
     const primaryName = String(name || '').trim();
     if (!primaryName) return null;
     const entry = findEntryByName(primaryName, options);
     const type = normalizeType(entryTypes(entry)[0] || 'Förmåga');
-    let minErf = typeBaseErf(type, type === 'Ritual' ? 'Novis' : 'Mästare');
+    let minErf = Math.max(0, Number(explicitMinErf) || 0);
     if (entry) {
-      if (type === 'Ritual') {
+      if (minErf <= 0 && type === 'Ritual') {
         minErf = requirementErf(entry, 'Novis');
-      } else if (type !== 'Fördel' && type !== 'Nackdel') {
+      } else if (minErf <= 0 && type !== 'Fördel' && type !== 'Nackdel') {
         const levels = entryDefinedLevels(entry);
         const targetLevel = levels.length
           ? levels.slice().sort((a, b) => (LEVEL_VALUE[b] || 0) - (LEVEL_VALUE[a] || 0))[0]
@@ -633,28 +615,73 @@
     };
   }
 
+  function buildNamedCountGroup(source, type, config = {}, options = {}) {
+    const normType = normalizeType(type);
+    const names = uniqStrings(config?.namn);
+    const minCount = Math.max(0, Number(config?.min_antal) || 0);
+    if (!normType || !names.length || minCount <= 0) return null;
+    const allowRepeat = names.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
+    return {
+      source,
+      type: normType,
+      names,
+      min_niva: 'Novis',
+      min_antal: minCount,
+      min_erf: 0,
+      slot_count: Math.max(1, minCount),
+      dynamic_select: true,
+      allow_repeat: allowRepeat
+    };
+  }
+
   function getKravGroups(rawKrav, options = {}) {
     const krav = normalizeKrav(rawKrav);
     const groups = [];
-    const xpSources = DEFAULT_XP_KALLOR.slice();
-
-    const pushTagXpGroup = (source, rawRule = {}) => {
-      const tagRule = normalizeTagRule(rawRule, source === 'sekundartagg');
-      const minErf = Math.max(0, Number(tagRule.krav_erf) || 0);
-      const minCount = Math.max(0, Number(tagRule.min_antal) || 0);
-      if (source === 'sekundartagg' && !tagRule.aktiv) return;
-      if (!tagRule.taggfalt || !tagRule.taggar.length || (minErf <= 0 && minCount <= 0)) return;
-      const names = resolveGroupNamesFromTagRule(tagRule, options, xpSources);
-      const allowRepeat = names.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
-      const minPositiveCost = names
-        .map(name => requirementErf(findEntryByName(name, options), 'Novis'))
-        .filter(cost => cost > 0)
-        .reduce((min, cost) => Math.min(min, cost), Infinity);
-      const slotCost = Number.isFinite(minPositiveCost) ? minPositiveCost : 5;
-      const slotByErf = minErf > 0 ? Math.ceil(minErf / Math.max(1, slotCost)) : 0;
+    const primaryNames = uniqStrings(
+      toArray(krav?.primarformaga?.namn_lista).length
+        ? krav.primarformaga.namn_lista
+        : [krav?.primarformaga?.namn]
+    );
+    const primaryOptions = primaryNames
+      .map(name => buildPrimaryOption(name, options, krav?.primarformaga?.krav_erf))
+      .filter(Boolean);
+    if (primaryOptions.length) {
+      const types = uniqStrings(primaryOptions.map(opt => normalizeType(opt.type)).filter(Boolean));
+      const minErf = Math.max(
+        0,
+        Number(krav?.primarformaga?.krav_erf) || 0,
+        Number(primaryOptions[0]?.min_erf) || 0
+      );
       groups.push({
-        source,
-        type: '',
+        source: 'primarformaga',
+        type: types.length === 1 ? types[0] : '',
+        names: primaryOptions.map(opt => opt.name),
+        min_antal: 1,
+        min_niva: 'Novis',
+        min_erf: minErf,
+        allRitual: types.length === 1 && types[0] === 'Ritual',
+        isPrimary: true,
+        dynamic_select: true,
+        primary_options: primaryOptions
+      });
+    }
+
+    toArray(krav.specifikt_val).forEach((choice, idx) => {
+      const alternatives = toArray(choice.alternativ)
+        .map(normalizeSpecificAlternative)
+        .filter(Boolean);
+      if (!alternatives.length) return;
+      const minErf = Math.max(0, Number(choice.krav_erf) || 0);
+      const minCount = Math.max(0, Number(choice.min_antal) || 0);
+      if (minErf <= 0) return;
+      const names = uniqStrings(alternatives.map(item => item.namn));
+      const types = uniqStrings(alternatives.map(item => normalizeType(item.typ)).filter(Boolean));
+      const oneType = types.length === 1 ? types[0] : '';
+      const allowRepeat = names.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
+      const slotByErf = minErf > 0 ? Math.ceil(minErf / 10) : 0;
+      groups.push({
+        source: `specifikt_val[${idx}]`,
+        type: oneType,
         names,
         min_antal: minCount,
         min_niva: 'Novis',
@@ -662,124 +689,46 @@
         slot_count: Math.max(1, minCount, slotByErf),
         dynamic_select: true,
         allow_repeat: allowRepeat,
-        tagRule: {
-          ...tagRule,
-          xp_kallor: xpSources
+        specifikt_val: {
+          alternativ: alternatives,
+          krav_erf: minErf,
+          min_antal: minCount
         }
       });
-    };
-
-    const primaryNames = uniqStrings([
-      ...toArray(krav.primarformaga?.namn_lista),
-      krav.primarformaga?.namn
-    ]);
-    const primaryOptions = primaryNames
-      .map(name => buildPrimaryOption(name, options))
-      .filter(Boolean);
-    if (primaryOptions.length) {
-      const types = uniqStrings(primaryOptions.map(opt => normalizeType(opt.type)).filter(Boolean));
-      const minErf = primaryOptions
-        .map(opt => Math.max(0, Number(opt.min_erf) || 0))
-        .reduce((min, value) => Math.min(min, value), Infinity);
-      groups.push({
-        source: 'primarformaga',
-        type: types.length === 1 ? types[0] : '',
-        names: primaryOptions.map(opt => opt.name),
-        min_antal: 1,
-        min_niva: 'Novis',
-        min_erf: Number.isFinite(minErf) ? minErf : 0,
-        allRitual: types.length === 1 && types[0] === 'Ritual',
-        isPrimary: true,
-        primary_options: primaryOptions
-      });
-    }
-
-    pushTagXpGroup('primartagg', krav.primartagg);
-    pushTagXpGroup('sekundartagg', krav.sekundartagg);
+    });
 
     toArray(krav.valfri_inom_tagg).forEach((rawRule, idx) => {
       const rule = normalizeValfriRule(rawRule);
-      const types = normalizeTypeList(rule.typer?.length ? rule.typer : rule.typ);
-      const hasAnyRequirement = (rule.min_antal > 0) || (rule.min_erf > 0);
-      if (!types.length || !hasAnyRequirement) return;
-      const source = `valfri_inom_tagg[${idx}]`;
-      const isAnyByType = !rule.taggfalt && !rule.taggar.length;
-
-      if (isAnyByType && types.length === 1 && types[0] === 'Mystisk kraft') {
-        groups.push({
-          source,
-          type: 'Mystisk kraft',
-          types,
-          anyMystic: true,
-          min_antal: rule.min_antal,
-          min_niva: 'Novis',
-          min_erf: rule.min_erf,
-          dynamic_select: true
-        });
-        return;
-      }
-
-      if (isAnyByType && types.length === 1 && types[0] === 'Ritual') {
-        groups.push({
-          source,
-          type: 'Ritual',
-          types,
-          anyRitual: true,
-          allRitual: true,
-          min_antal: rule.min_antal,
-          min_niva: 'Novis',
-          min_erf: rule.min_erf,
-          dynamic_select: true
-        });
-        return;
-      }
-
+      const minErf = Math.max(0, Number(rule.krav_erf) || 0);
+      if (!rule.taggfalt || !rule.taggar.length || minErf <= 0) return;
       const names = rule.taggfalt === 'namn' && rule.taggar.length
         ? rule.taggar.slice()
         : resolveGroupNamesFromRule(rule, options);
       const allowRepeat = names.some(name => isRepeatableBenefitEntry(findEntryByName(name, options)));
-      const oneType = types.length === 1 ? types[0] : '';
-      const tagRule = {
-        ...rule,
-        typer: types,
-        xp_kallor: types
-      };
-
       groups.push({
-        source,
-        type: oneType,
-        types,
+        source: `valfri_inom_tagg[${idx}]`,
+        type: rule.typ || '',
         names: uniqStrings(names),
-        min_antal: Math.max(0, Number(rule.min_antal) || 0),
+        min_antal: 0,
         min_niva: 'Novis',
-        min_erf: Math.max(0, Number(rule.min_erf) || 0),
-        allRitual: oneType === 'Ritual',
+        min_erf: minErf,
+        slot_count: Math.max(1, Math.ceil(minErf / 10)),
         dynamic_select: true,
         allow_repeat: allowRepeat,
-        tagRule
+        tagRule: {
+          taggfalt: rule.taggfalt,
+          taggar: rule.taggar,
+          typ: rule.typ,
+          krav_erf: minErf
+        }
       });
     });
 
-    groups.push(...buildNameGroups(
-      'specifika_formagor',
-      'Förmåga',
-      krav.specifika_formagor,
-      options
-    ));
+    const specificBenefits = buildNamedCountGroup('specifika_fordelar', 'Fördel', krav.specifika_fordelar, options);
+    if (specificBenefits) groups.push(specificBenefits);
 
-    groups.push(...buildNameGroups(
-      'specifika_mystiska_krafter',
-      'Mystisk kraft',
-      krav.specifika_mystiska_krafter,
-      options
-    ));
-
-    groups.push(...buildNameGroups(
-      'specifika_ritualer',
-      'Ritual',
-      krav.specifika_ritualer,
-      options
-    ));
+    const specificDrawbacks = buildNamedCountGroup('specifika_nackdelar', 'Nackdel', krav.specifika_nackdelar, options);
+    if (specificDrawbacks) groups.push(specificDrawbacks);
 
     return groups;
   }
@@ -794,9 +743,8 @@
 
   function matchesValfriRule(entry, rawRule = {}) {
     const rule = normalizeValfriRule(rawRule);
-    const types = normalizeTypeList(rule.typer?.length ? rule.typer : rule.typ);
-    if (!types.length) return false;
-    if (!types.some(type => entryHasType(entry, type))) return false;
+    if (!rule.taggfalt || !rule.taggar.length) return false;
+    if (rule.typ && !entryHasType(entry, rule.typ)) return false;
     if (!matchesTagRule(entry, rule)) return false;
     return true;
   }

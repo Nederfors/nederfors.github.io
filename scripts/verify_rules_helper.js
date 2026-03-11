@@ -2332,6 +2332,7 @@ function verifyRequirementRules(rootPath) {
     taggar: {
       typ: ['Lägre Artefakt'],
       regler: {
+        kraver_logik: 'and',
         kraver: [
           { namn: ['Blodvadare'], else: { pengar_multiplikator: 10, erf_multiplikator: 10 } },
           { namn: ['Häxkonster'], nivå_minst: 'Gesäll', else: { pengar_multiplikator: 10, erf_multiplikator: 10 } }
@@ -2424,6 +2425,227 @@ function verifyRequirementRules(rootPath) {
     ),
     ['Råstyrka'],
     'storeHelper.getDependents ska använda regelstyrda kravberoenden'
+  );
+}
+
+function verifyRequirementScopeLogic(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+  const helper = sandbox.rulesHelper;
+  const missing = (entry, list = [], level = '') => helper.getMissingRequirementReasonsForCandidate(entry, list, { level });
+
+  const attachTypeRules = (entry, typeRules) => {
+    try {
+      Object.defineProperty(entry, '__typ_regler', {
+        value: typeRules,
+        configurable: true,
+        writable: true,
+        enumerable: false
+      });
+    } catch (_) {
+      entry.__typ_regler = typeRules;
+    }
+    return entry;
+  };
+
+  const typeOnlyRules = {
+    'Förmåga': {
+      regler: {
+        kraver: [
+          { nar: { har_namn: ['Monster'] }, varde: 'type_monster' }
+        ]
+      }
+    }
+  };
+  const typeOnly = attachTypeRules({
+    id: 'req-scope-type-only',
+    namn: 'TypeOnly',
+    taggar: { typ: ['Förmåga'] }
+  }, typeOnlyRules);
+  assert(missing(typeOnly, []).length === 1, 'Endast typkrav ska blockera när typkravet saknas');
+  assert(missing(typeOnly, [{ namn: 'Monster' }]).length === 0, 'Endast typkrav ska passera när typkravet uppfylls');
+
+  const entryOnly = {
+    id: 'req-scope-entry-only',
+    namn: 'EntryOnly',
+    taggar: {
+      typ: ['Förmåga'],
+      regler: {
+        kraver: [
+          { nar: { har_namn: ['Robust'] }, varde: 'entry_robust' }
+        ]
+      }
+    }
+  };
+  assert(missing(entryOnly, []).length === 1, 'Endast entrykrav ska blockera när entrykravet saknas');
+  assert(missing(entryOnly, [{ namn: 'Robust' }]).length === 0, 'Endast entrykrav ska passera när entrykravet uppfylls');
+
+  const entryOr = {
+    id: 'req-scope-entry-or',
+    namn: 'EntryOr',
+    taggar: {
+      typ: ['Förmåga'],
+      regler: {
+        kraver_logik: 'or',
+        kraver: [
+          { nar: { har_namn: ['A'] }, varde: 'entry_a' },
+          { nar: { har_namn: ['B'] }, varde: 'entry_b' }
+        ]
+      }
+    }
+  };
+  assert(missing(entryOr, [{ namn: 'A' }]).length === 0, 'Entry OR ska passera när en gren uppfylls');
+  assert(missing(entryOr, []).length === 2, 'Entry OR ska ge reasons för båda grenar när båda saknas');
+
+  const entryAnd = {
+    id: 'req-scope-entry-and',
+    namn: 'EntryAnd',
+    taggar: {
+      typ: ['Förmåga'],
+      regler: {
+        kraver_logik: 'and',
+        kraver: [
+          { nar: { har_namn: ['A'] }, varde: 'entry_a' },
+          { nar: { har_namn: ['B'] }, varde: 'entry_b' }
+        ]
+      }
+    }
+  };
+  assert(missing(entryAnd, [{ namn: 'A' }]).length === 1, 'Entry AND ska blockera när en del saknas');
+  assert(missing(entryAnd, [{ namn: 'A' }, { namn: 'B' }]).length === 0, 'Entry AND ska passera när båda delkrav uppfylls');
+
+  const typeOrRules = {
+    'Förmåga': {
+      regler: {
+        kraver_logik: 'or',
+        kraver: [
+          { nar: { har_namn: ['A'] }, varde: 'type_a' },
+          { nar: { har_namn: ['B'] }, varde: 'type_b' }
+        ]
+      }
+    }
+  };
+  const typeOr = attachTypeRules({
+    id: 'req-scope-type-or',
+    namn: 'TypeOr',
+    taggar: { typ: ['Förmåga'] }
+  }, typeOrRules);
+  assert(missing(typeOr, [{ namn: 'A' }]).length === 0, 'Type OR ska passera när en gren uppfylls');
+  assert(missing(typeOr, []).length === 2, 'Type OR ska ge reasons när båda grenar saknas');
+
+  const typeAndRules = {
+    'Förmåga': {
+      regler: {
+        kraver_logik: 'and',
+        kraver: [
+          { nar: { har_namn: ['A'] }, varde: 'type_a' },
+          { nar: { har_namn: ['B'] }, varde: 'type_b' }
+        ]
+      }
+    }
+  };
+  const typeAnd = attachTypeRules({
+    id: 'req-scope-type-and',
+    namn: 'TypeAnd',
+    taggar: { typ: ['Förmåga'] }
+  }, typeAndRules);
+  assert(missing(typeAnd, [{ namn: 'A' }]).length === 1, 'Type AND ska blockera när en gren saknas');
+  assert(missing(typeAnd, [{ namn: 'A' }, { namn: 'B' }]).length === 0, 'Type AND ska passera när båda grenar uppfylls');
+
+  const combinedAndOr = {
+    id: 'req-combined-and-or',
+    namn: 'CombinedAndOr',
+    taggar: {
+      typ: ['Monstruöst särdrag'],
+      regler: {
+        kraver_logik: 'and',
+        kraver: [
+          { nar: { nagon_av_namn: ['Vandöd', 'Best', 'Andebesvärjare'] }, varde: 'req_source' },
+          { namn: ['Andeform'], varde: 'req_form' }
+        ]
+      }
+    }
+  };
+  assert(
+    missing(combinedAndOr, [{ namn: 'Best' }, { namn: 'Andeform' }]).length === 0,
+    '(A OR B OR C) AND D ska passera när både OR-grupp och D uppfylls'
+  );
+  assert(
+    missing(combinedAndOr, [{ namn: 'Andeform' }]).length === 1,
+    '(A OR B OR C) AND D ska blockera när OR-gruppen saknas'
+  );
+  assert(
+    missing(combinedAndOr, [{ namn: 'Best' }]).length === 1,
+    '(A OR B OR C) AND D ska blockera när D saknas'
+  );
+
+  const levelCombined = {
+    id: 'req-level-combined',
+    namn: 'LevelCombined',
+    taggar: {
+      typ: ['Monstruöst särdrag'],
+      regler: {
+        kraver_logik: 'and',
+        kraver: [
+          { nar: { nagon_av_namn: ['Vandöd', 'Best', 'Andebesvärjare'] }, varde: 'req_source' },
+          { namn: ['Andeform'], nivå_minst: 'Novis', varde: 'req_form_level' }
+        ]
+      }
+    }
+  };
+  assert(
+    missing(levelCombined, [{ namn: 'Best' }, { namn: 'Andeform', nivå: 'Novis' }]).length === 0,
+    'Nivåkrav + kombinerad AND/OR ska passera vid tillräcklig nivå'
+  );
+  assert(
+    missing(levelCombined, [{ namn: 'Best' }, { namn: 'Andeform', nivå: '' }]).length === 1,
+    'Nivåkrav + kombinerad AND/OR ska blockera vid för låg nivå'
+  );
+
+  const typeEntryBaseRules = {
+    'Förmåga': {
+      regler: {
+        kraver: [
+          { nar: { har_namn: ['Monster'] }, varde: 'type_monster' }
+        ]
+      }
+    }
+  };
+  const typeEntryOr = attachTypeRules({
+    id: 'req-type-entry-or',
+    namn: 'TypeEntryOr',
+    taggar: {
+      typ: ['Förmåga'],
+      regler: {
+        kraver: [
+          { namn: ['Väldig'], nivå_minst: 'Novis', varde: 'entry_valdig' }
+        ]
+      }
+    }
+  }, typeEntryBaseRules);
+  assert(missing(typeEntryOr, [{ namn: 'Monster' }]).length === 0, 'Type+Entry OR ska passera med enbart type-krav');
+  assert(missing(typeEntryOr, [{ namn: 'Väldig', nivå: 'Novis' }]).length === 0, 'Type+Entry OR ska passera med enbart entry-krav');
+
+  const typeEntryAnd = attachTypeRules({
+    id: 'req-type-entry-and',
+    namn: 'TypeEntryAnd',
+    taggar: {
+      typ: ['Förmåga'],
+      regler: {
+        kraver_typ_och_entry: 'and',
+        kraver: [
+          { namn: ['Väldig'], nivå_minst: 'Novis', varde: 'entry_valdig' }
+        ]
+      }
+    }
+  }, typeEntryBaseRules);
+  const andMissingMonsterOnly = missing(typeEntryAnd, [{ namn: 'Monster' }]);
+  assert(andMissingMonsterOnly.length === 1, 'Type+Entry AND ska blockera när entry-kravet saknas');
+  const andMissingValdigOnly = missing(typeEntryAnd, [{ namn: 'Väldig', nivå: 'Novis' }]);
+  assert(andMissingValdigOnly.length === 1, 'Type+Entry AND ska blockera när type-kravet saknas');
+  assert(
+    missing(typeEntryAnd, [{ namn: 'Monster' }, { namn: 'Väldig', nivå: 'Novis' }]).length === 0,
+    'Type+Entry AND ska passera när båda scope uppfylls'
   );
 }
 
@@ -4468,6 +4690,8 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
   const diminutiv = monstruostSardrag.find(e => e.namn === 'Diminutiv');
   const naturligtVapen = monstruostSardrag.find(e => e.namn === 'Naturligt vapen');
   const gravkyla = monstruostSardrag.find(e => e.namn === 'Gravkyla');
+  const slukare = monstruostSardrag.find(e => e.namn === 'Slukare');
+  const valdig = monstruostSardrag.find(e => e.namn === 'Väldig');
   const vingar = monstruostSardrag.find(e => e.namn === 'Vingar');
   const robustSardrag = sardrag.find(e => e.namn === 'Robust');
 
@@ -4553,6 +4777,23 @@ function verifyTargetDrivenMonstruosKrav(rootPath) {
     [{ ...blodvadare, nivå: '' }]
   );
   assert(missing12.length === 0, 'Naturligt vapen ska vara tillåtet med Blodvadare');
+
+  // Test 12b: Slukare requires both Monster (type) and Väldig Novis (entry)
+  const missing12bMonsterOnly = getMissingRequirementReasonsForCandidate(
+    slukare,
+    [{ ...monster, nivå: '' }]
+  );
+  assert(missing12bMonsterOnly.length > 0, 'Slukare ska vara blockerat med enbart Monster');
+  const missing12bValdigOnly = getMissingRequirementReasonsForCandidate(
+    slukare,
+    [{ ...valdig, nivå: 'Novis' }]
+  );
+  assert(missing12bValdigOnly.length > 0, 'Slukare ska vara blockerat med enbart Väldig Novis');
+  const missing12bBoth = getMissingRequirementReasonsForCandidate(
+    slukare,
+    [{ ...monster, nivå: '' }, { ...valdig, nivå: 'Novis' }]
+  );
+  assert(missing12bBoth.length === 0, 'Slukare ska vara tillåtet med Monster + Väldig Novis');
 
   // Test 13: No tillater_monstruost remains in data sources
   const allSources = [...rasList, ...fordelList, ...elityrkeList];
@@ -5557,6 +5798,643 @@ function verifyGrantCleanupRules(rootPath) {
   );
 }
 
+function verifyEliteRequirementV2(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/store.js'));
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/elite-utils.js'));
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/elite-req.js'));
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/elite-add.js'));
+
+  assert(sandbox.eliteReq && typeof sandbox.eliteReq.check === 'function', 'eliteReq.check ska finnas');
+  assert(sandbox.eliteAdd && typeof sandbox.eliteAdd.checkProjectedRequirements === 'function', 'eliteAdd.checkProjectedRequirements ska finnas');
+  assert(sandbox.eliteAdd && typeof sandbox.eliteAdd.projectRequirementList === 'function', 'eliteAdd.projectRequirementList ska finnas');
+  assert(sandbox.eliteAdd && typeof sandbox.eliteAdd.getValfrittTypeOptions === 'function', 'eliteAdd.getValfrittTypeOptions ska finnas');
+  assert(sandbox.eliteUtils && typeof sandbox.eliteUtils.normalizeKrav === 'function', 'eliteUtils.normalizeKrav ska finnas');
+
+  const makeEntry = (name, type, level = 'Novis', extraTags = {}) => ({
+    id: `elite-v2-${String(name || '').toLowerCase().replace(/[^a-z0-9]+/g, '-')}`,
+    namn: name,
+    nivå: level,
+    taggar: {
+      typ: [type],
+      ...extraTags
+    }
+  });
+
+  const elite = {
+    id: 'elite-v2-test',
+    namn: 'Elit V2 Test',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 150,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [
+        {
+          alternativ: [{ typ: 'Förmåga', namn: 'Krav A' }],
+          krav_erf: 30,
+          min_antal: 1
+        },
+        {
+          alternativ: [
+            { typ: 'Förmåga', namn: 'Krav B' },
+            { typ: 'Ritual', namn: 'Ritual A' },
+            { typ: 'Mystisk kraft', namn: 'Mystisk A' }
+          ],
+          krav_erf: 10,
+          min_antal: 1
+        }
+      ],
+      valfri_inom_tagg: [
+        {
+          taggfalt: 'ark_trad',
+          taggar: ['TaggX'],
+          krav_erf: 40,
+          typ: 'Förmåga'
+        }
+      ],
+      valfritt: { krav_erf: 10 },
+      specifika_fordelar: { namn: ['Fördel A'], min_antal: 1 },
+      specifika_nackdelar: { namn: ['Nackdel A'], min_antal: 1 }
+    }
+  };
+
+  const primaryMaster = makeEntry('Primärförmåga', 'Förmåga', 'Mästare', { ark_trad: ['PrimTagg'] });
+  const primaryJourneyman = makeEntry('Primärförmåga', 'Förmåga', 'Gesäll', { ark_trad: ['PrimTagg'] });
+  const kravA = makeEntry('Krav A', 'Förmåga', 'Mästare', { ark_trad: ['TaggX'] });
+  const kravB = makeEntry('Krav B', 'Förmåga', 'Novis', { ark_trad: ['TaggX'] });
+  const ritualA = makeEntry('Ritual A', 'Ritual', 'Novis', { ark_trad: ['TaggX'] });
+  const fillerTag = makeEntry('Fyllnad Tagg', 'Förmåga', 'Novis', { ark_trad: ['TaggX'] });
+  const fillerTagGesall = makeEntry('Fyllnad Tagg Gesäll', 'Förmåga', 'Gesäll', { ark_trad: ['TaggX'] });
+  const fillerNoTag = makeEntry('Fyllnad Övrig', 'Förmåga', 'Novis', { ark_trad: ['AnnanTagg'] });
+  const benefitA = makeEntry('Fördel A', 'Fördel', 'Novis');
+  const drawbackA = makeEntry('Nackdel A', 'Nackdel', 'Novis');
+
+  const passingList = [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTag },
+    { ...fillerNoTag },
+    { ...benefitA },
+    { ...drawbackA }
+  ];
+  const passRes = sandbox.eliteReq.check(elite, passingList);
+  assert(passRes.ok === true, `V2-passfall ska vara godkänt, fick fel: ${(passRes.missing || []).join(' | ')}`);
+
+  assert(
+    Number(passRes.profile?.total?.selectedErf) === 150,
+    `total_erf ska exkludera Fördel/Nackdel och bli 150, fick ${passRes.profile?.total?.selectedErf}`
+  );
+
+  const lowPrimaryRes = sandbox.eliteReq.check(elite, [
+    { ...primaryJourneyman },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTag },
+    { ...fillerNoTag },
+    { ...benefitA },
+    { ...drawbackA }
+  ]);
+  assert(lowPrimaryRes.ok === false, 'Primärförmåga under krav_erf ska underkänna');
+  assert(
+    (lowPrimaryRes.missing || []).some(msg => String(msg).includes('Primärförmåga')),
+    'Primärförmågemiss ska synas i missing-listan'
+  );
+
+  const minXpSimpleElite = {
+    id: 'elite-v2-minxp-simple',
+    namn: 'Elit V2 MinXP Simple',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 100,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [],
+      valfri_inom_tagg: [],
+      valfritt: { krav_erf: 0 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const minXpSimple = sandbox.eliteReq.minXP(minXpSimpleElite, [{ ...primaryJourneyman }]);
+  assert(
+    Number(minXpSimple) === 70,
+    `minXP ska inte dubbelräkna total + primär (förväntat 70, fick ${minXpSimple})`
+  );
+
+  const alternativeRes = sandbox.eliteReq.check(elite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...ritualA },
+    { ...fillerTag },
+    { ...fillerNoTag },
+    { ...benefitA },
+    { ...drawbackA }
+  ]);
+  assert(alternativeRes.ok === true, 'specifikt_val ska godkänna alternativmatch (Ritual A)');
+
+  const doubleUseElite = {
+    ...elite,
+    krav: {
+      ...elite.krav,
+      total_erf: 120,
+      specifikt_val: [
+        {
+          alternativ: [{ typ: 'Förmåga', namn: 'Krav A' }],
+          krav_erf: 30,
+          min_antal: 1
+        },
+        {
+          alternativ: [{ typ: 'Förmåga', namn: 'Krav A' }],
+          krav_erf: 30,
+          min_antal: 1
+        }
+      ],
+      valfri_inom_tagg: [],
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const doubleUseRes = sandbox.eliteReq.check(doubleUseElite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...fillerTag },
+    { ...fillerNoTag }
+  ]);
+  assert(doubleUseRes.ok === false, 'Samma post ska inte kunna uppfylla två specifikt_val-rader');
+
+  const overflowOnlyRes = sandbox.eliteReq.check(elite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerNoTag },
+    { ...benefitA },
+    { ...drawbackA }
+  ]);
+  assert(overflowOnlyRes.ok === false, 'valfri_inom_tagg ska falla när bara 30 overflow finns men 40 krävs');
+  const valfriProfile = (Array.isArray(overflowOnlyRes.profile?.valfri_inom_tagg)
+    ? overflowOnlyRes.profile.valfri_inom_tagg
+    : [])[0] || {};
+  assert(
+    Number(valfriProfile.selectedErf) === 30,
+    `Overflow till valfri_inom_tagg ska bli 30 i detta fall, fick ${valfriProfile.selectedErf}`
+  );
+  assert(
+    Array.isArray(valfriProfile.overflowSources)
+      && valfriProfile.overflowSources.some(row => String(row?.name || '').trim() === 'Krav A' && Number(row?.usedErf) === 30),
+    `valfri_inom_tagg ska exponera overflow-källa (Krav A +30), fick ${JSON.stringify(valfriProfile.overflowSources)}`
+  );
+
+  const hybridRes = sandbox.eliteReq.check(elite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTag },
+    { ...benefitA },
+    { ...drawbackA }
+  ]);
+  assert(hybridRes.ok === false, 'Hybridfyllning ska fortfarande blockeras när total_erf < 150');
+  const hybridValfri = (Array.isArray(hybridRes.profile?.valfri_inom_tagg)
+    ? hybridRes.profile.valfri_inom_tagg
+    : [])[0] || {};
+  assert(
+    Number(hybridValfri.selectedErf) === 40,
+    `Hybridfyllning ska ge 40 mot valfri_inom_tagg, fick ${hybridValfri.selectedErf}`
+  );
+
+  const valfriOverflowRes = sandbox.eliteReq.check(elite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTagGesall },
+    { ...fillerNoTag },
+    { ...benefitA },
+    { ...drawbackA }
+  ]);
+  const valfriOverflowRow = (Array.isArray(valfriOverflowRes.profile?.valfri_inom_tagg)
+    ? valfriOverflowRes.profile.valfri_inom_tagg
+    : [])[0] || {};
+  assert(
+    Number(valfriOverflowRow.overflowErf) === 20,
+    `valfri_inom_tagg ska skapa overflow vidare till valfritt (förväntat 20), fick ${valfriOverflowRow.overflowErf}`
+  );
+  assert(
+    Number(valfriOverflowRes.profile?.valfritt?.selectedFromOverflow) >= 20,
+    `valfritt ska ta emot overflow från valfri_inom_tagg (minst 20), fick ${valfriOverflowRes.profile?.valfritt?.selectedFromOverflow}`
+  );
+
+  const dualTagSource = makeEntry('Dubbel Tagg Källa', 'Förmåga', 'Mästare', { ark_trad: ['TaggA', 'TaggB'] });
+  const dualTagElite = {
+    id: 'elite-v2-dual-tag-priority',
+    namn: 'Elit V2 Dual Tag Priority',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 120,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [
+        {
+          alternativ: [{ typ: 'Förmåga', namn: 'Dubbel Tagg Källa' }],
+          krav_erf: 30,
+          min_antal: 1
+        }
+      ],
+      valfri_inom_tagg: [
+        { taggfalt: 'ark_trad', taggar: ['TaggA'], krav_erf: 20, typ: 'Förmåga' },
+        { taggfalt: 'ark_trad', taggar: ['TaggB'], krav_erf: 10, typ: 'Förmåga' }
+      ],
+      valfritt: { krav_erf: 0 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const dualTagRes = sandbox.eliteReq.check(dualTagElite, [
+    { ...primaryMaster },
+    { ...dualTagSource }
+  ]);
+  const dualTagRows = Array.isArray(dualTagRes.profile?.valfri_inom_tagg) ? dualTagRes.profile.valfri_inom_tagg : [];
+  const dualTagRow0 = dualTagRows[0] || {};
+  const dualTagRow1 = dualTagRows[1] || {};
+  assert(
+    Number(dualTagRow0.selectedErf) === 20 && Number(dualTagRow1.selectedErf) === 10,
+    `Overflow som matchar flera taggar ska fylla samtliga valfri_inom_tagg före valfritt (fick ${dualTagRow0.selectedErf}/${dualTagRow1.selectedErf})`
+  );
+  assert(
+    Number(dualTagRes.profile?.valfritt?.selectedFromOverflow) === 0,
+    `Ingen overflow ska gå till valfritt innan taggkraven är fyllda (fick ${dualTagRes.profile?.valfritt?.selectedFromOverflow})`
+  );
+  assert(dualTagRes.ok === true, 'Dubbel-taggsprioritering ska bli godkänd');
+
+  const noBenefitRes = sandbox.eliteReq.check(elite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTag },
+    { ...fillerNoTag },
+    { ...drawbackA }
+  ]);
+  assert(noBenefitRes.ok === false, 'saknad specifik fördel ska blockera även om total_erf är uppfylld');
+
+  const noDrawbackRes = sandbox.eliteReq.check(elite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTag },
+    { ...fillerNoTag },
+    { ...benefitA }
+  ]);
+  assert(noDrawbackRes.ok === false, 'saknad specifik nackdel ska blockera även om total_erf är uppfylld');
+
+  const minCountZeroNormalized = sandbox.eliteUtils.normalizeKrav({
+    specifikt_val: [
+      {
+        alternativ: [{ typ: 'Förmåga', namn: 'Krav A' }],
+        krav_erf: 30,
+        min_antal: 0
+      }
+    ]
+  });
+  assert(
+    Number(minCountZeroNormalized?.specifikt_val?.[0]?.min_antal) === 0,
+    `min_antal:0 ska bevaras i normalisering, fick ${JSON.stringify(minCountZeroNormalized?.specifikt_val?.[0])}`
+  );
+  const minCountZeroElite = {
+    id: 'elite-v2-min-count-zero',
+    namn: 'Elit V2 Min Count Zero',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 90,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [
+        {
+          alternativ: [{ typ: 'Förmåga', namn: 'Krav A' }],
+          krav_erf: 30,
+          min_antal: 0
+        }
+      ],
+      valfri_inom_tagg: [],
+      valfritt: { krav_erf: 0 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const minCountZeroRes = sandbox.eliteReq.check(minCountZeroElite, [
+    { ...primaryMaster },
+    { ...kravA }
+  ]);
+  const minCountZeroRow = (Array.isArray(minCountZeroRes.profile?.specifikt_val)
+    ? minCountZeroRes.profile.specifikt_val
+    : [])[0] || {};
+  assert(
+    Number(minCountZeroRow.requiredCount) === 0,
+    `specifikt_val med min_antal:0 ska ha requiredCount=0, fick ${minCountZeroRow.requiredCount}`
+  );
+  assert(minCountZeroRes.ok === true, 'specifikt_val med min_antal:0 ska godkännas när ERF-kravet uppfylls');
+
+  const overlapA = makeEntry('Överlapp A', 'Förmåga', 'Gesäll', { ark_trad: ['TaggX'] });
+  const overlapB = makeEntry('Överlapp B', 'Förmåga', 'Novis', { ark_trad: ['TaggX'] });
+  const overlapOnly = makeEntry('Överlapp Endast Rad2', 'Förmåga', 'Novis', { ark_trad: ['TaggX'] });
+  const hintedSpecificElite = {
+    id: 'elite-v2-hinted-specific',
+    namn: 'Elit V2 Hinted Specific',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 110,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [
+        {
+          alternativ: [
+            { typ: 'Förmåga', namn: 'Överlapp A' },
+            { typ: 'Förmåga', namn: 'Överlapp B' }
+          ],
+          krav_erf: 40,
+          min_antal: 1
+        },
+        {
+          alternativ: [
+            { typ: 'Förmåga', namn: 'Överlapp A' },
+            { typ: 'Förmåga', namn: 'Överlapp Endast Rad2' }
+          ],
+          krav_erf: 10,
+          min_antal: 1
+        }
+      ],
+      valfri_inom_tagg: [],
+      valfritt: { krav_erf: 0 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const hintedSpecificRes = sandbox.eliteReq.check(hintedSpecificElite, [
+    { ...primaryMaster, __elite_source: 'primarformaga' },
+    { ...overlapA, __elite_source: 'specifikt_val[0]' },
+    { ...overlapB, __elite_source: 'specifikt_val[0]' },
+    { ...overlapOnly, __elite_source: 'specifikt_val[1]' }
+  ]);
+  const hintedRows = Array.isArray(hintedSpecificRes.profile?.specifikt_val) ? hintedSpecificRes.profile.specifikt_val : [];
+  const hintedRow0 = hintedRows[0] || {};
+  const hintedRow1 = hintedRows[1] || {};
+  assert(
+    Number(hintedRow0.selectedErf) === 40,
+    `specifikt_val[0] ska summera Gesäll + Novis till 40 med radlåsning, fick ${hintedRow0.selectedErf}`
+  );
+  assert(
+    Number(hintedRow1.selectedErf) === 10,
+    `specifikt_val[1] ska behålla sitt explicit val (10), fick ${hintedRow1.selectedErf}`
+  );
+  assert(hintedSpecificRes.ok === true, 'Radlåst specifikt_val-fall ska bli godkänt');
+
+  const specOverflowMain = makeEntry('Spec Overflow Main', 'Förmåga', 'Gesäll', { ark_trad: ['TaggX'] });
+  const specOverflowExtra1 = makeEntry('Spec Overflow Extra 1', 'Förmåga', 'Novis', { ark_trad: ['TaggX'] });
+  const specOverflowExtra2 = makeEntry('Spec Overflow Extra 2', 'Förmåga', 'Novis', { ark_trad: ['TaggX'] });
+  const multiOverflowElite = {
+    id: 'elite-v2-multi-overflow',
+    namn: 'Elit V2 Multi Overflow',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 110,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [
+        {
+          alternativ: [
+            { typ: 'Förmåga', namn: 'Spec Overflow Main' },
+            { typ: 'Förmåga', namn: 'Spec Overflow Extra 1' },
+            { typ: 'Förmåga', namn: 'Spec Overflow Extra 2' }
+          ],
+          krav_erf: 30,
+          min_antal: 1
+        }
+      ],
+      valfri_inom_tagg: [
+        {
+          taggfalt: 'ark_trad',
+          taggar: ['TaggX'],
+          krav_erf: 20,
+          typ: 'Förmåga'
+        }
+      ],
+      valfritt: { krav_erf: 0 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const multiOverflowRes = sandbox.eliteReq.check(multiOverflowElite, [
+    { ...primaryMaster, __elite_source: 'primarformaga' },
+    { ...specOverflowMain, __elite_source: 'specifikt_val[0]' },
+    { ...specOverflowExtra1, __elite_source: 'specifikt_val[0]' },
+    { ...specOverflowExtra2, __elite_source: 'specifikt_val[0]' }
+  ]);
+  const multiSpecRow = (Array.isArray(multiOverflowRes.profile?.specifikt_val)
+    ? multiOverflowRes.profile.specifikt_val
+    : [])[0] || {};
+  assert(
+    Number(multiSpecRow.selectedErf) === 50,
+    `Specifik rad ska summera alla bidrag (förväntat 50), fick ${multiSpecRow.selectedErf}`
+  );
+  const multiValfriRow = (Array.isArray(multiOverflowRes.profile?.valfri_inom_tagg)
+    ? multiOverflowRes.profile.valfri_inom_tagg
+    : [])[0] || {};
+  assert(
+    Number(multiValfriRow.selectedFromOverflow) === 20,
+    `Overflow till valfri_inom_tagg ska fungera utan Mästare (förväntat 20), fick ${multiValfriRow.selectedFromOverflow}`
+  );
+  const multiOverflowSources = Array.isArray(multiValfriRow.overflowSources) ? multiValfriRow.overflowSources : [];
+  const sourceNames = multiOverflowSources
+    .map(row => String(row?.name || '').trim())
+    .filter(Boolean)
+    .sort();
+  assert(
+    sourceNames.includes('Spec Overflow Extra 1') && sourceNames.includes('Spec Overflow Extra 2'),
+    `Overflow ska kunna komma från flera specifika källor, fick ${JSON.stringify(multiOverflowSources)}`
+  );
+  assert(multiOverflowRes.ok === true, 'Multi-overflow-fall ska bli godkänt');
+
+  const strictOptionalElite = {
+    ...elite,
+    krav: {
+      ...elite.krav,
+      valfritt: { krav_erf: 160 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const strictOptionalRes = sandbox.eliteReq.check(strictOptionalElite, [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTag },
+    { ...fillerNoTag }
+  ]);
+  assert(strictOptionalRes.ok === false, 'valfritt ska underkännas när overflow/pool inte når valfritt.krav_erf');
+
+  const noPrimaryOverflowElite = {
+    id: 'elite-v2-no-primary-overflow',
+    namn: 'Elit V2 No Primary Overflow',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 120,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [
+        {
+          alternativ: [
+            { typ: 'Förmåga', namn: 'Primärförmåga' },
+            { typ: 'Förmåga', namn: 'Krav A' }
+          ],
+          krav_erf: 30,
+          min_antal: 1
+        }
+      ],
+      valfri_inom_tagg: [
+        {
+          taggfalt: 'ark_trad',
+          taggar: ['PrimTagg'],
+          krav_erf: 20,
+          typ: 'Förmåga'
+        }
+      ],
+      valfritt: { krav_erf: 0 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const noPrimaryOverflowRes = sandbox.eliteReq.check(noPrimaryOverflowElite, [
+    { ...primaryMaster },
+    { ...kravA }
+  ]);
+  const noPrimaryOverflowRow = (Array.isArray(noPrimaryOverflowRes.profile?.valfri_inom_tagg)
+    ? noPrimaryOverflowRes.profile.valfri_inom_tagg
+    : [])[0] || {};
+  assert(
+    Number(noPrimaryOverflowRow.selectedFromOverflow) === 0,
+    `Primärförmåga får inte bidra som overflow-källa (förväntat 0), fick ${noPrimaryOverflowRow.selectedFromOverflow}`
+  );
+  assert(
+    Array.isArray(noPrimaryOverflowRow.overflowSources) && noPrimaryOverflowRow.overflowSources.length === 0,
+    `Primärförmåga får inte synas bland overflow-källor, fick ${JSON.stringify(noPrimaryOverflowRow.overflowSources)}`
+  );
+  assert(
+    Number(noPrimaryOverflowRes.profile?.valfritt?.selectedFromOverflow) === 30,
+    `Overflow utan taggmatch ska hoppa valfri_inom_tagg och gå till valfritt (förväntat 30), fick ${noPrimaryOverflowRes.profile?.valfritt?.selectedFromOverflow}`
+  );
+
+  const primaryIsolatedElite = {
+    id: 'elite-v2-primary-isolated',
+    namn: 'Elit V2 Primary Isolated',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 60,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [],
+      valfri_inom_tagg: [],
+      valfritt: { krav_erf: 60 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const primaryIsolatedRes = sandbox.eliteReq.check(primaryIsolatedElite, [{ ...primaryMaster }]);
+  assert(primaryIsolatedRes.ok === false, 'Primärförmåga ska vara isolerad och inte kunna uppfylla valfritt');
+  assert(
+    Number(primaryIsolatedRes.profile?.total?.selectedErf) === 60,
+    `Primärförmåga ska fortfarande räknas i total_erf (förväntat 60), fick ${primaryIsolatedRes.profile?.total?.selectedErf}`
+  );
+  assert(
+    Number(primaryIsolatedRes.profile?.valfritt?.selectedErf) === 0,
+    `Primärförmåga ska inte bidra till valfritt (förväntat 0), fick ${primaryIsolatedRes.profile?.valfritt?.selectedErf}`
+  );
+
+  const stackTrait = makeEntry('Stackad Särdrag', 'Särdrag', 'Novis', { max_antal: 2 });
+  const helperDb = [
+    { ...primaryMaster },
+    { ...kravA },
+    { ...kravB },
+    { ...fillerTag },
+    { ...fillerNoTag },
+    { ...benefitA },
+    { ...drawbackA },
+    makeEntry('Typ Förmåga', 'Förmåga', 'Novis'),
+    makeEntry('Typ Mystik', 'Mystisk kraft', 'Novis'),
+    makeEntry('Typ Ritual', 'Ritual', 'Novis'),
+    { ...stackTrait }
+  ];
+  sandbox.DB = helperDb.map(item => ({ ...item }));
+  sandbox.DBList = sandbox.DB;
+
+  const projectedFail = sandbox.eliteAdd.checkProjectedRequirements(
+    elite,
+    [
+      { ...primaryMaster },
+      { ...kravA },
+      { ...kravB },
+      { ...fillerNoTag },
+      { ...benefitA },
+      { ...drawbackA }
+    ],
+    []
+  );
+  assert(projectedFail && projectedFail.ok === false, 'Popup-projektion ska falla utan extra val när valfri_inom_tagg saknar ERF');
+  const projectedFailValfri = (Array.isArray(projectedFail?.profile?.valfri_inom_tagg)
+    ? projectedFail.profile.valfri_inom_tagg
+    : [])[0] || {};
+  assert(
+    Number(projectedFailValfri.selectedErf) === 30,
+    `Popup-projektion ska använda eliteReq overspill (förväntat 30), fick ${projectedFailValfri.selectedErf}`
+  );
+
+  const projectedPass = sandbox.eliteAdd.checkProjectedRequirements(
+    elite,
+    [
+      { ...primaryMaster },
+      { ...kravA },
+      { ...kravB },
+      { ...fillerNoTag },
+      { ...benefitA },
+      { ...drawbackA }
+    ],
+    [{ name: 'Fyllnad Tagg', level: 'Novis' }]
+  );
+  assert(projectedPass && projectedPass.ok === true, 'Popup-projektion ska godkännas när ett taggmatchande val fyller valfri_inom_tagg');
+
+  const valfrittTypes = sandbox.eliteAdd.getValfrittTypeOptions();
+  const valfrittTypeKeys = Array.isArray(valfrittTypes) ? valfrittTypes.map(row => String(row?.key || '').trim()) : [];
+  assert(!valfrittTypeKeys.includes('advantage') && !valfrittTypeKeys.includes('drawback'), 'Valfritt-typval ska exkludera Fördel/Nackdel');
+  assert(
+    valfrittTypeKeys.includes('ability') && valfrittTypeKeys.includes('mystic') && valfrittTypeKeys.includes('ritual'),
+    `Valfritt-typval ska innehålla ERF-bärande typer, fick: ${JSON.stringify(valfrittTypeKeys)}`
+  );
+
+  const valfrittStackElite = {
+    id: 'elite-v2-stack-valfritt',
+    namn: 'Elit V2 Stack Valfritt',
+    taggar: { typ: ['Elityrke'] },
+    krav: {
+      total_erf: 80,
+      primarformaga: { namn: 'Primärförmåga', krav_erf: 60 },
+      specifikt_val: [],
+      valfri_inom_tagg: [],
+      valfritt: { krav_erf: 20 },
+      specifika_fordelar: { namn: [], min_antal: 0 },
+      specifika_nackdelar: { namn: [], min_antal: 0 }
+    }
+  };
+  const projectedStackList = sandbox.eliteAdd.projectRequirementList(
+    [{ ...primaryMaster }],
+    [
+      { name: 'Stackad Särdrag', level: 'pick' },
+      { name: 'Stackad Särdrag', level: 'pick' }
+    ]
+  );
+  const stackedCount = projectedStackList.filter(item => String(item?.namn || '').trim() === 'Stackad Särdrag').length;
+  assert(stackedCount === 2, `Valfritt-projektion ska stödja antal för stapelbara poster (förväntat 2, fick ${stackedCount})`);
+  const stackProjectedRes = sandbox.eliteAdd.checkProjectedRequirements(
+    valfrittStackElite,
+    [{ ...primaryMaster }],
+    [
+      { name: 'Stackad Särdrag', level: 'pick' },
+      { name: 'Stackad Särdrag', level: 'pick' }
+    ]
+  );
+  assert(stackProjectedRes && stackProjectedRes.ok === true, 'Valfritt med antal ska påverka projekterad ERF så kravet kan uppfyllas via valfritt-poolen');
+}
+
 try {
   const rootPath = unwrap($.NSFileManager.defaultManager.currentDirectoryPath);
   verifyRuleHelper(rootPath);
@@ -5573,6 +6451,8 @@ try {
   verifyMoneyGrantRules(rootPath);
   verifyXpNeutralizationForGrants(rootPath);
   verifyRequirementRules(rootPath);
+  verifyRequirementScopeLogic(rootPath);
+  verifyEliteRequirementV2(rootPath);
   verifyToughnessRules(rootPath);
   verifyTraitTotalMaxRules(rootPath);
   verifyPainThresholdRules(rootPath);

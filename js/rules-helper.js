@@ -98,6 +98,14 @@
     'bypass_limits',
     'bypass_limit'
   ]);
+  const REQUIREMENT_SCOPE_LOGIC_KEYS = Object.freeze([
+    'kraver_logik',
+    'krav_logik'
+  ]);
+  const REQUIREMENT_SCOPE_COMBINATION_LOGIC_KEYS = Object.freeze([
+    'kraver_typ_och_entry',
+    'krav_typ_och_entry'
+  ]);
   const ARTIFACT_EFFECT_STAT_KEY_MAP = Object.freeze({
     xp: 'xp',
     erf: 'xp',
@@ -233,6 +241,29 @@
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '');
+  }
+
+  function parseRequirementLogic(value) {
+    const token = normalizeLevelName(value);
+    if (token === 'and' || token === 'och' || token === 'all') return 'and';
+    if (token === 'or' || token === 'eller' || token === 'any') return 'or';
+    return '';
+  }
+
+  function normalizeRequirementLogic(value, fallback = 'or') {
+    const parsed = parseRequirementLogic(value);
+    if (parsed) return parsed;
+    return parseRequirementLogic(fallback) || 'or';
+  }
+
+  function readRequirementLogicFromContainer(container, keys = []) {
+    if (!container || typeof container !== 'object' || Array.isArray(container)) return '';
+    for (const key of keys) {
+      if (!Object.prototype.hasOwnProperty.call(container, key)) continue;
+      const parsed = parseRequirementLogic(container[key]);
+      if (parsed) return parsed;
+    }
+    return '';
   }
 
   function isTruthyRuleValue(value) {
@@ -454,6 +485,42 @@
     }, {});
   }
 
+  function readRequirementRuleConfig(container) {
+    return {
+      scopeLogic: readRequirementLogicFromContainer(container, REQUIREMENT_SCOPE_LOGIC_KEYS),
+      scopeCombinationLogic: readRequirementLogicFromContainer(container, REQUIREMENT_SCOPE_COMBINATION_LOGIC_KEYS)
+    };
+  }
+
+  function mergeRequirementRuleConfigs(lowPriority, highPriority) {
+    return {
+      scopeLogic: String(highPriority?.scopeLogic || '').trim() || String(lowPriority?.scopeLogic || '').trim(),
+      scopeCombinationLogic: String(highPriority?.scopeCombinationLogic || '').trim()
+        || String(lowPriority?.scopeCombinationLogic || '').trim()
+    };
+  }
+
+  function getEntryRequirementRuleConfig(entry, level = '') {
+    const top = readRequirementRuleConfig(getTopLevelRuleContainer(entry));
+    const levelConfig = getLevelRuleContainers(entry, level)
+      .map(readRequirementRuleConfig)
+      .reduce((acc, cfg) => mergeRequirementRuleConfigs(acc, cfg), {});
+    return mergeRequirementRuleConfigs(top, levelConfig);
+  }
+
+  function getTypeRequirementRuleConfig(entry, level = '') {
+    const templates = getTypeRuleTemplateEntries(entry);
+    if (!templates.length) return {};
+    return templates.reduce((acc, templateEntry) => {
+      const top = readRequirementRuleConfig(getTopLevelRuleContainer(templateEntry));
+      const levelConfig = getLevelRuleContainers(templateEntry, level)
+        .map(readRequirementRuleConfig)
+        .reduce((tmpAcc, cfg) => mergeRequirementRuleConfigs(tmpAcc, cfg), {});
+      const mergedTemplateConfig = mergeRequirementRuleConfigs(top, levelConfig);
+      return mergeRequirementRuleConfigs(acc, mergedTemplateConfig);
+    }, {});
+  }
+
   function getLevelDataMap(entry) {
     const tags = entry?.taggar;
     if (!tags || typeof tags !== 'object') return null;
@@ -469,15 +536,17 @@
     return exactKey ? levelData[exactKey] : null;
   }
 
-  function getTopLevelRules(entry) {
-    return normalizeRuleBlock(entry?.taggar?.regler);
+  function getTopLevelRuleContainer(entry) {
+    const raw = entry?.taggar?.regler;
+    if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return {};
+    return raw;
   }
 
-  function getLevelRules(entry, level) {
+  function getLevelRuleContainers(entry, level) {
     const levelData = getLevelDataMap(entry);
-    if (!levelData || typeof levelData !== 'object') return {};
+    if (!levelData || typeof levelData !== 'object') return [];
     const wanted = normalizeLevelName(level);
-    if (!wanted) return {};
+    if (!wanted) return [];
 
     const configuredOrder = Array.isArray(window.LVL) && window.LVL.length
       ? window.LVL.map(normalizeLevelName).filter(Boolean)
@@ -486,15 +555,28 @@
     const wantedIndex = order.indexOf(wanted);
 
     if (wantedIndex === -1) {
-      return normalizeRuleBlock(findLevelData(entry, level)?.regler);
+      const raw = findLevelData(entry, level)?.regler;
+      if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return [];
+      return [raw];
     }
 
-    const blocks = Object.keys(levelData)
-      .map(key => ({ key, index: order.indexOf(normalizeLevelName(key)) }))
+    return Object.keys(levelData)
+      .map(key => ({
+        key,
+        index: order.indexOf(normalizeLevelName(key))
+      }))
       .filter(item => item.index !== -1 && item.index <= wantedIndex)
       .sort((a, b) => a.index - b.index)
-      .map(item => normalizeRuleBlock(levelData[item.key]?.regler));
+      .map(item => levelData[item.key]?.regler)
+      .filter(raw => raw && typeof raw === 'object' && !Array.isArray(raw));
+  }
 
+  function getTopLevelRules(entry) {
+    return normalizeRuleBlock(getTopLevelRuleContainer(entry));
+  }
+
+  function getLevelRules(entry, level) {
+    const blocks = getLevelRuleContainers(entry, level).map(normalizeRuleBlock);
     return mergeRuleBlocks.apply(null, blocks);
   }
 
@@ -3144,9 +3226,18 @@
     const entryRules = !level
       ? getTopLevelRules(sourceEntry)
       : mergeRuleBlocks(getTopLevelRules(sourceEntry), getLevelRules(sourceEntry, level));
+    const typeRequirementConfig = getTypeRequirementRuleConfig(sourceEntry, level);
+    const entryRequirementConfig = getEntryRequirementRuleConfig(sourceEntry, level);
+    const scopeCombinationLogic = normalizeRequirementLogic(
+      entryRequirementConfig.scopeCombinationLogic || typeRequirementConfig.scopeCombinationLogic,
+      'or'
+    );
     return {
       entryRequirements: toRuleList(entryRules?.kraver),
-      typeRequirements: toRuleList(typeRules?.kraver)
+      typeRequirements: toRuleList(typeRules?.kraver),
+      entryScopeLogic: normalizeRequirementLogic(entryRequirementConfig.scopeLogic, 'or'),
+      typeScopeLogic: normalizeRequirementLogic(typeRequirementConfig.scopeLogic, 'or'),
+      scopeCombinationLogic
     };
   }
 
@@ -3213,6 +3304,45 @@
     });
   }
 
+  function evaluateRequirementScope(evaluations, logic = 'or', scope = '') {
+    const items = toArray(evaluations);
+    const normalizedLogic = normalizeRequirementLogic(logic, 'or');
+    if (!items.length) {
+      return {
+        scope,
+        logic: normalizedLogic,
+        hasRules: false,
+        passed: true,
+        activeEvaluations: [],
+        missingReasons: []
+      };
+    }
+
+    const passed = normalizedLogic === 'and'
+      ? items.every(item => Boolean(item?.passed))
+      : items.some(item => Boolean(item?.passed));
+
+    const activeEvaluations = normalizedLogic === 'and'
+      ? items
+      : (passed ? items.filter(item => Boolean(item?.passed)) : items);
+
+    const missingReasons = passed
+      ? []
+      : items
+        .filter(item => !item?.passed)
+        .map(item => item.reason)
+        .filter(Boolean);
+
+    return {
+      scope,
+      logic: normalizedLogic,
+      hasRules: true,
+      passed,
+      activeEvaluations,
+      missingReasons
+    };
+  }
+
   function dedupeRequirementReasons(reasons) {
     const out = [];
     const seen = new Set();
@@ -3228,39 +3358,61 @@
 
   function buildCandidateRequirementEvaluationSet(candidate, entries, candidateLevel = '') {
     const contextEntries = [...entries, candidate];
-    const { entryRequirements, typeRequirements } = getCandidateRequirementRuleSets(candidate, candidateLevel);
+    const {
+      entryRequirements,
+      typeRequirements,
+      entryScopeLogic,
+      typeScopeLogic,
+      scopeCombinationLogic
+    } = getCandidateRequirementRuleSets(candidate, candidateLevel);
     const entryEvaluations = evaluateRequirementRules(candidate, entries, contextEntries, entryRequirements, 'entry');
     const typeEvaluations = evaluateRequirementRules(candidate, entries, contextEntries, typeRequirements, 'type');
-    const entryMissing = entryEvaluations.filter(item => !item.passed).map(item => item.reason).filter(Boolean);
-    const typeMissing = typeEvaluations.filter(item => !item.passed).map(item => item.reason).filter(Boolean);
+    const entryScope = evaluateRequirementScope(entryEvaluations, entryScopeLogic, 'entry');
+    const typeScope = evaluateRequirementScope(typeEvaluations, typeScopeLogic, 'type');
+    const relevantScopes = [entryScope, typeScope].filter(scope => scope.hasRules);
+    const combineLogic = normalizeRequirementLogic(scopeCombinationLogic, 'or');
 
-    let activeEvaluations = [];
-    if (!entryRequirements.length) {
-      activeEvaluations = typeEvaluations;
-    } else if (!entryMissing.length) {
-      activeEvaluations = entryEvaluations;
-    } else if (!typeRequirements.length) {
-      activeEvaluations = entryEvaluations;
-    } else if (!typeMissing.length) {
-      activeEvaluations = typeEvaluations;
-    } else {
-      activeEvaluations = [...entryEvaluations, ...typeEvaluations];
+    const met = !relevantScopes.length
+      ? true
+      : (combineLogic === 'and'
+        ? relevantScopes.every(scope => scope.passed)
+        : relevantScopes.some(scope => scope.passed));
+
+    let activeScopes = [];
+    if (relevantScopes.length) {
+      if (combineLogic === 'and') {
+        activeScopes = relevantScopes;
+      } else if (entryScope.hasRules && entryScope.passed) {
+        activeScopes = [entryScope];
+      } else if (typeScope.hasRules && typeScope.passed) {
+        activeScopes = [typeScope];
+      } else {
+        activeScopes = relevantScopes;
+      }
     }
+    const activeEvaluations = activeScopes.flatMap(scope => scope.activeEvaluations);
 
-    const missingReasons = dedupeRequirementReasons(
-      activeEvaluations
-        .filter(item => !item.passed)
-        .map(item => item.reason)
-        .filter(Boolean)
-    );
+    const missingReasons = met
+      ? []
+      : dedupeRequirementReasons(
+        relevantScopes
+          .filter(scope => !scope.passed)
+          .flatMap(scope => scope.missingReasons)
+      );
 
     return {
       entryRequirements,
       typeRequirements,
       entryEvaluations,
       typeEvaluations,
+      entryScopeLogic: entryScope.logic,
+      typeScopeLogic: typeScope.logic,
+      scopeCombinationLogic: combineLogic,
+      entryScope,
+      typeScope,
       activeEvaluations,
-      missingReasons
+      missingReasons,
+      met
     };
   }
 
@@ -3421,7 +3573,7 @@
       : candidateEntry;
     const evaluation = buildCandidateRequirementEvaluationSet(candidate, entries, candidateLevel);
     out.missingReasons = evaluation.missingReasons;
-    out.met = evaluation.missingReasons.length === 0;
+    out.met = Boolean(evaluation.met);
 
     evaluation.activeEvaluations.forEach(item => {
       const outcome = item.passed ? 'pass' : 'fail';

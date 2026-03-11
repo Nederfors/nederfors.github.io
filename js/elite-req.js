@@ -5,12 +5,43 @@
   const normalizeType = (type) => (typeof utils.normalizeType === 'function'
     ? utils.normalizeType(type)
     : String(type || '').trim());
-  const normalizeLevel = (level, fallback = 'Novis') => (typeof utils.normalizeLevel === 'function'
-    ? utils.normalizeLevel(level, fallback)
-    : String(level || '').trim() || fallback);
   const entryHasType = (entry, type) => (typeof utils.entryHasType === 'function'
     ? utils.entryHasType(entry, type)
     : toArray(entry?.taggar?.typ).includes(type));
+
+  function normalizeKey(value) {
+    return String(value || '').trim().toLowerCase();
+  }
+
+  function normalizeSourceHint(value) {
+    return String(value || '').trim();
+  }
+
+  function parseSourceIndex(source, prefix) {
+    const match = normalizeSourceHint(source).match(new RegExp(`^${prefix}\\[(\\d+)\\]$`));
+    return match ? (Number(match[1]) || 0) : -1;
+  }
+
+  function tokenSourceHint(item) {
+    if (!item || typeof item !== 'object') return '';
+    const candidates = [
+      item.__elite_source,
+      item.elite_source,
+      item.__krav_source,
+      item.krav_source
+    ];
+    for (let i = 0; i < candidates.length; i += 1) {
+      const hint = normalizeSourceHint(candidates[i]);
+      if (hint) return hint;
+    }
+    return '';
+  }
+
+  function toInt(value, fallback = 0) {
+    const num = Number(value);
+    if (!Number.isFinite(num)) return fallback;
+    return Math.max(0, Math.floor(num));
+  }
 
   function getLookupOptions() {
     return {
@@ -33,745 +64,740 @@
     return [];
   }
 
-  function normalizeKey(value) {
-    return String(value || '').trim().toLowerCase();
+  function itemName(item) {
+    return String(item?.namn || '').trim();
   }
 
-  function parsePositiveLimit(value) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return null;
-    const rounded = Math.floor(numeric);
-    if (rounded <= 0) return null;
-    return rounded;
+  function isBenefit(item) {
+    return entryHasType(item, 'Fördel');
   }
 
-  function normalizeMaxCount(value, fallback = 1) {
-    const numeric = Number(value);
-    if (!Number.isFinite(numeric)) return 99;
-    const rounded = Math.floor(numeric);
-    if (rounded <= 0) return fallback;
-    return rounded;
+  function isDrawback(item) {
+    return entryHasType(item, 'Nackdel');
   }
 
-  function getEntryMaxCount(item, options = {}) {
-    if (!item || typeof item !== 'object') return 1;
-    if (typeof utils.getEntryMaxCount === 'function') {
-      return normalizeMaxCount(utils.getEntryMaxCount(item, options), 1);
+  function matchesType(item, type) {
+    const wanted = normalizeType(type);
+    if (!wanted) return true;
+    return entryHasType(item, wanted);
+  }
+
+  function calcItemXP(item, list) {
+    if (!item || typeof item !== 'object') return 0;
+    const helper = window.storeHelper;
+    if (helper && typeof helper.calcEntryXP === 'function') {
+      try {
+        const value = Number(helper.calcEntryXP(item, list));
+        if (Number.isFinite(value)) return Math.max(0, value);
+      } catch {}
     }
-    const tagLimit = parsePositiveLimit(item?.taggar?.max_antal);
-    if (tagLimit !== null) return tagLimit;
-    const directLimit = parsePositiveLimit(item?.max_antal);
-    if (directLimit !== null) return directLimit;
-    if (options.allowLegacy !== false) {
-      const legacyMulti = Boolean(
-        item?.kan_införskaffas_flera_gånger === true
-        || item?.taggar?.kan_införskaffas_flera_gånger === true
-      );
-      if (legacyMulti) return 3;
-    }
-    return 1;
-  }
-
-  function isRepeatableBenefitEntry(item) {
-    if (typeof utils.isRepeatableBenefitEntry === 'function') {
-      return utils.isRepeatableBenefitEntry(item);
-    }
-    const types = toArray(item?.taggar?.typ).map(normalizeType);
-    const multi = getEntryMaxCount(item) > 1;
-    return multi && (types.includes('Fördel') || types.includes('Nackdel'));
-  }
-
-  function uniqueByName(list) {
-    const map = new Map();
-    const out = [];
-    toArray(list).forEach(item => {
-      if (isRepeatableBenefitEntry(item)) {
-        out.push(item);
-        return;
-      }
-      const key = normalizeKey(item?.namn);
-      if (!key) return;
-      if (map.has(key)) return;
-      map.set(key, item);
-      out.push(item);
-    });
-    return out;
-  }
-
-  function costForEntry(item, level) {
-    if (!item) return 0;
     if (typeof utils.requirementErf === 'function') {
-      return Math.max(0, Number(utils.requirementErf(item, level)) || 0);
+      try {
+        const fallback = Number(utils.requirementErf(item, item?.nivå));
+        if (Number.isFinite(fallback)) return Math.max(0, fallback);
+      } catch {}
     }
-    if (entryHasType(item, 'Nackdel')) return 0;
-    if (entryHasType(item, 'Fördel')) return 5;
-    if (entryHasType(item, 'Ritual')) return 10;
-    const lvl = normalizeLevel(level || item?.nivå, 'Novis');
-    if (
-      entryHasType(item, 'Förmåga') ||
-      entryHasType(item, 'Mystisk kraft') ||
-      entryHasType(item, 'Monstruöst särdrag') ||
-      entryHasType(item, 'Särdrag')
-    ) {
-      if (lvl === 'Mästare') return 60;
-      if (lvl === 'Gesäll') return 30;
-      return 10;
-    }
-    return 10;
-  }
-
-  function findEntry(name) {
-    if (typeof utils.findEntryByName === 'function') {
-      return utils.findEntryByName(name, getLookupOptions());
-    }
-    try {
-      return typeof window.lookupEntry === 'function'
-        ? (window.lookupEntry({ id: name, name }) || window.lookupEntry(name))
-        : null;
-    } catch {
-      return null;
-    }
-  }
-
-  function countFloorForGroup(group) {
-    const type = normalizeType(group?.type);
-    if (type === 'Nackdel') return 0;
-    if (type === 'Fördel') return 5;
-    return 10;
-  }
-
-  function countCreditForItem(item, group) {
-    if (entryHasType(item, 'Nackdel')) {
-      const groupType = normalizeType(group?.type);
-      return groupType === 'Nackdel' ? 1 : 0;
-    }
-    const ded = deductionForItem(item).ded || 0;
-    if (ded <= 0) return 0;
-    if (entryHasType(item, 'Fördel')) {
-      const groupType = normalizeType(group?.type);
-      return groupType === 'Fördel' ? 1 : 0;
-    }
-    return ded >= countFloorForGroup(group) ? 1 : 0;
-  }
-
-  function groupSlotCost(group) {
-    const type = normalizeType(group?.type);
-    if (type === 'Nackdel') return 0;
-    if (type === 'Fördel') return 5;
-    if (type === 'Ritual' || group?.anyRitual || group?.allRitual) return 10;
-    if (
-      group?.isPrimary ||
-      group?.anyMystic ||
-      type === 'Förmåga' ||
-      type === 'Mystisk kraft' ||
-      type === 'Monstruöst särdrag' ||
-      type === 'Särdrag'
-    ) {
-      return 10;
-    }
-    const candidateMin = toArray(group?.names)
-      .map(name => findEntry(name))
-      .filter(Boolean)
-      .map(entry => costForEntry(entry, 'Novis'))
-      .reduce((acc, value) => Math.min(acc, value), Infinity);
-    if (Number.isFinite(candidateMin)) return candidateMin;
-    return 10;
-  }
-
-  function groupBaseCost(group) {
-    const minErf = Math.max(0, Number(group?.min_erf) || 0);
-    const minCount = Math.max(0, Number(group?.min_antal) || 0);
-    const countCost = minCount * countFloorForGroup(group);
-    if (minErf > 0 && minCount > 0) return Math.max(minErf, countCost);
-    if (minErf > 0) return minErf;
-    if (minCount > 0) return countCost;
     return 0;
   }
 
-  function groupLabel(group) {
-    const source = String(group?.source || '');
-    const minErf = Math.max(0, Number(group?.min_erf) || 0);
-    const minCount = Math.max(0, Number(group?.min_antal) || 0);
-    let label = 'Krav';
-    if (group?.isPrimary) {
-      const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
-      if (!names.length) label = 'Primärförmåga';
-      else label = names.length === 1 ? names[0] : names.join(' eller ');
-    } else if (group?.anyMystic) {
-      label = 'Valfri mystisk kraft';
-    } else if (group?.anyRitual) {
-      label = 'Valfri ritual';
-    } else if (source === 'primartagg') {
-      label = 'Primärt taggkrav';
-    } else if (source === 'sekundartagg') {
-      label = 'Sekundärt taggkrav';
-    } else if (source.startsWith('valfri_inom_tagg')) {
-      const type = normalizeType(group?.type);
-      label = type ? `Valfri ${type.toLowerCase()}` : 'Valfritt val';
-    } else {
-      const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
-      if (!names.length) return 'Okänt krav';
-      if (names.length > 5) label = `${names.slice(0, 5).join(', ')} och fler`;
-      else label = names.length === 1 ? names[0] : names.join(' eller ');
-    }
-
-    const reqParts = [];
-    if (minErf > 0) reqParts.push(`${minErf} ERF`);
-    if (minCount > 0) {
-      reqParts.push(group?.isPrimary
-        ? `minst ${minCount} val`
-        : `minst ${minCount} val (${countFloorForGroup(group)}+ ERF/st)`);
-    }
-    if (!reqParts.length) return label;
-    return `${label} (${reqParts.join(' · ')})`;
+  function buildTokens(list) {
+    const sourceList = toArray(list);
+    return sourceList
+      .map((item, idx) => {
+        const name = itemName(item);
+        if (!name) return null;
+        return {
+          id: `pc:${idx}`,
+          idx,
+          item,
+          name,
+          key: normalizeKey(name),
+          xp: calcItemXP(item, sourceList),
+          isBenefit: isBenefit(item),
+          isDrawback: isDrawback(item),
+          sourceHint: tokenSourceHint(item)
+        };
+      })
+      .filter(Boolean);
   }
 
-  function matchesNamedGroupEntry(item, group) {
-    const names = new Set(toArray(group?.names).map(name => normalizeKey(name)));
-    if (!names.size) return false;
-    if (!names.has(normalizeKey(item?.namn))) return false;
-    const type = normalizeType(group?.type);
-    if (type && !entryHasType(item, type)) return false;
+  function normalizeAlternative(raw = {}) {
+    if (!raw) return null;
+    if (typeof raw === 'string') {
+      const name = String(raw || '').trim();
+      if (!name) return null;
+      return { typ: '', namn: name };
+    }
+    if (typeof raw !== 'object') return null;
+    const name = String(raw.namn || '').trim();
+    if (!name) return null;
+    return {
+      typ: normalizeType(raw.typ),
+      namn: name
+    };
+  }
+
+  function matchesAlternative(token, alternative) {
+    if (!token || !alternative) return false;
+    if (!alternative.namn) return false;
+    if (token.key !== normalizeKey(alternative.namn)) return false;
+    if (!matchesType(token.item, alternative.typ)) return false;
     return true;
   }
 
-  function collectGroupMatches(group, list) {
-    const items = toArray(list);
-    const type = normalizeType(group?.type);
-
-    if (group?.anyMystic) {
-      return uniqueByName(items.filter(item => entryHasType(item, 'Mystisk kraft')));
+  function matchesValfriRule(token, rawRule = {}) {
+    if (!token || token.xp <= 0) return false;
+    if (token.isBenefit || token.isDrawback) return false;
+    if (typeof utils.matchesValfriRule === 'function') {
+      try {
+        return Boolean(utils.matchesValfriRule(token.item, rawRule));
+      } catch {}
     }
-    if (group?.anyRitual) {
-      return uniqueByName(items.filter(item => entryHasType(item, 'Ritual')));
+    const type = normalizeType(rawRule.typ);
+    if (type && !matchesType(token.item, type)) return false;
+    if (typeof utils.matchesTagRule === 'function') {
+      try {
+        return Boolean(utils.matchesTagRule(token.item, rawRule));
+      } catch {}
     }
-    if (group?.tagRule) {
-      const source = String(group?.source || '');
-      const xpTypes = toArray(group?.tagRule?.xp_kallor)
-        .map(normalizeType)
-        .filter(Boolean);
-      const matcher = (item) => {
-        if (source.startsWith('valfri_inom_tagg') && typeof utils.matchesValfriRule === 'function') {
-          return utils.matchesValfriRule(item, group.tagRule);
-        }
-        if (typeof utils.matchesTagRule === 'function' && !utils.matchesTagRule(item, group.tagRule)) {
-          return false;
-        }
-        if (xpTypes.length) {
-          return xpTypes.some(xpType => entryHasType(item, xpType));
-        }
-        if (type) return entryHasType(item, type);
-        return true;
-      };
-      return uniqueByName(items.filter(matcher));
-    }
-    if (toArray(group?.names).length) {
-      return uniqueByName(items.filter(item => matchesNamedGroupEntry(item, group)));
-    }
-    return [];
+    return false;
   }
 
-  function isReservedGroup(group) {
-    const source = String(group?.source || '');
-    if (group?.isPrimary) return true;
-    return source.startsWith('specifika_');
-  }
-
-  function primaryNamesFromKrav(krav) {
-    const out = [];
-    const seen = new Set();
-    const add = (value) => {
-      if (Array.isArray(value)) {
-        value.forEach(add);
-        return;
-      }
-      const text = String(value || '').trim();
-      if (!text) return;
-      text
-        .replace(/\beller\b/gi, ',')
-        .split(/[,;/|]+/)
-        .map(part => part.trim())
+  function parseSpecificRules(krav) {
+    return toArray(krav?.specifikt_val).map((rule, idx) => {
+      const alternatives = toArray(rule?.alternativ)
+        .map(normalizeAlternative)
         .filter(Boolean)
-        .forEach(name => {
-          const key = normalizeKey(name);
-          if (!key || seen.has(key)) return;
-          seen.add(key);
-          out.push(name);
+        .filter(alt => {
+          const type = normalizeType(alt.typ);
+          return type !== 'Fördel' && type !== 'Nackdel';
         });
-    };
-    add(krav?.primarformaga?.namn_lista);
-    add(krav?.primarformaga?.namn);
-    return out;
-  }
-
-  function reservedNamesFromKrav(krav, groups) {
-    const reserved = new Set();
-    const addName = (value) => {
-      const key = normalizeKey(value);
-      if (key) reserved.add(key);
-    };
-
-    primaryNamesFromKrav(krav).forEach(addName);
-
-    toArray(krav?.specifika_formagor?.namn).forEach(addName);
-    toArray(krav?.specifika_mystiska_krafter?.namn).forEach(addName);
-    toArray(krav?.specifika_ritualer?.namn).forEach(addName);
-    toArray(krav?.specifika_fordelar?.namn).forEach(addName);
-    toArray(groups).forEach(group => {
-      if (!isReservedGroup(group)) return;
-      toArray(group?.names).forEach(addName);
-    });
-    return reserved;
-  }
-
-  function groupPriority(group) {
-    const source = String(group?.source || '');
-    if (group?.isPrimary) return 0;
-    if (source.startsWith('specifika_')) return 1;
-    if (group?.tagRule) return 2;
-    if (Math.max(0, Number(group?.min_erf) || 0) > 0) return 3;
-    return 4;
-  }
-
-  function groupOptionCount(group) {
-    const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
-    if (!names.length) return 9999;
-    if (!group?.tagRule) return names.length;
-    const typeCounts = new Map();
-    names.forEach(name => {
-      const item = findEntry(name);
-      const key = (
-        entryHasType(item, 'Förmåga') || entryHasType(item, 'Monstruöst särdrag') || entryHasType(item, 'Särdrag')
-      ) ? 'ability'
-        : entryHasType(item, 'Mystisk kraft') ? 'mystic'
-          : entryHasType(item, 'Ritual') ? 'ritual'
-            : entryHasType(item, 'Fördel') ? 'advantage'
-              : entryHasType(item, 'Nackdel') ? 'drawback'
-                : 'other';
-      typeCounts.set(key, (typeCounts.get(key) || 0) + 1);
-    });
-    const nonZero = Array.from(typeCounts.values()).filter(count => count > 0);
-    if (!nonZero.length) return names.length;
-    return Math.min(...nonZero);
-  }
-
-  function collapseListTokens(list) {
-    const out = [];
-    const nonRepeatIndex = new Map();
-    toArray(list).forEach((item, idx) => {
-      const name = String(item?.namn || '').trim();
-      const key = normalizeKey(name);
-      if (!key) return;
-      const token = {
-        id: `pc:${idx}`,
-        item,
-        name,
-        key
+      const hasMinCount = rule?.min_antal !== undefined && rule?.min_antal !== null && String(rule.min_antal).trim() !== '';
+      const minCount = hasMinCount ? Math.max(0, toInt(rule.min_antal, 0)) : 1;
+      return {
+        idx,
+        alternatives,
+        requiredErf: toInt(rule?.krav_erf, 0),
+        minCount
       };
-      if (isRepeatableBenefitEntry(item)) {
-        out.push(token);
-        return;
-      }
-      const existingIdx = nonRepeatIndex.get(key);
-      if (existingIdx === undefined) {
-        nonRepeatIndex.set(key, out.length);
-        out.push(token);
-        return;
-      }
-      const prev = out[existingIdx];
-      if (deductionForItem(item).ded >= deductionForItem(prev.item).ded) {
-        out[existingIdx] = token;
-      }
     });
-    return out;
   }
 
-  function dedupeTokensForGroup(group, list) {
-    const allowRepeat = Boolean(group?.allow_repeat);
-    const out = [];
-    const seen = new Set();
-    toArray(list).forEach(token => {
-      const key = String(token?.key || '').trim();
-      if (!key) return;
-      const repeatable = isRepeatableBenefitEntry(token?.item);
-      if (!allowRepeat || !repeatable) {
-        if (seen.has(key)) return;
-        seen.add(key);
-      }
-      out.push(token);
-    });
-    return out;
+  function parseValfriRules(krav) {
+    return toArray(krav?.valfri_inom_tagg).map((rule, idx) => ({
+      idx,
+      taggfalt: String(rule?.taggfalt || '').trim(),
+      taggar: toArray(rule?.taggar).map(value => String(value || '').trim()).filter(Boolean),
+      typ: normalizeType(rule?.typ),
+      requiredErf: toInt(rule?.krav_erf, 0)
+    }));
   }
 
-  function buildGroupStates(groups, list, krav) {
-    const tokens = collapseListTokens(list);
-
-    const reservedNames = reservedNamesFromKrav(krav, groups);
-    const consumed = new Set();
-    const states = new Map();
-
-    const ordered = toArray(groups)
-      .map((group, idx) => ({ group, idx }))
-      .sort((a, b) => {
-        const p = groupPriority(a.group) - groupPriority(b.group);
-        if (p !== 0) return p;
-        if (a.group?.tagRule && b.group?.tagRule) {
-          const aCount = groupOptionCount(a.group);
-          const bCount = groupOptionCount(b.group);
-          if (aCount !== bCount) return aCount - bCount;
-        }
-        const aErf = Math.max(0, Number(a.group?.min_erf) || 0);
-        const bErf = Math.max(0, Number(b.group?.min_erf) || 0);
-        if (aErf !== bErf) return bErf - aErf;
-        return a.idx - b.idx;
-      });
-
-    ordered.forEach(({ group, idx }) => {
-      const reservedGroup = isReservedGroup(group);
-      const candidates = dedupeTokensForGroup(group, tokens.filter(token => {
-        if (consumed.has(token.id)) return false;
-        if (!reservedGroup && reservedNames.has(token.key)) return false;
-        return collectGroupMatches(group, [token.item]).length > 0;
-      }));
-
-      const minErf = Math.max(0, Number(group?.min_erf) || 0);
-      const minCount = Math.max(0, Number(group?.min_antal) || 0);
-      const primaryOptions = toArray(group?.primary_options);
-      if (group?.isPrimary && primaryOptions.length) {
-        const optionByKey = new Map(primaryOptions
-          .map(opt => {
-            const key = normalizeKey(opt?.name);
-            if (!key) return null;
-            return [key, {
-              minErf: Math.max(0, Number(opt?.min_erf) || 0)
-            }];
-          })
-          .filter(Boolean));
-
-        const rankedPrimary = candidates
-          .map(token => {
-            const option = optionByKey.get(token.key);
-            if (!option) return null;
-            const ded = deductionForItem(token.item).ded || 0;
-            const requiredErf = option.minErf;
-            const countCredit = ded > 0 ? 1 : 0;
-            const progress = requiredErf > 0 ? (ded / requiredErf) : ded;
-            return {
-              token,
-              ded,
-              countCredit,
-              requiredErf,
-              progress,
-              meetsErf: requiredErf <= 0 || ded >= requiredErf
-            };
-          })
-          .filter(Boolean)
-          .sort((a, b) => {
-            const meetsDiff = Number(b.meetsErf) - Number(a.meetsErf);
-            if (meetsDiff !== 0) return meetsDiff;
-            if ((b.progress || 0) !== (a.progress || 0)) return (b.progress || 0) - (a.progress || 0);
-            if ((b.countCredit || 0) !== (a.countCredit || 0)) return (b.countCredit || 0) - (a.countCredit || 0);
-            return (b.ded || 0) - (a.ded || 0);
-          });
-
-        const picked = rankedPrimary.length ? [rankedPrimary[0]] : [];
-        let selectedErf = 0;
-        let selectedCount = 0;
-        let requiredErf = minErf;
-        let requiredCount = minCount;
-        if (picked.length) {
-          selectedErf = picked[0].ded || 0;
-          selectedCount = picked[0].countCredit || 0;
-          requiredErf = Math.max(minErf, picked[0].requiredErf || 0);
-        }
-
-        const hasErfReq = requiredErf > 0;
-        const hasCountReq = requiredCount > 0;
-        const metric = hasErfReq && hasCountReq
-          ? 'both'
-          : (hasErfReq ? 'erf' : (hasCountReq ? 'count' : 'none'));
-        const ok = (!hasErfReq || selectedErf >= requiredErf) && (!hasCountReq || selectedCount >= requiredCount);
-        picked.forEach(row => consumed.add(row.token.id));
-        states.set(idx, {
-          ok,
-          selected: metric === 'count' ? selectedCount : selectedErf,
-          required: metric === 'count' ? requiredCount : requiredErf,
-          metric,
-          selected_erf: selectedErf,
-          required_erf: requiredErf,
-          selected_count: selectedCount,
-          required_count: requiredCount,
-          picked: picked.map(row => row.token),
-          deduction: Math.min(selectedErf, Math.max(groupBaseCost(group), requiredErf))
-        });
-        return;
-      }
-
-      const hasErfReq = minErf > 0;
-      const hasCountReq = minCount > 0;
-
-      const ranked = candidates
-        .map(token => ({
-          token,
-          ded: deductionForItem(token.item).ded || 0,
-          countCredit: countCreditForItem(token.item, group)
-        }))
-        .sort((a, b) => {
-          const countDiff = (b.countCredit || 0) - (a.countCredit || 0);
-          if (countDiff !== 0) return countDiff;
-          return (b.ded || 0) - (a.ded || 0);
-        });
-
-      const picked = [];
-      let selectedErf = 0;
-      let selectedCount = 0;
-      for (let i = 0; i < ranked.length; i += 1) {
-        if ((!hasErfReq || selectedErf >= minErf) && (!hasCountReq || selectedCount >= minCount)) break;
-        const row = ranked[i];
-        picked.push(row);
-        selectedErf += row.ded || 0;
-        selectedCount += row.countCredit || 0;
-      }
-      picked.forEach(row => consumed.add(row.token.id));
-
-      const metric = hasErfReq && hasCountReq
-        ? 'both'
-        : (hasErfReq ? 'erf' : (hasCountReq ? 'count' : 'none'));
-      const ok = (!hasErfReq || selectedErf >= minErf) && (!hasCountReq || selectedCount >= minCount);
-      states.set(idx, {
-        ok,
-        selected: metric === 'count' ? selectedCount : selectedErf,
-        required: metric === 'count' ? minCount : minErf,
-        metric,
-        selected_erf: selectedErf,
-        required_erf: minErf,
-        selected_count: selectedCount,
-        required_count: minCount,
-        picked: picked.map(row => row.token),
-        deduction: Math.min(selectedErf, groupBaseCost(group))
-      });
-    });
-
-    toArray(groups).forEach((group, idx) => {
-      if (states.has(idx)) return;
-      const minErf = Math.max(0, Number(group?.min_erf) || 0);
-      const minCount = Math.max(0, Number(group?.min_antal) || 0);
-      const metric = minErf > 0 && minCount > 0
-        ? 'both'
-        : (minErf > 0 ? 'erf' : (minCount > 0 ? 'count' : 'none'));
-      states.set(idx, {
-        ok: metric === 'none',
-        selected: 0,
-        required: metric === 'count' ? minCount : minErf,
-        metric,
-        selected_erf: 0,
-        required_erf: minErf,
-        selected_count: 0,
-        required_count: minCount,
-        picked: [],
-        deduction: 0
-      });
-    });
-
-    return states;
+  function parsePrimaryNames(krav) {
+    const fromList = toArray(krav?.primarformaga?.namn_lista)
+      .map(value => String(value || '').trim())
+      .filter(Boolean);
+    if (fromList.length) return fromList;
+    const rawName = krav?.primarformaga?.namn;
+    if (Array.isArray(rawName)) {
+      return rawName
+        .map(value => String(value || '').trim())
+        .filter(Boolean);
+    }
+    const one = String(rawName || '').trim();
+    return one ? [one] : [];
   }
 
-  function groupErfTotal(group, list) {
-    const matches = collectGroupMatches(group, list);
-    return matches.reduce((sum, item) => sum + (deductionForItem(item).ded || 0), 0);
+  function alternativesLabel(alternatives = []) {
+    const names = alternatives
+      .map(alt => String(alt?.namn || '').trim())
+      .filter(Boolean);
+    if (!names.length) return 'Specifikt val';
+    if (names.length === 1) return names[0];
+    return names.join(' eller ');
+  }
+
+  function valfriLabel(rule = {}) {
+    const tags = toArray(rule.taggar).map(tag => String(tag || '').trim()).filter(Boolean).join(', ');
+    if (tags) return `Valfri inom tagg: ${tags}`;
+    return 'Valfri inom tagg';
+  }
+
+  function annotateRequiredShare(sources = [], requiredErf = 0) {
+    let remaining = Math.max(0, Number(requiredErf) || 0);
+    return toArray(sources).map(raw => {
+      const usedErf = Math.max(0, Number(raw?.usedErf) || 0);
+      const appliedErf = Math.min(remaining, usedErf);
+      remaining = Math.max(0, remaining - appliedErf);
+      return {
+        ...raw,
+        usedErf,
+        appliedErf,
+        overflowErf: Math.max(0, usedErf - appliedErf)
+      };
+    });
   }
 
   function checkNamedSet(list, config, type) {
-    const normType = normalizeType(type);
-    if (normType === 'Nackdel') {
-      return { ok: true, missing: '' };
-    }
     const names = toArray(config?.namn).map(name => String(name || '').trim()).filter(Boolean);
-    const minCount = Math.max(0, Number(config?.min_antal) || 0);
-    const minErf = Math.max(0, Number(config?.min_erf) || 0);
-    if (!names.length || (minCount <= 0 && minErf <= 0)) return { ok: true, missing: '' };
-    const target = new Set(names.map(normalizeKey));
-    const rows = uniqueByName(toArray(list).filter(item => {
-      if (!target.has(normalizeKey(item?.namn))) return false;
-      if (type && !entryHasType(item, type)) return false;
-      return true;
-    }))
-      .map(item => ({
-        item,
-        ded: deductionForItem(item).ded || 0,
-        countCredit: countCreditForItem(item, { type: normType })
-      }))
-      .sort((a, b) => {
-        const countDiff = (b.countCredit || 0) - (a.countCredit || 0);
-        if (countDiff !== 0) return countDiff;
-        return (b.ded || 0) - (a.ded || 0);
-      });
-
-    let selectedErf = 0;
-    let selectedCount = 0;
-    for (let i = 0; i < rows.length; i += 1) {
-      if ((minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount)) break;
-      const row = rows[i];
-      selectedErf += row.ded || 0;
-      selectedCount += row.countCredit || 0;
+    const minCount = toInt(config?.min_antal, 0);
+    if (!names.length || minCount <= 0) {
+      return { ok: true, missing: '', count: 0, required: minCount };
     }
-
-    const ok = (minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount);
-    if (ok) return { ok: true, missing: '' };
-    if (minErf > 0 && minCount > 0) {
+    const wanted = new Set(names.map(normalizeKey));
+    const count = toArray(list).reduce((sum, item) => {
+      if (!item || typeof item !== 'object') return sum;
+      if (!wanted.has(normalizeKey(item?.namn))) return sum;
+      if (type && !matchesType(item, type)) return sum;
+      return sum + 1;
+    }, 0);
+    if (count >= minCount) {
+      return { ok: true, missing: '', count, required: minCount };
+    }
+    if (minCount === 1) {
       return {
         ok: false,
-        missing: `Specifika ${normType.toLowerCase()} (${selectedErf}/${minErf} ERF, ${selectedCount}/${minCount} val)`
+        missing: names.length === 1 ? names[0] : names.join(' eller '),
+        count,
+        required: minCount
       };
     }
-    if (minErf > 0) return { ok: false, missing: `Specifika ${normType.toLowerCase()} (${selectedErf}/${minErf} ERF)` };
-    if (minCount === 1) return { ok: false, missing: names.join(' eller ') };
-    return { ok: false, missing: `${minCount} av: ${names.join(', ')}` };
+    return {
+      ok: false,
+      missing: `Specifika ${normalizeType(type).toLowerCase()} (${count}/${minCount} val)`,
+      count,
+      required: minCount
+    };
+  }
+
+  function evaluate(entry, list) {
+    const pcList = toArray(list);
+    const krav = getKrav(entry);
+    const tokens = buildTokens(pcList);
+
+    const totalRequired = toInt(krav?.total_erf, 0);
+    const totalErf = tokens.reduce((sum, token) => {
+      if (token.isBenefit || token.isDrawback) return sum;
+      return sum + token.xp;
+    }, 0);
+    const totalMissing = Math.max(0, totalRequired - totalErf);
+
+    const primaryNames = parsePrimaryNames(krav);
+    const primaryRequiredErf = toInt(krav?.primarformaga?.krav_erf, 0);
+    const primaryNameSet = new Set(primaryNames.map(normalizeKey));
+    const primaryMatches = tokens.filter(token =>
+      !token.isBenefit
+      && !token.isDrawback
+      && primaryNameSet.has(token.key)
+    );
+    const primaryHintedMatches = primaryMatches.filter(token => normalizeSourceHint(token.sourceHint) === 'primarformaga');
+    const primaryPool = primaryHintedMatches.length ? primaryHintedMatches : primaryMatches;
+    const primaryBestToken = primaryPool
+      .slice()
+      .sort((a, b) => b.xp - a.xp)[0] || null;
+    const primarySelectedErf = Math.max(0, Number(primaryBestToken?.xp) || 0);
+    const primaryTokenId = String(primaryBestToken?.id || '').trim();
+    const primaryOk = primaryNames.length > 0 && (primarySelectedErf >= primaryRequiredErf);
+    const primaryMissing = Math.max(0, primaryRequiredErf - primarySelectedErf);
+
+    const specificRules = parseSpecificRules(krav);
+    const tokenById = new Map(tokens.map(token => [token.id, token]));
+    const assignedTokenIds = new Set();
+    const overflowByToken = new Map();
+    const specificRowsWork = specificRules.map(rule => ({
+      idx: rule.idx,
+      alternatives: toArray(rule.alternatives),
+      requiredErf: Math.max(0, Number(rule.requiredErf) || 0),
+      requiredCount: Math.max(0, Number(rule.minCount) || 0),
+      candidateCount: 0,
+      pickedIds: [],
+      selectedCount: 0,
+      selectedErf: 0
+    }));
+
+    const specificCandidates = tokens
+      .filter(token =>
+        token.xp > 0
+        && !token.isBenefit
+        && !token.isDrawback
+        && token.id !== primaryTokenId
+      );
+
+    const matchedRowsByToken = new Map();
+    specificCandidates.forEach(token => {
+      const sourceHint = normalizeSourceHint(token.sourceHint);
+      const forcedSpecificIdx = parseSourceIndex(sourceHint, 'specifikt_val');
+      if (sourceHint && forcedSpecificIdx < 0) return;
+      const rowIdxs = [];
+      specificRowsWork.forEach((row, rowIdx) => {
+        if (forcedSpecificIdx >= 0 && rowIdx !== forcedSpecificIdx) return;
+        if (row.alternatives.some(alt => matchesAlternative(token, alt))) {
+          rowIdxs.push(rowIdx);
+        }
+      });
+      if (rowIdxs.length) matchedRowsByToken.set(token.id, rowIdxs);
+    });
+
+    specificRowsWork.forEach((row, rowIdx) => {
+      let count = 0;
+      matchedRowsByToken.forEach(rowIdxs => {
+        if (rowIdxs.includes(rowIdx)) count += 1;
+      });
+      row.candidateCount = count;
+    });
+
+    const assignables = specificCandidates
+      .filter(token => matchedRowsByToken.has(token.id))
+      .sort((a, b) => {
+        const aFlex = toArray(matchedRowsByToken.get(a.id)).length;
+        const bFlex = toArray(matchedRowsByToken.get(b.id)).length;
+        if (aFlex !== bFlex) return aFlex - bFlex;
+        return b.xp - a.xp;
+      });
+
+    assignables.forEach(token => {
+      const rowIndexes = toArray(matchedRowsByToken.get(token.id));
+      if (!rowIndexes.length) return;
+
+      let bestRow = null;
+      let bestScore = -Infinity;
+      rowIndexes.forEach(rowIdx => {
+        const row = specificRowsWork[rowIdx];
+        if (!row) return;
+
+        const needCount = Math.max(0, row.requiredCount - row.selectedCount);
+        const needErf = Math.max(0, row.requiredErf - row.selectedErf);
+        const erfGain = Math.min(token.xp, needErf);
+        const countGain = needCount > 0 ? 1 : 0;
+        const scarcity = row.candidateCount > 0 ? (1_000 / row.candidateCount) : 0;
+        let score = (erfGain * 100_000) + (countGain * 10_000) + scarcity;
+        score += Math.min(token.xp, Math.max(0, row.requiredErf));
+        if (erfGain <= 0 && countGain <= 0) score += 1;
+        score -= row.idx * 0.001;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestRow = row;
+        }
+      });
+
+      if (!bestRow) return;
+      bestRow.pickedIds.push(token.id);
+      bestRow.selectedCount += 1;
+      bestRow.selectedErf += token.xp;
+      assignedTokenIds.add(token.id);
+    });
+
+    const specificRows = specificRowsWork.map(row => {
+      const ok = row.alternatives.length > 0
+        && row.requiredErf > 0
+        && row.selectedCount >= row.requiredCount
+        && row.selectedErf >= row.requiredErf;
+
+      if (ok) {
+        let remainingRequired = row.requiredErf;
+        const pickedTokens = toArray(row.pickedIds)
+          .map(id => tokenById.get(id))
+          .filter(Boolean)
+          .sort((a, b) => b.xp - a.xp);
+
+        pickedTokens.forEach(token => {
+          const appliedErf = Math.min(remainingRequired, token.xp);
+          remainingRequired = Math.max(0, remainingRequired - appliedErf);
+          const overflowErf = Math.max(0, token.xp - appliedErf);
+          if (overflowErf <= 0) return;
+          overflowByToken.set(token.id, (overflowByToken.get(token.id) || 0) + overflowErf);
+        });
+      }
+
+      return {
+        idx: row.idx,
+        alternatives: row.alternatives,
+        requiredErf: row.requiredErf,
+        requiredCount: row.requiredCount,
+        candidateCount: row.candidateCount,
+        selectedCount: row.selectedCount,
+        selectedErf: row.selectedErf,
+        ok,
+        missingCount: Math.max(0, row.requiredCount - row.selectedCount),
+        missingErf: Math.max(0, row.requiredErf - row.selectedErf),
+        pickedIds: row.pickedIds.slice()
+      };
+    });
+
+    const valfriRules = parseValfriRules(krav);
+    const hasValfriRules = valfriRules.some(rule => rule.taggfalt && rule.taggar.length && rule.requiredErf > 0);
+    const tokenEligibleForSpecific = new Set(matchedRowsByToken.keys());
+
+    let optionalFromSpecificBypass = 0;
+    const optionalSpecificBypassSources = [];
+    const overflowRemaining = new Map();
+    overflowByToken.forEach((value, key) => {
+      const amount = Math.max(0, Number(value) || 0);
+      if (amount <= 0) return;
+      const token = tokens.find(row => row.id === key);
+      if (!token) return;
+      const matchesAnyValfri = hasValfriRules && valfriRules.some(rule => {
+        const normalizedRule = {
+          taggfalt: rule.taggfalt,
+          taggar: rule.taggar,
+          typ: rule.typ,
+          krav_erf: rule.requiredErf
+        };
+        return matchesValfriRule(token, normalizedRule);
+      });
+      if (!matchesAnyValfri) {
+        optionalFromSpecificBypass += amount;
+        optionalSpecificBypassSources.push({
+          tokenId: token.id,
+          name: token.name,
+          usedErf: amount,
+          reason: 'specifikt_val->valfritt (ingen taggmatch)'
+        });
+        return;
+      }
+      overflowRemaining.set(key, amount);
+    });
+
+    const freePool = new Map();
+    tokens.forEach(token => {
+      if (token.xp <= 0) return;
+      if (token.isBenefit || token.isDrawback) return;
+      if (token.id === primaryTokenId) return;
+      if (assignedTokenIds.has(token.id)) return;
+      // Tokens tied to specifikt_val are reserved until they fulfill that step.
+      if (tokenEligibleForSpecific.has(token.id)) return;
+      freePool.set(token.id, token.xp);
+    });
+
+    const valfriRowsWork = valfriRules.map(rule => {
+      const requiredErf = Math.max(0, Number(rule.requiredErf) || 0);
+      return {
+        idx: rule.idx,
+        requiredErf,
+        taggfalt: rule.taggfalt,
+        taggar: rule.taggar,
+        typ: rule.typ,
+        normalizedRule: {
+          taggfalt: rule.taggfalt,
+          taggar: rule.taggar,
+          typ: rule.typ,
+          krav_erf: requiredErf
+        },
+        selectedFromOverflow: 0,
+        selectedFromPool: 0,
+        overflowSources: [],
+        poolSources: []
+      };
+    });
+
+    const valfriRemainingNeed = (row) => Math.max(
+      0,
+      (Math.max(0, Number(row?.requiredErf) || 0))
+      - (Math.max(0, Number(row?.selectedFromOverflow) || 0) + Math.max(0, Number(row?.selectedFromPool) || 0))
+    );
+
+    function addValfriSource(row, sourceKind, token, usedErf, availableErf) {
+      const used = Math.max(0, Number(usedErf) || 0);
+      if (!row || !token || used <= 0) return;
+      const selectedKey = sourceKind === 'overflow' ? 'selectedFromOverflow' : 'selectedFromPool';
+      const listKey = sourceKind === 'overflow' ? 'overflowSources' : 'poolSources';
+      const availableKey = sourceKind === 'overflow' ? 'availableOverflowErf' : 'availableErf';
+      row[selectedKey] += used;
+      const list = toArray(row[listKey]);
+      const existing = list.find(entry => String(entry?.tokenId || '') === String(token.id || ''));
+      if (existing) {
+        existing.usedErf = Math.max(0, Number(existing.usedErf) || 0) + used;
+        existing[availableKey] = Math.max(
+          Math.max(0, Number(existing[availableKey]) || 0),
+          Math.max(0, Number(availableErf) || 0),
+          existing.usedErf
+        );
+        return;
+      }
+      list.push({
+        tokenId: token.id,
+        name: token.name,
+        usedErf: used,
+        [availableKey]: Math.max(0, Number(availableErf) || 0)
+      });
+      row[listKey] = list;
+    }
+
+    function allocateValfriFromMap(sourceMap, sourceKind) {
+      if (!(sourceMap instanceof Map) || !valfriRowsWork.length) return;
+
+      const matchesByToken = new Map();
+      const candidateCountByRow = new Map();
+      sourceMap.forEach((rawValue, tokenId) => {
+        const available = Math.max(0, Number(rawValue) || 0);
+        if (available <= 0) return;
+        const token = tokenById.get(tokenId);
+        if (!token) return;
+        const rowIndexes = [];
+        valfriRowsWork.forEach((row, rowIdx) => {
+          if (row.requiredErf <= 0) return;
+          if (!row.taggfalt || !toArray(row.taggar).length) return;
+          if (!matchesValfriRule(token, row.normalizedRule)) return;
+          rowIndexes.push(rowIdx);
+        });
+        if (!rowIndexes.length) return;
+        matchesByToken.set(tokenId, rowIndexes);
+        rowIndexes.forEach(idx => {
+          candidateCountByRow.set(idx, (candidateCountByRow.get(idx) || 0) + 1);
+        });
+      });
+
+      const tokenOrder = Array.from(matchesByToken.keys()).sort((a, b) => {
+        const aFlex = toArray(matchesByToken.get(a)).length;
+        const bFlex = toArray(matchesByToken.get(b)).length;
+        if (aFlex !== bFlex) return aFlex - bFlex;
+        return (sourceMap.get(b) || 0) - (sourceMap.get(a) || 0);
+      });
+
+      tokenOrder.forEach(tokenId => {
+        let remaining = Math.max(0, Number(sourceMap.get(tokenId)) || 0);
+        if (remaining <= 0) {
+          sourceMap.delete(tokenId);
+          return;
+        }
+        const token = tokenById.get(tokenId);
+        if (!token) return;
+        const rowIndexes = toArray(matchesByToken.get(tokenId));
+        if (!rowIndexes.length) return;
+
+        const originalAvailable = remaining;
+        while (remaining > 0) {
+          const needyRows = rowIndexes.filter(idx => valfriRemainingNeed(valfriRowsWork[idx]) > 0);
+          if (needyRows.length) {
+            const bestRowIdx = needyRows.slice().sort((a, b) => {
+              const needDiff = valfriRemainingNeed(valfriRowsWork[b]) - valfriRemainingNeed(valfriRowsWork[a]);
+              if (needDiff !== 0) return needDiff;
+              const aCandidates = candidateCountByRow.get(a) || Number.MAX_SAFE_INTEGER;
+              const bCandidates = candidateCountByRow.get(b) || Number.MAX_SAFE_INTEGER;
+              if (aCandidates !== bCandidates) return aCandidates - bCandidates;
+              return a - b;
+            })[0];
+            const bestRow = valfriRowsWork[bestRowIdx];
+            const need = valfriRemainingNeed(bestRow);
+            const used = Math.min(remaining, need);
+            if (used <= 0) break;
+            addValfriSource(bestRow, sourceKind, token, used, originalAvailable);
+            remaining -= used;
+            continue;
+          }
+
+          const spillRowIdx = rowIndexes.slice().sort((a, b) => {
+            const reqDiff = (valfriRowsWork[b]?.requiredErf || 0) - (valfriRowsWork[a]?.requiredErf || 0);
+            if (reqDiff !== 0) return reqDiff;
+            return a - b;
+          })[0];
+          const spillRow = valfriRowsWork[spillRowIdx];
+          if (!spillRow) break;
+          addValfriSource(spillRow, sourceKind, token, remaining, originalAvailable);
+          remaining = 0;
+        }
+
+        sourceMap.delete(tokenId);
+      });
+    }
+
+    // Priority chain: specifikt_val overflow -> valfri_inom_tagg -> valfritt
+    allocateValfriFromMap(overflowRemaining, 'overflow');
+    allocateValfriFromMap(freePool, 'pool');
+
+    let optionalFromValfriOverflow = 0;
+    const optionalValfriOverflowSources = [];
+    const valfriRows = valfriRowsWork.map(row => {
+      const requiredErf = Math.max(0, Number(row.requiredErf) || 0);
+      const selectedFromOverflow = Math.max(0, Number(row.selectedFromOverflow) || 0);
+      const selectedFromPool = Math.max(0, Number(row.selectedFromPool) || 0);
+      const selectedErf = selectedFromOverflow + selectedFromPool;
+      const ok = requiredErf <= 0 || selectedErf >= requiredErf;
+      const overflowAnnotated = annotateRequiredShare(row.overflowSources, requiredErf);
+      const overflowApplied = overflowAnnotated.reduce((sum, source) => sum + Math.max(0, Number(source?.appliedErf) || 0), 0);
+      const poolAnnotated = annotateRequiredShare(row.poolSources, Math.max(0, requiredErf - overflowApplied));
+      const rowOverflowErf = Math.max(0, selectedErf - requiredErf);
+      if (rowOverflowErf > 0) {
+        optionalFromValfriOverflow += rowOverflowErf;
+        const rowOverflowParts = overflowAnnotated
+          .concat(poolAnnotated)
+          .filter(source => Math.max(0, Number(source?.overflowErf) || 0) > 0)
+          .map(source => ({
+            tokenId: source.tokenId,
+            name: source.name,
+            usedErf: Math.max(0, Number(source?.overflowErf) || 0),
+            reason: `valfri_inom_tagg[${row.idx}]->valfritt`
+          }));
+        optionalValfriOverflowSources.push(...rowOverflowParts);
+      }
+
+      return {
+        idx: row.idx,
+        requiredErf,
+        selectedErf,
+        ok,
+        missingErf: Math.max(0, requiredErf - selectedErf),
+        taggfalt: row.taggfalt,
+        taggar: row.taggar,
+        typ: row.typ,
+        selectedFromOverflow,
+        selectedFromPool,
+        overflowErf: rowOverflowErf,
+        overflowSources: overflowAnnotated,
+        poolSources: poolAnnotated
+      };
+    });
+
+    const optionalRequiredErf = toInt(krav?.valfritt?.krav_erf, 0);
+    let optionalFromSpecificRemainder = 0;
+    const optionalSpecificRemainderSources = [];
+    overflowRemaining.forEach((value, key) => {
+      const amount = Math.max(0, Number(value) || 0);
+      if (amount <= 0) return;
+      const token = tokens.find(row => row.id === key);
+      optionalFromSpecificRemainder += amount;
+      optionalSpecificRemainderSources.push({
+        tokenId: key,
+        name: token?.name || '',
+        usedErf: amount,
+        reason: 'specifikt_val->valfritt (kvarvarande overflow)'
+      });
+    });
+
+    let optionalFromPool = 0;
+    const optionalPoolSources = [];
+    freePool.forEach((value, key) => {
+      const amount = Math.max(0, Number(value) || 0);
+      if (amount <= 0) return;
+      const token = tokens.find(row => row.id === key);
+      optionalFromPool += amount;
+      optionalPoolSources.push({
+        tokenId: key,
+        name: token?.name || '',
+        usedErf: amount,
+        reason: 'valfritt direkt'
+      });
+    });
+
+    const optionalSelectedFromOverflow = optionalFromSpecificBypass + optionalFromSpecificRemainder + optionalFromValfriOverflow;
+    const optionalSelectedErf = optionalSelectedFromOverflow + optionalFromPool;
+    const optionalMissing = Math.max(0, optionalRequiredErf - optionalSelectedErf);
+    const optionalOk = optionalSelectedErf >= optionalRequiredErf;
+
+    const specificBenefits = checkNamedSet(pcList, krav?.specifika_fordelar, 'Fördel');
+    const specificDrawbacks = checkNamedSet(pcList, krav?.specifika_nackdelar, 'Nackdel');
+
+    const missing = [];
+    if (totalMissing > 0) {
+      missing.push(`Total ERF exkl. Fördel/Nackdel (${totalErf}/${totalRequired} ERF)`);
+    }
+    if (!primaryOk) {
+      const label = primaryNames.length > 1
+        ? primaryNames.join(' eller ')
+        : (primaryNames[0] || 'Primärförmåga');
+      missing.push(`${label} (${primarySelectedErf}/${primaryRequiredErf} ERF)`);
+    }
+
+    specificRows.forEach(row => {
+      if (row.ok) return;
+      const label = alternativesLabel(row.alternatives);
+      if (row.requiredCount > 1) {
+        missing.push(`${label} (${row.selectedCount}/${row.requiredCount} val, ${row.selectedErf}/${row.requiredErf} ERF)`);
+        return;
+      }
+      missing.push(`${label} (${row.selectedErf}/${row.requiredErf} ERF)`);
+    });
+
+    valfriRows.forEach(row => {
+      if (row.ok) return;
+      missing.push(`${valfriLabel(row)} (${row.selectedErf}/${row.requiredErf} ERF)`);
+    });
+
+    if (!optionalOk) {
+      missing.push(`Valfritt (${optionalSelectedErf}/${optionalRequiredErf} ERF)`);
+    }
+
+    if (!specificBenefits.ok && specificBenefits.missing) missing.push(specificBenefits.missing);
+    if (!specificDrawbacks.ok && specificDrawbacks.missing) missing.push(specificDrawbacks.missing);
+
+    return {
+      ok: missing.length === 0,
+      missing,
+      master: primaryOk,
+      primary: primaryOk,
+      profile: {
+        total: {
+          selectedErf: totalErf,
+          requiredErf: totalRequired,
+          missingErf: totalMissing
+        },
+        primary: {
+          names: primaryNames,
+          name: primaryNames[0] || '',
+          selectedErf: primarySelectedErf,
+          requiredErf: primaryRequiredErf,
+          missingErf: primaryMissing,
+          ok: primaryOk
+        },
+        specifikt_val: specificRows,
+        valfri_inom_tagg: valfriRows,
+        valfritt: {
+          selectedErf: optionalSelectedErf,
+          selectedFromOverflow: optionalSelectedFromOverflow,
+          selectedFromPool: optionalFromPool,
+          overflowSources: optionalSpecificBypassSources
+            .concat(optionalSpecificRemainderSources)
+            .concat(optionalValfriOverflowSources),
+          poolSources: optionalPoolSources,
+          requiredErf: optionalRequiredErf,
+          missingErf: optionalMissing,
+          ok: optionalOk
+        },
+        specifika_fordelar: specificBenefits,
+        specifika_nackdelar: specificDrawbacks
+      }
+    };
   }
 
   function check(entry, list){
-    const pcList = toArray(list);
-    const krav = getKrav(entry);
-    const groups = getGroups(entry);
-    const groupStates = buildGroupStates(groups, pcList, krav);
-    const missing = [];
-    let primaryOk = true;
-    const primaryNames = primaryNamesFromKrav(krav);
-
-    if (!primaryNames.length) {
-      primaryOk = false;
-      missing.push('Primärförmåga saknas');
-    }
-
-    groups.forEach((group, idx) => {
-      const state = groupStates.get(idx) || {
-        ok: false,
-        selected_erf: 0,
-        required_erf: 0,
-        selected_count: 0,
-        required_count: 0
-      };
-      const minErf = Math.max(0, Number(state?.required_erf ?? group?.min_erf) || 0);
-      const minCount = Math.max(0, Number(state?.required_count ?? group?.min_antal) || 0);
-      const ok = Boolean(state.ok);
-      if (group?.isPrimary) primaryOk = ok;
-      if (!ok) {
-        const selectedErf = Math.max(0, Number(state.selected_erf) || 0);
-        const selectedCount = Math.max(0, Number(state.selected_count) || 0);
-        if (minErf > 0 && minCount > 0) {
-          missing.push(`${groupLabel(group)} (${selectedErf}/${minErf} ERF, ${selectedCount}/${minCount} val)`);
-        } else if (minErf > 0) {
-          missing.push(`${groupLabel(group)} (${selectedErf}/${minErf} ERF)`);
-        } else if (minCount > 0) {
-          missing.push(`${groupLabel(group)} (${selectedCount}/${minCount} val)`);
-        } else {
-          missing.push(groupLabel(group));
-        }
-      }
-    });
-
-    const ford = checkNamedSet(pcList, krav.specifika_fordelar, 'Fördel');
-    if (!ford.ok && ford.missing) missing.push(ford.missing);
-    const nack = checkNamedSet(pcList, krav.specifika_nackdelar, 'Nackdel');
-    if (!nack.ok && nack.missing) missing.push(nack.missing);
-
-    const ok = missing.length === 0;
-    return { ok, missing, master: primaryOk, primary: primaryOk };
-  }
-
-  function deductionForItem(item) {
-    if (!item) return { kind: 'none', ded: 0 };
-    if (entryHasType(item, 'Nackdel')) return { kind: 'disadvantage', ded: 0 };
-    if (entryHasType(item, 'Fördel')) return { kind: 'advantage', ded: 5 };
-    if (entryHasType(item, 'Ritual')) return { kind: 'ritual', ded: 10 };
-    const isAbility =
-      entryHasType(item, 'Förmåga') ||
-      entryHasType(item, 'Mystisk kraft') ||
-      entryHasType(item, 'Monstruöst särdrag') ||
-      entryHasType(item, 'Särdrag');
-    if (!isAbility) return { kind: 'other', ded: 10 };
-    return { kind: 'ability', ded: costForEntry(item, item?.nivå) };
-  }
-
-  function namedSetRemaining(list, config, type) {
-    const normType = normalizeType(type);
-    if (normType === 'Nackdel') return 0;
-    const names = toArray(config?.namn).map(name => String(name || '').trim()).filter(Boolean);
-    const minCount = Math.max(0, Number(config?.min_antal) || 0);
-    const minErf = Math.max(0, Number(config?.min_erf) || 0);
-    if (!names.length || (minCount <= 0 && minErf <= 0)) return 0;
-    const target = new Set(names.map(normalizeKey));
-    const rows = uniqueByName(toArray(list).filter(item => {
-      if (!target.has(normalizeKey(item?.namn))) return false;
-      if (type && !entryHasType(item, type)) return false;
-      return true;
-    }))
-      .map(item => ({
-        ded: deductionForItem(item).ded || 0,
-        countCredit: countCreditForItem(item, { type: normType })
-      }))
-      .sort((a, b) => {
-        const countDiff = (b.countCredit || 0) - (a.countCredit || 0);
-        if (countDiff !== 0) return countDiff;
-        return (b.ded || 0) - (a.ded || 0);
-      });
-
-    let selectedErf = 0;
-    let selectedCount = 0;
-    for (let i = 0; i < rows.length; i += 1) {
-      if ((minErf <= 0 || selectedErf >= minErf) && (minCount <= 0 || selectedCount >= minCount)) break;
-      selectedErf += rows[i].ded || 0;
-      selectedCount += rows[i].countCredit || 0;
-    }
-
-    const missingErf = Math.max(0, minErf - selectedErf);
-    const missingCount = Math.max(0, minCount - selectedCount);
-    const perItem = normType === 'Fördel' ? 5 : 10;
-    if (minErf > 0 && minCount > 0) return Math.max(missingErf, missingCount * perItem);
-    if (minErf > 0) return missingErf;
-    return missingCount * perItem;
-  }
-
-  function groupRemainingXP(group, state = {}) {
-    const minErf = Math.max(0, Number(state?.required_erf ?? group?.min_erf) || 0);
-    const minCount = Math.max(0, Number(state?.required_count ?? group?.min_antal) || 0);
-    const selectedErf = Math.max(0, Number(state?.selected_erf) || 0);
-    const selectedCount = Math.max(0, Number(state?.selected_count) || 0);
-    const missingErf = Math.max(0, minErf - selectedErf);
-    const missingCount = Math.max(0, minCount - selectedCount);
-    const countGapCost = missingCount * countFloorForGroup(group);
-    if (minErf > 0 && minCount > 0) return Math.max(missingErf, countGapCost);
-    if (minErf > 0) return missingErf;
-    if (minCount > 0) return countGapCost;
-    return 0;
+    return evaluate(entry, list);
   }
 
   function minXP(entry, list){
     try {
-      const groups = getGroups(entry).filter(group =>
-        Math.max(0, Number(group?.min_erf) || 0) > 0 ||
-        Math.max(0, Number(group?.min_antal) || 0) > 0
-      );
-      const pcList = toArray(list);
-      const krav = getKrav(entry);
-      const groupStates = buildGroupStates(groups, pcList, krav);
-      const missingGroups = groups.reduce((sum, group, idx) =>
-        sum + groupRemainingXP(group, groupStates.get(idx)), 0);
-      const missingBenefits = namedSetRemaining(pcList, krav.specifika_fordelar, 'Fördel');
-      const result = missingGroups + missingBenefits;
-      return Math.max(0, result);
+      const result = evaluate(entry, list);
+      const profile = result?.profile || {};
+      const specificMissing = toArray(profile.specifikt_val)
+        .reduce((sum, row) => {
+          const missingErf = Math.max(0, Number(row?.missingErf) || 0);
+          const missingCount = Math.max(0, Number(row?.missingCount) || 0);
+          // A missing specific pick costs at least 10 ERF in practice.
+          const countFloor = missingCount * 10;
+          return sum + Math.max(missingErf, countFloor);
+        }, 0);
+      const valfriMissing = toArray(profile.valfri_inom_tagg)
+        .reduce((sum, row) => sum + Math.max(0, Number(row?.missingErf) || 0), 0);
+      const primaryMissing = Math.max(0, Number(profile?.primary?.missingErf) || 0);
+      const totalMissing = Math.max(0, Number(profile?.total?.missingErf) || 0);
+      const optionalMissing = Math.max(0, Number(profile?.valfritt?.missingErf) || 0);
+      // Heuristic: avoid double counting overlaps between non-primary requirements.
+      // Primary remains isolated from non-primary flows.
+      const nonPrimaryNeed = Math.max(optionalMissing, specificMissing, valfriMissing);
+      return Math.max(0, Math.max(totalMissing, primaryMissing + nonPrimaryNeed));
     } catch {
       return 50;
     }
   }
 
   function isElite(entry){
-    return (entry.taggar?.typ || []).includes('Elityrke');
+    return entryHasType(entry, 'Elityrke');
   }
 
   function canChange(list){
-    const elites = toArray(list).filter(isElite);
-    return elites.every(el => check(el, list).ok);
+    const entries = toArray(list);
+    const elites = entries.filter(isElite);
+    return elites.every(el => check(el, entries).ok);
   }
 
   function parse(krav) {

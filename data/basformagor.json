@@ -360,6 +360,26 @@
           }
         }
       }
+    },
+    {
+  "id": "bas17",
+  "namn": "Manipulatör",
+  "beskrivning": "Handling: Passiv. Rollpersonen är en mästare på att läsa andra varelsers svagheter och begär, och vet precis vilka ord som krävs för att dra nytta av dem. Istället för att lita till ren utstrålning eller aggressivitet väver du lögner, falskt smicker och subtila antydningar till ett nät som snärjer ditt offer. Din manipulation handlar sällan om att tala högst eller te sig farligast, utan om att viska exakt rätt sak i rätt öra vid rätt tillfälle. Rollpersonen får använda Listig istället för Övertygande närhelst denne försöker dupera, ljuga för, påverka eller på andra sätt spela på en annan varelses känslor.",
+  "taggar": {
+    "typ": [
+      "Basförmåga"
+    ],
+    "ark_trad": [],
+    "test": [
+      "Listig"
+    ],
+    "nivå_data": {
+      "Ordinär": {
+        "handling": "Passiv",
+        "skadetyp": ""
+      }
     }
+  }
+}
   ]
 }

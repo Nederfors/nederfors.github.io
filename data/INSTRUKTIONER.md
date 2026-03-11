@@ -149,7 +149,8 @@ Tillåtna regelblock (`RULE_KEYS`):
 - `ger`
 - `val`
 
-Allt annat på samma nivå ignoreras av normaliseringen.
+Allt annat på samma nivå ignoreras av normaliseringen, med undantag för kravlogiknycklarna
+`kraver_logik` och `kraver_typ_och_entry` som läses separat i kravutvärderingen.
 
 ## 2. Filformat och källor
 
@@ -203,6 +204,8 @@ Använd detta som första uppslag när du authorar.
 | Sätta max antal per typ | `typ_regler.<Typ>.max_antal` | Typdefault när entry saknar eget max. |
 | Sätta max antal för viss entry | `entries[i].taggar.max_antal` | Har företräde över typdefault. |
 | Lägga krav | `...kraver[]` | Samma path-mönster (typ/entry/nivå). |
+| Styra kravlogik inom scope | `...regler.kraver_logik` | `or` (default) eller `and` för lokala `kraver[]`. |
+| Styra kombination typ+entry | `...regler.kraver_typ_och_entry` | `or` (default) eller `and` mellan type- och entry-scope. |
 | Lägga krock | `...krockar[]` | Samma path-mönster (typ/entry/nivå). |
 | Lägga ändring av värde | `...andrar[]` | Samma path-mönster (typ/entry/nivå). |
 | Lägga grant av post/föremål/pengar | `...ger[]` | Samma path-mönster (typ/entry/nivå). |
@@ -266,6 +269,48 @@ Lägg en toppnivånyckel i `typ_regler` med exakt typnamn:
       "max_antal": 2
     }
   }
+}
+```
+
+### `typ_regler` i praktiken (snabbguide)
+
+`typ_regler` är filens typbaslinje och appliceras på alla entries som matchar `taggar.typ`.
+
+Kort regler:
+- `typ_regler` ligger på toppnivå i datafilen, parallellt med `entries`.
+- Legacy-alias `type_rules` stöds, men ny data bör använda `typ_regler`.
+- Matchning sker mot `entries[i].taggar.typ` och är normaliserad (case/diakritik-insensitiv).
+- En entry kan matcha flera typer; alla matchande typmallar appliceras.
+- Merge-prioritet är: typregler -> entry-regler -> nivåregler.
+- Vid samma override-token (`regel_id`/`mal`/target) överstyr entry motsvarande typregel.
+- Typregler kan definiera både globala regler (`regler`) och nivåspecifika (`nivå_data`).
+- För kravlogik i type-scope används `typ_regler.<Typ>.regler.kraver_logik`.
+- För top-level-kombination typ+entry används `kraver_typ_och_entry` (vanligtvis på entryn, men kan även sättas i typregel som default).
+
+Mini-mall:
+
+```json
+{
+  "typ_regler": {
+    "Monstruöst särdrag": {
+      "regler": {
+        "kraver_logik": "or",
+        "kraver": [
+          { "nar": { "har_namn": ["Monster"] }, "varde": "monster_race_required" }
+        ]
+      },
+      "nivå_data": {
+        "Gesäll": {
+          "regler": {
+            "andrar": [
+              { "mal": "forsvar_modifierare", "satt": "add", "varde": 1 }
+            ]
+          }
+        }
+      }
+    }
+  },
+  "entries": []
 }
 ```
 
@@ -344,6 +389,30 @@ Lägg i `...kraver[]`:
 {
   "nar": { "nagon_av_namn": ["Troll", "Andrik"] },
   "varde": "requires_troll_or_andrik"
+}
+```
+
+### AND-krav inom ett scope
+
+Lägg i samma `regler`-container som `kraver[]`:
+
+```json
+{
+  "kraver_logik": "and",
+  "kraver": [
+    { "namn": ["Andeform"] },
+    { "nar": { "nagon_av_namn": ["Vandöd", "Best", "Andebesvärjare"] } }
+  ]
+}
+```
+
+### AND mellan typ- och entry-scope
+
+Lägg i entryns `taggar.regler` (eller i typregel om du vill defaulta för hela typen):
+
+```json
+{
+  "kraver_typ_och_entry": "and"
 }
 ```
 
@@ -1008,6 +1077,8 @@ Typiska fält:
 - `om_uppfyllt` / `vid_uppfyllt` / `on_pass` (effekter när kravet uppfylls)
 - `varde` (felkod)
 - `meddelande`/`message` (valfritt UX-meddelande)
+- `kraver_logik` (på `regler`-containern): `or` (default) eller `and` för lokala `kraver[]`
+- `kraver_typ_och_entry` (på `regler`-containern): `or` (default) eller `and` mellan type- och entry-scope
 
 Kravformel för nivåkrav:
 - `kraver: [{ "namn": ["<Entry>"], "nivå_minst": "<Nivå>" }]` betyder `<Entry> >= <Nivå>`.
@@ -1227,10 +1298,86 @@ Kodkälla:
 - `rule.varde` om satt
 - annars `krav_<sourceEntryName>`
 
-Viktig override-regel mellan entry- och typkrav:
-- Om entry-krav finns och uppfylls: type-krav ignoreras.
-- Om entry-krav finns men inte uppfylls: type-krav får fungera som fallback-upplåsning.
-- Om varken entry- eller type-krav uppfylls: reasons från båda kan returneras.
+Kravlogik i tre steg:
+- Inom entry-scope: `kraver_logik` styr hur `entry.taggar.regler.kraver[]` kombineras (`or` default, `and` explicit).
+- Inom type-scope: `kraver_logik` styr hur `typ_regler.<Typ>.regler.kraver[]` kombineras (`or` default, `and` explicit).
+- Mellan scopes: `kraver_typ_och_entry` styr kombinationen mellan type-scope och entry-scope (`or` default, `and` explicit).
+
+Semantik:
+- Scope med noll krav påverkar inte utfallet.
+- `kraver_typ_och_entry: "or"`: minst ett scope måste passera.
+- `kraver_typ_och_entry: "and"`: alla scope med krav måste passera.
+- Misslyckas totalen returneras reasons från de scope som fallerar.
+
+Byggmönster för invecklade krav:
+- Tänk uttrycket som: `TOTAL = TYPE_SCOPE <kraver_typ_och_entry> ENTRY_SCOPE`.
+- `TYPE_SCOPE` styrs av `typ_regler.<Typ>.regler.kraver[]` + `typ_regler.<Typ>.regler.kraver_logik`.
+- `ENTRY_SCOPE` styrs av `entries[i].taggar.regler.kraver[]` + `entries[i].taggar.regler.kraver_logik`.
+- Inom varje scope:
+  - `kraver_logik: "or"` => minst en regel i `kraver[]` måste passera.
+  - `kraver_logik: "and"` => alla regler i `kraver[]` måste passera.
+- Mellan scopes:
+  - `kraver_typ_och_entry: "or"` => minst ett scope måste passera.
+  - `kraver_typ_och_entry: "and"` => båda scope måste passera (om de har krav).
+- En entry har ett aktivt top-level operatorval mellan scopes (`kraver_typ_och_entry`) åt gången.
+
+Exempel: `Monster AND (Andeform OR Vandödhet)`
+
+```json
+{
+  "typ_regler": {
+    "Monstruöst särdrag": {
+      "regler": {
+        "kraver": [{ "nar": { "har_namn": ["Monster"] } }]
+      }
+    }
+  },
+  "entries": [
+    {
+      "namn": "Exempelentry",
+      "taggar": {
+        "typ": ["Monstruöst särdrag"],
+        "regler": {
+          "kraver_typ_och_entry": "and",
+          "kraver_logik": "or",
+          "kraver": [
+            { "namn": ["Andeform"] },
+            { "namn": ["Vandödhet"] }
+          ]
+        }
+      }
+    }
+  ]
+}
+```
+
+Exempel: `Monster OR Andebesvärjare`
+
+```json
+{
+  "typ_regler": {
+    "Monstruöst särdrag": {
+      "regler": {
+        "kraver": [{ "nar": { "har_namn": ["Monster"] } }]
+      }
+    }
+  },
+  "entries": [
+    {
+      "namn": "Exempelentry",
+      "taggar": {
+        "typ": ["Monstruöst särdrag"],
+        "regler": {
+          "kraver_typ_och_entry": "or",
+          "kraver": [
+            { "namn": ["Andebesvärjare"] }
+          ]
+        }
+      }
+    }
+  ]
+}
+```
 
 Exempel:
 
@@ -1250,6 +1397,7 @@ Exempel (miniminivå på specifik post):
 
 ```json
 {
+  "kraver_logik": "and",
   "kraver": [
     {
       "namn": ["Häxkonster"],
@@ -1258,6 +1406,29 @@ Exempel (miniminivå på specifik post):
     {
       "namn": ["Blodvadare"]
     }
+  ]
+}
+```
+
+Exempel (kombinerad AND/OR):
+
+```json
+{
+  "kraver_logik": "and",
+  "kraver": [
+    { "nar": { "nagon_av_namn": ["Vandöd", "Best", "Andebesvärjare"] } },
+    { "namn": ["Andeform"] }
+  ]
+}
+```
+
+Exempel (typ + entry måste båda gälla, t.ex. `Monster AND Väldig`):
+
+```json
+{
+  "kraver_typ_och_entry": "and",
+  "kraver": [
+    { "namn": ["Väldig"], "nivå_minst": "Novis" }
   ]
 }
 ```

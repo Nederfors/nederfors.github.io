@@ -49,25 +49,32 @@
 
   const POPUP_SOURCE_ORDER = Object.freeze([
     'primarformaga',
-    'primartagg',
-    'sekundartagg',
+    'specifikt_val',
     'valfri_inom_tagg',
-    'specifika_formagor',
-    'specifika_mystiska_krafter',
-    'specifika_ritualer',
+    'valfritt',
     'specifika_fordelar',
     'specifika_nackdelar'
   ]);
 
   function sourceOrderRank(source) {
     const normalized = String(source || '').trim();
-    const key = normalized.startsWith('valfri_inom_tagg') ? 'valfri_inom_tagg' : normalized;
+    const key = normalized.startsWith('valfri_inom_tagg')
+      ? 'valfri_inom_tagg'
+      : (normalized.startsWith('specifikt_val')
+        ? 'specifikt_val'
+        : (normalized === 'valfritt' ? 'valfritt' : normalized));
     const idx = POPUP_SOURCE_ORDER.indexOf(key);
     return idx >= 0 ? idx : POPUP_SOURCE_ORDER.length;
   }
 
   function valfriOrderIndex(source) {
     const match = String(source || '').trim().match(/^valfri_inom_tagg\[(\d+)\]$/);
+    if (!match) return 0;
+    return Number(match[1]) || 0;
+  }
+
+  function specifiktValOrderIndex(source) {
+    const match = String(source || '').trim().match(/^specifikt_val\[(\d+)\]$/);
     if (!match) return 0;
     return Number(match[1]) || 0;
   }
@@ -82,9 +89,9 @@
       group?.dynamic_select ||
       group?.anyMystic ||
       group?.anyRitual ||
+      source === 'valfritt' ||
       source.startsWith('valfri_inom_tagg') ||
-      source === 'primartagg' ||
-      source === 'sekundartagg'
+      source.startsWith('specifikt_val')
     );
   }
 
@@ -105,10 +112,59 @@
     const types = entryTypes(entry);
     return types.some(type =>
       type === 'Förmåga' ||
+      type === 'Basförmåga' ||
       type === 'Mystisk kraft' ||
       type === 'Monstruöst särdrag' ||
       type === 'Särdrag'
     );
+  }
+
+  const SIMPLE_TIERS = Object.freeze(['Enkel', 'Ordinär', 'Avancerad']);
+
+  function entryDefinedLevels(entry) {
+    if (!entry || typeof entry !== 'object') return [];
+    if (window.storeHelper && typeof window.storeHelper.entryDefinedLevels === 'function') {
+      try {
+        const levels = window.storeHelper.entryDefinedLevels(entry);
+        if (Array.isArray(levels) && levels.length) {
+          return levels
+            .map(level => normalizeLevel(level, ''))
+            .filter(Boolean);
+        }
+      } catch {}
+    }
+    const raw = []
+      .concat(Object.keys(entry?.nivåer || {}))
+      .concat(Object.keys(entry?.nivaer || {}))
+      .concat(Object.keys(entry?.taggar?.nivå_data || {}))
+      .concat(Object.keys(entry?.taggar?.niva_data || {}));
+    return Array.from(new Set(raw.map(level => normalizeLevel(level, '')).filter(Boolean)));
+  }
+
+  function resolveFixedTierLabel(entry, preferredLevel = '') {
+    if (!entry) return '';
+    const isFixedTierType = entryHasType(entry, 'Ritual') || entryHasType(entry, 'Basförmåga');
+    if (!isFixedTierType) return '';
+
+    let resolved = '';
+    if (window.storeHelper && typeof window.storeHelper.resolveEntryLevel === 'function') {
+      try {
+        resolved = normalizeLevel(window.storeHelper.resolveEntryLevel(entry, preferredLevel || entry?.nivå), '');
+      } catch {}
+    }
+    if (SIMPLE_TIERS.includes(resolved)) return resolved;
+
+    const defined = entryDefinedLevels(entry);
+    return SIMPLE_TIERS.find(level => defined.includes(level)) || '';
+  }
+
+  function isEliteSkillEntry(entry) {
+    if (typeof window.isEliteSkill === 'function') {
+      try {
+        return Boolean(window.isEliteSkill(entry));
+      } catch {}
+    }
+    return entryHasType(entry, 'Elityrkesförmåga');
   }
 
   function findEntry(name) {
@@ -198,6 +254,18 @@
     return 10;
   }
 
+  function calcItemXP(entry, list) {
+    if (!entry || typeof entry !== 'object') return 0;
+    const sourceList = Array.isArray(list) ? list : [entry];
+    if (window.storeHelper && typeof window.storeHelper.calcEntryXP === 'function') {
+      try {
+        const xp = Number(window.storeHelper.calcEntryXP(entry, sourceList));
+        if (Number.isFinite(xp)) return Math.max(0, xp);
+      } catch {}
+    }
+    return estimateRequirementErf(entry, entry?.nivå);
+  }
+
   function countFloorForModel(model) {
     const type = normalizeType(model?.group?.type || model?.type || '');
     if (type === 'Nackdel') return 0;
@@ -234,37 +302,25 @@
     if (typeof utils.getKravGroups === 'function') {
       out.push(...utils.getKravGroups(krav || {}, getLookupOptions()));
     }
-
     const normalized = typeof utils.normalizeKrav === 'function'
       ? utils.normalizeKrav(krav || {})
       : (krav || {});
-    const pushBenefitGroup = (field, type) => {
-      const row = normalized[field] || {};
-      const names = toArray(row.namn).map(name => String(name || '').trim()).filter(Boolean);
-      const min = Math.max(0, Number(row.min_antal) || 0);
-      const minErf = Math.max(0, Number(row.min_erf) || 0);
-      if (!names.length || (min <= 0 && minErf <= 0)) return;
-      const repeatableNames = names.filter(name => isRepeatableBenefitName(name));
-      const allowRepeat = repeatableNames.length > 0;
-      const slotByErf = minErf > 0 ? Math.ceil(minErf / 5) : 0;
+    const optionalErf = Math.max(0, Number(normalized?.valfritt?.krav_erf) || 0);
+    if (optionalErf > 0) {
+      const names = resolveValfrittCandidateNames();
       out.push({
-        source: field,
-        type,
+        source: 'valfritt',
+        type: '',
         names,
-        min_antal: min,
-        min_erf: minErf,
+        min_antal: 0,
         min_niva: 'Novis',
+        min_erf: optionalErf,
+        slot_count: Math.max(2, Math.ceil(optionalErf / 10) + 1),
         dynamic_select: true,
-        slot_count: Math.max(
-          min,
-          slotByErf,
-          allowRepeat ? Math.max(min, slotByErf) : Math.min(names.length, Math.max(min, slotByErf))
-        ),
-        allow_repeat: allowRepeat
+        allow_repeat: true,
+        isOptional: true
       });
-    };
-    pushBenefitGroup('specifika_fordelar', 'Fördel');
-    pushBenefitGroup('specifika_nackdelar', 'Nackdel');
+    }
 
     const seen = new Set();
     return out
@@ -292,6 +348,8 @@
         const bSource = groupSource(b.group);
         const rankDiff = sourceOrderRank(aSource) - sourceOrderRank(bSource);
         if (rankDiff !== 0) return rankDiff;
+        const specifiktDiff = specifiktValOrderIndex(aSource) - specifiktValOrderIndex(bSource);
+        if (specifiktDiff !== 0) return specifiktDiff;
         const valfriDiff = valfriOrderIndex(aSource) - valfriOrderIndex(bSource);
         if (valfriDiff !== 0) return valfriDiff;
         return a.pos - b.pos;
@@ -339,7 +397,7 @@
     const db = toArray(getLookupOptions().dbList);
     db.forEach(item => {
       if (!item || typeof item !== 'object') return;
-      if (isElityrke(item)) return;
+      if (isElityrkeEntry(item)) return;
       const types = entryTypes(item);
       if (!types.includes('Elityrkesförmåga')) return;
       const traditions = toArray(item?.taggar?.ark_trad).map(value => normalizeKey(value)).filter(Boolean);
@@ -365,6 +423,7 @@
       const names = toArray(group?.names).map(name => String(name || '').trim()).filter(Boolean);
       return names.length > 1 ? 'Primärförmåga (välj en)' : 'Primärförmåga';
     }
+    if (String(group?.source || '').trim().startsWith('specifikt_val')) return 'Specifikt val';
     if (group?.anyMystic) return 'Valfri mystisk kraft';
     if (group?.anyRitual) return 'Valfri ritual';
 
@@ -374,13 +433,9 @@
       .join(', ');
 
     const source = String(group?.source || '');
-    if (source === 'specifika_formagor') return 'Specifika förmågor';
-    if (source === 'specifika_mystiska_krafter') return 'Specifika mystiska krafter';
-    if (source === 'specifika_ritualer') return 'Specifika ritualer';
     if (source === 'specifika_fordelar') return 'Specifika fördelar';
     if (source === 'specifika_nackdelar') return 'Specifika nackdelar';
-    if (source === 'primartagg') return `Primärt taggkrav: ${tagLabel || 'Tagg'}`;
-    if (source === 'sekundartagg') return `Sekundärt taggkrav: ${tagLabel || 'Tagg'}`;
+    if (source === 'valfritt') return 'Valfritt';
     if (source.startsWith('valfri_inom_tagg')) return `Valfritt inom: ${tagLabel || 'Tagg'}`;
     return `Kravgrupp ${idx + 1}`;
   }
@@ -388,6 +443,10 @@
   function groupSummary(group, names, minCount) {
     const minErf = groupMinErf(group);
     const countFloor = countFloorForModel({ group });
+    const source = String(group?.source || '').trim();
+    if (source === 'valfritt') {
+      return minErf > 0 ? `Minst ${minErf} ERF` : 'Inget minimikrav';
+    }
     if (minErf > 0) {
       const parts = [`Minst ${minErf} ERF`];
       if (minCount > 0) {
@@ -456,43 +515,72 @@
   function candidateNamesForGroup(group){
     const explicit = getGroupNames(group);
     if (explicit.length) return explicit;
+    if (String(group?.source || '').trim() === 'valfritt') {
+      return resolveValfrittCandidateNames();
+    }
     if (group?.anyMystic) return allMystic().map(item => item.namn).sort((a, b) => a.localeCompare(b, 'sv'));
     if (group?.anyRitual) return allRitual().map(item => item.namn).sort((a, b) => a.localeCompare(b, 'sv'));
     return [];
   }
 
+  function isElityrkeEntry(entry) {
+    return entryHasType(entry, 'Elityrke');
+  }
+
+  function resolveValfrittCandidateNames() {
+    const db = toArray(getLookupOptions().dbList);
+    const names = db
+      .filter(entry => entry && typeof entry === 'object')
+      .filter(entry => !isEliteSkillEntry(entry))
+      .filter(entry => !isElityrkeEntry(entry))
+      .filter(entry => !entryHasType(entry, 'Fördel') && !entryHasType(entry, 'Nackdel'))
+      .filter(entry => calcItemXP(entry, [entry]) > 0)
+      .map(entry => String(entry?.namn || '').trim())
+      .filter(Boolean);
+    return uniqueNames(names).sort((a, b) => a.localeCompare(b, 'sv'));
+  }
+
   const TAG_TYPE_META = Object.freeze([
     { key: 'ability', label: 'Förmåga' },
+    { key: 'base_ability', label: 'Basförmåga' },
     { key: 'mystic', label: 'Mystisk kraft' },
     { key: 'ritual', label: 'Ritual' },
+    { key: 'monster_trait', label: 'Monstruöst särdrag' },
+    { key: 'trait', label: 'Särdrag' },
+    { key: 'other', label: 'Övrigt' },
     { key: 'advantage', label: 'Fördel' },
     { key: 'drawback', label: 'Nackdel' }
   ]);
+
+  function typeLabelForKey(typeKey) {
+    const hit = TAG_TYPE_META.find(meta => meta.key === typeKey);
+    if (hit) return hit.label;
+    return String(typeKey || '').trim();
+  }
 
   function typeKeyForEntry(entry) {
     if (!entry) return '';
     if (entryHasType(entry, 'Mystisk kraft')) return 'mystic';
     if (entryHasType(entry, 'Ritual')) return 'ritual';
+    if (entryHasType(entry, 'Monstruöst särdrag')) return 'monster_trait';
+    if (entryHasType(entry, 'Särdrag')) return 'trait';
+    if (entryHasType(entry, 'Basförmåga')) return 'base_ability';
+    if (entryHasType(entry, 'Förmåga')) return 'ability';
     if (entryHasType(entry, 'Fördel')) return 'advantage';
     if (entryHasType(entry, 'Nackdel')) return 'drawback';
-    if (
-      entryHasType(entry, 'Förmåga') ||
-      entryHasType(entry, 'Monstruöst särdrag') ||
-      entryHasType(entry, 'Särdrag')
-    ) return 'ability';
-    return '';
+    return 'other';
   }
 
   function isReservedGroup(group) {
     const source = String(group?.source || '');
     if (group?.isPrimary) return true;
-    return source.startsWith('specifika_');
+    return source.startsWith('specifika_') || source.startsWith('specifikt_val');
   }
 
   function groupPriority(model) {
     const source = String(model?.source || model?.group?.source || '');
     if (model?.group?.isPrimary) return 0;
-    if (source.startsWith('specifika_')) return 1;
+    if (source.startsWith('specifika_') || source.startsWith('specifikt_val')) return 1;
     if (model?.group?.tagRule) return 2;
     const minErf = Math.max(0, Number(model?.minErf ?? model?.group?.min_erf) || 0);
     if (minErf > 0) return 3;
@@ -502,8 +590,8 @@
   function groupOptionCount(model) {
     if (!model) return 9999;
     if (model?.progressive) {
-      const counts = TAG_TYPE_META
-        .map(meta => toArray(model.typeBuckets?.[meta.key]).length)
+      const counts = toArray(model?.typeOptions)
+        .map(meta => Number(meta?.count) || 0)
         .filter(count => count > 0);
       if (counts.length) return Math.min(...counts);
     }
@@ -687,7 +775,7 @@
         if (picks.length >= max) return;
         const name = String(item?.namn || '').trim();
         if (!name) return;
-        const repeatable = isRepeatableBenefitEntry(item);
+        const repeatable = canStackRequirementEntry(item);
         if (!repeatable && used.has(normalizeKey(name))) return;
         const level = noLevel
           ? 'pick'
@@ -701,7 +789,7 @@
     names.forEach(name => {
       if (picks.length >= max) return;
       const key = normalizeKey(name);
-      const repeatable = isRepeatableBenefitName(name);
+      const repeatable = canStackRequirementEntry(findEntry(name));
       if (!repeatable && used.has(key)) return;
       const level = noLevel ? 'pick' : minLevel;
       picks.push({ name, level });
@@ -741,27 +829,36 @@
       const names = uniqueNames(candidateNamesForGroup(group));
       const minCount = Math.max(0, Number(group?.min_antal) || 0);
       const minErf = groupMinErf(group);
-      const isPrimaryTag = source === 'primartagg' || source === 'sekundartagg';
+      const isPrimaryGroup = Boolean(group?.isPrimary);
+      const isValfrittGroup = source === 'valfritt';
+      const isPrimaryTag = source.startsWith('valfri_inom_tagg');
       const isTagBased = minErf > 0 && isPrimaryTag;
       const hasBenefitQty = source === 'specifika_fordelar' || source === 'specifika_nackdelar';
-      const repeatableNames = new Set(names.filter(name => isRepeatableBenefitName(name)));
+      const repeatableNames = new Set(names.filter(name => canStackRequirementEntry(findEntry(name))));
       const allowRepeat = Boolean(group?.allow_repeat) || repeatableNames.size > 0;
       const benefitPlan = hasBenefitQty ? buildBenefitCountPlan(names, minCount) : null;
       const minSlots = minCount > 0 ? minCount : (minErf > 0 ? 1 : 0);
       const baseSlotCount = Math.max(minSlots, Number(group?.slot_count) || 0, 1);
-      const progressive = minErf > 0 && isPrimaryTag;
+      const progressive = minErf > 0 && (isPrimaryTag || isValfrittGroup);
       const dynamic = Boolean(usesDynamicPicker(group));
-      const erfPlan = (dynamic && !hasBenefitQty)
+      const erfPlan = (dynamic && !hasBenefitQty && !isValfrittGroup)
         ? buildErfRequirementPlan(names, minErf, minCount, groupMinLevel(group))
         : null;
-      const adaptiveSlots = dynamic;
+      const adaptiveSlots = dynamic && !isPrimaryGroup;
       const rawSlotCount = adaptiveSlots
-        ? Math.max(baseSlotCount + 1, minCount + 2, names.length + 1)
+        ? (isValfrittGroup
+          ? Math.max(baseSlotCount, Math.ceil(minErf / 10) + 2, 3)
+          : Math.max(baseSlotCount + 1, minCount + 2, names.length + 1))
         : baseSlotCount;
-      const slotCount = allowRepeat
-        ? rawSlotCount
-        : (names.length ? Math.min(rawSlotCount, names.length) : rawSlotCount);
-      const typeBuckets = TAG_TYPE_META.reduce((acc, row) => ({ ...acc, [row.key]: [] }), {});
+      const slotCount = isPrimaryGroup
+        ? 1
+        : (allowRepeat
+          ? rawSlotCount
+          : (names.length ? Math.min(rawSlotCount, names.length) : rawSlotCount));
+      const typeMeta = isValfrittGroup
+        ? TAG_TYPE_META.filter(row => row.key !== 'advantage' && row.key !== 'drawback')
+        : TAG_TYPE_META.slice();
+      const typeBuckets = typeMeta.reduce((acc, row) => ({ ...acc, [row.key]: [] }), {});
       names.forEach(name => {
         const entry = findEntry(name);
         const key = typeKeyForEntry(entry);
@@ -771,8 +868,8 @@
       Object.keys(typeBuckets).forEach(key => {
         typeBuckets[key] = toArray(typeBuckets[key]).sort((a, b) => a.localeCompare(b, 'sv'));
       });
-      const typeKeys = TAG_TYPE_META.map(row => row.key);
-      const typeOptions = TAG_TYPE_META.map(row => {
+      const typeKeys = typeMeta.map(row => row.key);
+      const typeOptions = typeMeta.map(row => {
         const count = toArray(typeBuckets[row.key]).length;
         return {
           key: row.key,
@@ -789,6 +886,8 @@
         minCount,
         minErf,
         slotCount,
+        isPrimary: isPrimaryGroup,
+        isValfritt: isValfrittGroup,
         allowRepeat,
         repeatableNames,
         progressive,
@@ -887,6 +986,27 @@
             </div>
           </div>
         `).join('');
+      }
+      if (model.group?.isPrimary) {
+        const names = uniqueNames(model.names);
+        const hasChoices = names.length > 0;
+        const hasSingleChoice = names.length === 1;
+        const nameOptions = !hasChoices
+          ? '<option value="">Inga val</option>'
+          : (hasSingleChoice
+            ? `<option value="${escapeHtml(names[0])}">${escapeHtml(names[0])}</option>`
+            : `<option value="">Välj...</option>${names.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}`);
+        return `
+          <div class="master-row">
+            <label class="master-row-name">Val 1</label>
+            <div class="master-row-controls">
+              <select data-ability data-group="${model.idx}" data-slot="0"${hasSingleChoice || !hasChoices ? ' disabled' : ''}>${nameOptions}</select>
+              <select data-name="" data-dynamic="1" data-group="${model.idx}" data-slot="0" class="level" disabled>
+                <option value="Mästare">Mästare</option>
+              </select>
+            </div>
+          </div>
+        `;
       }
       const optsName = `<option value="">Välj...</option>${
         model.dynamicAllowSkip ? '<option value="skip">Skippa</option>' : ''
@@ -999,6 +1119,7 @@
     function makeNameOwnerMap(states) {
       const map = new Map();
       models.forEach(model => {
+        if (String(model?.source || '') === 'valfritt') return;
         const state = states.get(model.idx);
         toArray(state?.picked).forEach(token => {
           const key = normalizeKey(token?.name || token?.entry?.namn || '');
@@ -1163,13 +1284,14 @@
         if (isNameOwnedByOtherGroup(name, model.idx)) return false;
         if (blockedGlobal.has(name)) return false;
         const entry = findEntry(name);
-        if (isRepeatableBenefitEntry(entry)) return true;
+        if (canStackRequirementEntry(entry)) return true;
         return !blocked.has(name);
       });
     }
 
     function typeOptionsForSlot(model, slot) {
-      return TAG_TYPE_META.map(meta => {
+      const rows = toArray(model?.typeOptions).length ? toArray(model.typeOptions) : TAG_TYPE_META;
+      return rows.map(meta => {
         const available = availableNamesForType(model, meta.key, slot);
         const enabled = available.length > 0;
         return {
@@ -1223,22 +1345,32 @@
       const chosenName = String(nameSel.value || '').trim();
       const chosenEntry = chosenName ? findEntry(chosenName) : null;
       let extraOptions = [];
-      if (typeKey === 'ability' || typeKey === 'mystic') {
+      const fixedTier = chosenEntry ? resolveFixedTierLabel(chosenEntry, chosenEntry?.nivå) : '';
+      const hasFixedTier = Boolean(fixedTier);
+      if (hasFixedTier) {
+        extraOptions = [{ value: fixedTier, label: fixedTier }];
+      } else if (chosenEntry && entryUsesLevel(chosenEntry) && !isNoLevelEntry(chosenEntry)) {
         extraOptions = ['Novis', 'Gesäll', 'Mästare'].map(level => ({ value: level, label: level }));
-      } else if (typeKey === 'advantage' || typeKey === 'drawback') {
-        const maxCount = chosenEntry && isRepeatableBenefitEntry(chosenEntry)
-          ? getEntryMaxCount(chosenEntry)
-          : 1;
-        extraOptions = Array.from({ length: maxCount }).map((_, idx) => ({ value: `x${idx + 1}`, label: `x${idx + 1}` }));
       } else {
-        extraOptions = [{ value: 'x1', label: 'x1' }];
+        const maxCount = chosenEntry ? Math.max(1, getEntryMaxCount(chosenEntry, { list: currentList })) : 1;
+        extraOptions = Array.from({ length: maxCount }).map((_, idx) => ({ value: `x${idx + 1}`, label: `x${idx + 1}` }));
       }
       const prevExtra = String(extraSel.value || '').trim();
       extraSel.innerHTML = extraOptions.map(opt => `<option value="${escapeHtml(opt.value)}">${escapeHtml(opt.label)}</option>`).join('');
-      if (prevExtra && extraOptions.some(opt => opt.value === prevExtra)) {
+      if (hasFixedTier) {
+        extraSel.value = fixedTier;
+      } else if (prevExtra && extraOptions.some(opt => opt.value === prevExtra)) {
         extraSel.value = prevExtra;
       }
-      extraSel.disabled = !chosenName || !names.length || extraOptions.length <= 1;
+      if (hasFixedTier) {
+        extraSel.disabled = true;
+        extraSel.dataset.fixedTier = '1';
+        setLockedField(extraSel, true);
+      } else {
+        extraSel.disabled = !chosenName || !names.length || extraOptions.length <= 1;
+        extraSel.dataset.fixedTier = '';
+        setLockedField(extraSel, false);
+      }
     }
 
     function progressiveSlotHasChoices(model, slot) {
@@ -1262,6 +1394,46 @@
           syncProgressiveRow(model, slot);
         });
         syncProgressiveLocks(model);
+        return;
+      }
+      if (model?.group?.isPrimary) {
+        const nameSel = options[0];
+        if (!nameSel) return;
+        const slot = String(nameSel.dataset.slot || '0');
+        const own = String(nameSel.value || '').trim();
+        const takenByOtherGroups = selectedNamesAcrossOtherGroups(model, slot);
+        const visibleNames = uniqueNames(model.names).filter(name => {
+          if (name === own) return true;
+          if (isNameOwnedByOtherGroup(name, model.idx)) return false;
+          if (takenByOtherGroups.has(name)) return false;
+          return true;
+        });
+        if (!visibleNames.length) {
+          nameSel.innerHTML = '<option value="">Inga val</option>';
+          nameSel.value = '';
+          nameSel.disabled = true;
+          setLockedField(nameSel, true);
+          syncDynamicLevelControl(model, slot);
+          return;
+        }
+        if (visibleNames.length === 1) {
+          const only = visibleNames[0];
+          nameSel.innerHTML = `<option value="${escapeHtml(only)}">${escapeHtml(only)}</option>`;
+          nameSel.value = only;
+          nameSel.disabled = true;
+          setLockedField(nameSel, true);
+          syncDynamicLevelControl(model, slot);
+          return;
+        }
+        nameSel.innerHTML = `<option value="">Välj...</option>${visibleNames.map(name => `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`).join('')}`;
+        if (own && visibleNames.includes(own)) {
+          nameSel.value = own;
+        } else {
+          nameSel.value = '';
+        }
+        nameSel.disabled = false;
+        setLockedField(nameSel, false);
+        syncDynamicLevelControl(model, slot);
         return;
       }
 
@@ -1324,6 +1496,15 @@
       const lvlSel = box.querySelector(`select[data-name][data-group="${model.idx}"][data-slot="${slot}"][data-dynamic="1"]`);
       if (!lvlSel) return;
       const nameSel = box.querySelector(`select[data-ability][data-group="${model.idx}"][data-slot="${slot}"]`);
+      if (model?.group?.isPrimary) {
+        const pickedPrimary = String(nameSel?.value || '').trim();
+        lvlSel.innerHTML = '<option value="Mästare">Mästare</option>';
+        lvlSel.value = 'Mästare';
+        lvlSel.disabled = true;
+        lvlSel.dataset.name = pickedPrimary && pickedPrimary !== 'skip' ? pickedPrimary : '';
+        setLockedField(lvlSel, true);
+        return;
+      }
       const picked = String(nameSel?.value || '').trim();
       const entry = picked && picked !== 'skip' ? findEntry(picked) : null;
       const disable = !picked || picked === 'skip' || !entry || isNoLevelEntry(entry);
@@ -1492,7 +1673,7 @@
         syncProgressiveRow(model, slot);
 
         const extraSel = box.querySelector(`select[data-choice-extra][data-group="${model.idx}"][data-slot="${slot}"]`);
-        if (extraSel && (typeKey === 'ability' || typeKey === 'mystic')) {
+        if (extraSel && entryUsesLevel(entry) && !isNoLevelEntry(entry)) {
           const floor = String(payload.info?.floorValue || '').trim();
           if (floor) {
             const allowed = Array.from(extraSel.options)
@@ -1550,8 +1731,22 @@
         }
 
         if (!extraSel) return;
-        const typeKey = String(typeSel?.value || '').trim();
-        if (lockName && (typeKey === 'ability' || typeKey === 'mystic')) {
+        const pickedEntry = pickedName ? findEntry(pickedName) : null;
+        const fixedTier = pickedEntry ? resolveFixedTierLabel(pickedEntry, String(extraSel.value || '').trim()) : '';
+        if (fixedTier) {
+          const hasTierOption = Array.from(extraSel.options).some(opt => String(opt.value || '').trim() === fixedTier);
+          if (!hasTierOption) {
+            extraSel.innerHTML = `<option value="${escapeHtml(fixedTier)}">${escapeHtml(fixedTier)}</option>`;
+          }
+          extraSel.value = fixedTier;
+          extraSel.disabled = true;
+          extraSel.dataset.lockedMandatory = '';
+          extraSel.dataset.fixedTier = '1';
+          setLockedField(extraSel, true);
+          return;
+        }
+        extraSel.dataset.fixedTier = '';
+        if (lockName && pickedEntry && entryUsesLevel(pickedEntry) && !isNoLevelEntry(pickedEntry)) {
           const floor = String(info?.floorValue || '').trim();
           if (floor) {
             const currentValues = Array.from(extraSel.options).map(opt => String(opt.value || '').trim()).filter(Boolean);
@@ -1598,18 +1793,19 @@
     function collectSelectionsByGroup() {
       const byGroup = new Map(models.map(model => [model.idx, []]));
       models.forEach(model => {
+        const source = String(model?.source || '').trim();
         if (!model.dynamic) {
           Array.from(box.querySelectorAll(`[data-group="${model.idx}"][data-static-name]`)).forEach(node => {
             const name = String(node.dataset.staticName || '').trim();
             const value = String(node.dataset.staticLevel || '').trim();
             if (!name || !value || value === 'skip') return;
-            byGroup.get(model.idx).push({ name, level: value });
+            byGroup.get(model.idx).push({ name, level: value, source });
           });
           Array.from(box.querySelectorAll(`select[data-group="${model.idx}"][data-name]:not([data-dynamic="1"])`)).forEach(sel => {
             const name = String(sel.dataset.name || '').trim();
             const value = String(sel.value || '').trim();
             if (!name || !value || value === 'skip') return;
-            byGroup.get(model.idx).push({ name, level: value });
+            byGroup.get(model.idx).push({ name, level: value, source });
           });
           return;
         }
@@ -1619,25 +1815,24 @@
             .filter(row => !row.classList.contains('slot-hidden'));
           rows.forEach(row => {
             const slot = String(row.dataset.slot || '');
-            const typeSel = box.querySelector(`select[data-choice-type][data-group="${model.idx}"][data-slot="${slot}"]`);
             const nameSel = box.querySelector(`select[data-ability][data-group="${model.idx}"][data-slot="${slot}"]`);
             const extraSel = box.querySelector(`select[data-choice-extra][data-group="${model.idx}"][data-slot="${slot}"]`);
-            const typeKey = String(typeSel?.value || '').trim();
             const name = String(nameSel?.value || '').trim();
             if (!name) return;
-            if (typeKey === 'ability' || typeKey === 'mystic') {
-              byGroup.get(model.idx).push({ name, level: String(extraSel?.value || model.minLevel || 'Novis') });
+            const chosenEntry = findEntry(name);
+            const fixedTier = chosenEntry ? resolveFixedTierLabel(chosenEntry, String(extraSel?.value || '').trim()) : '';
+            if (fixedTier) {
+              byGroup.get(model.idx).push({ name, level: fixedTier, source });
               return;
             }
-            if (typeKey === 'advantage' || typeKey === 'drawback') {
-              const qtyRaw = String(extraSel?.value || 'x1').trim();
-              const qty = Math.max(1, Math.min(3, Number(qtyRaw.replace('x', '')) || 1));
-              for (let i = 0; i < qty; i += 1) {
-                byGroup.get(model.idx).push({ name, level: 'pick' });
-              }
+            if (chosenEntry && entryUsesLevel(chosenEntry) && !isNoLevelEntry(chosenEntry)) {
+              byGroup.get(model.idx).push({ name, level: String(extraSel?.value || model.minLevel || 'Novis'), source });
               return;
             }
-            byGroup.get(model.idx).push({ name, level: 'pick' });
+            const maxCount = chosenEntry ? Math.max(1, getEntryMaxCount(chosenEntry, { list: currentList })) : 1;
+            const qtyRaw = String(extraSel?.value || 'x1').trim();
+            const qty = Math.max(1, Math.min(maxCount, Number(qtyRaw.replace('x', '')) || 1));
+            for (let i = 0; i < qty; i += 1) byGroup.get(model.idx).push({ name, level: 'pick', source });
           });
           return;
         }
@@ -1655,16 +1850,16 @@
             const qtyRaw = String(qtySel?.value || 'x1').trim();
             const qty = Math.max(1, Math.min(3, Number(qtyRaw.replace('x', '')) || 1));
             for (let i = 0; i < qty; i += 1) {
-              byGroup.get(model.idx).push({ name, level: 'pick' });
+              byGroup.get(model.idx).push({ name, level: 'pick', source });
             }
             return;
           }
           if (model.noLevel || isNoLevelGroup(model.group)) {
-            byGroup.get(model.idx).push({ name, level: 'pick' });
+            byGroup.get(model.idx).push({ name, level: 'pick', source });
             return;
           }
           const lvlSel = box.querySelector(`select[data-name][data-group="${model.idx}"][data-slot="${slot}"][data-dynamic="1"]`);
-          byGroup.get(model.idx).push({ name, level: String(lvlSel?.value || model.minLevel || 'Novis') });
+          byGroup.get(model.idx).push({ name, level: String(lvlSel?.value || model.minLevel || 'Novis'), source });
         });
       });
       return byGroup;
@@ -1677,7 +1872,7 @@
           const name = String(row?.name || '').trim();
           if (!name) return;
           const item = findEntry(name);
-          if (!item || !isRepeatableBenefitEntry(item)) return;
+          if (!item || !canStackRequirementEntry(item)) return;
           const key = normalizeKey(name);
           counts.set(key, (counts.get(key) || 0) + 1);
         });
@@ -1702,7 +1897,7 @@
           level: String(item?.nivå || '').trim() || 'Novis',
           lockedGroup: null
         };
-        if (isRepeatableBenefitEntry(item)) {
+        if (canStackRequirementEntry(item)) {
           const cap = repeatableCaps.has(key) ? Math.max(0, Number(repeatableCaps.get(key)) || 0) : null;
           const used = repeatableSeen.get(key) || 0;
           if (cap !== null && used >= cap) return;
@@ -1731,7 +1926,7 @@
       toArray(list).forEach(token => {
         const key = String(token?.key || '').trim();
         if (!key) return;
-        const repeatable = isRepeatableBenefitEntry(token?.entry);
+        const repeatable = canStackRequirementEntry(token?.entry);
         if (!allowRepeat || !repeatable) {
           if (seen.has(key)) return;
           seen.add(key);
@@ -1763,7 +1958,7 @@
           const name = String(entry?.namn || row.name || '').trim();
           if (!entry || !name) return;
           const key = normalizeKey(name);
-          const repeatable = isRepeatableBenefitEntry(entry);
+          const repeatable = canStackRequirementEntry(entry);
           const existingPool = existingByKey.get(key) || [];
           if (!repeatable && existingPool.length) {
             const preferred = existingPool.find(token => token.lockedGroup === null || token.lockedGroup === model.idx)
@@ -1901,7 +2096,8 @@
       return rows
         .map(row => ({
           name: String(row?.name || '').trim(),
-          level: String(row?.level || '').trim() || 'Novis'
+          level: String(row?.level || '').trim() || 'Novis',
+          source: String(row?.source || '').trim()
         }))
         .filter(row => row.name && row.level && row.level !== 'skip');
     }
@@ -2025,8 +2221,11 @@
             }
             syncProgressiveRow(model, String(slotIdx));
             if (extraSel) {
-              if (typeKey === 'ability' || typeKey === 'mystic') {
-                const lvl = String(token?.level || model.minLevel || 'Novis');
+              const fixedTier = resolveFixedTierLabel(token?.entry, token?.level);
+              if (fixedTier && [...extraSel.options].some(opt => opt.value === fixedTier)) {
+                extraSel.value = fixedTier;
+              } else if (typeKey === 'ability' || typeKey === 'mystic' || typeKey === 'base_ability') {
+                const lvl = normalizeLevel(String(token?.level || model.minLevel || 'Novis'), 'Novis');
                 if ([...extraSel.options].some(opt => opt.value === lvl)) extraSel.value = lvl;
               } else {
                 extraSel.value = 'x1';
@@ -2257,6 +2456,48 @@
       allSels.forEach(sel => sel.removeEventListener('change', onControlChange));
     }
 
+    function aggregateOverflowSources(rawList) {
+      const byKey = new Map();
+      toArray(rawList).forEach(row => {
+        const name = String(row?.name || '').trim();
+        const usedErf = Math.max(0, Number(row?.usedErf) || 0);
+        const appliedErf = Math.max(0, Number(row?.appliedErf ?? row?.usedErf) || 0);
+        if (!name || usedErf <= 0) return;
+        const key = normalizeKey(name) || name;
+        const prev = byKey.get(key) || { name, usedErf: 0, appliedErf: 0 };
+        prev.usedErf += usedErf;
+        prev.appliedErf += Math.min(appliedErf, usedErf);
+        byKey.set(key, prev);
+      });
+      return Array.from(byKey.values())
+        .sort((a, b) => (b.appliedErf - a.appliedErf) || (b.usedErf - a.usedErf) || a.name.localeCompare(b.name, 'sv'));
+    }
+
+    function syncOverflowSourceRows(model, sources = []) {
+      const card = box.querySelector(`.master-group[data-group-card="${model.idx}"]`);
+      const body = card?.querySelector('.master-group-body');
+      if (!body) return;
+      const oldBlock = body.querySelector(`[data-overflow-block="${model.idx}"]`);
+      if (oldBlock) oldBlock.remove();
+
+      const rows = aggregateOverflowSources(sources);
+      if (!rows.length) return;
+
+      const block = document.createElement('div');
+      block.className = 'master-overflow-block';
+      block.dataset.overflowBlock = String(model.idx);
+      block.innerHTML = `
+        <div class="master-overflow-title">Uppfylls även av:</div>
+        <div class="master-overflow-chips">
+          ${rows.map(row => {
+            const applied = Math.max(0, Number(row?.appliedErf ?? row?.usedErf) || 0);
+            return `<span class="master-overflow-chip">${escapeHtml(`${row.name} (${applied} ERF)`)}</span>`;
+          }).join('')}
+        </div>
+      `;
+      body.appendChild(block);
+    }
+
     function onAdd(){
       const levels = {};
       const selections = [];
@@ -2300,20 +2541,21 @@
         const name = String(sel.value || '').trim();
         if (!group || !name || name === 'skip') return;
         if (model?.progressive) {
-          const typeSel = box.querySelector(`select[data-choice-type][data-group="${idx}"][data-slot="${slot}"]`);
           const extraSel = box.querySelector(`select[data-choice-extra][data-group="${idx}"][data-slot="${slot}"]`);
-          const typeKey = String(typeSel?.value || '').trim();
-          if (typeKey === 'ability' || typeKey === 'mystic') {
+          const chosenEntry = findEntry(name);
+          const fixedTier = chosenEntry ? resolveFixedTierLabel(chosenEntry, String(extraSel?.value || '').trim()) : '';
+          if (fixedTier) {
+            pushSelection(name, fixedTier);
+            return;
+          }
+          if (chosenEntry && entryUsesLevel(chosenEntry) && !isNoLevelEntry(chosenEntry)) {
             pushSelection(name, String(extraSel?.value || groupMinLevel(group) || 'Novis'));
             return;
           }
-          if (typeKey === 'advantage' || typeKey === 'drawback') {
-            const qtyRaw = String(extraSel?.value || 'x1').trim();
-            const qty = Math.max(1, Math.min(3, Number(qtyRaw.replace('x', '')) || 1));
-            for (let i = 0; i < qty; i += 1) pushSelection(name, 'pick');
-            return;
-          }
-          pushSelection(name, 'pick');
+          const maxCount = chosenEntry ? Math.max(1, getEntryMaxCount(chosenEntry, { list: currentList })) : 1;
+          const qtyRaw = String(extraSel?.value || 'x1').trim();
+          const qty = Math.max(1, Math.min(maxCount, Number(qtyRaw.replace('x', '')) || 1));
+          for (let i = 0; i < qty; i += 1) pushSelection(name, 'pick');
           return;
         }
         if (model?.hasBenefitQty) {
@@ -2420,7 +2662,7 @@
         states = recalcWithOwnership();
       }
 
-      const stateList = models.map(model => states.get(model.idx) || {
+      const defaultStateForModel = (model) => ({
         ok: false,
         selected: 0,
         required: model.minErf > 0 ? model.minErf : model.minCount,
@@ -2429,6 +2671,121 @@
         required_erf: model.minErf,
         selected_count: 0,
         required_count: model.minCount
+      });
+
+      const sourceIndex = (source, prefix) => {
+        const match = String(source || '').trim().match(new RegExp(`^${prefix}\\[(\\d+)\\]$`));
+        return match ? (Number(match[1]) || 0) : -1;
+      };
+
+      const profileStateForModel = (model, profile, fallback) => {
+        const source = String(model?.source || '');
+        const base = { ...(fallback || defaultStateForModel(model)) };
+
+        if (source === 'primarformaga') {
+          const row = profile?.primary || {};
+          const requiredErf = Math.max(0, Number(row?.requiredErf ?? model.minErf) || 0);
+          const selectedErf = Math.max(0, Number(row?.selectedErf) || 0);
+          return {
+            ...base,
+            metric: 'erf',
+            selected: selectedErf,
+            required: requiredErf,
+            selected_erf: selectedErf,
+            required_erf: requiredErf,
+            selected_count: 0,
+            required_count: 0,
+            ok: Boolean(row?.ok)
+          };
+        }
+
+        if (source.startsWith('specifikt_val')) {
+          const row = toArray(profile?.specifikt_val)[sourceIndex(source, 'specifikt_val')] || {};
+          const requiredCount = Math.max(0, Number(row?.requiredCount ?? model.minCount) || 0);
+          const requiredPer = Math.max(0, Number(row?.requiredErf ?? model.minErf) || 0);
+          const requiredErf = requiredCount > 1 ? requiredPer * requiredCount : requiredPer;
+          const selectedErf = Math.max(0, Number(row?.selectedErf) || 0);
+          const selectedCount = Math.max(0, Number(row?.qualifiedCount ?? row?.selectedCount) || 0);
+          const metric = requiredCount > 0 ? 'both' : 'erf';
+          return {
+            ...base,
+            metric,
+            selected: selectedErf,
+            required: requiredErf,
+            selected_erf: selectedErf,
+            required_erf: requiredErf,
+            selected_count: selectedCount,
+            required_count: requiredCount,
+            ok: Boolean(row?.ok)
+          };
+        }
+
+        if (source.startsWith('valfri_inom_tagg')) {
+          const row = toArray(profile?.valfri_inom_tagg)[sourceIndex(source, 'valfri_inom_tagg')] || {};
+          const requiredErf = Math.max(0, Number(row?.requiredErf ?? model.minErf) || 0);
+          const selectedErf = Math.max(0, Number(row?.selectedErf) || 0);
+          return {
+            ...base,
+            metric: 'erf',
+            selected: selectedErf,
+            required: requiredErf,
+            selected_erf: selectedErf,
+            required_erf: requiredErf,
+            selected_count: 0,
+            required_count: 0,
+            ok: Boolean(row?.ok)
+          };
+        }
+
+        if (source === 'valfritt') {
+          const row = profile?.valfritt || {};
+          const requiredErf = Math.max(0, Number(row?.requiredErf ?? model.minErf) || 0);
+          const selectedErf = Math.max(0, Number(row?.selectedErf) || 0);
+          return {
+            ...base,
+            metric: 'erf',
+            selected: selectedErf,
+            required: requiredErf,
+            selected_erf: selectedErf,
+            required_erf: requiredErf,
+            selected_count: 0,
+            required_count: 0,
+            ok: Boolean(row?.ok)
+          };
+        }
+
+        if (source === 'specifika_fordelar' || source === 'specifika_nackdelar') {
+          const row = source === 'specifika_fordelar'
+            ? (profile?.specifika_fordelar || {})
+            : (profile?.specifika_nackdelar || {});
+          const requiredCount = Math.max(0, Number(row?.required ?? model.minCount) || 0);
+          const selectedCount = Math.max(0, Number(row?.count) || 0);
+          return {
+            ...base,
+            metric: 'count',
+            selected: selectedCount,
+            required: requiredCount,
+            selected_erf: 0,
+            required_erf: 0,
+            selected_count: selectedCount,
+            required_count: requiredCount,
+            ok: Boolean(row?.ok)
+          };
+        }
+
+        return base;
+      };
+
+      const previewRows = collectRowsForPreview();
+      const projectedList = projectRequirementList(currentList, previewRows);
+      const reqResult = (window.eliteReq && typeof window.eliteReq.check === 'function')
+        ? window.eliteReq.check(entry, projectedList)
+        : null;
+      const profile = reqResult?.profile || {};
+
+      const stateList = models.map(model => {
+        const fallback = states.get(model.idx) || defaultStateForModel(model);
+        return profileStateForModel(model, profile, fallback);
       });
 
       stateList.forEach((state, idx) => {
@@ -2460,16 +2817,31 @@
         }
       });
 
-      const allReqsOk = stateList.every(state => state.ok);
+      models.forEach(model => {
+        const source = String(model?.source || '');
+        let overflowSources = [];
+        if (source.startsWith('specifikt_val')) {
+          const row = toArray(profile?.specifikt_val)[sourceIndex(source, 'specifikt_val')] || {};
+          overflowSources = toArray(row?.overflowSources);
+        } else if (source.startsWith('valfri_inom_tagg')) {
+          const row = toArray(profile?.valfri_inom_tagg)[sourceIndex(source, 'valfri_inom_tagg')] || {};
+          overflowSources = toArray(row?.overflowSources);
+        } else if (source === 'valfritt') {
+          const row = profile?.valfritt || {};
+          overflowSources = toArray(row?.overflowSources);
+        }
+        syncOverflowSourceRows(model, overflowSources);
+      });
+
+      const allReqsOk = reqResult ? Boolean(reqResult.ok) : stateList.every(state => state.ok);
       const extraSection = box.querySelector('#masterExtraSection');
       if (extraSection) {
         extraSection.hidden = !allReqsOk;
       }
 
-      const previewRows = collectRowsForPreview();
       const investmentErf = projectedInvestmentErf(previewRows);
       updateProgress(stateList, investmentErf);
-      add.disabled = stateList.some(state => !state.ok);
+      add.disabled = !allReqsOk;
     }
 
     models.forEach(model => {
@@ -2497,13 +2869,13 @@
   function allMystic(){
     return toArray(DB).filter(entry =>
       (entry.taggar?.typ || []).includes('Mystisk kraft') &&
-      !isEliteSkill(entry));
+      !isEliteSkillEntry(entry));
   }
 
   function allRitual(){
     return toArray(DB).filter(entry =>
       (entry.taggar?.typ || []).includes('Ritual') &&
-      !isEliteSkill(entry));
+      !isEliteSkillEntry(entry));
   }
 
   function isRitualEntry(entry) {
@@ -2537,7 +2909,8 @@
       return input
         .map(row => ({
           name: String(row?.name || row?.namn || '').trim(),
-          level: String(row?.level || row?.nivå || '').trim()
+          level: String(row?.level || row?.nivå || '').trim(),
+          source: String(row?.source || row?.krav_source || '').trim()
         }))
         .filter(row => row.name && row.level && row.level !== 'skip');
     }
@@ -2545,7 +2918,8 @@
       return input.selections
         .map(row => ({
           name: String(row?.name || row?.namn || '').trim(),
-          level: String(row?.level || row?.nivå || '').trim()
+          level: String(row?.level || row?.nivå || '').trim(),
+          source: String(row?.source || row?.krav_source || '').trim()
         }))
         .filter(row => row.name && row.level && row.level !== 'skip');
     }
@@ -2554,21 +2928,20 @@
       : fallbackMap;
     return Object.keys(src || {}).map(name => ({
       name: String(name || '').trim(),
-      level: String(src[name] || '').trim()
+      level: String(src[name] || '').trim(),
+      source: ''
     })).filter(row => row.name && row.level && row.level !== 'skip');
   }
 
   function canStackRequirementEntry(entry) {
-    return isRepeatableBenefitEntry(entry);
+    if (!entry || typeof entry !== 'object') return false;
+    return Math.max(1, Number(getEntryMaxCount(entry)) || 1) > 1;
   }
 
-  async function addReq(entry, levels){
-    if(!store.current && !(await requireCharacter())) return;
-    const groups = parseGroupRequirements(entry?.krav || {});
-    const list = storeHelper.getCurrentList(store);
-    const fallbackMap = autoPickLevels(groups, list);
-    const rows = selectionRowsFromInput(levels, fallbackMap);
-    if (!rows.length) return;
+  function applySelectionRowsToList(baseList, rowsInput) {
+    const list = toArray(baseList).map(item => (item && typeof item === 'object' ? { ...item } : item));
+    const rows = selectionRowsFromInput(rowsInput, {});
+    if (!rows.length) return list;
 
     const grouped = new Map();
     rows.forEach(row => {
@@ -2577,11 +2950,13 @@
       const canonical = String(item?.namn || row.name).trim();
       if (!canonical) return;
       const key = normalizeKey(canonical);
-      if (!grouped.has(key)) grouped.set(key, { item, name: canonical, levels: [] });
+      if (!grouped.has(key)) grouped.set(key, { item, levels: [], source: '' });
       grouped.get(key).levels.push(String(row.level || '').trim() || 'Novis');
+      const source = String(row?.source || '').trim();
+      if (source && !grouped.get(key).source) grouped.get(key).source = source;
     });
 
-    grouped.forEach(({ item, levels: pickedLevels }, key) => {
+    grouped.forEach(({ item, levels: pickedLevels, source }, key) => {
       const existingRows = list.filter(row => normalizeKey(row?.namn) === key && !row?.trait);
       const existing = existingRows[0] || null;
       const ritual = isRitualEntry(item);
@@ -2589,8 +2964,8 @@
       const repeatable = canStackRequirementEntry(item);
 
       if (repeatable) {
-        const selectedCount = pickedLevels.length;
-        const desiredCount = Math.max(0, selectedCount);
+        const maxCount = Math.max(1, Number(getEntryMaxCount(item)) || 1);
+        const desiredCount = Math.max(0, Math.min(maxCount, pickedLevels.length));
         if (existingRows.length > desiredCount) {
           let toRemove = existingRows.length - desiredCount;
           for (let i = list.length - 1; i >= 0 && toRemove > 0; i -= 1) {
@@ -2602,7 +2977,9 @@
         } else {
           const toAdd = Math.max(0, desiredCount - existingRows.length);
           for (let i = 0; i < toAdd; i += 1) {
-            list.push({ ...item });
+            const nextRow = { ...item };
+            if (source) nextRow.__elite_source = source;
+            list.push(nextRow);
           }
         }
         return;
@@ -2614,10 +2991,12 @@
         return normalizeLevel(lvl, 'Novis');
       }, '');
       const levelValue = chosenLevel || 'Novis';
+      const fixedTierLevel = resolveFixedTierLabel(item, levelValue || item?.nivå);
 
       if (existing) {
+        if (source) existing.__elite_source = source;
         if (ritual) {
-          existing.nivå = existing.nivå || 'Novis';
+          existing.nivå = fixedTierLevel || existing.nivå || 'Novis';
         } else if (!noLevel) {
           existing.nivå = normalizeLevel(levelValue, 'Novis');
         }
@@ -2625,15 +3004,41 @@
       }
 
       if (ritual) {
-        list.push({ ...item, nivå: 'Novis' });
+        const nextRow = { ...item, nivå: fixedTierLevel || 'Novis' };
+        if (source) nextRow.__elite_source = source;
+        list.push(nextRow);
       } else if (noLevel) {
-        list.push({ ...item });
+        const nextRow = { ...item };
+        if (source) nextRow.__elite_source = source;
+        list.push(nextRow);
       } else {
-        list.push({ ...item, nivå: levelValue || 'Novis' });
+        const nextRow = { ...item, nivå: levelValue || 'Novis' };
+        if (source) nextRow.__elite_source = source;
+        list.push(nextRow);
       }
     });
+    return list;
+  }
 
-    storeHelper.setCurrentList(store, list);
+  function projectRequirementList(baseList, selectionInput) {
+    return applySelectionRowsToList(baseList, selectionRowsFromInput(selectionInput, {}));
+  }
+
+  function checkProjectedRequirements(entry, baseList, selectionInput) {
+    const projectedList = projectRequirementList(baseList, selectionInput);
+    if (!window.eliteReq || typeof window.eliteReq.check !== 'function') return null;
+    return window.eliteReq.check(entry, projectedList);
+  }
+
+  async function addReq(entry, levels){
+    if(!store.current && !(await requireCharacter())) return;
+    const groups = parseGroupRequirements(entry?.krav || {});
+    const list = storeHelper.getCurrentList(store);
+    const fallbackMap = autoPickLevels(groups, list);
+    const rows = selectionRowsFromInput(levels, fallbackMap);
+    if (!rows.length) return;
+    const nextList = applySelectionRowsToList(list, rows);
+    storeHelper.setCurrentList(store, nextList);
   }
 
   async function addElite(entry, opts = {}){
@@ -2692,11 +3097,34 @@
     handle(button);
   }
 
-  document.addEventListener('DOMContentLoaded', () => {
-    if(document.body.dataset.role === 'index'){
-      document.getElementById('lista').addEventListener('click', onClick);
-    }
-  });
+  if (typeof document !== 'undefined' && document?.addEventListener) {
+    document.addEventListener('DOMContentLoaded', () => {
+      if(document.body?.dataset?.role === 'index'){
+        document.getElementById('lista')?.addEventListener('click', onClick);
+      }
+    });
+  }
 
-  window.eliteAdd = { parseNames, parseGroupRequirements, addReq, addElite };
+  function getValfrittTypeOptions() {
+    const buckets = new Map();
+    resolveValfrittCandidateNames().forEach(name => {
+      const entry = findEntry(name);
+      const key = typeKeyForEntry(entry);
+      if (!key || key === 'advantage' || key === 'drawback') return;
+      buckets.set(key, (buckets.get(key) || 0) + 1);
+    });
+    return Array.from(buckets.entries())
+      .map(([key, count]) => ({ key, label: typeLabelForKey(key), count }))
+      .sort((a, b) => a.label.localeCompare(b.label, 'sv'));
+  }
+
+  window.eliteAdd = {
+    parseNames,
+    parseGroupRequirements,
+    addReq,
+    addElite,
+    projectRequirementList,
+    checkProjectedRequirements,
+    getValfrittTypeOptions
+  };
 })(window);

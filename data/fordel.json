@@ -467,18 +467,19 @@
     },
     {
       "id": "ford29",
-      "namn": "Manipulatör",
-      "beskrivning": "Rollpersonen är skicklig på att spela på folks känslor medelst smicker, hot eller en kombination därav. Rollpersonen får en gång per äventyr, med ett lyckat Övertygande -5 mot en utvald person, manipulera denna till ett känslotillstånd mot rollpersonen. Det kräver en scen av känslospel för att nå avsedd verkan. Å andra sidan är de manipulationerna verksamma över en längre tid, den manipulerade anser att känslorna och åsikterna är dess egna och kommer försvara dem långt efter att manipulatören lämnat platsen.",
+      "namn": "Stäppfödd",
+      "beskrivning": "Rollpersonen är mer eller mindre född i sadeln, likt västerns klanryttare eller de ambriska pansar-riddarna. Ryttare och riddjur rör sig som en enda varelse. Rollpersonen får +1 på alla slag som rör ridning. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
       "taggar": {
         "typ": [
           "Fördel"
         ],
         "ark_trad": [],
         "test": [
-          "Övertygande"
-        ]
+          "Kvick"
+        ],
+        "max_antal": 3
       },
-      "effekt": "Får en gång per äventyr med Övertygande -5 manipulera en person till ett känslotillstånd mot rollpersonen."
+      "effekt": "+1 på alla slag som rör ridning"
     },
     {
       "id": "ford30",
@@ -1624,22 +1625,6 @@
         "test": []
       },
       "effekt": "Vid en timmes vila (kort vila) läker du alltid +1T4 Tålighet utöver den normala läkningstakten."
-    },
-    {
-      "id": "ford101",
-      "namn": "Stäppfödd",
-      "beskrivning": "Rollpersonen är mer eller mindre född i sadeln, likt västerns klanryttare eller de ambriska pansar-riddarna. Ryttare och riddjur rör sig som en enda varelse. Rollpersonen får +1 på alla slag som rör ridning. Fördelen kan tas upp till tre gånger för en kumulativ effekt.",
-      "taggar": {
-        "typ": [
-          "Fördel"
-        ],
-        "ark_trad": [],
-        "test": [
-          "Kvick"
-        ],
-        "max_antal": 3
-      },
-      "effekt": "+1 på alla slag som rör ridning"
     }
   ]
 }
