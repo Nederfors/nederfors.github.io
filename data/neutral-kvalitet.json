@@ -42,6 +42,45 @@
       },
       "neutral": true,
       "effekt": "Kan brukas en- eller tvåhandat; enhandat tappar kvaliteter men tillåter sköld och ridbruk."
-    }
+    },
+    {
+  "id": "neu4",
+  "namn": "Robustanpassad (Novis)",
+  "beskrivning": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på novisnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x2",
+  "taggar": {
+    "typ": [
+      "Kvalitet",
+      "Rustningskvalitet"
+    ]
+  },
+  "neutral": true,
+  "effekt": "Grundpriset på rustningen ökar med x2."
+},
+{
+  "id": "neu4",
+  "namn": "Robustanpassad (Gesäll)",
+  "beskrivning": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på gesällnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x3",
+  "taggar": {
+    "typ": [
+      "Kvalitet",
+      "Rustningskvalitet"
+    ]
+  },
+  "neutral": true,
+  "effekt": "Grundpriset på rustningen ökar med x3."
+},
+{
+  "id": "neu4",
+  "namn": "Robustanpassad (Mästare)",
+  "beskrivning": "Rustningen är anpassad i storlek och tyngd för att kunna bäras av storvuxna varelser med särdraget Robust på mästarnivå (såsom Resar och Troll). Eftersom rustningen kräver mer material och måste måttbeställas ökar dess grundpris med x4",
+  "taggar": {
+    "typ": [
+      "Kvalitet",
+      "Rustningskvalitet"
+    ]
+  },
+  "neutral": true,
+  "effekt": "Grundpriset på rustningen ökar med x4."
+}
   ]
 }

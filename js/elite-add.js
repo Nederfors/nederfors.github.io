@@ -2702,8 +2702,8 @@
         if (source.startsWith('specifikt_val')) {
           const row = toArray(profile?.specifikt_val)[sourceIndex(source, 'specifikt_val')] || {};
           const requiredCount = Math.max(0, Number(row?.requiredCount ?? model.minCount) || 0);
-          const requiredPer = Math.max(0, Number(row?.requiredErf ?? model.minErf) || 0);
-          const requiredErf = requiredCount > 1 ? requiredPer * requiredCount : requiredPer;
+          // row.requiredErf/model.minErf is already the total ERF requirement for this group.
+          const requiredErf = Math.max(0, Number(row?.requiredErf ?? model.minErf) || 0);
           const selectedErf = Math.max(0, Number(row?.selectedErf) || 0);
           const selectedCount = Math.max(0, Number(row?.qualifiedCount ?? row?.selectedCount) || 0);
           const metric = requiredCount > 0 ? 'both' : 'erf';

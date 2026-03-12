@@ -484,15 +484,11 @@
     RANGED_WEAPON_BASE_TYPE,
     LEGACY_WEAPON_BASE_TYPE
   ]);
-  const WEAPON_SUBTYPE_ALIASES = Object.freeze({
-    'Tunga vapen': 'Tvåhandsvapen'
-  });
   const WEAPON_TYPE_FALLBACK = Object.freeze([
     'Enhandsvapen',
     'Korta vapen',
     'Långa vapen',
     'Tvåhandsvapen',
-    'Tunga vapen',
     'Obeväpnad attack',
     'Stav',
     'Armborst',
@@ -525,7 +521,7 @@
   const RANGED_WEAPON_TYPE_KEYS = new Set(
     RANGED_WEAPON_TYPES.map(normalizeTypeNameForMatch).filter(Boolean)
   );
-  const TWO_HANDED_WEAPON_TYPES = Object.freeze(['Långa vapen', 'Tvåhandsvapen', 'Tunga vapen']);
+  const TWO_HANDED_WEAPON_TYPES = Object.freeze(['Långa vapen', 'Tvåhandsvapen', 'Tvåhandsvapen']);
   const TWO_HANDED_WEAPON_TYPE_KEYS = new Set(
     TWO_HANDED_WEAPON_TYPES.map(normalizeTypeNameForMatch)
   );

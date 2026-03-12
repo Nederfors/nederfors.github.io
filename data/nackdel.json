@@ -235,7 +235,7 @@
     {
       "id": "na17",
       "namn": "Paria",
-      "beskrivning": "Rollpersonen är av ett släkte som är illa ansett av den styrande majoriteten och som diskrimineras mer eller mindre öppet. Enskilda individer i det omgivande samhället kan vara mindre fördomsfulla men generellt försvåras alla sociala interaktioner för varelsen. Däremot tenderar diskriminerade grupper att hålla samman mot omvärlden och ge varandra mycket hjälp. Rollpersonen tvingas slå två gånger för alla sociala utmaningar och måste ta det sämsta utfallet för att avgöra framgång eller misslyckande. Inom den egna gruppen får varelsen istället en andra chans på alla sociala slag och slår endast för situationer där det verkligen är tveksamt om det som efterfrågas alls är möjligt. Till detta kommer även att rollpersonen börjar spelet med endast fem skilling i sin bältesbörs.",
+      "beskrivning": "Rollpersonen är av ett släkte som är illa ansett av den styrande majoriteten och som diskrimineras mer eller mindre öppet. Enskilda individer i det omgivande samhället kan vara mindre fördomsfulla men generellt försvåras alla sociala interaktioner för varelsen. Däremot tenderar diskriminerade grupper att hålla samman mot omvärlden och ge varandra mycket hjälp. Rollpersonen tvingas slå två gånger för alla sociala utmaningar och måste ta det sämsta utfallet för att avgöra framgång eller misslyckande. Inom den egna gruppen får varelsen istället en andra chans på alla sociala slag och slår endast för situationer där det verkligen är tveksamt om det som efterfrågas alls är möjligt.",
       "taggar": {
         "typ": [
           "Nackdel"
@@ -1398,7 +1398,7 @@
     {
       "id": "na94",
       "namn": "Klenväxt",
-      "beskrivning": "Rollpersonen är onaturligt späd. Hen kan inte använda tunga vapen eller bära tung rustning, och slår alla slag mot Stark utanför strid med en modifikation på -4.",
+      "beskrivning": "Rollpersonen är onaturligt späd. Hen kan inte använda tvåhandsvapen eller bära tung rustning, och slår alla slag mot Stark för att lyfta och bära saker med en modifikation på -3.",
       "taggar": {
         "typ": [
           "Nackdel"
@@ -1408,7 +1408,7 @@
         ],
         "ark_trad": []
       },
-      "effekt": "Kan ej bära tungt; -4 på Stark utanför strid."
+      "effekt": "Kan ej använda tvåhandsvapen & rustningar; -3 på Stark för att lyfta och bära saker."
     },
     {
       "id": "na95",

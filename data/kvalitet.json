@@ -95,7 +95,7 @@
     {
       "id": "kv5_b",
       "namn": "Armfäst",
-      "beskrivning": "Skölden fästs på underarmen så att handen lämnas fri till annat, men dess placering omöjliggör hantering av både långa och tunga vapen. En armfäst sköld är dessutom för nätt för att användas till sköldbaserade förmågor och kan därför inte heller ha andra positiva kvaliteter.",
+      "beskrivning": "Skölden fästs på underarmen så att handen lämnas fri till annat, men dess placering omöjliggör hantering av både långa och tvåhandsvapen. En armfäst sköld är dessutom för nätt för att användas till sköldbaserade förmågor och kan därför inte heller ha andra positiva kvaliteter.",
       "taggar": {
         "typ": [
           "Kvalitet",
@@ -145,7 +145,7 @@
     {
       "id": "kv9",
       "namn": "Massivt",
-      "beskrivning": "Vapnet är så massivt att andra tunga vapen ser beskedliga ut i jämförelse. Skada med vapnet får en andra chans att lyckas, det vill säga skadetärningen för vapnet slås två gånger och det bästa värdet väljs. Detta gäller endast vapnets egen skadetärning, inte andra tilläggstärningar från förmågor, krafter, andra kvaliteter eller elixir med mera.",
+      "beskrivning": "Vapnet är så massivt att andra tvåhandsvapen ser beskedliga ut i jämförelse. Skada med vapnet får en andra chans att lyckas, det vill säga skadetärningen för vapnet slås två gånger och det bästa värdet väljs. Detta gäller endast vapnets egen skadetärning, inte andra tilläggstärningar från förmågor, krafter, andra kvaliteter eller elixir med mera.",
       "taggar": {
         "typ": [
           "Kvalitet",

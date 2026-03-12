@@ -902,7 +902,7 @@
     {
       "id": "ford54",
       "namn": "Kvickfotad",
-      "beskrivning": "Karaktären är ovanligt snabb och smidig i sina rörelser, vilket gör det svårt för motståndare med stora, långsamma vapen att träffa. Karaktären får +1 i försvar mot närstridsattacker som utförs med tunga vapen.",
+      "beskrivning": "Karaktären är ovanligt snabb och smidig i sina rörelser, vilket gör det svårt för motståndare med stora, långsamma vapen att träffa. Karaktären får +1 i försvar mot närstridsattacker som utförs med tvåhandsvapen.",
       "taggar": {
         "typ": [
           "Fördel"
@@ -910,7 +910,7 @@
         "ark_trad": [],
         "test": []
       },
-      "effekt": "+1 i försvar mot närstridsattacker med tunga vapen."
+      "effekt": "+1 i försvar mot närstridsattacker med tvåhandsvapen."
     },
     {
       "id": "ford55",

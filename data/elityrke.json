@@ -1419,7 +1419,7 @@
               }
             ],
             "krav_erf": 60,
-            "min_antal": 2
+            "min_antal": 1
           }
         ],
         "valfri_inom_tagg": [

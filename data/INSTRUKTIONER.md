@@ -698,7 +698,7 @@ Viktigt:
 | `taggar.artefakt_bindning` | Bindningskonfig + options | Artefaktval (`artifactEffect`) | Definierar valbara bindningskostnader och ev. regelsnuttar per val. |
 | `taggar.inventory.stackbar` | Bool | Inventory | Tvingar stackbar/ej stackbar radhantering. |
 | `taggar.inventory.traitbunden` / `traitBound` | Bool | Inventory | Markerar traitbunden inventoryrad. |
-| `taggar.grundritual` | Lista med ritualnamn | Ritual-flöde i UI | Kräver grundritual(er) innan ritual får läggas till (med dialogflöde). |
+| `taggar.regler.kraver` | Kravregler | Regelmotor + add/level-flöde | Används för förkunskapskrav (inklusive ritual-förkunskaper). |
 | `taggar.handling` | Handling-status per nivå (legacy) | UI-konflikter/info | Används som fallback om nivåmetadata saknas; "aktiv" triggar hanteringskonflikter. |
 | `taggar.arm_fast` | Bool | Traits/strid | Markerar armfäst kvalitet (påverkar vapen/sköldtolkning i försvarslogik). |
 
@@ -726,14 +726,13 @@ Rekommendation:
 Detta är en konkret snapshot av vilka taggar/taggvärden som faktiskt finns i `data/*.json` just nu
 (exklusive byggda filer som `all.json`/`struktur.json`).
 
-### 2.6.1 Exakta `taggar`-nycklar (14 st)
+### 2.6.1 Exakta `taggar`-nycklar (13 st)
 
 ```text
 ark_trad
 arm_fast
 artefakt_bindning
 dold
-grundritual
 handling
 inventory
 kvalitet
@@ -805,7 +804,7 @@ Särdrag
 Tabell
 Tjänster
 Tung Rustning
-Tunga vapen
+Tvåhandsvapen
 Tvåhandsvapen
 Vapen
 Vapenkvalitet
@@ -973,26 +972,6 @@ Ytverkande (radie)
 ```
 
 ### 2.6.9 Specialtaggar med konkreta värden
-
-`taggar.grundritual` (15 st):
-
-```text
-Andebesvärjelse
-Bjära
-Exorcism
-Falsk terräng
-Frammana Hämnddaemon
-Frammana Kunskapsdaemon
-Frammana Tjänardaemon
-Frammana Väktardaemon
-Helgande Rit
-Häxcirkel
-Klärvoajans
-Lockelse
-Offerrök
-Snabbväxt
-Väcka vandöd
-```
 
 `taggar.handling` (råvärden i data, 12 st):
 

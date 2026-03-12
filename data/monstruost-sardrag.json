@@ -44,7 +44,6 @@
           ]
         },
         "regler": {
-          "kraver_logik": "and",
           "kraver": [
             {
               "namn": [
@@ -53,13 +52,14 @@
             },
             {
               "nar": {
-                "nagon_av_namn": [
-                  "Vandöd",
+                "ark_trad": [
                   "Andebesvärjare"
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "and",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -124,6 +124,9 @@
               ]
             }
           }
+        },
+        "regler": {
+          "kraver_typ_och_entry": "and"
         }
       },
       "nivåer": {
@@ -243,7 +246,8 @@
                 "Andeform"
               ]
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "and"
         }
       },
       "nivåer": {
@@ -337,6 +341,9 @@
               ]
             }
           }
+        },
+        "regler": {
+          "kraver_typ_och_entry": "and"
         }
       },
       "nivåer": {
@@ -370,13 +377,18 @@
         "regler": {
           "kraver": [
             {
-              "nar": {
-                "nagon_av_namn": [
-                  "Vandöd"
-                ]
-              }
+              "namn": [
+                "Andeform"
+              ]
+            },
+            {
+              "namn": [
+                "Vandödhet"
+              ]
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "and",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -437,7 +449,8 @@
                 "Andeform"
               ]
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "and"
         }
       },
       "nivåer": {
@@ -477,7 +490,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -516,7 +531,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -528,7 +545,7 @@
     },
     {
       "namn": "Regeneration",
-      "beskrivning": "Varelsen läker skador utan att behöva ägna varken tid eller kraft åt det. Varelsen har också en svaghet i form av en skadetyp som den inte kan regenerera (men såklart läka på annat aktivt sätt). Varelsen måste välja en svaghet som avser en typ av skada som den inte kan läka automatiskt. Välj mellan typerna magiska vapen, elementarenergier (eld och syra), helig skada eller ohelig skada.",
+      "beskrivning": "Varelsen läker skador utan att behöva ägna varken tid eller kraft åt det. Varelsen har också en svaghet i form av en skadetyp som den inte kan regenerera (men såklart läka på annat aktivt sätt). Varelsen måste välja en svaghet som avser en typ av skada som den inte kan läka automatiskt. Välj mellan typerna Syra, Blixt, Eld, Helig eller Ohelig.",
       "taggar": {
         "typ": [
           "Monstruöst särdrag"
@@ -554,6 +571,22 @@
                   "Mörkt blod"
                 ]
               }
+            }
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or",
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj svaghet",
+              "subtitle": "Välj den skadetyp som varelsen inte kan regenerera automatiskt.",
+              "options": [
+                "Syra",
+                "Blixt",
+                "Eld",
+                "Helig",
+                "Ohelig"
+              ]
             }
           ]
         }
@@ -648,7 +681,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -686,7 +721,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -810,7 +847,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "id": "mo23"
@@ -1061,7 +1100,9 @@
               ],
               "nivå_minst": "Novis"
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "and",
+          "kraver_logik": "and"
         }
       },
       "nivåer": {
@@ -1249,6 +1290,10 @@
               ]
             }
           }
+        },
+        "regler": {
+          "kraver_typ_och_entry": "and",
+          "kraver_logik": "and"
         }
       },
       "nivåer": {
@@ -1555,7 +1600,9 @@
               ],
               "nivå_minst": "Novis"
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "and",
+          "kraver_logik": "and"
         }
       },
       "nivåer": {
@@ -1683,7 +1730,9 @@
               ],
               "nivå_minst": "Mästare"
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "and",
+          "kraver_logik": "and"
         }
       },
       "nivåer": {
@@ -1757,7 +1806,8 @@
       "beskrivning": "Endast tillgänglig för varelser med Hamnskifte. Rollpersonen är av ett släkte som till naturen är storvuxet och som ofta fortsätter att växa under hela sin levnad. Men variationer förekommer: vissa växer snabbt, andra långsamt, och somliga knappt alls.",
       "taggar": {
         "typ": [
-          "Monstruöst särdrag", "Elityrkesförmåga"
+          "Monstruöst särdrag",
+          "Elityrkesförmåga"
         ],
         "ras": [
           "Hamnskifte"
@@ -1831,7 +1881,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -1845,7 +1897,8 @@
       "beskrivning": "Endast tillgänglig för varelser med Hamnskifte. Varelsen är tjockhudad, fjällig eller på annat sätt särskilt svår att skada. Varelsen kan inte bära ytterligare rustning på sitt naturliga pansar, men bepansringen ger inte heller Begränsning som annan rustning gör. Förmågan Rustmästare utvecklar dock varelsens naturliga skydd ytterligare, utöver nivåerna i Pansar.",
       "taggar": {
         "typ": [
-          "Monstruöst särdrag", "Elityrkesförmåga"
+          "Monstruöst särdrag",
+          "Elityrkesförmåga"
         ],
         "ras": [
           "Hamnskifte"
@@ -1881,7 +1934,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {
@@ -1893,10 +1948,11 @@
     },
     {
       "namn": "Hamnskifte: Regeneration",
-      "beskrivning": "Varelsen läker skador utan att behöva ägna varken tid eller kraft åt det. Varelsen har också en svaghet i form av en skadetyp som den inte kan regenerera (men såklart läka på annat aktivt sätt). Varelsen måste välja en svaghet som avser en typ av skada som den inte kan läka automatiskt. Välj mellan typerna magiska vapen, elementarenergier (eld och syra), helig skada eller ohelig skada.",
+      "beskrivning": "Varelsen läker skador utan att behöva ägna varken tid eller kraft åt det. Varelsen har också en svaghet i form av en skadetyp som den inte kan regenerera (men såklart läka på annat aktivt sätt). Varelsen måste välja en svaghet som avser en typ av skada som den inte kan läka automatiskt. Välj mellan typerna Syra, Blixt, Eld, Helig eller Ohelig.",
       "taggar": {
         "typ": [
-          "Monstruöst särdrag", "Elityrkesförmåga"
+          "Monstruöst särdrag",
+          "Elityrkesförmåga"
         ],
         "ras": [
           "Hamnskifte"
@@ -1931,6 +1987,22 @@
                   "Blodvadare"
                 ]
               }
+            }
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or",
+          "val": [
+            {
+              "field": "trait",
+              "title": "Välj svaghet",
+              "subtitle": "Välj den skadetyp som varelsen inte kan regenerera automatiskt.",
+              "options": [
+                "Syra",
+                "Blixt",
+                "Eld",
+                "Helig",
+                "Ohelig"
+              ]
             }
           ]
         }
@@ -1947,7 +2019,8 @@
       "beskrivning": "Varelsen har begåvats med ett välutvecklat naturligt vapen som den kan göra bruk av i närstrid, exempelvis skarpa klor, bett eller svanssting. Förmågan Naturlig krigare (beskriven på sid 119) kan användas för att utveckla varelsens naturliga vapen ytterligare.",
       "taggar": {
         "typ": [
-          "Monstruöst särdrag", "Elityrkesförmåga"
+          "Monstruöst särdrag",
+          "Elityrkesförmåga"
         ],
         "ras": [
           "Hamnskifte"
@@ -1983,7 +2056,9 @@
                 ]
               }
             }
-          ]
+          ],
+          "kraver_typ_och_entry": "or",
+          "kraver_logik": "or"
         }
       },
       "nivåer": {

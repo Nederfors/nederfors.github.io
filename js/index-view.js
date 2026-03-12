@@ -6,54 +6,6 @@
     return str ? `“${str}”` : '';
   };
 
-  function formatQuotedList(values) {
-    if (!Array.isArray(values) || !values.length) return '';
-    return values
-      .map(val => quoteName(val))
-      .filter(Boolean)
-      .join(', ');
-  }
-
-  function getGrundritualRequirements(entry) {
-    const raw = entry?.taggar?.grundritual;
-    if (Array.isArray(raw)) {
-      return raw
-        .map(val => (typeof val === 'string' ? val.trim() : ''))
-        .filter(Boolean);
-    }
-    if (typeof raw === 'string') {
-      const trimmed = raw.trim();
-      return trimmed ? [trimmed] : [];
-    }
-    return [];
-  }
-
-  async function enforceGrundritualRequirement(entry, list) {
-    const required = getGrundritualRequirements(entry);
-    if (!required.length) return { allowed: true, autoAdd: [] };
-    const current = Array.isArray(list) ? list : [];
-    const missing = required.filter(name => !current.some(item => item?.namn === name));
-    if (!missing.length) return { allowed: true, autoAdd: [] };
-    const entryLabel = quoteName(entry?.namn) || 'Denna ritual';
-    const requirementText = missing.length === 1 ? 'grundritualen' : 'grundritualerna';
-    const missingText = formatQuotedList(missing) || 'den angivna ritualen';
-    const baseMessage = `${entryLabel} kräver ${requirementText} ${missingText}.`;
-    if (typeof window.openDialog === 'function') {
-      const extraLabel = missing.length === 1 ? `Lägg till ${missingText}` : 'Lägg till alla';
-      const response = await window.openDialog(`${baseMessage} Lägg till grundritual nu, hoppa över kravet eller avbryt.`, {
-        cancel: true,
-        okText: 'Hoppa över kravet',
-        cancelText: 'Avbryt',
-        extraText: extraLabel
-      });
-      if (response === false) return { allowed: false, autoAdd: [] };
-      if (response === 'extra') return { allowed: true, autoAdd: missing };
-      return { allowed: true, autoAdd: [] };
-    }
-    const fallback = await confirmPopup(`${baseMessage}\nHoppa över kravet?`);
-    return { allowed: !!fallback, autoAdd: [] };
-  }
-
   function makeHardStop(code, message, label = '', value = '') {
     return { code, message, label, value };
   }
@@ -759,6 +711,8 @@
       return String(val).trim();
     };
 
+    const CHOICE_MATCH_FIELDS = ['trait', 'race', 'form'];
+
     const getEntryChoiceDisplay = (entry, context = {}) => {
       if (typeof window.rulesHelper?.getEntryChoiceDisplay !== 'function') return null;
       try {
@@ -841,15 +795,27 @@
         || Object.prototype.hasOwnProperty.call(entry, 'nivå');
       const wantsTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
         || Object.prototype.hasOwnProperty.call(entry, 'trait');
+      const wantsRace = Object.prototype.hasOwnProperty.call(options, 'race')
+        || Object.prototype.hasOwnProperty.call(entry, 'race');
+      const wantsForm = Object.prototype.hasOwnProperty.call(options, 'form')
+        || Object.prototype.hasOwnProperty.call(entry, 'form');
       const desiredLevel = Object.prototype.hasOwnProperty.call(options, 'level')
         ? normalizeMatchValue(options.level)
         : normalizeMatchValue(entry.nivå);
       const desiredTrait = Object.prototype.hasOwnProperty.call(options, 'trait')
         ? normalizeMatchValue(options.trait)
         : normalizeMatchValue(entry.trait);
+      const desiredRace = Object.prototype.hasOwnProperty.call(options, 'race')
+        ? normalizeMatchValue(options.race)
+        : normalizeMatchValue(entry.race);
+      const desiredForm = Object.prototype.hasOwnProperty.call(options, 'form')
+        ? normalizeMatchValue(options.form)
+        : normalizeMatchValue(entry.form);
       const targetSig = entrySignature({
         ...entry,
         trait: Object.prototype.hasOwnProperty.call(options, 'trait') ? options.trait : entry.trait,
+        race: Object.prototype.hasOwnProperty.call(options, 'race') ? options.race : entry.race,
+        form: Object.prototype.hasOwnProperty.call(options, 'form') ? options.form : entry.form,
         nivå: Object.prototype.hasOwnProperty.call(options, 'level') ? options.level : entry.nivå
       });
       let fallbackById = null;
@@ -864,7 +830,9 @@
           && String(item.namn).trim() === String(entry.namn).trim();
         const levelMatches = !wantsLevel || normalizeMatchValue(item.nivå) === desiredLevel;
         const traitMatches = !wantsTrait || normalizeMatchValue(item.trait) === desiredTrait;
-        if ((sameId || sameName) && levelMatches && traitMatches) {
+        const raceMatches = !wantsRace || normalizeMatchValue(item.race) === desiredRace;
+        const formMatches = !wantsForm || normalizeMatchValue(item.form) === desiredForm;
+        if ((sameId || sameName) && levelMatches && traitMatches && raceMatches && formMatches) {
           return item;
         }
         if (sameId && !fallbackById) {
@@ -879,6 +847,40 @@
         }
       }
       return fallbackById || fallbackByName || fallbackBySig || null;
+    };
+
+    const getCardChoiceOptions = (cardEl) => {
+      const out = {};
+      if (!cardEl?.dataset) return out;
+      CHOICE_MATCH_FIELDS.forEach(field => {
+        if (!Object.prototype.hasOwnProperty.call(cardEl.dataset, field)) return;
+        const value = normalizeMatchValue(cardEl.dataset[field]);
+        if (value === null || value === '') return;
+        out[field] = value;
+      });
+      return out;
+    };
+
+    const matchesListEntryWithOptions = (candidate, reference, options = {}) => {
+      if (!candidate || typeof candidate !== 'object' || !reference || typeof reference !== 'object') {
+        return false;
+      }
+      const refId = normalizeId(reference.id);
+      const candidateId = normalizeId(candidate.id);
+      const refName = String(reference.namn || reference.name || '').trim();
+      const candidateName = String(candidate.namn || '').trim();
+      const sameId = refId && candidateId && refId === candidateId;
+      const sameName = refName && candidateName && refName === candidateName;
+      if (!sameId && !sameName) return false;
+
+      for (const field of CHOICE_MATCH_FIELDS) {
+        const expected = Object.prototype.hasOwnProperty.call(options, field)
+          ? normalizeMatchValue(options[field])
+          : normalizeMatchValue(reference[field]);
+        if (expected === null || expected === '') continue;
+        if (normalizeMatchValue(candidate[field]) !== expected) return false;
+      }
+      return true;
     };
 
     const flashAdded = (name, trait) => {
@@ -1029,6 +1031,99 @@
         usedValues,
         duplicate
       };
+    }
+
+    const entryDiffKey = (entry) => {
+      if (!entry || typeof entry !== 'object') return '';
+      const id = normalizeId(entry.id);
+      const name = normalizeMatchValue(entry.namn || entry.name);
+      const parts = [];
+      if (id) parts.push(`id:${id}`);
+      else if (name) parts.push(`name:${name}`);
+      CHOICE_MATCH_FIELDS.forEach(field => {
+        const value = normalizeMatchValue(entry[field]);
+        if (value === null || value === '') return;
+        parts.push(`${field}:${value}`);
+      });
+      const level = normalizeMatchValue(entry.nivå);
+      if (level !== null && level !== '') parts.push(`level:${level}`);
+      return parts.join('|');
+    };
+
+    const collectAddedEntries = (beforeList, afterList) => {
+      const beforeCounts = new Map();
+      (Array.isArray(beforeList) ? beforeList : []).forEach(entry => {
+        const key = entryDiffKey(entry);
+        if (!key) return;
+        beforeCounts.set(key, (beforeCounts.get(key) || 0) + 1);
+      });
+      const added = [];
+      (Array.isArray(afterList) ? afterList : []).forEach(entry => {
+        const key = entryDiffKey(entry);
+        if (!key) return;
+        const remaining = beforeCounts.get(key) || 0;
+        if (remaining > 0) {
+          beforeCounts.set(key, remaining - 1);
+          return;
+        }
+        added.push(entry);
+      });
+      return added;
+    };
+
+    const applyChoiceSelectionToListEntry = (list, entry, choiceResult) => {
+      if (!Array.isArray(list) || !entry || !choiceResult?.rule?.field) return false;
+      const field = String(choiceResult.rule.field || '').trim();
+      if (!field) return false;
+      const pickedValue = choiceResult.value;
+      if (pickedValue === undefined || pickedValue === null || String(pickedValue).trim() === '') {
+        return false;
+      }
+      let changed = false;
+      if (String(entry[field] ?? '') !== String(pickedValue)) {
+        entry[field] = pickedValue;
+        changed = true;
+      }
+      if (choiceResult.duplicate?.replaceExisting) {
+        const wanted = normalizeChoiceToken(pickedValue);
+        for (let i = list.length - 1; i >= 0; i--) {
+          const item = list[i];
+          if (!item || item === entry) continue;
+          if (!isSameChoiceSource(item, entry)) continue;
+          if (normalizeChoiceToken(item?.[field]) !== wanted) continue;
+          list.splice(i, 1);
+          changed = true;
+        }
+      }
+      return changed;
+    };
+
+    async function ensureChoicesForNewEntries(beforeList) {
+      const currentList = storeHelper.getCurrentList(store);
+      const addedEntries = collectAddedEntries(beforeList, currentList);
+      if (!addedEntries.length) return;
+
+      for (const addedEntry of addedEntries) {
+        const latestList = storeHelper.getCurrentList(store);
+        if (!Array.isArray(latestList) || !latestList.length) break;
+        const matchOptions = {};
+        CHOICE_MATCH_FIELDS.forEach(field => {
+          const value = normalizeMatchValue(addedEntry?.[field]);
+          if (value === null || value === '') return;
+          matchOptions[field] = value;
+        });
+        if (addedEntry?.nivå !== undefined && addedEntry?.nivå !== null && String(addedEntry.nivå).trim() !== '') {
+          matchOptions.level = addedEntry.nivå;
+        }
+        const liveEntry = findMatchingListEntry(latestList, addedEntry, matchOptions);
+        if (!liveEntry) continue;
+        const choiceResult = await pickListEntryChoice(liveEntry, latestList, liveEntry.nivå || '', liveEntry, {
+          promptIfMissingOnly: true
+        });
+        if (!choiceResult?.hasChoice || choiceResult.cancelled) continue;
+        if (!applyChoiceSelectionToListEntry(latestList, liveEntry, choiceResult)) continue;
+        storeHelper.setCurrentList(store, latestList);
+      }
     }
 
     const flashRemoved = (name, trait) => {
@@ -1969,10 +2064,16 @@
             const extra = yrkeInfoHtml(p);
             if (extra) infoBodyExtras.push(extra);
           }
-          let spec = null;
-          if (p.namn === 'Monsterlärd') {
-            spec = charEntry?.trait || null;
-          }
+          const cardChoiceValues = {};
+          CHOICE_MATCH_FIELDS.forEach(field => {
+            const sourceValue = (charEntry && Object.prototype.hasOwnProperty.call(charEntry, field))
+              ? charEntry[field]
+              : (Object.prototype.hasOwnProperty.call(p, field) ? p[field] : undefined);
+            const normalized = normalizeMatchValue(sourceValue);
+            if (normalized === null || normalized === '') return;
+            cardChoiceValues[field] = normalized;
+          });
+          const spec = cardChoiceValues.trait || null;
           const choiceGroups = collectChoiceDisplayValuesForEntry(p, charList);
           choiceGroups.forEach(group => {
             if (!group.values.length) return;
@@ -2195,6 +2296,8 @@
           else if (mobileTagsHtml) leftSections.push(mobileTagsHtml);
           const dataset = { name: p.namn };
           if (spec) dataset.trait = spec;
+          if (cardChoiceValues.race) dataset.race = cardChoiceValues.race;
+          if (cardChoiceValues.form) dataset.form = cardChoiceValues.form;
           if (xpVal != null) dataset.xp = xpVal;
           if (p.id) dataset.id = p.id;
           const descBlock = cardDesc
@@ -2379,9 +2482,7 @@
       const allowAdd = !(isService(entry) || isEmployment(entry));
 
       cards.forEach(card => {
-        const traitKey = card.dataset.trait || null;
-        const baseMatchOpts = {};
-        if (traitKey !== null) baseMatchOpts.trait = traitKey;
+        const baseMatchOpts = getCardChoiceOptions(card);
         let cardCharEntry = isInventory ? null : findMatchingListEntry(charList, entry, baseMatchOpts) || null;
         const isException = entry.namn === 'Exceptionellt karaktärsdrag';
         let curLvl = null;
@@ -2706,7 +2807,8 @@
       const li = btn.closest('li');
       if (!li) return;
       const name = btn.dataset.name || li.dataset.name;
-      const tr = li.dataset.trait || null;
+      const cardChoiceOptions = getCardChoiceOptions(li);
+      const tr = cardChoiceOptions.trait || null;
       const idAttr = btn.dataset.id || li.dataset.id || null;
       const ref = { id: idAttr || undefined, name };
       const entries = getEntries();
@@ -2980,6 +3082,7 @@
           }
         } else {
           const list = storeHelper.getCurrentList(store);
+          const beforeList = list.map(item => ({ ...item }));
           const disBefore = storeHelper.countDisadvantages(list);
           const checkDisadvWarning = async () => {
             if (storeHelper.countDisadvantages(list) === 5 && disBefore < 5) {
@@ -3052,6 +3155,8 @@
                 if (forceRuleOverride) existing.manualRuleOverride = true;
                 await checkDisadvWarning();
                 storeHelper.setCurrentList(store, list); updateXP();
+                await ensureChoicesForNewEntries(beforeList);
+                updateXP();
                 scheduleRenderList();
                 renderTraits();
                 flashAdded(existing.namn, existing.trait);
@@ -3060,32 +3165,11 @@
             }
           }
 
-          const grundCheck = await enforceGrundritualRequirement(p, list);
-          if (!grundCheck.allowed) return;
-          if (grundCheck.autoAdd.length) {
-            const autoAdded = [];
-            const missingBases = [];
-            grundCheck.autoAdd.forEach(baseName => {
-              if (list.some(item => item?.namn === baseName)) return;
-              const baseEntry = lookupEntry({ name: baseName });
-              if (baseEntry) {
-                list.push({ ...baseEntry });
-                autoAdded.push(baseName);
-              } else {
-                missingBases.push(baseName);
-              }
-            });
-            if (autoAdded.length && typeof window.toast === 'function') {
-              window.toast(`La till ${formatQuotedList(autoAdded)}.`);
-            }
-            if (missingBases.length && typeof alertPopup === 'function') {
-              const plural = missingBases.length === 1 ? 'grundritualen' : 'grundritualerna';
-              await alertPopup(`Hittar inte ${plural} ${formatQuotedList(missingBases)} i databasen. Lägg till manuellt.`);
-            }
-          }
           const finishAdd = async added => {
             await checkDisadvWarning();
             storeHelper.setCurrentList(store, list); updateXP();
+            await ensureChoicesForNewEntries(beforeList);
+            updateXP();
             if (p.namn === 'Privilegierad') {
               invUtil.renderInventory();
             }
@@ -3186,8 +3270,11 @@
           if (hidden || artifactTagged) needsFullRefresh = true;
         } else {
           needsFullRefresh = true;
-          const tr = btn.closest('li').dataset.trait || null;
           const before = storeHelper.getCurrentList(store);
+          const matchedForRemoval = findMatchingListEntry(before, p, cardChoiceOptions)
+            || before.find(it => matchesListEntryWithOptions(it, p, cardChoiceOptions))
+            || null;
+          const removalRef = matchedForRemoval || p;
           if (p.namn === 'Mörkt förflutet' && before.some(x => x.namn === 'Mörkt blod')) {
             if (!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
               return;
@@ -3206,19 +3293,20 @@
           }
           let list;
           if (act === 'del' || act === 'rem') {
-            list = before.filter(x => !(x.namn === p.namn && (tr ? x.trait === tr : !x.trait)));
+            list = before.filter(x => !matchesListEntryWithOptions(x, removalRef, cardChoiceOptions));
           } else {
             let removed = false;
             list = [];
             for (const it of before) {
-              if (!removed && it.namn === p.namn && (tr ? it.trait === tr : !it.trait)) {
+              if (!removed && matchesListEntryWithOptions(it, removalRef, cardChoiceOptions)) {
                 removed = true;
                 continue;
               }
               list.push(it);
             }
           }
-          const removed = before.find(it => it.namn === p.namn && (tr ? it.trait === tr : !it.trait));
+          const removed = matchedForRemoval
+            || before.find(it => matchesListEntryWithOptions(it, removalRef, cardChoiceOptions));
           if (removed && !(await handleSnapshotEntryRemoval(removed))) return;
           const remDeps = storeHelper.getDependents(before, removed);
           if (p.namn === 'Mörkt blod' && remDeps.length) {
@@ -3249,6 +3337,8 @@
             }
           }
           storeHelper.setCurrentList(store, list); updateXP();
+          await ensureChoicesForNewEntries(before);
+          updateXP();
           const affected = new Set([p.namn, ...remDeps]);
           affected.forEach(name => {
             const depEntry = entries.find(x => x.namn === name);
@@ -3317,9 +3407,13 @@
       const select = e.target;
       window.entryCardFactory?.syncLevelControl?.(select);
       const name = select.dataset.name;
-      const tr = select.closest('li').dataset.trait || null;
+      const cardEl = select.closest('li');
+      const levelMatchOptions = getCardChoiceOptions(cardEl);
+      const tr = levelMatchOptions.trait || null;
+      const idAttr = cardEl?.dataset?.id || '';
       const list = storeHelper.getCurrentList(store);
-      const ent = list.find(x => x.namn === name && (tr ? x.trait === tr : !x.trait));
+      const ent = findMatchingListEntry(list, { id: idAttr || undefined, namn: name }, levelMatchOptions)
+        || findMatchingListEntry(list, { namn: name }, levelMatchOptions);
       if (ent) {
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
@@ -3424,6 +3518,8 @@
           }
         }
         storeHelper.setCurrentList(store, list); updateXP();
+        await ensureChoicesForNewEntries(before);
+        updateXP();
         scheduleRenderList(); renderTraits();
         flashAdded(name, tr);
         return;

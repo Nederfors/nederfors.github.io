@@ -788,9 +788,15 @@
         "ark_trad": [
           "Själasörjare"
         ],
-        "grundritual": [
-          "Exorcism"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Exorcism"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -814,9 +820,15 @@
         "ark_trad": [
           "Nekromantiker"
         ],
-        "grundritual": [
-          "Väcka vandöd"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Väcka vandöd"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -840,9 +852,15 @@
         "ark_trad": [
           "Andebesvärjare"
         ],
-        "grundritual": [
-          "Andebesvärjelse"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Andebesvärjelse"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1024,9 +1042,15 @@
         "ark_trad": [
           "Blodvadare"
         ],
-        "grundritual": [
-          "Bjära"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Bjära"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1095,9 +1119,15 @@
         "ark_trad": [
           "Grönvävare"
         ],
-        "grundritual": [
-          "Snabbväxt"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Snabbväxt"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1321,12 +1351,18 @@
         "ark_trad": [
           "Demonolog"
         ],
-        "grundritual": [
-          "Frammana Hämnddaemon",
-          "Frammana Kunskapsdaemon",
-          "Frammana Tjänardaemon",
-          "Frammana Väktardaemon"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Frammana Hämnddaemon",
+                "Frammana Kunskapsdaemon",
+                "Frammana Tjänardaemon",
+                "Frammana Väktardaemon"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1350,9 +1386,15 @@
         "ark_trad": [
           "Inkvisitor"
         ],
-        "grundritual": [
-          "Offerrök"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Offerrök"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1466,9 +1508,15 @@
         "ark_trad": [
           "Illusionist"
         ],
-        "grundritual": [
-          "Falsk terräng"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Falsk terräng"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1536,9 +1584,15 @@
         "ark_trad": [
           "Mentalist"
         ],
-        "grundritual": [
-          "Klärvoajans"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Klärvoajans"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1853,9 +1907,15 @@
           "Templár",
           "Själasörjare"
         ],
-        "grundritual": [
-          "Helgande Rit"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Helgande Rit"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -1970,9 +2030,15 @@
         "ark_trad": [
           "Grönvävare"
         ],
-        "grundritual": [
-          "Häxcirkel"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Häxcirkel"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",
@@ -2223,9 +2289,15 @@
         "ark_trad": [
           "Skald"
         ],
-        "grundritual": [
-          "Lockelse"
-        ],
+        "regler": {
+          "kraver": [
+            {
+              "namn": [
+                "Lockelse"
+              ]
+            }
+          ]
+        },
         "nivå_data": {
           "Enkel": {
             "handling": "Speciell",

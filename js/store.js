@@ -495,7 +495,7 @@
   const normalizeWeaponType = (value) => {
     if (typeof global.normalizeWeaponTypeName === 'function') return global.normalizeWeaponTypeName(value);
     const txt = String(value || '').trim();
-    return txt === 'Tunga vapen' ? 'Tvåhandsvapen' : txt;
+    return txt === 'Tvåhandsvapen' ? 'Tvåhandsvapen' : txt;
   };
 
   function getSubtypeSets() {

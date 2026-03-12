@@ -3514,7 +3514,7 @@
         {
           "id": "kv5_b",
           "namn": "Armfäst",
-          "beskrivning": "Skölden fästs på underarmen så att handen lämnas fri till annat, men dess placering omöjliggör hantering av både långa och tunga vapen. En armfäst sköld är dessutom för nätt för att användas till sköldbaserade förmågor och kan därför inte heller ha andra positiva kvaliteter.",
+          "beskrivning": "Skölden fästs på underarmen så att handen lämnas fri till annat, men dess placering omöjliggör hantering av både långa och tvåhandsvapen. En armfäst sköld är dessutom för nätt för att användas till sköldbaserade förmågor och kan därför inte heller ha andra positiva kvaliteter.",
           "taggar": {
             "typ": [
               "Kvalitet",
@@ -3858,7 +3858,7 @@
         }
       ]
     },
-    "Tunga vapen": {
+    "Tvåhandsvapen": {
       "antal": 9,
       "källfiler": [
         "data/vapen.json"
@@ -3866,12 +3866,12 @@
       "exempel": [
         {
           "id": "v17",
-          "namn": "Tunga vapen",
-          "beskrivning": "Tunga vapen utmärks av att de kräver tvåhandsfattning för att alls kunna användas. De har en oöverträffad skadeverkan i närstrid. Exempel på tunga vapen är pålyxa, krigshammare samt det mäktiga tvåhandssvärdet.",
+          "namn": "Tvåhandsvapen",
+          "beskrivning": "Tvåhandsvapen utmärks av att de kräver tvåhandsfattning för att alls kunna användas. De har en oöverträffad skadeverkan i närstrid. Exempel på tvåhandsvapen är pålyxa, krigshammare samt det mäktiga tvåhandssvärdet.",
           "taggar": {
             "typ": [
               "Vapen",
-              "Tunga vapen"
+              "Tvåhandsvapen"
             ]
           },
           "stat": {
@@ -3891,7 +3891,7 @@
           "taggar": {
             "typ": [
               "Vapen",
-              "Tunga vapen"
+              "Tvåhandsvapen"
             ],
             "kvalitet": [
               "Precist",
@@ -3915,7 +3915,7 @@
           "taggar": {
             "typ": [
               "Vapen",
-              "Tunga vapen"
+              "Tvåhandsvapen"
             ],
             "kvalitet": [
               "Djupverkande"

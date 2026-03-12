@@ -2402,8 +2402,8 @@
       Vapen: ['Vapen', 'Närstridsvapen', 'Avståndsvapen'],
       Närstridsvapen: ['Närstridsvapen'],
       Avståndsvapen: ['Avståndsvapen'],
-      'Tunga vapen': ['Tunga vapen', 'Tvåhandsvapen'],
-      Tvåhandsvapen: ['Tvåhandsvapen', 'Tunga vapen'],
+      'Tvåhandsvapen': ['Tvåhandsvapen', 'Tvåhandsvapen'],
+      Tvåhandsvapen: ['Tvåhandsvapen', 'Tvåhandsvapen'],
       Projektilvapen: ['Projektilvapen', 'Avståndsvapen'],
       'Kort vapen': ['Kort vapen', 'Korta vapen'],
       'Korta vapen': ['Korta vapen', 'Kort vapen']

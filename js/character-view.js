@@ -821,6 +821,159 @@
       };
     }
 
+    const CHOICE_MATCH_FIELDS = ['trait', 'race', 'form'];
+
+    const normalizeMatchValue = (value) => {
+      if (value === undefined || value === null) return null;
+      const normalized = String(value).trim().toLowerCase();
+      return normalized || null;
+    };
+
+    const normalizeId = (value) => {
+      const normalized = normalizeMatchValue(value);
+      if (!normalized || normalized === 'undefined' || normalized === 'null') return '';
+      return normalized;
+    };
+
+    const entryDiffKey = (entry) => {
+      if (!entry || typeof entry !== 'object') return '';
+      const id = normalizeId(entry.id);
+      const name = normalizeMatchValue(entry.namn || entry.name);
+      const parts = [];
+      if (id) parts.push(`id:${id}`);
+      else if (name) parts.push(`name:${name}`);
+      CHOICE_MATCH_FIELDS.forEach(field => {
+        const value = normalizeMatchValue(entry[field]);
+        if (value === null || value === '') return;
+        parts.push(`${field}:${value}`);
+      });
+      const level = normalizeMatchValue(entry.nivå);
+      if (level !== null && level !== '') parts.push(`level:${level}`);
+      return parts.join('|');
+    };
+
+    const collectAddedEntries = (beforeList, afterList) => {
+      const beforeCounts = new Map();
+      (Array.isArray(beforeList) ? beforeList : []).forEach(entry => {
+        const key = entryDiffKey(entry);
+        if (!key) return;
+        beforeCounts.set(key, (beforeCounts.get(key) || 0) + 1);
+      });
+      const added = [];
+      (Array.isArray(afterList) ? afterList : []).forEach(entry => {
+        const key = entryDiffKey(entry);
+        if (!key) return;
+        const remaining = beforeCounts.get(key) || 0;
+        if (remaining > 0) {
+          beforeCounts.set(key, remaining - 1);
+          return;
+        }
+        added.push(entry);
+      });
+      return added;
+    };
+
+    const findMatchingCharacterListEntry = (list, entry, options = {}) => {
+      if (!Array.isArray(list) || !entry || typeof entry !== 'object') return null;
+      const hasOption = (key) => Object.prototype.hasOwnProperty.call(options, key);
+      const hasEntry = (key) => Object.prototype.hasOwnProperty.call(entry, key);
+      const wantsLevel = hasOption('level') || hasEntry('nivå');
+      const wantsTrait = hasOption('trait') || hasEntry('trait');
+      const wantsRace = hasOption('race') || hasEntry('race');
+      const wantsForm = hasOption('form') || hasEntry('form');
+      const desiredLevel = hasOption('level')
+        ? normalizeMatchValue(options.level)
+        : normalizeMatchValue(entry.nivå);
+      const desiredTrait = hasOption('trait')
+        ? normalizeMatchValue(options.trait)
+        : normalizeMatchValue(entry.trait);
+      const desiredRace = hasOption('race')
+        ? normalizeMatchValue(options.race)
+        : normalizeMatchValue(entry.race);
+      const desiredForm = hasOption('form')
+        ? normalizeMatchValue(options.form)
+        : normalizeMatchValue(entry.form);
+
+      let fallbackById = null;
+      let fallbackByName = null;
+      for (const item of list) {
+        if (!item || typeof item !== 'object') continue;
+        const sameId = entry.id != null && item.id != null
+          && normalizeId(entry.id) === normalizeId(item.id);
+        const sameName = String(entry.namn || entry.name || '').trim()
+          && String(item.namn || '').trim()
+          && String(entry.namn || entry.name || '').trim() === String(item.namn || '').trim();
+        const levelMatches = !wantsLevel || normalizeMatchValue(item.nivå) === desiredLevel;
+        const traitMatches = !wantsTrait || normalizeMatchValue(item.trait) === desiredTrait;
+        const raceMatches = !wantsRace || normalizeMatchValue(item.race) === desiredRace;
+        const formMatches = !wantsForm || normalizeMatchValue(item.form) === desiredForm;
+        if ((sameId || sameName) && levelMatches && traitMatches && raceMatches && formMatches) {
+          return item;
+        }
+        if (sameId && !fallbackById) {
+          fallbackById = item;
+          continue;
+        }
+        if (sameName && !fallbackByName) fallbackByName = item;
+      }
+      return fallbackById || fallbackByName || null;
+    };
+
+    const applyChoiceSelectionToCharacterEntry = (list, entry, choiceResult) => {
+      if (!Array.isArray(list) || !entry || !choiceResult?.rule?.field) return false;
+      const field = String(choiceResult.rule.field || '').trim();
+      if (!field) return false;
+      const pickedValue = choiceResult.value;
+      if (pickedValue === undefined || pickedValue === null || String(pickedValue).trim() === '') {
+        return false;
+      }
+      let changed = false;
+      if (String(entry[field] ?? '') !== String(pickedValue)) {
+        entry[field] = pickedValue;
+        changed = true;
+      }
+      if (choiceResult.duplicate?.replaceExisting) {
+        const wanted = normalizeChoiceToken(pickedValue);
+        for (let i = list.length - 1; i >= 0; i--) {
+          const item = list[i];
+          if (!item || item === entry) continue;
+          if (!isSameChoiceSource(item, entry)) continue;
+          if (normalizeChoiceToken(item?.[field]) !== wanted) continue;
+          list.splice(i, 1);
+          changed = true;
+        }
+      }
+      return changed;
+    };
+
+    async function ensureChoicesForNewEntries(beforeList) {
+      const currentList = storeHelper.getCurrentList(store);
+      const addedEntries = collectAddedEntries(beforeList, currentList);
+      if (!addedEntries.length) return;
+
+      for (const addedEntry of addedEntries) {
+        const latestList = storeHelper.getCurrentList(store);
+        if (!Array.isArray(latestList) || !latestList.length) break;
+        const matchOptions = {};
+        CHOICE_MATCH_FIELDS.forEach(field => {
+          const value = normalizeMatchValue(addedEntry?.[field]);
+          if (value === null || value === '') return;
+          matchOptions[field] = value;
+        });
+        if (addedEntry?.nivå !== undefined && addedEntry?.nivå !== null && String(addedEntry.nivå).trim() !== '') {
+          matchOptions.level = addedEntry.nivå;
+        }
+        const liveEntry = findMatchingCharacterListEntry(latestList, addedEntry, matchOptions);
+        if (!liveEntry) continue;
+        const choiceResult = await pickCharacterEntryChoice(liveEntry, latestList, liveEntry.nivå || '', liveEntry, {
+          promptIfMissingOnly: true
+        });
+        if (!choiceResult?.hasChoice || choiceResult.cancelled) continue;
+        if (!applyChoiceSelectionToCharacterEntry(latestList, liveEntry, choiceResult)) continue;
+        storeHelper.setCurrentList(store, latestList);
+      }
+    }
+
     function getActiveHandlingKeys(p) {
       const isActiveHandling = (value) => {
         const values = Array.isArray(value) ? value : [value];
@@ -2275,6 +2428,7 @@
         }
       }
       storeHelper.setCurrentList(store, list);
+      await ensureChoicesForNewEntries(before);
       if (p.namn === 'Privilegierad') {
         invUtil.renderInventory();
       }
@@ -2429,6 +2583,8 @@
           }
         }
         storeHelper.setCurrentList(store, list); updateXP();
+        await ensureChoicesForNewEntries(before);
+        updateXP();
       }
       renderSkills(filtered()); renderTraits(); updateSearchDatalist();
       window.entryCardFactory?.syncLevelControl?.(select);

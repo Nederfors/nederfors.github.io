@@ -3736,7 +3736,7 @@ function openDefenseCalcPopup() {
       return window.isTwoHandedWeaponType(typeName);
     }
     const txt = String(typeName || '').toLowerCase();
-    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tvåhandsvapen' || txt === 'tvahandsvapen' || txt === 'tunga vapen';
+    return txt === 'l\u00e5nga vapen' || txt === 'langa vapen' || txt === 'tvåhandsvapen' || txt === 'tvahandsvapen' || txt === 'tvåhandsvapen';
   };
   const hasWeaponType = (types) => {
     if (typeof window.hasWeaponType === 'function') return window.hasWeaponType(types);

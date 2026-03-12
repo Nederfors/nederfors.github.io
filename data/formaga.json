@@ -1577,7 +1577,7 @@
     {
       "id": "form37",
       "namn": "Tvåhandskraft",
-      "beskrivning": "Riddare och vredesgardister som klär sig i stål från topp till tå har insett att de med detta som grundskydd kan satsa på att göra massiv skada. Tunga tvåhandsvapen vilar vant i rollpersonens valkiga händer och ger en enastående skadeverkan mot alla sorters mål. Extra effektivt är tunga vapen mot tungt rustade fiender.",
+      "beskrivning": "Riddare och vredesgardister som klär sig i stål från topp till tå har insett att de med detta som grundskydd kan satsa på att göra massiv skada. Tunga tvåhandsvapen vilar vant i rollpersonens valkiga händer och ger en enastående skadeverkan mot alla sorters mål. Extra effektivt är tvåhandsvapen mot tungt rustade fiender.",
       "taggar": {
         "typ": [
           "Förmåga"
@@ -1606,7 +1606,7 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Passiv. Skadan med tunga vapen ökar till 1T12.",
+        "Novis": "Handling: Passiv. Skadan med tvåhandsvapen ökar till 1T12.",
         "Gesäll": "Handling: Reaktiv. Rollpersonen behärskar sitt vapen så väl att när en attack missar får rollpersonen göra ett nytt försök att träffa fienden med återsvingen. Då slås ett nytt attackslag, vilket ger 1T8 i skada vid träff.",
         "Mästare": "Handling: Aktiv. Ett tungt vapen är i mästarens händer en förödande pansarkrossare. När en attack träffar sitt mål ignoreras Bepansring helt och hållet."
       }
