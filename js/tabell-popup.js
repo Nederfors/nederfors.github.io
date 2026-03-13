@@ -1,4 +1,19 @@
 (function(window){
+  let activeSession = null;
+
+  function openSession(pop, options = {}) {
+    if (window.popupManager?.open && window.popupManager?.close && pop?.id) {
+      window.popupManager.open(pop, options);
+      return {
+        close: (reason = 'programmatic') => window.popupManager.close(pop, reason)
+      };
+    }
+    pop?.classList.add('open');
+    return {
+      close: () => pop?.classList.remove('open')
+    };
+  }
+
   function applyContentMode(wrap){
     if (!wrap) return;
     const inner = wrap.querySelector('.popup-inner');
@@ -12,6 +27,7 @@
     if(document.getElementById('tabellPopup')) return;
     const wrap = document.createElement('div');
     wrap.id = 'tabellPopup';
+    wrap.className = 'popup';
     wrap.innerHTML = `
       <div class="popup-inner">
         <div class="popup-header">
@@ -61,19 +77,33 @@
     if (noWrapBtn) noWrapBtn.classList.remove('danger');
     if (wideBtn)   wideBtn.classList.remove('danger');
     applyContentMode(pop);
-    pop.classList.add('open');
+    activeSession = openSession(pop, {
+      type: 'picker',
+      onClose: () => {
+        pop.classList.remove('open');
+        pop.classList.remove('has-table-view');
+        pop.querySelector('.popup-inner')?.classList.remove('has-table-view');
+        activeSession = null;
+        window.updateScrollLock?.();
+      }
+    });
     inner.scrollTop = 0;
     if (content) content.scrollTop = 0;
     window.updateScrollLock?.();
   }
 
-  function close(){
+  function close(reason = 'programmatic'){
     const p = document.getElementById('tabellPopup');
     if(p) {
-      p.classList.remove('open');
-      p.classList.remove('has-table-view');
-      p.querySelector('.popup-inner')?.classList.remove('has-table-view');
-      window.updateScrollLock?.();
+      if (activeSession?.close) {
+        activeSession.close(reason);
+        if (!window.popupManager?.close) activeSession = null;
+      } else {
+        p.classList.remove('open');
+        p.classList.remove('has-table-view');
+        p.querySelector('.popup-inner')?.classList.remove('has-table-view');
+        window.updateScrollLock?.();
+      }
     }
   }
 

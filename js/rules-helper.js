@@ -2196,6 +2196,15 @@
     return total;
   }
 
+  function sumAndrarByMal(list, mal, initialValue, options = {}) {
+    const entries = Array.isArray(list) ? list : [];
+    const dynamic = typeof options === 'function';
+    return getListRules(entries, { key: 'andrar', mal })
+      .filter(r => matchesListCondition(r, entries))
+      .reduce((val, r) => applyNumericChange(val, r, r?.sourceEntry,
+        dynamic ? options(val) : options), initialValue);
+  }
+
   function lookupEntriesByNames(names) {
     const lookup = typeof window.lookupEntry === 'function' ? window.lookupEntry : () => null;
     const seen = new Set();
@@ -2914,10 +2923,12 @@
     return defined.length ? defined[0] : 1;
   }
 
-  function matchesListCondition(rule, list) {
+  function matchesListCondition(rule, list, context = {}) {
+    const extra = context && typeof context === 'object' ? context : {};
     return evaluateNar(rule?.nar, {
+      ...extra,
       list: Array.isArray(list) ? list : [],
-      sourceLevel: rule?.sourceEntryLevel
+      sourceLevel: rule?.sourceEntryLevel || extra?.sourceLevel
     });
   }
 
@@ -2996,6 +3007,9 @@
   function getConflictReasonsForCandidate(candidateEntry, list, options = {}) {
     if (!candidateEntry || typeof candidateEntry !== 'object') return [];
     const entries = getRuleEntries(list);
+    const conditionContext = options?.conditionContext && typeof options.conditionContext === 'object'
+      ? options.conditionContext
+      : {};
     const candidateLevel = typeof options?.level === 'string' && options.level.trim()
       ? options.level.trim()
       : (typeof candidateEntry?.nivå === 'string' ? candidateEntry.nivå.trim() : '');
@@ -3009,7 +3023,7 @@
 
     const collectForSource = (sourceEntry, targets, level = '') => {
       getRuleList(sourceEntry, 'krockar', { level }).forEach(rule => {
-        if (!matchesListCondition(rule, contextList)) return;
+        if (!matchesListCondition(rule, contextList, { ...conditionContext, sourceEntry })) return;
         targets.forEach(targetEntry => {
           if (!targetEntry || targetEntry === sourceEntry) return;
           if (!matchesConflictTargetCondition(rule, targetEntry, { traditionGraph })) return;
@@ -4102,45 +4116,12 @@
 
   function getRuleNumericValue(rule, sourceEntry, options = {}) {
     const rawFormel = rule?.formel;
-    const formel = typeof rawFormel === 'string' ? rawFormel.trim() : '';
     const numericValue = Number(rule?.varde);
-    const willpower = Number(options?.viljestark || 0);
-    const strength = Number(options?.stark || 0);
-    const permanentCorruption = Number(options?.permanent_korruption || 0);
-    const currentPainThreshold = Number(options?.aktuell_smartgrans || 0);
     const objectFormulaValue = computeObjectFormulaValue(rawFormel, sourceEntry, options);
     if (Number.isFinite(objectFormulaValue)) {
       return Number.isFinite(numericValue) ? objectFormulaValue * numericValue : objectFormulaValue;
     }
-    if (!formel) {
-      return Number.isFinite(numericValue) ? numericValue : 0;
-    }
-
-    let computed = 0;
-    if (formel === 'viljestark' || formel === 'hel_viljestark') {
-      computed = Number.isFinite(willpower) ? willpower : 0;
-    } else if (formel === 'halv_viljestark_uppat') {
-      computed = Number.isFinite(willpower) ? Math.ceil(willpower / 2) : 0;
-    } else if (formel === 'halv_viljestark_nedat') {
-      computed = Number.isFinite(willpower) ? Math.floor(willpower / 2) : 0;
-    } else if (formel === 'stark_plus_3') {
-      computed = Number.isFinite(strength) ? strength + 3 : 3;
-    } else if (formel === 'stark_x_1_5_plus_3') {
-      computed = Number.isFinite(strength) ? Math.ceil(strength * 1.5) + 3 : 3;
-    } else if (formel === 'stark_x_0_5_plus_3') {
-      computed = Number.isFinite(strength) ? Math.ceil(strength * 0.5) + 3 : 3;
-    } else if (formel === 'halv_permanent_korruption_nedat') {
-      computed = Number.isFinite(permanentCorruption) ? Math.floor(permanentCorruption / 2) : 0;
-    } else if (formel === 'fjardedel_aktuell_smartgrans_nedat') {
-      computed = Number.isFinite(currentPainThreshold) ? Math.floor(currentPainThreshold / 4) : 0;
-    } else if (formel === 'niva') {
-      computed = getEntryLevelValue(sourceEntry || {});
-    } else if (formel === 'fjardedel_korruptionstroskel_uppat') {
-      const threshold = Number(options?.korruptionstroskel || 0);
-      computed = Math.ceil(threshold / 4);
-    }
-
-    return Number.isFinite(numericValue) ? computed * numericValue : computed;
+    return Number.isFinite(numericValue) ? numericValue : 0;
   }
 
   function applyNumericChange(currentValue, rule, sourceEntry, options = {}) {
@@ -4210,9 +4191,6 @@
     const numericValue = Number(rule?.varde);
     if (Number.isFinite(objectFormulaValue)) {
       return Number.isFinite(numericValue) ? objectFormulaValue * numericValue : objectFormulaValue;
-    }
-    if (rawFormel && typeof rawFormel === 'string') {
-      return getRuleNumericValue(rule, sourceEntry, options);
     }
     if (Number.isFinite(numericValue)) return numericValue;
     return null;
@@ -4320,168 +4298,49 @@
     const entries = getRuleEntries(list);
     const willpower = Number(options?.viljestark || 0);
     const normalizedWillpower = Number.isFinite(willpower) ? willpower : 0;
-    let korruptionstroskel = Math.ceil(normalizedWillpower / 2);
-    let styggelsetroskel = normalizedWillpower;
+    const baseKorr = Math.ceil(normalizedWillpower / 2);
+    const opts = { ...options, viljestark: normalizedWillpower };
 
-    getListRules(entries, { key: 'andrar' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      const mal = String(rule?.mal || '').trim();
-      if (mal === 'korruptionstroskel') {
-        korruptionstroskel = applyNumericChange(
-          korruptionstroskel,
-          rule,
-          rule?.sourceEntry,
-          {
-            ...options,
-            viljestark: normalizedWillpower,
-            aktuell_korruptionstroskel: korruptionstroskel,
-            aktuell_styggelsetroskel: styggelsetroskel
-          }
-        );
-        return;
-      }
-      if (mal === 'styggelsetroskel') {
-        styggelsetroskel = applyNumericChange(
-          styggelsetroskel,
-          rule,
-          rule?.sourceEntry,
-          {
-            ...options,
-            viljestark: normalizedWillpower,
-            aktuell_korruptionstroskel: korruptionstroskel,
-            aktuell_styggelsetroskel: styggelsetroskel
-          }
-        );
-      }
-    });
+    const korruptionstroskel = sumAndrarByMal(entries, 'korruptionstroskel', baseKorr,
+      (val) => ({ ...opts, aktuell_korruptionstroskel: val, aktuell_styggelsetroskel: normalizedWillpower }));
+    const styggelsetroskel = sumAndrarByMal(entries, 'styggelsetroskel', normalizedWillpower,
+      (val) => ({ ...opts, aktuell_korruptionstroskel: korruptionstroskel, aktuell_styggelsetroskel: val }));
 
-    return {
-      viljestark: normalizedWillpower,
-      korruptionstroskel,
-      styggelsetroskel
-    };
+    return { viljestark: normalizedWillpower, korruptionstroskel, styggelsetroskel };
   }
 
   function getCarryCapacityBase(list, options = {}) {
     const entries = getRuleEntries(list);
     const strength = Number(options?.stark || 0);
     const normalizedStrength = Number.isFinite(strength) ? strength : 0;
-    let barkapacitetFaktor = 1;
-    let barkapacitetTillagg = 3;
-    let barkapacitetStarkTillagg = 0;
+    const opts = { ...options, stark: normalizedStrength };
 
-    getListRules(entries, { key: 'andrar', mal: 'barkapacitet_stark' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      barkapacitetStarkTillagg = applyNumericChange(
-        barkapacitetStarkTillagg,
-        rule,
-        rule?.sourceEntry,
-        { ...options, stark: normalizedStrength }
-      );
-    });
+    const starkTillagg = sumAndrarByMal(entries, 'barkapacitet_stark', 0, opts);
+    const faktor = sumAndrarByMal(entries, 'barkapacitet_faktor', 1,
+      (val) => ({ ...opts, aktuell_barkapacitet_faktor: val }));
+    const tillagg = sumAndrarByMal(entries, 'barkapacitet_tillagg', 3,
+      (val) => ({ ...opts, aktuell_barkapacitet_faktor: faktor, aktuell_barkapacitet_tillagg: val }));
 
-    getListRules(entries, { key: 'andrar', mal: 'barkapacitet_faktor' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      barkapacitetFaktor = applyNumericChange(
-        barkapacitetFaktor,
-        rule,
-        rule?.sourceEntry,
-        {
-          ...options,
-          stark: normalizedStrength,
-          aktuell_barkapacitet_faktor: barkapacitetFaktor,
-          aktuell_barkapacitet_tillagg: barkapacitetTillagg
-        }
-      );
-    });
-
-    getListRules(entries, { key: 'andrar', mal: 'barkapacitet_tillagg' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      barkapacitetTillagg = applyNumericChange(
-        barkapacitetTillagg,
-        rule,
-        rule?.sourceEntry,
-        {
-          ...options,
-          stark: normalizedStrength,
-          aktuell_barkapacitet_faktor: barkapacitetFaktor,
-          aktuell_barkapacitet_tillagg: barkapacitetTillagg
-        }
-      );
-    });
-
-    let barkapacitetBas = Math.ceil((normalizedStrength + barkapacitetStarkTillagg) * barkapacitetFaktor) + barkapacitetTillagg;
-
-    // Compatibility path for earlier authored data that used direct base overrides.
-    getListRules(entries, { key: 'andrar', mal: 'barkapacitet_bas' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      barkapacitetBas = applyNumericChange(
-        barkapacitetBas,
-        rule,
-        rule?.sourceEntry,
-        {
-          ...options,
-          stark: normalizedStrength,
-          aktuell_barkapacitet_faktor: barkapacitetFaktor,
-          aktuell_barkapacitet_tillagg: barkapacitetTillagg,
-          aktuell_barkapacitet_bas: barkapacitetBas
-        }
-      );
-    });
-
-    return barkapacitetBas;
+    const computed = Math.ceil((normalizedStrength + starkTillagg) * faktor) + tillagg;
+    return sumAndrarByMal(entries, 'barkapacitet_bas', computed,
+      (val) => ({ ...opts, aktuell_barkapacitet_faktor: faktor, aktuell_barkapacitet_tillagg: tillagg, aktuell_barkapacitet_bas: val }));
   }
 
   function getToughnessBase(list, options = {}) {
     const entries = getRuleEntries(list);
     const strength = Number(options?.stark || 0);
     const normalizedStrength = Number.isFinite(strength) ? strength : 0;
-    let talighetBas = Math.max(10, normalizedStrength);
-    let talighetTillagg = 0;
+    const opts = { ...options, stark: normalizedStrength };
 
-    getListRules(entries, { key: 'andrar', mal: 'talighet_bas' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      talighetBas = applyNumericChange(
-        talighetBas,
-        rule,
-        rule?.sourceEntry,
-        {
-          ...options,
-          stark: normalizedStrength,
-          aktuell_talighet_bas: talighetBas,
-          aktuell_talighet_tillagg: talighetTillagg
-        }
-      );
-    });
+    let bas = sumAndrarByMal(entries, 'talighet_bas', Math.max(10, normalizedStrength),
+      (val) => ({ ...opts, aktuell_talighet_bas: val }));
+    const faktor = sumAndrarByMal(entries, 'talighet_faktor', 1,
+      (val) => ({ ...opts, aktuell_talighet_bas: bas, aktuell_talighet_faktor: val }));
+    bas = Math.ceil(bas * faktor);
+    const tillagg = sumAndrarByMal(entries, 'talighet_tillagg', 0,
+      (val) => ({ ...opts, aktuell_talighet_bas: bas, aktuell_talighet_tillagg: val }));
 
-    let talighetFaktor = 1;
-    getListRules(entries, { key: 'andrar', mal: 'talighet_faktor' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      talighetFaktor = applyNumericChange(
-        talighetFaktor,
-        rule,
-        rule?.sourceEntry,
-        { ...options, stark: normalizedStrength, aktuell_talighet_bas: talighetBas }
-      );
-    });
-    talighetBas = Math.ceil(talighetBas * talighetFaktor);
-
-    getListRules(entries, { key: 'andrar', mal: 'talighet_tillagg' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      talighetTillagg = applyNumericChange(
-        talighetTillagg,
-        rule,
-        rule?.sourceEntry,
-        {
-          ...options,
-          stark: normalizedStrength,
-          aktuell_talighet_bas: talighetBas,
-          aktuell_talighet_tillagg: talighetTillagg
-        }
-      );
-    });
-
-    return talighetBas + talighetTillagg;
+    return bas + tillagg;
   }
 
   function flattenInventoryRows(inventory) {
@@ -4518,12 +4377,7 @@
 
   function getTraitTotalMax(list, inventory, options = {}) {
     const entries = getRuleEntries(list);
-    let maxTotal = 80;
-
-    getListRules(entries, { key: 'andrar', mal: 'karaktarsdrag_max_tillagg' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      maxTotal = applyNumericChange(maxTotal, rule, rule?.sourceEntry, options);
-    });
+    let maxTotal = sumAndrarByMal(entries, 'karaktarsdrag_max_tillagg', 80, options);
 
     flattenInventoryRows(inventory).forEach(row => {
       const sourceEntry = getInventoryRowSourceEntry(row);
@@ -4547,36 +4401,15 @@
     const entries = getRuleEntries(list);
     const strength = Number(options?.stark || 0);
     const normalizedStrength = Number.isFinite(strength) ? strength : 0;
+    const opts = { ...options, stark: normalizedStrength };
     const basePainThreshold = Math.ceil(normalizedStrength / 2);
-    let currentPainThreshold = basePainThreshold;
 
-    let smartgransFaktor = 1;
-    getListRules(entries, { key: 'andrar', mal: 'smartgrans_faktor' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      smartgransFaktor = applyNumericChange(
-        smartgransFaktor,
-        rule,
-        rule?.sourceEntry,
-        { ...options, stark: normalizedStrength }
-      );
-    });
-    currentPainThreshold = Math.ceil(currentPainThreshold * smartgransFaktor);
+    const faktor = sumAndrarByMal(entries, 'smartgrans_faktor', 1, opts);
+    const factored = Math.ceil(basePainThreshold * faktor);
+    const current = sumAndrarByMal(entries, 'smartgrans_tillagg', factored,
+      (val) => ({ ...opts, aktuell_smartgrans: val }));
 
-    getListRules(entries, { key: 'andrar', mal: 'smartgrans_tillagg' }).forEach(rule => {
-      if (!matchesListCondition(rule, entries)) return;
-      currentPainThreshold = applyNumericChange(
-        currentPainThreshold,
-        rule,
-        rule?.sourceEntry,
-        {
-          ...options,
-          stark: normalizedStrength,
-          aktuell_smartgrans: currentPainThreshold
-        }
-      );
-    });
-
-    return currentPainThreshold - basePainThreshold;
+    return current - basePainThreshold;
   }
 
   function getProtectionTraditions(rule, options = {}) {
@@ -4900,6 +4733,359 @@
     return { faktor, tillagg };
   }
 
+  function getEntryPrimaryLevelName(entry) {
+    if (!entry || typeof entry !== 'object') return '';
+    const ownLevel = typeof entry.nivå === 'string' ? entry.nivå.trim() : '';
+    if (ownLevel) return ownLevel;
+    const levelKeys = Object.keys(entry.nivåer || {});
+    return levelKeys.find(key => String(key || '').trim()) || '';
+  }
+
+  function toPositiveFiniteNumber(value, fallback = 1) {
+    const numeric = Number(value);
+    if (!Number.isFinite(numeric) || numeric <= 0) return fallback;
+    return numeric;
+  }
+
+  function getQualityContextSummary(qualityNames = []) {
+    const names = toArray(qualityNames).map(String).map(name => name.trim()).filter(Boolean);
+    if (!names.length) {
+      return {
+        totalCount: 0,
+        positiveCount: 0,
+        mysticCount: 0
+      };
+    }
+
+    const qualityByName = new Map();
+    lookupEntriesByNames(names).forEach(entry => {
+      const key = normalizeLevelName(entry?.namn || '');
+      if (!key || qualityByName.has(key)) return;
+      qualityByName.set(key, entry);
+    });
+
+    let positiveCount = 0;
+    let mysticCount = 0;
+    names.forEach(name => {
+      const entry = qualityByName.get(normalizeLevelName(name));
+      const types = toArray(entry?.taggar?.typ).map(normalizeLevelName);
+      const isNegative = entry?.negativ === true
+        || types.includes(normalizeLevelName('Negativ kvalitet'));
+      const isNeutral = entry?.neutral === true
+        || types.includes(normalizeLevelName('Neutral kvalitet'));
+      const isMystic = types.includes(normalizeLevelName('Mystisk kvalitet'));
+      if (!isNegative && !isNeutral) {
+        positiveCount += 1;
+        if (isMystic) mysticCount += 1;
+      }
+    });
+
+    return {
+      totalCount: names.length,
+      positiveCount,
+      mysticCount
+    };
+  }
+
+  function buildItemRuleTargetContext(targetEntry, qualityNames = [], extra = {}) {
+    const entry = targetEntry && typeof targetEntry === 'object' ? targetEntry : {};
+    const names = toArray(qualityNames).map(String).map(name => name.trim()).filter(Boolean);
+    const details = extra && typeof extra === 'object' ? extra : {};
+    const qualitySummary = getQualityContextSummary(names);
+    const levelName = typeof details.targetLevel === 'string' && details.targetLevel.trim()
+      ? details.targetLevel.trim()
+      : getEntryPrimaryLevelName(entry);
+    const qualityCount = Number(details.kvalitet_antal ?? details.antal_kvalitet ?? qualitySummary.totalCount);
+    const positiveCount = Number(details.positiv_kvalitet_antal ?? details.antal_positiv_kvalitet ?? qualitySummary.positiveCount);
+    const mysticCount = Number(details.mystisk_kvalitet_antal ?? details.antal_mystisk_kvalitet ?? qualitySummary.mysticCount);
+    const out = {
+      id: entry.id,
+      namn: entry.namn,
+      typ: toArray(entry?.taggar?.typ ?? entry?.typ),
+      kvalitet: names,
+      niva: levelName,
+      kvalitet_antal: Number.isFinite(qualityCount) ? qualityCount : names.length,
+      antal_kvalitet: Number.isFinite(qualityCount) ? qualityCount : names.length,
+      positiv_kvalitet_antal: Number.isFinite(positiveCount) ? positiveCount : 0,
+      antal_positiv_kvalitet: Number.isFinite(positiveCount) ? positiveCount : 0,
+      mystisk_kvalitet_antal: Number.isFinite(mysticCount) ? mysticCount : 0,
+      antal_mystisk_kvalitet: Number.isFinite(mysticCount) ? mysticCount : 0
+    };
+    if (Object.prototype.hasOwnProperty.call(details, 'krav_uppfyllda')) {
+      out.krav_uppfyllda = Boolean(details.krav_uppfyllda);
+    }
+    return out;
+  }
+
+  function normalizePriceOperation(operation, fallbackSetter = '') {
+    const direct = normalizeLevelName(operation || '');
+    if (['multiplicera', 'multiply', 'mul', 'factor', 'faktor'].includes(direct)) return 'multiply';
+    if (['dividera', 'divide', 'div'].includes(direct)) return 'divide';
+    if (['addera', 'add', 'plus'].includes(direct)) return 'add';
+    if (['subtrahera', 'subtract', 'sub', 'minus'].includes(direct)) return 'subtract';
+
+    const setterToken = normalizeLevelName(fallbackSetter || '');
+    if (['add', 'addera'].includes(setterToken)) return 'add';
+    if (['sub', 'subtract', 'subtrahera'].includes(setterToken)) return 'subtract';
+    if (['divide', 'dividera', 'div'].includes(setterToken)) return 'divide';
+    return 'multiply';
+  }
+
+  function readPriceRuleNumericValue(rule, operation) {
+    if (!rule || typeof rule !== 'object') return null;
+    const raw = rule.varde;
+    if (operation === 'add' || operation === 'subtract') {
+      if (raw && typeof raw === 'object' && !Array.isArray(raw)) {
+        const asMoney = typeof window.moneyToO === 'function'
+          ? window.moneyToO(raw)
+          : (
+            (Number(raw.daler ?? raw.d) || 0) * 100
+            + (Number(raw.skilling ?? raw.s) || 0) * 10
+            + (Number(raw['örtegar'] ?? raw.o) || 0)
+          );
+        if (Number.isFinite(asMoney)) return Number(asMoney);
+      }
+      const num = Number(raw);
+      return Number.isFinite(num) ? num : null;
+    }
+    const num = Number(raw);
+    if (!Number.isFinite(num) || num <= 0) return null;
+    return num;
+  }
+
+  function readPriceRuleMatchMode(rule) {
+    const fromRule = normalizeRequirementLogic(rule?.matchning, 'and');
+    if (fromRule) return fromRule;
+    const fromNar = normalizeRequirementLogic(rule?.nar?.matchning, 'and');
+    if (fromNar) return fromNar;
+    return 'and';
+  }
+
+  function readBoundedNumber(value) {
+    const numeric = Number(value);
+    return Number.isFinite(numeric) ? numeric : null;
+  }
+
+  function evaluatePriceForemalCondition(condition, target, mode = 'and') {
+    const cond = condition && typeof condition === 'object' ? condition : {};
+    const out = [];
+
+    const requiredTypes = toArray(cond.typ).map(String).filter(Boolean);
+    if (requiredTypes.length) out.push(hasNormalizedAny(target?.typ, requiredTypes));
+
+    const excludedTypes = toArray(cond.ingen_typ).map(String).filter(Boolean);
+    if (excludedTypes.length) out.push(!hasNormalizedAny(target?.typ, excludedTypes));
+
+    const anyQuality = toArray(cond.nagon_kvalitet).map(String).filter(Boolean);
+    if (anyQuality.length) out.push(hasNormalizedAny(target?.kvalitet, anyQuality));
+
+    const ids = toArray(cond.id).map(v => String(v || '').trim()).filter(Boolean);
+    if (ids.length) out.push(ids.includes(String(target?.id || '').trim()));
+
+    const names = toArray(cond.namn).map(v => normalizeLevelName(v)).filter(Boolean);
+    if (names.length) out.push(names.includes(normalizeLevelName(target?.namn || '')));
+
+    const levels = toArray(cond.niva ?? cond.nivå).map(v => normalizeLevelName(v)).filter(Boolean);
+    if (levels.length) {
+      const levelValue = normalizeLevelName(target?.niva ?? target?.nivå ?? target?.level ?? '');
+      out.push(levels.includes(levelValue));
+    }
+
+    const qualityCount = Number(target?.kvalitet_antal ?? target?.antal_kvalitet ?? toArray(target?.kvalitet).length ?? 0);
+    const positiveCount = Number(target?.positiv_kvalitet_antal ?? target?.antal_positiv_kvalitet ?? 0);
+    const mysticCount = Number(target?.mystisk_kvalitet_antal ?? target?.antal_mystisk_kvalitet ?? 0);
+
+    const qualityMin = readBoundedNumber(cond.antal_kvalitet_minst);
+    if (qualityMin !== null) out.push(qualityCount >= qualityMin);
+    const qualityMax = readBoundedNumber(cond.antal_kvalitet_max);
+    if (qualityMax !== null) out.push(qualityCount <= qualityMax);
+
+    const posMin = readBoundedNumber(cond.antal_positiv_kvalitet_minst);
+    if (posMin !== null) out.push(positiveCount >= posMin);
+    const posMax = readBoundedNumber(cond.antal_positiv_kvalitet_max);
+    if (posMax !== null) out.push(positiveCount <= posMax);
+
+    const mystMin = readBoundedNumber(cond.antal_mystisk_kvalitet_minst);
+    if (mystMin !== null) out.push(mysticCount >= mystMin);
+    const mystMax = readBoundedNumber(cond.antal_mystisk_kvalitet_max);
+    if (mystMax !== null) out.push(mysticCount <= mystMax);
+
+    if (Object.prototype.hasOwnProperty.call(cond, 'krav_uppfyllda')) {
+      out.push(Boolean(target?.krav_uppfyllda) === isTruthyRuleValue(cond.krav_uppfyllda));
+    }
+    if (Object.prototype.hasOwnProperty.call(cond, 'krav_saknas')) {
+      out.push(Boolean(!target?.krav_uppfyllda) === isTruthyRuleValue(cond.krav_saknas));
+    }
+
+    if (!out.length) return true;
+    if (mode === 'or') return out.some(Boolean);
+    return out.every(Boolean);
+  }
+
+  function evaluatePriceRuleNar(rule, context = {}) {
+    if (!rule || typeof rule !== 'object') return false;
+    const nar = rule.nar && typeof rule.nar === 'object' ? rule.nar : null;
+    if (!nar) return true;
+
+    const narWithoutForemal = cloneRuleValue(nar);
+    delete narWithoutForemal.foremal;
+    delete narWithoutForemal.matchning;
+
+    if (Object.keys(narWithoutForemal).length && !evaluateNar(narWithoutForemal, context)) {
+      return false;
+    }
+
+    if (!nar.foremal || typeof nar.foremal !== 'object') return true;
+    const mode = readPriceRuleMatchMode(rule);
+    const target = context.foremal && typeof context.foremal === 'object' ? context.foremal : {};
+    return evaluatePriceForemalCondition(nar.foremal, target, mode);
+  }
+
+  function getPriceRuleEffectsForEntry(entry, context = {}) {
+    if (!entry || typeof entry !== 'object') return { factor: 1, additiveO: 0, explicit: false };
+    let factor = 1;
+    let additiveO = 0;
+    let explicit = false;
+    getRuleList(entry, 'andrar', { level: entry?.nivå || '' })
+      .filter(rule => String(rule?.mal || '') === 'pris_faktor')
+      .forEach(rule => {
+        if (!evaluatePriceRuleNar(rule, context)) return;
+        const operation = normalizePriceOperation(rule?.operation, rule?.satt);
+        const value = readPriceRuleNumericValue(rule, operation);
+        if (value === null) return;
+        const setterMode = normalizeLevelName(rule?.satt || '');
+        const replace = setterMode === 'ersatt' || setterMode === 'satt' || setterMode === 'replace' || setterMode === 'set';
+        if (operation === 'add') {
+          additiveO = replace ? value : additiveO + value;
+        } else if (operation === 'subtract') {
+          additiveO = replace ? -value : additiveO - value;
+        } else if (operation === 'divide') {
+          if (value === 0) return;
+          factor = replace ? (1 / value) : (factor / value);
+        } else {
+          factor = replace ? value : (factor * value);
+        }
+        explicit = true;
+      });
+    return { factor, additiveO, explicit };
+  }
+
+  function getPriceRuleEffectsForEntries(entries, context = {}) {
+    const list = Array.isArray(entries) ? entries : [];
+    let factor = 1;
+    let additiveO = 0;
+    list.forEach(entry => {
+      const effect = getPriceRuleEffectsForEntry(entry, context);
+      if (!effect.explicit) return;
+      factor *= toPositiveFiniteNumber(effect.factor, 1);
+      additiveO += Number(effect.additiveO || 0);
+    });
+    return { factor, additiveO };
+  }
+
+  function getQualityGratisbarForEntry(entry, context = {}) {
+    if (!entry || typeof entry !== 'object') return { gratisbar: false, explicit: false };
+    let gratisbar = false;
+    let explicit = false;
+    getRuleList(entry, 'andrar', { level: entry?.nivå || '' })
+      .filter(rule => String(rule?.mal || '') === 'kvalitet_gratisbar')
+      .forEach(rule => {
+        if (!evaluateNar(rule?.nar, context)) return;
+        if (!Object.prototype.hasOwnProperty.call(rule, 'varde')) return;
+        const value = isTruthyRuleValue(rule?.varde);
+        const mode = normalizeLevelName(rule?.satt || '');
+        if (mode === 'ersatt' || mode === 'satt' || !explicit) {
+          gratisbar = value;
+        } else {
+          // When multiple non-replace rules match, the last matching rule wins.
+          gratisbar = value;
+        }
+        explicit = true;
+      });
+    return { gratisbar, explicit };
+  }
+
+  function getItemQualityRuleEffects(qualityNames, targetEntry, options = {}) {
+    const names = Array.from(new Set(
+      toArray(qualityNames)
+        .map(String)
+        .map(name => name.trim())
+        .filter(Boolean)
+    ));
+    if (!names.length) return {};
+
+    const entriesByName = new Map();
+    lookupEntriesByNames(names).forEach(entry => {
+      const key = normalizeLevelName(entry?.namn || '');
+      if (!key || entriesByName.has(key)) return;
+      entriesByName.set(key, entry);
+    });
+
+    const out = {};
+    names.forEach(name => {
+      const key = normalizeLevelName(name);
+      const entry = entriesByName.get(key);
+      if (!entry) {
+        out[name] = { multiplier: 1, gratisbar: false };
+        return;
+      }
+
+      const details = options && typeof options === 'object'
+        ? (options.foremalContext && typeof options.foremalContext === 'object' ? options.foremalContext : options)
+        : {};
+      const ctx = {
+        ...(options && typeof options === 'object' ? options : {}),
+        foremal: buildItemRuleTargetContext(targetEntry, names, details),
+        targetEntry
+      };
+      const mult = getPriceRuleEffectsForEntry(entry, ctx);
+      const free = getQualityGratisbarForEntry(entry, ctx);
+      out[name] = {
+        multiplier: mult.explicit ? toPositiveFiniteNumber(mult.factor, 1) : 1,
+        additiveO: mult.explicit ? Number(mult.additiveO || 0) : 0,
+        // Explicit-only model: unspecified means not gratisbar.
+        gratisbar: free.explicit ? Boolean(free.gratisbar) : false
+      };
+    });
+    return out;
+  }
+
+  function getItemPriceRuleEffects(list, qualityNames, targetEntry, options = {}) {
+    const names = Array.from(new Set(
+      toArray(qualityNames)
+        .map(String)
+        .map(name => name.trim())
+        .filter(Boolean)
+    ));
+    const details = options && typeof options === 'object'
+      ? (options.foremalContext && typeof options.foremalContext === 'object' ? options.foremalContext : options)
+      : {};
+    const context = {
+      ...(options && typeof options === 'object' ? options : {}),
+      foremal: buildItemRuleTargetContext(targetEntry, names, details),
+      targetEntry
+    };
+    const listEffects = getPriceRuleEffectsForEntries(getRuleEntries(list), context);
+    const qualityEffects = getItemQualityRuleEffects(names, targetEntry, options);
+    let qualityFactor = 1;
+    let qualityAdditiveO = 0;
+    names.forEach(name => {
+      const effect = qualityEffects[name];
+      if (!effect || typeof effect !== 'object') return;
+      qualityFactor *= toPositiveFiniteNumber(effect.multiplier, 1);
+      qualityAdditiveO += Number(effect.additiveO || 0);
+    });
+    return {
+      additiveO: Number(listEffects.additiveO || 0) + Number(qualityAdditiveO || 0),
+      factor: toPositiveFiniteNumber(listEffects.factor, 1) * toPositiveFiniteNumber(qualityFactor, 1),
+      listAdditiveO: Number(listEffects.additiveO || 0),
+      listFactor: toPositiveFiniteNumber(listEffects.factor, 1),
+      qualityAdditiveO: Number(qualityAdditiveO || 0),
+      qualityFactor: toPositiveFiniteNumber(qualityFactor, 1),
+      qualityEffects
+    };
+  }
+
   // --- Mal handler registry (Phase B) ---
   // Numeric mals: handler(list, context) → number
   registerMal('korruptionstroskel', (list, ctx) =>
@@ -4915,51 +5101,16 @@
     return rules.filter(r => evaluateNar(r.nar, { list, ...ctx }))
       .reduce((prod, r) => prod * Number(r.varde ?? 1), 1);
   });
-  registerMal('barkapacitet_stark', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'barkapacitet_stark' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((sum, r) => applyNumericChange(sum, r, r.sourceEntry, ctx), 0);
-  });
+  registerMal('barkapacitet_stark', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_stark', 0, ctx));
   registerMal('talighet_bas', (list, ctx) => getToughnessBase(list, ctx));
-  registerMal('talighet_faktor', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'talighet_faktor' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((val, r) => applyNumericChange(val, r, r.sourceEntry, ctx), 1);
-  });
-  registerMal('smartgrans_faktor', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'smartgrans_faktor' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((val, r) => applyNumericChange(val, r, r.sourceEntry, ctx), 1);
-  });
-  registerMal('talighet_tillagg', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'talighet_tillagg' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((sum, r) => applyNumericChange(sum, r, r.sourceEntry, ctx), 0);
-  });
+  registerMal('talighet_faktor', (list, ctx) => sumAndrarByMal(list, 'talighet_faktor', 1, ctx));
+  registerMal('smartgrans_faktor', (list, ctx) => sumAndrarByMal(list, 'smartgrans_faktor', 1, ctx));
+  registerMal('talighet_tillagg', (list, ctx) => sumAndrarByMal(list, 'talighet_tillagg', 0, ctx));
   registerMal('smartgrans_tillagg', (list, ctx) => getPainThresholdModifier(list, ctx));
   registerMal('barkapacitet', (list, ctx) => getCarryCapacityBase(list, ctx));
-  registerMal('barkapacitet_faktor', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'barkapacitet_faktor' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((val, r) => applyNumericChange(val, r, r.sourceEntry, ctx), 1);
-  });
-  registerMal('barkapacitet_tillagg', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'barkapacitet_tillagg' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((val, r) => applyNumericChange(val, r, r.sourceEntry, ctx), 3);
-  });
-  registerMal('barkapacitet_bas', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'barkapacitet_bas' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((val, r) => applyNumericChange(val, r, r.sourceEntry, ctx), 0);
-  });
+  registerMal('barkapacitet_faktor', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_faktor', 1, ctx));
+  registerMal('barkapacitet_tillagg', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_tillagg', 3, ctx));
+  registerMal('barkapacitet_bas', (list, ctx) => sumAndrarByMal(list, 'barkapacitet_bas', 0, ctx));
   registerMal('forsvar_modifierare', (list, ctx) => {
     const facts = Array.isArray(ctx?.weaponFacts)
       ? ctx.weaponFacts
@@ -4967,12 +5118,7 @@
     return getDefenseModifier(list, facts, ctx || {});
   });
   registerMal('traffsaker_modifierare_vapen', (list, ctx) => getWeaponAttackBonus(list, ctx));
-  registerMal('karaktarsdrag_max_tillagg', (list, ctx) => {
-    const entries = Array.isArray(list) ? list : [];
-    const rules = getListRules(entries, { key: 'andrar', mal: 'karaktarsdrag_max_tillagg' });
-    return rules.filter(r => matchesListCondition(r, entries))
-      .reduce((sum, r) => applyNumericChange(sum, r, r.sourceEntry, ctx), 0);
-  });
+  registerMal('karaktarsdrag_max_tillagg', (list, ctx) => sumAndrarByMal(list, 'karaktarsdrag_max_tillagg', 0, ctx));
   registerMal('begransning_modifierare', (list, ctx) => getArmorRestrictionBonus(ctx?.qualityNames || [], ctx));
   registerMal('begransning_modifierare_fast', (list, ctx) => getArmorRestrictionBonusFast(ctx?.qualityNames || [], ctx));
   registerMal('nollstall_begransning_modifierare', (list) => hasArmorRestrictionReset(list));
@@ -4997,6 +5143,42 @@
   registerMal('skydd_permanent_korruption', (list) => getListRules(list, { key: 'ger', mal: 'skydd_permanent_korruption' }));
   registerMal('vikt_faktor', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).faktor);
   registerMal('vikt_tillagg', (list, ctx) => getItemWeightModifiers(list, ctx?.targetEntry).tillagg);
+  registerMal('pris_faktor', (list, ctx) => {
+    const entries = getRuleEntries(list);
+    if (!entries.length) return 1;
+    const targetEntry = ctx?.targetEntry || null;
+    const qualityNames = toArray(ctx?.qualityNames).map(String).filter(Boolean);
+    const details = ctx && typeof ctx === 'object'
+      ? (ctx.foremalContext && typeof ctx.foremalContext === 'object' ? ctx.foremalContext : ctx)
+      : {};
+    const targetContext = {
+      ...(ctx && typeof ctx === 'object' ? ctx : {}),
+      foremal: buildItemRuleTargetContext(targetEntry, qualityNames, details)
+    };
+    return toPositiveFiniteNumber(getPriceRuleEffectsForEntries(entries, targetContext).factor, 1);
+  });
+  registerMal('kvalitet_gratisbar', (list, ctx) => {
+    const entries = getRuleEntries(list);
+    if (!entries.length) return false;
+    const targetEntry = ctx?.targetEntry || null;
+    const qualityNames = toArray(ctx?.qualityNames).map(String).filter(Boolean);
+    const details = ctx && typeof ctx === 'object'
+      ? (ctx.foremalContext && typeof ctx.foremalContext === 'object' ? ctx.foremalContext : ctx)
+      : {};
+    const targetContext = {
+      ...(ctx && typeof ctx === 'object' ? ctx : {}),
+      foremal: buildItemRuleTargetContext(targetEntry, qualityNames, details)
+    };
+    let hasExplicit = false;
+    let latest = false;
+    entries.forEach(entry => {
+      const value = getQualityGratisbarForEntry(entry, targetContext);
+      if (!value.explicit) return;
+      hasExplicit = true;
+      latest = Boolean(value.gratisbar);
+    });
+    return hasExplicit ? latest : false;
+  });
 
   window.rulesHelper = {
     RULE_KEYS,
@@ -5084,6 +5266,8 @@
     calcPermanentCorruption,
     materializeSnapshotAndrarRules,
     hasRules,
-    getItemWeightModifiers
+    getItemWeightModifiers,
+    getItemQualityRuleEffects,
+    getItemPriceRuleEffects
   };
 })(window);

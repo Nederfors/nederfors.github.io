@@ -15,6 +15,43 @@ const FILTER_CARD_KEY_MAP = Object.freeze({
 });
 
 const icon = (name, opts) => window.iconHtml ? window.iconHtml(name, opts) : '';
+const POPUP_TYPE_BY_ID = Object.freeze({
+  qualPopup: 'picker',
+  inventoryItemsPopup: 'hub',
+  inventoryEconomyPopup: 'hub',
+  customPopup: 'form',
+  moneyPopup: 'form',
+  manualAdjustPopup: 'form',
+  saveFreePopup: 'dialog',
+  advMoneyPopup: 'dialog',
+  qtyPopup: 'form',
+  buyMultiplePopup: 'picker',
+  liveBuyPopup: 'picker',
+  pricePopup: 'form',
+  rowPricePopup: 'picker',
+  vehiclePopup: 'form',
+  vehicleRemovePopup: 'form',
+  vehicleQtyPopup: 'picker',
+  vehicleMoneyPopup: 'picker',
+  defenseCalcPopup: 'form',
+  deleteContainerPopup: 'dialog',
+  alcPopup: 'form',
+  smithPopup: 'form',
+  artPopup: 'form',
+  entrySortPopup: 'form',
+  pdfPopup: 'form',
+  driveStoragePopup: 'form',
+  characterToolsPopup: 'form',
+  nilasPopup: 'dialog',
+  folderManagerPopup: 'form',
+  renameFolderPopup: 'dialog',
+  newCharPopup: 'form',
+  generatorPopup: 'form',
+  dupCharPopup: 'form',
+  renameCharPopup: 'form',
+  dialogPopup: 'dialog',
+  danielPopup: 'dialog'
+});
 
 class SharedToolbar extends HTMLElement {
   constructor() {
@@ -30,6 +67,7 @@ class SharedToolbar extends HTMLElement {
   connectedCallback() {
     this.render();
     window.autoResizeAll?.(this.shadowRoot);
+    this.bindPopupManager();
     this.dispatchEvent(new CustomEvent('toolbar-rendered'));
 
     const toolbar = this.shadowRoot.querySelector('.toolbar');
@@ -484,6 +522,7 @@ class SharedToolbar extends HTMLElement {
           display: flex;
           flex-direction: column;
           gap: .6rem;
+          --toolbar-control-height: 2.72rem;
         }
         .toolbar-top {
           display: flex;
@@ -491,7 +530,7 @@ class SharedToolbar extends HTMLElement {
           gap: .6rem;
         }
         .toolbar-top .search-wrap { flex: 1 1 110px; min-width: 90px; position: relative; }
-        .toolbar-top .search-wrap input { width: 100%; }
+        .toolbar-top .search-wrap input { width: 100%; height: var(--toolbar-control-height); }
         .toolbar-top .suggestions {
           position: absolute;
           left: 0;
@@ -608,19 +647,55 @@ class SharedToolbar extends HTMLElement {
           opacity: 1;
         }
         .toolbar .exp-counter {
-          display: flex;
+          display: inline-flex;
           align-items: center;
-          gap: .3rem;
-          background: var(--border);
-          color: var(--txt);
-          padding: .3rem .7rem;
-          border-radius: .55rem;
-          font-weight: 600;
-          font-size: .9rem;
+          justify-content: center;
+          gap: .42rem;
+          height: var(--toolbar-control-height);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .01)),
+            rgba(49, 43, 39, .72);
+          color: #fff;
+          padding: 0 .95rem;
+          border: 1.5px solid rgba(227, 186, 106, .24);
+          border-radius: .6rem;
+          box-shadow:
+            0 4px 10px rgba(0, 0, 0, .22),
+            inset 0 1px 0 rgba(255, 255, 255, .08);
+          font-weight: 700;
+          font-size: .95rem;
+          letter-spacing: .02em;
+          text-shadow:
+            0 0 1px rgba(0, 0, 0, .9),
+            0 1px 0 rgba(0, 0, 0, .45);
+          font-family: inherit;
           white-space: nowrap;
+          cursor: pointer;
+          transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, background .12s ease;
+        }
+        .toolbar .exp-counter:hover {
+          border-color: rgba(227, 186, 106, .4);
+          box-shadow:
+            0 6px 13px rgba(0, 0, 0, .26),
+            inset 0 1px 0 rgba(255, 255, 255, .1);
+          background:
+            linear-gradient(180deg, rgba(255, 255, 255, .11), rgba(255, 255, 255, .02)),
+            rgba(56, 49, 44, .8);
+        }
+        .toolbar .exp-counter:focus-visible {
+          outline: 2px solid rgba(227, 186, 106, .6);
+          outline-offset: 2px;
+        }
+        .toolbar .exp-counter:active {
+          transform: translateY(1px) scale(.992);
         }
         .toolbar .exp-counter span {
-          color: var(--accent);
+          min-width: 1.8ch;
+          color: rgba(255, 255, 255, .95);
+          text-align: center;
+          text-shadow:
+            0 0 1px rgba(0, 0, 0, .9),
+            0 1px 0 rgba(0, 0, 0, .45);
           font-variant-numeric: tabular-nums;
         }
         #entrySortPopup .popup-inner {
@@ -755,7 +830,7 @@ class SharedToolbar extends HTMLElement {
             <input id="searchField" placeholder="T.ex 'Pajkastare'" autocomplete="off">
             <div id="searchSuggest" class="suggestions" hidden></div>
           </div>
-          <span class="exp-counter">XP: <span id="xpOut">0</span></span>
+          <button type="button" class="exp-counter" id="xpToggle">ERF: <span id="xpOut">0</span></button>
         </div>
         <div class="button-row">
           <a       id="traitsLink" class="char-btn icon icon-only nav-link" title="Egenskaper" href="traits.html">${icon('egenskaper')}</a>
@@ -1801,6 +1876,19 @@ class SharedToolbar extends HTMLElement {
         ${helpPanelHtml}
       </aside>
 
+      <!-- ---------- Översikt (XP slide-in) ---------- -->
+      <aside id="summarySlidePanel" class="offcanvas">
+        <header class="inv-header">
+          <h2>Översikt</h2>
+          <div class="inv-actions">
+            <button class="char-btn icon" data-close="summarySlidePanel">✕</button>
+          </div>
+        </header>
+        <div class="summary-slide-content summary-content">
+          <div id="summarySlideInner"></div>
+        </div>
+      </aside>
+
     `;
   }
 
@@ -1809,10 +1897,19 @@ class SharedToolbar extends HTMLElement {
     const $ = id => this.shadowRoot.getElementById(id);
     this.panels = {
       filterPanel: $('filterPanel'),
-      infoPanel: $('infoPanel')
+      infoPanel: $('infoPanel'),
+      summarySlidePanel: $('summarySlidePanel')
     };
     this.entryViewToggle = $('entryViewToggle');
     this.filterCollapseBtn = $('collapseAllFilters');
+  }
+
+  bindPopupManager() {
+    const manager = window.popupManager;
+    if (!manager) return;
+    manager.observeRoot?.(this.shadowRoot);
+    const registrations = Object.entries(POPUP_TYPE_BY_ID).map(([id, type]) => ({ id, type }));
+    manager.registerMany?.(registrations);
   }
 
   collapseNonPersistentCards() {
@@ -1865,6 +1962,13 @@ class SharedToolbar extends HTMLElement {
     /* öppna/stäng (toggle) */
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
     if (btn.id === 'infoToggle') return this.toggle('infoPanel');
+    if (btn.id === 'xpToggle') {
+      const inner = this.shadowRoot.getElementById('summarySlideInner');
+      if (inner && window.summaryEffects?.renderSummaryHtml) {
+        inner.innerHTML = window.summaryEffects.renderSummaryHtml();
+      }
+      return this.toggle('summarySlidePanel');
+    }
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);
 
@@ -2062,7 +2166,7 @@ class SharedToolbar extends HTMLElement {
       });
     };
 
-    const toggleButtons = ['filterToggle', 'infoToggle']
+    const toggleButtons = ['filterToggle', 'infoToggle', 'xpToggle']
       .map(id => this.shadowRoot.getElementById(id))
       .filter(Boolean);
     const isToggleClick = toggleButtons.some(btn => containsInPath(btn));
@@ -2078,9 +2182,12 @@ class SharedToolbar extends HTMLElement {
       }
     }
 
-    // ignore clicks inside popups so panels stay open
-    const popups = ['inventoryItemsPopup', 'inventoryEconomyPopup', 'qualPopup', 'customPopup', 'moneyPopup', 'saveFreePopup', 'advMoneyPopup', 'qtyPopup', 'buyMultiplePopup', 'liveBuyPopup', 'pricePopup', 'rowPricePopup', 'vehiclePopup', 'vehicleRemovePopup', 'vehicleQtyPopup', 'vehicleMoneyPopup', 'defenseCalcPopup', 'masterPopup', 'alcPopup', 'smithPopup', 'artPopup', 'driveStoragePopup', 'characterToolsPopup', 'pdfPopup', 'nilasPopup', 'tabellPopup', 'dialogPopup', 'danielPopup', 'folderManagerPopup', 'newCharPopup', 'generatorPopup', 'dupCharPopup', 'renameCharPopup', 'artifactPaymentPopup', 'manualAdjustPopup', 'entrySortPopup', 'traitPopup', 'maskPopup', 'powerPopup', 'beastPopup', 'bloodPopup', 'monsterPopup', 'choicePopup'];
-    if (path.some(el => el && popups.includes(el.id))) return;
+    // Ignore clicks inside any overlay so panels stay open.
+    const hasOverlayInPath = path.some(el =>
+      el instanceof Element &&
+      (el.classList?.contains('popup') || el.classList?.contains('offcanvas'))
+    );
+    if (hasOverlayInPath) return;
 
     const openPanel = Object.values(this.panels).find(p => p.classList.contains('open'));
     if (openPanel && !containsInPath(openPanel)) {
@@ -2160,6 +2267,7 @@ class SharedToolbar extends HTMLElement {
       const okBtn = this.shadowRoot.getElementById('dialogOk');
       const cancelBtn = this.shadowRoot.getElementById('dialogCancel');
       const extraBtn = this.shadowRoot.getElementById('dialogExtra');
+      const popupManager = window.popupManager;
       msgEl.textContent = message;
       cancelBtn.style.display = cancel ? '' : 'none';
       okBtn.textContent = okText;
@@ -2170,22 +2278,44 @@ class SharedToolbar extends HTMLElement {
       } else {
         extraBtn.style.display = 'none';
       }
-      pop.classList.add('open');
       pop.querySelector('.popup-inner').scrollTop = 0;
-      const close = res => {
-        pop.classList.remove('open');
+      let settled = false;
+      let pendingResult = false;
+      const finish = res => {
+        if (settled) return;
+        settled = true;
+        resolve(res);
+      };
+      const cleanup = () => {
         okBtn.removeEventListener('click', onOk);
         cancelBtn.removeEventListener('click', onCancel);
         extraBtn.removeEventListener('click', onExtra);
         pop.removeEventListener('click', onOutside);
-        resolve(res);
       };
-      const onOk = () => close(true);
-      const onCancel = () => close(false);
-      const onExtra = () => close('extra');
+      const close = (res, reason = 'programmatic') => {
+        pendingResult = res;
+        if (popupManager?.close && pop.id) {
+          popupManager.close(pop, reason);
+          return;
+        }
+        pop.classList.remove('open');
+        cleanup();
+        finish(res);
+      };
+      const onOk = () => close(true, 'ok');
+      const onCancel = () => close(false, 'cancel');
+      const onExtra = () => close('extra', 'extra');
       const onOutside = e => {
-        if (!pop.querySelector('.popup-inner').contains(e.target)) close(false);
+        if (!pop.querySelector('.popup-inner').contains(e.target)) close(false, 'backdrop');
       };
+      const onManagerClose = () => {
+        cleanup();
+        finish(pendingResult);
+      };
+
+      if (popupManager?.open && pop.id) popupManager.open(pop, { type: 'dialog', onClose: onManagerClose });
+      else pop.classList.add('open');
+
       okBtn.addEventListener('click', onOk);
       cancelBtn.addEventListener('click', onCancel);
       extraBtn.addEventListener('click', onExtra);

@@ -2,7 +2,8 @@
   "typ_regler": {
     "Lägre artefakt": {
       "regler": {
-        "kraver_logik": "and"
+        "kraver_logik": "and",
+        "kraver_typ_och_entry": "and"
       }
     }
   },
@@ -43,8 +44,7 @@
               ],
               "meddelande": "Krav: Ordensmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -54,8 +54,7 @@
               "nivå_minst": "Novis",
               "meddelande": "Krav: Ordensmagi >= Novis",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -138,8 +137,7 @@
               ],
               "meddelande": "Krav: Ordensmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -149,8 +147,7 @@
               "nivå_minst": "Novis",
               "meddelande": "Krav: Ordensmagi >= Novis",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -187,8 +184,7 @@
               ],
               "meddelande": "Krav: Teurg",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -198,8 +194,7 @@
               "nivå_minst": "Novis",
               "meddelande": "Krav: Teurgi >= Novis",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -302,8 +297,7 @@
               ],
               "meddelande": "Krav: Grönvävare",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -313,8 +307,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Häxkonster >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -382,8 +375,7 @@
               ],
               "meddelande": "Krav: Blodvadare",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -393,8 +385,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Häxkonster >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -438,8 +429,7 @@
               ],
               "meddelande": "Krav: Nekromantiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -449,8 +439,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Svartkonst >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -505,8 +494,7 @@
               ],
               "meddelande": "Krav: Ordensmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -516,8 +504,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -644,8 +631,7 @@
               ],
               "meddelande": "Krav: Pyromantiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -655,8 +641,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -693,8 +678,7 @@
               ],
               "meddelande": "Krav: Häxa",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -704,8 +688,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Häxkonster >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -742,8 +725,7 @@
               ],
               "meddelande": "Krav: Mentalist",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -753,8 +735,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -791,8 +772,7 @@
               ],
               "meddelande": "Krav: Demonolog",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -802,8 +782,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -906,8 +885,7 @@
               ],
               "meddelande": "Krav: Teurg",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -917,8 +895,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Teurgi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -955,8 +932,7 @@
               ],
               "meddelande": "Krav: Stavmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -966,8 +942,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Stavmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1004,8 +979,7 @@
               ],
               "meddelande": "Krav: Stavmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1015,8 +989,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Stavmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1053,8 +1026,7 @@
               ],
               "meddelande": "Krav: Andebesvärjare",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1064,8 +1036,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Häxkonster >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1102,8 +1073,7 @@
               ],
               "meddelande": "Krav: Illusionist",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1113,8 +1083,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1192,8 +1161,7 @@
               ],
               "meddelande": "Krav: Ordensmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1203,8 +1171,7 @@
               "nivå_minst": "Mästare",
               "meddelande": "Krav: Ordensmagi >= Mästare",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1361,8 +1328,7 @@
               ],
               "meddelande": "Krav: Stavmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1372,8 +1338,7 @@
               "nivå_minst": "Mästare",
               "meddelande": "Krav: Stavmagi >= Mästare",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1433,8 +1398,7 @@
               ],
               "meddelande": "Krav: Svartkonstnär",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1444,8 +1408,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Svartkonst >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1482,8 +1445,7 @@
               ],
               "meddelande": "Krav: Mentalist",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1493,8 +1455,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1531,8 +1492,7 @@
               ],
               "meddelande": "Krav: Stavmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1542,8 +1502,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Stavmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1580,8 +1539,7 @@
               ],
               "meddelande": "Krav: Pyromantiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1591,8 +1549,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1673,8 +1630,7 @@
               ],
               "meddelande": "Krav: Teurg",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1684,8 +1640,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Teurgi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -1744,8 +1699,7 @@
               ],
               "meddelande": "Krav: Ordensmagiker",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             },
             {
@@ -1755,8 +1709,7 @@
               "nivå_minst": "Gesäll",
               "meddelande": "Krav: Ordensmagi >= Gesäll",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]
@@ -2016,8 +1969,7 @@
               ],
               "meddelande": "Krav: Ulvahedna",
               "else": {
-                "pengar_multiplikator": 10,
-                "erf_multiplikator": 10
+                "pengar_multiplikator": 10
               }
             }
           ]

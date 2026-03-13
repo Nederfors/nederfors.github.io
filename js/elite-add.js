@@ -1111,10 +1111,57 @@
       </section>
     ` : '');
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
+    const usingManager = Boolean(window.popupManager?.open && window.popupManager?.close && pop?.id);
+    let popupSession = null;
+    let cleaned = false;
+    let resolved = false;
     const allSels = Array.from(box.querySelectorAll('select'));
+
+    function closeInternal(){
+      if (cleaned) return;
+      cleaned = true;
+      pop.classList.remove('open');
+      box.innerHTML = '';
+      add.removeEventListener('click', onAdd);
+      cls.removeEventListener('click', onCancel);
+      if (!usingManager) pop.removeEventListener('click', onOutside);
+      if (!usingManager) document.removeEventListener('keydown', onKeyDown);
+      allSels.forEach(sel => sel.removeEventListener('change', onControlChange));
+    }
+
+    function close(reason = 'programmatic'){
+      if (popupSession?.close) {
+        popupSession.close(reason);
+      } else {
+        closeInternal();
+      }
+    }
+
+    function finish(result, reason = 'programmatic') {
+      if (resolved) return;
+      resolved = true;
+      close(reason);
+      cb(result);
+    }
+
+    if (usingManager) {
+      popupSession = {
+        close: (reason = 'programmatic') => window.popupManager.close(pop, reason)
+      };
+      window.popupManager.open(pop, {
+        type: 'picker',
+        onClose: () => {
+          closeInternal();
+          if (!resolved) {
+            resolved = true;
+            cb(null);
+          }
+        }
+      });
+    } else {
+      pop.classList.add('open');
+    }
+    pop.querySelector('.popup-inner').scrollTop = 0;
 
     function makeNameOwnerMap(states) {
       const map = new Map();
@@ -2446,16 +2493,6 @@
 
     allSels.forEach(sel => sel.addEventListener('change', onControlChange));
 
-    function close(){
-      pop.classList.remove('open');
-      box.innerHTML = '';
-      add.removeEventListener('click', onAdd);
-      cls.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      document.removeEventListener('keydown', onKeyDown);
-      allSels.forEach(sel => sel.removeEventListener('change', onControlChange));
-    }
-
     function aggregateOverflowSources(rawList) {
       const byKey = new Map();
       toArray(rawList).forEach(row => {
@@ -2575,24 +2612,21 @@
       collectExtraSelections().forEach(row => {
         pushSelection(row.name, row.level);
       });
-      close();
-      cb({ levels, selections });
+      finish({ levels, selections }, 'confirm');
     }
 
-    function onCancel(){ close(); cb(null); }
+    function onCancel(){ finish(null, 'cancel'); }
 
     function onOutside(e){
       if(!pop.querySelector('.popup-inner').contains(e.target)){
-        close();
-        cb(null);
+        finish(null, 'cancel');
       }
     }
 
     function onKeyDown(e){
       if (e.key !== 'Escape') return;
       e.preventDefault();
-      close();
-      cb(null);
+      finish(null, 'escape');
     }
 
     function check(){
@@ -2862,8 +2896,8 @@
     check();
     add.addEventListener('click', onAdd);
     cls.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
-    document.addEventListener('keydown', onKeyDown);
+    if (!usingManager) pop.addEventListener('click', onOutside);
+    if (!usingManager) document.addEventListener('keydown', onKeyDown);
   }
 
   function allMystic(){

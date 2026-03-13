@@ -101,9 +101,13 @@ window.addEventListener('load', () => {
   }
 
   function initObservers() {
+    window.popupManager?.observeRoot?.(document);
     registerOverlays(document);
     const bar = document.querySelector('shared-toolbar');
-    const registerToolbarOverlays = () => registerOverlays(bar?.shadowRoot);
+    const registerToolbarOverlays = () => {
+      registerOverlays(bar?.shadowRoot);
+      window.popupManager?.observeRoot?.(bar?.shadowRoot);
+    };
     registerToolbarOverlays();
     if (bar) {
       bar.addEventListener('toolbar-rendered', registerToolbarOverlays);
@@ -179,6 +183,38 @@ window.addEventListener('load', () => {
     }
   });
 })();
+
+function createPopupSession(pop, options = {}) {
+  const target = pop || null;
+  const type = options.type || 'form';
+  const onClose = typeof options.onClose === 'function' ? options.onClose : () => {};
+  const popupManager = window.popupManager;
+  let settled = false;
+
+  const finalize = (reason = 'programmatic') => {
+    if (settled) return;
+    settled = true;
+    onClose(reason);
+  };
+
+  if (popupManager?.open && target?.id) {
+    popupManager.open(target, { type, dismissPolicy: options.dismissPolicy, onClose: finalize });
+  } else if (target) {
+    target.classList.add('open');
+  }
+
+  return {
+    close(reason = 'programmatic') {
+      if (popupManager?.close && target?.id) {
+        popupManager.close(target, reason);
+        return;
+      }
+      if (target) target.classList.remove('open');
+      finalize(reason);
+    },
+    finalize
+  };
+}
 
 // Ensure we are at top after a Hoppsan reset reload
 try {
@@ -416,32 +452,34 @@ function openDanielPopup() {
   if (pop.classList.contains('open')) return;
   const closeBtn = (root && root.getElementById('danielPopupClose')) || dom.danielClose;
   const inner = pop.querySelector('.popup-inner');
+  let popupSession = null;
 
-  function close() {
-    pop.classList.remove('open');
+  function cleanup() {
     closeBtn?.removeEventListener('click', onClose);
     pop.removeEventListener('click', onBackdrop);
-    window.registerOverlayCleanup?.(pop, null);
     if (dom.sIn && typeof dom.sIn.focus === 'function') {
       try { dom.sIn.focus(); }
       catch {}
     }
   }
 
+  function close(reason = 'cancel') {
+    popupSession?.close(reason);
+  }
+
   function onClose(event) {
     if (event) event.preventDefault();
-    close();
+    close('cancel');
   }
 
   function onBackdrop(event) {
     if (event?.target === pop) {
       event.preventDefault();
-      close();
+      close('backdrop');
     }
   }
 
-  window.registerOverlayCleanup?.(pop, close);
-  pop.classList.add('open');
+  popupSession = createPopupSession(pop, { type: 'dialog', onClose: cleanup });
   if (inner) inner.scrollTop = 0;
   closeBtn?.addEventListener('click', onClose);
   pop.addEventListener('click', onBackdrop);
@@ -3330,7 +3368,7 @@ function openFolderManagerPopup() {
   const renameApply  = bar.shadowRoot.getElementById('renameFolderApply');
   const inner        = pop.querySelector('.popup-inner');
   let cancelRename = null;
-  let innerClickStop = null;
+  let popupSession = null;
 
   function escapeHtml(s) {
     return String(s || '').replace(/[&<>"]/g, m => ({
@@ -3405,45 +3443,50 @@ function openFolderManagerPopup() {
       return trimmed || null;
     }
     renameInput.value = String(currentName || '').trim();
-    renamePop.classList.add('open');
-    renamePop.querySelector('.popup-inner').scrollTop = 0;
-    setTimeout(() => renameInput.focus(), 0);
-
     return await new Promise(resolve => {
       let done = false;
-      const renameInner = renamePop.querySelector('.popup-inner');
-      const stopBubble = e => e.stopPropagation();
-      renameInner?.addEventListener('click', stopBubble);
-      function finish(result) {
-        if (done) return;
-        done = true;
-        renamePop.classList.remove('open');
+      let pendingResult = null;
+      let renameSession = null;
+
+      function cleanup() {
         renameApply.removeEventListener('click', onApply);
         renameCancel.removeEventListener('click', onCancel);
-        renamePop.removeEventListener('click', onOutside);
         document.removeEventListener('keydown', onKey);
-        renameInner?.removeEventListener('click', stopBubble);
         cancelRename = null;
-        resolve(result);
       }
+
+      function finish(result, reason = 'programmatic') {
+        if (done) return;
+        done = true;
+        pendingResult = result;
+        renameSession?.close(reason);
+      }
+
       function onApply() {
         const val = String(renameInput.value || '').trim();
         if (!val) { renameInput.focus(); return; }
-        finish(val);
+        finish(val, 'apply');
       }
-      function onCancel() { finish(null); }
-      function onOutside(e) {
-        if (!renamePop.querySelector('.popup-inner').contains(e.target)) finish(null);
-      }
+      function onCancel() { finish(null, 'cancel'); }
       function onKey(e) {
-        if (e.key === 'Escape') finish(null);
+        if (e.key === 'Escape') finish(null, 'cancel');
         else if (e.key === 'Enter') onApply();
       }
+
+      renameSession = createPopupSession(renamePop, {
+        type: 'dialog',
+        onClose: () => {
+          cleanup();
+          resolve(pendingResult);
+        }
+      });
+      renamePop.querySelector('.popup-inner').scrollTop = 0;
+      setTimeout(() => renameInput.focus(), 0);
+
       renameApply.addEventListener('click', onApply);
       renameCancel.addEventListener('click', onCancel);
-      renamePop.addEventListener('click', onOutside);
       document.addEventListener('keydown', onKey);
-      cancelRename = () => finish(null);
+      cancelRename = () => finish(null, 'cancel');
     });
   }
 
@@ -3506,8 +3549,7 @@ function openFolderManagerPopup() {
     refreshCharSelect();
   }
 
-  function close() {
-    pop.classList.remove('open');
+  function cleanup() {
     list.removeEventListener('click', onListClick);
     closeBtn?.removeEventListener('click', onClose);
     closeX?.removeEventListener('click', onClose);
@@ -3515,20 +3557,11 @@ function openFolderManagerPopup() {
     moveApply?.removeEventListener('click', onMoveApply);
     charList?.removeEventListener('change', onCharListChange);
     cancelRename?.();
-    pop.removeEventListener('click', onOutside);
-    if (inner && innerClickStop) inner.removeEventListener('click', innerClickStop);
-    innerClickStop = null;
   }
-  function onClose() { close(); }
-  function onOutside(e) {
-    const inner = pop.querySelector('.popup-inner');
-    if (inner?.contains(e.target)) return;
-    if (renamePop?.classList.contains('open')) {
-      const renameInner = renamePop.querySelector('.popup-inner');
-      if (renameInner?.contains(e.target)) return;
-    }
-    close();
+  function close(reason = 'cancel') {
+    popupSession?.close(reason);
   }
+  function onClose() { close('cancel'); }
   function onMoveApply() {
     const dest = (moveSel && moveSel.value) || '';
     if (!charList) return;
@@ -3565,7 +3598,7 @@ function openFolderManagerPopup() {
   }
 
   render();
-  pop.classList.add('open');
+  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
   pop.querySelector('.popup-inner').scrollTop = 0;
   list.addEventListener('click', onListClick);
   closeBtn?.addEventListener('click', onClose);
@@ -3573,104 +3606,84 @@ function openFolderManagerPopup() {
   addBtn.addEventListener('click', onAdd);
   moveApply?.addEventListener('click', onMoveApply);
   charList?.addEventListener('change', onCharListChange);
-  pop.addEventListener('click', onOutside);
-  if (inner) {
-    innerClickStop = e => e.stopPropagation();
-    inner.addEventListener('click', innerClickStop);
-  }
 }
 
 function openAlchemistPopup(cb) {
   const pop  = bar.shadowRoot.getElementById('alcPopup');
   const box  = bar.shadowRoot.getElementById('alcOptions');
   const cls  = bar.shadowRoot.getElementById('alcCancel');
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
+  let popupSession = null;
+  const cleanup = () => {
     box.removeEventListener('click', onBtn);
     cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
-  }
+  };
+  const close = (result, reason = 'cancel') => {
+    cb(result);
+    popupSession?.close(reason);
+  };
+  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function onBtn(e) {
     const b = e.target.closest('button[data-level]');
     if (!b) return;
     const lvl = b.dataset.level;
-    close();
-    cb(lvl);
+    close(lvl, 'select');
   }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
-      close();
-      cb(null);
-    }
-  }
+  function onCancel() { close(null, 'cancel'); }
   box.addEventListener('click', onBtn);
   cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
 }
 
 function openSmithPopup(cb) {
   const pop  = bar.shadowRoot.getElementById('smithPopup');
   const box  = bar.shadowRoot.getElementById('smithOptions');
   const cls  = bar.shadowRoot.getElementById('smithCancel');
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
+  let popupSession = null;
+  const cleanup = () => {
     box.removeEventListener('click', onBtn);
     cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
-  }
+  };
+  const close = (result, reason = 'cancel') => {
+    cb(result);
+    popupSession?.close(reason);
+  };
+  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function onBtn(e) {
     const b = e.target.closest('button[data-level]');
     if (!b) return;
     const lvl = b.dataset.level;
-    close();
-    cb(lvl);
+    close(lvl, 'select');
   }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
-      close();
-      cb(null);
-    }
-  }
+  function onCancel() { close(null, 'cancel'); }
   box.addEventListener('click', onBtn);
   cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
 }
 
 function openArtefacterPopup(cb) {
   const pop  = bar.shadowRoot.getElementById('artPopup');
   const box  = bar.shadowRoot.getElementById('artOptions');
   const cls  = bar.shadowRoot.getElementById('artCancel');
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
+  let popupSession = null;
+  const cleanup = () => {
     box.removeEventListener('click', onBtn);
     cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
-  }
+  };
+  const close = (result, reason = 'cancel') => {
+    cb(result);
+    popupSession?.close(reason);
+  };
+  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
+  pop.querySelector('.popup-inner').scrollTop = 0;
   function onBtn(e) {
     const b = e.target.closest('button[data-level]');
     if (!b) return;
     const lvl = b.dataset.level;
-    close();
-    cb(lvl);
+    close(lvl, 'select');
   }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if(!pop.querySelector('.popup-inner').contains(e.target)){
-      close();
-      cb(null);
-    }
-  }
+  function onCancel() { close(null, 'cancel'); }
   box.addEventListener('click', onBtn);
   cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
 }
 
 function openDefenseCalcPopup() {
@@ -4111,15 +4124,13 @@ function openDefenseCalcPopup() {
     }
   }
 
-  pop.classList.add('open');
-  inner.scrollTop = 0;
+  let popupSession = null;
 
   const cleanup = () => {
     applyBtn.removeEventListener('click', onApply);
     cancelBtn.removeEventListener('click', onCancel);
     closeBtn.removeEventListener('click', onCancel);
     resetBtn.removeEventListener('click', onReset);
-    pop.removeEventListener('click', onOutside);
     inner.removeEventListener('keydown', onKey);
     traitSel.removeEventListener('change', onTraitChange);
     armorSel.removeEventListener('change', onArmorChange);
@@ -4128,10 +4139,7 @@ function openDefenseCalcPopup() {
     });
   };
 
-  const close = () => {
-    pop.classList.remove('open');
-    cleanup();
-  };
+  const close = (reason = 'programmatic') => popupSession?.close(reason);
 
   const onApply = () => {
     const currentSetup = buildCurrentSetup();
@@ -4143,7 +4151,7 @@ function openDefenseCalcPopup() {
         storeHelper.setDefenseTrait(store, '');
       }
       refreshUI();
-      close();
+      close('apply');
       return;
     }
     const nextSetup = {
@@ -4163,7 +4171,7 @@ function openDefenseCalcPopup() {
     }
     refreshUI();
     updateSummaryUi();
-    close();
+    close('apply');
   };
 
   const onReset = () => {
@@ -4176,7 +4184,7 @@ function openDefenseCalcPopup() {
       storeHelper.setDefenseTrait(store, '');
     }
     refreshUI();
-    close();
+    close('reset');
   };
 
   const onCancel = () => {
@@ -4185,30 +4193,25 @@ function openDefenseCalcPopup() {
       storeHelper.setDefenseSetup(store, defenseSetup || { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
     }
     refreshUI();
-    close();
-  };
-
-  const onOutside = e => {
-    if (!inner.contains(e.target)) {
-      close();
-    }
+    close('cancel');
   };
 
   const onKey = e => {
     if (e.key === 'Escape') {
       e.preventDefault();
-      close();
+      close('cancel');
     } else if (e.key === 'Enter') {
       e.preventDefault();
       onApply();
     }
   };
 
+  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
+  inner.scrollTop = 0;
   applyBtn.addEventListener('click', onApply);
   cancelBtn.addEventListener('click', onCancel);
   closeBtn.addEventListener('click', onCancel);
   resetBtn.addEventListener('click', onReset);
-  pop.addEventListener('click', onOutside);
   inner.addEventListener('keydown', onKey);
 }
 
@@ -4232,16 +4235,14 @@ function openEntrySortPopup(cb) {
   };
 
   setActive(current);
-  pop.classList.add('open');
-  if (inner) inner.scrollTop = 0;
+  let popupSession = null;
 
-  const close = () => {
-    pop.classList.remove('open');
+  const cleanup = () => {
     buttons.forEach(btn => btn.removeEventListener('click', onSelect));
     saveBtn?.removeEventListener('click', onSave);
     cancelBtn?.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
   };
+  const close = (reason = 'cancel') => popupSession?.close(reason);
 
   const onSelect = (e) => {
     const btn = e.currentTarget;
@@ -4250,23 +4251,17 @@ function openEntrySortPopup(cb) {
   };
 
   const onSave = () => {
-    close();
+    close('save');
     cb?.(selected);
   };
 
-  const onCancel = () => { close(); cb?.(null); };
+  const onCancel = () => { close('cancel'); cb?.(null); };
 
-  const onOutside = e => {
-    if (inner && !inner.contains(e.target)) {
-      close();
-      cb?.(null);
-    }
-  };
-
+  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
+  if (inner) inner.scrollTop = 0;
   buttons.forEach(btn => btn.addEventListener('click', onSelect));
   saveBtn?.addEventListener('click', onSave);
   cancelBtn?.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
 }
 
 function openManualAdjustPopup() {
@@ -4297,6 +4292,7 @@ function openManualAdjustPopup() {
   if (pop.classList.contains('open')) {
     return;
   }
+  let popupSession = null;
 
   const applyUpdate = (updater) => {
     if (!store || !store.current) return;
@@ -4314,16 +4310,18 @@ function openManualAdjustPopup() {
     syncManualAdjustButton();
   };
 
-  function close() {
-    pop.classList.remove('open');
+  function cleanup() {
     groups?.removeEventListener('click', onAction);
     closeBtn?.removeEventListener('click', onClose);
     resetBtn?.removeEventListener('click', onReset);
-    window.registerOverlayCleanup?.(pop, null);
+  }
+
+  function close(reason = 'cancel') {
+    popupSession?.close(reason);
   }
 
   function onClose() {
-    close();
+    close('cancel');
   }
 
   function onReset() {
@@ -4356,9 +4354,7 @@ function openManualAdjustPopup() {
     refresh();
   }
 
-  window.registerOverlayCleanup?.(pop, close);
-
-  pop.classList.add('open');
+  popupSession = createPopupSession(pop, { type: 'form', onClose: cleanup });
   if (inner) inner.scrollTop = 0;
   groups?.addEventListener('click', onAction);
   closeBtn?.addEventListener('click', onClose);
@@ -6038,35 +6034,46 @@ function openChoicePopup(build, cb, config = {}) {
   const popupId = config.popupId || 'driveStoragePopup';
   const optsId = config.optsId || 'driveStorageOptions';
   const cancelId = config.cancelId || 'driveStorageCancel';
+  const popupType = config.popupType || (popupId === 'dialogPopup' ? 'dialog' : 'form');
   const pop  = bar.shadowRoot.getElementById(popupId);
   const opts = bar.shadowRoot.getElementById(optsId);
   const cls  = bar.shadowRoot.getElementById(cancelId);
   if (!pop || !opts || !cls) return;
-  let outsideArmed = false;
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  setTimeout(() => {
-    outsideArmed = true;
-  }, 150);
-  function close() {
-    pop.classList.remove('open');
+  let popupSession = null;
+  let settled = false;
+  let pending = null;
+  function cleanup() {
     cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
     opts.innerHTML = '';
   }
-  function onCancel() { close(); cb(null); }
-  function onOutside(e) {
-    if (!outsideArmed) return;
-    if (!pop.querySelector('.popup-inner').contains(e.target)) {
-      close();
-      cb(null);
-    }
+  function resolveOnce(value) {
+    if (settled) return;
+    settled = true;
+    cb(value);
+  }
+  function close(value, reason = 'cancel') {
+    pending = value;
+    popupSession?.close(reason);
+  }
+  function onCancel() {
+    resolveOnce(null);
+    close(null, 'cancel');
   }
   opts.innerHTML = '';
-  const select = value => { close(); cb(value); };
+  const select = value => {
+    resolveOnce(value);
+    close(value, 'select');
+  };
   build(opts, select);
+  popupSession = createPopupSession(pop, {
+    type: popupType,
+    onClose: () => {
+      cleanup();
+      if (!settled) resolveOnce(null);
+    }
+  });
+  pop.querySelector('.popup-inner').scrollTop = 0;
   cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
 }
 
 async function chooseSeparateExportMode() {
@@ -6102,25 +6109,31 @@ function openNilasPopup(cb) {
   const pop = bar.shadowRoot.getElementById('nilasPopup');
   const yes = bar.shadowRoot.getElementById('nilasYes');
   const no  = bar.shadowRoot.getElementById('nilasNo');
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  function close() {
-    pop.classList.remove('open');
+  let popupSession = null;
+  let settled = false;
+  let pending = false;
+  function cleanup() {
     yes.removeEventListener('click', onYes);
     no.removeEventListener('click', onNo);
-    pop.removeEventListener('click', onOutside);
   }
-  function onYes() { close(); cb(true); }
-  function onNo()  { close(); cb(false); }
-  function onOutside(e) {
-    if (!pop.querySelector('.popup-inner').contains(e.target)) {
-      close();
-      cb(false);
+  function finish(result, reason = 'cancel') {
+    if (settled) return;
+    settled = true;
+    pending = Boolean(result);
+    popupSession?.close(reason);
+  }
+  function onYes() { finish(true, 'confirm'); }
+  function onNo()  { finish(false, 'cancel'); }
+  popupSession = createPopupSession(pop, {
+    type: 'dialog',
+    onClose: () => {
+      cleanup();
+      cb(pending);
     }
-  }
+  });
+  pop.querySelector('.popup-inner').scrollTop = 0;
   yes.addEventListener('click', onYes);
   no.addEventListener('click', onNo);
-  pop.addEventListener('click', onOutside);
 }
 
 function tryNilasPopup(term) {
@@ -6171,37 +6184,53 @@ async function openNewCharPopupWithFolder(preferredFolderId) {
   nameIn.value = '';
   if (xpIn) xpIn.value = 0;
 
-  pop.classList.add('open');
+  let popupSession = null;
+  let settled = false;
+  let pending = null;
+  let resolver = () => {};
+  let onCreate = () => {};
+  let onCancel = () => {};
+  let onKey = () => {};
+  popupSession = createPopupSession(pop, {
+    type: 'form',
+    onClose: () => {
+      create.removeEventListener('click', onCreate);
+      cancel.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onKey);
+      if (!settled) {
+        settled = true;
+        pending = null;
+      }
+      resolver(pending);
+    }
+  });
   pop.querySelector('.popup-inner').scrollTop = 0;
   setTimeout(()=> nameIn.focus(), 0);
 
   return await new Promise(resolve => {
-    function close(res) {
-      pop.classList.remove('open');
-      create.removeEventListener('click', onCreate);
-      cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      document.removeEventListener('keydown', onKey);
-      resolve(res);
+    resolver = resolve;
+    function close(res, reason = 'programmatic') {
+      if (settled) return;
+      settled = true;
+      pending = res;
+      popupSession?.close(reason);
     }
-    function onCreate() {
+    onCreate = function onCreate() {
       const name = String(nameIn.value||'').trim();
       if (!name) { nameIn.focus(); return; }
       const folderId = folderEl.value || '';
       const xp = Number(xpIn?.value || 0) || 0;
-      close({ name, folderId, xp });
-    }
-    function onCancel() { close(null); }
-    function onOutside(e) {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
-    }
-    function onKey(e) {
-      if (e.key === 'Escape') close(null);
-      if (e.key === 'Enter') onCreate();
-    }
+      close({ name, folderId, xp }, 'submit');
+    };
+    onCancel = function onCancel() { close(null, 'cancel'); };
+    onKey = function onKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onCreate();
+      }
+    };
     create.addEventListener('click', onCreate);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
     document.addEventListener('keydown', onKey);
   });
 }
@@ -6318,24 +6347,42 @@ async function openGeneratorPopup(preferredFolderId) {
     removeDbListener = () => window.removeEventListener('symbaroum-db-ready', onDbReady);
   }
 
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
-  setTimeout(()=> nameIn.focus(), 0);
-
-  return await new Promise(resolve => {
-    function close(res) {
-      pop.classList.remove('open');
+  let popupSession = null;
+  let settled = false;
+  let pending = null;
+  let resolver = () => {};
+  let onCreate = () => {};
+  let onCancel = () => {};
+  let onKey = () => {};
+  popupSession = createPopupSession(pop, {
+    type: 'form',
+    onClose: () => {
       createBtn.removeEventListener('click', onCreate);
       cancelBtn.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       document.removeEventListener('keydown', onKey);
       if (removeDbListener) {
         removeDbListener();
         removeDbListener = null;
       }
-      resolve(res);
+      if (!settled) {
+        settled = true;
+        pending = null;
+      }
+      resolver(pending);
     }
-    function onCreate() {
+  });
+  pop.querySelector('.popup-inner').scrollTop = 0;
+  setTimeout(()=> nameIn.focus(), 0);
+
+  return await new Promise(resolve => {
+    resolver = resolve;
+    function close(res, reason = 'programmatic') {
+      if (settled) return;
+      settled = true;
+      pending = res;
+      popupSession?.close(reason);
+    }
+    onCreate = function onCreate() {
       if (!syncGeneratorReadyState()) return;
       const name = String(nameIn.value || '').trim() || 'Slumpad rollperson';
       const folderId = folderEl.value || '';
@@ -6345,19 +6392,17 @@ async function openGeneratorPopup(preferredFolderId) {
       const race = raceSel?.value || '';
       const yrke = yrkeSel?.value || '';
       const elityrke = eliteSel?.value || '';
-      close({ name, folderId, xp, attrMode, traitFocus, race, yrke, elityrke });
-    }
-    function onCancel() { close(null); }
-    function onOutside(e) {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
-    }
-    function onKey(e) {
-      if (e.key === 'Escape') close(null);
-      if (e.key === 'Enter') onCreate();
-    }
+      close({ name, folderId, xp, attrMode, traitFocus, race, yrke, elityrke }, 'submit');
+    };
+    onCancel = function onCancel() { close(null, 'cancel'); };
+    onKey = function onKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onCreate();
+      }
+    };
     createBtn.addEventListener('click', onCreate);
     cancelBtn.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
     document.addEventListener('keydown', onKey);
   });
 }
@@ -6388,36 +6433,52 @@ async function openRenameCharPopupWithFolder(preferredFolderId, defaultName) {
 
   nameIn.value = String(defaultName || '').trim();
 
-  pop.classList.add('open');
+  let popupSession = null;
+  let settled = false;
+  let pending = null;
+  let resolver = () => {};
+  let onApply = () => {};
+  let onCancel = () => {};
+  let onKey = () => {};
+  popupSession = createPopupSession(pop, {
+    type: 'form',
+    onClose: () => {
+      applyBtn.removeEventListener('click', onApply);
+      cancel.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onKey);
+      if (!settled) {
+        settled = true;
+        pending = null;
+      }
+      resolver(pending);
+    }
+  });
   pop.querySelector('.popup-inner').scrollTop = 0;
   setTimeout(()=> nameIn.focus(), 0);
 
   return await new Promise(resolve => {
-    function close(res) {
-      pop.classList.remove('open');
-      applyBtn.removeEventListener('click', onApply);
-      cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      document.removeEventListener('keydown', onKey);
-      resolve(res);
+    resolver = resolve;
+    function close(res, reason = 'programmatic') {
+      if (settled) return;
+      settled = true;
+      pending = res;
+      popupSession?.close(reason);
     }
-    function onApply() {
+    onApply = function onApply() {
       const name = String(nameIn.value||'').trim();
       if (!name) { nameIn.focus(); return; }
       const folderId = folderEl.value || '';
-      close({ name, folderId });
-    }
-    function onCancel() { close(null); }
-    function onOutside(e) {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
-    }
-    function onKey(e) {
-      if (e.key === 'Escape') close(null);
-      if (e.key === 'Enter') onApply();
-    }
+      close({ name, folderId }, 'submit');
+    };
+    onCancel = function onCancel() { close(null, 'cancel'); };
+    onKey = function onKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onApply();
+      }
+    };
     applyBtn.addEventListener('click', onApply);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
     document.addEventListener('keydown', onKey);
   });
 }
@@ -6448,36 +6509,52 @@ async function openDuplicateCharPopupWithFolder(preferredFolderId, defaultName) 
 
   nameIn.value = String(defaultName || '').trim();
 
-  pop.classList.add('open');
+  let popupSession = null;
+  let settled = false;
+  let pending = null;
+  let resolver = () => {};
+  let onCreate = () => {};
+  let onCancel = () => {};
+  let onKey = () => {};
+  popupSession = createPopupSession(pop, {
+    type: 'form',
+    onClose: () => {
+      create.removeEventListener('click', onCreate);
+      cancel.removeEventListener('click', onCancel);
+      document.removeEventListener('keydown', onKey);
+      if (!settled) {
+        settled = true;
+        pending = null;
+      }
+      resolver(pending);
+    }
+  });
   pop.querySelector('.popup-inner').scrollTop = 0;
   setTimeout(()=> nameIn.focus(), 0);
 
   return await new Promise(resolve => {
-    function close(res) {
-      pop.classList.remove('open');
-      create.removeEventListener('click', onCreate);
-      cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
-      document.removeEventListener('keydown', onKey);
-      resolve(res);
+    resolver = resolve;
+    function close(res, reason = 'programmatic') {
+      if (settled) return;
+      settled = true;
+      pending = res;
+      popupSession?.close(reason);
     }
-    function onCreate() {
+    onCreate = function onCreate() {
       const name = String(nameIn.value||'').trim();
       if (!name) { nameIn.focus(); return; }
       const folderId = folderEl.value || '';
-      close({ name, folderId });
-    }
-    function onCancel() { close(null); }
-    function onOutside(e) {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close(null);
-    }
-    function onKey(e) {
-      if (e.key === 'Escape') close(null);
-      if (e.key === 'Enter') onCreate();
-    }
+      close({ name, folderId }, 'submit');
+    };
+    onCancel = function onCancel() { close(null, 'cancel'); };
+    onKey = function onKey(e) {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        onCreate();
+      }
+    };
     create.addEventListener('click', onCreate);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
     document.addEventListener('keydown', onKey);
   });
 }
@@ -6514,50 +6591,68 @@ async function requireCharacter() {
   renderCharOptions(select);
   wrap.style.display = 'none';
 
-  pop.classList.add('open');
-  inner.scrollTop = 0;
-
-  return await new Promise(resolve => {
-    function close(res) {
-      pop.classList.remove('open');
+  let popupSession = null;
+  let settled = false;
+  let pending = false;
+  let resolver = () => {};
+  let onChoose = () => {};
+  let onNew = () => {};
+  let onCancel = () => {};
+  let onSelect = () => {};
+  let onKey = () => {};
+  popupSession = createPopupSession(pop, {
+    type: 'dialog',
+    onClose: () => {
       btnChoose.removeEventListener('click', onChoose);
       btnNew.removeEventListener('click', onNew);
       btnCancel.removeEventListener('click', onCancel);
       select.removeEventListener('change', onSelect);
-      pop.removeEventListener('click', onClickOut);
       document.removeEventListener('keydown', onKey);
-      resolve(res);
+      pop.style.visibility = '';
+      if (!settled) {
+        settled = true;
+        pending = false;
+      }
+      resolver(pending);
     }
-    function onClickOut(e) {
-      if (e.target === pop) close(false);
+  });
+  inner.scrollTop = 0;
+
+  return await new Promise(resolve => {
+    resolver = resolve;
+    function close(res, reason = 'programmatic') {
+      if (settled) return;
+      settled = true;
+      pending = Boolean(res);
+      popupSession?.close(reason);
     }
-    function onKey(e) {
-      if (e.key === 'Escape') close(false);
-    }
-    function onChoose() {
+    onKey = function onKey(e) {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        close(false, 'escape');
+      }
+    };
+    onChoose = function onChoose() {
       wrap.style.display = '';
       select.focus();
-    }
-    function onSelect() {
+    };
+    onSelect = function onSelect() {
       const val = select.value;
       if (!val) return;
       store.current = val;
       storeHelper.save(store);
       refreshCharSelect();
       if (dom.cName) dom.cName.textContent = store.characters.find(c=>c.id===val)?.name||'';
-      close(true);
+      close(true, 'select');
       applyCharacterChange();
-    }
-    async function onNew() {
-      const wasOpen = pop.classList.contains('open');
+    };
+    onNew = async function onNew() {
       const restorePopup = () => {
         wrap.style.display = 'none';
-        if (wasOpen) {
-          pop.classList.add('open');
-          inner.scrollTop = 0;
-        }
+        pop.style.visibility = '';
+        inner.scrollTop = 0;
       };
-      if (wasOpen) pop.classList.remove('open');
+      pop.style.visibility = 'hidden';
       const active = storeHelper.getActiveFolder(store);
       const res = await openNewCharPopupWithFolder(active);
       if (!res) { restorePopup(); return; }
@@ -6575,16 +6670,15 @@ async function requireCharacter() {
       storeHelper.save(store);
       refreshCharSelect();
       if (dom.cName) dom.cName.textContent = name;
-      close(true);
+      close(true, 'create');
       applyCharacterChange();
-    }
-    function onCancel() { close(false); }
+    };
+    onCancel = function onCancel() { close(false, 'cancel'); };
 
     btnChoose.addEventListener('click', onChoose);
     btnNew.addEventListener('click', onNew);
     btnCancel.addEventListener('click', onCancel);
     select.addEventListener('change', onSelect);
-    pop.addEventListener('click', onClickOut);
     document.addEventListener('keydown', onKey);
   });
 }

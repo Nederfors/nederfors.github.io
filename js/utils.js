@@ -526,33 +526,8 @@
     TWO_HANDED_WEAPON_TYPES.map(normalizeTypeNameForMatch)
   );
 
-  function normalizeWeaponTypeName(typeName) {
-    const original = String(typeName || '').trim();
-    if (!original) return '';
-    const wantedKey = normalizeTypeNameForMatch(original);
-    for (const [from, to] of Object.entries(WEAPON_SUBTYPE_ALIASES)) {
-      if (normalizeTypeNameForMatch(from) === wantedKey) return to;
-    }
-    return original;
-  }
-
-  function normalizeWeaponTypeList(types) {
-    const source = Array.isArray(types) ? types : [types];
-    const out = [];
-    const seen = new Set();
-    source.forEach(raw => {
-      const normalized = normalizeWeaponTypeName(raw);
-      if (!normalized) return;
-      const key = normalizeTypeNameForMatch(normalized);
-      if (!key || seen.has(key)) return;
-      seen.add(key);
-      out.push(normalized);
-    });
-    return out;
-  }
-
   function isWeaponType(typeName) {
-    const key = normalizeTypeNameForMatch(normalizeWeaponTypeName(typeName));
+    const key = normalizeTypeNameForMatch(typeName);
     return key ? WEAPON_TYPE_KEYS.has(key) : false;
   }
 
@@ -566,14 +541,13 @@
   }
 
   function isRangedWeaponType(typeName) {
-    const key = normalizeTypeNameForMatch(normalizeWeaponTypeName(typeName));
+    const key = normalizeTypeNameForMatch(typeName);
     return key ? RANGED_WEAPON_TYPE_KEYS.has(key) : false;
   }
 
   function isTwoHandedWeaponType(typeName) {
     if (!typeName) return false;
-    const normalized = normalizeWeaponTypeName(typeName);
-    return TWO_HANDED_WEAPON_TYPE_KEYS.has(normalizeTypeNameForMatch(normalized));
+    return TWO_HANDED_WEAPON_TYPE_KEYS.has(normalizeTypeNameForMatch(typeName));
   }
 
   function isTwoHandedWeaponEntry(entry) {
@@ -1483,8 +1457,6 @@
   window.MELEE_WEAPON_BASE_TYPE = MELEE_WEAPON_BASE_TYPE;
   window.RANGED_WEAPON_BASE_TYPE = RANGED_WEAPON_BASE_TYPE;
   window.WEAPON_BASE_TYPES = WEAPON_BASE_TYPES;
-  window.normalizeWeaponTypeName = normalizeWeaponTypeName;
-  window.normalizeWeaponTypeList = normalizeWeaponTypeList;
   window.isWeaponType = isWeaponType;
   window.hasWeaponType = hasWeaponType;
   window.isWeaponBaseType = isWeaponBaseType;

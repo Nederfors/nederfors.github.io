@@ -1,4 +1,4 @@
-const CACHE_NAME = 'symbaroum-pwa-v17';
+const CACHE_NAME = 'symbaroum-pwa-v18';
 const PDF_DIR = 'pdf/';
 const URLS_TO_CACHE = [
   // build-sw-cache:start
@@ -78,6 +78,7 @@ const URLS_TO_CACHE = [
   'js/monsterlard.js',
   'js/notes-view.js',
   'js/pdf-library.js',
+  'js/popup-manager.js',
   'js/pwa.js',
   'js/rules-helper.js',
   'js/shared-toolbar.js',

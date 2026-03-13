@@ -407,14 +407,14 @@
             "saknar_namn": ["Jordnära"]
           },
           "mal": "permanent_korruption",
-          "formel": "fjardedel_korruptionstroskel_uppat"
+          "formel": { "bas": "attribut:korruptionstroskel", "division": 4, "avrunda": "uppat" }
         },
         {
           "nar": {
             "har_namn": ["Jordnära"]
           },
           "mal": "smartgrans_tillagg",
-          "formel": "fjardedel_aktuell_smartgrans_nedat"
+          "formel": { "bas": "attribut:aktuell_smartgrans", "division": 4, "avrunda": "nedat" }
         }
       ]
     }

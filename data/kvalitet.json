@@ -1,6 +1,20 @@
 {
   "typ_regler": {
-    "Kvalitet": {},
+    "Kvalitet": {
+      "regler": {
+        "andrar": [
+          {
+            "mal": "pris_faktor",
+            "varde": 5
+          },
+          {
+            "mal": "kvalitet_gratisbar",
+            "satt": "ersatt",
+            "varde": true
+          }
+        ]
+      }
+    },
     "Vapenkvalitet": {},
     "Sköldkvalitet": {},
     "Rustningskvalitet": {},

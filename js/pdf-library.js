@@ -205,14 +205,28 @@ pdfBtn?.addEventListener('click', async () => {
     box.append(message);
   }
 
-  pop.classList.add('open');
-  pop.querySelector('.popup-inner').scrollTop = 0;
+  let closed = false;
+  const usingManager = Boolean(window.popupManager?.open && window.popupManager?.close && pop?.id);
+  const popupSession = usingManager
+    ? {
+      close: (reason = 'programmatic') => window.popupManager.close(pop, reason)
+    }
+    : {
+      close: () => {
+        pop.classList.remove('open');
+        cleanup();
+      }
+    };
 
-  function close() {
-    pop.classList.remove('open');
+  function cleanup() {
+    if (closed) return;
+    closed = true;
     box.removeEventListener('click', onBtn);
     cls.removeEventListener('click', onCancel);
-    pop.removeEventListener('click', onOutside);
+  }
+
+  function close(reason = 'cancel') {
+    popupSession.close(reason);
   }
 
   function onBtn(e) {
@@ -224,20 +238,19 @@ pdfBtn?.addEventListener('click', async () => {
     } else {
       window.open(button.dataset.href, '_blank', 'noopener');
     }
-    close();
+    close('select');
   }
 
   function onCancel() {
-    close();
+    close('cancel');
   }
 
-  function onOutside(e) {
-    if (!pop.querySelector('.popup-inner').contains(e.target)) {
-      close();
-    }
+  if (usingManager) {
+    window.popupManager.open(pop, { type: 'form', onClose: cleanup });
+  } else {
+    pop.classList.add('open');
   }
-
+  pop.querySelector('.popup-inner').scrollTop = 0;
   box.addEventListener('click', onBtn);
   cls.addEventListener('click', onCancel);
-  pop.addEventListener('click', onOutside);
 });

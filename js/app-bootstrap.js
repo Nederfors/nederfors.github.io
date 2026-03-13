@@ -8,6 +8,7 @@ const CORE_SCRIPTS = [
   'js/store.js',
   'js/inventory-utils.js',
   'js/traits-utils.js',
+  'js/popup-manager.js',
   'js/shared-toolbar.js',
   'js/yrke-panel.js',
   'js/elite-utils.js',

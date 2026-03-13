@@ -685,24 +685,23 @@
       });
     }
 
-    summarySections.push({
-      title: 'Karaktärsdrag',
-      items: KEYS.map(key => ({
-        label: key,
-        value: formatNumber(vals[key] || 0)
-      })),
-      layout: 'grid'
-    });
-
-    const xpItems = [
-      { label: 'Total XP', value: totalXPText },
-      { label: 'Använt XP', value: usedXPText },
-      { label: 'XP kvar', value: freeXPText, valueClass: freeXP < 0 ? 'neg' : '' }
+    const corruptionItems = [
+      { label: 'Maximal korruption', value: formatNumber(maxCor) },
+      { label: 'Permanent korruption', value: formatNumber(perm) },
+      { label: 'Korruptionströskel', value: formatNumber(thresh) }
     ];
     summarySections.push({
-      title: 'Erfarenhet',
-      layout: 'grid',
-      items: xpItems
+      title: 'Korruption',
+      items: corruptionItems
+    });
+
+    summarySections.push({
+      title: 'Hälsa',
+      items: [
+        { label: 'Tålighet', value: formatNumber(tal) },
+        { label: 'Smärtgräns', value: formatNumber(pain) },
+        { label: 'Bärkapacitet', value: formatNumber(capacity, { decimals: 2 }) }
+      ]
     });
 
     summarySections.push({
@@ -715,33 +714,6 @@
         ...(Number.isFinite(dancingPrimary) && dancingPrimary > Number.NEGATIVE_INFINITY
           ? [{ label: 'Försvar (Dansande v.)', value: formatNumber(dancingPrimary) }]
           : [])
-      ]
-    });
-
-    summarySections.push({
-      title: 'Hälsa',
-      items: [
-        { label: 'Tålighet', value: formatNumber(tal) },
-        { label: 'Smärtgräns', value: formatNumber(pain) },
-        { label: 'Bärkapacitet', value: formatNumber(capacity, { decimals: 2 }) }
-      ]
-    });
-
-    const corruptionItems = [
-      { label: 'Maximal korruption', value: formatNumber(maxCor) },
-      { label: 'Permanent korruption', value: formatNumber(perm) },
-      { label: 'Korruptionströskel', value: formatNumber(thresh) }
-    ];
-    summarySections.push({
-      title: 'Korruption',
-      items: corruptionItems
-    });
-
-    summarySections.push({
-      title: 'Ekonomi',
-      items: [
-        { label: 'Totalt innehav', value: moneyToString(totalMoney) },
-        { label: 'Oanvänt kapital', value: unusedText, valueClass: unusedNegative ? 'neg' : '' }
       ]
     });
 
@@ -762,6 +734,34 @@
       title: 'Träffsäkerhet',
       layout: 'block',
       items: accuracyItems
+    });
+
+    summarySections.push({
+      title: 'Ekonomi',
+      items: [
+        { label: 'Totalt innehav', value: moneyToString(totalMoney) },
+        { label: 'Oanvänt kapital', value: unusedText, valueClass: unusedNegative ? 'neg' : '' }
+      ]
+    });
+
+    const xpItems = [
+      { label: 'Total XP', value: totalXPText },
+      { label: 'Använt XP', value: usedXPText },
+      { label: 'XP kvar', value: freeXPText, valueClass: freeXP < 0 ? 'neg' : '' }
+    ];
+    summarySections.push({
+      title: 'Erfarenhet',
+      layout: 'grid',
+      items: xpItems
+    });
+
+    summarySections.push({
+      title: 'Karaktärsdrag',
+      items: KEYS.map(key => ({
+        label: key,
+        value: formatNumber(vals[key] || 0)
+      })),
+      layout: 'grid'
     });
 
     const categorySections = [

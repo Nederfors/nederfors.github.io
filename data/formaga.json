@@ -64,15 +64,78 @@
         "nivå_data": {
           "Novis": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Elixir"
+                      ],
+                      "niva": [
+                        "Novis"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Elixir"
+                      ],
+                      "niva": [
+                        "Novis",
+                        "Gesäll"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
           },
           "Mästare": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Elixir"
+                      ],
+                      "niva": [
+                        "Novis",
+                        "Gesäll",
+                        "Mästare"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
           }
         }
       },
@@ -185,7 +248,7 @@
             {
               "mal": "karaktarsdrag_max_tillagg",
               "satt": "add",
-              "formel": "niva"
+              "formel": { "bas": "niva" }
             }
           ],
           "val": [
@@ -348,7 +411,7 @@
           "ger": [
             {
               "mal": "skydd_permanent_korruption",
-              "formel": "niva",
+              "formel": { "bas": "niva" },
               "nar": {
                 "typ": [
                   "Mystisk kraft",
@@ -780,7 +843,7 @@
           "ger": [
             {
               "mal": "skydd_permanent_korruption",
-              "formel": "niva",
+              "formel": { "bas": "niva" },
               "nar": {
                 "typ": [
                   "Mystisk kraft",
@@ -1120,9 +1183,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Reaktiv. Rollpersonen får en andra chans att lyckas med frislag till följd av att en fiende bryter närstrid.",
-        "Gesäll": "Handling: Reaktiv. Rollpersonen får använda aktiva förmågor på frislag till följd av att en fiende bryter närstrid. Detta ersätter i så fall den andra chansen att lyckas med frislaget som ges på novisnivån.",
-        "Mästare": "Handling: Reaktiv. Mästeropportunisten får både en andra chans att lyckas med frislag till följd av att en fiende bryter närstrid, liksom att mästaren kan använda aktiva förmågor på frislaget."
+        "Novis": "Handling: Reaktiv. Rollpersonen får en andra chans att lyckas med frislag.",
+        "Gesäll": "Handling: Reaktiv. Rollpersonen får använda aktiva förmågor på frislag. Detta ersätter i så fall den andra chansen att lyckas med frislaget som ges på novisnivån, vilket val som gäller måste deklareras innan frislaget slås.",
+        "Mästare": "Handling: Reaktiv. Mästeropportunisten kan nu också välja att ingen av novis eller geäsllförmågorna gäller, men får istället göra hur många frislag som helst per runda."
       }
     },
     {
@@ -1496,7 +1559,7 @@
           "ger": [
             {
               "mal": "skydd_permanent_korruption",
-              "formel": "niva",
+              "formel": { "bas": "niva" },
               "nar": {
                 "typ": [
                   "Mystisk kraft",
@@ -1664,15 +1727,78 @@
         "nivå_data": {
           "Novis": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Lägre Artefakt"
+                      ],
+                      "niva": [
+                        "Novis"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Lägre Artefakt"
+                      ],
+                      "niva": [
+                        "Novis",
+                        "Gesäll"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
           },
           "Mästare": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Lägre Artefakt"
+                      ],
+                      "niva": [
+                        "Novis",
+                        "Gesäll",
+                        "Mästare"
+                      ]
+                    }
+                  }
+                }
+              ]
+            }
           }
         }
       },
@@ -2170,15 +2296,83 @@
         "nivå_data": {
           "Novis": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Närstridsvapen",
+                        "Avståndsvapen",
+                        "Vapen",
+                        "Sköld",
+                        "Rustning"
+                      ],
+                      "antal_positiv_kvalitet_max": 0
+                    }
+                  }
+                }
+              ]
+            }
           },
           "Gesäll": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Närstridsvapen",
+                        "Avståndsvapen",
+                        "Vapen",
+                        "Sköld",
+                        "Rustning"
+                      ],
+                      "antal_positiv_kvalitet_max": 1,
+                      "antal_mystisk_kvalitet_max": 0
+                    }
+                  }
+                }
+              ]
+            }
           },
           "Mästare": {
             "handling": "Speciell",
-            "skadetyp": "Ingen"
+            "skadetyp": "Ingen",
+            "regler": {
+              "andrar": [
+                {
+                  "mal": "pris_faktor",
+                  "operation": "dividera",
+                  "satt": "ersatt",
+                  "varde": 2,
+                  "nar": {
+                    "foremal": {
+                      "typ": [
+                        "Närstridsvapen",
+                        "Avståndsvapen",
+                        "Vapen",
+                        "Sköld",
+                        "Rustning"
+                      ],
+                      "antal_positiv_kvalitet_max": 2,
+                      "antal_mystisk_kvalitet_max": 1
+                    }
+                  }
+                }
+              ]
+            }
           }
         },
         "ark_trad": [
@@ -2277,7 +2471,7 @@
             {
               "mal": "korruptionstroskel",
               "satt": "add",
-              "formel": "halv_viljestark_nedat"
+              "formel": { "bas": "attribut:viljestark", "division": 2, "avrunda": "nedat" }
             },
             {
               "mal": "styggelsetroskel",
@@ -2397,7 +2591,7 @@
           "ger": [
             {
               "mal": "skydd_permanent_korruption",
-              "formel": "niva",
+              "formel": { "bas": "niva" },
               "nar": {
                 "typ": [
                   "Mystisk kraft",
@@ -2512,7 +2706,7 @@
           "ger": [
             {
               "mal": "skydd_permanent_korruption",
-              "formel": "niva",
+              "formel": { "bas": "niva" },
               "nar": {
                 "typ": [
                   "Mystisk kraft",
@@ -2634,7 +2828,7 @@
           "ger": [
             {
               "mal": "skydd_permanent_korruption",
-              "formel": "niva",
+              "formel": { "bas": "niva" },
               "nar": {
                 "typ": [
                   "Mystisk kraft",
@@ -2724,7 +2918,7 @@
           "ger": [
             {
               "mal": "permanent_korruption",
-              "formel": "niva"
+              "formel": { "bas": "niva" }
             }
           ]
         },
@@ -3107,9 +3301,9 @@
         }
       },
       "nivåer": {
-        "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen använda en ytterligare förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
+        "Novis": "Handling: Speciell. Om rollpersonen använder sin förflyttning före en närstridsattack med ett Kort eller Balanserat vapen får hen använda Kvick istället för Träffsäker för den attacken. Vid träff får rollpersonen en gång per runda ytterligare en förflyttningshandling. Om rollpersonen har förmågan Tvillingattack får hen anfalla med det andra vapnet efter den andra förflyttningshandlingen, men får då ingen extra förflyttning efter attacken.",
         "Gesäll": "Handling: Reaktiv. En gång per runda, när en fiende missar rollpersonen i närstrid eller när rollpersonen lyckas med Försvar får rollpersonen använda en fri förflyttningshandling.",
-        "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot samma mål eller ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
+        "Mästare": "Handling: Reaktiv. En gång per runda, efter att rollpersonen utfört en förflyttning och träffat med en närstridsattack, får hen omedelbart göra ett frislag mot ett annat mål inom närstridsavstånd. Frislaget ger +1T4 i skada och ignorerar målets Bepansring."
       }
     },
     {

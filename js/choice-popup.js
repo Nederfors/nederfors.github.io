@@ -178,6 +178,8 @@
 
     let shown = allOptions.slice();
     let done = false;
+    let currentResult = null;
+    let resolvePromise = () => {};
 
     titleEl.textContent = title;
     if (subtitle) {
@@ -208,23 +210,30 @@
       emptyEl.hidden = shown.length !== 0;
     }
 
+    let popupSession = null;
+    const usingManager = Boolean(window.popupManager?.open && window.popupManager?.close && pop?.id);
+
     function cleanup() {
       box.innerHTML = '';
       if (searchEnabled) searchInput.value = '';
       box.removeEventListener('click', onClick);
       cancelBtn.removeEventListener('click', onCancel);
       closeBtn.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
+      if (!usingManager) pop.removeEventListener('click', onOutside);
       if (searchEnabled) searchInput.removeEventListener('input', onSearch);
-      window.registerOverlayCleanup?.(pop, null);
     }
 
-    function finish(result, resolve) {
+    function finish(result, reason = 'programmatic') {
       if (done) return;
       done = true;
-      pop.classList.remove('open');
-      cleanup();
-      resolve(result);
+       currentResult = result;
+      if (popupSession?.close) {
+        popupSession.close(reason);
+      } else {
+        pop.classList.remove('open');
+        cleanup();
+        resolvePromise(currentResult);
+      }
     }
 
     function onClick(e) {
@@ -244,10 +253,6 @@
       if (e.target === pop) resolver(null);
     }
 
-    function onOverlayClose() {
-      resolver(null);
-    }
-
     function onSearch() {
       render();
     }
@@ -255,20 +260,39 @@
     let resolver = () => {};
 
     render();
-    pop.classList.add('open');
+    if (usingManager) {
+      popupSession = {
+        close: (reason = 'programmatic') => window.popupManager.close(pop, reason)
+      };
+      window.popupManager.open(pop, {
+        type: 'picker',
+        onClose: () => {
+          if (!done) {
+            done = true;
+            currentResult = null;
+          }
+          cleanup();
+          resolvePromise(currentResult);
+        }
+      });
+    } else {
+      pop.classList.add('open');
+    }
     if (inner) inner.scrollTop = 0;
     if (searchEnabled) {
       searchInput.focus();
     }
 
     return new Promise(resolve => {
-      resolver = (value) => finish(value, resolve);
+      resolvePromise = resolve;
+      resolver = (value) => {
+        finish(value, value === null ? 'cancel' : 'select');
+      };
       box.addEventListener('click', onClick);
       cancelBtn.addEventListener('click', onCancel);
       closeBtn.addEventListener('click', onCancel);
-      pop.addEventListener('click', onOutside);
+      if (!usingManager) pop.addEventListener('click', onOutside);
       if (searchEnabled) searchInput.addEventListener('input', onSearch);
-      window.registerOverlayCleanup?.(pop, onOverlayClose);
     });
   }
 

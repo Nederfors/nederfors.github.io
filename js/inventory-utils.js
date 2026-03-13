@@ -31,7 +31,6 @@
   const isWeaponBaseType = (typeName) => WEAPON_BASE_TYPES.includes(String(typeName || '').trim());
   const WEAPON_AND_SHIELD_TYPES = [...WEAPON_BASE_TYPES, 'Sköld'];
   const WEAPON_QUALITY_TARGET_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Pil/Lod'];
-  const FORGEABLE_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning'];
   const INDIVIDUAL_TYPES = [...WEAPON_BASE_TYPES, 'Sköld', 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt', 'Färdmedel'];
   const LEGACY_STACKABLE_ID_SET = new Set(['l1', 'l11', 'l27', 'l6', 'l12', 'l13', 'l28', 'l30']);
   const LEGACY_BUNDLE_BY_ENTRY_ID = Object.freeze({
@@ -55,6 +54,37 @@
     return root ? root.getElementById(id) : null;
   };
   const getEl = (id) => document.getElementById(id) || $T(id);
+  function createPopupSession(pop, options = {}) {
+    const target = pop || null;
+    const type = options.type || 'form';
+    const onClose = typeof options.onClose === 'function' ? options.onClose : () => {};
+    const popupManager = window.popupManager;
+    let settled = false;
+
+    const finalize = (reason = 'programmatic') => {
+      if (settled) return;
+      settled = true;
+      onClose(reason);
+    };
+
+    if (popupManager?.open && target?.id) {
+      popupManager.open(target, { type, dismissPolicy: options.dismissPolicy, onClose: finalize });
+    } else if (target) {
+      target.classList.add('open');
+    }
+
+    return {
+      close(reason = 'programmatic') {
+        if (popupManager?.close && target?.id) {
+          popupManager.close(target, reason);
+          return;
+        }
+        if (target) target.classList.remove('open');
+        finalize(reason);
+      },
+      finalize
+    };
+  }
   const INVENTORY_HUB_DEFS = {
     items: {
       popupId: 'inventoryItemsPopup',
@@ -116,7 +146,12 @@
     Object.values(INVENTORY_HUB_DEFS).flatMap(def => Object.keys(def.sectionTabIds))
   ));
   const LEVEL_IDX = { '':0, Novis:1, 'Ges\u00e4ll':2, 'M\u00e4stare':3 };
-  const LOWER_ARTIFACT_PRICE_MULT = 10;
+  const LEVEL_BY_IDX = ['', 'Novis', 'Ges\u00e4ll', 'M\u00e4stare'];
+  const PRICE_RULE_LEVEL_SPECS = [
+    { abilityName: 'Smideskonst', key: 'forgeLvl' },
+    { abilityName: 'Alkemist', key: 'alcLevel' },
+    { abilityName: 'Artefaktmakande', key: 'artLevel' }
+  ];
   const VEHICLE_EMOJI = {
     'Vagn': '🚚',
     'Släde': '🛷',
@@ -134,6 +169,33 @@
     const fn = window.enforceArmorQualityExclusion;
     if (typeof fn === 'function') return fn(entry, qualities);
     return Array.isArray(qualities) ? qualities.filter(Boolean) : [];
+  };
+  const lookupQualityEntry = (name) => {
+    if (typeof window.lookupEntry !== 'function') return null;
+    const label = String(name || '').trim();
+    if (!label) return null;
+    try {
+      const hit = window.lookupEntry({ name: label });
+      return hit && typeof hit === 'object' ? hit : null;
+    } catch (_) {
+      return null;
+    }
+  };
+  const isNegativeQual = (name) => {
+    if (typeof window.isNegativeQual === 'function') return window.isNegativeQual(name);
+    const entry = lookupQualityEntry(name);
+    return Boolean(entry?.negativ === true);
+  };
+  const isNeutralQual = (name) => {
+    if (typeof window.isNeutralQual === 'function') return window.isNeutralQual(name);
+    const entry = lookupQualityEntry(name);
+    return Boolean(entry?.neutral === true);
+  };
+  const isMysticQual = (name) => {
+    if (typeof window.isMysticQual === 'function') return window.isMysticQual(name);
+    const entry = lookupQualityEntry(name);
+    const types = Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [];
+    return types.some(typeName => String(typeName || '').trim() === 'Mystisk kvalitet');
   };
   const normalizeShieldQualityName = (entry, qualityName) => {
     const isShield = Array.isArray(entry?.taggar?.typ) && entry.taggar.typ.includes('Sköld');
@@ -168,7 +230,52 @@
     if (Math.abs(mult - Math.round(mult)) < 0.001) return String(Math.round(mult));
     return mult.toFixed(2).replace(/\.?0+$/, '');
   };
-  const checkLowerArtifactKraver = (entry, list) => {
+  const getQualityRuleEffects = (entry, qualityNames) => {
+    const names = Array.from(new Set(
+      (Array.isArray(qualityNames) ? qualityNames : [])
+        .map(String)
+        .map(name => name.trim())
+        .filter(Boolean)
+    ));
+    if (!names.length) return {};
+
+    const helper = window.rulesHelper;
+    if (helper && typeof helper.getItemQualityRuleEffects === 'function') {
+      try {
+        const resolved = helper.getItemQualityRuleEffects(names, entry) || {};
+        const out = {};
+        names.forEach(name => {
+          const raw = resolved[name] || {};
+          const multiplier = normalizeMultiplierValue(raw.multiplier, 1);
+          const additiveO = Number(raw.additiveO || 0);
+          out[name] = {
+            multiplier,
+            additiveO: Number.isFinite(additiveO) ? additiveO : 0,
+            gratisbar: raw.gratisbar === true
+          };
+        });
+        return out;
+      } catch (_) {
+        // fall through to safe defaults below
+      }
+    }
+
+    // Explicit-only fallback model: no explicit rule means multiplier 1 and not gratisbar.
+    const out = {};
+    names.forEach(name => {
+      out[name] = { multiplier: 1, additiveO: 0, gratisbar: false };
+    });
+    return out;
+  };
+  const getGratisbarQualitySet = (entry, qualityNames) => {
+    const effects = getQualityRuleEffects(entry, qualityNames);
+    const allowed = new Set();
+    (Array.isArray(qualityNames) ? qualityNames : []).forEach(name => {
+      if (effects?.[name]?.gratisbar === true) allowed.add(name);
+    });
+    return allowed;
+  };
+  const getRequirementCheckForEntry = (entry, list) => {
     const entries = Array.isArray(list) ? list : [];
     const levelName = getEntryPrimaryLevelName(entry);
     const candidate = levelName
@@ -186,17 +293,106 @@
     const explicitMessages = (helper && typeof helper.formatEntryStopMessages === 'function')
       ? helper.formatEntryStopMessages(entry?.namn || '', { requirementReasons: explicitRequirementReasons })
       : [];
-    let moneyMultiplier = normalizeMultiplierValue(requirementEffects?.moneyMultiplier, 1);
+    const moneyMultiplier = normalizeMultiplierValue(requirementEffects?.moneyMultiplier, 1);
     const erfMultiplier = normalizeMultiplierValue(requirementEffects?.erfMultiplier, 1);
-    if (explicitRequirementReasons.length && Math.abs(moneyMultiplier - 1) < 0.001) {
-      moneyMultiplier = LOWER_ARTIFACT_PRICE_MULT;
-    }
 
     return {
       ok: explicitRequirementReasons.length === 0,
       explicitMessages,
       moneyMultiplier,
       erfMultiplier
+    };
+  };
+  const normalizeLevelIndex = (value) => {
+    const numeric = Math.floor(Number(value) || 0);
+    if (!Number.isFinite(numeric)) return 0;
+    return Math.max(0, Math.min(LEVEL_BY_IDX.length - 1, numeric));
+  };
+  const createSyntheticAbilityEntry = (abilityName, levelIdx) => {
+    if (levelIdx <= 0) return null;
+    const base = getEntry(abilityName);
+    if (!base || typeof base !== 'object' || !base.id) return null;
+    const levelName = LEVEL_BY_IDX[levelIdx] || '';
+    if (!levelName) return null;
+    return { ...base, nivå: levelName };
+  };
+  const buildPriceRuleSourceList = (list, levels = {}) => {
+    const baseList = Array.isArray(list) ? list.filter(entry => entry && typeof entry === 'object') : [];
+    const excluded = new Set(PRICE_RULE_LEVEL_SPECS.map(spec => String(spec.abilityName || '').trim().toLowerCase()));
+    const out = baseList.filter(entry => {
+      const key = String(entry?.namn || '').trim().toLowerCase();
+      return !excluded.has(key);
+    });
+    PRICE_RULE_LEVEL_SPECS.forEach(spec => {
+      const levelIdx = normalizeLevelIndex(levels?.[spec.key]);
+      const synthetic = createSyntheticAbilityEntry(spec.abilityName, levelIdx);
+      if (synthetic) out.push(synthetic);
+    });
+    return out;
+  };
+  const buildItemPriceRuleContext = (entry, qualityNames, options = {}) => {
+    const names = Array.isArray(qualityNames) ? qualityNames.filter(Boolean) : [];
+    const positiveCount = countPositiveQuals(names);
+    const mysticCount = names.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
+    const targetLevel = typeof options.targetLevel === 'string' && options.targetLevel.trim()
+      ? options.targetLevel.trim()
+      : getEntryPrimaryLevelName(entry);
+    const context = {
+      targetLevel,
+      kvalitet_antal: names.length,
+      positiv_kvalitet_antal: positiveCount,
+      mystisk_kvalitet_antal: mysticCount
+    };
+    if (Object.prototype.hasOwnProperty.call(options || {}, 'krav_uppfyllda')) {
+      context.krav_uppfyllda = Boolean(options.krav_uppfyllda);
+    }
+    return context;
+  };
+  const getItemPriceEffects = (list, entry, qualityNames, options = {}) => {
+    const names = Array.isArray(qualityNames) ? qualityNames.filter(Boolean) : [];
+    const helper = window.rulesHelper;
+    const foremalContext = buildItemPriceRuleContext(entry, names, options);
+    if (helper && typeof helper.getItemPriceRuleEffects === 'function') {
+      try {
+        const resolved = helper.getItemPriceRuleEffects(list, names, entry, { foremalContext }) || {};
+        const qualityEffects = {};
+        names.forEach(name => {
+          const raw = resolved?.qualityEffects?.[name] || {};
+          qualityEffects[name] = {
+            multiplier: normalizeMultiplierValue(raw.multiplier, 1),
+            additiveO: Number(raw.additiveO || 0) || 0,
+            gratisbar: raw.gratisbar === true
+          };
+        });
+        return {
+          additiveO: Number(resolved.additiveO || 0) || 0,
+          factor: normalizeMultiplierValue(resolved.factor, 1),
+          listAdditiveO: Number(resolved.listAdditiveO || 0) || 0,
+          listFactor: normalizeMultiplierValue(resolved.listFactor, 1),
+          qualityAdditiveO: Number(resolved.qualityAdditiveO || 0) || 0,
+          qualityFactor: normalizeMultiplierValue(resolved.qualityFactor, 1),
+          qualityEffects
+        };
+      } catch (_) {
+        // fall through to safe defaults below
+      }
+    }
+
+    const qualityEffects = getQualityRuleEffects(entry, names);
+    let qualityFactor = 1;
+    let qualityAdditiveO = 0;
+    names.forEach(name => {
+      qualityFactor *= normalizeMultiplierValue(qualityEffects?.[name]?.multiplier, 1);
+      qualityAdditiveO += Number(qualityEffects?.[name]?.additiveO || 0) || 0;
+    });
+    return {
+      additiveO: qualityAdditiveO,
+      factor: qualityFactor,
+      listAdditiveO: 0,
+      listFactor: 1,
+      qualityAdditiveO,
+      qualityFactor,
+      qualityEffects
     };
   };
   const mapRowQualityArray = (entry, list) => {
@@ -223,12 +419,110 @@
     const addedQ = Array.isArray(row?.kvaliteter) ? row.kvaliteter.filter(Boolean) : [];
     return { baseQ, addedQ };
   };
-  const isQualityAllowedByRules = (entry, row, qualityName) => {
-    if (!entry || !qualityName) return true;
+  const normalizeQualityToken = (value) => String(value || '').trim().toLowerCase();
+  const buildQualityRuleForemalContext = (entry, qualityNames = []) => ({
+    id: entry?.id,
+    namn: entry?.namn,
+    typ: Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : [],
+    kvalitet: Array.isArray(qualityNames) ? qualityNames.filter(Boolean) : []
+  });
+  const getCurrentCharacterEntryList = () => {
+    if (typeof storeHelper?.getCurrentList !== 'function') return [];
+    try {
+      const list = storeHelper.getCurrentList(store);
+      return Array.isArray(list) ? list.filter(item => item && typeof item === 'object') : [];
+    } catch (_) {
+      return [];
+    }
+  };
+  const dedupeConflictReasons = (reasons) => {
+    const out = [];
+    const seen = new Set();
+    (Array.isArray(reasons) ? reasons : []).forEach(reason => {
+      if (!reason || typeof reason !== 'object') return;
+      const key = [
+        String(reason.code || '').trim(),
+        String(reason.mode || '').trim(),
+        String(reason.sourceEntryName || '').trim(),
+        String(reason.sourceEntryLevel || '').trim()
+      ].join('|');
+      if (seen.has(key)) return;
+      seen.add(key);
+      out.push(reason);
+    });
+    return out;
+  };
+  const getQualityBlockingConflicts = (entry, row, qualityName) => {
+    const helper = window.rulesHelper;
+    if (!helper || typeof helper.getConflictResolutionForCandidate !== 'function') return [];
+    const candidate = lookupQualityEntry(qualityName);
+    if (!candidate) return [];
+
     const { baseQ, addedQ } = getRowQualityState(entry, row);
-    if ([...baseQ, ...addedQ].includes(qualityName)) return true;
-    const next = sanitizeArmorQualities(entry, [...baseQ, ...addedQ, qualityName]);
-    return next.includes(qualityName);
+    const existingNames = [...baseQ, ...addedQ].filter(Boolean);
+    const effectiveQualities = sanitizeArmorQualities(entry, [...existingNames, qualityName]);
+    const conditionContext = { foremal: buildQualityRuleForemalContext(entry, effectiveQualities) };
+
+    const existingQualityEntries = [];
+    const seenQualityNames = new Set();
+    existingNames.forEach(name => {
+      const key = normalizeQualityToken(name);
+      if (!key || seenQualityNames.has(key)) return;
+      seenQualityNames.add(key);
+      const qualityEntry = lookupQualityEntry(name);
+      if (qualityEntry) existingQualityEntries.push(qualityEntry);
+    });
+    const itemTargetEntry = {
+      id: `__item_quality_target__:${entry?.id || entry?.namn || ''}`,
+      namn: String(entry?.namn || 'Föremål'),
+      taggar: {
+        typ: Array.isArray(entry?.taggar?.typ) ? entry.taggar.typ : []
+      }
+    };
+
+    const listConflicts = helper.getConflictResolutionForCandidate(
+      candidate,
+      getCurrentCharacterEntryList(),
+      { conditionContext }
+    );
+    const qualityConflicts = helper.getConflictResolutionForCandidate(
+      candidate,
+      [...existingQualityEntries, itemTargetEntry],
+      { conditionContext }
+    );
+
+    return dedupeConflictReasons([
+      ...(Array.isArray(listConflicts?.blockingReasons) ? listConflicts.blockingReasons : []),
+      ...(Array.isArray(qualityConflicts?.blockingReasons) ? qualityConflicts.blockingReasons : [])
+    ]);
+  };
+  const evaluateQualityRuleAllowance = (entry, row, qualityName) => {
+    if (!entry || !qualityName) return { allowed: true, blockingConflicts: [], hardStops: [] };
+    const { baseQ, addedQ } = getRowQualityState(entry, row);
+    const existing = [...baseQ, ...addedQ];
+    if (existing.includes(qualityName)) return { allowed: true, blockingConflicts: [], hardStops: [] };
+
+    const next = sanitizeArmorQualities(entry, [...existing, qualityName]);
+    if (!next.includes(qualityName)) {
+      return {
+        allowed: false,
+        blockingConflicts: [],
+        hardStops: [{
+          code: `quality_blocked_${normalizeQualityToken(qualityName)}`,
+          message: `Kvalitet: ${qualityName}`
+        }]
+      };
+    }
+
+    const blockingConflicts = getQualityBlockingConflicts(entry, row, qualityName);
+    return {
+      allowed: blockingConflicts.length === 0,
+      blockingConflicts,
+      hardStops: []
+    };
+  };
+  const isQualityAllowedByRules = (entry, row, qualityName) => {
+    return evaluateQualityRuleAllowance(entry, row, qualityName).allowed;
   };
   const normalizeRowQualities = (row) => {
     if (!row || typeof row !== 'object') return;
@@ -268,7 +562,8 @@
       }
       if (Array.isArray(row.gratisKval)) {
         const allowedSet = new Set(allowedAll);
-        row.gratisKval = row.gratisKval.filter(q => allowedSet.has(q));
+        const gratisbarSet = getGratisbarQualitySet(entry, allowedAll);
+        row.gratisKval = row.gratisKval.filter(q => allowedSet.has(q) && gratisbarSet.has(q));
       }
     }
     if (Array.isArray(row.contains)) {
@@ -384,13 +679,6 @@
     const saveFreeBtn = def.saveFreeBtnId ? root.getElementById(def.saveFreeBtnId) : null;
     closeBtn?.addEventListener('click', () => closeInventoryHub(hubKey));
     saveFreeBtn?.addEventListener('click', () => openSaveFreePopup());
-    hub.addEventListener('click', event => {
-      const inner = hub.querySelector('.popup-inner.inventory-hub-ui');
-      if (!hub.classList.contains('open') || !inner) return;
-      if (!inner.contains(event.target)) {
-        closeInventoryHub(hubKey);
-      }
-    });
     hub.querySelectorAll('.inventory-hub-tab').forEach(btn => {
       btn.addEventListener('click', () => {
         openInventoryHubTab(btn.dataset.tab || 'custom-item');
@@ -440,7 +728,19 @@
         try { cleanup({ viaHubClose: true }); } catch {}
       });
       const popup = root.getElementById(def.popupId);
-      if (popup) popup.classList.remove('open');
+      if (!popup) return;
+      if (popup.__hubSession) {
+        popup.__hubClosingInternal = true;
+        const session = popup.__hubSession;
+        popup.__hubSession = null;
+        session.close('programmatic');
+        return;
+      }
+      if (window.popupManager?.close && popup.id) {
+        window.popupManager.close(popup, 'programmatic');
+      } else {
+        popup.classList.remove('open');
+      }
     });
     clearInventoryHubHighlight(root);
     window.updateScrollLock?.();
@@ -467,7 +767,25 @@
     });
     syncInventoryHubState();
     setInventoryHubTab(hubKey, resolvedTab);
-    hub.classList.add('open');
+    hub.__hubSession = createPopupSession(hub, {
+      type: 'hub',
+      onClose: () => {
+        if (hub.__hubClosingInternal) {
+          hub.__hubClosingInternal = false;
+          return;
+        }
+        Object.keys(def.sectionTabIds).forEach(sectionId => {
+          const section = root.getElementById(sectionId);
+          if (!section || typeof section.__hubCleanup !== 'function') return;
+          const cleanup = section.__hubCleanup;
+          section.__hubCleanup = null;
+          try { cleanup({ viaHubClose: true }); } catch {}
+        });
+        hub.__hubSession = null;
+        clearInventoryHubHighlight(root);
+        window.updateScrollLock?.();
+      }
+    });
     const inner = hub.querySelector('.popup-inner.inventory-hub-ui');
     if (inner) inner.scrollTop = 0;
     window.updateScrollLock?.();
@@ -576,8 +894,8 @@
     return true;
   }
 
-  function getCraftLevels() {
-    const list = storeHelper.getCurrentList(store);
+  function getCraftLevelsForList(sourceList) {
+    const list = Array.isArray(sourceList) ? sourceList : storeHelper.getCurrentList(store);
     const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
     const skillForge = storeHelper.abilityLevel(list, 'Smideskonst');
     const forgeLvl = Math.max(partyForge, skillForge);
@@ -588,6 +906,9 @@
     const skillArt = storeHelper.abilityLevel(list, 'Artefaktmakande');
     const artLevel = Math.max(partyArt, skillArt);
     return { forgeLvl, alcLevel, artLevel };
+  }
+  function getCraftLevels() {
+    return getCraftLevelsForList();
   }
 
   function calcRowCostOWithLevels(row, levels) {
@@ -608,8 +929,8 @@
     const baseQ = baseQuals.filter(q => !removed.includes(q));
     const extraQ = Array.isArray(row.kvaliteter) ? row.kvaliteter : [];
     const allQ = sanitizeArmorQualities(entry, [...baseQ, ...extraQ]);
-    const positives = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
-    row.gratisKval = [...new Set(positives)];
+    const gratisbarSet = getGratisbarQualitySet(entry, allQ);
+    row.gratisKval = [...new Set(allQ.filter(q => gratisbarSet.has(q)))];
   }
 
   function applyLiveModePayment(pairs, opts) {
@@ -693,11 +1014,6 @@
     });
     dom.active.innerHTML = tags.join('');
   }
-
-  const dividePrice = (amt, divisor) => {
-    const o = typeof amt === 'number' ? amt : moneyToO(amt || {});
-    return Math.floor(o / divisor);
-  };
 
   function parseRef(ref) {
     if (ref && typeof ref === 'object') {
@@ -2053,28 +2369,21 @@
         .filter(idx => Number.isInteger(idx) && idx >= 0)
         .sort((a, b) => a - b);
       if (!chosen.length) return;
-      close();
+      close('submit');
       done(chosen);
     };
 
     const popInner = pop.querySelector('.popup-inner');
-    pop.classList.add('open');
+    let popupSession = null;
+    let closed = false;
     window.autoResizeAll?.(pop);
-    if (popInner) popInner.scrollTop = 0;
-    render();
-    requestAnimationFrame(() => {
-      if (typeof searchEl.focus === 'function') {
-        try { searchEl.focus({ preventScroll: true }); } catch { searchEl.focus(); }
-      }
-    });
-
-    const close = () => {
-      pop.classList.remove('open');
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       box.removeEventListener('click', onBtn);
-      cls.removeEventListener('click', close);
-      if (closeBtn) closeBtn.removeEventListener('click', close);
+      cls.removeEventListener('click', onCancel);
+      if (closeBtn) closeBtn.removeEventListener('click', onCancel);
       applyBtn.removeEventListener('click', onApply);
-      pop.removeEventListener('click', onOutside);
       searchEl.removeEventListener('input', onSearch);
       searchEl.removeEventListener('keydown', onSearchKeydown);
       box.innerHTML = '';
@@ -2086,6 +2395,9 @@
       applyBtn.disabled = true;
       applyBtn.textContent = 'Lägg till valda';
       if (legendEl) legendEl.hidden = true;
+    };
+    const close = (reason = 'cancel') => {
+      popupSession?.close(reason);
     };
     const onBtn = e => {
       const b = e.target.closest('button[data-i]');
@@ -2099,14 +2411,14 @@
         render();
         return;
       }
-      close();
+      close('select');
       done(idx);
     };
     const onSearch = () => render();
     const onSearchKeydown = e => {
       if (e.key === 'Escape') {
         e.preventDefault();
-        close();
+        close('escape');
         return;
       }
       if (e.key === 'Enter') {
@@ -2128,24 +2440,27 @@
         if (filtered.length !== 1) return;
         const idx = Number(filtered[0]?.idx);
         if (!Number.isInteger(idx)) return;
-        close();
+        close('select');
         done(idx);
       }
     };
     const onApply = () => applySelection();
-    const onOutside = e => {
-      if (popInner && !popInner.contains(e.target)) {
-        close();
-      }
-    };
+    const onCancel = () => close('cancel');
 
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+    if (popInner) popInner.scrollTop = 0;
+    render();
+    requestAnimationFrame(() => {
+      if (typeof searchEl.focus === 'function') {
+        try { searchEl.focus({ preventScroll: true }); } catch { searchEl.focus(); }
+      }
+    });
     box.addEventListener('click', onBtn);
-    cls.addEventListener('click', close);
-    if (closeBtn) closeBtn.addEventListener('click', close);
+    cls.addEventListener('click', onCancel);
+    if (closeBtn) closeBtn.addEventListener('click', onCancel);
     applyBtn.addEventListener('click', onApply);
     searchEl.addEventListener('input', onSearch);
     searchEl.addEventListener('keydown', onSearchKeydown);
-    pop.addEventListener('click', onOutside);
   }
 
   function openCustomPopup(arg1, arg2) {
@@ -3016,8 +3331,10 @@
     const row = { id: entry.id, name: entry.namn, qty: 1, gratis: 0, gratisKval: [], removedKval: [] };
     const tagTyp = entry.taggar?.typ || [];
     const curList = Array.isArray(list) ? list : storeHelper.getCurrentList(store);
+    const craftLevels = getCraftLevelsForList(curList);
+    const priceRuleList = buildPriceRuleSourceList(curList, craftLevels);
+    const requirementCheck = getRequirementCheckForEntry(entry, priceRuleList);
     if (tagTyp.includes('L\u00e4gre Artefakt')) {
-      const requirementCheck = checkLowerArtifactKraver(entry, curList);
       const moneyMult = normalizeMultiplierValue(requirementCheck.moneyMultiplier, 1);
       if (!requirementCheck.ok) {
         const bullets = [];
@@ -3037,7 +3354,6 @@
           return null;
         }
       }
-      if (Math.abs(moneyMult - 1) > 0.001) row.priceMult = moneyMult;
     }
     if (tagTyp.includes('Artefakt')) {
       ensureArtifactSnapshotSourceKey(entry, row);
@@ -3115,36 +3431,43 @@
       }
     }
 
-    pop.classList.add('open');
+    let popupSession = null;
+    let closed = false;
+    let pendingResult = null;
+    let resolver = () => {};
+    let onConfirm = () => {};
+    let onCancel = () => {};
+    let onKey = () => {};
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
+      confirm.removeEventListener('click', onConfirm);
+      cancel.removeEventListener('click', onCancel);
+      qtyEl.removeEventListener('keydown', onKey);
+      dEl.removeEventListener('keydown', onKey);
+      sEl.removeEventListener('keydown', onKey);
+      oEl.removeEventListener('keydown', onKey);
+      qtyEl.value = '';
+      dEl.value = '';
+      sEl.value = '';
+      oEl.value = '';
+      if (nameEl) {
+        nameEl.textContent = '';
+        nameEl.hidden = true;
+      }
+      resolver(pendingResult);
+    };
+    const close = (result, reason = 'cancel') => {
+      pendingResult = result;
+      popupSession?.close(reason);
+    };
+
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
     if (inner) inner.scrollTop = 0;
     setTimeout(() => qtyEl.focus(), 50);
 
     return new Promise(resolve => {
-      let closed = false;
-      const cleanup = () => {
-        confirm.removeEventListener('click', onConfirm);
-        cancel.removeEventListener('click', onCancel);
-        pop.removeEventListener('click', onOutside);
-        qtyEl.removeEventListener('keydown', onKey);
-        dEl.removeEventListener('keydown', onKey);
-        sEl.removeEventListener('keydown', onKey);
-        oEl.removeEventListener('keydown', onKey);
-      };
-      const close = result => {
-        if (closed) return;
-        closed = true;
-        cleanup();
-        qtyEl.value = '';
-        dEl.value = '';
-        sEl.value = '';
-        oEl.value = '';
-        if (nameEl) {
-          nameEl.textContent = '';
-          nameEl.hidden = true;
-        }
-        pop.classList.remove('open');
-        resolve(result);
-      };
+      resolver = resolve;
 
       const parseMoney = () => {
         const daler = parseInt(dEl.value, 10) || 0;
@@ -3153,7 +3476,7 @@
         return storeHelper.normalizeMoney({ daler, skilling, 'örtegar': ort });
       };
 
-      const onConfirm = e => {
+      onConfirm = e => {
         e?.preventDefault();
         const qty = parseInt(qtyEl.value, 10);
         if (!Number.isFinite(qty) || qty <= 0) {
@@ -3163,17 +3486,13 @@
         const pricePerUnit = parseMoney();
         const pricePerUnitO = Math.max(0, moneyToO(pricePerUnit));
         const totalO = pricePerUnitO * qty;
-        close({ qty, pricePerUnit, pricePerUnitO, totalO });
+        close({ qty, pricePerUnit, pricePerUnitO, totalO }, 'confirm');
       };
-      const onCancel = e => {
+      onCancel = e => {
         e?.preventDefault();
-        close(null);
+        close(null, 'cancel');
       };
-      const onOutside = e => {
-        if (!inner || inner.contains(e.target)) return;
-        close(null);
-      };
-      const onKey = e => {
+      onKey = e => {
         if (e.key === 'Enter') {
           e.preventDefault();
           onConfirm(e);
@@ -3185,7 +3504,6 @@
 
       confirm.addEventListener('click', onConfirm);
       cancel.addEventListener('click', onCancel);
-      pop.addEventListener('click', onOutside);
       qtyEl.addEventListener('keydown', onKey);
       dEl.addEventListener('keydown', onKey);
       sEl.addEventListener('keydown', onKey);
@@ -3389,26 +3707,25 @@
 
     input.value = '';
     clearInputValidity();
-    pop.classList.add('open');
-    if (inner) inner.scrollTop = 0;
-    setTimeout(() => input.focus(), 50);
-
     let closed = false;
-    const close = (reason = 'cancel') => {
+    let popupSession = null;
+    let handleCancel = () => {};
+    const cleanup = () => {
       if (closed) return;
       closed = true;
-      pop.classList.remove('open');
       confirm.removeEventListener('click', apply);
       cancelBtn.removeEventListener('click', handleCancel);
       removeBtn.removeEventListener('click', handleRemove);
-      pop.removeEventListener('click', onOutside);
       input.removeEventListener('keydown', onKey);
       input.removeEventListener('input', onInput);
       input.value = '';
       clearInputValidity();
-      if (reason !== 'confirm' && typeof cancelCb === 'function') {
+      if (!confirmed && typeof cancelCb === 'function') {
         cancelCb();
       }
+    };
+    const close = (reason = 'cancel') => {
+      popupSession?.close(reason);
     };
 
     const apply = () => {
@@ -3419,6 +3736,7 @@
         return;
       }
       processQty({ qty });
+      confirmed = true;
       close('confirm');
     };
 
@@ -3443,12 +3761,8 @@
         return;
       }
       processQty({ qty, mode: 'remove' });
+      confirmed = true;
       close('confirm');
-    };
-
-    const onOutside = e => {
-      if (!inner || inner.contains(e.target)) return;
-      close('cancel');
     };
 
     const onKey = e => {
@@ -3462,12 +3776,15 @@
     };
 
     const onInput = () => clearInputValidity();
+    let confirmed = false;
 
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+    if (inner) inner.scrollTop = 0;
+    setTimeout(() => input.focus(), 50);
     confirm.addEventListener('click', apply);
-    const handleCancel = () => close('cancel');
+    handleCancel = () => close('cancel');
     cancelBtn.addEventListener('click', handleCancel);
     removeBtn.addEventListener('click', handleRemove);
-    pop.addEventListener('click', onOutside);
     input.addEventListener('keydown', onKey);
     input.addEventListener('input', onInput);
   }
@@ -3571,11 +3888,14 @@
     const apply  = root.getElementById('rowPriceApply');
     if (!pop || !presets) return;
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const close = (reason = 'cancel') => {
+      popupSession?.close(reason);
+    };
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       presets.removeEventListener('click', onPreset);
       apply?.removeEventListener('click', onApply);
       inEl?.removeEventListener('keydown', onKey);
@@ -3584,7 +3904,6 @@
       sEl?.removeEventListener('keydown', onBaseKey);
       oEl?.removeEventListener('keydown', onBaseKey);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       if (inEl) inEl.value = '';
     };
     const onPreset = e => {
@@ -3601,7 +3920,7 @@
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
       // Stäng popuppen direkt för snabbare UI-feedback
-      close();
+      close('select');
       // Rendera om inventariet efter att popuppen stängts
       renderInventory();
     };
@@ -3616,7 +3935,7 @@
       }
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
-      close();
+      close('submit');
       renderInventory();
     };
     const onKey = e => {
@@ -3639,11 +3958,7 @@
       if (oEl) oEl.value = '';
     }
 
-    const onCancel = (e) => { if (e) e.stopPropagation(); close(); };
-    const onOutside = e => {
-      e.stopPropagation();
-      if(!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const onCancel = (e) => { if (e) e.stopPropagation(); close('cancel'); };
 
     const onSet = e => {
       e?.stopPropagation();
@@ -3659,7 +3974,7 @@
       }
       const inv = storeHelper.getInventory(store);
       saveInventory(inv);
-      close();
+      close('submit');
       renderInventory();
     };
     const onBaseKey = e => {
@@ -3667,6 +3982,8 @@
       e.stopPropagation();
     };
 
+    popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     presets.addEventListener('click', onPreset);
     apply?.addEventListener('click', onApply);
     inEl?.addEventListener('keydown', onKey);
@@ -3675,7 +3992,6 @@
     sEl?.addEventListener('keydown', onBaseKey);
     oEl?.addEventListener('keydown', onBaseKey);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
   }
 
   function openVehicleQtyPrompt({ maxQty, itemName, mode, vehicleName }) {
@@ -3708,30 +4024,36 @@
     input.step = '1';
     input.max = String(max);
     if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
-    pop.classList.add('open');
-    if (inner) inner.scrollTop = 0;
-    setTimeout(() => { if (typeof input.focus === 'function') input.focus(); if (typeof input.select === 'function') input.select(); }, 40);
+    let popupSession = null;
+    let closed = false;
+    let pendingResult = null;
+    let resolver = () => {};
+    let onConfirm = () => {};
+    let onCancel = () => {};
+    let onKey = () => {};
     return new Promise(resolve => {
-      let closed = false;
+      resolver = resolve;
       const clearValidity = () => {
         if (typeof input.setCustomValidity === 'function') input.setCustomValidity('');
       };
-      const close = result => {
+      const cleanup = () => {
         if (closed) return;
         closed = true;
-        pop.classList.remove('open');
         confirm.removeEventListener('click', onConfirm);
         cancel.removeEventListener('click', onCancel);
-        pop.removeEventListener('click', onOutside);
         input.removeEventListener('keydown', onKey);
         input.removeEventListener('input', clearValidity);
         if (hint) hint.textContent = '';
         if (message) message.textContent = '';
         input.value = '';
         clearValidity();
-        resolve(result);
+        resolver(pendingResult);
       };
-      const onConfirm = () => {
+      const close = (result, reason = 'cancel') => {
+        pendingResult = result;
+        popupSession?.close(reason);
+      };
+      onConfirm = () => {
         clearValidity();
         const value = parseInt(input.value, 10);
         if (!Number.isFinite(value) || value <= 0) {
@@ -3746,14 +4068,10 @@
           input.focus();
           return;
         }
-        close(value);
+        close(value, 'confirm');
       };
-      const onCancel = () => close(null);
-      const onOutside = e => {
-        if (!inner || inner.contains(e.target)) return;
-        close(null);
-      };
-      const onKey = e => {
+      onCancel = () => close(null, 'cancel');
+      onKey = e => {
         if (e.key === 'Enter') {
           e.preventDefault();
           onConfirm();
@@ -3762,9 +4080,14 @@
           onCancel();
         }
       };
+      popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+      if (inner) inner.scrollTop = 0;
+      setTimeout(() => {
+        if (typeof input.focus === 'function') input.focus();
+        if (typeof input.select === 'function') input.select();
+      }, 40);
       confirm.addEventListener('click', onConfirm);
       cancel.addEventListener('click', onCancel);
-      pop.addEventListener('click', onOutside);
       input.addEventListener('keydown', onKey);
       input.addEventListener('input', clearValidity);
     });
@@ -3799,25 +4122,31 @@
     }
     [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; });
     if (errorEl) errorEl.textContent = '';
-    pop.classList.add('open');
-    if (inner) inner.scrollTop = 0;
-    setTimeout(() => { if (typeof dInput?.focus === 'function') dInput.focus(); }, 40);
+    let popupSession = null;
+    let closed = false;
+    let pendingResult = null;
+    let resolver = () => {};
+    let onConfirm = () => {};
+    let onCancel = () => {};
+    let onKey = () => {};
 
     return new Promise(resolve => {
-      let closed = false;
-      const close = result => {
+      resolver = resolve;
+      const cleanup = () => {
         if (closed) return;
         closed = true;
-        pop.classList.remove('open');
         confirm.removeEventListener('click', onConfirm);
         cancel.removeEventListener('click', onCancel);
-        pop.removeEventListener('click', onOutside);
         [dInput, sInput, oInput].forEach(inp => { if (inp) inp.removeEventListener('keydown', onKey); });
         if (hint) hint.textContent = '';
         if (message) message.textContent = '';
         [dInput, sInput, oInput].forEach(inp => { if (inp) inp.value = ''; if (typeof inp?.setCustomValidity === 'function') inp.setCustomValidity(''); });
         if (errorEl) errorEl.textContent = '';
-        resolve(result);
+        resolver(pendingResult);
+      };
+      const close = (result, reason = 'cancel') => {
+        pendingResult = result;
+        popupSession?.close(reason);
       };
       const parseNonNegInt = input => {
         if (!input) return 0;
@@ -3829,7 +4158,7 @@
         return num;
       };
       const showError = msg => { if (errorEl) errorEl.textContent = msg || ''; };
-      const onConfirm = () => {
+      onConfirm = () => {
         const d = parseNonNegInt(dInput);
         const s = parseNonNegInt(sInput);
         const o = parseNonNegInt(oInput);
@@ -3849,17 +4178,18 @@
           return;
         }
         showError('');
-        close(bundle);
+        close(bundle, 'confirm');
       };
-      const onCancel = () => close(null);
-      const onOutside = e => { if (!inner || inner.contains(e.target)) return; close(null); };
-      const onKey = e => {
+      onCancel = () => close(null, 'cancel');
+      onKey = e => {
         if (e.key === 'Enter') { e.preventDefault(); onConfirm(); }
         else if (e.key === 'Escape') { e.preventDefault(); onCancel(); }
       };
+      popupSession = createPopupSession(pop, { type: 'picker', onClose: cleanup });
+      if (inner) inner.scrollTop = 0;
+      setTimeout(() => { if (typeof dInput?.focus === 'function') dInput.focus(); }, 40);
       confirm.addEventListener('click', onConfirm);
       cancel.addEventListener('click', onCancel);
-      pop.addEventListener('click', onOutside);
       [dInput, sInput, oInput].forEach(inp => inp?.addEventListener('keydown', onKey));
     });
   }
@@ -4358,30 +4688,28 @@
     if (allBtn && allLabel) allBtn.textContent = allLabel;
     if (onlyBtn && onlyLabel) onlyBtn.textContent = onlyLabel;
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       allBtn.removeEventListener('click', onAll);
       onlyBtn.removeEventListener('click', onOnly);
       cancel.removeEventListener('click', onCancel);
-      pop.removeEventListener('click', onOutside);
       if (textEl) textEl.textContent = defaultText;
       if (allBtn) allBtn.textContent = defaultAll;
       if (onlyBtn) onlyBtn.textContent = defaultOnly;
     };
-    const onAll = () => { removeAll(); close(); };
-    const onOnly = () => { removeOnly(); close(); };
-    const onCancel = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const close = (reason = 'cancel') => popupSession?.close(reason);
+    const onAll = () => { removeAll(); close('confirm'); };
+    const onOnly = () => { removeOnly(); close('confirm'); };
+    const onCancel = () => { close('cancel'); };
 
+    popupSession = createPopupSession(pop, { type: 'dialog', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     allBtn.addEventListener('click', onAll);
     onlyBtn.addEventListener('click', onOnly);
     cancel.addEventListener('click', onCancel);
-    pop.addEventListener('click', onOutside);
   }
 
   function openAdvMoneyPopup(onConfirm) {
@@ -4391,24 +4719,22 @@
     const cancel = root.getElementById('advMoneyCancel');
     const confirm= root.getElementById('advMoneyConfirm');
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       cancel.removeEventListener('click', onCancel);
       confirm.removeEventListener('click', onConf);
-      pop.removeEventListener('click', onOutside);
     };
-    const onConf = () => { onConfirm(); close(); };
-    const onCancel = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const close = (reason = 'cancel') => popupSession?.close(reason);
+    const onConf = () => { onConfirm(); close('confirm'); };
+    const onCancel = () => { close('cancel'); };
 
+    popupSession = createPopupSession(pop, { type: 'dialog', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     cancel.addEventListener('click', onCancel);
     confirm.addEventListener('click', onConf);
-    pop.addEventListener('click', onOutside);
   }
 
   function openSaveFreePopup() {
@@ -4418,35 +4744,33 @@
     const cancel = root.getElementById('saveFreeCancel');
     const confirm= root.getElementById('saveFreeConfirm');
 
-    pop.classList.add('open');
-    pop.querySelector('.popup-inner').scrollTop = 0;
-
-    const close = () => {
-      pop.classList.remove('open');
+    let popupSession = null;
+    let closed = false;
+    const cleanup = () => {
+      if (closed) return;
+      closed = true;
       cancel.removeEventListener('click', onCancel);
       confirm.removeEventListener('click', onConfirm);
-      pop.removeEventListener('click', onOutside);
     };
+    const close = (reason = 'cancel') => popupSession?.close(reason);
     const onConfirm = () => {
       const priv = storeHelper.getPrivMoney(store);
       const pos  = storeHelper.getPossessionMoney(store);
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) {
-        close();
+        close('confirm');
         openAdvMoneyPopup(() => { massFreeAndSave(); });
       } else {
         massFreeAndSave();
-        close();
+        close('confirm');
       }
     };
-    const onCancel  = () => { close(); };
-    const onOutside = e => {
-      if (!pop.querySelector('.popup-inner').contains(e.target)) close();
-    };
+    const onCancel  = () => { close('cancel'); };
 
+    popupSession = createPopupSession(pop, { type: 'dialog', onClose: cleanup });
+    pop.querySelector('.popup-inner').scrollTop = 0;
     cancel.addEventListener('click', onCancel);
     confirm.addEventListener('click', onConfirm);
-    pop.addEventListener('click', onOutside);
   }
 
   function massFreeAndSave() {
@@ -4497,7 +4821,8 @@
       ];
       const baseQ = baseQuals.filter(q => !removed.includes(q));
       const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter || [])]);
-      row.gratisKval = allQ.filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+      const gratisbarSet = getGratisbarQualitySet(entry, allQ);
+      row.gratisKval = allQ.filter(q => gratisbarSet.has(q));
       // remove any price multiplier when everything is made free
       delete row.priceMult;
     });
@@ -4506,10 +4831,9 @@
     renderInventory();
   }
 
-  function calcRowCost(row, forgeLvl, alcLevel, _artLevel) {
+  function calcRowCost(row, forgeLvl, alcLevel, artLevel) {
     const entry  = getEntry(row.id || row.name);
     const tagger = entry.taggar ?? {};
-    const tagTyp = tagger.typ ?? [];
     const entryBase = moneyToO(entry.grundpris || {});
     const qtyNum = Math.max(0, Number(row.qty) || 0);
     const gratisNum = Math.max(0, Number(row.gratis) || 0);
@@ -4520,9 +4844,8 @@
     }
     const hasBaseOverride = row.basePrice != null && baseSource !== 'live';
     const overrideBase = hasBaseOverride ? moneyToO(row.basePrice || {}) : null;
-    let base = hasBaseOverride ? overrideBase : entryBase;
-    let fallbackBase = entryBase;
-    const forgeable = FORGEABLE_TYPES.some(t => tagTyp.includes(t));
+    const base = hasBaseOverride ? overrideBase : entryBase;
+    const fallbackBase = entryBase;
     const baseQuals = [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
@@ -4532,80 +4855,59 @@
       ...baseQuals.filter(q => !removedQ.includes(q)),
       ...(row.kvaliteter || [])
     ]);
-    if (forgeLvl && forgeable) {
-      const posCnt = countPositiveQuals(allQuals);
-      const mystCnt = allQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
-      const qualifies =
-        (forgeLvl >= 1 && posCnt === 0) ||
-        (forgeLvl >= 2 && posCnt === 1 && mystCnt === 0) ||
-        (forgeLvl >= 3 && posCnt === 2 && mystCnt <= 1);
-      if (qualifies) {
-        base = dividePrice(base, 2);
-        fallbackBase = dividePrice(fallbackBase, 2);
-      }
-    }
-    if (tagTyp.includes('Elixir')) {
-      const lvlName = row.nivå || Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) {
-        base = dividePrice(base, 2);
-        fallbackBase = dividePrice(fallbackBase, 2);
-      }
-    }
-    // Build price chain and track before/after for each quality
-    const priceBase = base > 0 ? base : fallbackBase; // ensures qualities still cost after mark-free flows
-    let price = priceBase;
-    const steps = [];
-    const posQuals = allQuals.filter(q => !isNegativeQual(q));
-    const negQuals = allQuals.filter(q => isNegativeQual(q));
-    posQuals.forEach(q => {
-      const qEntry = getEntry(q);
-      const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-      const negat = false;
-      const neut  = Boolean(qEntry.neutral);
-      const before = price;
-      if (neut)  price *= 1;
-      else       price *= myst ? 10 : 5;
-      const after = price;
-      steps.push({ name: q, before, after, negat, neut });
-    });
+    const targetLevel = typeof row?.nivå === 'string' && row.nivå.trim()
+      ? row.nivå.trim()
+      : getEntryPrimaryLevelName(entry);
+    const targetEntry = targetLevel && getEntryPrimaryLevelName(entry) !== targetLevel
+      ? { ...entry, nivå: targetLevel }
+      : entry;
 
-    const rowMultRaw = Number(row.priceMult || 1);
-    const rowMult = Number.isFinite(rowMultRaw) && rowMultRaw > 0 ? rowMultRaw : 1;
-    const mult = rowMult;
+    const currentList = storeHelper.getCurrentList(store);
+    const priceRuleList = buildPriceRuleSourceList(currentList, {
+      forgeLvl,
+      alcLevel,
+      artLevel
+    });
+    const requirementCheck = getRequirementCheckForEntry(targetEntry, priceRuleList);
+    const requirementMoneyMult = normalizeMultiplierValue(requirementCheck.moneyMultiplier, 1);
+    const kravUppfyllda = requirementCheck.ok;
+    const priceEffects = getItemPriceEffects(priceRuleList, targetEntry, allQuals, {
+      targetLevel,
+      krav_uppfyllda: kravUppfyllda
+    });
+    const listAdditiveO = Number(priceEffects.listAdditiveO || 0);
+    const listFactor = normalizeMultiplierValue(priceEffects.listFactor, 1);
+    const qualityAdditiveO = Number(priceEffects.qualityAdditiveO || 0);
+    const qualityFactor = normalizeMultiplierValue(priceEffects.qualityFactor, 1);
+    const priceBase = base > 0 ? base : fallbackBase;
+    const valueBeforeQualityMultipliers = (priceBase + listAdditiveO + qualityAdditiveO) * listFactor;
+
+    const qualityEffects = priceEffects.qualityEffects || {};
+    const freeSet = new Set(
+      (Array.isArray(row.gratisKval) ? row.gratisKval : [])
+        .filter(q => allQuals.includes(q) && qualityEffects?.[q]?.gratisbar === true)
+    );
+    let freeQualityFactor = 1;
+    [...freeSet].forEach(name => {
+      freeQualityFactor *= normalizeMultiplierValue(qualityEffects?.[name]?.multiplier, 1);
+    });
+    const paidQualityFactor = freeQualityFactor > 0
+      ? normalizeMultiplierValue(qualityFactor / freeQualityFactor, 1)
+      : qualityFactor;
+
     const qty = qtyNum || 1;
     const baseOverrideZero = hasBaseOverride && overrideBase === 0;
     const rawFreeBase = Math.min(gratisNum, qty);
     const freeBase = baseOverrideZero ? qty : rawFreeBase;
+    const rowMult = normalizeMultiplierValue(row.priceMult || 1, 1);
 
-    // Full price before adjustments
-    const fullPerUnit = price * mult;
-    let total = fullPerUnit * qty;
+    let total = (valueBeforeQualityMultipliers * paidQualityFactor) * qty;
+    const baseCorePerUnit = (priceBase + listAdditiveO) * listFactor;
+    total -= baseCorePerUnit * freeBase;
+    total *= requirementMoneyMult;
+    total *= rowMult;
 
-    // Adjustment for free base price
-    total -= priceBase * mult * freeBase;
-
-    // Adjustment for free qualities (left to right)
-    const freeNames = (row.gratisKval || []).filter(q => {
-      const qEntry = getEntry(q);
-      return !qEntry.negativ && !qEntry.neutral;
-    });
-    const remaining = [...freeNames];
-    let qualAdjust = 0;
-    steps.forEach(s => {
-      const idx = remaining.indexOf(s.name);
-      if (idx !== -1) {
-        qualAdjust += (s.after - s.before);
-        remaining.splice(idx, 1); // consume to enforce left-to-right
-      }
-    });
-    total -= qualAdjust * mult * qty;
-
-    // Apply negative quality discount after all other adjustments
-    total = dividePrice(total, Math.pow(5, negQuals.length));
-
-    const totalO = Math.max(0, total);
-    return oToMoney(totalO);
+    return oToMoney(Math.max(0, Math.round(total)));
   }
 
   function calcRowWeight(row, list) {
@@ -4642,50 +4944,28 @@
 
   function calcEntryCost(entry) {
     const tagger = entry.taggar ?? {};
-    const tagTyp = tagger.typ ?? [];
-    let price = moneyToO(entry.grundpris || {});
-
-    const partyForge = LEVEL_IDX[storeHelper.getPartySmith(store) || ''] || 0;
-    const skillForge = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Smideskonst');
-    const forgeLevel = Math.max(partyForge, skillForge);
-    const partyAlc = LEVEL_IDX[storeHelper.getPartyAlchemist(store) || ''] || 0;
-    const skillAlc = storeHelper.abilityLevel(
-      storeHelper.getCurrentList(store), 'Alkemist');
-    const alcLevel = Math.max(partyAlc, skillAlc);
-    const forgeable = FORGEABLE_TYPES.some(t => tagTyp.includes(t));
-    const baseQuals = [
+    const basePrice = moneyToO(entry.grundpris || {});
+    const baseQuals = sanitizeArmorQualities(entry, [
       ...(tagger.kvalitet ?? []),
       ...splitQuals(entry.kvalitet)
-    ];
-    if (forgeLevel && forgeable) {
-      const posCnt = countPositiveQuals(baseQuals);
-      const mystCnt = baseQuals.filter(q => !isNegativeQual(q) && !isNeutralQual(q) && isMysticQual(q)).length;
-      if (
-        (forgeLevel === 1 && posCnt === 0) ||
-        (forgeLevel === 2 && mystCnt === 0 && posCnt <= 1) ||
-        (forgeLevel >= 3 && posCnt <= 2)
-      ) {
-        price = dividePrice(price, 2);
-      }
-    }
-    if (tagTyp.includes('Elixir')) {
-      const lvlName = Object.keys(entry.nivåer || {}).find(l=>l) || '';
-      const req = LEVEL_IDX[lvlName] || 0;
-      if (alcLevel >= req) price = dividePrice(price, 2);
-    }
-    const posBaseQuals = baseQuals.filter(q => !isNegativeQual(q));
-    const negBaseQuals = baseQuals.filter(q => isNegativeQual(q));
-    posBaseQuals.forEach(q => {
-      const qEntry = getEntry(q);
-      const myst  = (qEntry.taggar?.typ || []).includes('Mystisk kvalitet');
-      const neut  = Boolean(qEntry.neutral);
-      if (neut) price *= 1;
-      else      price *= myst ? 10 : 5;
+    ]);
+    const currentList = storeHelper.getCurrentList(store);
+    const levels = getCraftLevels();
+    const priceRuleList = buildPriceRuleSourceList(currentList, levels);
+    const targetLevel = getEntryPrimaryLevelName(entry);
+    const requirementCheck = getRequirementCheckForEntry(entry, priceRuleList);
+    const requirementMoneyMult = normalizeMultiplierValue(requirementCheck.moneyMultiplier, 1);
+    const kravUppfyllda = requirementCheck.ok;
+    const priceEffects = getItemPriceEffects(priceRuleList, entry, baseQuals, {
+      targetLevel,
+      krav_uppfyllda: kravUppfyllda
     });
-    price = dividePrice(price, Math.pow(5, negBaseQuals.length));
-    price = Math.max(0, price);
-    return oToMoney(price);
+    const listAdditiveO = Number(priceEffects.listAdditiveO || 0);
+    const listFactor = normalizeMultiplierValue(priceEffects.listFactor, 1);
+    const qualityAdditiveO = Number(priceEffects.qualityAdditiveO || 0);
+    const qualityFactor = normalizeMultiplierValue(priceEffects.qualityFactor, 1);
+    const total = (((basePrice + listAdditiveO + qualityAdditiveO) * listFactor) * qualityFactor) * requirementMoneyMult;
+    return oToMoney(Math.max(0, Math.round(total)));
   }
 
   function buildQualityInfoSections(qualities, freeQualities) {
@@ -4825,9 +5105,10 @@
     const visibleBaseQ = baseQ.filter(consumeAllowed);
     const visibleAddQ = addQ.filter(consumeAllowed);
     const allowedSet = new Set(allowedQuals);
+    const gratisbarSet = getGratisbarQualitySet(entry, allowedQuals);
     const freeQ = (row.gratisKval ?? [])
-      .filter(q => !isNegativeQual(q) && !isNeutralQual(q))
-      .filter(q => allowedSet.has(q));
+      .filter(q => allowedSet.has(q))
+      .filter(q => gratisbarSet.has(q));
     const all = [
       ...visibleBaseQ.map(q => ({ q, base: true })),
       ...visibleAddQ.map(q => ({ q, base: false }))
@@ -6168,28 +6449,38 @@
           const baseQ = baseQuals.filter(q => !removed.includes(q));
 
           let addedCount = 0;
-          const blockedNames = [];
+          const blockedStops = [];
           chosen.forEach(quality => {
             const qn = quality?.namn || quality?.name;
             if (!qn) return;
             const existing = [...baseQ, ...(row.kvaliteter || [])];
             if (existing.includes(qn)) return;
-            if (!isQualityAllowedByRules(entry, row, qn)) {
-              blockedNames.push(qn);
+            const allowance = evaluateQualityRuleAllowance(entry, row, qn);
+            if (!allowance.allowed) {
+              blockedStops.push({
+                qualityName: qn,
+                blockingConflicts: Array.isArray(allowance.blockingConflicts) ? allowance.blockingConflicts : [],
+                hardStops: Array.isArray(allowance.hardStops) ? allowance.hardStops : []
+              });
               return;
             }
             row.kvaliteter.push(qn);
             addedCount++;
           });
 
-          if (blockedNames.length) {
-            const hardStops = blockedNames.map(name => ({
-              code: `quality_blocked_${String(name || '').toLowerCase()}`,
-              message: `Kvalitet: ${name}`
-            }));
+          if (blockedStops.length) {
+            const blockingConflicts = blockedStops.flatMap(stop => stop.blockingConflicts || []);
+            const explicitHardStops = blockedStops.flatMap(stop => stop.hardStops || []);
+            const fallbackHardStops = blockedStops
+              .filter(stop => !(Array.isArray(stop.hardStops) && stop.hardStops.length))
+              .map(stop => ({
+                code: `quality_blocked_${String(stop?.qualityName || '').toLowerCase()}`,
+                message: `Kvalitet: ${stop?.qualityName || ''}`
+              }));
+            const hardStops = [...explicitHardStops, ...fallbackHardStops];
             const stopResult = {
               requirementReasons: [],
-              blockingConflicts: [],
+              blockingConflicts,
               replaceTargetNames: [],
               grantedLevelStop: null,
               hardStops,
@@ -6198,12 +6489,13 @@
             const messages = typeof window.rulesHelper?.formatEntryStopMessages === 'function'
               ? window.rulesHelper.formatEntryStopMessages(entry?.namn || row?.name || 'föremålet', stopResult)
               : hardStops.map(stop => stop.message);
+            const lines = messages.length ? messages : ['Spärrad av regel'];
             const label = `“${String(entry?.namn || row?.name || 'föremålet').trim()}”`;
-            const text = `Karaktären möter inte följande krav:\n- ${messages.join('\n- ')}\n\nVill du lägga till blockerade kvaliteter på ${label} ändå?`;
+            const text = `Följande regler blockerar valet:\n- ${lines.join('\n- ')}\n\nVill du lägga till blockerade kvaliteter på ${label} ändå?`;
             const forceOverride = !!(await confirmPopup(text));
             if (forceOverride) {
               row.manualQualityOverride = Array.isArray(row.manualQualityOverride) ? row.manualQualityOverride : [];
-              blockedNames.forEach(qn => {
+              blockedStops.forEach(({ qualityName: qn }) => {
                 if (!row.kvaliteter.includes(qn)) {
                   row.kvaliteter.push(qn);
                   addedCount++;
@@ -6233,11 +6525,12 @@
         const baseQ = baseQuals.filter(q => !removed.includes(q));
         const allQ = sanitizeArmorQualities(entry, [...baseQ, ...(row.kvaliteter ?? [])]);
         if (!allQ.length) return;
+        const gratisbarSet = getGratisbarQualitySet(entry, allQ);
 
-        // Behåll endast positiva/mystiska gratis-kvaliteter
-        row.gratisKval = (row.gratisKval || []).filter(q => !isNegativeQual(q) && !isNeutralQual(q));
+        // Behåll endast kvaliteter som både finns kvar och uttryckligen är gratisbara.
+        row.gratisKval = (row.gratisKval || []).filter(q => allQ.includes(q) && gratisbarSet.has(q));
         const existing = row.gratisKval.slice();
-        const candidates = allQ.filter(q => !existing.includes(q) && !isNegativeQual(q) && !isNeutralQual(q));
+        const candidates = allQ.filter(q => !existing.includes(q) && gratisbarSet.has(q));
         if (!candidates.length) return;
 
         row.gratisKval.push(candidates[0]);

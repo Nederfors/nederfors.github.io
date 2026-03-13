@@ -2646,7 +2646,7 @@
               "ger": [
                 {
                   "mal": "skydd_permanent_korruption",
-                  "formel": "niva",
+                  "formel": { "bas": "niva" },
                   "nar": {
                     "typ": [
                       "Mystisk kraft",
