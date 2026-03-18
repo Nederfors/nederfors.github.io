@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-03-08T08:05:55.896464+00:00",
+  "generatedAt": "2026-03-18T22:44:49.215109+00:00",
   "entryDataFiles": [
     "diverse.json",
     "kuriositeter.json",
@@ -43,6 +43,7 @@
     "tabeller.json"
   ],
   "excludedDataFiles": [
+    "ai-plugin.json",
     "all.json",
     "pdf-list.json",
     "struktur.json",

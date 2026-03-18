@@ -1,6 +1,6 @@
 # Symbapedia
 
-Symbapedia är en statisk webbapp för Symbaroum: du bläddrar poster i `index.html` och bygger/hanterar rollpersoner i `character.html`.
+Symbapedia är nu en shell-baserad webbapp för Symbaroum. `index.html` bootar appen, och vyerna körs som rutter under samma entrypoint: `#/index`, `#/character`, `#/inventory`, `#/traits`, `#/summary`, `#/effects` och `#/notes`.
 
 ## Innehåll
 - [Kom igång](#kom-igång)
@@ -14,9 +14,9 @@ Symbapedia är en statisk webbapp för Symbaroum: du bläddrar poster i `index.h
 
 ## Kom igång
 1. Klona eller ladda ner repot.
-2. Öppna `index.html` för databasvyn.
-3. Öppna `character.html` för rollpersonsvyn.
-4. Alternativt: kör `python3 -m http.server` och öppna `http://localhost:8000`.
+2. Kör `npm install`.
+3. Kör `npm run dev` och öppna adressen som skrivs ut.
+4. Alternativt: kör `npm run build` följt av `npm run preview`.
 
 Allt körs lokalt i webbläsaren och sparas i `localStorage`.
 
@@ -263,11 +263,11 @@ Detaljerad lista över aktiva limit-checkar och hur `ignore_limits` påverkar de
   - en vald rollperson som JSON
   - alla rollpersoner i en gemensam JSON
 - **Import** läser en eller flera sådana filer och återställer rollpersoner.
-- Anteckningar (`notes.html`) följer med om något fält är ifyllt.
+- Anteckningar följer med om något fält är ifyllt.
 
 ## Kort användarmanual
-- `index.html`: sök och filtrera poster.
-- `character.html`: lägg till/ta bort poster på rollpersonen.
+- `#/index`: sök och filtrera poster.
+- `#/character`: lägg till/ta bort poster på rollpersonen.
 - `🎒`: inventarie.
 - `📊`: karaktärsdrag, översikt, effekter.
 - `📜`: anteckningar.
@@ -275,12 +275,13 @@ Detaljerad lista över aktiva limit-checkar och hur `ignore_limits` påverkar de
 - Skriv `lol` i sökfältet och tryck Enter för att rensa filter.
 
 ## Projektstruktur
-- `index.html` - databasvy.
-- `character.html` - rollpersonsvy.
+- `index.html` - app shell och hash-router.
+- `webapp.html` - installationshjälp för PWA.
 - `data/` - alla JSON-filer och dataskrivregler.
 - `data/INSTRUKTIONER.md` - fullständig regelmotor- och dataguide.
 - `js/` - app-, store- och regelmotorlogik.
 - `css/` - stilar.
+- `public/` - kompatibilitetslager för statiska filer som fortfarande behöver fasta root-URL:er.
 
 ## Dataflöde för utveckling
 Efter ändringar i data/regler:
@@ -288,7 +289,8 @@ Efter ändringar i data/regler:
 ```bash
 python3 scripts/master_sync.py
 python3 scripts/build_all.py --strict
+npm run build
 osascript -l JavaScript scripts/verify_rules_helper.js
 ```
 
-Projektet är statisk HTML/CSS/JS utan byggsteg. Förslag och förbättringar tas via pull requests.
+Appen byggs nu via Vite från repo-roten. Förslag och förbättringar tas via pull requests.

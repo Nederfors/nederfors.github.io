@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" id="Gift">
+  <path fill="#ff8066" stroke="#3a3636" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M44.14,17.16a9.4,9.4,0,0,0,1.13-.68c2.92-2.05,3.82-5.82,2-8.4s-5.66-3-8.58-.93-4.42,5.73-6.05,10Z" class="colorfffaf0 svgShape colorStroke3c3b72 svgStroke"></path>
+  <path fill="#ffbf66" stroke="#3a3636" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M8.7,30.46H55.31a0,0,0,0,1,0,0v23.7a4,4,0,0,1-4,4H12.7a4,4,0,0,1-4-4V30.46A0,0,0,0,1,8.7,30.46Z" class="colorc4c8d1 svgShape colorStroke3c3b72 svgStroke"></path>
+  <rect width="11.7" height="27.7" x="26.15" y="30.46" fill="#ff8066" stroke="#3a3636" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" class="colorfffaf0 svgShape colorStroke3c3b72 svgStroke"></rect>
+  <path fill="#ff8066" stroke="#3a3636" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M19.86,17.16a8.57,8.57,0,0,1-1.12-.68c-2.92-2.05-3.83-5.82-2-8.4s5.66-3,8.59-.93,4.41,5.73,6.05,10Z" class="colorfffaf0 svgShape colorStroke3c3b72 svgStroke"></path>
+  <rect width="51" height="13.3" x="6.5" y="17.16" fill="#ffbf66" stroke="#3a3636" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" rx="3" class="colorc4c8d1 svgShape colorStroke3c3b72 svgStroke"></rect>
+  <rect width="13.83" height="13.3" x="25.09" y="17.16" fill="#ff8066" stroke="#3a3636" stroke-linecap="round" stroke-linejoin="round" stroke-width="3" class="colorfffaf0 svgShape colorStroke3c3b72 svgStroke"></rect>
+</svg>

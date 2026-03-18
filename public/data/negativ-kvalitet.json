@@ -1,0 +1,132 @@
+{
+  "typ_regler": {
+    "Kvalitet": {
+      "regler": {
+        "andrar": [
+          {
+            "mal": "pris_faktor",
+            "varde": 0.2
+          },
+          {
+            "mal": "kvalitet_gratisbar",
+            "satt": "ersatt",
+            "varde": false
+          }
+        ]
+      }
+    },
+    "Vapenkvalitet": {},
+    "Rustningskvalitet": {},
+    "Allmän kvalitet": {}
+  },
+  "entries": [
+    {
+      "id": "neg1",
+      "namn": "Trubbigt",
+      "beskrivning": "Vapnet saknar skärande eller spetsande egenskaper och använder därför en (1) lägre nivå av effekttärning än andra vapen av sitt slag.",
+      "taggar": {
+        "typ": [
+          "Kvalitet",
+          "Vapenkvalitet"
+        ]
+      },
+      "negativ": true,
+      "effekt": "Effekttärningen sänks en nivå."
+    },
+    {
+      "id": "neg2",
+      "namn": "Otymplig",
+      "beskrivning": "Rustningen är svår att röra sig i och dess begränsning är ett poäng högre än annars; en otymplig lätt rustning har begränsning (−3), en medeltung (−4) och en tung (−5).",
+      "taggar": {
+        "typ": [
+          "Kvalitet",
+          "Rustningskvalitet"
+        ],
+        "regler": {
+          "andrar": [
+            {
+              "mal": "begransning_modifierare",
+              "varde": -1
+            }
+          ]
+        }
+      },
+      "negativ": true,
+      "effekt": "Begränsning höjs med 1 (lätt −3, medeltung −4, tung −5)."
+    },
+    {
+      "id": "neg3",
+      "namn": "Långsamt",
+      "beskrivning": "Vapnet är framtungt och så pass obalanserat att det är svårt få sving på vapnet liksom att få stopp på det när man väl har anfallit. Att anfalla med vapnet är en hel rundas handling; stridshandling och förflyttning går båda åt till att anfalla. Bäraren kan med andra ord inte förflytta sig in i strid och anfalla i samma runda, men när bäraren väl är på plats kan denne anfalla varje runda.",
+      "taggar": {
+        "typ": [
+          "Kvalitet",
+          "Vapenkvalitet"
+        ]
+      },
+      "negativ": true,
+      "effekt": "Anfall tar hela rundan; ingen förflyttning samma runda som anfallet inleds."
+    },
+    {
+      "id": "neg4",
+      "namn": "Obalanserat",
+      "beskrivning": "Vapnet är dåligt balanserat; bäraren får −1 i Försvar.",
+      "taggar": {
+        "typ": [
+          "Kvalitet",
+          "Vapenkvalitet"
+        ],
+        "regler": {
+          "andrar": [
+            {
+              "mal": "forsvar_modifierare",
+              "varde": -1
+            }
+          ]
+        }
+      },
+      "negativ": true,
+      "effekt": "−1 i Försvar."
+    },
+    {
+      "id": "neg5",
+      "namn": "Skört",
+      "beskrivning": "Vid ett kritiskt misslyckande (försvar för rustning, anfall för vapen) blir föremålet obrukbart tills det har lagats.",
+      "taggar": {
+        "typ": [
+          "Kvalitet",
+          "Allmän kvalitet",
+          "Vapenkvalitet"
+        ]
+      },
+      "negativ": true,
+      "effekt": "Kritiskt misslyckande gör föremålet obrukbart tills lagat."
+    },
+    {
+      "id": "neg6",
+      "namn": "Klumpigt",
+      "beskrivning": "Bäraren får −1 på Träffsäker med detta vapen.",
+      "taggar": {
+        "typ": [
+          "Kvalitet",
+          "Vapenkvalitet"
+        ]
+      },
+      "negativ": true,
+      "effekt": "−1 på Träffsäker med vapnet."
+    },
+    {
+      "id": "neg7",
+      "namn": "Genomsläpplig",
+      "beskrivning": "Rustningens skydd sänks en tärningsnivå mot vassa anfall (svärd, dolkar, pilar, lod).",
+      "taggar": {
+        "typ": [
+          "Kvalitet",
+          "Rustningskvalitet"
+        ]
+      },
+      "negativ": true,
+      "effekt": "Bepansring sänks en tärningsnivå mot vassa anfall."
+    }
+  ]
+}

@@ -205,6 +205,8 @@ def render_bootstrap_bundle() -> str:
 
 
 def sync_html_page(path: Path, scripts: list[str]) -> bool:
+    if not path.exists():
+        return False
     text = read_text(path)
     if HTML_START not in text or HTML_END not in text:
         return False

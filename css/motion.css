@@ -1,0 +1,83 @@
+body.app-shell {
+  --daub-gesture-x: 0px;
+  --daub-gesture-y: 0px;
+}
+
+body.app-shell .offcanvas[data-touch-profile="panel-right"] {
+  touch-action: pan-y;
+}
+
+body.app-shell .popup[data-touch-profile="sheet-down"] .popup-inner,
+body.app-shell .popup[data-touch-profile="sheet-down"] .inventory-hub-ui {
+  touch-action: pan-x;
+}
+
+.daub-swipe-tabs {
+  min-width: 0;
+}
+
+.daub-swipe-tabs > .swiper-wrapper {
+  align-items: stretch;
+}
+
+.daub-swipe-tabs > .swiper-wrapper > .swiper-slide {
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.traits-tab-panels[data-swipe-tabs="1"] {
+  overflow: hidden;
+}
+
+.traits-tab-panels[data-swipe-tabs="1"] > .swiper-wrapper {
+  display: flex;
+  align-items: stretch;
+}
+
+.traits-tab-panels[data-swipe-tabs="1"] .traits-tab-panel {
+  display: flex !important;
+  flex-direction: column;
+  min-height: 0;
+  animation: none;
+}
+
+.traits-tab-panels[data-swipe-tabs="1"] .traits-tab-panel[hidden] {
+  display: flex !important;
+}
+
+.inventory-hub-panels[data-swipe-tabs="1"] {
+  overflow: hidden;
+  display: block;
+}
+
+.inventory-hub-panels[data-swipe-tabs="1"] > .swiper-wrapper {
+  display: flex;
+  align-items: stretch;
+}
+
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel,
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel.active {
+  display: block;
+}
+
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-panel {
+  min-height: 0;
+}
+
+.inventory-hub-panels[data-swipe-tabs="1"] .inventory-hub-stack {
+  min-height: 0;
+}
+
+.popup[data-touch-profile="sheet-down"] .popup-inner,
+.popup[data-touch-profile="sheet-down"] .inventory-hub-ui,
+.offcanvas[data-touch-profile="panel-right"] {
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popup[data-touch-profile="sheet-down"] .popup-inner,
+  .popup[data-touch-profile="sheet-down"] .inventory-hub-ui,
+  .offcanvas[data-touch-profile="panel-right"] {
+    transition-duration: 0.01ms !important;
+  }
+}

@@ -10,7 +10,7 @@ ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 OUTPUT_FILE = DATA_DIR / 'struktur.json'
 MANIFEST_FILE = ROOT_DIR / 'scripts' / 'generated' / 'data_manifest.json'
-EXCLUDED_FILES = {'all.json', 'struktur.json', 'pdf-list.json'}
+EXCLUDED_FILES = {'ai-plugin.json', 'all.json', 'struktur.json', 'pdf-list.json'}
 
 
 def parse_args():

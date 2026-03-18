@@ -1,0 +1,691 @@
+{
+  "typ_regler": {
+    "Specialverktyg": {}
+  },
+  "entries": [
+    {
+      "id": "sp1",
+      "namn": "Artefaktkatalog",
+      "beskrivning": "En vältummad kopia av av trollsmeden Xavaundos visdomar, nedtecknade av ordensmäster Balinda. Boken ger +1 på framgångsslag i Artefaktmakande.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Artefaktmakande."
+    },
+    {
+      "id": "sp2",
+      "namn": "Bestiarium",
+      "beskrivning": "Ett bestiarium, en fint illustrerad katalog över världens olika fasor, försedd med marginalanteckningar från tidigare ägare rörande de bästa sätten att undvika monstren – eller hur man bäst bekämpar dem. Bestiariet ger +1 på framgångsslag i Monsterlärd.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Monsterlärd."
+    },
+    {
+      "id": "sp3",
+      "namn": "Falskspelsutrustning",
+      "beskrivning": "Viktade tärningar, märkta kort och spelpjäser ger användaren +1 på alla framgångsslag i spel (se dock fördelen Falskspelare på sidan 53 för riskerna med att spela falskt).",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i spel."
+    },
+    {
+      "id": "sp4",
+      "namn": "Fältskärsränsel",
+      "beskrivning": "Fältskärens ränsel innehåller verktyg för att skära, bränna och med örter behandla skador och sjukdomar. Fältskärsväskan ger +1 på framgångsslag i Medicus.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Medicus."
+    },
+    {
+      "id": "sp5",
+      "namn": "Fältsmedja",
+      "beskrivning": "Den så kallade fältsmedjan är ett måste för varje resande smed. Den består av en uppsättning smidesverktyg, en fältugn med vattenbad och ett litet städ. Den som använder fältsmedjan får +1 på framgångsslag i Smideskonst.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Smideskonst."
+    },
+    {
+      "id": "sp6",
+      "namn": "Förfalskningsutrustning",
+      "beskrivning": "Förutom lupp, papper, pergament och en rad pennor och bläck innehåller paketet en samling stämplar, sigill och redan förtryckta brevpapper från en rad olika organisationer, handelshus och liknande. Utrustningen ger användaren +1 på alla framgångsslag i syfte att undgå att få sina förfalskningar genomskådade.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på slag för att undvika att förfalskningar genomskådas."
+    },
+    {
+      "id": "sp7",
+      "namn": "Förklädnasväska",
+      "beskrivning": "Smink, peruker och vax för att ändra ansiktets form, tillsammans med ett grundläggande antal klädesplagg av regional betydelse ger +1 på framgångsslag för den som vill undvika att få sin förklädnad genomskådad.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på slag för att förklädnad inte ska genomskådas."
+    },
+    {
+      "id": "sp8",
+      "namn": "Försåtsmanual",
+      "beskrivning": "Ett välanvänt exemplar av den omtalade resen Grymkäfts lustfyllda skrift; en lång förteckning av fällor, allt från enkla marsnaror via nålfällor i skrin till massiva mördarpjäser lämpliga för portar till konungars gravvalv. Boken ger +1 på framgångsslag i Försåtsgillrare.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Försåtsgillrare."
+    },
+    {
+      "id": "sp9",
+      "namn": "Giftmanual",
+      "beskrivning": "En manual kring användande av gifter, rikt illustrerad med exempel på hur man ska och inte ska göra för att få ut det mesta av sina dekokter. Den som använder giftmanualen får +1 på alla framgångsslag i Giftkunnig.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Giftkunnig."
+    },
+    {
+      "id": "sp10",
+      "namn": "Kartografverktyg",
+      "beskrivning": "Skrivdon, pergament, passare, linjal och en sextant utgör stommen i kartografverktygen, som tillsammans ger +1 på alla framgångsslag för att upprätta exakta kartor.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på slag för att upprätta exakta kartor."
+    },
+    {
+      "id": "sp11",
+      "namn": "Klättringsutrustning",
+      "beskrivning": "En samling rep, säkringar, hakar och verktyg för att klättra i svår terräng. Klättringsutrustningen ger +1 på framgångsslag för att klättra.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag för att klättra."
+    },
+    {
+      "id": "sp12",
+      "namn": "Resebibliotek",
+      "beskrivning": "Halvdussinet referensböcker och ett dussin bokrullar kring mer specialiserade ämnen. Resebiblioteket ger +1 på framgångsslag i Lärd.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Lärd."
+    },
+    {
+      "id": "sp13",
+      "namn": "Reselaboratorium",
+      "beskrivning": "Brännare, retorter, pipetter, mortel och andra saker som en alkemist på vägarna behöver. Reselaboratoriet ger +1 på framgångsslag i Alkemi.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i Alkemi."
+    },
+    {
+      "id": "sp14",
+      "namn": "Utgrävningsverktyg",
+      "beskrivning": "Ett par spadar, ett mindre spett, en sil och en hink, kompletterat med penslar, mätsnöre med knutar på samt en lupp. Utgrävningsverktygen ger +1 på fyndtabellen när det kommer till att hitta skatter i världens ruiner.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på fyndtabellen för att hitta skatter."
+    },
+    {
+      "id": "sp15",
+      "namn": "Ruinmästarkit",
+      "beskrivning": "Kritor, lod, knutlina, kolstift och fällkarta för strukturläsning i ruiner. Ger +1 på framgångsslag för att hitta dolda utrymmen, svaga punkter och mekaniska gångar.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 i syfte att hitta dolda utrymmen, svaga punkter och mekaniska gångar i ruiner."
+    },
+    {
+      "id": "sp16",
+      "namn": "Dyrksats",
+      "beskrivning": "Finmekaniska dyrkar, spännstift, fjäderkrok och polerad spegelplåt för insyn i lås. Ger +1 på framgångsslag för dyrkning och tyst öppning; enkla fällmekanismer kan kringgås.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på dyrkning och tyst öppning; enkla fällor kan kringgås."
+    },
+    {
+      "id": "sp17",
+      "namn": "Spejarglas med grålinser",
+      "beskrivning": "Stöttålig kikare med grålinser och avståndsskala. Ger +1 på framgångsslag i spaning på långt håll och tidig hotidentifiering.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på spaning på långt håll och tidig hotidentifiering."
+    },
+    {
+      "id": "sp18",
+      "namn": "Detektiv-kit",
+      "beskrivning": "Markörpinnar, knutlina, krita, gjutram för fotspår och glasburkar för spårprov. Ger +1 på framgångsslag för att följa spår i svår terräng och dåligt väder.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 att följa spår i svår terräng och dåligt väder."
+    },
+    {
+      "id": "sp19",
+      "namn": "Förberedelsesäck",
+      "beskrivning": "Ett lätt packsystem med färdiga satser för alla möjliga händelser, rollpersonen är helt enkelt kittad för vad som helst. En gång per dag, när en ny scen börjar får bäraren +1 på sitt första framgångsslag under den.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "En gång per dag +1 på första framgångsslaget i en ny scen."
+    },
+    {
+      "id": "sp20",
+      "namn": "Gråglödslykta",
+      "beskrivning": "Rökfri lyktampa med inbyggd reflektor och skuggskärm som ger stabilt arbetsljus utan att avslöja positionen i onödan. Rollpersonen kan använda denna istället för en vanlig lykta och således kunna smyga i mörka och olysta utrymmen med enbart en modifikation på -3 och ändå kunna se vad hen sysslar med.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "Ger arbetsljus som låter dig smyga i mörker med bara −3 i modifikator."
+    },
+    {
+      "id": "sp21",
+      "namn": "Orakelkortlek",
+      "beskrivning": "Ledfrågekort, minnestekniker och rituella kasttecken som styr samtal och efterforskning. Vid ryktessök och användandet av informationssökande ritualer ger kortleken +1 på Listig, Viljestark eller Övertygande.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på Listig/Viljestark/Övertygande vid ryktessök och informationsritualer."
+    },
+    {
+      "id": "sp22",
+      "namn": "Ingefärskok i reseflaska",
+      "beskrivning": "En liten flaska med starkt ingefärsavkok. En enda droppe under näsan skär igenom även den mest fruktansvärda odör och låter bäraren stå oberörd inför stanken av förruttnelse och träsk.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "Ignorerar vädereffekt en scen per användning. Avkoket förbrukas."
+    },
+    {
+      "id": "sp23",
+      "namn": "Polyglottikon",
+      "beskrivning": "Fällbar parallellordlista med språkstammar och rotmönster. Ger +1 på framgångsslag i Listig vid läsning och skrivning av främmande språk.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 Listig vid läsning/skrift av främmande språk."
+    },
+    {
+      "id": "sp24",
+      "namn": "Resefrasbok",
+      "beskrivning": "Kortfattade fraser per ämne: hälsning, handel, färd, härbärge. Ger +1 på framgångsslag i Listig när tal behövs för enkel kommunikation.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 Listig för enkel talad kommunikation."
+    },
+    {
+      "id": "sp25",
+      "namn": "Avkodarfjäder & Chifferhjul",
+      "beskrivning": "Fjäderpenna med ritskala för frekvensanalys och chifferhjul. Ger +1 på framgångsslag i Listig vid chiffer och substitutionsskrift.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 Listig vid chiffer och substitutionsskrift."
+    },
+    {
+      "id": "sp26",
+      "namn": "Teckenkodex",
+      "beskrivning": "Handbok för gester, siffror, mått och handels­signaler. Ger +1 på framgångsslag i Listig vid tyst kommunikation utan gemensamt språk.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 Listig för tyst kommunikation utan gemensamt språk."
+    },
+    {
+      "id": "sp27",
+      "namn": "Säkringsutrustning",
+      "beskrivning": "Ett fältprövat set med stålkrok försedd med mothake, lätt men stark hampa­lina på kastspole, läderhandske och sele för snabb säkring. Kroken biter i bjälkar, kreneleringar och fönsterkarmar, linan löper mjukt och när den väl spänts bär den både människa och last med dova knarr snarare än klonk. Om rollpersonen försöker klättra med denna utrustning får en annan rollperson som säkrar hen slå mot Stark för att försöka rädda rollpersonen om den faller under klättringen.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "Vid klättring kan en säkringskamrat slå mot Stark för att rädda vid fall."
+    },
+    {
+      "id": "sp28",
+      "namn": "Dämpningskit",
+      "beskrivning": "Finolja, vax, filtrem­sremsor, träkilar, mjukläder och tunna snören samlade i en diskret rulle. Gångjärn, kedjor, spännen, luckor, vinschar och hjul får dämpning där metall möter metall, resonans i brädor tas upp och de små avslöjande ljuden kvävs innan de sprider sig genom väggar och golv. När last flyttas, en dörr smygs upp eller ett block och talja börjar arbeta, får rollpersonen +1 på framgångsslag i Diskret när ljud från rörliga föremål riskerar att röja vägen.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på Diskret när mekaniskt ljud riskerar att avslöja dig."
+    },
+    {
+      "id": "sp29",
+      "namn": "Kamouflagenkit",
+      "beskrivning": "Matt vävt nät med fästöglor och insydda flikar, burkar med jordpigment och pinnar för att bryta konturer. På några minuter förvandlar rollpersonen packning, ställning eller till och med en liten vagn till ett oroligt mönster av skugga och jordtoner som blicken glider över. Stillastående föremål upp till vagnsstorlek kan döljas så väl att den som saknar tydlig målbild måste slå mot Vaksam med en andra chans att misslyckas för att upptäcka gömstället, medan den som vet vad som söks slår som vanligt.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "Stillastående föremål upp till vagnsstorlek kan döljas så väl att den som saknar tydlig målbild måste slå mot Vaksam med en andra chans att misslyckas för att upptäcka gömstället, medan den som vet vad som söks slår som vanligt."
+    },
+    {
+      "id": "sp30",
+      "namn": "Luktmaskeringssats",
+      "beskrivning": "Ett kompakt kit med alkaliskt tvättsoda, ört­salva och kolduk som binder och neutraliserar mänsklig doft. Med omsorgsfull behandling, rätt vind och tålamod suddas närvaron ut för nosar som annars vädrar fara långt innan ögat gör det. Vid smygande mot djur och bestar ger satsen +1 på framgångsslag i Diskret.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på Diskret vid smygande mot djur och bestar."
+    },
+    {
+      "id": "sp31",
+      "namn": "Fältbår",
+      "beskrivning": "Hopfällbar bår med kryssram, två lyftremmar, nackstöd och snabbspännen för axel och höft. Den skadade fixeras, vikt fördelas och varje steg blir mer förutsägbart även i trånga passager och under press. När två bärare samspelar med remmarna lyfter de som en kropp och räknar då bådas Stark som +5 vid lyft- och bärmoment så länge båda aktivt kan bära.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "När två bärare finns får båda räkna sitt Stark som +5 vid lyft- och bärmoment."
+    },
+    {
+      "id": "sp32",
+      "namn": "Hävklo",
+      "beskrivning": "Smal, fjädrande hävstång med fasad klo, ett kit av trä- och bly­kilar samt mjuk skyddsduk som skonar karm och tröskel. Rollpersonen får grepp där fingrar inte ryms, matar in kilarna och låter kraften gå in i materialet i stället för att skaka huset. En kontrollerad rörelse och låsningen ger med sig, vilket ger +1 på slag som avser att forcera dörrar och luckor öppna samtidigt som arbetsljudet hålls nere med rätt kilning och underlag.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 att forcera dörrar och luckor med dämpat arbetsljus."
+    },
+    {
+      "id": "sp33",
+      "namn": "Larmklockor",
+      "beskrivning": "Tunn tvinnad tråd, små klockor med dov kläpp, lätta krokar och krita för markering ger ett flyttbart perimeterskydd kring läger, fyndplats eller bakhåll. Trådarna dras lågt där fotleder passerar eller högt där mantelfållar sveper, och när vinden stillnar hörs ett knappt ljud som räcker för den uppmärksamme. När systemet är uppsatt måste smygande motståndare lyckas med ett slag mot Vaksam för att undvika att bli upptäckta vid intrång över linjen.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "Avslöjar inkräktare. Smygare måste klara Vaksam för att passera obemärkt."
+    },
+    {
+      "id": "sp34",
+      "namn": "Växtpress",
+      "beskrivning": "Fickpress i trä med skruv, pergamentark, namnlappar och liten kniv gör att blad och blommor kan tas, pressas och jämföras direkt vid stigkanten. Rollpersonen bygger ett vandrande herbarium och lär fingertopparna känna skillnaden mellan läkedom, gift och föda redan innan lägerelden falnat, vilket ger +1 på framgångsslag i syfte att växter ska identifieras",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag för att identifiera växter."
+    },
+    {
+      "id": "sp35",
+      "namn": "Kopparretort",
+      "beskrivning": "Ett litet destillationskärl i koppar med glasinsatser, tillverkat för att enkelt packas ned och användas på resande fot. När bryggning sker med färdigheten Alkemi räknas arbetet som om det utfördes i en enkel verkstad. Om rollpersonen använder både en Kopparretort och ett reselaboratorium kan elixir bryggas på en dag istället för två i fält. Redskapet ger dessutom +1 på Listig vid slag för att samla ingredienser eller rena bort föroreningar under framställningen.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "Alkemi i fält räknas som enkel verkstad och ger +1 Listig vid insamling/rening. Tillsammans med Reselaboratorium bryggs elixir i fält på 1 dag."
+    },
+    {
+      "id": "sp36",
+      "namn": "Görlamans Gröna",
+      "beskrivning": "En hopfällbar fältflora med växtpress, smaknotiser och varningsmärkningar sammanställda av häxan Görlaman. Innehåller enkla tester för att skilja ätliga örter och svampar från giftiga förväxlingar. Ger +1 i syfte att hitta ätbara flora inne i Davokar.",
+      "taggar": {
+        "typ": [
+          "Specialverktyg"
+        ]
+      },
+      "grundpris": {
+        "daler": 10,
+        "skilling": 0,
+        "örtegar": 0
+      },
+      "stat": {
+        "vikt": 1.0
+      },
+      "effekt": "+1 på framgångsslag i syfte att hitta ätbara växter."
+    }
+  ]
+}

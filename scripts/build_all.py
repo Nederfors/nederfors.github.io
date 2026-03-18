@@ -4,7 +4,7 @@ import json
 import hashlib
 from pathlib import Path
 from datetime import datetime, timezone
-from data_file_schema import load_json, normalize_payload
+from data_file_schema import build_payload, load_json, normalize_payload
 
 DATA_FILES = [
     # sync-data-manifest:start
@@ -50,6 +50,7 @@ DATA_FILES = [
 ROOT_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = ROOT_DIR / 'data'
 OUTPUT_FILE = DATA_DIR / 'all.json'
+TABLES_FILE = DATA_DIR / 'tabeller.json'
 RITUAL_LEVELS = ('Enkel', 'Ordinär', 'Avancerad')
 MYSTIC_LEVELS = ('Novis', 'Gesäll', 'Mästare')
 
@@ -142,6 +143,7 @@ def main():
     args = parse_args()
     entries = []
     sources = []
+    source_payloads = []
     warnings = []
     duplicate_ids = []
     seen_ids = {}
@@ -167,12 +169,23 @@ def main():
             'checksum': checksum(payload),
             'typeRuleCount': len(parsed.type_rules)
         })
+        source_payloads.append(
+            build_payload(
+                data,
+                type_rules=parsed.type_rules,
+                extra=parsed.extra,
+                as_object=parsed.is_object_format,
+            )
+        )
+
+    tables_payload = load_json(TABLES_FILE)
 
     bundle = {
         'generatedAt': datetime.now(timezone.utc).isoformat(),
         'totalCount': len(entries),
         'sources': sources,
-        'entries': entries
+        'sourcePayloads': source_payloads,
+        'tables': tables_payload,
     }
 
     with OUTPUT_FILE.open('w', encoding='utf-8') as handle:

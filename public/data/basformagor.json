@@ -1,0 +1,385 @@
+{
+  "typ_regler": {
+    "Basförmåga": {}
+  },
+  "entries": [
+    {
+      "id": "bas1",
+      "namn": "Stärkande Måltid",
+      "beskrivning": "Handling: Speciell. Denna kunskap låter karaktären förvandla enkla råvaror till en festmåltid som stärker både kropp och sinne i vildmarkens mörker. En varm, välgjord gryta kan vara skillnaden mellan hopp och förtvivlan för en sargad trupp. Tillagningen tar en timme i anspråk och kräver ett etablerat läger med eld och kokkärl, samt tillgång till ordentliga råvaror (ej enbart torkad färdkost). Det är möjligt att dryga ut måltiden med färdkost, förutsatt att minst hälften av ingredienserna utgörs av färska råvaror (exempelvis inköpta i stad eller insamlade med förmågan Vildmarksvana). Om färdkost används som utfyllnad krävs ett lyckat test mot [Listig − antalet portioner färdkost] för att måltiden ska få avsedd verkan. Vid lyckat resultat, eller om enbart råvaror använts, erhåller alla som äter av måltiden +1T4 i tillfällig Tålighet. Denna bonus fungerar som en buffert mot skada och försvinner först när den förbrukats eller efter ett dygn. En person kan endast tillgodogöra sig effekten av en stärkande måltid en gång per dag.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [
+          "Krigare",
+          "Mystiker",
+          "Jägare"
+        ],
+        "test": [
+          "Listig"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas2",
+      "namn": "Mental Försegling",
+      "beskrivning": "Handling: Reaktiv. Genom strikta mentalövningar och djup meditation har karaktären lärt sig att sluta sitt sinne mot Davokars viskningar. Denna disciplin fungerar som en sista försvarslinje när skuggan hotar att bryta ner karaktärens motståndskraft. Förmågan är reaktiv och kan användas en gång per dag. Den aktiveras när karaktären drabbas av korruption (tillfällig eller permanent) som gör att den Totala Korruptionen når eller överstiger karaktärens Korruptionströskel. Spelaren slår då 1T20. Om resultatet är högre än rollpersonens Totala Korruption (innan den inkommande mängden), lyckas karaktären stöta bort mörkret och den inkommande korruptionen negeras helt. Om slaget misslyckas tas korruptionen emot som vanligt.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [
+          "Mystiker"
+        ],
+        "test": [
+          ""
+        ],
+        "nivå_data": {
+          "Ordinär": {
+            "handling": "Reaktiv",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas3",
+      "namn": "Fintstepp",
+      "beskrivning": "Handling: Reaktiv. Karaktären kan med falska ansatser och kroppsspråk lura en anstormande fiende. Förmågan är reaktiv och kan användas en gång per runda när en fiende rör sig mot karaktären. Spelaren slår ett slag på [Diskret ← Kvick]. Om testet lyckas går motståndaren på finten och tvingas korrigera sin rutt, vilket halverar dess totala förflyttning för den aktuella rundan.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [
+          "Jägare",
+          "Tjuv"
+        ],
+        "test": [
+          "Diskret"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Reaktiv",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas4",
+      "namn": "Repmästare",
+      "beskrivning": "Handling: Speciell. Karaktären är en virtuos med tågvirke och änterhake. Genom att omsorgsfullt förbereda en passage – välja strategiska fästpunkter, slå korrekta knopar och säkra repet – kan riskerna för sällskapet minimeras. Att rigga en sådan säker led tar en timme i anspråk och kräver ett slag på [Listig]. Vid framgång får alla allierade som använder repet +3 på [Kvick] vid slag för klättring eller balansering. Därtill besitter karaktären en särskild teknik för att packa sina rep, vilket gör att rep som bärs av karaktären endast upptar hälften av normalt utrymme (vikt) i packningen.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [
+          "Jägare",
+          "Tjuv"
+        ],
+        "test": [
+          "Listig"
+        ],
+        "regler": {
+          "andrar": [
+            {
+              "mal": "vikt_faktor",
+              "nar": { "foremal": { "id": ["di12"] } },
+              "varde": 0.5
+            }
+          ]
+        },
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas5",
+      "namn": "Stavsprång",
+      "beskrivning": "Handling: Aktiv. Konsten att använda sitt vapen eller sin vandringsstav som en hävstång är ovärderlig i oländig terräng. Handlingen kräver karaktären håller ett långt föremål i händerna (exempelvis spjut, stav eller hillebard). Genom att ta sats kan karaktären med ett lyckat test mot [Kvick] slunga sig över hinder upp till 5 meter i höjd eller längd. Tekniken kan även nyttjas för att dämpa landningar; ett lyckat test mot [Kvick] tillåter karaktären att hoppa ner från höjder upp till 10 meter utan att ta fallskada. Manövern kräver god rörlighet och kan inte utföras om karaktären bär Tung rustning eller besitter särdraget Robust.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [
+          "Jägare",
+          "Krigare",
+          "Tjuv"
+        ],
+        "test": [
+          "Kvick"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Aktiv",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+  "id": "bas6",
+  "namn": "Djurvän",
+  "beskrivning": "Handling: Speciell. Banden mellan klanfolken och skogens varelser är urgamla; de delar mark, bytesdjur och ibland till och med gudar. Karaktären har tillägnat sig denna djupa samhörighet och erhåller därmed särdraget Bestars tunga. Karaktärens förståelse för djurisk instinkt är så pass djup att inget test mot [Övertygande] krävs för att be en best om hjälp, förutsatt att varelsen har [Listig] lägre än 10. Begäran måste dock ligga inom ramen för vad djuret naturligt kan och vill göra.",
+  "taggar": {
+    "typ": [
+      "Basförmåga"
+    ],
+    "ark_trad": [
+      "Häxa"
+    ],
+    "test": [
+      "Övertygande"
+    ],
+    "nivå_data": {
+      "Enkel": {
+        "handling": "Speciell",
+        "skadetyp": "",
+        "regler": {
+          "ger": [
+            {
+              "mal": "post",
+              "namn": [
+                "Bestars tunga"
+              ],
+              "gratis": true
+            }
+          ]
+        }
+      }
+    }
+  }
+},
+    {
+      "id": "bas7",
+      "namn": "Fältkartering",
+      "beskrivning": "Handling: Speciell. Genom att studera horisonten, vegetationsskiften och ruiners yttre geometri kan karaktären upprätta en mental eller fysisk karta över ett område utan att behöva beträda det. Det handlar om att läsa landskapet som en öppen bok. Handlingen kräver tid och fri sikt. Med ett lyckat test mot [Listig] kan karaktären deducera områdets layout. Metoden kan även appliceras på ruinkomplex, förutsatt att karaktären obehindrat kan röra sig runt strukturens utsida. Detta avslöjar dock inte dolda kammare eller underjordiska plan som saknar yttre kännetecken.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Listig"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas8",
+      "namn": "Utpressare",
+      "beskrivning": "Handling: Speciell. Kunskap är makt, och i de civiliserade delarna av Ambria är en mörk hemlighet värd mer än guld. Karaktären vet hur man gräver fram smuts om folk genom att korsreferera arkiv eller lyssna till viskningar. Detta kräver en timmes arbete i en stad eller ett arkiv. Vid ett lyckat test mot [Vaksam ← Diskret] (där motståndet är målets Diskret) hittar karaktären hållhakar som garanterar att nästa slag för [Övertygande] mot personen lyckas automatiskt. Utpressningen måste gälla en genomförbar handling. Offret kommer att minnas utpressningen vid framtida möten.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Vaksam"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas9",
+      "namn": "Spåranalys",
+      "beskrivning": "Handling: Speciell. För den oinvigde är en bruten kvist bara skräp, men för denna karaktär är det en rad i skogens dagbok. Istället för att bara följa ett spår stannar karaktären upp för att metodiskt undersöka marken. Analysen tar en timme. Med ett lyckat test mot [Vaksam] kan karaktären fastställa exakt vilken typ av varelser som passerat, deras antal, deras fysiska tillstånd (skadade/utmattade) samt med stor precision avgöra hur lång tid som förflutit sedan de var på platsen.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Vaksam"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": "-"
+          }
+        }
+      }
+    },
+    {
+      "id": "bas10",
+      "namn": "Karaktärsmord",
+      "beskrivning": "Handling: Speciell. Att krossa en fiende kräver inte alltid stål; ett välplacerat rykte kan vara lika dödligt som en dolk i ryggen. Genom att systematiskt plantera lögner och förfalska korrespondens kan karaktären rasera en motståndares anseende. Processen kräver en kvälls arbete. Spelaren slår ett slag på [Övertygande ← Övertygande]. Vid framgång fläckas offrets rykte så djupt att denne under en veckas tid får två chanser att misslyckas på alla sociala prov inom det aktuella området.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Övertygande"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas11",
+      "namn": "Desinformationsspridning",
+      "beskrivning": "Handling: Speciell. Information är en handelsvara i krig, och falsk sådan är en fälla. Karaktären sprider noggrant kalkylerade lögner om sällskapets storlek eller mål. Efter en kvälls arbete slås ett slag på [Övertygande ← Vaksam]. Vid framgång blir fiendens ledare övertygad om lögnerna och kommer att basera sina strategiska beslut på dessa, förutsatt att informationen är någorlunda trovärdig.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Övertygande"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas12",
+      "namn": "Meditationsledning",
+      "beskrivning": "Handling: Speciell. I en värld där korruption och skräck ständigt hotar, är sinnesro en bristvara. Karaktären leder sällskapet i mentala övningar för att stärka själen. Ritualen tar en timme. Med ett lyckat test mot [Övertygande] läker alla deltagande allierade 1T8 Tålighet utöver naturlig återhämtning. Dessutom reduceras 1T4 tillfällig Korruption hos deltagarna. Kan endast nyttjas en gång per dygn per person.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Övertygande"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas13",
+      "namn": "Lägereldsberättelse",
+      "beskrivning": "Handling: Speciell. När mörkret faller och kylan tränger sig på är hoppet ofta det första som dör. Genom att återberätta gamla legender om mod ingjuter karaktären nytt hopp i sällskapet. Med ett lyckat test mot [Övertygande] bär varje deltagare på en mental styrka i ett dygn. Detta tillåter deltagaren att vid ett tillfälle helt ignorera effekten av en valfri Nackdel. Varje rollperson kan bara dra nytta av en berättelse per dygn.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Övertygande"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas14",
+      "namn": "Retorisk trollbindning",
+      "beskrivning": "Handling: Speciell. Ord kan fängsla lika effektivt som kedjor. Genom retorik och gester kan karaktären fånga en publiks uppmärksamhet utanför strid. Med ett lyckat test mot [Övertygande ← Vaksam] blir åhörarna så distraherade att de får -3 på alla slag mot [Vaksam] för att upptäcka vad som händer i periferin.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Övertygande"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas15",
+      "namn": "Terrängkamouflage",
+      "beskrivning": "Handling: Speciell. I vildmarken är synlighet dödlighet. Karaktären spenderar en timme på att dölja sig själv eller ett föremål med lokala material. En maskerad varelse får två chanser att lyckas på [Diskret] i den miljön. Ett maskerat föremål ger de som letar -3 på [Vaksam] samt två chanser att misslyckas. Kamouflaget håller en scen eller tills vädret förstör det.",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          ""
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+      "id": "bas16",
+      "namn": "Infiltratör",
+      "beskrivning": "Handling: Speciell. Ibland är det bästa sättet att dölja sig att synas, men som någon annan. Med smink och rekvisita kan karaktären efterlikna en ospecificerad person från en viss grupp. Det tar en timme att applicera. Med ett lyckat test mot [Diskret] luras alla utomstående automatiskt. Medlemmar av gruppen kan genomskåda förklädnaden med ett lyckat [Vaksam] mot karaktärens [Diskret].",
+      "taggar": {
+        "typ": [
+          "Basförmåga"
+        ],
+        "ark_trad": [],
+        "test": [
+          "Diskret"
+        ],
+        "nivå_data": {
+          "Enkel": {
+            "handling": "Speciell",
+            "skadetyp": ""
+          }
+        }
+      }
+    },
+    {
+  "id": "bas17",
+  "namn": "Manipulatör",
+  "beskrivning": "Handling: Passiv. Rollpersonen är en mästare på att läsa andra varelsers svagheter och begär, och vet precis vilka ord som krävs för att dra nytta av dem. Istället för att lita till ren utstrålning eller aggressivitet väver du lögner, falskt smicker och subtila antydningar till ett nät som snärjer ditt offer. Din manipulation handlar sällan om att tala högst eller te sig farligast, utan om att viska exakt rätt sak i rätt öra vid rätt tillfälle. Rollpersonen får använda Listig istället för Övertygande närhelst denne försöker dupera, ljuga för, påverka eller på andra sätt spela på en annan varelses känslor.",
+  "taggar": {
+    "typ": [
+      "Basförmåga"
+    ],
+    "ark_trad": [],
+    "test": [
+      "Listig"
+    ],
+    "nivå_data": {
+      "Ordinär": {
+        "handling": "Passiv",
+        "skadetyp": ""
+      }
+    }
+  }
+}
+  ]
+}

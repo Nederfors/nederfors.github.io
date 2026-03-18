@@ -19,6 +19,7 @@ JS_START = "  // sync-data-manifest:start"
 JS_END = "  // sync-data-manifest:end"
 
 ENTRY_DATA_EXCLUDES = {
+    "ai-plugin.json",
     "all.json",
     "pdf-list.json",
     "struktur.json",

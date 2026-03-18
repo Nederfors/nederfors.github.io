@@ -3,8 +3,8 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-06T11:50:37.709386+00:00",
-      "antal_typer_hittade": 52,
+      "genererad": "2026-03-18T23:05:18.114075+00:00",
+      "antal_typer_hittade": 58,
       "källfiler": [
         "data/diverse.json",
         "data/kuriositeter.json",
@@ -33,14 +33,15 @@
         "data/tjanster.json",
         "data/ritual.json",
         "data/rustning.json",
-        "data/vapen.json",
         "data/mat.json",
         "data/dryck.json",
         "data/sardrag.json",
         "data/monstruost-sardrag.json",
         "data/artefakter.json",
         "data/lagre-artefakter.json",
-        "data/fallor.json"
+        "data/fallor.json",
+        "data/avstandsvapen.json",
+        "data/narstridsvapen.json"
       ]
     },
     "Allmän kvalitet": {
@@ -132,6 +133,80 @@
         }
       ]
     },
+    "Armborst": {
+      "antal": 4,
+      "källfiler": [
+        "data/avstandsvapen.json"
+      ],
+      "exempel": [
+        {
+          "id": "v21",
+          "namn": "Armborst",
+          "beskrivning": "Ett mekaniskt vapen som avfyrar lod med stor kraft.",
+          "taggar": {
+            "typ": [
+              "Avståndsvapen",
+              "Armborst"
+            ]
+          },
+          "stat": {
+            "skada": "1T10",
+            "vikt": 2.0
+          },
+          "grundpris": {
+            "daler": 8,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "v22",
+          "namn": "Arbalest",
+          "beskrivning": "Arbalest är ett tungt ambriskt armborst med båge av fjäderstål vilket ger dess lod extra kraft.",
+          "taggar": {
+            "typ": [
+              "Avståndsvapen",
+              "Armborst"
+            ],
+            "kvalitet": [
+              "Djupverkande"
+            ]
+          },
+          "stat": {
+            "skada": "1T10",
+            "vikt": 2.0
+          },
+          "grundpris": {
+            "daler": 8,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "v38",
+          "namn": "Handarmborst",
+          "beskrivning": "Bland Yndaros gäng och tjuvgillen förekommer en lättdold variant av armborstet, som kan skjutas med en hand men som kräver två för att ladda. Genom 5äderstålsbågen är kraften i skottet lika tung som det vanliga armborstets. Lönnmördare applicerar dessutom ofta gift på loden vilket blir synnerligen effektivt.",
+          "taggar": {
+            "typ": [
+              "Avståndsvapen",
+              "Armborst"
+            ],
+            "kvalitet": [
+              "Dold"
+            ]
+          },
+          "stat": {
+            "skada": "1T10",
+            "vikt": 2.0
+          },
+          "grundpris": {
+            "daler": 8,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        }
+      ]
+    },
     "Artefakt": {
       "antal": 119,
       "källfiler": [
@@ -144,12 +219,15 @@
           "namn": "Opadias Ormstav",
           "beskrivning": "Den ormhövdade runstav som nyligen försvann från Ordo Magicas kapitel i Tistla Fäste sägs ha tillhört Opadia, en nu avliden stavmagiker – mäktiga magiker som enligt legenden verkade som livvakter åt den siste symbariske kejsaren. Opadia var bekant med Lasifor Nattbäcka och levde en tid i Tistla Fäste. Hon stupade i strid mot anfallande alver och staven såldes till Ordo Magica, varifrån den alltså har försvunnit.",
           "kvalitet": [
-            "Trubbigt"
+            "Trubbigt",
+            "Långt"
           ],
           "taggar": {
             "typ": [
               "Artefakt",
-              "Vapen"
+              "Närstridsvapen",
+              "Långa vapen",
+              "Stav"
             ],
             "handling": {
               "Förmåga 1": [
@@ -177,12 +255,43 @@
         {
           "id": "ar02",
           "namn": "Skymningsvatten",
-          "beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet. När den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar. Detta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret. Det heliga skymningsvattnet går inte att binda till sig med korruption, det krävs ett permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. Rollpersoner som binder sig till vattnet tar direkt skada, 1T4 per poäng av permanent korruption de besitter. Om rollpersonen går ner till 0 Tålighet förbränns rollpersonen till en hög med aska – här gäller inte regeln om dödsslag! Rollpersoner med permanent Korruption får slå ett slag för [Vaksam -permanent Korruption] för att inse att vattnet kommer att döma dem hårt. Vattnet bränner också bort den permanenta Korruption rollpersonen har. Skymningsvatten har därtill följande egenskaper och krafter:",
+          "beskrivning": "Skymningsvatten är ett exempel på en artefakt som spelledaren kan använda i något av sina egna äventyr, och med den som inspiration kan spelledaren även utveckla egna mytiska eller mystiska föremål. Just skymningsvatten sägs ha skapats för första gången på ett slagfält under Det stora kriget, just innan Mörkermästarnas horder skulle välla in i Alberetor. Numera skapas det av Prios högsta präster och skickligaste teurger i samband med sommarsolståndet. När den döende solens sista strålar flödar genom ljusgården i Tempelvalls mäktiga katedral fångas det i de heliga gråterskornas tårar, för att därefter droppas i en kristallflaska, helgad för ändamålet. Endast en sådan flaska skapas per år och dess kraft innehåller Prios välsignelse och dom, destillerad till en handfull droppar. Detta ljusbringande elixir sägs kunna bota sjukdomar, skrämma styggelser och – om flaskan krossas – förbränna det oheliga från förbannade platser. Skymningsvattnet går förstås inte att köpa eller tillskansa sig genom förhandlingar, utan föräras alltid kyrkans mest trogna tjänare inför viktiga uppdrag. Det är däremot möjligt att en eller annan flaska har kommit på avvägar sedan ljusets förkämpar fallit i strid mot mörkret. Det heliga skymningsvattnet går inte att binda till sig med korruption, det krävs i stället 1 permanent Erfarenhet för att komma i åtnjutande av vattnets kraft. När rollpersonen binder sig till vattnet sänks rollpersonens smärtgräns med 1 för varje poäng permanent Korruption som rollpersonen har vid bindningstillfället. Därefter bränner vattnet bort lika mycket permanent Korruption som rollpersonen då besitter, vilket innebär att den permanenta Korruptionen förbränns helt. Dessa effekter avgörs vid bindningen och påverkas inte av senare förändringar. Skymningsvatten har därtill följande egenskaper och krafter:",
           "kvalitet": [],
           "taggar": {
             "typ": [
               "Artefakt"
             ],
+            "artefakt_bindning": {
+              "options": [
+                {
+                  "value": "xp",
+                  "label": "−1 Erfarenhetspoäng",
+                  "effects": {
+                    "xp": 1
+                  },
+                  "regler": {
+                    "andrar": [
+                      {
+                        "mal": "smartgrans_tillagg",
+                        "formel": {
+                          "bas": "mal:permanent_korruption",
+                          "faktor": -1
+                        },
+                        "snapshot": true
+                      },
+                      {
+                        "mal": "permanent_korruption",
+                        "formel": {
+                          "bas": "mal:permanent_korruption",
+                          "faktor": -1
+                        },
+                        "snapshot": true
+                      }
+                    ]
+                  }
+                }
+              ]
+            },
             "handling": {
               "Förmåga 1": [
                 "Fri"
@@ -256,8 +365,131 @@
         }
       ]
     },
+    "Avståndsvapen": {
+      "antal": 42,
+      "källfiler": [
+        "data/artefakter.json",
+        "data/avstandsvapen.json",
+        "data/lagre-artefakter.json"
+      ],
+      "exempel": [
+        {
+          "id": "ar09",
+          "namn": "Brandskär",
+          "beskrivning": "Kastyxan Brandskär hyser vilda andar av eld och aska vilka låter den flamma upp och också flyga genom luften tillbaka till kastarens hand. Legenderna är märkligt tysta om vapnets ursprung, men det är inte otänkbart att vapnet är den brinnande yxa som sades svingas av monsterjägaren Ksandukha, hon som enligt legenderna dräpte Davokars sista drake. Vapnets huvud glöder och osar svagt och ger +1T4 i skada på alla attacker. Vapnets mästare är märkligt opåverkad av dess hetta och kan hantera det som en vanlig kastyxa. Det eldfängda vapnet söker sig alltid tillbaka till mästaren, om inte denne vill ha det annorlunda. När yxan kastas eller tappas återvänder den till mästarens hand som en fri handling, utan någon kostnad i korruption.",
+          "kvalitet": [
+            "Självfarande"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Enhandsvapen",
+              "Avståndsvapen",
+              "Kastvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Lavakniv; Handling: Aktiv\nNär vapnet kastas glöder yxeggen som bergens brinnande blod och vapnet bränner lätt genom bepansring av alla slag – attacken ignorerar rustning. Korruption: 1T4.",
+            "Förmåga 2": "Eldregn; Handling: Aktiv\nBrandskär slår ut mot en rad fiender i en kedjeattack. Yxan kastas mot en fiende och om det träffar denne flyger vapnet vidare till ett ytterligare mål, och så vidare tills ett anfallsslag misslyckas. Då återvänder vapnet till mästarens hand. Korruption: 1T6."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 0.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar30",
+          "namn": "Loravanas Kastsköld",
+          "beskrivning": "En av det tidiga Symbaroums mest omsjungna hjältar är krigaren Loravana, ledare för Drottning Serala-Han Urels väpnade styrkor. Under hennes befäl kunde drottningens nordliga smårike ta allt större landområden i beslag, och vissa legender utpekar henne därför som det förenade Symbaroums verkliga moder. Om det stämmer skulle det även förklara varför hennes legendariska sköld blev kvar i de symbariska härskarnas ägo.",
+          "kvalitet": [
+            "Självfarande"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Sköld",
+              "Avståndsvapen",
+              "Kastvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Sköldkast; Handling: Aktiv\nOm den som har bundit sig till Loravanas kastsköld behärskar förmågan Stålkast kan artefakten slungas som ett kastvapen med 1T8 i skada. Skölden återvänder dessutom Passivt till mästarens arm, redo att användas för pareringar direkt efter kastet. Korruption: 1.",
+            "Förmåga 2": "Kraftstöt; Handling: Reaktiv\nOm sköldens mästare behärskar förmågan Sköldkamp till minst gesällnivå kan denne lägga extra kraft bakom sina sköldstötar. En kraftstöt ökar manöverns skada till 1T8 och ger +5 på Stark i försöket att slå fienden till backen. Korruption: 1T4."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 0.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar48",
+          "namn": "Girakosh Cirkelstål",
+          "beskrivning": "Ett runristat cirkelvapen av skarpt stål som enligt ryktet en gång bars av en hjälte uppfostrad bland troll. Föremålet florerar i norra gränstrakter och sägs vara igenkänt av trollen; en bärare kan behöva förhandla eller visa gott uppsåt. Den som binder artefakten kan även använda den i närstrid likt en dolk, annars är det ett kastvapen. Beskrivningen undviker ursprungsplatser och olycksbådande detaljer som hör till spelledarens verktyg, och fokuserar på reglerna för bruk.",
+          "kvalitet": [
+            "Självfarande"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Korta vapen",
+              "Avståndsvapen",
+              "Kastvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Fri"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Återvändo; Handling: Speciell\nDet kastade cirkelstålet återvänder till mästarens hand, oavsett om det träffar sitt mål eller ej. Om mästaren är kapabel att kasta flera stål per runda kan Kaststålet återvända så många gånger som det behövs. Villkor: Fri handling. Korruption: Inget",
+            "Förmåga 2": "Stålregn; Handling: Aktiv\nEn mästare med förmågan Stålkast kan släppa iväg cirkelstålet på en virvlande färd över slagfältet, sicksackande mellan allierade i jakt på fiendekött. Kraften gör attacken till en kedja av anfall (se sida 130 i Grundboken för förklaring av termen Kedja) mot de fiender som mästaren ser. Stålcirkeln återvänder till kastarens hand efter anfallet. Korruption: 1T4"
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 1.0
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        }
+      ]
+    },
     "Basförmåga": {
-      "antal": 16,
+      "antal": 17,
       "källfiler": [
         "data/basformagor.json"
       ],
@@ -336,7 +568,7 @@
     "Belägringsvapen": {
       "antal": 8,
       "källfiler": [
-        "data/vapen.json"
+        "data/avstandsvapen.json"
       ],
       "exempel": [
         {
@@ -345,7 +577,7 @@
           "beskrivning": "Ballistan utgörs av ett massivt och stationärt armborst, avsett för beskjutande av fasta mål, truppformationer på slagfält – samt monster av mest robusta sort.\nRedan under Det stora kriget användes ballistan mot mörkermästarnas odöda dragbestar, i syfte att stoppa deras belägringstorn från att nå försvararnas murar. Den praktiken fortsatte vid koloniseringen av Ambria där framför allt häxornas fasansfulla kolosser utgjorde måltavlor. Även idag riktas ballistor mot Davokars mörka bryn från utposter och fort.",
           "taggar": {
             "typ": [
-              "Vapen",
+              "Avståndsvapen",
               "Belägringsvapen"
             ],
             "kvalitet": [
@@ -369,7 +601,7 @@
           "beskrivning": "En kruka fylld med alkemiskt tändmedel som vid antändning exploderar med en massiv knall. Om bräschkrukan grävts ned nära ett objekt blir effekten raserande, om krukan står öppet blir effekten istället ytverkande. Notera att den som placerar en bräschkruka måste förse den med stubin för att inte själv fångas av effekten. Vem som helst kan använda en bräschkruka men endast en person med förmågan Belägringskonst eller Pyroteknik kan göra det säkert. Se reglerna för Alkemiska vapen på sidan 98. Bräschskrukan kan också användas som ammunition för katapulter, och har i så fall en ytverkande effekt vid nedslaget.",
           "taggar": {
             "typ": [
-              "Vapen",
+              "Avståndsvapen",
               "Belägringsvapen"
             ],
             "kvalitet": [
@@ -393,7 +625,7 @@
           "beskrivning": "En kruka fylld med alkemiskt tändmedel som vid antändning exploderar med en massiv knall. Om bräschkrukan grävts ned nära ett objekt blir effekten raserande, om krukan står öppet blir effekten istället ytverkande. Notera att den som placerar en bräschkruka måste förse den med stubin för att inte själv fångas av effekten. Vem som helst kan använda en bräschkruka men endast en person med förmågan Belägringskonst eller Pyroteknik kan göra det säkert. Se reglerna för Alkemiska vapen på sidan 98. Bräschskrukan kan också användas som ammunition för katapulter, och har i så fall en ytverkande effekt vid nedslaget.",
           "taggar": {
             "typ": [
-              "Vapen",
+              "Avståndsvapen",
               "Belägringsvapen"
             ],
             "kvalitet": [
@@ -407,6 +639,37 @@
           "grundpris": {
             "daler": 25,
             "skilling": 0,
+            "örtegar": 0
+          }
+        }
+      ]
+    },
+    "Blåsrör": {
+      "antal": 1,
+      "källfiler": [
+        "data/avstandsvapen.json"
+      ],
+      "exempel": [
+        {
+          "id": "v34",
+          "namn": "Blåsrör",
+          "beskrivning": "Blåsrörets enda funktion är att med en liten pil leverera gift till målet. Blåsrörspilen i sig ger ingen skada, men penetrerar rustning om man slår över målets skydd med 1T8 (rollpersoner med förmågan Prickskytt slår 1T10).",
+          "taggar": {
+            "typ": [
+              "Avståndsvapen",
+              "Blåsrör"
+            ],
+            "kvalitet": [
+              "Speciell"
+            ]
+          },
+          "stat": {
+            "skada": "1T8",
+            "vikt": 1.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 4,
             "örtegar": 0
           }
         }
@@ -606,20 +869,7 @@
             "ark_trad": [
               "Järnsvuren",
               "Jägare"
-            ],
-            "regler": {
-              "kraver": [
-                {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Elityrke": 1
-                    }
-                  },
-                  "varde": "single_elite",
-                  "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-                }
-              ]
-            }
+            ]
           },
           "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick 11+",
           "Elityrkesförmågor": [
@@ -643,50 +893,62 @@
           ],
           "id": "elit1",
           "krav": {
+            "total_erf": 150,
             "primarformaga": {
               "namn": [
-                "Akrobatik"
-              ]
-            },
-            "primartagg": {
-              "taggfalt": "ark_trad",
-              "taggar": [
-                "Monsterjägare"
+                "Prickskytt",
+                "Tvillingattack",
+                "Spjutdans"
               ],
-              "krav_erf": 30,
-              "min_antal": 1
+              "krav_erf": 60
             },
-            "sekundartagg": {
-              "aktiv": true,
-              "taggfalt": "ark_trad",
-              "taggar": [
-                "Häxa"
-              ],
-              "krav_erf": 20,
-              "min_antal": 1
-            },
-            "valfri_inom_tagg": [],
-            "specifika_formagor": {
-              "namn": [
-                "Sjätte sinne",
-                "Spjutdans",
-                "Snabbskytte",
-                "Prickskytt"
-              ],
-              "min_erf": 30,
-              "min_antal": 1
-            },
-            "specifika_mystiska_krafter": {
-              "namn": [],
-              "min_erf": 0,
-              "min_antal": 0
-            },
-            "specifika_ritualer": {
-              "namn": [
-                ""
-              ],
-              "min_erf": 0,
-              "min_antal": 0
+            "specifikt_val": [
+              {
+                "alternativ": [
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Prickskytt"
+                  },
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Spjutdans"
+                  },
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Tvillingattack"
+                  },
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Prickskytt"
+                  },
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Akrobatik"
+                  },
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Lärd"
+                  },
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Monsterlärd"
+                  }
+                ],
+                "krav_erf": 40,
+                "min_antal": 1
+              }
+            ],
+            "valfri_inom_tagg": [
+              {
+                "taggfalt": "ark_trad",
+                "taggar": [
+                  "Jägare"
+                ],
+                "krav_erf": 30
+              }
+            ],
+            "valfritt": {
+              "krav_erf": 20
             },
             "specifika_fordelar": {
               "namn": [
@@ -713,20 +975,7 @@
             "ark_trad": [
               "Templár",
               "Teurg"
-            ],
-            "regler": {
-              "kraver": [
-                {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Elityrke": 1
-                    }
-                  },
-                  "varde": "single_elite",
-                  "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-                }
-              ]
-            }
+            ]
           },
           "krav_formagor": "",
           "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
@@ -748,60 +997,45 @@
           ],
           "id": "elit2",
           "krav": {
+            "total_erf": 150,
             "primarformaga": {
-              "namn": "Teurg"
+              "namn": "Teurg",
+              "krav_erf": 10
             },
-            "primartagg": {
-              "taggfalt": "ark_trad",
-              "taggar": [],
-              "krav_erf": 0,
-              "min_antal": 0
-            },
-            "sekundartagg": {
-              "aktiv": false,
-              "taggfalt": "",
-              "taggar": [],
-              "krav_erf": 0,
-              "min_antal": 0
-            },
+            "specifikt_val": [
+              {
+                "alternativ": [
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Rustmästare"
+                  }
+                ],
+                "krav_erf": 10,
+                "min_antal": 1
+              }
+            ],
             "valfri_inom_tagg": [
               {
-                "typ": "Förmåga",
                 "taggfalt": "namn",
                 "taggar": [
                   "Tvåhandskraft",
                   "Sköldkamp"
                 ],
-                "min_erf": 10,
-                "min_antal": 0
+                "krav_erf": 10,
+                "typ": "Förmåga"
               },
               {
-                "typ": "Mystisk kraft",
                 "taggfalt": "namn",
                 "taggar": [
                   "Häxhammare",
                   "Helig aura"
                 ],
-                "min_erf": 10,
-                "min_antal": 0
+                "krav_erf": 10,
+                "typ": "Mystisk kraft"
               }
             ],
-            "specifika_formagor": {
-              "namn": [
-                "Rustmästare"
-              ],
-              "min_erf": 10,
-              "min_antal": 0
-            },
-            "specifika_mystiska_krafter": {
-              "namn": [],
-              "min_erf": 0,
-              "min_antal": 0
-            },
-            "specifika_ritualer": {
-              "namn": [],
-              "min_erf": 0,
-              "min_antal": 0
+            "valfritt": {
+              "krav_erf": 10
             },
             "specifika_fordelar": {
               "namn": [],
@@ -823,20 +1057,7 @@
             "ark_trad": [
               "Vredesgardist",
               "Krigare"
-            ],
-            "regler": {
-              "kraver": [
-                {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Elityrke": 1
-                    }
-                  },
-                  "varde": "single_elite",
-                  "meddelande": "Elityrke: Karaktären kan normalt bara ha ett elityrke."
-                }
-              ]
-            }
+            ]
           },
           "krav_formagor": "",
           "viktiga_karaktarsdrag": "Stark 13+, Viljestark 11+",
@@ -858,51 +1079,40 @@
           ],
           "id": "elit3",
           "krav": {
+            "total_erf": 150,
             "primarformaga": {
-              "namn": "Järnnäve"
+              "namn": "Järnnäve",
+              "krav_erf": 60
             },
-            "primartagg": {
-              "taggfalt": "ark_trad",
-              "taggar": [],
-              "krav_erf": 0,
-              "min_antal": 0
-            },
-            "sekundartagg": {
-              "aktiv": false,
-              "taggfalt": "",
-              "taggar": [],
-              "krav_erf": 0,
-              "min_antal": 0
-            },
+            "specifikt_val": [
+              {
+                "alternativ": [
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Rustmästare"
+                  },
+                  {
+                    "typ": "Förmåga",
+                    "namn": "Återhämtning"
+                  }
+                ],
+                "krav_erf": 20,
+                "min_antal": 1
+              }
+            ],
             "valfri_inom_tagg": [
               {
-                "typ": "Förmåga",
                 "taggfalt": "namn",
                 "taggar": [
                   "Sköldkamp",
                   "Tvillingattack"
                 ],
-                "min_erf": 10,
-                "min_antal": 0
+                "krav_erf": 10,
+                "typ": "Förmåga"
               }
             ],
-            "specifika_formagor": {
-              "namn": [
-                "Rustmästare",
-                "Återhämtning"
-              ],
-              "min_erf": 20,
-              "min_antal": 0
-            },
-            "specifika_mystiska_krafter": {
-              "namn": [],
-              "min_erf": 0,
-              "min_antal": 0
-            },
-            "specifika_ritualer": {
-              "namn": [],
-              "min_erf": 0,
-              "min_antal": 0
+            "valfritt": {
+              "krav_erf": 10
             },
             "specifika_fordelar": {
               "namn": [],
@@ -917,7 +1127,7 @@
       ]
     },
     "Elityrkesförmåga": {
-      "antal": 59,
+      "antal": 64,
       "källfiler": [
         "data/formaga.json",
         "data/monstruost-sardrag.json",
@@ -979,15 +1189,78 @@
             "nivå_data": {
               "Novis": {
                 "handling": "Speciell",
-                "skadetyp": "Ingen"
+                "skadetyp": "Ingen",
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "pris_faktor",
+                      "operation": "dividera",
+                      "satt": "ersatt",
+                      "varde": 2,
+                      "nar": {
+                        "foremal": {
+                          "typ": [
+                            "Lägre Artefakt"
+                          ],
+                          "niva": [
+                            "Novis"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
               },
               "Gesäll": {
                 "handling": "Speciell",
-                "skadetyp": "Ingen"
+                "skadetyp": "Ingen",
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "pris_faktor",
+                      "operation": "dividera",
+                      "satt": "ersatt",
+                      "varde": 2,
+                      "nar": {
+                        "foremal": {
+                          "typ": [
+                            "Lägre Artefakt"
+                          ],
+                          "niva": [
+                            "Novis",
+                            "Gesäll"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
               },
               "Mästare": {
                 "handling": "Speciell",
-                "skadetyp": "Ingen"
+                "skadetyp": "Ingen",
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "pris_faktor",
+                      "operation": "dividera",
+                      "satt": "ersatt",
+                      "varde": 2,
+                      "nar": {
+                        "foremal": {
+                          "typ": [
+                            "Lägre Artefakt"
+                          ],
+                          "niva": [
+                            "Novis",
+                            "Gesäll",
+                            "Mästare"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },
@@ -1102,73 +1375,129 @@
       ]
     },
     "Enhandsvapen": {
-      "antal": 8,
+      "antal": 19,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json",
+        "data/narstridsvapen.json"
       ],
       "exempel": [
         {
-          "id": "v1",
-          "namn": "Enhandsvapen",
-          "beskrivning": "Enhandsvapen omfattar alla typer av vapen som kan svingas i en hand. Exempel på enhandsvapen som är vanliga i davokarregionen är hammare, kroksabel, svärd och yxa.",
+          "id": "ar05",
+          "namn": "Algsar-Maras Kätting",
+          "beskrivning": "algsar-maras kätting, artefakt Algsar-Mara omnämns såvitt känt bara i en enda strof, tillskriven Aroaleta, och då endast med hänvisning till dennes bakslughet, mordiska sinnelag och ”bitande kätting”. Vem han eller hon var och vad som gör denne förtjänt av omnämnandet är ett lika stort mysterium som frågan om huruvida just denna kätting var hans. Eller hennes. Kättingen med sina tunna men urstarka länkar är nära två meter lång och väger inte mer än ett motsvarande rep. Den tycks vara ingjuten med en hungrande eller rent av svulten makt. Vid sidan om nedanstående krafter kan den svingas som en Långpiska (ledat, snärjande och djupverkande).",
+          "kvalitet": [
+            "Ledat",
+            "Snärjande",
+            "Djupverkande"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
+              "Artefakt",
+              "Närstridsvapen",
               "Enhandsvapen"
-            ]
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Omslingra; Handling: Aktiv\nDen som har bundit sig till kättingen kan med ett lyckat anfallsslag kasta artefakten mot en fiende som den har Övertag emot. Oavsett hur den kastas snärjer sig kättingen blixtsnabbt kring offret och hindrar dess rörelser totalt under följande runda. Därefter krävs det ett slag mot [10←Stark] varje runda för att vidmakthålla effekten; misslyckas slaget sliter sig fienden fri. Korruption: 1T4.",
+            "Förmåga 2": "Krypande fälla; Handling: Aktiv\nArtefaktens mästare kan placera den som en levande fälla som täcker av ett större område (en palatsruin, en skogsdunge eller området kring en lägerplats). Kättingen kommer Passivt att söka sig till annalkande varelser, undantaget sådana som sedan tidigare har varit i kontakt med den, och snärja sig kring dem som ovan (max två inom närstridsavstånd från varandra). Kättingens rasslande är ljudligt nog för att varsko mästaren även om denne sover [Vaksam]. Korruption: 1T4."
           },
           "stat": {
-            "skada": "1T8",
+            "skada": "",
             "vikt": 1.5
           },
           "grundpris": {
-            "daler": 5,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v2",
-          "namn": "Duellsvärd",
-          "beskrivning": "I Yndaros är det ambriska duellsvärdet högsta mode, ett fjäderstålsmide med ypperlig precision. Och det kombineras gärna med fäktarens favorit, parerdolken, som ger de lätt rustade duellanterna ett starkare försvar under fäktningsmatcherna.",
+          "id": "ar09",
+          "namn": "Brandskär",
+          "beskrivning": "Kastyxan Brandskär hyser vilda andar av eld och aska vilka låter den flamma upp och också flyga genom luften tillbaka till kastarens hand. Legenderna är märkligt tysta om vapnets ursprung, men det är inte otänkbart att vapnet är den brinnande yxa som sades svingas av monsterjägaren Ksandukha, hon som enligt legenderna dräpte Davokars sista drake. Vapnets huvud glöder och osar svagt och ger +1T4 i skada på alla attacker. Vapnets mästare är märkligt opåverkad av dess hetta och kan hantera det som en vanlig kastyxa. Det eldfängda vapnet söker sig alltid tillbaka till mästaren, om inte denne vill ha det annorlunda. När yxan kastas eller tappas återvänder den till mästarens hand som en fri handling, utan någon kostnad i korruption.",
+          "kvalitet": [
+            "Självfarande"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
-              "Enhandsvapen"
+              "Artefakt",
+              "Närstridsvapen",
+              "Enhandsvapen",
+              "Avståndsvapen",
+              "Kastvapen"
             ],
-            "kvalitet": [
-              "Precist"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Lavakniv; Handling: Aktiv\nNär vapnet kastas glöder yxeggen som bergens brinnande blod och vapnet bränner lätt genom bepansring av alla slag – attacken ignorerar rustning. Korruption: 1T4.",
+            "Förmåga 2": "Eldregn; Handling: Aktiv\nBrandskär slår ut mot en rad fiender i en kedjeattack. Yxan kastas mot en fiende och om det träffar denne flyger vapnet vidare till ett ytterligare mål, och så vidare tills ett anfallsslag misslyckas. Då återvänder vapnet till mästarens hand. Korruption: 1T6."
           },
           "stat": {
-            "skada": "1T8",
-            "vikt": 1.5
+            "skada": "",
+            "vikt": 0.5
           },
           "grundpris": {
-            "daler": 5,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v3",
-          "namn": "Korpnäbb",
-          "beskrivning": "Ett mindre elegant men likafullt effektivt vapen är korpnäbben, också känd som den kandoriska stridshackan efter staden i Alberetor där den först smiddes. Korpnäbben är en stridsklubba vars järnhuvud försetts med en spik eller näbb av stål, för att bättre slå genom rustningar. Kandorias stridshackesmeder slog sig efter flytten till Yndaros ner i stadsdelen Gamla Kadizar och fortsätter där att ge skäl åt vapnets smeknamn.",
+          "id": "ar14",
+          "namn": "Spinneldräpa",
+          "beskrivning": "spinneldräpa Den artefakt som Elmendra misstog för att vara den så kallade Häxhammaren är i själva verket ingenting mindre än det vapen som storhövding Maiesticar svingade mot och genom Spindelkonungens hjärta. Sedan Angatal Taars död har häxorna hållit det i förvar, i väntan på att nästa fientligt inställda spindelväsen ska dyka upp. Spinneldräpa är oavsett form (se nedan) ett mästartillverkat föremål med kvaliteterna Balanserat, Djupverkande och Precist.",
+          "kvalitet": [
+            "Balanserat",
+            "Djupverkande",
+            "Precist"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
-              "Enhandsvapen"
+              "Artefakt",
+              "Närstridsvapen",
+              "Korta vapen",
+              "Enhandsvapen",
+              "Långa vapen",
+              "Tvåhandsvapen"
             ],
-            "kvalitet": [
-              "Djupverkande"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Fri"
+              ],
+              "Förmåga 3": [
+                "Fri"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Formförändring; Handling: Aktiv\nArtefakten kan omforma sig i enlighet med mästarens vilja, till någon av typerna Korta vapen, Enhandsvapen, Långa vapen eller Tvåhandsvapen. Förändringen tar en runda i anspråk men håller sedan i sig tills mästaren vill något annat. Korruption: 1",
+            "Förmåga 2": "Blodets rening; Handling: Speciell\nMed ett lätt jack eller stick på en egen, blottad kroppsdel kan artefaktens mästare låta Spinneldräpa komma i kontakt med dennes blod och därigenom mildra effekten av gifter – fungerar som ett medelstarkt motgift. Villkor: Fri handling. Korruption: 1T4",
+            "Förmåga 3": "Spindelbane; Handling: Speciell\nOm artefaktens mästare behärskar förmågan Monsterlärd till gesällnivå (specialisering: bestar) och lyckas med ett slag mot Listig gör Spinneldräpa +1T8 i skada mot varelser av familjen Spindlar. Effekten varar hela scenen ut. Villkor: Fri handling. Korruption: 1T6"
           },
           "stat": {
-            "skada": "1T8",
-            "vikt": 1.5
+            "skada": "",
+            "vikt": 1
           },
           "grundpris": {
-            "daler": 5,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
@@ -1188,7 +1517,21 @@
             "typ": [
               "Elixir",
               "Fälla"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Försåtsgillrare",
+                      "Pyroteknik"
+                    ]
+                  },
+                  "varde": "requires_forsatsgillrare_or_pyroteknik",
+                  "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
+                }
+              ]
+            }
           },
           "nivåer": {
             "Novis": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T8 skada; därefter brinner substansen i 1T4 rundor och ger 1T4 skada per runda."
@@ -1209,7 +1552,21 @@
             "typ": [
               "Elixir",
               "Fälla"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Försåtsgillrare",
+                      "Pyroteknik"
+                    ]
+                  },
+                  "varde": "requires_forsatsgillrare_or_pyroteknik",
+                  "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
+                }
+              ]
+            }
           },
           "nivåer": {
             "Gesäll": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T10 skada; därefter brinner substansen i 1T6 rundor och ger 1T6 skada per runda."
@@ -1230,7 +1587,21 @@
             "typ": [
               "Elixir",
               "Fälla"
-            ]
+            ],
+            "regler": {
+              "kraver": [
+                {
+                  "nar": {
+                    "nagon_av_namn": [
+                      "Försåtsgillrare",
+                      "Pyroteknik"
+                    ]
+                  },
+                  "varde": "requires_forsatsgillrare_or_pyroteknik",
+                  "meddelande": "Kräver Försåtsgillrare eller Pyroteknik."
+                }
+              ]
+            }
           },
           "nivåer": {
             "Mästare": "Apteras med Försåtsgillrare eller Pyroteknik. Vid utlöst kastar den brinnande substans på målet. Substansen fortsätter brinna. Att skrapa bort substansen är en stridshandling som kräver lyckat [Kvick←Listig] där Listig motsvarar minmakarens (vanligen 13, −3). Vatten kväver lågorna tills offret lämnar vattnet. Allierade får egna försök att skrapa bort. Explosionen gör 1T12 skada; därefter brinner substansen i 1T8 rundor och ger 1T8 skada per runda."
@@ -1309,7 +1680,7 @@
       ]
     },
     "Fördel": {
-      "antal": 101,
+      "antal": 100,
       "källfiler": [
         "data/fordel.json"
       ],
@@ -1426,15 +1797,78 @@
             "nivå_data": {
               "Novis": {
                 "handling": "Speciell",
-                "skadetyp": "Ingen"
+                "skadetyp": "Ingen",
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "pris_faktor",
+                      "operation": "dividera",
+                      "satt": "ersatt",
+                      "varde": 2,
+                      "nar": {
+                        "foremal": {
+                          "typ": [
+                            "Elixir"
+                          ],
+                          "niva": [
+                            "Novis"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
               },
               "Gesäll": {
                 "handling": "Speciell",
-                "skadetyp": "Ingen"
+                "skadetyp": "Ingen",
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "pris_faktor",
+                      "operation": "dividera",
+                      "satt": "ersatt",
+                      "varde": 2,
+                      "nar": {
+                        "foremal": {
+                          "typ": [
+                            "Elixir"
+                          ],
+                          "niva": [
+                            "Novis",
+                            "Gesäll"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
               },
               "Mästare": {
                 "handling": "Speciell",
-                "skadetyp": "Ingen"
+                "skadetyp": "Ingen",
+                "regler": {
+                  "andrar": [
+                    {
+                      "mal": "pris_faktor",
+                      "operation": "dividera",
+                      "satt": "ersatt",
+                      "varde": 2,
+                      "nar": {
+                        "foremal": {
+                          "typ": [
+                            "Elixir"
+                          ],
+                          "niva": [
+                            "Novis",
+                            "Gesäll",
+                            "Mästare"
+                          ]
+                        }
+                      }
+                    }
+                  ]
+                }
               }
             }
           },
@@ -1595,6 +2029,128 @@
         }
       ]
     },
+    "Kastvapen": {
+      "antal": 10,
+      "källfiler": [
+        "data/artefakter.json",
+        "data/avstandsvapen.json"
+      ],
+      "exempel": [
+        {
+          "id": "ar09",
+          "namn": "Brandskär",
+          "beskrivning": "Kastyxan Brandskär hyser vilda andar av eld och aska vilka låter den flamma upp och också flyga genom luften tillbaka till kastarens hand. Legenderna är märkligt tysta om vapnets ursprung, men det är inte otänkbart att vapnet är den brinnande yxa som sades svingas av monsterjägaren Ksandukha, hon som enligt legenderna dräpte Davokars sista drake. Vapnets huvud glöder och osar svagt och ger +1T4 i skada på alla attacker. Vapnets mästare är märkligt opåverkad av dess hetta och kan hantera det som en vanlig kastyxa. Det eldfängda vapnet söker sig alltid tillbaka till mästaren, om inte denne vill ha det annorlunda. När yxan kastas eller tappas återvänder den till mästarens hand som en fri handling, utan någon kostnad i korruption.",
+          "kvalitet": [
+            "Självfarande"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Enhandsvapen",
+              "Avståndsvapen",
+              "Kastvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Lavakniv; Handling: Aktiv\nNär vapnet kastas glöder yxeggen som bergens brinnande blod och vapnet bränner lätt genom bepansring av alla slag – attacken ignorerar rustning. Korruption: 1T4.",
+            "Förmåga 2": "Eldregn; Handling: Aktiv\nBrandskär slår ut mot en rad fiender i en kedjeattack. Yxan kastas mot en fiende och om det träffar denne flyger vapnet vidare till ett ytterligare mål, och så vidare tills ett anfallsslag misslyckas. Då återvänder vapnet till mästarens hand. Korruption: 1T6."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 0.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar30",
+          "namn": "Loravanas Kastsköld",
+          "beskrivning": "En av det tidiga Symbaroums mest omsjungna hjältar är krigaren Loravana, ledare för Drottning Serala-Han Urels väpnade styrkor. Under hennes befäl kunde drottningens nordliga smårike ta allt större landområden i beslag, och vissa legender utpekar henne därför som det förenade Symbaroums verkliga moder. Om det stämmer skulle det även förklara varför hennes legendariska sköld blev kvar i de symbariska härskarnas ägo.",
+          "kvalitet": [
+            "Självfarande"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Sköld",
+              "Avståndsvapen",
+              "Kastvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Sköldkast; Handling: Aktiv\nOm den som har bundit sig till Loravanas kastsköld behärskar förmågan Stålkast kan artefakten slungas som ett kastvapen med 1T8 i skada. Skölden återvänder dessutom Passivt till mästarens arm, redo att användas för pareringar direkt efter kastet. Korruption: 1.",
+            "Förmåga 2": "Kraftstöt; Handling: Reaktiv\nOm sköldens mästare behärskar förmågan Sköldkamp till minst gesällnivå kan denne lägga extra kraft bakom sina sköldstötar. En kraftstöt ökar manöverns skada till 1T8 och ger +5 på Stark i försöket att slå fienden till backen. Korruption: 1T4."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 0.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar48",
+          "namn": "Girakosh Cirkelstål",
+          "beskrivning": "Ett runristat cirkelvapen av skarpt stål som enligt ryktet en gång bars av en hjälte uppfostrad bland troll. Föremålet florerar i norra gränstrakter och sägs vara igenkänt av trollen; en bärare kan behöva förhandla eller visa gott uppsåt. Den som binder artefakten kan även använda den i närstrid likt en dolk, annars är det ett kastvapen. Beskrivningen undviker ursprungsplatser och olycksbådande detaljer som hör till spelledarens verktyg, och fokuserar på reglerna för bruk.",
+          "kvalitet": [
+            "Självfarande"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Korta vapen",
+              "Avståndsvapen",
+              "Kastvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Fri"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Återvändo; Handling: Speciell\nDet kastade cirkelstålet återvänder till mästarens hand, oavsett om det träffar sitt mål eller ej. Om mästaren är kapabel att kasta flera stål per runda kan Kaststålet återvända så många gånger som det behövs. Villkor: Fri handling. Korruption: Inget",
+            "Förmåga 2": "Stålregn; Handling: Aktiv\nEn mästare med förmågan Stålkast kan släppa iväg cirkelstålet på en virvlande färd över slagfältet, sicksackande mellan allierade i jakt på fiendekött. Kraften gör attacken till en kedja av anfall (se sida 130 i Grundboken för förklaring av termen Kedja) mot de fiender som mästaren ser. Stålcirkeln återvänder till kastarens hand efter anfallet. Korruption: 1T4"
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 1.0
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        }
+      ]
+    },
     "Kläder": {
       "antal": 20,
       "källfiler": [
@@ -1658,76 +2214,121 @@
       ]
     },
     "Korta vapen": {
-      "antal": 5,
+      "antal": 11,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json",
+        "data/narstridsvapen.json"
       ],
       "exempel": [
         {
-          "id": "v5",
-          "namn": "Korta vapen",
-          "beskrivning": "Lätta vapen består av korta klingor som är snabba att dra och lätta att dölja. Exempel på korta vapen är dolk och kortsvärd.",
+          "id": "ar14",
+          "namn": "Spinneldräpa",
+          "beskrivning": "spinneldräpa Den artefakt som Elmendra misstog för att vara den så kallade Häxhammaren är i själva verket ingenting mindre än det vapen som storhövding Maiesticar svingade mot och genom Spindelkonungens hjärta. Sedan Angatal Taars död har häxorna hållit det i förvar, i väntan på att nästa fientligt inställda spindelväsen ska dyka upp. Spinneldräpa är oavsett form (se nedan) ett mästartillverkat föremål med kvaliteterna Balanserat, Djupverkande och Precist.",
+          "kvalitet": [
+            "Balanserat",
+            "Djupverkande",
+            "Precist"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
-              "Korta vapen"
+              "Artefakt",
+              "Närstridsvapen",
+              "Korta vapen",
+              "Enhandsvapen",
+              "Långa vapen",
+              "Tvåhandsvapen"
             ],
-            "kvalitet": [
-              "Kort"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Fri"
+              ],
+              "Förmåga 3": [
+                "Fri"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Formförändring; Handling: Aktiv\nArtefakten kan omforma sig i enlighet med mästarens vilja, till någon av typerna Korta vapen, Enhandsvapen, Långa vapen eller Tvåhandsvapen. Förändringen tar en runda i anspråk men håller sedan i sig tills mästaren vill något annat. Korruption: 1",
+            "Förmåga 2": "Blodets rening; Handling: Speciell\nMed ett lätt jack eller stick på en egen, blottad kroppsdel kan artefaktens mästare låta Spinneldräpa komma i kontakt med dennes blod och därigenom mildra effekten av gifter – fungerar som ett medelstarkt motgift. Villkor: Fri handling. Korruption: 1T4",
+            "Förmåga 3": "Spindelbane; Handling: Speciell\nOm artefaktens mästare behärskar förmågan Monsterlärd till gesällnivå (specialisering: bestar) och lyckas med ett slag mot Listig gör Spinneldräpa +1T8 i skada mot varelser av familjen Spindlar. Effekten varar hela scenen ut. Villkor: Fri handling. Korruption: 1T6"
           },
           "stat": {
-            "skada": "1T6",
-            "vikt": 1.0
+            "skada": "",
+            "vikt": 1
           },
           "grundpris": {
             "daler": 0,
-            "skilling": 2,
-            "örtegar": 0
-          }
-        },
-        {
-          "id": "v6",
-          "namn": "Parerdolk",
-          "beskrivning": "I Yndaros har parerdolken med sin breda och v-formade parerstång blivit populär, gärna tillsammans med ett duellsvärd.",
-          "taggar": {
-            "typ": [
-              "Vapen",
-              "Korta vapen"
-            ],
-            "kvalitet": [
-              "Balanserad"
-            ]
-          },
-          "stat": {
-            "skada": "1T6",
-            "vikt": 1.0
-          },
-          "grundpris": {
-            "daler": 1,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v7",
-          "namn": "Stylett",
-          "beskrivning": "Den slanka och smidiga styletten är en dolk vars sylvassa spets tränger djupt – en lönnmördares vapen.",
+          "id": "ar21",
+          "namn": "Dolken Svartegg",
+          "beskrivning": "Dolken Svartegg\nDen krökta dolken Svartegg omtalas i legenderna som tillhörande förrädaren Arbusal, en häxa som lät sig korrumperas och skapade vapnet i syfte att lönnmörda sin härskare – storhövdingen Maiesticar. Mordförsöket misslyckades och Arbusal begravdes med vapnet kört genom sitt hjärta.",
+          "kvalitet": [],
           "taggar": {
             "typ": [
-              "Vapen",
+              "Artefakt",
+              "Närstridsvapen",
               "Korta vapen"
             ],
-            "kvalitet": [
-              "Djupverkande"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Utmatta; Handling: Reaktiv\nDen som har bundit dolken till sig kan använda den för att försvaga sina motståndare. När vapnet ger skada kan bäraren aktivera en effekt som gör att offret inte får använda några av sina förmågor under innevarande och följande runda. Korruption: 1T4",
+            "Förmåga 2": "Paralysera; Handling: Reaktiv\nSom Utmatta men offret blir istället helt handlingsförlamat under innevarande och följande runda. Korruption: 1T6"
           },
           "stat": {
-            "skada": "1T6",
+            "skada": "",
+            "vikt": 1
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar40",
+          "namn": "Ashikis Tvillingdolkar",
+          "beskrivning": "Ashiki var en omtalad bortbyting som växte upp i Lindaros slum och tog över ett av gängen där med en blandning av list och våld. Efter att hon förråtts av sina närmaste tog hon sig rollen som bestraffare av Lindaros kriminella, och svepte genom staden i en veritabel mordfest. Festen fick sitt slut när Ashiki gav sig på samhällets toppskick i jakten på rövare och tjuvar. Då jagades hon intensivt och fångades slutligen in och avrättades offentligt. Hennes dolkar försvann, och ingen vet var de är nu.",
+          "kvalitet": [],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Korta vapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Skuggans gåva; Handling: Reaktiv\nNär någon av dolkarna används tillsammans med förmågan Lönnstöt får användaren slå den extra skadetärningen två gånger och ta det bästa utfallet. Korruption: 1 per användande.",
+            "Förmåga 2": "Två leka bäst; Handling: Aktiv\nMed båda tvillingdolkarna i händerna på någon med förmågan Tvillingattack kan ett veritabelt regn av hugg utlösas, där den ena tvillingdolken hugger efter den andra, i strävan att överträffa varandra inom syskonparet. Användaren av tvillingdolkarna kan fortsätta hugga mot ett enskilt mål tills ett hugg missar eller offret dött av sina många sår. Den som lyssnar noga kan höra hur dolkarna väser av förtjusning och tävlingslusta när syskonrivaliteten pågår. Korruption: 1T4."
+          },
+          "stat": {
+            "skada": "",
             "vikt": 1.0
           },
           "grundpris": {
-            "daler": 1,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
@@ -1797,7 +2398,7 @@
       ]
     },
     "Kvalitet": {
-      "antal": 58,
+      "antal": 62,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",
@@ -1886,6 +2487,27 @@
                   },
                   "duplicate_policy": "confirm"
                 }
+              ],
+              "kraver": [
+                {
+                  "namn": [
+                    "Ordensmagiker"
+                  ],
+                  "meddelande": "Krav: Ordensmagiker",
+                  "else": {
+                    "pengar_multiplikator": 10
+                  }
+                },
+                {
+                  "namn": [
+                    "Ordensmagi"
+                  ],
+                  "nivå_minst": "Novis",
+                  "meddelande": "Krav: Ordensmagi >= Novis",
+                  "else": {
+                    "pengar_multiplikator": 10
+                  }
+                }
               ]
             }
           },
@@ -1951,8 +2573,9 @@
       ]
     },
     "Lätt Rustning": {
-      "antal": 10,
+      "antal": 11,
       "källfiler": [
+        "data/artefakter.json",
         "data/lagre-artefakter.json",
         "data/rustning.json"
       ],
@@ -2026,76 +2649,132 @@
       ]
     },
     "Långa vapen": {
-      "antal": 7,
+      "antal": 15,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json",
+        "data/lagre-artefakter.json",
+        "data/narstridsvapen.json"
       ],
       "exempel": [
         {
-          "id": "v8",
-          "namn": "Långa vapen",
-          "beskrivning": "Långa vapen har räckvidd som fördel och ger användaren ett frislag mot fiender som inte har långa vapen. Ett långt vapen kan användas i en hand, men förlorar då kvaliteten Långt eftersom användaren tvingas hålla längre fram för att alls kunna kontrollera vapnet. Exempel på långa vapen är spjut och stav.",
+          "id": "ar01",
+          "namn": "Opadias Ormstav",
+          "beskrivning": "Den ormhövdade runstav som nyligen försvann från Ordo Magicas kapitel i Tistla Fäste sägs ha tillhört Opadia, en nu avliden stavmagiker – mäktiga magiker som enligt legenden verkade som livvakter åt den siste symbariske kejsaren. Opadia var bekant med Lasifor Nattbäcka och levde en tid i Tistla Fäste. Hon stupade i strid mot anfallande alver och staven såldes till Ordo Magica, varifrån den alltså har försvunnit.",
+          "kvalitet": [
+            "Trubbigt",
+            "Långt"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
-              "Långa vapen"
+              "Artefakt",
+              "Närstridsvapen",
+              "Långa vapen",
+              "Stav"
             ],
-            "kvalitet": [
-              "Långt"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Stavbett; Handling: Reaktiv\nDen som bundit staven till sig kan låta den bita giftigt vid träff i närstrid. Stavslaget måste orsaka skada för att giftet ska verka. Giftet är medelstarkt och ger 1T6 skada i 1T6 rundor. Korruption: 1T4.",
+            "Förmåga 2": "Bitande fjättrar; Handling: Aktiv\nOm bäraren har förmågan Stångverkan kan staven användas mot ett offer i närstrid som träffas Passivt. Staven slingrar sig runt offret och biter det varje runda. Bäraren måste klara [Viljestark←Stark] varje runda för att greppet ska hållas kvar. Offret får agera men drabbas av en bettattack varje runda, 1T6 i skada. Om skadan penetrerar rustning aktiveras ett gift (1T6 skada i 1T6 rundor). Giftet verkar endast en gång, men betten fortsätter. Om offret kommer loss faller staven till marken och återgår till att vara en runstav. Korruption: 1T6."
           },
           "stat": {
             "skada": "1T8",
             "vikt": 1.5
           },
           "grundpris": {
-            "daler": 3,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v9",
-          "namn": "Hillebard",
-          "beskrivning": "Hillebarden, bland barbarerna känd som pikyxa, har drag av både det långa och det tunga vapnet då det kombinerar en spjutspets med ett yxhuvud. Dess stötar är inte lika snabba som spjutets men dess svepande hugg kan ha en förödande verkan.",
+          "id": "ar14",
+          "namn": "Spinneldräpa",
+          "beskrivning": "spinneldräpa Den artefakt som Elmendra misstog för att vara den så kallade Häxhammaren är i själva verket ingenting mindre än det vapen som storhövding Maiesticar svingade mot och genom Spindelkonungens hjärta. Sedan Angatal Taars död har häxorna hållit det i förvar, i väntan på att nästa fientligt inställda spindelväsen ska dyka upp. Spinneldräpa är oavsett form (se nedan) ett mästartillverkat föremål med kvaliteterna Balanserat, Djupverkande och Precist.",
+          "kvalitet": [
+            "Balanserat",
+            "Djupverkande",
+            "Precist"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
-              "Långa vapen"
+              "Artefakt",
+              "Närstridsvapen",
+              "Korta vapen",
+              "Enhandsvapen",
+              "Långa vapen",
+              "Tvåhandsvapen"
             ],
-            "kvalitet": [
-              "Djupverkande"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Fri"
+              ],
+              "Förmåga 3": [
+                "Fri"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Formförändring; Handling: Aktiv\nArtefakten kan omforma sig i enlighet med mästarens vilja, till någon av typerna Korta vapen, Enhandsvapen, Långa vapen eller Tvåhandsvapen. Förändringen tar en runda i anspråk men håller sedan i sig tills mästaren vill något annat. Korruption: 1",
+            "Förmåga 2": "Blodets rening; Handling: Speciell\nMed ett lätt jack eller stick på en egen, blottad kroppsdel kan artefaktens mästare låta Spinneldräpa komma i kontakt med dennes blod och därigenom mildra effekten av gifter – fungerar som ett medelstarkt motgift. Villkor: Fri handling. Korruption: 1T4",
+            "Förmåga 3": "Spindelbane; Handling: Speciell\nOm artefaktens mästare behärskar förmågan Monsterlärd till gesällnivå (specialisering: bestar) och lyckas med ett slag mot Listig gör Spinneldräpa +1T8 i skada mot varelser av familjen Spindlar. Effekten varar hela scenen ut. Villkor: Fri handling. Korruption: 1T6"
           },
           "stat": {
-            "skada": "1T8",
-            "vikt": 1.5
+            "skada": "",
+            "vikt": 1
           },
           "grundpris": {
-            "daler": 3,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v10",
-          "namn": "Pik",
-          "beskrivning": "Den ambriska pikens smäckra skaft och eldhärdade stålspets glider mot målet med stor precision.",
+          "id": "ar29",
+          "namn": "Elasaths Drakdråpare",
+          "beskrivning": "Under Symbaroums tidiga år, när drakar ännu jagade rikets människor och boskap, beordrade Kung Eoran-Ald Ornon sina mystiker att tillverka ett vapen värdigt hans främsta drakdödare, Elasath. Krigarfurstinnan tog tacksamt emot gåvan och skred till verket. Enligt vissa skrönor hann hon nedlägga tjugosju fullvuxna drakar innan hon föll offer för Fofar Förgörarens eld. Hur många i hennes jaktlag som fick sätta livet till är det ingen som minns eller bryr sig om. Elasaths Drakdråpare är ett spjut med kvaliteterna Balanserat, Blodsgjutande, Djupverkande och Långt samt med den mystiska kvaliteten Banevapen (reptiler). Dessutom kan följande krafter aktiveras:",
+          "kvalitet": [
+            "Balanserat",
+            "Blodsgjutande",
+            "Djupverkande",
+            "Långt",
+            "Banevapen"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
+              "Artefakt",
+              "Närstridsvapen",
               "Långa vapen"
             ],
-            "kvalitet": [
-              "Precist"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Fri"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Splittra pansar; Handling: Aktiv\nVid en attack mot en reptil kan mästaren välja att slå med spjuthuvudets flatsida och med en lyckad träff utlösa en chockvåg som fortplantar sig genom offrets fjälltäckta skinn. Attacken ger ingen skada, däremot gör den att merparten av fjällen faller till marken. Fjällen växer så småningom tillbaka men under en månads tid är varelsens naturliga Bepansring reducerad till 1. Korruption: 1T4.",
+            "Förmåga 2": "Bryta ormens charm; Handling: Speciell\nMästaren kan som en fri handling svänga spjutet så att det ger upphov till en kraftfull skärande ton. Oljudet bryter genast den paralysering som kommer av det monstruösa särdraget Trollbinda och påverkar alla som befinner sig inom hörhåll. Ingenting hindrar dock de befriade från att trollbindas på nytt. Villkor: Fri handling. Korruption: 1T4."
           },
           "stat": {
-            "skada": "1T8",
+            "skada": "",
             "vikt": 1.5
           },
           "grundpris": {
-            "daler": 3,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
@@ -2353,14 +3032,20 @@
             "regler": {
               "kraver": [
                 {
+                  "namn": [
+                    "Andeform"
+                  ]
+                },
+                {
                   "nar": {
-                    "nagon_av_namn": [
-                      "Vandöd",
-                      "Best"
+                    "ark_trad": [
+                      "Andebesvärjare"
                     ]
                   }
                 }
-              ]
+              ],
+              "kraver_typ_och_entry": "and",
+              "kraver_logik": "or"
             }
           },
           "nivåer": {
@@ -2387,6 +3072,47 @@
               "Mästare": [
                 "Reaktiv"
               ]
+            },
+            "nivå_data": {
+              "Novis": {
+                "regler": {
+                  "kraver": [
+                    {
+                      "namn": [
+                        "Frätande blod"
+                      ],
+                      "nivå_minst": "Novis"
+                    }
+                  ]
+                }
+              },
+              "Gesäll": {
+                "regler": {
+                  "kraver": [
+                    {
+                      "namn": [
+                        "Frätande blod"
+                      ],
+                      "nivå_minst": "Gesäll"
+                    }
+                  ]
+                }
+              },
+              "Mästare": {
+                "regler": {
+                  "kraver": [
+                    {
+                      "namn": [
+                        "Frätande blod"
+                      ],
+                      "nivå_minst": "Mästare"
+                    }
+                  ]
+                }
+              }
+            },
+            "regler": {
+              "kraver_typ_och_entry": "and"
             }
           },
           "nivåer": {
@@ -2578,7 +3304,7 @@
       ]
     },
     "Mystisk kvalitet": {
-      "antal": 28,
+      "antal": 29,
       "källfiler": [
         "data/mystisk-kvalitet.json"
       ],
@@ -2646,7 +3372,9 @@
               "ger": [
                 {
                   "mal": "skydd_permanent_korruption",
-                  "formel": { "bas": "niva" },
+                  "formel": {
+                    "bas": "niva"
+                  },
                   "nar": {
                     "typ": [
                       "Mystisk kraft",
@@ -2731,19 +3459,178 @@
         }
       ]
     },
-    "Obeväpnad attack": {
-      "antal": 2,
+    "Närstridsvapen": {
+      "antal": 68,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json",
+        "data/lagre-artefakter.json",
+        "data/narstridsvapen.json"
       ],
       "exempel": [
+        {
+          "id": "ar01",
+          "namn": "Opadias Ormstav",
+          "beskrivning": "Den ormhövdade runstav som nyligen försvann från Ordo Magicas kapitel i Tistla Fäste sägs ha tillhört Opadia, en nu avliden stavmagiker – mäktiga magiker som enligt legenden verkade som livvakter åt den siste symbariske kejsaren. Opadia var bekant med Lasifor Nattbäcka och levde en tid i Tistla Fäste. Hon stupade i strid mot anfallande alver och staven såldes till Ordo Magica, varifrån den alltså har försvunnit.",
+          "kvalitet": [
+            "Trubbigt",
+            "Långt"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Långa vapen",
+              "Stav"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Stavbett; Handling: Reaktiv\nDen som bundit staven till sig kan låta den bita giftigt vid träff i närstrid. Stavslaget måste orsaka skada för att giftet ska verka. Giftet är medelstarkt och ger 1T6 skada i 1T6 rundor. Korruption: 1T4.",
+            "Förmåga 2": "Bitande fjättrar; Handling: Aktiv\nOm bäraren har förmågan Stångverkan kan staven användas mot ett offer i närstrid som träffas Passivt. Staven slingrar sig runt offret och biter det varje runda. Bäraren måste klara [Viljestark←Stark] varje runda för att greppet ska hållas kvar. Offret får agera men drabbas av en bettattack varje runda, 1T6 i skada. Om skadan penetrerar rustning aktiveras ett gift (1T6 skada i 1T6 rundor). Giftet verkar endast en gång, men betten fortsätter. Om offret kommer loss faller staven till marken och återgår till att vara en runstav. Korruption: 1T6."
+          },
+          "stat": {
+            "skada": "1T8",
+            "vikt": 1.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar05",
+          "namn": "Algsar-Maras Kätting",
+          "beskrivning": "algsar-maras kätting, artefakt Algsar-Mara omnämns såvitt känt bara i en enda strof, tillskriven Aroaleta, och då endast med hänvisning till dennes bakslughet, mordiska sinnelag och ”bitande kätting”. Vem han eller hon var och vad som gör denne förtjänt av omnämnandet är ett lika stort mysterium som frågan om huruvida just denna kätting var hans. Eller hennes. Kättingen med sina tunna men urstarka länkar är nära två meter lång och väger inte mer än ett motsvarande rep. Den tycks vara ingjuten med en hungrande eller rent av svulten makt. Vid sidan om nedanstående krafter kan den svingas som en Långpiska (ledat, snärjande och djupverkande).",
+          "kvalitet": [
+            "Ledat",
+            "Snärjande",
+            "Djupverkande"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Enhandsvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Omslingra; Handling: Aktiv\nDen som har bundit sig till kättingen kan med ett lyckat anfallsslag kasta artefakten mot en fiende som den har Övertag emot. Oavsett hur den kastas snärjer sig kättingen blixtsnabbt kring offret och hindrar dess rörelser totalt under följande runda. Därefter krävs det ett slag mot [10←Stark] varje runda för att vidmakthålla effekten; misslyckas slaget sliter sig fienden fri. Korruption: 1T4.",
+            "Förmåga 2": "Krypande fälla; Handling: Aktiv\nArtefaktens mästare kan placera den som en levande fälla som täcker av ett större område (en palatsruin, en skogsdunge eller området kring en lägerplats). Kättingen kommer Passivt att söka sig till annalkande varelser, undantaget sådana som sedan tidigare har varit i kontakt med den, och snärja sig kring dem som ovan (max två inom närstridsavstånd från varandra). Kättingens rasslande är ljudligt nog för att varsko mästaren även om denne sover [Vaksam]. Korruption: 1T4."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 1.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar08",
+          "namn": "Själaslukaren",
+          "beskrivning": "Stridshammaren Själaslukaren ska enligt legenderna ha skapats i österlandet bortom Ravennerna i syfte att tillfredsställa en anonym krigsherres härsklystnad. Vapnet var illa omtalat redan i Symbaroum om man får tro de krönikor där det omnämns, ofta med påståenden som att det”smiddes i avundsjuka och härdades i missunnsamhet”. Ingen av dess ägare i gamla Symbaroum påstås heller ha gått goda öden till mötes. När Själaslukaren hittas i mausoleet har den en mystisk kraft lagrad från ett tidigare offer: Helig aura (Novis).",
+          "kvalitet": [],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Tvåhandsvapen"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Samma som den lagrade kraften"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Liktjuv; Handling: Reaktiv\nSjälaslukaren kan ”suga åt sig” en mystisk kraft som involverar karaktärsdraget Viljestark från en varelse den dräper och lagra den i sitt runristade huvud. För att det ska hända måste hammaren fälla det dödande slaget och dess mästare måste välja att ersätta den redan lagrade förmågan med en från det nya offret. Korruption: 1T4.",
+            "Förmåga 2": "Parasitens storhet; Handling: Speciell\nVapnets mästare kan använda den mystiska kraft som har lagrats i vapnet, som om den var mästarens egen. Bärarens Viljestark räknas som 15 i sammanhang som har med användningen av den lagrade kraften att göra, dock utan att ha någon inverkan på bärarens korruptionströskel. Villkor: Samma som den lagrade kraften. Korruption: 1T4."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 2
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        }
+      ]
+    },
+    "Obeväpnad attack": {
+      "antal": 3,
+      "källfiler": [
+        "data/artefakter.json",
+        "data/narstridsvapen.json"
+      ],
+      "exempel": [
+        {
+          "id": "ar26",
+          "namn": "Yaregos Järnnäve",
+          "beskrivning": "Det föremål som kallas Yaregos järnnäve omtalas i dussintals sägner om det tidiga Symbaroum och dess stridigheter, tillhörande olika ägare på olika platser. Artefakten är sannerligen ett under av mystisk konstfärdighet men ställer också stora krav på den som binder den till sig – dennes arm måste nämligen kapas strax under armbågen så att artefakten kan låtas växa samman med stumpen. Väl på plats duger den klumpiga tingesten just så pass till att utföra vardagliga sysslor som att greppa en matkniv, men dess grepp tillåter inte användningen av något slags vapen. Den underarmslånga Järnnäven är som namnet antyder tillverkad av järn som med tiden har drabbats av osköna rostfläckar och otaliga skåror efter parerade hugg. I strid skjuter decimeterlånga pikar ut ur knogarna samtidigt som en krage av järn fälls ut nära armbågen, att användas som parerstång. Tillsammans med sin tyngd ger detta Järnnäven permanent +1 på både försvarsslag och i skada. Därutöver har artefakten följande förmågor:",
+          "kvalitet": [],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Obeväpnad attack"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
+              ],
+              "Förmåga 3": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Omtöckna; Handling: Reaktiv\nVid en träff som ger skada efter avdragen bepansring kan järnnäven omtöckna motståndaren. Kraften kan användas en gång per scen och kräver att bäraren slår ett slag mot [Stark←Viljestark]. Lyckas slaget förlorar motståndaren sina två nästkommande handlingar. Korruption: 1",
+            "Förmåga 2": "Stöt; Handling: Reaktiv\nVid en träff som ger skada efter avdragen bepansring kan järnnäven en gång per scen ge motståndaren en extra stöt. Stöten knuffar omkull motståndaren om bäraren lyckas med ett slag mot [Stark←Stark]. Korruption: 1T4",
+            "Förmåga 3": "Bryta; Handling: Aktiv\nEn gång varje runda kan järnnävens bärare välja att försöka attackera en motståndares vapen istället för personen i fråga. Det krävs först ett lyckat anfallsslag för att greppa tag om vapnet, därefter måste bäraren lyckas med ett slag mot Stark för vapnet ska brytas sönder. Ett vapen som räknas som magiskt (dvs. är en artefakt som kan bindas till en ägare) går inte att förstöra på detta sätt – i sådana fall blir fienden avväpnad. Korruption: 1T4"
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 2
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
         {
           "id": "v12",
           "namn": "Obeväpnad attack",
           "beskrivning": "Obeväpnade attacker används vanligen som desperata kulturvarelsers sista utväg och de är i alla hänseenden mindre effektiva än rovbestars och styggelsers naturliga vapen. Tillsammans med förmågan Naturlig krigare kan dock även en obeväpnad rollperson tillfoga sina fiender ansenlig skada. Exempel på obeväpnade attacker omfattar armbåge, bett, knytnäve, skallning, knogjärn och spark.",
           "taggar": {
             "typ": [
-              "Vapen",
+              "Närstridsvapen",
               "Obeväpnad attack"
             ],
             "kvalitet": [
@@ -2766,7 +3653,7 @@
           "beskrivning": "Kariterna i Davokar har utvecklat en stridsklo som träs på handen och vars långa blad simulerar marakattens klor.",
           "taggar": {
             "typ": [
-              "Vapen",
+              "Närstridsvapen",
               "Obeväpnad attack"
             ],
             "kvalitet": [
@@ -2788,7 +3675,7 @@
     "Pil/Lod": {
       "antal": 10,
       "källfiler": [
-        "data/vapen.json"
+        "data/avstandsvapen.json"
       ],
       "exempel": [
         {
@@ -2797,8 +3684,8 @@
           "beskrivning": "En vanlig pil eller ett lod som används till båge eller armborst. Standardprojektil utan särskilda kvaliteter.",
           "taggar": {
             "typ": [
-              "Pil/Lod",
-              "Projektilvapen"
+              "Avståndsvapen",
+              "Pil/Lod"
             ]
           },
           "stat": {
@@ -2816,8 +3703,8 @@
           "beskrivning": "En pil (eller ett lod) som är särskilt välbalanserad för en rakare bana mot målet. Projektilen besitter kvaliteten Precist.",
           "taggar": {
             "typ": [
-              "Pil/Lod",
-              "Projektilvapen"
+              "Avståndsvapen",
+              "Pil/Lod"
             ],
             "kvalitet": [
               "Precist"
@@ -2838,8 +3725,8 @@
           "beskrivning": "Projektil med ett brandstycke invid spetsen. Används oftast för att sätta eld på målet, må det vara en levande varelse, byggnader eller terräng, se kvaliteten Brinnande.",
           "taggar": {
             "typ": [
-              "Pil/Lod",
-              "Projektilvapen"
+              "Avståndsvapen",
+              "Pil/Lod"
             ],
             "kvalitet": [
               "Brinnande"
@@ -2856,51 +3743,81 @@
         }
       ]
     },
-    "Projektilvapen": {
-      "antal": 26,
+    "Pilbåge": {
+      "antal": 6,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json",
+        "data/avstandsvapen.json"
       ],
       "exempel": [
         {
-          "id": "v21",
-          "namn": "Armborst",
-          "beskrivning": "Ett mekaniskt vapen som avfyrar lod med stor kraft.",
+          "id": "ar50",
+          "namn": "Hagmandaras Hämndbåge",
+          "beskrivning": "En båge som tänder projektiler mot korrumperade mål och används bäst av en bärare utan styggelsemärken; annars fungerar den som en vanlig pilbåge.",
+          "kvalitet": [],
           "taggar": {
             "typ": [
-              "Vapen",
-              "Projektilvapen"
-            ]
+              "Artefakt",
+              "Avståndsvapen",
+              "Pilbåge"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Gnista i mörkret; Handling: Reaktiv\nVapnets mästare kan ingjuta sitt korruptionshat i projektilerna och sända dem brinnande mot korrumperade varelser. En varelse som träffas av pilen måste slå över sin korruption med 1T6, om slaget misslyckas tar varelsen omedelbart så mycket extra skada som tärningen visade. Rustning skyddar inte mot denna extra skada men kan såklart göra det mot pilen. Notera att den extra skadan drabbar offret även om själva pilen inte trängde genom rustning; pilens brännande ljus gör det oavsett. Korruption: 1 per pil",
+            "Förmåga 2": "Glödande fjättrar; Handling: Reaktiv\nI handen på en mästare med förmågan Prickskytt kan pilarna förutom att göra extra skada (se Gnista i mörkret) också binda genomkorrumperade varelser. En genomkorrumperad varelse som träffas av pilen måste klara ett Viljestark eller fångas i kedjor av eld och inte kunna röra sig eller attackera under en runda; den kan dock använda mystiska krafter och särdrag. Korruption: 1T4 per pil, inklusive effekten av Gnista i mörkret."
           },
           "stat": {
-            "skada": "1T10",
-            "vikt": 2.0
+            "skada": "",
+            "vikt": 1.5
           },
           "grundpris": {
-            "daler": 8,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v22",
-          "namn": "Arbalest",
-          "beskrivning": "Arbalest är ett tungt ambriskt armborst med båge av fjäderstål vilket ger dess lod extra kraft.",
+          "id": "art101",
+          "namn": "Stormbågen Ivelios",
+          "beskrivning": "En båge snidad ur en gren från ett träd som träffats av blixten men vägrat brinna. Träet är svartnat och ådrat med silver som sprakar svagt vid beröring. Den sägs ha tillhört Ivelios, en alvisk väktare som svor att aldrig låta en inkräktare undkomma levande. Pilar som skjuts från bågen tycks styras av osynliga vindar och kan vid behov förvandlas till ren åska.",
+          "kvalitet": [
+            "Djupverkande",
+            "Precist",
+            "Vindkraft"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
-              "Projektilvapen"
+              "Artefakt",
+              "Avståndsvapen",
+              "Pilbåge"
             ],
-            "kvalitet": [
-              "Djupverkande"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Passiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Örnöga; Handling: Passiv\n Bågen kan med ett lyckat slag mot Träffsäker ignorera alla negativa modifikationer för avstånd och skymmande terräng eller skydd (dock ej totalt skydd). Pilarna flyger rakt och sant genom lövverk, stridsvimme och runt hörn. Korruption: 1 per pil.",
+            "Förmåga 2": "Dubbelskott; Handling: Aktiv\nSkytten kan med ett lyckat slag mot Träffsäker avlossa två pilar i en enda rörelse mot samma eller olika mål och slås som vanligt för att träffa. Om båda träffar samma mål räknas skadan ihop som en enskild träff. Korruption: 1T4."
           },
           "stat": {
-            "skada": "1T10",
-            "vikt": 2.0
+            "skada": "1T8",
+            "vikt": 1.0
           },
           "grundpris": {
-            "daler": 8,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
@@ -2911,8 +3828,8 @@
           "beskrivning": "Pilbågen är ett bågvapen som skjuter pilar snabbt.",
           "taggar": {
             "typ": [
-              "Vapen",
-              "Projektilvapen"
+              "Avståndsvapen",
+              "Pilbåge"
             ]
           },
           "stat": {
@@ -2937,7 +3854,7 @@
           "id": "ra1",
           "namn": "Alv",
           "beskrivning": "Davokars alver är inte ett folk i egentlig mening utan faktiskt en helig väktarorden. Orden bestod ursprungligen av alver komna från västerns mer jungfruliga trakter, dit människan ännu inte har nått och där alvernas högkultur frodas.\n\nDenna orden – av människor känd som Järnpakten – har som uppdrag att förhindra att den ondska som ruvar under Davokars rötter och mossa vaknar igen och sprids i världen.\n\nHuvuddelen av alverna i Davokar är födda in i pakten och har aldrig varit västerut och kommer aldrig att komma dit; för dem är och förblir västerns alvmarker blott en dröm som aldrig kommer att gå i uppfyllelse. De får redan i späda år höra att deras plikt är här och att de inte är välkomna västerut.\n\nDe är besmutsade av Davokars mörker och som smittbärare kommer de inte att släppas in i alvernas andra riken. Järnpakten har till och med utvecklat en ceremoni, en initiationsrit för unga alver, där de äldste – ledda av alvfursten Eneánor – gråtande ber nyvakna sommaralver om ursäkt för att de tvingats födas, leva och dö i dödsskuggans skog, Davokar.\n\nAlvernas läge i Davokar är utsatt, deras antal tynande och deras en gång så starka ledare Furst Eneánor är på väg mot sin själs vinter. Furstens tilltagande oberäknelighet lämnar utrymme för andra oeniga ledare att positionera sig för den stundande maktkampen.\n\nTvistefrågan gäller hur striden mot mörkret ska föras; om det främst är med pilar och spjut eller genom byggandet av allianser.\n\nDe vårystra älvor som vaknar upp efter sin första dvala träder in i sommaralvens livsfas och det är dessa som utgör stommen i Davokars spetsörade väktarkår: vaksamma jägare rustade med spjut och pilbågar. Många av dem kommer att stupa i strider mot styggelser eller mot tabubrytare bland de alltmer oförsiktiga människorna från söder.\n\nDe som inte faller i strid når sin andra dvala och även den möts med sammanbitna miner; endast ett fåtal alver vaknar upp ur sin andra dvala, medan merparten tynar bort innan de når nästkommande livsfas.\n\nJärnpaktens fästen och skogsslott i Davokar ekar av sorgsna stämmors sång, vemodigt klagande över de fallna och borttynade. Alverna blir färre; inte ens utökat bortbytande kan fylla luckorna i deras led med alvtagna människor.\n\nEtt glädjeämne är att fler och fler människor frivilligt börjar sluta sig till Järnpakten och optimisterna bland alverna framhåller att det till och med finns ambrier bland dessa.\n\n",
-          "extra": "**Alviska särdrag, fördelar och nackdelar:** Alviska rollpersoner har särdraget Långlivad. De flesta har dessutom nackdelen Paria, då alver är illa sedda av de flesta människor; ambrier ser dem med avsky och även barbarer är rädda för dem. Många alver har också särdraget Eonernas visdom, vilket införskaffas som andra förmågor.\nAlver som så önskar kan uppträda som bortbytingar, vanligen genom att byta kläder till människoskapade sådana samt imitera mänskliga manér. En person med Lärd till minst gesällnivå kan genomskåda en sådan förklädnad med ett lyckat Listig; en alv som igenkänns som sådan bland människor drabbas av nackdelen Paria.\n\n**Alviska namn:** Vår- och sommaralver ges alla dubbelnamn som följer med individen genom den första dvalan; namn som anspelar på deras karaktär och/eller på förhoppningar om vad denne ska bli under sin krafts dagar. Merparten av de som överlever sin andra dvala väljer att kapa bort en del av sitt namn eller att helt byta, men inte alla. Valet är upp till individen och handlar oftast mer om smak och stil än om någon egentlig funktion. Alvnamn innehåller ofta fler vokaler än konsonanter och bokstaven ”x” är ovanlig, liksom att ett namn har två konsonanter i rad.\n\n**Alviska äventyrare:** Rollpersoner av alvisk härkomst utgörs lämpligen av sommaralver, den andra fasen i den alviska livscykeln. Äldre alver är möjliga att spela, men höstalver passar bättre i kampanjer där övriga rollpersoner är mycket mäktiga, då dessa väsen överskuggar de flesta människor i fråga om personlig makt och insikt i världens djupare mysterier. Alver som rör sig bland människor är mycket ovanliga och har troligen ett starkt motiv för sitt äventyrande.\n\n**Alliansbyggare:** Alven har skickats ut för att bygga relationer till en grupp människor och försöker lära dem om skogens värde och faran med att utforska för ivrigt. Uppdraget kan vara självpåtaget men är mer troligt en order given av en överordnad höstalv.\n\n**Spanare:** Alven är utsänd som kunskapare, för att värdera fiendens styrkor och svagheter inför den strid som med säkerhet kommer. Uppdragsgivare är troligtvis en äldre alv, antingen krigiskt eller diplomatiskt orienterad.\n\n**Exil:** Alver som allvarligt bryter mot gruppens regler är extremt ovanliga men mindre så i det korrumperande Davokar. Kanske är rollpersonen en av dessa. Alternativt är exilen självpåtagen, som en följd av upplevd brist i lojalitet eller heder.\n\n**Hämndsökare:** Alverna lever, jagar och slåss i små enheter med starka band till varandra. Kanske stupade de andra som följd av ett förräderi, medan rollpersonen överlevde av en slump eller genom någon mindre heroisk handling. Alven återvänder inte hem innan förräderiet är hämnat.\n",
+          "extra": "**Alviska särdrag, fördelar och nackdelar:** Alviska rollpersoner har särdraget Långlivad samt nackdelen Paria, då alver är illa sedda av de flesta människor; ambrier ser dem med avsky och även barbarer är rädda för dem. Många alver har också särdraget Eonernas visdom, vilket införskaffas som andra förmågor.\nAlver som så önskar kan uppträda som bortbytingar, vanligen genom att byta kläder till människoskapade sådana samt imitera mänskliga manér. En person med Lärd till minst gesällnivå kan genomskåda en sådan förklädnad med ett lyckat Listig; en alv som igenkänns som sådan bland människor drabbas av nackdelen Paria.\n\n**Alviska namn:** Vår- och sommaralver ges alla dubbelnamn som följer med individen genom den första dvalan; namn som anspelar på deras karaktär och/eller på förhoppningar om vad denne ska bli under sin krafts dagar. Merparten av de som överlever sin andra dvala väljer att kapa bort en del av sitt namn eller att helt byta, men inte alla. Valet är upp till individen och handlar oftast mer om smak och stil än om någon egentlig funktion. Alvnamn innehåller ofta fler vokaler än konsonanter och bokstaven ”x” är ovanlig, liksom att ett namn har två konsonanter i rad.\n\n**Alviska äventyrare:** Rollpersoner av alvisk härkomst utgörs lämpligen av sommaralver, den andra fasen i den alviska livscykeln. Äldre alver är möjliga att spela, men höstalver passar bättre i kampanjer där övriga rollpersoner är mycket mäktiga, då dessa väsen överskuggar de flesta människor i fråga om personlig makt och insikt i världens djupare mysterier. Alver som rör sig bland människor är mycket ovanliga och har troligen ett starkt motiv för sitt äventyrande.\n\n**Alliansbyggare:** Alven har skickats ut för att bygga relationer till en grupp människor och försöker lära dem om skogens värde och faran med att utforska för ivrigt. Uppdraget kan vara självpåtaget men är mer troligt en order given av en överordnad höstalv.\n\n**Spanare:** Alven är utsänd som kunskapare, för att värdera fiendens styrkor och svagheter inför den strid som med säkerhet kommer. Uppdragsgivare är troligtvis en äldre alv, antingen krigiskt eller diplomatiskt orienterad.\n\n**Exil:** Alver som allvarligt bryter mot gruppens regler är extremt ovanliga men mindre så i det korrumperande Davokar. Kanske är rollpersonen en av dessa. Alternativt är exilen självpåtagen, som en följd av upplevd brist i lojalitet eller heder.\n\n**Hämndsökare:** Alverna lever, jagar och slåss i små enheter med starka band till varandra. Kanske stupade de andra som följd av ett förräderi, medan rollpersonen överlevde av en slump eller genom någon mindre heroisk handling. Alven återvänder inte hem innan förräderiet är hämnat.\n",
           "sardrag": "Långlivad; Paria; många tar Eonernas visdom (kostar som en förmåga).",
           "namn_man": [
             "Alal-Roak",
@@ -2966,15 +3883,18 @@
               "Ras"
             ],
             "regler": {
-              "kraver": [
+              "ger": [
                 {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Ras": 1
-                    }
-                  },
-                  "varde": "single_race",
-                  "meddelande": "Ras: Karaktären kan normalt bara ha en ras."
+                  "mal": "post",
+                  "namn": [
+                    "Långlivad"
+                  ]
+                },
+                {
+                  "mal": "post",
+                  "namn": [
+                    "Paria"
+                  ]
                 }
               ]
             }
@@ -2984,7 +3904,7 @@
           "id": "ra2",
           "namn": "Dvärg",
           "beskrivning": "Det korta, krumma och seniga folk som människorna kallar dvärgar har en historia dold i dunkel. Om man får utgå från Yndaros dvärgar verkar de inte ens själva vara intresserade av sin historia; de är ett folk på väg, med en längtan framåt, på flykt från ett mörkt förflutet som givit dem sammanhållning men varken ro eller mening.\n\nDvärgarnas arv är familjens helighet, språkets hemligheter och den fasta övertygelsen att världen i övrigt är deras fiende. Gamalga av Kadizar, en lärd med intresse för dvärgarna, lär ha beskrivit det som att ”familjen är deras sköld, språket deras vapen och världen deras slagfält”.\n\nGamalga har också vågat sig på att skissera dvärgarnas ursprung. Efter många fruktlösa samtal med Yndaros dvärgar och långa resor till möjligen lika frustrerade möten i fästet Küam Zamok insåg Gamalga att hon fick bättre svar av alver och troll, och att dessa intygade att de inte mött dvärgar innan Symbaroums fall: sannolikt skapades släktet där.\n\nGamalga sammanfattar sina magra fynd om dvärgarnas ursprung så här:\n\n”De föddes som maskar i världsormens ruttnade kött och gavs förstånd av Symbars svartkonstnärer, så att de skulle slava bättre. Men dvärgarnas uralstring knöt dem för evigt till världen och dess öde, och i kraft av denna koppling utvecklade de redan under slaveriets ok en kraftfull motkultur som fortfarande präglar dem.\n\nDvärgarnas urmödrar och anfäder byggde ett språk med dolda koder och hemliga dubbelbetydelser, så snåriga att inte ens mästarna förstod vad slavarna sade. Dvärgarna skrev inget, då sådant som kunde läsas också kunde tolkas och dechiffreras av Symbars furstar.\n\nDvärgarnas drömmar förblev deras egna och deras hemliga språk ekade av världens öde. Både troll och alver intygar att det i vissa dvärgars tungomål finns ödeskraft, och antyder också att deras skapare, Symbaroums herrar, lärde sig att hata sina skapelser och med tiden också fruktade dem och deras kraftord.\n\nEfter Symbaroums fall är dvärgafolkets krönika en mödosam vandring i dödsskuggans dal, ständigt utsatta och jagade av andra folk och väsen. Numera återfinns ättlingarna till de få överlevande flyktingarna från Symbaroums ruiner på flera platser och deras öden är till synes mycket varierande.\n\nKlart är att dvärgarna i Yndaros utgör en tidigare styrande elit från Küam Zamok, utkastade därifrån under en blodig revolution. Det är alltså dvärgiska aristokrater, vana att domdera men inkapabla att själva skapa det allra nödvändigaste, som vi i Yndaros möter som välorganiserade ligister.\n\nMer osäkra uppgifter gör gällande att deras oförmåga att hålla sams har att göra med successionsordningen i det rike de har tvingats fly ifrån, och därmed rätten till en tron de aldrig kommer att få bestiga.”\n\nYndaros dvärgar är de som ambrierna främst möter och dessa låter ingen utomstående komma dem nära. De kräver inget av världen kring dem, annat än att få leva i fred med sina familjer.\n\nJust familjen är dvärgarnas själ och individerna är underordnade familjens vilja – en vilja uttolkad av familjens äldste.\n\nDenna extrema sammanhållning ger dem till synes också två sorters moral: den ena strikt kodad och riktad mot familjen, den andra riktad utåt och av dvärgarnas grannar ofta beskriven som en avsaknad av moral, då handlingar mot utomstående inte räknas i relationerna inom familjen.\n\nEn dvärg är det den gör mot sina meddvärgar, och i någon mån hur dess handlingar utåt påverkar familjen.\n\nDe yndariska dvärgarnas tungomål är ännu i dag så snårigt av svårdechiffrerade koder, listiga dubbelbetydelser och dunkla idiomatiska uttryck att även dagligt tal i stort sett är obegripligt även för de mest kunniga utomstående. Dvärgarnas tungomål rymmer också en märklig ödestyngd, vilket vissa dvärgar vet att nyttja.\n\nDvärgarnas minnestekniska färdigheter är dessutom långt utvecklade – de driver exempelvis komplexa ”affärsrörelser” i Yndaros helt utan nedtecknade siffror – men också den minneskonstens detaljer är dolda bakom dvärgaspråkets höga murar.\n\n",
-          "extra": "**Dvärgiska särdrag, fördelar och nackdelar:**\n Alla rollpersoner av dvärgisk börd har särdraget *Jordnära*, de flesta har även fördelen *Minnesmästare* samt nackdelen *Paria*. Många dvärgar har också den mystiska kraften *Vedergällning*, vilken införskaffas som en förmåga. Just för dvärgar ger denna kraft ingen korruption, varken då den lärs in eller då den används – det gäller enbart för denna kraft och enbart för dvärgar.\n\n**Dvärgars namn:**\nAtt döma av de dvärgar som lever i Yndaros har släktet en förkärlek för hårda namn med många inslag av konsonanter som k, t och r. I övrigt tycks det inte finnas någon skillnad mellan kvinnliga och manliga namn; namnen ärvs inom familjen genom generationer utan hänsyn till kön. Alla dvärgar har även efternamn knutna till sin familj eller ätt, likt Ambrias ädlingar. Yngre dvärgar måste dock förtjäna rätten att använda släktnamnet, företrädesvis genom att göra sina släktingar stolta eller imponerade på något sätt.\n\n**Dvärgiska äventyrare:**\nDvärgar som väljer eller tvingas att lämna sina ätter i Yndaros är ensamma och inte sällan farliga individer. För vissa blir ensamheten starten på sökandet efter en ny familj, definierad på andra sätt än genom blodet och språket. Följande skäl kan driva en dvärgättad rollperson ut i världen:\n\n- **Domedagsdrömmare** – Dvärgen hemsöks av drömmar om domedag och död för sin familj eller för världen i stort. För att utröna drömmarnas sanningshalt, och i bästa fall finna sätt att skydda familjen, lämnar dvärgen gemenskapen och blir en sökare i världen.\n- **Livsskuld** – En utomstående har räddat dvärgens liv utan att kräva något i gengäld. Dvärgen vill återgälda denna handling genom att tjäna livräddaren, vare sig denne vill det eller ej. Detta motiv är allmänt accepterat som anledning att tillfälligt lämna familjen.\n- **Utstött** – Dvärgen har begått illojala handlingar mot sin familj, kanske utmanat familjeöverhuvudet eller ifrågasatt ättens främsta plats i successionsordningen. Straffet blir förvisning, antingen tidsbegränsad eller livslång. För de flesta dvärgar är exil ett straff värre än döden.\n- **Spion** – Dvärgen är i själva verket inte utstött utan spelar rollen för att skaffa hemligheter som familjen behöver. Det kan också handla om ett uppdrag att utföra en olaglig handling, exempelvis att söka efter en rymling som påstår sig ha större rätt till dvärgakronan än rollpersonens familjeöverhuvud.",
+          "extra": "**Dvärgiska särdrag, fördelar och nackdelar:**\n Alla rollpersoner av dvärgisk börd har särdraget *Jordnära, De har även fördelen *Minnesmästare* samt nackdelen *Paria*. Många dvärgar har också den mystiska kraften *Vedergällning*, vilken införskaffas som en förmåga. Just för dvärgar ger denna kraft ingen korruption, varken då den lärs in eller då den används – det gäller enbart för denna kraft och enbart för dvärgar.\n\n**Dvärgars namn:**\nAtt döma av de dvärgar som lever i Yndaros har släktet en förkärlek för hårda namn med många inslag av konsonanter som k, t och r. I övrigt tycks det inte finnas någon skillnad mellan kvinnliga och manliga namn; namnen ärvs inom familjen genom generationer utan hänsyn till kön. Alla dvärgar har även efternamn knutna till sin familj eller ätt, likt Ambrias ädlingar. Yngre dvärgar måste dock förtjäna rätten att använda släktnamnet, företrädesvis genom att göra sina släktingar stolta eller imponerade på något sätt.\n\n**Dvärgiska äventyrare:**\nDvärgar som väljer eller tvingas att lämna sina ätter i Yndaros är ensamma och inte sällan farliga individer. För vissa blir ensamheten starten på sökandet efter en ny familj, definierad på andra sätt än genom blodet och språket. Följande skäl kan driva en dvärgättad rollperson ut i världen:\n\n- **Domedagsdrömmare** – Dvärgen hemsöks av drömmar om domedag och död för sin familj eller för världen i stort. För att utröna drömmarnas sanningshalt, och i bästa fall finna sätt att skydda familjen, lämnar dvärgen gemenskapen och blir en sökare i världen.\n- **Livsskuld** – En utomstående har räddat dvärgens liv utan att kräva något i gengäld. Dvärgen vill återgälda denna handling genom att tjäna livräddaren, vare sig denne vill det eller ej. Detta motiv är allmänt accepterat som anledning att tillfälligt lämna familjen.\n- **Utstött** – Dvärgen har begått illojala handlingar mot sin familj, kanske utmanat familjeöverhuvudet eller ifrågasatt ättens främsta plats i successionsordningen. Straffet blir förvisning, antingen tidsbegränsad eller livslång. För de flesta dvärgar är exil ett straff värre än döden.\n- **Spion** – Dvärgen är i själva verket inte utstött utan spelar rollen för att skaffa hemligheter som familjen behöver. Det kan också handla om ett uppdrag att utföra en olaglig handling, exempelvis att söka efter en rymling som påstår sig ha större rätt till dvärgakronan än rollpersonens familjeöverhuvud.",
           "sardrag": "Alla rollpersoner av dvärgisk börd har särdraget Jordnära, fördelen Minnesmästare samt nackdelen Paria. Många dvärgar har också den mystiska kraften Vedergällning.",
           "namn_man": [
             "Artek",
@@ -3037,6 +3957,27 @@
                       "Vedergällning"
                     ]
                   }
+                },
+                {
+                  "mal": "post",
+                  "namn": [
+                    "Jordnära"
+                  ],
+                  "gratis": true
+                },
+                {
+                  "mal": "post",
+                  "namn": [
+                    "Minnesmästare"
+                  ],
+                  "gratis": true
+                },
+                {
+                  "mal": "post",
+                  "namn": [
+                    "Paria"
+                  ],
+                  "gratis": true
                 }
               ],
               "krockar": [
@@ -3044,17 +3985,6 @@
                   "namn": "Korruptionskänslig",
                   "satt": "ersatt",
                   "varde": "dvarg_korruptionskanslig"
-                }
-              ],
-              "kraver": [
-                {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Ras": 1
-                    }
-                  },
-                  "varde": "single_race",
-                  "meddelande": "Ras: Karaktären kan normalt bara ha en ras."
                 }
               ]
             }
@@ -3064,8 +3994,8 @@
           "id": "ra3",
           "namn": "Troll",
           "beskrivning": "För alla ambrier och de flesta barbarer är troll synonymt med blodig död. Vissa häxor och enstaka ambriska lärde vet bättre och hävdar att det finns ett stort mått av sanning i barbarernas sagor om trollriken under mark, där trollen håller hov och mäktiga sånger framförs i salar prydda med sköna ting frambringade av trollens grova händer.\n\nÄven de som medger att trollen har en civilisation erkänner dock att troll ovan jord är farliga: troll ger sig inte upp till markytan utan bra skäl därtill, och dessa skäl är ofta blodiga.\n\nTroll förökar sig inte, den saken sköts av svartalferna. När en svartalf känner dödens andedräkt flåsa dem i nacken söker de sig ner i Davokars underjord.\n\nDär faller de ihop och en kokongliknande vävnad växer ut ur deras kroppar för att så småningom omsluta dem helt. Många dör under dvalan men det fåtal som överlever utvecklas till de bestlika varelser som ambrierna kallar rovtroll.\n\nNågra av dessa har redan som kokonger hittats av andra troll och förts till något rike där de genast tas omhand; merparten kravlar sig dock upp till markytan, nakna och glupande hungriga, redo att äta sig mätta på vadhelst som kommer i deras väg.\n\nÄven vissa av de senare fångas upp av trollens härskare – härskare som antingen sveper dem i klädnader och uppfostrar dem till civiliserade troll, eller som piskar dem till lydnad och till att bli frontsoldater i deras rövarband på markytan.\n\nTrollens civilisation är inte heller densamma som mänsklighetens motsvarighet. Ett trolls värde bestäms av vad individen kan tillföra sitt samhälle, vare sig det är krigarens beskydd, hantverkarens vackra ting eller skaldens sånger.\n\nDe mest drivna och fysiskt potenta trollen mäktar med att karva sig en nisch bland de ledande och tar plats i härskarnas kast – en plats de behåller endast så länge som de med klor och ränker förmår behålla den. Trollen utmanar rutinmässigt varandra till kamp som en del i det sociala spelet.\n\nKampen är ofta fysisk men kan lika gärna handla om vem som kan sjunga längst eller vem som kan skapa den mäktigaste artefakten. De fysiska kamperna är dock mest frekventa och trots att dessa strider är rituella är de inte helt utan dödlig utgång, även om det inte är målet.\n\nFostran genom fysiska och andliga utmaningar är djupt förankrad i trollens kultur och det ses som grundläggande att odla styrka på både ett personligt och ett kulturellt plan. Tvekamp anses vara det enda sättet att nå denna härdning av kropp och släkte.\n\nEtt talesätt bland trollen som fångar detta lyder: ”Om jag knäcker dig blir vårt folk svagare; om jag låter dig komma undan blir du svagare.”\n\nKapitelmästare Argoi vid Kurun-kapitlet har sammanfattat det på följande sätt: ”Trollens fysisk-moraliska livsstil får ett särskilt blodigt uttryck i mötet med andra folkslag, då det i sådana möten inte längre finns kulturbevarande skäl för trollen att visa nåd.\n\nDenna råa slaktarkultur blir tvärt om värre om fienden kapitulerar eller visar någon form av svaghet inför anfallaren, då detta för trollen väcker en särskild sorts avsky. En fiende som visar stridsvilja och mod förtjänar trots allt att respekteras och kan därmed skonas utifrån trollens logik.”\n\n",
-          "extra": "**Trollens särdrag, fördelar och nackdelar:** Trollättade rollpersoner kan köpa de monstruösa särdragen **Naturligt vapen**, **Pansar**, **Regeneration** och **Robust** som om de vore vanliga förmågor. Troll bär dessutom oftast nackdelen Paria eftersom människor fruktar dem.\n\n**Förklädnad som resa:** Ett troll kan försöka uppträda som resa genom att kapa hornen, byta till människotillverkade kläder och efterlikna resars sävliga rörelsemönster. En person med **Lärd** på minst gesällnivå kan avslöja förklädnaden med ett lyckat **Listig**-slag. Resar har också oftast nackdelen **Paria**, men människor betraktar dem oftast som ofarliga. Om ett troll avslöjas väcker det däremot ofta panik; stadsbor larmar väktare och kallar på trolldräpare.\n\n**Trollens namn:** Släktet gör ingen könsskillnad vid namnval. Varje troll får det namn det förtjänar och kan byta det flera gånger under livet beroende på erfarenheter. Namn skiljer sig mellan yngre och äldre: bokstaven ”x” återfinns ofta i de mäktiga och äldre trollens namn.\n\n**Troll som äventyrare:** Troll är starkt bundna till sina samhällen och behöver mer än vanlig nyfikenhet för att färdas ensamma. Vanliga drivkrafter är:\n- **Artefaktsamlare** – Trollens berömda hantverkskonst har spritt deras skapelser vida omkring, ibland som gåvor, ibland som krigsbyten. Rollpersonen är utsänd för att återbörda sådana trollskapade ting från gravar, symbariska ruiner eller ur ovärdiga tjuvars (ännu en tid) levande händer.\n- **Bildningsresa** – Unga troll ger sig ut på färd innan de tar en fast roll i samhället. Målet är att förstå omvärlden och de krafter som formar den. Tidigare gick resorna oftast till närmaste järnpaktsnäste; numera lockar mötet med människor, särskilt de nyanlända ambrierna, minst lika mycket.",
-          "sardrag": "Rollpersoner av trollätt kan köpa Naturligt vapen, Pansar, Regeneration, Robust som vanliga förmågor. De flesta Troll har nackdelen Paria.",
+          "extra": "**Trollens särdrag, fördelar och nackdelar:** Trollättade rollpersoner kan köpa de monstruösa särdragen **Naturligt vapen**, **Pansar**, **Regeneration** och **Robust** som om de vore vanliga förmågor. Troll har dessutom nackdelen Paria eftersom människor fruktar dem.\n\n**Förklädnad som resa:** Ett troll kan försöka uppträda som resa genom att kapa hornen, byta till människotillverkade kläder och efterlikna resars sävliga rörelsemönster. En person med **Lärd** på minst gesällnivå kan avslöja förklädnaden med ett lyckat **Listig**-slag. Resar har också oftast nackdelen **Paria**, men människor betraktar dem oftast som ofarliga. Om ett troll avslöjas väcker det däremot ofta panik; stadsbor larmar väktare och kallar på trolldräpare.\n\n**Trollens namn:** Släktet gör ingen könsskillnad vid namnval. Varje troll får det namn det förtjänar och kan byta det flera gånger under livet beroende på erfarenheter. Namn skiljer sig mellan yngre och äldre: bokstaven ”x” återfinns ofta i de mäktiga och äldre trollens namn.\n\n**Troll som äventyrare:** Troll är starkt bundna till sina samhällen och behöver mer än vanlig nyfikenhet för att färdas ensamma. Vanliga drivkrafter är:\n- **Artefaktsamlare** – Trollens berömda hantverkskonst har spritt deras skapelser vida omkring, ibland som gåvor, ibland som krigsbyten. Rollpersonen är utsänd för att återbörda sådana trollskapade ting från gravar, symbariska ruiner eller ur ovärdiga tjuvars (ännu en tid) levande händer.\n- **Bildningsresa** – Unga troll ger sig ut på färd innan de tar en fast roll i samhället. Målet är att förstå omvärlden och de krafter som formar den. Tidigare gick resorna oftast till närmaste järnpaktsnäste; numera lockar mötet med människor, särskilt de nyanlända ambrierna, minst lika mycket.",
+          "sardrag": "Rollpersoner av trollätt kan köpa Naturligt vapen, Pansar, Regeneration, Robust som vanliga förmågor. Troll har nackdelen Paria då de är illa ansedda av människor.",
           "namn_man": [
             "Aka",
             "Aroha",
@@ -3107,15 +4037,13 @@
               "Ras"
             ],
             "regler": {
-              "kraver": [
+              "ger": [
                 {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Ras": 1
-                    }
-                  },
-                  "varde": "single_race",
-                  "meddelande": "Ras: Karaktären kan normalt bara ha en ras."
+                  "mal": "post",
+                  "namn": [
+                    "Paria"
+                  ],
+                  "gratis": true
                 }
               ]
             }
@@ -3198,8 +4126,9 @@
       ]
     },
     "Rustning": {
-      "antal": 21,
+      "antal": 24,
       "källfiler": [
+        "data/artefakter.json",
         "data/lagre-artefakter.json",
         "data/rustning.json"
       ],
@@ -3273,11 +4202,12 @@
       ]
     },
     "Rustningskvalitet": {
-      "antal": 15,
+      "antal": 18,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",
-        "data/negativ-kvalitet.json"
+        "data/negativ-kvalitet.json",
+        "data/neutral-kvalitet.json"
       ],
       "exempel": [
         {
@@ -3392,92 +4322,123 @@
     "Sköld": {
       "antal": 3,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json"
       ],
       "exempel": [
         {
-          "id": "v14",
-          "namn": "Sköld",
-          "beskrivning": "Sköldar gör det svårt att träffa bäraren med såväl närstrids- som avståndsvapen. De kombineras oftast med ett enhandsvapen, alternativt med enhandsvapen och kastvapen.",
+          "id": "ar10",
+          "namn": "Ellas Trollkors",
+          "beskrivning": "Ellas trollkors Ett trollkors graverat på en plåt av meteoritjärn, smitt av trollhaggan Ella som hjälp mot hennes ärkefiende, den styggelsefödda barbarhärskaren Odalbagar. Antingen hjälpte korset inte trollkonan, eller så stupade trollet i senare strider. Oavsett vilket har hennes skyddstalisman vandrat vidare till andra händer. Trollkorset är av lämplig smyckesstorlek för ett fullvuxet ärketroll och alltså i storlek som en bucklare för en människa. Trollkorset går de facto att använda som just en bucklare, med de regler som grundboken anger (sidan 150). Detta kräver inte heller att rollpersonen binder artefakten till sig. För trollkorsets övriga krafter måste artefakten bindas till bäraren på vanligt vis.",
+          "kvalitet": [
+            "Armfäst"
+          ],
           "taggar": {
             "typ": [
+              "Artefakt",
               "Sköld"
             ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
+              ]
+            },
             "regler": {
               "andrar": [
                 {
                   "mal": "forsvar_modifierare",
-                  "varde": 1
+                  "varde": 1,
+                  "regel_id": "ellas_trollkors_bucklare_forsvar"
                 }
               ]
             }
+          },
+          "nivåer": {
+            "Förmåga 1": "Sinnets sköld; Handling: Reaktiv\nTrollkorsets mästare kan låta Ellas ålderdomliga signerier skydda mot sinnespåverkande krafter. Bäraren får en andra chans att lyckas motstå en kraft som involverar Viljestark. Om kraften verkar över tid får trollkorsets bärare dessutom slå omslag för att bryta en pågående effekt. Detta räknas som ett användande av artefaktens kraft. Korruption: 1.",
+            "Förmåga 2": "Hämnande spegel; Handling: Reaktiv\nBäraren tar stöd i trollsmedens djupaste kunnande för att försöka vända tillbaka anfallande magi mot kastaren. Alla offensiva krafter som inkluderar trollkorsets bärare som måltavla påverkas. Den hämnande speglingen fungerar regeltekniskt som om bäraren av trollkorset attackerade kastaren med kraften i fråga. Om kraften exempelvis kräver ett slag mot Viljestark är det alltså bärarens Viljestark som används för att avgöra om spelgingen lyckas, modifierat av kastarens karaktärsdrag om modifiering ska göras. Speglingen är dock riskfylld. En misslyckad spegling drar ännu mer korruption till bäraren. Korruption: 1T4 om försöket lyckas, 1T6 om det miss lyckas"
           },
           "stat": {
             "skada": "1T4",
             "vikt": 0.5
           },
           "grundpris": {
-            "daler": 3,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v15",
-          "namn": "Bucklare",
-          "beskrivning": "Bucklaren är en liten sköld som vanligen bärs av elitbågskyttar och duellanter. Den fästs på underarmen och ger +1 försvar, samtidigt som handen kan användas till annat, men är för nätt för att användas offensivt, exempelvis tillsammans med förmågan Sköldkamp.",
+          "id": "ar30",
+          "namn": "Loravanas Kastsköld",
+          "beskrivning": "En av det tidiga Symbaroums mest omsjungna hjältar är krigaren Loravana, ledare för Drottning Serala-Han Urels väpnade styrkor. Under hennes befäl kunde drottningens nordliga smårike ta allt större landområden i beslag, och vissa legender utpekar henne därför som det förenade Symbaroums verkliga moder. Om det stämmer skulle det även förklara varför hennes legendariska sköld blev kvar i de symbariska härskarnas ägo.",
+          "kvalitet": [
+            "Självfarande"
+          ],
           "taggar": {
             "typ": [
-              "Sköld"
+              "Artefakt",
+              "Sköld",
+              "Avståndsvapen",
+              "Kastvapen"
             ],
-            "kvalitet": [
-              "Armfäst"
-            ],
-            "regler": {
-              "andrar": [
-                {
-                  "mal": "forsvar_modifierare",
-                  "varde": 1
-                }
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
               ]
             }
           },
+          "nivåer": {
+            "Förmåga 1": "Sköldkast; Handling: Aktiv\nOm den som har bundit sig till Loravanas kastsköld behärskar förmågan Stålkast kan artefakten slungas som ett kastvapen med 1T8 i skada. Skölden återvänder dessutom Passivt till mästarens arm, redo att användas för pareringar direkt efter kastet. Korruption: 1.",
+            "Förmåga 2": "Kraftstöt; Handling: Reaktiv\nOm sköldens mästare behärskar förmågan Sköldkamp till minst gesällnivå kan denne lägga extra kraft bakom sina sköldstötar. En kraftstöt ökar manöverns skada till 1T8 och ger +5 på Stark i försöket att slå fienden till backen. Korruption: 1T4."
+          },
           "stat": {
-            "skada": "1T4",
+            "skada": "",
             "vikt": 0.5
           },
           "grundpris": {
-            "daler": 3,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v16",
-          "namn": "Stålsköld",
-          "beskrivning": "Stålskölden är lika stark som de vanliga träsköldarna men tunnare och mer lättmanövrerad.",
+          "id": "ar52",
+          "namn": "Iloonas Spegelsköld",
+          "beskrivning": "En speglande sköld som enligt myten smiddes av en häxa i samarbete med ett troll. Känd för att vända bort fientlig magi och för att kunna kastas i rätt händer. Sköldens nuvarande hemvist lämnas därhän; texten fokuserar på användning i spel.",
+          "kvalitet": [
+            "Självfarande"
+          ],
           "taggar": {
             "typ": [
-              "Sköld"
+              "Artefakt",
+              "Sköld",
+              "Avståndsvapen",
+              "Kastvapen"
             ],
-            "kvalitet": [
-              "Balanserad"
-            ],
-            "regler": {
-              "andrar": [
-                {
-                  "mal": "forsvar_modifierare",
-                  "varde": 1
-                }
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Reaktiv"
               ]
             }
           },
+          "nivåer": {
+            "Förmåga 1": "Blockera magi; Handling: Reaktiv\nSköldens mästare kan försvara sig mot magiska anfall med den; sköldmästarens Försvar ersätter Viljestark mot sådana angrepp. Korruption: 1T4",
+            "Förmåga 2": "Sköldkast; Handling: Reaktiv\nEn mästare med förmågan Sköldkamp kan en gång per runda kasta skölden som en reaktion för att blockera magi riktad mot en allierad inom synhåll, se sköldens kraft Blockera magi. För en mästare med Sköldkamp på nivån gesäll eller högre kan skölden också kastas för att skada och eventuellt slå omkull en fiende inom synhåll. Detta görs som en reaktion på en egen attack mot en annan fiende som sköldbäraren angriper i närstrid (den attacken sker också, men utan efterföljande sköldstöt). Skölden återvänder alltid till kastarens hand efter kastet. Korruption: 1T6"
+          },
           "stat": {
-            "skada": "1T4",
+            "skada": "",
             "vikt": 0.5
           },
           "grundpris": {
-            "daler": 3,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
@@ -3536,6 +4497,61 @@
             ]
           },
           "effekt": "Täcker skottfält i en riktning för bäraren och en följeslagare."
+        }
+      ]
+    },
+    "Slunga": {
+      "antal": 2,
+      "källfiler": [
+        "data/avstandsvapen.json"
+      ],
+      "exempel": [
+        {
+          "id": "v26",
+          "namn": "Spjutslunga",
+          "beskrivning": "Östra Davokars barbarklaner använder gärna spjutslungor – en kastarm med hake som fäster i änden på ett kort spjut och kastar det med stor kraft.",
+          "taggar": {
+            "typ": [
+              "Avståndsvapen",
+              "Slunga"
+            ],
+            "kvalitet": [
+              "Djupverkande"
+            ]
+          },
+          "stat": {
+            "skada": "1T6",
+            "vikt": 1.0
+          },
+          "grundpris": {
+            "daler": 2,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "v56",
+          "namn": "Alkemiskt eldrör, bärbart",
+          "beskrivning": "Det bärbara alkemiska eldröret är en portabel version av det stationära belägringsvapnet med samma namn. Det bärbara eldröret består av ett gjutet rör som laddas med alkemiska eldämnen, vilka vid antändning förvandlar eldröret till en förödande eldkastare. Eldröret kan svepas och kan träffa alla fiender framför skytten, ett slag slås för varje mål. De som träffas tar full skadetärning i skada och drabbas av eld som pågående effekt. De som lyckas försvara sig tar halv skada och drabbas inte av någon pågående effekt.\nVem som helst kan använda ett bärbart alkemiskt eldrör, men en användare som saknar förmågan Belägringskonst (gesällnivå) riskerar ett katastrofalt förlopp. Se reglerna för Alkemiska vapen på sidan 98 i Spelarens Handbok.\nEtt bärbart alkemiskt eldrör som svingas i närstrid räknas som en kampslägga.",
+          "taggar": {
+            "typ": [
+              "Avståndsvapen",
+              "Slunga"
+            ],
+            "kvalitet": [
+              "Brinnande",
+              "Ytverkande (kon)"
+            ]
+          },
+          "stat": {
+            "skada": "1T12",
+            "vikt": 5.0
+          },
+          "grundpris": {
+            "daler": 10,
+            "skilling": 0,
+            "örtegar": 0
+          }
         }
       ]
     },
@@ -3606,25 +4622,40 @@
       ]
     },
     "Stav": {
-      "antal": 1,
+      "antal": 5,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json",
+        "data/lagre-artefakter.json",
+        "data/narstridsvapen.json"
       ],
       "exempel": [
         {
-          "id": "v11",
-          "namn": "Vandringsstav",
-          "beskrivning": "Den enklare trästaven, inte sällan i tungt trä och härdad nära elden, har de långa vapnens räckvidd men saknar stålspetsade vapnens verkan.",
+          "id": "ar01",
+          "namn": "Opadias Ormstav",
+          "beskrivning": "Den ormhövdade runstav som nyligen försvann från Ordo Magicas kapitel i Tistla Fäste sägs ha tillhört Opadia, en nu avliden stavmagiker – mäktiga magiker som enligt legenden verkade som livvakter åt den siste symbariske kejsaren. Opadia var bekant med Lasifor Nattbäcka och levde en tid i Tistla Fäste. Hon stupade i strid mot anfallande alver och staven såldes till Ordo Magica, varifrån den alltså har försvunnit.",
+          "kvalitet": [
+            "Trubbigt",
+            "Långt"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
+              "Artefakt",
+              "Närstridsvapen",
               "Långa vapen",
               "Stav"
             ],
-            "kvalitet": [
-              "Trubbigt",
-              "Långt"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Stavbett; Handling: Reaktiv\nDen som bundit staven till sig kan låta den bita giftigt vid träff i närstrid. Stavslaget måste orsaka skada för att giftet ska verka. Giftet är medelstarkt och ger 1T6 skada i 1T6 rundor. Korruption: 1T4.",
+            "Förmåga 2": "Bitande fjättrar; Handling: Aktiv\nOm bäraren har förmågan Stångverkan kan staven användas mot ett offer i närstrid som träffas Passivt. Staven slingrar sig runt offret och biter det varje runda. Bäraren måste klara [Viljestark←Stark] varje runda för att greppet ska hållas kvar. Offret får agera men drabbas av en bettattack varje runda, 1T6 i skada. Om skadan penetrerar rustning aktiveras ett gift (1T6 skada i 1T6 rundor). Giftet verkar endast en gång, men betten fortsätter. Om offret kommer loss faller staven till marken och återgår till att vara en runstav. Korruption: 1T6."
           },
           "stat": {
             "skada": "1T8",
@@ -3632,7 +4663,85 @@
           },
           "grundpris": {
             "daler": 0,
-            "skilling": 1,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar68",
+          "namn": "Eroneas Korpklo",
+          "beskrivning": "En hög svart stav av okänt, tungt och kallt material, med silverfärgad spets och vita fjäderprydnader längs skaftet. Korpar och andra fåglar dras till staven och uppträder vänligt mot bäraren.",
+          "kvalitet": [
+            "Trubbigt"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Långa vapen",
+              "Stav"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ],
+              "Förmåga 3": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Djurens välvilja; Handling: Aktiv\nMed ett lyckat [Övertygande←Viljestark] lyder en Best enkla instruktioner. Ett djur i taget; uppgiften måste ligga inom dess naturliga beteende. Fungerar inte på Bestar med Listig > 12. Korruption: 1T4.",
+            "Förmåga 2": "Fåglarnas förbund; Handling: Aktiv\nMed ett lyckat Övertygande blir fåglar i närheten välvilliga under en scen: de flyr inte, attackerar inte bäraren eller allierade och kan hjälpa till med enkla uppgifter som spaning eller födosök. Korruption: 1T4.",
+            "Förmåga 3": "Korpflockens hämnd; Handling: Aktiv\nMed ett lyckat Övertygande frammana en korpsvärm som angriper ett utpekat mål: 1T4 skada per runda, bepansring skyddar ej. Offret får en extra chans att misslyckas på alla framgångsslag under anfallet. Endast ett mål i taget. Effekten avbryts om bäraren tappar koncentrationen och misslyckas med Övertygande. Korruption: 1T6."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 1.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
+            "örtegar": 0
+          }
+        },
+        {
+          "id": "ar75",
+          "namn": "Ethranors Spira",
+          "beskrivning": "En lång, smärt spira i mörk ask, krönt av en silverörn med smaragdögon som skimrar inifrån. Enligt sägen band Ethranor örnguden Siuscel i spiran för att vaka över skog och folk.",
+          "kvalitet": [
+            "Trubbigt"
+          ],
+          "taggar": {
+            "typ": [
+              "Artefakt",
+              "Närstridsvapen",
+              "Långa vapen",
+              "Stav"
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Siuscels skri; Handling: Reaktiv\nNär bäraren utsätts för bakhåll kan ett örnskri släppas loss med ett lyckat [Vaksam←Diskret]. Fiender förvirras och skräms; bäraren och allierade blir alerta och får initiativ och Övertag i en runda. Korruption: 1T4.",
+            "Förmåga 2": "Väktarens överblick; Handling: Aktiv\nEn gång per dag kan bäraren, med ett lyckat Vaksam, se ett stort område som ur en örns perspektiv för spaning, kartläggning och ruttplanering. Varar en scen. Korruption: 1T6."
+          },
+          "stat": {
+            "skada": "",
+            "vikt": 1.5
+          },
+          "grundpris": {
+            "daler": 0,
+            "skilling": 0,
             "örtegar": 0
           }
         }
@@ -3693,6 +4802,7 @@
             "typ": [
               "Särdrag"
             ],
+            "erf": 0,
             "regler": {
               "kraver": [
                 {
@@ -3714,6 +4824,7 @@
             "typ": [
               "Särdrag"
             ],
+            "erf": 0,
             "regler": {
               "kraver": [
                 {
@@ -3859,74 +4970,121 @@
       ]
     },
     "Tvåhandsvapen": {
-      "antal": 9,
+      "antal": 22,
       "källfiler": [
-        "data/vapen.json"
+        "data/artefakter.json",
+        "data/narstridsvapen.json"
       ],
       "exempel": [
         {
-          "id": "v17",
-          "namn": "Tvåhandsvapen",
-          "beskrivning": "Tvåhandsvapen utmärks av att de kräver tvåhandsfattning för att alls kunna användas. De har en oöverträffad skadeverkan i närstrid. Exempel på tvåhandsvapen är pålyxa, krigshammare samt det mäktiga tvåhandssvärdet.",
+          "id": "ar08",
+          "namn": "Själaslukaren",
+          "beskrivning": "Stridshammaren Själaslukaren ska enligt legenderna ha skapats i österlandet bortom Ravennerna i syfte att tillfredsställa en anonym krigsherres härsklystnad. Vapnet var illa omtalat redan i Symbaroum om man får tro de krönikor där det omnämns, ofta med påståenden som att det”smiddes i avundsjuka och härdades i missunnsamhet”. Ingen av dess ägare i gamla Symbaroum påstås heller ha gått goda öden till mötes. När Själaslukaren hittas i mausoleet har den en mystisk kraft lagrad från ett tidigare offer: Helig aura (Novis).",
+          "kvalitet": [],
           "taggar": {
             "typ": [
-              "Vapen",
+              "Artefakt",
+              "Närstridsvapen",
               "Tvåhandsvapen"
-            ]
+            ],
+            "handling": {
+              "Förmåga 1": [
+                "Reaktiv"
+              ],
+              "Förmåga 2": [
+                "Samma som den lagrade kraften"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Liktjuv; Handling: Reaktiv\nSjälaslukaren kan ”suga åt sig” en mystisk kraft som involverar karaktärsdraget Viljestark från en varelse den dräper och lagra den i sitt runristade huvud. För att det ska hända måste hammaren fälla det dödande slaget och dess mästare måste välja att ersätta den redan lagrade förmågan med en från det nya offret. Korruption: 1T4.",
+            "Förmåga 2": "Parasitens storhet; Handling: Speciell\nVapnets mästare kan använda den mystiska kraft som har lagrats i vapnet, som om den var mästarens egen. Bärarens Viljestark räknas som 15 i sammanhang som har med användningen av den lagrade kraften att göra, dock utan att ha någon inverkan på bärarens korruptionströskel. Villkor: Samma som den lagrade kraften. Korruption: 1T4."
           },
           "stat": {
-            "skada": "1T10",
-            "vikt": 2.0
+            "skada": "",
+            "vikt": 2
           },
           "grundpris": {
-            "daler": 10,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v18",
-          "namn": "Bastardsvärd",
-          "beskrivning": "Pansárernas mästersmeder hamrar fram Ambrias finaste vapen, och pansárernas bastardklingor är utsökta sådana i händerna på rätt krigare. Bastardsvärd hanteras med fördel med två händer (som ett tungt vapen) men kan användas i en hand för bruk med sköld. Svingat med en hand tappar bastardsvärdet kvaliteten Precist och gör skada som ett enhandsvapen.",
+          "id": "ar12",
+          "namn": "Hymne",
+          "beskrivning": "Hymne I legenderna talas det om trollkrigarkonan Oramox och hennes strid mot ulvahövdingen Fergos. Den senare ska ha fått sin intelligens i gåva av Spindelkonungen just för att straffa Oramox stam, sedan trollen allierat sig med en människobosättning. Enligt sägnen ska Oramox ha fallit offer för Hymnes korrumperande verkan, men först efter att hon låtit den väldiga dubbelyxan sjunga sitt folk till seger och klyva skallen på den listige ulven i två delar.",
+          "kvalitet": [],
           "taggar": {
             "typ": [
-              "Vapen",
+              "Artefakt",
+              "Närstridsvapen",
               "Tvåhandsvapen"
             ],
-            "kvalitet": [
-              "Precist",
-              "Bastardvapen"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Aktiv"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Eggande genklang; Handling: Aktiv\nNär artefaktens mästare spenderar en stridhandling på att upprepade gånger slå Hymne mot något hårt (sten, träd eller bergvägg) byggs en bastonig genklang upp. Under en runda framåt har mästarens allierade +1 på Stark och Viljestark. Korruption: 1T4",
+            "Förmåga 2": "Förstärkande harmoni; Handling: Aktiv\nKräver att mästaren behärskar Kampsång. Efter att ha byggt upp genklangen enligt ovan kan den kombineras med hjältens egen sång och då hållas vid liv i 1T4 rundor. Under denna tid har mästaren själv och dess allierade +2 på Kvick, Stark och Träffsäker. Dessutom återfår mästaren och de allierade 1T8 Tålighet när effekten träder i kraft. Korruption: 1T6"
           },
           "stat": {
-            "skada": "1T10",
-            "vikt": 2.0
+            "skada": "",
+            "vikt": 2
           },
           "grundpris": {
-            "daler": 10,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
         },
         {
-          "id": "v19",
-          "namn": "Dubbelyxa",
-          "beskrivning": "Barbarernas dubbelyxa (inte att förväxla med den vanligare förekommande pålyxan som endast har ett yxblad på sitt skaft) kallas så efter sina två yxblad och antas vara ett arv från det fallna Symbaroum. Där förekom dubbelyxan både som vapen och som statussymbol. Även efter att det metallurgiska kunnandet i Davokar dalade i och med Symbaroums fall kunde dessa mäktiga vapen smidas, vilket ännu görs åt särskilt framstående klankrigare. Bland ambrierna anses dubbelyxan vara ofin och förråande, lämplig för barbarer och få andra, men dess form är välkänd genom dess likhet med den kungliga runan Labrys.",
+          "id": "ar14",
+          "namn": "Spinneldräpa",
+          "beskrivning": "spinneldräpa Den artefakt som Elmendra misstog för att vara den så kallade Häxhammaren är i själva verket ingenting mindre än det vapen som storhövding Maiesticar svingade mot och genom Spindelkonungens hjärta. Sedan Angatal Taars död har häxorna hållit det i förvar, i väntan på att nästa fientligt inställda spindelväsen ska dyka upp. Spinneldräpa är oavsett form (se nedan) ett mästartillverkat föremål med kvaliteterna Balanserat, Djupverkande och Precist.",
+          "kvalitet": [
+            "Balanserat",
+            "Djupverkande",
+            "Precist"
+          ],
           "taggar": {
             "typ": [
-              "Vapen",
+              "Artefakt",
+              "Närstridsvapen",
+              "Korta vapen",
+              "Enhandsvapen",
+              "Långa vapen",
               "Tvåhandsvapen"
             ],
-            "kvalitet": [
-              "Djupverkande"
-            ]
+            "handling": {
+              "Förmåga 1": [
+                "Aktiv"
+              ],
+              "Förmåga 2": [
+                "Fri"
+              ],
+              "Förmåga 3": [
+                "Fri"
+              ]
+            }
+          },
+          "nivåer": {
+            "Förmåga 1": "Formförändring; Handling: Aktiv\nArtefakten kan omforma sig i enlighet med mästarens vilja, till någon av typerna Korta vapen, Enhandsvapen, Långa vapen eller Tvåhandsvapen. Förändringen tar en runda i anspråk men håller sedan i sig tills mästaren vill något annat. Korruption: 1",
+            "Förmåga 2": "Blodets rening; Handling: Speciell\nMed ett lätt jack eller stick på en egen, blottad kroppsdel kan artefaktens mästare låta Spinneldräpa komma i kontakt med dennes blod och därigenom mildra effekten av gifter – fungerar som ett medelstarkt motgift. Villkor: Fri handling. Korruption: 1T4",
+            "Förmåga 3": "Spindelbane; Handling: Speciell\nOm artefaktens mästare behärskar förmågan Monsterlärd till gesällnivå (specialisering: bestar) och lyckas med ett slag mot Listig gör Spinneldräpa +1T8 i skada mot varelser av familjen Spindlar. Effekten varar hela scenen ut. Villkor: Fri handling. Korruption: 1T6"
           },
           "stat": {
-            "skada": "1T10",
-            "vikt": 2.0
+            "skada": "",
+            "vikt": 1
           },
           "grundpris": {
-            "daler": 10,
+            "daler": 0,
             "skilling": 0,
             "örtegar": 0
           }
@@ -3934,12 +5092,9 @@
       ]
     },
     "Vapen": {
-      "antal": 93,
+      "antal": 1,
       "källfiler": [
-        "data/artefakter.json",
-        "data/lagre-artefakter.json",
-        "data/skatter.json",
-        "data/vapen.json"
+        "data/skatter.json"
       ],
       "exempel": [
         {
@@ -3961,54 +5116,11 @@
             "skilling": 0,
             "örtegar": 0
           }
-        },
-        {
-          "id": "v1",
-          "namn": "Enhandsvapen",
-          "beskrivning": "Enhandsvapen omfattar alla typer av vapen som kan svingas i en hand. Exempel på enhandsvapen som är vanliga i davokarregionen är hammare, kroksabel, svärd och yxa.",
-          "taggar": {
-            "typ": [
-              "Vapen",
-              "Enhandsvapen"
-            ]
-          },
-          "stat": {
-            "skada": "1T8",
-            "vikt": 1.5
-          },
-          "grundpris": {
-            "daler": 5,
-            "skilling": 0,
-            "örtegar": 0
-          }
-        },
-        {
-          "id": "v2",
-          "namn": "Duellsvärd",
-          "beskrivning": "I Yndaros är det ambriska duellsvärdet högsta mode, ett fjäderstålsmide med ypperlig precision. Och det kombineras gärna med fäktarens favorit, parerdolken, som ger de lätt rustade duellanterna ett starkare försvar under fäktningsmatcherna.",
-          "taggar": {
-            "typ": [
-              "Vapen",
-              "Enhandsvapen"
-            ],
-            "kvalitet": [
-              "Precist"
-            ]
-          },
-          "stat": {
-            "skada": "1T8",
-            "vikt": 1.5
-          },
-          "grundpris": {
-            "daler": 5,
-            "skilling": 0,
-            "örtegar": 0
-          }
         }
       ]
     },
     "Vapenkvalitet": {
-      "antal": 46,
+      "antal": 47,
       "källfiler": [
         "data/kvalitet.json",
         "data/mystisk-kvalitet.json",
@@ -4079,20 +5191,7 @@
             ],
             "ark_trad": [
               "Bärsärkare"
-            ],
-            "regler": {
-              "kraver": [
-                {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Yrke": 1
-                    }
-                  },
-                  "varde": "single_occupation",
-                  "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-                }
-              ]
-            }
+            ]
           },
           "viktiga_karaktarsdrag": "Stark 13+, Kvick 11+",
           "forslag_pa_slakte": [
@@ -4118,20 +5217,7 @@
             ],
             "ark_trad": [
               "Duellant"
-            ],
-            "regler": {
-              "kraver": [
-                {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Yrke": 1
-                    }
-                  },
-                  "varde": "single_occupation",
-                  "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-                }
-              ]
-            }
+            ]
           },
           "viktiga_karaktarsdrag": "Träffsäker 13+, Kvick eller Diskret 11+",
           "forslag_pa_slakte": [
@@ -4163,20 +5249,7 @@
             ],
             "ark_trad": [
               "Kapten"
-            ],
-            "regler": {
-              "kraver": [
-                {
-                  "nar": {
-                    "antal_typ_max": {
-                      "Yrke": 1
-                    }
-                  },
-                  "varde": "single_occupation",
-                  "meddelande": "Yrke: Karaktären kan normalt bara ha ett yrke."
-                }
-              ]
-            }
+            ]
           },
           "viktiga_karaktarsdrag": "Övertygande 13+",
           "forslag_pa_slakte": "Människa (vanligen ambrier)",

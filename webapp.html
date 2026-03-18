@@ -12,6 +12,18 @@
   <title>Symbapedia - Installera som webapp</title>
   <style>html[data-preload] body { visibility:hidden; opacity:0; } html.is-ready body { visibility:visible; opacity:1; transition:opacity .2s; }</style>
   <script>document.documentElement.dataset.preload = "true";</script>
+  <script>
+    const revealWebapp = () => {
+      document.documentElement.classList.add('is-ready');
+      document.documentElement.removeAttribute('data-preload');
+    };
+
+    if (document.readyState === 'complete') {
+      revealWebapp();
+    } else {
+      window.addEventListener('load', revealWebapp, { once: true });
+    }
+  </script>
   <link rel="stylesheet" href="css/style.css">
   <style>
     main { max-width: 40rem; margin: 2rem auto; padding: 0 1rem; }
@@ -68,12 +80,23 @@
   </main>
 
   <script>
-    document.addEventListener('DOMContentLoaded', () => {
-      const target = location.hash.slice(1) || 'general';
-      document.querySelectorAll('section').forEach(sec => {
-        sec.style.display = (sec.id === target) ? 'block' : 'none';
-      });
-    });
+    (() => {
+      const renderSection = () => {
+        const target = window.location.hash.slice(1) || 'general';
+        document.querySelectorAll('section').forEach(sec => {
+          sec.style.display = sec.id === target ? 'block' : 'none';
+        });
+      };
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', renderSection, { once: true });
+      } else {
+        renderSection();
+      }
+
+      window.addEventListener('hashchange', renderSection);
+      window.requestAnimationFrame?.(renderSection);
+    })();
   </script>
   <script src="js/pwa.js" defer></script>
 </body>
