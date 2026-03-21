@@ -48,8 +48,7 @@ const ROUTE_SCRIPTS = Object.freeze({
 });
 
 const POST_SCRIPTS = [
-  'js/main.js',
-  'js/pwa.js'
+  'js/main.js'
 ];
 
 const pendingScripts = new Map();

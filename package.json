@@ -3,7 +3,9 @@
   "private": true,
   "type": "module",
   "scripts": {
+    "sync:static": "python3 ./scripts/sync_static_assets.py",
     "dev": "vite --config ./vite.config.js",
+    "prebuild": "npm run sync:static",
     "build": "vite build --config ./vite.config.js",
     "preview": "vite preview --config ./vite.config.js",
     "test:e2e": "npm run build && playwright test --config=./playwright.config.js",

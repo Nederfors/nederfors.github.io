@@ -1,5 +1,5 @@
 # App Source
 
-Phase 1 keeps the legacy multi-page app running from copied static assets in `public/`.
+Phase 2 keeps root `css/`, `js/`, `data/`, `icons/`, `pdf/`, `manifest.json`, and `sw.js` as the authored source of truth.
 
-Later phases move the active boot path and route modules into `src/`.
+Builds regenerate `.generated-public/` from those root assets before Vite copies them into `dist/`.

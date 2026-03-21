@@ -281,7 +281,7 @@ Detaljerad lista över aktiva limit-checkar och hur `ignore_limits` påverkar de
 - `data/INSTRUKTIONER.md` - fullständig regelmotor- och dataguide.
 - `js/` - app-, store- och regelmotorlogik.
 - `css/` - stilar.
-- `public/` - kompatibilitetslager för statiska filer som fortfarande behöver fasta root-URL:er.
+- `.generated-public/` - genererad stagingyta för builden. Skapas från root-assets och checkas inte in.
 
 ## Dataflöde för utveckling
 Efter ändringar i data/regler:
@@ -293,4 +293,4 @@ npm run build
 osascript -l JavaScript scripts/verify_rules_helper.js
 ```
 
-Appen byggs nu via Vite från repo-roten. Förslag och förbättringar tas via pull requests.
+Appen byggs nu via Vite från repo-roten. `npm run build` kör först `scripts/sync_static_assets.py`, som återskapar `.generated-public/` från rootens `css/`, `js/`, `data/`, `icons/`, `pdf/`, `manifest.json` och `sw.js`. Förslag och förbättringar tas via pull requests.

@@ -1,5 +1,6 @@
 import perf from './perf.js';
 import persistence from './persistence.js';
+import './pwa.js';
 import rulesWorker from './workers/rules-client.js';
 import router from './shell/router.js';
 import { VIEW_TEMPLATES, getViewTitle } from './shell/view-templates.js';

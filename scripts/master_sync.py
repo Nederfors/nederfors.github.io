@@ -9,7 +9,6 @@ from _sync_utils import ROOT_DIR
 
 SCRIPT_SEQUENCE = [
     ("Sync data manifest", "scripts/sync_data_manifest.py"),
-    ("Sync page bundles", "scripts/sync_page_bundles.py"),
     ("Build service worker cache", "scripts/build_sw_cache.py"),
     ("Update lampliga formagor", "scripts/update_lampliga_formagor.py"),
     ("Build all.json", "scripts/build_all.py"),

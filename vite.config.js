@@ -5,7 +5,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const pwaBuildId = new Date().toISOString();
 
 export default defineConfig({
-  publicDir: 'public',
+  publicDir: '.generated-public',
   define: {
     __PWA_BUILD_ID__: JSON.stringify(pwaBuildId)
   },
@@ -15,6 +15,8 @@ export default defineConfig({
       manifest: false,
       registerType: 'autoUpdate',
       strategies: 'injectManifest',
+      srcDir: '.',
+      filename: 'sw.js',
       injectManifest: {
         rollupFormat: 'es',
         globPatterns: ['**/*.{js,css,html,svg,ico,json}'],
