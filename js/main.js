@@ -7704,6 +7704,47 @@ window.symbaroumDerivedState = {
   waitForCharacterConsistencyRefresh: () => deferredCharacterSyncPromise || Promise.resolve()
 };
 
+function scheduleCharacterMutationRefresh(options = {}) {
+  const next = {
+    refreshCurrent: true,
+    afterPaint: true,
+    ...options
+  };
+
+  if (typeof window.symbaroumDerivedState?.scheduleCharacterConsistencyRefresh === 'function') {
+    window.symbaroumDerivedState.scheduleCharacterConsistencyRefresh(next);
+    return;
+  }
+
+  if (next.xp && typeof window.updateXP === 'function') {
+    updateXP({
+      afterPaint: false,
+      source: next.source || 'mutation-refresh'
+    });
+  }
+
+  if (next.traits && typeof window.renderTraits === 'function') {
+    window.renderTraits();
+  }
+
+  if (next.refreshCurrent !== false) {
+    const refreshOptions = buildPanelRefreshOptions(next);
+    if (Object.keys(refreshOptions).length) {
+      const role = next.role || getCurrentRouteRole();
+      if (role !== getCurrentRouteRole()) {
+        refreshRoleView(role, refreshOptions);
+      } else {
+        refreshCurrentView(refreshOptions);
+      }
+    }
+  }
+}
+
+window.symbaroumMutationPipeline = {
+  scheduleCharacterRefresh: scheduleCharacterMutationRefresh,
+  waitForCharacterRefresh: () => window.symbaroumDerivedState?.waitForCharacterConsistencyRefresh?.() || Promise.resolve()
+};
+
 function updateXP(options = {}) {
   const list  = storeHelper.getCurrentList(store);
   const base  = storeHelper.getBaseXP(store);

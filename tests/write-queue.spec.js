@@ -125,4 +125,22 @@ test('debounces writes and flushes on explicit boundaries', async ({ page }) => 
   await expect.poll(async () => (
     (await readCharacterState(page, 'queue-char-b'))?.notes?.background || ''
   )).toBe('Explicit flush');
+
+  await page.evaluate(async () => {
+    const store = window.storeHelper.load();
+    store.current = 'queue-char-b';
+    window.storeHelper.setMoney(store, {
+      daler: 9,
+      skilling: 1,
+      'örtegar': 2
+    });
+    await window.symbaroumPersistence.flushPendingWrites();
+  });
+  await expect.poll(async () => (
+    (await readCharacterState(page, 'queue-char-b'))?.money || null
+  )).toEqual({
+    daler: 9,
+    skilling: 1,
+    'örtegar': 2
+  });
 });

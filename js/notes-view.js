@@ -15,6 +15,7 @@
   };
   let form, editBtn, clearBtn, charLink, isEditing=false;
   let catsMinimized = false;
+  let detachNotesBindings = null;
 
   // State for collapsed/expanded note fields, keyed by character id
   let STATE_KEY = 'notesViewState:default';
@@ -110,6 +111,12 @@
 
     showView();
 
+    if (typeof detachNotesBindings === 'function') {
+      detachNotesBindings();
+      detachNotesBindings = null;
+    }
+    const cleanupFns = [];
+
     const updateCatToggle = () => {
       const details = document.querySelectorAll('.note-field');
       catsMinimized = [...details].every(d => !d.open);
@@ -125,33 +132,59 @@
     detailEls.forEach(d => {
       const key = d.querySelector('textarea')?.id || '';
       if (key && catState[key] === false) d.open = false;
-      d.addEventListener('toggle', () => {
+      const onToggle = () => {
         if (key) catState[key] = d.open;
         saveState();
         updateCatToggle();
-      });
+      };
+      d.addEventListener('toggle', onToggle);
+      cleanupFns.push(() => d.removeEventListener('toggle', onToggle));
     });
     updateCatToggle();
 
-    if (dom.catToggle) dom.catToggle.addEventListener('click', () => {
-      const details = document.querySelectorAll('.note-field');
-      if (catsMinimized) {
-        details.forEach(d => { d.open = true; });
-      } else {
-        details.forEach(d => { d.open = false; });
-      }
-      updateCatToggle();
-    });
+    if (dom.catToggle) {
+      const onCatToggleClick = () => {
+        const details = document.querySelectorAll('.note-field');
+        if (catsMinimized) {
+          details.forEach(d => { d.open = true; });
+        } else {
+          details.forEach(d => { d.open = false; });
+        }
+        updateCatToggle();
+      };
+      dom.catToggle.addEventListener('click', onCatToggleClick);
+      cleanupFns.push(() => dom.catToggle.removeEventListener('click', onCatToggleClick));
+    }
 
-    form.addEventListener('submit',e=>{
+    const onSubmit = e => {
       e.preventDefault();
+      if (form?.dataset?.notesSubmitLocked === '1') return;
+      if (form?.dataset) form.dataset.notesSubmitLocked = '1';
       const obj={};
       fields.forEach(id=>{
         const el=form.querySelector('#'+id);
         obj[id]=el?el.value:'';
       });
       storeHelper.setNotes(store,obj);
+      if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
+        window.symbaroumMutationPipeline.scheduleCharacterRefresh({
+          notes: true,
+          name: true,
+          source: 'notes-save',
+          xp: false,
+          afterPaint: false
+        });
+      }
       showView();
+      setTimeout(() => {
+        if (form?.dataset?.notesSubmitLocked === '1') {
+          delete form.dataset.notesSubmitLocked;
+        }
+      }, 0);
+    };
+    form.onsubmit = onSubmit;
+    cleanupFns.push(() => {
+      if (form.onsubmit === onSubmit) form.onsubmit = null;
     });
 
     if(clearBtn) clearBtn.onclick = async ()=>{
@@ -163,13 +196,22 @@
       }
     };
 
-    if(charLink) charLink.addEventListener('click',async e=>{
-      if(isEditing && !(await confirmPopup('Nu stängs redigering utan att spara, är du säker?'))){
-        e.preventDefault();
-      }
-    });
+    if(charLink) {
+      const onCharLinkClick = async e => {
+        if(isEditing && !(await confirmPopup('Nu stängs redigering utan att spara, är du säker?'))){
+          e.preventDefault();
+        }
+      };
+      charLink.addEventListener('click', onCharLinkClick);
+      cleanupFns.push(() => charLink.removeEventListener('click', onCharLinkClick));
+    }
 
     if(editBtn) editBtn.onclick = showEdit;
+    detachNotesBindings = () => {
+      cleanupFns.forEach(fn => {
+        try { fn(); } catch {}
+      });
+    };
   }
 
   window.initNotes=initNotes;

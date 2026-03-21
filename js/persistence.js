@@ -133,6 +133,19 @@ function buildStoreSnapshot(snapshot = {}) {
   };
 }
 
+function buildQueuedSnapshotBase() {
+  const snapshot = state.storeSnapshot || emptyStoreSnapshot();
+  return {
+    ...emptyStoreSnapshot(),
+    ...normalizeStoreMeta(snapshot),
+    characters: Array.isArray(snapshot?.characters) ? snapshot.characters.slice() : [],
+    folders: Array.isArray(snapshot?.folders) ? snapshot.folders.slice() : [],
+    data: snapshot?.data && typeof snapshot.data === 'object'
+      ? { ...snapshot.data }
+      : {}
+  };
+}
+
 function getCharacterRows(characters = []) {
   return (Array.isArray(characters) ? characters : [])
     .filter((char) => char && char.id)
@@ -362,26 +375,32 @@ function queueMetaWrite(payload = {}) {
   const meta = normalizeStoreMeta(payload.meta || {});
   const characters = cloneValue(payload.characters || []);
   const folders = cloneValue(payload.folders || []);
-  const currentSnapshot = buildStoreSnapshot(state.storeSnapshot || emptyStoreSnapshot());
-  state.storeSnapshot = buildStoreSnapshot({
-    meta,
-    characters,
-    folders,
-    data: currentSnapshot.data
-  });
+  const snapshot = buildQueuedSnapshotBase();
+  snapshot.current = meta.current;
+  snapshot.activeFolder = meta.activeFolder;
+  snapshot.filterUnion = meta.filterUnion;
+  snapshot.compactEntries = meta.compactEntries;
+  snapshot.onlySelected = meta.onlySelected;
+  snapshot.recentSearches = cloneValue(meta.recentSearches) || [];
+  snapshot.liveMode = meta.liveMode;
+  snapshot.entrySort = meta.entrySort;
+  snapshot.characters = characters;
+  snapshot.folders = folders;
+  state.storeSnapshot = snapshot;
   state.writeQueue.meta = { meta, characters, folders };
   scheduleFlush();
 }
 
 function queueCharacterWrite(charId, payload) {
   if (!charId) return;
-  const snapshot = buildStoreSnapshot(state.storeSnapshot || emptyStoreSnapshot());
+  const snapshot = buildQueuedSnapshotBase();
   if (payload === null || payload === undefined) {
     delete snapshot.data[charId];
     state.writeQueue.characters.set(charId, null);
   } else {
-    snapshot.data[charId] = cloneValue(payload);
-    state.writeQueue.characters.set(charId, cloneValue(payload));
+    const nextValue = cloneValue(payload);
+    snapshot.data[charId] = nextValue;
+    state.writeQueue.characters.set(charId, nextValue);
   }
   state.storeSnapshot = snapshot;
   scheduleFlush();
@@ -392,14 +411,12 @@ function takePendingWrites() {
   const batch = {
     meta: state.writeQueue.meta
       ? {
-          meta: cloneValue(state.writeQueue.meta.meta),
-          characters: cloneValue(state.writeQueue.meta.characters),
-          folders: cloneValue(state.writeQueue.meta.folders)
+          meta: state.writeQueue.meta.meta,
+          characters: state.writeQueue.meta.characters,
+          folders: state.writeQueue.meta.folders
         }
       : null,
-    characters: new Map(
-      Array.from(state.writeQueue.characters.entries()).map(([id, value]) => [id, cloneValue(value)])
-    )
+    characters: new Map(state.writeQueue.characters)
   };
   state.writeQueue.meta = null;
   state.writeQueue.characters.clear();
@@ -418,7 +435,7 @@ async function commitPendingWrites(batch) {
     .filter(([, value]) => value !== null && value !== undefined)
     .map(([id, value]) => ({
       id,
-      state: cloneValue(value)
+      state: value
     }));
 
   if (!metaPayload) {

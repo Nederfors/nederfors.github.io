@@ -1,10 +1,12 @@
 import { spawn } from 'node:child_process';
 import { mkdir, writeFile } from 'node:fs/promises';
+import { createRequire } from 'node:module';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const require = createRequire(import.meta.url);
 
 export const APP_ROOT = path.resolve(__dirname, '..');
 export const PERF_ROOT = path.join(APP_ROOT, '.artifacts', 'perf');
@@ -56,7 +58,8 @@ export async function waitForPort(port, host = PREVIEW_HOST, timeoutMs = 15_000)
 }
 
 export async function startPreviewServer({ port = PREVIEW_PORT } = {}) {
-  const viteBin = path.resolve(APP_ROOT, '../node_modules/vite/bin/vite.js');
+  const vitePackagePath = require.resolve('vite/package.json');
+  const viteBin = path.join(path.dirname(vitePackagePath), 'bin', 'vite.js');
   const child = spawn(
     'node',
     [viteBin, 'preview', '--config', './vite.config.js', '--host', PREVIEW_HOST, '--port', String(port)],

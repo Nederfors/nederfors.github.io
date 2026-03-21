@@ -962,14 +962,17 @@
       const remainingO = Math.max(0, moneyToO(curMoney) - spendO);
       storeHelper.setMoney(store, oToMoney(remainingO));
       renderInventory();
+      scheduleMoneyMutationRefresh({
+        source: options.source || 'inventory-money-spend'
+      });
     };
     const priv = storeHelper.getPrivMoney(store);
     const pos  = storeHelper.getPossessionMoney(store);
     const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
     if (hasAdv) {
       openAdvMoneyPopup(() => {
-        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
         finish();
         if (typeof options.onComplete === 'function') options.onComplete(true);
       });
@@ -1040,7 +1043,7 @@
     if (deltaO > 0) {
       const money = storeHelper.getMoney(store);
       const remainingO = Math.max(0, moneyToO(money) - deltaO);
-      storeHelper.setMoney(store, oToMoney(remainingO));
+      storeHelper.setMoney(store, oToMoney(remainingO), { persist: false });
     }
     pairs.forEach(({ next }) => {
       if (next) markRowFree(next);
@@ -1699,8 +1702,8 @@
     }, {
       surface: 'inventory'
     });
-    if (typeof window.symbaroumDerivedState?.scheduleCharacterConsistencyRefresh === 'function') {
-      window.symbaroumDerivedState.scheduleCharacterConsistencyRefresh({
+    if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
+      window.symbaroumMutationPipeline.scheduleCharacterRefresh({
         xp: true,
         traits: true,
         summary: true,
@@ -1713,6 +1716,24 @@
       if (window.renderTraits) renderTraits();
       window.symbaroumViewBridge?.refreshCurrent({ summary: true, effects: true, strict: true });
     }
+  }
+
+  function scheduleMoneyMutationRefresh(options = {}) {
+    if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
+      window.symbaroumMutationPipeline.scheduleCharacterRefresh({
+        role: 'character',
+        summary: true,
+        effects: true,
+        source: options.source || 'inventory-money-mutation',
+        afterPaint: options.afterPaint !== false
+      });
+      return;
+    }
+    window.symbaroumViewBridge?.refreshRole?.('character', {
+      summary: true,
+      effects: true,
+      strict: true
+    });
   }
 
   function getGrantSourceName(value) {
@@ -3187,8 +3208,8 @@
       const hasAdv = priv.daler || priv.skilling || priv['örtegar'] || pos.daler || pos.skilling || pos['örtegar'];
       if (hasAdv) {
         openAdvMoneyPopup(() => {
-          storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
           fn();
           updateStatus();
         });
@@ -3202,6 +3223,9 @@
       maybeAdv(() => {
         storeHelper.setMoney(store, money);
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-money-set'
+        });
         clearBalanceInputs({ focus: true });
       });
     };
@@ -3216,6 +3240,9 @@
       maybeAdv(() => {
         storeHelper.setMoney(store, total);
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-money-add'
+        });
         clearBalanceInputs({ focus: true });
       });
     };
@@ -4345,7 +4372,7 @@
         return { success: false, error: 'Du har inte så mycket pengar i bältesbörsen.' };
       }
       const remainingWallet = oToMoney(walletO - moneyO);
-      storeHelper.setMoney(store, remainingWallet);
+      storeHelper.setMoney(store, remainingWallet, { persist: false });
     }
     vehicle.contains = vehicle.contains || [];
     const existing = vehicle.contains.find(r => r?.typ === 'currency' && r.money);
@@ -4406,7 +4433,7 @@
     if (addToWallet) {
       const wallet = storeHelper.normalizeMoney(storeHelper.getMoney(store));
       const walletO = moneyToO(wallet);
-      storeHelper.setMoney(store, oToMoney(walletO + removeTotalO));
+      storeHelper.setMoney(store, oToMoney(walletO + removeTotalO), { persist: false });
     }
     if (moneyToO(remaining) <= 0) {
       parentArr.splice(idx, 1);
@@ -4915,14 +4942,14 @@
     tot.d += Math.floor(tot.s / SBASE); tot.s %= SBASE;
     const diffO = moneyToO(cash) - (tot.d * SBASE * OBASE + tot.s * OBASE + tot.o);
     const diff  = oToMoney(Math.max(0, diffO));
-    storeHelper.setSavedUnusedMoney(store, diff);
-    storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-    storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+    storeHelper.setSavedUnusedMoney(store, diff, { persist: false });
+    storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+    storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
     storeHelper.setMoney(store, {
       daler: diff.d,
       skilling: diff.s,
       'örtegar': diff.o
-    });
+    }, { persist: false });
 
     flat.forEach(row => {
       row.basePrice = { daler: 0, skilling: 0, 'örtegar': 0 };
@@ -5299,6 +5326,9 @@
             storeHelper.setMoney(store, { ...cur, daler: newD });
           }
           renderInventory();
+          scheduleMoneyMutationRefresh({
+            source: 'inventory-formal-money-daler'
+          });
           return;
         }
         if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
@@ -5315,6 +5345,9 @@
             storeHelper.setMoney(store, { ...cur, skilling: newS });
           }
           renderInventory();
+          scheduleMoneyMutationRefresh({
+            source: 'inventory-formal-money-skilling'
+          });
           return;
         }
         if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
@@ -5332,6 +5365,9 @@
             storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
           }
           renderInventory();
+          scheduleMoneyMutationRefresh({
+            source: 'inventory-formal-money-ortegar'
+          });
           return;
         }
       };
@@ -6267,6 +6303,9 @@
           storeHelper.setMoney(store, { ...cur, daler: newD });
         }
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-card-money-daler'
+        });
         return;
       }
 
@@ -6760,6 +6799,9 @@
             storeHelper.setMoney(store, { ...cur, daler: newD });
           }
           renderInventory();
+          scheduleMoneyMutationRefresh({
+            source: 'inventory-info-money-daler'
+          });
           return;
         }
         if (act === 'moneySkillingPlus' || act === 'moneySkillingMinus') {
@@ -6776,6 +6818,9 @@
             storeHelper.setMoney(store, { ...cur, skilling: newS });
           }
           renderInventory();
+          scheduleMoneyMutationRefresh({
+            source: 'inventory-info-money-skilling'
+          });
           return;
         }
         if (act === 'moneyOrtegarPlus' || act === 'moneyOrtegarMinus') {
@@ -6793,6 +6838,9 @@
             storeHelper.setMoney(store, { ...cur, 'örtegar': newO });
           }
           renderInventory();
+          scheduleMoneyMutationRefresh({
+            source: 'inventory-info-money-ortegar'
+          });
           return;
         }
       };
@@ -6848,10 +6896,13 @@
     });
     if (resetBtn) resetBtn.onclick = () => {
       const doReset = () => {
-        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
-        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+        storeHelper.setPrivMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
+        storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 }, { persist: false });
         storeHelper.setMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
         renderInventory();
+        scheduleMoneyMutationRefresh({
+          source: 'inventory-money-reset'
+        });
       };
       const priv = storeHelper.getPrivMoney(store);
       const pos  = storeHelper.getPossessionMoney(store);

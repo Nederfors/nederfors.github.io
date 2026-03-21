@@ -119,7 +119,7 @@
     if (!charId) return;
     const persistence = getPersistence();
     if (persistence?.mode === 'dexie' && typeof persistence.saveCharacter === 'function') {
-      persistence.saveCharacter(charId, cloneValue(store.data?.[charId] || null)).catch(error => {
+      persistence.saveCharacter(charId, store.data?.[charId] || null).catch(error => {
         console.error(`Failed to persist character ${charId}`, error);
       });
       return;
@@ -130,6 +130,14 @@
   const persistCurrentCharacter = (store) => {
     if (store.current) persistCharacter(store, store.current);
   };
+
+  function commitCurrentCharacterMutation(store, options = {}) {
+    const charId = getDerivedVersionKey(store);
+    if (!charId) return null;
+    if (options.bumpDerived) bumpDerivedVersion(store, charId);
+    if (options.persist !== false) persistCharacter(store, charId);
+    return charId;
+  }
 
   const MAX_RECENT_SEARCHES = 10;
 
@@ -2357,9 +2365,7 @@
     store.data[store.current].bonusMoney = total;
     ensureListAppliedDigests(list);
     if (hiddenRevealChanged) bumpRuntimeVersion('revealed');
-    bumpDerivedVersion(store);
-
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { bumpDerived: true });
   }
 
   /* ---------- 4. Inventarie­funktioner ---------- */
@@ -2373,8 +2379,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].inventory = inv;
-    bumpDerivedVersion(store);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { bumpDerived: true });
   }
 
   function getCustomEntries(store) {
@@ -2403,7 +2408,7 @@
       )];
     }
     if (idMap.size) bumpRuntimeVersion('revealed');
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
     return { entries: sanitized, idMap };
   }
 
@@ -2535,7 +2540,7 @@
     const nextJson = JSON.stringify(next);
     if (prevJson === nextJson) return false;
     store.data[store.current][SNAPSHOT_RULES_KEY] = next;
-    if (options.persist !== false) persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store);
     return true;
   }
 
@@ -2628,11 +2633,11 @@
     return { ...defaultMoney(), ...(data.money || {}) };
   }
 
-  function setMoney(store, money) {
+  function setMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].money = { ...defaultMoney(), ...money };
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store);
   }
 
   function getSavedUnusedMoney(store) {
@@ -2641,12 +2646,12 @@
     return { ...defaultMoney(), ...(data.savedUnusedMoney || {}) };
   }
 
-  function setSavedUnusedMoney(store, money) {
+  function setSavedUnusedMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     const normalized = normalizeMoney(money);
     store.data[store.current].savedUnusedMoney = { ...defaultMoney(), ...normalized };
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store);
   }
 
   function getLiveMode(store) {
@@ -2668,7 +2673,7 @@
       const currentData = store.data[store.current] = store.data[store.current] || {};
       if (currentData.liveMode !== next) {
         currentData.liveMode = next;
-        persistCurrentCharacter(store);
+        commitCurrentCharacterMutation(store);
       }
     }
     if (store.liveMode !== next) {
@@ -2683,11 +2688,11 @@
     return { ...defaultMoney(), ...(data.bonusMoney || {}) };
   }
 
-  function setBonusMoney(store, money) {
+  function setBonusMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].bonusMoney = { ...defaultMoney(), ...money };
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store);
   }
 
   function getPrivMoney(store) {
@@ -2696,7 +2701,7 @@
     return { ...defaultMoney(), ...(data.privMoney || {}) };
   }
 
-  function setPrivMoney(store, money) {
+  function setPrivMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].privMoney = { ...defaultMoney(), ...money };
@@ -2706,7 +2711,7 @@
       'örtegar': (money['örtegar'] || 0) + ((store.data[store.current].possessionMoney || {})['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store);
   }
 
   function getPossessionMoney(store) {
@@ -2715,7 +2720,7 @@
     return { ...defaultMoney(), ...(data.possessionMoney || {}) };
   }
 
-  function setPossessionMoney(store, money) {
+  function setPossessionMoney(store, money, options = {}) {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].possessionMoney = { ...defaultMoney(), ...money };
@@ -2725,7 +2730,7 @@
       'örtegar': (store.data[store.current].privMoney || {})['örtegar'] + (money['örtegar'] || 0)
     });
     store.data[store.current].bonusMoney = total;
-    persistCurrentCharacter(store);
+    if (options.persist !== false) commitCurrentCharacterMutation(store);
   }
 
   function incrementPossessionRemoved(store) {
@@ -2733,7 +2738,7 @@
     store.data[store.current] = store.data[store.current] || {};
     const cur = Number(store.data[store.current].possessionRemoved || 0) + 1;
     store.data[store.current].possessionRemoved = cur;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
     return cur;
   }
 
@@ -2741,7 +2746,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].possessionRemoved = 0;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function getHamnskifteRemoved(store) {
@@ -2754,7 +2759,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].hamnskifteRemoved = arr;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function duplicateCharacter(store, sourceId) {
@@ -2865,7 +2870,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partySmith = level || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function getPartyAlchemist(store) {
@@ -2880,7 +2885,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyAlchemist = level || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function getPartyArtefacter(store) {
@@ -2895,7 +2900,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].partyArtefacter = level || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function getDefenseTrait(store) {
@@ -2908,7 +2913,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].forcedDefense = trait || '';
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function getDefenseSetup(store) {
@@ -2921,7 +2926,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].defenseSetup = normalizeDefenseSetup(setup);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function getArtifactEffects(store) {
@@ -2937,8 +2942,7 @@
     const prev = normalizeArtifactEffectsMap(store.data[store.current].artifactEffects);
     if (JSON.stringify(prev) === JSON.stringify(next)) return;
     store.data[store.current].artifactEffects = next;
-    bumpDerivedVersion(store);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { bumpDerived: true });
   }
 
   function getManualAdjustments(store) {
@@ -2966,8 +2970,7 @@
     next.capacity = Number(next.capacity || 0);
     if (JSON.stringify(prev) === JSON.stringify(next)) return;
     store.data[store.current].manualAdjustments = next;
-    bumpDerivedVersion(store);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { bumpDerived: true });
   }
 
   function getFilterUnion(store) {
@@ -3089,7 +3092,7 @@
     set.add(id);
     if (set.size === before) return;
     store.data[store.current].revealedArtifacts = [...set];
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
     bumpRuntimeVersion('revealed');
   }
 
@@ -3100,7 +3103,7 @@
     const next = list.filter(n => n !== id);
     if (next.length === list.length) return;
     store.data[store.current].revealedArtifacts = next;
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
     bumpRuntimeVersion('revealed');
   }
 
@@ -3131,7 +3134,7 @@
     const cur = getRevealedArtifacts(store);
     store.data[store.current].revealedArtifacts = cur.filter(n => keep.has(n));
     bumpRuntimeVersion('revealed');
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function getNilasPopupSeen(store) {
@@ -3144,7 +3147,7 @@
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].nilasPopupShown = Boolean(val);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   function normalizeMoney(m) {
@@ -3178,8 +3181,7 @@ function defaultTraits() {
     const prev = { ...defaultTraits(), ...(store.data[store.current].traits || {}) };
     if (JSON.stringify(prev) === JSON.stringify(next)) return;
     store.data[store.current].traits = next;
-    bumpDerivedVersion(store);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { bumpDerived: true });
   }
 
   /* ---------- 6b. Anteckningar ---------- */
@@ -3210,7 +3212,7 @@ function defaultTraits() {
     if (!store.current) return;
     store.data[store.current] = store.data[store.current] || {};
     store.data[store.current].notes = { ...defaultNotes(), ...notes };
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store);
   }
 
   /* ---------- 6. XP-hantering ---------- */
@@ -3423,8 +3425,7 @@ function defaultTraits() {
     const next = Number(xp) || 0;
     if ((Number(store.data[store.current].baseXp) || 0) === next) return;
     store.data[store.current].baseXp = next;
-    bumpDerivedVersion(store);
-    persistCurrentCharacter(store);
+    commitCurrentCharacterMutation(store, { bumpDerived: true });
   }
 
   const RITUAL_COST = ERF_RULES.ritualCost;

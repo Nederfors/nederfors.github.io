@@ -958,6 +958,32 @@
       perf?.clearFlowContext?.(ADD_FLOW_CONTEXT_KEY, scenarioId);
       return perf?.endScenario?.(scenarioId, detail) || null;
     };
+    const hasActiveIndexFilters = () => (
+      Boolean(storeHelper.getOnlySelected(store))
+      || ['search', 'typ', 'ark', 'test'].some((key) => {
+        const values = Array.isArray(F?.[key]) ? F[key] : [];
+        return values.some((value) => String(value || '').trim() !== '');
+      })
+    );
+    const scheduleCharacterMutationRefresh = (options = {}) => {
+      if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
+        window.symbaroumMutationPipeline.scheduleCharacterRefresh(options);
+        return;
+      }
+      if (options.xp && typeof window.updateXP === 'function') updateXP();
+      if (options.traits && typeof window.renderTraits === 'function') renderTraits();
+      const refreshOptions = {};
+      ['summary', 'effects', 'name', 'filters', 'selection', 'inventory', 'notes', 'traits']
+        .forEach((key) => {
+          if (options[key]) refreshOptions[key] = true;
+        });
+      if (Object.keys(refreshOptions).length) {
+        window.symbaroumViewBridge?.refreshCurrent({ ...refreshOptions, strict: true });
+      }
+    };
+    const waitForCharacterMutationRefresh = () => (
+      window.symbaroumMutationPipeline?.waitForCharacterRefresh?.() || Promise.resolve()
+    );
 
     const getMonsterLoreSpecs = () => {
       const list = window.monsterLore?.SPECS;
@@ -2855,6 +2881,20 @@
       let entries = null;
       let p = null;
       let lvl = null;
+      let addBranch = null;
+      const resolveAddRenderMode = () => {
+        if (addBranch === 'inventory') {
+          return (!needsFullRefresh && skipIndexRerender) ? 'incremental' : 'full';
+        }
+        return needsFullRefresh ? 'full' : 'incremental';
+      };
+      const completeAddScenario = (detail = {}) => finishAddScenario(addScenarioId, {
+        scope: 'index',
+        entry: name,
+        branch: addBranch || null,
+        renderMode: resolveAddRenderMode(),
+        ...detail
+      });
       const resolveActionCardState = () => {
         cardChoiceOptions = getCardChoiceOptions(li);
         tr = cardChoiceOptions.trait || null;
@@ -2884,6 +2924,7 @@
           entry: name,
           scope: 'index'
         });
+        addBranch = p && isInv(p) ? 'inventory' : 'list';
       } else {
         resolveActionCardState();
       }
@@ -3126,18 +3167,13 @@
                   addedToList = true;
                 }
                 if (addedToList || hidden) {
-                  if (typeof window.symbaroumDerivedState?.scheduleCharacterConsistencyRefresh === 'function') {
-                    window.symbaroumDerivedState.scheduleCharacterConsistencyRefresh({
-                      xp: true,
-                      traits: true,
-                      summary: true,
-                      effects: true,
-                      source: 'index-inventory-add'
-                    });
-                  } else {
-                    if (window.updateXP) updateXP();
-                    if (window.renderTraits) renderTraits();
-                  }
+                  scheduleCharacterMutationRefresh({
+                    xp: true,
+                    traits: true,
+                    summary: true,
+                    effects: true,
+                    source: 'index-inventory-add'
+                  });
                 }
                 if (hidden && p.id) {
                   storeHelper.addRevealedArtifact(store, p.id);
@@ -3189,6 +3225,7 @@
           const list = storeHelper.getCurrentList(store);
           const beforeList = list.map(item => ({ ...item }));
           const disBefore = storeHelper.countDisadvantages(list);
+          let requiresFullRefresh = hasActiveIndexFilters();
           const checkDisadvWarning = async () => {
             if (storeHelper.countDisadvantages(list) === 5 && disBefore < 5) {
               await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
@@ -3222,6 +3259,7 @@
           const forceRuleOverride = (stopResult.hasStops || hasReplaceTargets)
             ? (await confirmRuleStopOverride(p.namn, stopResult, 'add'))
             : false;
+          requiresFullRefresh = requiresFullRefresh || forceRuleOverride || hasReplaceTargets;
           if (stopResult.hasStops && !forceRuleOverride) {
             cancelAddScenario(addScenarioId, {
               scope: 'index',
@@ -3255,6 +3293,7 @@
             });
             return;
           }
+          requiresFullRefresh = requiresFullRefresh || Boolean(listChoice.hasChoice);
 
           const addedBase = { ...p, nivå: lvl };
           if (listChoice.hasChoice && listChoice.rule?.field) {
@@ -3272,20 +3311,31 @@
                 if (forceRuleOverride) existing.manualRuleOverride = true;
                 await checkDisadvWarning();
                 timeActiveAddStage('store-mutation', () => {
-                  storeHelper.setCurrentList(store, list); updateXP();
+                  storeHelper.setCurrentList(store, list);
                 }, {
                   branch: 'list',
                   mode: 'replace-existing',
                   surface: 'index'
                 });
                 await ensureChoicesForNewEntries(beforeList);
-                updateXP();
-                scheduleRenderList();
-                renderTraits();
+                skipImmediateDerivedRefresh = true;
+                needsFullRefresh = needsFullRefresh || requiresFullRefresh;
+                scheduleCharacterMutationRefresh({
+                  xp: true,
+                  traits: true,
+                  summary: true,
+                  effects: true,
+                  source: 'index-list-replace',
+                  afterPaint: false
+                });
+                activeTags();
+                if (needsFullRefresh || !updateEntryCardUI(existing)) {
+                  needsFullRefresh = true;
+                  scheduleRenderList();
+                }
                 flashAdded(existing.namn, existing.trait);
-                await finishAddScenario(addScenarioId, {
-                  scope: 'index',
-                  entry: name,
+                await waitForCharacterMutationRefresh();
+                await completeAddScenario({
                   mode: 'replace-existing'
                 });
                 return;
@@ -3296,25 +3346,34 @@
           const finishAdd = async added => {
             await checkDisadvWarning();
             timeActiveAddStage('store-mutation', () => {
-              storeHelper.setCurrentList(store, list); updateXP();
+              storeHelper.setCurrentList(store, list);
             }, {
               branch: 'list',
               mode: 'add',
               surface: 'index'
             });
             await ensureChoicesForNewEntries(beforeList);
-            updateXP();
             if (p.namn === 'Privilegierad') {
               invUtil.renderInventory();
+              requiresFullRefresh = true;
             }
             if (p.namn === 'Besittning') {
               const amount = Math.floor(Math.random() * 10) + 11;
               storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
               await alertPopup(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
               invUtil.renderInventory();
+              requiresFullRefresh = true;
             }
-            needsFullRefresh = true;
-            renderTraits();
+            skipImmediateDerivedRefresh = true;
+            needsFullRefresh = needsFullRefresh || requiresFullRefresh;
+            scheduleCharacterMutationRefresh({
+              xp: true,
+              traits: true,
+              summary: true,
+              effects: true,
+              source: 'index-list-add',
+              afterPaint: false
+            });
             flashAdded(added.namn, added.trait);
           };
           const added = { ...addedBase };
@@ -3550,12 +3609,9 @@
       if (act === 'add') {
         flashAdded(name, tr);
         if (skipImmediateDerivedRefresh) {
-          await window.symbaroumDerivedState?.waitForCharacterConsistencyRefresh?.();
+          await waitForCharacterMutationRefresh();
         }
-        await finishAddScenario(addScenarioId, {
-          scope: 'index',
-          entry: name
-        });
+        await completeAddScenario();
       } else if (act === 'sub' || act === 'del' || act === 'rem') {
         flashRemoved(name, tr);
       }

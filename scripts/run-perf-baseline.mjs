@@ -26,14 +26,17 @@ function renderMarkdownSummary(summary) {
   lines.push('', '## Scenarios');
 
   Object.entries(summary.scenarios.scenarios).forEach(([name, scenario]) => {
-    const duration = scenario?.duration != null ? `${scenario.duration.toFixed(1)} ms` : 'n/a';
-    lines.push(`- ${name}: ${duration}`);
+    const avg = scenario?.avgMs != null ? `${scenario.avgMs.toFixed(1)} ms` : 'n/a';
+    const median = scenario?.medianMs != null ? `${scenario.medianMs.toFixed(1)} ms` : 'n/a';
+    lines.push(`- ${name}: avg ${avg}, median ${median}`);
   });
 
   lines.push('', '## Web Vitals');
 
   (summary.scenarios.vitals.firstLoad || []).forEach((metric) => {
-    lines.push(`- ${metric.name}: ${metric.value.toFixed(2)} (${metric.rating})`);
+    const avg = metric?.avgMs != null ? metric.avgMs.toFixed(2) : 'n/a';
+    const median = metric?.medianMs != null ? metric.medianMs.toFixed(2) : 'n/a';
+    lines.push(`- ${metric.name}: avg ${avg}, median ${median}`);
   });
 
   return `${lines.join('\n')}\n`;
