@@ -324,6 +324,273 @@ async function clickDeterministicAddButton(page, kind) {
   return target;
 }
 
+async function settleAfterMutation(page) {
+  await page.evaluate(() => new Promise((resolve) => {
+    requestAnimationFrame(() => requestAnimationFrame(resolve));
+  }));
+}
+
+async function enableRemoveProfiling(page) {
+  await page.evaluate(async () => {
+    window.__symbaroumPerfCaptureRemovals = true;
+    window.__symbaroumPerfAwaitFlush = true;
+    if (!window.__symbaroumPerfDialogOverrides) {
+      window.__symbaroumPerfDialogOverrides = {
+        alertPopup: window.alertPopup,
+        confirmPopup: window.confirmPopup,
+        openDialog: window.openDialog
+      };
+    }
+    window.alertPopup = async () => true;
+    window.confirmPopup = async () => true;
+    window.openDialog = async () => true;
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'remove-prep' });
+    window.symbaroumPerf?.clearHistory?.();
+  });
+}
+
+async function clickCardAction(page, { rootSelector, name, act }) {
+  const acts = (Array.isArray(act) ? act : [act]).map((value) => String(value || '').trim()).filter(Boolean);
+  const clicked = await page.evaluate(({ rootSelector, name, acts }) => {
+    const root = document.querySelector(rootSelector);
+    if (!root) return null;
+    const cards = [...root.querySelectorAll('li.entry-card, li.card')];
+    const target = cards.find((card) => {
+      const cardName = String(card?.dataset?.name || '').trim();
+      if (name && cardName !== name) return false;
+      return acts.some((candidateAct) => Boolean(card.querySelector(`button[data-act="${candidateAct}"]`)));
+    }) || null;
+    if (!target) return null;
+    const button = acts
+      .map((candidateAct) => target.querySelector(`button[data-act="${candidateAct}"]`))
+      .find(Boolean);
+    if (!button) return null;
+    button.click();
+    return {
+      name: String(target.dataset.name || '').trim(),
+      act: String(button.dataset.act || '').trim()
+    };
+  }, { rootSelector, name, acts });
+
+  if (!clicked) {
+    const available = await page.evaluate(({ rootSelector, name }) => {
+      const root = document.querySelector(rootSelector);
+      if (!root) return { rootFound: false, cards: [] };
+      const cards = [...root.querySelectorAll('li.entry-card, li.card')].map((card) => ({
+        name: String(card?.dataset?.name || '').trim(),
+        acts: [...card.querySelectorAll('button[data-act]')].map((button) => String(button.dataset.act || '').trim()).filter(Boolean)
+      }));
+      return {
+        rootFound: true,
+        cards: name
+          ? cards.filter((card) => card.name === name)
+          : cards.slice(0, 20)
+      };
+    }, { rootSelector, name });
+    throw new Error(`Unable to click ${acts.join('/')} in ${rootSelector}${name ? ` for ${name}` : ''}. Available: ${JSON.stringify(available)}`);
+  }
+  return clicked;
+}
+
+async function waitForRemoveScenario(page) {
+  return waitForScenario(page, 'remove-item-from-character');
+}
+
+async function prepareCharacterListEntry(page, options = {}) {
+  return page.evaluate(async ({ entryName = 'Akrobatik', count = 1, onlySelected = false }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entry = window.lookupEntry?.({ name: entryName })
+      || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
+      || null;
+    if (!entry) throw new Error(`Missing entry: ${entryName}`);
+    const levels = Object.keys(entry.nivåer || {});
+    const level = levels[0] || entry.nivå || 'Novis';
+    const list = Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => ({
+      ...JSON.parse(JSON.stringify(entry)),
+      nivå: level,
+      __uid: `perf-char-${Date.now()}-${index}`
+    }));
+    window.storeHelper.setCurrentList(activeStore, list);
+    window.storeHelper.setOnlySelected(activeStore, Boolean(onlySelected));
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-character-list' });
+    window.symbaroumViewBridge?.refreshCurrent({
+      selection: true,
+      inventory: true,
+      filters: true,
+      traits: true,
+      summary: true,
+      effects: true,
+      strict: true
+    });
+    if (typeof window.updateXP === 'function') window.updateXP();
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    return {
+      name: entry.namn,
+      count: list.length
+    };
+  }, options);
+}
+
+async function prepareCharacterArtifactRemove(page) {
+  return page.evaluate(async () => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const candidates = (window.DB || []).filter((candidate) => (
+      window.isInv?.(candidate)
+      && Array.isArray(candidate?.taggar?.typ)
+      && candidate.taggar.typ.some((type) => ['Artefakt', 'Lägre Artefakt'].includes(String(type || '').trim()))
+    ));
+    const entry = candidates.find((candidate) => (
+      Array.isArray(candidate?.taggar?.typ)
+      && candidate.taggar.typ.some((type) => String(type || '').trim() === 'Artefakt')
+    )) || candidates[0] || null;
+    if (!entry) throw new Error('Missing artifact entry for character remove scenario.');
+    const row = {
+      id: entry.id,
+      name: entry.namn,
+      qty: 1,
+      gratis: 0,
+      gratisKval: [],
+      removedKval: [],
+      artifactEffect: entry.artifactEffect || ''
+    };
+    const levels = Object.keys(entry.nivåer || {});
+    window.storeHelper.setCurrentList(activeStore, [{
+      ...JSON.parse(JSON.stringify(entry)),
+      nivå: levels[0] || entry.nivå || 'Novis',
+      __uid: `perf-artifact-${Date.now()}`
+    }]);
+    window.storeHelper.setInventory(activeStore, [row]);
+    if (entry.id) window.storeHelper.addRevealedArtifact(activeStore, entry.id);
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-character-artifact' });
+    window.symbaroumViewBridge?.refreshCurrent({
+      selection: true,
+      strict: true
+    });
+    return { name: entry.namn, id: entry.id || null };
+  });
+}
+
+async function prepareIndexListEntry(page, options = {}) {
+  return page.evaluate(async ({ entryName = 'Akrobatik', count = 1, onlySelected = false }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entry = window.lookupEntry?.({ name: entryName })
+      || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
+      || null;
+    if (!entry) throw new Error(`Missing entry: ${entryName}`);
+    const levels = Object.keys(entry.nivåer || {});
+    const level = levels[0] || entry.nivå || 'Novis';
+    const list = Array.from({ length: Math.max(1, Number(count) || 1) }, (_, index) => ({
+      ...JSON.parse(JSON.stringify(entry)),
+      nivå: level,
+      __uid: `perf-index-${Date.now()}-${index}`
+    }));
+    window.storeHelper.setCurrentList(activeStore, list);
+    window.storeHelper.setOnlySelected(activeStore, Boolean(onlySelected));
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-index-list' });
+    window.symbaroumViewBridge?.refreshCurrent({
+      selection: true,
+      inventory: true,
+      filters: true,
+      strict: true
+    });
+    if (typeof window.updateXP === 'function') window.updateXP();
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    return { name: entry.namn, count: list.length };
+  }, options);
+}
+
+async function prepareIndexInventoryEntry(page, options = {}) {
+  return page.evaluate(async ({ entryName = 'Dubbel ringbrynja', qty = 1, useArtifactCandidate = false, onlySelected = false }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entry = useArtifactCandidate
+      ? (() => {
+          const visibleCards = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')]
+            .map((card) => {
+              const ref = {
+                id: card?.dataset?.id || undefined,
+                name: String(card?.dataset?.name || '').trim()
+              };
+              const candidate = window.lookupEntry?.(ref) || null;
+              return candidate ? { card, candidate } : null;
+            })
+            .filter(Boolean);
+          const visibleArtifact = visibleCards.find(({ candidate }) => (
+            window.isInv?.(candidate)
+            && Array.isArray(candidate?.taggar?.typ)
+            && candidate.taggar.typ.some((type) => ['Artefakt', 'Lägre Artefakt'].includes(String(type || '').trim()))
+          ))?.candidate || null;
+          if (visibleArtifact) return visibleArtifact;
+          return (window.DB || []).find((candidate) => (
+            window.isInv?.(candidate)
+            && Array.isArray(candidate?.taggar?.typ)
+            && candidate.taggar.typ.some((type) => ['Artefakt', 'Lägre Artefakt'].includes(String(type || '').trim()))
+          )) || (window.DB || []).find((candidate) => (
+            window.isInv?.(candidate)
+            && window.storeHelper?.isSearchHiddenEntry?.(candidate)
+          )) || null;
+        })()
+      : window.lookupEntry?.({ name: entryName })
+        || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === String(entryName).trim())
+        || null;
+    if (!entry) throw new Error('Missing inventory entry for index remove scenario.');
+    const row = useArtifactCandidate
+      ? {
+          id: entry.id,
+          name: entry.namn,
+          qty: 1,
+          gratis: 0,
+          gratisKval: [],
+          removedKval: [],
+          artifactEffect: entry.artifactEffect || ''
+        }
+      : await window.invUtil?.buildInventoryRow?.({
+          entry,
+          list: window.storeHelper.getCurrentList(activeStore)
+        });
+    if (!row) throw new Error('Unable to build inventory row.');
+    row.qty = Math.max(1, Number(qty) || 1);
+    window.storeHelper.setInventory(activeStore, [row]);
+    if (useArtifactCandidate) {
+      const levels = Object.keys(entry.nivåer || {});
+      window.storeHelper.setCurrentList(activeStore, [{
+        ...JSON.parse(JSON.stringify(entry)),
+        nivå: levels[0] || entry.nivå || 'Novis'
+      }]);
+      if (entry.id && typeof window.storeHelper.addRevealedArtifact === 'function') {
+        window.storeHelper.addRevealedArtifact(activeStore, entry.id);
+      }
+    }
+    window.storeHelper.setOnlySelected(activeStore, Boolean(onlySelected));
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-index-inventory' });
+    window.symbaroumViewBridge?.refreshCurrent({
+      selection: true,
+      inventory: true,
+      filters: true,
+      strict: true
+    });
+    window.invUtil?.renderInventory?.();
+    if (typeof window.updateXP === 'function') window.updateXP();
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    return {
+      name: entry.namn,
+      qty: row.qty,
+      useArtifactCandidate
+    };
+  }, options);
+}
+
+async function pickMultiListEntryName(page) {
+  return page.evaluate(() => {
+    const entry = (window.DB || []).find((candidate) => (
+      !window.isInv?.(candidate)
+      && !window.isEmployment?.(candidate)
+      && !window.isService?.(candidate)
+      && Number(candidate?.taggar?.max_antal) > 1
+    )) || null;
+    return entry?.namn || null;
+  });
+}
+
 async function runFirstLoad(browser, iterations) {
   const vitals = [];
   const runs = await collectRuns(browser, iterations, async () => (
@@ -715,31 +982,499 @@ async function runHeavyCurrentCharacterSave(browser, iterations) {
   return aggregateScenarioRuns('heavy-current-character-save', runs);
 }
 
+async function runCharacterRemoveSingle(browser, iterations) {
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => {
+      const target = await prepareCharacterListEntry(page, { entryName: 'Akrobatik', count: 1 });
+      await settleAfterMutation(page);
+      await enableRemoveProfiling(page);
+      await clickCardAction(page, { rootSelector: '#valda', name: target.name, act: 'rem' });
+      const scenario = await waitForRemoveScenario(page);
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns('character-list-remove-single', runs);
+}
+
+async function runCharacterRemoveMulti(browser, iterations, action) {
+  const scenarioName = action === 'sub' ? 'character-list-remove-decrement' : 'character-list-remove-all';
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => (
+      page.evaluate(async ({ action, scenarioName }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const entry = window.lookupEntry?.({ name: 'Akrobatik' })
+          || (window.DB || []).find((candidate) => String(candidate?.namn || '').trim() === 'Akrobatik')
+          || null;
+        if (!entry) throw new Error('Missing Akrobatik for character multi remove scenario.');
+        const levels = Object.keys(entry.nivåer || {});
+        const list = [0, 1].map((index) => ({
+          ...JSON.parse(JSON.stringify(entry)),
+          nivå: levels[0] || entry.nivå || 'Novis',
+          __uid: `perf-char-multi-${index}`
+        }));
+        window.storeHelper.setCurrentList(activeStore, list);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName });
+        window.symbaroumViewBridge?.refreshCurrent({ selection: true, strict: true });
+        if (typeof window.updateXP === 'function') window.updateXP();
+        if (typeof window.renderTraits === 'function') window.renderTraits();
+        window.symbaroumPerf?.clearHistory?.();
+        const perf = window.symbaroumPerf;
+        const scenarioId = perf?.startScenario?.(scenarioName, {
+          scope: 'character',
+          entry: entry.namn,
+          branch: 'list'
+        });
+        perf?.setFlowContext?.('remove-item', scenarioId);
+        const next = action === 'sub' ? list.slice(1) : [];
+        await perf?.timeScenarioStage?.(scenarioId, 'store-mutation', () => {
+          window.storeHelper.setCurrentList(activeStore, next);
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+        await perf?.timeScenarioStage?.(scenarioId, 'selection-render', () => {
+          window.symbaroumViewBridge?.refreshCurrent({ selection: true, strict: true });
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+        await perf?.timeScenarioStage?.(scenarioId, 'derived-refresh', () => {
+          if (typeof window.updateXP === 'function') window.updateXP();
+          if (typeof window.renderTraits === 'function') window.renderTraits();
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName })
+        ));
+        await perf?.afterNextPaint?.(2);
+        perf?.clearFlowContext?.('remove-item', scenarioId);
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'character',
+          entry: entry.namn,
+          branch: 'list'
+        });
+      }, { action, scenarioName })
+    ))
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runCharacterArtifactRemove(browser, iterations) {
+  const scenarioName = 'character-artifact-cascade-remove';
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => (
+      page.evaluate(async ({ scenarioName }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const waitWithTimeout = (value, label, timeoutMs = 8_000) => Promise.race([
+          Promise.resolve(value),
+          new Promise((_, reject) => {
+            setTimeout(() => reject(new Error(label)), timeoutMs);
+          })
+        ]);
+        const candidates = (window.DB || []).filter((candidate) => (
+          window.isInv?.(candidate)
+          && Array.isArray(candidate?.taggar?.typ)
+          && candidate.taggar.typ.some((type) => ['Artefakt', 'Lägre Artefakt'].includes(String(type || '').trim()))
+        ));
+        const entry = candidates.find((candidate) => (
+          Array.isArray(candidate?.taggar?.typ)
+          && candidate.taggar.typ.some((type) => String(type || '').trim() === 'Artefakt')
+        )) || candidates[0] || null;
+        if (!entry) throw new Error('Missing artifact entry for character remove scenario.');
+
+        const row = {
+          id: entry.id,
+          name: entry.namn,
+          qty: 1,
+          gratis: 0,
+          gratisKval: [],
+          removedKval: [],
+          artifactEffect: entry.artifactEffect || ''
+        };
+
+        const levels = Object.keys(entry.nivåer || {});
+        window.storeHelper.setCurrentList(activeStore, [{
+          ...JSON.parse(JSON.stringify(entry)),
+          nivå: levels[0] || entry.nivå || 'Novis',
+          __uid: 'perf-character-artifact-remove'
+        }]);
+        window.storeHelper.setInventory(activeStore, [row]);
+        if (entry.id) window.storeHelper.addRevealedArtifact(activeStore, entry.id);
+        await waitWithTimeout(
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName }),
+          'Artifact scenario setup flush timed out.'
+        );
+        window.symbaroumViewBridge?.refreshCurrent({ selection: true, strict: true });
+        window.symbaroumPerf?.clearHistory?.();
+
+        const perf = window.symbaroumPerf;
+        const scenarioId = perf?.startScenario?.(scenarioName, {
+          scope: 'character',
+          entry: entry.namn,
+          branch: 'list'
+        });
+        perf?.setFlowContext?.('remove-item', scenarioId);
+
+        const runMutationBatch = typeof window.storeHelper?.batchCurrentCharacterMutation === 'function'
+          ? (callback) => window.storeHelper.batchCurrentCharacterMutation(activeStore, {}, callback)
+          : async (callback) => callback();
+
+        await waitWithTimeout(runMutationBatch(async () => {
+          await perf?.timeScenarioStage?.(scenarioId, 'store-mutation', () => {
+            window.storeHelper.setCurrentList(activeStore, []);
+          }, {
+            surface: 'character',
+            branch: 'list'
+          });
+
+          const nextInventory = window.storeHelper.getInventory(activeStore);
+          const removeItem = (items) => {
+            for (let index = items.length - 1; index >= 0; index -= 1) {
+              if (items[index]?.id === entry.id) items.splice(index, 1);
+              else if (Array.isArray(items[index]?.contains)) removeItem(items[index].contains);
+            }
+          };
+          removeItem(nextInventory);
+
+          await perf?.timeScenarioStage?.(scenarioId, 'inventory-sync', () => (
+            window.invUtil?.saveInventory?.(nextInventory, {
+              source: 'perf-character-artifact-remove',
+              skipCharacterRefresh: true,
+              afterPaint: false
+            })
+          ), {
+            surface: 'character',
+            branch: 'list'
+          });
+
+          if (entry.id) {
+            window.storeHelper.removeRevealedArtifact(activeStore, entry.id);
+          }
+        }), 'Artifact scenario mutation batch timed out.');
+
+        await perf?.timeScenarioStage?.(scenarioId, 'selection-render', () => {
+          window.symbaroumViewBridge?.refreshCurrent({ selection: true, strict: true });
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+
+        await perf?.timeScenarioStage?.(scenarioId, 'derived-refresh', () => {
+          if (typeof window.updateXP === 'function') window.updateXP();
+          if (typeof window.renderTraits === 'function') window.renderTraits();
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+
+        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => (
+          waitWithTimeout(
+            window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName }),
+            'Artifact scenario final flush timed out.'
+          )
+        ));
+        await perf?.afterNextPaint?.(2);
+        perf?.clearFlowContext?.('remove-item', scenarioId);
+        return perf?.endScenario?.(scenarioId, {
+          scope: 'character',
+          entry: entry.namn,
+          branch: 'list'
+        });
+      }, { scenarioName })
+    ))
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runCharacterClearNonInv(browser, iterations) {
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/character', readySelector: '#valda' }, async (page) => {
+      await page.evaluate(async () => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const listEntries = ['Akrobatik', 'Sjätte sinne']
+          .map((name, index) => {
+            const entry = window.lookupEntry?.({ name });
+            if (!entry) return null;
+            const levels = Object.keys(entry.nivåer || {});
+            return {
+              ...JSON.parse(JSON.stringify(entry)),
+              nivå: levels[0] || entry.nivå || 'Novis',
+              __uid: `perf-clear-${index}`
+            };
+          })
+          .filter(Boolean);
+        const invEntry = window.lookupEntry?.({ name: 'Dubbel ringbrynja' }) || null;
+        const invRow = invEntry
+          ? await window.invUtil?.buildInventoryRow?.({
+              entry: invEntry,
+              list: window.storeHelper.getCurrentList(activeStore)
+            })
+          : null;
+        window.storeHelper.setCurrentList(activeStore, listEntries);
+        if (invRow) window.storeHelper.setInventory(activeStore, [invRow]);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'prepare-clear-non-inv' });
+        window.symbaroumViewBridge?.refreshCurrent({
+          selection: true,
+          inventory: true,
+          filters: true,
+          strict: true
+        });
+        window.invUtil?.renderInventory?.();
+      });
+      await settleAfterMutation(page);
+      await enableRemoveProfiling(page);
+      await page.locator('#clearNonInv').click();
+      const scenario = await waitForRemoveScenario(page);
+      return scenario;
+    })
+  ));
+  return aggregateScenarioRuns('character-clear-non-inventory', runs);
+}
+
+async function runIndexListRemove(browser, iterations, options = {}) {
+  const scenarioName = options.onlySelected ? 'index-list-remove-full-rerender' : 'index-list-remove';
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
+      const target = await prepareIndexListEntry(page, {
+        entryName: 'Akrobatik',
+        count: 1,
+        onlySelected: Boolean(options.onlySelected)
+      });
+      await settleAfterMutation(page);
+      await enableRemoveProfiling(page);
+      await clickCardAction(page, { rootSelector: '#lista', name: target.name, act: 'rem' });
+      const scenario = await waitForRemoveScenario(page);
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runIndexInventoryRemove(browser, iterations, options = {}) {
+  const scenarioName = options.useArtifactCandidate ? 'index-hidden-artifact-remove' : 'index-inventory-remove';
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/index', readySelector: '#lista' }, async (page) => {
+      const target = await prepareIndexInventoryEntry(page, {
+        entryName: 'Dubbel ringbrynja',
+        qty: options.useArtifactCandidate ? 1 : 2,
+        useArtifactCandidate: Boolean(options.useArtifactCandidate)
+      });
+      await settleAfterMutation(page);
+      await enableRemoveProfiling(page);
+      await clickCardAction(page, {
+        rootSelector: '#lista',
+        name: target.name,
+        act: options.useArtifactCandidate ? ['rem', 'del', 'sub'] : 'sub'
+      });
+      const scenario = await waitForRemoveScenario(page);
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
+async function runInventoryRemove(browser, iterations, kind) {
+  const scenarioNames = {
+    'row-delete': 'inventory-row-delete',
+    'stack-decrement': 'inventory-stack-decrement',
+    'tag-remove': 'inventory-tag-remove',
+    'container-delete-all': 'inventory-container-delete-all',
+    'container-delete-only': 'inventory-container-delete-only',
+    'vehicle-unload': 'inventory-vehicle-unload-remove',
+    'vehicle-money-remove': 'inventory-vehicle-money-remove',
+    'clear-inventory': 'inventory-clear'
+  };
+  const scenarioName = scenarioNames[kind];
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, { pathName: '/#/inventory', readySelector: '#invList' }, async (page) => (
+      page.evaluate(async ({ kind, scenarioName }) => {
+        const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+        const perf = window.symbaroumPerf;
+        const ringArmor = window.lookupEntry?.({ name: 'Dubbel ringbrynja' });
+        const bandage = window.lookupEntry?.({ name: 'Bandage' }) || window.lookupEntry?.({ name: 'Dryckesbälte' });
+        const vehicleEntry = window.lookupEntry?.({ name: 'Kärra' }) || window.lookupEntry?.({ name: 'Mulåsna' });
+        const buildRow = async (entry) => {
+          const row = await window.invUtil?.buildInventoryRow?.({
+            entry,
+            list: window.storeHelper.getCurrentList(activeStore)
+          });
+          if (!row) throw new Error(`Unable to build inventory row for ${entry?.namn || 'unknown entry'}.`);
+          return row;
+        };
+        let inventory = [];
+        if (kind === 'row-delete' || kind === 'stack-decrement' || kind === 'tag-remove' || kind === 'clear-inventory') {
+          const row = await buildRow(ringArmor);
+          row.qty = kind === 'stack-decrement' ? 3 : 1;
+          if (kind === 'tag-remove') {
+            row.kvaliteter = ['Massivt'];
+            row.gratisKval = ['Massivt'];
+          }
+          inventory = kind === 'clear-inventory'
+            ? [row, { ...(await buildRow(bandage)), qty: 2 }]
+            : [row];
+        } else if (kind === 'container-delete-all' || kind === 'container-delete-only' || kind === 'vehicle-unload' || kind === 'vehicle-money-remove') {
+          const vehicle = await buildRow(vehicleEntry);
+          if (kind === 'vehicle-money-remove') {
+            vehicle.contains = [{
+              name: 'Pengar',
+              typ: 'currency',
+              money: { daler: 3, skilling: 0, 'örtegar': 0 },
+              qty: 1
+            }];
+          } else {
+            const item = await buildRow(bandage);
+            item.qty = 2;
+            vehicle.contains = [item];
+          }
+          inventory = [vehicle];
+        }
+
+        window.storeHelper.setInventory(activeStore, inventory);
+        await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-${scenarioName}` });
+        window.invUtil?.renderInventory?.();
+        perf?.clearHistory?.();
+        const scenarioId = perf?.startScenario?.(scenarioName, { scope: 'inventory', kind });
+        perf?.setFlowContext?.('remove-item', scenarioId);
+
+        const runMutation = async () => {
+          if (kind === 'row-delete') {
+            inventory.splice(0, 1);
+            window.invUtil?.saveInventory?.(inventory, { source: 'perf-row-delete', afterPaint: false });
+          } else if (kind === 'stack-decrement') {
+            inventory[0].qty = 2;
+            window.invUtil?.saveInventory?.(inventory, { source: 'perf-stack-decrement', afterPaint: false });
+          } else if (kind === 'tag-remove') {
+            inventory[0].gratisKval = [];
+            inventory[0].kvaliteter = [];
+            window.invUtil?.saveInventory?.(inventory, { source: 'perf-tag-remove', afterPaint: false });
+          } else if (kind === 'container-delete-all') {
+            inventory.splice(0, 1);
+            window.invUtil?.saveInventory?.(inventory, { source: 'perf-container-delete-all', afterPaint: false });
+          } else if (kind === 'container-delete-only') {
+            const [vehicle] = inventory.splice(0, 1);
+            inventory.push(...(vehicle.contains || []));
+            window.invUtil?.saveInventory?.(inventory, { source: 'perf-container-delete-only', afterPaint: false });
+          } else if (kind === 'vehicle-unload') {
+            const vehicle = inventory[0];
+            const item = (vehicle.contains || []).shift();
+            if (item) inventory.push(item);
+            window.invUtil?.saveInventory?.(inventory, { source: 'perf-vehicle-unload-remove', afterPaint: false });
+          } else if (kind === 'vehicle-money-remove') {
+            const vehicle = inventory[0];
+            window.invUtil?.removeMoneyFromVehicle?.(vehicle, [0, 0], {
+              daler: 1,
+              skilling: 0,
+              'örtegar': 0
+            });
+          } else if (kind === 'clear-inventory') {
+            window.invUtil?.saveInventory?.([], { source: 'perf-clear-inventory', afterPaint: false });
+          }
+        };
+
+        await perf?.timeScenarioStage?.(scenarioId, 'store-mutation', runMutation, {
+          surface: 'inventory'
+        });
+        if (kind !== 'vehicle-money-remove') {
+          await perf?.timeScenarioStage?.(scenarioId, 'inventory-render', () => {
+            window.invUtil?.renderInventory?.();
+          }, {
+            surface: 'inventory'
+          });
+        }
+        await perf?.timeScenarioStage?.(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: scenarioName })
+        ));
+        await perf?.afterNextPaint?.(2);
+        perf?.clearFlowContext?.('remove-item', scenarioId);
+        return perf?.endScenario?.(scenarioId, { scope: 'inventory', kind });
+      }, { kind, scenarioName })
+    ))
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
+}
+
 export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_ITERATIONS } = {}) {
   const resolvedRunDir = runDir || await createRunDir('scenarios');
   const reportDir = path.join(resolvedRunDir, 'scenarios');
   const server = await startPreviewServer({ port: PREVIEW_PORT });
   const browser = await chromium.launch({ headless: true });
+  const scenarioFilter = String(process.env.SCENARIO_FILTER || '').trim().toLowerCase();
+  const normalizeScenarioToken = (value) => String(value || '').trim().toLowerCase();
+  const splitScenarioTokens = (value) => normalizeScenarioToken(value).split(/[\s-]+/).filter(Boolean);
+  const includeScenario = (name, aliases = []) => {
+    if (!scenarioFilter) return true;
+    const candidates = [name, ...aliases]
+      .map(normalizeScenarioToken)
+      .filter(Boolean);
+    if (!candidates.length) return false;
+    if (candidates.includes(scenarioFilter)) return true;
+    const filterTokens = splitScenarioTokens(scenarioFilter);
+    if (filterTokens.length !== 1) return false;
+    return candidates.some((candidate) => splitScenarioTokens(candidate).includes(filterTokens[0]));
+  };
 
   try {
-    const scenarios = {
-      firstLoad: await runFirstLoad(browser, iterations),
-      routeChange: await runRouteChange(browser, iterations),
-      openInventory: await runOpenInventory(browser, iterations),
-      switchCharacter: await runSwitchCharacter(browser, iterations),
-      addIndexList: await runIndexAdd(browser, iterations, 'list'),
-      addIndexInventory: await runIndexAdd(browser, iterations, 'inventory'),
-      searchFilter: await runSearchFilter(browser, iterations),
-      inventoryBuyMultiple: await runInventoryBuyMultiple(browser, iterations),
-      inventoryAddQuality: await runInventoryAddQuality(browser, iterations),
-      inventoryCustomItemCreate: await runInventoryCustomItemCreate(browser, iterations),
-      inventoryCustomItemEdit: await runInventoryCustomItemEdit(browser, iterations),
-      inventoryVehicleLoad: await runVehicleScenario(browser, iterations, 'load'),
-      inventoryVehicleUnload: await runVehicleScenario(browser, iterations, 'unload'),
-      notesEdit: await runNotesEdit(browser, iterations),
-      moneyEdit: await runMoneyEdit(browser, iterations),
-      heavyCharacterSave: await runHeavyCurrentCharacterSave(browser, iterations)
-    };
+    const scenarioDefinitions = [
+      { key: 'firstLoad', name: 'first-load', run: () => runFirstLoad(browser, iterations) },
+      { key: 'routeChange', name: 'route-change', run: () => runRouteChange(browser, iterations) },
+      { key: 'openInventory', name: 'open-inventory', run: () => runOpenInventory(browser, iterations) },
+      { key: 'switchCharacter', name: 'switch-character', run: () => runSwitchCharacter(browser, iterations) },
+      { key: 'addIndexList', name: 'index-list-add', aliases: ['add'], run: () => runIndexAdd(browser, iterations, 'list') },
+      { key: 'addIndexInventory', name: 'index-inventory-add', aliases: ['add'], run: () => runIndexAdd(browser, iterations, 'inventory') },
+      { key: 'searchFilter', name: 'search-filter', run: () => runSearchFilter(browser, iterations) },
+      { key: 'inventoryBuyMultiple', name: 'inventory-buy-multiple', aliases: ['inventory add'], run: () => runInventoryBuyMultiple(browser, iterations) },
+      { key: 'inventoryAddQuality', name: 'inventory-add-quality', aliases: ['inventory add'], run: () => runInventoryAddQuality(browser, iterations) },
+      { key: 'inventoryCustomItemCreate', name: 'inventory-custom-item-create', aliases: ['inventory add'], run: () => runInventoryCustomItemCreate(browser, iterations) },
+      { key: 'inventoryCustomItemEdit', name: 'inventory-custom-item-edit', run: () => runInventoryCustomItemEdit(browser, iterations) },
+      { key: 'inventoryVehicleLoad', name: 'inventory-vehicle-load', aliases: ['inventory add'], run: () => runVehicleScenario(browser, iterations, 'load') },
+      { key: 'inventoryVehicleUnload', name: 'inventory-vehicle-unload', aliases: ['inventory remove'], run: () => runVehicleScenario(browser, iterations, 'unload') },
+      { key: 'notesEdit', name: 'notes-edit', run: () => runNotesEdit(browser, iterations) },
+      { key: 'moneyEdit', name: 'money-edit', run: () => runMoneyEdit(browser, iterations) },
+      { key: 'heavyCharacterSave', name: 'heavy-current-character-save', run: () => runHeavyCurrentCharacterSave(browser, iterations) },
+      { key: 'characterListRemoveSingle', name: 'character-list-remove-single', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations) },
+      { key: 'characterListRemoveDecrement', name: 'character-list-remove-decrement', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveMulti(browser, iterations, 'sub') },
+      { key: 'characterListRemoveAll', name: 'character-list-remove-all', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveMulti(browser, iterations, 'del') },
+      { key: 'characterArtifactCascadeRemove', name: 'character-artifact-cascade-remove', aliases: ['remove', 'character remove'], run: () => runCharacterArtifactRemove(browser, iterations) },
+      { key: 'characterClearNonInventory', name: 'character-clear-non-inventory', aliases: ['remove', 'character remove'], run: () => runCharacterClearNonInv(browser, iterations) },
+      { key: 'indexListRemove', name: 'index-list-remove', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations) },
+      { key: 'indexInventoryRemove', name: 'index-inventory-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations) },
+      { key: 'indexHiddenArtifactRemove', name: 'index-hidden-artifact-remove', aliases: ['remove', 'index remove'], run: () => runIndexInventoryRemove(browser, iterations, { useArtifactCandidate: true }) },
+      { key: 'indexListRemoveFullRerender', name: 'index-list-remove-full-rerender', aliases: ['remove', 'index remove'], run: () => runIndexListRemove(browser, iterations, { onlySelected: true }) },
+      { key: 'inventoryRowDelete', name: 'inventory-row-delete', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'row-delete') },
+      { key: 'inventoryStackDecrement', name: 'inventory-stack-decrement', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'stack-decrement') },
+      { key: 'inventoryTagRemove', name: 'inventory-tag-remove', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'tag-remove') },
+      { key: 'inventoryContainerDeleteAll', name: 'inventory-container-delete-all', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'container-delete-all') },
+      { key: 'inventoryContainerDeleteOnly', name: 'inventory-container-delete-only', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'container-delete-only') },
+      { key: 'inventoryVehicleUnloadRemove', name: 'inventory-vehicle-unload-remove', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'vehicle-unload') },
+      { key: 'inventoryVehicleMoneyRemove', name: 'inventory-vehicle-money-remove', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'vehicle-money-remove') },
+      { key: 'inventoryClear', name: 'inventory-clear', aliases: ['remove', 'inventory remove'], run: () => runInventoryRemove(browser, iterations, 'clear-inventory') }
+    ];
+
+    const scenarios = {};
+    for (const definition of scenarioDefinitions) {
+      if (!includeScenario(definition.name, definition.aliases || [])) continue;
+      scenarios[definition.key] = await definition.run();
+    }
 
     const summary = {
       generatedAt: new Date().toISOString(),

@@ -926,9 +926,14 @@
     };
 
     const ADD_FLOW_CONTEXT_KEY = 'add-item';
-    const getActiveAddScenarioId = () => window.symbaroumPerf?.getFlowContext?.(ADD_FLOW_CONTEXT_KEY) || null;
+    const REMOVE_FLOW_CONTEXT_KEY = 'remove-item';
+    const getActiveMutationScenarioId = () => (
+      window.symbaroumPerf?.getFlowContext?.(REMOVE_FLOW_CONTEXT_KEY)
+      || window.symbaroumPerf?.getFlowContext?.(ADD_FLOW_CONTEXT_KEY)
+      || null
+    );
     const timeActiveAddStage = (name, callback, detail = {}) => {
-      const scenarioId = getActiveAddScenarioId();
+      const scenarioId = getActiveMutationScenarioId();
       const perf = window.symbaroumPerf;
       if (!scenarioId || typeof perf?.timeScenarioStage !== 'function') {
         return callback();
@@ -942,10 +947,23 @@
       perf?.markScenario?.(scenarioId, 'click-handler-start', detail);
       return scenarioId;
     };
+    const bindRemoveScenario = (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      perf?.setFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
+      perf?.markScenario?.(scenarioId, 'click-handler-start', detail);
+      return scenarioId;
+    };
     const cancelAddScenario = (scenarioId, detail = {}) => {
       if (!scenarioId) return null;
       const perf = window.symbaroumPerf;
       perf?.clearFlowContext?.(ADD_FLOW_CONTEXT_KEY, scenarioId);
+      return perf?.cancelScenario?.(scenarioId, detail) || null;
+    };
+    const cancelRemoveScenario = (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      perf?.clearFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
       return perf?.cancelScenario?.(scenarioId, detail) || null;
     };
     const finishAddScenario = async (scenarioId, detail = {}) => {
@@ -958,6 +976,24 @@
       perf?.clearFlowContext?.(ADD_FLOW_CONTEXT_KEY, scenarioId);
       return perf?.endScenario?.(scenarioId, detail) || null;
     };
+    const finishRemoveScenario = async (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      if (window.__symbaroumPerfAwaitFlush && typeof perf?.timeScenarioStage === 'function') {
+        await perf.timeScenarioStage(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'remove-scenario' })
+        ), {
+          surface: 'index'
+        });
+      }
+      if (typeof perf?.afterNextPaint === 'function') {
+        await perf.afterNextPaint(2);
+      }
+      perf?.markScenario?.(scenarioId, 'post-render-paint-complete', detail);
+      perf?.clearFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
+      return perf?.endScenario?.(scenarioId, detail) || null;
+    };
+    const shouldProfileRemoveActions = () => Boolean(window.__symbaroumPerfCaptureRemovals);
     const hasActiveIndexFilters = () => (
       Boolean(storeHelper.getOnlySelected(store))
       || ['search', 'typ', 'ark', 'test'].some((key) => {
@@ -984,6 +1020,13 @@
     const waitForCharacterMutationRefresh = () => (
       window.symbaroumMutationPipeline?.waitForCharacterRefresh?.() || Promise.resolve()
     );
+    const runCurrentCharacterMutationBatch = (callback) => {
+      if (typeof callback !== 'function') return undefined;
+      if (typeof storeHelper?.batchCurrentCharacterMutation === 'function') {
+        return storeHelper.batchCurrentCharacterMutation(store, {}, callback);
+      }
+      return callback();
+    };
 
     const getMonsterLoreSpecs = () => {
       const list = window.monsterLore?.SPECS;
@@ -2388,7 +2431,9 @@
       const run = () => {
         renderListFrame = null;
         renderListFrameType = '';
-        renderList(filtered());
+        timeActiveAddStage('full-list-render', () => renderList(filtered()), {
+          surface: 'index'
+        });
       };
       if (typeof requestAnimationFrame === 'function') {
         renderListFrameType = 'raf';
@@ -2449,8 +2494,42 @@
       else actionsRow.classList.remove('only-standard');
     };
 
+    const syncStandardActionButtons = (standardGroup, buttonSpecs, options = {}) => {
+      if (!standardGroup) return;
+      const buttonName = options.buttonName || '';
+      const buttonId = options.buttonId || '';
+      const existing = [...standardGroup.querySelectorAll(':scope > button')];
+
+      while (existing.length > buttonSpecs.length) {
+        existing.pop()?.remove();
+      }
+
+      buttonSpecs.forEach((spec, index) => {
+        let button = existing[index];
+        if (!button) {
+          button = document.createElement('button');
+          standardGroup.appendChild(button);
+          existing.push(button);
+        }
+        button.className = spec.highlight ? `${spec.classes} add-btn` : spec.classes;
+        button.dataset.act = spec.act;
+        if (buttonName) button.dataset.name = buttonName;
+        else delete button.dataset.name;
+        if (buttonId) button.dataset.id = buttonId;
+        else delete button.dataset.id;
+        if (spec.ariaLabel) button.setAttribute('aria-label', spec.ariaLabel);
+        else button.removeAttribute('aria-label');
+        if (button.dataset.iconName !== spec.iconName) {
+          button.innerHTML = icon(spec.iconName);
+          button.dataset.iconName = spec.iconName;
+        }
+      });
+    };
+
     const updateEntryCardUI = (entry) => {
-      const cards = findEntryCards(entry);
+      const cards = timeActiveAddStage('card-query', () => findEntryCards(entry), {
+        surface: 'index'
+      });
       if (!cards.length) return false;
       const charList = storeHelper.getCurrentList(store);
       const invList = storeHelper.getInventory(store);
@@ -2578,41 +2657,41 @@
         if (standardGroup) {
           const buttonName = card.dataset.name || entry.namn || '';
           const buttonId = card.dataset.id || (entry.id !== undefined && entry.id !== null ? String(entry.id) : '');
-          const buttons = [];
-          const createButton = (act, classes, iconName, ariaLabel = '', highlight = false) => {
-            const btn = document.createElement('button');
-            btn.className = highlight ? `${classes} add-btn` : classes;
-            btn.dataset.act = act;
-            if (buttonName) btn.dataset.name = buttonName;
-            if (buttonId) btn.dataset.id = buttonId;
-            if (ariaLabel) btn.setAttribute('aria-label', ariaLabel);
-            btn.innerHTML = icon(iconName);
-            return btn;
+          const buttonSpecs = [];
+          const pushButton = (act, classes, iconName, ariaLabel = '', highlight = false) => {
+            buttonSpecs.push({ act, classes, iconName, ariaLabel, highlight });
           };
 
           if (allowAdd) {
             if (multi) {
               if (count > 0) {
-                buttons.push(createButton('del', 'char-btn danger icon icon-only', 'remove'));
-                buttons.push(createButton('sub', 'char-btn icon icon-only', 'minus', 'Minska'));
-                if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
+                pushButton('del', 'char-btn danger icon icon-only', 'remove');
+                pushButton('sub', 'char-btn icon icon-only', 'minus', 'Minska');
+                if (isInventory) pushButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera');
                 if (count < limit) {
-                  buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till'));
+                  pushButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till');
                 }
               } else {
-                buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
-                if (isInventory) buttons.push(createButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera'));
+                pushButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true);
+                if (isInventory) pushButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera');
               }
             } else {
               if (inChar) {
-                buttons.push(createButton('rem', 'char-btn danger icon icon-only', 'remove'));
+                pushButton('rem', 'char-btn danger icon icon-only', 'remove');
               } else {
-                buttons.push(createButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true));
+                pushButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true);
               }
             }
           }
 
-          standardGroup.replaceChildren(...buttons);
+          timeActiveAddStage('button-patch', () => {
+            syncStandardActionButtons(standardGroup, buttonSpecs, {
+              buttonName,
+              buttonId
+            });
+          }, {
+            surface: 'index'
+          });
           syncActionRowState(card);
         }
       });
@@ -2867,12 +2946,23 @@
           entry: name
         })
         : null;
+      const removeScenarioId = shouldProfileRemoveActions() && (act === 'sub' || act === 'del' || act === 'rem')
+        ? window.symbaroumPerf?.startScenario?.('remove-item-from-character', {
+          scope: 'index',
+          entry: name
+        })
+        : null;
       if (act === 'add') {
         bindAddScenario(addScenarioId, {
           entry: name,
           scope: 'index'
         });
         cancelScheduledRenderList();
+      } else if (removeScenarioId) {
+        bindRemoveScenario(removeScenarioId, {
+          entry: name,
+          scope: 'index'
+        });
       }
       let cardChoiceOptions = {};
       let tr = null;
@@ -2882,6 +2972,8 @@
       let p = null;
       let lvl = null;
       let addBranch = null;
+      let removeBranch = null;
+      let removeRenderMode = 'incremental';
       const resolveAddRenderMode = () => {
         if (addBranch === 'inventory') {
           return (!needsFullRefresh && skipIndexRerender) ? 'incremental' : 'full';
@@ -2893,6 +2985,13 @@
         entry: name,
         branch: addBranch || null,
         renderMode: resolveAddRenderMode(),
+        ...detail
+      });
+      const completeRemoveScenario = (detail = {}) => finishRemoveScenario(removeScenarioId, {
+        scope: 'index',
+        entry: name,
+        branch: removeBranch || null,
+        renderMode: removeRenderMode,
         ...detail
       });
       const resolveActionCardState = () => {
@@ -3429,53 +3528,53 @@
         return;
       } else if (act === 'sub' || act === 'del' || act === 'rem') {
         if (isInv(p)) {
+          removeBranch = 'inventory';
           const inv = storeHelper.getInventory(store);
-          const bundleCount = getBundleCountForEntry(inv, p);
-          if (bundleCount !== null) {
-            const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
-            if (removeCnt > 0) removeBundleForEntry(inv, p, removeCnt);
-          } else {
-            const idxInv = inv.findIndex(x => x.id === p.id);
-            if (idxInv >= 0) {
-              if (act === 'del' || act === 'rem') {
-                inv.splice(idxInv, 1);
-              } else {
-                inv[idxInv].qty--;
-                if (inv[idxInv].qty < 1) inv.splice(idxInv, 1);
-              }
-            }
-          }
-          invUtil.saveInventory(inv); invUtil.renderInventory();
           const hidden = isHidden(p);
           const artifactTagged = hasArtifactTag(p);
           skipImmediateDerivedRefresh = true;
           if (!hidden && !artifactTagged) {
             skipIndexRerender = true;
           }
-          if (hidden || artifactTagged) {
-            const still = inv.some(r => r.id === p.id);
-            if (!still) {
-              let list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
-              storeHelper.setCurrentList(store, list);
-              if (typeof window.symbaroumDerivedState?.scheduleCharacterConsistencyRefresh === 'function') {
-                window.symbaroumDerivedState.scheduleCharacterConsistencyRefresh({
-                  xp: true,
-                  traits: true,
-                  summary: true,
-                  effects: true,
-                  source: 'index-inventory-remove'
-                });
-              } else {
-                if (window.updateXP) updateXP();
-                if (window.renderTraits) renderTraits();
+          await runCurrentCharacterMutationBatch(() => {
+            const bundleCount = getBundleCountForEntry(inv, p);
+            if (bundleCount !== null) {
+              const removeCnt = (act === 'del' || act === 'rem') ? bundleCount : 1;
+              if (removeCnt > 0) removeBundleForEntry(inv, p, removeCnt);
+            } else {
+              const idxInv = inv.findIndex(x => x.id === p.id);
+              if (idxInv >= 0) {
+                if (act === 'del' || act === 'rem') {
+                  inv.splice(idxInv, 1);
+                } else {
+                  inv[idxInv].qty--;
+                  if (inv[idxInv].qty < 1) inv.splice(idxInv, 1);
+                }
               }
-              if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
             }
-          }
+            invUtil.saveInventory(inv);
+            if (hidden || artifactTagged) {
+              const still = inv.some(r => r.id === p.id);
+              if (!still) {
+                const list = storeHelper.getCurrentList(store).filter(x => !(x.id === p.id && x.noInv));
+                storeHelper.setCurrentList(store, list);
+                if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
+              }
+            }
+          });
+          timeActiveAddStage('inventory-render', () => {
+            invUtil.renderInventory();
+          }, {
+            surface: 'index',
+            branch: 'inventory'
+          });
           queueUpdate(p);
-          if (hidden || artifactTagged) needsFullRefresh = true;
+          if (hidden || artifactTagged) {
+            needsFullRefresh = Boolean(storeHelper.getOnlySelected(store));
+          }
         } else {
-          needsFullRefresh = true;
+          removeBranch = 'list';
+          needsFullRefresh = Boolean(storeHelper.getOnlySelected(store));
           const before = storeHelper.getCurrentList(store);
           const matchedForRemoval = findMatchingListEntry(before, p, cardChoiceOptions)
             || before.find(it => matchesListEntryWithOptions(it, p, cardChoiceOptions))
@@ -3542,16 +3641,33 @@
               }
             }
           }
-          storeHelper.setCurrentList(store, list); updateXP();
-          await ensureChoicesForNewEntries(before);
-          updateXP();
+          const applyListRemoval = async () => {
+            timeActiveAddStage('store-mutation', () => {
+              storeHelper.setCurrentList(store, list);
+            }, {
+              branch: 'list',
+              mode: 'remove',
+              surface: 'index'
+            });
+            await ensureChoicesForNewEntries(before);
+          };
+          if (p.namn !== 'Besittning') {
+            await runCurrentCharacterMutationBatch(applyListRemoval);
+          } else {
+            await applyListRemoval();
+          }
           const affected = new Set([p.namn, ...remDeps]);
           affected.forEach(name => {
             const depEntry = entries.find(x => x.namn === name);
             if (depEntry) pendingUpdates.add(depEntry);
           });
           if (p.namn === 'Privilegierad') {
-            invUtil.renderInventory();
+            timeActiveAddStage('inventory-render', () => {
+              invUtil.renderInventory();
+            }, {
+              surface: 'index',
+              branch: 'list'
+            });
           }
           if (p.namn === 'Besittning') {
             storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
@@ -3575,7 +3691,12 @@
             } else if (cnt === 2) {
               await alertPopup('Misstänkt fusk: lägger du till och tar bort denna fördel igen raderas karaktären omedelbart');
             }
-            invUtil.renderInventory();
+            timeActiveAddStage('inventory-render', () => {
+              invUtil.renderInventory();
+            }, {
+              surface: 'index',
+              branch: 'list'
+            });
           }
           const hidden = isHidden(p);
           const artifactTagged = hasArtifactTag(p);
@@ -3587,9 +3708,26 @@
                 else if (Array.isArray(arr[i].contains)) removeItem(arr[i].contains);
               }
             };
-            removeItem(inv);
-            invUtil.saveInventory(inv); invUtil.renderInventory();
-            if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
+            await runCurrentCharacterMutationBatch(() => {
+              removeItem(inv);
+              invUtil.saveInventory(inv);
+              if (hidden) storeHelper.removeRevealedArtifact(store, p.id);
+            });
+            timeActiveAddStage('inventory-render', () => {
+              invUtil.renderInventory();
+            }, {
+              surface: 'index',
+              branch: 'list'
+            });
+            skipImmediateDerivedRefresh = true;
+          } else {
+            timeActiveAddStage('derived-refresh', () => {
+              if (window.updateXP) updateXP();
+              if (window.renderTraits) renderTraits();
+            }, {
+              surface: 'index',
+              branch: 'list'
+            });
           }
         }
       }
@@ -3603,17 +3741,31 @@
           if (!updateEntryCardUI(entry)) needsFullRefresh = true;
         });
       }
-      activeTags();
-      if (needsFullRefresh) scheduleRenderList();
-      if (!skipImmediateDerivedRefresh) renderTraits();
       if (act === 'add') {
+        timeActiveAddStage('tag-refresh', () => {
+          activeTags();
+        }, {
+          surface: 'index'
+        });
+        if (needsFullRefresh) scheduleRenderList();
+        if (!skipImmediateDerivedRefresh) renderTraits();
         flashAdded(name, tr);
         if (skipImmediateDerivedRefresh) {
           await waitForCharacterMutationRefresh();
         }
         await completeAddScenario();
       } else if (act === 'sub' || act === 'del' || act === 'rem') {
+        if (needsFullRefresh) scheduleRenderList();
+        removeRenderMode = needsFullRefresh ? 'full' : 'incremental';
+        if (skipImmediateDerivedRefresh) {
+          await timeActiveAddStage('derived-refresh', () => waitForCharacterMutationRefresh(), {
+            surface: 'index',
+            branch: removeBranch || null,
+            mode: 'pipeline'
+          });
+        }
         flashRemoved(name, tr);
+        await completeRemoveScenario();
       }
     });
 

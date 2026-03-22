@@ -1,7 +1,7 @@
 import Dexie from './vendor/dexie.mjs';
 
 const DB_NAME = 'symbapedia-app';
-const DB_VERSION = 1;
+const DB_VERSION = 2;
 const STORE_META_KEY = 'storeMeta';
 const MIGRATION_KEY = 'migration:localStorage:v1';
 const LEGACY_STORAGE_KEY = 'rpall';
@@ -9,6 +9,8 @@ const LEGACY_META_KEY = 'rpall-meta';
 const LEGACY_CHAR_PREFIX = 'rpall-char-';
 const ENTRY_SORT_DEFAULT = 'alpha-asc';
 const WRITE_DEBOUNCE_MS = 150;
+const CHARACTER_FIELDS_STORE = 'characterFields';
+const MUTATION_FLOW_CONTEXT_KEYS = ['remove-item', 'add-item'];
 
 const UI_PREF_EXACT_KEYS = new Set([
   'indexViewState',
@@ -29,12 +31,36 @@ const UI_PREF_PREFIXES = [
 class SymbaroumDexie extends Dexie {
   constructor() {
     super(DB_NAME);
-    this.version(DB_VERSION).stores({
+    this.version(1).stores({
       characters: '&id, sortOrder, folderId',
       characterState: '&id',
       folders: '&id, order, system',
       uiPrefs: '&key',
       cachedEntries: '&key, updatedAt'
+    });
+    this.version(DB_VERSION).stores({
+      characters: '&id, sortOrder, folderId',
+      characterState: '&id',
+      characterFields: '&key, charId, field',
+      folders: '&id, order, system',
+      uiPrefs: '&key',
+      cachedEntries: '&key, updatedAt'
+    }).upgrade(async (tx) => {
+      const characterFields = tx.table(CHARACTER_FIELDS_STORE);
+      const characterState = tx.table('characterState');
+      const existingFieldCount = await characterFields.count();
+      if (!existingFieldCount) {
+        const legacyStates = await characterState.toArray();
+        const migratedRows = [];
+        (Array.isArray(legacyStates) ? legacyStates : []).forEach((record) => {
+          if (!record?.id) return;
+          migratedRows.push(...getCharacterFieldRows({ [record.id]: record.state }, new Set([record.id])));
+        });
+        if (migratedRows.length) {
+          await characterFields.bulkPut(migratedRows);
+        }
+      }
+      await characterState.clear();
     });
   }
 }
@@ -49,7 +75,8 @@ const state = {
   flushHandlersBound: false,
   writeQueue: {
     meta: null,
-    characters: new Map(),
+    characterReplacements: new Map(),
+    characterFieldPatches: new Map(),
     timerId: 0,
     flushPromise: null
   }
@@ -57,10 +84,12 @@ const state = {
 
 let initPromise = null;
 
-function markActiveAddCheckpoint(name, detail = {}) {
+function markActiveMutationCheckpoint(name, detail = {}) {
   try {
     const perf = window.symbaroumPerf;
-    const scenarioId = perf?.getFlowContext?.('add-item');
+    const scenarioId = MUTATION_FLOW_CONTEXT_KEYS
+      .map((key) => perf?.getFlowContext?.(key))
+      .find(Boolean);
     if (!scenarioId) return;
     perf.markScenario?.(scenarioId, name, detail);
   } catch {}
@@ -146,6 +175,10 @@ function buildQueuedSnapshotBase() {
   };
 }
 
+function getCharacterFieldKey(charId, field) {
+  return `${String(charId || '').trim()}:${String(field || '').trim()}`;
+}
+
 function getCharacterRows(characters = []) {
   return (Array.isArray(characters) ? characters : [])
     .filter((char) => char && char.id)
@@ -171,6 +204,47 @@ function getCharacterStateRows(data = {}, allowedIds = null) {
       id,
       state: cloneValue(value)
     }));
+}
+
+function getCharacterFieldRows(data = {}, allowedIds = null) {
+  return Object.entries(data && typeof data === 'object' ? data : {})
+    .filter(([id, value]) => id && value && typeof value === 'object' && (!allowedIds || allowedIds.has(id)))
+    .flatMap(([id, value]) => (
+      Object.entries(value)
+        .filter(([field, fieldValue]) => field && fieldValue !== undefined)
+        .map(([field, fieldValue]) => ({
+          key: getCharacterFieldKey(id, field),
+          charId: id,
+          field,
+          value: cloneValue(fieldValue)
+        }))
+    ));
+}
+
+function composeCharacterData(fieldRows = [], allowedIds = null, fallbackStates = []) {
+  const data = {};
+  const charIdsWithFieldRows = new Set();
+
+  (Array.isArray(fieldRows) ? fieldRows : []).forEach((record) => {
+    const charId = String(record?.charId || '').trim();
+    const field = String(record?.field || '').trim();
+    if (!charId || !field) return;
+    if (allowedIds && !allowedIds.has(charId)) return;
+    if (!data[charId] || typeof data[charId] !== 'object') {
+      data[charId] = {};
+    }
+    data[charId][field] = cloneValue(record.value);
+    charIdsWithFieldRows.add(charId);
+  });
+
+  (Array.isArray(fallbackStates) ? fallbackStates : []).forEach((record) => {
+    const charId = String(record?.id || '').trim();
+    if (!charId || charIdsWithFieldRows.has(charId)) return;
+    if (allowedIds && !allowedIds.has(charId)) return;
+    data[charId] = cloneValue(record.state) || {};
+  });
+
+  return data;
 }
 
 function getUiPrefRows(entries = []) {
@@ -264,7 +338,9 @@ function clearScheduledFlush() {
 }
 
 function hasPendingWrites() {
-  return Boolean(state.writeQueue.meta) || state.writeQueue.characters.size > 0;
+  return Boolean(state.writeQueue.meta)
+    || state.writeQueue.characterReplacements.size > 0
+    || state.writeQueue.characterFieldPatches.size > 0;
 }
 
 function scheduleFlush(delay = WRITE_DEBOUNCE_MS) {
@@ -276,7 +352,7 @@ function scheduleFlush(delay = WRITE_DEBOUNCE_MS) {
       console.error('Failed to flush debounced writes', error);
     });
   }, Math.max(0, Number(delay) || 0));
-  markActiveAddCheckpoint('dexie-flush-scheduled', {
+  markActiveMutationCheckpoint('dexie-flush-scheduled', {
     delayMs: Math.max(0, Number(delay) || 0)
   });
 }
@@ -301,10 +377,11 @@ function registerFlushHandlers() {
 }
 
 async function hydrateFromDexie() {
-  const [metaRecord, characterRows, folderRows, characterStates, uiPrefRows] = await Promise.all([
+  const [metaRecord, characterRows, folderRows, characterFieldRows, legacyCharacterStates, uiPrefRows] = await Promise.all([
     db.uiPrefs.get(STORE_META_KEY),
     db.characters.orderBy('sortOrder').toArray(),
     db.folders.orderBy('order').toArray(),
+    db.characterFields.toArray(),
     db.characterState.toArray(),
     db.uiPrefs.toArray()
   ]);
@@ -316,11 +393,8 @@ async function hydrateFromDexie() {
   const folders = (Array.isArray(folderRows) ? folderRows : [])
     .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
     .map((folder) => cloneValue(folder));
-  const data = {};
-  (Array.isArray(characterStates) ? characterStates : []).forEach((record) => {
-    if (!record?.id) return;
-    data[record.id] = cloneValue(record.state) || {};
-  });
+  const allowedIds = new Set(characters.map((char) => char.id));
+  const data = composeCharacterData(characterFieldRows, allowedIds, legacyCharacterStates);
 
   state.storeSnapshot = buildStoreSnapshot({ meta, characters, folders, data });
   syncUiPrefCache((Array.isArray(uiPrefRows) ? uiPrefRows : []).filter((record) => (
@@ -338,23 +412,18 @@ async function writeStoreSnapshot(snapshot, options = {}) {
   const characters = getCharacterRows(storeSnapshot.characters);
   const folders = getFolderRows(storeSnapshot.folders);
   const characterIds = new Set(characters.map((char) => char.id));
-  const characterStates = getCharacterStateRows(storeSnapshot.data, characterIds);
+  const characterFields = getCharacterFieldRows(storeSnapshot.data, characterIds);
 
-  await db.transaction('rw', db.characters, db.characterState, db.folders, db.uiPrefs, async () => {
+  await db.transaction('rw', db.characters, db.characterFields, db.characterState, db.folders, db.uiPrefs, async () => {
     await db.characters.clear();
     if (characters.length) await db.characters.bulkPut(characters);
 
     await db.folders.clear();
     if (folders.length) await db.folders.bulkPut(folders);
 
-    const existingStateIds = await db.characterState.toCollection().primaryKeys();
-    const removedIds = existingStateIds.filter((id) => !characterIds.has(id));
-    if (removedIds.length) {
-      await db.characterState.bulkDelete(removedIds);
-    }
-    if (characterStates.length) {
-      await db.characterState.bulkPut(characterStates);
-    }
+    await db.characterFields.clear();
+    if (characterFields.length) await db.characterFields.bulkPut(characterFields);
+    await db.characterState.clear();
 
     await db.uiPrefs.put({ key: STORE_META_KEY, value: meta });
     if (includeMigrationMarker) {
@@ -396,13 +465,64 @@ function queueCharacterWrite(charId, payload) {
   const snapshot = buildQueuedSnapshotBase();
   if (payload === null || payload === undefined) {
     delete snapshot.data[charId];
-    state.writeQueue.characters.set(charId, null);
+    state.writeQueue.characterReplacements.set(charId, null);
+    state.writeQueue.characterFieldPatches.delete(charId);
   } else {
     const nextValue = cloneValue(payload);
     snapshot.data[charId] = nextValue;
-    state.writeQueue.characters.set(charId, nextValue);
+    state.writeQueue.characterReplacements.set(charId, nextValue);
+    state.writeQueue.characterFieldPatches.delete(charId);
   }
   state.storeSnapshot = snapshot;
+  scheduleFlush();
+}
+
+function queueCharacterFieldWrite(charId, patch = {}) {
+  if (!charId || !patch || typeof patch !== 'object') return;
+  const entries = Object.entries(patch)
+    .map(([field, value]) => [String(field || '').trim(), value])
+    .filter(([field]) => field);
+  if (!entries.length) return;
+
+  const snapshot = buildQueuedSnapshotBase();
+  const nextCharacter = snapshot.data?.[charId] && typeof snapshot.data[charId] === 'object'
+    ? cloneValue(snapshot.data[charId]) || {}
+    : {};
+
+  entries.forEach(([field, value]) => {
+    if (value === undefined) {
+      delete nextCharacter[field];
+      return;
+    }
+    nextCharacter[field] = cloneValue(value);
+  });
+  snapshot.data[charId] = nextCharacter;
+  state.storeSnapshot = snapshot;
+
+  if (state.writeQueue.characterReplacements.has(charId)) {
+    const replacement = state.writeQueue.characterReplacements.get(charId);
+    if (replacement && typeof replacement === 'object') {
+      const nextReplacement = cloneValue(replacement) || {};
+      entries.forEach(([field, value]) => {
+        if (value === undefined) {
+          delete nextReplacement[field];
+          return;
+        }
+        nextReplacement[field] = cloneValue(value);
+      });
+      state.writeQueue.characterReplacements.set(charId, nextReplacement);
+    }
+    scheduleFlush();
+    return;
+  }
+
+  const patchMap = state.writeQueue.characterFieldPatches.get(charId) || new Map();
+  entries.forEach(([field, value]) => {
+    patchMap.set(field, value === undefined
+      ? { delete: true }
+      : { value: cloneValue(value) });
+  });
+  state.writeQueue.characterFieldPatches.set(charId, patchMap);
   scheduleFlush();
 }
 
@@ -416,36 +536,115 @@ function takePendingWrites() {
           folders: state.writeQueue.meta.folders
         }
       : null,
-    characters: new Map(state.writeQueue.characters)
+    characterReplacements: new Map(state.writeQueue.characterReplacements),
+    characterFieldPatches: new Map(
+      Array.from(state.writeQueue.characterFieldPatches.entries()).map(([charId, patchMap]) => [
+        charId,
+        new Map(
+          Array.from(patchMap.entries()).map(([field, operation]) => [
+            field,
+            operation?.delete ? { delete: true } : { value: cloneValue(operation?.value) }
+          ])
+        )
+      ])
+    )
   };
   state.writeQueue.meta = null;
-  state.writeQueue.characters.clear();
+  state.writeQueue.characterReplacements.clear();
+  state.writeQueue.characterFieldPatches.clear();
   return batch;
+}
+
+async function deleteCharacterFieldRows(charIds = []) {
+  const ids = [...new Set((Array.isArray(charIds) ? charIds : []).filter(Boolean))];
+  if (!ids.length) return;
+  if (ids.length === 1) {
+    await db.characterFields.where('charId').equals(ids[0]).delete();
+    return;
+  }
+  await db.characterFields.where('charId').anyOf(ids).delete();
+}
+
+function buildCharacterFieldRowsForPayload(charId, payload) {
+  if (!charId || !payload || typeof payload !== 'object') return [];
+  return Object.entries(payload)
+    .filter(([field, value]) => field && value !== undefined)
+    .map(([field, value]) => ({
+      key: getCharacterFieldKey(charId, field),
+      charId,
+      field,
+      value: cloneValue(value)
+    }));
 }
 
 async function commitPendingWrites(batch) {
   const metaPayload = batch?.meta || null;
-  const characterEntries = Array.from(batch?.characters?.entries?.() || []);
-  if (!metaPayload && !characterEntries.length) return;
+  const characterReplacements = Array.from(batch?.characterReplacements?.entries?.() || []);
+  const characterFieldPatches = new Map(batch?.characterFieldPatches || []);
+  if (!metaPayload && !characterReplacements.length && !characterFieldPatches.size) return;
 
-  const deletions = characterEntries
+  const replacementDeletes = characterReplacements
     .filter(([, value]) => value === null || value === undefined)
     .map(([id]) => id);
-  const puts = characterEntries
+  const replacementPuts = characterReplacements
     .filter(([, value]) => value !== null && value !== undefined)
     .map(([id, value]) => ({
-      id,
-      state: value
+      charId: id,
+      rows: buildCharacterFieldRowsForPayload(id, value)
     }));
 
+  const patchDeleteKeys = [];
+  const patchPutRows = [];
+  characterFieldPatches.forEach((patchMap, charId) => {
+    if (!charId || !(patchMap instanceof Map)) return;
+    patchMap.forEach((operation, field) => {
+      const normalizedField = String(field || '').trim();
+      if (!normalizedField) return;
+      if (operation?.delete) {
+        patchDeleteKeys.push(getCharacterFieldKey(charId, normalizedField));
+        return;
+      }
+      patchPutRows.push({
+        key: getCharacterFieldKey(charId, normalizedField),
+        charId,
+        field: normalizedField,
+        value: cloneValue(operation?.value)
+      });
+    });
+  });
+
+  const applyCharacterWrites = async (allowedIds = null) => {
+    const deleteSet = new Set(replacementDeletes);
+    replacementPuts.forEach(({ charId }) => {
+      if (!charId) return;
+      if (allowedIds && !allowedIds.has(charId)) return;
+      deleteSet.add(charId);
+    });
+    if (deleteSet.size) {
+      await deleteCharacterFieldRows([...deleteSet]);
+    }
+    if (patchDeleteKeys.length) {
+      await db.characterFields.bulkDelete(patchDeleteKeys);
+    }
+    if (replacementPuts.length) {
+      const rows = replacementPuts
+        .filter(({ charId }) => !allowedIds || allowedIds.has(charId))
+        .flatMap(({ rows }) => rows);
+      if (rows.length) {
+        await db.characterFields.bulkPut(rows);
+      }
+    }
+    if (patchPutRows.length) {
+      const rows = patchPutRows.filter((row) => !allowedIds || allowedIds.has(row.charId));
+      if (rows.length) {
+        await db.characterFields.bulkPut(rows);
+      }
+    }
+  };
+
   if (!metaPayload) {
-    await db.transaction('rw', db.characterState, async () => {
-      if (deletions.length) {
-        await db.characterState.bulkDelete(deletions);
-      }
-      if (puts.length) {
-        await db.characterState.bulkPut(puts);
-      }
+    await db.transaction('rw', db.characterFields, async () => {
+      await applyCharacterWrites();
     });
     return;
   }
@@ -455,36 +654,39 @@ async function commitPendingWrites(batch) {
   const folders = getFolderRows(metaPayload.folders || []);
   const characterIds = new Set(characters.map((char) => char.id));
 
-  await db.transaction('rw', db.characters, db.characterState, db.folders, db.uiPrefs, async () => {
+  await db.transaction('rw', db.characters, db.characterFields, db.characterState, db.folders, db.uiPrefs, async () => {
     await db.characters.clear();
     if (characters.length) await db.characters.bulkPut(characters);
 
     await db.folders.clear();
     if (folders.length) await db.folders.bulkPut(folders);
 
-    const existingStateIds = await db.characterState.toCollection().primaryKeys();
-    const removedIds = existingStateIds.filter((id) => !characterIds.has(id));
-    const deleteSet = new Set([...removedIds, ...deletions]);
-    if (deleteSet.size) {
-      await db.characterState.bulkDelete([...deleteSet]);
-    }
-    if (puts.length) {
-      await db.characterState.bulkPut(puts);
+    const existingFieldRows = await db.characterFields.toArray();
+    const removedIds = [...new Set(
+      existingFieldRows
+        .map((record) => String(record?.charId || '').trim())
+        .filter((id) => id && !characterIds.has(id))
+    )];
+    if (removedIds.length) {
+      await deleteCharacterFieldRows(removedIds);
     }
 
+    await applyCharacterWrites(characterIds);
+    await db.characterState.clear();
     await db.uiPrefs.put({ key: STORE_META_KEY, value: meta });
   });
 }
 
 async function runMigrationIfNeeded() {
-  const [metaRecord, migrationRecord, characterCount, stateCount] = await Promise.all([
+  const [metaRecord, migrationRecord, characterCount, fieldCount, stateCount] = await Promise.all([
     db.uiPrefs.get(STORE_META_KEY),
     db.uiPrefs.get(MIGRATION_KEY),
     db.characters.count(),
+    db.characterFields.count(),
     db.characterState.count()
   ]);
 
-  const hasDexieData = Boolean(metaRecord) || characterCount > 0 || stateCount > 0;
+  const hasDexieData = Boolean(metaRecord) || characterCount > 0 || fieldCount > 0 || stateCount > 0;
   const legacyDataAvailable = hasLegacyStorageData();
   if (hasDexieData) return;
   if (migrationRecord && !legacyDataAvailable) return;
@@ -545,6 +747,11 @@ async function saveMeta(payload = {}) {
 async function saveCharacter(charId, payload) {
   if (state.mode !== 'dexie' || !db || !charId) return;
   queueCharacterWrite(charId, payload);
+}
+
+async function saveCharacterFields(charId, patch = {}) {
+  if (state.mode !== 'dexie' || !db || !charId) return;
+  queueCharacterFieldWrite(charId, patch);
 }
 
 async function flushPendingWrites() {
@@ -634,6 +841,7 @@ const persistenceApi = {
   init,
   saveMeta,
   saveCharacter,
+  saveCharacterFields,
   flushPendingWrites,
   getStoreSnapshot,
   getUiPref

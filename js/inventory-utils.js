@@ -1673,12 +1673,17 @@
     return sortByType(entA, entB);
   }
 
-  function getActiveAddScenarioId() {
-    return window.symbaroumPerf?.getFlowContext?.('add-item') || null;
+  const MUTATION_FLOW_CONTEXT_KEYS = Object.freeze(['remove-item', 'add-item']);
+
+  function getActiveMutationScenarioId() {
+    const perf = window.symbaroumPerf;
+    return MUTATION_FLOW_CONTEXT_KEYS
+      .map((key) => perf?.getFlowContext?.(key))
+      .find(Boolean) || null;
   }
 
-  function timeActiveAddStage(name, callback, detail = {}) {
-    const scenarioId = getActiveAddScenarioId();
+  function timeActiveMutationStage(name, callback, detail = {}) {
+    const scenarioId = getActiveMutationScenarioId();
     const perf = window.symbaroumPerf;
     if (!scenarioId || typeof perf?.timeScenarioStage !== 'function') {
       return callback();
@@ -1686,8 +1691,23 @@
     return perf.timeScenarioStage(scenarioId, name, callback, detail);
   }
 
+  function runCurrentCharacterMutationBatch(callback) {
+    if (typeof callback !== 'function') return undefined;
+    if (typeof storeHelper?.batchCurrentCharacterMutation === 'function') {
+      return storeHelper.batchCurrentCharacterMutation(store, {}, callback);
+    }
+    return callback();
+  }
+
+  function renderInventoryWithPerf(detail = {}) {
+    return timeActiveMutationStage('inventory-render', () => renderInventory(), {
+      surface: 'inventory',
+      ...detail
+    });
+  }
+
   function saveInventory(inv, options = {}) {
-    timeActiveAddStage('store-mutation', () => {
+    timeActiveMutationStage('store-mutation', () => {
       normalizeInventoryQualities(inv);
       const nonVeh = [];
       const veh = [];
@@ -1697,11 +1717,18 @@
         else nonVeh.push(row);
       });
       inv.splice(0, inv.length, ...nonVeh, ...veh);
-      storeHelper.setInventory(store, inv);
-      recalcArtifactEffects();
+      runCurrentCharacterMutationBatch(() => {
+        storeHelper.setInventory(store, inv);
+        timeActiveMutationStage('artifact-effects-recalc', () => {
+          recalcArtifactEffects();
+        }, {
+          surface: 'inventory'
+        });
+      });
     }, {
       surface: 'inventory'
     });
+    if (options.skipCharacterRefresh) return;
     if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
       window.symbaroumMutationPipeline.scheduleCharacterRefresh({
         xp: true,
@@ -1830,18 +1857,33 @@
       });
       if (choice === false) return false;
       if (choice === true) {
-        impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
+        timeActiveMutationStage('snapshot-cleanup', () => {
+          impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
+        }, {
+          surface: 'inventory',
+          mode: 'remove'
+        });
         return true;
       }
       if (choice === 'extra') {
-        impacts.forEach(impact => storeHelper?.detachSnapshotRulesBySource?.(store, impact.sourceKey));
+        timeActiveMutationStage('snapshot-cleanup', () => {
+          impacts.forEach(impact => storeHelper?.detachSnapshotRulesBySource?.(store, impact.sourceKey));
+        }, {
+          surface: 'inventory',
+          mode: 'detach'
+        });
       }
       return true;
     }
 
     const fallback = await confirmPopup('Ta bort kopplade snapshot-effekter också?');
     if (fallback) {
-      impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
+      timeActiveMutationStage('snapshot-cleanup', () => {
+        impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
+      }, {
+        surface: 'inventory',
+        mode: 'remove'
+      });
       return true;
     }
     return false;
@@ -2143,9 +2185,14 @@
     }, defaultArtifactEffectTotals());
     storeHelper.setArtifactEffects(store, normalizeArtifactEffectTotals(effects));
     if (typeof storeHelper.syncSnapshotRuleSources === 'function') {
-      storeHelper.syncSnapshotRuleSources(store, snapshotSources, {
-        sourceType: 'artifact_binding',
-        removeMissing: true
+      timeActiveMutationStage('snapshot-cleanup', () => {
+        storeHelper.syncSnapshotRuleSources(store, snapshotSources, {
+          sourceType: 'artifact_binding',
+          removeMissing: true
+        });
+      }, {
+        surface: 'inventory',
+        mode: 'sync'
       });
     }
   }
@@ -4433,16 +4480,18 @@
     if (addToWallet) {
       const wallet = storeHelper.normalizeMoney(storeHelper.getMoney(store));
       const walletO = moneyToO(wallet);
-      storeHelper.setMoney(store, oToMoney(walletO + removeTotalO), { persist: false });
+      storeHelper.setMoney(store, oToMoney(walletO + removeTotalO));
     }
-    if (moneyToO(remaining) <= 0) {
-      parentArr.splice(idx, 1);
-    } else {
-      row.money = remaining;
-      row.qty = 1;
-    }
-    saveInventory(inv);
-    renderInventory();
+    runCurrentCharacterMutationBatch(() => {
+      if (moneyToO(remaining) <= 0) {
+        parentArr.splice(idx, 1);
+      } else {
+        row.money = remaining;
+        row.qty = 1;
+      }
+      saveInventory(inv);
+    });
+    renderInventoryWithPerf({ trigger: 'vehicle-money-remove' });
     return { success: true, remaining };
   }
 
@@ -4798,7 +4847,7 @@
         }
       });
       saveInventory(inv);
-      renderInventory();
+      renderInventoryWithPerf({ trigger: 'vehicle-unload' });
       const keepValue = vIdx;
       cleanup();
       openVehicleRemovePopup(keepValue);
@@ -5960,7 +6009,7 @@
     let categories = null;
     let catKeys = [];
     if (filteredRows.length) {
-      timeActiveAddStage('sort-group-rebuild', () => {
+      timeActiveMutationStage('sort-group-rebuild', () => {
         categories = new Map();
         filteredRows.forEach(({ row, idx, entry }) => {
           const cat = (entry.taggar?.typ || [])[0] || 'Övrigt';
@@ -5975,7 +6024,7 @@
       });
     }
 
-    timeActiveAddStage('dom-patch', () => {
+    timeActiveMutationStage('dom-patch', () => {
       if (dom.invFormal) {
         dom.invFormal.innerHTML = '';
         dom.invFormal.appendChild(functionsCard);
@@ -6222,7 +6271,7 @@
             delete row.basePriceSource;
           }
           saveInventory(inv);
-          renderInventory();
+          renderInventoryWithPerf({ trigger: 'remove-tag' });
           return;
         }
 
@@ -6259,7 +6308,7 @@
         const next = idx === -1 ? levels[0] : (idx < levels.length - 1 ? levels[idx+1] : levels[0]);
         row.nivå = next;
         saveInventory(inv);
-        renderInventory();
+        renderInventoryWithPerf({ trigger: 'cycle-level' });
         return;
       }
 
@@ -6327,17 +6376,21 @@
               () => {
                 (async () => {
                   if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: true }))) return;
-                  parentArr.splice(idx, 1);
-                  saveInventory(inv);
-                  renderInventory();
+                  runCurrentCharacterMutationBatch(() => {
+                    parentArr.splice(idx, 1);
+                    saveInventory(inv);
+                  });
+                  renderInventoryWithPerf({ trigger: 'delete-container-all' });
                 })();
               },
               () => {
                 (async () => {
                   if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
-                  parentArr.splice(idx, 1, ...(row.contains || []));
-                  saveInventory(inv);
-                  renderInventory();
+                  runCurrentCharacterMutationBatch(() => {
+                    parentArr.splice(idx, 1, ...(row.contains || []));
+                    saveInventory(inv);
+                  });
+                  renderInventoryWithPerf({ trigger: 'delete-container-only' });
                 })();
               },
               {
@@ -6347,19 +6400,30 @@
             );
           } else {
             if (!(await confirmSnapshotSourceRemoval(row, { includeChildren: false }))) return;
-            parentArr.splice(idx, 1);
-            saveInventory(inv);
-            renderInventory();
-            const hidden = isHiddenType(entry);
-            if (needsArtifactListSync(entry)) {
-              const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
-              if (!still) {
-                let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
-                storeHelper.setCurrentList(store, list);
+            let requiresDerivedRefresh = false;
+            runCurrentCharacterMutationBatch(() => {
+              parentArr.splice(idx, 1);
+              saveInventory(inv);
+              const hidden = isHiddenType(entry);
+              if (needsArtifactListSync(entry)) {
+                const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
+                if (!still) {
+                  const list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
+                  storeHelper.setCurrentList(store, list);
+                  if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
+                  requiresDerivedRefresh = true;
+                }
+              }
+            });
+            renderInventoryWithPerf({ trigger: 'delete-row' });
+            if (requiresDerivedRefresh) {
+              timeActiveMutationStage('derived-refresh', () => {
                 if (window.updateXP) updateXP();
                 if (window.renderTraits) renderTraits();
-                if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
-              }
+              }, {
+                surface: 'inventory',
+                trigger: 'delete-row'
+              });
             }
           }
         }
@@ -6580,18 +6644,29 @@
             parentArr.splice(idx, 1);
           }
           const parentIdx = Number(li.dataset.parent);
-          saveInventory(inv);
-          renderInventory();
-          const hidden = isHiddenType(entry);
-          if (needsArtifactListSync(entry)) {
-            const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
-            if (!still) {
-              let list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
-              storeHelper.setCurrentList(store, list);
+          let requiresDerivedRefresh = false;
+          runCurrentCharacterMutationBatch(() => {
+            saveInventory(inv);
+            const hidden = isHiddenType(entry);
+            if (needsArtifactListSync(entry)) {
+              const still = flattenInventory(inv).some(r => (r.id ? r.id === row.id : r.name === row.name));
+              if (!still) {
+                const list = storeHelper.getCurrentList(store).filter(x => !(x.id === row.id && x.noInv));
+                storeHelper.setCurrentList(store, list);
+                if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
+                requiresDerivedRefresh = true;
+              }
+            }
+          });
+          renderInventoryWithPerf({ trigger: 'decrement-row' });
+          if (requiresDerivedRefresh) {
+            timeActiveMutationStage('derived-refresh', () => {
               if (window.updateXP) updateXP();
               if (window.renderTraits) renderTraits();
-              if (hidden) storeHelper.removeRevealedArtifact(store, row.id || row.name);
-            }
+            }, {
+              surface: 'inventory',
+              trigger: 'decrement-row'
+            });
           }
           const selector = !Number.isNaN(parentIdx)
             ? `li[data-name="${CSS.escape(itemName)}"][data-parent="${parentIdx}"][data-child="${idx}"]`
@@ -6914,7 +6989,7 @@
         const inv = storeHelper.getInventory(store);
         if (!(await confirmSnapshotSourceRemoval(inv, { includeChildren: true }))) return;
         saveInventory([]);
-        renderInventory();
+        renderInventoryWithPerf({ trigger: 'clear-inventory' });
       }
     };
 

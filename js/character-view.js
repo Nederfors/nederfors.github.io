@@ -145,6 +145,54 @@
       try { setUiPref(STATE_KEY, JSON.stringify({ filters: F, cats: catState })); }
       catch { }
     };
+    const REMOVE_FLOW_CONTEXT_KEY = 'remove-item';
+    const shouldProfileRemoveActions = () => Boolean(window.__symbaroumPerfCaptureRemovals);
+    const getActiveRemoveScenarioId = () => window.symbaroumPerf?.getFlowContext?.(REMOVE_FLOW_CONTEXT_KEY) || null;
+    const timeActiveRemoveStage = (name, callback, detail = {}) => {
+      const scenarioId = getActiveRemoveScenarioId();
+      const perf = window.symbaroumPerf;
+      if (!scenarioId || typeof perf?.timeScenarioStage !== 'function') {
+        return callback();
+      }
+      return perf.timeScenarioStage(scenarioId, name, callback, detail);
+    };
+    const bindRemoveScenario = (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      perf?.setFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
+      perf?.markScenario?.(scenarioId, 'click-handler-start', detail);
+      return scenarioId;
+    };
+    const cancelRemoveScenario = (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      perf?.clearFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
+      return perf?.cancelScenario?.(scenarioId, detail) || null;
+    };
+    const finishRemoveScenario = async (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      if (window.__symbaroumPerfAwaitFlush && typeof perf?.timeScenarioStage === 'function') {
+        await perf.timeScenarioStage(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'remove-scenario' })
+        ), {
+          surface: 'character'
+        });
+      }
+      if (typeof perf?.afterNextPaint === 'function') {
+        await perf.afterNextPaint(2);
+      }
+      perf?.markScenario?.(scenarioId, 'post-render-paint-complete', detail);
+      perf?.clearFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
+      return perf?.endScenario?.(scenarioId, detail) || null;
+    };
+    const runCurrentCharacterMutationBatch = (callback) => {
+      if (typeof callback !== 'function') return undefined;
+      if (typeof storeHelper?.batchCurrentCharacterMutation === 'function') {
+        return storeHelper.batchCurrentCharacterMutation(store, {}, callback);
+      }
+      return callback();
+    };
     {
       const saved = loadState();
       if (saved.filters) {
@@ -616,18 +664,60 @@
     if (clearBtn) {
       clearBtn.addEventListener('click', async () => {
         if (!store.current && !(await requireCharacter())) return;
+        const removeScenarioId = shouldProfileRemoveActions()
+          ? window.symbaroumPerf?.startScenario?.('remove-item-from-character', {
+            scope: 'character',
+            entry: 'clear-non-inventory',
+            branch: 'clear-non-inventory'
+          })
+          : null;
+        if (removeScenarioId) {
+          bindRemoveScenario(removeScenarioId, {
+            scope: 'character',
+            entry: 'clear-non-inventory',
+            branch: 'clear-non-inventory'
+          });
+        }
         const ok = await confirmPopup('Detta tar bort Ras, Yrken, Elityrken, Förmågor, Mystisk kraft, Ritualer, Fördelar, Nackdelar, Särdrag och Monstruösa särdrag från karaktären. Inventariet lämnas orört. Vill du fortsätta?');
-        if (!ok) return;
+        if (!ok) {
+          cancelRemoveScenario(removeScenarioId, {
+            scope: 'character',
+            entry: 'clear-non-inventory',
+            branch: 'clear-non-inventory',
+            cancelled: true
+          });
+          return;
+        }
         const before = storeHelper.getCurrentList(store);
         const keep = before.filter(p => isInv(p));
-        storeHelper.setCurrentList(store, keep);
+        timeActiveRemoveStage('store-mutation', () => {
+          storeHelper.setCurrentList(store, keep);
+        }, {
+          surface: 'character',
+          branch: 'clear-non-inventory'
+        });
         if (window.invUtil && typeof invUtil.renderInventory === 'function') {
           invUtil.renderInventory();
         }
-        renderSkills(filtered());
-        updateXP();
-        renderTraits();
+        timeActiveRemoveStage('selection-render', () => {
+          renderSkills(filtered());
+        }, {
+          surface: 'character',
+          branch: 'clear-non-inventory'
+        });
+        timeActiveRemoveStage('derived-refresh', () => {
+          updateXP();
+          renderTraits();
+        }, {
+          surface: 'character',
+          branch: 'clear-non-inventory'
+        });
         updateSearchDatalist();
+        await finishRemoveScenario(removeScenarioId, {
+          scope: 'character',
+          entry: 'clear-non-inventory',
+          branch: 'clear-non-inventory'
+        });
       });
     }
 
@@ -2231,6 +2321,20 @@
       const liEl = actBtn.closest('li');
       if (!liEl) return;
       const name = actBtn.dataset.name || liEl.dataset.name;
+      const removeScenarioId = shouldProfileRemoveActions() && (act === 'sub' || act === 'del' || act === 'rem')
+        ? window.symbaroumPerf?.startScenario?.('remove-item-from-character', {
+          scope: 'character',
+          entry: name
+        })
+        : null;
+      const abortRemoveScenario = (detail = {}) => {
+        cancelRemoveScenario(removeScenarioId, {
+          scope: 'character',
+          entry: name,
+          branch: 'list',
+          ...detail
+        });
+      };
       const idAttr = actBtn.dataset.id || liEl.dataset.id || null;
       const ref = { id: idAttr || undefined, name };
       const tr = liEl.dataset.trait || null;
@@ -2239,7 +2343,17 @@
       let p = idAttr ? before.find(x => String(x.id) === String(idAttr)) : null;
       if (!p && name) p = before.find(x => x.namn === name);
       if (!p) p = lookupEntry(ref);
-      if (!p) return;
+      if (!p) {
+        abortRemoveScenario({ cancelled: true, reason: 'missing-entry' });
+        return;
+      }
+      if (removeScenarioId) {
+        bindRemoveScenario(removeScenarioId, {
+          scope: 'character',
+          entry: name,
+          branch: 'list'
+        });
+      }
       const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
       const handleEntryEdited = () => {
         refreshCharacterFilters();
@@ -2331,14 +2445,18 @@
         }
       } else if (act === 'sub' || act === 'del' || act === 'rem') {
         if (name === 'Mörkt förflutet' && before.some(x => x.namn === 'Mörkt blod')) {
-          if (!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?')))
+          if (!(await confirmPopup('Mörkt förflutet hänger ihop med Mörkt blod. Ta bort ändå?'))) {
+            abortRemoveScenario({ cancelled: true, reason: 'dark-past-confirm' });
             return;
+          }
         }
         if (isMonstrousTrait(p)) {
           const missingBefore = window.rulesHelper?.getMissingRequirementReasonsForCandidate?.(p, before) || ['unknown'];
           if (missingBefore.length === 0) {
-            if (!(await confirmPopup(name + ' är ett monstruöst särdrag. Ta bort ändå?')))
+            if (!(await confirmPopup(name + ' är ett monstruöst särdrag. Ta bort ändå?'))) {
+              abortRemoveScenario({ cancelled: true, reason: 'monstrous-trait-confirm' });
               return;
+            }
           }
         }
         if (act === 'sub') {
@@ -2368,14 +2486,20 @@
           return;
         }
         const removed = before.find(it => it.namn === name && (tr ? it.trait === tr : !it.trait));
-        if (removed && !(await handleSnapshotEntryRemoval(removed, store))) return;
+        if (removed && !(await handleSnapshotEntryRemoval(removed, store))) {
+          abortRemoveScenario({ cancelled: true, reason: 'snapshot-removal-confirm' });
+          return;
+        }
         const remDeps = storeHelper.getDependents(before, removed);
         if (name === 'Mörkt blod' && remDeps.length) {
           if (await confirmPopup(`Ta bort även: ${remDeps.join(', ')}?`)) {
             list = list.filter(x => !remDeps.includes(x.namn));
           }
         } else if (remDeps.length) {
-          if (!(await confirmPopup(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`))) return;
+          if (!(await confirmPopup(`F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${remDeps.join(', ')}. Ta bort \u00e4nd\u00e5?`))) {
+            abortRemoveScenario({ cancelled: true, reason: 'dependent-confirm' });
+            return;
+          }
         }
         if (eliteReq.canChange(before) && !eliteReq.canChange(list)) {
           const deps = before
@@ -2385,8 +2509,10 @@
           const msg = deps.length
             ? `F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r: ${deps.join(', ')}. Ta bort \u00e4nd\u00e5?`
             : 'F\u00f6rm\u00e5gan kr\u00e4vs f\u00f6r ett valt elityrke. Ta bort \u00e4nd\u00e5?';
-          if (!(await confirmPopup(msg)))
+          if (!(await confirmPopup(msg))) {
+            abortRemoveScenario({ cancelled: true, reason: 'elite-requirement-confirm' });
             return;
+          }
         }
         flashRemoved(liEl);
         await new Promise(r => setTimeout(r, 100));
@@ -2402,8 +2528,44 @@
           }
         }
       }
-      storeHelper.setCurrentList(store, list);
-      await ensureChoicesForNewEntries(before);
+      const isRemoveAction = act === 'sub' || act === 'del' || act === 'rem';
+      if (isRemoveAction) {
+        await runCurrentCharacterMutationBatch(async () => {
+          timeActiveRemoveStage('store-mutation', () => {
+            storeHelper.setCurrentList(store, list);
+          }, {
+            surface: 'character',
+            branch: 'list'
+          });
+          await ensureChoicesForNewEntries(before);
+          if (p.namn === 'Besittning') {
+            storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
+          }
+          if ((p.taggar?.typ || []).includes('Artefakt')) {
+            const inv = storeHelper.getInventory(store);
+            const removeItem = arr => {
+              for (let i = arr.length - 1; i >= 0; i--) {
+                if (arr[i].id === p.id) arr.splice(i, 1);
+                else if (Array.isArray(arr[i].contains)) removeItem(arr[i].contains);
+              }
+            };
+            removeItem(inv);
+            timeActiveRemoveStage('inventory-sync', () => {
+              invUtil.saveInventory(inv, {
+                source: 'character-artifact-remove',
+                skipCharacterRefresh: true
+              });
+            }, {
+              surface: 'character',
+              branch: 'list'
+            });
+            storeHelper.removeRevealedArtifact(store, p.id);
+          }
+        });
+      } else {
+        storeHelper.setCurrentList(store, list);
+        await ensureChoicesForNewEntries(before);
+      }
       if (p.namn === 'Privilegierad') {
         invUtil.renderInventory();
       }
@@ -2412,12 +2574,10 @@
           const amount = Math.floor(Math.random() * 10) + 11;
           storeHelper.setPossessionMoney(store, { daler: amount, skilling: 0, 'örtegar': 0 });
           await alertPopup(`Grattis! Din besittning har tjänat dig ${amount} daler!`);
-        } else {
-          storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
         }
         invUtil.renderInventory();
       }
-      if ((p.taggar?.typ || []).includes('Artefakt')) {
+      if (!isRemoveAction && (p.taggar?.typ || []).includes('Artefakt')) {
         const inv = storeHelper.getInventory(store);
         const removeItem = arr => {
           for (let i = arr.length - 1; i >= 0; i--) {
@@ -2430,12 +2590,34 @@
         invUtil.renderInventory();
         storeHelper.removeRevealedArtifact(store, p.id);
       }
-      renderSkills(filtered());
-      updateXP();
-      renderTraits();
+      if (isRemoveAction) {
+        timeActiveRemoveStage('selection-render', () => {
+          renderSkills(filtered());
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+        timeActiveRemoveStage('derived-refresh', () => {
+          updateXP();
+          renderTraits();
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+      } else {
+        renderSkills(filtered());
+        updateXP();
+        renderTraits();
+      }
       updateSearchDatalist();
       if (act === 'add') {
         flashAdded(name, tr);
+      } else if (isRemoveAction) {
+        await finishRemoveScenario(removeScenarioId, {
+          scope: 'character',
+          entry: name,
+          branch: 'list'
+        });
       }
 
     });

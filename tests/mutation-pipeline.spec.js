@@ -61,10 +61,22 @@ async function readCharacterState(page, charId) {
       request.onsuccess = () => resolve(request.result);
     });
     const db = await openDb();
+    const tx = db.transaction(['characterFields', 'characterState'], 'readonly');
+    const fieldRows = await new Promise((resolve, reject) => {
+      const request = tx.objectStore('characterFields').index('charId').getAll(id);
+      request.onerror = () => reject(request.error);
+      request.onsuccess = () => resolve(request.result || []);
+    });
+    if (Array.isArray(fieldRows) && fieldRows.length) {
+      db.close();
+      return fieldRows.reduce((acc, row) => {
+        if (!row?.field) return acc;
+        acc[row.field] = row.value;
+        return acc;
+      }, {});
+    }
     const record = await new Promise((resolve, reject) => {
-      const tx = db.transaction('characterState', 'readonly');
-      const store = tx.objectStore('characterState');
-      const request = store.get(id);
+      const request = tx.objectStore('characterState').get(id);
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result || null);
     });
