@@ -142,7 +142,10 @@
     const fields = normalizeMutationFields(options.fields);
     if (persistence?.mode === 'dexie') {
       if (fields.length && typeof persistence.saveCharacterFields === 'function') {
-        persistence.saveCharacterFields(charId, getCharacterFieldPatch(store, charId, fields)).catch(error => {
+        persistence.saveCharacterFields(charId, {
+          fields,
+          resolveValue: (field) => store?.data?.[charId]?.[field]
+        }).catch(error => {
           console.error(`Failed to persist character fields for ${charId}`, error);
         });
         return;
@@ -592,6 +595,108 @@
       }
     });
     data.entryOrderCounter = counter;
+  }
+
+  function snapshotCurrentListMutationState(store) {
+    if (!store?.current) return null;
+    const data = store.data?.[store.current];
+    if (!data || typeof data !== 'object') return null;
+    return {
+      list: Array.isArray(data.list) ? data.list : [],
+      entryOrderCounter: coerceOrderValue(data.entryOrderCounter) || 0,
+      suppressedEntryGrants: stableSignature(normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants)),
+      darkPastSuppressed: Boolean(data.darkPastSuppressed),
+      snapshotRules: stableSignature(normalizeSnapshotRuleRecords(data[SNAPSHOT_RULES_KEY])),
+      revealedArtifacts: stableSignature(Array.isArray(data.revealedArtifacts) ? data.revealedArtifacts : []),
+      privMoney: stableSignature(normalizeMoney(data.privMoney || defaultMoney())),
+      possessionMoney: stableSignature(normalizeMoney(data.possessionMoney || defaultMoney())),
+      bonusMoney: stableSignature(normalizeMoney(data.bonusMoney || defaultMoney()))
+    };
+  }
+
+  function collectListEntryTopology(beforeList, afterList) {
+    const beforeUidSet = new Set(
+      (Array.isArray(beforeList) ? beforeList : [])
+        .map(entry => String(entry?.__uid || '').trim())
+        .filter(Boolean)
+    );
+    const afterUidSet = new Set(
+      (Array.isArray(afterList) ? afterList : [])
+        .map(entry => String(entry?.__uid || '').trim())
+        .filter(Boolean)
+    );
+    const addedEntries = (Array.isArray(afterList) ? afterList : []).filter(entry => {
+      const uid = String(entry?.__uid || '').trim();
+      return Boolean(uid) && !beforeUidSet.has(uid);
+    });
+    const removedEntries = (Array.isArray(beforeList) ? beforeList : []).filter(entry => {
+      const uid = String(entry?.__uid || '').trim();
+      return Boolean(uid) && !afterUidSet.has(uid);
+    });
+    return {
+      addedEntries,
+      removedEntries,
+      topologyChanged: addedEntries.length > 0 || removedEntries.length > 0
+    };
+  }
+
+  function normalizeGrantedEntryList(entries, liveList) {
+    if (!Array.isArray(entries) || !entries.length) return [];
+    const live = Array.isArray(liveList) ? liveList : [];
+    const byUid = new Map(
+      live
+        .map(entry => [String(entry?.__uid || '').trim(), entry])
+        .filter(([uid, entry]) => Boolean(uid) && entry)
+    );
+    const out = [];
+    const seen = new Set();
+    entries.forEach(entry => {
+      const uid = String(entry?.__uid || '').trim();
+      const liveEntry = (uid && byUid.get(uid)) || entry;
+      const liveUid = String(liveEntry?.__uid || '').trim();
+      if (!liveEntry || !liveUid || seen.has(liveUid)) return;
+      seen.add(liveUid);
+      out.push(liveEntry);
+    });
+    return out;
+  }
+
+  function buildCurrentListMutationSummary(beforeState, afterState, options = {}) {
+    const topology = collectListEntryTopology(beforeState?.list, afterState?.list);
+    const inventoryChanged = Boolean(options.inventoryChanged);
+    const revealedChanged = Boolean(options.revealedChanged)
+      || beforeState?.revealedArtifacts !== afterState?.revealedArtifacts;
+    const privMoneyChanged = beforeState?.privMoney !== afterState?.privMoney;
+    const possessionMoneyChanged = beforeState?.possessionMoney !== afterState?.possessionMoney;
+    const bonusMoneyChanged = beforeState?.bonusMoney !== afterState?.bonusMoney;
+    const moneyChanged = privMoneyChanged || possessionMoneyChanged || bonusMoneyChanged;
+    const entryOrderCounterChanged = beforeState?.entryOrderCounter !== afterState?.entryOrderCounter;
+    const suppressedEntryGrantsChanged = beforeState?.suppressedEntryGrants !== afterState?.suppressedEntryGrants;
+    const darkPastSuppressedChanged = beforeState?.darkPastSuppressed !== afterState?.darkPastSuppressed;
+    const snapshotRulesChanged = Boolean(options.snapshotRulesChanged)
+      || beforeState?.snapshotRules !== afterState?.snapshotRules;
+
+    const changedFields = ['list'];
+    if (inventoryChanged) changedFields.push('inventory');
+    if (privMoneyChanged) changedFields.push('privMoney');
+    if (possessionMoneyChanged) changedFields.push('possessionMoney');
+    if (bonusMoneyChanged) changedFields.push('bonusMoney');
+    if (entryOrderCounterChanged) changedFields.push('entryOrderCounter');
+    if (suppressedEntryGrantsChanged) changedFields.push('suppressedEntryGrants');
+    if (darkPastSuppressedChanged) changedFields.push('darkPastSuppressed');
+    if (snapshotRulesChanged) changedFields.push(SNAPSHOT_RULES_KEY);
+    if (revealedChanged) changedFields.push('revealedArtifacts');
+
+    return {
+      changedFields,
+      topologyChanged: topology.topologyChanged,
+      addedEntries: topology.addedEntries,
+      removedEntries: topology.removedEntries,
+      grantedEntriesAdded: normalizeGrantedEntryList(options.grantedEntriesAdded, afterState?.list),
+      inventoryChanged,
+      moneyChanged,
+      revealedChanged
+    };
   }
 
   function initializeEntryMetadata(data) {
@@ -1688,13 +1793,14 @@
     return isEntryIgnoredByGrantLimit(entry, list, options);
   }
 
-  function syncRuleEntryGrants(store, list, prevList) {
+  function syncRuleEntryGrants(store, list, prevList, options = {}) {
     if (!store?.current) return false;
     if (typeof global.rulesHelper?.getEntryGrantTargets !== 'function') return false;
     store.data[store.current] = store.data[store.current] || {};
     const data = store.data[store.current];
     const prev = Array.isArray(prevList) ? prevList : [];
     const now = Array.isArray(list) ? list : [];
+    const grantedEntriesAdded = Array.isArray(options?.grantedEntriesAdded) ? options.grantedEntriesAdded : null;
     const suppressed = normalizeSuppressedEntryGrantMap(data.suppressedEntryGrants);
     const legacyTargetKey = `name:${normalizeEntryGrantName('Mörkt förflutet')}`;
     if (data.darkPastSuppressed) {
@@ -1798,6 +1904,7 @@
         const grantedEntry = { ...target.entry };
         if (isHamnskifteGrantEntry(grantedEntry)) grantedEntry.form = 'beast';
         now.push(grantedEntry);
+        if (grantedEntriesAdded) grantedEntriesAdded.push(grantedEntry);
         changed = true;
       });
     });
@@ -2456,19 +2563,21 @@
   }
 
   function setCurrentList(store, list) {
-    if (!store.current) return;
+    if (!store.current) return null;
     store.data[store.current] = store.data[store.current] || {};
     const prev = store.data[store.current]?.list || [];
     ensureListEntryMetadata(store, prev);
-    syncRuleEntryGrants(store, list, prev);
+    const beforeState = snapshotCurrentListMutationState(store);
+    const grantedEntriesAdded = [];
+    syncRuleEntryGrants(store, list, prev, { grantedEntriesAdded });
     enforceEarthbound(list);
     enforceRuleConflicts(list);
     applyHamnskifteTraits(store, list);
     syncEntryMetadataFromPrev(store, prev, list);
-    syncEntrySnapshotRules(store, list);
+    const snapshotRulesChanged = syncEntrySnapshotRules(store, list);
     store.data[store.current].list = list;
     const hiddenRevealChanged = syncHiddenRevealedFromList(store, list);
-    syncRuleInventoryGrants(store, list);
+    const inventoryChanged = syncRuleInventoryGrants(store, list);
     syncRuleMoneyGrant(store, list, prev);
 
     const hasPos = list.some(x => x.namn === 'Besittning');
@@ -2485,11 +2594,20 @@
     });
     store.data[store.current].bonusMoney = total;
     ensureListAppliedDigests(list);
+    const afterState = snapshotCurrentListMutationState(store);
+    const summary = buildCurrentListMutationSummary(beforeState, afterState, {
+      grantedEntriesAdded,
+      inventoryChanged,
+      revealedChanged: hiddenRevealChanged,
+      snapshotRulesChanged
+    });
+    store.data[store.current].lastCurrentListMutationSummary = summary;
     if (hiddenRevealChanged) bumpRuntimeVersion('revealed');
     commitCurrentCharacterMutation(store, {
       bumpDerived: true,
-      fields: CURRENT_LIST_MUTATION_FIELDS
+      fields: summary.changedFields
     });
+    return summary;
   }
 
   /* ---------- 4. Inventarie­funktioner ---------- */
@@ -4755,6 +4873,11 @@ function defaultTraits() {
     getCurrentList,
     getCharacterRaces,
     setCurrentList,
+    getLastCurrentListMutationSummary: (store) => (
+      store?.current && store?.data?.[store.current]
+        ? store.data[store.current].lastCurrentListMutationSummary || null
+        : null
+    ),
     syncRuleInventoryGrants,
     findOutdatedEntries,
     syncEntriesWithDb,

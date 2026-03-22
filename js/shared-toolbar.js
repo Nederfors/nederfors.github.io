@@ -1940,6 +1940,64 @@ class SharedToolbar extends HTMLElement {
     this.filterCollapseBtn.title = allCollapsed ? 'Öppna alla' : 'Kollapsa alla';
   }
 
+  async ensureSummaryEffectsReady() {
+    if (window.summaryEffects?.renderSummaryHtml) {
+      return window.summaryEffects;
+    }
+    if (!this._summaryEffectsPromise) {
+      this._summaryEffectsPromise = (async () => {
+        if (typeof window.ensureRouteScripts === 'function') {
+          await window.ensureRouteScripts('traits');
+        } else if (typeof window.ensureScript === 'function') {
+          await window.ensureScript('js/summary-effects.js');
+        }
+        return window.summaryEffects || null;
+      })();
+    }
+    try {
+      return await this._summaryEffectsPromise;
+    } finally {
+      if (!window.summaryEffects?.renderSummaryHtml) {
+        this._summaryEffectsPromise = null;
+      }
+    }
+  }
+
+  async openSummarySlide() {
+    const panel = this.panels.summarySlidePanel;
+    const inner = this.shadowRoot.getElementById('summarySlideInner');
+    const toggleBtn = this.shadowRoot.getElementById('xpToggle');
+    if (!panel) return;
+
+    if (panel.classList.contains('open')) {
+      this.close('summarySlidePanel');
+      return;
+    }
+
+    if (inner) {
+      inner.innerHTML = '<section class="summary-section"><ul class="summary-list summary-text"><li>Beräknar…</li></ul></section>';
+    }
+    this.toggle('summarySlidePanel');
+
+    const previousDisabled = Boolean(toggleBtn?.disabled);
+    if (toggleBtn) toggleBtn.disabled = true;
+    try {
+      await this.ensureSummaryEffectsReady();
+      if (inner) {
+        inner.innerHTML = window.summaryEffects?.renderSummaryHtml?.()
+          || '<section class="summary-section"><ul class="summary-list summary-text"><li>Kunde inte visa översikten.</li></ul></section>';
+      }
+    } catch (error) {
+      console.error('Failed to load summary slide', error);
+      if (inner) {
+        inner.innerHTML = '<section class="summary-section"><ul class="summary-list summary-text"><li>Kunde inte ladda översikten.</li></ul></section>';
+      }
+      window.toast?.('Kunde inte öppna översikten.');
+    } finally {
+      if (toggleBtn) toggleBtn.disabled = previousDisabled;
+    }
+  }
+
   /* ------------------------------------------------------- */
   handleClick(e) {
     const btn = e.target.closest('button, a');
@@ -1961,15 +2019,26 @@ class SharedToolbar extends HTMLElement {
       return;
     }
 
+    if (btn.classList.contains('summary-chip-btn')) {
+      e.preventDefault();
+      window.summaryEffects?.handleSummaryChipClick?.(btn);
+      return;
+    }
+
+    if (btn.dataset.action === 'open-defense-calc') {
+      e.preventDefault();
+      if (typeof window.openDefenseCalcPopup === 'function') {
+        window.openDefenseCalcPopup();
+      }
+      return;
+    }
+
     /* öppna/stäng (toggle) */
     if (btn.id === 'filterToggle') return this.toggle('filterPanel');
     if (btn.id === 'infoToggle') return this.toggle('infoPanel');
     if (btn.id === 'xpToggle') {
-      const inner = this.shadowRoot.getElementById('summarySlideInner');
-      if (inner && window.summaryEffects?.renderSummaryHtml) {
-        inner.innerHTML = window.summaryEffects.renderSummaryHtml();
-      }
-      return this.toggle('summarySlidePanel');
+      void this.openSummarySlide();
+      return;
     }
     /* stäng */
     if (btn.dataset.close) return this.close(btn.dataset.close);

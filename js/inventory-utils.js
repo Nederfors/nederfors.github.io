@@ -832,6 +832,7 @@
   }
 
   function openInventoryHub(target = 'items', options = {}) {
+    const root = getToolbarRoot();
     const focusSection = options && typeof options === 'object' ? options.focusSection : '';
     let hubKey = Object.prototype.hasOwnProperty.call(INVENTORY_HUB_DEFS, target) ? target : '';
     let resolvedTab = getInventoryHubKeyForTab(target) ? target : '';
@@ -5660,6 +5661,22 @@
       collapsible: true
     });
 
+    const buildInventoryStandardActionConfig = ({
+      qty = 0,
+      isGear = false,
+      canStack = false
+    } = {}) => {
+      const count = Math.max(0, Number(qty) || 0);
+      const config = {
+        remove: { act: 'del' }
+      };
+      if (isGear && !canStack) return config;
+      config.multi = { act: 'buyMulti' };
+      if (count > 1) config.minus = { act: 'sub' };
+      config.plus = { act: 'add' };
+      return config;
+    };
+
     const renderRowCard = (row, realIdx, entryOverride) => {
       const entry = entryOverride || getEntry(row.id || row.name);
       const tagTyp = entry.taggar?.typ ?? [];
@@ -5688,17 +5705,19 @@
       const moneyAmount = (isCurrency && typeof formatMoney === 'function')
         ? formatMoney(storeHelper.normalizeMoney(row.money))
         : '';
-      const buttonParts = [];
-      if (isGear && !canStack) {
-        buttonParts.push(`<button data-act="del" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only">${icon('remove')}</button>`);
-      } else {
-        buttonParts.push(
-          `<button data-act="del" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only">${icon('remove')}</button>`,
-          `<button data-act="sub" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Minska">${icon('minus')}</button>`,
-          `<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
-          `<button data-act="buyMulti" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
-        );
-      }
+      const buttonParts = [
+        ...(window.entryCardFactory?.buildStandardActionButtons?.(
+          buildInventoryStandardActionConfig({
+            qty: row.qty,
+            isGear,
+            canStack
+          }),
+          {
+            buttonName: row.name,
+            buttonId: row.id || row.name
+          }
+        ) || [])
+      ];
       if (isCustom) buttonParts.push('<button data-act="editCustom" class="db-btn">✏️</button>');
       if (allowQual) buttonParts.push(`<button data-act="addQual" class="db-btn">${icon('addqual')}</button>`);
       if (allowQual) buttonParts.push(`<button data-act="freeQual" class="db-btn">${icon('qualfree')}</button>`);
@@ -5860,17 +5879,19 @@
         const cIsGear = [...WEAPON_AND_SHIELD_TYPES, 'Rustning', 'L\u00e4gre Artefakt', 'Artefakt'].some(t => cTagTyp.includes(t));
         const cAllowQual = [...WEAPON_QUALITY_TARGET_TYPES, 'Rustning', 'Artefakt'].some(t => cTagTyp.includes(t));
         const cCanStack = ['kraft','ritual'].includes(centry.bound);
-        const cButtons = [];
-        if (cIsGear && !cCanStack) {
-          cButtons.push(`<button data-act="del" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only">${icon('remove')}</button>`);
-        } else {
-          cButtons.push(
-            `<button data-act="del" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only">${icon('remove')}</button>`,
-            `<button data-act="sub" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Minska">${icon('minus')}</button>`,
-            `<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Lägg till">${icon('plus')}</button>`,
-            `<button data-act="buyMulti" class="db-btn db-btn--icon db-btn--icon-only" aria-label="Köp flera">${icon('buymultiple')}</button>`
-          );
-        }
+        const cButtons = [
+          ...(window.entryCardFactory?.buildStandardActionButtons?.(
+            buildInventoryStandardActionConfig({
+              qty: childRow.qty,
+              isGear: cIsGear,
+              canStack: cCanStack
+            }),
+            {
+              buttonName: childRow.name,
+              buttonId: childRow.id || childRow.name
+            }
+          ) || [])
+        ];
         if (cTagTyp.includes('Hemmagjort')) cButtons.push('<button data-act="editCustom" class="db-btn">✏️</button>');
         if (cAllowQual) cButtons.push(`<button data-act="addQual" class="db-btn">${icon('addqual')}</button>`);
         if (cAllowQual) cButtons.push(`<button data-act="freeQual" class="db-btn">${icon('qualfree')}</button>`);

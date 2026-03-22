@@ -1,4 +1,8 @@
 (function(window){
+  const icon = (name, opts) => typeof window.iconHtml === 'function'
+    ? window.iconHtml(name, opts)
+    : '';
+
   const escapeAttr = (value) => String(value ?? '').replace(/[&<>"']/g, (m) => ({
     '&': '&amp;',
     '<': '&lt;',
@@ -26,16 +30,110 @@
 
   const joinParts = (parts) => (Array.isArray(parts) ? parts.filter(Boolean).join('') : '');
 
+  const STANDARD_ACTION_ORDER = ['remove', 'multi', 'minus', 'plus'];
+  const STANDARD_ACTION_DEFAULTS = Object.freeze({
+    remove: Object.freeze({
+      act: 'rem',
+      iconName: 'remove',
+      ariaLabel: 'Ta bort',
+      danger: true
+    }),
+    multi: Object.freeze({
+      act: 'buyMulti',
+      iconName: 'buymultiple',
+      ariaLabel: 'Köp flera',
+      danger: false
+    }),
+    minus: Object.freeze({
+      act: 'sub',
+      iconName: 'minus',
+      ariaLabel: 'Minska',
+      danger: false
+    }),
+    plus: Object.freeze({
+      act: 'add',
+      iconName: 'plus',
+      ariaLabel: 'Lägg till',
+      danger: false
+    })
+  });
+  const ACT_MAP = new Map([
+    ['del', 'remove'],
+    ['rem', 'remove'],
+    ['sub', 'minus'],
+    ['add', 'plus'],
+    ['buyMulti', 'multi']
+  ]);
+
+  const normalizeStandardActionDescriptor = (slot, config) => {
+    if (!slot || !STANDARD_ACTION_DEFAULTS[slot] || !config || config === false) return null;
+    const extraClasses = normalizeClasses(config.classes || config.className || config.extraClasses);
+    return {
+      ...STANDARD_ACTION_DEFAULTS[slot],
+      ...config,
+      slot,
+      act: String(config.act || STANDARD_ACTION_DEFAULTS[slot].act),
+      iconName: String(config.iconName || STANDARD_ACTION_DEFAULTS[slot].iconName),
+      ariaLabel: config.ariaLabel === undefined
+        ? STANDARD_ACTION_DEFAULTS[slot].ariaLabel
+        : String(config.ariaLabel || ''),
+      title: config.title ? String(config.title) : '',
+      highlight: Boolean(config.highlight),
+      danger: config.danger === undefined
+        ? Boolean(STANDARD_ACTION_DEFAULTS[slot].danger)
+        : Boolean(config.danger),
+      extraClasses
+    };
+  };
+
+  const getStandardActionDescriptors = (config = {}) => {
+    const source = Array.isArray(config)
+      ? config.reduce((acc, item) => {
+          if (item?.slot) acc[item.slot] = item;
+          return acc;
+        }, {})
+      : (config && typeof config === 'object' ? config : {});
+    return STANDARD_ACTION_ORDER
+      .map(slot => normalizeStandardActionDescriptor(slot, source[slot]))
+      .filter(Boolean);
+  };
+
+  const buildStandardActionClassName = (descriptor) => {
+    const classes = [
+      'db-btn',
+      'db-btn--icon',
+      'db-btn--icon-only',
+      'entry-standard-action',
+      `entry-standard-action--${descriptor.slot}`
+    ];
+    if (descriptor.danger) classes.push('db-btn--danger');
+    if (descriptor.highlight) classes.push('add-btn');
+    classes.push(...normalizeClasses(descriptor.extraClasses));
+    return [...new Set(classes)].join(' ');
+  };
+
+  const buildStandardActionMarkup = (descriptor, options = {}) => {
+    if (!descriptor) return '';
+    const attrs = [
+      `class="${escapeAttr(buildStandardActionClassName(descriptor))}"`,
+      `data-act="${escapeAttr(descriptor.act)}"`,
+      `data-standard-slot="${escapeAttr(descriptor.slot)}"`
+    ];
+    const buttonName = options.buttonName ? String(options.buttonName) : '';
+    const buttonId = options.buttonId ? String(options.buttonId) : '';
+    if (buttonName) attrs.push(`data-name="${escapeAttr(buttonName)}"`);
+    if (buttonId) attrs.push(`data-id="${escapeAttr(buttonId)}"`);
+    if (descriptor.ariaLabel) attrs.push(`aria-label="${escapeAttr(descriptor.ariaLabel)}"`);
+    if (descriptor.title) attrs.push(`title="${escapeAttr(descriptor.title)}"`);
+    return `<button ${attrs.join(' ')}>${icon(descriptor.iconName)}</button>`;
+  };
+
+  const buildStandardActionButtons = (config = {}, options = {}) =>
+    getStandardActionDescriptors(config).map(descriptor => buildStandardActionMarkup(descriptor, options));
+
   const splitButtons = (buttonParts) => {
     const dynamic = [];
     const standardBuckets = { remove: [], minus: [], plus: [], multi: [] };
-    const ACT_MAP = new Map([
-      ['del', 'remove'],
-      ['rem', 'remove'],
-      ['sub', 'minus'],
-      ['add', 'plus'],
-      ['buyMulti', 'multi']
-    ]);
 
     buttonParts.forEach(part => {
       if (typeof part !== 'string' || !part.trim()) return;
@@ -50,8 +148,7 @@
       dynamic.push(part);
     });
 
-    const standardOrder = ['remove', 'multi', 'minus', 'plus'];
-    const standard = standardOrder.reduce((acc, key) => acc.concat(standardBuckets[key]), []);
+    const standard = STANDARD_ACTION_ORDER.reduce((acc, key) => acc.concat(standardBuckets[key]), []);
     return {
       dynamic,
       standard,
@@ -61,6 +158,41 @@
   };
 
   const syncLevelControl = () => {};
+
+  const syncStandardActionButtons = (standardGroup, config = {}, options = {}) => {
+    if (!standardGroup || !(standardGroup instanceof HTMLElement)) return;
+    const descriptors = getStandardActionDescriptors(config);
+    const existing = [...standardGroup.querySelectorAll(':scope > button')];
+
+    while (existing.length > descriptors.length) {
+      existing.pop()?.remove();
+    }
+
+    descriptors.forEach((descriptor, index) => {
+      let button = existing[index];
+      if (!button) {
+        button = document.createElement('button');
+        standardGroup.appendChild(button);
+        existing.push(button);
+      }
+      button.type = 'button';
+      button.className = buildStandardActionClassName(descriptor);
+      button.dataset.act = descriptor.act;
+      button.dataset.standardSlot = descriptor.slot;
+      if (descriptor.ariaLabel) button.setAttribute('aria-label', descriptor.ariaLabel);
+      else button.removeAttribute('aria-label');
+      if (descriptor.title) button.setAttribute('title', descriptor.title);
+      else button.removeAttribute('title');
+      if (options.buttonName) button.dataset.name = String(options.buttonName);
+      else delete button.dataset.name;
+      if (options.buttonId) button.dataset.id = String(options.buttonId);
+      else delete button.dataset.id;
+      if (button.dataset.iconName !== descriptor.iconName) {
+        button.innerHTML = icon(descriptor.iconName);
+        button.dataset.iconName = descriptor.iconName;
+      }
+    });
+  };
 
   const syncCollapseButton = (card) => {
     if (!card || !(card instanceof HTMLElement)) return;
@@ -98,6 +230,19 @@
     }));
 
     return !shouldCompact;
+  };
+
+  const syncActionRowState = (card) => {
+    if (!card || !(card instanceof HTMLElement)) return;
+    const actionsRow = card.querySelector('.entry-row.entry-row-actions');
+    if (!actionsRow) return;
+    const dynamicGroup = actionsRow.querySelector('.entry-action-group-dynamic');
+    const standardGroup = actionsRow.querySelector('.entry-action-group-standard');
+    const levelControl = actionsRow.querySelector('.entry-level-control');
+    const hasDynamic = !!(dynamicGroup && dynamicGroup.children.length);
+    const hasStandard = !!(standardGroup && standardGroup.children.length);
+    const hasLevel = !!(levelControl && levelControl.children.length);
+    actionsRow.classList.toggle('only-standard', !hasDynamic && hasStandard && !hasLevel);
   };
 
   const INTERACTIVE_SELECTOR = 'button, a, select, input, textarea, [contenteditable="true"], [role="button"], .filter-tag';
@@ -245,6 +390,7 @@
       : '';
 
     li.innerHTML = `${summaryHtml}${bodyHtml}${detailHtml}`;
+    syncActionRowState(li);
 
     if (collapsible) {
       syncCollapseButton(li);
@@ -261,6 +407,10 @@
 
   window.entryCardFactory = Object.freeze({
     create: createEntryCard,
+    buildStandardActionButtons,
+    getStandardActionDescriptors,
+    syncActionRow: syncActionRowState,
+    syncStandardActionButtons,
     syncCollapse: syncCollapseButton,
     syncLevelControl,
     toggle: toggleEntryCard

@@ -479,14 +479,20 @@ function queueCharacterWrite(charId, payload) {
 
 function queueCharacterFieldWrite(charId, patch = {}) {
   if (!charId || !patch || typeof patch !== 'object') return;
-  const entries = Object.entries(patch)
-    .map(([field, value]) => [String(field || '').trim(), value])
-    .filter(([field]) => field);
+  const lazyFields = Array.isArray(patch.fields)
+    ? [...new Set(patch.fields.map(field => String(field || '').trim()).filter(Boolean))]
+    : [];
+  const hasLazyResolver = lazyFields.length > 0 && typeof patch.resolveValue === 'function';
+  const entries = hasLazyResolver
+    ? lazyFields.map(field => [field, patch.resolveValue(field)])
+    : Object.entries(patch)
+      .map(([field, value]) => [String(field || '').trim(), value])
+      .filter(([field]) => field);
   if (!entries.length) return;
 
   const snapshot = buildQueuedSnapshotBase();
   const nextCharacter = snapshot.data?.[charId] && typeof snapshot.data[charId] === 'object'
-    ? cloneValue(snapshot.data[charId]) || {}
+    ? { ...snapshot.data[charId] }
     : {};
 
   entries.forEach(([field, value]) => {
@@ -494,7 +500,7 @@ function queueCharacterFieldWrite(charId, patch = {}) {
       delete nextCharacter[field];
       return;
     }
-    nextCharacter[field] = cloneValue(value);
+    nextCharacter[field] = value;
   });
   snapshot.data[charId] = nextCharacter;
   state.storeSnapshot = snapshot;
@@ -502,13 +508,13 @@ function queueCharacterFieldWrite(charId, patch = {}) {
   if (state.writeQueue.characterReplacements.has(charId)) {
     const replacement = state.writeQueue.characterReplacements.get(charId);
     if (replacement && typeof replacement === 'object') {
-      const nextReplacement = cloneValue(replacement) || {};
+      const nextReplacement = { ...replacement };
       entries.forEach(([field, value]) => {
         if (value === undefined) {
           delete nextReplacement[field];
           return;
         }
-        nextReplacement[field] = cloneValue(value);
+        nextReplacement[field] = value;
       });
       state.writeQueue.characterReplacements.set(charId, nextReplacement);
     }
@@ -520,7 +526,9 @@ function queueCharacterFieldWrite(charId, patch = {}) {
   entries.forEach(([field, value]) => {
     patchMap.set(field, value === undefined
       ? { delete: true }
-      : { value: cloneValue(value) });
+      : (hasLazyResolver
+        ? { resolveValue: () => patch.resolveValue(field) }
+        : { value }));
   });
   state.writeQueue.characterFieldPatches.set(charId, patchMap);
   scheduleFlush();
@@ -543,7 +551,11 @@ function takePendingWrites() {
         new Map(
           Array.from(patchMap.entries()).map(([field, operation]) => [
             field,
-            operation?.delete ? { delete: true } : { value: cloneValue(operation?.value) }
+            operation?.delete
+              ? { delete: true }
+              : (typeof operation?.resolveValue === 'function'
+                ? { resolveValue: operation.resolveValue }
+                : { value: cloneValue(operation?.value) })
           ])
         )
       ])
@@ -604,11 +616,18 @@ async function commitPendingWrites(batch) {
         patchDeleteKeys.push(getCharacterFieldKey(charId, normalizedField));
         return;
       }
+      const resolvedValue = typeof operation?.resolveValue === 'function'
+        ? operation.resolveValue()
+        : operation?.value;
+      if (resolvedValue === undefined) {
+        patchDeleteKeys.push(getCharacterFieldKey(charId, normalizedField));
+        return;
+      }
       patchPutRows.push({
         key: getCharacterFieldKey(charId, normalizedField),
         charId,
         field: normalizedField,
-        value: cloneValue(operation?.value)
+        value: cloneValue(resolvedValue)
       });
     });
   });

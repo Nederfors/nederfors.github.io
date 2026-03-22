@@ -940,6 +940,37 @@
     window.yrkePanel?.open(title, html);
   };
 
+  const handleSummaryChipClick = (button) => {
+    const btn = button?.closest?.('.summary-chip-btn') || button;
+    if (!btn || !btn.dataset) return false;
+    const data = btn.dataset || {};
+    const list = storeHelper.getCurrentList(store) || [];
+    let match = null;
+    const id = data.entryId ? String(data.entryId) : '';
+    if (id) match = list.find(item => String(item.id) === id);
+    if (!match) {
+      const name = data.entryName ? String(data.entryName) : '';
+      const trait = data.entryTrait ? String(data.entryTrait) : '';
+      const level = data.entryLevel ? String(data.entryLevel) : '';
+      match = list.find(item => {
+        if (name && String(item.namn) !== name) return false;
+        if (trait && String(item.trait || '') !== trait) return false;
+        if (level && String(item.nivå || '') !== level) return false;
+        return true;
+      });
+      if (!match && (name || id)) {
+        const fallback = resolveDbEntry({ id: id || undefined, name }) || null;
+        if (fallback) {
+          match = { ...fallback };
+          if (trait) match.trait = trait;
+          if (level) match.nivå = level;
+        }
+      }
+    }
+    openSummaryEntryInfo(match, data.entryName || '');
+    return Boolean(match);
+  };
+
   const renderSummaryInto = (container) => {
     if (!container) return;
     container.innerHTML = renderSummaryHtml();
@@ -1091,31 +1122,7 @@
     container.addEventListener('click', e => {
       const btn = e.target.closest('.summary-chip-btn');
       if (!btn) return;
-      const data = btn.dataset || {};
-      const list = storeHelper.getCurrentList(store) || [];
-      let match = null;
-      const id = data.entryId ? String(data.entryId) : '';
-      if (id) match = list.find(item => String(item.id) === id);
-      if (!match) {
-        const name = data.entryName ? String(data.entryName) : '';
-        const trait = data.entryTrait ? String(data.entryTrait) : '';
-        const level = data.entryLevel ? String(data.entryLevel) : '';
-        match = list.find(item => {
-          if (name && String(item.namn) !== name) return false;
-          if (trait && String(item.trait || '') !== trait) return false;
-          if (level && String(item.nivå || '') !== level) return false;
-          return true;
-        });
-        if (!match && (name || id)) {
-          const fallback = resolveDbEntry({ id: id || undefined, name }) || null;
-          if (fallback) {
-            match = { ...fallback };
-            if (trait) match.trait = trait;
-            if (level) match.nivå = level;
-          }
-        }
-      }
-      openSummaryEntryInfo(match, data.entryName || '');
+      handleSummaryChipClick(btn);
     });
   };
 
@@ -1160,6 +1167,7 @@
     initUnifiedTraitsPage,
     activateTraitsTab,
     collectEffectsData,
+    handleSummaryChipClick,
     renderSummaryHtml,
     renderEffectsHtml
   };

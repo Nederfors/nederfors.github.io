@@ -26,6 +26,8 @@
   --shell-width: min(1120px, calc(100vw - 1.6rem));
   --shell-edge: var(--db-color-border, rgba(245, 230, 208, 0.08));
   --shell-highlight: rgba(245, 230, 208, 0.14);
+  --db-layout-texture-base: url('../icons/wood-grain.svg');
+  --db-layout-texture-overlay: url('../icons/wood-grain.svg');
 }
 
 html,
@@ -38,6 +40,16 @@ body {
 
 html {
   position: relative;
+}
+
+html[data-db-texture="grain"] {
+  --db-layout-texture-base: url('../icons/grain.svg');
+  --db-layout-texture-overlay: url('../icons/grain.svg');
+}
+
+html[data-db-texture="wood"] {
+  --db-layout-texture-base: url('../icons/wood-grain.svg');
+  --db-layout-texture-overlay: url('../icons/wood-grain.svg');
 }
 
 html::before,
@@ -65,14 +77,14 @@ html::before {
     radial-gradient(circle at 50% 0%, rgba(160, 68, 32, 0.14), transparent 45%),
     linear-gradient(160deg, #2a1c12 0%, #140e09 100%),
     url('../icons/background.svg') center top / cover no-repeat,
-    url('../icons/grain.svg') center / 320px repeat;
+    var(--db-layout-texture-base) center / 320px repeat;
   opacity: 0.78;
 }
 
 html::after {
   background:
     linear-gradient(180deg, rgba(0, 0, 0, 0.10), rgba(0, 0, 0, 0.24)),
-    url('../icons/grain.svg') center / 240px repeat;
+    var(--db-layout-texture-overlay) center / 240px repeat;
   opacity: 0.07;
   mix-blend-mode: soft-light;
 }

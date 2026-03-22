@@ -181,6 +181,7 @@ export function bindToolbarLazyButton(buttonId, ensureFn) {
 
 export function exposeLegacyLoaders() {
   window.ensureScript = loadClassicScript;
+  window.ensureRouteScripts = ensureRouteScripts;
   window.ensureJsZip = ensureJsZip;
   window.ensureCharacterGenerator = ensureCharacterGenerator;
   window.ensureTabellPopup = ensureTabellPopup;

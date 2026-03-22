@@ -969,6 +969,13 @@
     const finishAddScenario = async (scenarioId, detail = {}) => {
       if (!scenarioId) return null;
       const perf = window.symbaroumPerf;
+      if (window.__symbaroumPerfAwaitFlush && typeof perf?.timeScenarioStage === 'function') {
+        await perf.timeScenarioStage(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'add-scenario' })
+        ), {
+          surface: 'index'
+        });
+      }
       if (typeof perf?.afterNextPaint === 'function') {
         await perf.afterNextPaint(2);
       }
@@ -994,6 +1001,12 @@
       return perf?.endScenario?.(scenarioId, detail) || null;
     };
     const shouldProfileRemoveActions = () => Boolean(window.__symbaroumPerfCaptureRemovals);
+    const markActiveMutationCheckpoint = (name, detail = {}) => {
+      const scenarioId = getActiveMutationScenarioId();
+      const perf = window.symbaroumPerf;
+      if (!scenarioId || !name || typeof perf?.markScenario !== 'function') return null;
+      return perf.markScenario(scenarioId, name, detail);
+    };
     const hasActiveIndexFilters = () => (
       Boolean(storeHelper.getOnlySelected(store))
       || ['search', 'typ', 'ark', 'test'].some((key) => {
@@ -1026,6 +1039,51 @@
         return storeHelper.batchCurrentCharacterMutation(store, {}, callback);
       }
       return callback();
+    };
+    const waitForDeferredMutationTurn = async (options = {}) => {
+      const afterPaint = options.afterPaint !== false;
+      if (afterPaint && typeof window.requestAnimationFrame === 'function') {
+        await new Promise(resolve => {
+          window.requestAnimationFrame(() => {
+            window.setTimeout(resolve, 0);
+          });
+        });
+        return;
+      }
+      await new Promise(resolve => window.setTimeout(resolve, 0));
+    };
+    const runDeferredCurrentCharacterMutation = async (callback, options = {}) => {
+      await waitForDeferredMutationTurn(options);
+      return runCurrentCharacterMutationBatch(callback);
+    };
+    const withBusyInteraction = async (control, callback) => {
+      if (typeof callback !== 'function') return undefined;
+      if (!control || typeof control !== 'object') return callback();
+      if (control.dataset?.mutationBusy === '1') return undefined;
+      const card = typeof control.closest === 'function'
+        ? control.closest('li.entry-card, li.db-card')
+        : null;
+      const restoreDisabled = 'disabled' in control ? Boolean(control.disabled) : null;
+      if (control.dataset) control.dataset.mutationBusy = '1';
+      if (card) {
+        card.classList.add('entry-busy');
+        card.setAttribute('aria-busy', 'true');
+      }
+      if (restoreDisabled !== null) {
+        control.disabled = true;
+      }
+      try {
+        return await callback();
+      } finally {
+        if (control.dataset) delete control.dataset.mutationBusy;
+        if (card) {
+          card.classList.remove('entry-busy');
+          card.removeAttribute('aria-busy');
+        }
+        if (restoreDisabled !== null) {
+          control.disabled = restoreDisabled;
+        }
+      }
     };
 
     const getMonsterLoreSpecs = () => {
@@ -1130,6 +1188,13 @@
         currentValue,
         fallbackLegacy: true
       });
+      if (picked?.hasChoice && !picked.noOptions) {
+        markActiveMutationCheckpoint('popup-close', {
+          surface: 'index',
+          entry: candidate?.namn || entry?.namn || '',
+          promptIfMissingOnly: Boolean(options?.promptIfMissingOnly)
+        });
+      }
       if (!picked?.hasChoice) return { hasChoice: false, cancelled: false };
       if (picked.cancelled) {
         return {
@@ -1184,25 +1249,17 @@
       return parts.join('|');
     };
 
-    const collectAddedEntries = (beforeList, afterList) => {
-      const beforeCounts = new Map();
-      (Array.isArray(beforeList) ? beforeList : []).forEach(entry => {
-        const key = entryDiffKey(entry);
-        if (!key) return;
-        beforeCounts.set(key, (beforeCounts.get(key) || 0) + 1);
+    const buildChoiceEntryMatchOptions = (entry) => {
+      const matchOptions = {};
+      CHOICE_MATCH_FIELDS.forEach(field => {
+        const value = normalizeMatchValue(entry?.[field]);
+        if (value === null || value === '') return;
+        matchOptions[field] = value;
       });
-      const added = [];
-      (Array.isArray(afterList) ? afterList : []).forEach(entry => {
-        const key = entryDiffKey(entry);
-        if (!key) return;
-        const remaining = beforeCounts.get(key) || 0;
-        if (remaining > 0) {
-          beforeCounts.set(key, remaining - 1);
-          return;
-        }
-        added.push(entry);
-      });
-      return added;
+      if (entry?.nivå !== undefined && entry?.nivå !== null && String(entry.nivå).trim() !== '') {
+        matchOptions.level = entry.nivå;
+      }
+      return matchOptions;
     };
 
     const applyChoiceSelectionToListEntry = (list, entry, choiceResult) => {
@@ -1232,32 +1289,37 @@
       return changed;
     };
 
-    async function ensureChoicesForNewEntries(beforeList) {
-      const currentList = storeHelper.getCurrentList(store);
-      const addedEntries = collectAddedEntries(beforeList, currentList);
-      if (!addedEntries.length) return;
+    async function resolvePendingChoiceEntries(entries) {
+      const queue = Array.isArray(entries) ? entries.filter(Boolean).slice() : [];
+      if (!queue.length) return { changed: false, summaries: [] };
+      const summaries = [];
+      let changed = false;
+      const seen = new Set();
 
-      for (const addedEntry of addedEntries) {
+      while (queue.length) {
+        const pendingEntry = queue.shift();
         const latestList = storeHelper.getCurrentList(store);
         if (!Array.isArray(latestList) || !latestList.length) break;
-        const matchOptions = {};
-        CHOICE_MATCH_FIELDS.forEach(field => {
-          const value = normalizeMatchValue(addedEntry?.[field]);
-          if (value === null || value === '') return;
-          matchOptions[field] = value;
-        });
-        if (addedEntry?.nivå !== undefined && addedEntry?.nivå !== null && String(addedEntry.nivå).trim() !== '') {
-          matchOptions.level = addedEntry.nivå;
-        }
-        const liveEntry = findMatchingListEntry(latestList, addedEntry, matchOptions);
+        const liveEntry = findMatchingListEntry(latestList, pendingEntry, buildChoiceEntryMatchOptions(pendingEntry));
         if (!liveEntry) continue;
+        const seenKey = String(liveEntry?.__uid || entryDiffKey(liveEntry) || '');
+        if (seenKey && seen.has(seenKey)) continue;
+        if (seenKey) seen.add(seenKey);
         const choiceResult = await pickListEntryChoice(liveEntry, latestList, liveEntry.nivå || '', liveEntry, {
           promptIfMissingOnly: true
         });
         if (!choiceResult?.hasChoice || choiceResult.cancelled) continue;
         if (!applyChoiceSelectionToListEntry(latestList, liveEntry, choiceResult)) continue;
-        storeHelper.setCurrentList(store, latestList);
+        const summary = storeHelper.setCurrentList(store, latestList) || null;
+        summaries.push(summary);
+        changed = true;
+        (summary?.grantedEntriesAdded || []).forEach(entry => {
+          const queueKey = String(entry?.__uid || entryDiffKey(entry) || '');
+          if (!queueKey || !seen.has(queueKey)) queue.push(entry);
+        });
       }
+
+      return { changed, summaries };
     }
 
     const flashRemoved = (name, trait) => {
@@ -2309,25 +2371,20 @@
           const allowAdd = !(isService(p) || isEmployment(p));
           const actionButtons = [];
           if (editBtn) actionButtons.push(editBtn);
-          if (allowAdd) {
-            if (multi) {
-              const buyMultiButton = `<button data-act="buyMulti" class="db-btn db-btn--icon db-btn--icon-only" data-name="${p.namn}" aria-label="Köp flera">${icon('buymultiple')}</button>`;
-              if (count > 0) {
-                actionButtons.push(`<button data-act="del" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only" data-name="${p.namn}">${icon('remove')}</button>`);
-                actionButtons.push(`<button data-act="sub" class="db-btn db-btn--icon db-btn--icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`);
-                if (isInventoryEntry) actionButtons.push(buyMultiButton);
-                if (count < limit) actionButtons.push(`<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
-              } else {
-                if (count < limit) actionButtons.push(`<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`);
-                if (isInventoryEntry) actionButtons.push(buyMultiButton);
-              }
-            } else {
-              const mainBtn = inChar
-                ? `<button data-act="rem" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only" data-name="${p.namn}">${icon('remove')}</button>`
-                : `<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`;
-              actionButtons.push(mainBtn);
+          actionButtons.push(...(window.entryCardFactory?.buildStandardActionButtons?.(
+            buildIndexStandardActionConfig({
+              allowAdd,
+              multi,
+              count,
+              limit,
+              inChar,
+              isInventory: isInventoryEntry
+            }),
+            {
+              buttonName: p.namn,
+              buttonId: p.id !== undefined && p.id !== null ? String(p.id) : ''
             }
-          }
+          ) || []));
           if (eliteBtn) actionButtons.push(eliteBtn);
 
           // ── Build card via shared builder ──
@@ -2480,50 +2537,38 @@
       return cards;
     };
 
-    const syncActionRowState = (card) => {
-      if (!card) return;
-      const actionsRow = card.querySelector('.entry-row.entry-row-actions');
-      if (!actionsRow) return;
-      const dynamicGroup = actionsRow.querySelector('.entry-action-group-dynamic');
-      const standardGroup = actionsRow.querySelector('.entry-action-group-standard');
-      const levelControl = actionsRow.querySelector('.entry-level-control');
-      const hasDynamic = !!(dynamicGroup && dynamicGroup.children.length);
-      const hasStandard = !!(standardGroup && standardGroup.children.length);
-      const hasLevel = !!(levelControl && levelControl.children.length);
-      if (!hasDynamic && hasStandard && !hasLevel) actionsRow.classList.add('only-standard');
-      else actionsRow.classList.remove('only-standard');
-    };
-
-    const syncStandardActionButtons = (standardGroup, buttonSpecs, options = {}) => {
-      if (!standardGroup) return;
-      const buttonName = options.buttonName || '';
-      const buttonId = options.buttonId || '';
-      const existing = [...standardGroup.querySelectorAll(':scope > button')];
-
-      while (existing.length > buttonSpecs.length) {
-        existing.pop()?.remove();
+    const buildIndexStandardActionConfig = ({
+      allowAdd = false,
+      multi = false,
+      count = 0,
+      limit = 0,
+      inChar = false,
+      isInventory = false
+    } = {}) => {
+      const config = {};
+      if (!allowAdd) return config;
+      if (multi) {
+        const hasEntry = count > 0;
+        if (hasEntry) config.remove = { act: 'del' };
+        if (isInventory) config.multi = { act: 'buyMulti' };
+        if (count > 1) config.minus = { act: 'sub' };
+        if (count < limit) {
+          config.plus = {
+            act: 'add',
+            highlight: !hasEntry
+          };
+        }
+        return config;
       }
-
-      buttonSpecs.forEach((spec, index) => {
-        let button = existing[index];
-        if (!button) {
-          button = document.createElement('button');
-          standardGroup.appendChild(button);
-          existing.push(button);
-        }
-        button.className = spec.highlight ? `${spec.classes} add-btn` : spec.classes;
-        button.dataset.act = spec.act;
-        if (buttonName) button.dataset.name = buttonName;
-        else delete button.dataset.name;
-        if (buttonId) button.dataset.id = buttonId;
-        else delete button.dataset.id;
-        if (spec.ariaLabel) button.setAttribute('aria-label', spec.ariaLabel);
-        else button.removeAttribute('aria-label');
-        if (button.dataset.iconName !== spec.iconName) {
-          button.innerHTML = icon(spec.iconName);
-          button.dataset.iconName = spec.iconName;
-        }
-      });
+      if (inChar) {
+        config.remove = { act: 'rem' };
+      } else {
+        config.plus = {
+          act: 'add',
+          highlight: true
+        };
+      }
+      return config;
     };
 
     const updateEntryCardUI = (entry) => {
@@ -2657,46 +2702,53 @@
         if (standardGroup) {
           const buttonName = card.dataset.name || entry.namn || '';
           const buttonId = card.dataset.id || (entry.id !== undefined && entry.id !== null ? String(entry.id) : '');
-          const buttonSpecs = [];
-          const pushButton = (act, classes, iconName, ariaLabel = '', highlight = false) => {
-            buttonSpecs.push({ act, classes, iconName, ariaLabel, highlight });
-          };
-
-          if (allowAdd) {
-            if (multi) {
-              if (count > 0) {
-                pushButton('del', 'char-btn danger icon icon-only', 'remove');
-                pushButton('sub', 'char-btn icon icon-only', 'minus', 'Minska');
-                if (isInventory) pushButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera');
-                if (count < limit) {
-                  pushButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till');
-                }
-              } else {
-                pushButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true);
-                if (isInventory) pushButton('buyMulti', 'char-btn icon icon-only', 'buymultiple', 'Köp flera');
-              }
-            } else {
-              if (inChar) {
-                pushButton('rem', 'char-btn danger icon icon-only', 'remove');
-              } else {
-                pushButton('add', 'char-btn icon icon-only', 'plus', 'Lägg till', true);
-              }
-            }
-          }
+          const actionConfig = buildIndexStandardActionConfig({
+            allowAdd,
+            multi,
+            count,
+            limit,
+            inChar,
+            isInventory
+          });
 
           timeActiveAddStage('button-patch', () => {
-            syncStandardActionButtons(standardGroup, buttonSpecs, {
+            window.entryCardFactory?.syncStandardActionButtons?.(standardGroup, actionConfig, {
               buttonName,
               buttonId
             });
           }, {
             surface: 'index'
           });
-          syncActionRowState(card);
+          window.entryCardFactory?.syncActionRow?.(card);
         }
       });
 
       return true;
+    };
+
+    const buildAffectedIndexEntries = (summary, extraEntries = []) => {
+      const seen = new Set();
+      const out = [];
+      [
+        ...(Array.isArray(extraEntries) ? extraEntries : []),
+        ...(Array.isArray(summary?.addedEntries) ? summary.addedEntries : []),
+        ...(Array.isArray(summary?.removedEntries) ? summary.removedEntries : [])
+      ].forEach(entry => {
+        if (!entry) return;
+        const key = entryDiffKey(entry) || entrySignature(entry);
+        if (key && seen.has(key)) return;
+        if (key) seen.add(key);
+        out.push(entry);
+      });
+      return out;
+    };
+
+    const refreshAffectedIndexCards = (summary, extraEntries = []) => {
+      let needsFullRefresh = false;
+      buildAffectedIndexEntries(summary, extraEntries).forEach(entry => {
+        if (!updateEntryCardUI(entry)) needsFullRefresh = true;
+      });
+      return !needsFullRefresh;
     };
 
     /* första render */
@@ -3392,7 +3444,6 @@
             });
             return;
           }
-          requiresFullRefresh = requiresFullRefresh || Boolean(listChoice.hasChoice);
 
           const addedBase = { ...p, nivå: lvl };
           if (listChoice.hasChoice && listChoice.rule?.field) {
@@ -3409,29 +3460,51 @@
                 existing.nivå = lvl;
                 if (forceRuleOverride) existing.manualRuleOverride = true;
                 await checkDisadvWarning();
-                timeActiveAddStage('store-mutation', () => {
-                  storeHelper.setCurrentList(store, list);
-                }, {
+                const mutationSummary = await withBusyInteraction(btn, () => (
+                  runDeferredCurrentCharacterMutation(() => (
+                    timeActiveAddStage('store-mutation', () => (
+                      storeHelper.setCurrentList(store, list)
+                    ), {
+                      branch: 'list',
+                      mode: 'replace-existing',
+                      surface: 'index'
+                    })
+                  ))
+                ));
+                const choiceResolution = await timeActiveAddStage('pending-choice-resolution', () => (
+                  resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded)
+                ), {
                   branch: 'list',
                   mode: 'replace-existing',
                   surface: 'index'
                 });
-                await ensureChoicesForNewEntries(beforeList);
-                skipImmediateDerivedRefresh = true;
-                needsFullRefresh = needsFullRefresh || requiresFullRefresh;
+                needsFullRefresh = needsFullRefresh || requiresFullRefresh || hasActiveIndexFilters();
                 scheduleCharacterMutationRefresh({
                   xp: true,
                   traits: true,
                   summary: true,
                   effects: true,
                   source: 'index-list-replace',
-                  afterPaint: false
+                  afterPaint: true
                 });
-                activeTags();
-                if (needsFullRefresh || !updateEntryCardUI(existing)) {
-                  needsFullRefresh = true;
-                  scheduleRenderList();
-                }
+                needsFullRefresh = timeActiveAddStage('targeted-ui-refresh', () => {
+                  let nextNeedsFullRefresh = needsFullRefresh;
+                  activeTags();
+                  if (!nextNeedsFullRefresh && !refreshAffectedIndexCards(mutationSummary, [existing])) {
+                    nextNeedsFullRefresh = true;
+                  }
+                  (choiceResolution?.summaries || []).forEach(summary => {
+                    if (!nextNeedsFullRefresh && !refreshAffectedIndexCards(summary)) {
+                      nextNeedsFullRefresh = true;
+                    }
+                  });
+                  if (nextNeedsFullRefresh) scheduleRenderList();
+                  return nextNeedsFullRefresh;
+                }, {
+                  branch: 'list',
+                  mode: 'replace-existing',
+                  surface: 'index'
+                });
                 flashAdded(existing.namn, existing.trait);
                 await waitForCharacterMutationRefresh();
                 await completeAddScenario({
@@ -3444,14 +3517,24 @@
 
           const finishAdd = async added => {
             await checkDisadvWarning();
-            timeActiveAddStage('store-mutation', () => {
-              storeHelper.setCurrentList(store, list);
-            }, {
+            const mutationSummary = await withBusyInteraction(btn, () => (
+              runDeferredCurrentCharacterMutation(() => (
+                timeActiveAddStage('store-mutation', () => (
+                  storeHelper.setCurrentList(store, list)
+                ), {
+                  branch: 'list',
+                  mode: 'add',
+                  surface: 'index'
+                })
+              ))
+            ));
+            const choiceResolution = await timeActiveAddStage('pending-choice-resolution', () => (
+              resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded)
+            ), {
               branch: 'list',
               mode: 'add',
               surface: 'index'
             });
-            await ensureChoicesForNewEntries(beforeList);
             if (p.namn === 'Privilegierad') {
               invUtil.renderInventory();
               requiresFullRefresh = true;
@@ -3464,16 +3547,32 @@
               requiresFullRefresh = true;
             }
             skipImmediateDerivedRefresh = true;
-            needsFullRefresh = needsFullRefresh || requiresFullRefresh;
+            needsFullRefresh = needsFullRefresh || requiresFullRefresh || hasActiveIndexFilters();
             scheduleCharacterMutationRefresh({
               xp: true,
               traits: true,
               summary: true,
               effects: true,
               source: 'index-list-add',
-              afterPaint: false
+              afterPaint: true
             });
-            flashAdded(added.namn, added.trait);
+            needsFullRefresh = timeActiveAddStage('targeted-ui-refresh', () => {
+              let nextNeedsFullRefresh = needsFullRefresh;
+              if (!nextNeedsFullRefresh && !refreshAffectedIndexCards(mutationSummary, [added])) {
+                nextNeedsFullRefresh = true;
+              }
+              (choiceResolution?.summaries || []).forEach(summary => {
+                if (!nextNeedsFullRefresh && !refreshAffectedIndexCards(summary)) {
+                  nextNeedsFullRefresh = true;
+                }
+              });
+              if (nextNeedsFullRefresh) scheduleRenderList();
+              return nextNeedsFullRefresh;
+            }, {
+              branch: 'list',
+              mode: 'add',
+              surface: 'index'
+            });
           };
           const added = { ...addedBase };
           if (!Object.prototype.hasOwnProperty.call(added, 'form')) {
@@ -3642,14 +3741,14 @@
             }
           }
           const applyListRemoval = async () => {
-            timeActiveAddStage('store-mutation', () => {
-              storeHelper.setCurrentList(store, list);
-            }, {
+            const mutationSummary = timeActiveAddStage('store-mutation', () => (
+              storeHelper.setCurrentList(store, list)
+            ), {
               branch: 'list',
               mode: 'remove',
               surface: 'index'
             });
-            await ensureChoicesForNewEntries(before);
+            await resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded);
           };
           if (p.namn !== 'Besittning') {
             await runCurrentCharacterMutationBatch(applyListRemoval);
@@ -3887,11 +3986,33 @@
             }
           }
         }
-        storeHelper.setCurrentList(store, list); updateXP();
-        await ensureChoicesForNewEntries(before);
-        updateXP();
-        scheduleRenderList(); renderTraits();
-        flashAdded(name, tr);
+        const mutationSummary = await withBusyInteraction(select, () => (
+          runDeferredCurrentCharacterMutation(() => (
+            storeHelper.setCurrentList(store, list)
+          ))
+        ));
+        const choiceResolution = await resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded);
+        scheduleCharacterMutationRefresh({
+          xp: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          source: 'index-level-change',
+          afterPaint: true
+        });
+        let needsSelectionRefresh = hasActiveIndexFilters();
+        if (!needsSelectionRefresh && !refreshAffectedIndexCards(mutationSummary, [ent])) {
+          needsSelectionRefresh = true;
+        }
+        (choiceResolution?.summaries || []).forEach(summary => {
+          if (!needsSelectionRefresh && !refreshAffectedIndexCards(summary)) {
+            needsSelectionRefresh = true;
+          }
+        });
+        if (needsSelectionRefresh) scheduleRenderList();
+        void waitForCharacterMutationRefresh().then(() => {
+          flashAdded(name, tr);
+        });
         return;
       }
 

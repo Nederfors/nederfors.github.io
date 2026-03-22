@@ -45,6 +45,7 @@
   /* Skugga och kontroller */
   --shadow:      0 4px 16px #0007;
   --ctrl-btn-size:       40px;
+  --entry-card-action-size: var(--ctrl-btn-size);
   --ctrl-btn-font-size:  1.35rem;
 
   /* Verktygskanter och knappar enligt kitet */
@@ -2505,11 +2506,11 @@ input:focus, select:focus, textarea:focus {
 }
 
 .entry-row-actions .entry-action-group-standard {
-  margin-left: 0;
+  margin-left: auto;
 }
 
 .entry-row-actions.only-standard .entry-action-group-standard {
-  margin-left: 0;
+  margin-left: auto;
 }
 
 .entry-card-details {
@@ -2796,14 +2797,21 @@ input:focus, select:focus, textarea:focus {
   white-space: normal;
 }
 
+.entry-row-actions .control-buttons .entry-standard-action,
 .entry-row-actions .control-buttons .char-btn {
-  width: var(--ctrl-btn-size);
-  min-width: var(--ctrl-btn-size);
-  height: var(--ctrl-btn-size);
+  width: var(--entry-card-action-size);
+  min-width: var(--entry-card-action-size);
+  height: var(--entry-card-action-size);
   padding: 0;
 }
 
-.entry-row-actions .control-buttons .char-btn[data-clear-filters] {
+.entry-row-actions .control-buttons .entry-standard-action .btn-icon {
+  width: calc(var(--entry-card-action-size) - 12px);
+  height: calc(var(--entry-card-action-size) - 12px);
+}
+
+.entry-row-actions .control-buttons .char-btn[data-clear-filters],
+.entry-row-actions .control-buttons .db-btn[data-clear-filters] {
   width: auto;
   min-width: 0;
   height: auto;
@@ -2811,7 +2819,8 @@ input:focus, select:focus, textarea:focus {
 }
 
 @media (max-width: 680px) {
-  .entry-row-actions .control-buttons .char-btn[data-clear-filters] {
+  .entry-row-actions .control-buttons .char-btn[data-clear-filters],
+  .entry-row-actions .control-buttons .db-btn[data-clear-filters] {
     padding: .45rem .9rem;
   }
 }

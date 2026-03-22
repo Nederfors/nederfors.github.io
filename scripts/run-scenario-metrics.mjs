@@ -46,9 +46,11 @@ function cloneValue(value) {
   return JSON.parse(JSON.stringify(value));
 }
 
-function makeHeavyCharacter(label) {
+function makeHeavyCharacter(label, options = {}) {
+  const listSize = Number.isFinite(options.listSize) ? Math.max(0, Number(options.listSize)) : 1000;
+  const inventorySize = Number.isFinite(options.inventorySize) ? Math.max(0, Number(options.inventorySize)) : 1000;
   return {
-    list: Array.from({ length: 1000 }, (_, index) => ({
+    list: Array.from({ length: listSize }, (_, index) => ({
       id: `${label}-list-${index}`,
       namn: `${label} List ${index}`,
       nivå: 'Novis',
@@ -56,7 +58,7 @@ function makeHeavyCharacter(label) {
       taggar: { typ: ['Förmåga'] },
       text: 'x'.repeat(120)
     })),
-    inventory: Array.from({ length: 1000 }, (_, index) => ({
+    inventory: Array.from({ length: inventorySize }, (_, index) => ({
       id: `${label}-inv-${index}`,
       name: `${label} Inv ${index}`,
       qty: 1 + (index % 3),
@@ -86,6 +88,15 @@ async function seedStore(context, { profile = 'base' } = {}) {
   if (profile === 'heavy') {
     characters[TEST_CHAR_ID] = makeHeavyCharacter('Alpha');
     characters[TEST_CHAR_ID_2] = makeHeavyCharacter('Beta');
+  } else if (profile === 'interaction-heavy') {
+    characters[TEST_CHAR_ID] = makeHeavyCharacter('Alpha', {
+      listSize: 250,
+      inventorySize: 250
+    });
+    characters[TEST_CHAR_ID_2] = makeHeavyCharacter('Beta', {
+      listSize: 250,
+      inventorySize: 250
+    });
   }
 
   await context.addInitScript(({ metaState, characters }) => {
@@ -104,14 +115,21 @@ async function waitForApp(page, pathName, readySelector, options = {}) {
     waitUntil: 'domcontentloaded',
     timeout: timeoutMs
   });
-  if (readySelector) {
-    await page.locator(readySelector).first().waitFor({ state: 'visible', timeout: timeoutMs });
-  }
   await page.waitForFunction(
     () => Boolean(window.DB?.length) && Boolean(window.__symbaroumBootCompleted),
     null,
     { timeout: timeoutMs }
   );
+  if (readySelector) {
+    await page.locator(readySelector).first().waitFor({ state: 'attached', timeout: timeoutMs });
+    await page.waitForFunction((selector) => {
+      const element = document.querySelector(selector);
+      if (!element) return false;
+      const items = element.querySelectorAll?.('li.entry-card, li.card, li');
+      if (items && items.length > 0) return true;
+      return element.childElementCount > 0;
+    }, readySelector, { timeout: timeoutMs });
+  }
   await page.waitForTimeout(500);
 }
 
@@ -677,6 +695,270 @@ async function runIndexAdd(browser, iterations, kind) {
     })
   ));
   return aggregateScenarioRuns(kind === 'inventory' ? 'index-inventory-add' : 'index-list-add', runs);
+}
+
+async function runIndexPopupAdd(browser, iterations) {
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, {
+      pathName: '/#/index',
+      readySelector: '#lista',
+      profile: 'interaction-heavy'
+    }, async (page) => {
+      await page.evaluate(() => {
+        window.__symbaroumPerfAwaitFlush = true;
+        window.symbaroumPerf?.clearHistory?.();
+      });
+
+      const target = await page.evaluate(() => {
+        const cards = [...document.querySelectorAll('#lista li.entry-card, #lista li.card')];
+        const currentList = window.storeHelper.getCurrentList(typeof store === 'object' && store ? store : window.storeHelper.load());
+        const picker = window.choicePopup;
+        const preferredNames = ['Monsterlärd', 'Exceptionellt karaktärsdrag', 'Blodsband'];
+        const candidates = cards.map((card) => {
+          const name = String(card?.dataset?.name || '').trim();
+          const id = String(card?.dataset?.id || '').trim();
+          const entry = window.lookupEntry?.({ id: id || undefined, name }) || null;
+          if (!entry || window.isInv?.(entry) || window.isEmployment?.(entry) || window.isService?.(entry)) return null;
+          const select = card.querySelector('select.level');
+          const levels = select
+            ? [...select.options].map((option) => String(option.value || '').trim()).filter(Boolean)
+            : Object.keys(entry?.nivåer || {});
+          const chosenLevel = levels.find((level) => {
+            if (!picker || typeof picker.getChoiceRule !== 'function') return false;
+            const candidate = level && entry?.nivå !== level ? { ...entry, nivå: level } : { ...entry };
+            const context = {
+              list: Array.isArray(currentList) ? currentList : [],
+              entry: candidate,
+              sourceEntry: candidate,
+              level: level || candidate?.nivå || '',
+              sourceLevel: level || candidate?.nivå || ''
+            };
+            try {
+              return Boolean(picker.getChoiceRule(candidate, context, { fallbackLegacy: true }));
+            } catch {
+              return false;
+            }
+          }) || '';
+          const button = card.querySelector('button[data-act="add"]');
+          if (!chosenLevel || !button) return null;
+          return { card, button, select, name, level: chosenLevel };
+        }).filter(Boolean);
+
+        const picked = preferredNames
+          .map((name) => candidates.find((candidate) => candidate.name === name))
+          .find(Boolean) || candidates[0] || null;
+        if (!picked?.button) return null;
+        if (picked.select) {
+          picked.select.value = picked.level;
+          window.entryCardFactory?.syncLevelControl?.(picked.select);
+        }
+        picked.button.click();
+        return {
+          name: picked.name,
+          level: picked.level
+        };
+      });
+
+      if (!target) {
+        throw new Error('Unable to find a deterministic popup-based add target.');
+      }
+
+      await page.locator('#choicePopup').waitFor({ state: 'visible' });
+      const popupClose = await page.evaluate(async () => {
+        const popup = document.getElementById('choicePopup');
+        if (!popup) throw new Error('Choice popup was not found.');
+        const optionRoot = popup.querySelector('#choiceOpts') || popup;
+        const button = [...optionRoot.querySelectorAll('button')]
+          .find((candidate) => !candidate.disabled && String(candidate.textContent || '').trim());
+        if (!button) throw new Error('Choice popup had no selectable option.');
+        const label = String(button.textContent || '').trim();
+        const isVisible = () => {
+          if (!popup.isConnected) return false;
+          const style = window.getComputedStyle(popup);
+          if (style.display === 'none' || style.visibility === 'hidden') return false;
+          if (popup.getAttribute('aria-hidden') === 'true') return false;
+          if (popup.hidden) return false;
+          return popup.classList.contains('open')
+            || popup.getAttribute('aria-hidden') === 'false'
+            || popup.getBoundingClientRect().height > 0;
+        };
+        const start = performance.now();
+        button.click();
+        const timeoutAt = performance.now() + 5000;
+        await new Promise((resolve, reject) => {
+          const tick = () => {
+            if (!isVisible()) {
+              resolve();
+              return;
+            }
+            if (performance.now() > timeoutAt) {
+              reject(new Error('Choice popup did not close after selection.'));
+              return;
+            }
+            requestAnimationFrame(tick);
+          };
+          tick();
+        });
+        return {
+          durationMs: Math.max(0, performance.now() - start),
+          label
+        };
+      });
+
+      const scenario = await waitForScenario(page, 'add-item-to-character');
+      const profile = scenario?.detail?.profile || {};
+      const stages = Array.isArray(profile?.stages) ? profile.stages.slice() : [];
+      stages.push({
+        name: 'popup-close',
+        duration: Number(popupClose?.durationMs || 0),
+        detail: {
+          surface: 'index',
+          entry: target.name,
+          option: popupClose?.label || null
+        }
+      });
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target: {
+            ...target,
+            choice: popupClose?.label || null
+          },
+          profile: {
+            ...profile,
+            stages
+          }
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns('index-popup-add', runs);
+}
+
+async function prepareCharacterLevelChangeTarget(page, mode = 'fast') {
+  return page.evaluate(async ({ mode }) => {
+    const activeStore = typeof store === 'object' && store ? store : window.storeHelper.load();
+    const entries = Array.isArray(window.DB) ? window.DB : [];
+    const preferredName = mode === 'structural' ? 'Hamnskifte' : 'Akrobatik';
+    const isStructuralEntry = (candidate) => {
+      const grants = candidate?.taggar?.regler?.ger;
+      return Array.isArray(grants) && grants.length > 0;
+    };
+    const hasMultiLevels = (candidate) => Object.keys(candidate?.nivåer || {}).length > 1;
+    const isListEntry = (candidate) => (
+      candidate
+      && !window.isInv?.(candidate)
+      && !window.isEmployment?.(candidate)
+      && !window.isService?.(candidate)
+    );
+    const entry = window.lookupEntry?.({ name: preferredName })
+      || entries.find((candidate) => (
+        isListEntry(candidate)
+        && hasMultiLevels(candidate)
+        && (mode === 'structural' ? isStructuralEntry(candidate) : !isStructuralEntry(candidate))
+        && !Array.isArray(candidate?.taggar?.regler?.val)
+      ))
+      || entries.find((candidate) => isListEntry(candidate) && hasMultiLevels(candidate))
+      || null;
+    if (!entry) {
+      throw new Error(`Unable to prepare a ${mode} level-change candidate.`);
+    }
+
+    const levels = Object.keys(entry.nivåer || {}).filter(Boolean);
+    const fromLevel = mode === 'structural'
+      ? (levels.find((level) => level === 'Novis') || levels[0] || entry.nivå || '')
+      : (levels[0] || entry.nivå || '');
+    const toLevel = mode === 'structural'
+      ? (levels.find((level) => level === 'Gesäll') || levels[1] || levels[0] || entry.nivå || '')
+      : (levels[1] || levels[0] || entry.nivå || '');
+    if (!fromLevel || !toLevel || fromLevel === toLevel) {
+      throw new Error(`Entry ${entry.namn} does not expose a usable ${mode} level-change path.`);
+    }
+
+    const existingList = Array.isArray(window.storeHelper.getCurrentList(activeStore))
+      ? window.storeHelper.getCurrentList(activeStore).filter(Boolean)
+      : [];
+    const nextList = existingList.filter((item) => String(item?.namn || '').trim() !== String(entry.namn || '').trim());
+    nextList.push({
+      ...JSON.parse(JSON.stringify(entry)),
+      nivå: fromLevel,
+      __uid: `perf-character-level-${mode}-${Date.now()}`
+    });
+
+    window.storeHelper.setCurrentList(activeStore, nextList);
+    await window.symbaroumPersistence?.flushPendingWrites?.({ reason: `prepare-character-level-${mode}` });
+    window.symbaroumViewBridge?.refreshCurrent({
+      selection: true,
+      inventory: true,
+      filters: true,
+      traits: true,
+      summary: true,
+      effects: true,
+      strict: true
+    });
+    if (typeof window.updateXP === 'function') window.updateXP();
+    if (typeof window.renderTraits === 'function') window.renderTraits();
+    window.__symbaroumPerfCaptureLevelChanges = true;
+    window.__symbaroumPerfAwaitFlush = true;
+    window.symbaroumPerf?.clearHistory?.();
+    return {
+      mode,
+      name: entry.namn,
+      fromLevel,
+      toLevel
+    };
+  }, { mode });
+}
+
+async function changeCardLevel(page, { rootSelector, name, value }) {
+  const changed = await page.evaluate(({ rootSelector, name, value }) => {
+    const root = document.querySelector(rootSelector);
+    if (!root) return false;
+    const card = [...root.querySelectorAll('li.entry-card, li.card')]
+      .find((candidate) => String(candidate?.dataset?.name || '').trim() === String(name || '').trim()) || null;
+    if (!card) return false;
+    const select = card.querySelector('select.level');
+    if (!select) return false;
+    select.value = value;
+    window.entryCardFactory?.syncLevelControl?.(select);
+    select.dispatchEvent(new Event('change', { bubbles: true }));
+    return true;
+  }, { rootSelector, name, value });
+
+  if (!changed) {
+    throw new Error(`Unable to change level for ${name} in ${rootSelector}.`);
+  }
+}
+
+async function runCharacterLevelChange(browser, iterations, mode) {
+  const scenarioName = mode === 'structural'
+    ? 'character-level-change-structural'
+    : 'character-level-change-fast';
+  const runs = await collectRuns(browser, iterations, async () => (
+    withSeededPage(browser, {
+      pathName: '/#/character',
+      readySelector: '#valda',
+      profile: 'interaction-heavy'
+    }, async (page) => {
+      const target = await prepareCharacterLevelChangeTarget(page, mode);
+      await settleAfterMutation(page);
+      await changeCardLevel(page, {
+        rootSelector: '#valda',
+        name: target.name,
+        value: target.toLevel
+      });
+      const scenario = await waitForScenario(page, 'character-level-change');
+      return {
+        ...scenario,
+        detail: {
+          ...(scenario?.detail || {}),
+          target
+        }
+      };
+    })
+  ));
+  return aggregateScenarioRuns(scenarioName, runs);
 }
 
 async function runInventoryBuyMultiple(browser, iterations) {
@@ -1440,6 +1722,7 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'openInventory', name: 'open-inventory', run: () => runOpenInventory(browser, iterations) },
       { key: 'switchCharacter', name: 'switch-character', run: () => runSwitchCharacter(browser, iterations) },
       { key: 'addIndexList', name: 'index-list-add', aliases: ['add'], run: () => runIndexAdd(browser, iterations, 'list') },
+      { key: 'addIndexPopup', name: 'index-popup-add', aliases: ['add', 'popup add'], run: () => runIndexPopupAdd(browser, iterations) },
       { key: 'addIndexInventory', name: 'index-inventory-add', aliases: ['add'], run: () => runIndexAdd(browser, iterations, 'inventory') },
       { key: 'searchFilter', name: 'search-filter', run: () => runSearchFilter(browser, iterations) },
       { key: 'inventoryBuyMultiple', name: 'inventory-buy-multiple', aliases: ['inventory add'], run: () => runInventoryBuyMultiple(browser, iterations) },
@@ -1451,6 +1734,8 @@ export async function runScenarioMetrics({ runDir = null, iterations = DEFAULT_I
       { key: 'notesEdit', name: 'notes-edit', run: () => runNotesEdit(browser, iterations) },
       { key: 'moneyEdit', name: 'money-edit', run: () => runMoneyEdit(browser, iterations) },
       { key: 'heavyCharacterSave', name: 'heavy-current-character-save', run: () => runHeavyCurrentCharacterSave(browser, iterations) },
+      { key: 'characterLevelChangeFast', name: 'character-level-change-fast', aliases: ['character level change'], run: () => runCharacterLevelChange(browser, iterations, 'fast') },
+      { key: 'characterLevelChangeStructural', name: 'character-level-change-structural', aliases: ['character level change'], run: () => runCharacterLevelChange(browser, iterations, 'structural') },
       { key: 'characterListRemoveSingle', name: 'character-list-remove-single', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveSingle(browser, iterations) },
       { key: 'characterListRemoveDecrement', name: 'character-list-remove-decrement', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveMulti(browser, iterations, 'sub') },
       { key: 'characterListRemoveAll', name: 'character-list-remove-all', aliases: ['remove', 'character remove'], run: () => runCharacterRemoveMulti(browser, iterations, 'del') },

@@ -13,6 +13,8 @@
       uiPrefs?.setItem?.(key, value);
     } catch {}
   };
+  let characterInitController = null;
+  let characterInitToken = 0;
 
   const quoteName = (value) => {
     const str = String(value ?? '').trim();
@@ -90,6 +92,10 @@
   }
 
   function initCharacter() {
+    characterInitController?.abort();
+    characterInitController = new AbortController();
+    const { signal } = characterInitController;
+    const initToken = String(++characterInitToken);
     const createEntryCard = window.entryCardFactory.create;
     dom.cName.textContent = store.characters.find(c => c.id === store.current)?.name || '';
 
@@ -146,8 +152,11 @@
       catch { }
     };
     const REMOVE_FLOW_CONTEXT_KEY = 'remove-item';
+    const LEVEL_CHANGE_FLOW_CONTEXT_KEY = 'level-change';
     const shouldProfileRemoveActions = () => Boolean(window.__symbaroumPerfCaptureRemovals);
+    const shouldProfileLevelChanges = () => Boolean(window.__symbaroumPerfCaptureLevelChanges);
     const getActiveRemoveScenarioId = () => window.symbaroumPerf?.getFlowContext?.(REMOVE_FLOW_CONTEXT_KEY) || null;
+    const getActiveLevelScenarioId = () => window.symbaroumPerf?.getFlowContext?.(LEVEL_CHANGE_FLOW_CONTEXT_KEY) || null;
     const timeActiveRemoveStage = (name, callback, detail = {}) => {
       const scenarioId = getActiveRemoveScenarioId();
       const perf = window.symbaroumPerf;
@@ -156,6 +165,20 @@
       }
       return perf.timeScenarioStage(scenarioId, name, callback, detail);
     };
+    const timeActiveLevelStage = (name, callback, detail = {}) => {
+      const scenarioId = getActiveLevelScenarioId();
+      const perf = window.symbaroumPerf;
+      if (!scenarioId || typeof perf?.timeScenarioStage !== 'function') {
+        return callback();
+      }
+      return perf.timeScenarioStage(scenarioId, name, callback, detail);
+    };
+    const markActiveLevelCheckpoint = (name, detail = {}) => {
+      const scenarioId = getActiveLevelScenarioId();
+      const perf = window.symbaroumPerf;
+      if (!scenarioId || !name || typeof perf?.markScenario !== 'function') return null;
+      return perf.markScenario(scenarioId, name, detail);
+    };
     const bindRemoveScenario = (scenarioId, detail = {}) => {
       if (!scenarioId) return null;
       const perf = window.symbaroumPerf;
@@ -163,10 +186,23 @@
       perf?.markScenario?.(scenarioId, 'click-handler-start', detail);
       return scenarioId;
     };
+    const bindLevelScenario = (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      perf?.setFlowContext?.(LEVEL_CHANGE_FLOW_CONTEXT_KEY, scenarioId);
+      perf?.markScenario?.(scenarioId, 'click-handler-start', detail);
+      return scenarioId;
+    };
     const cancelRemoveScenario = (scenarioId, detail = {}) => {
       if (!scenarioId) return null;
       const perf = window.symbaroumPerf;
       perf?.clearFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
+      return perf?.cancelScenario?.(scenarioId, detail) || null;
+    };
+    const cancelLevelScenario = (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      perf?.clearFlowContext?.(LEVEL_CHANGE_FLOW_CONTEXT_KEY, scenarioId);
       return perf?.cancelScenario?.(scenarioId, detail) || null;
     };
     const finishRemoveScenario = async (scenarioId, detail = {}) => {
@@ -186,12 +222,101 @@
       perf?.clearFlowContext?.(REMOVE_FLOW_CONTEXT_KEY, scenarioId);
       return perf?.endScenario?.(scenarioId, detail) || null;
     };
+    const finishLevelScenario = async (scenarioId, detail = {}) => {
+      if (!scenarioId) return null;
+      const perf = window.symbaroumPerf;
+      if (window.__symbaroumPerfAwaitFlush && typeof perf?.timeScenarioStage === 'function') {
+        await perf.timeScenarioStage(scenarioId, 'persistence-flush', () => (
+          window.symbaroumPersistence?.flushPendingWrites?.({ reason: 'character-level-change' })
+        ), {
+          surface: 'character',
+          branch: 'list'
+        });
+      }
+      if (typeof perf?.afterNextPaint === 'function') {
+        await perf.afterNextPaint(2);
+      }
+      perf?.markScenario?.(scenarioId, 'post-render-paint-complete', detail);
+      perf?.clearFlowContext?.(LEVEL_CHANGE_FLOW_CONTEXT_KEY, scenarioId);
+      return perf?.endScenario?.(scenarioId, detail) || null;
+    };
     const runCurrentCharacterMutationBatch = (callback) => {
       if (typeof callback !== 'function') return undefined;
       if (typeof storeHelper?.batchCurrentCharacterMutation === 'function') {
         return storeHelper.batchCurrentCharacterMutation(store, {}, callback);
       }
       return callback();
+    };
+    const scheduleCharacterMutationRefresh = (options = {}) => {
+      if (typeof window.symbaroumMutationPipeline?.scheduleCharacterRefresh === 'function') {
+        window.symbaroumMutationPipeline.scheduleCharacterRefresh(options);
+        return;
+      }
+      if (options.xp && typeof window.updateXP === 'function') {
+        updateXP({
+          afterPaint: false,
+          source: options.source || 'character-mutation'
+        });
+      }
+      if (options.traits && typeof window.renderTraits === 'function') {
+        renderTraits();
+      }
+      const refreshOptions = {};
+      ['summary', 'effects', 'name', 'filters', 'selection', 'inventory', 'notes', 'traits']
+        .forEach((key) => {
+          if (options[key]) refreshOptions[key] = true;
+        });
+      if (Object.keys(refreshOptions).length) {
+        window.symbaroumViewBridge?.refreshCurrent({ ...refreshOptions, strict: true });
+      }
+    };
+    const waitForCharacterMutationRefresh = () => (
+      window.symbaroumMutationPipeline?.waitForCharacterRefresh?.() || Promise.resolve()
+    );
+    const waitForDeferredMutationTurn = async (options = {}) => {
+      const afterPaint = options.afterPaint !== false;
+      if (afterPaint && typeof window.requestAnimationFrame === 'function') {
+        await new Promise(resolve => {
+          window.requestAnimationFrame(() => {
+            window.setTimeout(resolve, 0);
+          });
+        });
+        return;
+      }
+      await new Promise(resolve => window.setTimeout(resolve, 0));
+    };
+    const runDeferredCurrentCharacterMutation = async (callback, options = {}) => {
+      await waitForDeferredMutationTurn(options);
+      return runCurrentCharacterMutationBatch(callback);
+    };
+    const withBusyInteraction = async (control, callback) => {
+      if (typeof callback !== 'function') return undefined;
+      if (!control || typeof control !== 'object') return callback();
+      if (control.dataset?.mutationBusy === '1') return undefined;
+      const card = typeof control.closest === 'function'
+        ? control.closest('li.entry-card, li.db-card')
+        : null;
+      const restoreDisabled = 'disabled' in control ? Boolean(control.disabled) : null;
+      if (control.dataset) control.dataset.mutationBusy = '1';
+      if (card) {
+        card.classList.add('entry-busy');
+        card.setAttribute('aria-busy', 'true');
+      }
+      if (restoreDisabled !== null) {
+        control.disabled = true;
+      }
+      try {
+        return await callback();
+      } finally {
+        if (control.dataset) delete control.dataset.mutationBusy;
+        if (card) {
+          card.classList.remove('entry-busy');
+          card.removeAttribute('aria-busy');
+        }
+        if (restoreDisabled !== null) {
+          control.disabled = restoreDisabled;
+        }
+      }
     };
     {
       const saved = loadState();
@@ -718,7 +843,7 @@
           entry: 'clear-non-inventory',
           branch: 'clear-non-inventory'
         });
-      });
+      }, { signal });
     }
 
     const conflictPanel = document.getElementById('conflictPanel');
@@ -894,6 +1019,13 @@
         currentValue,
         fallbackLegacy: true
       });
+      if (picked?.hasChoice && !picked.noOptions) {
+        markActiveLevelCheckpoint('popup-close', {
+          surface: 'character',
+          entry: candidate?.namn || entry?.namn || '',
+          promptIfMissingOnly: Boolean(options?.promptIfMissingOnly)
+        });
+      }
       if (!picked?.hasChoice) return { hasChoice: false, cancelled: false };
       if (picked.cancelled) {
         return {
@@ -962,25 +1094,17 @@
       return parts.join('|');
     };
 
-    const collectAddedEntries = (beforeList, afterList) => {
-      const beforeCounts = new Map();
-      (Array.isArray(beforeList) ? beforeList : []).forEach(entry => {
-        const key = entryDiffKey(entry);
-        if (!key) return;
-        beforeCounts.set(key, (beforeCounts.get(key) || 0) + 1);
+    const buildChoiceEntryMatchOptions = (entry) => {
+      const matchOptions = {};
+      CHOICE_MATCH_FIELDS.forEach(field => {
+        const value = normalizeMatchValue(entry?.[field]);
+        if (value === null || value === '') return;
+        matchOptions[field] = value;
       });
-      const added = [];
-      (Array.isArray(afterList) ? afterList : []).forEach(entry => {
-        const key = entryDiffKey(entry);
-        if (!key) return;
-        const remaining = beforeCounts.get(key) || 0;
-        if (remaining > 0) {
-          beforeCounts.set(key, remaining - 1);
-          return;
-        }
-        added.push(entry);
-      });
-      return added;
+      if (entry?.nivå !== undefined && entry?.nivå !== null && String(entry.nivå).trim() !== '') {
+        matchOptions.level = entry.nivå;
+      }
+      return matchOptions;
     };
 
     const findMatchingCharacterListEntry = (list, entry, options = {}) => {
@@ -1056,32 +1180,37 @@
       return changed;
     };
 
-    async function ensureChoicesForNewEntries(beforeList) {
-      const currentList = storeHelper.getCurrentList(store);
-      const addedEntries = collectAddedEntries(beforeList, currentList);
-      if (!addedEntries.length) return;
+    async function resolvePendingChoiceEntries(entries) {
+      const queue = Array.isArray(entries) ? entries.filter(Boolean).slice() : [];
+      if (!queue.length) return { changed: false, summaries: [] };
+      const summaries = [];
+      let changed = false;
+      const seen = new Set();
 
-      for (const addedEntry of addedEntries) {
+      while (queue.length) {
+        const pendingEntry = queue.shift();
         const latestList = storeHelper.getCurrentList(store);
         if (!Array.isArray(latestList) || !latestList.length) break;
-        const matchOptions = {};
-        CHOICE_MATCH_FIELDS.forEach(field => {
-          const value = normalizeMatchValue(addedEntry?.[field]);
-          if (value === null || value === '') return;
-          matchOptions[field] = value;
-        });
-        if (addedEntry?.nivå !== undefined && addedEntry?.nivå !== null && String(addedEntry.nivå).trim() !== '') {
-          matchOptions.level = addedEntry.nivå;
-        }
-        const liveEntry = findMatchingCharacterListEntry(latestList, addedEntry, matchOptions);
+        const liveEntry = findMatchingCharacterListEntry(latestList, pendingEntry, buildChoiceEntryMatchOptions(pendingEntry));
         if (!liveEntry) continue;
+        const seenKey = String(liveEntry?.__uid || entryDiffKey(liveEntry) || '');
+        if (seenKey && seen.has(seenKey)) continue;
+        if (seenKey) seen.add(seenKey);
         const choiceResult = await pickCharacterEntryChoice(liveEntry, latestList, liveEntry.nivå || '', liveEntry, {
           promptIfMissingOnly: true
         });
         if (!choiceResult?.hasChoice || choiceResult.cancelled) continue;
         if (!applyChoiceSelectionToCharacterEntry(latestList, liveEntry, choiceResult)) continue;
-        storeHelper.setCurrentList(store, latestList);
+        const summary = storeHelper.setCurrentList(store, latestList) || null;
+        summaries.push(summary);
+        changed = true;
+        (summary?.grantedEntriesAdded || []).forEach(entry => {
+          const queueKey = String(entry?.__uid || entryDiffKey(entry) || '');
+          if (!queueKey || !seen.has(queueKey)) queue.push(entry);
+        });
       }
+
+      return { changed, summaries };
     }
 
     function getActiveHandlingKeys(p) {
@@ -1679,39 +1808,39 @@
         renderSummary();
         const isOpen = summaryPanel.classList.toggle('open');
         if (isOpen) summaryPanel.scrollTop = 0;
-      });
+      }, { signal });
     }
-    summaryClose?.addEventListener('click', () => summaryPanel.classList.remove('open'));
+    summaryClose?.addEventListener('click', () => summaryPanel.classList.remove('open'), { signal });
     document.addEventListener('click', e => {
       if (summaryPanel && summaryPanel.classList.contains('open') &&
         !summaryPanel.contains(e.target) && e.target !== summaryBtn) {
         summaryPanel.classList.remove('open');
       }
-    });
+    }, { signal });
 
     if (effectsBtn && effectsPanel) {
       effectsBtn.addEventListener('click', () => {
         renderEffects();
         const isOpen = effectsPanel.classList.toggle('open');
         if (isOpen) effectsPanel.scrollTop = 0;
-      });
+      }, { signal });
     }
-    effectsClose?.addEventListener('click', () => effectsPanel.classList.remove('open'));
+    effectsClose?.addEventListener('click', () => effectsPanel.classList.remove('open'), { signal });
     document.addEventListener('click', e => {
       if (effectsPanel && effectsPanel.classList.contains('open') &&
         !effectsPanel.contains(e.target) && e.target !== effectsBtn) {
         effectsPanel.classList.remove('open');
       }
-    });
+    }, { signal });
 
-    conflictClose.addEventListener('click', () => conflictPanel.classList.remove('open'));
+    conflictClose.addEventListener('click', () => conflictPanel.classList.remove('open'), { signal });
     document.addEventListener('click', e => {
       if (conflictPanel.classList.contains('open') &&
         !conflictPanel.contains(e.target) &&
         !e.target.closest('.conflict-btn')) {
         conflictPanel.classList.remove('open');
       }
-    });
+    }, { signal });
 
     /* Dropdowns baserat på karaktärslista */
     function refreshCharacterFilters() {
@@ -1822,6 +1951,205 @@
         .sort(createSearchSorter(terms));
     };
 
+    const buildCharacterSelectionCard = (group) => {
+      if (!group?.entry) return null;
+      const p = group.entry;
+      const currentList = storeHelper.getCurrentList(store);
+      const compact = storeHelper.getCompactEntries(store);
+      const typesList = Array.isArray(p.taggar?.typ) ? p.taggar.typ : [];
+      const availLvls = LVL.filter(l => p.nivåer?.[l]);
+      const hasAnyLevel = availLvls.length > 0;
+      const curLvl = p.nivå || (hasAnyLevel ? availLvls[0] : null);
+      const hideDetails = isRas(p) || isYrke(p) || isElityrke(p);
+      let desc = abilityHtml(p, p.nivå);
+      let infoBodyHtml = desc;
+      const infoMeta = [];
+      const keyInfoMeta = [];
+      let choiceInfo = '';
+      if (isRas(p) || isYrke(p) || isElityrke(p)) {
+        const extra = yrkeInfoHtml(p);
+        if (extra) infoBodyHtml += extra;
+      }
+      const choiceMeta = getEntryChoiceDisplay(p, {
+        list: currentList,
+        level: p?.nivå || ''
+      });
+      if (choiceMeta?.valueLabel) {
+        const label = escapeHtml(choiceMeta.label || 'Val');
+        const value = escapeHtml(choiceMeta.valueLabel);
+        keyInfoMeta.push({ label, value });
+        choiceInfo = `<p><strong>${label}:</strong> ${value}</p>`;
+      }
+      let xpSourceMatch = null;
+      if (Array.isArray(currentList) && currentList.length) {
+        xpSourceMatch = currentList.find(item => {
+          if (!item || typeof item !== 'object') return false;
+          if (item === p) return true;
+          const sameId = item.id && p.id && item.id === p.id;
+          const sameName = item.namn && p.namn && item.namn === p.namn;
+          const sameLevel = (item.nivå ?? null) === (p.nivå ?? null);
+          const sameTrait = (item.trait ?? null) === (p.trait ?? null);
+          if (sameId) return sameLevel && sameTrait;
+          if (sameName) return sameLevel && sameTrait;
+          return false;
+        }) || null;
+      }
+      const xpHelper = window.entryXp?.buildDisplay || window.entryXp?.compute;
+      const xpInfo = typeof xpHelper === 'function'
+        ? xpHelper(p, currentList, {
+          xpSource: xpSourceMatch,
+          allowInventory: true,
+          allowEmployment: true,
+          allowService: true,
+          forceDisplay: true
+        })
+        : null;
+      const fallbackOpts = xpSourceMatch ? { xpSource: xpSourceMatch } : undefined;
+      const xpVal = xpInfo ? xpInfo.value : storeHelper.calcEntryDisplayXP(p, currentList, fallbackOpts);
+      let xpText = xpInfo ? xpInfo.text : storeHelper.formatEntryXPText(p, xpVal);
+      if (!xpInfo && isElityrke(p)) {
+        xpText = `Minst ${eliteReq.minXP ? eliteReq.minXP(p, currentList) : 50}`;
+      }
+      const effectiveXpInfo = xpInfo || {
+        headerHtml: `<span class="entry-xp-value">Erf: ${xpText}</span>`,
+        tagHtml: `<span class="db-chip xp-cost">Erf: ${xpText}</span>`,
+        value: xpVal
+      };
+      const testList = readEntryTests(p, curLvl || p?.nivå).filter(Boolean);
+      const activeKeys = getActiveHandlingKeys(p);
+      const conflictPool = findConflictingEntries(p, currentList);
+      const conflictsHtml = (activeKeys.length && conflictPool.length)
+        ? buildConflictsHtml(conflictPool)
+        : '';
+      const infoSections = (isElityrke(p) && typeof buildElityrkeInfoSections === 'function')
+        ? buildElityrkeInfoSections(p)
+        : [];
+      const resolvedForSkadetyp = (!Array.isArray(p.taggar?.typ) || !p.taggar.typ.includes('Hemmagjort'))
+        ? (resolveDbEntry(p) || null)
+        : null;
+      const skadeEntry = (() => {
+        if (typeof entryHasDamageType !== 'function') return null;
+        if (entryHasDamageType(p)) return p;
+        if (resolvedForSkadetyp && entryHasDamageType(resolvedForSkadetyp)) return resolvedForSkadetyp;
+        return null;
+      })();
+      const skadeTabHtml = (typeof buildSkadetypPanelHtml === 'function' && skadeEntry)
+        ? buildSkadetypPanelHtml(skadeEntry, { level: curLvl, tables: window.TABELLER })
+        : '';
+      const multi = getEntryMaxCount(p) > 1 && !p.trait;
+      const total = currentList.filter(x => x.namn === p.namn && !x.trait).length;
+      const limit = getEntryMaxCount(p);
+      const hasCustomEdit = typesList.includes('Hemmagjort');
+      const hasArtifactType = typesList.some(t => String(t).trim().toLowerCase() === 'artefakt');
+      const editAction = hasCustomEdit ? 'editCustom' : (hasArtifactType ? 'editArtifact' : '');
+      const idAttr = p.id ? ` data-id="${p.id}"` : '';
+      const editBtn = editAction
+        ? `<button data-act="${editAction}" class="db-btn" data-name="${p.namn}"${idAttr}>✏️</button>`
+        : '';
+      const buttonParts = [];
+      if (editBtn) buttonParts.push(editBtn);
+      const standardActionConfig = {};
+      if (multi) {
+        const isDisadv = typesList.includes('Nackdel');
+        if (isDisadv) {
+          if (total > 0) standardActionConfig.remove = { act: 'del' };
+          if (total > 1) standardActionConfig.minus = { act: 'sub' };
+          if (total < limit) {
+            standardActionConfig.plus = {
+              act: 'add',
+              highlight: total === 0
+            };
+          }
+        } else {
+          if (total > 0) standardActionConfig.remove = { act: 'rem' };
+          if (total < limit) {
+            standardActionConfig.plus = {
+              act: 'add',
+              highlight: total === 0
+            };
+          }
+        }
+      } else {
+        standardActionConfig.remove = { act: 'rem' };
+      }
+      buttonParts.push(...(window.entryCardFactory?.buildStandardActionButtons?.(standardActionConfig, {
+        buttonName: p.namn,
+        buttonId: p.id !== undefined && p.id !== null ? String(p.id) : ''
+      }) || []));
+      const opts = entryCardBuilder.build(p, {
+        compact,
+        currentLevel: curLvl,
+        availLvls,
+        xpInfo: effectiveXpInfo,
+        desc,
+        infoBodyHtml,
+        choiceInfo,
+        keyInfoMeta,
+        infoMeta,
+        conflictsHtml,
+        infoSections,
+        skadetypHtml: skadeTabHtml,
+        count: group.count,
+        multi: group.count > 1,
+        hideDetails,
+        testList,
+      });
+      opts.buttonSections = buttonParts;
+      return createEntryCard(opts);
+    };
+
+    const replaceCharacterSelectionCard = (cardEl, entry) => {
+      if (!cardEl || !entry) return false;
+      const currentList = storeHelper.getCurrentList(store);
+      const count = getEntryMaxCount(entry) > 1 && !entry.trait
+        ? currentList.filter(item => item?.namn === entry.namn && !item?.trait).length
+        : 1;
+      const nextCard = buildCharacterSelectionCard({ entry, count });
+      if (!nextCard) return false;
+      nextCard.classList.toggle('compact', cardEl.classList.contains('compact'));
+      window.entryCardFactory?.syncCollapse?.(nextCard);
+      cardEl.replaceWith(nextCard);
+      const terms = [...F.search, ...(sTemp ? [sTemp] : [])]
+        .map(t => searchNormalize(t.toLowerCase()));
+      if (terms.length) {
+        const titleSpan = nextCard.querySelector('.card-title .entry-title-main');
+        if (titleSpan) highlightInElement(titleSpan, terms);
+        const descEl = nextCard.querySelector('.card-desc');
+        if (descEl) highlightInElement(descEl, terms);
+      }
+      return true;
+    };
+
+    const matchesCharacterSelectionEntry = (candidate, name, trait = null) => {
+      const wantedName = String(name || '').trim();
+      if (!candidate || String(candidate?.namn || '').trim() !== wantedName) return false;
+      const wantedTrait = String(trait || '').trim();
+      const multi = getEntryMaxCount(candidate) > 1 && !candidate?.trait;
+      if (multi && !wantedTrait) return true;
+      if (wantedTrait) {
+        return String(candidate?.trait || '').trim() === wantedTrait;
+      }
+      return !candidate?.trait;
+    };
+
+    const findCharacterSelectionEntry = ({ name, trait = null } = {}) => {
+      const wantedName = String(name || '').trim();
+      if (!wantedName) return null;
+      const visibleMatch = filtered().find(candidate => matchesCharacterSelectionEntry(candidate, wantedName, trait));
+      if (visibleMatch) return visibleMatch;
+      return storeHelper.getCurrentList(store)
+        .find(candidate => matchesCharacterSelectionEntry(candidate, wantedName, trait)) || null;
+    };
+
+    const canTargetCharacterSelectionAddMutation = (summary, entryName) => {
+      if (!summary) return false;
+      const removedEntries = Array.isArray(summary.removedEntries) ? summary.removedEntries : [];
+      if (removedEntries.length) return false;
+      const addedEntries = Array.isArray(summary.addedEntries) ? summary.addedEntries : [];
+      const wantedName = String(entryName || '').trim();
+      return addedEntries.every(entry => String(entry?.namn || '').trim() === wantedName);
+    };
+
     const renderSkills = arr => {
       const sortMode = storeHelper.getEntrySort
         ? storeHelper.getEntrySort(store)
@@ -1899,7 +2227,7 @@
           updateCatToggle();
           catState[cat] = detailsEl.open;
           saveState();
-        });
+        }, { signal });
         cats[cat].forEach(g => {
           const p = g.entry;
           const availLvls = LVL.filter(l => p.nivåer?.[l]);
@@ -2021,32 +2349,34 @@
             : '';
           const buttonParts = [];
           if (editBtn) buttonParts.push(editBtn);
+          const standardActionConfig = {};
           if (multi) {
             const isDisadv = typesList.includes('Nackdel');
             if (isDisadv) {
-              if (total > 0) {
-                const delBtn = `<button data-act="del" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only" data-name="${p.namn}">${icon('remove')}</button>`;
-                const subBtn = `<button data-act="sub" class="db-btn db-btn--icon db-btn--icon-only" data-name="${p.namn}" aria-label="Minska">${icon('minus')}</button>`;
-                const addBtn = total < limit ? `<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>` : '';
-                buttonParts.push(delBtn, subBtn);
-                if (addBtn) buttonParts.push(addBtn);
-              } else {
-                const addBtn = `<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`;
-                buttonParts.push(addBtn);
+              if (total > 0) standardActionConfig.remove = { act: 'del' };
+              if (total > 1) standardActionConfig.minus = { act: 'sub' };
+              if (total < limit) {
+                standardActionConfig.plus = {
+                  act: 'add',
+                  highlight: total === 0
+                };
               }
             } else {
-              const remBtn = total > 0
-                ? `<button data-act="rem" class="db-btn db-btn--danger db-btn--icon db-btn--icon-only" data-name="${p.namn}">${icon('remove')}</button>`
-                : '';
-              const addBtn = total < limit
-                ? `<button data-act="add" class="db-btn db-btn--icon db-btn--icon-only add-btn" data-name="${p.namn}" aria-label="Lägg till">${icon('plus')}</button>`
-                : '';
-              if (remBtn) buttonParts.push(remBtn);
-              if (addBtn) buttonParts.push(addBtn);
+              if (total > 0) standardActionConfig.remove = { act: 'rem' };
+              if (total < limit) {
+                standardActionConfig.plus = {
+                  act: 'add',
+                  highlight: total === 0
+                };
+              }
             }
           } else {
-            buttonParts.push(`<button class="db-btn db-btn--danger db-btn--icon db-btn--icon-only" data-act="rem">${icon('remove')}</button>`);
+            standardActionConfig.remove = { act: 'rem' };
           }
+          buttonParts.push(...(window.entryCardFactory?.buildStandardActionButtons?.(standardActionConfig, {
+            buttonName: p.namn,
+            buttonId: p.id !== undefined && p.id !== null ? String(p.id) : ''
+          }) || []));
 
           // ── Build card via shared builder ──
           const opts = entryCardBuilder.build(p, {
@@ -2132,12 +2462,12 @@
         details.forEach(d => { d.open = false; });
       }
       updateCatToggle();
-    });
+    }, { signal });
 
     /* --- filter-events */
     dom.sIn.addEventListener('input', () => {
       sTemp = dom.sIn.value.trim();
-    });
+    }, { signal });
 
     const DROPDOWN_CONFIG = [
       ['typSel', 'typ'],
@@ -2174,11 +2504,11 @@
 
     const ensureDropdownChangeHandlers = () => {
       const toolbar = document.querySelector('shared-toolbar');
-      if (toolbar && toolbar.dataset.characterDropdownWatcher !== '1') {
+      if (toolbar && toolbar.dataset.characterDropdownWatcher !== initToken) {
         toolbar.addEventListener('toolbar-rendered', () => {
           ensureDropdownChangeHandlers();
-        });
-        toolbar.dataset.characterDropdownWatcher = '1';
+        }, { signal });
+        toolbar.dataset.characterDropdownWatcher = initToken;
       }
       const root = toolbar?.shadowRoot || null;
       let missing = false;
@@ -2193,9 +2523,9 @@
           return;
         }
         dom[sel] = el;
-        if (el.dataset.characterDropdownBound === '1') return;
-        el.addEventListener('change', handleDropdownChange(sel, key));
-        el.dataset.characterDropdownBound = '1';
+        if (el.dataset.characterDropdownBound === initToken) return;
+        el.addEventListener('change', handleDropdownChange(sel, key), { signal });
+        el.dataset.characterDropdownBound = initToken;
       });
       return !missing;
     };
@@ -2209,7 +2539,7 @@
       else F[sec] = F[sec].filter(x => x !== val);
       if (sec === 'test') { storeHelper.setOnlySelected(store, false); dom.tstSel.value = ''; }
       activeTags(); renderSkills(filtered()); renderTraits(); updateSearchDatalist();
-    });
+    }, { signal });
 
     // Treat clicks on tags anywhere as filter selections
     document.addEventListener('click', e => {
@@ -2223,7 +2553,7 @@
       if (!F[section].includes(val)) F[section].push(val);
       if (section === 'typ') openCatsOnce.add(val);
       activeTags(); renderSkills(filtered()); renderTraits();
-    });
+    }, { signal });
 
     function formatLevels(list) {
       if (list.length === 0) return '';
@@ -2384,6 +2714,8 @@
       }
       const multi = getEntryMaxCount(p) > 1 && !p.trait;
       let list;
+      let mutationSummary = null;
+      let choiceResolution = null;
       if (act === 'add') {
         if (!multi) return;
         const lvlSel = liEl.querySelector('select.level');
@@ -2437,8 +2769,36 @@
           conflictBaseList = before.filter(entry => !replaceSet.has(entry?.namn || '') || entry?.manualRuleOverride);
         }
         const added = { ...p, nivå: lvl };
+        const addChoice = await pickCharacterEntryChoice(added, conflictBaseList, lvl);
+        if (addChoice.hasChoice && addChoice.cancelled) {
+          if (addChoice.noOptions) {
+            await alertPopup(`Inga val kvar för "${p.namn}".`);
+          } else if (addChoice.duplicateRejected && addChoice.rule?.duplicate_policy === 'reject') {
+            await alertPopup('Samma val är redan valt.');
+          }
+          return;
+        }
+        let replacedExisting = null;
+        if (addChoice.hasChoice && addChoice.rule?.field) {
+          const field = addChoice.rule.field;
+          added[field] = addChoice.value;
+          if (addChoice.duplicate?.replaceExisting) {
+            const wanted = normalizeChoiceToken(addChoice.value);
+            replacedExisting = conflictBaseList.find(item =>
+              item
+              && isSameChoiceSource(item, added)
+              && normalizeChoiceToken(item?.[field]) === wanted
+            ) || null;
+            if (replacedExisting) {
+              replacedExisting.nivå = lvl;
+            }
+          }
+        }
         if (forceRuleOverride) added.manualRuleOverride = true;
-        list = [...conflictBaseList, added];
+        if (replacedExisting && forceRuleOverride) {
+          replacedExisting.manualRuleOverride = true;
+        }
+        list = replacedExisting ? conflictBaseList : [...conflictBaseList, added];
         const disAfter = storeHelper.countDisadvantages(list);
         if (disAfter === 5 && disBefore < 5) {
           await alertPopup('Nu har du försökt gamea systemet för mycket, framtida nackdelar ger +0 erfarenhetspoäng');
@@ -2531,13 +2891,13 @@
       const isRemoveAction = act === 'sub' || act === 'del' || act === 'rem';
       if (isRemoveAction) {
         await runCurrentCharacterMutationBatch(async () => {
-          timeActiveRemoveStage('store-mutation', () => {
-            storeHelper.setCurrentList(store, list);
+          mutationSummary = timeActiveRemoveStage('store-mutation', () => {
+            return storeHelper.setCurrentList(store, list);
           }, {
             surface: 'character',
             branch: 'list'
           });
-          await ensureChoicesForNewEntries(before);
+          await resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded);
           if (p.namn === 'Besittning') {
             storeHelper.setPossessionMoney(store, { daler: 0, skilling: 0, 'örtegar': 0 });
           }
@@ -2563,8 +2923,12 @@
           }
         });
       } else {
-        storeHelper.setCurrentList(store, list);
-        await ensureChoicesForNewEntries(before);
+        mutationSummary = await withBusyInteraction(actBtn, () => (
+          runDeferredCurrentCharacterMutation(() => (
+            storeHelper.setCurrentList(store, list)
+          ))
+        ));
+        choiceResolution = await resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded);
       }
       if (p.namn === 'Privilegierad') {
         invUtil.renderInventory();
@@ -2604,14 +2968,36 @@
           surface: 'character',
           branch: 'list'
         });
+        updateSearchDatalist();
       } else {
-        renderSkills(filtered());
-        updateXP();
-        renderTraits();
+        scheduleCharacterMutationRefresh({
+          xp: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          source: act === 'add' ? 'character-list-add' : 'character-list-mutate',
+          afterPaint: true
+        });
+        let needsSelectionRefresh = !canTargetCharacterSelectionAddMutation(mutationSummary, name);
+        (choiceResolution?.summaries || []).forEach(summary => {
+          if (!canTargetCharacterSelectionAddMutation(summary, name)) {
+            needsSelectionRefresh = true;
+          }
+        });
+        let patchedInPlace = false;
+        if (!needsSelectionRefresh) {
+          const liveEntry = findCharacterSelectionEntry({ name, trait: tr });
+          patchedInPlace = replaceCharacterSelectionCard(liEl, liveEntry);
+        }
+        if (needsSelectionRefresh || !patchedInPlace) {
+          refreshCharacterSelection();
+        }
+        refreshCharacterFilters();
       }
-      updateSearchDatalist();
       if (act === 'add') {
-        flashAdded(name, tr);
+        void waitForCharacterMutationRefresh().then(() => {
+          flashAdded(name, tr);
+        });
       } else if (isRemoveAction) {
         await finishRemoveScenario(removeScenarioId, {
           scope: 'character',
@@ -2620,25 +3006,45 @@
         });
       }
 
-    });
+    }, { signal });
 
     if (dom.valda) {
       dom.valda.addEventListener('entry-card-toggle', () => {
         updateCatToggle();
         refreshEffectsPanel();
-      });
+      }, { signal });
     }
     dom.valda.addEventListener('change', async e => {
       if (!e.target.matches('select.level')) return;
       const select = e.target;
       window.entryCardFactory?.syncLevelControl?.(select);
       const name = select.dataset.name;
-      const tr = select.dataset.trait || select.closest('li').dataset.trait || null;
+      const cardEl = select.closest('li');
+      const tr = select.dataset.trait || cardEl?.dataset?.trait || null;
       const list = storeHelper.getCurrentList(store);
       const ent = list.find(x => x.namn === name && (tr ? x.trait === tr : !x.trait));
       if (ent) {
         const before = list.map(x => ({ ...x }));
         const old = ent.nivå;
+        const nextLevel = select.value;
+        const levelScenarioId = shouldProfileLevelChanges()
+          ? window.symbaroumPerf?.startScenario?.('character-level-change', {
+            scope: 'character',
+            entry: name,
+            branch: 'list',
+            fromLevel: old || '',
+            toLevel: nextLevel || ''
+          })
+          : null;
+        if (levelScenarioId) {
+          bindLevelScenario(levelScenarioId, {
+            scope: 'character',
+            entry: name,
+            branch: 'list',
+            fromLevel: old || '',
+            toLevel: nextLevel || ''
+          });
+        }
         const previousChoiceRule = (() => {
           const picker = window.choicePopup;
           if (!picker || typeof picker.getChoiceRule !== 'function') return null;
@@ -2670,6 +3076,14 @@
             } else if (levelChoice.duplicateRejected && levelChoice.rule?.duplicate_policy === 'reject') {
               await alertPopup('Samma val är redan valt.');
             }
+            cancelLevelScenario(levelScenarioId, {
+              scope: 'character',
+              entry: name,
+              branch: 'list',
+              reason: levelChoice.noOptions ? 'no-options' : (
+                levelChoice.duplicateRejected ? 'duplicate-rejected' : 'choice-cancelled'
+              )
+            });
             return;
           }
           const field = levelChoice.rule?.field;
@@ -2727,6 +3141,12 @@
           ent.nivå = old;
           select.value = old;
           window.entryCardFactory?.syncLevelControl?.(select);
+          cancelLevelScenario(levelScenarioId, {
+            scope: 'character',
+            entry: name,
+            branch: 'list',
+            reason: 'requirements-blocked'
+          });
           return;
         }
         if (forceRuleOverride) ent.manualRuleOverride = true;
@@ -2739,14 +3159,65 @@
             }
           }
         }
-        storeHelper.setCurrentList(store, list); updateXP();
-        await ensureChoicesForNewEntries(before);
-        updateXP();
+        const mutationSummary = await withBusyInteraction(select, () => (
+          runDeferredCurrentCharacterMutation(() => (
+            timeActiveLevelStage('store-mutation', () => (
+              storeHelper.setCurrentList(store, list)
+            ), {
+              surface: 'character',
+              branch: 'list'
+            })
+          ))
+        ));
+        const choiceResolution = await timeActiveLevelStage('pending-choice-resolution', () => (
+          resolvePendingChoiceEntries(mutationSummary?.grantedEntriesAdded)
+        ), {
+          surface: 'character',
+          branch: 'list'
+        });
+        scheduleCharacterMutationRefresh({
+          xp: true,
+          traits: true,
+          summary: true,
+          effects: true,
+          source: 'character-level-change',
+          afterPaint: true
+        });
+        let needsSelectionRefresh = Boolean(mutationSummary?.topologyChanged);
+        (choiceResolution?.summaries || []).forEach(summary => {
+          if (summary?.topologyChanged) needsSelectionRefresh = true;
+        });
+        let renderMode = 'targeted';
+        const patchedInPlace = timeActiveLevelStage('targeted-ui-refresh', () => {
+          if (needsSelectionRefresh) return false;
+          return replaceCharacterSelectionCard(cardEl, ent);
+        }, {
+          surface: 'character',
+          branch: 'list'
+        });
+        if (needsSelectionRefresh || !patchedInPlace) {
+          renderMode = 'full';
+          timeActiveLevelStage('selection-render', () => {
+            refreshCharacterSelection();
+          }, {
+            surface: 'character',
+            branch: 'list'
+          });
+        }
+        refreshCharacterFilters();
+        await waitForCharacterMutationRefresh();
+        flashAdded(name, tr);
+        await finishLevelScenario(levelScenarioId, {
+          scope: 'character',
+          entry: name,
+          branch: 'list',
+          renderMode,
+          structural: needsSelectionRefresh
+        });
+        return;
       }
-      renderSkills(filtered()); renderTraits(); updateSearchDatalist();
       window.entryCardFactory?.syncLevelControl?.(select);
-      flashAdded(name, tr);
-    });
+    }, { signal });
   }
 
   window.initCharacter = initCharacter;

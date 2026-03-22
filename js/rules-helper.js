@@ -3787,7 +3787,7 @@
       const requestedIdx = getLevelValue(toLevel);
       const grantedIdx = getLevelValue(beviljadNiva);
       if (beviljadNiva && requestedIdx > grantedIdx) {
-        const missingRequirements = getMissingRequirementReasonsForCandidate(candidate, entries, { level: toLevel });
+        const missingRequirements = requirementReasons;
         if (missingRequirements.length) {
           grantedLevelStop = {
             beviljadNiva,

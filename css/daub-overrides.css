@@ -78,6 +78,22 @@
   position: relative !important;
 }
 
+/* Sections moved into the inventory hub must not be hidden/repositioned
+   by the CDN .db-modal-overlay defaults or the bridge rule above */
+.inventory-hub-popup .inventory-hub-section.db-modal-overlay {
+  display: block !important;
+  position: static !important;
+  inset: auto !important;
+  z-index: auto !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  background: none !important;
+  backdrop-filter: none !important;
+  align-items: stretch !important;
+  justify-content: stretch !important;
+  padding: 0 !important;
+}
+
 /* ── Bridge: offcanvas .open ↔ DAUB drawer ── */
 .db-drawer.offcanvas {
   position: fixed !important;

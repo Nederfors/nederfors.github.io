@@ -11,9 +11,9 @@ export function createAppShell() {
         mountedRoot.dataset.appRole = role;
       }
       if (typeof DAUB !== 'undefined') {
-        DAUB.setFamily('grunge');
-        DAUB.setScheme('dark');
         DAUB.init();
+        DAUB.setFamily('ember');
+        DAUB.setScheme('dark');
       }
       return mountedRoot;
     },

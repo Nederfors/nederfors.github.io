@@ -10,6 +10,10 @@ from _sync_utils import ROOT_DIR
 STAGING_DIR = ROOT_DIR / ".generated-public"
 STATIC_DIRS = ("css", "js", "data", "icons", "pdf")
 STATIC_FILES = ("manifest.json", "sw.js", "google7c739dca0cd83ad1.html")
+VENDOR_FILES = (
+    "node_modules/daub-ui/daub.css",
+    "node_modules/daub-ui/daub.js",
+)
 
 
 def reset_staging_dir() -> None:
@@ -43,6 +47,8 @@ def main() -> None:
     for name in STATIC_DIRS:
         copy_tree(name)
     for name in STATIC_FILES:
+        copy_file(name)
+    for name in VENDOR_FILES:
         copy_file(name)
     print(f"Rebuilt {STAGING_DIR.relative_to(ROOT_DIR).as_posix()} from root static assets.")
 
