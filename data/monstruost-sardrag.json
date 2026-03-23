@@ -44,21 +44,21 @@
           ]
         },
         "regler": {
+          "ignorera_typ_kraver": true,
           "kraver": [
             {
-              "namn": [
-                "Andeform"
-              ]
+              "grupp": [
+                { "nar": { "nagon_av_namn": ["Monster"] } },
+                { "namn": ["Andeform"] }
+              ],
+              "grupp_logik": "and",
+              "meddelande": "Kräver Monster + Andeform."
             },
             {
-              "nar": {
-                "ark_trad": [
-                  "Andebesvärjare"
-                ]
-              }
+              "nar": { "nagon_av_namn": ["Andebesvärjare"] },
+              "meddelande": "Alternativt: Andebesvärjare."
             }
           ],
-          "kraver_typ_och_entry": "and",
           "kraver_logik": "or"
         }
       },

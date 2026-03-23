@@ -2,6 +2,7 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './tests',
+  testMatch: '**/*.spec.js',
   timeout: 30 * 1000,
   expect: {
     timeout: 5000
@@ -20,6 +21,18 @@ export default defineConfig({
     {
       name: 'chromium',
       use: { ...devices['Desktop Chrome'] }
+    },
+    {
+      name: 'webkit',
+      use: { ...devices['Desktop Safari'] }
+    },
+    {
+      name: 'Mobile Safari',
+      use: { ...devices['iPhone 16'] } 
+    },
+    {
+      name: 'Mobile Chrome',
+      use: { ...devices['Pixel 9'] }
     }
   ],
   webServer: {

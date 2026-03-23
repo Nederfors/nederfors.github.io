@@ -3,7 +3,7 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-19T10:11:05.401415+00:00",
+      "genererad": "2026-03-23T08:02:14.514187+00:00",
       "antal_typer_hittade": 58,
       "källfiler": [
         "data/diverse.json",
@@ -3032,19 +3032,33 @@
             "regler": {
               "kraver": [
                 {
-                  "namn": [
-                    "Andeform"
-                  ]
+                  "grupp": [
+                    {
+                      "nar": {
+                        "nagon_av_namn": [
+                          "Monster"
+                        ]
+                      }
+                    },
+                    {
+                      "namn": [
+                        "Andeform"
+                      ]
+                    }
+                  ],
+                  "grupp_logik": "and",
+                  "meddelande": "Kräver Monster + Andeform."
                 },
                 {
                   "nar": {
-                    "ark_trad": [
+                    "nagon_av_namn": [
                       "Andebesvärjare"
                     ]
-                  }
+                  },
+                  "meddelande": "Alternativt: Andebesvärjare."
                 }
               ],
-              "kraver_typ_och_entry": "and",
+              "kraver_typ_och_entry": "or",
               "kraver_logik": "or"
             }
           },

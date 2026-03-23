@@ -289,8 +289,14 @@ Efter ändringar i data/regler:
 ```bash
 python3 scripts/master_sync.py
 python3 scripts/build_all.py --strict
+npm run lint
+npm run test:unit
 npm run build
 osascript -l JavaScript scripts/verify_rules_helper.js
 ```
 
-Appen byggs nu via Vite från repo-roten. `npm run build` kör först `scripts/sync_static_assets.py`, som återskapar `.generated-public/` från rootens `css/`, `js/`, `data/`, `icons/`, `pdf/`, `manifest.json` och `sw.js`. Förslag och förbättringar tas via pull requests.
+Appen byggs nu via Vite från repo-roten. `npm run build` kör först `scripts/sync_static_assets.py`, som återskapar `.generated-public/` från rootens `css/`, `js/`, `data/`, `icons/`, `pdf/`, `manifest.json` och `sw.js`.
+
+`npm run test:unit` kör den portabla Vitest-sviten för regler/helper-logik. `osascript -l JavaScript scripts/verify_rules_helper.js` finns kvar som den äldre, macOS-specifika regressionssviten. För bundle-inspektion kan du köra `npm run build:analyze`, som skriver `dist/bundle-analysis.html`.
+
+Förslag och förbättringar tas via pull requests.

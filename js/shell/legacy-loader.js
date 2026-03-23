@@ -55,6 +55,7 @@ const pendingScripts = new Map();
 const loadedRoutes = new Set();
 let sharedScriptsPromise = null;
 let postScriptsPromise = null;
+let jsZipPromise = null;
 
 export function normalizeRole(role = 'index') {
   const value = String(role || '').trim().toLowerCase();
@@ -120,8 +121,15 @@ export async function loadInitialLegacyApp(role = 'index') {
 }
 
 export async function ensureJsZip() {
-  await loadClassicScript('js/jszip.min.js');
-  return window.JSZip || null;
+  if (window.JSZip) return window.JSZip;
+  if (!jsZipPromise) {
+    jsZipPromise = import('jszip').then((module) => {
+      const JSZip = module?.default || module?.JSZip || module;
+      window.JSZip = JSZip;
+      return JSZip;
+    });
+  }
+  return jsZipPromise;
 }
 
 export async function ensureCharacterGenerator() {

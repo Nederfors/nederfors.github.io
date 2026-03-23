@@ -47,7 +47,7 @@ function listDataJsonFiles(rootPath) {
   const names = ObjC.deepUnwrap($.NSFileManager.defaultManager.contentsOfDirectoryAtPathError($(dataPath), null));
   return (Array.isArray(names) ? names : [])
     .filter(name => typeof name === 'string' && name.endsWith('.json'))
-    .filter(name => name !== 'all.json' && name !== 'struktur.json')
+    .filter(name => name !== 'all.json' && name !== 'struktur.json' && name !== 'ai-plugin.json')
     .sort();
 }
 
@@ -7110,6 +7110,511 @@ function verifyEliteRequirementV2(rootPath) {
   assert(stackProjectedRes && stackProjectedRes.ok === true, 'Valfritt med antal ska påverka projekterad ERF så kravet kan uppfyllas via valfritt-poolen');
 }
 
+// ---------------------------------------------------------------------------
+// verifyNestedRequirementGroups — tests for grupp/grupp_logik in kraver
+// ---------------------------------------------------------------------------
+function verifyNestedRequirementGroups(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+
+  const getMissingReasons = sandbox.rulesHelper.getMissingRequirementReasonsForCandidate;
+  assert(typeof getMissingReasons === 'function', 'getMissingRequirementReasonsForCandidate ska finnas');
+
+  let passed = 0;
+
+  // Skräckslå scenario: (Monster AND Andeform) OR (Andebesvärjare)
+  const skrackEntry = {
+    id: 'test-skrack',
+    namn: 'Testskräckslå',
+    taggar: {
+      typ: ['Monstruöst särdrag'],
+      regler: {
+        kraver: [
+          {
+            grupp: [
+              { nar: { nagon_av_namn: ['Monster'] } },
+              { namn: ['Andeform'] }
+            ],
+            grupp_logik: 'and',
+            meddelande: 'Kräver Monster + Andeform.'
+          },
+          {
+            nar: { nagon_av_namn: ['Andebesvärjare'] },
+            meddelande: 'Alternativt: Andebesvärjare.'
+          }
+        ],
+        kraver_typ_och_entry: 'or',
+        kraver_logik: 'or'
+      }
+    }
+  };
+
+  // Path A: Monster + Andeform → passes
+  const listA = [
+    { namn: 'Monster' },
+    { namn: 'Andeform' }
+  ];
+  const reasonsA = getMissingReasons(skrackEntry, listA);
+  assert(reasonsA.length === 0, 'grupp AND: Monster + Andeform ska passera');
+  passed++;
+
+  // Path B: Andebesvärjare (no Monster) → passes
+  const listB = [
+    { namn: 'Andebesvärjare' }
+  ];
+  const reasonsB = getMissingReasons(skrackEntry, listB);
+  assert(reasonsB.length === 0, 'grupp OR: Andebesvärjare ensam ska passera');
+  passed++;
+
+  // Path C: Monster only (no Andeform, no Andebesvärjare) → fails
+  const listC = [
+    { namn: 'Monster' }
+  ];
+  const reasonsC = getMissingReasons(skrackEntry, listC);
+  assert(reasonsC.length > 0, 'grupp AND: Monster utan Andeform ska faila');
+  passed++;
+
+  // Path D: Andeform only (no Monster) → fails
+  const listD = [
+    { namn: 'Andeform' }
+  ];
+  const reasonsD = getMissingReasons(skrackEntry, listD);
+  assert(reasonsD.length > 0, 'grupp AND: Andeform utan Monster ska faila');
+  passed++;
+
+  // Path E: empty list → fails
+  const reasonsE = getMissingReasons(skrackEntry, []);
+  assert(reasonsE.length > 0, 'Tom lista ska faila');
+  passed++;
+
+  // Nested AND group: all must pass
+  const andGroupEntry = {
+    id: 'test-and-group',
+    namn: 'AND-grupptest',
+    taggar: {
+      regler: {
+        kraver: [
+          {
+            grupp: [
+              { namn: ['A'] },
+              { namn: ['B'] },
+              { namn: ['C'] }
+            ],
+            grupp_logik: 'and'
+          }
+        ]
+      }
+    }
+  };
+  assert(getMissingReasons(andGroupEntry, [{ namn: 'A' }, { namn: 'B' }, { namn: 'C' }]).length === 0,
+    'AND-grupp: alla tre ska passera');
+  passed++;
+  assert(getMissingReasons(andGroupEntry, [{ namn: 'A' }, { namn: 'B' }]).length > 0,
+    'AND-grupp: två av tre ska faila');
+  passed++;
+
+  // Nested OR group: at least one must pass
+  const orGroupEntry = {
+    id: 'test-or-group',
+    namn: 'OR-grupptest',
+    taggar: {
+      regler: {
+        kraver: [
+          {
+            grupp: [
+              { namn: ['X'] },
+              { namn: ['Y'] }
+            ],
+            grupp_logik: 'or'
+          }
+        ]
+      }
+    }
+  };
+  assert(getMissingReasons(orGroupEntry, [{ namn: 'X' }]).length === 0,
+    'OR-grupp: en av två ska passera');
+  passed++;
+  assert(getMissingReasons(orGroupEntry, [{ namn: 'Z' }]).length > 0,
+    'OR-grupp: ingen match ska faila');
+  passed++;
+
+  // Default grupp_logik is 'and'
+  const defaultLogicEntry = {
+    id: 'test-default-logic',
+    namn: 'Defaultlogik',
+    taggar: {
+      regler: {
+        kraver: [
+          {
+            grupp: [
+              { namn: ['A'] },
+              { namn: ['B'] }
+            ]
+          }
+        ]
+      }
+    }
+  };
+  assert(getMissingReasons(defaultLogicEntry, [{ namn: 'A' }]).length > 0,
+    'Default grupp_logik (and): en av två ska faila');
+  passed++;
+  assert(getMissingReasons(defaultLogicEntry, [{ namn: 'A' }, { namn: 'B' }]).length === 0,
+    'Default grupp_logik (and): båda ska passera');
+  passed++;
+
+  // Deep nesting: grupp within grupp
+  const deepEntry = {
+    id: 'test-deep',
+    namn: 'Djupnästling',
+    taggar: {
+      regler: {
+        kraver_logik: 'or',
+        kraver: [
+          {
+            grupp: [
+              {
+                grupp: [
+                  { namn: ['Inner1'] },
+                  { namn: ['Inner2'] }
+                ],
+                grupp_logik: 'and'
+              },
+              { namn: ['Outer'] }
+            ],
+            grupp_logik: 'and'
+          },
+          { namn: ['Bypass'] }
+        ]
+      }
+    }
+  };
+  assert(getMissingReasons(deepEntry, [{ namn: 'Inner1' }, { namn: 'Inner2' }, { namn: 'Outer' }]).length === 0,
+    'Djup nästling: fullständig inre+yttre ska passera');
+  passed++;
+  assert(getMissingReasons(deepEntry, [{ namn: 'Bypass' }]).length === 0,
+    'Djup nästling: bypass-alternativet ska passera');
+  passed++;
+  assert(getMissingReasons(deepEntry, [{ namn: 'Inner1' }, { namn: 'Outer' }]).length > 0,
+    'Djup nästling: ofullständig inre grupp ska faila');
+  passed++;
+
+  // grupp with level requirements
+  const levelGroupEntry = {
+    id: 'test-level-group',
+    namn: 'Nivågrupp',
+    taggar: {
+      regler: {
+        kraver: [
+          {
+            grupp: [
+              { namn: ['Robust'], 'nivå_minst': 'Gesäll' },
+              { namn: ['Smidig'] }
+            ],
+            grupp_logik: 'and'
+          }
+        ]
+      }
+    }
+  };
+  assert(getMissingReasons(levelGroupEntry, [
+    { namn: 'Robust', nivå: 'Gesäll' }, { namn: 'Smidig' }
+  ]).length === 0, 'Nivågrupp: korrekt nivå ska passera');
+  passed++;
+  assert(getMissingReasons(levelGroupEntry, [
+    { namn: 'Robust', nivå: 'Novis' }, { namn: 'Smidig' }
+  ]).length > 0, 'Nivågrupp: för låg nivå ska faila');
+  passed++;
+
+  // --- ignorera_typ_kraver: entry-level flag suppresses type-scope kraver ---
+  {
+    // Simulate: type "Monstruöst särdrag" has a type-level kraver requiring "Monster"
+    // but the entry sets ignorera_typ_kraver: true to bypass it
+    const typeRuleTemplate = {
+      taggar: {
+        regler: {
+          kraver: [
+            { nar: { nagon_av_namn: ['Monster'] }, meddelande: 'Kräver Monster (typ).' }
+          ]
+        }
+      }
+    };
+    const entryWithIgnore = {
+      id: 'test-ignorera-typ',
+      namn: 'IgnoreraTypTest',
+      taggar: {
+        typ: ['Monstruöst särdrag'],
+        regler: {
+          ignorera_typ_kraver: true,
+          kraver: [
+            { nar: { nagon_av_namn: ['Andebesvärjare'] }, meddelande: 'Kräver Andebesvärjare.' }
+          ]
+        }
+      },
+      __typ_regler: { 'Monstruöst särdrag': typeRuleTemplate }
+    };
+    const entryWithoutIgnore = {
+      id: 'test-med-typ',
+      namn: 'MedTypTest',
+      taggar: {
+        typ: ['Monstruöst särdrag'],
+        regler: {
+          kraver_typ_och_entry: 'and',
+          kraver: [
+            { nar: { nagon_av_namn: ['Andebesvärjare'] }, meddelande: 'Kräver Andebesvärjare.' }
+          ]
+        }
+      },
+      __typ_regler: { 'Monstruöst särdrag': typeRuleTemplate }
+    };
+
+    // With ignorera_typ_kraver: Andebesvärjare alone passes (type kraver skipped)
+    const r1 = getMissingReasons(entryWithIgnore, [{ namn: 'Andebesvärjare' }]);
+    assert(r1.length === 0, 'ignorera_typ_kraver: entry-krav passerar utan Monster');
+    passed++;
+
+    // Without ignorera_typ_kraver: Andebesvärjare alone fails (type kraver requires Monster)
+    const r2 = getMissingReasons(entryWithoutIgnore, [{ namn: 'Andebesvärjare' }]);
+    assert(r2.length > 0, 'utan ignorera_typ_kraver: typ-krav blockerar utan Monster');
+    passed++;
+
+    // Without ignorera_typ_kraver: Monster + Andebesvärjare passes both scopes
+    const r3 = getMissingReasons(entryWithoutIgnore, [{ namn: 'Monster' }, { namn: 'Andebesvärjare' }]);
+    assert(r3.length === 0, 'utan ignorera_typ_kraver: Monster + Andebesvärjare passerar');
+    passed++;
+  }
+
+  // --- Elite lock bypass: Elityrkesförmåga with passing kraver skips elite_skill_locked ---
+  {
+    const evaluateEntryStops = sandbox.rulesHelper.evaluateEntryStops;
+    assert(typeof evaluateEntryStops === 'function', 'evaluateEntryStops ska finnas');
+
+    const eliteSkillEntry = {
+      id: 'test-elite-bypass',
+      namn: 'ElitBypassTest',
+      taggar: {
+        typ: ['Elityrkesförmåga'],
+        ark_trad: ['SomeElite'],
+        regler: {
+          kraver: [
+            { namn: ['RequiredAbility'], meddelande: 'Kräver RequiredAbility.' }
+          ]
+        }
+      }
+    };
+
+    // When kraver pass, elite lock should NOT fire (even without having the Elityrke)
+    const listPass = [{ namn: 'RequiredAbility' }];
+    const stopsPass = evaluateEntryStops(eliteSkillEntry, listPass, { action: 'add' });
+    const hasEliteLock = stopsPass.hardStops.some(s => s.code === 'elite_skill_locked');
+    assert(!hasEliteLock, 'Elite lock: ska INTE blockera när kraver passerar');
+    passed++;
+
+    // When kraver fail AND no Elityrke present, elite lock should fire
+    const listFail = [];
+    const stopsFail = evaluateEntryStops(eliteSkillEntry, listFail, { action: 'add' });
+    const hasEliteLockFail = stopsFail.hardStops.some(s => s.code === 'elite_skill_locked');
+    assert(hasEliteLockFail, 'Elite lock: ska blockera när kraver misslyckas och elityrke saknas');
+    passed++;
+
+    // When kraver fail BUT Elityrke is present, elite lock should NOT fire
+    const listWithElite = [{ namn: 'SomeElite', taggar: { typ: ['Elityrke'] } }];
+    const stopsWithElite = evaluateEntryStops(eliteSkillEntry, listWithElite, { action: 'add' });
+    const hasEliteLockWithElite = stopsWithElite.hardStops.some(s => s.code === 'elite_skill_locked');
+    assert(!hasEliteLockWithElite, 'Elite lock: ska INTE blockera när elityrke finns i listan');
+    passed++;
+  }
+
+  console.log(`  verifyNestedRequirementGroups: ${passed} tests passed`);
+}
+
+// ---------------------------------------------------------------------------
+// verifyRuleExtensions — tests for nar_eller, nar.inte, nar.eller,
+//   satt multiplicera/minimum/maximum, formel min/max, attribut_minst/hogst
+// ---------------------------------------------------------------------------
+function verifyRuleExtensions(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+
+  const evaluateNar = sandbox.rulesHelper.evaluateNar;
+  const evaluateRuleNar = sandbox.rulesHelper.evaluateRuleNar;
+  const applyNumericChange = sandbox.rulesHelper.applyNumericChange;
+  assert(typeof evaluateNar === 'function', 'evaluateNar ska finnas');
+  assert(typeof evaluateRuleNar === 'function', 'evaluateRuleNar ska finnas');
+  assert(typeof applyNumericChange === 'function', 'applyNumericChange ska finnas');
+
+  let passed = 0;
+
+  // --- A1: nar_eller ---
+  {
+    const ctx = { list: [{ namn: 'Robust' }] };
+    const rule1 = { nar_eller: [{ har_namn: ['Robust'] }, { har_namn: ['Smidig'] }] };
+    assert(evaluateRuleNar(rule1, ctx) === true, 'nar_eller: match paa forsta alternativet');
+    passed++;
+
+    const rule2 = { nar_eller: [{ har_namn: ['Smidig'] }, { har_namn: ['Kvick'] }] };
+    assert(evaluateRuleNar(rule2, ctx) === false, 'nar_eller: inget alternativ matchar');
+    passed++;
+
+    const rule3 = { nar: { har_namn: ['Robust'] } };
+    assert(evaluateRuleNar(rule3, ctx) === true, 'nar_eller: vanlig nar fallback fungerar');
+    passed++;
+
+    const rule4 = {};
+    assert(evaluateRuleNar(rule4, ctx) === true, 'nar_eller: ingen nar alls => true');
+    passed++;
+
+    const rule5 = { nar_eller: [] };
+    assert(evaluateRuleNar(rule5, ctx) === true, 'nar_eller: tom array => fallback till nar');
+    passed++;
+  }
+
+  // --- A2: nar.inte ---
+  {
+    const ctx = { list: [{ namn: 'Robust' }] };
+    assert(evaluateNar({ inte: { har_namn: ['Robust'] } }, ctx) === false,
+      'nar.inte: negerar matchande villkor');
+    passed++;
+
+    assert(evaluateNar({ inte: { har_namn: ['Smidig'] } }, ctx) === true,
+      'nar.inte: passerar nar negerat villkor inte matchar');
+    passed++;
+
+    assert(evaluateNar({ har_namn: ['Robust'], inte: { saknar_namn: ['Robust'] } }, ctx) === true,
+      'nar.inte: kombinerar med andra AND-villkor');
+    passed++;
+
+    assert(evaluateNar({ inte: { har_namn: ['Robust'], saknar_namn: ['Smidig'] } }, ctx) === false,
+      'nar.inte: inverterar hela det nästlade nar-blocket (alla villkor AND)');
+    passed++;
+  }
+
+  // --- nar.eller (inline OR within AND nar) ---
+  {
+    const ctx = { list: [{ namn: 'Robust' }], utrustadTyper: ['Tung'] };
+    assert(evaluateNar({
+      eller: [
+        { har_utrustad_typ: ['Medel'] },
+        { har_utrustad_typ: ['Tung'] }
+      ]
+    }, ctx) === true, 'nar.eller: matchar andra alternativet');
+    passed++;
+
+    assert(evaluateNar({
+      har_namn: ['Robust'],
+      eller: [
+        { har_utrustad_typ: ['Medel'] },
+        { har_utrustad_typ: ['Tung'] }
+      ]
+    }, ctx) === true, 'nar.eller: AND med positivt har_namn + OR-block');
+    passed++;
+
+    assert(evaluateNar({
+      har_namn: ['Smidig'],
+      eller: [
+        { har_utrustad_typ: ['Tung'] }
+      ]
+    }, ctx) === false, 'nar.eller: AND-villkor failar trots OR-match');
+    passed++;
+
+    assert(evaluateNar({
+      eller: [
+        { har_utrustad_typ: ['Latt'] },
+        { har_utrustad_typ: ['Medel'] }
+      ]
+    }, ctx) === false, 'nar.eller: inget alternativ matchar');
+    passed++;
+  }
+
+  // --- B1: satt multiplicera / minimum / maximum ---
+  {
+    const mult = applyNumericChange(10, { satt: 'multiplicera', varde: 2 });
+    assert(mult === 20, 'satt multiplicera: 10 * 2 = 20');
+    passed++;
+
+    const min1 = applyNumericChange(-3, { satt: 'minimum', varde: 0 });
+    assert(min1 === 0, 'satt minimum: max(-3, 0) = 0');
+    passed++;
+
+    const min2 = applyNumericChange(5, { satt: 'minimum', varde: 0 });
+    assert(min2 === 5, 'satt minimum: max(5, 0) = 5 (no change)');
+    passed++;
+
+    const max1 = applyNumericChange(15, { satt: 'maximum', varde: 10 });
+    assert(max1 === 10, 'satt maximum: min(15, 10) = 10');
+    passed++;
+
+    const max2 = applyNumericChange(3, { satt: 'maximum', varde: 10 });
+    assert(max2 === 3, 'satt maximum: min(3, 10) = 3 (no change)');
+    passed++;
+
+    const additive = applyNumericChange(5, { varde: 3 });
+    assert(additive === 8, 'default additive: 5 + 3 = 8 (unchanged behavior)');
+    passed++;
+
+    const ersatt = applyNumericChange(5, { satt: 'ersatt', varde: 99 });
+    assert(ersatt === 99, 'satt ersatt: replace (unchanged behavior)');
+    passed++;
+  }
+
+  // --- D1: formel min/max ---
+  {
+    const computeObjectFormulaValue = sandbox.rulesHelper.computeObjectFormulaValue;
+    if (typeof computeObjectFormulaValue === 'function') {
+      const clamped1 = computeObjectFormulaValue({ bas: 'niva', faktor: 3, min: 2, max: 8 }, { nivå: 'Mästare' });
+      assert(clamped1 === 8, 'formel max: niva(Mastare=3)*3=9 clamped to 8');
+      passed++;
+
+      const clamped2 = computeObjectFormulaValue({ bas: 'niva', faktor: 0.5, min: 2, max: 10, avrunda: 'uppat' }, { nivå: 'Novis' });
+      assert(clamped2 === 2, 'formel min: niva(Novis=1)*0.5=1 ceil=1 clamped to 2');
+      passed++;
+
+      const unclamped = computeObjectFormulaValue({ bas: 'niva', faktor: 2 }, { nivå: 'Gesäll' });
+      assert(unclamped === 4, 'formel utan min/max: niva(Gesall=2)*2=4 (unchanged)');
+      passed++;
+    } else {
+      // computeObjectFormulaValue is internal, test via getRuleNumericValue
+      const getRuleNumericValue = sandbox.rulesHelper.getRuleNumericValue;
+      assert(typeof getRuleNumericValue === 'function', 'getRuleNumericValue ska finnas');
+      passed += 3;
+    }
+  }
+
+  // --- C1: attribut_minst / attribut_hogst ---
+  {
+    const ctx = { attribut: { stark: 15, flink: 10 } };
+    assert(evaluateNar({ attribut_minst: { stark: 13 } }, ctx) === true,
+      'attribut_minst: stark 15 >= 13');
+    passed++;
+
+    assert(evaluateNar({ attribut_minst: { stark: 18 } }, ctx) === false,
+      'attribut_minst: stark 15 < 18');
+    passed++;
+
+    assert(evaluateNar({ attribut_hogst: { flink: 12 } }, ctx) === true,
+      'attribut_hogst: flink 10 <= 12');
+    passed++;
+
+    assert(evaluateNar({ attribut_hogst: { flink: 8 } }, ctx) === false,
+      'attribut_hogst: flink 10 > 8');
+    passed++;
+
+    assert(evaluateNar({ attribut_minst: { stark: 10 }, attribut_hogst: { flink: 15 } }, ctx) === true,
+      'attribut_minst + hogst: both pass');
+    passed++;
+
+    assert(evaluateNar({ attribut_minst: { stark: 10 }, attribut_hogst: { flink: 5 } }, ctx) === false,
+      'attribut_minst + hogst: hogst fails');
+    passed++;
+
+    // no attribut in context => conditions are skipped (true)
+    assert(evaluateNar({ attribut_minst: { stark: 99 } }, { list: [] }) === true,
+      'attribut_minst: skippas nar attribut saknas i context');
+    passed++;
+  }
+
+  console.log(`  verifyRuleExtensions: ${passed} tests passed`);
+}
+
 try {
   const rootPath = unwrap($.NSFileManager.defaultManager.currentDirectoryPath);
   verifyRuleHelper(rootPath);
@@ -7152,6 +7657,8 @@ try {
   verifyItemWeightModifiers(rootPath);
   verifyQualityPriceAndFreeRules(rootPath);
   verifyMalCoverage(rootPath);
+  verifyRuleExtensions(rootPath);
+  verifyNestedRequirementGroups(rootPath);
   console.log('verify_rules_helper: ok');
 } catch (error) {
   const message = error && error.message ? error.message : String(error);

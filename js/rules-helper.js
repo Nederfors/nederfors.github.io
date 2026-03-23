@@ -927,8 +927,7 @@
     if (!rule) return false;
     const wantedField = normalizeChoiceField(context?.field);
     if (wantedField && rule.field !== wantedField) return false;
-    const nar = rule.nar && typeof rule.nar === 'object' ? rule.nar : null;
-    if (nar && !evaluateNar(nar, context)) return false;
+    if (!evaluateRuleNar(rule, context)) return false;
     return true;
   }
 
@@ -1543,7 +1542,7 @@
     const out = [];
     getListRules(entries, { key: 'andrar', mal }).forEach(rule => {
       if (String(rule?.satt || '') !== 'ersatt') return;
-      if (!evaluateNar(rule?.nar, { list: entries, ...context })) return;
+      if (!evaluateRuleNar(rule, { list: entries, ...context })) return;
       const trait = String(rule?.varde || '').trim();
       if (!trait || seen.has(trait)) return;
       seen.add(trait);
@@ -1562,7 +1561,7 @@
     const out = [];
     getListRules(entries, { key: 'andrar', mal: 'anfall_karaktarsdrag' }).forEach(rule => {
       if (String(rule?.satt || '') !== 'ersatt') return;
-      if (!evaluateNar(rule?.nar, { list: entries, ...context })) return;
+      if (!evaluateRuleNar(rule, { list: entries, ...context })) return;
       const trait = String(rule?.varde || '').trim();
       if (!trait || seen.has(trait)) return;
       seen.add(trait);
@@ -1582,7 +1581,7 @@
     const entries = Array.isArray(list) ? list : [];
     const candidates = getListRules(entries, { key: 'andrar', mal: 'separat_forsvar_karaktarsdrag' })
       .filter(rule => String(rule?.satt || '') === 'ersatt'
-        && evaluateNar(rule?.nar, { list: entries, ...context }));
+        && evaluateRuleNar(rule, { list: entries, ...context }));
     // Deduplicate by (sourceEntryId, varde): last rule in accumulation order is the highest level
     const seen = new Map();
     candidates.forEach(rule => {
@@ -2181,7 +2180,7 @@
     (Array.isArray(entries) ? entries : []).forEach(entry => {
       const rules = getRuleList(entry, 'andrar', { level: entry?.nivå })
         .filter(rule => String(rule?.mal || '') === targetMal
-          && evaluateNar(rule?.nar, context));
+          && evaluateRuleNar(rule, context));
       if (!rules.length) return;
       let entryValue = 0;
       rules.forEach(rule => {
@@ -2375,7 +2374,7 @@
       const rules = getRuleList(entry, 'andrar', { level: entry?.nivå })
         .filter(rule => String(rule?.mal || '') === 'forsvar_modifierare'
           && rule?.nar?.har_utrustad_typ != null
-          && evaluateNar(rule?.nar, context));
+          && evaluateRuleNar(rule, context));
       if (!rules.length) return;
       let entryValue = 0;
       rules.forEach(rule => {
@@ -2568,6 +2567,23 @@
       if (harMal.length && !harMal.every(m => cv[m])) return false;
     }
 
+    // --- Attribute conditions (only when attribut is in context) ---
+    if (ctx.attribut !== undefined) {
+      const attr = ctx.attribut && typeof ctx.attribut === 'object' ? ctx.attribut : {};
+      if (nar.attribut_minst && typeof nar.attribut_minst === 'object') {
+        const failed = Object.keys(nar.attribut_minst).some(key =>
+          Number(attr[key] ?? 0) < Number(nar.attribut_minst[key])
+        );
+        if (failed) return false;
+      }
+      if (nar.attribut_hogst && typeof nar.attribut_hogst === 'object') {
+        const failed = Object.keys(nar.attribut_hogst).some(key =>
+          Number(attr[key] ?? 0) > Number(nar.attribut_hogst[key])
+        );
+        if (failed) return false;
+      }
+    }
+
     // --- Armor type conditions (only when utrustadTyper is in context) ---
     if (ctx.utrustadTyper !== undefined) {
       const condTypes = toArray(nar.har_utrustad_typ).map(String).filter(Boolean);
@@ -2661,7 +2677,26 @@
       }
     }
 
+    // --- Negation block: nar.inte inverts a nested nar ---
+    if (nar.inte && typeof nar.inte === 'object' && !Array.isArray(nar.inte)) {
+      if (evaluateNar(nar.inte, ctx)) return false;
+    }
+
+    // --- Inline OR block: nar.eller — at least one nested nar must pass ---
+    if (Array.isArray(nar.eller) && nar.eller.length) {
+      if (!nar.eller.some(alt => evaluateNar(alt, ctx))) return false;
+    }
+
     return true;
+  }
+
+  // Evaluates a rule's nar condition, supporting both nar (AND) and nar_eller (OR over multiple nar blocks).
+  function evaluateRuleNar(rule, context) {
+    if (!rule || typeof rule !== 'object') return true;
+    if (Array.isArray(rule.nar_eller) && rule.nar_eller.length) {
+      return rule.nar_eller.some(alt => evaluateNar(alt, context));
+    }
+    return evaluateNar(rule.nar, context);
   }
 
   // Thin wrappers — preserve existing call signatures while delegating to evaluateNar.
@@ -2682,7 +2717,10 @@
     (Array.isArray(entries) ? entries : []).forEach(entry => {
       const rules = getRuleList(entry, 'andrar', { level: entry.nivå })
         .filter(rule => String(rule?.mal || '') === targetMal
-          && evaluateVapenNar(rule?.nar, weaponContext));
+          && evaluateRuleNar(rule, {
+            vapenFakta: weaponContext?.vapenFakta,
+            antalVapen: weaponContext?.antalVapen
+          }));
       total += rules.reduce((sum, rule) => sum + Number(rule.varde || 0), 0);
     });
     return total;
@@ -2798,7 +2836,7 @@
     entries.forEach(entry => {
       const rules = getRuleList(entry, 'andrar')
         .filter(rule => String(rule?.mal || '') === String(mal)
-          && evaluateRustningNar(rule?.nar, armorContext));
+          && evaluateRuleNar(rule, { utrustadTyper: armorContext?.utrustadTyper }));
       total += rules.reduce((sum, rule) => sum + Number(rule.varde || 0), 0);
     });
     return total;
@@ -2925,11 +2963,12 @@
 
   function matchesListCondition(rule, list, context = {}) {
     const extra = context && typeof context === 'object' ? context : {};
-    return evaluateNar(rule?.nar, {
+    const ctx = {
       ...extra,
       list: Array.isArray(list) ? list : [],
       sourceLevel: rule?.sourceEntryLevel || extra?.sourceLevel
-    });
+    };
+    return evaluateRuleNar(rule, ctx);
   }
 
   function matchesTargetCondition(rule, targetEntry, options = {}) {
@@ -3246,9 +3285,11 @@
       entryRequirementConfig.scopeCombinationLogic || typeRequirementConfig.scopeCombinationLogic,
       'or'
     );
+    const rawContainer = getTopLevelRuleContainer(sourceEntry);
+    const skipTypeKraver = rawContainer?.ignorera_typ_kraver === true;
     return {
       entryRequirements: toRuleList(entryRules?.kraver),
-      typeRequirements: toRuleList(typeRules?.kraver),
+      typeRequirements: skipTypeKraver ? [] : toRuleList(typeRules?.kraver),
       entryScopeLogic: normalizeRequirementLogic(entryRequirementConfig.scopeLogic, 'or'),
       typeScopeLogic: normalizeRequirementLogic(typeRequirementConfig.scopeLogic, 'or'),
       scopeCombinationLogic
@@ -3256,6 +3297,36 @@
   }
 
   function buildRequirementReason(rule, candidate, entries, contextEntries, nameSet) {
+    // --- Nested group: grupp contains sub-rules combined with grupp_logik ---
+    if (Array.isArray(rule?.grupp) && rule.grupp.length) {
+      const subRules = rule.grupp;
+      const groupLogic = normalizeRequirementLogic(rule?.grupp_logik, 'and');
+      const subReasons = subRules.map(sub =>
+        buildRequirementReason(sub, candidate, entries, contextEntries, nameSet)
+      );
+      const satisfied = groupLogic === 'and'
+        ? subReasons.every(r => r === null)
+        : subReasons.some(r => r === null);
+      if (satisfied) return null;
+
+      const failedReasons = subReasons.filter(Boolean);
+      const allMissing = failedReasons.flatMap(r => r.missingNames || []);
+      const allRequired = failedReasons.flatMap(r => r.requiredNames || []);
+      const allMissingLevels = failedReasons.flatMap(r => r.missingLevelRequirements || []);
+      const allLevelReqs = failedReasons.flatMap(r => r.levelRequirements || []);
+      return {
+        code: getRequirementReasonCode(rule, candidate),
+        sourceEntryId: candidate?.id || '',
+        sourceEntryName: candidate?.namn || '',
+        sourceEntryLevel: candidate?.nivå || '',
+        requiredNames: getUniqueNames(allRequired),
+        missingNames: getUniqueNames(allMissing),
+        levelRequirements: allLevelReqs,
+        missingLevelRequirements: allMissingLevels,
+        message: String(rule?.meddelande || rule?.message || '').trim()
+      };
+    }
+
     const baseRequiredNames = getRequirementNames(rule);
     const levelRequirements = getRequirementLevelRules(rule, baseRequiredNames);
     const requiredNames = getUniqueNames([
@@ -3846,7 +3917,7 @@
         }
       }
 
-      if (entryHasType(candidate, 'Elityrkesförmåga')) {
+      if (entryHasType(candidate, 'Elityrkesförmåga') && requirementReasons.length > 0) {
         const requiredEliteNames = (typeof window.explodeTags === 'function'
           ? window.explodeTags(candidate?.taggar?.ark_trad)
           : splitListTags(candidate?.taggar?.ark_trad)
@@ -4111,6 +4182,11 @@
       computed = Math.round(computed);
     }
 
+    const minVal = Number(formel.min);
+    if (Number.isFinite(minVal)) computed = Math.max(computed, minVal);
+    const maxVal = Number(formel.max);
+    if (Number.isFinite(maxVal)) computed = Math.min(computed, maxVal);
+
     return computed;
   }
 
@@ -4129,6 +4205,9 @@
     const amount = getRuleNumericValue(rule, sourceEntry, options);
     if (!Number.isFinite(amount)) return currentValue;
     if (mode === 'ersatt' || mode === 'satt') return amount;
+    if (mode === 'multiplicera') return currentValue * amount;
+    if (mode === 'minimum') return Math.max(currentValue, amount);
+    if (mode === 'maximum') return Math.min(currentValue, amount);
     return currentValue + amount;
   }
 
@@ -4244,7 +4323,7 @@
         row: baseOptions?.row || null,
         computedValues
       };
-      if (rule?.nar && !evaluateNar(rule.nar, narContext)) {
+      if (!evaluateRuleNar(rule, narContext)) {
         return;
       }
 
@@ -4372,7 +4451,7 @@
   }
 
   function matchesInventoryRuleCondition(rule, row, sourceEntry) {
-    return evaluateNar(rule?.nar, { row, sourceEntry });
+    return evaluateRuleNar(rule, { row, sourceEntry });
   }
 
   function getTraitTotalMax(list, inventory, options = {}) {
@@ -4534,7 +4613,7 @@
         resolveMal: resolveAndrarMal,
         baseOptions: { ...options, list }
       }, {});
-      if (rule?.nar && !evaluateNar(rule.nar, {
+      if (!evaluateRuleNar(rule, {
         ...options,
         list,
         sourceEntry: rule?.sourceEntry || null,
@@ -4725,10 +4804,10 @@
     };
     const ctx = { list: entries, foremal: foremalCtx };
     const faktor = getListRules(entries, { key: 'andrar', mal: 'vikt_faktor' })
-      .filter(rule => evaluateNar(rule.nar, ctx))
+      .filter(rule => evaluateRuleNar(rule, ctx))
       .reduce((prod, rule) => prod * Number(rule.varde ?? 1), 1);
     const tillagg = getListRules(entries, { key: 'andrar', mal: 'vikt_tillagg' })
-      .filter(rule => evaluateNar(rule.nar, ctx))
+      .filter(rule => evaluateRuleNar(rule, ctx))
       .reduce((sum, rule) => applyNumericChange(sum, rule, rule.sourceEntry), 0);
     return { faktor, tillagg };
   }
@@ -4990,7 +5069,7 @@
     getRuleList(entry, 'andrar', { level: entry?.nivå || '' })
       .filter(rule => String(rule?.mal || '') === 'kvalitet_gratisbar')
       .forEach(rule => {
-        if (!evaluateNar(rule?.nar, context)) return;
+        if (!evaluateRuleNar(rule, context)) return;
         if (!Object.prototype.hasOwnProperty.call(rule, 'varde')) return;
         const value = isTruthyRuleValue(rule?.varde);
         const mode = normalizeLevelName(rule?.satt || '');
@@ -5136,7 +5215,7 @@
     const entries = Array.isArray(list) ? list : [];
     const rules = getListRules(entries, { key: 'andrar', mal: 'Hidden' });
     return rules.some(rule =>
-      evaluateNar(rule?.nar, { list: entries, ...(ctx || {}) })
+      evaluateRuleNar(rule, { list: entries, ...(ctx || {}) })
       && isTruthyRuleValue(rule?.varde)
     );
   });
@@ -5209,6 +5288,7 @@
     getLegacyChoiceRule,
     getListRules,
     evaluateNar,
+    evaluateRuleNar,
     hasEntryAtLeastLevel,
     getConflictReasonsForCandidate,
     getConflictResolutionForCandidate,
@@ -5268,6 +5348,8 @@
     hasRules,
     getItemWeightModifiers,
     getItemQualityRuleEffects,
-    getItemPriceRuleEffects
+    getItemPriceRuleEffects,
+    applyNumericChange,
+    computeObjectFormulaValue
   };
 })(window);

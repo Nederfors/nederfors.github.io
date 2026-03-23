@@ -207,6 +207,7 @@ Använd detta som första uppslag när du authorar.
 | Lägga krav | `...kraver[]` | Samma path-mönster (typ/entry/nivå). |
 | Styra kravlogik inom scope | `...regler.kraver_logik` | `or` (default) eller `and` för lokala `kraver[]`. |
 | Styra kombination typ+entry | `...regler.kraver_typ_och_entry` | `or` (default) eller `and` mellan type- och entry-scope. |
+| Ignorera typ-scopets krav | `...regler.ignorera_typ_kraver` | `true` → typ-krav hoppas över, bara entry-krav utvärderas. |
 | Lägga krock | `...krockar[]` | Samma path-mönster (typ/entry/nivå). |
 | Lägga ändring av värde | `...andrar[]` | Samma path-mönster (typ/entry/nivå). |
 | Lägga grant av post/föremål/pengar | `...ger[]` | Samma path-mönster (typ/entry/nivå). |
@@ -1039,10 +1040,16 @@ Tips:
 ### 5.1 `andrar`
 Typiska fält:
 - `mal` (vilket värde som påverkas)
-- `satt` (`add`/uteblivet eller `ersatt`; aliasvärdet `satt` behandlas också som ersättning i numeric-apply)
+- `satt` (hur värdet appliceras):
+  - uteblivet/`add`: additivt (default)
+  - `ersatt`/`satt`: absolut ersättning
+  - `multiplicera`: multiplicerar ackumulerat värde
+  - `minimum`: golv (`Math.max(ack, varde)`)
+  - `maximum`: tak (`Math.min(ack, varde)`)
 - `varde` (nummer eller text beroende på `mal`)
-- `nar` (villkor)
-- `formel` (sträng eller objekt)
+- `nar` (villkor, se §7)
+- `nar_eller` (array av alternativa nar-objekt, se §7.11)
+- `formel` (sträng eller objekt, se §11; stöder `min`/`max` för clamping)
 - `modifierare` (extra numerisk justering, används bl.a. för separata försvarsdrag)
 - `tillat` (selektiv aktivering av delkomponenter, t.ex. `karaktarsdrag`, `vapen_typer`, `vapen_kvaliteter`)
 
@@ -1053,12 +1060,15 @@ Typiska fält:
 - `nivå_minst` / `niva_minst` (global miniminivå för alla namn i `namn`)
 - `namn_nivå_minst` / `namn_niva_minst` (per-entry nivåkrav, objekt eller array av objekt)
 - `nar.har_namn_niva_minst` (nivåkrav i `nar`-grammatiken; objekt eller array)
+- `grupp` (array av sub-kravsregler, se nedan)
+- `grupp_logik` (`and` (default) eller `or`; styr hur reglerna i `grupp` kombineras)
 - `else` / `annars` / `on_fail` (effekter när kravet inte uppfylls)
 - `om_uppfyllt` / `vid_uppfyllt` / `on_pass` (effekter när kravet uppfylls)
 - `varde` (felkod)
 - `meddelande`/`message` (valfritt UX-meddelande)
 - `kraver_logik` (på `regler`-containern): `or` (default) eller `and` för lokala `kraver[]`
 - `kraver_typ_och_entry` (på `regler`-containern): `or` (default) eller `and` mellan type- och entry-scope
+- `ignorera_typ_kraver` (på `regler`-containern): `true` → hoppa helt över typ-scopets `kraver`
 
 Kravformel för nivåkrav:
 - `kraver: [{ "namn": ["<Entry>"], "nivå_minst": "<Nivå>" }]` betyder `<Entry> >= <Nivå>`.
@@ -1191,6 +1201,9 @@ Exempel (framtida/generaliserat utanför artefakter):
 
 ### Numeriska förändringar (`andrar`, vissa `ger`)
 - `ersatt` (och alias `satt` i intern numeric-apply) sätter absolut värde.
+- `multiplicera`: multiplicerar ackumulerat värde (`currentValue * varde`).
+- `minimum`: sätter golv (`Math.max(currentValue, varde)`).
+- `maximum`: sätter tak (`Math.min(currentValue, varde)`).
 - Allt annat behandlas additivt.
 
 ### Konflikter (`krockar`)
@@ -1252,13 +1265,43 @@ Specialfall:
 ### 7.7 Källnivå (`context.sourceLevel`)
 - `kalla_niva_minst`
 
-### 7.8 Inventory-rad (`context.row` / `context.sourceEntry`)
+### 7.8 Attributvillkor (`context.attribut`)
+- `attribut_minst` — objekt `{ "stark": 13 }`, alla nycklar måste uppfyllas (AND).
+- `attribut_hogst` — objekt `{ "flink": 10 }`, alla nycklar måste uppfyllas (AND).
+- Kräver `ctx.attribut = { stark: 15, flink: 10, ... }` i kontexten.
+
+### 7.9 Inventory-rad (`context.row` / `context.sourceEntry`)
 - `trait`
 - `namn`
 - `typ`
 - `endast_valda` (alias: `only_selected`) när `context.list` också finns; matchar om `sourceEntry` redan finns i karaktärslistan (id eller namn)
 
-### 7.9 Targetfilter i krav/krock-logik (utanför `evaluateNar`)
+### 7.10 Negation och OR inom `nar`
+- `inte` — inverterar ett nästlat nar-block. Om det inre villkoret matchar, misslyckas det yttre.
+  ```json
+  { "nar": { "inte": { "har_utrustad_typ": ["Tung"] } } }
+  ```
+- `eller` — array av alternativa nar-block. Minst ett måste matcha (OR). Kombineras med AND mot övriga nar-nycklar.
+  ```json
+  { "nar": { "har_namn": ["Robust"], "eller": [{ "har_utrustad_typ": ["Tung"] }, { "har_utrustad_typ": ["Medel"] }] } }
+  ```
+
+### 7.11 `nar_eller` — top-level OR på regelnivå
+Alternativ till `nar`. Array av nar-objekt; regeln matchar om NÅGOT nar-objekt passerar.
+```json
+{
+  "mal": "forsvar_modifierare", "varde": 1,
+  "nar_eller": [
+    { "har_utrustad_vapen_typ": ["Skoeld"] },
+    { "har_utrustad_typ": ["Tung"] }
+  ]
+}
+```
+`nar_eller` och `nar` är ömsesidigt exkluderande; `nar_eller` har företräde om båda anges. Tom `nar_eller`-array faller tillbaka på `nar`.
+
+Stöds av `evaluateRuleNar(rule, context)` som ersätter direkta `evaluateNar(rule.nar)`-anrop i alla regelkonsumenter.
+
+### 7.12 Targetfilter i krav/krock-logik (utanför `evaluateNar`)
 - `nar.namn`
 - `nar.typ`
 - `nar.ark_trad`
@@ -1430,6 +1473,91 @@ Exempel (`else` för pris/erf om krav saknas):
 }
 ```
 
+### Nästlade kravgrupper (`grupp`)
+
+En kravpost kan innehålla `grupp` — en array av sub-kravsregler som utvärderas rekursivt och kombineras med `grupp_logik` (`and` default, `or` explicit). Stöder godtycklig djup nästling.
+
+Exempel: `(Monster AND Andeform) OR Andebesvärjare`
+
+```json
+{
+  "kraver_logik": "or",
+  "kraver": [
+    {
+      "grupp": [
+        { "nar": { "nagon_av_namn": ["Monster"] } },
+        { "namn": ["Andeform"] }
+      ],
+      "grupp_logik": "and",
+      "meddelande": "Kräver Monster + Andeform."
+    },
+    {
+      "nar": { "nagon_av_namn": ["Andebesvärjare"] },
+      "meddelande": "Alternativt: Andebesvärjare."
+    }
+  ]
+}
+```
+
+- `grupp_logik: "and"`: alla sub-regler i gruppen måste passera.
+- `grupp_logik: "or"`: minst en sub-regel i gruppen måste passera.
+- Sub-regler stöder alla vanliga kravfält (`namn`, `nar`, `nivå_minst`, `meddelande`) samt nästlade `grupp`.
+- Om en grupp misslyckas aggregeras `missingNames`/`missingLevelRequirements` från alla misslyckade sub-regler.
+
+### `ignorera_typ_kraver` — hoppa över typnivå-krav
+
+Om en entry sätter `ignorera_typ_kraver: true` i sin `regler`-container ignoreras alla `kraver` från `typ_regler`-nivån. Bara entry-scopets egna `kraver` utvärderas. Flaggan läses från den råa `taggar.regler`-containern (inte normaliserade regelblock).
+
+Användning: när entryn har egna komplexa krav (t.ex. nästlade grupper) som redan täcker hela kravlogiken och typ-scopets krav inte ska blandas in.
+
+```json
+{
+  "taggar": {
+    "typ": ["Monstruöst särdrag"],
+    "regler": {
+      "ignorera_typ_kraver": true,
+      "kraver_logik": "or",
+      "kraver": [
+        {
+          "grupp": [
+            { "nar": { "nagon_av_namn": ["Monster"] } },
+            { "namn": ["Andeform"] }
+          ],
+          "grupp_logik": "and"
+        },
+        { "nar": { "nagon_av_namn": ["Andebesvärjare"] } }
+      ]
+    }
+  }
+}
+```
+
+I exemplet ovan hoppar motorn över typ-regelns `kraver` (t.ex. Monster-kravet på `Monstruöst särdrag`) och utvärderar bara entry-kravarna.
+
+Exempel: djup nästling `((A AND B) AND C) OR D`
+
+```json
+{
+  "kraver_logik": "or",
+  "kraver": [
+    {
+      "grupp": [
+        {
+          "grupp": [
+            { "namn": ["A"] },
+            { "namn": ["B"] }
+          ],
+          "grupp_logik": "and"
+        },
+        { "namn": ["C"] }
+      ],
+      "grupp_logik": "and"
+    },
+    { "namn": ["D"] }
+  ]
+}
+```
+
 ## 9. `krockar` i praktiken
 
 Primära funktioner:
@@ -1539,6 +1667,13 @@ Stöd i motorn:
 - `uppat`
 - `nedat`
 - `narmast`
+
+`min` / `max` (clamping, appliceras efter avrundning):
+```json
+{ "formel": { "bas": "niva", "faktor": 3, "min": 1, "max": 8 } }
+```
+- `min`: golvvärde (`Math.max(computed, min)`)
+- `max`: takvärde (`Math.min(computed, max)`)
 
 ## 12. Komplett `MAL_REGISTRY` (inbyggda mål)
 
@@ -1654,7 +1789,8 @@ Relaterade API:
 Automatiska hard-stops inkluderar bl.a.:
 - `duplicate_entry`
 - `stack_limit`
-- elityrkesrelaterade spärrar
+- `elite_missing_requirements` / `elite_primary_requirement` (Elityrke)
+- `elite_skill_locked` (Elityrkesförmåga) — aktiveras **bara** om `requirementReasons` är icke-tom (dvs. kraver misslyckas). Om entryn har egna `kraver` som passerar, hoppas elitlåset över. Detta gör att en Elityrkesförmåga kan göras tillgänglig genom alternativa kravvägar utan att kräva elityrket i listan.
 
 Meddelanden kan formateras med:
 - `formatEntryStopMessages(entryName, stopResult)`

@@ -7,7 +7,11 @@
     "dev": "vite --config ./vite.config.js",
     "prebuild": "npm run sync:static",
     "build": "vite build --config ./vite.config.js",
+    "build:analyze": "npm run build -- --mode analyze",
     "preview": "vite preview --config ./vite.config.js",
+    "lint": "eslint .",
+    "test:unit": "vitest run --config ./vitest.config.js",
+    "test:unit:watch": "vitest --config ./vitest.config.js",
     "test:e2e": "npm run build && playwright test --config=./playwright.config.js",
     "test:lighthouse": "npm run build && node ./scripts/run-lighthouse.mjs",
     "test:scenarios": "npm run build && node ./scripts/run-scenario-metrics.mjs",
@@ -17,12 +21,14 @@
     "comlink": "^4.4.2",
     "daub-ui": "^3.19.6",
     "dexie": "^4.2.0",
+    "jszip": "^3.10.1",
     "web-vitals": "^5.1.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.47.2",
     "eslint": "^10.1.0",
     "lighthouse": "^12.0.0",
+    "rollup-plugin-visualizer": "^7.0.1",
     "vite": "^7.3.1",
     "vite-plugin-pwa": "^1.2.0",
     "vitest": "^4.1.0"
