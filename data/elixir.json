@@ -653,10 +653,10 @@
         ]
       },
       "nivåer": {
-        "Gesäll": "När Livselixiret förtärs vaknar en våldsam regenerationskraft i kroppen. Elixirets verkan håller i sig under 1T6 rundor. I början av varje sådan runda slår rollpersonen 1T6 och återfår motsvarande mängd Tålighet. Denna vilda läkning kräver dock ett högt pris, då rollpersonen drabbas av 1 temporär Korruption för varje runda som elixiret är verksamt. Skulle läget vara kritiskt kan rollpersonen, istället för att återfå Tålighet under en specifik runda, välja att låta elixirets samlade kraft verka omedelbart för att direkt lyckas med ett dödsslag."
+        "Gesäll": "När Livselixiret förtärs vaknar en våldsam regenerationskraft i kroppen. Elixirets verkan håller i sig under 1T6 rundor. I början av varje sådan runda slår rollpersonen 1T6 och återfår motsvarande mängd Tålighet. Denna vilda läkning kräver dock ett högt pris, då rollpersonen drabbas av 1 temporär Korruption för varje runda som elixiret är verksamt."
       },
       "grundpris": {
-        "daler": 10,
+        "daler": 8,
         "skilling": 0,
         "örtegar": 0
       },
@@ -1394,7 +1394,7 @@
         ]
       },
       "nivåer": {
-        "Mästare": "Klara, honungsgula droppar som sprider värme från magen. När de intas läker läker omedelbart brukarens kropp upp till full Tålighet och alla skador fårn överstigen smärtgräns återställs. Men den överväldigande kraften kommer med en biverkning; brukaren drabbas ögonblickligen av temporär Korruption motsvarande hälften av den läkta Tåligheten (avrundat uppåt)."
+        "Mästare": "Klara, honungsgula droppar som sprider värme från magen. När de intas läker läker omedelbart läker brukarens kropp upp till full Tålighet samtidigt som alla skador fårn överstigen smärtgräns återställs. Den överväldigande kraften kommer dock med en biverkning; brukaren drabbas ögonblickligen av temporär Korruption motsvarande hälften av den läkta Tåligheten (avrundat uppåt)."
       },
       "grundpris": {
         "daler": 16,
@@ -1894,7 +1894,7 @@
         ]
       },
       "nivåer": {
-       "Gesäll": "Dena beska, trögflytande örtsaft saktar ned kroppens förfall och håller döden stången. Elixiret stabiliserar omedelbart en döende person så att hen inte längre behöver slå dödsslag, målet förblir dock djupt medvetslös fram till dess att naturlig läkning eller en annan kraft återställer minst 1 i Tålighet."
+       "Gesäll": "Dena beska, trögflytande örtsaft saktar ned kroppens förfall och håller döden stången. Elixiret stabiliserar omedelbart en döende person så att hen inte längre behöver slå dödsslag, målet förblir dock djupt medvetslös fram till dess att naturlig läkning eller en annan kraft återställer hen till minst 1 i Tålighet."
       },
       "grundpris": {
         "daler": 10,

@@ -195,7 +195,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 
 .tag.price-mult:active {
   filter: brightness(.95);
-  transform: scale(.97);
+  transform: scale(.98);
 }
 .tag.quality   { border: 1.5px solid var(--quality); }
 .tag.mystic    { border: 1.5px solid var(--mystic); }
@@ -290,7 +290,7 @@ h1, h2, h3 { margin: 0 0 .8rem; font-weight: 700; }
 }
 .char-btn.icon, .db-btn--icon { font-size: 1.1rem; }
 .char-btn:hover, .db-btn:hover { opacity: .85; }
-.char-btn:active, .db-btn:active { transform: scale(.95); opacity: .7; }
+.char-btn:active, .db-btn:active { transform: scale(.97); opacity: .7; }
 
 /* Visual cue for programmatic focus/highlight on buttons/links */
 .focus-highlight {
@@ -641,7 +641,7 @@ body[data-role="summary"] .summary-section-header h3 {
 }
 
 .summary-chip-btn:active {
-  transform: scale(.97);
+  transform: scale(.98);
 }
 
 .summary-chip-more {
@@ -2152,7 +2152,7 @@ body[data-role="summary"] .summary-value.neg {
   flex-shrink: 0;
 }
 .party-toggle:hover  { opacity: .85; }
-.party-toggle:active { transform: scale(.95); opacity: .7; }
+.party-toggle:active { transform: scale(.97); opacity: .7; }
 .party-toggle.active {
   background: var(--danger);
 }
@@ -2312,7 +2312,7 @@ input:focus, select:focus, textarea:focus {
 }
 
 .entry-collapse-btn:active {
-  transform: scale(.94);
+  transform: scale(.97);
 }
 
 .entry-collapse-btn:focus-visible {
@@ -2944,7 +2944,7 @@ input:focus, select:focus, textarea:focus {
   padding: 0;
 }
 .card button:hover  { opacity: .85; }
-.card button:active { transform: scale(.95); opacity: .7; }
+.card button:active { transform: scale(.97); opacity: .7; }
 .card button.danger { background: var(--danger); }
 
 
@@ -3551,7 +3551,7 @@ select.level {
 }
 
 .trait-btn:hover  { background: rgba(255, 255, 255, .16); }
-.trait-btn:active { transform: scale(.95); opacity: .8; }
+.trait-btn:active { transform: scale(.97); opacity: .85; }
 .trait-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 
@@ -7645,7 +7645,7 @@ select.level {
   gap: .25rem;
 }
 #folderManagerPopup .popup-inner.folder-ui .mini-btn:hover  { opacity: .85; }
-#folderManagerPopup .popup-inner.folder-ui .mini-btn:active { transform: scale(.95); opacity: .7; }
+#folderManagerPopup .popup-inner.folder-ui .mini-btn:active { transform: scale(.97); opacity: .7; }
 #folderManagerPopup .popup-inner.folder-ui .mini-btn.danger {
   background: var(--danger);
   color: #fff;
@@ -7772,8 +7772,8 @@ select.level {
 }
 
 .card-info-price .price-click:active {
-  filter: brightness(.95);
-  transform: scale(.97);
+  filter: brightness(.97);
+  transform: scale(.98);
 }
 
 /* Rad med två knappar */

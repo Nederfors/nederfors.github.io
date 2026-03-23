@@ -125,6 +125,14 @@
   padding: 0.65rem 0.75rem;
 }
 
+/* Subtler hover on entry cards — keep the lift minimal */
+.db-card.entry-card:hover,
+.db-card--interactive.entry-card:hover {
+  transform: translateY(0);
+  box-shadow: var(--db-card-shadow), inset 0 1px 0 rgba(var(--db-glow-rgb),0.6), inset 0 -1px 0 rgba(var(--db-shadow-rgb),0.08);
+  border-color: rgba(255, 243, 228, 0.14);
+}
+
 /* Special cards keep their stronger border but gain rounded corners */
 .db-card[data-special] {
   border-radius: 0.75rem;
