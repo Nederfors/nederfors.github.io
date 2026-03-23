@@ -1223,5 +1223,26 @@
       "begränsning": -2
     },
     "effekt": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
+  },
+  {
+    "id": "l53",
+    "namn": "Mystisk reagens",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Denna noga utvalda samling av sällsynta och potenta ingredienser är oumbärlig för att maximera utövarens magiska potential, oavsett om det rör sig om en näve rent svavel för att frammana en förödande svavelkaskad eller uråldriga hartser för komplexa besvärjelser. Genom att använda rätt materialkomponent i det avgörande ögonblicket skapar reagensen en kraftfull mystisk resonans som en gång per dag ger rollpersonen +1 på ett framgångsslag kopplat till en Mystisk kraft eller Ritual som väljs vid inköp."
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    },
+    "effekt": "En gång per dag +1 på ett framgångsslag kopplat till en specifik Mystisk kraft eller Ritual."
   }
 ]
