@@ -344,7 +344,7 @@
   {
     "id": "sp19",
     "namn": "Förberedelsesäck",
-    "beskrivning": "Ett lätt packsystem med färdiga satser för alla möjliga händelser, rollpersonen är helt enkelt kittad för vad som helst. En gång per dag, när en ny scen börjar får bäraren +1 på sin första använda förmåga under den.",
+    "beskrivning": "Detta högspecialiserade och metodiska packsystem är skräddarsytt för att maximera bärarens unika expertis, oavsett om det rör sig om precisionsverktyg för medicinska ingrepp eller optimerade selar för akrobatiska konster. Genom att erbjuda omedelbar tillgång till rätt utrustning skänker systemet en mental och praktisk beredskap som en gång per dag ger rollpersonen +1 på ett framgångsslag kopplat till en förmåga som väljs vid inköp.",
     "taggar": {
       "typ": [
         "Specialverktyg"
@@ -358,7 +358,7 @@
     "stat": {
       "vikt": 1.0
     },
-    "effekt": "En gång per dag +1 på sin första använda förmåga i en ny scen."
+    "effekt": "En gång per dag får rollpersonen +1 på ett framgångsslag som avser användandet av en vald förmåga."
   },
   {
     "id": "sp20",
