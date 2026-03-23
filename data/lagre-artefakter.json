@@ -695,17 +695,17 @@
         }
       },
       "nivåer": {
-        "Gesäll": "En fläta av tre sorters hår eller päls håller döden på avstånd. Häxflätan ger +1 på Stark vid Dödsslag. Spelledarpersoner som bär flätan slår också för Dödsslag, då med +1."
+        "Mästare": "En fläta av hår och päls som håller döden borta. Vid dödens tröskel kan flätans knopar lösas upp och förbrukas för att avstå från att slå ett dödsslag under en aktuell runda. Därefter måste dödsslag slås igen som vanligt."
       },
       "grundpris": {
-        "daler": 8,
+        "daler": 9,
         "skilling": 0,
         "örtegar": 0
       },
       "stat": {
         "vikt": 1.0
       },
-      "effekt": "+1 Stark på Dödsslag; gäller även SLP."
+      "effekt": "Avstå från att slå ett dödsslag."
     },
     {
       "id": "l16",
@@ -1867,7 +1867,7 @@
         "ark_trad": []
       },
       "nivåer": {
-        "Gesäll": "En gnistrande kristall som sprakar av instängd åska. Bäraren får +1 i Träffsäker."
+        "Gesäll": "En gnistrande kristall som sprakar av instängd åska. Bäraren rör sig får +1 i Träffsäker."
       },
       "grundpris": {
         "daler": 9,
@@ -1933,7 +1933,7 @@
         "ark_trad": []
       },
       "nivåer": {
-        "Novis": "En polerad skiva av mörksilver som visar en vätskas 'skugga'. Vid analys av okänd dryck, tinktur eller gift får en skolad alkemist en andra chans att lyckas om det första slaget misslyckas. En lyckad analys avslöjar om vätskan är elixir eller gift, dess nivå (Novis/Gesäll/Mästare) och huvudverkan."
+        "Novis": "En polerad skiva av mörksilver som visar en vätskas 'skugga'. Vid analys av okänd dryck, tinktur eller gift får en skolad alkemist en andra chans att lyckas. En lyckad analys avslöjar om vätskan är elixir eller gift, dess nivå (Novis/Gesäll/Mästare) och huvudverkan."
       },
       "grundpris": {
         "daler": 6,
@@ -1989,6 +1989,27 @@
         "begränsning": -2
       },
       "effekt": "Fungerar som lätt rustning; skyddstärningen höjs till 1T6 +1 när bäraren är i bärsärkagång, annars 1T4 +1."
-    }
+    },
+  {
+    "id": "l53",
+    "namn": "Mystisk reagens",
+    "taggar": {
+      "typ": [
+        "Lägre Artefakt"
+      ]
+    },
+    "nivåer": {
+      "Novis": "Denna noga utvalda samling av sällsynta och potenta ingredienser är oumbärlig för att maximera utövarens magiska potential, oavsett om det rör sig om en näve rent svavel för att frammana en förödande svavelkaskad eller uråldriga hartser för komplexa besvärjelser. Genom att använda rätt materialkomponent i det avgörande ögonblicket skapar reagensen en kraftfull mystisk resonans som en gång per dag ger rollpersonen +1 på ett framgångsslag kopplat till en Mystisk kraft eller Ritual som väljs vid inköp."
+    },
+    "grundpris": {
+      "daler": 10,
+      "skilling": 0,
+      "örtegar": 0
+    },
+    "stat": {
+      "vikt": 1.0
+    },
+    "effekt": "En gång per dag +1 på ett framgångsslag kopplat till en specifik Mystisk kraft eller Ritual (väljs vid inköp)."
+  }
   ]
 }

@@ -3,7 +3,7 @@
     "_meta": {
       "beskrivning": "Ett representativt exempel med upp till 3 poster för varje datatyp (tagg) hittad i källfilerna.",
       "språk": "Svenska",
-      "genererad": "2026-03-23T08:02:14.514187+00:00",
+      "genererad": "2026-03-23T13:42:19.131226+00:00",
       "antal_typer_hittade": 58,
       "källfiler": [
         "data/diverse.json",
@@ -1306,7 +1306,7 @@
       ]
     },
     "Elixir": {
-      "antal": 97,
+      "antal": 99,
       "källfiler": [
         "data/elixir.json",
         "data/fallor.json"
@@ -2454,7 +2454,7 @@
       ]
     },
     "Lägre Artefakt": {
-      "antal": 51,
+      "antal": 52,
       "källfiler": [
         "data/lagre-artefakter.json"
       ],
@@ -2956,6 +2956,18 @@
                       "varde": -2,
                       "satt": "ersatt"
                     }
+                  ],
+                  "kraver": [
+                    {
+                      "utrustning_typ": [
+                        "Rustning"
+                      ],
+                      "utrustning_kvalitet": [
+                        "Robustanpassad (Novis)",
+                        "Robustanpassad (Gesäll)",
+                        "Robustanpassad (Mästare)"
+                      ]
+                    }
                   ]
                 }
               },
@@ -2967,6 +2979,17 @@
                       "varde": -3,
                       "satt": "ersatt"
                     }
+                  ],
+                  "kraver": [
+                    {
+                      "utrustning_typ": [
+                        "Rustning"
+                      ],
+                      "utrustning_kvalitet": [
+                        "Robustanpassad (Gesäll)",
+                        "Robustanpassad (Mästare)"
+                      ]
+                    }
                   ]
                 }
               },
@@ -2977,6 +3000,16 @@
                       "mal": "forsvar_modifierare",
                       "varde": -4,
                       "satt": "ersatt"
+                    }
+                  ],
+                  "kraver": [
+                    {
+                      "utrustning_typ": [
+                        "Rustning"
+                      ],
+                      "utrustning_kvalitet": [
+                        "Robustanpassad (Mästare)"
+                      ]
                     }
                   ]
                 }
@@ -3030,6 +3063,7 @@
               ]
             },
             "regler": {
+              "ignorera_typ_kraver": true,
               "kraver": [
                 {
                   "grupp": [
@@ -3058,7 +3092,6 @@
                   "meddelande": "Alternativt: Andebesvärjare."
                 }
               ],
-              "kraver_typ_och_entry": "or",
               "kraver_logik": "or"
             }
           },

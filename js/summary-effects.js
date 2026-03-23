@@ -586,7 +586,7 @@
     const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
       ? storeHelper.getDefenseSetup(store)
       : null;
-    const defenseActionBtn = `<button type="button" class="db-btn db-btn--icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Beräkna försvar</span></button>`;
+    const combatActionBtn = `<button type="button" class="db-btn db-btn--icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Utrustning & strid</span></button>`;
     const accuracyPreview = typeof window.getAccuracyPreview === 'function'
       ? window.getAccuracyPreview({ list, inv, traitValues: vals })
       : {
@@ -709,7 +709,7 @@
     summarySections.push({
       title: 'Försvar',
       layout: 'grid',
-      action: defenseActionBtn,
+      action: combatActionBtn,
       items: [
         { label: 'Försvar', value: defenseDisplayValue },
         { label: 'Försvarstärning', value: defTrait },
@@ -735,6 +735,7 @@
     summarySections.push({
       title: 'Träffsäkerhet',
       layout: 'block',
+      action: combatActionBtn,
       items: accuracyItems
     });
 

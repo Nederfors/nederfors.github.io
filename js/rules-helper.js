@@ -2146,6 +2146,40 @@
     return out;
   }
 
+  function getCombatFactDisplayName(fact) {
+    if (!fact || typeof fact !== 'object') return '';
+    const direct = typeof fact.name === 'string' ? fact.name.trim() : '';
+    if (direct) return direct;
+    const entryName = typeof fact.entryRef?.namn === 'string' ? fact.entryRef.namn.trim() : '';
+    if (entryName) return entryName;
+    return '';
+  }
+
+  function getCombatFactEntry(fact) {
+    if (!fact || typeof fact !== 'object') return null;
+    if (fact.entryRef && typeof fact.entryRef === 'object') return fact.entryRef;
+    const name = getCombatFactDisplayName(fact);
+    const types = toArray(fact.types ?? fact.typer).map(String).filter(Boolean);
+    if (!name && fact.id === undefined && !types.length) return null;
+    return {
+      id: fact.id,
+      namn: name,
+      taggar: { typ: types }
+    };
+  }
+
+  function buildCombatEquipmentFacts(weaponFacts, extra = {}) {
+    const armorFacts = [];
+    if (extra?.armorFact && typeof extra.armorFact === 'object') armorFacts.push(extra.armorFact);
+    if (Array.isArray(extra?.armorFacts)) armorFacts.push(...extra.armorFacts);
+    const equippedItemFacts = Array.isArray(extra?.equippedItemFacts) ? extra.equippedItemFacts : [];
+    return normalizeDefenseWeaponFacts([
+      ...(Array.isArray(weaponFacts) ? weaponFacts : []),
+      ...armorFacts,
+      ...equippedItemFacts
+    ]);
+  }
+
   function hasEntryByName(list, name) {
     const wanted = normalizeLevelName(name);
     if (!wanted) return false;
@@ -2154,8 +2188,9 @@
     );
   }
 
-  function buildDefenseContext(list, weaponFacts, extra = {}) {
+  function buildCombatContext(list, weaponFacts, extra = {}) {
     const normalizedFacts = normalizeDefenseWeaponFacts(weaponFacts);
+    const equippedFacts = buildCombatEquipmentFacts(normalizedFacts, extra);
     const antalVapen = Number.isFinite(Number(extra?.antalVapen))
       ? Number(extra.antalVapen)
       : normalizedFacts.filter(f => f.isWeapon).length;
@@ -2163,14 +2198,49 @@
       typer: toArray(f.types),
       kvaliteter: toArray(f.qualities)
     }));
+    const equippedNames = [
+      ...new Set([
+        ...equippedFacts.map(getCombatFactDisplayName).filter(Boolean),
+        ...toArray(extra?.utrustadeNamn).map(String).map(name => name.trim()).filter(Boolean)
+      ])
+    ];
+    const equippedTypes = [
+      ...new Set([
+        ...equippedFacts.flatMap(f => toArray(f.types).map(String).filter(Boolean)),
+        ...toArray(extra?.utrustadTyper).map(String).filter(Boolean)
+      ])
+    ];
+    const equippedQualities = [
+      ...new Set([
+        ...equippedFacts.flatMap(f => toArray(f.qualities).map(String).filter(Boolean)),
+        ...toArray(extra?.utrustadeKvaliteter).map(String).filter(Boolean)
+      ])
+    ];
+    let foremal = Object.prototype.hasOwnProperty.call(extra || {}, 'foremal')
+      ? extra.foremal
+      : undefined;
+    if (foremal === undefined && extra?.activeItemFact) {
+      const activeFact = normalizeDefenseWeaponFacts([extra.activeItemFact])[0] || null;
+      const targetEntry = getCombatFactEntry(activeFact);
+      foremal = targetEntry
+        ? buildItemRuleTargetContext(targetEntry, toArray(activeFact?.qualities), extra?.foremalContext || extra)
+        : undefined;
+    }
     return {
       ...extra,
       list: Array.isArray(list) ? list : [],
+      weaponFacts: normalizedFacts,
       vapenFakta,
       antalVapen,
-      utrustadTyper: toArray(extra?.utrustadTyper).map(String).filter(Boolean),
-      utrustadeKvaliteter: toArray(extra?.utrustadeKvaliteter).map(String).filter(Boolean)
+      foremal,
+      utrustadeNamn: equippedNames,
+      utrustadTyper: equippedTypes,
+      utrustadeKvaliteter: equippedQualities
     };
+  }
+
+  function buildDefenseContext(list, weaponFacts, extra = {}) {
+    return buildCombatContext(list, weaponFacts, extra);
   }
 
   function sumModifierByMal(entries, mal, context = {}) {
@@ -2192,6 +2262,32 @@
       });
       total += entryValue;
     });
+    return total;
+  }
+
+  function getCombatFactEntries(facts) {
+    return (Array.isArray(facts) ? facts : [])
+      .map(getCombatFactEntry)
+      .filter(entry => entry && typeof entry === 'object');
+  }
+
+  function getCombatFactQualityNames(facts) {
+    return [
+      ...new Set(
+        (Array.isArray(facts) ? facts : [])
+          .flatMap(f => toArray(f?.qualities).map(String).filter(Boolean))
+      )
+    ];
+  }
+
+  function getEquippedModifierByMal(list, mal, weaponFacts = [], context = {}) {
+    const facts = normalizeDefenseWeaponFacts(weaponFacts);
+    const equippedFacts = buildCombatEquipmentFacts(facts, context);
+    const ctx = buildCombatContext(list, facts, context || {});
+    let total = 0;
+    total += sumModifierByMal(Array.isArray(list) ? list : [], mal, ctx);
+    total += sumModifierByMal(getCombatFactEntries(equippedFacts), mal, ctx);
+    total += sumModifierByMal(lookupEntriesByNames(getCombatFactQualityNames(equippedFacts)), mal, ctx);
     return total;
   }
 
@@ -2278,6 +2374,19 @@
         }
       });
     });
+
+    const forbiddenWeaponTypes = getEquipmentConflictTypes(list);
+    if (forbiddenWeaponTypes.length) {
+      facts.forEach(f => {
+        const blockedTypes = (f.types || []).filter(t =>
+          forbiddenWeaponTypes.some(ft => normalizeCompareToken(ft) === normalizeCompareToken(t)));
+        if (blockedTypes.length) {
+          pushReason('forbidden_weapon_type_' + f.key,
+            'Kan inte utrusta vapen av typ ' + blockedTypes.join(', ') + '.');
+          violations.push({ code: 'forbidden_weapon_type', offenders: [f], forbiddenTypes: blockedTypes });
+        }
+      });
+    }
 
     return {
       valid: reasons.length === 0,
@@ -2395,7 +2504,9 @@
   //   vapenFakta,         — [{typer, kvaliteter}] → weapon nar keys
   //   antalVapen,         — number → antal_utrustade_vapen_minst
   //   foremal,            — { typ, kvalitet } → nar.foremal.typ/ingen_typ/nagon_kvalitet
-  //   utrustadTyper,      — string[] → har_utrustad_typ
+  //   utrustadeNamn,      — string[] → har_utrustat_namn / ej_utrustat_namn
+  //   utrustadTyper,      — string[] → har_utrustad_typ / ej_utrustad_typ
+  //   utrustadeKvaliteter,— string[] → har_utrustad_kvalitet / ej_utrustad_kvalitet
   //   row,                — inventory row → trait
   //   sourceEntry,        — inventory item DB entry → namn, typ
   //   computedValues,     — pre-computed values: { <mal>: value, ... } → mal_minst, har_mal, mal_saknas
@@ -2584,13 +2695,35 @@
       }
     }
 
-    // --- Armor type conditions (only when utrustadTyper is in context) ---
-    if (ctx.utrustadTyper !== undefined) {
-      const condTypes = toArray(nar.har_utrustad_typ).map(String).filter(Boolean);
-      if (condTypes.length) {
-        const contextTypes = toArray(ctx.utrustadTyper).map(String).filter(Boolean);
-        if (!condTypes.some(t => contextTypes.includes(t))) return false;
-      }
+    // --- Equipped item conditions (only when any equipped pool key is in context) ---
+    if (ctx.utrustadTyper !== undefined
+      || ctx.utrustadeKvaliteter !== undefined
+      || ctx.utrustadeNamn !== undefined) {
+      const contextNames = new Set(
+        toArray(ctx.utrustadeNamn)
+          .map(normalizeCompareToken)
+          .filter(Boolean)
+      );
+      const contextTypes = toArray(ctx.utrustadTyper).map(String).filter(Boolean);
+      const contextQualities = toArray(ctx.utrustadeKvaliteter).map(String).filter(Boolean);
+
+      const requiredNames = toArray(nar.har_utrustat_namn).map(normalizeCompareToken).filter(Boolean);
+      if (requiredNames.length && !requiredNames.some(name => contextNames.has(name))) return false;
+
+      const excludedNames = toArray(nar.ej_utrustat_namn).map(normalizeCompareToken).filter(Boolean);
+      if (excludedNames.length && excludedNames.some(name => contextNames.has(name))) return false;
+
+      const requiredTypes = toArray(nar.har_utrustad_typ).map(String).filter(Boolean);
+      if (requiredTypes.length && !hasNormalizedAny(contextTypes, requiredTypes)) return false;
+
+      const excludedTypes = toArray(nar.ej_utrustad_typ).map(String).filter(Boolean);
+      if (excludedTypes.length && hasNormalizedAny(contextTypes, excludedTypes)) return false;
+
+      const requiredQualities = toArray(nar.har_utrustad_kvalitet).map(String).filter(Boolean);
+      if (requiredQualities.length && !hasNormalizedAny(contextQualities, requiredQualities)) return false;
+
+      const excludedQualities = toArray(nar.ej_utrustad_kvalitet).map(String).filter(Boolean);
+      if (excludedQualities.length && hasNormalizedAny(contextQualities, excludedQualities)) return false;
     }
 
     // --- Weapon conditions (only when vapenFakta or antalVapen is in context) ---
@@ -2738,21 +2871,7 @@
   }
 
   function getEquippedDefenseModifier(list, weaponFacts = [], context = {}) {
-    const facts = normalizeDefenseWeaponFacts(weaponFacts);
-    const qualityNames = [...new Set(facts.flatMap(f => toArray(f.qualities).map(String).filter(Boolean)))];
-    const qualityEntries = lookupEntriesByNames(qualityNames);
-    const weaponEntries = facts.map(f => f.entryRef).filter(entry => entry && typeof entry === 'object');
-    const ctx = buildDefenseContext(list, facts, context);
-    let total = 0;
-    total += sumModifierByMal(Array.isArray(list) ? list : [], 'forsvar_modifierare', ctx);
-    total += sumModifierByMal(weaponEntries, 'forsvar_modifierare', ctx);
-    total += sumModifierByMal(qualityEntries, 'forsvar_modifierare', ctx);
-    // Include armor quality entries (e.g. Stenpansar: -4)
-    const armorQualityNames = toArray(context?.utrustadeKvaliteter).map(String).filter(Boolean);
-    if (armorQualityNames.length) {
-      total += sumModifierByMal(lookupEntriesByNames(armorQualityNames), 'forsvar_modifierare', ctx);
-    }
-    return total;
+    return getEquippedModifierByMal(list, 'forsvar_modifierare', weaponFacts, context);
   }
 
   // Returns weapon/ability-based defense bonus from the character trait list.
@@ -2766,6 +2885,10 @@
   // Returns weapon/ability-based attack bonus from the character trait list.
   function getWeaponAttackBonus(list, weaponContext) {
     return sumVapenBonusByMal(Array.isArray(list) ? list : [], 'traffsaker_modifierare_vapen', weaponContext);
+  }
+
+  function getEquippedAttackModifier(list, weaponFacts = [], context = {}) {
+    return getEquippedModifierByMal(list, 'traffsaker_modifierare', weaponFacts, context);
   }
 
   // Returns defense bonus from the weapon entries themselves (e.g. shield base +1).
@@ -2799,11 +2922,11 @@
     const targetMal = String(mal || '').trim();
     if (!targetMal) return 0;
     const entries = lookupEntriesByNames(qualityNames);
-    if (targetMal === 'forsvar_modifierare') {
+    if (targetMal === 'forsvar_modifierare' || targetMal === 'traffsaker_modifierare') {
       const facts = normalizeDefenseWeaponFacts(
         weaponContext?.weaponFacts || weaponContext?.vapenFakta || []
       );
-      const ctx = buildDefenseContext([], facts, weaponContext || {});
+      const ctx = buildCombatContext([], facts, weaponContext || {});
       return sumModifierByMal(entries, targetMal, ctx);
     }
     return sumVapenBonusByMal(entries, targetMal, weaponContext);
@@ -2818,7 +2941,7 @@
   // Returns attack bonus from equipped weapon qualities, resolved by name via lookupEntry.
   // qualityNames: string[] — unique quality names found on equipped weapons.
   function getEquippedQualityAttackBonus(qualityNames, weaponContext = {}) {
-    return getEquippedQualityVapenBonus(qualityNames, 'traffsaker_modifierare_vapen', weaponContext);
+    return getEquippedQualityVapenBonus(qualityNames, 'traffsaker_modifierare', weaponContext);
   }
 
   function evaluateRustningNar(nar, armorContext) {
@@ -2855,6 +2978,40 @@
   // Returns true if any entry in the list grants the Rustmästare-level reset of begransning_modifierare.
   function hasArmorRestrictionReset(list) {
     return getListRules(list, { key: 'andrar', mal: 'nollstall_begransning_modifierare' }).length > 0;
+  }
+
+  function getEquipmentConflictTypes(list) {
+    return getListRules(list, { key: 'krockar' })
+      .filter(r => Array.isArray(r.utrustning_typ))
+      .flatMap(r => r.utrustning_typ)
+      .map(String);
+  }
+
+  function getEquipmentQualityRequirements(list) {
+    return getListRules(list, { key: 'kraver' })
+      .filter(r => Array.isArray(r.utrustning_typ) && Array.isArray(r.utrustning_kvalitet))
+      .map(r => ({
+        types: r.utrustning_typ.map(String),
+        requiredQualities: r.utrustning_kvalitet.map(String),
+        sourceName: r.sourceName || ''
+      }));
+  }
+
+  function validateEquipment(list, itemTypes, itemQualities) {
+    const reasons = [];
+    const forbidden = getEquipmentConflictTypes(list);
+    const blocked = (itemTypes || []).filter(t =>
+      forbidden.some(f => normalizeCompareToken(f) === normalizeCompareToken(t)));
+    if (blocked.length) reasons.push('Kan inte utrusta: ' + blocked.join(', ') + '.');
+    getEquipmentQualityRequirements(list).forEach(req => {
+      const typeMatch = req.types.some(t =>
+        (itemTypes || []).some(it => normalizeCompareToken(it) === normalizeCompareToken(t)));
+      if (!typeMatch) return;
+      const qualMatch = req.requiredQualities.some(q =>
+        (itemQualities || []).some(iq => normalizeCompareToken(iq) === normalizeCompareToken(q)));
+      if (!qualMatch) reasons.push('Kräver kvalitet: ' + req.requiredQualities.join(' eller ') + ' (' + req.sourceName + ').');
+    });
+    return { valid: reasons.length === 0, reasons };
   }
 
   function toArray(value) {
@@ -2992,6 +3149,7 @@
   }
 
   function matchesConflictTargetCondition(rule, targetEntry, options = {}) {
+    if (Array.isArray(rule?.utrustning_typ)) return false;
     const names = toArray(rule?.namn)
       .map(name => normalizeLevelName(name))
       .filter(Boolean);
@@ -5196,6 +5354,12 @@
       : (Array.isArray(ctx?.vapenFakta) ? ctx.vapenFakta : []);
     return getDefenseModifier(list, facts, ctx || {});
   });
+  registerMal('traffsaker_modifierare', (list, ctx) => {
+    const facts = Array.isArray(ctx?.weaponFacts)
+      ? ctx.weaponFacts
+      : (Array.isArray(ctx?.vapenFakta) ? ctx.vapenFakta : []);
+    return getEquippedAttackModifier(list, facts, ctx || {});
+  });
   registerMal('traffsaker_modifierare_vapen', (list, ctx) => getWeaponAttackBonus(list, ctx));
   registerMal('karaktarsdrag_max_tillagg', (list, ctx) => sumAndrarByMal(list, 'karaktarsdrag_max_tillagg', 0, ctx));
   registerMal('begransning_modifierare', (list, ctx) => getArmorRestrictionBonus(ctx?.qualityNames || [], ctx));
@@ -5308,7 +5472,11 @@
     clearAllEntryErfOverrides,
     getMoneyGrant,
     validateDefenseLoadout,
+    validateEquipment,
+    getEquipmentConflictTypes,
+    getEquipmentQualityRequirements,
     normalizeDefenseLoadout,
+    buildCombatContext,
     getDefenseModifier,
     getEquippedDefenseModifier,
     getDefenseValueModifier,
@@ -5318,6 +5486,7 @@
     sumVapenBonus,
     getWeaponDefenseBonus,
     getWeaponAttackBonus,
+    getEquippedAttackModifier,
     getEquippedWeaponEntryDefenseBonus,
     getEquippedWeaponEntryAttackBonus,
     getEquippedQualityVapenBonus,

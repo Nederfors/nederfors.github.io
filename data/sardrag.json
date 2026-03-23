@@ -120,6 +120,12 @@
                   "varde": -2,
                   "satt": "ersatt"
                 }
+              ],
+              "kraver": [
+                {
+                  "utrustning_typ": ["Rustning"],
+                  "utrustning_kvalitet": ["Robustanpassad (Novis)", "Robustanpassad (Gesäll)", "Robustanpassad (Mästare)"]
+                }
               ]
             }
           },
@@ -131,6 +137,12 @@
                   "varde": -3,
                   "satt": "ersatt"
                 }
+              ],
+              "kraver": [
+                {
+                  "utrustning_typ": ["Rustning"],
+                  "utrustning_kvalitet": ["Robustanpassad (Gesäll)", "Robustanpassad (Mästare)"]
+                }
               ]
             }
           },
@@ -141,6 +153,12 @@
                   "mal": "forsvar_modifierare",
                   "varde": -4,
                   "satt": "ersatt"
+                }
+              ],
+              "kraver": [
+                {
+                  "utrustning_typ": ["Rustning"],
+                  "utrustning_kvalitet": ["Robustanpassad (Mästare)"]
                 }
               ]
             }

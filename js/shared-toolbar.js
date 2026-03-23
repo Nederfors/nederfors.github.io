@@ -929,9 +929,9 @@ class SharedToolbar extends HTMLElement {
                   </li>
                   <li>
                     <span class="toggle-desc">
-                      <span class="toggle-question">Beräkna försvar?</span>
+                      <span class="toggle-question">Utrustning & strid?</span>
                     </span>
-                    <button id="forceDefense" class="party-toggle icon-only" title="Öppna försvarsberäkning">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
+                    <button id="forceDefense" class="party-toggle icon-only" title="Öppna utrustning, försvar och anfall">${icon('forsvar') || '<span class="emoji-fallback">🏃</span>'}</button>
                   </li>
                   <li>
                     <span class="toggle-desc">
@@ -1446,25 +1446,26 @@ class SharedToolbar extends HTMLElement {
         </div>
       </div>
 
-      <!-- ---------- Popup Beräkna försvar ---------- -->
+      <!-- ---------- Popup Utrustning, försvar och anfall ---------- -->
       <div id="defenseCalcPopup" class="db-modal-overlay popup popup-bottom" aria-hidden="true">
         <div class="db-modal popup-inner defense-calc-ui">
           <header class="defense-calc-header">
             <div class="defense-calc-header-copy">
-              <div class="defense-calc-kicker">Stridsinställningar</div>
-              <h3>Beräkna försvar</h3>
-              <p class="defense-calc-intro">Välj vad som ska räknas in när försvar beräknas automatiskt för rollpersonen.</p>
+              <div class="defense-calc-kicker">Utrustningshanterare</div>
+              <h3>Utrustning, försvar och anfall</h3>
+              <p class="defense-calc-intro">Välj aktiv utrustning och vilka karaktärsdrag som ska användas när Försvar och Träffsäkerhet beräknas.</p>
             </div>
             <button id="defenseCalcCloseX" class="db-btn defense-calc-close" type="button" title="Stäng">✕</button>
           </header>
           <div class="defense-calc-hero">
             <div class="defense-calc-status-block">
-              <span class="defense-calc-status-label">Status</span>
-              <span id="defenseCalcStatus" class="defense-calc-status-value">Automatisk beräkning</span>
+              <span class="defense-calc-status-label">Läge</span>
+              <span id="defenseCalcStatus" class="defense-calc-status-value">Automatiskt läge</span>
             </div>
             <div class="defense-calc-meta">
-              <span id="defenseCalcBasisSummary" class="defense-calc-pill">Automatiskt drag</span>
+              <span id="defenseCalcBasisSummary" class="defense-calc-pill">Försvar: Automatiskt</span>
               <span id="defenseCalcWeaponSummary" class="defense-calc-pill">Inga vapen valda</span>
+              <span id="defenseCalcAccuracySummary" class="defense-calc-pill">Träffsäkerhet</span>
               <span id="defenseCalcDancingSummary" class="defense-calc-pill" hidden></span>
             </div>
           </div>
@@ -1473,14 +1474,18 @@ class SharedToolbar extends HTMLElement {
               <div class="defense-calc-card-head">
                 <div class="defense-calc-card-title-group">
                   <div class="defense-calc-step">1. Grund</div>
-                  <div class="defense-calc-heading">Grundval</div>
+                  <div class="defense-calc-heading">Karaktärsdrag och rustning</div>
                 </div>
-                <p class="defense-calc-card-note">Välj karaktärsdrag och rustning som ska användas som bas.</p>
+                <p class="defense-calc-card-note">Välj karaktärsdrag för försvar och anfall samt vilken rustning som ska vara aktiv.</p>
               </div>
               <div class="defense-calc-field-grid">
                 <div class="defense-calc-field">
-                  <label for="defenseCalcTrait">Karaktärsdrag</label>
+                  <label for="defenseCalcTrait">Försvar</label>
                   <select id="defenseCalcTrait"></select>
+                </div>
+                <div class="defense-calc-field">
+                  <label for="defenseCalcAttackTrait">Träffsäkerhet</label>
+                  <select id="defenseCalcAttackTrait"></select>
                 </div>
                 <div class="defense-calc-field">
                   <label for="defenseCalcArmor">Rustning</label>
@@ -1499,10 +1504,21 @@ class SharedToolbar extends HTMLElement {
               <p id="defenseCalcEmpty" class="defense-calc-empty" hidden></p>
               <div id="defenseCalcWeaponList" class="defense-item-list"></div>
             </section>
+            <section class="card defense-calc-card defense-calc-group">
+              <div class="defense-calc-card-head">
+                <div class="defense-calc-card-title-group">
+                  <div class="defense-calc-step">3. Utrustning</div>
+                  <div class="defense-calc-heading">Övriga utrustade föremål</div>
+                </div>
+                <p class="defense-calc-card-note">Välj plats för utrustning som ska räknas som aktiv och kunna påverka Försvar och Träffsäkerhet.</p>
+              </div>
+              <p id="defenseCalcExtraEmpty" class="defense-calc-empty" hidden></p>
+              <div id="defenseCalcExtraItems" class="defense-item-list defense-item-list-equipment"></div>
+            </section>
             <section id="defenseCalcDancingCard" class="card defense-calc-card defense-calc-card-dancing">
               <div class="defense-calc-card-head">
                 <div class="defense-calc-card-title-group">
-                  <div class="defense-calc-step">3. Specialfall</div>
+                  <div class="defense-calc-step">4. Specialfall</div>
                   <div class="defense-calc-heading">Alternativt försvar</div>
                 </div>
                 <p class="defense-calc-card-note">Visas när rollpersonen har separat försvarsform. Välj vapen om tillämpligt.</p>

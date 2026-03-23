@@ -2822,6 +2822,7 @@
     return {
       enabled: false,
       trait: '',
+      attackTrait: '',
       armor: null,
       weapons: [],
       dancingTrait: '',       // kept for backward compat (no longer used in logic)
@@ -2868,6 +2869,7 @@
     return {
       enabled: Boolean(base.enabled),
       trait: typeof base.trait === 'string' ? base.trait : '',
+      attackTrait: typeof base.attackTrait === 'string' ? base.attackTrait : '',
       armor: normalizeDefenseItem(base.armor),
       weapons,
       dancingTrait: typeof base.dancingTrait === 'string' ? base.dancingTrait : '',
@@ -4402,6 +4404,10 @@ function defaultTraits() {
         ? ''
         : String(row.snapshotSourceKey).trim();
       if (snapshotSourceKey) res.ssk = snapshotSourceKey;
+      const equippedSlot = row.equippedSlot === undefined || row.equippedSlot === null
+        ? ''
+        : String(row.equippedSlot).trim();
+      if (equippedSlot) res.es = equippedSlot;
       if (row.nivå) res.l = row.nivå;
       if (row.trait) res.t = row.trait;
       if (row.perk) res.pk = row.perk;
@@ -4539,6 +4545,10 @@ function defaultTraits() {
         const snapshotSourceKey = snapshotSourceKeyRaw === undefined || snapshotSourceKeyRaw === null
           ? ''
           : String(snapshotSourceKeyRaw).trim();
+        const equippedSlotRaw = row.equippedSlot ?? row.es ?? '';
+        const equippedSlot = equippedSlotRaw === undefined || equippedSlotRaw === null
+          ? ''
+          : String(equippedSlotRaw).trim();
         const expanded = {
           id: resolvedId,
           name: resolvedName,
@@ -4550,6 +4560,7 @@ function defaultTraits() {
           artifactEffect
         };
         if (snapshotSourceKey) expanded.snapshotSourceKey = snapshotSourceKey;
+        if (equippedSlot) expanded.equippedSlot = equippedSlot;
         if (manualQualityOverride.length) {
           expanded.manualQualityOverride = manualQualityOverride;
         }

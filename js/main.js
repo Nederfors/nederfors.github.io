@@ -1017,7 +1017,7 @@ async function pickJsonFilesFromDirectoryWithFallback() {
     { id: 'settings-art',     label: 'Artefaktmakare i partyt', sel: '#partyArtefacter', panel: 'filterPanel', emoji: '🏺', icon: 'artefakt', syn: ['artefaktmakare','artefaktare'] },
     { id: 'settings-union',   label: 'Utvidgad sökning',     sel: '#filterUnion',     panel: 'filterPanel', emoji: '🔭', icon: 'extend', syn: ['utvidga sökning','or-sökning','union','OR'] },
     { id: 'settings-expand',  label: 'Expandera vy',         sel: '#entryViewToggle', panel: 'filterPanel', emoji: '↕️', icon: 'expand', syn: ['expandera vy','vy','detaljer','expand'] },
-    { id: 'settings-defense', label: 'Beräkna försvar',      sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', icon: 'forsvar', syn: ['försvar','beräkna försvar','försvarskaraktärsdrag','tvinga försvar'] },
+    { id: 'settings-defense', label: 'Utrustning & strid',   sel: '#forceDefense',    panel: 'filterPanel', emoji: '🏃', icon: 'forsvar', syn: ['utrustning','utrustning och strid','försvar','anfall','träffsäkerhet'] },
     { id: 'settings-manual',  label: 'Manuella justeringar', sel: '#manualAdjustBtn', panel: 'filterPanel', emoji: '🧮', syn: ['manuell justering','korruption','erf','erfarenhet','xp'] },
     { id: 'settings-help',    label: 'Hjälp',                sel: '#infoToggle',      panel: 'filterPanel', emoji: 'ℹ️',
       syn: ['hjälp','info','information','behöver du hjälp','behover du hjalp'] },
@@ -4095,11 +4095,14 @@ function openDefenseCalcPopup() {
   if (!root) return;
   const pop = root.getElementById('defenseCalcPopup');
   const traitSel = root.getElementById('defenseCalcTrait');
+  const attackTraitSel = root.getElementById('defenseCalcAttackTrait');
   const armorSel = root.getElementById('defenseCalcArmor');
   const weaponList = root.getElementById('defenseCalcWeaponList');
+  const extraItemsEl = root.getElementById('defenseCalcExtraItems');
   const danceCard = root.getElementById('defenseCalcDancingCard');
   const separateSelectorsEl = root.getElementById('defenseCalcSeparateSelectors');
   const emptyMsg = root.getElementById('defenseCalcEmpty');
+  const extraEmptyMsg = root.getElementById('defenseCalcExtraEmpty');
   const applyBtn = root.getElementById('defenseCalcApply');
   const cancelBtn = root.getElementById('defenseCalcCancel');
   const closeBtn = root.getElementById('defenseCalcCloseX');
@@ -4107,9 +4110,10 @@ function openDefenseCalcPopup() {
   const statusEl = root.getElementById('defenseCalcStatus');
   const basisSummaryEl = root.getElementById('defenseCalcBasisSummary');
   const weaponSummaryEl = root.getElementById('defenseCalcWeaponSummary');
+  const accuracySummaryEl = root.getElementById('defenseCalcAccuracySummary');
   const dancingSummaryEl = root.getElementById('defenseCalcDancingSummary');
   const inner = pop?.querySelector('.popup-inner');
-  if (!pop || !traitSel || !armorSel || !weaponList || !applyBtn || !cancelBtn || !closeBtn || !resetBtn || !inner) return;
+  if (!pop || !traitSel || !attackTraitSel || !armorSel || !weaponList || !extraItemsEl || !applyBtn || !cancelBtn || !closeBtn || !resetBtn || !inner) return;
 
   const list = typeof storeHelper.getCurrentList === 'function'
     ? storeHelper.getCurrentList(store)
@@ -4142,6 +4146,30 @@ function openDefenseCalcPopup() {
     const opt = select?.options?.[select.selectedIndex];
     if (!opt) return emptyLabel;
     return opt.value === '' ? emptyLabel : String(opt.textContent || '').trim();
+  };
+  const formatSlotLabel = (value) => {
+    const text = String(value || '').trim().replace(/_/g, ' ');
+    if (!text) return 'Ej utrustad';
+    return text.charAt(0).toUpperCase() + text.slice(1);
+  };
+  const cloneInventory = (value) => {
+    try {
+      return JSON.parse(JSON.stringify(Array.isArray(value) ? value : []));
+    } catch {
+      return [];
+    }
+  };
+  const getRowByPathLocal = (inventory, path) => {
+    let arr = inventory;
+    let row = null;
+    const normalizedPath = Array.isArray(path) ? path : [];
+    for (let i = 0; i < normalizedPath.length; i += 1) {
+      const idx = Number(normalizedPath[i]);
+      row = Array.isArray(arr) ? arr[idx] : null;
+      if (!row) return { row: null, parentArr: null, idx: -1 };
+      if (i < normalizedPath.length - 1) arr = Array.isArray(row.contains) ? row.contains : [];
+    }
+    return { row, parentArr: arr, idx: normalizedPath.length ? normalizedPath[normalizedPath.length - 1] : -1 };
   };
   const isBalancedQuality = (q) => String(q || '').toLowerCase().startsWith('balanser');
   const isArmMountedShieldQuality = q => {
@@ -4193,9 +4221,17 @@ function openDefenseCalcPopup() {
     : null;
   const autoDefenseSetup = typeof window.getAutoDefenseSetup === 'function'
     ? window.getAutoDefenseSetup({ list, inv, traitValues })
-    : { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} };
-  const initialSetup = defenseSetup?.enabled ? defenseSetup : autoDefenseSetup;
+    : { enabled: false, trait: '', attackTrait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} };
+  const initialSetup = defenseSetup?.enabled
+    ? defenseSetup
+    : {
+        ...autoDefenseSetup,
+        enabled: false,
+        trait: '',
+        attackTrait: ''
+      };
   const selectedTrait = initialSetup?.trait || '';
+  const selectedAttackTrait = initialSetup?.attackTrait || '';
   const selectedArmorPath = Array.isArray(initialSetup?.armor?.path) ? initialSetup.armor.path.join('.') : '';
   const initialSeparateWeapons = initialSetup?.separateWeapons || {};
   let manualModeEnabled = Boolean(defenseSetup?.enabled);
@@ -4204,12 +4240,31 @@ function openDefenseCalcPopup() {
       .map(w => Array.isArray(w.path) ? w.path.join('.') : '')
       .filter(Boolean)
   );
+  const extraItemMeta = new Map();
+  const initialExtraSlotByPath = new Map();
+  const extraItemInfos = typeof window.getCombatExtraItemInfos === 'function'
+    ? (window.getCombatExtraItemInfos(inv) || [])
+    : [];
+  extraItemInfos.forEach(info => {
+    const pathStr = Array.isArray(info?.path) ? info.path.join('.') : '';
+    if (!pathStr) return;
+    extraItemMeta.set(pathStr, {
+      ...info,
+      path: Array.isArray(info.path) ? [...info.path] : []
+    });
+    initialExtraSlotByPath.set(pathStr, typeof info?.equippedSlot === 'string' ? info.equippedSlot.trim() : '');
+  });
+  const pendingExtraSlots = new Map(initialExtraSlotByPath);
 
   const KEYS = ['Diskret','Kvick','Listig','Stark','Träffsäker','Vaksam','Viljestark','Övertygande'];
   traitSel.innerHTML = ['<option value="">Automatiskt</option>']
     .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
     .join('');
   traitSel.value = selectedTrait;
+  attackTraitSel.innerHTML = ['<option value="">Automatiskt</option>']
+    .concat(KEYS.map(key => `<option value="${escapeAttrLocal(key)}">${escapeText(key)}</option>`))
+    .join('');
+  attackTraitSel.value = selectedAttackTrait;
 
   const armorMeta = new Map();
   const armorOptions = flat
@@ -4219,6 +4274,12 @@ function openDefenseCalcPopup() {
       const value = obj.path.join('.');
       const label = nameMap.get(obj.row) || entry.namn || obj.row.name || 'Rustning';
       armorMeta.set(value, { path: obj.path, id: obj.row.id, name: obj.row.name || entry.namn || '' });
+      const eqVal = typeof window.rulesHelper?.validateEquipment === 'function'
+        ? window.rulesHelper.validateEquipment(list, entry.taggar?.typ || [], getQualities(obj.row, entry))
+        : { valid: true, reasons: [] };
+      if (!eqVal.valid) {
+        return `<option value="${escapeAttrLocal(value)}" disabled title="${escapeAttrLocal(eqVal.reasons.join('\n'))}">${escapeText(label)} \u26D4</option>`;
+      }
       return `<option value="${escapeAttrLocal(value)}">${escapeText(label)}</option>`;
     })
     .filter(Boolean);
@@ -4257,7 +4318,25 @@ function openDefenseCalcPopup() {
     .filter(Boolean)
     .join('');
   weaponList.innerHTML = weaponHtml;
+  const extraItemHtml = extraItemInfos.map(info => {
+    const value = Array.isArray(info?.path) ? info.path.join('.') : '';
+    if (!value) return '';
+    const name = info.name || info.entry?.namn || info.row?.name || 'Utrustning';
+    const slotChips = (Array.isArray(info.equipSlots) ? info.equipSlots : [])
+      .map(slot => `<span class="defense-chip equipped-slot">${escapeText(formatSlotLabel(slot))}</span>`)
+      .join('');
+    const metaHtml = slotChips ? `<span class="defense-item-meta">${slotChips}</span>` : '';
+    const optionsHtml = ['<option value="">Ej utrustad</option>']
+      .concat((Array.isArray(info.equipSlots) ? info.equipSlots : []).map(slot => {
+        const selected = (pendingExtraSlots.get(value) || '') === slot ? ' selected' : '';
+        return `<option value="${escapeAttrLocal(slot)}"${selected}>${escapeText(formatSlotLabel(slot))}</option>`;
+      }))
+      .join('');
+    return `<div class="price-item defense-item defense-item-equipment" data-path="${escapeAttrLocal(value)}"><span class="defense-item-copy"><span class="defense-item-name">${escapeText(name)}</span>${metaHtml}</span><div class="defense-item-control"><select data-path="${escapeAttrLocal(value)}">${optionsHtml}</select></div></div>`;
+  }).filter(Boolean).join('');
+  extraItemsEl.innerHTML = extraItemHtml;
   const getWeaponCheckboxes = () => [...weaponList.querySelectorAll('input[type="checkbox"][data-path]')];
+  const getExtraSlotSelects = () => [...extraItemsEl.querySelectorAll('select[data-path]')];
   const sanitizeWeaponPathSelection = (paths) => {
     const unique = [];
     const seen = new Set();
@@ -4324,6 +4403,29 @@ function openDefenseCalcPopup() {
     });
     return selectedPaths;
   };
+  const syncExtraItemUi = () => {
+    getExtraSlotSelects().forEach(select => {
+      const pathStr = select.dataset.path || '';
+      const selectedSlot = String(pendingExtraSlots.get(pathStr) || '').trim();
+      if (select.value !== selectedSlot) select.value = selectedSlot;
+      const item = select.closest('.defense-item');
+      if (item) item.classList.toggle('is-selected', Boolean(selectedSlot));
+    });
+  };
+  const applyExtraSlotsToInventory = (targetInv) => {
+    extraItemMeta.forEach((meta, pathStr) => {
+      const { row } = getRowByPathLocal(targetInv, meta.path || []);
+      if (!row) return;
+      const selectedSlot = String(pendingExtraSlots.get(pathStr) || '').trim();
+      if (selectedSlot && (Array.isArray(meta.equipSlots) ? meta.equipSlots : []).includes(selectedSlot)) {
+        row.equippedSlot = selectedSlot;
+      } else {
+        delete row.equippedSlot;
+      }
+    });
+    return targetInv;
+  };
+  const buildPreviewInventory = () => applyExtraSlotsToInventory(cloneInventory(inv));
   const toStoredRef = meta => meta ? { path: meta.path, id: meta.id, name: meta.name } : null;
   const buildCurrentSetup = (preferredPath = '') => {
     const selectedPathsNext = syncWeaponSelectionUi(preferredPath);
@@ -4338,6 +4440,7 @@ function openDefenseCalcPopup() {
     return {
       enabled: manualModeEnabled,
       trait: traitSel.value || '',
+      attackTrait: attackTraitSel.value || '',
       armor: armorRef,
       weapons: selectedPathsNext
         .map(pathStr => toStoredRef(weaponMeta.get(pathStr) || null))
@@ -4370,6 +4473,7 @@ function openDefenseCalcPopup() {
         .filter(Boolean)
     );
     traitSel.value = setup?.trait || '';
+    attackTraitSel.value = setup?.attackTrait || '';
     armorSel.value = armorPath;
     getWeaponCheckboxes().forEach(ch => {
       ch.checked = weaponPathSet.has(ch.dataset.path || '');
@@ -4386,32 +4490,48 @@ function openDefenseCalcPopup() {
   };
   const updateSummaryUi = (preferredPath = '') => {
     const currentSetup = buildCurrentSetup(preferredPath);
+    const previewInv = buildPreviewInventory();
     const selectedPathsNext = currentSetup.weapons
       .map(item => Array.isArray(item.path) ? item.path.join('.') : '')
       .filter(Boolean);
-    const preview = typeof window.getDefensePreview === 'function'
+    const defensePreview = typeof window.getDefensePreview === 'function'
       ? window.getDefensePreview({
           list,
-          inv,
+          inv: previewInv,
           traitValues,
           setup: currentSetup
         })
       : null;
-    const standardValue = Number(preview?.standardValue);
+    const accuracyPreview = typeof window.getAccuracyPreview === 'function'
+      ? window.getAccuracyPreview({
+          list,
+          inv: previewInv,
+          traitValues,
+          setup: currentSetup
+        })
+      : null;
+    const standardValue = Number(defensePreview?.standardValue);
+    const accuracyValue = Number(accuracyPreview?.value);
     if (statusEl) {
-      const label = manualModeEnabled ? 'Manuell beräkning' : 'Automatisk beräkning';
-      statusEl.textContent = Number.isFinite(standardValue)
-        ? `${label} • Försvar ${standardValue}`
-        : label;
+      const label = manualModeEnabled ? 'Manuellt läge' : 'Automatiskt läge';
+      const parts = [label];
+      if (Number.isFinite(standardValue)) parts.push(`Försvar ${standardValue}`);
+      if (Number.isFinite(accuracyValue)) parts.push(`Träffsäkerhet ${accuracyValue}`);
+      statusEl.textContent = parts.join(' • ');
       statusEl.dataset.state = manualModeEnabled ? 'active' : 'inactive';
     }
     if (basisSummaryEl) {
-      basisSummaryEl.textContent = `${getSelectLabel(traitSel, 'Automatiskt drag')} • ${getSelectLabel(armorSel, 'Ingen rustning')}`;
+      basisSummaryEl.textContent = `Försvar: ${getSelectLabel(traitSel, 'Automatiskt')} • Anfall: ${getSelectLabel(attackTraitSel, 'Automatiskt')} • Rustning: ${getSelectLabel(armorSel, 'Ingen')}`;
     }
     if (weaponSummaryEl) {
       weaponSummaryEl.textContent = selectedPathsNext.length
         ? `${selectedPathsNext.length} ${selectedPathsNext.length === 1 ? 'vapen/sköld vald' : 'vapen/sköldar valda'}`
         : 'Inga vapen eller sköldar valda';
+    }
+    if (accuracySummaryEl) {
+      accuracySummaryEl.textContent = Number.isFinite(accuracyValue)
+        ? `Anfall • Träffsäkerhet ${accuracyValue}`
+        : 'Träffsäkerhet';
     }
     if (dancingSummaryEl) {
       if (!hasSeparateWithWeapons) {
@@ -4419,7 +4539,7 @@ function openDefenseCalcPopup() {
         dancingSummaryEl.textContent = '';
       } else {
         dancingSummaryEl.hidden = false;
-        const separateEntries = preview?.separateEntries || [];
+        const separateEntries = defensePreview?.separateEntries || [];
         const lines = separateEntries
           .filter(d => d.source === 'separate')
           .map(d => `${d.name || 'Alternativt försvar'} • Försvar ${d.value}`)
@@ -4427,24 +4547,6 @@ function openDefenseCalcPopup() {
         dancingSummaryEl.textContent = lines || 'Alternativt försvar';
       }
     }
-    // Write to store first so renderTraits/refreshSummaryPage read the updated setup.
-    if (typeof storeHelper.setDefenseSetup === 'function') {
-      storeHelper.setDefenseSetup(store, currentSetup);
-    }
-    // Re-render only the mounted traits/summary/effects panels from store.
-    syncCharacterPanels({
-      defaults: false,
-      syncSelect: false,
-      syncName: false,
-      syncChrome: false,
-      announceCurrent: false,
-      promptOutdated: false,
-      xp: false,
-      traits: true,
-      summary: true,
-      effects: true
-    });
-    syncDefenseButtons();
     return currentSetup;
   };
   getWeaponCheckboxes().forEach(ch => {
@@ -4452,6 +4554,24 @@ function openDefenseCalcPopup() {
       manualModeEnabled = true;
       updateSummaryUi(ch.dataset.path || '');
     });
+  });
+  const onExtraSlotChange = (e) => {
+    const pathStr = e.target?.dataset?.path || '';
+    if (!pathStr || !extraItemMeta.has(pathStr)) return;
+    const nextSlot = String(e.target.value || '').trim();
+    if (nextSlot) {
+      pendingExtraSlots.forEach((value, otherPath) => {
+        if (otherPath !== pathStr && String(value || '').trim() === nextSlot) {
+          pendingExtraSlots.set(otherPath, '');
+        }
+      });
+    }
+    pendingExtraSlots.set(pathStr, nextSlot);
+    syncExtraItemUi();
+    updateSummaryUi();
+  };
+  getExtraSlotSelects().forEach(select => {
+    select.addEventListener('change', onExtraSlotChange);
   });
   // Build per-rule checkbox lists for separate defense forms that allow weapon selection
   // separateWeaponCheckboxes: Map<sourceEntryId, { els: HTMLInputElement[], maxCount: number }>
@@ -4516,6 +4636,10 @@ function openDefenseCalcPopup() {
     manualModeEnabled = true;
     updateSummaryUi();
   };
+  const onAttackTraitChange = () => {
+    manualModeEnabled = true;
+    updateSummaryUi();
+  };
   const onArmorChange = () => {
     manualModeEnabled = true;
     updateSummaryUi();
@@ -4530,20 +4654,30 @@ function openDefenseCalcPopup() {
     els.forEach(ch => ch.addEventListener('change', onSeparateWeaponChange));
   });
   traitSel.addEventListener('change', onTraitChange);
+  attackTraitSel.addEventListener('change', onAttackTraitChange);
   armorSel.addEventListener('change', onArmorChange);
   applySetupToUi({
     trait: selectedTrait,
+    attackTrait: selectedAttackTrait,
     armor: selectedArmorPath ? { path: selectedArmorPath.split('.').map(Number).filter(Number.isInteger) } : null,
     weapons: [...selectedWeaponPaths].map(pathStr => ({ path: pathStr.split('.').map(Number).filter(Number.isInteger) })),
     dancingTrait: '',
     dancingWeapon: null
   });
+  syncExtraItemUi();
   updateSummaryUi();
   if (emptyMsg) {
     const hasWeapons = Boolean(weaponHtml);
     emptyMsg.hidden = hasWeapons;
     if (!hasWeapons) {
       emptyMsg.textContent = 'Inga vapen eller sköldar hittades i inventariet.';
+    }
+  }
+  if (extraEmptyMsg) {
+    const hasExtraItems = Boolean(extraItemHtml);
+    extraEmptyMsg.hidden = hasExtraItems;
+    if (!hasExtraItems) {
+      extraEmptyMsg.textContent = 'Ingen övrig utrustning med utrustningsplatser hittades i inventariet.';
     }
   }
 
@@ -4556,9 +4690,13 @@ function openDefenseCalcPopup() {
     resetBtn.removeEventListener('click', onReset);
     inner.removeEventListener('keydown', onKey);
     traitSel.removeEventListener('change', onTraitChange);
+    attackTraitSel.removeEventListener('change', onAttackTraitChange);
     armorSel.removeEventListener('change', onArmorChange);
     separateWeaponCheckboxes.forEach(({ els }) => {
       els.forEach(ch => ch.removeEventListener('change', onSeparateWeaponChange));
+    });
+    getExtraSlotSelects().forEach(select => {
+      select.removeEventListener('change', onExtraSlotChange);
     });
   };
 
@@ -4566,42 +4704,64 @@ function openDefenseCalcPopup() {
 
   const onApply = () => {
     const currentSetup = buildCurrentSetup();
-    if (!manualModeEnabled) {
-      if (typeof storeHelper.setDefenseSetup === 'function') {
-        storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
+    const extraSlotsChanged = [...extraItemMeta.keys()].some(pathStr => {
+      const initialValue = String(initialExtraSlotByPath.get(pathStr) || '').trim();
+      const pendingValue = String(pendingExtraSlots.get(pathStr) || '').trim();
+      return initialValue !== pendingValue;
+    });
+    if (extraSlotsChanged) {
+      const nextInv = applyExtraSlotsToInventory(cloneInventory(
+        typeof storeHelper.getInventory === 'function' ? (storeHelper.getInventory(store) || []) : inv
+      ));
+      if (typeof invUtil?.saveInventory === 'function') {
+        invUtil.saveInventory(nextInv, {
+          skipCharacterRefresh: true,
+          source: 'combat-extra-items'
+        });
+      } else if (typeof storeHelper.setInventory === 'function') {
+        storeHelper.setInventory(store, nextInv);
       }
-      if (typeof storeHelper.setDefenseTrait === 'function') {
-        storeHelper.setDefenseTrait(store, '');
-      }
-      refreshUI();
-      close('apply');
-      return;
     }
-    const nextSetup = {
-      enabled: true,
-      trait: currentSetup.trait || '',
-      armor: currentSetup.armor,
-      weapons: currentSetup.weapons,
-      dancingTrait: '',
-      dancingWeapon: null,
-      separateWeapons: currentSetup.separateWeapons || {}
-    };
     if (typeof storeHelper.setDefenseSetup === 'function') {
-      storeHelper.setDefenseSetup(store, nextSetup);
+      storeHelper.setDefenseSetup(store, manualModeEnabled
+        ? {
+            enabled: true,
+            trait: currentSetup.trait || '',
+            attackTrait: currentSetup.attackTrait || '',
+            armor: currentSetup.armor,
+            weapons: currentSetup.weapons,
+            dancingTrait: '',
+            dancingWeapon: null,
+            separateWeapons: currentSetup.separateWeapons || {}
+          }
+        : {
+            enabled: false,
+            trait: '',
+            attackTrait: '',
+            armor: null,
+            weapons: [],
+            dancingTrait: '',
+            dancingWeapon: null,
+            separateWeapons: {}
+          });
     }
     if (typeof storeHelper.setDefenseTrait === 'function') {
       storeHelper.setDefenseTrait(store, '');
     }
     refreshUI();
-    updateSummaryUi();
     close('apply');
   };
 
   const onReset = () => {
     manualModeEnabled = false;
-    applySetupToUi(autoDefenseSetup);
+    applySetupToUi({
+      ...autoDefenseSetup,
+      enabled: false,
+      trait: '',
+      attackTrait: ''
+    });
     if (typeof storeHelper.setDefenseSetup === 'function') {
-      storeHelper.setDefenseSetup(store, { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
+      storeHelper.setDefenseSetup(store, { enabled: false, trait: '', attackTrait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
     }
     if (typeof storeHelper.setDefenseTrait === 'function') {
       storeHelper.setDefenseTrait(store, '');
@@ -4611,11 +4771,6 @@ function openDefenseCalcPopup() {
   };
 
   const onCancel = () => {
-    // Restore the defense setup that was active before the popup opened.
-    if (typeof storeHelper.setDefenseSetup === 'function') {
-      storeHelper.setDefenseSetup(store, defenseSetup || { enabled: false, trait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null, separateWeapons: {} });
-    }
-    refreshUI();
     close('cancel');
   };
 
@@ -7210,7 +7365,7 @@ function manualAdjustmentSummaryText(manual) {
 
 function syncDefenseButtons() {
   const btn = dom.defBtn;
-  const baseTitle = 'Öppna försvarsberäkning';
+  const baseTitle = 'Öppna utrustning, försvar och anfall';
   if (!btn) return;
   if (!store || !store.current) {
     btn.classList.remove('active');

@@ -671,6 +671,7 @@ Grundprinciper:
 | `taggar.ark_trad` | Traditions-/arketypnamn (med alias-normalisering, t.ex. Häxa -> Häxkonst) | Regelmotor + UI | Används i traditionsträd, `nar.ark_trad`, krock/krav-targeting och filter. |
 | `taggar.test` | Test-taggar på entry och nivå | UI + hjälpfunktioner | Visas/filteras som testtaggar; kan kompletteras nivåspecifikt. |
 | `taggar.kvalitet` | Kvalitetsnamn på entry | UI + inventory + `nar.foremal` | Bas-kvaliteter för utrustning; används vid quality-logik och matchning mot `foremal.nagon_kvalitet`. |
+| `taggar.utrustning.platser` | Array av plats-id:n, t.ex. `["ring_vanster","ring_hoger"]` | Inventory + strids-popup + regelmotor | Markerar manuellt utrustningsbara föremål som kan ges en aktiv plats och därmed räknas in i `Försvar`/`Träffsäkerhet`. |
 
 Notering:
 - `test` läses både från `taggar.test` och `taggar.nivå_data.<Nivå>.test` (legacy: `niva_data`).
@@ -1238,8 +1239,13 @@ Specialfall:
 - `mal_saknas`
 - `har_mal`
 
-### 7.3 Rustning (`context.utrustadTyper`)
+### 7.3 Utrustade föremål (`context.utrustadeNamn` / `context.utrustadTyper` / `context.utrustadeKvaliteter`)
+- `har_utrustat_namn`
+- `ej_utrustat_namn`
 - `har_utrustad_typ`
+- `ej_utrustad_typ`
+- `har_utrustad_kvalitet`
+- `ej_utrustad_kvalitet`
 
 ### 7.4 Vapen (`context.vapenFakta`/`context.antalVapen`)
 - `antal_utrustade_vapen_minst`
@@ -1694,7 +1700,8 @@ Registrerade mål i `rules-helper`:
 - `barkapacitet_tillagg`
 - `barkapacitet_bas`
 - `forsvar_modifierare`
-- `traffsaker_modifierare_vapen`
+- `traffsaker_modifierare`
+- `traffsaker_modifierare_vapen` (legacy alias)
 - `karaktarsdrag_max_tillagg`
 - `begransning_modifierare`
 - `begransning_modifierare_fast`
@@ -1925,7 +1932,8 @@ Mål som förekommer i `data/*.json` idag:
 - `styggelsetroskel`
 - `talighet_bas`
 - `talighet_tillagg`
-- `traffsaker_modifierare_vapen`
+- `traffsaker_modifierare`
+- `traffsaker_modifierare_vapen` (legacy alias)
 
 ## 20. Authoring-checklista
 

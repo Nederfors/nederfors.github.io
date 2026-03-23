@@ -1406,7 +1406,14 @@
         "test": [
           "Stark"
         ],
-        "ark_trad": []
+        "ark_trad": [],
+        "regler": {
+          "krockar": [
+            {
+              "utrustning_typ": ["Tvåhandsvapen", "Tung Rustning"]
+            }
+          ]
+        }
       },
       "effekt": "Kan ej använda tvåhandsvapen & rustningar; -3 på Stark för att lyfta och bära saker."
     },

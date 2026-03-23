@@ -74,6 +74,14 @@
       : combined;
   }
 
+  function getCombatEquipSlots(entry) {
+    const raw = entry?.taggar?.utrustning?.platser;
+    const slots = Array.isArray(raw)
+      ? raw
+      : (raw === undefined || raw === null ? [] : [raw]);
+    return [...new Set(slots.map(value => String(value || '').trim()).filter(Boolean))];
+  }
+
   function getCurrentTraitValues(list = null, inv = null) {
     const currentList = Array.isArray(list) ? list : storeHelper.getCurrentList(store);
     const inventory = Array.isArray(inv) ? inv : storeHelper.getInventory(store);
@@ -185,6 +193,39 @@
     }).filter(Boolean);
   }
 
+  function buildCombatExtraItemInfos(inv) {
+    const flat = flattenInventoryWithPath(inv);
+    const nameMap = invUtil.makeNameMap(flat.map(f => f.row));
+    return flat.map(obj => {
+      const entry = invUtil.getEntry(obj.row.id || obj.row.name);
+      const types = entry?.taggar?.typ || [];
+      const equipSlots = getCombatEquipSlots(entry);
+      if (!entry || !equipSlots.length) return null;
+      if (types.includes('Rustning') || types.includes('Sköld') || hasWeaponType(types)) return null;
+      return {
+        ...obj,
+        entry,
+        name: nameMap.get(obj.row) || obj.row?.name || entry?.namn || 'Utrustning',
+        types,
+        qualities: getAllQualities(obj.row, entry),
+        equipSlots,
+        equippedSlot: typeof obj.row?.equippedSlot === 'string' ? obj.row.equippedSlot.trim() : ''
+      };
+    }).filter(Boolean);
+  }
+
+  function getEquippedCombatExtraItemInfos(inv) {
+    const usedSlots = new Set();
+    return buildCombatExtraItemInfos(inv).filter(info => {
+      const slot = typeof info?.equippedSlot === 'string' ? info.equippedSlot.trim() : '';
+      if (!slot) return false;
+      if (!(Array.isArray(info?.equipSlots) ? info.equipSlots : []).includes(slot)) return false;
+      if (usedSlots.has(slot)) return false;
+      usedSlots.add(slot);
+      return true;
+    });
+  }
+
   function buildWeaponInfos(inv) {
     const flat = flattenInventoryWithPath(inv);
     const nameMap = invUtil.makeNameMap(flat.map(f => f.row));
@@ -220,16 +261,20 @@
     }, Number.NEGATIVE_INFINITY);
   }
 
-  function toWeaponFact(info) {
+  function toCombatFact(info) {
     if (!info) return null;
     return {
       path: Array.isArray(info.path) ? [...info.path] : [],
-      id: info.row?.id,
+      id: info.row?.id ?? info.id,
       name: info.row?.name || info.entry?.namn || info.name || '',
       entryRef: info.entry || null,
       types: Array.isArray(info.types) ? [...info.types] : [],
       qualities: Array.isArray(info.qualities) ? [...info.qualities] : []
     };
+  }
+
+  function toWeaponFact(info) {
+    return toCombatFact(info);
   }
 
   function toArmorContext(armorInfo) {
@@ -238,8 +283,59 @@
       ? armorInfo.qualities
       : getAllQualities(armorInfo.row, armorInfo.entry);
     return {
+      armorFact: toCombatFact({ ...armorInfo, qualities }),
       utrustadTyper: Array.isArray(armorInfo.types) ? armorInfo.types : (armorInfo.entry.taggar?.typ || []),
       utrustadeKvaliteter: qualities
+    };
+  }
+
+  function buildCombatContextSnapshot(list, inv, weaponInfos, armorInfo = null) {
+    const selectedWeapons = normalizeSelectedWeapons(list, weaponInfos);
+    const weaponFacts = selectedWeapons.map(info => toCombatFact(info)).filter(Boolean);
+    const armorContext = toArmorContext(armorInfo);
+    const extraItemInfos = getEquippedCombatExtraItemInfos(inv);
+    const equippedItemFacts = extraItemInfos.map(info => toCombatFact(info)).filter(Boolean);
+    return {
+      selectedWeapons,
+      weaponFacts,
+      armorContext,
+      extraItemInfos,
+      equippedItemFacts
+    };
+  }
+
+  function buildCombatRuleContext(list, snapshot, activeItemInfo = null) {
+    const activeFact = activeItemInfo ? toCombatFact(activeItemInfo) : null;
+    const activeTypes = Array.isArray(activeFact?.types) ? activeFact.types : [];
+    const ranged = activeFact ? isRangedWeapon(activeTypes) : false;
+    const extra = {
+      armorFact: snapshot?.armorContext?.armorFact || null,
+      utrustadTyper: Array.isArray(snapshot?.armorContext?.utrustadTyper) ? snapshot.armorContext.utrustadTyper : [],
+      utrustadeKvaliteter: Array.isArray(snapshot?.armorContext?.utrustadeKvaliteter) ? snapshot.armorContext.utrustadeKvaliteter : [],
+      equippedItemFacts: Array.isArray(snapshot?.equippedItemFacts) ? snapshot.equippedItemFacts : [],
+      activeItemFact: activeFact,
+      avstand: Boolean(activeFact && ranged),
+      narstrid: Boolean(activeFact && !ranged)
+    };
+    if (typeof window.rulesHelper?.buildCombatContext === 'function') {
+      return window.rulesHelper.buildCombatContext(list, snapshot?.weaponFacts || [], extra);
+    }
+    const weaponFacts = Array.isArray(snapshot?.weaponFacts) ? snapshot.weaponFacts : [];
+    return {
+      ...extra,
+      list: Array.isArray(list) ? list : [],
+      weaponFacts,
+      vapenFakta: weaponFacts.map(f => ({
+        typer: Array.isArray(f?.types) ? f.types : [],
+        kvaliteter: Array.isArray(f?.qualities) ? f.qualities : []
+      })),
+      antalVapen: weaponFacts.filter(f => hasWeaponType(f?.types || [])).length,
+      foremal: activeFact
+        ? {
+            typ: Array.isArray(activeFact.types) ? activeFact.types : [],
+            kvalitet: Array.isArray(activeFact.qualities) ? activeFact.qualities : []
+          }
+        : undefined
     };
   }
 
@@ -279,29 +375,34 @@
     return limit;
   }
 
-  function getDefenseModifierForSetup(list, weaponInfos, armorInfo = null) {
-    const selectedWeapons = normalizeSelectedWeapons(list, weaponInfos);
-    const weaponFacts = selectedWeapons.map(info => toWeaponFact(info)).filter(Boolean);
-    const armorContext = toArmorContext(armorInfo);
+  function getDefenseModifierForSetup(list, weaponInfos, armorInfo = null, inv = null) {
+    const snapshot = buildCombatContextSnapshot(list, inv, weaponInfos, armorInfo);
     if (typeof window.rulesHelper?.getEquippedDefenseModifier === 'function') {
-      return window.rulesHelper.getEquippedDefenseModifier(list, weaponFacts, armorContext) || 0;
+      return window.rulesHelper.getEquippedDefenseModifier(
+        list,
+        snapshot.weaponFacts,
+        buildCombatRuleContext(list, snapshot)
+      ) || 0;
     }
     return window.rulesHelper?.getDefenseValueModifier?.(list) || 0;
   }
 
-  function computeDancingDefenseEntries(baseTraitVal, list, _inv, weaponItems) {
+  function computeDancingDefenseEntries(baseTraitVal, list, inv, weaponItems) {
     const selected = normalizeSelectedWeapons(list, (Array.isArray(weaponItems) ? weaponItems : []).slice(0, 1));
-    const modifier = getDefenseModifierForSetup(list, selected, null);
+    const modifier = getDefenseModifierForSetup(list, selected, null, inv);
     const value = Math.max(1, Number(baseTraitVal || 0) + Number(modifier || 0));
     return [{ name: selected[0]?.name || '', value, source: 'dancing' }];
   }
 
   // weaponsBySourceId: { [sourceEntryId]: weaponInfo[] } — per-rule weapon selection.
   // Falls back to empty (fully isolated) for rules with no entry in the map.
-  function computeSeparateDefenseEntries(stdTraitName, list, traitValues, weaponsBySourceId) {
+  function computeSeparateDefenseEntries(stdTraitName, list, traitValues, weaponsBySourceId, inv = null) {
     const rules = window.rulesHelper?.getSeparateDefenseTraitRules?.(list) || [];
     if (!rules.length) return [];
     const byId = weaponsBySourceId && typeof weaponsBySourceId === 'object' ? weaponsBySourceId : {};
+    const equippedItemFacts = getEquippedCombatExtraItemInfos(inv)
+      .map(info => toCombatFact(info))
+      .filter(Boolean);
     return rules.map(rule => {
       const trait = String(rule.varde || stdTraitName || 'Kvick');
       const baseVal = Number(traitValues?.[trait] || 0);
@@ -309,7 +410,12 @@
       const ruleWeapons = Array.isArray(byId[rule.sourceEntryId]) ? byId[rule.sourceEntryId] : [];
       const weaponFacts = ruleWeapons.map(info => toWeaponFact(info)).filter(Boolean);
       const bonus = typeof window.rulesHelper?.getSelectiveDefenseModifier === 'function'
-        ? window.rulesHelper.getSelectiveDefenseModifier(list, weaponFacts, { utrustadTyper: [], utrustadeKvaliteter: [] }, rule.tillat)
+        ? window.rulesHelper.getSelectiveDefenseModifier(
+            list,
+            weaponFacts,
+            { utrustadTyper: [], utrustadeKvaliteter: [], equippedItemFacts },
+            rule.tillat
+          )
         : 0;
       return {
         name: String(rule.sourceEntryName || ''),
@@ -325,7 +431,7 @@
     const armorInfos = (Array.isArray(armorItems) && armorItems.length) ? armorItems : [null];
     let res = armorInfos.map(armorInfo => {
       const limit = getArmorRestrictionValue(list, armorInfo);
-      const modifier = getDefenseModifierForSetup(list, selectedWeapons, armorInfo);
+      const modifier = getDefenseModifierForSetup(list, selectedWeapons, armorInfo, _inv);
       return {
         name: armorInfo?.name || '',
         value: Math.max(1, Number(baseTraitVal || 0) + Number(limit || 0) + Number(modifier || 0))
@@ -400,17 +506,10 @@
     let bestWithoutArmor = null;
 
     armorInfos.forEach(armorInfo => {
-      const armorContext = toArmorContext(armorInfo);
       weaponSelections.forEach(selection => {
-        const selected = normalizeSelectedWeapons(list, selection);
-        const weaponFacts = selected.map(info => toWeaponFact(info)).filter(Boolean);
-        const defenseContext = {
-          list,
-          vapenFakta: weaponFacts.map(f => ({ typer: f.types, kvaliteter: f.qualities })),
-          antalVapen: weaponFacts.filter(f => hasWeaponType(f.types || [])).length,
-          utrustadTyper: armorContext.utrustadTyper,
-          utrustadeKvaliteter: armorContext.utrustadeKvaliteter
-        };
+        const snapshot = buildCombatContextSnapshot(list, inv, selection, armorInfo);
+        const selected = snapshot.selectedWeapons;
+        const defenseContext = buildCombatRuleContext(list, snapshot);
         const trait = pickBestDefenseTrait(getAutomaticDefenseTraitCandidates(list, defenseContext), traitValues);
         const traitValue = Number(traitValues?.[trait] || 0);
         const entries = computeStandardDefenseEntries(traitValue, list, inv, armorInfo ? [armorInfo] : [], selected);
@@ -448,13 +547,9 @@
     let best = null;
 
     candidates.forEach(weaponInfo => {
-      const selected = normalizeSelectedWeapons(list, weaponInfo ? [weaponInfo] : []);
-      const weaponFacts = selected.map(info => toWeaponFact(info)).filter(Boolean);
-      const context = {
-        list,
-        vapenFakta: weaponFacts.map(f => ({ typer: f.types, kvaliteter: f.qualities })),
-        antalVapen: weaponFacts.filter(f => hasWeaponType(f.types || [])).length
-      };
+      const snapshot = buildCombatContextSnapshot(list, inv, weaponInfo ? [weaponInfo] : [], null);
+      const selected = snapshot.selectedWeapons;
+      const context = buildCombatRuleContext(list, snapshot);
       const dancingTraits = getAutomaticDancingDefenseTraitCandidates(list, context);
       if (!dancingTraits.length) return;
       const trait = pickBestTrait(dancingTraits, traitValues, dancingTraits[0]);
@@ -497,6 +592,9 @@
     if (!rules.length) return {};
     const allWeaponInfos = buildWeaponInfos(inv);
     const result = {};
+    const equippedItemFacts = getEquippedCombatExtraItemInfos(inv)
+      .map(info => toCombatFact(info))
+      .filter(Boolean);
     rules.forEach(rule => {
       const tl = rule.tillat || {};
       const maxWeapons = Math.max(1, Number(tl.antal_vapen || 1));
@@ -507,7 +605,12 @@
       let best = { weaponRefs: [], value: Math.max(1, baseVal + mod) };
       generateWeaponCombinationsForRule(candidates, maxWeapons).forEach(combo => {
         const facts = combo.map(info => toWeaponFact(info)).filter(Boolean);
-        const bonus = window.rulesHelper?.getSelectiveDefenseModifier?.(list, facts, { utrustadTyper: [], utrustadeKvaliteter: [] }, rule.tillat) || 0;
+        const bonus = window.rulesHelper?.getSelectiveDefenseModifier?.(
+          list,
+          facts,
+          { utrustadTyper: [], utrustadeKvaliteter: [], equippedItemFacts },
+          rule.tillat
+        ) || 0;
         const value = Math.max(1, baseVal + mod + bonus);
         if (value > best.value) best = { weaponRefs: combo.map(toDefenseRef).filter(Boolean), value };
       });
@@ -526,6 +629,7 @@
     return {
       enabled: false,
       trait: standardBest?.trait || '',
+      attackTrait: '',
       armor: standardBest?.armor || null,
       weapons: standardBest?.weapons || [],
       dancingTrait: dancingBest?.dancingTrait || '',
@@ -558,7 +662,7 @@
       ? (opts.setupOverride || null)
       : (typeof storeHelper.getDefenseSetup === 'function'
           ? storeHelper.getDefenseSetup(store)
-          : { enabled: false, armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
+          : { enabled: false, trait: '', attackTrait: '', armor: null, weapons: [], dancingTrait: '', dancingWeapon: null });
     if (setup?.enabled) {
       const armor = resolveFromRef(setup.armor, armorByPath, armorInfos);
       const selectedWeapons = mode === 'dancing'
@@ -623,7 +727,7 @@
       }).filter(Boolean);
       if (infos.length) weaponsBySourceId[id] = infos;
     });
-    return computeSeparateDefenseEntries(stdTraitName, list, traitValues, weaponsBySourceId);
+    return computeSeparateDefenseEntries(stdTraitName, list, traitValues, weaponsBySourceId, inv);
   }
 
   function getDefenseTraitName(list, traitValues = null, opts = {}) {
@@ -716,11 +820,11 @@
     return list.some(type => isRangedWeaponType(type));
   }
 
-  function getAttackTraitNameForWeapon(list, weaponInfo, traitValues) {
+  function getAttackTraitNameForWeapon(list, weaponInfo, traitValues, context = null) {
     const types = Array.isArray(weaponInfo?.types) ? weaponInfo.types : [];
     const qualities = Array.isArray(weaponInfo?.qualities) ? weaponInfo.qualities : [];
     const ranged = isRangedWeapon(types);
-    const context = {
+    const fallbackContext = {
       avstand: ranged,
       narstrid: !ranged,
       foremal: {
@@ -728,7 +832,7 @@
         kvalitet: qualities
       }
     };
-    const candidates = getAutomaticAttackTraitCandidates(list, context);
+    const candidates = getAutomaticAttackTraitCandidates(list, context || fallbackContext);
     return pickBestTrait(candidates, traitValues, 'Tr\u00e4ffs\u00e4ker');
   }
 
@@ -736,37 +840,55 @@
     const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
     const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
     const traitValues = opts.traitValues || getCurrentTraitValues(list, inv);
-    const weapons = buildAttackWeaponInfos(inv);
-    if (!weapons.length) {
-      const baseValue = Number(traitValues?.['Tr\u00e4ffs\u00e4ker'] || 0);
+    const setup = Object.prototype.hasOwnProperty.call(opts, 'setupOverride')
+      ? (opts.setupOverride || null)
+      : (typeof storeHelper.getDefenseSetup === 'function' ? storeHelper.getDefenseSetup(store) : null);
+    const attackTraitOverride = setup?.enabled && typeof setup?.attackTrait === 'string'
+      ? setup.attackTrait.trim()
+      : '';
+    const resolveOpts = { list, traitValues };
+    if ('setupOverride' in opts) {
+      resolveOpts.setupOverride = opts.setupOverride;
+    }
+    const selection = resolveDefenseSelection(inv, 'standard', resolveOpts);
+    const sharedLoadout = Array.isArray(selection?.weapons) ? selection.weapons : [];
+    const attackWeapons = sharedLoadout.filter(info => hasWeaponType(info?.types || []));
+    if (!attackWeapons.length) {
+      const fallbackTrait = attackTraitOverride || 'Tr\u00e4ffs\u00e4ker';
+      const baseValue = Number(traitValues?.[fallbackTrait] || 0);
       return [{
         name: '',
         value: Math.max(1, baseValue),
-        trait: 'Tr\u00e4ffs\u00e4ker',
+        trait: fallbackTrait,
         source: 'base'
       }];
     }
 
-    return weapons.map(info => {
+    const snapshot = buildCombatContextSnapshot(list, inv, sharedLoadout, selection?.armor || null);
+    return attackWeapons.map(info => {
       const types = Array.isArray(info.types) ? info.types : [];
-      const qualities = Array.isArray(info.qualities) ? info.qualities : [];
       const ranged = isRangedWeapon(types);
-      const weaponContext = {
-        vapenFakta: [{ typer: types, kvaliteter: qualities }],
-        antalVapen: 1
+      const fact = toCombatFact(info);
+      const attackContext = buildCombatRuleContext(list, snapshot, info);
+      const legacyWeaponContext = {
+        ...attackContext,
+        weaponFacts: snapshot.weaponFacts
       };
-      const trait = getAttackTraitNameForWeapon(list, info, traitValues);
+      const trait = attackTraitOverride || getAttackTraitNameForWeapon(list, info, traitValues, attackContext);
       const traitValue = Number(traitValues?.[trait] || 0);
-      const entryBonus = window.rulesHelper?.getEquippedWeaponEntryAttackBonus?.([{
-        entryRef: info.entry,
-        types,
-        qualities
-      }]) || 0;
-      const abilityBonus = window.rulesHelper?.getWeaponAttackBonus?.(list, weaponContext) || 0;
-      const qualityBonus = window.rulesHelper?.getEquippedQualityAttackBonus?.(qualities, weaponContext) || 0;
+      const generalBonus = window.rulesHelper?.getEquippedAttackModifier?.(
+        list,
+        snapshot.weaponFacts,
+        attackContext
+      ) || 0;
+      const entryBonus = fact
+        ? (window.rulesHelper?.getEquippedWeaponEntryAttackBonus?.([fact]) || 0)
+        : 0;
+      const abilityBonus = window.rulesHelper?.getWeaponAttackBonus?.(list, legacyWeaponContext) || 0;
+      const qualityBonus = window.rulesHelper?.getEquippedQualityAttackBonus?.(fact?.qualities || [], legacyWeaponContext) || 0;
       return {
         name: info.name || '',
-        value: Math.max(1, traitValue + entryBonus + abilityBonus + qualityBonus),
+        value: Math.max(1, traitValue + generalBonus + entryBonus + abilityBonus + qualityBonus),
         trait,
         source: ranged ? 'ranged' : 'melee'
       };
@@ -777,7 +899,10 @@
     const list = Array.isArray(opts.list) ? opts.list : storeHelper.getCurrentList(store);
     const inv = Array.isArray(opts.inv) ? opts.inv : storeHelper.getInventory(store);
     const traitValues = opts.traitValues || getCurrentTraitValues(list, inv);
-    const entries = calcAccuracy({ list, inv, traitValues });
+    const setup = Object.prototype.hasOwnProperty.call(opts, 'setup')
+      ? (opts.setup || null)
+      : (typeof storeHelper.getDefenseSetup === 'function' ? storeHelper.getDefenseSetup(store) : null);
+    const entries = calcAccuracy({ list, inv, traitValues, setupOverride: setup });
     return {
       entries,
       value: getHighestDefenseValue(entries)
@@ -1058,6 +1183,7 @@
   window.getAutoDefenseSetup = getAutoDefenseSetup;
   window.getDefensePreview = getDefensePreview;
   window.getAccuracyPreview = getAccuracyPreview;
+  window.getCombatExtraItemInfos = buildCombatExtraItemInfos;
   window.getDefenseTraitName = getDefenseTraitName;
   window.getDancingDefenseTraitName = getDancingDefenseTraitName;
   window.getAttackTraitRuleNotes = getAttackTraitRuleNotes;

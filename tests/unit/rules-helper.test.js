@@ -26,7 +26,7 @@ function createLocalStorage(seed = {}) {
   };
 }
 
-function createSandbox(storageSeed = {}) {
+function createSandbox(storageSeed = {}, overrides = {}) {
   const localStorage = createLocalStorage(storageSeed);
   const sandbox = {
     JSON,
@@ -69,13 +69,14 @@ function createSandbox(storageSeed = {}) {
       return { daler, skilling, 'örtegar': ortegar, d: daler, s: skilling, o: ortegar };
     }
   };
+  Object.assign(sandbox, overrides || {});
   sandbox.window = sandbox;
   sandbox.globalThis = sandbox;
   return sandbox;
 }
 
-function loadRulesHelper() {
-  const sandbox = createSandbox();
+function loadRulesHelper(overrides = {}) {
+  const sandbox = createSandbox({}, overrides);
   vm.runInNewContext(rulesHelperSource, sandbox, { filename: rulesHelperPath });
   return sandbox.window.rulesHelper;
 }
@@ -142,6 +143,42 @@ describe('rules-helper unit coverage', () => {
 
     expect(
       rulesHelper.evaluateNar(
+        {
+          har_utrustat_namn: ['Solring'],
+          har_utrustad_typ: ['Amulett'],
+          har_utrustad_kvalitet: ['Välsignad']
+        },
+        {
+          utrustadeNamn: ['Solring'],
+          utrustadTyper: ['Amulett'],
+          utrustadeKvaliteter: ['Välsignad']
+        }
+      )
+    ).toBe(true);
+
+    expect(
+      rulesHelper.evaluateNar(
+        { ej_utrustat_namn: ['Solring'] },
+        { utrustadeNamn: ['Solring'] }
+      )
+    ).toBe(false);
+
+    expect(
+      rulesHelper.evaluateNar(
+        { ej_utrustad_typ: ['Amulett'] },
+        { utrustadTyper: ['Amulett'] }
+      )
+    ).toBe(false);
+
+    expect(
+      rulesHelper.evaluateNar(
+        { ej_utrustad_kvalitet: ['Välsignad'] },
+        { utrustadeKvaliteter: ['Välsignad'] }
+      )
+    ).toBe(false);
+
+    expect(
+      rulesHelper.evaluateNar(
         { inte: { har_namn: ['Robust'] } },
         { list: [{ namn: 'Robust' }] }
       )
@@ -168,5 +205,174 @@ describe('rules-helper unit coverage', () => {
         { nivå: 'Mästare' }
       )
     ).toBe(8);
+  });
+
+  it('keeps legacy traffsaker_modifierare_vapen behavior for weapon-scoped rules', () => {
+    const rulesHelper = loadRulesHelper();
+    const list = [{
+      namn: 'Tränad skytt',
+      taggar: {
+        regler: {
+          andrar: [
+            {
+              mal: 'traffsaker_modifierare_vapen',
+              varde: 2,
+              nar: {
+                har_utrustad_vapen_typ: ['Avståndsvapen'],
+                har_utrustad_vapen_kvalitet: ['Precist']
+              }
+            }
+          ]
+        }
+      }
+    }];
+
+    expect(rulesHelper.queryMal(list, 'traffsaker_modifierare_vapen', {
+      vapenFakta: [{ typer: ['Avståndsvapen'], kvaliteter: ['Precist'] }],
+      antalVapen: 1
+    })).toBe(2);
+  });
+
+  it('supports traffsaker_modifierare with active-item context and equipped pools', () => {
+    const rulesHelper = loadRulesHelper({
+      lookupEntry({ name }) {
+        if (name === 'Välsignad') {
+          return {
+            namn: 'Välsignad',
+            taggar: {
+              regler: {
+                andrar: [
+                  {
+                    mal: 'traffsaker_modifierare',
+                    varde: 1,
+                    nar: { har_utrustat_namn: ['Solring'] }
+                  }
+                ]
+              }
+            }
+          };
+        }
+        return null;
+      }
+    });
+    const list = [{
+      namn: 'Skjutexpert',
+      taggar: {
+        regler: {
+          andrar: [
+            {
+              mal: 'traffsaker_modifierare',
+              varde: 2,
+              nar: {
+                avstand: true,
+                'foremal.typ': ['Avståndsvapen']
+              }
+            },
+            {
+              mal: 'traffsaker_modifierare',
+              varde: 3,
+              nar: { har_utrustad_vapen_kvalitet: ['Precist'] }
+            },
+            {
+              mal: 'traffsaker_modifierare',
+              varde: 4,
+              nar: { har_utrustad_typ: ['Amulett'] }
+            },
+            {
+              mal: 'traffsaker_modifierare',
+              varde: 5,
+              nar: { har_utrustat_namn: ['Solring'] }
+            },
+            {
+              mal: 'traffsaker_modifierare',
+              varde: 6,
+              nar: { har_utrustad_kvalitet: ['Välsignad'] }
+            }
+          ]
+        }
+      }
+    }];
+    const weaponFact = {
+      entryRef: { namn: 'Långbåge', taggar: { typ: ['Avståndsvapen'] } },
+      types: ['Avståndsvapen'],
+      qualities: ['Precist']
+    };
+    const extraItemFact = {
+      entryRef: { namn: 'Solring', taggar: { typ: ['Amulett'] } },
+      types: ['Amulett'],
+      qualities: ['Välsignad']
+    };
+
+    expect(rulesHelper.getEquippedAttackModifier(list, [weaponFact], {
+      activeItemFact: weaponFact,
+      equippedItemFacts: [extraItemFact]
+    })).toBe(21);
+  });
+
+  it('supports forsvar_modifierare from equipped extra items', () => {
+    const rulesHelper = loadRulesHelper({
+      lookupEntry({ name }) {
+        if (name === 'Välsignad') {
+          return {
+            namn: 'Välsignad',
+            taggar: {
+              regler: {
+                andrar: [
+                  {
+                    mal: 'forsvar_modifierare',
+                    varde: 1,
+                    nar: { har_utrustat_namn: ['Skyddsring'] }
+                  }
+                ]
+              }
+            }
+          };
+        }
+        return null;
+      }
+    });
+    const list = [{
+      namn: 'Försvarsstil',
+      taggar: {
+        regler: {
+          andrar: [
+            {
+              mal: 'forsvar_modifierare',
+              varde: 2,
+              nar: { har_utrustat_namn: ['Skyddsring'] }
+            },
+            {
+              mal: 'forsvar_modifierare',
+              varde: 3,
+              nar: { har_utrustad_typ: ['Ring'] }
+            },
+            {
+              mal: 'forsvar_modifierare',
+              varde: 4,
+              nar: { har_utrustad_kvalitet: ['Välsignad'] }
+            }
+          ]
+        }
+      }
+    }];
+    const extraItemFact = {
+      entryRef: {
+        namn: 'Skyddsring',
+        taggar: {
+          typ: ['Ring'],
+          regler: {
+            andrar: [
+              { mal: 'forsvar_modifierare', varde: 5 }
+            ]
+          }
+        }
+      },
+      types: ['Ring'],
+      qualities: ['Välsignad']
+    };
+
+    expect(rulesHelper.getEquippedDefenseModifier(list, [], {
+      equippedItemFacts: [extraItemFact]
+    })).toBe(15);
   });
 });

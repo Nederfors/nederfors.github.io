@@ -52,43 +52,22 @@
 
   async function handleSnapshotEntryRemoval(entry, store) {
     if (!entry || typeof entry !== 'object') return true;
-    const impactFn = window.storeHelper?.getSnapshotSourceImpactForEntry;
-    if (typeof impactFn !== 'function') return true;
-    const impact = impactFn(store, entry) || {};
-    const count = Number(impact.count || 0);
-    const sourceKeys = Array.isArray(impact.sourceKeys)
-      ? impact.sourceKeys.map(key => String(key || '').trim()).filter(Boolean)
+    const helper = window.snapshotHelper;
+    const impacts = typeof helper?.getEntryRemovalImpacts === 'function'
+      ? helper.getEntryRemovalImpacts(store, entry)
       : [];
-    const fallbackSourceKey = String(impact.sourceKey || '').trim();
-    if (!sourceKeys.length && fallbackSourceKey) sourceKeys.push(fallbackSourceKey);
-    if (!count || !sourceKeys.length) return true;
-
-    if (typeof window.openDialog === 'function') {
-      const label = String(entry?.namn || 'källan').trim() || 'källan';
-      const message = `${quoteName(label)} har ${count} snapshot-effekt${count === 1 ? '' : 'er'}.\nVälj om de ska tas bort eller behållas när posten tas bort.`;
-      const choice = await window.openDialog(message, {
-        cancel: true,
-        okText: 'Ta bort effekter',
-        extraText: 'Behåll effekter',
-        cancelText: 'Avbryt'
-      });
-      if (choice === false) return false;
-      if (choice === true) {
-        sourceKeys.forEach(key => window.storeHelper?.removeSnapshotRulesBySource?.(store, key));
-        return true;
-      }
-      if (choice === 'extra') {
-        sourceKeys.forEach(key => window.storeHelper?.detachSnapshotRulesBySource?.(store, key));
-      }
+    const decision = typeof helper?.confirmRemovalDecision === 'function'
+      ? await helper.confirmRemovalDecision(impacts)
+      : 'noop';
+    if (decision === 'cancel') return false;
+    if (decision === 'remove') {
+      impacts.forEach(impact => window.storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
       return true;
     }
-
-    const fallback = await confirmPopup('Ta bort kopplade snapshot-effekter också?');
-    if (fallback) {
-      sourceKeys.forEach(key => window.storeHelper?.removeSnapshotRulesBySource?.(store, key));
-      return true;
+    if (decision === 'detach') {
+      impacts.forEach(impact => window.storeHelper?.detachSnapshotRulesBySource?.(store, impact.sourceKey));
     }
-    return false;
+    return true;
   }
 
   function initCharacter() {
@@ -1661,7 +1640,7 @@
       const defenseSetup = typeof storeHelper.getDefenseSetup === 'function'
         ? storeHelper.getDefenseSetup(store)
         : null;
-      const defenseAction = `<button type="button" class="db-btn db-btn--icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Beräkna försvar</span></button>`;
+      const combatAction = `<button type="button" class="db-btn db-btn--icon defense-action-btn${defenseSetup?.enabled ? ' active' : ''}" data-action="open-defense-calc" aria-pressed="${defenseSetup?.enabled ? 'true' : 'false'}">${icon('forsvar', { width: 24, height: 24 })}<span>Utrustning & strid</span></button>`;
       const defenseRows = [];
       if (defenseStandard.length) {
         const highestDefense = defenseStandard
@@ -1696,7 +1675,7 @@
       }
 
       if (defenseRows.length) {
-        summarySections.push({ title: 'Försvar', rows: defenseRows, listClass: 'summary-pairs', action: defenseAction });
+        summarySections.push({ title: 'Försvar', rows: defenseRows, listClass: 'summary-pairs', action: combatAction });
       }
 
       const normalizedAccuracy = (Array.isArray(accuracyPreview?.entries) ? accuracyPreview.entries : [])
@@ -1731,7 +1710,7 @@
       cond.forEach(text => {
         accuracyRows.push({ text });
       });
-      summarySections.push({ title: 'Träffsäkerhet', rows: accuracyRows, listClass: 'summary-pairs' });
+      summarySections.push({ title: 'Träffsäkerhet', rows: accuracyRows, listClass: 'summary-pairs', action: combatAction });
 
       const healthRows = [
         { label: 'Tålighet', value: String(tal), align: 'right' },

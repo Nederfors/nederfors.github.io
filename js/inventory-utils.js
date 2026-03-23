@@ -1787,98 +1787,17 @@
     return confirmPopup(getGrantRemovalMessage(source));
   }
 
-  function collectSnapshotRows(rows, includeChildren = true) {
-    const out = [];
-    const queue = Array.isArray(rows) ? [...rows] : [rows];
-    while (queue.length) {
-      const row = queue.shift();
-      if (!row || typeof row !== 'object') continue;
-      out.push(row);
-      if (!includeChildren) continue;
-      if (Array.isArray(row.contains) && row.contains.length) {
-        row.contains.forEach(child => queue.push(child));
-      }
-    }
-    return out;
-  }
-
-  function getSnapshotSourceImpactForRows(rows, options = {}) {
-    const recordsFn = storeHelper?.getSnapshotRuleRecords;
-    if (typeof recordsFn !== 'function') return [];
-    const includeChildren = options.includeChildren !== false;
-    const impacts = [];
-    const activeRecords = recordsFn(store)
-      .filter(record => record && typeof record === 'object' && !record.detached)
-      .filter(record => String(record.sourceKey || '').trim());
-    if (!activeRecords.length) return impacts;
-    const countsBySource = new Map();
-    activeRecords.forEach(record => {
-      const key = String(record.sourceKey || '').trim();
-      countsBySource.set(key, (countsBySource.get(key) || 0) + 1);
-    });
-    const seenSources = new Set();
-    collectSnapshotRows(rows, includeChildren).forEach(row => {
-      const sourceKey = row?.snapshotSourceKey === undefined || row?.snapshotSourceKey === null
-        ? ''
-        : String(row.snapshotSourceKey).trim();
-      if (!sourceKey || seenSources.has(sourceKey)) return;
-      const count = Number(countsBySource.get(sourceKey) || 0);
-      if (!count) return;
-      seenSources.add(sourceKey);
-      impacts.push({
-        sourceKey,
-        count,
-        label: String(row?.name || row?.namn || '').trim()
-      });
-    });
-    return impacts;
-  }
-
   async function confirmSnapshotSourceRemoval(rows, options = {}) {
-    const impacts = getSnapshotSourceImpactForRows(rows, options);
-    if (!impacts.length) return true;
+    const helper = window.snapshotHelper;
+    const impacts = typeof helper?.getRowRemovalImpacts === 'function'
+      ? helper.getRowRemovalImpacts(store, rows, options)
+      : [];
+    const decision = typeof helper?.confirmRemovalDecision === 'function'
+      ? await helper.confirmRemovalDecision(impacts)
+      : 'noop';
 
-    const totalCount = impacts.reduce((sum, item) => sum + Number(item.count || 0), 0);
-    let message = '';
-    if (impacts.length === 1) {
-      const impact = impacts[0];
-      const label = impact.label || 'källan';
-      const count = Number(impact.count || 0);
-      message = `“${label}” har ${count} snapshot-effekt${count === 1 ? '' : 'er'}.\nVälj om de ska tas bort eller behållas när posten tas bort.`;
-    } else {
-      message = `${impacts.length} poster har totalt ${totalCount} snapshot-effekter.\nVälj om de ska tas bort eller behållas när posterna tas bort.`;
-    }
-
-    if (typeof openDialog === 'function') {
-      const choice = await openDialog(message, {
-        cancel: true,
-        okText: 'Ta bort effekter',
-        extraText: 'Behåll effekter',
-        cancelText: 'Avbryt'
-      });
-      if (choice === false) return false;
-      if (choice === true) {
-        timeActiveMutationStage('snapshot-cleanup', () => {
-          impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
-        }, {
-          surface: 'inventory',
-          mode: 'remove'
-        });
-        return true;
-      }
-      if (choice === 'extra') {
-        timeActiveMutationStage('snapshot-cleanup', () => {
-          impacts.forEach(impact => storeHelper?.detachSnapshotRulesBySource?.(store, impact.sourceKey));
-        }, {
-          surface: 'inventory',
-          mode: 'detach'
-        });
-      }
-      return true;
-    }
-
-    const fallback = await confirmPopup('Ta bort kopplade snapshot-effekter också?');
-    if (fallback) {
+    if (decision === 'cancel') return false;
+    if (decision === 'remove') {
       timeActiveMutationStage('snapshot-cleanup', () => {
         impacts.forEach(impact => storeHelper?.removeSnapshotRulesBySource?.(store, impact.sourceKey));
       }, {
@@ -1887,7 +1806,15 @@
       });
       return true;
     }
-    return false;
+    if (decision === 'detach') {
+      timeActiveMutationStage('snapshot-cleanup', () => {
+        impacts.forEach(impact => storeHelper?.detachSnapshotRulesBySource?.(store, impact.sourceKey));
+      }, {
+        surface: 'inventory',
+        mode: 'detach'
+      });
+    }
+    return true;
   }
 
   function flattenInventory(arr) {

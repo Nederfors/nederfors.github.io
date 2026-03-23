@@ -4355,7 +4355,11 @@ function verifyArmorQualityDefenseModifier(rootPath) {
   const withStenpansar = getEquippedDefenseModifier(
     [],
     [],
-    { utrustadTyper: ['Rustning'], utrustadeKvaliteter: ['Stenpansar'] }
+    {
+      armorFact: { types: ['Rustning'], qualities: ['Stenpansar'] },
+      utrustadTyper: ['Rustning'],
+      utrustadeKvaliteter: ['Stenpansar']
+    }
   );
   assert(withStenpansar === -4, `Stenpansar ska ge -4, fick ${withStenpansar}`);
 
@@ -4363,7 +4367,11 @@ function verifyArmorQualityDefenseModifier(rootPath) {
   const plainArmor = getEquippedDefenseModifier(
     [],
     [],
-    { utrustadTyper: ['Rustning'], utrustadeKvaliteter: [] }
+    {
+      armorFact: { types: ['Rustning'], qualities: [] },
+      utrustadTyper: ['Rustning'],
+      utrustadeKvaliteter: []
+    }
   );
   assert(plainArmor === 0, `Rustning utan Stenpansar ska ge 0, fick ${plainArmor}`);
 }
@@ -4382,7 +4390,7 @@ function verifyWeaponAttackBonusRules(rootPath) {
 
   const pRule = precist.taggar?.regler?.andrar?.[0];
   assert(pRule, 'Precist saknar andrar-regel i taggar.regler');
-  assert(pRule.mal === 'traffsaker_modifierare_vapen', 'Precist andrar-regel ska ha mal=traffsaker_modifierare_vapen');
+  assert(pRule.mal === 'traffsaker_modifierare', 'Precist andrar-regel ska ha mal=traffsaker_modifierare');
   assert(pRule.varde === 1, 'Precist andrar-regel ska ha varde=1');
 
   const {
@@ -7615,6 +7623,107 @@ function verifyRuleExtensions(rootPath) {
   console.log(`  verifyRuleExtensions: ${passed} tests passed`);
 }
 
+function verifyEquipmentRestrictions(rootPath) {
+  const sandbox = createSandbox();
+  loadBrowserScript(sandbox, joinPath(rootPath, 'js/rules-helper.js'));
+
+  const nackdel = readEntryDataFile(rootPath, 'data/nackdel.json');
+  const sardrag = readEntryDataFile(rootPath, 'data/sardrag.json');
+
+  const klenvaxt = nackdel.find(e => e.namn === 'Klenväxt');
+  const robust = sardrag.find(e => e.namn === 'Robust');
+  assert(klenvaxt, 'Hittade inte Klenväxt i nackdel.json');
+  assert(robust, 'Hittade inte Robust i sardrag.json');
+
+  // Test 1: Klenväxt data has krockar with utrustning_typ
+  const klKrockar = klenvaxt.taggar?.regler?.krockar || [];
+  assert(klKrockar.length >= 1, 'Klenväxt ska ha minst 1 krockar-regel');
+  const klUtrTyp = klKrockar[0].utrustning_typ;
+  assert(Array.isArray(klUtrTyp), 'Klenväxt krockar ska ha utrustning_typ array');
+  assert(klUtrTyp.includes('Tvåhandsvapen'), 'Klenväxt ska blockera Tvåhandsvapen');
+  assert(klUtrTyp.includes('Tung Rustning'), 'Klenväxt ska blockera Tung Rustning');
+
+  // Test 2: Robust data has kraver with utrustning_typ + utrustning_kvalitet per level
+  const robNovis = robust.taggar?.nivå_data?.Novis?.regler?.kraver || [];
+  assert(robNovis.length >= 1, 'Robust Novis ska ha minst 1 kraver-regel');
+  assert(Array.isArray(robNovis[0].utrustning_typ), 'Robust Novis kraver ska ha utrustning_typ');
+  assert(robNovis[0].utrustning_typ.includes('Rustning'), 'Robust Novis ska kräva Rustning-typ');
+  const robNovisKval = robNovis[0].utrustning_kvalitet;
+  assert(Array.isArray(robNovisKval) && robNovisKval.length === 3, 'Robust Novis ska acceptera 3 kvaliteter');
+
+  const robGesall = robust.taggar?.nivå_data?.['Gesäll']?.regler?.kraver || [];
+  assert(robGesall.length >= 1 && robGesall[0].utrustning_kvalitet?.length === 2,
+    'Robust Gesäll ska acceptera 2 kvaliteter');
+
+  const robMastare = robust.taggar?.nivå_data?.['Mästare']?.regler?.kraver || [];
+  assert(robMastare.length >= 1 && robMastare[0].utrustning_kvalitet?.length === 1,
+    'Robust Mästare ska acceptera 1 kvalitet');
+
+  const { validateEquipment, getEquipmentConflictTypes, getEquipmentQualityRequirements,
+    getConflictReasonsForCandidate } = sandbox.rulesHelper;
+  assert(typeof validateEquipment === 'function', 'validateEquipment ska vara exporterad');
+  assert(typeof getEquipmentConflictTypes === 'function', 'getEquipmentConflictTypes ska vara exporterad');
+  assert(typeof getEquipmentQualityRequirements === 'function', 'getEquipmentQualityRequirements ska vara exporterad');
+
+  // Test 3: Klenväxt blockerar Tvåhandsvapen
+  const listKlen = [{ namn: 'Klenväxt', taggar: klenvaxt.taggar }];
+  const res1 = validateEquipment(listKlen, ['Vapen', 'Tvåhandsvapen'], []);
+  assert(!res1.valid, 'Klenväxt ska blockera Tvåhandsvapen');
+  assert(res1.reasons.length >= 1, 'Ska ge minst 1 reason');
+
+  // Test 4: Klenväxt tillåter Enhandsvapen
+  const res2 = validateEquipment(listKlen, ['Vapen', 'Enhandsvapen'], []);
+  assert(res2.valid, 'Klenväxt ska tillåta Enhandsvapen');
+
+  // Test 5: Klenväxt blockerar Tung Rustning
+  const res3 = validateEquipment(listKlen, ['Rustning', 'Tung Rustning'], []);
+  assert(!res3.valid, 'Klenväxt ska blockera Tung Rustning');
+
+  // Test 6: Klenväxt tillåter Lätt Rustning
+  const res4 = validateEquipment(listKlen, ['Rustning', 'Lätt Rustning'], []);
+  assert(res4.valid, 'Klenväxt ska tillåta Lätt Rustning');
+
+  // Test 7: Robust Novis kräver Robustanpassad — blockerar rustning utan
+  const listRobust = [{ namn: 'Robust', nivå: 'Novis', taggar: robust.taggar }];
+  const res5 = validateEquipment(listRobust, ['Rustning', 'Lätt Rustning'], []);
+  assert(!res5.valid, 'Robust Novis ska blockera rustning utan Robustanpassad');
+
+  // Test 8: Robust Novis accepterar Robustanpassad (Novis)
+  const res6 = validateEquipment(listRobust, ['Rustning', 'Lätt Rustning'], ['Robustanpassad (Novis)']);
+  assert(res6.valid, 'Robust Novis ska acceptera Robustanpassad (Novis)');
+
+  // Test 9: Robust Gesäll accepterar Robustanpassad (Gesäll) men inte (Novis)
+  const listRobGes = [{ namn: 'Robust', nivå: 'Gesäll', taggar: robust.taggar }];
+  const res7 = validateEquipment(listRobGes, ['Rustning', 'Lätt Rustning'], ['Robustanpassad (Novis)']);
+  assert(!res7.valid, 'Robust Gesäll ska inte acceptera Robustanpassad (Novis)');
+  const res8 = validateEquipment(listRobGes, ['Rustning', 'Lätt Rustning'], ['Robustanpassad (Gesäll)']);
+  assert(res8.valid, 'Robust Gesäll ska acceptera Robustanpassad (Gesäll)');
+
+  // Test 10: Robust Mästare kräver exakt Robustanpassad (Mästare)
+  const listRobMas = [{ namn: 'Robust', nivå: 'Mästare', taggar: robust.taggar }];
+  const res9 = validateEquipment(listRobMas, ['Rustning', 'Lätt Rustning'], ['Robustanpassad (Gesäll)']);
+  assert(!res9.valid, 'Robust Mästare ska inte acceptera Robustanpassad (Gesäll)');
+  const res10 = validateEquipment(listRobMas, ['Rustning', 'Lätt Rustning'], ['Robustanpassad (Mästare)']);
+  assert(res10.valid, 'Robust Mästare ska acceptera Robustanpassad (Mästare)');
+
+  // Test 11: Utan Klenväxt/Robust — inga begränsningar
+  const res11 = validateEquipment([], ['Rustning', 'Tung Rustning'], []);
+  assert(res11.valid, 'Tom lista ska ge inga begränsningar');
+
+  // Test 12: Tom typ-lista passerar
+  const res12 = validateEquipment(listKlen, [], []);
+  assert(res12.valid, 'Tom typ-lista ska passera');
+
+  // Test 13: Guard — krockar med utrustning_typ triggar INTE entry-konflikter
+  const dummyEntry = { id: 'dummy', namn: 'TestEntry', taggar: { typ: ['Nackdel'] } };
+  const conflicts = getConflictReasonsForCandidate(dummyEntry, listKlen);
+  const eqConflicts = conflicts.filter(c => c.code && c.code.includes('utrustning'));
+  assert(eqConflicts.length === 0,
+    'utrustning_typ krockar ska inte generera entry-konflikter');
+
+  console.log('  verifyEquipmentRestrictions: 13 tests passed');
+}
+
 try {
   const rootPath = unwrap($.NSFileManager.defaultManager.currentDirectoryPath);
   verifyRuleHelper(rootPath);
@@ -7659,6 +7768,7 @@ try {
   verifyMalCoverage(rootPath);
   verifyRuleExtensions(rootPath);
   verifyNestedRequirementGroups(rootPath);
+  verifyEquipmentRestrictions(rootPath);
   console.log('verify_rules_helper: ok');
 } catch (error) {
   const message = error && error.message ? error.message : String(error);

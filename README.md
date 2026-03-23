@@ -159,8 +159,13 @@ Beräknade mål (`context.computedValues`):
 - `mal_saknas`
 - `har_mal`
 
-Rustning (`context.utrustadTyper`):
+Utrustade föremål (`context.utrustadeNamn`/`context.utrustadTyper`/`context.utrustadeKvaliteter`):
+- `har_utrustat_namn`
+- `ej_utrustat_namn`
 - `har_utrustad_typ`
+- `ej_utrustad_typ`
+- `har_utrustad_kvalitet`
+- `ej_utrustad_kvalitet`
 
 Vapen (`context.vapenFakta`/`context.antalVapen`):
 - `antal_utrustade_vapen_minst`
@@ -238,7 +243,11 @@ Objektformel:
 - `styggelsetroskel`
 - `talighet_bas`
 - `talighet_tillagg`
-- `traffsaker_modifierare_vapen`
+- `traffsaker_modifierare`
+- `traffsaker_modifierare_vapen` (legacy alias för vapenspecifika träffsäkerhetsregler)
+
+Inventarie-taggar:
+- `taggar.utrustning.platser: string[]` markerar manuellt utrustningsbara, icke-vapenburna föremål som kan ges en aktiv plats via inventariet/popuprutan.
 
 ### G) Relaterade begränsningsnycklar
 - `max_antal`
