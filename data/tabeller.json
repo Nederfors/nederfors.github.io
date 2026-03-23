@@ -1657,7 +1657,7 @@
         "Effekt": "Rollpersonen kan inte agera alls förrän den klarar ett slag mot Stark eller Viljestark."
       }
     ],
-    "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T10 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Livselixir, Helbgrägdagörelse eller Örtkur."
+    "extra": "När rollpersonen drabbas av skada som överskrider dess smärtgräns så slår hen 1T10 och drabbas av en effekt enligt tabellen ovan. Effekterna i tabellen varar fram tills karaktären behandlats av Medicus, Soldroppar, Helbgrägdagörelse eller Örtkur."
   },
   {
     "id": "ta23",

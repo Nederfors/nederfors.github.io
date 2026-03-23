@@ -1201,7 +1201,7 @@
           return raw
             .split(/[;,/|]+/)
             .map(part => part.trim().replace(/[.!?]$/g, '').toLowerCase())
-            .some(part => part === 'aktiv');
+            .some(part => part === 'aktiv' || part === 'hel runda');
         });
       };
 
